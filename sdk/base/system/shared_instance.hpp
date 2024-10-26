@@ -154,6 +154,16 @@ class t_shared_instance {
     OBJECT_T* operator->() { return _object; }
     OBJECT_T& operator*() { return *_object; }
 
+    /**
+     * @sample
+     *  t_shared_instance<object> obj;
+     *  obj.make_share(new object);
+     *
+     *  object* inst1 = &(*obj); // implicit
+     *  object* inst2 = obj->instance(); // explicit
+     */
+    OBJECT_T* instance() { return _object; }
+
     t_shared_instance& make_share(OBJECT_T* object) {
         if (nullptr == _object) {
             _object = object;

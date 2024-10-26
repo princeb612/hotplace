@@ -46,7 +46,7 @@ transport_layer_security::transport_layer_security(SSL_CTX* ctx) : _ctx(ctx) {
     _shared.make_share(this);
 }
 
-transport_layer_security::transport_layer_security(x509cert* cert) : _ctx(nullptr) {
+transport_layer_security::transport_layer_security(tlscert* cert) : _ctx(nullptr) {
     if (cert) {
         _ctx = cert->get_ctx();
     }

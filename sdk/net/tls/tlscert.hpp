@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_X509__
-#define __HOTPLACE_SDK_NET_TLS_X509__
+#ifndef __HOTPLACE_SDK_NET_TLS_CERT__
+#define __HOTPLACE_SDK_NET_TLS_CERT__
 
 #include <sdk/io.hpp>
 
@@ -55,23 +55,23 @@ namespace net {
  *  openssl x509 -text -in server.crt
  */
 
-enum x509cert_flag_t {
-    x509cert_flag_tls = (1 << 0),
-    x509cert_flag_dtls = (1 << 1),
-    x509cert_flag_dh = (1 << 2),
-    x509cert_flag_allow_expired = (1 << 5),  // reserved
+enum tlscert_flag_t {
+    tlscert_flag_tls = (1 << 0),
+    tlscert_flag_dtls = (1 << 1),
+    tlscert_flag_dh = (1 << 2),
+    tlscert_flag_allow_expired = (1 << 5),  // reserved
 };
 
 /**
  * @brief certificate
- * @param uint32 flag [in] x509cert_flag_tls or x509cert_flag_dtls
+ * @param uint32 flag [in] tlscert_flag_tls or tlscert_flag_dtls
  * @param SSL_CTX** context [out]
  */
-return_t x509cert_open_simple(uint32 flag, SSL_CTX** context);
+return_t tlscert_open_simple(uint32 flag, SSL_CTX** context);
 
 /**
  * @brief   SSL_CTX*
- * @param   uint32 flag [in] x509cert_flag_tls or x509cert_flag_dtls
+ * @param   uint32 flag [in] tlscert_flag_tls or tlscert_flag_dtls
  * @param   SSL_CTX** context [out]
  * @param   const char* cert_file [in]
  * @param   const char* key_file [in]
@@ -94,40 +94,40 @@ return_t x509cert_open_simple(uint32 flag, SSL_CTX** context);
  *        unencrypted key (ex. -----BEGIN PRIVATE KEY-----)
  *          works good, password parameter useless
  */
-return_t x509cert_open(uint32 flag, SSL_CTX** context, const char* cert_file, const char* key_file, const char* password = nullptr,
-                       const char* chain_file = nullptr);
+return_t tlscert_open(uint32 flag, SSL_CTX** context, const char* cert_file, const char* key_file, const char* password = nullptr,
+                      const char* chain_file = nullptr);
 
-class x509cert {
+class tlscert {
    public:
-    x509cert(uint32 flag = x509cert_flag_tls);
+    tlscert(uint32 flag = tlscert_flag_tls);
     /**
      * @brief   SSL_CTX*
-     * @param   uint32 flags [in] x509cert_flag_tls, x509cert_flag_dtls
+     * @param   uint32 flags [in] tlscert_flag_tls, tlscert_flag_dtls
      * @param   SSL_CTX** context [out]
      * @param   const char* cert_file [in]
      * @param   const char* key_file [in]
      * @param   const char* password [inopt]
      * @param   const char* chain_file [inopt]
      */
-    x509cert(uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr);
-    ~x509cert();
+    tlscert(uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr);
+    ~tlscert();
 
     /**
      * SSL_CTX_set_cipher_list
      */
-    x509cert& set_cipher_list(const char* list);
+    tlscert& set_cipher_list(const char* list);
     /**
      * DH_generate_parameters_ex, SSL_CTX_set_tmp_dh
      */
-    x509cert& set_use_dh(int bits);
+    tlscert& set_use_dh(int bits);
     /**
      * SSL_CTX_set_verify
      */
-    x509cert& set_verify(int mode);
+    tlscert& set_verify(int mode);
     /**
      * SSL_CTX_set_alpn_select_cb
      */
-    x509cert& enable_alpn_h2(bool enable);
+    tlscert& enable_alpn_h2(bool enable);
 
     /**
      * @brief   call openssl api

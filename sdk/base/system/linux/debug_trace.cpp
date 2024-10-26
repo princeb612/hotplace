@@ -29,7 +29,7 @@ namespace hotplace {
  *  - b. COFF (Common Object File Format)
  *  - c. CodeView
  */
-return_t trace(return_t errorcode) {
+return_t trace_backtrace(return_t errorcode) {
     return_t ret = errorcode_t::success;
 
     if (errorcode_t::success != errorcode) {

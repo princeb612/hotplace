@@ -102,12 +102,12 @@ class http_server : public traceable {
     tcp_server_socket _server_socket;
 
     // TLS
-    x509cert* _tlscert;
+    tlscert* _tlscert;
     transport_layer_security* _tls;
     tls_server_socket* _tls_server_socket;
 
     // DTLS
-    x509cert* _dtlscert;
+    tlscert* _dtlscert;
     transport_layer_security* _dtls;
     dtls_server_socket* _dtls_server_socket;
 

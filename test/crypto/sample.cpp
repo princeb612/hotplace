@@ -611,7 +611,7 @@ int main(int argc, char** argv) {
     __try2 {
         openssl_startup();
 
-        auto lambda = [&](trace_category_t, uint32, stream_t* s) -> void { _logger->writeln("%.*s", (unsigned int)s->size(), s->data()); };
+        auto lambda = [&](trace_category_t, uint32, stream_t* s) -> void { _logger->writeln(s); };
         crypto_advisor::trace(lambda);
 
         test_features();

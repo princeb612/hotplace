@@ -66,20 +66,6 @@ std::function<void(network_session *, http_request *, http_response *, http_rout
     response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
 };
 
-void cprint(const char *text, ...) {
-    basic_stream bs;
-    console_color _concolor;
-
-    bs << _concolor.turnon().set_fgcolor(console_color_t::magenta);
-    va_list ap;
-    va_start(ap, text);
-    bs.vprintf(text, ap);
-    va_end(ap);
-    bs << _concolor.turnoff();
-
-    _logger->writeln(bs);
-}
-
 return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CALLBACK_CONTROL *callback_control, void *user_context) {
     return_t ret = errorcode_t::success;
     network_session_socket_t *session_socket = (network_session_socket_t *)data_array[0];
@@ -95,10 +81,10 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
 
     switch (type) {
         case mux_connect:
-            cprint("connect %i", session_socket->event_socket);
+            _logger->colorln("connect %i", session_socket->event_socket);
             break;
         case mux_read:
-            cprint("read %i", session_socket->event_socket);
+            _logger->colorln("read %i", session_socket->event_socket);
             if (option.verbose) {
                 _logger->writeln("%.*s", (unsigned)bufsize, buf);
             }
@@ -108,8 +94,8 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
                 basic_stream bs;
                 if (option.verbose) {
                     auto lambda = [&](trace_category_t, uint32, stream_t *s) -> void {
-                        cprint("response %i", session_socket->event_socket);
-                        _logger->writeln("%.*s", (unsigned int)s->size(), s->data());
+                        _logger->colorln("response %i", session_socket->event_socket);
+                        _logger->writeln(s);
                     };
                     response.settrace(lambda);
                 }
@@ -129,7 +115,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
 
             break;
         case mux_disconnect:
-            cprint("disconnect %i", session_socket->event_socket);
+            _logger->colorln("disconnect %i", session_socket->event_socket);
             break;
     }
     return ret;
@@ -263,6 +249,7 @@ int main(int argc, char **argv) {
         builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("server.log");
     }
     _logger.make_share(builder.build());
+    _logger->setcolor(bold, cyan);
 
     if (option.verbose) {
         // openssl ERR_get_error_all/ERR_get_error_line_data

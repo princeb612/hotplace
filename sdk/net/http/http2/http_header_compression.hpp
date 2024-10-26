@@ -457,7 +457,7 @@ class http_huffman_coding : public huffman_coding {
  *                  // do something
  *              }
  *              // keep the index until the decoder process is finished
- *              // insert info dynamic table
+ *              // insert into dynamic table
  *              hp.commit();
  *          }
  *          // QPACK decoding
@@ -471,7 +471,7 @@ class http_huffman_coding : public huffman_coding {
  *                  // do something
  *              }
  *              // keep the index until the decoder process is finished
- *              // insert info dynamic table
+ *              // insert into dynamic table
  *              qp.commit();
  *          }
  */
@@ -542,7 +542,7 @@ class http_header_compression_stream {
      *              // do something
      *          }
      *          // keep the index until the decoder process is finished
-     *          // insert info dynamic table
+     *          // insert into dynamic table
      *          hp.commit();
      */
     http_header_compression_stream<DYNAMIC_T, ENCODER_T>& decode_header(const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {

@@ -88,7 +88,7 @@ return_t echo_server(void*) {
 
     __try2 {
         // part of ssl certificate
-        ret = x509cert_open(x509cert_flag_dtls, &sslctx, "server.crt", "server.key");
+        ret = tlscert_open(tlscert_flag_dtls, &sslctx, "server.crt", "server.key");
 
         // https://docs.openssl.org/1.1.1/man1/ciphers/
         // TLS 1.2

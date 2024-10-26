@@ -1141,7 +1141,7 @@ void crypto_advisor::get_cookie_secret(uint8 key, size_t secret_size, binary_t& 
     }
 }
 
-void crypto_advisor::trace(std::function<void(trace_category_t category, uint32 events, stream_t* s)> f) { _instance.settrace(f); }
+void crypto_advisor::trace(std::function<void(trace_category_t category, uint32 event, stream_t* s)> f) { _instance.settrace(f); }
 
 }  // namespace crypto
 }  // namespace hotplace

@@ -84,7 +84,7 @@ class console_color {
         _bg = bg;
         return *this;
     }
-    bool get_status() { return _use; }
+    bool get_usage() { return _use; }
     uint16 get_style() { return _style; }
     uint16 get_fgcolor() { return CONSOLE_COLOR_FG + _fg; }
     uint16 get_bgcolor() { return CONSOLE_COLOR_BG + _bg; }
@@ -103,7 +103,7 @@ class console_color {
         return *this;
     }
     friend std::ostream& operator<<(std::ostream& os, console_color& color) {
-        if (color.get_status()) {
+        if (color.get_usage()) {
             os << "\e[" << color.get_style() << ";" << color.get_fgcolor() << ";" << color.get_bgcolor() << "m";
         } else {
             os << "\e[0m";
@@ -111,7 +111,7 @@ class console_color {
         return os;
     }
     friend basic_stream& operator<<(basic_stream& os, console_color& color) {
-        if (color.get_status()) {
+        if (color.get_usage()) {
             os << "\e[" << color.get_style() << ";" << color.get_fgcolor() << ";" << color.get_bgcolor() << "m";
         } else {
             os << "\e[0m";
@@ -131,7 +131,7 @@ class console_color {
                 ret = errorcode_t::invalid_parameter;
                 __leave2;
             }
-            if (get_status()) {
+            if (get_usage()) {
                 stream->printf("\e[%d;%d;%dm", get_style(), get_fgcolor(), get_bgcolor());
             } else {
                 stream->printf("\e[0m");

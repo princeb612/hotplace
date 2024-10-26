@@ -65,7 +65,7 @@ class hpack_encoder : public http_header_compression {
      *              encoder.decode(session, stream, streamsize, pos, name, value, flags);
      *          }
      *          // keep the index until the decoder process is finished
-     *          // insert info dynamic table
+     *          // insert into dynamic table
      *          session.commit();
      */
     virtual return_t decode(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);

@@ -11,7 +11,10 @@
 #ifndef __HOTPLACE_SDK_BASE_SYNTAX__
 #define __HOTPLACE_SDK_BASE_SYNTAX__
 
-#include <sdk/base/system/trace.hpp>
+#include <sdk/base/charset.hpp>
+#include <sdk/base/error.hpp>
+#include <sdk/base/stream.hpp>
+#include <sdk/base/types.hpp>
 
 #define __try2 do
 #define __finally2 \
@@ -46,22 +49,22 @@
  *      ret = do_something ();
  *      __leave2_if_fail (ret);
  */
-#define __trace(x, ...)            \
-    {                              \
-        __footprintf(__VA_ARGS__); \
-        hotplace::trace(x);        \
+#define __trace(x, ...)               \
+    {                                 \
+        __footprintf(__VA_ARGS__);    \
+        hotplace::trace_backtrace(x); \
     }
-#define __leave2_trace(x)   \
-    {                       \
-        __footprints(x);    \
-        hotplace::trace(x); \
-        break;              \
+#define __leave2_trace(x)             \
+    {                                 \
+        __footprints(x);              \
+        hotplace::trace_backtrace(x); \
+        break;                        \
     }
-#define __leave2_tracef(x, ...)    \
-    {                              \
-        __footprintf(__VA_ARGS__); \
-        hotplace::trace(x);        \
-        break;                     \
+#define __leave2_tracef(x, ...)       \
+    {                                 \
+        __footprintf(__VA_ARGS__);    \
+        hotplace::trace_backtrace(x); \
+        break;                        \
     }
 #define __leave2_if_fail(x)          \
     if (errorcode_t::success != x) { \

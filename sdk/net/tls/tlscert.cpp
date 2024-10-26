@@ -9,10 +9,11 @@
  */
 
 #include <sdk/base/binary.hpp>
+#include <sdk/base/system/trace.hpp>
 #include <sdk/crypto.hpp>
 #include <sdk/io.hpp>
 #include <sdk/net/tls/sdk.hpp>
-#include <sdk/net/tls/x509cert.hpp>
+#include <sdk/net/tls/tlscert.hpp>
 #include <sdk/nostd.hpp>
 
 namespace hotplace {
@@ -21,70 +22,79 @@ using namespace io;
 namespace net {
 
 static void set_info_callback_routine(const SSL* ssl, int where, int ret) {
-    basic_stream bs;
-    valist va;
-    const char* state = "*";
+    __try2 {
+        uint32 option = get_trace_option();
+        if (trace_option_t::trace_debug & ~option) {
+            __leave2;
+        }
 
-    // # define SSL_ST_CONNECT                  0x1000
-    // # define SSL_ST_ACCEPT                   0x2000
-    //
-    // # define SSL_ST_MASK                     0x0FFF
-    //
-    // # define SSL_CB_LOOP                     0x01
-    // # define SSL_CB_EXIT                     0x02
-    // # define SSL_CB_READ                     0x04
-    // # define SSL_CB_WRITE                    0x08
-    // # define SSL_CB_ALERT                    0x4000
-    // # define SSL_CB_HANDSHAKE_START          0x10
-    // # define SSL_CB_HANDSHAKE_DONE           0x20
+        basic_stream bs;
+        valist va;
+        const char* state = "*";
 
-    if (where & SSL_ST_CONNECT) {
-        state = "SSL_connect";
-    } else if (where & SSL_ST_ACCEPT) {
-        state = "SSL_accept";
-    } else if (where & SSL_CB_READ) {
-        state = "SSL_read";
-    } else if (where & SSL_CB_WRITE) {
-        state = "SSL_write";
+        // # define SSL_ST_CONNECT                  0x1000
+        // # define SSL_ST_ACCEPT                   0x2000
+        //
+        // # define SSL_ST_MASK                     0x0FFF
+        //
+        // # define SSL_CB_LOOP                     0x01
+        // # define SSL_CB_EXIT                     0x02
+        // # define SSL_CB_READ                     0x04
+        // # define SSL_CB_WRITE                    0x08
+        // # define SSL_CB_ALERT                    0x4000
+        // # define SSL_CB_HANDSHAKE_START          0x10
+        // # define SSL_CB_HANDSHAKE_DONE           0x20
+
+        if (where & SSL_ST_CONNECT) {
+            state = "SSL_connect";
+        } else if (where & SSL_ST_ACCEPT) {
+            state = "SSL_accept";
+        } else if (where & SSL_CB_READ) {
+            state = "SSL_read";
+        } else if (where & SSL_CB_WRITE) {
+            state = "SSL_write";
+        }
+
+        if (where & SSL_CB_LOOP) {
+            va << state << "loop" << SSL_state_string_long(ssl) << SSL_get_cipher_name(ssl);
+        } else if (where & SSL_CB_EXIT) {
+            va << state << "exit" << SSL_state_string_long(ssl);
+        } else if (where & SSL_CB_ALERT) {
+            va << state << "callback" << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
+        } else if (where & SSL_CB_HANDSHAKE_START) {
+            va << "handshake start";
+        } else if (where & SSL_CB_HANDSHAKE_DONE) {
+            va << "handshake done";
+        } else {
+            va << state << SSL_state_string_long(ssl) << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
+        }
+
+        // # define TLS1_3_VERSION  0x0304
+        // # define TLS1_VERSION    0x0301
+        // # define TLS1_1_VERSION  0x0302
+        // # define TLS1_2_VERSION  0x0303
+        // # define DTLS1_VERSION   0xFEFF
+        // # define DTLS1_2_VERSION 0xFEFD
+
+        bs.printf("TLS %08X %08x ", SSL_version(ssl), where);
+        switch (va.size()) {
+            case 1:
+                bs.vprintf("{1}", va);
+                break;
+            case 3:
+                bs.vprintf("{1}:{2}:{3}", va);
+                break;
+            case 4:
+                bs.vprintf("{1}:{2}:{3}:{4}", va);
+                break;
+            default:
+                break;
+        }
+        trace_debug_event(category_ossl_tlsstate, where, &bs);
     }
-
-    if (where & SSL_CB_LOOP) {
-        va << state << "loop" << SSL_state_string_long(ssl) << SSL_get_cipher_name(ssl);
-    } else if (where & SSL_CB_EXIT) {
-        va << state << "exit" << SSL_state_string_long(ssl);
-    } else if (where & SSL_CB_ALERT) {
-        va << state << "callback" << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
-    } else if (where & SSL_CB_HANDSHAKE_START) {
-        va << "handshake start";
-    } else if (where & SSL_CB_HANDSHAKE_DONE) {
-        va << "handshake done";
-    } else {
-        va << state << SSL_state_string_long(ssl) << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
+    __finally2 {
+        // do nothing
     }
-
-    // # define TLS1_3_VERSION  0x0304
-    // # define TLS1_VERSION    0x0301
-    // # define TLS1_1_VERSION  0x0302
-    // # define TLS1_2_VERSION  0x0303
-    // # define DTLS1_VERSION   0xFEFF
-    // # define DTLS1_2_VERSION 0xFEFD
-
-    bs.printf("TLS %08X %08x ", SSL_version(ssl), where);
-    switch (va.size()) {
-        case 1:
-            bs.vprintf("{1}", va);
-            break;
-        case 3:
-            bs.vprintf("{1}:{2}:{3}", va);
-            break;
-        case 4:
-            bs.vprintf("{1}:{2}:{3}:{4}", va);
-            break;
-        default:
-            break;
-    }
-    std::cout << bs << std::endl;
-    fflush(stdout);
 }
 
 static int set_cookie_generate_callback_routine(SSL* ssl, unsigned char* cookie, unsigned int* cookie_len) {
@@ -112,7 +122,7 @@ static int set_cookie_verify_callback_routine(SSL* ssl, const unsigned char* coo
     return ret;
 }
 
-return_t x509cert_open_simple(uint32 flag, SSL_CTX** context) {
+return_t tlscert_open_simple(uint32 flag, SSL_CTX** context) {
     return_t ret = errorcode_t::success;
     SSL_CTX* ssl_ctx = nullptr;
 
@@ -123,13 +133,13 @@ return_t x509cert_open_simple(uint32 flag, SSL_CTX** context) {
         }
 
         const SSL_METHOD* method = nullptr;
-        if (x509cert_flag_tls & flag) {
+        if (tlscert_flag_tls & flag) {
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
             method = TLS_method();
 #else
             method = TLSv1_2_method();  // openssl-1.0
 #endif
-        } else if (x509cert_flag_dtls & flag) {
+        } else if (tlscert_flag_dtls & flag) {
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
             method = DTLS_method();
 #else
@@ -163,11 +173,11 @@ return_t x509cert_open_simple(uint32 flag, SSL_CTX** context) {
          * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
          * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
          */
-        if (x509cert_flag_tls & flag) {
+        if (tlscert_flag_tls & flag) {
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
             SSL_CTX_set_min_proto_version(ssl_ctx, TLS1_3_VERSION);
 #endif
-        } else if (x509cert_flag_dtls & flag) {
+        } else if (tlscert_flag_dtls & flag) {
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
             SSL_CTX_set_min_proto_version(ssl_ctx, DTLS1_2_VERSION);
 #endif
@@ -180,7 +190,7 @@ return_t x509cert_open_simple(uint32 flag, SSL_CTX** context) {
         SSL_CTX_set_verify(ssl_ctx, 0, nullptr);
 
         uint32 option = get_trace_option();
-        if (trace_option_t::trace_bt & option) {
+        if (trace_option_t::trace_debug & option) {
             SSL_CTX_set_info_callback(ssl_ctx, set_info_callback_routine);
         }
 
@@ -200,7 +210,7 @@ static int set_default_passwd_callback_routine(char* buf, int num, int rwflag, v
     return len;
 }
 
-return_t x509cert_open(uint32 flag, SSL_CTX** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file) {
+return_t tlscert_open(uint32 flag, SSL_CTX** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file) {
     return_t ret = errorcode_t::success;
     SSL_CTX* ssl_ctx = nullptr;
     SSL* ssl = nullptr;
@@ -211,7 +221,7 @@ return_t x509cert_open(uint32 flag, SSL_CTX** context, const char* cert_file, co
             __leave2;
         }
 
-        ret = x509cert_open_simple(flag, &ssl_ctx);
+        ret = tlscert_open_simple(flag, &ssl_ctx);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -317,19 +327,19 @@ return_t x509cert_open(uint32 flag, SSL_CTX** context, const char* cert_file, co
     return ret;
 }
 
-x509cert::x509cert(uint32 flag) : _ctx(nullptr) { x509cert_open_simple(flag, &_ctx); }
+tlscert::tlscert(uint32 flag) : _ctx(nullptr) { tlscert_open_simple(flag, &_ctx); }
 
-x509cert::x509cert(uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file) : _ctx(nullptr) {
-    x509cert_open(flag, &_ctx, cert_file, key_file, password, chain_file);
+tlscert::tlscert(uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file) : _ctx(nullptr) {
+    tlscert_open(flag, &_ctx, cert_file, key_file, password, chain_file);
 }
 
-x509cert::~x509cert() {
+tlscert::~tlscert() {
     if (_ctx) {
         SSL_CTX_free(_ctx);
     }
 }
 
-x509cert& x509cert::set_cipher_list(const char* list) {
+tlscert& tlscert::set_cipher_list(const char* list) {
     if (list) {
         if (_ctx) {
             SSL_CTX_set_cipher_list(_ctx, list);
@@ -338,7 +348,7 @@ x509cert& x509cert::set_cipher_list(const char* list) {
     return *this;
 }
 
-x509cert& x509cert::set_use_dh(int bits) {
+tlscert& tlscert::set_use_dh(int bits) {
     return_t ret = errorcode_t::success;
     DH* dh = nullptr;
     int rc = 0;
@@ -393,7 +403,7 @@ x509cert& x509cert::set_use_dh(int bits) {
     return *this;
 }
 
-x509cert& x509cert::set_verify(int mode) {
+tlscert& tlscert::set_verify(int mode) {
     if (_ctx) {
         SSL_CTX_set_verify(_ctx, mode, nullptr);
     }
@@ -466,7 +476,7 @@ static int set_alpn_select_h2_cb(SSL* ssl, const unsigned char** out, unsigned c
     return ret;
 }
 
-x509cert& x509cert::enable_alpn_h2(bool enable) {
+tlscert& tlscert::enable_alpn_h2(bool enable) {
     if (enable) {
         // RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
         // RFC 7540 3.1.  HTTP/2 Version Identification
@@ -481,7 +491,7 @@ x509cert& x509cert::enable_alpn_h2(bool enable) {
     return *this;
 }
 
-SSL_CTX* x509cert::get_ctx() { return _ctx; }
+SSL_CTX* tlscert::get_ctx() { return _ctx; }
 
 }  // namespace net
 }  // namespace hotplace

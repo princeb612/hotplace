@@ -35,20 +35,6 @@ typedef struct _OPTION {
 
 t_shared_instance<t_cmdline_t<OPTION>> cmdline;
 
-void cprint(const char *text, ...) {
-    console_color _concolor;
-
-    basic_stream bs;
-    bs << _concolor.turnon().set_fgcolor(console_color_t::cyan);
-    va_list ap;
-    va_start(ap, text);
-    bs.vprintf(text, ap);
-    va_end(ap);
-    bs << _concolor.turnoff();
-
-    _logger->writeln(bs);
-}
-
 void do_split_url(const char *url, url_info_t *url_info) {
     const OPTION &option = cmdline->value();
 
@@ -342,7 +328,7 @@ void test_basic_authentication() {
         if (option.verbose) {
             response.get_response(bs);
 
-            cprint("server response");
+            _logger->colorln("server response");
             _logger->writeln("%s", bs.c_str());
         }
 
@@ -357,7 +343,7 @@ void test_basic_authentication() {
         if (option.verbose) {
             request.get_request(bs);
 
-            cprint("client request");
+            _logger->colorln("client request");
             _logger->writeln("%s", bs.c_str());
         }
 
@@ -501,10 +487,10 @@ void test_digest_access_authentication(const char *alg = nullptr, unsigned long 
             if (option.verbose) {
                 response.get_response(bs);
 
-                cprint("session nonce %s", session.get_session_data()->get("nonce").c_str());
-                cprint("session opaque %s", session.get_session_data()->get("opaque").c_str());
+                _logger->colorln("session nonce %s", session.get_session_data()->get("nonce").c_str());
+                _logger->colorln("session opaque %s", session.get_session_data()->get("opaque").c_str());
 
-                cprint("server response");
+                _logger->colorln("server response");
                 _logger->writeln("%s", bs.c_str());
             }
 
@@ -545,7 +531,7 @@ void test_digest_access_authentication(const char *alg = nullptr, unsigned long 
             if (option.verbose) {
                 request.get_request(bs);
 
-                cprint("client request");
+                _logger->colorln("client request");
                 _logger->writeln("%s", bs.c_str());
             }
 
@@ -556,7 +542,7 @@ void test_digest_access_authentication(const char *alg = nullptr, unsigned long 
             if (test) {
                 ret = errorcode_t::success;
             }
-            // cprint("[%08x] %s:%s", ret, user.c_str(), password.c_str());
+            // _logger->colorln("[%08x] %s:%s", ret, user.c_str(), password.c_str());
             return ret;
         };
 
@@ -766,21 +752,21 @@ void test_get_tlsclient() {
 
         tls_context_t *handle = nullptr;
         SSL_CTX *sslctx = nullptr;
-        x509cert_open_simple(x509cert_flag_tls, &sslctx);
+        tlscert_open_simple(tlscert_flag_tls, &sslctx);
         transport_layer_security tls(sslctx);
         tls_client_socket cli(&tls);
         basic_stream bs;
 
         ret = cli.connect(&sock, &handle, url_info.host.c_str(), url_info.port, 5);
         if (errorcode_t::success == ret) {
-            cprint("connected");
+            _logger->colorln("connected");
 
             http_request req;
             req.open(format("GET %s HTTP/1.1", url_info.uri.c_str()));
             basic_stream body;
             req.get_request(body);
 
-            cprint("request");
+            _logger->colorln("request");
             if (option.verbose) {
                 _logger->writeln(body);
             }
@@ -824,7 +810,7 @@ void test_get_tlsclient() {
                     network_stream_data *data = nullptr;
                     stream_interpreted.consume(&data);
                     if (data) {
-                        cprint("response");
+                        _logger->colorln("response");
                         if (option.verbose) {
                             _logger->writeln("%.*s", (unsigned)data->size(), (char *)data->content());
                         }
@@ -834,7 +820,7 @@ void test_get_tlsclient() {
                 }
             }  // send
             cli.close(sock, handle);
-            cprint("closed");
+            _logger->colorln("closed");
         }  // connect
 
         SSL_CTX_free(sslctx);
@@ -938,6 +924,7 @@ int main(int argc, char **argv) {
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
+    _logger->setcolor(bold, cyan);
 
     // uri
     test_uri();

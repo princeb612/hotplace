@@ -61,7 +61,7 @@ logger* logger_builder::build() {
     return p;
 }
 
-logger::logger() : _thread(nullptr), _run(true) {}
+logger::logger() : _thread(nullptr), _run(true), _style(normal), _fgcolor(white), _bgcolor(black) {}
 
 logger::~logger() { clear(); }
 
@@ -158,6 +158,8 @@ logger& logger::consoleln(const std::string& msg) { return do_console_raw(msg.c_
 
 logger& logger::consoleln(const basic_stream& msg) { return do_console_raw(msg.c_str(), msg.size(), true); }
 
+logger& logger::consoleln(stream_t* s) { return do_console_stream(s, true); }
+
 logger& logger::writeln(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
@@ -170,6 +172,8 @@ logger& logger::writeln(const std::string& msg) { return do_write_raw(msg.c_str(
 
 logger& logger::writeln(const basic_stream& msg) { return do_write_raw(msg.c_str(), msg.size(), true); }
 
+logger& logger::writeln(stream_t* s) { return do_write_stream(s, true); }
+
 logger& logger::write(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
@@ -181,6 +185,8 @@ logger& logger::write(const char* fmt, ...) {
 logger& logger::write(const std::string& msg) { return do_write_raw(msg.c_str(), msg.size(), false); }
 
 logger& logger::write(const basic_stream& msg) { return do_write_raw(msg.c_str(), msg.size(), false); }
+
+logger& logger::write(stream_t* s) { return do_write_stream(s, false); }
 
 logger& logger::dump(const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) { return do_dump(addr, size, hexpart, indent, true); }
 
@@ -284,6 +290,18 @@ logger& logger::do_console_raw(const char* buf, size_t bufsize, bool lf) {
     return do_console(lambda);
 }
 
+logger& logger::do_console_stream(stream_t* s, bool lf) {
+    auto lambda = [&](logger_item* item) -> void {
+        if (s) {
+            item->bs.write(s->data(), s->size());
+            if (lf) {
+                item->bs.printf("\n");
+            }
+        }
+    };
+    return do_console(lambda);
+}
+
 logger& logger::do_write(std::function<void(logger_item*)> f) {
     std::string datefmt;
     {
@@ -322,6 +340,18 @@ logger& logger::do_write_raw(const char* buf, size_t bufsize, bool lf) {
         item->bs.write(buf, bufsize);
         if (lf) {
             item->bs.printf("\n");
+        }
+    };
+    return do_write(lambda);
+}
+
+logger& logger::do_write_stream(stream_t* s, bool lf) {
+    auto lambda = [&](logger_item* item) -> void {
+        if (s) {
+            item->bs.write(s->data(), s->size());
+            if (lf) {
+                item->bs.printf("\n");
+            }
         }
     };
     return do_write(lambda);
@@ -413,6 +443,74 @@ logger& logger::flush(bool check) {
         }
     }
     return *this;
+}
+
+logger& logger::setcolor(console_style_t style, console_color_t fgcolor, console_color_t bgcolor) {
+    _style = style;
+    _fgcolor = fgcolor;
+    _bgcolor = bgcolor;
+    return *this;
+}
+
+logger& logger::colorln(const char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    do_color_write_vprintf(fmt, ap, true);
+    va_end(ap);
+    return *this;
+}
+
+logger& logger::colorln(const std::string& msg) { return do_color_write_raw(msg.c_str(), msg.size(), true); }
+
+logger& logger::colorln(const basic_stream& msg) { return do_color_write_raw(msg.c_str(), msg.size(), true); }
+
+logger& logger::colorln(stream_t* s) { return do_color_write_stream(s, true); }
+
+logger& logger::do_color_write_vprintf(const char* fmt, va_list ap, bool lf) {
+    auto lambda = [&](logger_item* item) -> void {
+        console_color color;
+        color.set_style(_style).set_fgcolor(_fgcolor).set_bgcolor(_bgcolor);
+        color.printf(&item->bs);
+        item->bs.vprintf(fmt, ap);
+        color.turnoff();
+        color.printf(&item->bs);
+        if (lf) {
+            item->bs.printf("\n");
+        }
+    };
+    return do_write(lambda);
+}
+
+logger& logger::do_color_write_raw(const char* buf, size_t bufsize, bool lf) {
+    auto lambda = [&](logger_item* item) -> void {
+        console_color color;
+        color.set_style(_style).set_fgcolor(_fgcolor).set_bgcolor(_bgcolor);
+        color.printf(&item->bs);
+        item->bs.write(buf, bufsize);
+        color.turnoff();
+        color.printf(&item->bs);
+        if (lf) {
+            item->bs.printf("\n");
+        }
+    };
+    return do_write(lambda);
+}
+
+logger& logger::do_color_write_stream(stream_t* s, bool lf) {
+    auto lambda = [&](logger_item* item) -> void {
+        if (s) {
+            console_color color;
+            color.set_style(_style).set_fgcolor(_fgcolor).set_bgcolor(_bgcolor);
+            color.printf(&item->bs);
+            item->bs.write(s->data(), s->size());
+            color.turnoff();
+            color.printf(&item->bs);
+            if (lf) {
+                item->bs.printf("\n");
+            }
+        }
+    };
+    return do_write(lambda);
 }
 
 }  // namespace hotplace

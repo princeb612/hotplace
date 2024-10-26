@@ -37,36 +37,18 @@ t_shared_instance<hpack_encoder> encoder;
 unsigned int count_evict_encoder = 0;
 unsigned int count_evict_decoder = 0;
 
-void cprint(const char* text, ...) {
-    basic_stream bs;
-    console_color _concolor;
-
-    bs << _concolor.turnon().set_fgcolor(console_color_t::cyan);
-    va_list ap;
-    va_start(ap, text);
-    bs.vprintf(text, ap);
-    va_end(ap);
-    bs << _concolor.turnoff();
-
-    _logger->writeln(bs);
-}
-
 void debug_hpack_encoder(trace_category_t, uint32 event, stream_t* s) {
     if (header_compression_event_evict == event) {
         count_evict_encoder++;
     }
-    if (s) {
-        _logger->writeln("\e[1;34m%.*s\e[0m", (unsigned int)s->size(), s->data());
-    }
+    _logger->writeln(s);
 };
 
 void debug_hpack_decoder(trace_category_t, uint32 event, stream_t* s) {
     if (header_compression_event_evict == event) {
         count_evict_decoder++;
     }
-    if (s) {
-        _logger->writeln("\e[1;36m%.*s\e[0m", (unsigned int)s->size(), s->data());
-    }
+    _logger->writeln(s);
 };
 
 void test_huffman_codes_routine(const char* sample, const char* expect) {

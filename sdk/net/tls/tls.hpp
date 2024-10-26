@@ -12,7 +12,7 @@
 #define __HOTPLACE_SDK_NET_TLS_TLS__
 
 #include <sdk/crypto.hpp>
-#include <sdk/net/tls/x509cert.hpp>
+#include <sdk/net/tls/tlscert.hpp>
 #include <sdk/net/types.hpp>
 
 namespace hotplace {
@@ -27,7 +27,7 @@ enum tls_flag_t {
  * @brief TLS
  * @example
  *      uint32 ret = errorcode_t::success;
- *      x509cert_open_simple(x509cert_flag_tls, &sslctx);
+ *      tlscert_open_simple(tlscert_flag_tls, &sslctx);
  *      transport_layer_security tls(sslctx);
  *      tls_client_socket cli(&tls);
  *      cli.connect(&sock, &tlshandle, host, port, 1);
@@ -45,7 +45,7 @@ enum tls_flag_t {
 class transport_layer_security {
    public:
     transport_layer_security(SSL_CTX* sslctx);
-    transport_layer_security(x509cert* cert);
+    transport_layer_security(tlscert* cert);
     ~transport_layer_security();
 
     /**

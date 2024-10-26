@@ -125,7 +125,7 @@ void tls_client() {
     tls_context_t* tlshandle = nullptr;
     socket_t sock = -1;
     SSL_CTX* sslctx = nullptr;
-    x509cert_open_simple(x509cert_flag_tls, &sslctx);
+    tlscert_open_simple(tlscert_flag_tls, &sslctx);
     transport_layer_security tls(sslctx);
     tls_client_socket cli(&tls);
 
@@ -177,7 +177,7 @@ void dtls_client() {
     tls_context_t* tlshandle = nullptr;
     socket_t sock = -1;
     SSL_CTX* sslctx = nullptr;
-    x509cert_open_simple(x509cert_flag_dtls, &sslctx);
+    tlscert_open_simple(tlscert_flag_dtls, &sslctx);
     transport_layer_security tls(sslctx);
     dtls_client_socket cli(&tls);
     sockaddr_storage_t addr;

@@ -553,7 +553,7 @@ class crypto_advisor : public traceable {
      */
     void get_cookie_secret(uint8 key, size_t secret_size, binary_t& secret);
 
-    static void trace(std::function<void(trace_category_t category, uint32 events, stream_t* s)> f);
+    static void trace(std::function<void(trace_category_t category, uint32 event, stream_t* s)> f);
 
    protected:
     return_t load();

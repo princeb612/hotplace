@@ -43,31 +43,6 @@ t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 t_shared_instance<http_server> _http_server;
 critical_section print_lock;
 
-void cprint(const char* text, ...) {
-    basic_stream bs;
-    critical_section_guard guard(print_lock);
-    console_color _concolor;
-
-    bs << _concolor.turnon().set_fgcolor(console_color_t::cyan);
-    va_list ap;
-    va_start(ap, text);
-    bs.vprintf(text, ap);
-    va_end(ap);
-    bs << _concolor.turnoff();
-
-    _logger->writeln(bs);
-}
-
-void print(const char* text, ...) {
-    // valgrind
-    critical_section_guard guard(print_lock);
-    va_list ap;
-    va_start(ap, text);
-    vprintf(text, ap);
-    va_end(ap);
-    fflush(stdout);
-}
-
 void api_response_html_handler(network_session*, http_request* request, http_response* response, http_router* router) {
     response->compose(200, "text/html", "<html><body>page - ok<body></html>");
 }
@@ -92,14 +67,12 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     switch (type) {
         case mux_connect:
-            // cprint("connect %i", session_socket->event_socket);
             break;
         case mux_read:
-            // cprint("read %i", session_socket->event_socket);
             if (request) {
                 http_response response(request);
                 if (option.verbose) {
-                    auto lambda = [](trace_category_t, uint32, stream_t* s) -> void { print("\e[1;37m%.*s\e[0m", (unsigned int)s->size(), s->data()); };
+                    auto lambda = [](trace_category_t, uint32, stream_t* s) -> void { _logger->writeln(s); };
                     response.settrace(lambda);
                 }
                 _http_server->get_http_router().route(session, request, &response);
@@ -107,7 +80,6 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             }
             break;
         case mux_disconnect:
-            // cprint("disconnect %i", session_socket->event_socket);
             break;
     }
 
@@ -148,7 +120,7 @@ return_t simple_http2_server(void*) {
             .set(netserver_config_t::serverconf_concurrent_network, 2)
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
         if (option.verbose) {
-            auto lambda = [](trace_category_t, uint32, stream_t* s) -> void { print("%.*s", (unsigned int)s->size(), s->data()); };
+            auto lambda = [](trace_category_t, uint32, stream_t* s) -> void { _logger->writeln(s); };
             builder.settrace(lambda);
             builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
         }
@@ -338,8 +310,9 @@ int main(int argc, char** argv) {
     _logger.make_share(builder.build());
 
     if (option.verbose) {
-        // openssl ERR_get_error_all/ERR_get_error_line_data
-        set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
+        auto lambda = [&](trace_category_t, uint32, stream_t* s) -> void { _logger->writeln(s); };
+        set_trace_debug(lambda);
+        set_trace_option(trace_bt | trace_except | trace_debug);
     }
 
 #if defined _WIN32 || defined _WIN64

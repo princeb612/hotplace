@@ -617,7 +617,7 @@ void test_x690_annex_a_1() {
         // publish
         {
             object->publish(&bs1);
-            _logger->writeln("\e[1;33mcompose\e[0m");
+            _logger->colorln("compose");
             _logger->write(bs1);
         }
 
@@ -628,7 +628,7 @@ void test_x690_annex_a_1() {
 
             binary_t bin;
             n->publish(&bs2);
-            _logger->writeln("\e[1;33mclone\e[0m");
+            _logger->colorln("clone");
             _logger->write(bs2);
         }
         __finally2 {
@@ -659,6 +659,7 @@ int main(int argc, char** argv) {
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
+    _logger->setcolor(bold, cyan);
 
     // studying ...
     test_x690_8_1_3_length_octets();

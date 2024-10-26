@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_BASE_LOGGER__
 #define __HOTPLACE_SDK_BASE_LOGGER__
 
+#include <sdk/base/basic/console_color.hpp>
 #include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/base/binary.hpp>
 #include <sdk/base/charset.hpp>
@@ -97,20 +98,27 @@ class logger {
     thread* _thread;
     bool _run;
 
+    console_style_t _style;
+    console_color_t _fgcolor;
+    console_color_t _bgcolor;
+
    public:
     ~logger();
 
     logger& consoleln(const char* fmt, ...);
     logger& consoleln(const std::string& msg);
     logger& consoleln(const basic_stream& msg);
+    logger& consoleln(stream_t* s);
 
     logger& writeln(const char* fmt, ...);
     logger& writeln(const std::string& msg);
     logger& writeln(const basic_stream& msg);
+    logger& writeln(stream_t* s);
 
     logger& write(const char* fmt, ...);
     logger& write(const std::string& msg);
     logger& write(const basic_stream& msg);
+    logger& write(stream_t* s);
 
     logger& dump(const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
@@ -132,6 +140,12 @@ class logger {
 
     logger& flush(bool check = false);
 
+    logger& setcolor(console_style_t style = normal, console_color_t fgcolor = white, console_color_t bgcolor = black);
+    logger& colorln(const char* fmt, ...);
+    logger& colorln(const std::string& msg);
+    logger& colorln(const basic_stream& msg);
+    logger& colorln(stream_t* s);
+
    private:
     logger();
     void clear();
@@ -139,10 +153,16 @@ class logger {
     logger& do_console(std::function<void(logger_item*)> f);
     logger& do_console_vprintf(const char* fmt, va_list ap, bool lf = false);
     logger& do_console_raw(const char* buf, size_t bufsize, bool lf = false);
+    logger& do_console_stream(stream_t* s, bool lf = false);
 
     logger& do_write(std::function<void(logger_item*)> f);
     logger& do_write_vprintf(const char* fmt, va_list ap, bool lf = false);
     logger& do_write_raw(const char* buf, size_t bufsize, bool lf = false);
+    logger& do_write_stream(stream_t* s, bool lf = false);
+
+    logger& do_color_write_vprintf(const char* fmt, va_list ap, bool lf = false);
+    logger& do_color_write_raw(const char* buf, size_t bufsize, bool lf = false);
+    logger& do_color_write_stream(stream_t* s, bool lf = false);
 
     logger& do_dump(const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0, bool lf = false);
     logger& do_hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0, bool lf = false);

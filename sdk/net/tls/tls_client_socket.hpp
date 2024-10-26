@@ -13,7 +13,7 @@
 
 #include <sdk/net/basic/tcp_client_socket.hpp>  // tcp_client_socket
 #include <sdk/net/tls/tls.hpp>
-#include <sdk/net/tls/x509cert.hpp>
+#include <sdk/net/tls/tlscert.hpp>
 
 namespace hotplace {
 namespace net {
@@ -31,7 +31,7 @@ namespace net {
  *
  *      tls_context_t* handle = nullptr;
  *      SSL_CTX* x509 = nullptr;
- *      x509cert_open_simple(&x509);
+ *      tlscert_open_simple(&x509);
  *      transport_layer_security tls(x509);
  *      tls_client_socket cli(&tls);
  *

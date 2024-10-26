@@ -120,6 +120,7 @@ return_t hpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
 
         // do not handle hpack_layout_capacity here
         // HTTP2 SETTINGS frame SETTINGS_HEADER_TABLE_SIZE (0x1)
+        // see http2_session::consume
 
         auto statable = hpack_static_table::get_instance();
 

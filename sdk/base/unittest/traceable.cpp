@@ -44,13 +44,13 @@ void traceable::settrace(traceable* diag) {
     }
 }
 
-void traceable::traceevent(trace_category_t category, uint32 events, stream_t* s) {
+void traceable::traceevent(trace_category_t category, uint32 event, stream_t* s) {
     if (_df) {
-        _df(category, events, s);
+        _df(category, event, s);
     }
 }
 
-void traceable::traceevent(trace_category_t category, uint32 events, const char* fmt, ...) {
+void traceable::traceevent(trace_category_t category, uint32 event, const char* fmt, ...) {
     if (_df) {
         basic_stream bs;
         va_list ap;
@@ -59,7 +59,7 @@ void traceable::traceevent(trace_category_t category, uint32 events, const char*
         bs.vprintf(fmt, ap);
         va_end(ap);
 
-        _df(category, events, &bs);
+        _df(category, event, &bs);
     }
 }
 

@@ -47,84 +47,12 @@ critical_section print_lock;
 void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
     std::string ct;
     std::string ev;
-    switch (category) {
-        case category_crypto:
-            ct = "crypto";
-            break;
-        case category_net_session:
-            ct = "network_session";
-            switch (event) {
-                case net_session_event_produce:
-                    ev = "produce";
-                    break;
-                case net_session_event_http2_consume:
-                    ev = "consume";
-                    break;
-            }
-            break;
-        case category_http_server:
-            ct = "http_server";
-            switch (event) {
-                case http_server_event_consume:
-                    ev = "consume";
-                    break;
-            }
-            break;
-        case category_http_request:
-            ct = "http_request";
-            break;
-        case category_http_response:
-            ct = "http_response";
-            switch (event) {
-                case http_response_event_getresponse:
-                    ev = "response";
-                    break;
-            }
-            break;
-        case category_header_compression:
-            ct = "hpack";
-            switch (event) {
-                case header_compression_event_insert:
-                    ev = "insert";
-                    break;
-                case header_compression_event_evict:
-                    ev = "evict";
-                    break;
-                case header_compression_event_select:
-                    ev = "select";
-                    break;
-            }
-            break;
-        case category_http2_serverpush:
-            ct = "server push";
-            switch (event) {
-                case http2_push_event_push_promise:
-                    ev = "push promise";
-                    break;
-            }
-            break;
-        default:
-            break;
-    }
     basic_stream bs;
+    auto advisor = trace_advisor::get_instance();
+    advisor->get_names(category, event, ct, ev);
     bs.printf("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned int)s->size(), s->data());
     _logger->writeln(bs);
 };
-
-void cprint(const char* text, ...) {
-    basic_stream bs;
-    critical_section_guard guard(print_lock);
-    console_color _concolor;
-
-    bs << _concolor.turnon().set_fgcolor(console_color_t::cyan);
-    va_list ap;
-    va_start(ap, text);
-    bs.vprintf(text, ap);
-    va_end(ap);
-    bs << _concolor.turnoff();
-
-    _logger->writeln(bs);
-}
 
 void api_response_html_handler(network_session*, http_request* request, http_response* response, http_router* router) {
     response->compose(200, "text/html", "<html><body>page - ok<body></html>");
@@ -150,10 +78,8 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     switch (type) {
         case mux_connect:
-            // cprint("connect %i", session_socket->event_socket);
             break;
         case mux_read:
-            // cprint("read %i", session_socket->event_socket);
             if (request) {
                 http_response response(request);
                 if (option.verbose) {
@@ -164,7 +90,6 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             }
             break;
         case mux_disconnect:
-            // cprint("disconnect %i", session_socket->event_socket);
             break;
     }
 
@@ -391,8 +316,9 @@ int main(int argc, char** argv) {
     _logger.make_share(builder.build());
 
     if (option.verbose) {
-        // openssl ERR_get_error_all/ERR_get_error_line_data
-        set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
+        auto lambda = [&](trace_category_t, uint32, stream_t* s) -> void { _logger->writeln(s); };
+        set_trace_debug(lambda);
+        set_trace_option(trace_bt | trace_except | trace_debug);
     }
 
 #if defined _WIN32 || defined _WIN64

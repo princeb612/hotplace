@@ -62,18 +62,14 @@ void debug_qpack_encoder(trace_category_t, uint32 event, stream_t* s) {
     if (header_compression_event_evict == event) {
         count_evict_encoder++;
     }
-    if (s) {
-        _logger->writeln("\e[1;34m%.*s\e[0m", (unsigned int)s->size(), s->data());
-    }
+    _logger->writeln(s);
 };
 
 void debug_qpack_decoder(trace_category_t, uint32 event, stream_t* s) {
     if (header_compression_event_evict == event) {
         count_evict_decoder++;
     }
-    if (s) {
-        _logger->writeln("\e[1;36m%.*s\e[0m", (unsigned int)s->size(), s->data());
-    }
+    _logger->writeln(s);
 };
 
 void test_rfc9204_b() {

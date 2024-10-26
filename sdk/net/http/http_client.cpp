@@ -24,9 +24,9 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-http_client::http_client() : _socket(0), _client_socket(nullptr), _tls_context(nullptr), _x509(nullptr), _wto(1000) {
-    x509cert_open_simple(x509cert_flag_tls, &_x509);
-    _tls_client_socket = new tls_client_socket(new transport_layer_security(_x509));
+http_client::http_client() : _socket(0), _client_socket(nullptr), _tls_context(nullptr), _tlsctx(nullptr), _wto(1000) {
+    tlscert_open_simple(tlscert_flag_tls, &_tlsctx);
+    _tls_client_socket = new tls_client_socket(new transport_layer_security(_tlsctx));
     _client_socket = new tcp_client_socket;
 }
 
@@ -39,7 +39,7 @@ http_client::~http_client() {
     if (_client_socket) {
         delete _client_socket;
     }
-    SSL_CTX_free(_x509);
+    SSL_CTX_free(_tlsctx);
 }
 
 tcp_client_socket* http_client::try_connect() {

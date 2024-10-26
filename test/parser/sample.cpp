@@ -473,7 +473,7 @@ void test_patterns() {
     };
 
     for (auto item : _table) {
-        _logger->writeln("\e[1;33m%s\e[0m", item.source);
+        _logger->setcolor(bold, cyan).colorln(item.source);
 
         parser::context context;
         p.parse(context, item.source);

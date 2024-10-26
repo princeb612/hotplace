@@ -180,7 +180,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
                         composer.compose(&cbor_newone);
 
                         publisher.publish(cbor_newone, &bs_diagnostic_composed);
-                        dump_test_data("\e[1;36mcompose\e[0m", bs_diagnostic_composed);
+                        dump_test_data("compose", bs_diagnostic_composed);
 
                         _test_case.assert(false == bin_untagged.empty(), __FUNCTION__, "check.compose %s", text ? text : "");
 
@@ -1216,7 +1216,7 @@ void test_github_example() {
             int break_point_here = 1;
         }
 
-        _logger->writeln("\e[33m%s\e[0m", vector->file);
+        _logger->colorln(vector->file);
         binary_t cbor = base16_decode(vector->cbor);
         crypto_key* mapped_key = keymapper[vector->keysetname];
 
@@ -1247,7 +1247,7 @@ void test_github_example() {
             composer.compose(&cbor_newone, bin_composed, vector->untagged ? false : true);
 
             publisher.publish(cbor_newone, &bs_diagnostic_composed);
-            dump_test_data("\e[1;36mcompose\e[0m", bs_diagnostic_composed);
+            dump_test_data("compose", bs_diagnostic_composed);
             _test_case.assert(bin_composed == bin_cbor, __FUNCTION__, "compose.parse %s", vector->file);
         }
 
@@ -1259,10 +1259,10 @@ void test_github_example() {
         cose_context_t* handle = nullptr;
         cose.open(&handle);
 
-#define dumps(b, f)                                                  \
-    if (f) {                                                         \
-        dump_memory(base16_decode(f), &bs, 16, 2);                   \
-        _logger->writeln("\e[35m>%s %s\n%s\e[0m", b, f, bs.c_str()); \
+#define dumps(b, f)                                       \
+    if (f) {                                              \
+        dump_memory(base16_decode(f), &bs, 16, 2);        \
+        _logger->colorln(">%s %s\n%s", b, f, bs.c_str()); \
     }
 
         if (option.verbose) {
@@ -1348,8 +1348,8 @@ void test_github_example() {
 
         cose.close(handle);
 
-        _test_case.test(ret, __FUNCTION__, "%s %s %s%s%s%s", vector->file, properties.c_str(), reason.size() ? "\e[1;33m[ debug : " : "", reason.c_str(),
-                        reason.size() ? "]\e[0m " : " ", debug_stream.c_str());
+        _test_case.test(ret, __FUNCTION__, "%s %s %s%s%s%s", vector->file, properties.c_str(), reason.size() ? "[ debug : " : "", reason.c_str(),
+                        reason.size() ? "] " : " ", debug_stream.c_str());
     }
 }
 
@@ -1741,6 +1741,7 @@ int main(int argc, char** argv) {
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
+    _logger->setcolor(bold, cyan);
 
     _logger->writeln("option.verbose %i", option.verbose ? 1 : 0);
     _logger->writeln("option.dump_keys %i", option.dump_keys ? 1 : 0);
