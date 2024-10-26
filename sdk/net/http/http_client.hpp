@@ -7,13 +7,6 @@
  * Revision History
  * Date         Name                Description
  *
- * spec list
- *      qop=auth
- *      algorithm=MD5|MD5-sess|SHA-256|SHA-256-sess
- *      userhash
- * todo list
- *      qop=auth-int
- *      nextnonce
  */
 
 #ifndef __HOTPLACE_SDK_NET_HTTP_CLIENT__

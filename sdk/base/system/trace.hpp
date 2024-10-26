@@ -28,8 +28,7 @@ enum trace_option_t {
 };
 
 enum trace_category_t {
-    category_debug_linternal = 0,
-    category_ossl_tlsstate = 32,       // SSL_ST_CONNECT/SSL_ST_ACCEPT/SSL_CB_READ/SSL_CB_WRITE/SSL_CB_HANDSHAKE_START/SSL_CB_HANDSHAKE_DONE/...
+    category_debug_internal = 0,
     category_crypto = 63,              // see category_crypto_event_t
     category_net_session = 64,         // see category_net_session_event_t
     category_http_server = 65,         // see category_http_server_event_t
@@ -40,8 +39,9 @@ enum trace_category_t {
 };
 
 enum category_crypto_event_t {
-    crypto_event_info_openssl = 1,
-    crypto_event_error_openssl_load = 2,  // ex. EVP_CIPHER_fetch(EVP_get_cipherbyname), EVP_MD_fetch(EVP_get_digestbyname)
+    crypto_event_info_openssl = 1,       // OpenSSL_version_num
+    crypto_event_openssl_nosupport = 2,  // ex. EVP_CIPHER_fetch(EVP_get_cipherbyname), EVP_MD_fetch(EVP_get_digestbyname)
+    crypto_event_state_ossl_tls = 3,     // SSL_ST_CONNECT/SSL_ST_ACCEPT/SSL_CB_READ/SSL_CB_WRITE/SSL_CB_HANDSHAKE_START/SSL_CB_HANDSHAKE_DONE/...
 };
 
 enum category_net_session_event_t {
@@ -85,7 +85,7 @@ void reset_trace_exception();
  *              // do something
  *              basic_stream bs;
  *              bs = "blah blah";
- *              trace_debug_event(category_debug_linternal, 0, &bs);
+ *              trace_debug_event(category_debug_internal, 0, &bs);
  *          }
  *
  *          // and then activate ...

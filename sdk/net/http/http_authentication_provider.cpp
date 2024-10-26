@@ -12,6 +12,7 @@
 #include <sdk/io.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
 #include <sdk/net/http/http_request.hpp>
+#include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/http/http_response.hpp>
 #include <sdk/net/server/network_session.hpp>
 

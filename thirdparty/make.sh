@@ -16,13 +16,11 @@ set -e
 
 source function
 source dependency
+
 if [ -z ${HOTPLACE_HOME} ]; then
     HOTPLACE_HOME=`cd ..; pwd`
     export HOTPLACE_HOME
 fi
-
-# download https://www.openssl.org/source/openssl-3.1.4.tar.gz
-# unzip openssl-3.1.4.tar.gz
 
 for item in ${dependency[@]}; do
     member=item[name]

@@ -39,6 +39,16 @@ typedef struct _OPTION {
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 t_shared_instance<http_server> _http_server;
 
+void debug_handler(trace_category_t category, uint32 event, stream_t *s) {
+    std::string ct;
+    std::string ev;
+    basic_stream bs;
+    auto advisor = trace_advisor::get_instance();
+    advisor->get_names(category, event, ct, ev);
+    bs.printf("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned int)s->size(), s->data());
+    _logger->writeln(bs);
+};
+
 void api_response_html_handler(network_session *, http_request *request, http_response *response, http_router *router) {
     response->compose(200, "text/html", "<html><body>page - ok<body></html>");
 }
@@ -62,10 +72,8 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
 
     switch (type) {
         case mux_connect:
-            _logger->colorln("connect %i", session_socket->event_socket);
             break;
         case mux_read:
-            _logger->colorln("read %i", session_socket->event_socket);
             if (option.verbose) {
                 _logger->writeln("%.*s", (unsigned)bufsize, buf);
             }
@@ -124,7 +132,6 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
 
             break;
         case mux_disconnect:
-            _logger->colorln("disconnect %i", session_socket->event_socket);
             break;
     }
     return ret;
@@ -155,7 +162,13 @@ return_t simple_http_server(void *) {
             .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
             .set(netserver_config_t::serverconf_concurrent_network, 4)
             .set(netserver_config_t::serverconf_concurrent_consume, 4);
+        if (option.verbose) {
+            builder.settrace(debug_handler);
+            builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
+        }
         _http_server.make_share(builder.build());
+
+        _http_server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
 
         std::function<void(network_session *, http_request *, http_response *, http_router *)> default_handler =
             [&](network_session *session, http_request *request, http_response *response, http_router *router) -> void {
@@ -173,7 +186,10 @@ return_t simple_http_server(void *) {
         _http_server->get_http_router()
             .get_html_documents()
             .add_documents_root("/", ".")
+            .add_content_type(".css", "text/css")
             .add_content_type(".html", "text/html")
+            .add_content_type(".ico", "image/image/vnd.microsoft.icon")
+            .add_content_type(".jpeg", "image/jpeg")
             .add_content_type(".json", "text/json")
             .add_content_type(".js", "application/javascript")
             .set_default_document("index.html");
@@ -252,8 +268,7 @@ int main(int argc, char **argv) {
     _logger->setcolor(bold, cyan);
 
     if (option.verbose) {
-        auto lambda = [&](trace_category_t, uint32, stream_t *s) -> void { _logger->writeln(s); };
-        set_trace_debug(lambda);
+        set_trace_debug(debug_handler);
         set_trace_option(trace_bt | trace_except | trace_debug);
     }
 

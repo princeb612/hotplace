@@ -90,7 +90,6 @@ flowchart LR
 
 | feature | API                   | minimum version |
 | --      | --                    | --              |
-| QUIC    | SSL_new_stream        | openssl 3.2~    |
 | KDF     | OSSL_set_max_threads  | openssl 3.2~    |
 
 ## TODO

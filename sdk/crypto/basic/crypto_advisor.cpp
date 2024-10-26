@@ -119,7 +119,7 @@ return_t crypto_advisor::build() {
 #endif
         if (nullptr == evp_cipher) {
             // __trace(errorcode_t::debug, "%s", nameof_alg(item));
-            traceevent(category_crypto, crypto_event_error_openssl_load, "%s", nameof_alg(item));
+            traceevent(category_crypto, crypto_event_openssl_nosupport, "%s", nameof_alg(item));
         }
 
         _cipher_fetch_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(typeof_alg(item), typeof_mode(item)), item));
@@ -156,7 +156,7 @@ return_t crypto_advisor::build() {
 #endif
         if (nullptr == evp_md) {
             // __trace(errorcode_t::debug, "%s", nameof_alg(item));
-            traceevent(category_crypto, crypto_event_error_openssl_load, "%s", nameof_alg(item));
+            traceevent(category_crypto, crypto_event_openssl_nosupport, "%s", nameof_alg(item));
         }
         _md_fetch_map.insert(std::make_pair(typeof_alg(item), item));
         _md_byname_map.insert(std::make_pair(nameof_alg(item), item));

@@ -310,7 +310,13 @@ int main(int argc, char** argv) {
     _logger.make_share(builder.build());
 
     if (option.verbose) {
-        auto lambda = [&](trace_category_t, uint32, stream_t* s) -> void { _logger->writeln(s); };
+        auto lambda = [&](trace_category_t category, uint32 event, stream_t* s) -> void {
+            std::string ct;
+            std::string ev;
+            auto advisor = trace_advisor::get_instance();
+            advisor->get_names(category, event, ct, ev);
+            _logger->writeln("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned)s->size(), s->data());
+        };
         set_trace_debug(lambda);
         set_trace_option(trace_bt | trace_except | trace_debug);
     }

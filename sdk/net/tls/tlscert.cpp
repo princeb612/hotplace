@@ -90,7 +90,7 @@ static void set_info_callback_routine(const SSL* ssl, int where, int ret) {
             default:
                 break;
         }
-        trace_debug_event(category_ossl_tlsstate, where, &bs);
+        trace_debug_event(category_crypto, crypto_event_state_ossl_tls, &bs);
     }
     __finally2 {
         // do nothing

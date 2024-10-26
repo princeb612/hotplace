@@ -59,18 +59,14 @@ void trace_advisor::load() {
             {
                 events e;
                 e.cname = "internal";
-                _resource_map.insert({category_debug_linternal, e});
+                _resource_map.insert({category_debug_internal, e});
             }
             {
                 events e;
                 e.cname = "openssl";
-                _resource_map.insert({category_ossl_tlsstate, e});
-            }
-            {
-                events e;
-                e.cname = "crypto";
                 e.event_map.insert({crypto_event_info_openssl, "info"});
-                e.event_map.insert({crypto_event_error_openssl_load, "load"});
+                e.event_map.insert({crypto_event_openssl_nosupport, "no support"});
+                e.event_map.insert({crypto_event_state_ossl_tls, "state"});
                 _resource_map.insert({category_crypto, e});
             }
             {

@@ -42,7 +42,6 @@ typedef struct _OPTION {
 
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 t_shared_instance<http_server> _http_server;
-critical_section print_lock;
 
 void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
     std::string ct;
@@ -314,10 +313,10 @@ int main(int argc, char** argv) {
         builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("server.log");
     }
     _logger.make_share(builder.build());
+    _logger->setcolor(bold, cyan);
 
     if (option.verbose) {
-        auto lambda = [&](trace_category_t, uint32, stream_t* s) -> void { _logger->writeln(s); };
-        set_trace_debug(lambda);
+        set_trace_debug(debug_handler);
         set_trace_option(trace_bt | trace_except | trace_debug);
     }
 

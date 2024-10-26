@@ -34,6 +34,18 @@ typedef struct _OPTION {
 } OPTION;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
+void test_rfc_9000_a1() {
+    // A.1.  Sample Variable-Length Integer Decoding
+}
+
+void test_rfc_9000_a2() {
+    // A.2.  Sample Packet Number Encoding Algorithm
+}
+
+void test_rfc_9000_a3() {
+    // A.3.  Sample Packet Number Decoding Algorithm
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -52,6 +64,9 @@ int main(int argc, char** argv) {
     openssl_startup();
 
     // studying ...
+    test_rfc_9000_a1();
+    test_rfc_9000_a2();
+    test_rfc_9000_a3();
 
     openssl_cleanup();
 

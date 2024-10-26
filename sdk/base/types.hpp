@@ -104,6 +104,15 @@ enum encoding_t {
         var = (var < maximum) ? var : maximum; \
     }
 
+#if __GNUC__ >= 5
+#define CONSTEXPR constexpr
+#else
+// error: redeclaration in gcc [4.8.5, ? ]
+// extern const char var[]
+// constexpr char var[]
+#define CONSTEXPR const
+#endif
+
 }  // namespace hotplace
 
 #endif

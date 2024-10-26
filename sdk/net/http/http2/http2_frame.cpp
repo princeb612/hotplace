@@ -24,15 +24,6 @@ namespace hotplace {
 using namespace io;
 namespace net {
 
-#if __GNUC__ >= 5
-#define CONSTEXPR constexpr
-#else
-// error: redeclaration in gcc [4.8.5, ? ]
-// extern const char var[]
-// constexpr char var[]
-#define CONSTEXPR const
-#endif
-
 // RFC 7540 4.  HTTP Frames
 CONSTEXPR char constexpr_frame_length[] = "length";
 CONSTEXPR char constexpr_frame_type[] = "type";
