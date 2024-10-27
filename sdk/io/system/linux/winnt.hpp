@@ -17,6 +17,8 @@
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 
+using namespace hotplace;
+
 #pragma pack(push, 1)
 
 #define UNALIGNED
