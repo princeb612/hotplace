@@ -19,8 +19,7 @@
  */
 
 #include <queue>
-#include <sdk/base/unittest/traceable.hpp>
-#include <sdk/io.hpp>
+#include <sdk/base/system/signalwait_threads.hpp>
 #include <sdk/net/basic/tcp_server_socket.hpp>
 #include <sdk/net/basic/udp_server_socket.hpp>
 #include <sdk/net/server/network_protocol.hpp>
@@ -30,7 +29,6 @@
 #include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 #define NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE 0x20151127

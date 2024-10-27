@@ -18,17 +18,9 @@
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/crypto/cose/cbor_web_key.hpp>
-#include <sdk/io/basic/json.hpp>
-#include <sdk/io/cbor/cbor_array.hpp>
-#include <sdk/io/cbor/cbor_data.hpp>
-#include <sdk/io/cbor/cbor_map.hpp>
-#include <sdk/io/cbor/cbor_object.hpp>
-#include <sdk/io/cbor/cbor_publisher.hpp>
-#include <sdk/io/cbor/cbor_reader.hpp>
 #include <sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 cbor_web_key::cbor_web_key() : crypto_keychain() {

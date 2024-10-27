@@ -8,13 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
-#include <sdk/io.hpp>
+#include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/net/http/auth/custom_credentials.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 custom_credentials::custom_credentials() {}

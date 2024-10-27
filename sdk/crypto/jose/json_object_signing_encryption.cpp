@@ -14,7 +14,6 @@
  * Date         Name                Description
  */
 
-#include <iostream>
 #include <sdk/base/string/string.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
@@ -23,12 +22,8 @@
 #include <sdk/crypto/jose/json_object_signing.hpp>
 #include <sdk/crypto/jose/json_object_signing_encryption.hpp>
 #include <sdk/crypto/jose/json_web_key.hpp>
-#include <sdk/io/basic/json.hpp>
-#include <sdk/io/basic/zlib.hpp>
-#include <sdk/io/string/string.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 json_object_signing_encryption::json_object_signing_encryption() {

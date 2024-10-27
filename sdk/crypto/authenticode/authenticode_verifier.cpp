@@ -17,12 +17,10 @@
 #include <sdk/crypto/authenticode/authenticode_verifier.hpp>
 #include <sdk/crypto/authenticode/sdk.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/io/string/string.hpp>
-#include <sdk/io/system/sdk.hpp>
+#include <sdk/io/string/string.hpp>  // split_url
 #include <set>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 #define AUTHENTICODE_CONTEXT_SIGNATURE 0x20170710

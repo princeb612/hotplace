@@ -12,6 +12,8 @@
  *      priority
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/io/system/types.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_serverpush.hpp>

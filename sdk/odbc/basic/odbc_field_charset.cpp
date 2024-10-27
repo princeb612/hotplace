@@ -13,7 +13,6 @@
 #include <sdk/odbc/basic/odbc_field.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace odbc {
 
 #if defined _MBCS || defined MBCS

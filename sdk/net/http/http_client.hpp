@@ -12,18 +12,11 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_CLIENT__
 #define __HOTPLACE_SDK_NET_HTTP_CLIENT__
 
-#include <map>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/io.hpp>
+#include <sdk/io/string/string.hpp>
 #include <sdk/net/http/http_request.hpp>  // http_request
 #include <sdk/net/http/types.hpp>
-#include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 /**

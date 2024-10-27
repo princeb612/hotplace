@@ -8,12 +8,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/io.hpp>
 #include <sdk/net/basic/ipaddr_acl.hpp>
-#include <sdk/net/types.hpp>  // ws2tcpip.h first
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 ipaddr_acl::ipaddr_acl() : _mode(ipaddr_acl_t::blacklist) {

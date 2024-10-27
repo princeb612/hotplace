@@ -21,6 +21,7 @@
 #include <sdk/io/types.hpp>
 
 namespace hotplace {
+using namespace io;
 namespace crypto {
 
 enum crypt_poweredby_t {

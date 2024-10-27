@@ -11,10 +11,8 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
-#include <sdk/io/system/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 openssl_prng::openssl_prng() {

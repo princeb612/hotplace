@@ -8,13 +8,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
-#include <sdk/io.hpp>
 #include <sdk/net/http/auth/bearer_credentials.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 bearer_credentials::bearer_credentials() {}

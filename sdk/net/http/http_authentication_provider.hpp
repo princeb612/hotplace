@@ -12,16 +12,9 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_AUTHENTICATION_PROVIDER__
 #define __HOTPLACE_SDK_NET_HTTP_AUTHENTICATION_PROVIDER__
 
-#include <map>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/io.hpp>
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 /**

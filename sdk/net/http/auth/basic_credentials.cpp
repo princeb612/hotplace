@@ -10,14 +10,11 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
-#include <sdk/io.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/net/http/auth/basic_authentication_provider.hpp>
 #include <sdk/net/http/auth/basic_credentials.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 basic_credentials::basic_credentials() {}

@@ -8,11 +8,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/io/system/socket.hpp>
 #include <sdk/net/basic/udp_server_socket.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 udp_server_socket::udp_server_socket() : server_socket() {}

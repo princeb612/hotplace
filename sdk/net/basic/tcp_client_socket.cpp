@@ -8,11 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/io/system/socket.hpp>
+#include <sdk/base/string/string.hpp>  // split_begin, split_count, split_get, split_end
 #include <sdk/net/basic/tcp_client_socket.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 tcp_client_socket::tcp_client_socket() : client_socket() {

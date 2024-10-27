@@ -10,7 +10,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/io.hpp>
+#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/io/basic/zlib.hpp>
+#include <sdk/io/string/string.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http_request.hpp>
@@ -19,7 +21,6 @@
 #include <sdk/net/server/network_session.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 http_response::http_response() : traceable(), _request(nullptr), _statuscode(0), _hpsess(nullptr), _version(1), _stream_id(0) { _shared.make_share(this); }

@@ -8,17 +8,15 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/binary.hpp>
+#include <sdk/base/basic/valist.hpp>
+#include <sdk/base/pattern/aho_corasick.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/trace.hpp>
-#include <sdk/crypto.hpp>
-#include <sdk/io.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/net/tls/sdk.hpp>
 #include <sdk/net/tls/tlscert.hpp>
-#include <sdk/nostd.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 static void set_info_callback_routine(const SSL* ssl, int where, int ret) {

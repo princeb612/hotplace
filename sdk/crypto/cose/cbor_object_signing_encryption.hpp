@@ -20,7 +20,6 @@
 #include <sdk/crypto/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 enum cose_mode_t {

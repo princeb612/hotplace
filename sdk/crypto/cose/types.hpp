@@ -12,10 +12,6 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_TYPES__
 #define __HOTPLACE_SDK_CRYPTO_COSE_TYPES__
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/types.hpp>
 #include <sdk/io/cbor/cbor.hpp>
@@ -27,7 +23,6 @@
 #include <sdk/io/cbor/cbor_reader.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 typedef struct _cose_context_t cose_context_t;

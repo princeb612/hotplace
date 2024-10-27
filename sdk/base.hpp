@@ -38,15 +38,26 @@
 #include <sdk/base/basic/valist.hpp>
 #include <sdk/base/basic/variant.hpp>
 
+/* graph */
+#include <sdk/base/graph/graph.hpp>
+
 /* nostd */
 #include <sdk/base/nostd/exception.hpp>
-#include <sdk/base/nostd/graph.hpp>
 #include <sdk/base/nostd/list.hpp>
-#include <sdk/base/nostd/pattern.hpp>
 #include <sdk/base/nostd/pq.hpp>
 #include <sdk/base/nostd/template.hpp>
 #include <sdk/base/nostd/tree.hpp>
 #include <sdk/base/nostd/vector.hpp>
+
+/* pattern */
+#include <sdk/base/pattern/aho_corasick.hpp>
+#include <sdk/base/pattern/aho_corasick_wildcard.hpp>
+#include <sdk/base/pattern/kmp.hpp>
+#include <sdk/base/pattern/pattern.hpp>
+#include <sdk/base/pattern/suffixtree.hpp>
+#include <sdk/base/pattern/trie.hpp>
+#include <sdk/base/pattern/ukkonen.hpp>
+#include <sdk/base/pattern/wildcard.hpp>
 
 /* stream */
 #include <sdk/base/stream/basic_stream.hpp>

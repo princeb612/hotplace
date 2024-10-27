@@ -8,11 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/net/tls/tls_server_socket.hpp>
 
 namespace hotplace {
-using namespace crypto;
 namespace net {
 
 tls_server_socket::tls_server_socket(transport_layer_security* tls) : tcp_server_socket(), _tls(tls) {

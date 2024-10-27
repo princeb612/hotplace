@@ -19,7 +19,6 @@
 #include <sdk/crypto/cose/cose_composer.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 cose_recipient::cose_recipient()

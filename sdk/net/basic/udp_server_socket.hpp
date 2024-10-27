@@ -12,7 +12,6 @@
 #define __HOTPLACE_SDK_NET_BASIC_UDPSERVERSOCKET__
 
 #include <sdk/net/basic/server_socket.hpp>
-#include <sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {

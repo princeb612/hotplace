@@ -8,14 +8,15 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
-#include <sdk/io.hpp>
+#include <sdk/base/basic/keyvalue.hpp>
+#include <sdk/base/string/string.hpp>
 #include <sdk/net/http/auth/bearer_authentication_provider.hpp>
+#include <sdk/net/http/http_authentication_resolver.hpp>
+#include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_resource.hpp>
+#include <sdk/net/http/http_response.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 bearer_authentication_provider::bearer_authentication_provider(const std::string& realm) : http_authentication_provider(realm) {}

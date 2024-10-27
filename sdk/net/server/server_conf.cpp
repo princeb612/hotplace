@@ -8,12 +8,9 @@
  * Date         Name                Description
  */
 
-#include <queue>
-#include <sdk/io.hpp>
 #include <sdk/net/server/network_server.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 server_conf::server_conf() : t_key_value<netserver_config_t, uint16>() {

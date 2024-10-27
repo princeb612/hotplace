@@ -11,10 +11,8 @@
 
 #include <sdk/crypto/basic/hmac_otp.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
-#include <sdk/io/system/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 #define HOTP_CONTEXT_SIGNATURE 0x20170701

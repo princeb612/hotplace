@@ -10,10 +10,8 @@
 
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/io/string/string.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 static uint32 ossl_cooltime = 0;

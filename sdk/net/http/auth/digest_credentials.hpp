@@ -13,18 +13,13 @@
 #define __HOTPLACE_SDK_NET_HTTP_DIGEST_CREDENTIALS__
 
 #include <map>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/io.hpp>
+#include <sdk/base/basic/keyvalue.hpp>
+#include <sdk/net/types.hpp>
 #include <string>
 
 namespace hotplace {
 namespace net {
 
-class http_authentication_provider;
-using namespace io;
 class digest_credentials {
    public:
     digest_credentials();

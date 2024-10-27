@@ -17,14 +17,13 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
+#include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/io/system/socket.hpp>
 #include <sdk/net/tls/sdk.hpp>
 #include <sdk/net/tls/tls.hpp>
+#include <sdk/net/tls/tlscert.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 #define TLS_CONTEXT_SIGNATURE 0x20120119

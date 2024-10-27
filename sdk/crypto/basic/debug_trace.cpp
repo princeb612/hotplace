@@ -13,11 +13,8 @@
 #include <sdk/base/system/trace.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/io/stream/string.hpp>
-#include <sdk/io/system/sdk.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 return_t get_opensslerror(int rc) {

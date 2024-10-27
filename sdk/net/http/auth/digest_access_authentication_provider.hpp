@@ -20,18 +20,12 @@
 #define __HOTPLACE_SDK_NET_HTTP_DIGEST_ACCESS_AUTHENTICATION_PROVIDER__
 
 #include <map>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
+#include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/http/http_authentication_resolver.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_response.hpp>
-#include <sdk/net/server/network_session.hpp>
+#include <sdk/net/types.hpp>
+#include <string>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 /**

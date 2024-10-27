@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HEADER_COMPRESSION__
 #define __HOTPLACE_SDK_NET_HTTP_HEADER_COMPRESSION__
 
+#include <queue>
 #include <sdk/base/basic/huffman_coding.hpp>  // huffman_coding
 #include <sdk/base/unittest/traceable.hpp>    // traceable
 #include <sdk/net/http/types.hpp>

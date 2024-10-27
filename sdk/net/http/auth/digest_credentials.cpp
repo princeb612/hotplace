@@ -10,15 +10,11 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
-#include <sdk/io.hpp>
 #include <sdk/net/http/auth/digest_access_authentication_provider.hpp>
 #include <sdk/net/http/auth/digest_credentials.hpp>
 #include <sdk/net/http/auth/rfc2617_digest.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 digest_credentials::digest_credentials() {}

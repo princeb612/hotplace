@@ -20,10 +20,8 @@
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/io/system/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 #define CRYPT_MAX_KEYSIZE 512  // 2^9 << 3 = 4096

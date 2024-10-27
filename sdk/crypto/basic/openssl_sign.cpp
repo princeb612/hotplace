@@ -8,7 +8,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
@@ -16,7 +15,6 @@
 #include <sdk/crypto/basic/openssl_sign.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 openssl_sign::openssl_sign() {

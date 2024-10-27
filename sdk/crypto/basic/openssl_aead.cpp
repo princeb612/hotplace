@@ -16,10 +16,8 @@
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/io/system/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 openssl_aead::openssl_aead() {}

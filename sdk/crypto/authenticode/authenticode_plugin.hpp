@@ -18,11 +18,11 @@
 
 #include <list>
 #include <sdk/base/system/shared_instance.hpp>
+#include <sdk/crypto/types.hpp>
 #include <sdk/io/stream/file_stream.hpp>
 #include <string>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 enum authenticode_engine_id_t {

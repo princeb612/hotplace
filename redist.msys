@@ -1,4 +1,4 @@
-# redist
+# redist MINGW runtime
 
 # @brief    copy
 # @desc     copy_dir_files targetdir sourcedir [+ sourcefiles]

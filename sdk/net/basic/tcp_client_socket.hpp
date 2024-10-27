@@ -11,9 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_TCPCLIENTSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_TCPCLIENTSOCKET__
 
-#include <sdk/io/system/socket.hpp>
 #include <sdk/net/basic/client_socket.hpp>
-#include <sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {

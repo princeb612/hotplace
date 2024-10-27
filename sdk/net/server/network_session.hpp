@@ -12,14 +12,12 @@
 #ifndef __HOTPLACE_SDK_NET_SERVER_NETWORKSESSION__
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSESSION__
 
-#include <sdk/io.hpp>
+#include <sdk/io/basic/mlfq.hpp>
 #include <sdk/net/http/http2/http2_session.hpp>  // http2_session
 #include <sdk/net/server/network_stream.hpp>     // network_stream
-#include <sdk/net/tls/tls.hpp>
 #include <sdk/net/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 struct network_session_buffer_t {
@@ -206,8 +204,6 @@ class network_session : public traceable {
     t_shared_reference<network_session> _shared;
     critical_section _lock;
 };
-
-class server_conf;
 
 /**
  * @brief network_session container

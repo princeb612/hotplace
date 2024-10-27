@@ -18,6 +18,7 @@
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
+#include <set>
 #include <string>
 
 namespace hotplace {

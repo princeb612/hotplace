@@ -19,15 +19,8 @@
 #include <sdk/crypto/cose/cbor_object_signing.hpp>
 #include <sdk/crypto/cose/cbor_object_signing_encryption.hpp>
 #include <sdk/crypto/cose/cose_composer.hpp>
-#include <sdk/io/cbor/cbor_array.hpp>
-#include <sdk/io/cbor/cbor_data.hpp>
-#include <sdk/io/cbor/cbor_encode.hpp>
-#include <sdk/io/cbor/cbor_map.hpp>
-#include <sdk/io/cbor/cbor_publisher.hpp>
-#include <sdk/io/cbor/cbor_reader.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 cose_composer::cose_composer() : _cbor_tag(cbor_tag_t::cbor_tag_unknown) { get_layer().set_composer(this); }

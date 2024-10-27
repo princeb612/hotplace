@@ -11,19 +11,10 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_OAUTH2__
 #define __HOTPLACE_SDK_NET_HTTP_OAUTH2__
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/io.hpp>
-#include <sdk/net/http/auth/oauth2_credentials.hpp>
-#include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_response.hpp>
-#include <sdk/net/server/network_session.hpp>
+#include <sdk/net/http/types.hpp>
+#include <sdk/net/server/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 /**

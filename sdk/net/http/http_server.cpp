@@ -8,13 +8,13 @@
  * Date         Name                Description
  */
 
-#include <sdk/io.hpp>
+#include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_server.hpp>
+#include <sdk/net/server/network_session.hpp>
 #include <sdk/net/tls/dtls_server_socket.hpp>
 #include <sdk/net/tls/tls_server_socket.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 http_server::http_server()
@@ -280,6 +280,8 @@ http2_protocol& http_server::get_http2_protocol() { return _protocol2; }
 http_router& http_server::get_http_router() { return _router; }
 
 ipaddr_acl& http_server::get_ipaddr_acl() { return _acl; }
+
+tlscert* http_server::get_tlscert() { return _tlscert; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -12,10 +12,8 @@
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/io/string/string.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {

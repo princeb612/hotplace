@@ -8,8 +8,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
-#include <sdk/io.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_resource.hpp>
@@ -17,8 +15,6 @@
 #include <sdk/net/server/network_session.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 http_authentication_provider::http_authentication_provider(const std::string& realm) : _realm(realm) { _shared.make_share(this); }

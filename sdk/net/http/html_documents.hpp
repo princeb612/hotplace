@@ -13,15 +13,9 @@
 #define __HOTPLACE_SDK_NET_HTTP_HTML_DOCUMENTS__
 
 #include <map>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/io.hpp>
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 class html_documents {

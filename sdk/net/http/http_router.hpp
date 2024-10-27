@@ -13,12 +13,7 @@
 #define __HOTPLACE_SDK_NET_HTTP_ROUTER__
 
 #include <map>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/base/unittest/traceable.hpp>  // traceable
-#include <sdk/io.hpp>
+#include <sdk/base/unittest/traceable.hpp>          // traceable
 #include <sdk/net/http/auth/oauth2.hpp>             // oauth2_provider
 #include <sdk/net/http/html_documents.hpp>          // html_documents
 #include <sdk/net/http/http2/http2_serverpush.hpp>  // http2_serverpush
@@ -27,7 +22,6 @@
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 typedef void (*http_request_handler_t)(network_session*, http_request*, http_response*, http_router*);

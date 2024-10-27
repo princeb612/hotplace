@@ -10,14 +10,13 @@
  * Date         Name                Description
  */
 
-#include <sdk/io.hpp>
+#include <sdk/io/string/string.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 constexpr char constexpr_content_type[] = "Content-Type";

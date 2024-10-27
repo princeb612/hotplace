@@ -19,7 +19,6 @@
 #include <sdk/crypto/cose/cose_composer.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 #define TYPE_STATIC_KEY (TYPE_USER)

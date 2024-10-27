@@ -33,6 +33,7 @@
 #endif
 
 namespace hotplace {
+using namespace io;
 namespace odbc {
 
 enum sql_query_mode_t { sync_query = 0, async_query };

@@ -12,21 +12,9 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_BEARER_AUTHENTICATION_PROVIDER__
 #define __HOTPLACE_SDK_NET_HTTP_BEARER_AUTHENTICATION_PROVIDER__
 
-#include <map>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/io.hpp>
-#include <sdk/net/http/auth/bearer_credentials.hpp>
 #include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/http/http_authentication_resolver.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_response.hpp>
-#include <sdk/net/server/network_session.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 class bearer_authentication_provider : public http_authentication_provider {

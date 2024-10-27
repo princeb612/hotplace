@@ -17,6 +17,7 @@
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/basic/variant.hpp>
 #include <sdk/base/binary.hpp>
+#include <sdk/base/pattern/trie.hpp>
 #include <sdk/base/system/endian.hpp>
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/io/asn.1/types.hpp>

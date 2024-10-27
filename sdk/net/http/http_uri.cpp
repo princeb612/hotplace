@@ -10,11 +10,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/io.hpp>
+#include <sdk/io/string/string.hpp>
 #include <sdk/net/http/http_uri.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 http_uri::http_uri() { _shared.make_share(this); }

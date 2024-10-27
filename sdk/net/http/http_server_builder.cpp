@@ -8,11 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/io.hpp>
 #include <sdk/net/http/http_server_builder.hpp>
+#include <sdk/net/tls/tlscert.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 http_server_builder::http_server_builder() : traceable(), _handler(nullptr), _user_context(nullptr) {
@@ -154,8 +153,8 @@ http_server* http_server_builder::build() {
             }
 
             if (enable_h2) {
-                if (server->_tlscert) {
-                    server->_tlscert->enable_alpn_h2(true);
+                if (server->get_tlscert()) {
+                    server->get_tlscert()->enable_alpn_h2(true);
                 }
             }
         }

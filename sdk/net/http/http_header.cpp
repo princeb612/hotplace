@@ -10,11 +10,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/io.hpp>
+#include <sdk/io/string/string.hpp>
 #include <sdk/net/http/http_header.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 http_header::http_header() : _version(1) {

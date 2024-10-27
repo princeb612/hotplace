@@ -10,13 +10,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/io.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
-#include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 http_resource http_resource::_instance;

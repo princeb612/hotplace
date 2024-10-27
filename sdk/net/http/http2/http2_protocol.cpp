@@ -10,14 +10,12 @@
 
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/critical_section.hpp>
-#include <sdk/io/basic/zlib.hpp>
-#include <sdk/io/string/string.hpp>
+#include <sdk/base/system/types.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 http2_protocol::http2_protocol() : network_protocol() {}

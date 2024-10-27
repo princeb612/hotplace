@@ -12,16 +12,9 @@
 #ifndef __HOTPLACE_SDK_NET_QUIC__
 #define __HOTPLACE_SDK_NET_QUIC__
 
-#include <map>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/io.hpp>
 #include <sdk/net/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 // RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport

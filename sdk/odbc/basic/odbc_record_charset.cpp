@@ -8,12 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/io/stream/string.hpp>
 #include <sdk/odbc/basic/odbc_field.hpp>
 #include <sdk/odbc/basic/odbc_record.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace odbc {
 
 odbc_field* odbc_record::get_field(LPTSTR tszName) {

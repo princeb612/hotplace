@@ -9,13 +9,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
-#include <sdk/io.hpp>
+#include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/net/http/auth/rfc2617_digest.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 rfc2617_digest::rfc2617_digest() {}

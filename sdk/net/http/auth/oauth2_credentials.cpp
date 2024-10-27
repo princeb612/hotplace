@@ -9,13 +9,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
-#include <sdk/io.hpp>
-#include <sdk/net/http/auth/oauth2.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
+#include <sdk/net/http/auth/oauth2_credentials.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 access_token_t::access_token_t(const std::string& client_id, const std::string& access_token, const std::string& refresh_token, uint16 expire)

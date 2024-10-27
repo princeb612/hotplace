@@ -11,10 +11,8 @@
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/io/string/string.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 void openssl_startup_implementation() {

@@ -10,15 +10,18 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
-#include <sdk/io.hpp>
+#include <sdk/base/basic/valist.hpp>
+#include <sdk/base/string/string.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/net/http/auth/digest_access_authentication_provider.hpp>
 #include <sdk/net/http/auth/rfc2617_digest.hpp>
+#include <sdk/net/http/http_authentication_resolver.hpp>
+#include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_resource.hpp>
+#include <sdk/net/http/http_response.hpp>
+#include <sdk/net/server/network_session.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 digest_access_authentication_provider::digest_access_authentication_provider(const std::string& realm)

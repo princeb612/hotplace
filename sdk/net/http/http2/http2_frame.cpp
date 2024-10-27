@@ -8,11 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/system/critical_section.hpp>
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/io/basic/zlib.hpp>
-#include <sdk/io/string/string.hpp>
-#include <sdk/io/system/types.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
@@ -21,7 +17,6 @@
 #include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 // RFC 7540 4.  HTTP Frames

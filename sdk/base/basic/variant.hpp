@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include <sdk/base/error.hpp>
+#include <sdk/base/inline.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/base/types.hpp>

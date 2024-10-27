@@ -17,21 +17,19 @@
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 
-using namespace hotplace;
-
 #pragma pack(push, 1)
 
 #define UNALIGNED
 
 #if defined BIG_ENDIAN
-#define IMAGE_DOS_SIGNATURE 0x5A4D  // MZ
-#define IMAGE_OS2_SIGNATURE 0x454E  // NE
+#define IMAGE_DOS_SIGNATURE 0x5A4D     // MZ
+#define IMAGE_OS2_SIGNATURE 0x454E     // NE
 #define IMAGE_OS2_SIGNATURE_LE 0x454C  // LE
-#define IMAGE_VXD_SIGNATURE 0x454C  // LE
+#define IMAGE_VXD_SIGNATURE 0x454C     // LE
 #define IMAGE_NT_SIGNATURE 0x00004550  // PE00
 #elif defined LITTLE_ENDIAN
-#define IMAGE_DOS_SIGNATURE 0x4D5A  // MZ
-#define IMAGE_OS2_SIGNATURE 0x4E45  // NE
+#define IMAGE_DOS_SIGNATURE 0x4D5A     // MZ
+#define IMAGE_OS2_SIGNATURE 0x4E45     // NE
 #define IMAGE_OS2_SIGNATURE_LE 0x4C45  // LE
 #define IMAGE_NT_SIGNATURE 0x50450000  // PE00
 #endif
@@ -1728,9 +1726,5 @@ typedef enum IMPORT_OBJECT_NAME_TYPE {
 } IMPORT_OBJECT_NAME_TYPE;
 
 #pragma pack(pop)
-
-namespace hotplace {
-namespace io {}
-}  // namespace hotplace
 
 #endif

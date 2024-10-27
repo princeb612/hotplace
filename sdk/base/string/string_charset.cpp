@@ -11,7 +11,7 @@
 #include <string.h>
 
 #include <list>
-#include <sdk/base/nostd/pattern.hpp>
+#include <sdk/base/pattern/kmp.hpp>
 #include <sdk/base/string/string.hpp>
 #include <string>
 

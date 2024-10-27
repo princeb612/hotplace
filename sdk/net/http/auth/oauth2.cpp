@@ -9,13 +9,16 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/string/string.hpp>
+#include <sdk/io/basic/json.hpp>
 #include <sdk/net/http/auth/oauth2.hpp>
+#include <sdk/net/http/http_request.hpp>
+#include <sdk/net/http/http_response.hpp>
 #include <sdk/net/http/http_router.hpp>
+#include <sdk/net/server/network_session.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 oauth2_grant_provider::oauth2_grant_provider() { _instance.make_share(this); }

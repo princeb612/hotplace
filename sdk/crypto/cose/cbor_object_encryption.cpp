@@ -20,13 +20,6 @@
 #include <sdk/crypto/cose/cbor_object_encryption.hpp>
 #include <sdk/crypto/cose/cbor_object_signing_encryption.hpp>
 #include <sdk/crypto/cose/cose_composer.hpp>
-#include <sdk/io/cbor/cbor_array.hpp>
-#include <sdk/io/cbor/cbor_data.hpp>
-#include <sdk/io/cbor/cbor_encode.hpp>
-#include <sdk/io/cbor/cbor_map.hpp>
-#include <sdk/io/cbor/cbor_publisher.hpp>
-#include <sdk/io/cbor/cbor_reader.hpp>
-#include <sdk/io/types.hpp>
 
 namespace hotplace {
 namespace crypto {

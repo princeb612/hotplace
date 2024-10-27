@@ -15,10 +15,8 @@
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/cbor/cbor_publisher.hpp>
-#include <sdk/io/string/string.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* stream, uint8 hex_part, uint8 indent) {
@@ -69,9 +67,8 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
             stream->printf("%s\n", msg);
         }
 
-        /* JWK-style base64url encoding */
+        /* base64url encoding */
         std::string b64url_encoded = base64_encode(key, base64_encoding_t::base64url_encoding);
-        /* COSE-style */
         cbor_data* root = new cbor_data(key);
 
         /* openssl evp_pkey_print style */
@@ -102,7 +99,7 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
         }
         stream->printf("\n");
 
-        /* JWK-style base64url encoding */
+        /* base64url encoding */
         stream->fill(indent, ' ');
         stream->printf("\e[35m");
         stream->printf("%s", b64url_encoded.c_str());

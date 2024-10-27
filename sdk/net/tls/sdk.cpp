@@ -8,12 +8,12 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/io/system/socket.hpp>
+#include <sdk/net/tls/sdk.hpp>
 
 namespace hotplace {
-using namespace crypto;
-using namespace io;
 namespace net {
 
 return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, socklen_t addrlen) {

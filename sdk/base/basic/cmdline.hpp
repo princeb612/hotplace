@@ -18,6 +18,7 @@
 #include <map>
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
+#include <sdk/base/inline.hpp>
 #include <sdk/base/stream.hpp>
 #include <sdk/base/string/string.hpp>
 #include <sdk/base/syntax.hpp>

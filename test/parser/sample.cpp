@@ -13,7 +13,6 @@
 #include <stdio.h>
 
 #include <iostream>
-#include <sdk/nostd.hpp>
 #include <sdk/sdk.hpp>
 
 using namespace hotplace;

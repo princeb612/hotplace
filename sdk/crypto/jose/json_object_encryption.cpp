@@ -10,7 +10,7 @@
  * Date         Name                Description
  */
 
-#include <iostream>
+#include <sdk/base/string/string.hpp>  // split_begin, split_count, split_get, split_end
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
@@ -25,11 +25,8 @@
 #include <sdk/crypto/jose/json_web_key.hpp>
 #include <sdk/io/basic/json.hpp>
 #include <sdk/io/basic/zlib.hpp>
-#include <sdk/io/string/string.hpp>
-#include <sdk/io/system/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace crypto {
 
 json_object_encryption::json_object_encryption() {

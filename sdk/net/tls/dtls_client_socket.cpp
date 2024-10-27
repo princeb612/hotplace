@@ -9,11 +9,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/io/system/socket.hpp>
 #include <sdk/net/tls/dtls_client_socket.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 dtls_client_socket::dtls_client_socket(transport_layer_security* tls) : udp_client_socket(), _tls(tls) {

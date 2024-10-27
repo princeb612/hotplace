@@ -8,12 +8,11 @@
  * Date         Name                Description
  */
 
-#include <sdk/io/stream/string.hpp>
+#include <sdk/base/stream/tstring.hpp>
 #include <sdk/odbc/basic/odbc_diagnose.hpp>
 #include <sdk/odbc/basic/odbc_query.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace odbc {
 
 return_t odbc_query::query(LPCTSTR query_string, ...) {

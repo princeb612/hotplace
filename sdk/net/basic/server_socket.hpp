@@ -11,11 +11,10 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_SERVERSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_SERVERSOCKET__
 
-#include <sdk/io/system/socket.hpp>
-#include <sdk/net/types.hpp>
+#include <sdk/net/basic/types.hpp>
+#include <sdk/net/tls/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 class server_socket {

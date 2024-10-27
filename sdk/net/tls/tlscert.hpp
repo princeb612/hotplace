@@ -11,10 +11,9 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_CERT__
 #define __HOTPLACE_SDK_NET_TLS_CERT__
 
-#include <sdk/io.hpp>
+#include <sdk/crypto/basic/types.hpp>
 
 namespace hotplace {
-using namespace io;
 namespace net {
 
 /**

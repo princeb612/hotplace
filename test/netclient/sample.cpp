@@ -12,7 +12,6 @@
 
 #include <algorithm>
 #include <functional>
-#include <sdk/nostd.hpp>
 #include <sdk/sdk.hpp>
 
 using namespace hotplace;

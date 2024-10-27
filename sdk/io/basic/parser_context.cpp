@@ -11,8 +11,10 @@
  *
  */
 
+#include <sdk/base/nostd/exception.hpp>
+#include <sdk/base/pattern/aho_corasick.hpp>
+#include <sdk/base/pattern/kmp.hpp>
 #include <sdk/io/basic/parser.hpp>
-#include <sdk/nostd.hpp>
 
 namespace hotplace {
 namespace io {

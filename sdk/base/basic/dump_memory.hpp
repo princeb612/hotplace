@@ -12,9 +12,9 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_DUMPMEMORY__
 #define __HOTPLACE_SDK_BASE_BASIC_DUMPMEMORY__
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/stream.hpp>
-#include <sdk/base/types.hpp>
+#include <sdk/base/basic/variant.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/stream/printf.hpp>
 #include <string>
 
 namespace hotplace {
@@ -46,6 +46,13 @@ enum dump_memory_flag_t {
  */
 return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0,
                      int flags = 0);
+
+return_t dump_memory(const char* data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+return_t dump_memory(const std::string& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+return_t dump_memory(const binary_t& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+return_t dump_memory(const basic_stream& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+return_t dump_memory(bufferio_context_t* context, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+return_t dump_memory(variant_t vt, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
 
 }  // namespace hotplace
 
