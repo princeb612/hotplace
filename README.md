@@ -82,7 +82,7 @@
     * sdk/net/tls/
     * test/payload/
     * test/hpack/
-    * test/http-altsvc/
+    * test/httpaltsvc/
     * test/httpserver2/
 * HTTP/3
   * RFC 9204 QPACK: Field Compression for HTTP/3

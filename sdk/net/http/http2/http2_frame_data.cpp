@@ -99,7 +99,16 @@ void http2_frame_data::dump(stream_t* s) {
     }
 }
 
-binary_t& http2_frame_data::get_data() { return _data; }
+void http2_frame_data::set_data(const binary_t& data) { _data = data; }
+
+void http2_frame_data::set_data(const char* data, size_t size) {
+    if (data) {
+        _data.clear();
+        _data.insert(_data.end(), data, data + size);
+    }
+}
+
+const binary_t& http2_frame_data::get_data() { return _data; }
 
 }  // namespace net
 }  // namespace hotplace

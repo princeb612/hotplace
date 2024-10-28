@@ -187,7 +187,9 @@ class http2_frame_data : public http2_frame {
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
-    binary_t& get_data();
+    void set_data(const binary_t& data);
+    void set_data(const char* data, size_t size);
+    const binary_t& get_data();
 
    private:
     uint8 _padlen;
@@ -208,7 +210,8 @@ class http2_frame_headers : public http2_frame {
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
-    binary_t& get_fragment();
+    void set_fragment(const binary_t& fragment);
+    const binary_t& get_fragment();
 
    private:
     uint8 _padlen;
@@ -295,7 +298,8 @@ class http2_frame_push_promise : public http2_frame {
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
-    binary_t& get_fragment();
+    void set_fragment(const binary_t& fragment);
+    const binary_t& get_fragment();
 
    private:
     uint8 _padlen;
@@ -336,7 +340,9 @@ class http2_frame_goaway : public http2_frame {
     virtual void dump(stream_t* s);
 
     http2_frame_goaway& set_errorcode(uint32 errorcode);
-    binary_t& get_debug();
+
+    void set_debug(const binary_t& debug);
+    const binary_t& get_debug();
 
    private:
     uint32 _last_id;
@@ -376,7 +382,8 @@ class http2_frame_continuation : public http2_frame {
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
-    binary_t& get_fragment();
+    void set_fragment(const binary_t& fragment);
+    const binary_t& get_fragment();
 
    private:
     binary_t _fragment;
@@ -396,8 +403,10 @@ class http2_frame_alt_svc : public http2_frame {
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
-    binary_t& get_origin();
-    binary_t& get_altsvc();
+    void set_origin(const binary_t& origin);
+    void set_altsvc(const binary_t& altsvc);
+    const binary_t& get_origin();
+    const binary_t& get_altsvc();
 
    private:
     binary_t _origin;  // Origin

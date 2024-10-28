@@ -95,9 +95,13 @@ void http2_frame_alt_svc::dump(stream_t* s) {
     }
 }
 
-binary_t& http2_frame_alt_svc::get_origin() { return _origin; }
+void http2_frame_alt_svc::set_origin(const binary_t& origin) { _origin = origin; }
 
-binary_t& http2_frame_alt_svc::get_altsvc() { return _altsvc; }
+void http2_frame_alt_svc::set_altsvc(const binary_t& altsvc) { _altsvc = altsvc; }
+
+const binary_t& http2_frame_alt_svc::get_origin() { return _origin; }
+
+const binary_t& http2_frame_alt_svc::get_altsvc() { return _altsvc; }
 
 }  // namespace net
 }  // namespace hotplace

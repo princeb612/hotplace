@@ -21,20 +21,6 @@ namespace net {
 
 /**
  * @brief   RFC 7541 HPACK
- * @remarks
- *          t_shared_instance<hpack_encoder> _hpack;
- *          // RFC 7541 Appendix B. Huffman Code
- *          // RFC 7541 Appendix A.  Static Table Definition
- *          hpack_instance.make_share(new hpack_encoder); // load resources here
- *
- *              // thread #1 connection #1
- *              hpack_dynamic_table session;
- *              (*hpack_instance).encode_header(&session, ...); // handle dynamic table #1
- *
- *              // thread #2 connection #2
- *              hpack_dynamic_table session;
- *              (*hpack_instance).encode_header(&session, ...); // handle dynamic table #2
- *
  */
 class hpack_encoder : public http_header_compression {
    public:

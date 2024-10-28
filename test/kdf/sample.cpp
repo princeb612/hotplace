@@ -49,7 +49,7 @@ void test_kdf_hkdf() {
     binary_t result;
 
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        kdf.hmac_kdf(result, hash_algorithm_t::sha2_256, vector[i].dlen, strtobin(vector[i].password), strtobin(vector[i].salt), strtobin(vector[i].info));
+        kdf.hmac_kdf(result, hash_algorithm_t::sha2_256, vector[i].dlen, str2bin(vector[i].password), str2bin(vector[i].salt), str2bin(vector[i].info));
 
         if (option.verbose) {
             _logger->dump(result);
@@ -124,7 +124,7 @@ void test_kdf_pbkdf2_rfc7914() {
     binary_t result;
 
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        kdf.pbkdf2(result, hash_algorithm_t::sha2_256, vector[i].dlen, vector[i].password, strtobin(vector[i].salt), vector[i].c);
+        kdf.pbkdf2(result, hash_algorithm_t::sha2_256, vector[i].dlen, vector[i].password, str2bin(vector[i].salt), vector[i].c);
 
         if (option.verbose) {
             _logger->dump(result);
@@ -168,7 +168,7 @@ void test_kdf_scrypt_rfc7914() {
         binary_t result;
 
         for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
-            ret = kdf.scrypt(result, vector[i].dlen, vector[i].password, strtobin(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
+            ret = kdf.scrypt(result, vector[i].dlen, vector[i].password, str2bin(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
             if (errorcode_t::success == ret) {
                 if (option.verbose) {
                     _logger->dump(result);

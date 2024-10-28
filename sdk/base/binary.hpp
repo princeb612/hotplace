@@ -214,7 +214,7 @@ static inline std::string bin2str(const binary_t& bin) {
 /**
  * @brief   util
  */
-static inline binary_t strtobin(const std::string& source) {
+static inline binary_t str2bin(const std::string& source) {
     binary_t result;
 
     result.insert(result.end(), source.begin(), source.end());

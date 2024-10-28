@@ -402,8 +402,6 @@ class json_object_signing_encryption {
     static return_t clear_context(jose_context_t* context);
 };
 
-typedef json_object_signing_encryption JOSE;
-
 }  // namespace crypto
 }  // namespace hotplace
 

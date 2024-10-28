@@ -331,7 +331,6 @@ http_response& http_response::get_response_h2(binary_t& bin) {
         }
 
         std::string encoding;
-        binary_t encoded;
         bool header_only = false;
 
         // RFC 2616 5.1.1 Method
@@ -382,15 +381,19 @@ http_response& http_response::get_response_h2(binary_t& bin) {
         data.set_flags(h2_flag_end_stream).set_stream_id(get_stream_id()).load_hpack(hp);
 
         if (false == header_only) {
-            if (encoding.empty()) {
-                data.get_data().insert(data.get_data().end(), content(), content() + content_size());
-            } else {
+            binary_t encoded;
+            if (false == encoding.empty()) {
                 // RFC 2616 3.5 Content Codings
                 if ("deflate" == encoding) {
-                    zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)content(), content_size(), data.get_data());
+                    zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)content(), content_size(), encoded);
+                    data.set_data(encoded);
                 } else if ("gzip" == encoding) {
-                    zlib_deflate(zlib_windowbits_t::windowbits_gzip, (byte_t*)content(), content_size(), data.get_data());
+                    zlib_deflate(zlib_windowbits_t::windowbits_gzip, (byte_t*)content(), content_size(), encoded);
+                    data.set_data(encoded);
                 }
+            }
+            if (encoded.empty()) {
+                data.set_data(content(), content_size());
             }
         }
 
@@ -412,7 +415,7 @@ http_response& http_response::get_response_h2(binary_t& bin) {
         // RFC 7838 4.  The ALTSVC HTTP/2 Frame
         if (altsvc_fieldvalue.size()) {
             http2_frame_alt_svc alt_svc;
-            alt_svc.get_altsvc() = strtobin(altsvc_fieldvalue);
+            alt_svc.set_altsvc(str2bin(altsvc_fieldvalue));
 
             alt_svc.write(bin);
 
@@ -422,7 +425,7 @@ http_response& http_response::get_response_h2(binary_t& bin) {
         // HEADERS
         {
             hp.encode_header("content-length", format("%zi", data.get_data().size()));
-            headers.get_fragment() = hp.get_binary();
+            headers.set_fragment(hp.get_binary());
 
             headers.write(bin);
 

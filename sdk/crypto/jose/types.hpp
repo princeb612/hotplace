@@ -131,6 +131,7 @@ class json_object_signing;
 class json_object_signing_encryption;
 class json_web_key;
 class json_web_signature;
+typedef json_object_signing_encryption JOSE;
 
 }  // namespace crypto
 }  // namespace hotplace

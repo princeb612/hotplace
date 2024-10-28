@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_CLIENT__
 #define __HOTPLACE_SDK_NET_HTTP_CLIENT__
 
-#include <sdk/io/string/string.hpp>
+#include <sdk/io/string/string.hpp>       // url_info_t
 #include <sdk/net/http/http_request.hpp>  // http_request
 #include <sdk/net/http/types.hpp>
 

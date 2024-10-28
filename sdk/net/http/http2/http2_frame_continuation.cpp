@@ -85,7 +85,9 @@ void http2_frame_continuation::dump(stream_t* s) {
     }
 }
 
-binary_t& http2_frame_continuation::get_fragment() { return _fragment; }
+void http2_frame_continuation::set_fragment(const binary_t& fragment) { _fragment = fragment; }
+
+const binary_t& http2_frame_continuation::get_fragment() { return _fragment; }
 
 }  // namespace net
 }  // namespace hotplace

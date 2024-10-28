@@ -220,7 +220,7 @@ cose_data& cose_data::set(const binary_t& bin) {
 }
 
 cose_data& cose_data::set(const std::string& value) {
-    _payload = strtobin(value);
+    _payload = str2bin(value);
     return *this;
 }
 

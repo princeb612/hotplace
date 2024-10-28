@@ -9,7 +9,7 @@ cmake_minimum_required (VERSION 2.6)
 project (hotplace)
 
 #set (CMAKE_BUILD_TYPE Debug)
-set (CMAKE_VERBOSE_MAKEFILE ON)
+set (CMAKE_VERBOSE_MAKEFILE OFF)
 set (CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set (SUPPORT_STATIC 1) # always set 1

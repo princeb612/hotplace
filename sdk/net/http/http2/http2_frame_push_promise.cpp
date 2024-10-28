@@ -109,7 +109,9 @@ void http2_frame_push_promise::dump(stream_t* s) {
     }
 }
 
-binary_t& http2_frame_push_promise::get_fragment() { return _fragment; }
+void http2_frame_push_promise::set_fragment(const binary_t& fragment) { _fragment = fragment; }
+
+const binary_t& http2_frame_push_promise::get_fragment() { return _fragment; }
 
 }  // namespace net
 }  // namespace hotplace

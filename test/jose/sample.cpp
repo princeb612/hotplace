@@ -994,15 +994,15 @@ void test_rfc7516_A1() {
     jose_context_t* context = nullptr;
     jose.open(&context, &key);
 
-    jose.encrypt(context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, strtobin(input), compact, jose_serialization_t::jose_compact);
+    jose.encrypt(context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, str2bin(input), compact, jose_serialization_t::jose_compact);
     ret = jose.decrypt(context, compact, source, result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.1. JWE using RSAES-OAEP and AES GCM (compact)");
 
-    jose.encrypt(context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, strtobin(input), json_flat, jose_serialization_t::jose_flatjson);
+    jose.encrypt(context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, str2bin(input), json_flat, jose_serialization_t::jose_flatjson);
     ret = jose.decrypt(context, json_flat, source, result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.1. JWE using RSAES-OAEP and AES GCM (flat)");
 
-    jose.encrypt(context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, strtobin(input), json_serial, jose_serialization_t::jose_json);
+    jose.encrypt(context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep, str2bin(input), json_serial, jose_serialization_t::jose_json);
     ret = jose.decrypt(context, json_serial, source, result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.1. JWE using RSAES-OAEP and AES GCM (json)");
 
@@ -1034,7 +1034,7 @@ void test_rsa_oaep() {
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
 
     jose.open(&context, &key);
-    jose.encrypt(context, jwe_t::jwe_a128gcm, jwa_t::jwa_rsa_oaep, strtobin(input), output, jose_serialization_t::jose_compact);
+    jose.encrypt(context, jwe_t::jwe_a128gcm, jwa_t::jwa_rsa_oaep, str2bin(input), output, jose_serialization_t::jose_compact);
     ret = jose.decrypt(context, output, plain, result);
     jose.close(context);
 
@@ -1062,7 +1062,7 @@ void test_rsa_oaep_256() {
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
 
     jose.open(&context, &key);
-    jose.encrypt(context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep_256, strtobin(input), output, jose_serialization_t::jose_compact);
+    jose.encrypt(context, jwe_t::jwe_a256gcm, jwa_t::jwa_rsa_oaep_256, str2bin(input), output, jose_serialization_t::jose_compact);
     ret = jose.decrypt(context, output, plain, result);
     jose.close(context);
 
@@ -1095,15 +1095,15 @@ void test_rfc7516_A2() {
     jose_context_t* context = nullptr;
     jose.open(&context, &key);
 
-    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, strtobin(input), compact, jose_serialization_t::jose_compact);
+    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, str2bin(input), compact, jose_serialization_t::jose_compact);
     ret = jose.decrypt(context, compact, source, result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.2. JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256 (compact)");
 
-    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, strtobin(input), json_flat, jose_serialization_t::jose_flatjson);
+    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, str2bin(input), json_flat, jose_serialization_t::jose_flatjson);
     ret = jose.decrypt(context, compact, source, result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.2. JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256 (flat)");
 
-    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, strtobin(input), json_serial, jose_serialization_t::jose_json);
+    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_rsa_1_5, str2bin(input), json_serial, jose_serialization_t::jose_json);
     ret = jose.decrypt(context, compact, source, result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.2. JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256 (json)");
 
@@ -1139,13 +1139,13 @@ void test_rfc7516_A3() {
 
     jose_context_t* context = nullptr;
     jose.open(&context, &key);
-    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, strtobin(input), compact, jose_serialization_t::jose_compact);
+    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, str2bin(input), compact, jose_serialization_t::jose_compact);
     ret = jose.decrypt(context, compact, source, result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (compact)");
-    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, strtobin(input), json_flat, jose_serialization_t::jose_flatjson);
+    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, str2bin(input), json_flat, jose_serialization_t::jose_flatjson);
     ret = jose.decrypt(context, json_flat, source, result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (flat)");
-    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, strtobin(input), json_serial, jose_serialization_t::jose_json);
+    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_a128kw, str2bin(input), json_serial, jose_serialization_t::jose_json);
     ret = jose.decrypt(context, json_serial, source, result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (json)");
     jose.close(context);
@@ -1182,7 +1182,7 @@ void test_rfc7516_A4() {
     // algs.push_back (jwa_t::jwa_rsa_1_5);
     // algs.push_back (jwa_t::jwa_a128kw);
     algs.push_back(jwa_t::jwa_pbes2_hs256_a128kw);
-    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, algs, strtobin(input), json_serial, jose_serialization_t::jose_json);
+    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, algs, str2bin(input), json_serial, jose_serialization_t::jose_json);
     ret = jose.decrypt(context, json_serial, source, result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.4. JWE Using General JWE JSON Serialization (json)");
     jose.close(context);
@@ -1324,7 +1324,7 @@ void test_rfc7517_C() {
     keygen.add_oct(&key, nullptr, jwa_t::jwa_pbes2_hs256_a128kw, (byte_t*)passphrase, strlen(passphrase), crypto_use_t::use_enc);
 
     jose.open(&context, &key);
-    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_pbes2_hs256_a128kw, strtobin(input), output, jose_serialization_t::jose_compact);
+    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_pbes2_hs256_a128kw, str2bin(input), output, jose_serialization_t::jose_compact);
     ret = jose.decrypt(context, output, plain, result);
     jose.close(context);
 
@@ -1718,7 +1718,7 @@ void test_jwe_flattened() {
                 if (nameof_alg) {
                     print_text("JWE enc %s alg %s", nameof_enc, nameof_alg);
 
-                    ret = jose.encrypt(handle_encrypt, enc, alg, strtobin(input), encrypted, jose_serialization_t::jose_flatjson);
+                    ret = jose.encrypt(handle_encrypt, enc, alg, str2bin(input), encrypted, jose_serialization_t::jose_flatjson);
                     if (errorcode_t::success == ret) {
                         dump("encrypted", encrypted);
 
@@ -1787,7 +1787,7 @@ void test_jwe_json(jwe_t enc) {
 
         print_text("JWE enc %s", nameof_enc);
 
-        ret = jose.encrypt(handle_encrypt, enc, algs, strtobin(input), encrypted, jose_serialization_t::jose_json);
+        ret = jose.encrypt(handle_encrypt, enc, algs, str2bin(input), encrypted, jose_serialization_t::jose_json);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -1951,7 +1951,7 @@ void test_rfc8037() {
     jwk.load_file(&jwk_x25519, "rfc8037_A_X25519.jwk");
     jwk_x25519.for_each(dump_crypto_key, nullptr);
     jose.open(&handle, &jwk_x25519);
-    ret = jose.encrypt(handle, jwe_t::jwe_a128gcm, jwa_t::jwa_ecdh_es_a128kw, strtobin(claim), encrypted, jose_serialization_t::jose_flatjson);
+    ret = jose.encrypt(handle, jwe_t::jwe_a128gcm, jwa_t::jwa_ecdh_es_a128kw, str2bin(claim), encrypted, jose_serialization_t::jose_flatjson);
     if (errorcode_t::success == ret) {
         dump("RFC 8037 A.6.  ECDH-ES with X25519", encrypted);
     }
@@ -1962,7 +1962,7 @@ void test_rfc8037() {
     jwk.load_file(&jwk_x448, "rfc8037_A_X448.jwk");
     jwk_x448.for_each(dump_crypto_key, nullptr);
     jose.open(&handle, &jwk_x448);
-    ret = jose.encrypt(handle, jwe_t::jwe_a256gcm, jwa_t::jwa_ecdh_es_a256kw, strtobin(claim), encrypted, jose_serialization_t::jose_flatjson);
+    ret = jose.encrypt(handle, jwe_t::jwe_a256gcm, jwa_t::jwa_ecdh_es_a256kw, str2bin(claim), encrypted, jose_serialization_t::jose_flatjson);
     if (errorcode_t::success == ret) {
         dump("RFC 8037 A.7.  ECDH-ES with X448", encrypted);
     }
@@ -2012,7 +2012,7 @@ void test_okp() {
             const char* nameof_alg = advisor->nameof_jose_algorithm(algs[j]);
             claim = format("JWE with OKP enc %s alg %s", nameof_enc, nameof_alg);
 
-            ret = jose.encrypt(handle, encs[i], algs[j], strtobin(claim), encrypted, jose_serialization_t::jose_flatjson);
+            ret = jose.encrypt(handle, encs[i], algs[j], str2bin(claim), encrypted, jose_serialization_t::jose_flatjson);
             if (errorcode_t::success == ret) {
                 dump("encrypted", encrypted);
                 ret = jose.decrypt(handle, encrypted, source, result);

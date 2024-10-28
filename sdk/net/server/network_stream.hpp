@@ -11,10 +11,6 @@
 #ifndef __HOTPLACE_SDK_NET_SERVER_NETWORKSTREAM__
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSTREAM__
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
 #include <sdk/net/types.hpp>
 
 namespace hotplace {

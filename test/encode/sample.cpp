@@ -253,7 +253,7 @@ void whatsthis() {
                 additional << "> b64u\n  " << base64_encode(what, base64_encoding_t::base64url_encoding).c_str() << "\n";
                 break;
             case encode_plaintext:
-                what = strtobin(o.content);
+                what = str2bin(o.content);
                 base16_encode(o.content, temp);
                 additional << "> b16\n  " << bin2str(temp).c_str() << "\n";
                 additional << "> b64\n  " << base64_encode(o.content).c_str() << "\n";
@@ -274,7 +274,7 @@ void whatsthis() {
         }
 
         if (encode_plaintext == o.mode) {
-            dump_memory(strtobin(o.content), &bs, 16, 2);
+            dump_memory(str2bin(o.content), &bs, 16, 2);
         } else {
             dump_memory(what, &bs, 16, 2);
         }

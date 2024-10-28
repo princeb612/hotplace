@@ -46,8 +46,8 @@ void test_payload_dump() {
 
     {
         payload pl;
-        binary_t data = strtobin("data");
-        binary_t pad = strtobin("pad");
+        binary_t data = str2bin("data");
+        binary_t pad = str2bin("pad");
         uint8 padlen = 3;  // "pad"
         basic_stream bs;
         binary_t bin_padded;
@@ -92,7 +92,7 @@ void test_payload_parse() {
 
         binary_t data2;
         pl.select("data")->get_variant().to_binary(data2);
-        _test_case.assert(data2 == strtobin("data"), __FUNCTION__, "read binary");
+        _test_case.assert(data2 == str2bin("data"), __FUNCTION__, "read binary");
     }
 }
 
@@ -108,7 +108,7 @@ void test_payload_uint24() {
     const OPTION& option = cmdline->value();
     _test_case.begin("payload");
 
-    binary_t pad = strtobin("pad");
+    binary_t pad = str2bin("pad");
     binary_t bin_payload;
     binary_t expect = base16_decode("0310000010000000706164");
 
@@ -216,7 +216,7 @@ void test_http2_frame() {
 
     http2_frame_headers frame_headers;
     frame_headers.set_flags(0).set_stream_id(1);
-    frame_headers.get_fragment() = hp.get_binary();
+    frame_headers.set_fragment(hp.get_binary());
     frame_headers.set_hpack_session(&session);  // dump
 
     // test
@@ -236,7 +236,7 @@ void test_http2_frame() {
 
     http2_frame_continuation frame_continuation;
     frame_continuation.set_flags(h2_flag_end_headers).set_stream_id(1);
-    frame_continuation.get_fragment() = hp.get_binary();
+    frame_continuation.set_fragment(hp.get_binary());
     frame_continuation.set_hpack_session(&session);  // dump
 
     // test
@@ -253,7 +253,7 @@ void test_http2_frame() {
 
     http2_frame_data frame_data;
     frame_data.set_flags(h2_flag_end_stream).set_stream_id(1);
-    frame_data.get_data() = strtobin("hello world");
+    frame_data.set_data(str2bin("hello world"));
 
     // test
     {
@@ -269,7 +269,7 @@ void test_http2_frame() {
 
     http2_frame_headers frame_goaway;
     frame_goaway.set_stream_id(1);
-    frame_goaway.get_fragment() = strtobin("protocol error cause of .... blah blah ...");
+    frame_goaway.set_fragment(str2bin("protocol error cause of .... blah blah ..."));
 
     // test
     {
@@ -287,8 +287,8 @@ void test_http2_frame() {
 
     http2_frame_alt_svc frame_alt_svc;
     frame_alt_svc.set_stream_id(1);  // ignore stream id
-    frame_alt_svc.get_origin() = strtobin("origin");
-    frame_alt_svc.get_altsvc() = strtobin("altsvc");
+    frame_alt_svc.set_origin(str2bin("origin"));
+    frame_alt_svc.set_altsvc(str2bin("altsvc"));
 
     // test
     {

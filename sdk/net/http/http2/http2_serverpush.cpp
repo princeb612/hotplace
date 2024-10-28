@@ -185,7 +185,7 @@ return_t http2_serverpush::do_push_promise(const std::string& promise, uint32 st
             http2_frame_push_promise frame;
             frame.set_hpack_session(&hpsess).set_stream_id(streamid);
             frame.write_compressed_header(&header, fragment);
-            frame.get_fragment() = fragment;
+            frame.set_fragment(fragment);
 
             if (istraceable()) {
                 basic_stream bs;

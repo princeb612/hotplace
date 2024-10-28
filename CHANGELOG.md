@@ -1,6 +1,7 @@
 # history
 
-* Revision 639
+* Revision 641
+  * [study] QUIC (RFC 9000)
 
 * Revision 634, 635
   * [tested] HPACK/QPACK
