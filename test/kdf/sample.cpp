@@ -224,7 +224,7 @@ void test_kdf_argon_rfc9106() {
 }
 
 void test_kdf_extract_expand_rfc5869() {
-    _test_case.begin("KDF-Extract/Expand");
+    _test_case.begin("RFC 5869 Appendix A.  Test Vectors");
     const OPTION& option = _cmdline->value();
     openssl_kdf kdf;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -242,7 +242,7 @@ void test_kdf_extract_expand_rfc5869() {
         const char* okm;
     } expand_vector[] = {
         {
-            "Test Case 1 - Basic test case with SHA-256",
+            "RFC 5869 A.1.  Test Case 1 - Basic test case with SHA-256",
             "sha256",
             42,
             "0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
@@ -252,7 +252,7 @@ void test_kdf_extract_expand_rfc5869() {
             "0x3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865",
         },
         {
-            "Test Case 2 - Test with SHA-256 and longer inputs/outputs",
+            "RFC 5869 A.2.  Test Case 2 - Test with SHA-256 and longer inputs/outputs",
             "sha256",
             82,
             "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f4041424344454647"
@@ -266,7 +266,7 @@ void test_kdf_extract_expand_rfc5869() {
             "c14c01d5c1f3434f1d87",
         },
         {
-            "Test Case 3 - Test with SHA-256 and zero-length salt/info",
+            "RFC 5869 A.3.  Test Case 3 - Test with SHA-256 and zero-length salt/info",
             "sha256",
             42,
             "0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
@@ -276,7 +276,7 @@ void test_kdf_extract_expand_rfc5869() {
             "0x8da4e775a563c18f715f802a063c5a31b8a11f5c5ee1879ec3454e5f3c738d2d9d201395faa4b61a96c8",
         },
         {
-            "Test Case 4 - Basic test case with SHA-1",
+            "RFC 5869 A.4.  Test Case 4 - Basic test case with SHA-1",
             "sha1",
             42,
             "0x0b0b0b0b0b0b0b0b0b0b0b",
@@ -286,7 +286,7 @@ void test_kdf_extract_expand_rfc5869() {
             "0x085a01ea1b10f36933068b56efa5ad81a4f14b822f5b091568a9cdd4f155fda2c22e422478d305f3f896",
         },
         {
-            "Test Case 5 - Test with SHA-1 and longer inputs/outputs",
+            "RFC 5869 A.5.  Test Case 5 - Test with SHA-1 and longer inputs/outputs",
             "sha1",
             82,
             "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f4041424344454647"
@@ -300,7 +300,7 @@ void test_kdf_extract_expand_rfc5869() {
             "00e2cff0d0900b52d3b4",
         },
         {
-            "Test Case 6 - Test with SHA-1 and zero-length salt/info",
+            "RFC 5869 A.6.  Test Case 6 - Test with SHA-1 and zero-length salt/info",
             "sha1",
             42,
             "0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
@@ -310,7 +310,7 @@ void test_kdf_extract_expand_rfc5869() {
             "0x0ac1af7002b3d761d1e55298da9d0506b9ae52057220a306e07b6b87e8df21d0ea00033de03984d34918",
         },
         {
-            "Test Case 7 - Test with SHA-1, salt not provided (defaults to HashLen zero octets), zero-length info",
+            "RFC 5869 A.7.  Test Case 7 - Test with SHA-1, salt not provided (defaults to HashLen zero octets), zero-length info",
             "sha1",
             42,
             "0x0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
@@ -326,82 +326,100 @@ void test_kdf_extract_expand_rfc5869() {
     for (i = 0; i < RTL_NUMBER_OF(expand_vector); i++) {
         // 2.2 Step 1: Extract
         //  PRK = HMAC-Hash(salt, IKM)
-        binary_t prk;
-        kdf.hmac_kdf_extract(prk, expand_vector[i].alg, base16_decode(expand_vector[i].salt), base16_decode(expand_vector[i].ikm));
+        binary_t bin_prk;
+        auto alg = expand_vector[i].alg;
+        binary_t ikm = base16_decode(expand_vector[i].ikm);
+        binary_t salt = base16_decode(expand_vector[i].salt);
+        binary_t info = base16_decode(expand_vector[i].info);
+        binary_t prk = base16_decode(expand_vector[i].prk);
+        binary_t okm = base16_decode(expand_vector[i].okm);
+        auto dlen = expand_vector[i].dlen;
+        auto desc = expand_vector[i].desc;
 
-        // dump_memory(prk, &bs);
-        // printf("PRK\n%s\n", bs.c_str());
+        kdf.hmac_kdf_extract(bin_prk, alg, salt, ikm);
+        _test_case.assert((bin_prk == prk), __FUNCTION__, "%s - KDF_Extract", desc);
 
         // 2.3 Step 2: Expand
         //  HKDF-Expand(PRK, info, L) -> OKM
-        binary_t okm;
-        kdf.hkdf_expand(okm, expand_vector[i].alg, expand_vector[i].dlen, prk, base16_decode(expand_vector[i].info));
-
+        binary_t bin_okm;
+        kdf.hkdf_expand(bin_okm, alg, dlen, bin_prk, info);
         if (option.verbose) {
-            _logger->hdump("OKM", okm);
+            _logger->hdump("OKM", bin_okm);
         }
+        _test_case.assert((bin_okm == okm), __FUNCTION__, "%s - KDF_Expand", desc);
 
         binary_t derived;
-        kdf.hmac_kdf(derived, expand_vector[i].alg, expand_vector[i].dlen, base16_decode(expand_vector[i].ikm), base16_decode(expand_vector[i].salt),
-                     base16_decode(expand_vector[i].info));
-
+        kdf.hmac_kdf(derived, alg, dlen, ikm, salt, info);
         if (option.verbose) {
             _logger->hdump("HKDF", derived);
         }
-
-        _test_case.assert((okm == base16_decode(expand_vector[i].okm)), __FUNCTION__, "%s - RFC 5869 KDF_Extract, KDF_Expand", expand_vector[i].desc);
-        _test_case.assert((okm == derived), __FUNCTION__, "%s - EVP_PKEY_derive", expand_vector[i].desc);
+        _test_case.assert((bin_okm == derived), __FUNCTION__, "%s - EVP_PKEY_derive", desc);
     }
 }
 
+// RFC 4615
 // The Advanced Encryption Standard-Cipher-based Message Authentication Code-Pseudo-Random Function-128
 // (AES-CMAC-PRF-128) Algorithm for the Internet Key Exchange Protocol (IKE)
 void test_ckdf_rfc4615() {
     _test_case.begin("CMAC-based Extract-and-Expand Key Derivation Function (CKDF)");
     const OPTION& option = _cmdline->value();
     openssl_kdf kdf;
+    openssl_mac mac;
 
     // RFC 4615 AES-CMAC-PRF-128
     // study step.1 CKDF_Extract
     struct {
         const char* desc;
-        const char* salt;
-        const char* ikm;
-        const char* prk;
+        const char* salt;  // key
+        const char* ikm;   // message
+        const char* prk;   // RFC 4493 AES-CMAC, RFC 4615 PRF output
     } extract_vector[] = {
         {
-            "Test Case 1",
+            "RFC 4615 4.  Test Vectors #1",
             "000102030405060708090a0b0c0d0e0fedcb",
             "000102030405060708090a0b0c0d0e0f10111213",
             "84a348a4a45d235babfffc0d2b4da09a",
         },
         {
-            "Test Case 2",
+            "RFC 4615 4.  Test Vectors #2",
             "000102030405060708090a0b0c0d0e0f",
             "000102030405060708090a0b0c0d0e0f10111213",
             "980ae87b5f4c9c5214f5b6a8455e4c2d",
         },
         {
-            "Test Case 3",
+            "RFC 4615 4.  Test Vectors #3",
             "00010203040506070809",
             "000102030405060708090a0b0c0d0e0f10111213",
             "290d9e112edb09ee141fcf64c0b72f3d",
         },
         {
-            "Test Case 4",
+            "RFC 4493 4.  Test Vectors Example 1",
             "2b7e151628aed2a6abf7158809cf4f3c",
             "",
             "bb1d6929e95937287fa37d129b756746",
         },
         {
-            "Test Case 5",
+            "RFC 4493 4.  Test Vectors Example 2",
             "2b7e151628aed2a6abf7158809cf4f3c",
             "6bc1bee22e409f96e93d7e117393172a",
             "070a16b46b4d4144f79bdd9dd04a287c",
         },
         {
-            "Test Case 6",
-            "",
+            "RFC 4493 4.  Test Vectors Example 3",
+            "2b7e151628aed2a6abf7158809cf4f3c",
+            "6bc1bee2 2e409f96 e93d7e11 7393172a ae2d8a57 1e03ac9c 9eb76fac 45af8e51 30c81c46 a35ce411",
+            "dfa66747 de9ae630 30ca3261 1497c827",
+        },
+        {
+            "RFC 4493 4.  Test Vectors Example 4",
+            "2b7e151628aed2a6abf7158809cf4f3c",
+            "6bc1bee2 2e409f96 e93d7e11 7393172a ae2d8a57 1e03ac9c 9eb76fac 45af8e51 30c81c46 a35ce411 e5fbc119 1a0a52ef f69f2445 df4f9b17 ad2b417b e66c3710",
+            "51f0bebf 7e3b9d92 fc497417 79363cfe",
+        },
+        {
+            // CMAC-based Extract-and-Expand Key Derivation Function (CKDF) draft-agl-ckdf-01
+            "draft-agl-ckdf-01 Test Case (empty salt)",
+            "",  // empty salt
             "736563726574206b6579",
             "6f79b401ea761a0100b7ca60c178b69d",
         },
@@ -415,20 +433,28 @@ void test_ckdf_rfc4615() {
     for (i = 0; i < RTL_NUMBER_OF(extract_vector); i++) {
         binary_t output;
 
-        binary_t salt = base16_decode(extract_vector[i].salt);
-        // If no salt is given, the 16-byte, all-zero value is used.
-        if (0 == salt.size()) {
-            salt.resize(128 >> 3);
-        }
+        auto desc = extract_vector[i].desc;
+        binary_t salt = base16_decode_rfc(extract_vector[i].salt);
+        binary_t ikm = base16_decode_rfc(extract_vector[i].ikm);
+        binary_t prk = base16_decode_rfc(extract_vector[i].prk);
 
-        // cmac_kdf_extract(output, crypt_algorithm_t::aes128, base16_decode(extract_vector[i].salt), base16_decode(extract_vector[i].ikm));
-        kdf.cmac_kdf_extract(output, crypt_algorithm_t::aes128, salt, base16_decode(extract_vector[i].ikm));
+        kdf.cmac_kdf_extract(output, crypt_algorithm_t::aes128, salt, ikm);
 
         if (option.verbose) {
+            _logger->hdump("Salt", salt);
+            _logger->hdump("IKM", ikm);
+            _logger->hdump("PRK", prk);
             _logger->dump(output);
         }
 
-        _test_case.assert(output == base16_decode(extract_vector[i].prk), __FUNCTION__, "CKDF_Extract %s - RFC 4615 AES-CMAC-PRF-128", extract_vector[i].desc);
+        _test_case.assert(output == prk, __FUNCTION__, "%s - CKDF_Extract, AES-CMAC-PRF-128", desc);
+
+        binary_t output2;
+        mac.cmac("aes-128-cbc", salt, ikm, output2);
+        if (option.verbose) {
+            _logger->hdump("cmac", output2);
+        }
+        _test_case.assert(output == output2, __FUNCTION__, "%s - openssl_mac::cmac", desc);
     }
 
     struct {
@@ -440,6 +466,30 @@ void test_ckdf_rfc4615() {
         const char* info;
         const char* okm;
     } expand_vector[] = {
+        /**
+         *  draft-agl-ckdf-01
+         *
+         *   PRK:  6f79b401 ea761a01 00b7ca60 c178b69d
+         *   Info: (empty)
+         *   L:    32
+         *   OKM:  922da31d 7e1955f0 6a56464b 5feb7032 8f7e6f60 aaea5735
+         *         c2772e33 17d0a288
+         *
+         *   PRK:  6f79b401 ea761a01 00b7ca60 c178b69d
+         *   Info: 696e666f 20737472 696e67
+         *   L:    256
+         *   OKM:  6174e672 12e1234b 6e05bfd3 1043422c df1e34cd 29ee09f5
+         *         bd5edb90 db39dcd4 c301e873 d91acbd5 333c8701 6dda05be
+         *         3a8faade 2c3992c8 f3221f05 5efb3b51 76dbbe76 90cb4400
+         *         f737298d 638b8026 d527c1e5 81f4e37d a0499c31 abfd8908
+         *         207160de 343c126e cb460e38 8481fa9f 73391fe6 35a0e4b6
+         *         cde3d385 78bcb8b5 5a60952b ac6f840f d87c397a c2477992
+         *         ac6cbd64 3100e3ca d660373b 44e2fc0e 4867b15a cd9a070a
+         *         3229ee40 76bf9851 7ccc656f 5bf1f8bb 41ce7e2d 48db670f
+         *         1b2921ee 462d9cf1 987eb983 e5c2ce4e a9ceea10 c301dcca
+         *         f16c4b57 67daa4bf 6ecc8161 77da31a5 9a9b1972 86259bd6
+         *         598d2874 a4f605fb 877bee1b 5529873f
+         */
         {
             "case 1",
             32,
@@ -464,27 +514,38 @@ void test_ckdf_rfc4615() {
     };
 
     for (i = 0; i < RTL_NUMBER_OF(expand_vector); i++) {
-        binary_t prk;
-        kdf.cmac_kdf_extract(prk, crypt_algorithm_t::aes128, base16_decode(expand_vector[i].salt), base16_decode(expand_vector[i].ikm));
-        // cmac_kdf_extract(prk, crypt_algorithm_t::aes128, salt, base16_decode(expand_vector[i].ikm));
+        binary_t bin_prk;
 
-        binary_t okm;
-        kdf.cmac_kdf_expand(okm, crypt_algorithm_t::aes128, expand_vector[i].dlen, base16_decode(expand_vector[i].prk), base16_decode(expand_vector[i].info));
+        auto desc = expand_vector[i].desc;
+        auto dlen = expand_vector[i].dlen;
+        binary_t salt = base16_decode(expand_vector[i].salt);
+        binary_t ikm = base16_decode(expand_vector[i].ikm);
+        binary_t prk = base16_decode(expand_vector[i].prk);
+        binary_t info = base16_decode(expand_vector[i].info);
+        binary_t okm = base16_decode(expand_vector[i].okm);
+
+        kdf.cmac_kdf_extract(bin_prk, crypt_algorithm_t::aes128, salt, ikm);
+
+        binary_t bin_okm;
+        kdf.cmac_kdf_expand(bin_okm, crypt_algorithm_t::aes128, dlen, prk, info);
 
         binary_t ckdf_okm;
-        kdf.cmac_kdf(ckdf_okm, crypt_algorithm_t::aes128, expand_vector[i].dlen, base16_decode(expand_vector[i].ikm), base16_decode(expand_vector[i].salt),
-                     base16_decode(expand_vector[i].info));
+        kdf.cmac_kdf(ckdf_okm, crypt_algorithm_t::aes128, dlen, ikm, salt, info);
 
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
-            _logger->hdump("CKDF_Extract PRK", prk);
-            _logger->hdump("CKDF_Expand OKM", okm);
+            _logger->hdump("Salt", salt);
+            _logger->hdump("IKM", ikm);
+            _logger->hdump("PRK", prk);
+            _logger->hdump("CKDF_Extract PRK", bin_prk);
+            _logger->hdump("CKDF_Expand OKM", bin_okm);
             _logger->hdump("CKDF OKM", ckdf_okm);
         }
 
-        _test_case.assert(okm == base16_decode(expand_vector[i].okm), __FUNCTION__, "CKDF-Expand %s", expand_vector[i].desc);
-        _test_case.assert(ckdf_okm == base16_decode(expand_vector[i].okm), __FUNCTION__, "CKDF %s", expand_vector[i].desc);
+        _test_case.assert(bin_prk == prk, __FUNCTION__, "%s - CKDF-Extract", desc);
+        _test_case.assert(bin_okm == okm, __FUNCTION__, "%s - CKDF-Expand", desc);
+        _test_case.assert(ckdf_okm == okm, __FUNCTION__, "%s - CKDF", desc);
     }
 }
 

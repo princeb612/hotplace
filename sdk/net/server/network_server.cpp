@@ -114,7 +114,14 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
 
         uint16 concurrent = conf ? conf->get(netserver_config_t::serverconf_concurrent_event) : 1024;
         uint16 concurrent_tls_accept = conf ? conf->get(netserver_config_t::serverconf_concurrent_tls_accept) : 1;
+
         uint16 concurrent_network = conf ? conf->get(netserver_config_t::serverconf_concurrent_network) : 1;
+#if defined __linux__
+        if (svr_socket->support_tls() && (SOCK_DGRAM == svr_socket->socket_type())) {
+            // [epoll] DTLS handshake only support single-thread model
+            concurrent_network = 1;
+        }
+#endif
         uint16 concurrent_consume = conf ? conf->get(netserver_config_t::serverconf_concurrent_consume) : 2;
 
         ret = mplexer.open(&mplexer_handle, concurrent);

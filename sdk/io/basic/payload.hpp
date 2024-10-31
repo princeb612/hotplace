@@ -76,6 +76,8 @@ class payload_member {
     payload_member(uint64 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint128 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
     payload_member(const binary_t& value, const char* name = nullptr, const char* group = nullptr);
+    payload_member(const std::string& value, const char* name = nullptr, const char* group = nullptr);
+    payload_member(const stream_t* value, const char* name = nullptr, const char* group = nullptr);
 
     bool get_change_endian();
     std::string get_name() const;

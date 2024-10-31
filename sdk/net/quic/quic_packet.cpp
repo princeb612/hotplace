@@ -23,7 +23,7 @@ quic_packet::quic_packet(const quic_packet& rhs) : _type(rhs._type), _version(rh
 
 quic_packet& quic_packet::set_version(uint32 version) {
     switch (get_type()) {
-        case quic_packet_version_negotiation:
+        case quic_packet_type_version_negotiation:
             // 17.2.1.  Version Negotiation Packet
             break;
         default:
@@ -60,30 +60,30 @@ return_t quic_packet::read(byte_t* stream, size_t size, size_t& pos) {
         byte_t hdr = stream[pos++];
         bool is_longheader = true;
 
-        if (quic_packet_field_hf & hdr) {
+        if (quic_packet_field_hf & hdr) {  // Header Form
             is_longheader = true;
-            if (quic_packet_field_fb & hdr) {
-                switch (quic_packet_field_mask_t & hdr) {
+            if (quic_packet_field_fb & hdr) {               // Fixed Bit
+                switch (quic_packet_field_mask_lh & hdr) {  // Long Packet Type
                     case quic_packet_field_initial:
-                        _type = quic_packet_initial;
+                        _type = quic_packet_type_initial;
                         break;
                     case quic_packet_field_0_rtt:
-                        _type = quic_packet_0_rtt;
+                        _type = quic_packet_type_0_rtt;
                         break;
                     case quic_packet_field_handshake:
-                        _type = quic_packet_handshake;
+                        _type = quic_packet_type_handshake;
                         break;
                     case quic_packet_field_retry:
-                        _type = quic_packet_retry;
+                        _type = quic_packet_type_retry;
                         break;
                 }
             } else {
-                _type = quic_packet_version_negotiation;
+                _type = quic_packet_type_version_negotiation;
             }
         } else {
             is_longheader = false;
             if (quic_packet_field_fb & hdr) {
-                _type = quic_packet_1_rtt;
+                _type = quic_packet_type_1_rtt;
             }
         }
 
@@ -115,32 +115,32 @@ return_t quic_packet::write(binary_t& packet) {
     bool is_longheader = true;
 
     switch (get_type()) {
-        case quic_packet_version_negotiation:
+        case quic_packet_type_version_negotiation:
             is_longheader = true;
             // 17.2.1.  Version Negotiation Packet
             hdr |= (quic_packet_field_hf);
             break;
-        case quic_packet_initial:
+        case quic_packet_type_initial:
             is_longheader = true;
             // 17.2.2.  Initial Packet
             hdr |= (quic_packet_field_hf | quic_packet_field_fb | quic_packet_field_initial);
             break;
-        case quic_packet_0_rtt:
+        case quic_packet_type_0_rtt:
             is_longheader = true;
             // 17.2.3.  0-RTT
             hdr |= (quic_packet_field_hf | quic_packet_field_fb | quic_packet_field_0_rtt);
             break;
-        case quic_packet_handshake:
+        case quic_packet_type_handshake:
             is_longheader = true;
             // 17.2.4.  Handshake Packet
             hdr |= (quic_packet_field_hf | quic_packet_field_fb | quic_packet_field_handshake);
             break;
-        case quic_packet_retry:
+        case quic_packet_type_retry:
             is_longheader = true;
             // 17.2.5.  Retry Packet
             hdr |= (quic_packet_field_hf | quic_packet_field_fb | quic_packet_field_retry);
             break;
-        case quic_packet_1_rtt:
+        case quic_packet_type_1_rtt:
             is_longheader = false;
             // 17.3.1.  1-RTT Packet
             hdr |= (quic_packet_field_fb);
@@ -161,12 +161,12 @@ return_t quic_packet::write(binary_t& packet) {
 void quic_packet::dump(stream_t* s) {
     if (s) {
         std::map<uint8, std::string> packet_name;
-        packet_name.insert({quic_packet_version_negotiation, "version negotiation"});
-        packet_name.insert({quic_packet_initial, "initial"});
-        packet_name.insert({quic_packet_0_rtt, "0-RTT"});
-        packet_name.insert({quic_packet_handshake, "handshake"});
-        packet_name.insert({quic_packet_retry, "retry"});
-        packet_name.insert({quic_packet_1_rtt, "1-RTT"});
+        packet_name.insert({quic_packet_type_version_negotiation, "version negotiation"});
+        packet_name.insert({quic_packet_type_initial, "initial"});
+        packet_name.insert({quic_packet_type_0_rtt, "0-RTT"});
+        packet_name.insert({quic_packet_type_handshake, "handshake"});
+        packet_name.insert({quic_packet_type_retry, "retry"});
+        packet_name.insert({quic_packet_type_1_rtt, "1-RTT"});
 
         s->printf("- quic packet %s\n", packet_name[_type].c_str());
         s->printf(" > version %08x\n", get_version());
@@ -175,21 +175,56 @@ void quic_packet::dump(stream_t* s) {
         s->printf("\n");
         switch (get_type()) {
             // long header
-            case quic_packet_version_negotiation:
-            case quic_packet_initial:
-            case quic_packet_0_rtt:
-            case quic_packet_handshake:
-            case quic_packet_retry:
+            case quic_packet_type_version_negotiation:
+            case quic_packet_type_initial:
+            case quic_packet_type_0_rtt:
+            case quic_packet_type_handshake:
+            case quic_packet_type_retry:
                 s->printf(" > source connection id\n");
                 dump_memory(_scid, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
                 s->printf("\n");
                 break;
             // short header
-            case quic_packet_1_rtt:
+            case quic_packet_type_1_rtt:
                 break;
         }
     }
 }
+
+quic_packet& quic_packet::add(const quic_frame* frame) {
+    //
+    return *this;
+}
+
+/**
+ * Figure 14: Version Negotiation Packet
+ *  Supported Version (32) ...,
+ */
+/**
+ * Figure 15: Initial Packet
+ *  Token Length (i),
+ *  Token (..),
+ *  Length (i),
+ *  Packet Number (8..32),
+ *  Packet Payload (8..),
+ */
+/**
+ * Figure 16: 0-RTT Packet
+ * Figure 17: Handshake Protected Packet
+ *  Length (i),
+ *  Packet Number (8..32),
+ *  Packet Payload (8..),
+ */
+/**
+ * Figure 18: Retry Packet
+ *  Retry Token (..),
+ *  Retry Integrity Tag (128),
+ */
+/**
+ * Figure 19: 1-RTT Packet
+ *  Packet Number (8..32),
+ *  Packet Payload (8..),
+ */
 
 }  // namespace net
 }  // namespace hotplace

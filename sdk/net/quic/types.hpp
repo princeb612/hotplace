@@ -20,7 +20,8 @@
 namespace hotplace {
 namespace net {
 
-//
+class quic_packet;
+class quic_frame;
 
 }  // namespace net
 }  // namespace hotplace

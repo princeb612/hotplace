@@ -84,11 +84,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
                 http_response response(request);
                 basic_stream bs;
                 if (option.verbose) {
-                    auto lambda = [&](trace_category_t, uint32, stream_t *s) -> void {
-                        _logger->colorln("response");
-                        _logger->writeln(s);
-                    };
-                    response.settrace(lambda);
+                    response.settrace(debug_handler);
                 }
 
                 if (use_tls) {

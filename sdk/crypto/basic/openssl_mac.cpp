@@ -12,27 +12,30 @@
 
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
+#include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {
 namespace crypto {
 
-openssl_mac::openssl_mac() : openssl_hash() {}
+openssl_mac::openssl_mac() {}
 
 return_t openssl_mac::hmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
+    openssl_hash hash;
 
     __try2 {
-        ret = open(&handle, alg, &key[0], key.size());
+        ret = hash.open(&handle, alg, &key[0], key.size());
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        init(handle);
-        update(handle, &input[0], input.size());
-        finalize(handle, output);
+        hash.hash(handle, &input[0], input.size(), output);
+        hash.close(handle);
     }
-    __finally2 { close(handle); }
+    __finally2 {
+        // do nothing
+    }
 
     return ret;
 }
@@ -40,58 +43,72 @@ return_t openssl_mac::hmac(const char* alg, const binary_t& key, const binary_t&
 return_t openssl_mac::hmac(hash_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
+    openssl_hash hash;
 
     __try2 {
-        ret = open(&handle, alg, &key[0], key.size());
+        ret = hash.open(&handle, alg, &key[0], key.size());
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        init(handle);
-        update(handle, &input[0], input.size());
-        finalize(handle, output);
+        hash.hash(handle, &input[0], input.size(), output);
+        hash.close(handle);
     }
-    __finally2 { close(handle); }
+    __finally2 {
+        // do nothing
+    }
 
     return ret;
 }
 
 return_t openssl_mac::cmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
-    hash_context_t* handle = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
-        ret = open(&handle, alg, &key[0], key.size());
-        if (errorcode_t::success != ret) {
+        if (nullptr == alg) {
+            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        init(handle);
-        update(handle, &input[0], input.size());
-        finalize(handle, output);
+
+        auto hint = advisor->hintof_cipher(alg);
+        if (nullptr == hint) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = cmac(hint->algorithm, key, input, output);
     }
-    __finally2 { close(handle); }
+    __finally2 {
+        // do nothing
+    }
 
     return ret;
 }
 
-return_t openssl_mac::cmac(crypt_algorithm_t alg, crypt_mode_t mode, const binary_t& key, const binary_t& input, binary_t& output) {
+return_t openssl_mac::cmac(crypt_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
-    hash_context_t* handle = nullptr;
 
-    __try2 {
-        ret = open(&handle, alg, mode, &key[0], key.size());
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        init(handle);
-        update(handle, &input[0], input.size());
-        finalize(handle, output);
-    }
-    __finally2 { close(handle); }
+    /**
+     * RFC 4615 Figure 1.  The AES-CMAC-PRF-128 Algorithm
+     * Step 1.   If VKlen is equal to 16
+     * Step 1a.  then
+     *               K := VK;
+     * Step 1b.  else
+     *               K := AES-CMAC(0^128, VK, VKlen);
+     * Step 2.   PRV := AES-CMAC(K, M, len);
+     *           return PRV;
+     *
+     * PASSED
+     *  RFC 4493 4.  Test Vectors
+     *  RFC 4614 4.  Test Vectors
+     */
+    openssl_kdf kdf;
+    ret = kdf.cmac_kdf_extract(output, alg, key, input);
 
     return ret;
 }
 
-return_t openssl_mac::cbc_mac(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize) {
+#if 0
+return_t openssl_mac::cbc_mac_rfc3610(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize) {
     return_t ret = errorcode_t::success;
     EVP_CIPHER_CTX* context = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -142,8 +159,9 @@ return_t openssl_mac::cbc_mac(const char* alg, const binary_t& key, const binary
     }
     return ret;
 }
+#endif
 
-return_t openssl_mac::cbc_mac_rfc8152(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize) {
+return_t openssl_mac::cbc_mac(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize) {
     return_t ret = errorcode_t::success;
     EVP_CIPHER_CTX* context = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();

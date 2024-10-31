@@ -50,7 +50,7 @@ return_t dtls_server_socket::dtls_open(tls_context_t** tls_handle, socket_t sock
 
         uint32 flags = 0;
 #if defined _WIN32 || defined _WIN64
-        flags = tls_nbio;  // IOCP - passed
+        // flags = tls_nbio;
 #endif
         ret = _tls->dtls_open(&context, sock, flags);
         if (errorcode_t::success != ret) {

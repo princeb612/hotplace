@@ -116,27 +116,29 @@ http_server* http_server_builder::build() {
                 uint16 verify_peer = get_server_conf().get(netserver_config_t::serverconf_verify_peer);
 
                 if (enable_h1 || enable_h2) {
+                    // TLS
                     ret = server->startup_tls(_server_cert, _server_key, _tls_cipher_list, verify_peer);
                     if (errorcode_t::success != ret) {
                         __leave2;
                     }
                     if (ipv4) {
-                        server->startup_server(1, AF_INET, port_https, _handler, _user_context);
+                        server->startup_server(http_service_t::service_https, AF_INET, port_https, _handler, _user_context);
                     }
                     if (ipv6) {
-                        server->startup_server(1, AF_INET6, port_https, _handler, _user_context);
+                        server->startup_server(http_service_t::service_https, AF_INET6, port_https, _handler, _user_context);
                     }
                 }
                 if (enable_h3) {
+                    // DTLS
                     ret = server->startup_dtls(_server_cert, _server_key, _tls_cipher_list, verify_peer);
                     if (errorcode_t::success != ret) {
                         __leave2;
                     }
                     if (ipv4) {
-                        server->startup_server(1, AF_INET, port_https, _handler, _user_context);
+                        server->startup_server(http_service_t::service_http3, AF_INET, port_https, _handler, _user_context);
                     }
                     if (ipv6) {
-                        server->startup_server(1, AF_INET6, port_https, _handler, _user_context);
+                        server->startup_server(http_service_t::service_http3, AF_INET6, port_https, _handler, _user_context);
                     }
                 }
             }
@@ -145,10 +147,10 @@ http_server* http_server_builder::build() {
                 uint16 port_http = get_server_conf().get(netserver_config_t::serverconf_port_http);
 
                 if (ipv4) {
-                    server->startup_server(0, AF_INET, port_http, _handler, _user_context);
+                    server->startup_server(http_service_t::service_http, AF_INET, port_http, _handler, _user_context);
                 }
                 if (ipv6) {
-                    server->startup_server(0, AF_INET6, port_http, _handler, _user_context);
+                    server->startup_server(http_service_t::service_http, AF_INET6, port_http, _handler, _user_context);
                 }
             }
 

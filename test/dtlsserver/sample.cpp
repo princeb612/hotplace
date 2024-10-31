@@ -35,6 +35,16 @@ t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 #define FILENAME_RUN _T (".run")
 
+void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
+    std::string ct;
+    std::string ev;
+    basic_stream bs;
+    auto advisor = trace_advisor::get_instance();
+    advisor->get_names(category, event, ct, ev);
+    bs.printf("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned int)s->size(), s->data());
+    _logger->writeln(bs);
+};
+
 return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
     network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
@@ -83,7 +93,7 @@ return_t echo_server(void*) {
 #elif defined _WIN32 || defined _WIN64
     // [IOCP] GetQueuedCompletionStatus only catches information directly related to overlapped
     //        and is not interested in DTLS handshakes that do not use overlapped
-    // uint16 nproc_threads = 2; // it works
+    nproc_threads = 2;  // it works
 #endif
 
     __try2 {
@@ -180,8 +190,8 @@ int main(int argc, char** argv) {
     _logger.make_share(builder.build());
 
     if (option.verbose) {
-        // openssl ERR_get_error_all/ERR_get_error_line_data
-        set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
+        set_trace_debug(debug_handler);
+        set_trace_option(trace_bt | trace_except | trace_debug);
     }
 
 #if defined _WIN32 || defined _WIN64

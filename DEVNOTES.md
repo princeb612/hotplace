@@ -1,3 +1,4 @@
+
 ## Notes
 
 - [Plan](#plan)
@@ -6,73 +7,120 @@
 
 ### Plan
 
-#### basic
+- holding
+  - asn1
+- TODO
+  - QUIC, HTTP/3
+- flowchart
+  - line : implemented
+  - dot-line : not implemented yet
+
 ```mermaid
 flowchart LR
   A[basic];
-  B[unittest];
-  C[pattern];
-  A --> B;
-  A --> C;
-  B --> B1[test_case];
-  B --> B2[logger];
-  C --> C1[KMP];
-  C --> C2[trie];
-  C --> C3[suffixtree];
-  C --> C4[ukkonen];
-  C --> C5[Aho-Corasick];
-  C5 --> C6[+wildcard];
+
+  AA[unittest];
+  AB[pattern];
+  A --> AA;
+  A --> AB;
+
+  AA1[test_case];
+  AA2[logger];
+  AB1[KMP];
+  AB2[trie];
+  AB3[suffixtree];
+  AB4[ukkonen];
+  AB5[Aho-Corasick];
+  AB51[+wildcard];
+  AA --> AA1;
+  AA --> AA2;
+  AB --> AB1;
+  AB --> AB2;
+  AB --> AB3;
+  AB --> AB4;
+  AB --> AB5;
+  AB5 --> AB51;
+
+  B[io];
+
+  BA[CBOR];
+  BB[ASN.1];
+  B --> BA;
+  B -.-> BB;
+
+  C[crypto];
+
+  CA[JOSE];
+  CB[COSE];
+  C --> CA;
+  C ---> CB;
+  BA --> CB;
+
+  CA1[JWS];
+  CA2[JWA];
+  CA3[JWE];
+  CA4[JWK];
+  CA --> CA1;
+  CA --> CA2;
+  CA --> CA3;
+  CA --> CA4;
+
+  CB1[key];
+  CB2[encrypt];
+  CB3[sign];
+  CB4[mac];
+  CB5[hash];
+  CB --> CB1;
+  CB --> CB2;
+  CB --> CB3;
+  CB --> CB4;
+  CB -.-> CB5;
+
+  D[network];
+
+  DA[multiplexer];
+  DB[transport];
+  D --> DA;
+  D --> DB;
+
+  DA1[epoll];
+  DA2[IOCP];
+  DA3[kqueue];
+  DA --> DA1;
+  DA --> DA2;
+  DA -.-> DA3;
+
+  DB1[TLS];
+  DB2[DTLS];
+  DB3[QUIC];
+  DB --> DB1;
+  DB --> DB2;
+  DB -.-> DB3;
+  DA1 --> DC;
+  DA2 --> DC;
+  DA3 -.-> DC;
+  DB1 --> DC;
+  DB2 --> DC;
+  DB3 -.-> DC;
+
+  DC[network server];
+  DC1[HTTP/1.1];
+  DC2[HPACK];
+  DC3[HTTP/2];
+  DC4[QPACK];
+  DC5[HTTP/3];
+
+  DC --> DC1;
+  DC --> DC2;
+  DC2 --> DC3;
+  DC --> DC4;
+  DC4 -.-> DC5;
+
+  DD[http_server];
+  DC1 --> DD;
+  DC3 --> DD;
+  DC5 -.-> DD;
 ```
-
-#### io
-```mermaid
-flowchart LR
-  A --> B;
-  A -.-> C;
-  A[io];
-  B[CBOR];
-  C[ASN.1];
-```
-
-- holding
-  - asn1
-
-#### crypto
-```mermaid
-flowchart LR
-  A[crypto];
-  B[JOSE];
-  C1[CBOR];
-  C2[COSE];
-  A --> B;
-  A --> C1;
-  C1 --> C2;
-```
-
-#### net
-```mermaid
-flowchart LR
-  A[network] --> A1[epoll];
-  A --> A2[IOCP];
-  A --> A3[TLS];
-  A --> A4[DTLS];
-  A -.-> A5[QUIC];
-  A1 --> B;
-  A2 --> B;
-  A3 --> B;
-  A4 --> B;
-  A5 -.-> B;
-  B[network server];
-  B --> C1[http_server];
-  C1 --> C2[HTTP/1.1];
-  B --> D1[HPACK];
-  D1 --> D2[HTTP/2];
-  B --> E1[QPACK];
-  E1 -.-> E2[HTTP/3];
-```
-
-- TODO
-  - QUIC, HTTP/3
 
 ## Memo
 
@@ -81,10 +129,11 @@ flowchart LR
 - execution failure cause of DLL binding error
 ; after updating MINGW (pacman -Suy), test application do not work
 
-| API                   | minimum version |
-| --                    | --              |
-| BIO_err_is_non_fatal  | openssl 3.2~    |
-| OPENSSL_LH_set_thunks | openssl 3.3~    |
+| API                    | version      |
+| --                     | --           |
+| BIO_err_is_non_fatal   | openssl 3.2~ |
+| OPENSSL_LH_set_thunks  | openssl 3.3~ |
+| EVP_MD_CTX_get_size_ex | openssl 3.4~ |
 
 - feature
 

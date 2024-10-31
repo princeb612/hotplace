@@ -136,10 +136,10 @@ return_t http_server::shutdown_dtls() {
     return ret;
 }
 
-return_t http_server::startup_server(uint16 tls, uint16 family, uint16 port, http_server_handler_t handler, void* user_context) {
+return_t http_server::startup_server(http_service_t service, uint16 family, uint16 port, http_server_handler_t handler, void* user_context) {
     return_t ret = errorcode_t::success;
     network_multiplexer_context_t* handle = nullptr;
-    tcp_server_socket* socket = nullptr;
+    server_socket* socket = nullptr;
 
     __try2 {
         if (nullptr == handler) {
@@ -149,10 +149,17 @@ return_t http_server::startup_server(uint16 tls, uint16 family, uint16 port, htt
         _consumer = handler;
         _user_context = user_context;
 
-        if (tls) {
-            socket = _tls_server_socket;
-        } else {
-            socket = &_server_socket;
+        switch (service) {
+            case service_http:
+                socket = &_server_socket;
+                break;
+            case service_http3:
+                socket = _dtls_server_socket;
+                break;
+            case service_https:
+            default:
+                socket = _tls_server_socket;
+                break;
         }
 
         ret = get_network_server().open(&handle, family, port, socket, &get_server_conf(), &consume_routine, this);

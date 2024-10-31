@@ -63,6 +63,16 @@ payload_member::payload_member(const binary_t& value, const char* name, const ch
     get_variant().set_binary_new(value);
 }
 
+payload_member::payload_member(const std::string& value, const char* name, const char* group) : _change_endian(false), _member_value_of(nullptr), _reserve(0) {
+    set_name(name).set_group(group);
+    get_variant().set_str_new(value);
+}
+
+payload_member::payload_member(const stream_t* value, const char* name, const char* group) : _change_endian(false), _member_value_of(nullptr), _reserve(0) {
+    set_name(name).set_group(group);
+    get_variant().set_bstr_new(value);
+}
+
 bool payload_member::get_change_endian() { return _change_endian; }
 
 std::string payload_member::get_name() const { return _name; }

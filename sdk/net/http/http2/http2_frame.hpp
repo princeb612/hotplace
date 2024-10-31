@@ -339,6 +339,10 @@ class http2_frame_goaway : public http2_frame {
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
+    /**
+     * @brief   set error code
+     * @param   uint32 errorcode [in] see h2_errorcodes_t
+     */
     http2_frame_goaway& set_errorcode(uint32 errorcode);
 
     void set_debug(const binary_t& debug);

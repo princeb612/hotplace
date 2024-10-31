@@ -15,6 +15,7 @@
 
 #include <sdk/base/error.hpp>
 #include <sdk/base/inline.hpp>
+#include <sdk/base/stream.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/base/types.hpp>
@@ -256,6 +257,7 @@ class variant {
     variant(const unsigned char* value, size_t n);
     variant(const std::string& rhs);
     variant(const binary_t& rhs);
+    variant(const stream_t* rhs);
     variant(bool value);
     variant(int8 value);
     variant(uint8 value);
@@ -319,8 +321,10 @@ class variant {
     variant& set_user_type(vartype_t vtype, void* value);
 
     variant& set_str_new(const char* value);
+    variant& set_str_new(const std::string& value);
     variant& set_strn_new(const char* value, size_t n);
     variant& set_bstr_new(const unsigned char* value, size_t n);
+    variant& set_bstr_new(const stream_t* s);
     variant& set_nstr_new(const char* value, size_t n);
     variant& set_binary_new(const binary_t& bin);
 

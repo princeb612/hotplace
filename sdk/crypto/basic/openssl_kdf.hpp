@@ -5,6 +5,7 @@
  * @desc
  *  RFC 6070 PKCS #5: Password-Based Key Derivation Function 2 (PBKDF2)
  *  RFC 7914 The scrypt Password-Based Key Derivation Function
+ *  RFC 8446 HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
  *  RFC 9106 Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications
  *  - openssl-3.2 required
  *
@@ -109,6 +110,35 @@ class openssl_kdf {
      */
     return_t hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, size_t dlen, const binary_t& prk, const binary_t& info);
     /**
+     * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+     *  7.  Cryptographic Computations
+     *  7.1.  Key Schedule
+     *
+     *  HKDF-Expand-Label(Secret, Label, Context, Length) =
+     *       HKDF-Expand(Secret, HkdfLabel, Length)
+     *  Where HkdfLabel is specified as:
+     *
+     *  struct {
+     *      uint16 length = Length;
+     *      opaque label<7..255> = "tls13 " + Label;
+     *      opaque context<0..255> = Context;
+     *  } HkdfLabel;
+     *
+     *  Derive-Secret(Secret, Label, Messages) =
+     *       HKDF-Expand-Label(Secret, Label,
+     *                         Transcript-Hash(Messages), Hash.length)
+     *
+     * RFC 9001 Using TLS to Secure QUIC
+     *  5.2.  Initial Secrets
+     *
+     *  initial_salt = 0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a
+     *  initial_secret = HKDF-Extract(initial_salt, client_dst_connection_id)
+     *
+     *  client_initial_secret = HKDF-Expand-Label(initial_secret, "client in", "", Hash.length)
+     *  server_initial_secret = HKDF-Expand-Label(initial_secret, "server in", "", Hash.length)
+     */
+    return_t hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
+    /**
      * @brief   CMAC-based Extract-and-Expand Key Derivation Function (CKDF)
      * @param   binary_t& okm [out] output key material
      * @param   crypt_algorithm_t alg [in] algorithm
@@ -118,12 +148,97 @@ class openssl_kdf {
      * @param   const binary_t& info [in] info
      * @return  error code (see error.hpp)
      * @remarks
+     *          RFC 4493 Figure 2.3.  Algorithm AES-CMAC
+     *          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *          +                   Algorithm AES-CMAC                              +
+     *          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *          +                                                                   +
+     *          +   Input    : K    ( 128-bit key )                                 +
+     *          +            : M    ( message to be authenticated )                 +
+     *          +            : len  ( length of the message in octets )             +
+     *          +   Output   : T    ( message authentication code )                 +
+     *          +                                                                   +
+     *          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *          +   Constants: const_Zero is 0x00000000000000000000000000000000     +
+     *          +              const_Bsize is 16                                    +
+     *          +                                                                   +
+     *          +   Variables: K1, K2 for 128-bit subkeys                           +
+     *          +              M_i is the i-th block (i=1..ceil(len/const_Bsize))   +
+     *          +              M_last is the last block xor-ed with K1 or K2        +
+     *          +              n      for number of blocks to be processed          +
+     *          +              r      for number of octets of last block            +
+     *          +              flag   for denoting if last block is complete or not +
+     *          +                                                                   +
+     *          +   Step 1.  (K1,K2) := Generate_Subkey(K);                         +
+     *          +   Step 2.  n := ceil(len/const_Bsize);                            +
+     *          +   Step 3.  if n = 0                                               +
+     *          +            then                                                   +
+     *          +                 n := 1;                                           +
+     *          +                 flag := false;                                    +
+     *          +            else                                                   +
+     *          +                 if len mod const_Bsize is 0                       +
+     *          +                 then flag := true;                                +
+     *          +                 else flag := false;                               +
+     *          +                                                                   +
+     *          +   Step 4.  if flag is true                                        +
+     *          +            then M_last := M_n XOR K1;                             +
+     *          +            else M_last := padding(M_n) XOR K2;                    +
+     *          +   Step 5.  X := const_Zero;                                       +
+     *          +   Step 6.  for i := 1 to n-1 do                                   +
+     *          +                begin                                              +
+     *          +                  Y := X XOR M_i;                                  +
+     *          +                  X := AES-128(K,Y);                               +
+     *          +                end                                                +
+     *          +            Y := M_last XOR X;                                     +
+     *          +            T := AES-128(K,Y);                                     +
+     *          +   Step 7.  return T;                                              +
+     *          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *
+     *          RFC 4615 Figure 1.  The AES-CMAC-PRF-128 Algorithm
+     *          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *          +                        AES-CMAC-PRF-128                           +
+     *          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *          +                                                                   +
+     *          + Input  : VK (Variable-length key)                                 +
+     *          +        : M (Message, i.e., the input data of the PRF)             +
+     *          +        : VKlen (length of VK in octets)                           +
+     *          +        : len (length of M in octets)                              +
+     *          + Output : PRV (128-bit Pseudo-Random Variable)                     +
+     *          +                                                                   +
+     *          +-------------------------------------------------------------------+
+     *          + Variable: K (128-bit key for AES-CMAC)                            +
+     *          +                                                                   +
+     *          + Step 1.   If VKlen is equal to 16                                 +
+     *          + Step 1a.  then                                                    +
+     *          +               K := VK;                                            +
+     *          + Step 1b.  else                                                    +
+     *          +               K := AES-CMAC(0^128, VK, VKlen);                    +
+     *          + Step 2.   PRV := AES-CMAC(K, M, len);                             +
+     *          +           return PRV;                                             +
+     *          +                                                                   +
+     *          +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     *
+     *          CKDF follows exactly the same structure as [RFC5869] but HMAC-Hash is replaced by the function AES-CMAC throughout.
+     *
+     *          Thus, following HKDF, the CKDF-Extract(salt, IKM) function takes an optional,
+     *          16-byte salt and an arbitrary-length "input keying material" (IKM) message.
+     *          If no salt is given, the 16-byte, all-zero value is used.
+     *
+     *          It returns the result of AES-CMAC(key = salt, input = IKM), called the "pseudorandom key" (PRK), which will be 16 bytes long.
+     *
+     *          Likewise, the CKDF-Expand(PRK, info, L) function takes the PRK result from CKDF-Extract,
+     *          an arbitrary "info" argument and a requested number of bytes to produce.
+     *          It calculates the L-byte result, called the "output keying material" (OKM)
+     *
+     *          the CKDF-Extract(salt, IKM) function takes an optional, 16-byte salt and an arbitrary-length "input keying material" (IKM) message.
+     *          If no salt is given, the 16-byte, all-zero value is used.
+     *          It returns the result of AES-CMAC(key = salt, input = IKM), called the "pseudorandom key" (PRK), which will be 16 bytes long.
+     *
      *          CMAC = CKDF-Extract + CKDF-Expand
      *
      *          CMAC "aes-128-cbc"
      *          CKDF-Extract "aes-128-cbc"
      *          CKDF-Expand "aes-128-ecb"
-     * @desc    RFC 4493 Figure 2.3.  Algorithm AES-CMAC
      */
     return_t cmac_kdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info);
     /**
@@ -134,6 +249,7 @@ class openssl_kdf {
      * @param   const binary_t& ikm [in] input key material
      * @return  error code (see error.hpp)
      * @desc    RFC 4493 Figure 2.3.  Algorithm AES-CMAC
+     * @sa      openssl_mac::cmac
      */
     return_t cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, const binary_t& salt, const binary_t& ikm);
     /**
@@ -180,7 +296,7 @@ class openssl_kdf {
     // bcrypt - blowfish based... (openssl 3.x deprecates bf)
 
     /**
-     * @brief   argon2d/2i/2id openssl-3.2 required
+     * @brief   argon2d/2i/2id
      * @param   binary_t& derived [in]
      * @param   argon2_t mode [in]
      * @param   size_t dlen [in]
@@ -192,7 +308,7 @@ class openssl_kdf {
      * @param   uint32 parallel_cost [inopt] default 4
      * @param   uint32 memory_cost [inopt] default 32
      * @return  error code (see error.hpp)
-     *          not_supported .. openssl-1.1.1, 3.0
+     * @remarks openssl-3.2 required
      */
     return_t argon2(binary_t& derived, argon2_t mode, size_t dlen, const binary_t& password, const binary_t& salt, const binary_t& ad, const binary_t& secret,
                     uint32 iteration_cost = 3, uint32 parallel_cost = 4, uint32 memory_cost = 32);

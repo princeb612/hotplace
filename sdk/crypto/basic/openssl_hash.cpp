@@ -439,17 +439,13 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
         if (context->_flags & openssl_hash_context_flag_t::hash_cmac) {
             crypto_advisor* advisor = crypto_advisor::get_instance();
             const hint_blockcipher_t* hint = advisor->find_evp_cipher(context->_evp_cipher);
-            unsigned int size_digest = sizeof_block(hint);
+            size_t size_digest = sizeof_block(hint);
             output.resize(size_digest);
 
-            HMAC_Init_ex(context->_hmac_context, &context->_key[0], context->_key.size(), context->_evp_md, nullptr);
-            HMAC_Update(context->_hmac_context, source_data, source_size);
-            HMAC_Final(context->_hmac_context, &output[0], &size_digest);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-            HMAC_CTX_reset(context->_hmac_context);
-#else
-            HMAC_CTX_cleanup(context->_hmac_context);
-#endif
+            CMAC_Init(context->_cmac_context, &context->_key[0], context->_key.size(), context->_evp_cipher, nullptr);
+            CMAC_Update(context->_cmac_context, source_data, source_size);
+            CMAC_Final(context->_cmac_context, &output[0], &size_digest);
+            CMAC_CTX_cleanup(context->_cmac_context);
         } else {
             unsigned int size_digest = EVP_MD_size(context->_evp_md);
             output.resize(size_digest);

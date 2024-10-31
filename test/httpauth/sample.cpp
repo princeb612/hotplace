@@ -30,14 +30,25 @@ t_shared_instance<logger> _logger;
 typedef struct _OPTION {
     int port;
     int port_tls;
+    int h2;
     int verbose;
     int log;
 
-    _OPTION() : port(8080), port_tls(9000), verbose(0), log(0) {}
+    _OPTION() : port(8080), port_tls(9000), h2(0), verbose(0), log(0) {}
 } OPTION;
 
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 t_shared_instance<http_server> _http_server;
+
+void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
+    std::string ct;
+    std::string ev;
+    basic_stream bs;
+    auto advisor = trace_advisor::get_instance();
+    advisor->get_names(category, event, ct, ev);
+    bs.printf("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned int)s->size(), s->data());
+    _logger->writeln(bs);
+};
 
 void api_response_html_handler(network_session*, http_request* request, http_response* response, http_router* router) {
     response->compose(200, "text/html", "<html><body>page - ok<body></html>");
@@ -76,6 +87,10 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 http_response response(request);
                 basic_stream bs;
 
+                if (option.verbose) {
+                    response.settrace(debug_handler);
+                }
+
                 if (use_tls) {
                     // using http_router
                     _http_server->get_http_router().route(session, request, &response);
@@ -85,13 +100,6 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                     int status_code = 426;
                     response.compose(status_code, "text/html", "<html><body><a href='https://localhost:%d%s'>%d %s</a><br></body></html>", option.port_tls,
                                      request->get_http_uri().get_uri(), status_code, http_resource::get_instance()->load(status_code).c_str());
-                }
-
-                if (option.verbose) {
-                    _logger->colorln("send %i", session_socket->event_socket);
-                    basic_stream resp;
-                    response.get_response(resp);
-                    _logger->dump(resp);
                 }
 
                 response.respond(session);
@@ -126,6 +134,9 @@ return_t simple_http_server(void*) {
             .enable_ipv4(true)
             .enable_ipv6(true)
             .set_handler(consume_routine);
+        if (option.h2) {
+            builder.enable_h2(true);
+        }
         builder.get_server_conf()
             .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
             .set(netserver_config_t::serverconf_concurrent_network, 4)
@@ -154,13 +165,13 @@ return_t simple_http_server(void*) {
         std::function<void(network_session*, http_request*, http_response*, http_router*)> default_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
             basic_stream bs;
-            request->get_request(bs);
+            bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
         };
         std::function<void(network_session*, http_request*, http_response*, http_router*)> error_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
             basic_stream bs;
-            request->get_request(bs);
+            bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
         };
         std::function<void(network_session*, http_request*, http_response*, http_router*)> cb_handler =
@@ -298,6 +309,7 @@ int main(int argc, char** argv) {
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     *_cmdline << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
               << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
+              << t_cmdarg_t<OPTION>("-h2", "HTTP/2", [](OPTION& o, char* param) -> void { o.h2 = 1; }).optional()
               << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
               << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional();
 
@@ -314,8 +326,8 @@ int main(int argc, char** argv) {
     _logger->setcolor(bold, cyan);
 
     if (option.verbose) {
-        // openssl ERR_get_error_all/ERR_get_error_line_data
-        set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
+        set_trace_debug(debug_handler);
+        set_trace_option(trace_bt | trace_except | trace_debug);
     }
 
 #if defined _WIN32 || defined _WIN64

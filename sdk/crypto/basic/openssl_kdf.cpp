@@ -12,11 +12,13 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/io/basic/payload.hpp>
 
 #if defined __linux__
 #include <dlfcn.h>
@@ -265,85 +267,43 @@ return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, si
     return ret;
 }
 
-// RFC 4493 Figure 2.3.  Algorithm AES-CMAC
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +                   Algorithm AES-CMAC                              +
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +                                                                   +
-// +   Input    : K    ( 128-bit key )                                 +
-// +            : M    ( message to be authenticated )                 +
-// +            : len  ( length of the message in octets )             +
-// +   Output   : T    ( message authentication code )                 +
-// +                                                                   +
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +   Constants: const_Zero is 0x00000000000000000000000000000000     +
-// +              const_Bsize is 16                                    +
-// +                                                                   +
-// +   Variables: K1, K2 for 128-bit subkeys                           +
-// +              M_i is the i-th block (i=1..ceil(len/const_Bsize))   +
-// +              M_last is the last block xor-ed with K1 or K2        +
-// +              n      for number of blocks to be processed          +
-// +              r      for number of octets of last block            +
-// +              flag   for denoting if last block is complete or not +
-// +                                                                   +
-// +   Step 1.  (K1,K2) := Generate_Subkey(K);                         +
-// +   Step 2.  n := ceil(len/const_Bsize);                            +
-// +   Step 3.  if n = 0                                               +
-// +            then                                                   +
-// +                 n := 1;                                           +
-// +                 flag := false;                                    +
-// +            else                                                   +
-// +                 if len mod const_Bsize is 0                       +
-// +                 then flag := true;                                +
-// +                 else flag := false;                               +
-// +                                                                   +
-// +   Step 4.  if flag is true                                        +
-// +            then M_last := M_n XOR K1;                             +
-// +            else M_last := padding(M_n) XOR K2;                    +
-// +   Step 5.  X := const_Zero;                                       +
-// +   Step 6.  for i := 1 to n-1 do                                   +
-// +                begin                                              +
-// +                  Y := X XOR M_i;                                  +
-// +                  X := AES-128(K,Y);                               +
-// +                end                                                +
-// +            Y := M_last XOR X;                                     +
-// +            T := AES-128(K,Y);                                     +
-// +   Step 7.  return T;                                              +
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+return_t openssl_kdf::hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (label.empty() || (label.size() > 255) || (context.size() > 255)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        /**
+         * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+         *  7.  Cryptographic Computations
+         *   HKDF-Expand-Label(Secret, Label, Context, Length) = HKDF-Expand(Secret, HkdfLabel, Length)
+         *
+         * RFC 9001 Using TLS to Secure QUIC
+         *  Appendix A.  Sample Packet Protection
+         */
 
-// RFC 4615 Figure 1.  The AES-CMAC-PRF-128 Algorithm
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +                        AES-CMAC-PRF-128                           +
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// +                                                                   +
-// + Input  : VK (Variable-length key)                                 +
-// +        : M (Message, i.e., the input data of the PRF)             +
-// +        : VKlen (length of VK in octets)                           +
-// +        : len (length of M in octets)                              +
-// + Output : PRV (128-bit Pseudo-Random Variable)                     +
-// +                                                                   +
-// +-------------------------------------------------------------------+
-// + Variable: K (128-bit key for AES-CMAC)                            +
-// +                                                                   +
-// + Step 1.   If VKlen is equal to 16                                 +
-// + Step 1a.  then                                                    +
-// +               K := VK;                                            +
-// + Step 1b.  else                                                    +
-// +               K := AES-CMAC(0^128, VK, VKlen);                    +
-// + Step 2.   PRV := AES-CMAC(K, M, len);                             +
-// +           return PRV;                                             +
-// +                                                                   +
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        payload pl;
+        uint8 opaque_len_label = 6 + label.size();
+        uint8 opaque_len_context = context.size();
+        pl << new payload_member(length, true, "length") << new payload_member(opaque_len_label, "opaque_len_label")
+           << new payload_member(std::string("tls13 "), "tls13") << new payload_member(label, "label")
+           << new payload_member(opaque_len_context, "opaque_len_context") << new payload_member(context, "context");
+        binary_t bin_hkdflabel;
+        pl.write(bin_hkdflabel);
 
-// CKDF follows exactly the same structure as [RFC5869] but HMAC-Hash is replaced by the function AES-CMAC throughout.
-
-// Thus, following HKDF, the CKDF-Extract(salt, IKM) function takes an optional, 16-byte salt and an arbitrary-length "input keying material" (IKM)
-// message. If no salt is given, the 16-byte, all-zero value is used.
-
-// It returns the result of AES-CMAC(key = salt, input = IKM), called the "pseudorandom key" (PRK), which will be 16 bytes long.
-
-// Likewise, the CKDF-Expand(PRK, info, L) function takes the PRK result from CKDF-Extract, an arbitrary "info" argument and a requested number of bytes
-// to produce. It calculates the L-byte result, called the "output keying material" (OKM)
+        /**
+         * RFC 5869
+         * HKDF-Expand(PRK, info, L) -> OKM
+         */
+        openssl_kdf kdf;
+        kdf.hkdf_expand(okm, alg, length, secret, bin_hkdflabel);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
 
 return_t openssl_kdf::cmac_kdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info) {
     return_t ret = errorcode_t::success;
@@ -361,13 +321,11 @@ return_t openssl_kdf::cmac_kdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen
     return ret;
 }
 
-// the CKDF-Extract(salt, IKM) function takes an optional, 16-byte salt and an arbitrary-length "input keying material" (IKM) message.
-// If no salt is given, the 16-byte, all-zero value is used.
-// It returns the result of AES-CMAC(key = salt, input = IKM), called the "pseudorandom key" (PRK), which will be 16 bytes long.
 return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, const binary_t& salt, const binary_t& ikm) {
+    // RFC 4615 Figure 1.  The AES-CMAC-PRF-128 Algorithm
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    openssl_mac mac;
+    openssl_hash hash;
     hash_context_t* mac_handle = nullptr;
 
     __try2 {
@@ -379,38 +337,31 @@ return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, con
         if (0 == blocksize) {
             throw;
         }
-
-        const byte_t* ptr_salt = &salt[0];
-        size_t size_salt = salt.size();
-        binary_t temp;
-        if (0 == size_salt) {
-            temp.resize(blocksize);
-            ptr_salt = &temp[0];
-            size_salt = blocksize;
-        }
+        auto algorithm = hint->algorithm;
 
         binary_t k;
-        if (blocksize == size_salt) {
+        if (0 == salt.size()) {
+            // If no salt is given, the 16-byte, all-zero value is used.
+            // step 1a.
+            k.resize(blocksize);
+        } else if (blocksize == salt.size()) {
             // step 1.
             // step 1a.
-            k.insert(k.end(), ptr_salt, ptr_salt + size_salt);
+            k = salt;
         } else {
             // step 1b.
             binary_t o128;
             o128.resize(blocksize);
 
-            mac.open(&mac_handle, crypt_algorithm_t::aes128, crypt_mode_t::cbc, &o128[0], o128.size());
-            mac.init(mac_handle);
-            mac.update(mac_handle, ptr_salt, size_salt);
-            mac.finalize(mac_handle, k);
-            mac.close(mac_handle);
+            hash.open(&mac_handle, algorithm, crypt_mode_t::cbc, &o128[0], o128.size());
+            hash.hash(mac_handle, &salt[0], salt.size(), k);
+            hash.close(mac_handle);
         }
+
         // step 2.
-        mac.open(&mac_handle, crypt_algorithm_t::aes128, crypt_mode_t::cbc, &k[0], k.size());
-        mac.init(mac_handle);
-        mac.update(mac_handle, &ikm[0], ikm.size());
-        mac.finalize(mac_handle, prk);
-        mac.close(mac_handle);
+        hash.open(&mac_handle, algorithm, crypt_mode_t::cbc, &k[0], k.size());
+        hash.hash(mac_handle, &ikm[0], ikm.size(), prk);
+        hash.close(mac_handle);
     }
     __finally2 {
         // do nothing
@@ -421,11 +372,13 @@ return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, con
 return_t openssl_kdf::cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size_t dlen, const binary_t& prk, const binary_t& info) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    openssl_mac mac;
+    openssl_hash hash;
 
     __try2 {
-        // the CKDF-Expand(PRK, info, L) function takes the PRK result from CKDF-Extract, an arbitrary "info" argument and a requested number of bytes to
-        // produce. It calculates the L-byte result, called the "output keying material" (OKM)
+        /**
+         * the CKDF-Expand(PRK, info, L) function takes the PRK result from CKDF-Extract, an arbitrary "info" argument and a requested number of bytes to
+         * produce. It calculates the L-byte result, called the "output keying material" (OKM)
+         */
 
         okm.clear();
 
@@ -440,7 +393,11 @@ return_t openssl_kdf::cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size
             content.insert(content.end(), info.begin(), info.end());
             content.insert(content.end(), i);  // i = 1..255 (01..ff)
 
-            mac.cmac(alg, crypt_mode_t::ecb, prk, content, t_block);  // T(i) = AES-CMAC(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
+            // T(i) = AES-CMAC(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
+            hash_context_t* mac_handle = nullptr;
+            hash.open(&mac_handle, alg, crypt_mode_t::ecb, &prk[0], prk.size());
+            hash.hash(mac_handle, &content[0], content.size(), t_block);
+            hash.close(mac_handle);
 
             okm.insert(okm.end(), t_block.begin(), t_block.end());  // T = T(1) | T(2) | T(3) | ... | T(N)
             offset += t_block.size();

@@ -180,8 +180,10 @@
 * HTTP/3
   * RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
   * RFC 9001 Using TLS to Secure QUIC
-  * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
+  * RFC 9002 QUIC Loss Detection and Congestion Control
   * RFC 9114 HTTP/3
+  * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
+  * RFC 9368 Compatible Version Negotiation for QUIC
 * ASN.1
   * ITU-T X.680-X.699
     * [X.680-X.693 : Information Technology - Abstract Syntax Notation One (ASN.1) & ASN.1 encoding rules](https://www.itu.int/rec/T-REC-X.680-X.693-202102-I/en)

@@ -1,5 +1,9 @@
 # history
 
+* Revision 642
+  * [study] QUIC (RFC 9001)
+  * [study] TLS (RFC 8446)
+
 * Revision 641
   * [study] QUIC (RFC 9000)
 

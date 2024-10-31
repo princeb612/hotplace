@@ -36,6 +36,8 @@ variant::variant(const std::string &rhs) { set_strn_new(rhs.c_str(), rhs.size())
 
 variant::variant(const binary_t &rhs) { set_bstr_new(&rhs[0], rhs.size()); }
 
+variant::variant(const stream_t *rhs) { set_bstr_new(rhs); }
+
 variant::variant(bool value) { set_bool(value); }
 
 variant::variant(int8 value) { set_int8(value); }
@@ -313,6 +315,19 @@ variant &variant::set_str_new(const char *value) {
     return *this;
 }
 
+variant &variant::set_str_new(const std::string &value) {
+    _vt.type = TYPE_STRING;
+    _vt.size = 0;
+    _vt.flag = flag_string;
+    char *p = strdup(value.c_str());
+    if (p) {
+        _vt.data.str = p;
+        _vt.flag |= variant_flag_t::flag_free;
+    }
+    _vt.data.str = p;
+    return *this;
+}
+
 variant &variant::set_strn_new(const char *value, size_t n) {
     _vt.type = TYPE_STRING;
     _vt.size = 0;
@@ -343,6 +358,28 @@ variant &variant::set_bstr_new(const unsigned char *value, size_t n) {
             *(p + n) = 0;
             _vt.size = n;
             _vt.flag |= variant_flag_t::flag_free;
+        }
+    }
+    _vt.data.bstr = p;
+    return *this;
+}
+
+variant &variant::set_bstr_new(const stream_t *s) {
+    _vt.type = TYPE_BINARY;
+    _vt.size = 0;
+    _vt.flag = flag_binary;
+    unsigned char *p = nullptr;
+    if (s) {
+        const byte_t *value = s->data();
+        size_t n = s->size();
+        if (n) {
+            p = (unsigned char *)malloc(n + 1);
+            if (p) {
+                memcpy(p, value, n);
+                *(p + n) = 0;
+                _vt.size = n;
+                _vt.flag |= variant_flag_t::flag_free;
+            }
         }
     }
     _vt.data.bstr = p;

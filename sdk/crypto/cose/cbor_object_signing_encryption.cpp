@@ -1746,7 +1746,7 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
             binary_t iv;
             iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.
             openssl_mac mac;
-            ret = mac.cbc_mac_rfc8152(hint->enc.algname, cek, iv, tomac, tag, hint->enc.tsize);
+            ret = mac.cbc_mac(hint->enc.algname, cek, iv, tomac, tag, hint->enc.tsize);
         } else {
             ret = errorcode_t::bad_request;
             __leave2;

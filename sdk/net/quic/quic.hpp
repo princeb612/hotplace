@@ -15,6 +15,7 @@
  * OpenSSL 3.2 and later features support for the QUIC transport protocol.
  * Currently, only client connectivity is supported.
  * This man page describes the usage of QUIC client functionality for both existing and new applications.
+ *
  */
 
 #ifndef __HOTPLACE_SDK_NET_QUIC__
@@ -28,28 +29,28 @@ namespace net {
 /**
  * RFC 9000 17.  Packet Formats
  * 17.2.  Long Header Packets
+ * 17.3.  Short Header Packets
  */
 enum quic_packet_field_t {
-    quic_packet_field_hf = 0x80,         // RFC 9000 Figure 13
-    quic_packet_field_fb = 0x40,         // RFC 9000 Figure 13
-    quic_packet_field_mask_t = 0x30,     // RFC 9000 Figure 13
-    quic_packet_field_initial = 0x00,    // RFC 9000 17.2.2.  Initial Packet
-    quic_packet_field_0_rtt = 0x10,      // RFC 9000 17.2.3.  0-RTT
-    quic_packet_field_handshake = 0x20,  // RFC 9000 17.2.4.  Handshake Packet
-    quic_packet_field_retry = 0x30,      // RFC 9000 17.2.5.  Retry Packet
-    quic_packet_field_mask_s = 0x0f,     // RFC 9000 Figure 13
-    quic_packet_field_mask_pnl = 0x03,   // RFC 9000 Initial Packet, 0-RTT, Handshake Packet, 1-RTT Packet
-    quic_packet_field_spin = 0x20,       // RFC 9000 17.4.  Latency Spin Bit
-    quic_packet_field_key_phase = 0x04,  // RFC 9000 17.3.  Short Header Packets
+    quic_packet_field_hf = 0x80,         // RFC 9000 Figure 13, Header Form
+    quic_packet_field_fb = 0x40,         // RFC 9000 Figure 13, Fixed Bit
+    quic_packet_field_mask_lh = 0x30,    // RFC 9000 Figure 13, Long Packet Type
+    quic_packet_field_initial = 0x00,    // RFC 9000 Table 5, 17.2.2, Initial Packet
+    quic_packet_field_0_rtt = 0x10,      // RFC 9000 Table 5, 17.2.3, 0-RTT
+    quic_packet_field_handshake = 0x20,  // RFC 9000 Table 5, 17.2.4, Handshake Packet
+    quic_packet_field_retry = 0x30,      // RFC 9000 Table 5, 17.2.5, Retry Packet
+    quic_packet_field_sb = 0x20,         // RFC 9000 Figure 19: 1-RTT Packet, 17.4.  Latency Spin Bit
+    quic_packet_field_kp = 0x04,         // RFC 9000 Figure 19: 1-RTT Packet, Key Phase
+    quic_packet_field_mask_pnl = 0x03,   // RFC 9000 Figure 19: 1-RTT Packet, Packet Number Length
 };
 
 enum quic_packet_t {
-    quic_packet_version_negotiation = 1,
-    quic_packet_initial = 2,
-    quic_packet_0_rtt = 3,
-    quic_packet_handshake = 4,
-    quic_packet_retry = 5,
-    quic_packet_1_rtt = 6,
+    quic_packet_type_version_negotiation = 1,  // RFC 9000 17.2.1.  Version Negotiation Packet
+    quic_packet_type_initial = 2,              // RFC 9000 17.2.2.  Initial Packet
+    quic_packet_type_0_rtt = 3,                // RFC 9000 17.2.3.  0-RTT
+    quic_packet_type_handshake = 4,            // RFC 9000 17.2.4.  Handshake Packet
+    quic_packet_type_retry = 5,                // RFC 9000 17.2.5.  Retry Packet
+    quic_packet_type_1_rtt = 6,                // RFC 9000 17.3.1.  1-RTT Packet
 };
 
 /*
@@ -78,6 +79,68 @@ enum quic_frame_t {
     quic_frame_handshake_done = 0x1e,        // RFC 9000 19.20 ___1
 };
 
+/**
+ * RFC 9000 18.  Transport Parameter Encoding
+ */
+enum quic_param_t {
+    quic_param_original_destination_connection_id = 0x00,
+    quic_param_max_idle_timeout = 0x01,
+    quic_param_stateless_reset_token = 0x02,
+    quic_param_max_udp_payload_size = 0x03,
+    quic_param_initial_max_data = 0x04,
+    quic_param_initial_max_stream_data_bidi_local = 0x05,
+    quic_param_initial_max_stream_data_bidi_remote = 0x06,
+    quic_param_initial_max_stream_data_uni = 0x07,
+    quic_param_initial_max_streams_bidi = 0x08,
+    quic_param_initial_max_streams_uni = 0x09,
+    quic_param_ack_delay_exponent = 0x0a,
+    quic_param_max_ack_delay = 0x0b,
+    quic_param_disable_active_migration = 0x0c,
+    quic_param_preferred_address = 0x0d,
+    quic_param_active_connection_id_limit = 0x0e,
+    quic_param_initial_source_connection_id = 0x0f,
+    quic_param_retry_source_connection_id = 0x10,
+};
+
+/**
+ * RFC 9000 20.  Error Codes
+ */
+enum h3_errorcodes_t {
+    h3_no_error = 0x00,
+    h3_internal_error = 0x01,
+    h3_connection_refused = 0x02,
+    h3_flow_control_error = 0x03,
+    h3_stream_limit_error = 0x04,
+    h3_stream_state_error = 0x05,
+    h3_final_size_error = 0x06,
+    h3_frame_encoding_error = 0x07,
+    h3_transport_parameter_error = 0x08,
+    h3_connection_id_limit_error = 0x09,
+    h3_protocol_violation = 0x0a,
+    h3_invalid_token = 0x0b,
+    h3_application_error = 0x0c,
+    h3_crypto_buffer_exceeded = 0x0d,
+    h3_key_update_error = 0x0e,
+    h3_aead_limit_reached = 0x0f,
+    h3_no_viable_path = 0x10,
+    h3_crypto_error = 0x0100,  // 0x0100-0x01ff
+};
+
+/**
+ * RFC 9000 Figure 22: Preferred Address Format
+ */
+struct preferred_address {
+    uint32 ipv4addr;
+    uint16 ipv4port;
+    uint128 ipv6addr;
+    uint16 ipv6port;
+    binary_t cid;
+    uint128 stateless_reset_token;
+};
+
+/**
+ * RFC 9000 17.  Packet Formats
+ */
 class quic_packet {
    public:
     quic_packet();
@@ -110,6 +173,8 @@ class quic_packet {
      */
     virtual void dump(stream_t* s);
 
+    quic_packet& add(const quic_frame* frame);
+
    protected:
     uint8 _type;
     uint32 _version;
@@ -120,7 +185,11 @@ class quic_packet {
 class quick_frame {
    public:
     quick_frame();
+    quick_frame(quic_frame_t type);
     quick_frame(const quick_frame& rhs);
+
+   protected:
+    uint8 _type;
 };
 
 class quick_frame_padding : public quick_frame {

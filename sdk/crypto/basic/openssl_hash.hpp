@@ -208,7 +208,7 @@ class openssl_digest : public openssl_hash {
     return_t digest(const char* alg, const std::string& input, std::string& hashstring, encoding_t encoding = encoding_t::encoding_base16);
 };
 
-class openssl_mac : public openssl_hash {
+class openssl_mac {
    public:
     openssl_mac();
 
@@ -220,9 +220,12 @@ class openssl_mac : public openssl_hash {
      *          see also kdf_ckdf
      * @remarks not the same algorithm AES-CBC-MAC
      *          see also RFC 8152 9.2.  AES Message Authentication Code (AES-CBC-MAC)
+     *
+     *          run as openssl_kdf::cmac_kdf_extract
+     *          see also RFC 4615 Figure 1.  The AES-CMAC-PRF-128 Algorithm
      */
     return_t cmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output);
-    return_t cmac(crypt_algorithm_t alg, crypt_mode_t mode, const binary_t& key, const binary_t& input, binary_t& output);
+    return_t cmac(crypt_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output);
 
     /**
      * @brief   CBC-MAC
@@ -245,14 +248,14 @@ class openssl_mac : public openssl_hash {
      *          OMAC is the first good CBC-MAC derivative that uses a single key.
      *          OMAC works the same way CBC-MAC does until the last block, where it XORs the state with an additional value before encrypting.
      */
-    return_t cbc_mac(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize);
+    // return_t cbc_mac_rfc3610(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize);
     /**
      * @brief   RFC 8152 9.2. AES Message Authentication Code (AES-CBC-MAC)
      * @desc
      *          reference https://travis-ci.org/cose-wg/
-     *          difference ... encrypt final block w/ IV
+     *          cbc_mac_rfc3610 difference ... encrypt final block w/ IV
      */
-    return_t cbc_mac_rfc8152(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize);
+    return_t cbc_mac(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize);
 };
 
 }  // namespace crypto

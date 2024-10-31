@@ -13,7 +13,11 @@
 namespace hotplace {
 namespace net {
 
-// RFC 9000
+quick_frame::quick_frame() : _type(0) {}
+
+quick_frame::quick_frame(quic_frame_t type) : _type(type) {}
+
+quick_frame::quick_frame(const quick_frame& rhs) : _type(rhs._type) {}
 
 }  // namespace net
 }  // namespace hotplace

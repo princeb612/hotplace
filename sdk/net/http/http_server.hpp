@@ -25,6 +25,12 @@
 namespace hotplace {
 namespace net {
 
+enum http_service_t {
+    service_http = 0,
+    service_https = 1,
+    service_http3 = 2,
+};
+
 typedef TYPE_CALLBACK_HANDLEREXV http_server_handler_t;
 
 /**
@@ -59,7 +65,18 @@ class http_server : public traceable {
     return_t shutdown_tls();
     return_t startup_dtls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
     return_t shutdown_dtls();
-    return_t startup_server(uint16 tls, uint16 family, uint16 port, http_server_handler_t handler, void* user_context = nullptr);
+    /**
+     * @brief   startup
+     * @param   http_service_t service [in]
+     * @param   uint16 family [in]
+     * @param   uint16 port [in]
+     * @param   http_server_handler_t handler [in]
+     * @param   void* user_context [inopt]
+     */
+    return_t startup_server(http_service_t service, uint16 family, uint16 port, http_server_handler_t handler, void* user_context = nullptr);
+    /**
+     * @brief   shutdown
+     */
     return_t shutdown_server();
 
     void shutdown();

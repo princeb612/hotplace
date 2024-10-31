@@ -10,6 +10,9 @@
  * Date         Name                Description
  *
  * @comments
+ *      debug w/ curl
+ *      curl -v -k https://localhost:9000 --http3
+ *      curl -v -k https://localhost:9000 --http3-only
  */
 
 // studying - not implemented yet
@@ -41,7 +44,16 @@ typedef struct _OPTION {
 
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 t_shared_instance<http_server> _http_server;
-critical_section print_lock;
+
+void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
+    std::string ct;
+    std::string ev;
+    basic_stream bs;
+    auto advisor = trace_advisor::get_instance();
+    advisor->get_names(category, event, ct, ev);
+    bs.printf("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned int)s->size(), s->data());
+    _logger->writeln(bs);
+};
 
 void api_response_html_handler(network_session*, http_request* request, http_response* response, http_router* router) {
     response->compose(200, "text/html", "<html><body>page - ok<body></html>");
@@ -72,8 +84,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
             if (request) {
                 http_response response(request);
                 if (option.verbose) {
-                    auto lambda = [](trace_category_t, uint32, stream_t* s) -> void { _logger->writeln(s); };
-                    response.settrace(lambda);
+                    response.settrace(debug_handler);
                 }
                 _http_server->get_http_router().route(session, request, &response);
                 response.respond(session);
@@ -96,56 +107,44 @@ return_t simple_http2_server(void*) {
 
     fclose(fp);
 
+    const char* cipher_list =
+        // HTTP/2, TLS 1.3
+        "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256"
+        // concatenate
+        ":"
+        // HTTP/3, DTLS 1.2
+        // current openssl support DTLS 1.2
+        "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-"
+        "RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-"
+        "AES256-SHA384:DHE-RSA-AES256-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-"
+        "AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA";
+
     __try2 {
-        constexpr char ciphersuites[] =
-            "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-"
-            "RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-"
-            "AES256-SHA384:DHE-RSA-AES256-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-"
-            "AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA";
         builder
             .enable_http(false)  // disable http scheme
             .set_port_http(option.port)
             .enable_https(true)  // enable https scheme
             .set_port_https(option.port_tls)
             .set_tls_certificate("server.crt", "server.key")
-            .set_tls_cipher_list(ciphersuites)
+            .set_tls_cipher_list(cipher_list)
             .set_tls_verify_peer(0)  // self-signed certificate
             .enable_ipv4(true)       // enable IPv4
             .enable_ipv6(false)      // disable IPv6
-            .enable_h2(false)        // enable HTTP/2
+            .enable_h2(true)         // enable HTTP/2
             .enable_h3(true)         // enable HTTP/3
             .set_handler(consume_routine);
         builder.get_server_conf()
-            .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
-            .set(netserver_config_t::serverconf_concurrent_network, 2)
-            .set(netserver_config_t::serverconf_concurrent_consume, 2);
+            .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
+            .set(netserver_config_t::serverconf_concurrent_network, 4)
+            .set(netserver_config_t::serverconf_concurrent_consume, 4);
         if (option.verbose) {
-            auto lambda = [](trace_category_t, uint32, stream_t* s) -> void { _logger->writeln(s); };
-            builder.settrace(lambda);
+            builder.settrace(debug_handler);
             builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
         }
         _http_server.make_share(builder.build());
 
         _http_server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
-        _http_server->get_http2_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
-
-        // Basic Authentication (realm)
-        std::string basic_realm = "Hello World";
-        // Digest Access Authentication (realm/algorithm/qop/userhash)
-        std::string digest_access_realm = "happiness";
-        std::string digest_access_realm2 = "testrealm@host.com";
-        std::string digest_access_alg = "SHA-256-sess";
-        std::string digest_access_alg2 = "SHA-512-256-sess";
-        std::string digest_access_qop = "auth";
-        bool digest_access_userhash = true;
-        // Bearer Authentication (realm)
-        std::string bearer_realm = "hotplace";
-        // OAuth 2.0 (realm)
-        std::string oauth2_realm = "somewhere over the rainbow";
-        basic_stream endpoint_url;
-        basic_stream cb_url;
-        endpoint_url << "https://localhost:" << option.port_tls;
-        cb_url << endpoint_url << "/client/cb";
+        _http_server->get_http2_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 16);  // default window size 64k
 
         std::function<void(network_session*, http_request*, http_response*, http_router*)> default_handler =
             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
@@ -158,39 +157,6 @@ return_t simple_http2_server(void*) {
             basic_stream bs;
             bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
-        };
-        std::function<void(network_session*, http_request*, http_response*, http_router*)> cb_handler =
-            [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
-            skey_value& kv = request->get_http_uri().get_query_keyvalue();
-            std::string code = kv.get("code");
-            std::string access_token = kv.get("access_token");
-            std::string error = kv.get("error");
-            if (error.empty()) {
-                if (code.size()) {
-                    // Authorization Code Grant
-                    http_client client;
-                    http_request req;
-                    http_response* resp = nullptr;
-                    basic_stream bs;
-                    bs << "/auth/token?grant_type=authorization_code&code=" << code << "&redirect_uri=" << cb_url << "&client_id=s6BhdRkqt3";
-
-                    req.compose(http_method_t::HTTP_POST, bs.c_str(), "");                             // token endpoint
-                    req.get_http_header().add("Authorization", "Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW");  // s6BhdRkqt3:gX1fBat3bV
-
-                    client.set_url(endpoint_url.c_str());
-                    client.set_wto(10 * 1000);
-                    client.request(req, &resp);
-                    if (resp) {
-                        *response = *resp;
-                        resp->release();
-                    }
-                } else if (access_token.size()) {
-                    // Implitcit Grant
-                    response->compose(200, "text/plain", "");
-                }
-            } else {
-                response->compose(401, "text/html", "<html><body>Unauthorized</body></html>");
-            }
         };
 
         // content-type, default document
@@ -209,44 +175,7 @@ return_t simple_http2_server(void*) {
         _http_server->get_http_router()
             .add("/api/html", api_response_html_handler)
             .add("/api/json", api_response_json_handler)
-            .add("/api/test", default_handler)
-            // .add(404, error_handler)
-            // basic authentication
-            .add("/auth/basic", default_handler, new basic_authentication_provider(basic_realm))
-            // digest access authentication
-            .add("/auth/digest", default_handler,
-                 new digest_access_authentication_provider(digest_access_realm, digest_access_alg, digest_access_qop, digest_access_userhash))
-            .add("/auth/digest2", default_handler, new digest_access_authentication_provider(digest_access_realm2, "", digest_access_qop))
-            // bearer authentication
-            .add("/auth/bearer", default_handler, new bearer_authentication_provider(bearer_realm))
-            // callback
-            .add("/client/cb", cb_handler);
-
-        // authentication
-        _http_server->get_http_router()
-            .get_oauth2_provider()
-            .add(new oauth2_authorization_code_grant_provider)
-            .add(new oauth2_implicit_grant_provider)
-            .add(new oauth2_resource_owner_password_credentials_grant_provider)
-            .add(new oauth2_client_credentials_grant_provider)
-            .add(new oauth2_unsupported_provider)
-            .set(oauth2_authorization_endpoint, "/auth/authorize")
-            .set(oauth2_token_endpoint, "/auth/token")
-            .set(oauth2_signpage, "/auth/sign")
-            .set(oauth2_signin, "/auth/signin")
-            .set_token_endpoint_authentication(new basic_authentication_provider(oauth2_realm))
-            .apply(_http_server->get_http_router());
-
-        http_authentication_resolver& resolver = _http_server->get_http_router().get_authenticate_resolver();
-
-        resolver.get_basic_credentials(basic_realm).add("user", "password");
-        resolver.get_basic_credentials(oauth2_realm).add("s6BhdRkqt3", "gX1fBat3bV");  // RFC 6749 Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
-        resolver.get_digest_credentials(digest_access_realm).add(digest_access_realm, digest_access_alg, "user", "password");
-        resolver.get_digest_credentials(digest_access_realm2).add(digest_access_realm2, digest_access_alg2, "Mufasa", "Circle Of Life");
-        resolver.get_bearer_credentials(bearer_realm).add("clientid", "token");
-
-        resolver.get_oauth2_credentials().insert("s6BhdRkqt3", "gX1fBat3bV", "user", "testapp", cb_url.c_str(), std::list<std::string>());
-        resolver.get_custom_credentials().add("user", "password");
+            .add("/api/test", default_handler);
 
         _http_server->start();
 
@@ -308,16 +237,10 @@ int main(int argc, char** argv) {
         builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("server.log");
     }
     _logger.make_share(builder.build());
+    _logger->setcolor(bold, cyan);
 
     if (option.verbose) {
-        auto lambda = [&](trace_category_t category, uint32 event, stream_t* s) -> void {
-            std::string ct;
-            std::string ev;
-            auto advisor = trace_advisor::get_instance();
-            advisor->get_names(category, event, ct, ev);
-            _logger->writeln("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned)s->size(), s->data());
-        };
-        set_trace_debug(lambda);
+        set_trace_debug(debug_handler);
         set_trace_option(trace_bt | trace_except | trace_debug);
     }
 

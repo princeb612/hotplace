@@ -96,6 +96,7 @@ void http_resource::load_resources() {
         _frame_names.insert(std::make_pair(h2_frame_t::h2_frame_goaway, "GOAWAY"));
         _frame_names.insert(std::make_pair(h2_frame_t::h2_frame_window_update, "WINDOW_UPDATE"));
         _frame_names.insert(std::make_pair(h2_frame_t::h2_frame_continuation, "CONTINUATION"));
+        _frame_names.insert(std::make_pair(h2_frame_t::h2_frame_altsvc, "ALTSVC"));
     }
 
     if (_frame_flags.empty()) {
