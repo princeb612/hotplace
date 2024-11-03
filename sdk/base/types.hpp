@@ -60,7 +60,16 @@ typedef struct linger linger_t;
 #define NET_DEFAULT_TIMEOUT 10
 typedef struct linger linger_t;
 
+/**
+ * byte type conflict
+ *
+ * #if __cplusplus >= 201703L
+ * enum class byte : unsigned char;
+ * ...
+ * #endif
+ */
 typedef unsigned char byte_t;
+typedef unsigned int uint;
 typedef std::vector<byte_t> binary_t;
 
 struct range_t {

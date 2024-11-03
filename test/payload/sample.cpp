@@ -59,7 +59,7 @@ void test_payload_dump() {
         pl.set_group("pad", true);  // enable "pad" group
         pl.write(bin_padded);
         if (option.verbose) {
-            _logger->dump(bin_padded);
+            _logger->hdump("padded", bin_padded, 16, 3);
         }
         _test_case.assert(bin_padded == base16_decode_rfc("03 64 61 74 61 00 00 10 00 70 61 64"), __FUNCTION__,
                           "payload padded");  // 3 || "data" || 0x00001000 || "pad"
@@ -67,7 +67,7 @@ void test_payload_dump() {
         pl.set_group("pad", false);  // disable "pad" group
         pl.write(bin_notpadded);
         if (option.verbose) {
-            _logger->dump(bin_notpadded);
+            _logger->hdump("not padded", bin_notpadded, 16, 3);
         }
         _test_case.assert(bin_notpadded == base16_decode_rfc("64 61 74 61 00 00 10 00"), __FUNCTION__, "payload not padded");  // "data" || 0x00001000
     }
@@ -81,13 +81,27 @@ void test_payload_parse() {
         payload pl;
         binary_t data;
         binary_t pad;
+        binary_t bin_dump;
+        binary_t decoded = base16_decode("036461746100001000706164");
+
         pl << new payload_member((uint8)0, "padlen", "pad") << new payload_member(data, "data") << new payload_member((uint32)0, true, "value")
            << new payload_member(pad, "pad", "pad");
-        binary_t decoded = base16_decode("036461746100001000706164");
-        pl.set_reference_value("pad", "padlen");
+        pl.set_reference_value("pad", "padlen");  // length of "pad" is value of "padlen"
+
+        // pl << padlen(uint8:1) << data(unknown:?) << value(uint32:4) << pad(referenceof.padlen:?)
+        //  input  : 036461746100001000706164
+        //         : pl << padlen(uint8:1) << data(unknown:?) << value(uint32:4) << pad(referenceof.padlen:?)
+        //         : pl << padlen(uint8:1) << data(unknown:?) << value(uint32:4) << pad(referenceof.padlen:3)
+        //  infer  :
+        //         : 12 - 1 - 4 - 3 = 12 - 8 = 4
+        //         : pl << padlen(uint8:1) << data(unknown:4) << value(uint32:4) << pad(referenceof.padlen:3)
+        //         : 03 64617461 00001000 706164
+        //  result : padlen->3, data->"data", value->0x00001000, pad->"pad"
         pl.read(decoded);
-        binary_t bin_dump;
         pl.write(bin_dump);
+
+        _logger->hdump("decoded", decoded, 16, 3);
+        _logger->hdump("dump", bin_dump, 16, 3);
         _test_case.assert(bin_dump == decoded, __FUNCTION__, "read/parse");
 
         binary_t data2;
@@ -124,7 +138,7 @@ void test_payload_uint24() {
 
         pl.write(bin_payload);
         if (option.verbose) {
-            _logger->dump(bin_payload);
+            _logger->hdump("uint24", bin_payload, 16, 3);
         }
         _test_case.assert(expect == bin_payload, __FUNCTION__, "payload /w i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
     }
@@ -162,7 +176,7 @@ void do_test_http2_frame(http2_frame* frame1, http2_frame* frame2, const char* t
 
     // write a composed http2_frame context into binary
     frame1->write(bin_f1);
-    _logger->dump(bin_f1);
+    _logger->hdump("frame", bin_f1, 16, 3);
 
     // human-readable
     frame1->dump(&bs);
@@ -175,7 +189,7 @@ void do_test_http2_frame(http2_frame* frame1, http2_frame* frame2, const char* t
     frame2->read((http2_frame_header_t*)&bin_expect[0], bin_expect.size());
     frame2->write(bin_f2);
 
-    _logger->dump(bin_f2);
+    _logger->hdump("dump", bin_f2, 16, 3);
 
     // comparison
     _test_case.assert(bin_f1 == bin_f2, __FUNCTION__, "%s #read", text);
@@ -313,7 +327,7 @@ void test_quic_packet() {
         packet.write(bin);
         basic_stream bs;
         packet.dump(&bs);
-        _logger->dump(bin);
+        _logger->hdump("packet", bin, 16, 3);
         _logger->writeln(bs);
 
         bs.clear();
@@ -325,7 +339,7 @@ void test_quic_packet() {
         packet2.read(&bin[0], bin.size(), pos);
         packet2.write(bin2);
         packet2.dump(&bs);
-        _logger->dump(bin);
+        _logger->hdump("dump", bin, 16, 3);
         _logger->writeln(bs);
 
         _test_case.assert(bin == bin2, __FUNCTION__, "quic packet");
@@ -337,6 +351,123 @@ void test_quic_packet() {
     lambda(quic_packet_type_handshake);
     lambda(quic_packet_type_retry);
     lambda(quic_packet_type_1_rtt);
+}
+
+void test_quic_integer() {
+    _test_case.begin("proof of concept payload_encoded");
+    const char* expect =
+        "3B 52 46 43 20 39 30 30 30 20 51 55 49 43 3A 20"  // ;RFC 9000 QUIC:
+        "41 20 55 44 50 2D 42 61 73 65 64 20 4D 75 6C 74"  // A UDP-Based Mult
+        "69 70 6C 65 78 65 64 20 61 6E 64 20 53 65 63 75"  // iplexed and Secu
+        "72 65 20 54 72 61 6E 73 70 6F 72 74 25 31 36 2E"  // re Transport%16.
+        "20 20 56 61 72 69 61 62 6C 65 2D 4C 65 6E 67 74"  //   Variable-Lengt
+        "68 20 49 6E 74 65 67 65 72 20 45 6E 63 6F 64 69"  // h Integer Encodi
+        "6E 67 -- -- -- -- -- -- -- -- -- -- -- -- -- --"  // ng
+        ;
+    binary_t bin_expect = base16_decode_rfc(expect);
+
+    // step.1 a variable length integer + set_reference_value
+    {
+        payload pl1;
+        binary_t bin1;
+        pl1 << new payload_member(new quic_integer(59), "len1") << new payload_member("RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport", "var1")
+            << new payload_member(new quic_integer(37), "len2") << new payload_member("16.  Variable-Length Integer Encoding", "var2");
+        pl1.write(bin1);
+        _logger->hdump("dump", bin1, 16, 3);
+        _test_case.assert(bin1 == bin_expect, __FUNCTION__, "QUIC variable length integer #write");
+
+        payload pl2;
+        binary_t bin2;
+        pl2 << new payload_member(new quic_integer(int(0)), "len1") << new payload_member(binary_t(), "var1")
+            << new payload_member(new quic_integer(int(0)), "len2") << new payload_member(binary_t(), "var2");
+        pl2.set_reference_value("var1", "len1");  // length of "var1" is value of "len1"
+        pl2.set_reference_value("var2", "len2");  // length of "var2" is value of "len2"
+        pl2.read(bin1);
+        pl2.write(bin2);
+        _logger->hdump("dump", bin2, 16, 3);
+        _test_case.assert(bin2 == bin_expect, __FUNCTION__, "QUIC variable length integer #read");
+        size_t len1 = pl2.select("len1")->get_payload_encoded()->value();
+        _test_case.assert(59 == len1, __FUNCTION__, "QUIC variable length integer #get_length %zi", len1);
+        size_t len2 = pl2.select("len2")->get_payload_encoded()->value();
+        _test_case.assert(37 == len2, __FUNCTION__, "QUIC variable length integer #get_length %zi", len2);
+    }
+
+    // step.1 encode a variable length integer + data
+    {
+        payload pl1;
+        binary_t bin1;
+        pl1 << new payload_member(new quic_integer("RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport"), "var1")
+            << new payload_member(new quic_integer("16.  Variable-Length Integer Encoding"), "var2");
+        pl1.write(bin1);
+        _logger->hdump("dump", bin1, 16, 3);
+        _test_case.assert(bin1 == bin_expect, __FUNCTION__, "QUIC variable length integer #write");
+
+        // step.2 decode a variable length integer + data
+        payload pl2;
+        binary_t bin2;
+        pl2 << new payload_member(new quic_integer, "var1") << new payload_member(new quic_integer, "var2");
+        pl2.read(bin1);
+        pl2.write(bin2);
+        _logger->hdump("dump", bin2, 16, 3);
+        _test_case.assert(bin2 == bin_expect, __FUNCTION__, "QUIC variable length integer #read");
+    }
+
+    // step.4 zero-length
+    {
+        const char* expect_zero_length = "00";
+        binary_t bin_expect_zero_length = base16_decode_rfc(expect_zero_length);
+        payload pl1;
+        binary_t bin1;
+        pl1 << new payload_member(new quic_integer(""));
+        pl1.write(bin1);
+        _logger->hdump("dump", bin1, 16, 3);
+        _test_case.assert(bin1 == bin_expect_zero_length, __FUNCTION__, "zero-length #write");
+
+        payload pl2;
+        binary_t bin2;
+        pl2 << new payload_member(new quic_integer(binary_t()));
+        pl2.read(bin1);
+        pl2.write(bin2);
+        _logger->hdump("dump", bin2, 16, 3);
+        _test_case.assert(bin2 == bin_expect_zero_length, __FUNCTION__, "zero-length #read");
+    }
+
+    // integer
+    auto test_lambda = [&](uint64 value, const char* expect) -> void {
+        binary_t bin_expect = base16_decode_rfc(expect);
+        payload pl1;
+        binary_t bin1;
+
+        pl1 << new payload_member(new quic_integer(value));
+        pl1.write(bin1);
+
+        _logger->hdump("dump", bin1, 16, 3);
+        _test_case.assert(bin1 == bin_expect, __FUNCTION__, "QUIC variable length integer #write");
+
+        payload pl2;
+        binary_t bin2;
+
+        pl2 << new payload_member(new quic_integer(int(0)));
+        pl2.read(bin1);
+        pl2.write(bin2);
+
+        _logger->hdump("dump", bin2, 16, 3);
+        _test_case.assert(bin2 == bin_expect, __FUNCTION__, "QUIC variable length integer #read");
+    };
+
+    // RFC 9000 A.1
+    test_lambda(151288809941952652, "0xc2197c5eff14e88c");
+    test_lambda(494878333, "0x9d7f3e7d");
+    test_lambda(15293, "0x7bbd");
+
+    test_lambda(0x00, "0x00");
+    test_lambda(0x3f, "0x3f");
+    test_lambda(0x40, "0x4040");
+    test_lambda(0x3fff, "0x7fff");
+    test_lambda(0x4000, "0x80004000");
+    test_lambda(0x3fffffff, "0xbfffffff");
+    test_lambda(0x40000000, "0xc000000040000000");
+    test_lambda(0x3fffffffffffffff, "0xffffffffffffffff");
 }
 
 int main(int argc, char** argv) {
@@ -359,6 +490,7 @@ int main(int argc, char** argv) {
     test_payload_uint24();
     test_http2_frame();
     test_quic_packet();
+    test_quic_integer();
 
     _logger->flush();
 

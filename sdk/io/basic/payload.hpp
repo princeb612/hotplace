@@ -65,6 +65,17 @@ namespace io {
  *          binary_t decoded = base16_decode("036461746100001000706164");
  *          pl.set_reference_value("pad", "padlen");
  *          pl.read(decoded); // sizeof "pad" refers "padlen" value
+ *
+ *          // computation
+ *          // pl << padlen(uint8:1) << data(unknown:?) << value(uint32:4) << pad(referenceof.padlen:?)
+ *          //  input  : 036461746100001000706164
+ *          //         : pl << padlen(uint8:1) << data(unknown:?) << value(uint32:4) << pad(referenceof.padlen:?)
+ *          //         : pl << padlen(uint8:1) << data(unknown:?) << value(uint32:4) << pad(referenceof.padlen:3)
+ *          //  infer  :
+ *          //         : 12 - 1 - 4 - 3 = 12 - 8 = 4
+ *          //         : pl << padlen(uint8:1) << data(unknown:4) << value(uint32:4) << pad(referenceof.padlen:3)
+ *          //         : 03 64617461 00001000 706164
+ *          //  result : padlen->3, data->"data", value->0x00001000, pad->"pad"
  */
 class payload_member {
    public:
@@ -78,10 +89,13 @@ class payload_member {
     payload_member(const binary_t& value, const char* name = nullptr, const char* group = nullptr);
     payload_member(const std::string& value, const char* name = nullptr, const char* group = nullptr);
     payload_member(const stream_t* value, const char* name = nullptr, const char* group = nullptr);
+    payload_member(payload_encoded* value, const char* name = nullptr, const char* group = nullptr);
+    ~payload_member();
 
     bool get_change_endian();
     std::string get_name() const;
     std::string get_group() const;
+    bool encoded() const;  // nullptr != _vl
     payload_member& set_change_endian(bool enable = true);
     payload_member& set_name(const char* name);
     payload_member& set_group(const char* group);
@@ -90,21 +104,28 @@ class payload_member {
 
     size_t get_space();
     size_t get_capacity();
-    payload_member* get_value_of();
-    payload_member& set_value_of(payload_member* member);
+    size_t get_reference_value();
+    payload_member* get_reference_of();
+    payload_member& set_reference_of(payload_member* member);
 
     payload_member& write(binary_t& bin);
-    payload_member& read(byte_t* ptr, size_t size_ptr, size_t* size_read);
+    payload_member& read(const byte_t* ptr, size_t size_ptr, size_t* size_read);
     payload_member& reserve(uint16 size);
 
+    payload_encoded* get_payload_encoded();
+
    protected:
+    return_t doread(const byte_t* ptr, size_t size_ptr, size_t* size_read);
+    return_t doread_encoded(const byte_t* ptr, size_t size_ptr, size_t* size_read);
+
    private:
     std::string _name;
     std::string _group;
     bool _change_endian;
     variant _vt;
 
-    payload_member* _member_value_of;
+    payload_member* _ref;
+    payload_encoded* _vl;
     uint16 _reserve;
 };
 
@@ -151,10 +172,14 @@ class payload {
 
     return_t write(binary_t& bin);
     return_t read(const binary_t& bin);
-    return_t read(byte_t* p, size_t size);
+    return_t read(const byte_t* p, size_t size);
+    return_t read(const binary_t& bin, size_t& pos);
+    return_t read(const byte_t* p, size_t size, size_t& pos);
 
     payload& for_each(std::function<void(payload_member*)> func);
     payload_member* select(const std::string& name);
+    size_t offset_of(const std::string& name);
+    size_t size();
 
    private:
     /**

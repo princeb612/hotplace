@@ -256,7 +256,8 @@ enum errorcode_t {
     /* 0xef01003b 4009820219 */ error_send,
     /* 0xef01003c 4009820220 */ error_recv,
     /* 0xef01003d 4009820221 */ abandoned,
-    /* 0xef01003e 4009820222 */ difference_type,
+    /* 0xef01003e 4009820222 */ different_type,
+    /* 0xef01003f 4009820223 */ narrow_type,
 
     /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,

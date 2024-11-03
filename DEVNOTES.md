@@ -7,10 +7,10 @@
 
 ### Plan
 
+- in progress
+  - QUIC, HTTP/3
 - holding
   - asn1
-- TODO
-  - QUIC, HTTP/3
 - flowchart
   - line : implemented
   - dot-line : not implemented yet
@@ -203,3 +203,4 @@ sub-tasks
 
 - [ ] shutdown DTLS peer connection
 - [ ] br(Brotli), zstd(Zstandard) HTTP encoding
+- [ ] HTTP/2 Authentication Scheme

@@ -21,6 +21,7 @@
 #ifndef __HOTPLACE_SDK_NET_QUIC__
 #define __HOTPLACE_SDK_NET_QUIC__
 
+#include <sdk/base/basic/variant.hpp>
 #include <sdk/net/quic/types.hpp>
 
 namespace hotplace {
@@ -147,21 +148,25 @@ class quic_packet {
     quic_packet(quic_packet_t type);
     quic_packet(const quic_packet& rhs);
 
+    uint8 get_type();
+    void get_type(uint8 hdr, uint8& type, bool& is_longheader);
+    void set_type(uint8 type, uint8& hdr, bool& is_longheader);
+
     quic_packet& set_version(uint32 version);
     uint32 get_version();
     void set_dcid(const binary& cid);
     void set_scid(const binary& cid);
     const binary_t& get_dcid();
     const binary_t& get_scid();
-    uint8 get_type();
 
     /**
      * @brief   read
-     * @param   byte_t* stream [in]
+     * @param   const byte_t* stream [in]
      * @param   size_t size [in]
      * @param   size_t& pos [inout]
      */
-    virtual return_t read(byte_t* stream, size_t size, size_t& pos);
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t read(const binary_t& bin, size_t& pos);
     /**
      * @brief   write
      * @param   binary_t& packet [out]
@@ -174,28 +179,255 @@ class quic_packet {
     virtual void dump(stream_t* s);
 
     quic_packet& add(const quic_frame* frame);
+    virtual return_t read_frame(byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write_frame(binary_t& packet);
+
+    /*
+     * Initial, 1-RTT, Handshake, 0-RTT
+     * Packet Number (8..32)
+     * pn_length = (_hdr & 0x03) + 1
+     */
+    quic_packet& set_pn_length(uint8 len);
+    uint8 get_pn_length();
+
+    void set_binary(binary_t& target, const binary_t& payload);
+    void set_binary(binary_t& target, const byte_t* stream, size_t size);
 
    protected:
     uint8 _type;
+    uint8 _hdr;
     uint32 _version;
     binary_t _dcid;
     binary_t _scid;
 };
 
-class quick_frame {
+/**
+ * @brief   RFC 9000 17.2.1.  Version Negotiation Packet
+ */
+class quic_packet_vn : public quic_packet {
    public:
-    quick_frame();
-    quick_frame(quic_frame_t type);
-    quick_frame(const quick_frame& rhs);
+    quic_packet_vn();
+    quic_packet_vn(const quic_packet_vn& rhs);
 
    protected:
-    uint8 _type;
+   private:
+    /**
+     * Figure 14: Version Negotiation Packet
+     *  Supported Version (32) ...,
+     */
+    std::vector<uint32> _version;
 };
 
-class quick_frame_padding : public quick_frame {
+/**
+ * @brief   RFC 9000 17.2.2.  Initial Packet
+ */
+class quic_packet_initial : public quic_packet {
    public:
-    quick_frame_padding();
-    quick_frame_padding(const quick_frame_padding& rhs);
+    quic_packet_initial();
+    quic_packet_initial(const quic_packet_initial& rhs);
+
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write(binary_t& packet);
+    virtual void dump(stream_t* s);
+
+    quic_packet_initial& set_token(const binary_t& token);
+    const binary_t& get_token();
+    uint64 get_length();
+    quic_packet_initial& set_packet_number(uint32 pn);
+    uint32 get_packet_number();
+    quic_packet_initial& set_payload(const binary_t& payload);
+    quic_packet_initial& set_payload(const byte_t* stream, size_t size);
+    const binary_t& get_payload();
+
+   protected:
+   private:
+    /**
+     * Figure 15: Initial Packet
+     *  Token Length (i),
+     *  Token (..),
+     *  Length (i),
+     *  Packet Number (8..32),
+     *  Packet Payload (8..),
+     */
+    binary_t _token;
+    uint64 _length;
+    uint32 _pn;
+    binary_t _payload;
+};
+
+/**
+ * @breif   RFC 9000 17.2.3.  0-RTT
+ */
+class quic_packet_0rtt : public quic_packet {
+   public:
+    quic_packet_0rtt();
+    quic_packet_0rtt(const quic_packet_0rtt& rhs);
+
+   protected:
+   private:
+    /**
+     * Figure 16: 0-RTT Packet
+     *  Length (i),
+     *  Packet Number (8..32),
+     *  Packet Payload (8..),
+     */
+    uint32 _pn;
+    binary_t _payload;
+};
+
+/**
+ * @brief   17.2.4.  Handshake Packet
+ */
+class quic_packet_handshake : public quic_packet {
+   public:
+    quic_packet_handshake();
+    quic_packet_handshake(const quic_packet_handshake& rhs);
+
+   protected:
+   private:
+    /**
+     * Figure 17: Handshake Protected Packet
+     *  Length (i),
+     *  Packet Number (8..32),
+     *  Packet Payload (8..),
+     */
+};
+
+class quic_packet_retry : public quic_packet {
+   public:
+    quic_packet_retry();
+    quic_packet_retry(const quic_packet_retry& rhs);
+
+   protected:
+   private:
+    /**
+     * Figure 18: Retry Packet
+     *  Retry Token (..),
+     *  Retry Integrity Tag (128),
+     */
+};
+
+class quic_packet_1rtt : public quic_packet {
+   protected:
+    quic_packet_1rtt();
+    quic_packet_1rtt(const quic_packet_1rtt& rhs);
+
+   private:
+    /**
+     * Figure 19: 1-RTT Packet
+     *  Packet Number (8..32),
+     *  Packet Payload (8..),
+     */
+};
+
+/**
+ * @brief   an integer value using the variable-length encoding
+ * @param   const byte_t* stream [in]
+ * @param   size_t size [in]
+ * @param   size_t& pos [inout]
+ * @param   uint64& value [out]
+ * @remarks RFC 9000
+ *            16.  Variable-Length Integer Encoding
+ *              Table 4: Summary of Integer Encodings
+ *            17.1.  Packet Number Encoding and Decoding
+ *            A.1.  Sample Variable-Length Integer Decoding
+ *              Figure 45: Sample Variable-Length Integer Decoding Algorithm
+ */
+return_t quic_read_vle_int(const byte_t* stream, size_t size, size_t& pos, uint64& value);
+/**
+ * @brief   an integer value using the variable-length encoding
+ * @param   uint64 value [in]
+ * @param   binary_t& bin [out]
+ * @remarks RFC 9000
+ *            16.  Variable-Length Integer Encoding
+ *              Table 4: Summary of Integer Encodings
+ *            17.1.  Packet Number Encoding and Decoding
+ *            A.1.  Sample Variable-Length Integer Decoding
+ *              Figure 45: Sample Variable-Length Integer Decoding Algorithm
+ */
+return_t quic_write_vle_int(uint64 value, binary_t& bin);
+
+return_t quic_length_vle_int(uint64 value, uint8& length);
+
+/**
+ * @brief   RFC 9000
+ *            17.1.  Packet Number Encoding and Decoding
+ *            A.2.  Sample Packet Number Encoding Algorithm
+ *              Figure 46: Sample Packet Number Encoding Algorithm
+ */
+return_t encode_packet_number(uint64 full_pn, uint64 largest_acked, uint64& represent, uint8& nbits);
+
+/**
+ * @brief   RFC 9000
+ *            17.1.  Packet Number Encoding and Decoding
+ *            A.3.  Sample Packet Number Decoding Algorithm
+ *              Figure 47: Sample Packet Number Decoding Algorithm
+ */
+return_t decode_packet_number(uint64 largest_pn, uint64 truncated_pn, uint8 pn_nbits, uint64& value);
+
+/**
+ * @brief   QUIC variable length integer encoding
+ * @sa      payload_member
+ * @remarks
+ *          sketch
+ *          // Token Length (i),
+ *          // Token (..),
+ *          // 05 74 6F 6B 65 6E -- -- -- -- -- -- -- -- -- -- | .token
+ *
+ *          // payload set_reference_value interface
+ *          payload pl1;
+ *          binary_t bin1;
+ *          pl1 << new payload_member(new quic_integer(5)) << new payload_member("token");
+ *          pl1.write(bin1);
+ *
+ *          payload pl2;
+ *          binary_t bin2;
+ *          pl2 << new payload_member(new quic_integer(int(0)), "len") << new payload_member(binary_t(), "token");
+ *          pl2.set_reference_value("token", "len");  // length of "token" is value of "len"
+ *          pl2.read(bin1);
+ *          pl2.write(bin2);
+ *
+ *          // simple
+ *          payload p3;
+ *          binary_t bin3;
+ *          pl3 << new payload_member(new quic_integer("token"));
+ *          pl3.write(bin3);
+ *
+ *          payload pl4;
+ *          binary_t bin4;
+ *          pl4 << new payload_member(new quic_integer);
+ *          pl4.read(bin3);
+ *          pl4.write(bin4);
+ */
+class quic_integer : public payload_encoded {
+   public:
+    quic_integer();
+    quic_integer(const quic_integer& rhs);
+    quic_integer(quic_integer&& rhs);
+    /**
+     * @brief   integers in the range 0 to 2^62-1
+     */
+    quic_integer(uint64 data);
+    /**
+     * @brief   integer + data
+     */
+    quic_integer(const char* data);
+    quic_integer(const std::string& data);
+    quic_integer(const binary_t& data);
+
+    virtual size_t lsize();
+    virtual size_t value();
+    virtual const byte_t* data();
+    virtual void write(binary_t& target);
+
+    virtual size_t lsize(const byte_t* stream, size_t size);
+    virtual size_t value(const byte_t* stream, size_t size);
+    virtual void read(const byte_t* stream, size_t size, size_t& pos);
+
+   protected:
+    bool _datalink;
+    uint64 _len;
+    variant _data;
 };
 
 }  // namespace net

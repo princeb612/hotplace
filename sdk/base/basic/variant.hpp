@@ -18,6 +18,7 @@
 #include <sdk/base/stream.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/system/datetime.hpp>
+#include <sdk/base/system/shared_instance.hpp>
 #include <sdk/base/types.hpp>
 
 namespace hotplace {
@@ -89,7 +90,6 @@ enum vartype_t {
     TYPE_TSTRING = 23,
     TYPE_STRING = 24,
     TYPE_WSTRING = 25,
-    TYPE_BSTRING = TYPE_WSTRING,
 
     TYPE_FLOAT = 26,  /* single precision floating point */
     TYPE_DOUBLE = 27, /* double precision floating point */
@@ -99,6 +99,7 @@ enum vartype_t {
     TYPE_DATETIME = 30,
     TYPE_BINARY = 31,
     TYPE_BLOB = TYPE_BINARY,
+    TYPE_BSTRING = TYPE_BINARY,
 
     TYPE_TEXT = 32,     /* specially vector<string> */
     TYPE_JBOOLEAN = 33, /* unsigned char */
@@ -114,16 +115,57 @@ enum vartype_t {
     TYPE_USER = 0x10000,
 };
 
+enum variant_control_t {
+    variant_trunc = (1 << 16),
+    variant_convendian = (1 << 17),
+};
+
 /**
- * byte type conflict
+ * @brief   encoded data
+ * @sa      quic_integer
+ * @remarks
+ *          sketch
  *
- * #if __cplusplus >= 201703L
- * enum class byte : unsigned char;
- * ...
- * #endif
+ *          std::string data = "data";
+ *          binary_t bin_stream = base16_decode("0x046461746110000102030405060708090a0b0c0d0e0f");
+ *          const byte_t* stream = &bin_stream[0];
+ *          size_t streamsize = bin_stream.size();
+ *
+ *          my_variant_length_data v(data);                 // 04 64 61 74 61 | .data
+ *          lsize = v.lsize();                              // 04 -> 1 byte
+ *          len = v.value();                                // 04 -> 4
+ *          p = v.data();                                   // "data"
+ *
+ *          lsize = v.lsize(stream, streamsize);            // 04 -> 1 byte
+ *          len = v.value(stream, streamsize);              // 04 -> 4
+ *          printf("%.*s", (unsigned)len, stream + lsize);  // "data"
+ *
+ *          stream += len;
+ *          streamsize -= len;
+ *          lsize = v.lsize(stream, streamsize);            // 10 -> 1 bytes
+ *          len = v.value(stream, streamsize);              // 10 -> 16
+ *          dump(stream + lsize, len);                      // 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f
+ *          p = v.data(stream, streamsize);                 // p = stream + lsize
  */
-typedef unsigned char byte_t;
-typedef unsigned int uint;
+class payload_encoded {
+   public:
+    payload_encoded() { _shared.make_share(this); }
+
+    virtual size_t lsize() = 0;
+    virtual size_t value() = 0;
+    virtual const byte_t* data() = 0;
+    virtual void write(binary_t& target) = 0;
+
+    virtual size_t lsize(const byte_t* stream, size_t size) = 0;
+    virtual size_t value(const byte_t* stream, size_t size) = 0;
+    virtual void read(const byte_t* stream, size_t size, size_t& pos) = 0;
+
+    virtual void addref() { _shared.addref(); }
+    virtual void release() { _shared.delref(); }
+
+   protected:
+    t_shared_reference<payload_encoded> _shared;
+};
 
 enum variant_flag_t {
     flag_free = 1 << 0,
@@ -139,39 +181,41 @@ enum variant_flag_t {
     flag_datetime = 1 << 8,  // datetime
 };
 
+union vartype_union {
+    bool b;
+    // BOOL B; // uint32
+    char c;
+    char jb;
+    byte_t uc;
+    byte_t jbool;
+    double d;
+    float f;
+    int i;
+    uint ui;
+    int8 i8;
+    uint8 ui8;
+    int16 i16;
+    uint16 ui16;
+    uint16 jc;
+    int32 i32;
+    uint32 ui32;
+    int64 i64;
+    uint64 ui64;
+#if defined __SIZEOF_INT128__
+    int128 i128;
+    uint128 ui128;
+#endif
+    // long l;   ulong ul;
+    // short s;   ushort us;
+    void* p;
+    char* str;
+    byte_t* bstr;
+    datetime_t* dt;
+};
+
 struct variant_t {
     vartype_t type;
-    union {
-        bool b;
-        // BOOL B; // uint32
-        char c;
-        char jb;
-        byte_t uc;
-        byte_t jbool;
-        double d;
-        float f;
-        int i;
-        uint ui;
-        int8 i8;
-        uint8 ui8;
-        int16 i16;
-        uint16 ui16;
-        uint16 jc;
-        int32 i32;
-        uint32 ui32;
-        int64 i64;
-        uint64 ui64;
-#if defined __SIZEOF_INT128__
-        int128 i128;
-        uint128 ui128;
-#endif
-        // long l;   ulong ul;
-        // short s;   ushort us;
-        void* p;
-        char* str;
-        byte_t* bstr;
-        datetime_t* dt;
-    } data;
+    vartype_union data;
     uint16 size;
     uint16 flag;
 
@@ -241,11 +285,6 @@ struct variant_t {
 
         return *this;
     }
-};
-
-enum variant_control_flag_t {
-    variant_flag_trunc = (1 << 16),
-    variant_flag_convendian = (1 << 17),
 };
 
 class variant {

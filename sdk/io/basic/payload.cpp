@@ -9,232 +9,10 @@
  */
 
 #include <sdk/io/basic/payload.hpp>
+#include <set>
 
 namespace hotplace {
 namespace io {
-
-payload_member::payload_member(uint8 value, const char* name, const char* group) : _change_endian(false), _member_value_of(nullptr), _reserve(0) {
-    set_name(name).set_group(group);
-    get_variant().set_uint8(value);
-}
-
-payload_member::payload_member(uint8 value, uint16 repeat, const char* name, const char* group)
-    : _change_endian(false), _member_value_of(nullptr), _reserve(repeat) {
-    set_name(name).set_group(group);
-    binary_t bin;
-    uint16 temp = repeat;
-    while (temp--) {
-        bin.insert(bin.end(), value);
-    }
-    get_variant().set_binary_new(bin);
-}
-
-payload_member::payload_member(uint16 value, bool change_endian, const char* name, const char* group)
-    : _change_endian(change_endian), _member_value_of(nullptr), _reserve(0) {
-    set_name(name).set_group(group);
-    get_variant().set_uint16(value);
-}
-
-payload_member::payload_member(uint32_24_t value, const char* name, const char* group) : _change_endian(true), _member_value_of(nullptr), _reserve(0) {
-    set_name(name).set_group(group);
-    get_variant().set_uint24(value.get());
-}
-
-payload_member::payload_member(uint32 value, bool change_endian, const char* name, const char* group)
-    : _change_endian(change_endian), _member_value_of(nullptr), _reserve(0) {
-    set_name(name).set_group(group);
-    get_variant().set_uint32(value);
-}
-
-payload_member::payload_member(uint64 value, bool change_endian, const char* name, const char* group)
-    : _change_endian(change_endian), _member_value_of(nullptr), _reserve(0) {
-    set_name(name).set_group(group);
-    get_variant().set_uint64(value);
-}
-
-payload_member::payload_member(uint128 value, bool change_endian, const char* name, const char* group)
-    : _change_endian(change_endian), _member_value_of(nullptr), _reserve(0) {
-    set_name(name).set_group(group);
-    get_variant().set_uint128(value);
-}
-
-payload_member::payload_member(const binary_t& value, const char* name, const char* group) : _change_endian(false), _member_value_of(nullptr), _reserve(0) {
-    set_name(name).set_group(group);
-    get_variant().set_binary_new(value);
-}
-
-payload_member::payload_member(const std::string& value, const char* name, const char* group) : _change_endian(false), _member_value_of(nullptr), _reserve(0) {
-    set_name(name).set_group(group);
-    get_variant().set_str_new(value);
-}
-
-payload_member::payload_member(const stream_t* value, const char* name, const char* group) : _change_endian(false), _member_value_of(nullptr), _reserve(0) {
-    set_name(name).set_group(group);
-    get_variant().set_bstr_new(value);
-}
-
-bool payload_member::get_change_endian() { return _change_endian; }
-
-std::string payload_member::get_name() const { return _name; }
-
-std::string payload_member::get_group() const { return _group; }
-
-payload_member& payload_member::set_change_endian(bool enable) {
-    _change_endian = enable;
-    return *this;
-}
-
-payload_member& payload_member::set_name(const char* name) {
-    if (name) {
-        _name = name;
-    }
-    return *this;
-}
-
-payload_member& payload_member::set_group(const char* group) {
-    if (group) {
-        _group = group;
-    }
-    return *this;
-}
-
-variant& payload_member::get_variant() { return _vt; }
-
-size_t payload_member::get_space() {
-    size_t space = 0;
-    payload_member* ref = get_value_of();
-    if (_reserve) {
-        space = _reserve;
-    } else if (variant_flag_t::flag_int == get_variant().flag()) {
-        space = get_variant().size();
-    } else if (ref) {
-        space = t_to_int<size_t>(ref);
-    }
-    return space;
-}
-
-size_t payload_member::get_capacity() {
-    size_t space = 0;
-    payload_member* ref = get_value_of();
-    if (_reserve) {
-        space = _reserve;
-    } else if (ref) {
-        space = t_to_int<size_t>(ref);
-    } else {
-        space = get_variant().size();
-    }
-    return space;
-}
-
-payload_member* payload_member::get_value_of() { return _member_value_of; }
-
-payload_member& payload_member::set_value_of(payload_member* member) {
-    _member_value_of = member;
-    return *this;
-}
-
-payload_member& payload_member::write(binary_t& bin) {
-    uint32 flags = 0;
-    if (get_change_endian()) {
-        flags |= variant_flag_convendian;
-    }
-    get_variant().to_binary(bin, flags);
-    return *this;
-}
-
-payload_member& payload_member::read(byte_t* ptr, size_t size_ptr, size_t* size_read) {
-    if (ptr && size_read) {
-        size_t read_bytes = 0;
-        variant& v = get_variant();
-        vartype_t type = v.type();
-        if (variant_flag_t::flag_int == v.flag()) {
-            uint16 size = v.size();
-            if (size_ptr >= size) {
-                switch (type) {
-                    case TYPE_INT8:
-                    case TYPE_UINT8: {
-                        v.set_uint8(*(uint8*)ptr);
-                        *size_read = size;
-                    } break;
-                    case TYPE_INT16:
-                    case TYPE_UINT16: {
-                        uint16 temp = *(uint16*)ptr;
-                        if (get_change_endian()) {
-                            temp = ntoh16(temp);
-                        }
-                        v.set_uint16(temp);
-                        *size_read = size;
-                    } break;
-                    case TYPE_INT24:
-                    case TYPE_UINT24: {
-                        uint32 temp = 0;
-                        b24_i32(ptr, size_ptr, temp);
-                        v.set_uint24(temp);
-                        *size_read = size;
-                    } break;
-                    case TYPE_INT32:
-                    case TYPE_UINT32: {
-                        uint32 temp = *(uint32*)ptr;
-                        if (get_change_endian()) {
-                            temp = ntoh32(temp);
-                        }
-                        v.set_uint32(temp);
-                        *size_read = size;
-                    } break;
-                    case TYPE_INT64:
-                    case TYPE_UINT64: {
-                        uint64 temp = *(uint64*)ptr;
-                        if (get_change_endian()) {
-                            temp = ntoh64(temp);
-                        }
-                        v.set_uint64(temp);
-                        *size_read = size;
-                    } break;
-                    case TYPE_INT128:
-                    case TYPE_UINT128: {
-                        uint128 temp = *(uint128*)ptr;
-                        if (get_change_endian()) {
-                            temp = ntoh128(temp);
-                        }
-                        v.set_uint64(temp);
-                        *size_read = size;
-                    } break;
-                    default:
-                        break;
-                }
-            }
-        } else {
-            size_t size = 0;
-            payload_member* ref = get_value_of();
-            if (_reserve) {
-                size = _reserve;
-            } else if (ref) {
-                size = t_to_int<size_t>(ref);
-            }
-
-            if (size_ptr >= size) {
-                switch (type) {
-                    case TYPE_STRING:
-                        v.clear().set_strn_new((char*)ptr, size);
-                        *size_read = size;
-                        break;
-                    case TYPE_BINARY:
-                        v.clear().set_bstr_new(ptr, size);
-                        *size_read = size;
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-    }
-    return *this;
-}
-
-payload_member& payload_member::reserve(uint16 size) {
-    _reserve = size;
-    return *this;
-}
 
 payload::payload() {}
 
@@ -275,7 +53,7 @@ payload& payload::set_reference_value(const std::string& name, const std::string
         hint.find(name, &member);
         if (member && member_ref) {
             if (member_ref->get_space()) {
-                member->set_value_of(member_ref);
+                member->set_reference_of(member_ref);
             }
         }
     }
@@ -293,92 +71,135 @@ return_t payload::write(binary_t& bin) {
     return ret;
 }
 
-return_t payload::read(const binary_t& bin) { return read((byte_t*)&bin[0], bin.size()); }
+return_t payload::read(const binary_t& bin) {
+    size_t pos = 0;
+    return read(bin, pos);
+}
 
-return_t payload::read(byte_t* base, size_t size) {
+return_t payload::read(const byte_t* p, size_t size) {
+    size_t pos = 0;
+    return read(p, size, pos);
+}
+
+return_t payload::read(const binary_t& bin, size_t& pos) { return read((byte_t*)&bin[0], bin.size(), pos); }
+
+return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
+    size_t size_payload = 0;
+    size_t size_estimated = 0;
 
     __try2 {
-        if (nullptr == base) {
+        if ((nullptr == base) || (pos > size)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        size_t size_sum = 0;
+        auto lambda_postread = [&](byte_t*& p, size_t& l, size_t itemsize, bool sum) -> void {
+            p += itemsize;
+            l -= itemsize;
+            if (sum) {
+                size_payload += itemsize;
+            }
+        };
+        auto lambda_estimate = [&](size_t itemsize) -> void { size_estimated += itemsize; };
+
+        byte_t* baseptr = const_cast<byte_t*>(base);
+        size_t size_item = 0;
         std::list<payload_member*> _size_unknown;
+        std::set<payload_member*> _once_read;
+
+        lambda_postread(baseptr, size, pos, false);
 
         {
-            byte_t* p = base;
+            byte_t* ptr = baseptr;
             size_t len = size;
-            size_t pos = 0;
-            size_t size_read = 0;
-            bool check = true;
             for (auto item : _members) {
                 bool condition = get_group_condition(item->get_group());
                 if (false == condition) {
                     continue;
                 }
 
-                uint16 space = item->get_space();
-                size_sum += space;
-                if (0 == space) {
-                    if (nullptr == item->get_value_of()) {
-                        _size_unknown.push_back(item);
+                auto try_read = _size_unknown.empty();
+                uint16 space = 0;
+                if (item->encoded()) {
+                    if (try_read) {
+                        item->read(ptr, len, &size_item);
+                        lambda_postread(ptr, len, size_item, true);
+                        lambda_estimate(size_item);
+                        _once_read.insert(item);
+                    } else {
+                        ret = errorcode_t::bad_data;
+                        break;
                     }
-                    check = false;
                 } else {
-                    if (check) {
-                        item->read(p + pos, len, &size_read);
-                        p += size_read;
-                        len -= size_read;
+                    space = item->get_space();
+                    if (0 == space) {
+                        auto ref = item->get_reference_of();
+                        if (ref) {
+                            space = ref->get_reference_value();
+                            item->reserve(space);
+                            item->read(ptr, len, &size_item);
+                            lambda_postread(ptr, len, size_item, true);
+                            lambda_estimate(size_item);
+                        } else {
+                            _size_unknown.push_back(item);
+                        }
+                    } else {
+                        if (try_read) {
+                            item->read(ptr, len, &size_item);
+                            lambda_postread(ptr, len, size_item, true);
+                            lambda_estimate(size_item);
+                            _once_read.insert(item);
+                        } else {
+                            lambda_estimate(space);
+                        }
                     }
                 }
             }
         }
 
-        if (_size_unknown.size() > 1) {
-            ret = errorcode_t::unknown;
+        if (size < size_estimated) {
+            ret = errorcode_t::bad_data;
+        }
+        if (errorcode_t::success != ret) {
             __leave2;
         }
+        auto state = _size_unknown.size();
+        if (0 == state) {
+            // nothing to do
+            __leave2;
+        } else if (1 == state) {
+            size_t remain = size - size_estimated;
+            payload_member* item = *(_size_unknown.begin());
+            item->reserve(remain);
+            _size_unknown.clear();
 
-        if (size > size_sum) {
-            if (1 == _size_unknown.size()) {
-                size_t remain = size - size_sum;
-                payload_member* item = *(_size_unknown.begin());
-                item->reserve(remain);
-                _size_unknown.clear();
-            }
-        }
-
-        if (_size_unknown.empty()) {
-            byte_t* p = base;
+            byte_t* ptr = baseptr;
             size_t len = size;
-            size_t pos = 0;
-            size_t size_read = 0;
-            bool check = true;
             for (auto item : _members) {
                 bool condition = get_group_condition(item->get_group());
                 if (false == condition) {
                     continue;
                 }
 
-                uint16 space = item->get_space();
-                size_sum += space;
-
-                if (len < space) {
-                    ret = errorcode_t::insufficient;
-                    break;
+                auto iter = _once_read.find(item);
+                if (_once_read.end() == iter) {
+                    // not read yet
+                    item->read(ptr, len, &size_item);
+                    lambda_postread(ptr, len, size_item, true);
+                } else {
+                    // once read
+                    auto item = *iter;
+                    auto space = item->get_space();
+                    lambda_postread(ptr, len, space, false);
                 }
-
-                item->read(p + pos, len, &size_read);
-                p += size_read;
-                len -= size_read;
             }
+        } else {  // if (state > 1)
+            ret = errorcode_t::bad_data;
+            __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 { pos += size_payload; }
 
     return ret;
 }
@@ -397,6 +218,17 @@ payload_member* payload::select(const std::string& name) {
     t_maphint<std::string, payload_member*> hint(_members_map);
     hint.find(name, &item);
     return item;
+}
+
+size_t payload::offset_of(const std::string& name) {
+    size_t offset = 0;
+    for (auto item : _members) {
+        if (name == item->get_name()) {
+            break;
+        }
+        offset += item->get_space();
+    }
+    return offset;
 }
 
 size_t payload::size_estimated() {
@@ -431,6 +263,8 @@ payload& payload::clear() {
     }
     return *this;
 }
+
+size_t payload::size() { return _members.size(); }
 
 }  // namespace io
 }  // namespace hotplace

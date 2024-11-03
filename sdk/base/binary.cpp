@@ -192,7 +192,7 @@ return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t 
     return ret;
 }
 
-return_t binary_load(binary_t& target, uint32 bnlen, byte_t* data, uint32 len) {
+return_t binary_load(binary_t& target, uint32 bnlen, const byte_t* data, uint32 len) {
     return_t ret = errorcode_t::success;
     target.clear();
     target.resize(bnlen);

@@ -22,6 +22,7 @@ namespace net {
 
 class quic_packet;
 class quic_frame;
+class quic_integer;
 
 }  // namespace net
 }  // namespace hotplace

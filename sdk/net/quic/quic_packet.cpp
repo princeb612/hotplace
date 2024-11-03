@@ -15,106 +15,49 @@
 namespace hotplace {
 namespace net {
 
-quic_packet::quic_packet() : _type(0), _version(0) {}
+quic_packet::quic_packet() : _type(0), _hdr(0), _version(0) {}
 
-quic_packet::quic_packet(quic_packet_t type) : _type(type), _version(0) {}
-
-quic_packet::quic_packet(const quic_packet& rhs) : _type(rhs._type), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid) {}
-
-quic_packet& quic_packet::set_version(uint32 version) {
-    switch (get_type()) {
-        case quic_packet_type_version_negotiation:
-            // 17.2.1.  Version Negotiation Packet
-            break;
-        default:
-            _version = version;
-            break;
-    }
-    return *this;
+quic_packet::quic_packet(quic_packet_t type) : _type(type), _hdr(0), _version(0) {
+    bool is_longheader = true;
+    set_type(type, _hdr, is_longheader);
 }
 
-uint32 quic_packet::get_version() { return _version; }
-
-void quic_packet::set_dcid(const binary& cid) { _dcid = cid; }
-
-void quic_packet::set_scid(const binary& cid) { _scid = cid; }
-
-const binary_t& quic_packet::get_dcid() { return _dcid; }
-
-const binary_t& quic_packet::get_scid() { return _scid; }
+quic_packet::quic_packet(const quic_packet& rhs) : _type(rhs._type), _hdr(rhs._hdr), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid) {}
 
 uint8 quic_packet::get_type() { return _type; }
 
-return_t quic_packet::read(byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (size < 6) {
-            ret = errorcode_t::bad_data;
-            __leave2;
-        }
-
-        byte_t hdr = stream[pos++];
-        bool is_longheader = true;
-
-        if (quic_packet_field_hf & hdr) {  // Header Form
-            is_longheader = true;
-            if (quic_packet_field_fb & hdr) {               // Fixed Bit
-                switch (quic_packet_field_mask_lh & hdr) {  // Long Packet Type
-                    case quic_packet_field_initial:
-                        _type = quic_packet_type_initial;
-                        break;
-                    case quic_packet_field_0_rtt:
-                        _type = quic_packet_type_0_rtt;
-                        break;
-                    case quic_packet_field_handshake:
-                        _type = quic_packet_type_handshake;
-                        break;
-                    case quic_packet_field_retry:
-                        _type = quic_packet_type_retry;
-                        break;
-                }
-            } else {
-                _type = quic_packet_type_version_negotiation;
+void quic_packet::get_type(uint8 hdr, uint8& type, bool& is_longheader) {
+    if (quic_packet_field_hf & hdr) {  // Header Form
+        is_longheader = true;
+        if (quic_packet_field_fb & hdr) {               // Fixed Bit
+            switch (quic_packet_field_mask_lh & hdr) {  // Long Packet Type
+                case quic_packet_field_initial:
+                    type = quic_packet_type_initial;
+                    break;
+                case quic_packet_field_0_rtt:
+                    type = quic_packet_type_0_rtt;
+                    break;
+                case quic_packet_field_handshake:
+                    type = quic_packet_type_handshake;
+                    break;
+                case quic_packet_field_retry:
+                    type = quic_packet_type_retry;
+                    break;
             }
         } else {
-            is_longheader = false;
-            if (quic_packet_field_fb & hdr) {
-                _type = quic_packet_type_1_rtt;
-            }
+            type = quic_packet_type_version_negotiation;
         }
-
-        payload pl;
-        pl << new payload_member(uint8(0), "hdr") << new payload_member(uint32(0), true, "version") << new payload_member(uint8(0), "dcid_len", "longheader")
-           << new payload_member(binary_t(), "dcid") << new payload_member(uint8(0), "scid_len", "longheader")
-           << new payload_member(binary_t(), "scid", "longheader");
-        if (is_longheader) {
-            pl.set_reference_value("dcid", "dcid_len");
-            pl.set_reference_value("scid", "scid_len");
+    } else {
+        is_longheader = false;
+        if (quic_packet_field_fb & hdr) {
+            type = quic_packet_type_1_rtt;
         }
-        pl.set_group("longheader", is_longheader);
-
-        pl.read(stream, size);
-
-        _version = t_to_int<uint32>(pl.select("version"));
-        pl.select("dcid")->get_variant().to_binary(_dcid);
-        pl.select("scid")->get_variant().to_binary(_scid);
     }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
 }
 
-return_t quic_packet::write(binary_t& packet) {
-    return_t ret = errorcode_t::success;
-    byte_t hdr = 0;
-    bool is_longheader = true;
-
-    switch (get_type()) {
+void quic_packet::set_type(uint8 type, uint8& hdr, bool& is_longheader) {
+    hdr = 0;
+    switch (type) {
         case quic_packet_type_version_negotiation:
             is_longheader = true;
             // 17.2.1.  Version Negotiation Packet
@@ -146,9 +89,85 @@ return_t quic_packet::write(binary_t& packet) {
             hdr |= (quic_packet_field_fb);
             break;
     }
+}
+
+quic_packet& quic_packet::set_version(uint32 version) {
+    switch (get_type()) {
+        case quic_packet_type_version_negotiation:
+            // 17.2.1.  Version Negotiation Packet
+            break;
+        default:
+            _version = version;
+            break;
+    }
+    return *this;
+}
+
+uint32 quic_packet::get_version() { return _version; }
+
+void quic_packet::set_dcid(const binary& cid) { _dcid = cid; }
+
+void quic_packet::set_scid(const binary& cid) { _scid = cid; }
+
+const binary_t& quic_packet::get_dcid() { return _dcid; }
+
+const binary_t& quic_packet::get_scid() { return _scid; }
+
+return_t quic_packet::read(const byte_t* stream, size_t size, size_t& pos) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if ((size < 6) || (size < pos)) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
+        byte_t hdr = stream[pos];
+        bool is_longheader = true;
+        get_type(hdr, _type, is_longheader);
+
+        payload pl;
+        pl << new payload_member(uint8(0), "hdr") << new payload_member(uint32(0), true, "version") << new payload_member(uint8(0), "dcid_len", "longheader")
+           << new payload_member(binary_t(), "dcid") << new payload_member(uint8(0), "scid_len", "longheader")
+           << new payload_member(binary_t(), "scid", "longheader");
+        if (is_longheader) {
+            pl.set_reference_value("dcid", "dcid_len");
+            pl.set_reference_value("scid", "scid_len");
+        }
+        pl.set_group("longheader", is_longheader);
+
+        pl.read(stream, size, pos);
+
+        _hdr = hdr;
+        _version = t_to_int<uint32>(pl.select("version"));
+        pl.select("dcid")->get_variant().to_binary(_dcid);
+        pl.select("scid")->get_variant().to_binary(_scid);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t quic_packet::read(const binary_t& bin, size_t& pos) { return read(&bin[0], bin.size(), pos); }
+
+return_t quic_packet::write(binary_t& packet) {
+    return_t ret = errorcode_t::success;
+    uint8 hdr = 0;
+    bool is_longheader = true;
+
+    if (_hdr) {
+        uint8 type = 0;
+        get_type(_hdr, type, is_longheader);
+    } else {
+        set_type(_type, _hdr, is_longheader);
+    }
 
     payload pl;
-    pl << new payload_member(hdr, "hdr") << new payload_member(_version, true, "version") << new payload_member((uint8)_dcid.size(), "dcidl", "longheader")
+    pl << new payload_member(_hdr, "hdr") << new payload_member(_version, true, "version") << new payload_member((uint8)_dcid.size(), "dcidl", "longheader")
        << new payload_member(_dcid, "dcid") << new payload_member((uint8)_scid.size(), "scidl", "longheader")
        << new payload_member(_scid, "scid", "longheader");
     pl.set_group("longheader", is_longheader);
@@ -188,6 +207,14 @@ void quic_packet::dump(stream_t* s) {
             case quic_packet_type_1_rtt:
                 break;
         }
+        switch (get_type()) {
+            case quic_packet_type_initial:
+            case quic_packet_type_0_rtt:
+            case quic_packet_type_handshake:
+            case quic_packet_type_1_rtt:
+                s->printf(" > packet length %i\n", get_pn_length());
+                break;
+        }
     }
 }
 
@@ -196,35 +223,133 @@ quic_packet& quic_packet::add(const quic_frame* frame) {
     return *this;
 }
 
-/**
- * Figure 14: Version Negotiation Packet
- *  Supported Version (32) ...,
- */
-/**
- * Figure 15: Initial Packet
- *  Token Length (i),
- *  Token (..),
- *  Length (i),
- *  Packet Number (8..32),
- *  Packet Payload (8..),
- */
-/**
- * Figure 16: 0-RTT Packet
- * Figure 17: Handshake Protected Packet
- *  Length (i),
- *  Packet Number (8..32),
- *  Packet Payload (8..),
- */
-/**
- * Figure 18: Retry Packet
- *  Retry Token (..),
- *  Retry Integrity Tag (128),
- */
-/**
- * Figure 19: 1-RTT Packet
- *  Packet Number (8..32),
- *  Packet Payload (8..),
- */
+return_t quic_packet::read_frame(byte_t* stream, size_t size, size_t& pos) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        uint64 value = 0;
+        ret = quic_read_vle_int(stream, size, pos, value);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        if (value > 255) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+        _type = value;
+        switch (get_type()) {
+            case quic_frame_padding:  // Figure 23: PADDING Frame Format
+            case quic_frame_ping:     // Figure 24: PING Frame Format
+                break;
+            case quic_frame_ack:  // Figure 25: ACK Frame Format
+                break;
+            case quic_frame_reset_stream:  // Figure 28: RESET_STREAM Frame Format
+                break;
+            case quic_frame_stop_pending:  // Figure 29: STOP_SENDING Frame Format
+                break;
+            case quic_frame_crypto:  // Figure 30: CRYPTO Frame Format
+            {
+                uint64 offset = 0;
+                ret = quic_read_vle_int(stream, size, pos, offset);
+                uint64 length = 0;
+                ret = quic_read_vle_int(stream, size, pos, length);
+                binary_t crypto_data;
+                crypto_data.insert(crypto_data.end(), stream + pos, stream + pos + length);
+                {
+                    printf("offset %I64i\n", offset);
+                    printf("length %I64i\n", length);
+                    basic_stream bs;
+                    dump_memory(crypto_data, &bs);
+                    printf("%s\n", bs.c_str());
+                }
+                pos += length;
+            } break;
+            case quic_frame_new_token:  // Figure 31: NEW_TOKEN Frame Format
+                break;
+            case quic_frame_stream:  // Figure 32: STREAM Frame Format
+                break;
+            case quic_frame_max_data:  // Figure 33: MAX_DATA Frame Format
+                break;
+            case quic_frame_max_stream_data:  // Figure 34: MAX_STREAM_DATA Frame Format
+                break;
+            case quic_frame_max_streams:  // Figure 35: MAX_STREAMS Frame Format
+                break;
+            case quic_frame_data_blocked:  // Figure 36: DATA_BLOCKED Frame Format
+                break;
+            case quic_frame_stream_data_blocked:  // Figure 37: STREAM_DATA_BLOCKED Frame Format
+                break;
+            case quic_frame_stream_blocked:  // Figure 38: STREAMS_BLOCKED Frame Format
+                break;
+            case quic_frame_new_connection_id:  // Figure 39: NEW_CONNECTION_ID Frame Format
+                break;
+            case quic_frame_retire_connection_id:  // Figure 40: RETIRE_CONNECTION_ID Frame Format
+                break;
+            case quic_frame_path_challenge:  // Figure 41: PATH_CHALLENGE Frame Format
+                break;
+            case quic_frame_path_response:  // Figure 42: PATH_RESPONSE Frame Format
+                break;
+            case quic_frame_connection_close:  // Figure 43: CONNECTION_CLOSE Frame Format
+                break;
+            case quic_frame_handshake_done:  // Figure 44: HANDSHAKE_DONE Frame Format
+                break;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t quic_packet::write_frame(binary_t& packet) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
+
+quic_packet& quic_packet::set_pn_length(uint8 len) {
+    switch (get_type()) {
+        case quic_packet_type_initial:
+        case quic_packet_type_0_rtt:
+        case quic_packet_type_handshake:
+        case quic_packet_type_1_rtt: {
+            len -= 1;
+            uint8 l = (len - 1) & 0x03;
+            _hdr = (_hdr & 0xfc) | l;
+        } break;
+        default:
+            break;
+    }
+    return *this;
+}
+
+uint8 quic_packet::get_pn_length() {
+    uint8 len = 0;
+    switch (get_type()) {
+        case quic_packet_type_initial:
+        case quic_packet_type_0_rtt:
+        case quic_packet_type_handshake:
+        case quic_packet_type_1_rtt:
+            len = (_hdr & 0x03) + 1;
+            break;
+        default:
+            break;
+    }
+    return len;
+}
+
+void quic_packet::set_binary(binary_t& target, const binary_t& stream) { target = stream; }
+
+void quic_packet::set_binary(binary_t& target, const byte_t* stream, size_t size) {
+    if (stream) {
+        target.insert(target.end(), stream, stream + size);
+    }
+}
+
+quic_packet_vn::quic_packet_vn() : quic_packet() {}
+
+quic_packet_vn::quic_packet_vn(const quic_packet_vn& rhs) : quic_packet(rhs) {}
 
 }  // namespace net
 }  // namespace hotplace

@@ -70,7 +70,7 @@ return_t SSL_dgram_peer_sockaddr(SSL* ssl, struct sockaddr* sockaddr, socklen_t 
         socket_t sock = SSL_get_fd(ssl);
         typeof_socket(sock, socktype);
         if (SOCK_DGRAM != socktype) {
-            ret = errorcode_t::difference_type;
+            ret = errorcode_t::different_type;
             __leave2;
         }
 

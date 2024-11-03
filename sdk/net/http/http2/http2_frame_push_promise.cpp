@@ -60,7 +60,7 @@ return_t http2_frame_push_promise::read(http2_frame_header_t const* header, size
         }
 
         _promised_id = t_to_int<uint32>(pl.select(constexpr_frame_promised_stream_id));
-        pl.select(constexpr_frame_fragment)->get_variant().to_binary(_fragment, variant_flag_convendian);
+        pl.select(constexpr_frame_fragment)->get_variant().to_binary(_fragment);
     }
     __finally2 {
         // do nothing

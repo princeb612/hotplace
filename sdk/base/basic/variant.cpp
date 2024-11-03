@@ -323,6 +323,7 @@ variant &variant::set_str_new(const std::string &value) {
     if (p) {
         _vt.data.str = p;
         _vt.flag |= variant_flag_t::flag_free;
+        _vt.size = value.size();
     }
     _vt.data.str = p;
     return *this;
@@ -448,9 +449,9 @@ int variant::to_int() const { return t_to_int<int>(_vt); }
 return_t variant::to_binary(binary_t &target, uint32 flags) const {
     return_t ret = errorcode_t::success;
 
-    bool change_endian = (variant_flag_convendian & flags);
+    bool change_endian = (variant_convendian & flags);
 
-    if (variant_flag_trunc & flags) {
+    if (variant_trunc & flags) {
         target.clear();
     }
 
