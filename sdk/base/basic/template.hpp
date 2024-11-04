@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_TEMPLATE__
 #define __HOTPLACE_SDK_BASE_BASIC_TEMPLATE__
 
+#include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/variant.hpp>
-#include <sdk/base/binary.hpp>
 #include <sdk/base/error.hpp>
 #include <sdk/base/stream.hpp>
 #include <sdk/base/syntax.hpp>
@@ -99,7 +99,7 @@ T t_to_int(const variant_t& vt, return_t& errorcode) {
             }
             break;
         case TYPE_BINARY:
-            i = binary_to_intger_force<T>(vt.data.bstr, vt.size, errorcode);
+            i = t_binary_to_integer2<T>(vt.data.bstr, vt.size, errorcode);
             break;
         default:
             break;
@@ -114,6 +114,12 @@ template <typename T>
 T t_to_int(const variant_t& vt) {
     return_t errorcode = errorcode_t::success;
     return t_to_int<T>(vt, errorcode);
+}
+
+template <typename T>
+T t_to_int(const variant& v) {
+    return_t errorcode = errorcode_t::success;
+    return t_to_int<T>(v.content(), errorcode);
 }
 
 }  // namespace hotplace

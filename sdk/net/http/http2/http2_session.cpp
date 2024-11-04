@@ -42,11 +42,6 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
             basic_stream bs;
 
-            datetime dt;
-            datetime_t t;
-            dt.getlocaltime(&t);
-            bs.printf("\e[1;37m%04d-%02d-%02d %02d:%02d:%02d.%03d\e[0m ", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
-
             switch (type) {
                 case mux_connect:
                     bs.printf("[h2] connect %i\n", session_socket->event_socket);

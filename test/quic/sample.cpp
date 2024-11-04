@@ -382,26 +382,30 @@ void test_rfc_9001_a2() {
          *  header = c000000001088394c8f03e5157080000449e7b9aec34
          */
 
-        byte_t header0 = bin_unprotected_header[0];
+        // pn_offset 0x12
+        // see quic_packet_initial::read
+        // see payload::offset_of("pn")
+        binary_t bin_protected_header = bin_unprotected_header;
+
+        byte_t header0 = bin_protected_header[0];
         if (header0 & 0x80) {
             header0 ^= bin_mask[0] & 0x0f;
         } else {
             header0 ^= bin_mask[0] & 0x1f;
         }
-        bin_unprotected_header[0] = header0;
+        bin_protected_header[0] = header0;
 
-        // pn_offset 0x12
-        // see quic_packet_initial::read
-        // see payload::offset_of("pn")
         auto pn_offset = 0x12;
         auto pnl = packet.get_pn_length();
         for (auto i = 0; i < pnl; i++) {
-            auto b = bin_unprotected_header[pn_offset + i];
+            auto b = bin_protected_header[pn_offset + i];
             b ^= bin_mask[1 + i];
-            bin_unprotected_header[pn_offset + i] = b;
+            bin_protected_header[pn_offset + i] = b;
         }
-        _logger->hdump("header", bin_unprotected_header, 16, 3);
-        _test_case.assert(bin_unprotected_header == base16_decode("c000000001088394c8f03e5157080000449e7b9aec34"), __FUNCTION__, "RFC 9001 A.2.");
+
+        _logger->hdump("protected header", bin_protected_header, 16, 3);
+        _test_case.assert(bin_protected_header == base16_decode("c000000001088394c8f03e5157080000449e7b9aec34"), __FUNCTION__,
+                          "RFC 9001 A.2. protected header");
 
         const char* result =
             "c000000001088394c8f03e5157080000 449e7b9aec34d1b1c98dd7689fb8ec11"
@@ -445,30 +449,197 @@ void test_rfc_9001_a2() {
 
         binary_t bin_result = base16_decode_rfc(result);
 
-        // TODO
-        // 1 result packet
-        // 2 protected packet number
+        // vice versa
+        header0 = bin_result[0];
+        if (header0 & 0x80) {
+            header0 ^= bin_mask[0] & 0x0f;
+        } else {
+            header0 ^= bin_mask[0] & 0x1f;
+        }
+        bin_result[0] = header0;
+        for (auto i = 0; i < pnl; i++) {
+            auto b = bin_result[pn_offset + i];
+            b ^= bin_mask[1 + i];
+            bin_result[pn_offset + i] = b;
+        }
+        _test_case.assert(0 == memcmp(&bin_result[0], &bin_unprotected_header[0], bin_unprotected_header.size()), __FUNCTION__, "RFC 9001 A.2.");
 
-        // quic_packet_initial initial;
-        // pos = 0;
-        // initial.read(&bin_result[0], bin_result.size(), pos);
-        // initial.dump(&bs);
-        // _logger->writeln(bs);
+        quic_packet_initial initial;
+        pos = 0;
+        initial.read(&bin_result[0], bin_result.size(), pos);
+        initial.dump(&bs);
+        _logger->writeln(bs);
+
+        // TODO
+        // result
     }
 }
 
 void test_rfc_9001_a3() {
     _test_case.begin("RFC 9001 A.3.  Server Initial");
-    //
+
+    const char* payload =
+        "02000000000600405a020000560303ee fce7f7b37ba1d1632e96677825ddf739"
+        "88cfc79825df566dc5430b9a045a1200 130100002e00330024001d00209d3c94"
+        "0d89690b84d08a60993c144eca684d10 81287c834d5311bcf32bb9da1a002b00"
+        "020304";
+    binary_t bin_payload = base16_decode_rfc(payload);
+    const char* unprotected_header = "c1000000010008f067a5502a4262b50040750001";
+    binary_t bin_unprotected_header = base16_decode(unprotected_header);
+
+    quic_packet_initial packet;
+    size_t pos = 0;
+    basic_stream bs;
+
+    {
+        packet.read(&bin_unprotected_header[0], bin_unprotected_header.size(), pos);
+        packet.dump(&bs);
+
+        _logger->writeln(bs);
+    }
+
+    // sample = 2cd0991cd25b0aac406a5816b6394100
+    // mask   = 2ec0d8356a
+    // unprotected_header = cf000000010008f067a5502a4262b5004075c0d9
+    const char* hp = "c206b8d9b9f0f37644430b490eeaa314";
+    const char* sample = "2cd0991cd25b0aac406a5816b6394100";
+    binary_t bin_hp = base16_decode_rfc(hp);
+    binary_t bin_sample = base16_decode_rfc(sample);
+    binary_t bin_mask;
+
+    {
+        crypt_context_t* handle = nullptr;
+        openssl_crypt crypt;
+        crypt.open(&handle, "aes-128-ecb", bin_hp, binary_t());
+        crypt.encrypt(handle, bin_sample, bin_mask);
+        crypt.close(handle);
+
+        bin_mask.resize(5);  // [0..4]
+        _logger->hdump("hp", bin_hp, 16, 3);
+        _logger->hdump("sample", bin_sample, 16, 3);
+        _logger->hdump("mask", bin_mask, 16, 3);
+        _test_case.assert(bin_mask == base16_decode("2ec0d8356a"), __FUNCTION__, "RFC 9001 A.3. mask");
+    }
+
+    {
+        binary_t bin_protected_header = bin_unprotected_header;
+
+        byte_t header0 = bin_protected_header[0];
+        if (header0 & 0x80) {
+            header0 ^= bin_mask[0] & 0x0f;
+        } else {
+            header0 ^= bin_mask[0] & 0x1f;
+        }
+        bin_protected_header[0] = header0;
+
+        auto pn_offset = 0x12;
+        auto pnl = packet.get_pn_length();
+        for (auto i = 0; i < pnl; i++) {
+            auto b = bin_protected_header[pn_offset + i];
+            b ^= bin_mask[1 + i];
+            bin_protected_header[pn_offset + i] = b;
+        }
+
+        _logger->hdump("protected header", bin_protected_header, 16, 3);
+        _test_case.assert(bin_protected_header == base16_decode("cf000000010008f067a5502a4262b5004075c0d9"), __FUNCTION__, "RFC 9001 A.3. protected header");
+    }
+
+    {
+        const char* protected_packet =
+            "cf000000010008f067a5502a4262b500 4075c0d95a482cd0991cd25b0aac406a"
+            "5816b6394100f37a1c69797554780bb3 8cc5a99f5ede4cf73c3ec2493a1839b3"
+            "dbcba3f6ea46c5b7684df3548e7ddeb9 c3bf9c73cc3f3bded74b562bfb19fb84"
+            "022f8ef4cdd93795d77d06edbb7aaf2f 58891850abbdca3d20398c276456cbc4"
+            "2158407dd074ee";
+    }
+
+    // TODO - protected packet
 }
 
 void test_rfc_9001_a4() {
     _test_case.begin("RFC 9001 A.4.  Retry");
-    //
+
+    const char* retry_packet =
+        "ff000000010008f067a5502a4262b574 6f6b656e04a265ba2eff4d829058fb3f"
+        "0f2496ba";
+    binary_t bin_retry_packet = base16_decode_rfc(retry_packet);
+
+    basic_stream bs;
+    size_t pos = 0;
+    quic_packet_retry packet;
+    packet.read(&bin_retry_packet[0], bin_retry_packet.size(), pos);
+    packet.dump(&bs);
+    _logger->writeln(bs);
+
+    // the client-chosen connection ID value of 0x8394c8f03e515708
 }
 
 void test_rfc_9001_a5() {
     _test_case.begin("RFC 9001 A.5.  ChaCha20-Poly1305 Short Header Packet");
+    //
+}
+
+void test_tls_hello_messages() {
+    // RFC 2246 The TLS Protocol Version 1.0
+    //  7.4. Handshake protocol
+    //  7.4.1. Hello messages
+    //  7.4.1.1. Hello request
+    //  7.4.1.2. Client hello
+    //
+    // RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+    //  4.  Handshake Protocol
+    //      enum {
+    //          client_hello(1),
+    //          server_hello(2),
+    //          new_session_ticket(4),
+    //          end_of_early_data(5),
+    //          encrypted_extensions(8),
+    //          certificate(11),
+    //          certificate_request(13),
+    //          certificate_verify(15),
+    //          finished(20),
+    //          key_update(24),
+    //          message_hash(254),
+    //          (255)
+    //      } HandshakeType;
+    //
+    //      struct {
+    //          HandshakeType msg_type;    /* handshake type */
+    //          uint24 length;             /* remaining bytes in message */
+    //          select (Handshake.msg_type) {
+    //              case client_hello:          ClientHello;
+    //              case server_hello:          ServerHello;
+    //              case end_of_early_data:     EndOfEarlyData;
+    //              case encrypted_extensions:  EncryptedExtensions;
+    //              case certificate_request:   CertificateRequest;
+    //              case certificate:           Certificate;
+    //              case certificate_verify:    CertificateVerify;
+    //              case finished:              Finished;
+    //              case new_session_ticket:    NewSessionTicket;
+    //              case key_update:            KeyUpdate;
+    //          };
+    //      } Handshake;
+    //  4.1.2.  Client Hello
+    //    Structure of this message:
+    //
+    //       uint16 ProtocolVersion;
+    //       opaque Random[32];
+    //
+    //       uint8 CipherSuite[2];    /* Cryptographic suite selector */
+    //
+    //       struct {
+    //           ProtocolVersion legacy_version = 0x0303;    /* TLS v1.2 */
+    //           Random random;
+    //           opaque legacy_session_id<0..32>;
+    //           CipherSuite cipher_suites<2..2^16-2>;
+    //           opaque legacy_compression_methods<1..2^8-1>;
+    //           Extension extensions<8..2^16-1>;
+    //       } ClientHello;
+
+    // QUIC integrates the TLS handshake [TLS13], although using a customized framing for protecting packets.
+}
+
+void test_quic_handshake() {
     //
 }
 
@@ -505,6 +676,9 @@ int main(int argc, char** argv) {
     test_rfc_9001_a3();
     test_rfc_9001_a4();
     test_rfc_9001_a5();
+
+    test_tls_hello_messages();
+    test_quic_handshake();
 
     openssl_cleanup();
 

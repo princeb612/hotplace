@@ -15,14 +15,14 @@
 namespace hotplace {
 namespace net {
 
-quic_packet::quic_packet() : _type(0), _hdr(0), _version(0) {}
+quic_packet::quic_packet() : _type(0), _ht(0), _version(0) {}
 
-quic_packet::quic_packet(quic_packet_t type) : _type(type), _hdr(0), _version(0) {
+quic_packet::quic_packet(quic_packet_t type) : _type(type), _ht(0), _version(0) {
     bool is_longheader = true;
-    set_type(type, _hdr, is_longheader);
+    set_type(type, _ht, is_longheader);
 }
 
-quic_packet::quic_packet(const quic_packet& rhs) : _type(rhs._type), _hdr(rhs._hdr), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid) {}
+quic_packet::quic_packet(const quic_packet& rhs) : _type(rhs._type), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid) {}
 
 uint8 quic_packet::get_type() { return _type; }
 
@@ -141,7 +141,7 @@ return_t quic_packet::read(const byte_t* stream, size_t size, size_t& pos) {
 
         pl.read(stream, size, pos);
 
-        _hdr = hdr;
+        _ht = hdr;
         _version = t_to_int<uint32>(pl.select("version"));
         pl.select("dcid")->get_variant().to_binary(_dcid);
         pl.select("scid")->get_variant().to_binary(_scid);
@@ -159,15 +159,15 @@ return_t quic_packet::write(binary_t& packet) {
     uint8 hdr = 0;
     bool is_longheader = true;
 
-    if (_hdr) {
+    if (_ht) {
         uint8 type = 0;
-        get_type(_hdr, type, is_longheader);
+        get_type(_ht, type, is_longheader);
     } else {
-        set_type(_type, _hdr, is_longheader);
+        set_type(_type, _ht, is_longheader);
     }
 
     payload pl;
-    pl << new payload_member(_hdr, "hdr") << new payload_member(_version, true, "version") << new payload_member((uint8)_dcid.size(), "dcidl", "longheader")
+    pl << new payload_member(_ht, "hdr") << new payload_member(_version, true, "version") << new payload_member((uint8)_dcid.size(), "dcidl", "longheader")
        << new payload_member(_dcid, "dcid") << new payload_member((uint8)_scid.size(), "scidl", "longheader")
        << new payload_member(_scid, "scid", "longheader");
     pl.set_group("longheader", is_longheader);
@@ -251,22 +251,7 @@ return_t quic_packet::read_frame(byte_t* stream, size_t size, size_t& pos) {
             case quic_frame_stop_pending:  // Figure 29: STOP_SENDING Frame Format
                 break;
             case quic_frame_crypto:  // Figure 30: CRYPTO Frame Format
-            {
-                uint64 offset = 0;
-                ret = quic_read_vle_int(stream, size, pos, offset);
-                uint64 length = 0;
-                ret = quic_read_vle_int(stream, size, pos, length);
-                binary_t crypto_data;
-                crypto_data.insert(crypto_data.end(), stream + pos, stream + pos + length);
-                {
-                    printf("offset %I64i\n", offset);
-                    printf("length %I64i\n", length);
-                    basic_stream bs;
-                    dump_memory(crypto_data, &bs);
-                    printf("%s\n", bs.c_str());
-                }
-                pos += length;
-            } break;
+                break;
             case quic_frame_new_token:  // Figure 31: NEW_TOKEN Frame Format
                 break;
             case quic_frame_stream:  // Figure 32: STREAM Frame Format
@@ -316,7 +301,7 @@ quic_packet& quic_packet::set_pn_length(uint8 len) {
         case quic_packet_type_1_rtt: {
             len -= 1;
             uint8 l = (len - 1) & 0x03;
-            _hdr = (_hdr & 0xfc) | l;
+            _ht = (_ht & 0xfc) | l;
         } break;
         default:
             break;
@@ -331,7 +316,7 @@ uint8 quic_packet::get_pn_length() {
         case quic_packet_type_0_rtt:
         case quic_packet_type_handshake:
         case quic_packet_type_1_rtt:
-            len = (_hdr & 0x03) + 1;
+            len = (_ht & 0x03) + 1;
             break;
         default:
             break;

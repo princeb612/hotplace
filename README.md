@@ -182,8 +182,17 @@
   * RFC 9001 Using TLS to Secure QUIC
   * RFC 9002 QUIC Loss Detection and Congestion Control
   * RFC 9114 HTTP/3
-  * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
   * RFC 9368 Compatible Version Negotiation for QUIC
+* TLS
+  * RFC 2246 The TLS Protocol Version 1.0
+  * RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
+  * RFC 6066 Transport Layer Security (TLS) Extensions: Extension Definitions
+  * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
+  * RFC 7520 Using Raw Public Keys in Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)
+  * RFC 7685 A Transport Layer Security (TLS) ClientHello Padding Extension
+  * RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
+  * RFC 8422 Elliptic Curve Cryptography (ECC) Cipher Suites for Transport Layer Security (TLS) Versions 1.2 and Earlier
+  * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
 * ASN.1
   * ITU-T X.680-X.699
     * [X.680-X.693 : Information Technology - Abstract Syntax Notation One (ASN.1) & ASN.1 encoding rules](https://www.itu.int/rec/T-REC-X.680-X.693-202102-I/en)

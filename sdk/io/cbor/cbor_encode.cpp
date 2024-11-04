@@ -359,7 +359,7 @@ return_t cbor_encode::encode(binary_t& target, int128 value) {
             uint8 len = contents_byte_length(value);  // 128 / 8 = 16 always less than 24
             binary_push(target, (cbor_major_t::cbor_major_tag << 5) | valueoftag);
             binary_push(target, (cbor_major_t::cbor_major_bstr << 5) | len);
-            binary_append(target, value, hton128, len);
+            binary_append2(target, len, value, hton128);
         } else {
             if (value < 24) {
                 binary_push(target, (major << 5) | value);
@@ -392,7 +392,7 @@ return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint128 value
             uint8 len = contents_byte_length(value);  // 128 / 8 = 16 always less than 24
             binary_push(target, (cbor_major_t::cbor_major_tag << 5) | cbor_tag_t::cbor_tag_positive_bignum);
             binary_push(target, (cbor_major_t::cbor_major_bstr << 5) | len);
-            binary_append(target, value, hton128, len);
+            binary_append2(target, len, value, hton128);
         } else {
             if (value < 24) {
                 binary_push(target, (major << 5) | value);

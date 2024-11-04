@@ -206,7 +206,7 @@ template <typename T>
 T t_to_int(payload_member* v) {
     T i = 0;
     if (v) {
-        i = t_to_int<T>(v->get_variant().content());
+        i = t_to_int<T>(v->get_variant());
     }
     return i;
 }

@@ -12,9 +12,9 @@
 #ifndef __HOTPLACE_SDK_BASE_LOGGER__
 #define __HOTPLACE_SDK_BASE_LOGGER__
 
+#include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/console_color.hpp>
 #include <sdk/base/basic/keyvalue.hpp>
-#include <sdk/base/binary.hpp>
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
@@ -37,7 +37,7 @@ namespace hotplace {
  *          builder.set(logger_t::logger_stdout, 1)
  *                 .set(logger_t::logger_flush_time, 0)
  *                 .set(logger_t::logger_flush_size, 0)
- *                 .set_format("Y-M-D h:m:s.f ");
+ *                 .set_timeformat("Y-M-D h:m:s.f ");
  *          _logger.make_share(builder.build());
  *
  *          _logger->writeln("logging message ...");
@@ -53,13 +53,22 @@ enum logger_t {
     logger_rotate_size = 5,  // log-rotate
     logger_max_file = 6,     // keep log files
 };
+enum loglevel_t {
+    loglevel_trace = 0,    // everything
+    loglevel_debug = 2,    // debug
+    loglevel_info = 4,     // information
+    loglevel_warn = 6,     // warning
+    loglevel_error = 8,    // error
+    loglevel_fatal = 10,   // fatal error
+    loglevel_notice = 12,  // notice
+};
 
 class logger;
 class logger_builder {
    public:
     logger_builder();
     logger_builder& set(logger_t key, uint16 value);
-    logger_builder& set_format(const std::string& fmt);
+    logger_builder& set_timeformat(const std::string& fmt);
     logger_builder& set_logfile(const std::string& filename);
 
     logger* build();
@@ -102,23 +111,63 @@ class logger {
     console_color_t _fgcolor;
     console_color_t _bgcolor;
 
+    loglevel_t _log_level;
+    loglevel_t _implicit_level;
+
    public:
     ~logger();
+
+    /**
+     * @brief   log level
+     * @remarks
+     *          default general log level is loglevel_trace
+     * @sample
+     *      // general log level is loglevel_trace
+     *
+     *      // general log level to loglevel_debug
+     *      logger->set_implicit_loglevel(loglevel_debug);
+     *      logger->writeln("test");                // loglevel_debug
+     *
+     *      logger->set_loglevel(loglevel_debug);
+     *      logger->writeln("test");                // loglevel_debug == loglevel_debug, log
+     *      logger->writeln(loglevel_info, "test"); // loglevel_info  >  loglevel_debug, log
+     *
+     *      logger->set_loglevel(loglevel_info);
+     *      logger->writeln("test");                // loglevel_debug <  loglevel_info, do not log
+     *      logger->writeln(loglevel_info, "test"); // loglevel_info  == loglevel_info, log
+     */
+    logger& set_loglevel(loglevel_t level);
+    logger& set_implicit_loglevel(loglevel_t level);
 
     logger& consoleln(const char* fmt, ...);
     logger& consoleln(const std::string& msg);
     logger& consoleln(const basic_stream& msg);
     logger& consoleln(stream_t* s);
 
+    logger& consoleln(loglevel_t level, const char* fmt, ...);
+    logger& consoleln(loglevel_t level, const std::string& msg);
+    logger& consoleln(loglevel_t level, const basic_stream& msg);
+    logger& consoleln(loglevel_t level, stream_t* s);
+
     logger& writeln(const char* fmt, ...);
     logger& writeln(const std::string& msg);
     logger& writeln(const basic_stream& msg);
     logger& writeln(stream_t* s);
 
+    logger& writeln(loglevel_t level, const char* fmt, ...);
+    logger& writeln(loglevel_t level, const std::string& msg);
+    logger& writeln(loglevel_t level, const basic_stream& msg);
+    logger& writeln(loglevel_t level, stream_t* s);
+
     logger& write(const char* fmt, ...);
     logger& write(const std::string& msg);
     logger& write(const basic_stream& msg);
     logger& write(stream_t* s);
+
+    logger& write(loglevel_t level, const char* fmt, ...);
+    logger& write(loglevel_t level, const std::string& msg);
+    logger& write(loglevel_t level, const basic_stream& msg);
+    logger& write(loglevel_t level, stream_t* s);
 
     logger& dump(const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
@@ -127,12 +176,26 @@ class logger {
     logger& dump(const std::string& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const basic_stream& msg, unsigned hexpart = 16, unsigned indent = 0);
 
+    logger& dump(loglevel_t level, const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
+    logger& dump(loglevel_t level, const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
+    logger& dump(loglevel_t level, const binary_t& msg, unsigned hexpart = 16, unsigned indent = 0);
+    logger& dump(loglevel_t level, const binary& msg, unsigned hexpart = 16, unsigned indent = 0);
+    logger& dump(loglevel_t level, const std::string& msg, unsigned hexpart = 16, unsigned indent = 0);
+    logger& dump(loglevel_t level, const basic_stream& msg, unsigned hexpart = 16, unsigned indent = 0);
+
     logger& hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const binary_t& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const binary& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const std::string& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const basic_stream& msg, unsigned hexpart = 16, unsigned indent = 0);
+
+    logger& hdump(loglevel_t level, const std::string& header, const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
+    logger& hdump(loglevel_t level, const std::string& header, const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
+    logger& hdump(loglevel_t level, const std::string& header, const binary_t& msg, unsigned hexpart = 16, unsigned indent = 0);
+    logger& hdump(loglevel_t level, const std::string& header, const binary& msg, unsigned hexpart = 16, unsigned indent = 0);
+    logger& hdump(loglevel_t level, const std::string& header, const std::string& msg, unsigned hexpart = 16, unsigned indent = 0);
+    logger& hdump(loglevel_t level, const std::string& header, const basic_stream& msg, unsigned hexpart = 16, unsigned indent = 0);
 
     logger& operator<<(const char* msg);
     logger& operator<<(const std::string& msg);
@@ -177,6 +240,8 @@ class logger {
 
     bool test_logging_stdout();
     bool test_logging_file();
+    bool test_loglevel(loglevel_t level);
+    bool test_loglevel();
 };
 
 }  // namespace hotplace

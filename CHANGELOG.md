@@ -1,6 +1,7 @@
 # history
 
-* Revision 643
+* Revision 644
+  * [added] log level
   * [study] QUIC (RFC 9001)
   * [study] TLS (RFC 8446)
 

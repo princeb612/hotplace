@@ -38,6 +38,24 @@ quic_integer::quic_integer(const binary_t& data) : payload_encoded(), _datalink(
     _data.set_binary_new(data);
 }
 
+quic_integer& quic_integer::set(const char* data) {
+    if (data) {
+        _len = strlen(data);
+        _data.clear().set_strn_new(data, _len);
+    }
+    return *this;
+}
+quic_integer& quic_integer::set(const std::string& data) {
+    _len = data.size();
+    _data.clear().set_str_new(data);
+    return *this;
+}
+quic_integer& quic_integer::set(const binary_t& data) {
+    _len = data.size();
+    _data.clear().set_binary_new(data);
+    return *this;
+}
+
 size_t quic_integer::lsize() {
     uint8 length = 0;
     quic_length_vle_int(_len, length);

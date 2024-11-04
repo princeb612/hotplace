@@ -68,6 +68,17 @@ class http_resource {
     std::map<uint8, std::string> _frame_flags2;
 };
 
+// declaration GCC 4.8.5~
+extern const char constexpr_h1_accept_encoding[];
+extern const char constexpr_h1_connection[];
+extern const char constexpr_h1_content_encoding[];
+extern const char constexpr_h1_content_length[];
+extern const char constexpr_h1_content_type[];
+extern const char constexpr_h1_keep_alive[];
+extern const char constexpr_deflate[];
+extern const char constexpr_gzip[];
+extern const char constexpr_url_encoded[];
+
 }  // namespace net
 }  // namespace hotplace
 

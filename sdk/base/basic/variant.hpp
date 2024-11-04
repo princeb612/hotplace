@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_BASE_VARIANT__
-#define __HOTPLACE_SDK_BASE_VARIANT__
+#ifndef __HOTPLACE_SDK_BASE_BASIC_VARIANT__
+#define __HOTPLACE_SDK_BASE_BASIC_VARIANT__
 
 #include <string.h>
 

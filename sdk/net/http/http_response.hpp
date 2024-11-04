@@ -28,7 +28,7 @@ class http_response : public traceable {
     ~http_response();
 
     /* *
-     * @brief   open
+     * @brief   open HTTP 1.x
      * @param   const char*     response        [IN]
      * @param   size_t          size_response   [IN]
      * @return  error code (see error.hpp)

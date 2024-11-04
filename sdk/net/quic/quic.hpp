@@ -185,7 +185,7 @@ class quic_packet {
     /*
      * Initial, 1-RTT, Handshake, 0-RTT
      * Packet Number (8..32)
-     * pn_length = (_hdr & 0x03) + 1
+     * pn_length = (_ht & 0x03) + 1
      */
     quic_packet& set_pn_length(uint8 len);
     uint8 get_pn_length();
@@ -195,10 +195,10 @@ class quic_packet {
 
    protected:
     uint8 _type;
-    uint8 _hdr;
-    uint32 _version;
-    binary_t _dcid;
-    binary_t _scid;
+    uint8 _ht;        // header type, public flag
+    uint32 _version;  // version
+    binary_t _dcid;   // destination
+    binary_t _scid;   // source
 };
 
 /**
@@ -298,6 +298,13 @@ class quic_packet_retry : public quic_packet {
     quic_packet_retry();
     quic_packet_retry(const quic_packet_retry& rhs);
 
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write(binary_t& packet);
+    virtual void dump(stream_t* s);
+
+    const binary_t get_retry_token();
+    const binary_t get_integrity_tag();
+
    protected:
    private:
     /**
@@ -305,6 +312,8 @@ class quic_packet_retry : public quic_packet {
      *  Retry Token (..),
      *  Retry Integrity Tag (128),
      */
+    binary_t _retry_token;
+    binary_t _retry_integrity_tag;
 };
 
 class quic_packet_1rtt : public quic_packet {
@@ -414,6 +423,10 @@ class quic_integer : public payload_encoded {
     quic_integer(const char* data);
     quic_integer(const std::string& data);
     quic_integer(const binary_t& data);
+
+    quic_integer& set(const char* data);
+    quic_integer& set(const std::string& data);
+    quic_integer& set(const binary_t& data);
 
     virtual size_t lsize();
     virtual size_t value();

@@ -39,7 +39,7 @@ logger_builder& logger_builder::set(logger_t key, uint16 value) {
     return *this;
 }
 
-logger_builder& logger_builder::set_format(const std::string& fmt) {
+logger_builder& logger_builder::set_timeformat(const std::string& fmt) {
     _skeyvalue.set("datefmt", fmt);
     return *this;
 }
@@ -61,9 +61,26 @@ logger* logger_builder::build() {
     return p;
 }
 
-logger::logger() : _thread(nullptr), _run(true), _style(normal), _fgcolor(white), _bgcolor(black) {}
+logger::logger()
+    : _thread(nullptr),
+      _run(true),
+      _style(normal),
+      _fgcolor(white),
+      _bgcolor(black),
+      _log_level(loglevel_t::loglevel_trace),
+      _implicit_level(loglevel_t::loglevel_trace) {}
 
 logger::~logger() { clear(); }
+
+logger& logger::set_loglevel(loglevel_t level) {
+    _log_level = level;
+    return *this;
+}
+
+logger& logger::set_implicit_loglevel(loglevel_t level) {
+    _implicit_level = level;
+    return *this;
+}
 
 void logger::clear() {
     stop_consumer();
@@ -147,88 +164,379 @@ logger::logger_item* logger::get_context(bool upref) {
 // for std::string and basic_stream, use write, not printf nor vprintf
 
 logger& logger::consoleln(const char* fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-    do_console_vprintf(fmt, ap, true);
-    va_end(ap);
+    if (test_loglevel()) {
+        va_list ap;
+        va_start(ap, fmt);
+        do_console_vprintf(fmt, ap, true);
+        va_end(ap);
+    }
     return *this;
 }
 
-logger& logger::consoleln(const std::string& msg) { return do_console_raw(msg.c_str(), msg.size(), true); }
+logger& logger::consoleln(const std::string& msg) {
+    if (test_loglevel()) {
+        do_console_raw(msg.c_str(), msg.size(), true);
+    }
+    return *this;
+}
 
-logger& logger::consoleln(const basic_stream& msg) { return do_console_raw(msg.c_str(), msg.size(), true); }
+logger& logger::consoleln(const basic_stream& msg) {
+    if (test_loglevel()) {
+        do_console_raw(msg.c_str(), msg.size(), true);
+    }
+    return *this;
+}
 
-logger& logger::consoleln(stream_t* s) { return do_console_stream(s, true); }
+logger& logger::consoleln(stream_t* s) {
+    if (test_loglevel()) {
+        do_console_stream(s, true);
+    }
+    return *this;
+}
 
 logger& logger::writeln(const char* fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-    do_write_vprintf(fmt, ap, true);
-    va_end(ap);
+    if (test_loglevel()) {
+        va_list ap;
+        va_start(ap, fmt);
+        do_write_vprintf(fmt, ap, true);
+        va_end(ap);
+    }
     return *this;
 }
 
-logger& logger::writeln(const std::string& msg) { return do_write_raw(msg.c_str(), msg.size(), true); }
+logger& logger::consoleln(loglevel_t level, const char* fmt, ...) {
+    if (test_loglevel(level)) {
+        va_list ap;
+        va_start(ap, fmt);
+        do_console_vprintf(fmt, ap, true);
+        va_end(ap);
+    }
+    return *this;
+}
 
-logger& logger::writeln(const basic_stream& msg) { return do_write_raw(msg.c_str(), msg.size(), true); }
+logger& logger::consoleln(loglevel_t level, const std::string& msg) {
+    if (test_loglevel(level)) {
+        do_console_raw(msg.c_str(), msg.size(), true);
+    }
+    return *this;
+}
 
-logger& logger::writeln(stream_t* s) { return do_write_stream(s, true); }
+logger& logger::consoleln(loglevel_t level, const basic_stream& msg) {
+    if (test_loglevel(level)) {
+        do_console_raw(msg.c_str(), msg.size(), true);
+    }
+    return *this;
+}
+
+logger& logger::consoleln(loglevel_t level, stream_t* s) {
+    if (test_loglevel(level)) {
+        do_console_stream(s, true);
+    }
+    return *this;
+}
+
+logger& logger::writeln(const std::string& msg) {
+    if (test_loglevel()) {
+        do_write_raw(msg.c_str(), msg.size(), true);
+    }
+    return *this;
+}
+
+logger& logger::writeln(const basic_stream& msg) {
+    if (test_loglevel()) {
+        do_write_raw(msg.c_str(), msg.size(), true);
+    }
+    return *this;
+}
+
+logger& logger::writeln(stream_t* s) {
+    if (test_loglevel()) {
+        do_write_stream(s, true);
+    }
+    return *this;
+}
+
+logger& logger::writeln(loglevel_t level, const char* fmt, ...) {
+    if (test_loglevel(level)) {
+        va_list ap;
+        va_start(ap, fmt);
+        do_write_vprintf(fmt, ap, true);
+        va_end(ap);
+    }
+    return *this;
+}
+
+logger& logger::writeln(loglevel_t level, const std::string& msg) {
+    if (test_loglevel(level)) {
+        do_write_raw(msg.c_str(), msg.size(), true);
+    }
+    return *this;
+}
+
+logger& logger::writeln(loglevel_t level, const basic_stream& msg) {
+    if (test_loglevel(level)) {
+        do_write_raw(msg.c_str(), msg.size(), true);
+    }
+    return *this;
+}
+
+logger& logger::writeln(loglevel_t level, stream_t* s) {
+    if (test_loglevel(level)) {
+        do_write_stream(s, true);
+    }
+    return *this;
+}
 
 logger& logger::write(const char* fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-    do_write_vprintf(fmt, ap);
-    va_end(ap);
+    if (test_loglevel()) {
+        va_list ap;
+        va_start(ap, fmt);
+        do_write_vprintf(fmt, ap);
+        va_end(ap);
+    }
     return *this;
 }
 
-logger& logger::write(const std::string& msg) { return do_write_raw(msg.c_str(), msg.size(), false); }
+logger& logger::write(const std::string& msg) {
+    if (test_loglevel()) {
+        do_write_raw(msg.c_str(), msg.size(), false);
+    }
+    return *this;
+}
 
-logger& logger::write(const basic_stream& msg) { return do_write_raw(msg.c_str(), msg.size(), false); }
+logger& logger::write(const basic_stream& msg) {
+    if (test_loglevel()) {
+        do_write_raw(msg.c_str(), msg.size(), false);
+    }
+    return *this;
+}
 
-logger& logger::write(stream_t* s) { return do_write_stream(s, false); }
+logger& logger::write(stream_t* s) {
+    if (test_loglevel()) {
+        do_write_stream(s, false);
+    }
+    return *this;
+}
 
-logger& logger::dump(const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) { return do_dump(addr, size, hexpart, indent, true); }
+logger& logger::write(loglevel_t level, const char* fmt, ...) {
+    if (test_loglevel(level)) {
+        va_list ap;
+        va_start(ap, fmt);
+        do_write_vprintf(fmt, ap);
+        va_end(ap);
+    }
+    return *this;
+}
 
-logger& logger::dump(const char* addr, size_t size, unsigned hexpart, unsigned indent) { return do_dump((byte_t*)addr, size, hexpart, indent, true); }
+logger& logger::write(loglevel_t level, const std::string& msg) {
+    if (test_loglevel(level)) {
+        do_write_raw(msg.c_str(), msg.size(), false);
+    }
+    return *this;
+}
 
-logger& logger::dump(const binary_t& msg, unsigned hexpart, unsigned indent) { return do_dump(&msg[0], msg.size(), hexpart, indent, true); }
+logger& logger::write(loglevel_t level, const basic_stream& msg) {
+    if (test_loglevel(level)) {
+        do_write_raw(msg.c_str(), msg.size(), false);
+    }
+    return *this;
+}
 
-logger& logger::dump(const binary& msg, unsigned hexpart, unsigned indent) { return do_dump(&msg.get()[0], msg.get().size(), hexpart, indent, true); }
+logger& logger::write(loglevel_t level, stream_t* s) {
+    if (test_loglevel(level)) {
+        do_write_stream(s, false);
+    }
+    return *this;
+}
 
-logger& logger::dump(const std::string& msg, unsigned hexpart, unsigned indent) { return do_dump((byte_t*)msg.c_str(), msg.size(), hexpart, indent, true); }
+logger& logger::dump(const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
+    if (test_loglevel()) {
+        do_dump(addr, size, hexpart, indent, true);
+    }
+    return *this;
+}
 
-logger& logger::dump(const basic_stream& msg, unsigned hexpart, unsigned indent) { return do_dump(msg.data(), msg.size(), hexpart, indent, true); }
+logger& logger::dump(const char* addr, size_t size, unsigned hexpart, unsigned indent) {
+    if (test_loglevel()) {
+        do_dump((byte_t*)addr, size, hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::dump(const binary_t& msg, unsigned hexpart, unsigned indent) {
+    if (test_loglevel()) {
+        do_dump(&msg[0], msg.size(), hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::dump(const binary& msg, unsigned hexpart, unsigned indent) {
+    if (test_loglevel()) {
+        do_dump(&msg.get()[0], msg.get().size(), hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::dump(const std::string& msg, unsigned hexpart, unsigned indent) {
+    if (test_loglevel()) {
+        do_dump((byte_t*)msg.c_str(), msg.size(), hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::dump(const basic_stream& msg, unsigned hexpart, unsigned indent) {
+    if (test_loglevel()) {
+        do_dump(msg.data(), msg.size(), hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::dump(loglevel_t level, const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_dump(addr, size, hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::dump(loglevel_t level, const char* addr, size_t size, unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_dump((byte_t*)addr, size, hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::dump(loglevel_t level, const binary_t& msg, unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_dump(&msg[0], msg.size(), hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::dump(loglevel_t level, const binary& msg, unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_dump(&msg.get()[0], msg.get().size(), hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::dump(loglevel_t level, const std::string& msg, unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_dump((byte_t*)msg.c_str(), msg.size(), hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::dump(loglevel_t level, const basic_stream& msg, unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_dump(msg.data(), msg.size(), hexpart, indent, true);
+    }
+    return *this;
+}
 
 logger& logger::hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
-    return do_hdump(header, addr, size, hexpart, indent, true);
+    if (test_loglevel()) {
+        do_hdump(header, addr, size, hexpart, indent, true);
+    }
+    return *this;
 }
 
 logger& logger::hdump(const std::string& header, const char* addr, size_t size, unsigned hexpart, unsigned indent) {
-    return do_hdump(header, (byte_t*)addr, size, hexpart, indent, true);
+    if (test_loglevel()) {
+        do_hdump(header, (byte_t*)addr, size, hexpart, indent, true);
+    }
+    return *this;
 }
 
 logger& logger::hdump(const std::string& header, const binary_t& msg, unsigned hexpart, unsigned indent) {
-    return do_hdump(header, &msg[0], msg.size(), hexpart, indent, true);
+    if (test_loglevel()) {
+        do_hdump(header, &msg[0], msg.size(), hexpart, indent, true);
+    }
+    return *this;
 }
 
 logger& logger::hdump(const std::string& header, const binary& msg, unsigned hexpart, unsigned indent) {
-    return do_hdump(header, &msg.get()[0], msg.get().size(), hexpart, indent, true);
+    if (test_loglevel()) {
+        do_hdump(header, &msg.get()[0], msg.get().size(), hexpart, indent, true);
+    }
+    return *this;
 }
 
 logger& logger::hdump(const std::string& header, const std::string& msg, unsigned hexpart, unsigned indent) {
-    return do_hdump(header, (byte_t*)msg.c_str(), msg.size(), hexpart, indent, true);
+    if (test_loglevel()) {
+        do_hdump(header, (byte_t*)msg.c_str(), msg.size(), hexpart, indent, true);
+    }
+    return *this;
 }
 
 logger& logger::hdump(const std::string& header, const basic_stream& msg, unsigned hexpart, unsigned indent) {
-    return do_hdump(header, msg.data(), msg.size(), hexpart, indent, true);
+    if (test_loglevel()) {
+        do_hdump(header, msg.data(), msg.size(), hexpart, indent, true);
+    }
+    return *this;
 }
 
-logger& logger::operator<<(const char* msg) { return do_write_raw(msg, msg ? strlen(msg) : 0, false); }
+logger& logger::hdump(loglevel_t level, const std::string& header, const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_hdump(header, addr, size, hexpart, indent, true);
+    }
+    return *this;
+}
 
-logger& logger::operator<<(const std::string& msg) { return do_write_raw(msg.c_str(), msg.size(), false); }
+logger& logger::hdump(loglevel_t level, const std::string& header, const char* addr, size_t size, unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_hdump(header, (byte_t*)addr, size, hexpart, indent, true);
+    }
+    return *this;
+}
 
-logger& logger::operator<<(const basic_stream& msg) { return do_write_raw(msg.c_str(), msg.size(), false); }
+logger& logger::hdump(loglevel_t level, const std::string& header, const binary_t& msg, unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_hdump(header, &msg[0], msg.size(), hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::hdump(loglevel_t level, const std::string& header, const binary& msg, unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_hdump(header, &msg.get()[0], msg.get().size(), hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::hdump(loglevel_t level, const std::string& header, const std::string& msg, unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_hdump(header, (byte_t*)msg.c_str(), msg.size(), hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::hdump(loglevel_t level, const std::string& header, const basic_stream& msg, unsigned hexpart, unsigned indent) {
+    if (test_loglevel(level)) {
+        do_hdump(header, msg.data(), msg.size(), hexpart, indent, true);
+    }
+    return *this;
+}
+
+logger& logger::operator<<(const char* msg) {
+    if (test_loglevel()) {
+        do_write_raw(msg, msg ? strlen(msg) : 0, false);
+    }
+    return *this;
+}
+
+logger& logger::operator<<(const std::string& msg) {
+    if (test_loglevel()) {
+        do_write_raw(msg.c_str(), msg.size(), false);
+    }
+    return *this;
+}
+
+logger& logger::operator<<(const basic_stream& msg) {
+    if (test_loglevel()) {
+        do_write_raw(msg.c_str(), msg.size(), false);
+    }
+    return *this;
+}
 
 bool logger::test_logging_stdout() {
     critical_section_guard guard(_lock);
@@ -512,5 +820,9 @@ logger& logger::do_color_write_stream(stream_t* s, bool lf) {
     };
     return do_write(lambda);
 }
+
+bool logger::test_loglevel(loglevel_t level) { return level >= _log_level; }
+
+bool logger::test_loglevel() { return _implicit_level >= _log_level; }
 
 }  // namespace hotplace

@@ -99,6 +99,21 @@ class http_request {
     void release();
 
    protected:
+    /**
+     * @brief   open
+     * @param   const char* request [in]
+     * @param   size_t size_request [in]
+     * @param   uint32 flags [inopt] reserved
+     */
+    return_t open_h1(const char* request, size_t size_request, uint32 flags = 0);
+    return_t open_h2(const char* request, size_t size_request, uint32 flags = 0);
+    /**
+     * @brief   open URI
+     * @param   const std::string& uri [in]
+     * @param   uint32 flags [inopt]
+     */
+    return_t open_uri(const std::string& uri, uint32 flags = 0);
+
     t_shared_reference<http_request> _shared;
 
    private:

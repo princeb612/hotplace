@@ -262,11 +262,6 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
 
                     if (istraceable()) {
                         basic_stream bs;
-                        datetime dt;
-                        datetime_t t;
-                        dt.getlocaltime(&t);
-
-                        bs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d ", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
                         bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                         bs << "\n";
@@ -298,11 +293,6 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
 
             if (istraceable() && (errorcode_t::success == ret)) {
                 basic_stream bs;
-                datetime dt;
-                datetime_t t;
-                dt.getlocaltime(&t);
-
-                bs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d ", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
                 bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                 bs << "\n";
@@ -364,11 +354,6 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 
                     if (istraceable()) {
                         basic_stream bs;
-                        datetime dt;
-                        datetime_t t;
-                        dt.getlocaltime(&t);
-
-                        bs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d ", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
                         bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                         bs << "\n";
@@ -403,11 +388,6 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 
             if (istraceable() && (errorcode_t::success == ret)) {
                 basic_stream bs;
-                datetime dt;
-                datetime_t t;
-                dt.getlocaltime(&t);
-
-                bs.printf("%04d-%02d-%02d %02d:%02d:%02d.%03d ", t.year, t.month, t.day, t.hour, t.minute, t.second, t.milliseconds);
                 bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                 bs << "\n";

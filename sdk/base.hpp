@@ -12,7 +12,6 @@
 #define __HOTPLACE_SDK_BASE__
 
 /* top-most */
-#include <sdk/base/binary.hpp>
 #include <sdk/base/c++14.hpp>
 #include <sdk/base/callback.hpp>
 #include <sdk/base/charset.hpp>
@@ -26,6 +25,7 @@
 /* basic */
 #include <sdk/base/basic/base16.hpp>
 #include <sdk/base/basic/base64.hpp>
+#include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/cmdline.hpp>
 #include <sdk/base/basic/console_color.hpp>
 #include <sdk/base/basic/constexpr_obfuscate.hpp>

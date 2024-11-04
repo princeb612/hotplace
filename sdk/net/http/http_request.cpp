@@ -19,9 +19,6 @@
 namespace hotplace {
 namespace net {
 
-constexpr char constexpr_content_type[] = "Content-Type";
-constexpr char constexpr_url_encoded[] = "application/x-www-form-urlencoded";
-
 http_request::http_request() : _hpsess(nullptr), _version(1), _stream_id(0) { _shared.make_share(this); }
 
 http_request::http_request(const http_request& object) {
@@ -41,7 +38,6 @@ http_request::~http_request() { close(); }
 
 return_t http_request::open(const char* request, size_t size_request, uint32 flags) {
     return_t ret = errorcode_t::success;
-    return_t ret_getline = errorcode_t::success;
 
     __try2 {
         if (nullptr == request) {
@@ -55,91 +51,127 @@ return_t http_request::open(const char* request, size_t size_request, uint32 fla
         size_t pos = 0;
 
         if (1 == get_version()) {
-            /*
-             * 1. request format
-             *  GET /resource?a=1&b=2\r\n
-             *  Content-Type: application/json\r\n
-             *  \r\n
-             *
-             * 2. loop
-             * while getline and tokenize(space or colon) do insert into map
-             * line 1 -> GET /resource?a=1&b=2
-             *           first token GET -> method
-             *           next token /resource?a=1&b=2 -> uri
-             * line 2 -> Content-Type: application/json
-             *           insert(make_pair("Content-Type", "application/json"))
-             * line 3 -> break loop if no space nor colon
-             */
-
-            size_t line = 1;
-            size_t epos = 0;
-            while (true) {
-                ret_getline = getline(request, size_request, pos, &epos);
-                if (errorcode_t::success != ret_getline) {
-                    break;
-                }
-
-                std::string token, str(request + pos, epos - pos);
-                size_t tpos = 0;
-                token = tokenize(str, ": ", tpos);
-                token = rtrim(token);
-
-                if (0 == token.size()) {
-                    break;
-                }
-
-                if ((epos <= size_request) && (tpos < size_request)) { /* if token (space, colon) not found */
-                    while (isspace(str[tpos])) {
-                        tpos++; /* swallow trailing spaces */
-                    }
-                    if (1 == line) {
-                        _method = token; /* first token aka GET, POST, ... */
-
-                        size_t zpos = tpos;
-                        uri = tokenize(str, " ", zpos);
-                        _uri.open(uri);
-                    } else {
-                        std::string remain = tokenize(str, "\r\n", tpos);  // std::string remain = str.substr(tpos);
-                        _header.add(token, remain);
-                    }
-                }
-
-                pos = epos;
-                line++;
-            }
-
-            if (size_request > epos) {
-                _content.assign(request + epos, size_request - epos);
-            }
+            open_h1(request, size_request, flags);
         } else if (2 == get_version()) {
-            _method = get_http_header().get(":method");
-            _uri.open(get_http_header().get(":path"));
+            open_h2(request, size_request, flags);
         }
 
-        // RFC 2616 3.7 Media Types
-        // RFC 2616 14.17 Content-Type
-        if (_content.empty()) {
-            if (http_request_flag_t::http_request_compose & flags) {
-                if ((std::string::npos != uri.find("?")) && (false == _header.contains(constexpr_content_type, constexpr_url_encoded))) {
-                    // RFC 6750 2.2.  Form-Encoded Body Parameter
-                    _header.add(constexpr_content_type, constexpr_url_encoded);
-                    _content = _uri.get_query();
+        open_uri(uri, flags);
+    }
+    __finally2 {
+        // do nothing
+    }
 
-                    pos = 0;
-                    _uri.open(tokenize(uri, "?", pos));  // uri wo param
-                    _uri.set_query(_content);            // set param
+    return ret;
+}
+
+return_t http_request::open_h1(const char* request, size_t size_request, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    return_t ret_getline = errorcode_t::success;
+
+    __try2 {
+        std::string uri;
+        size_t pos = 0;
+
+        /*
+         * 1. request format
+         *  GET /resource?a=1&b=2\r\n
+         *  Content-Type: application/json\r\n
+         *  \r\n
+         *
+         * 2. loop
+         * while getline and tokenize(space or colon) do insert into map
+         * line 1 -> GET /resource?a=1&b=2
+         *           first token GET -> method
+         *           next token /resource?a=1&b=2 -> uri
+         * line 2 -> Content-Type: application/json
+         *           insert(make_pair("Content-Type", "application/json"))
+         * line 3 -> break loop if no space nor colon
+         */
+
+        size_t line = 1;
+        size_t epos = 0;
+        while (true) {
+            ret_getline = getline(request, size_request, pos, &epos);
+            if (errorcode_t::success != ret_getline) {
+                break;
+            }
+
+            std::string token, str(request + pos, epos - pos);
+            size_t tpos = 0;
+            token = tokenize(str, ": ", tpos);
+            token = rtrim(token);
+
+            if (0 == token.size()) {
+                break;
+            }
+
+            if ((epos <= size_request) && (tpos < size_request)) { /* if token (space, colon) not found */
+                while (isspace(str[tpos])) {
+                    tpos++; /* swallow trailing spaces */
+                }
+                if (1 == line) {
+                    _method = token; /* first token aka GET, POST, ... */
+
+                    size_t zpos = tpos;
+                    uri = tokenize(str, " ", zpos);
+                    _uri.open(uri);
+                } else {
+                    std::string remain = tokenize(str, "\r\n", tpos);  // std::string remain = str.substr(tpos);
+                    _header.add(token, remain);
                 }
             }
-        } else {
-            if (_header.contains(constexpr_content_type, constexpr_url_encoded)) {
-                _uri.set_query(_content);
-            }
+
+            pos = epos;
+            line++;
+        }
+
+        if (size_request > epos) {
+            _content.assign(request + epos, size_request - epos);
         }
     }
     __finally2 {
         // do nothing
     }
 
+    return ret;
+}
+
+return_t http_request::open_h2(const char* request, size_t size_request, uint32 flags) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        _method = get_http_header().get(":method");
+        _uri.open(get_http_header().get(":path"));
+    }
+    __finally2 {
+        // do nothing
+    }
+
+    return ret;
+}
+
+return_t http_request::open_uri(const std::string& uri, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    // RFC 2616 3.7 Media Types
+    // RFC 2616 14.17 Content-Type
+    if (_content.empty()) {
+        if (http_request_flag_t::http_request_compose & flags) {
+            if ((std::string::npos != uri.find("?")) && (false == _header.contains(constexpr_h1_content_type, constexpr_url_encoded))) {
+                // RFC 6750 2.2.  Form-Encoded Body Parameter
+                _header.add(constexpr_h1_content_type, constexpr_url_encoded);
+                _content = _uri.get_query();
+
+                size_t pos = 0;
+                _uri.open(tokenize(uri, "?", pos));  // uri wo param
+                _uri.set_query(_content);            // set param
+            }
+        }
+    } else {
+        if (_header.contains(constexpr_h1_content_type, constexpr_url_encoded)) {
+            _uri.set_query(_content);
+        }
+    }
     return ret;
 }
 
@@ -201,7 +233,7 @@ http_request& http_request::compose(http_method_t method, const std::string& uri
         stream << resource->get_method(method) << " " << uri << " " << get_version() << "\r\n";
         // RFC 2616 14.13 Content-Length
         if (body.size()) {
-            stream << "Content-Length: " << body.size() << "\r\n";
+            stream << constexpr_h1_content_length << ": " << body.size() << "\r\n";
         }
         stream << "\r\n" << body;
 
@@ -219,7 +251,10 @@ http_request& http_request::get_request(basic_stream& bs) {
         // RFC 2616 14.13 Content-Length
         std::string headers;
         bs.clear();
-        get_http_header().add("Content-Length", format("%zi", _content.size())).add("Connection", "Keep-Alive").get_headers(headers);
+        get_http_header()
+            .add(constexpr_h1_content_length, format("%zi", _content.size()))
+            .add(constexpr_h1_connection, constexpr_h1_keep_alive)
+            .get_headers(headers);
 
         bs << get_method() << " " << get_http_uri().get_uri() << " " << get_version() << "\r\n" << headers << "\r\n" << get_content();
     }

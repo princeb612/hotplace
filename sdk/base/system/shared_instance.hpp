@@ -162,10 +162,14 @@ class t_shared_instance {
      *  t_shared_instance<object> obj;
      *  obj.make_share(new object);
      *
-     *  object* inst1 = &(*obj); // implicit
-     *  object* inst2 = obj->instance(); // explicit
+     *  void test(object* o) { dosomething; }
+     *
+     *  object* inst1 = &(*obj);
+     *  test(int1);
+     *
+     *  test(obj);
      */
-    OBJECT_T* instance() { return _object; }
+    operator OBJECT_T*() { return _object; }
 
     t_shared_instance& make_share(OBJECT_T* object) {
         if (nullptr == _object) {

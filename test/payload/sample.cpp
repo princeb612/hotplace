@@ -91,6 +91,8 @@ void test_payload_parse() {
         // pl << padlen(uint8:1) << data(unknown:?) << value(uint32:4) << pad(referenceof.padlen:?)
         //  input  : 036461746100001000706164
         //         : pl << padlen(uint8:1) << data(unknown:?) << value(uint32:4) << pad(referenceof.padlen:?)
+        //  learn  :
+        //         : pl.select("padlen")
         //         : pl << padlen(uint8:1) << data(unknown:?) << value(uint32:4) << pad(referenceof.padlen:3)
         //  infer  :
         //         : 12 - 1 - 4 - 3 = 12 - 8 = 4

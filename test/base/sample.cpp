@@ -23,8 +23,11 @@ t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
+    int time;
+    int log;
+    int attach;
 
-    _OPTION() : verbose(0) {
+    _OPTION() : verbose(0), time(0), log(0), attach(0) {
         // do nothing
     }
 } OPTION;
@@ -303,23 +306,119 @@ void test_maphint() {
     _test_case.assert("two" == value, __FUNCTION__, "t_maphint.find(2)");
 }
 
+void test_binary() {
+    _test_case.begin("binary");
+    binary_t bin;
+    uint16 ui16 = 1;
+    ui16 = convert_endian(ui16);
+    binary_load(bin, sizeof(uint32), (byte_t *)&ui16, sizeof(ui16));
+    // 4 bytes long
+    // 00000000 : 00 00 00 01 -- -- -- -- -- -- -- -- -- -- -- -- | ....
+    _logger->dump(bin);
+
+    return_t ret = errorcode_t::success;
+    auto i1 = t_binary_to_integer<uint64>(bin, ret);
+    _test_case.assert(errorcode_t::narrow_type == ret, __FUNCTION__, "binary_to_integer #narrow");
+    auto i2 = t_binary_to_integer<uint32>(bin, ret);
+    _test_case.assert(1 == i2, __FUNCTION__, "binary_to_integer #uint32");
+    auto i3 = t_binary_to_integer2<uint64>(bin, ret);
+    _test_case.assert(1 == i3, __FUNCTION__, "binary_to_integer #uint64");
+
+    uint32 ui32 = 0x12345678;
+    binary_load(bin, sizeof(uint128), ui32, hton32);
+    _logger->dump(bin);
+    // 00000000 : 00 00 00 00 00 00 00 00 00 00 00 00 12 34 56 78 | .............4Vx
+
+    auto i4 = t_binary_to_integer<uint128>(bin, ret);
+    _test_case.assert(0x12345678 == i4, __FUNCTION__, "binary_to_integer #0x%I128x", i4);
+}
+
+void test_loglevel() {
+    std::map<loglevel_t, std::string> table;
+    table.insert({loglevel_trace, "trace"});
+    table.insert({loglevel_debug, "debug"});
+    table.insert({loglevel_info, "info"});
+    table.insert({loglevel_warn, "warn"});
+    table.insert({loglevel_error, "error"});
+    table.insert({loglevel_fatal, "fatal"});
+    table.insert({loglevel_notice, "notice"});
+    auto dolog = [&](loglevel_t lvl, loglevel_t imp) -> void {
+        const std::string &lvlstr = table[lvl];
+        const std::string &impstr = table[imp];
+        std::string oper;
+        if (lvl > imp) {
+            oper = " > ";
+        } else if (lvl == imp) {
+            oper = " = ";
+        } else {
+            oper = " < ";
+        }
+        _logger->writeln(loglevel_notice, "level:%s %s implicit:%s", lvlstr.c_str(), oper.c_str(), impstr.c_str());
+        _logger->writeln("> loglevel:implicit");
+        _logger->writeln(loglevel_trace, "> loglevel:trace");
+        _logger->writeln(loglevel_debug, "> loglevel:debug");
+        _logger->writeln(loglevel_info, "> loglevel:info");
+        _logger->writeln(loglevel_warn, "> loglevel:warn");
+        _logger->writeln(loglevel_error, "> loglevel:error");
+        _logger->writeln(loglevel_fatal, "> loglevel:fatal");
+        _logger->writeln(loglevel_notice, "> loglevel:notice");
+    };
+
+    std::list<loglevel_t> case1;
+    std::list<loglevel_t> case2;
+    case1.push_back(loglevel_trace);
+    case2.push_back(loglevel_trace);
+    case1.push_back(loglevel_debug);
+    case2.push_back(loglevel_debug);
+    case1.push_back(loglevel_info);
+    case2.push_back(loglevel_info);
+    case1.push_back(loglevel_warn);
+    case2.push_back(loglevel_warn);
+    case1.push_back(loglevel_error);
+    case2.push_back(loglevel_error);
+    case1.push_back(loglevel_fatal);
+    case2.push_back(loglevel_fatal);
+    case1.push_back(loglevel_notice);
+    case2.push_back(loglevel_notice);
+
+    _test_case.begin("logger");
+
+    for (auto c1 : case1) {
+        for (auto c2 : case2) {
+            _logger->set_loglevel(c1);
+            _logger->set_implicit_loglevel(c2);
+            dolog(c1, c2);
+        }
+    }
+}
+
 int main(int argc, char **argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional();
+    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION &o, char *param) -> void { o.log = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-a", "attach", [](OPTION &o, char *param) -> void { o.attach = 1; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION &option = _cmdline->value();
 
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0).set_format("[Y-M-D h:m:s.f] ")
-        //.set_logfile("log")
-        ;
+    builder.set(logger_t::logger_stdout, option.verbose);
+    if (option.time) {
+        builder.set_timeformat("[Y-M-D h:m:s.f]");
+    }
+    if (option.log) {
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("unittest.log");
+    }
     _logger.make_share(builder.build());
-    _test_case.attach(&*_logger);
+
+    if (option.attach) {
+        _test_case.attach(_logger);
+    }
 
     test_sharedinstance1();
     test_sharedinstance2();
@@ -328,6 +427,8 @@ int main(int argc, char **argv) {
     test_byte_capacity_unsigned();
     test_byte_capacity_signed();
     test_maphint();
+    test_binary();
+    test_loglevel();
 
     _logger->flush();
 

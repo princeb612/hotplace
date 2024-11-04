@@ -32,18 +32,18 @@ return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& po
         uint8 pn_length = get_pn_length();
         payload pl;
         pl << new payload_member(new quic_integer(binary_t()), "token") << new payload_member(new quic_integer(int(0)), "length")
-           << new payload_member(binary_t(), "pn") << new payload_member(binary_t(), "payload");
-        pl.select("pn")->reserve(pn_length);
+           << new payload_member(binary_t(), "packet number") << new payload_member(binary_t(), "payload");
+        pl.select("packet number")->reserve(pn_length);
         pl.read(stream, size, pos);
 
         pl.select("token")->get_variant().to_binary(_token);
         _length = pl.select("length")->get_payload_encoded()->value();
         binary_t bin_pn;
-        pl.select("pn")->get_variant().to_binary(bin_pn);  // 8..32
-        _pn = binary_to_intger_force<uint32>(bin_pn);
+        pl.select("packet number")->get_variant().to_binary(bin_pn);  // 8..32
+        _pn = t_binary_to_integer2<uint32>(bin_pn);
         pl.select("payload")->get_variant().to_binary(_payload);
 
-        // size_t pn_offset = initial_offset + pl.offset_of("pn");
+        // size_t pn_offset = initial_offset + pl.offset_of("packet number");
     }
     __finally2 {
         // do nothing
@@ -54,9 +54,14 @@ return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& po
 return_t quic_packet_initial::write(binary_t& packet) {
     return_t ret = errorcode_t::success;
     ret = quic_packet::write(packet);
-    binary_append(packet, _token);
-    binary_append(packet, _pn);
-    binary_append(packet, _payload);
+
+    payload pl;
+    pl << new payload_member(new quic_integer(_token), "token") << new payload_member(new quic_integer(_length), "length")
+       << new payload_member(_pn, true, "packet number") << new payload_member(_payload, "payload");
+    uint8 pn_length = get_pn_length();
+    pl.select("packet number")->reserve(pn_length);
+    pl.write(packet);
+
     return ret;
 }
 
