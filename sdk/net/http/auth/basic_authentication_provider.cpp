@@ -33,12 +33,10 @@ bool basic_authentication_provider::try_auth(http_authentication_resolver* resol
         }
 
         // Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-        constexpr char constexpr_authorization[] = "Authorization";
-        constexpr char constexpr_basic[] = "Basic";
         std::string token_scheme;
-        request->get_http_header().get_token(constexpr_authorization, 0, token_scheme);
+        request->get_http_header().get_token("Authorization", 0, token_scheme);
 
-        if (0 == strcmp(constexpr_basic, token_scheme.c_str())) {
+        if (0 == strcmp("Basic", token_scheme.c_str())) {
             ret_value = resolver->basic_authenticate(this, session, request, response);
         }
     }

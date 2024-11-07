@@ -10,6 +10,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
@@ -119,12 +120,12 @@ return_t http_response::open(const char* response, size_t size_response) {
 
             // RFC 2616 3.5 Content Codings
             // RFC 2616 14.11 Content-Encoding
-            std::string encoding = get_http_header().get(constexpr_h1_content_encoding);
-            if (constexpr_deflate == encoding) {
+            std::string encoding = get_http_header().get("Content-Encoding");
+            if ("deflate" == encoding) {
                 basic_stream inflated;
                 zlib_inflate(zlib_windowbits_t::windowbits_deflate, content, content_size, &inflated);
                 _content = inflated;
-            } else if (constexpr_gzip == encoding) {
+            } else if ("gzip" == encoding) {
                 basic_stream inflated;
                 zlib_inflate(zlib_windowbits_t::windowbits_gzip, content, content_size, &inflated);
                 _content = inflated;
@@ -135,7 +136,7 @@ return_t http_response::open(const char* response, size_t size_response) {
 
         // RFC 2616 3.7 Media Types
         // RFC 2616 14.17 Content-Type
-        _header.get(constexpr_h1_content_type, _content_type);
+        _header.get("Content-Type", _content_type);
     }
     __finally2 {
         // do nothing
@@ -263,7 +264,7 @@ http_response& http_response::get_response(basic_stream& bs) {
         if (_request) {
             // RFC 2616 3.5 Content Codings
             // RFC 2616 14.3 Accept-Encoding
-            _request->get_http_header().get(constexpr_h1_accept_encoding, accept_encoding);
+            _request->get_http_header().get("Accept-Encoding", accept_encoding);
             method = _request->get_method();
         }
 
@@ -273,39 +274,33 @@ http_response& http_response::get_response(basic_stream& bs) {
         if (_content_type.size() && content_size()) {
             // RFC 2616 3.7 Media Types
             // RFC 2616 14.17 Content-Type
-            get_http_header().add(constexpr_h1_content_type, content_type());
+            get_http_header().add("Content-Type", content_type());
         }
-        get_http_header().add(constexpr_h1_connection, constexpr_h1_keep_alive);
+        get_http_header().add("Connection", "Keep-Alive");
 
         // RFC 2616 5.1.1 Method
         if (0 == strcmp("HEAD", method.c_str())) {
-            get_http_header().add(constexpr_h1_content_length, "0").get_headers(headers);
+            get_http_header().add("Content-Length", "0").get_headers(headers);
             bs << get_version_str() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
         } else {
             // RFC 2616 3.5 Content Codings
             // RFC 2616 14.11 Content-Encoding
-            if (std::string::npos != accept_encoding.find(constexpr_deflate)) {
+            if (std::string::npos != accept_encoding.find("deflate")) {
                 basic_stream encoded;
                 zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)content(), content_size(), &encoded);
 
-                get_http_header()
-                    .add(constexpr_h1_content_encoding, constexpr_deflate)
-                    .add(constexpr_h1_content_length, format("%zi", encoded.size()))
-                    .get_headers(headers);
+                get_http_header().add("Content-Encoding", "deflate").add("Content-Length", format("%zi", encoded.size())).get_headers(headers);
                 bs << get_version_str() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
                 bs.write(encoded.data(), encoded.size());
-            } else if (std::string::npos != accept_encoding.find(constexpr_gzip)) {
+            } else if (std::string::npos != accept_encoding.find("gzip")) {
                 basic_stream encoded;
                 zlib_deflate(zlib_windowbits_t::windowbits_gzip, (byte_t*)content(), content_size(), &encoded);
 
-                get_http_header()
-                    .add(constexpr_h1_content_encoding, constexpr_gzip)
-                    .add(constexpr_h1_content_length, format("%zi", encoded.size()))
-                    .get_headers(headers);
+                get_http_header().add("Content-Encoding", "gzip").add("Content-Length", format("%zi", encoded.size())).get_headers(headers);
                 bs << get_version_str() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
                 bs.write(encoded.data(), encoded.size());
             } else /* "identity" */ {
-                get_http_header().add(constexpr_h1_content_length, format("%zi", content_size())).get_headers(headers);
+                get_http_header().add("Content-Length", format("%zi", content_size())).get_headers(headers);
 
                 bs << get_version_str() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
                 bs.write(content(), content_size());
@@ -341,10 +336,10 @@ http_response& http_response::get_response_h2(binary_t& bin) {
             header_only = false;
 
             // RFC 2616 3.5 Content Codings
-            if (std::string::npos != accept_encoding.find(constexpr_deflate)) {
-                encoding = constexpr_deflate;
-            } else if (std::string::npos != accept_encoding.find(constexpr_gzip)) {
-                encoding = constexpr_gzip;
+            if (std::string::npos != accept_encoding.find("deflate")) {
+                encoding = "deflate";
+            } else if (std::string::npos != accept_encoding.find("gzip")) {
+                encoding = "gzip";
             } else /* "identity" */ {
                 // do nothing
             }
@@ -385,10 +380,10 @@ http_response& http_response::get_response_h2(binary_t& bin) {
             binary_t encoded;
             if (false == encoding.empty()) {
                 // RFC 2616 3.5 Content Codings
-                if (constexpr_deflate == encoding) {
+                if ("deflate" == encoding) {
                     zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)content(), content_size(), encoded);
                     data.set_data(encoded);
-                } else if (constexpr_gzip == encoding) {
+                } else if ("gzip" == encoding) {
                     zlib_deflate(zlib_windowbits_t::windowbits_gzip, (byte_t*)content(), content_size(), encoded);
                     data.set_data(encoded);
                 }

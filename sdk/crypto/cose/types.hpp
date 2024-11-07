@@ -100,10 +100,16 @@ struct _cose_context_t {
     }
 };
 
+class cbor_object_encryption;
+class cbor_object_signing;
+class cbor_object_signing_encryption;
+class cbor_web_key;
+
 class cose_binary;
 class cose_composer;
 class cose_countersign;
 class cose_countersigns;
+class cose_data;
 class cose_protected;
 class cose_recipient;
 class cose_recipients;

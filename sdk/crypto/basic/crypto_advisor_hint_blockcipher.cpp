@@ -22,7 +22,7 @@ const hint_blockcipher_t hint_blockciphers[] = {
     {
         crypt_algorithm_t::aes128,
         16,
-        16,
+        12,
         16,
         16,
     },

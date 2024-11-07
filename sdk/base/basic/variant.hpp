@@ -120,53 +120,6 @@ enum variant_control_t {
     variant_convendian = (1 << 17),
 };
 
-/**
- * @brief   encoded data
- * @sa      quic_integer
- * @remarks
- *          sketch
- *
- *          std::string data = "data";
- *          binary_t bin_stream = base16_decode("0x046461746110000102030405060708090a0b0c0d0e0f");
- *          const byte_t* stream = &bin_stream[0];
- *          size_t streamsize = bin_stream.size();
- *
- *          my_variant_length_data v(data);                 // 04 64 61 74 61 | .data
- *          lsize = v.lsize();                              // 04 -> 1 byte
- *          len = v.value();                                // 04 -> 4
- *          p = v.data();                                   // "data"
- *
- *          lsize = v.lsize(stream, streamsize);            // 04 -> 1 byte
- *          len = v.value(stream, streamsize);              // 04 -> 4
- *          printf("%.*s", (unsigned)len, stream + lsize);  // "data"
- *
- *          stream += len;
- *          streamsize -= len;
- *          lsize = v.lsize(stream, streamsize);            // 10 -> 1 bytes
- *          len = v.value(stream, streamsize);              // 10 -> 16
- *          dump(stream + lsize, len);                      // 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f
- *          p = v.data(stream, streamsize);                 // p = stream + lsize
- */
-class payload_encoded {
-   public:
-    payload_encoded() { _shared.make_share(this); }
-
-    virtual size_t lsize() = 0;
-    virtual size_t value() = 0;
-    virtual const byte_t* data() = 0;
-    virtual void write(binary_t& target) = 0;
-
-    virtual size_t lsize(const byte_t* stream, size_t size) = 0;
-    virtual size_t value(const byte_t* stream, size_t size) = 0;
-    virtual void read(const byte_t* stream, size_t size, size_t& pos) = 0;
-
-    virtual void addref() { _shared.addref(); }
-    virtual void release() { _shared.delref(); }
-
-   protected:
-    t_shared_reference<payload_encoded> _shared;
-};
-
 enum variant_flag_t {
     flag_free = 1 << 0,
 

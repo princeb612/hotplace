@@ -21,7 +21,7 @@
 #ifndef __HOTPLACE_SDK_NET_QUIC__
 #define __HOTPLACE_SDK_NET_QUIC__
 
-#include <sdk/base/basic/variant.hpp>
+#include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/types.hpp>
 
 namespace hotplace {
@@ -128,6 +128,47 @@ enum h3_errorcodes_t {
 };
 
 /**
+ * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+ *  4.  Handshake Protocol
+ *      enum {
+ *          client_hello(1),
+ *          server_hello(2),
+ *          new_session_ticket(4),
+ *          end_of_early_data(5),
+ *          encrypted_extensions(8),
+ *          certificate(11),
+ *          certificate_request(13),
+ *          certificate_verify(15),
+ *          finished(20),
+ *          key_update(24),
+ *          message_hash(254),
+ *          (255)
+ *      } HandshakeType;
+ *
+ *      struct {
+ *          HandshakeType msg_type;    // handshake type
+ *          uint24 length;             // remaining bytes in message
+ *          select (Handshake.msg_type) {
+ *              case client_hello:          ClientHello;
+ *              case server_hello:          ServerHello;
+ *              case end_of_early_data:     EndOfEarlyData;
+ *              case encrypted_extensions:  EncryptedExtensions;
+ *              case certificate_request:   CertificateRequest;
+ *              case certificate:           Certificate;
+ *              case certificate_verify:    CertificateVerify;
+ *              case finished:              Finished;
+ *              case new_session_ticket:    NewSessionTicket;
+ *              case key_update:            KeyUpdate;
+ *          };
+ *      } Handshake;
+ */
+enum tls_handshake_t {
+    tls_client_hello = 1,
+    tls_server_hello = 2,
+    // ...
+};
+
+/**
  * RFC 9000 Figure 22: Preferred Address Format
  */
 struct preferred_address {
@@ -139,6 +180,39 @@ struct preferred_address {
     uint128 stateless_reset_token;
 };
 
+enum quic_initial_keys_t {
+    quic_initial_secret = (1 << 0),  // initial secret
+    quic_client_secret = (1 << 1),   // client initial secret
+    quic_server_secret = (1 << 2),   // server initial secret
+    quic_client_key = (1 << 3),      // client initial key
+    quic_server_key = (1 << 4),      // server initial key
+    quic_client_iv = (1 << 5),       // client initial iv
+    quic_server_iv = (1 << 6),       // server initial iv
+    quic_client_hp = (1 << 7),       // client header protection key
+    quic_server_hp = (1 << 8),       // server header protection key
+};
+
+/**
+ * @brief   RFC 9001 5.  Packet Protection
+ */
+class quic_header_protection_keys {
+   public:
+    quic_header_protection_keys(const binary_t& salt, uint32 flags = -1);
+    quic_header_protection_keys(const binary_t& salt, const binary_t& context, uint32 flags = -1);
+
+    const binary_t& get_item(quic_initial_keys_t type);
+    void get_item(quic_initial_keys_t type, binary_t& item);
+
+    void addref();
+    void release();
+
+   protected:
+    std::map<uint16, binary_t> _kv;
+    t_shared_reference<quic_header_protection_keys> _shared;
+
+    return_t compute(const binary_t& salt, const binary_t& context, uint32 flags = -1);
+};
+
 /**
  * RFC 9000 17.  Packet Formats
  */
@@ -147,6 +221,7 @@ class quic_packet {
     quic_packet();
     quic_packet(quic_packet_t type);
     quic_packet(const quic_packet& rhs);
+    ~quic_packet();
 
     uint8 get_type();
     void get_type(uint8 hdr, uint8& type, bool& is_longheader);
@@ -154,8 +229,8 @@ class quic_packet {
 
     quic_packet& set_version(uint32 version);
     uint32 get_version();
-    void set_dcid(const binary& cid);
-    void set_scid(const binary& cid);
+    quic_packet& set_dcid(const binary& cid);
+    quic_packet& set_scid(const binary& cid);
     const binary_t& get_dcid();
     const binary_t& get_scid();
 
@@ -164,34 +239,50 @@ class quic_packet {
      * @param   const byte_t* stream [in]
      * @param   size_t size [in]
      * @param   size_t& pos [inout]
+     * @param   uint8 type [inopt]  RFC 9001 5.4.  Header Protection
+     *                              see tls_handshake_t
      */
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t read(const binary_t& bin, size_t& pos);
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint8 type = 0);
+    virtual return_t read(const binary_t& bin, size_t& pos, uint8 type = 0);
     /**
      * @brief   write
      * @param   binary_t& packet [out]
+     * @param   uint8 type [inopt]  RFC 9001 5.4.  Header Protection
+     *                              see tls_handshake_t
      */
-    virtual return_t write(binary_t& packet);
+    virtual return_t write(binary_t& packet, uint8 type = 0);
     /**
      * @brief   dump
      * @param   stream_t* s [in]
      */
     virtual void dump(stream_t* s);
 
-    quic_packet& add(const quic_frame* frame);
-    virtual return_t read_frame(byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write_frame(binary_t& packet);
-
     /*
-     * Initial, 1-RTT, Handshake, 0-RTT
-     * Packet Number (8..32)
-     * pn_length = (_ht & 0x03) + 1
+     * @brief   set packet number
+     * @param   uint32 pn [in]
+     * @param   uint8 len [inopt]
+     * @sample
+     *          packet.set_pn(0x00000000, 1); // 00
+     *          packet.set_pn(0x00000000, 4); // 00000000
+     *          packet.set_pn(0x00000000);    // 00
+     *          packet.set_pn(0x12345678, 4); // 12345678
+     *          packet.set_pn(0x12345678);    // 12345678
+     *
+     * @remarks override
+     *          Initial, 1-RTT, Handshake, 0-RTT
+     *          Packet Number (8..32)
+     *          pn_length = (_ht & 0x03) + 1
+     *
      */
-    quic_packet& set_pn_length(uint8 len);
+    virtual void set_pn(uint32 pn, uint8 len = 0);
     uint8 get_pn_length();
+    uint8 get_pn_length(uint8 ht);
 
     void set_binary(binary_t& target, const binary_t& payload);
     void set_binary(binary_t& target, const byte_t* stream, size_t size);
+
+    void attach(quic_header_protection_keys* keys);
+    quic_header_protection_keys* get_keys();
 
    protected:
     uint8 _type;
@@ -199,15 +290,16 @@ class quic_packet {
     uint32 _version;  // version
     binary_t _dcid;   // destination
     binary_t _scid;   // source
+    quic_header_protection_keys* _keys;
 };
 
 /**
  * @brief   RFC 9000 17.2.1.  Version Negotiation Packet
  */
-class quic_packet_vn : public quic_packet {
+class quic_packet_version_negotiation : public quic_packet {
    public:
-    quic_packet_vn();
-    quic_packet_vn(const quic_packet_vn& rhs);
+    quic_packet_version_negotiation();
+    quic_packet_version_negotiation(const quic_packet_version_negotiation& rhs);
 
    protected:
    private:
@@ -226,20 +318,24 @@ class quic_packet_initial : public quic_packet {
     quic_packet_initial();
     quic_packet_initial(const quic_packet_initial& rhs);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& packet);
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint8 type = 0);
+    virtual return_t write(binary_t& packet, uint8 type = 0);
     virtual void dump(stream_t* s);
+
+    virtual void set_pn(uint32 pn, uint8 len = 0);
+    uint32 get_pn();
 
     quic_packet_initial& set_token(const binary_t& token);
     const binary_t& get_token();
     uint64 get_length();
-    quic_packet_initial& set_packet_number(uint32 pn);
-    uint32 get_packet_number();
     quic_packet_initial& set_payload(const binary_t& payload);
     quic_packet_initial& set_payload(const byte_t* stream, size_t size);
     const binary_t& get_payload();
 
    protected:
+    return_t header_protection_mask(uint8 type, const byte_t* sampled, size_t size_sampled, binary_t& mask);
+    return_t header_protection_encode(uint8 type, const binary_t& mask, byte_t& ht, binary_t& bin_pn);
+
    private:
     /**
      * Figure 15: Initial Packet
@@ -298,8 +394,8 @@ class quic_packet_retry : public quic_packet {
     quic_packet_retry();
     quic_packet_retry(const quic_packet_retry& rhs);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& packet);
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint8 type = 0);
+    virtual return_t write(binary_t& packet, uint8 type = 0);
     virtual void dump(stream_t* s);
 
     const binary_t get_retry_token();
@@ -357,6 +453,7 @@ return_t quic_read_vle_int(const byte_t* stream, size_t size, size_t& pos, uint6
 return_t quic_write_vle_int(uint64 value, binary_t& bin);
 
 return_t quic_length_vle_int(uint64 value, uint8& length);
+uint8 quic_length_vle_int(uint64 value);
 
 /**
  * @brief   RFC 9000

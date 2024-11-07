@@ -10,6 +10,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/binary.hpp>
 #include <sdk/base/string/string.hpp>  // split_begin, split_count, split_get, split_end
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>

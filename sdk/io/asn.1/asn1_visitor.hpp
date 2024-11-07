@@ -14,7 +14,6 @@
 #define __HOTPLACE_SDK_IO_ASN1_VISOTOR__
 
 #include <sdk/base/basic/base16.hpp>
-#include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/basic/variant.hpp>
 #include <sdk/base/system/endian.hpp>

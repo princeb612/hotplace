@@ -11,7 +11,6 @@
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_TYPES__
 #define __HOTPLACE_SDK_IO_SYSTEM_TYPES__
 
-#include <sdk/base/basic/template.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/io/types.hpp>
 

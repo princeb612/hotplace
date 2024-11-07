@@ -101,6 +101,12 @@ return_t quic_length_vle_int(uint64 value, uint8& length) {
     return ret;
 }
 
+uint8 quic_length_vle_int(uint64 value) {
+    uint8 length = 0;
+    quic_length_vle_int(value, length);
+    return length;
+}
+
 return_t encode_packet_number(uint64 full_pn, uint64 largest_acked, uint64& represent, uint8& nbits) {
     return_t ret = errorcode_t::success;
     uint64 num_unacked = 0;

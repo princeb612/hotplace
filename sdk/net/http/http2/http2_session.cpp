@@ -116,10 +116,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
 
             req->add_content(frame.get_data());
 
-            constexpr char constexpr_content_type[] = "Content-Type";
-            constexpr char constexpr_url_encoded[] = "application/x-www-form-urlencoded";
-
-            if (req->get_http_header().contains(constexpr_content_type, constexpr_url_encoded)) {
+            if (req->get_http_header().contains("Content-Type", "application/x-www-form-urlencoded")) {
                 auto const& content = req->get_content();
                 req->get_http_uri().set_query(content);
             }

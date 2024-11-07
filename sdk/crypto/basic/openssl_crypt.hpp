@@ -139,6 +139,7 @@ class openssl_crypt : public crypt_t {
      * @param const binary_t& iv [in]
      * @return error code (see error.hpp)
      */
+    virtual return_t open(crypt_context_t** handle, const char* cipher, const unsigned char* key, size_t size_key, const unsigned char* iv, size_t size_iv);
     virtual return_t open(crypt_context_t** handle, const char* cipher, const binary_t& key, const binary_t& iv);
     /**
      * @brief destroy a context handle

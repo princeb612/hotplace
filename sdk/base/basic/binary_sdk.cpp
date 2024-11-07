@@ -24,6 +24,18 @@ return_t binary_push(binary_t& target, byte_t rhs) {
     return ret;
 }
 
+return_t binary_append(binary_t& target, int8 value) {
+    return_t ret = errorcode_t::success;
+    target.push_back(value);
+    return ret;
+}
+
+return_t binary_append(binary_t& target, uint8 value) {
+    return_t ret = errorcode_t::success;
+    target.push_back(value);
+    return ret;
+}
+
 return_t binary_append(binary_t& target, int16 value, std::function<int16(int16)> func) { return t_binary_append<int16>(target, value, func); }
 
 return_t binary_append(binary_t& target, uint16 value, std::function<uint16(uint16)> func) { return t_binary_append<uint16>(target, value, func); }
@@ -168,7 +180,6 @@ return_t binary_load(binary_t& bn, uint32 bnlen, uint128 value, std::function<ui
 
 return_t binary_load(binary_t& target, uint32 bnlen, const byte_t* data, uint32 len) {
     return_t ret = errorcode_t::success;
-    target.clear();
     target.resize(bnlen);
     if (data) {
         if (len > bnlen) {

@@ -245,8 +245,7 @@ void test_uri_form_encoded_body_parameter() {
     basic_stream request_stream1;
     basic_stream request_stream2;
 
-    request1.compose(http_method_t::HTTP_GET, "/auth/bearer?client_id=clientid",
-                     "");  // reform if body is empty
+    request1.compose(http_method_t::HTTP_GET, "/auth/bearer?client_id=clientid", "");  // reform if body is empty
     request1.get_http_header().add("Accept-Encoding", "gzip, deflate");
     request1.get_request(request_stream1);
 

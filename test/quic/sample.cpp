@@ -5,11 +5,50 @@
  * @desc
  * @remarks
  *          RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
+ *            QUIC integrates the TLS handshake [TLS13], although using a customized framing for protecting packets.
+ *
+ *          RFC 2246 The TLS Protocol Version 1.0
+ *           7.4. Handshake protocol
+ *           7.4.1. Hello messages
+ *           7.4.1.1. Hello request
+ *           7.4.1.2. Client hello
+ *
+ *          RFC 4346 The Transport Layer Security (TLS) Protocol Version 1.1
+ *           7.4. Handshake Protocol
+ *           7.4.1. Hello Messages
+ *           7.4.1.2. Client Hello
+ *
+ *          RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
+ *           7.4.  Handshake Protocol
+ *           7.4.1.  Hello Messages
+ *           7.4.1.2.  Client Hello
+ *
+ *           4.1.2.  Client Hello
+ *             Structure of this message:
+ *
+ *                uint16 ProtocolVersion;
+ *                opaque Random[32];
+ *
+ *                uint8 CipherSuite[2];    // Cryptographic suite selector
+ *
+ *                struct {
+ *                    ProtocolVersion legacy_version = 0x0303;    // TLS v1.2
+ *                    Random random;
+ *                    opaque legacy_session_id<0..32>;
+ *                    CipherSuite cipher_suites<2..2^16-2>;
+ *                    opaque legacy_compression_methods<1..2^8-1>;
+ *                    Extension extensions<8..2^16-1>;
+ *                } ClientHello;
  *
  * Revision History
  * Date         Name                Description
  *
  */
+
+// write - tested
+// read  - tested
+// AEAD  - studying
+// frame - TODO
 
 #include <stdio.h>
 
@@ -41,8 +80,8 @@ void test_rfc_9000_a1() {
         size_t pos = 0;
         uint64 value = 0;
         quic_read_vle_int(&bin[0], bin.size(), pos, value);
-        _logger->writeln("quic_read_vle_int %s -> %I64i");
-        _test_case.assert(expect == value, __FUNCTION__, R"(RFC 9000 A.1. %s -> "%I64i")", input, expect);
+        _logger->writeln(R"(> encode "%s" -> %I64i)", input, value);
+        _test_case.assert(expect == value, __FUNCTION__, R"(RFC 9000 A.1. expect "%s" -> %I64i)", input, expect);
     };
 
     lambda_read("0xc2197c5eff14e88c", 151288809941952652);  // prefix 3 length 8
@@ -58,13 +97,13 @@ void test_rfc_9000_a1() {
     lambda_read("0xc000000040000000", 0x40000000);          // MSB 11, length 8, 1073741824
     lambda_read("0xffffffffffffffff", 0x3fffffffffffffff);  // MSB 11, length 8, 4611686018427387903
 
-    auto lambda_write = [&](size_t value, const char* expect) -> void {
+    auto lambda_write = [&](uint64 value, const char* expect) -> void {
         binary_t bin_value;
         binary_t bin_expect;
         bin_expect = base16_decode_rfc(expect);
         quic_write_vle_int(value, bin_value);
-        _logger->dump(bin_value);
-        _test_case.assert(bin_value == bin_expect, __FUNCTION__, "RFC 9000 A.1. %I64i -> %s", value, expect);
+        _logger->hdump("> decode", bin_value, 16, 3);
+        _test_case.assert(bin_value == bin_expect, __FUNCTION__, R"(RFC 9000 A.1. %I64i -> "%s")", value, expect);
     };
 
     lambda_write(151288809941952652, "0xc2197c5eff14e88c");
@@ -87,7 +126,7 @@ void test_rfc_9000_a2() {
         uint64 represent = 0;
         uint8 nbits = 0;
         encode_packet_number(full_pn, largest_acked, represent, nbits);
-        _logger->writeln("full_pn %I64i largest_acked %I64i -> expect_represent %I64i expect_nbits %i", full_pn, largest_acked, represent, nbits);
+        _logger->writeln("> full_pn %I64i largest_acked %I64i -> expect_represent %I64i expect_nbits %i", full_pn, largest_acked, represent, nbits);
         _test_case.assert(represent == expect_represent, __FUNCTION__, "RFC 9000 A.2 represent");
         _test_case.assert(nbits == expect_nbits, __FUNCTION__, "RFC 9000 A.2 bits required");
     };
@@ -104,7 +143,7 @@ void test_rfc_9000_a3() {
 
 void test_rfc_9001_section4() {
     _test_case.begin("RFC 9001 4.  Carrying TLS Messages");
-    //
+    // studying ...
 }
 
 void test_rfc_9001_a1() {
@@ -112,187 +151,98 @@ void test_rfc_9001_a1() {
     openssl_kdf kdf;
 
     const char* initial_salt = "0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a";
-    const char* client_in = "00200f746c73313320636c69656e7420696e00";
-    const char* server_in = "00200f746c7331332073657276657220696e00";
-    const char* quic_key = "00100e746c7331332071756963206b657900";
-    const char* quic_iv = "000c0d746c733133207175696320697600";
-    const char* quic_hp = "00100d746c733133207175696320687000";
 
     // Destination Connection ID of 0x8394c8f03e515708
-    // initial_secret = HKDF-Extract(initial_salt, cid)
+    // quic_initial_secret = HKDF-Extract(initial_salt, cid)
     const char* dcid = "0x8394c8f03e515708";
-    const char* initial_secret = "7db5df06e7a69e432496adedb00851923595221596ae2ae9fb8115c1e9ed0a44";
+    const char* quic_initial_secret = "7db5df06e7a69e432496adedb00851923595221596ae2ae9fb8115c1e9ed0a44";
     const char* client_initial_secret = "c00cf151ca5be075ed0ebfb5c80323c42d6b7db67881289af4008f1f6c357aea";
     const char* server_initial_secret = "3c199828fd139efd216c155ad844cc81fb82fa8d7446fa7d78be803acdda951b";
 
     binary_t bin_dcid = base16_decode_rfc(dcid);
     binary_t bin_initial_salt = base16_decode_rfc(initial_salt);
-    binary_t bin_client_in = base16_decode_rfc(client_in);
-    binary_t bin_server_in = base16_decode_rfc(server_in);
-    binary_t bin_quic_key = base16_decode_rfc(quic_key);
-    binary_t bin_quic_iv = base16_decode_rfc(quic_iv);
-    binary_t bin_quic_hp = base16_decode_rfc(quic_hp);
-    binary_t bin_initial_secret = base16_decode_rfc(initial_secret);
+    binary_t bin_initial_secret = base16_decode_rfc(quic_initial_secret);
     binary_t bin_client_initial_secret = base16_decode_rfc(client_initial_secret);
     binary_t bin_server_initial_secret = base16_decode_rfc(server_initial_secret);
 
-    _logger->hdump("> DCID", bin_dcid, 16, 2);
-    _logger->hdump("> initial_secret", bin_initial_secret, 16, 2);
-    _logger->hdump("> initial_salt", bin_initial_salt, 16, 2);
-    _logger->hdump("> client_in", bin_client_in, 16, 2);
-    _logger->hdump("> server_in", bin_server_in, 16, 2);
-    _logger->hdump("> bin_quic_key", bin_quic_key, 16, 2);
-    _logger->hdump("> bin_quic_iv", bin_quic_iv, 16, 2);
-    _logger->hdump("> bin_quic_hp", bin_quic_hp, 16, 2);
+    _logger->hdump("> DCID", bin_dcid, 16, 3);
 
-    /**
-     * RFC 5869
-     *  HKDF-Extract(salt, IKM) -> PRK
-     *  HKDF-Expand(PRK, info, L) -> OKM
-     *
-     * RFC 9001
-     *  initial_salt = 0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a
-     *  initial_secret = HKDF-Extract(initial_salt, client_dst_connection_id)
-     *  client_initial_secret = HKDF-Expand-Label(initial_secret, "client in", "", Hash.length)
-     *  server_initial_secret = HKDF-Expand-Label(initial_secret, "server in", "", Hash.length)
-     */
+    binary_t bin_result;
+    binary_t bin_expect;
+    quic_header_protection_keys initial_keys(bin_dcid);
 
-    binary_t bin_initial_secret_computed;
-    kdf.hmac_kdf_extract(bin_initial_secret_computed, "sha256", bin_initial_salt, bin_dcid);
-    _test_case.assert(bin_initial_secret == bin_initial_secret_computed, __FUNCTION__, "initial_secret");
+    bin_result = initial_keys.get_item(quic_initial_keys_t::quic_initial_secret);
+    _logger->hdump("> initial secret", bin_result, 16, 3);
+    _test_case.assert(bin_initial_secret == bin_result, __FUNCTION__, "quic_initial_secret");
 
-    struct testvector {
-        const char* text;
-        const char* label;    // 1 .. 255 - 6
-        const char* context;  // 0 .. 255
-        uint16 dlen;
-        binary_t* secret;
-        binary_t* hkdflabel;
-        const char* expect;
-    } _testvector[] = {
-        {
-            "client_initial_secret",
-            "client in",
-            "",
-            32,
-            &bin_initial_secret,
-            &bin_client_in,
-            "c00cf151ca5be075ed0ebfb5c80323c42d6b7db67881289af4008f1f6c357aea",
-        },
-        {
-            "key (client)",
-            "quic key",
-            "",
-            16,
-            &bin_client_initial_secret,
-            &bin_quic_key,
-            "1f369613dd76d5467730efcbe3b1a22d",
-        },
-        {
-            "iv (client)",
-            "quic iv",
-            "",
-            12,
-            &bin_client_initial_secret,
-            &bin_quic_iv,
-            "fa044b2f42a3fd3b46fb255c",
-        },
-        {
-            "hp (client)",
-            "quic hp",
-            "",
-            16,
-            &bin_client_initial_secret,
-            &bin_quic_hp,
-            "9f50449e04a0e810283a1e9933adedd2",
-        },
-        {
-            "server_initial_secret",
-            "server in",
-            "",
-            32,
-            &bin_initial_secret,
-            &bin_server_in,
-            "3c199828fd139efd216c155ad844cc81fb82fa8d7446fa7d78be803acdda951b",
-        },
-        {
-            "key (server)",
-            "quic key",
-            "",
-            16,
-            &bin_server_initial_secret,
-            &bin_quic_key,
-            "cf3a5331653c364c88f0f379b6067e37",
-        },
-        {
-            "iv (server)",
-            "quic iv",
-            "",
-            12,
-            &bin_server_initial_secret,
-            &bin_quic_iv,
-            "0ac1493ca1905853b0bba03e",
-        },
-        {
-            "hp (server)",
-            "quic hp",
-            "",
-            16,
-            &bin_server_initial_secret,
-            &bin_quic_hp,
-            "c206b8d9b9f0f37644430b490eeaa314",
-        },
-    };
+    bin_result = initial_keys.get_item(quic_initial_keys_t::quic_client_secret);
+    bin_expect = base16_decode("c00cf151ca5be075ed0ebfb5c80323c42d6b7db67881289af4008f1f6c357aea");
+    _logger->hdump("> client secret", bin_result, 16, 3);
+    _test_case.assert(bin_expect == bin_result, __FUNCTION__, "client_initial_secret");
 
-    for (auto item : _testvector) {
-        binary_t bin_expect = base16_decode_rfc(item.expect);
+    bin_result = initial_keys.get_item(quic_initial_keys_t::quic_client_key);
+    bin_expect = base16_decode("1f369613dd76d5467730efcbe3b1a22d");
+    _logger->hdump("> client key", bin_result, 16, 3);
+    _test_case.assert(bin_expect == bin_result, __FUNCTION__, "client key");
 
-        binary_t bin_computed1;
-        binary_t bin_computed2;
-        kdf.hkdf_expand(bin_computed1, "sha256", item.dlen, *item.secret, *item.hkdflabel);
-        kdf.hkdf_expand_label(bin_computed2, "sha256", item.dlen, *item.secret, str2bin(item.label), str2bin(item.context));
+    bin_result = initial_keys.get_item(quic_initial_keys_t::quic_client_iv);
+    bin_expect = base16_decode("fa044b2f42a3fd3b46fb255c");
+    _logger->hdump("> client iv", bin_result, 16, 3);
+    _test_case.assert(bin_expect == bin_result, __FUNCTION__, "client iv");
 
-        _logger->writeln(item.text);
-        _logger->hdump("> expected", bin_expect, 16, 2);
-        _logger->hdump("> hkdf_expand", bin_computed1, 16, 2);
-        _logger->hdump("> hkdf_expand_label", bin_computed2, 16, 2);
-        _test_case.assert(bin_computed1 == bin_expect, __FUNCTION__, "RFC 9000 A.1. %s", item.text);
-        _test_case.assert(bin_computed2 == bin_expect, __FUNCTION__, "RFC 9000 A.1. %s", item.text);
-    }
+    bin_result = initial_keys.get_item(quic_initial_keys_t::quic_client_hp);
+    bin_expect = base16_decode("9f50449e04a0e810283a1e9933adedd2");
+    _logger->hdump("> client hp", bin_result, 16, 3);
+    _test_case.assert(bin_expect == bin_result, __FUNCTION__, "client hp");
+
+    bin_result = initial_keys.get_item(quic_initial_keys_t::quic_server_secret);
+    bin_expect = base16_decode("3c199828fd139efd216c155ad844cc81fb82fa8d7446fa7d78be803acdda951b");
+    _logger->hdump("> server secret", bin_result, 16, 3);
+    _test_case.assert(bin_expect == bin_result, __FUNCTION__, "server_initial_secret");
+
+    bin_result = initial_keys.get_item(quic_initial_keys_t::quic_server_key);
+    bin_expect = base16_decode("cf3a5331653c364c88f0f379b6067e37");
+    _logger->hdump("> server key", bin_result, 16, 3);
+    _test_case.assert(bin_expect == bin_result, __FUNCTION__, "server key");
+
+    bin_result = initial_keys.get_item(quic_initial_keys_t::quic_server_iv);
+    bin_expect = base16_decode("0ac1493ca1905853b0bba03e");
+    _logger->hdump("> server iv", bin_result, 16, 3);
+    _test_case.assert(bin_expect == bin_result, __FUNCTION__, "server iv");
+
+    bin_result = initial_keys.get_item(quic_initial_keys_t::quic_server_hp);
+    bin_expect = base16_decode("c206b8d9b9f0f37644430b490eeaa314");
+    _logger->hdump("> server hp", bin_result, 16, 3);
+    _test_case.assert(bin_expect == bin_result, __FUNCTION__, "server hp");
 }
 
 void test_rfc_9001_a2() {
     _test_case.begin("RFC 9001 A.2.  Client Initial");
 
-    binary_t bin_crypto_frame_payload;
+    binary_t bin_dcid;
+    binary_t bin_unprotected;
+    binary_t bin_protected;
     binary_t bin_unprotected_header;
-    basic_stream bs;
+    binary_t bin_protected_header;
     size_t pos = 0;
 
+    // write
     {
-        /**
-         * RFC 9000
-         *  19.6.  CRYPTO Frames
-         *  Figure 30: CRYPTO Frame Format
-         */
-        const char* crypto_frame_payload =
-            "060040f1010000ed0303ebf8fa56f129 39b9584a3896472ec40bb863cfd3e868"
-            "04fe3a47f06a2b69484c000004130113 02010000c000000010000e00000b6578"
-            "616d706c652e636f6dff01000100000a 00080006001d00170018001000070005"
-            "04616c706e0005000501000000000033 00260024001d00209370b2c9caa47fba"
-            "baf4559fedba753de171fa71f50f1ce1 5d43e994ec74d748002b000302030400"
-            "0d0010000e0403050306030203080408 050806002d00020101001c0002400100"
-            "3900320408ffffffffffffffff050480 00ffff07048000ffff08011001048000"
-            "75300901100f088394c8f03e51570806 048000ffff";
-        bin_crypto_frame_payload = base16_decode_rfc(crypto_frame_payload);
-    }
+        // Destination Connection ID of 0x8394c8f03e515708
+        const char* dcid = "0x8394c8f03e515708";
+        bin_dcid = base16_decode_rfc(dcid);
 
-    {
-        quic_packet_initial packet;
+        //   sample = d1b1c98dd7689fb8ec11d242b123dc9b
+        //   mask = AES-ECB(hp, sample)[0..4]
+        //        = 437b9aec36
+        const char* sample = "D1 B1 C9 8D D7 68 9F B8 EC 11 D2 42 B1 23 DC 9B";
         const char* unprotected_header = "c300000001088394c8f03e5157080000449e00000002";
-        bin_unprotected_header = base16_decode_rfc(unprotected_header);
+        const char* protected_header = "c000000001088394c8f03e5157080000449e7b9aec34";
 
-        // unprotected header
+        bin_unprotected_header = base16_decode_rfc(unprotected_header);
+        bin_protected_header = base16_decode_rfc(protected_header);
+
+        // generate unprotected header
         //            00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f
         // 00000000 : C3 00 00 00 01 08 83 94 C8 F0 3E 51 57 08 00 00 | ..........>QW...
         // 00000010 : 44 9E 00 00 00 02 -- -- -- -- -- -- -- -- -- -- | D.....
@@ -306,107 +256,37 @@ void test_rfc_9001_a2() {
         // [0x0f] SCID
         // [0x0f] Token Length  : 00
         // [0x0f] Token
-        // [0x10] Length        : 449e (1182)
-        // [0x12] Packet Number : 00000002
+        // [0x10] Length        : 449e     ; 0x449e -> 1182 = pn_length(4) + payload(1178) = 1182
+        // [0x12] Packet Number : 00000002 ; pnl 0x03 -> 4 bytes
+        binary_t bin_payload = base16_decode_rfc(sample);
+        bin_payload.resize(1178);
 
-        _logger->hdump("unprotected header", bin_unprotected_header, 16, 3);
+        quic_packet_initial initial;
 
-        pos = 0;
-        packet.read(&bin_unprotected_header[0], bin_unprotected_header.size(), pos);
-        packet.dump(&bs);
+        initial.set_dcid(bin_dcid);
+        initial.set_pn(2, 4);  // 00000002
+        initial.set_payload(bin_payload);
 
-        _logger->writeln("dump packet");
-        _logger->writeln(bs);
+        // no header protection
+        initial.write(bin_unprotected);
+        // header protection
+        initial.attach(new quic_header_protection_keys(bin_dcid, quic_client_hp));  // compute client header protection key
+        initial.write(bin_protected, tls_client_hello);
 
-        /**
-         *
-         * RFC 9001 5.4.3.  AES-Based Header Protection
-         *
-         *  header_protection(hp_key, sample):
-         *    mask = AES-ECB(hp_key, sample)
-         *
-         * RFC 9001 5.4.4.  ChaCha20-Based Header Protection
-         *
-         *  header_protection(hp_key, sample):
-         *    counter = sample[0..3]
-         *    nonce = sample[4..15]
-         *    mask = ChaCha20(hp_key, counter, nonce, {0,0,0,0,0})
-         *
-         * RFC 9001 A.2.
-         *  sample = d1b1c98dd7689fb8ec11d242b123dc9b
-         *  mask = AES-ECB(hp, sample)[0..4]
-         *       = 437b9aec36
-         */
+        _logger->hdump("> unprotected header + sample", &bin_unprotected[0], 0x26, 16, 3);
+        _logger->hdump("> protected header + sample", &bin_protected[0], 0x26, 16, 3);
 
-        const char* hp = "9f50449e04a0e810283a1e9933adedd2";
-        const char* sample = "d1b1c98dd7689fb8ec11d242b123dc9b";
-        binary_t bin_hp = base16_decode_rfc(hp);
-        binary_t bin_sample = base16_decode_rfc(sample);
-        binary_t bin_mask;
+        _test_case.assert(quic_packet_type_initial == initial.get_type(), __FUNCTION__, "initial packet");
+        _test_case.assert(bin_dcid == initial.get_dcid(), __FUNCTION__, "DCID");
+        _test_case.assert(1182 == initial.get_length(), __FUNCTION__, "length");
+        _test_case.assert(4 == initial.get_pn_length(), __FUNCTION__, "packet number length");
+        _test_case.assert(2 == initial.get_pn(), __FUNCTION__, "packet number");
+        _test_case.assert(0 == memcmp(&bin_unprotected_header[0], &bin_unprotected[0], 0x16), __FUNCTION__, "unprotected header");
+        _test_case.assert(0 == memcmp(&bin_protected_header[0], &bin_protected[0], 0x16), __FUNCTION__, "protected header");
+    }
 
-        crypt_context_t* handle = nullptr;
-        openssl_crypt crypt;
-        crypt.open(&handle, "aes-128-ecb", bin_hp, binary_t());
-        crypt.encrypt(handle, bin_sample, bin_mask);
-        crypt.close(handle);
-
-        bin_mask.resize(5);  // [0..4]
-        _logger->hdump("hp", bin_hp, 16, 3);
-        _logger->hdump("sample", bin_sample, 16, 3);
-        _logger->hdump("mask", bin_mask, 16, 3);
-        _test_case.assert(bin_mask == base16_decode("437b9aec36"), __FUNCTION__, "RFC 9001 A.2. mask");
-
-        /**
-         * RFC 9001 5.4.1.  Header Protection Application
-         *
-         *  mask = header_protection(hp_key, sample)
-         *
-         *  pn_length = (packet[0] & 0x03) + 1
-         *  if (packet[0] & 0x80) == 0x80:
-         *     # Long header: 4 bits masked
-         *     packet[0] ^= mask[0] & 0x0f
-         *  else:
-         *     # Short header: 5 bits masked
-         *     packet[0] ^= mask[0] & 0x1f
-         *
-         *  # pn_offset is the start of the Packet Number field.
-         *  packet[pn_offset:pn_offset+pn_length] ^= mask[1:1+pn_length]
-         *
-         *                  Figure 6: Header Protection Pseudocode
-         *
-         * RFC 9001 A.2.
-         *  header[0] ^= mask[0] & 0x0f
-         *          = c0
-         *  header[18..21] ^= mask[1..4]
-         *          = 7b9aec34
-         *  header = c000000001088394c8f03e5157080000449e7b9aec34
-         */
-
-        // pn_offset 0x12
-        // see quic_packet_initial::read
-        // see payload::offset_of("pn")
-        binary_t bin_protected_header = bin_unprotected_header;
-
-        byte_t header0 = bin_protected_header[0];
-        if (header0 & 0x80) {
-            header0 ^= bin_mask[0] & 0x0f;
-        } else {
-            header0 ^= bin_mask[0] & 0x1f;
-        }
-        bin_protected_header[0] = header0;
-
-        auto pn_offset = 0x12;
-        auto pnl = packet.get_pn_length();
-        for (auto i = 0; i < pnl; i++) {
-            auto b = bin_protected_header[pn_offset + i];
-            b ^= bin_mask[1 + i];
-            bin_protected_header[pn_offset + i] = b;
-        }
-
-        _logger->hdump("protected header", bin_protected_header, 16, 3);
-        _test_case.assert(bin_protected_header == base16_decode("c000000001088394c8f03e5157080000449e7b9aec34"), __FUNCTION__,
-                          "RFC 9001 A.2. protected header");
-
+    // read
+    {
         const char* result =
             "c000000001088394c8f03e5157080000 449e7b9aec34d1b1c98dd7689fb8ec11"
             "d242b123dc9bd8bab936b47d92ec356c 0bab7df5976d27cd449f63300099f399"
@@ -446,114 +326,144 @@ void test_rfc_9001_a2() {
             "056df31bd267b6b90a079831aaf579be 0a39013137aac6d404f518cfd4684064"
             "7e78bfe706ca4cf5e9c5453e9f7cfd2b 8b4c8d169a44e55c88d4a9a7f9474241"
             "e221af44860018ab0856972e194cd934";
-
         binary_t bin_result = base16_decode_rfc(result);
-
-        // vice versa
-        header0 = bin_result[0];
-        if (header0 & 0x80) {
-            header0 ^= bin_mask[0] & 0x0f;
-        } else {
-            header0 ^= bin_mask[0] & 0x1f;
-        }
-        bin_result[0] = header0;
-        for (auto i = 0; i < pnl; i++) {
-            auto b = bin_result[pn_offset + i];
-            b ^= bin_mask[1 + i];
-            bin_result[pn_offset + i] = b;
-        }
-        _test_case.assert(0 == memcmp(&bin_result[0], &bin_unprotected_header[0], bin_unprotected_header.size()), __FUNCTION__, "RFC 9001 A.2.");
+        /**
+         * RFC 9000
+         *  19.6.  CRYPTO Frames
+         *  Figure 30: CRYPTO Frame Format
+         */
+        const char* payload_frames =
+            "060040f1010000ed0303ebf8fa56f129 39b9584a3896472ec40bb863cfd3e868"
+            "04fe3a47f06a2b69484c000004130113 02010000c000000010000e00000b6578"
+            "616d706c652e636f6dff01000100000a 00080006001d00170018001000070005"
+            "04616c706e0005000501000000000033 00260024001d00209370b2c9caa47fba"
+            "baf4559fedba753de171fa71f50f1ce1 5d43e994ec74d748002b000302030400"
+            "0d0010000e0403050306030203080408 050806002d00020101001c0002400100"
+            "3900320408ffffffffffffffff050480 00ffff07048000ffff08011001048000"
+            "75300901100f088394c8f03e51570806 048000ffff";
+        binary_t bin_crypto_frame_payload = base16_decode_rfc(payload_frames);
 
         quic_packet_initial initial;
+
+        initial.attach(new quic_header_protection_keys(bin_dcid));
         pos = 0;
-        initial.read(&bin_result[0], bin_result.size(), pos);
+        initial.read(&bin_result[0], bin_result.size(), pos, tls_client_hello);
+
+        basic_stream bs;
         initial.dump(&bs);
         _logger->writeln(bs);
 
-        // TODO
-        // result
+        _test_case.assert(quic_packet_type_initial == initial.get_type(), __FUNCTION__, "initial packet");
+        _test_case.assert(bin_dcid == initial.get_dcid(), __FUNCTION__, "DCID");
+        _test_case.assert(1182 == initial.get_length(), __FUNCTION__, "length");
+        _test_case.assert(4 == initial.get_pn_length(), __FUNCTION__, "packet number length");
+        _test_case.assert(2 == initial.get_pn(), __FUNCTION__, "packet number");
+        _test_case.assert(0 == memcmp(&bin_unprotected_header[0], &bin_unprotected[0], 0x16), __FUNCTION__, "unprotected header");
+        _test_case.assert(0 == memcmp(&bin_protected_header[0], &bin_protected[0], 0x16), __FUNCTION__, "protected header");
     }
 }
 
 void test_rfc_9001_a3() {
     _test_case.begin("RFC 9001 A.3.  Server Initial");
 
-    const char* payload =
-        "02000000000600405a020000560303ee fce7f7b37ba1d1632e96677825ddf739"
-        "88cfc79825df566dc5430b9a045a1200 130100002e00330024001d00209d3c94"
-        "0d89690b84d08a60993c144eca684d10 81287c834d5311bcf32bb9da1a002b00"
-        "020304";
-    binary_t bin_payload = base16_decode_rfc(payload);
-    const char* unprotected_header = "c1000000010008f067a5502a4262b50040750001";
-    binary_t bin_unprotected_header = base16_decode(unprotected_header);
-
-    quic_packet_initial packet;
+    binary_t bin_dcid;
+    binary_t bin_scid;
+    binary_t bin_unprotected;
+    binary_t bin_protected;
+    binary_t bin_unprotected_header;
+    binary_t bin_protected_header;
     size_t pos = 0;
-    basic_stream bs;
 
+    // write
     {
-        packet.read(&bin_unprotected_header[0], bin_unprotected_header.size(), pos);
-        packet.dump(&bs);
+        // Destination Connection ID of 0x8394c8f03e515708
+        const char* dcid = "0x8394c8f03e515708";
+        bin_dcid = base16_decode_rfc(dcid);
 
-        _logger->writeln(bs);
+        // including an ACK frame, a CRYPTO frame, and no PADDING frames
+        const char* payload =
+            "02000000000600405a020000560303ee fce7f7b37ba1d1632e96677825ddf739"
+            "88cfc79825df566dc5430b9a045a1200 130100002e00330024001d00209d3c94"
+            "0d89690b84d08a60993c144eca684d10 81287c834d5311bcf32bb9da1a002b00"
+            "020304";
+        // sample = 2cd0991cd25b0aac406a5816b6394100
+        const char* sample = "2cd0991cd25b0aac406a5816b6394100";
+        const char* unprotected_header = "c1000000010008f067a5502a4262b50040750001";
+        const char* protected_header = "cf000000010008f067a5502a4262b5004075c0d9";
+        const char* scid = "F0 67 A5 50 2A 42 62 B5";
+
+        bin_scid = base16_decode_rfc(scid);
+        bin_unprotected_header = base16_decode(unprotected_header);
+        bin_protected_header = base16_decode(protected_header);
+        binary_t bin_payload = base16_decode_rfc(sample);
+        bin_payload.resize(115);  // 117 - packet number length
+
+        // c1000000010008f067a5502a4262b50040750001
+        // 20 bytes long
+        // [0x00] header        : c1
+        // [0x01] version       : 00000001
+        // [0x05] DCID Length   : 00
+        // [0x05] DCID          :
+        // [0x06] SCID Length   : 08
+        // [0x07] SCID          : f067a5502a4262b5
+        // [0x0f] Token Length  : 00
+        // [0x0f] Token
+        // [0x10] Length        : 4075 ; 0x4075 -> 117
+        // [0x12] Packet Number : 0001 ; pnl 0x01 -> 2 bytes
+
+        quic_packet_initial initial;
+        initial.set_pn(1, 2);  // 0001
+        initial.set_scid(bin_scid);
+        initial.set_payload(bin_payload);  // 115 bytes long
+
+        // no header protection
+        initial.write(bin_unprotected);
+        // header protection
+        initial.attach(new quic_header_protection_keys(bin_dcid, quic_server_hp));  // compute server header protection key
+        initial.write(bin_protected, tls_server_hello);
+
+        _logger->hdump("> unprotected header + sample", &bin_unprotected[0], 0x24, 16, 3);
+        _logger->hdump("> protected header + sample", &bin_protected[0], 0x26, 16, 3);
+
+        _test_case.assert(quic_packet_type_initial == initial.get_type(), __FUNCTION__, "initial packet");
+        _test_case.assert(bin_scid == initial.get_scid(), __FUNCTION__, "SCID");
+        _test_case.assert(117 == initial.get_length(), __FUNCTION__, "length");  // packet number length 4
+        _test_case.assert(2 == initial.get_pn_length(), __FUNCTION__, "packet number length");
+        _test_case.assert(1 == initial.get_pn(), __FUNCTION__, "packet number 2");
+        _test_case.assert(0 == memcmp(&bin_unprotected_header[0], &bin_unprotected[0], 20), __FUNCTION__, "unprotected header");
+        _test_case.assert(0 == memcmp(&bin_protected_header[0], &bin_protected[0], 20), __FUNCTION__, "protected header");
     }
 
-    // sample = 2cd0991cd25b0aac406a5816b6394100
-    // mask   = 2ec0d8356a
-    // unprotected_header = cf000000010008f067a5502a4262b5004075c0d9
-    const char* hp = "c206b8d9b9f0f37644430b490eeaa314";
-    const char* sample = "2cd0991cd25b0aac406a5816b6394100";
-    binary_t bin_hp = base16_decode_rfc(hp);
-    binary_t bin_sample = base16_decode_rfc(sample);
-    binary_t bin_mask;
-
+    // read
     {
-        crypt_context_t* handle = nullptr;
-        openssl_crypt crypt;
-        crypt.open(&handle, "aes-128-ecb", bin_hp, binary_t());
-        crypt.encrypt(handle, bin_sample, bin_mask);
-        crypt.close(handle);
-
-        bin_mask.resize(5);  // [0..4]
-        _logger->hdump("hp", bin_hp, 16, 3);
-        _logger->hdump("sample", bin_sample, 16, 3);
-        _logger->hdump("mask", bin_mask, 16, 3);
-        _test_case.assert(bin_mask == base16_decode("2ec0d8356a"), __FUNCTION__, "RFC 9001 A.3. mask");
-    }
-
-    {
-        binary_t bin_protected_header = bin_unprotected_header;
-
-        byte_t header0 = bin_protected_header[0];
-        if (header0 & 0x80) {
-            header0 ^= bin_mask[0] & 0x0f;
-        } else {
-            header0 ^= bin_mask[0] & 0x1f;
-        }
-        bin_protected_header[0] = header0;
-
-        auto pn_offset = 0x12;
-        auto pnl = packet.get_pn_length();
-        for (auto i = 0; i < pnl; i++) {
-            auto b = bin_protected_header[pn_offset + i];
-            b ^= bin_mask[1 + i];
-            bin_protected_header[pn_offset + i] = b;
-        }
-
-        _logger->hdump("protected header", bin_protected_header, 16, 3);
-        _test_case.assert(bin_protected_header == base16_decode("cf000000010008f067a5502a4262b5004075c0d9"), __FUNCTION__, "RFC 9001 A.3. protected header");
-    }
-
-    {
-        const char* protected_packet =
+        // final protected packet
+        const char* result =
             "cf000000010008f067a5502a4262b500 4075c0d95a482cd0991cd25b0aac406a"
             "5816b6394100f37a1c69797554780bb3 8cc5a99f5ede4cf73c3ec2493a1839b3"
             "dbcba3f6ea46c5b7684df3548e7ddeb9 c3bf9c73cc3f3bded74b562bfb19fb84"
             "022f8ef4cdd93795d77d06edbb7aaf2f 58891850abbdca3d20398c276456cbc4"
             "2158407dd074ee";
-    }
+        binary_t bin_result = base16_decode_rfc(result);
 
-    // TODO - protected packet
+        quic_packet_initial initial;
+        initial.attach(new quic_header_protection_keys(bin_dcid));
+        pos = 0;
+        initial.read(&bin_result[0], bin_result.size(), pos, tls_server_hello);
+
+        _logger->hdump("> RFC 9001 A.3 The final protected packet", bin_result, 16, 3);
+
+        basic_stream bs;
+        initial.dump(&bs);
+        _logger->writeln(bs);
+
+        _test_case.assert(quic_packet_type_initial == initial.get_type(), __FUNCTION__, "initial packet");
+        _test_case.assert(bin_scid == initial.get_scid(), __FUNCTION__, "SCID");
+        _test_case.assert(115 == initial.get_length(), __FUNCTION__, "length");  // packet number length 2
+        _test_case.assert(2 == initial.get_pn_length(), __FUNCTION__, "packet number length");
+        _test_case.assert(1 == initial.get_pn(), __FUNCTION__, "packet number 2");
+        _test_case.assert(0 == memcmp(&bin_unprotected_header[0], &bin_unprotected[0], 20), __FUNCTION__, "unprotected header");
+        _test_case.assert(0 == memcmp(&bin_protected_header[0], &bin_protected[0], 20), __FUNCTION__, "protected header");
+    }
 }
 
 void test_rfc_9001_a4() {
@@ -579,68 +489,72 @@ void test_rfc_9001_a5() {
     //
 }
 
-void test_tls_hello_messages() {
-    // RFC 2246 The TLS Protocol Version 1.0
-    //  7.4. Handshake protocol
-    //  7.4.1. Hello messages
-    //  7.4.1.1. Hello request
-    //  7.4.1.2. Client hello
-    //
-    // RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
-    //  4.  Handshake Protocol
-    //      enum {
-    //          client_hello(1),
-    //          server_hello(2),
-    //          new_session_ticket(4),
-    //          end_of_early_data(5),
-    //          encrypted_extensions(8),
-    //          certificate(11),
-    //          certificate_request(13),
-    //          certificate_verify(15),
-    //          finished(20),
-    //          key_update(24),
-    //          message_hash(254),
-    //          (255)
-    //      } HandshakeType;
-    //
-    //      struct {
-    //          HandshakeType msg_type;    /* handshake type */
-    //          uint24 length;             /* remaining bytes in message */
-    //          select (Handshake.msg_type) {
-    //              case client_hello:          ClientHello;
-    //              case server_hello:          ServerHello;
-    //              case end_of_early_data:     EndOfEarlyData;
-    //              case encrypted_extensions:  EncryptedExtensions;
-    //              case certificate_request:   CertificateRequest;
-    //              case certificate:           Certificate;
-    //              case certificate_verify:    CertificateVerify;
-    //              case finished:              Finished;
-    //              case new_session_ticket:    NewSessionTicket;
-    //              case key_update:            KeyUpdate;
-    //          };
-    //      } Handshake;
-    //  4.1.2.  Client Hello
-    //    Structure of this message:
-    //
-    //       uint16 ProtocolVersion;
-    //       opaque Random[32];
-    //
-    //       uint8 CipherSuite[2];    /* Cryptographic suite selector */
-    //
-    //       struct {
-    //           ProtocolVersion legacy_version = 0x0303;    /* TLS v1.2 */
-    //           Random random;
-    //           opaque legacy_session_id<0..32>;
-    //           CipherSuite cipher_suites<2..2^16-2>;
-    //           opaque legacy_compression_methods<1..2^8-1>;
-    //           Extension extensions<8..2^16-1>;
-    //       } ClientHello;
+void study_client_initial() {
+    _test_case.begin("Client Initial Packet");
+    const char* result =
+        "CD 00 00 00 01 08 00 01 02 03 04 05 06 07 05 63"
+        "5F 63 69 64 00 41 03 98 1C 36 A7 ED 78 71 6B E9"
+        "71 1B A4 98 B7 ED 86 84 43 BB 2E 0C 51 4D 4D 84"
+        "8E AD CC 7A 00 D2 5C E9 F9 AF A4 83 97 80 88 DE"
+        "83 6B E6 8C 0B 32 A2 45 95 D7 81 3E A5 41 4A 91"
+        "99 32 9A 6D 9F 7F 76 0D D8 BB 24 9B F3 F5 3D 9A"
+        "77 FB B7 B3 95 B8 D6 6D 78 79 A5 1F E5 9E F9 60"
+        "1F 79 99 8E B3 56 8E 1F DC 78 9F 64 0A CA B3 85"
+        "8A 82 EF 29 30 FA 5C E1 4B 5B 9E A0 BD B2 9F 45"
+        "72 DA 85 AA 3D EF 39 B7 EF AF FF A0 74 B9 26 70"
+        "70 D5 0B 5D 07 84 2E 49 BB A3 BC 78 7F F2 95 D6"
+        "AE 3B 51 43 05 F1 02 AF E5 A0 47 B3 FB 4C 99 EB"
+        "92 A2 74 D2 44 D6 04 92 C0 E2 E6 E2 12 CE F0 F9"
+        "E3 F6 2E FD 09 55 E7 1C 76 8A A6 BB 3C D8 0B BB"
+        "37 55 C8 B7 EB EE 32 71 2F 40 F2 24 51 19 48 70"
+        "21 B4 B8 4E 15 65 E3 CA 31 96 7A C8 60 4D 40 32"
+        "17 0D EC 28 0A EE FA 09 5D 08 B3 B7 24 1E F6 64"
+        "6A 6C 86 E5 C6 2C E0 8B E0 99 -- -- -- -- -- --";
+    const char* packet =
+        "CD 00 00 00 01 08 00 01 02 03 04 05 06 07 05 63"
+        "5F 63 69 64 00 41 03 98 1C 36 A7 ED 78 71 6B E9"
+        "71 1B A4 98 B7 ED 86 84 43 BB 2E 0C 51 4D 4D 84"
+        "8E AD CC 7A 00 D2 5C E9 F9 AF A4 83 97 80 88 DE"
+        "83 6B E6 8C 0B 32 A2 45 95 D7 81 3E A5 41 4A 91"
+        "99 32 9A 6D 9F 7F 76 0D D8 BB 24 9B F3 F5 3D 9A"
+        "77 FB B7 B3 95 B8 D6 6D 78 79 A5 1F E5 9E F9 60"
+        "1F 79 99 8E B3 56 8E 1F DC 78 9F 64 0A CA B3 85"
+        "8A 82 EF 29 30 FA 5C E1 4B 5B 9E A0 BD B2 9F 45"
+        "72 DA 85 AA 3D EF 39 B7 EF AF FF A0 74 B9 26 70"
+        "70 D5 0B 5D 07 84 2E 49 BB A3 BC 78 7F F2 95 D6"
+        "AE 3B 51 43 05 F1 02 AF E5 A0 47 B3 FB 4C 99 EB"
+        "92 A2 74 D2 44 D6 04 92 C0 E2 E6 E2 12 CE F0 F9"
+        "E3 F6 2E FD 09 55 E7 1C 76 8A A6 BB 3C D8 0B BB"
+        "37 55 C8 B7 EB EE 32 71 2F 40 F2 24 51 19 48 70"
+        "21 B4 B8 4E 15 65 E3 CA 31 96 7A C8 60 4D 40 32"
+        "17 0D EC 28 0A EE FA 09 5D 08 B3 B7 24 1E F6 64"
+        "6A 6C 86 E5 C6 2C E0 8B E0 99 -- -- -- -- -- --";
 
-    // QUIC integrates the TLS handshake [TLS13], although using a customized framing for protecting packets.
-}
+    const char* dcid = "00 01 02 03 04 05 06 07";
+    const char* scid = "63 5F 63 69 64";
 
-void test_quic_handshake() {
-    //
+    binary_t bin_packet = base16_decode_rfc(packet);
+    binary_t bin_dcid = base16_decode_rfc(dcid);
+    binary_t bin_scid = base16_decode_rfc(scid);
+    binary_t bin_result = base16_decode_rfc(result);
+    size_t pos = 0;
+
+    quic_packet_initial initial;
+    initial.attach(new quic_header_protection_keys(bin_dcid));
+    initial.read(&bin_packet[0], bin_packet.size(), pos, tls_client_hello);
+
+    _logger->hdump("> result", bin_result, 16, 3);
+
+    basic_stream bs;
+    initial.dump(&bs);
+    _logger->writeln(bs);
+
+    _test_case.assert(quic_packet_type_initial == initial.get_type(), __FUNCTION__, "initial packet");
+    _test_case.assert(bin_dcid == initial.get_dcid(), __FUNCTION__, "DCID");
+    _test_case.assert(bin_scid == initial.get_scid(), __FUNCTION__, "SCID");
+    _test_case.assert(256 == initial.get_length(), __FUNCTION__, "length %i", initial.get_length());
+    _test_case.assert(1 == initial.get_pn_length(), __FUNCTION__, "packet number length");
+    _test_case.assert(0 == initial.get_pn(), __FUNCTION__, "packet number 2");
 }
 
 int main(int argc, char** argv) {
@@ -660,7 +574,7 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
-    // studying ...
+    // RFC 9000 Appendix A.  Pseudocode
 
     test_rfc_9000_a1();
     test_rfc_9000_a2();
@@ -676,9 +590,7 @@ int main(int argc, char** argv) {
     test_rfc_9001_a3();
     test_rfc_9001_a4();
     test_rfc_9001_a5();
-
-    test_tls_hello_messages();
-    test_quic_handshake();
+    study_client_initial();
 
     openssl_cleanup();
 

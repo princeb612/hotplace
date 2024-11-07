@@ -9,6 +9,7 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
+#include <sdk/base/basic/binary.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/system/types.hpp>
 #include <sdk/io/types.hpp>

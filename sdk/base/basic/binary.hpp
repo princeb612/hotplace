@@ -159,6 +159,8 @@ return_t t_binary_append(binary_t& target, T value, std::function<T(T)> func = n
     return ret;
 }
 
+return_t binary_append(binary_t& target, int8 value);
+return_t binary_append(binary_t& target, uint8 value);
 return_t binary_append(binary_t& target, int16 value, std::function<int16(int16)> func = nullptr);
 return_t binary_append(binary_t& target, uint16 value, std::function<uint16(uint16)> func = nullptr);
 return_t binary_append(binary_t& target, int32 value, std::function<int32(int32)> func = nullptr);
@@ -186,18 +188,25 @@ return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t 
  * @param   std::function<T(T)> func [inopt]
  */
 template <typename T>
-return_t t_binary_append2(binary_t& target, uint32 len, T value, std::function<T(T)> func = nullptr) {
+return_t t_binary_append2(binary_t& target, uint32 bnlen, T value, std::function<T(T)> func = nullptr) {
     return_t ret = errorcode_t::success;
+    size_t pos = target.size();
+    uint32 tsize = sizeof(T);
+    size_t toffset = 0;
     if (func) {
         T temp = value;
         value = func(temp);
     }
-    size_t limit = sizeof(T);
-    if (len > limit) {
-        len = limit;
+    if (bnlen >= tsize) {
+        size_t offset = bnlen - tsize;
+        while (offset--) {
+            binary_push(target, 0);
+        }
+    } else {
+        toffset = tsize - bnlen;
+        tsize = bnlen;
     }
-    size_t offset = limit - len;
-    target.insert(target.end(), (byte_t*)&value + offset, (byte_t*)&value + sizeof(T));
+    target.insert(target.end(), (byte_t*)&value + toffset, (byte_t*)&value + toffset + tsize);
     return ret;
 }
 
@@ -221,19 +230,24 @@ return_t binary_append2(binary_t& target, uint32 len, uint128 value, std::functi
  * @brief   overwrite (resize and fill)
  */
 template <typename T>
-return_t t_binary_load(binary_t& target, uint32 limit, T value, std::function<T(T)> func = nullptr) {
+return_t t_binary_load(binary_t& target, uint32 bnlen, T value, std::function<T(T)> func = nullptr) {
     return_t ret = errorcode_t::success;
     target.clear();
-    target.resize(limit);
+    target.resize(bnlen);
     uint32 tsize = sizeof(T);
+    size_t toffset = 0;
     if (func) {
         T temp = value;
         value = func(temp);
     }
-    if (tsize > limit) {
-        tsize = limit;
+    if (bnlen >= tsize) {
+        //
+    } else {
+        toffset = tsize - bnlen;
+        tsize = bnlen;
     }
-    memcpy(&target[0] + (limit - tsize), (byte_t*)&value, tsize);
+
+    memcpy(&target[0] + (bnlen - tsize), (byte_t*)&value + toffset, tsize);
     return ret;
 }
 

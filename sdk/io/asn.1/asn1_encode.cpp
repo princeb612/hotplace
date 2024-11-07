@@ -14,9 +14,11 @@
  *  X.690 11 Restrictions on BER employed by both CER and DER
  */
 
+#include <sdk/base/basic/binary.hpp>
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/io/asn.1/asn1.hpp>
 #include <sdk/io/asn.1/template.hpp>
+#include <sdk/io/basic/oid.hpp>
 
 namespace hotplace {
 namespace io {

@@ -324,16 +324,54 @@ void test_binary() {
     auto i3 = t_binary_to_integer2<uint64>(bin, ret);
     _test_case.assert(1 == i3, __FUNCTION__, "binary_to_integer #uint64");
 
+    // narrow, truncate
+    // 00000000 : 56 78 -- -- -- -- -- -- -- -- -- -- -- -- -- -- | Vx
+    binary_t bin1;
+    binary_t bin2;
     uint32 ui32 = 0x12345678;
-    binary_load(bin, sizeof(uint128), ui32, hton32);
-    _logger->dump(bin);
-    // 00000000 : 00 00 00 00 00 00 00 00 00 00 00 00 12 34 56 78 | .............4Vx
+    t_binary_load<uint32>(bin1, sizeof(uint16), ui32, hton32);
+    t_binary_append2<uint32>(bin2, sizeof(uint16), ui32, hton32);
+    auto i4 = t_binary_to_integer<uint16>(bin1, ret);
 
-    auto i4 = t_binary_to_integer<uint128>(bin, ret);
-    _test_case.assert(0x12345678 == i4, __FUNCTION__, "binary_to_integer #0x%I128x", i4);
+    _logger->hdump("> binary_load (narrow)", bin1);
+    _logger->hdump("> binary_append2 (narrow)", bin2);
+    _test_case.assert(bin1 == base16_decode("0x5678"), __FUNCTION__, "binary_load (narrow)");
+    _test_case.assert(bin2 == base16_decode("0x5678"), __FUNCTION__, "binary_append2 (narrow)");
+    _test_case.assert(0x5678 == i4, __FUNCTION__, "binary_to_integer #0x%04x", i4);
+
+    bin2.clear();
+
+    // wide
+    // 00000000 : 00 00 00 00 12 34 56 78 -- -- -- -- -- -- -- -- | .....4Vx
+    t_binary_load<uint32>(bin1, sizeof(uint64), ui32, hton32);
+    t_binary_append2<uint32>(bin2, sizeof(uint64), ui32, hton32);
+    auto i5 = t_binary_to_integer<uint64>(bin1, ret);
+
+    _logger->hdump("> binary_load (wide)", bin1);
+    _logger->hdump("> binary_append2 (wide)", bin2);
+    _test_case.assert(bin1 == base16_decode("0x0000000012345678"), __FUNCTION__, "binary_load (wide)");
+    _test_case.assert(bin2 == base16_decode("0x0000000012345678"), __FUNCTION__, "binary_append2 (wide)");
+    _test_case.assert(0x12345678 == i5, __FUNCTION__, "binary_to_integer #0x%I64x", i5);
+
+    bin2.clear();
+
+    // wide
+    // 00000000 : 00 00 00 00 00 00 00 00 00 00 00 00 12 34 56 78 | .............4Vx
+    t_binary_load<uint32>(bin1, sizeof(uint128), ui32, hton32);
+    t_binary_append2<uint32>(bin2, sizeof(uint128), ui32, hton32);
+    auto i6 = t_binary_to_integer<uint128>(bin1, ret);
+    _logger->hdump("> binary_load (wide)", bin1);
+    _logger->hdump("> binary_append2 (wide)", bin2);
+    _test_case.assert(bin1 == base16_decode("0x00000000000000000000000012345678"), __FUNCTION__, "binary_load (wide)");
+    _test_case.assert(bin2 == base16_decode("0x00000000000000000000000012345678"), __FUNCTION__, "binary_append2 (wide)");
+    _test_case.assert(0x12345678 == i6, __FUNCTION__, "binary_to_integer #0x%I128x", i6);
+
+    bin2.clear();
 }
 
 void test_loglevel() {
+    _test_case.begin("logger");
+
     std::map<loglevel_t, std::string> table;
     table.insert({loglevel_trace, "trace"});
     table.insert({loglevel_debug, "debug"});
@@ -342,27 +380,6 @@ void test_loglevel() {
     table.insert({loglevel_error, "error"});
     table.insert({loglevel_fatal, "fatal"});
     table.insert({loglevel_notice, "notice"});
-    auto dolog = [&](loglevel_t lvl, loglevel_t imp) -> void {
-        const std::string &lvlstr = table[lvl];
-        const std::string &impstr = table[imp];
-        std::string oper;
-        if (lvl > imp) {
-            oper = " > ";
-        } else if (lvl == imp) {
-            oper = " = ";
-        } else {
-            oper = " < ";
-        }
-        _logger->writeln(loglevel_notice, "level:%s %s implicit:%s", lvlstr.c_str(), oper.c_str(), impstr.c_str());
-        _logger->writeln("> loglevel:implicit");
-        _logger->writeln(loglevel_trace, "> loglevel:trace");
-        _logger->writeln(loglevel_debug, "> loglevel:debug");
-        _logger->writeln(loglevel_info, "> loglevel:info");
-        _logger->writeln(loglevel_warn, "> loglevel:warn");
-        _logger->writeln(loglevel_error, "> loglevel:error");
-        _logger->writeln(loglevel_fatal, "> loglevel:fatal");
-        _logger->writeln(loglevel_notice, "> loglevel:notice");
-    };
 
     std::list<loglevel_t> case1;
     std::list<loglevel_t> case2;
@@ -381,15 +398,38 @@ void test_loglevel() {
     case1.push_back(loglevel_notice);
     case2.push_back(loglevel_notice);
 
-    _test_case.begin("logger");
+    auto dolog = [&](loglevel_t lvl, loglevel_t imp) -> void {
+        _logger->set_loglevel(lvl).set_implicit_loglevel(imp);
 
-    for (auto c1 : case1) {
-        for (auto c2 : case2) {
-            _logger->set_loglevel(c1);
-            _logger->set_implicit_loglevel(c2);
-            dolog(c1, c2);
+        const std::string &lvlstr = table[lvl];
+        const std::string &impstr = table[imp];
+        std::string oper;
+        if (lvl > imp) {
+            oper = " > ";
+        } else if (lvl == imp) {
+            oper = " = ";
+        } else {
+            oper = " < ";
+        }
+
+        _logger->writeln(loglevel_notice, "level:%s %s implicit:%s", lvlstr.c_str(), oper.c_str(), impstr.c_str());
+        _logger->writeln("> loglevel:implicit");
+        _logger->writeln(loglevel_trace, "> loglevel:trace");
+        _logger->writeln(loglevel_debug, "> loglevel:debug");
+        _logger->writeln(loglevel_info, "> loglevel:info");
+        _logger->writeln(loglevel_warn, "> loglevel:warn");
+        _logger->writeln(loglevel_error, "> loglevel:error");
+        _logger->writeln(loglevel_fatal, "> loglevel:fatal");
+        _logger->writeln(loglevel_notice, "> loglevel:notice");
+    };
+
+    for (auto lvl : case1) {
+        for (auto imp : case2) {
+            dolog(lvl, imp);
         }
     }
+
+    _logger->set_loglevel(loglevel_trace).set_implicit_loglevel(loglevel_trace);
 }
 
 int main(int argc, char **argv) {

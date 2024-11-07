@@ -55,8 +55,6 @@ return_t http_request::open(const char* request, size_t size_request, uint32 fla
         } else if (2 == get_version()) {
             open_h2(request, size_request, flags);
         }
-
-        open_uri(uri, flags);
     }
     __finally2 {
         // do nothing
@@ -129,6 +127,8 @@ return_t http_request::open_h1(const char* request, size_t size_request, uint32 
         if (size_request > epos) {
             _content.assign(request + epos, size_request - epos);
         }
+
+        open_uri(uri, flags);
     }
     __finally2 {
         // do nothing
@@ -157,9 +157,9 @@ return_t http_request::open_uri(const std::string& uri, uint32 flags) {
     // RFC 2616 14.17 Content-Type
     if (_content.empty()) {
         if (http_request_flag_t::http_request_compose & flags) {
-            if ((std::string::npos != uri.find("?")) && (false == _header.contains(constexpr_h1_content_type, constexpr_url_encoded))) {
+            if ((std::string::npos != uri.find("?")) && (false == _header.contains("Content-Type", "application/x-www-form-urlencoded"))) {
                 // RFC 6750 2.2.  Form-Encoded Body Parameter
-                _header.add(constexpr_h1_content_type, constexpr_url_encoded);
+                _header.add("Content-Type", "application/x-www-form-urlencoded");
                 _content = _uri.get_query();
 
                 size_t pos = 0;
@@ -168,7 +168,7 @@ return_t http_request::open_uri(const std::string& uri, uint32 flags) {
             }
         }
     } else {
-        if (_header.contains(constexpr_h1_content_type, constexpr_url_encoded)) {
+        if (_header.contains("Content-Type", "application/x-www-form-urlencoded")) {
             _uri.set_query(_content);
         }
     }
@@ -233,7 +233,8 @@ http_request& http_request::compose(http_method_t method, const std::string& uri
         stream << resource->get_method(method) << " " << uri << " " << get_version() << "\r\n";
         // RFC 2616 14.13 Content-Length
         if (body.size()) {
-            stream << constexpr_h1_content_length << ": " << body.size() << "\r\n";
+            stream << "Content-Length"
+                   << ": " << body.size() << "\r\n";
         }
         stream << "\r\n" << body;
 
@@ -251,10 +252,7 @@ http_request& http_request::get_request(basic_stream& bs) {
         // RFC 2616 14.13 Content-Length
         std::string headers;
         bs.clear();
-        get_http_header()
-            .add(constexpr_h1_content_length, format("%zi", _content.size()))
-            .add(constexpr_h1_connection, constexpr_h1_keep_alive)
-            .get_headers(headers);
+        get_http_header().add("Content-Length", format("%zi", _content.size())).add("Connection", "Keep-Alive").get_headers(headers);
 
         bs << get_method() << " " << get_http_uri().get_uri() << " " << get_version() << "\r\n" << headers << "\r\n" << get_content();
     }

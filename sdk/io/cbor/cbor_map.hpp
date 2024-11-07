@@ -16,6 +16,7 @@
 
 #include <deque>
 #include <map>
+#include <sdk/base/basic/template.hpp>
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
 #include <sdk/base/stream.hpp>

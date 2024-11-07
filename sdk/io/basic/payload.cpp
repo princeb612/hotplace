@@ -264,7 +264,7 @@ payload& payload::clear() {
     return *this;
 }
 
-size_t payload::size() { return _members.size(); }
+size_t payload::numberof_members() { return _members.size(); }
 
 }  // namespace io
 }  // namespace hotplace

@@ -16,17 +16,6 @@
 namespace hotplace {
 namespace net {
 
-// definition GCC 4.8.5~
-CONSTEXPR char constexpr_h1_accept_encoding[] = "Accept-Encoding";
-CONSTEXPR char constexpr_h1_connection[] = "Connection";
-CONSTEXPR char constexpr_h1_content_encoding[] = "Content-Encoding";
-CONSTEXPR char constexpr_h1_content_length[] = "Content-Length";
-CONSTEXPR char constexpr_h1_content_type[] = "Content-Type";
-CONSTEXPR char constexpr_h1_keep_alive[] = "Keep-Alive";
-CONSTEXPR char constexpr_deflate[] = "deflate";
-CONSTEXPR char constexpr_gzip[] = "gzip";
-CONSTEXPR char constexpr_url_encoded[] = "application/x-www-form-urlencoded";
-
 http_resource http_resource::_instance;
 
 http_resource* http_resource::get_instance() { return &_instance; }

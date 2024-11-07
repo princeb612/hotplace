@@ -1,9 +1,11 @@
 # history
 
-* Revision 644
-  * [added] log level
+* Revision 645
   * [study] QUIC (RFC 9001)
   * [study] TLS (RFC 8446)
+
+* Revision 644
+  * [added] log level
 
 * Revision 634, 635
   * [tested] HPACK/QPACK

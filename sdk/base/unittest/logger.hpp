@@ -120,11 +120,11 @@ class logger {
     /**
      * @brief   log level
      * @remarks
-     *          default general log level is loglevel_trace
+     *          default level is loglevel_trace
      * @sample
-     *      // general log level is loglevel_trace
+     *      // implicit log level is loglevel_trace
      *
-     *      // general log level to loglevel_debug
+     *      // implicit log level to loglevel_debug
      *      logger->set_implicit_loglevel(loglevel_debug);
      *      logger->writeln("test");                // loglevel_debug
      *

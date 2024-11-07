@@ -15,14 +15,25 @@
 namespace hotplace {
 namespace net {
 
-quic_packet::quic_packet() : _type(0), _ht(0), _version(0) {}
+quic_packet::quic_packet() : _type(0), _ht(0), _version(1), _keys(nullptr) {}
 
-quic_packet::quic_packet(quic_packet_t type) : _type(type), _ht(0), _version(0) {
+quic_packet::quic_packet(quic_packet_t type) : _type(type), _ht(0), _version(1), _keys(nullptr) {
     bool is_longheader = true;
     set_type(type, _ht, is_longheader);
 }
 
-quic_packet::quic_packet(const quic_packet& rhs) : _type(rhs._type), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid) {}
+quic_packet::quic_packet(const quic_packet& rhs)
+    : _type(rhs._type), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _keys(rhs._keys) {
+    if (_keys) {
+        _keys->addref();
+    }
+}
+
+quic_packet::~quic_packet() {
+    if (_keys) {
+        _keys->release();
+    }
+}
 
 uint8 quic_packet::get_type() { return _type; }
 
@@ -105,15 +116,21 @@ quic_packet& quic_packet::set_version(uint32 version) {
 
 uint32 quic_packet::get_version() { return _version; }
 
-void quic_packet::set_dcid(const binary& cid) { _dcid = cid; }
+quic_packet& quic_packet::set_dcid(const binary& cid) {
+    _dcid = cid;
+    return *this;
+}
 
-void quic_packet::set_scid(const binary& cid) { _scid = cid; }
+quic_packet& quic_packet::set_scid(const binary& cid) {
+    _scid = cid;
+    return *this;
+}
 
 const binary_t& quic_packet::get_dcid() { return _dcid; }
 
 const binary_t& quic_packet::get_scid() { return _scid; }
 
-return_t quic_packet::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t quic_packet::read(const byte_t* stream, size_t size, size_t& pos, uint8 type) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -152,16 +169,16 @@ return_t quic_packet::read(const byte_t* stream, size_t size, size_t& pos) {
     return ret;
 }
 
-return_t quic_packet::read(const binary_t& bin, size_t& pos) { return read(&bin[0], bin.size(), pos); }
+return_t quic_packet::read(const binary_t& bin, size_t& pos, uint8 type) { return read(&bin[0], bin.size(), pos, type); }
 
-return_t quic_packet::write(binary_t& packet) {
+return_t quic_packet::write(binary_t& packet, uint8 type) {
     return_t ret = errorcode_t::success;
     uint8 hdr = 0;
     bool is_longheader = true;
 
     if (_ht) {
-        uint8 type = 0;
-        get_type(_ht, type, is_longheader);
+        uint8 pty = 0;
+        get_type(_ht, pty, is_longheader);
     } else {
         set_type(_type, _ht, is_longheader);
     }
@@ -218,95 +235,30 @@ void quic_packet::dump(stream_t* s) {
     }
 }
 
-quic_packet& quic_packet::add(const quic_frame* frame) {
-    //
-    return *this;
-}
-
-return_t quic_packet::read_frame(byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        uint64 value = 0;
-        ret = quic_read_vle_int(stream, size, pos, value);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        if (value > 255) {
-            ret = errorcode_t::bad_data;
-            __leave2;
-        }
-        _type = value;
-        switch (get_type()) {
-            case quic_frame_padding:  // Figure 23: PADDING Frame Format
-            case quic_frame_ping:     // Figure 24: PING Frame Format
-                break;
-            case quic_frame_ack:  // Figure 25: ACK Frame Format
-                break;
-            case quic_frame_reset_stream:  // Figure 28: RESET_STREAM Frame Format
-                break;
-            case quic_frame_stop_pending:  // Figure 29: STOP_SENDING Frame Format
-                break;
-            case quic_frame_crypto:  // Figure 30: CRYPTO Frame Format
-                break;
-            case quic_frame_new_token:  // Figure 31: NEW_TOKEN Frame Format
-                break;
-            case quic_frame_stream:  // Figure 32: STREAM Frame Format
-                break;
-            case quic_frame_max_data:  // Figure 33: MAX_DATA Frame Format
-                break;
-            case quic_frame_max_stream_data:  // Figure 34: MAX_STREAM_DATA Frame Format
-                break;
-            case quic_frame_max_streams:  // Figure 35: MAX_STREAMS Frame Format
-                break;
-            case quic_frame_data_blocked:  // Figure 36: DATA_BLOCKED Frame Format
-                break;
-            case quic_frame_stream_data_blocked:  // Figure 37: STREAM_DATA_BLOCKED Frame Format
-                break;
-            case quic_frame_stream_blocked:  // Figure 38: STREAMS_BLOCKED Frame Format
-                break;
-            case quic_frame_new_connection_id:  // Figure 39: NEW_CONNECTION_ID Frame Format
-                break;
-            case quic_frame_retire_connection_id:  // Figure 40: RETIRE_CONNECTION_ID Frame Format
-                break;
-            case quic_frame_path_challenge:  // Figure 41: PATH_CHALLENGE Frame Format
-                break;
-            case quic_frame_path_response:  // Figure 42: PATH_RESPONSE Frame Format
-                break;
-            case quic_frame_connection_close:  // Figure 43: CONNECTION_CLOSE Frame Format
-                break;
-            case quic_frame_handshake_done:  // Figure 44: HANDSHAKE_DONE Frame Format
-                break;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t quic_packet::write_frame(binary_t& packet) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
-
-quic_packet& quic_packet::set_pn_length(uint8 len) {
+void quic_packet::set_pn(uint32 pn, uint8 len) {
     switch (get_type()) {
         case quic_packet_type_initial:
         case quic_packet_type_0_rtt:
         case quic_packet_type_handshake:
         case quic_packet_type_1_rtt: {
-            len -= 1;
-            uint8 l = (len - 1) & 0x03;
+            uint8 elen = (len > 4) ? 4 : len;
+            uint8 mlen = 1;
+            if (pn > 0x00ffffff) {
+                mlen = 4;
+            } else if (pn > 0x0000ffff) {
+                mlen = 3;
+            } else if (pn > 0x000000ff) {
+                mlen = 2;
+            }
+            if (elen > mlen) {
+                mlen = elen;
+            }
+            uint8 l = (mlen - 1) & 0x03;
             _ht = (_ht & 0xfc) | l;
         } break;
         default:
             break;
     }
-    return *this;
 }
 
 uint8 quic_packet::get_pn_length() {
@@ -324,17 +276,36 @@ uint8 quic_packet::get_pn_length() {
     return len;
 }
 
+uint8 quic_packet::get_pn_length(uint8 ht) {
+    uint8 len = 0;
+    switch (get_type()) {
+        case quic_packet_type_initial:
+        case quic_packet_type_0_rtt:
+        case quic_packet_type_handshake:
+        case quic_packet_type_1_rtt:
+            len = (ht & 0x03) + 1;
+            break;
+        default:
+            break;
+    }
+    return len;
+}
+
 void quic_packet::set_binary(binary_t& target, const binary_t& stream) { target = stream; }
 
-void quic_packet::set_binary(binary_t& target, const byte_t* stream, size_t size) {
-    if (stream) {
-        target.insert(target.end(), stream, stream + size);
+void quic_packet::set_binary(binary_t& target, const byte_t* stream, size_t size) { binary_load(target, size, stream, size); }
+
+void quic_packet::attach(quic_header_protection_keys* keys) {
+    if (keys) {
+        keys->addref();
+        if (_keys) {
+            _keys->release();
+        }
+        _keys = keys;
     }
 }
 
-quic_packet_vn::quic_packet_vn() : quic_packet() {}
-
-quic_packet_vn::quic_packet_vn(const quic_packet_vn& rhs) : quic_packet(rhs) {}
+quic_header_protection_keys* quic_packet::get_keys() { return _keys; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -50,12 +50,10 @@ bool digest_access_authentication_provider::try_auth(http_authentication_resolve
 
         // Authorization: Digest username="test", realm="Protected", nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093", uri="/login",
         // response="dc17f5db4addad1490b3f565064c3621", opaque="5ccc069c403ebaf9f0171e9517f40e41", qop=auth, nc=00000001, cnonce="3ceef920aacfb49e"
-        constexpr char constexpr_authorization[] = "Authorization";
-        constexpr char constexpr_digest[] = "Digest";
         std::string token_scheme;
-        request->get_http_header().get_token(constexpr_authorization, 0, token_scheme);
+        request->get_http_header().get_token("Authorization", 0, token_scheme);
 
-        if (0 == strcmp(constexpr_digest, token_scheme.c_str())) {
+        if (0 == strcmp("Digest", token_scheme.c_str())) {
             ret_value = resolver->digest_authenticate(this, session, request, response);
         }
     }

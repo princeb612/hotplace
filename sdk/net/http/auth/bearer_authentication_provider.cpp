@@ -31,12 +31,10 @@ bool bearer_authentication_provider::try_auth(http_authentication_resolver* reso
             __leave2;
         }
 
-        constexpr char constexpr_authorization[] = "Authorization";
-        constexpr char constexpr_bearer[] = "Bearer";
         std::string token_scheme;
-        request->get_http_header().get_token(constexpr_authorization, 0, token_scheme);
+        request->get_http_header().get_token("Authorization", 0, token_scheme);
 
-        if (constexpr_bearer != token_scheme) {
+        if ("Bearer" != token_scheme) {
             __leave2;
         }
 
@@ -71,10 +69,7 @@ return_t bearer_authentication_provider::request_auth(network_session* session, 
 std::string bearer_authentication_provider::get_challenge(http_request* request) {
     std::string challenge;
 
-    __try2 {
-        constexpr char constexpr_authorization[] = "Authorization";
-        request->get_http_header().get(constexpr_authorization, challenge);
-    }
+    __try2 { request->get_http_header().get("Authorization", challenge); }
     __finally2 {
         // do nothing
     }

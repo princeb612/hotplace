@@ -209,6 +209,24 @@ return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorit
     return open(handle, algorithm, mode, &key[0], key.size(), &iv[0], iv.size());
 }
 
+return_t openssl_crypt::open(crypt_context_t **handle, const char *cipher, const unsigned char *key, size_t size_key, const unsigned char *iv, size_t size_iv) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor *advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        const hint_cipher_t *hint = advisor->hintof_cipher(cipher);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+        } else {
+            ret = open(handle, typeof_alg(hint), typeof_mode(hint), key, size_key, iv, size_iv);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t openssl_crypt::open(crypt_context_t **handle, const char *cipher, const binary_t &key, const binary_t &iv) {
     return_t ret = errorcode_t::success;
     crypto_advisor *advisor = crypto_advisor::get_instance();

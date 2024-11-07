@@ -283,15 +283,22 @@ return_t openssl_kdf::hkdf_expand_label(binary_t& okm, const char* alg, uint16 l
          *  Appendix A.  Sample Packet Protection
          */
 
-        payload pl;
-        uint8 opaque_len_label = 6 + label.size();
-        uint8 opaque_len_context = context.size();
-        pl << new payload_member(length, true, "length") << new payload_member(opaque_len_label, "opaque_len_label")
-           << new payload_member(std::string("tls13 "), "tls13") << new payload_member(label, "label")
-           << new payload_member(opaque_len_context, "opaque_len_context") << new payload_member(context, "context");
         binary_t bin_hkdflabel;
+        uint8 opaque_len_label = 6 + label.size();  // length including "tls13 "
+        uint8 opaque_len_context = context.size();
+#if 0
+        payload pl;
+        pl << new payload_member(length, true) << new payload_member(opaque_len_label) << new payload_member(std::string("tls13 ")) << new payload_member(label)
+           << new payload_member(opaque_len_context) << new payload_member(context);
         pl.write(bin_hkdflabel);
-
+#else
+        binary_append(bin_hkdflabel, length, hton16);
+        binary_append(bin_hkdflabel, opaque_len_label);
+        binary_append(bin_hkdflabel, "tls13 ", 6);
+        binary_append(bin_hkdflabel, label);
+        binary_append(bin_hkdflabel, opaque_len_context);
+        binary_append(bin_hkdflabel, context);
+#endif
         /**
          * RFC 5869
          * HKDF-Expand(PRK, info, L) -> OKM

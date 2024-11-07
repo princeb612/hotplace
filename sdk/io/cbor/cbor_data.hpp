@@ -15,10 +15,7 @@
 #define __HOTPLACE_SDK_IO_CBOR_CBORDATA__
 
 #include <deque>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
+#include <sdk/base/basic/ieee754.hpp>
 #include <sdk/io/cbor/cbor_object.hpp>  // cbor_object
 
 namespace hotplace {
