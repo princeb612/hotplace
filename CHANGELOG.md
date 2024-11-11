@@ -1,7 +1,9 @@
 # history
 
-* Revision 645
-  * [study] QUIC (RFC 9001)
+* Revision 646
+  * [tested] QUIC (RFC 9001)
+    * A.2.  Client Initial
+    * A.3.  Server Initial
   * [study] TLS (RFC 8446)
 
 * Revision 644

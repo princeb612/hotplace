@@ -24,6 +24,10 @@ namespace hotplace {
 namespace io {
 
 #define MULTIPLEXER_EPOLL_CONTEXT_SIGNATURE 0x20151030
+// support Minum OS - Fedora Core 4
+#ifndef EPOLLRDHUP
+#define EPOLLRDHUP 0
+#endif
 
 typedef struct _multiplexer_epoll_context_t : public multiplexer_context_t {
     uint32 signature;

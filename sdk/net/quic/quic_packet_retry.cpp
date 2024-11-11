@@ -19,10 +19,10 @@ quic_packet_retry::quic_packet_retry() : quic_packet(quic_packet_type_retry) {}
 
 quic_packet_retry::quic_packet_retry(const quic_packet_retry& rhs) : quic_packet(rhs) {}
 
-return_t quic_packet_retry::read(const byte_t* stream, size_t size, size_t& pos, uint8 type) {
+return_t quic_packet_retry::read(const byte_t* stream, size_t size, size_t& pos, uint32 mode) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = quic_packet::read(stream, size, pos, type);
+        ret = quic_packet::read(stream, size, pos, mode);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -43,13 +43,13 @@ return_t quic_packet_retry::read(const byte_t* stream, size_t size, size_t& pos,
     return ret;
 }
 
-return_t quic_packet_retry::write(binary_t& packet, uint8 type) {
+return_t quic_packet_retry::write(binary_t& header, binary_t& encrypted, binary_t& tag, uint32 mode) {
     return_t ret = errorcode_t::success;
-    ret = quic_packet::write(packet, type);
+    ret = quic_packet::write(header, mode);
 
     payload pl;
     pl << new payload_member(_retry_token, "retry token") << new payload_member(_retry_integrity_tag, "retry integrity tag");
-    pl.write(packet);
+    pl.write(header);
 
     return ret;
 }

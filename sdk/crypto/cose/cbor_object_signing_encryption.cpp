@@ -1443,8 +1443,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
         }
 
         if (iv.size() && partial_iv.size()) {
-            // TEST FAILED
-            // test vector wrong ?
+            // TEST FAILED - TODO
 
             // RFC 8152 3.1.  Common COSE Headers Parameters
             // Partial IV
@@ -1517,8 +1516,6 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
             //        tag = poly1305_mac(mac_data, otk)
             //        return (ciphertext, tag)
             // RFC 8152 10.3. ChaCha20 and Poly1305
-
-            // how to encrypt wo counter ?
 
             // EVP_CIPHER::(*init) chacha_init_key @openssl
             // EVP_CIPHER::(*do_cipher) chacha_cipher @openssl

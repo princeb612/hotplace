@@ -46,11 +46,12 @@ class openssl_kdf {
     ~openssl_kdf();
 
     /**
-     * @desc
-     *      HKDF(okm, alg, dlen, ikm, salt, info);
+     * @brief   HKDF (Extract and Expand)
+     * @remarks
+     *          HKDF(okm, alg, dlen, ikm, salt, info);
      *
-     *      KDF_Extract (prk, alg, salt, ikm);
-     *      KDF_Expand (okm, alg, dlen, prk, info);
+     *          KDF_Extract (prk, alg, salt, ikm);
+     *          KDF_Expand (okm, alg, dlen, prk, info);
      */
 
     /**
@@ -63,6 +64,7 @@ class openssl_kdf {
      * @param   const binary_t& info [in] info
      * @return  error code (see error.hpp)
      */
+    return_t hkdf(binary_t& derived, hash_algorithm_t alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info);
     return_t hmac_kdf(binary_t& derived, hash_algorithm_t alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info);
     /**
      * @brief   HKDF (Extract and Expand)
@@ -74,6 +76,7 @@ class openssl_kdf {
      * @param   const binary_t& info [in] info
      * @return  error code (see error.hpp)
      */
+    return_t hkdf(binary_t& derived, const char* alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info);
     return_t hmac_kdf(binary_t& derived, const char* alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info);
 
     /**
@@ -240,6 +243,7 @@ class openssl_kdf {
      *          CKDF-Extract "aes-128-cbc"
      *          CKDF-Expand "aes-128-ecb"
      */
+    return_t ckdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info);
     return_t cmac_kdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info);
     /**
      * @brief   CMAC-based Extract

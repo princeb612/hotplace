@@ -26,9 +26,9 @@ quic_header_protection_keys::quic_header_protection_keys(const binary_t& salt, c
     compute(salt, context, flags);
 }
 
-const binary_t& quic_header_protection_keys::get_item(quic_initial_keys_t type) { return _kv[type]; }
+const binary_t& quic_header_protection_keys::get_item(quic_initial_keys_t mode) { return _kv[mode]; }
 
-void quic_header_protection_keys::get_item(quic_initial_keys_t type, binary_t& item) { item = _kv[type]; }
+void quic_header_protection_keys::get_item(quic_initial_keys_t mode, binary_t& item) { item = _kv[mode]; }
 
 return_t quic_header_protection_keys::compute(const binary_t& salt, const binary_t& context, uint32 flags) {
     return_t ret = errorcode_t::success;

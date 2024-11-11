@@ -33,6 +33,10 @@ openssl_kdf::openssl_kdf() {}
 
 openssl_kdf::~openssl_kdf() {}
 
+return_t openssl_kdf::hkdf(binary_t& derived, hash_algorithm_t alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info) {
+    return hmac_kdf(derived, alg, dlen, ikm, salt, info);
+}
+
 return_t openssl_kdf::hmac_kdf(binary_t& derived, hash_algorithm_t alg, size_t dlen, const binary_t& key, const binary_t& salt, const binary_t& info) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* ctx = nullptr;
@@ -72,6 +76,10 @@ return_t openssl_kdf::hmac_kdf(binary_t& derived, hash_algorithm_t alg, size_t d
         }
     }
     return ret;
+}
+
+return_t openssl_kdf::hkdf(binary_t& derived, const char* alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info) {
+    return hmac_kdf(derived, alg, dlen, ikm, salt, info);
 }
 
 return_t openssl_kdf::hmac_kdf(binary_t& derived, const char* alg, size_t dlen, const binary_t& key, const binary_t& salt, const binary_t& info) {
@@ -310,6 +318,10 @@ return_t openssl_kdf::hkdf_expand_label(binary_t& okm, const char* alg, uint16 l
         // do nothing
     }
     return ret;
+}
+
+return_t openssl_kdf::ckdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info) {
+    return cmac_kdf(okm, alg, dlen, ikm, salt, info);
 }
 
 return_t openssl_kdf::cmac_kdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info) {

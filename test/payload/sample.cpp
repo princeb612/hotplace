@@ -380,8 +380,8 @@ void test_quic_integer() {
 
         payload pl2;
         binary_t bin2;
-        pl2 << new payload_member(new quic_integer(int(0)), "len1") << new payload_member(binary_t(), "var1")
-            << new payload_member(new quic_integer(int(0)), "len2") << new payload_member(binary_t(), "var2");
+        pl2 << new payload_member(new quic_integer(uint64(0)), "len1") << new payload_member(binary_t(), "var1")
+            << new payload_member(new quic_integer(uint64(0)), "len2") << new payload_member(binary_t(), "var2");
         pl2.set_reference_value("var1", "len1");  // length of "var1" is value of "len1"
         pl2.set_reference_value("var2", "len2");  // length of "var2" is value of "len2"
         pl2.read(bin1);
@@ -443,18 +443,18 @@ void test_quic_integer() {
         pl1 << new payload_member(new quic_integer(value));
         pl1.write(bin1);
 
-        _logger->hdump("dump", bin1, 16, 3);
-        _test_case.assert(bin1 == bin_expect, __FUNCTION__, "QUIC variable length integer #write");
+        _logger->hdump("> dump", bin1, 16, 3);
+        _test_case.assert(bin1 == bin_expect, __FUNCTION__, "QUIC variable length integer #write %I64i -> %s", value, base16_encode(bin1).c_str());
 
         payload pl2;
         binary_t bin2;
 
-        pl2 << new payload_member(new quic_integer(int(0)));
+        pl2 << new payload_member(new quic_integer(uint64(0)));
         pl2.read(bin1);
         pl2.write(bin2);
 
-        _logger->hdump("dump", bin2, 16, 3);
-        _test_case.assert(bin2 == bin_expect, __FUNCTION__, "QUIC variable length integer #read");
+        _logger->hdump("> dump", bin2, 16, 3);
+        _test_case.assert(bin2 == bin_expect, __FUNCTION__, "QUIC variable length integer #read %I64i -> %s", value, base16_encode(bin2).c_str());
     };
 
     // RFC 9000 A.1

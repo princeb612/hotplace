@@ -7,6 +7,10 @@
  * Revision History
  * Date         Name                Description
  *
+ * reference
+ *  https://github.com/martinduke/quic-test-vector
+ *  https://quic.xargs.org/
+ *
  * studying...
  *
  * RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
@@ -162,9 +166,9 @@ enum h3_errorcodes_t {
  *          };
  *      } Handshake;
  */
-enum tls_handshake_t {
-    tls_client_hello = 1,
-    tls_server_hello = 2,
+enum quic_mode_t {
+    quic_mode_client = 1,
+    quic_mode_server = 2,
     // ...
 };
 
@@ -192,6 +196,9 @@ enum quic_initial_keys_t {
     quic_server_hp = (1 << 8),       // server header protection key
 };
 
+#define quic_client_initial_keys (quic_client_hp | quic_client_key | quic_client_iv)
+#define quic_server_initial_keys (quic_server_hp | quic_server_key | quic_server_iv)
+
 /**
  * @brief   RFC 9001 5.  Packet Protection
  */
@@ -200,8 +207,8 @@ class quic_header_protection_keys {
     quic_header_protection_keys(const binary_t& salt, uint32 flags = -1);
     quic_header_protection_keys(const binary_t& salt, const binary_t& context, uint32 flags = -1);
 
-    const binary_t& get_item(quic_initial_keys_t type);
-    void get_item(quic_initial_keys_t type, binary_t& item);
+    const binary_t& get_item(quic_initial_keys_t mode);
+    void get_item(quic_initial_keys_t mode, binary_t& item);
 
     void addref();
     void release();
@@ -234,23 +241,73 @@ class quic_packet {
     const binary_t& get_dcid();
     const binary_t& get_scid();
 
+    void attach(quic_header_protection_keys* keys);
+    quic_header_protection_keys* get_keys();
+
     /**
      * @brief   read
      * @param   const byte_t* stream [in]
      * @param   size_t size [in]
      * @param   size_t& pos [inout]
-     * @param   uint8 type [inopt]  RFC 9001 5.4.  Header Protection
-     *                              see tls_handshake_t
+     * @param   uint32 mode [inopt]
+     * @remarks
+     *          // sketch
+     *
+     *          payload pl;
+     *          // set layout
+     *          // pl << ... << new payload_member(binary_t(), "payload");
+     *          pl.read(stream, size, pos);
+     *          payload = pl.select("payload")->get_variant().to_binary(payload);
+     *
+     *          // unprotect header
+     *          pl.write(unprotected_header);
+     *          // decrypt payload
+     *          binary_append(aad, &payload[0], 0x10);
+     *          binary_append(tag, &payload[size - 0x10], 0x10);
+     *          binary_load(bin_pn, 8, pn, hton64);
+     *          for (int i = 0; i < 8; i++) {
+     *              iv[i + 12 - 8] ^= bin_pn[i];
+     *          }
+     *          crypt.open(&handle, "aes-128-gcm", client_key, client_iv);
+     *          crypt.decrypt2(handle, &payload[0], payload.size() - 0x10, payload_decrypted, &aad, &tag);
+     *          crypt.close(handle);
+     *
+     *          set_payload(payload_decrypted);  // replace
      */
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint8 type = 0);
-    virtual return_t read(const binary_t& bin, size_t& pos, uint8 type = 0);
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint32 mode = 0);
+    virtual return_t read(const binary_t& bin, size_t& pos, uint32 mode = 0);
+
     /**
      * @brief   write
      * @param   binary_t& packet [out]
-     * @param   uint8 type [inopt]  RFC 9001 5.4.  Header Protection
-     *                              see tls_handshake_t
+     * @param   uint32 mode [inopt]  RFC 9001 5.4.  Header Protection
+     *                               see quic_mode_t
+     * @remarks
+     *          // sketch
+     *
+     *          // unprotected_header
+     *          packet.write(unprotected_header);
+     *
+     *          // encrypt
+     *          binary_load(bin_pn, 8, pn, hton64);
+     *          for (int i = 0; i < 8; i++) {
+     *              client_iv[i + 12 - 8] ^= bin_pn[i];
+     *          }
+     *          crypt.open(&handle, "aes-128-gcm", client_key, client_iv);
+     *          crypt.encrypt2(handle, frame, encrypted_frame, &unprotected_header, &tag);
+     *          crypt.close(handle);
+     *
+     *          // protected header
+     *          packet.set_payload(encrypted_frame); // sample
+     *          packet.write(unprotected_header, quic_mode_client);
+     *
+     *          // unprotected_header + encrypted_frame frame + tag
+     *          binary_append(bin_packet, protected_header);
+     *          binary_append(bin_packet, encrypted_frame);
+     *          binary_append(bin_packet, tag);
      */
-    virtual return_t write(binary_t& packet, uint8 type = 0);
+    virtual return_t write(binary_t& packet, uint32 mode = 0);
+
     /**
      * @brief   dump
      * @param   stream_t* s [in]
@@ -268,7 +325,7 @@ class quic_packet {
      *          packet.set_pn(0x12345678, 4); // 12345678
      *          packet.set_pn(0x12345678);    // 12345678
      *
-     * @remarks override
+     * @remarks
      *          Initial, 1-RTT, Handshake, 0-RTT
      *          Packet Number (8..32)
      *          pn_length = (_ht & 0x03) + 1
@@ -277,19 +334,33 @@ class quic_packet {
     virtual void set_pn(uint32 pn, uint8 len = 0);
     uint8 get_pn_length();
     uint8 get_pn_length(uint8 ht);
+    uint32 get_pn();
+    /**
+     * @remarks payload
+     *          Initial, 1-RTT, Handshake, 0-RTT
+     */
+    quic_packet& set_payload(const binary_t& payload);
+    quic_packet& set_payload(const byte_t* stream, size_t size);
+    const binary_t& get_payload();
 
+   protected:
     void set_binary(binary_t& target, const binary_t& payload);
     void set_binary(binary_t& target, const byte_t* stream, size_t size);
 
-    void attach(quic_header_protection_keys* keys);
-    quic_header_protection_keys* get_keys();
+    return_t header_protection_mask(uint32 mode, const byte_t* sample, size_t size_sample, binary_t& mask);
+    return_t header_protection_encode(uint32 mode, const binary_t& mask, byte_t& ht, binary_t& bin_pn);
+    return_t encrypt(uint32 mode, uint64 pn, const binary_t& payload, binary_t& encrypted, const binary_t& aad, binary_t& tag);
+    return_t decrypt(uint32 mode, uint64 pn, const binary_t& payload, binary_t& decrypted, const binary_t& aad, const binary_t& tag);
 
-   protected:
     uint8 _type;
     uint8 _ht;        // header type, public flag
     uint32 _version;  // version
     binary_t _dcid;   // destination
     binary_t _scid;   // source
+
+    uint32 _pn;
+    binary_t _payload;
+
     quic_header_protection_keys* _keys;
 };
 
@@ -318,24 +389,16 @@ class quic_packet_initial : public quic_packet {
     quic_packet_initial();
     quic_packet_initial(const quic_packet_initial& rhs);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint8 type = 0);
-    virtual return_t write(binary_t& packet, uint8 type = 0);
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint32 mode = 0);
+    virtual return_t write(binary_t& packet, uint32 mode = 0);
+    virtual return_t write(binary_t& header, binary_t& encrypted, binary_t& tag, uint32 mode = 0);
     virtual void dump(stream_t* s);
-
-    virtual void set_pn(uint32 pn, uint8 len = 0);
-    uint32 get_pn();
 
     quic_packet_initial& set_token(const binary_t& token);
     const binary_t& get_token();
     uint64 get_length();
-    quic_packet_initial& set_payload(const binary_t& payload);
-    quic_packet_initial& set_payload(const byte_t* stream, size_t size);
-    const binary_t& get_payload();
 
    protected:
-    return_t header_protection_mask(uint8 type, const byte_t* sampled, size_t size_sampled, binary_t& mask);
-    return_t header_protection_encode(uint8 type, const binary_t& mask, byte_t& ht, binary_t& bin_pn);
-
    private:
     /**
      * Figure 15: Initial Packet
@@ -347,8 +410,6 @@ class quic_packet_initial : public quic_packet {
      */
     binary_t _token;
     uint64 _length;
-    uint32 _pn;
-    binary_t _payload;
 };
 
 /**
@@ -394,8 +455,8 @@ class quic_packet_retry : public quic_packet {
     quic_packet_retry();
     quic_packet_retry(const quic_packet_retry& rhs);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint8 type = 0);
-    virtual return_t write(binary_t& packet, uint8 type = 0);
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint32 mode = 0);
+    virtual return_t write(binary_t& header, binary_t& encrypted, binary_t& tag, uint32 mode = 0);
     virtual void dump(stream_t* s);
 
     const binary_t get_retry_token();

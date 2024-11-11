@@ -158,7 +158,7 @@ class crypt_t {
      * @param const unsigned char* data_encrypted [in]
      * @param size_t size_encrypted [in]
      * @param binary_t& out_decrypted [out]
-     * @param binary_t* aad [inpot]
+     * @param binary_t* aad [inopt]
      * @param binary_t* tag [inopt]
      */
     virtual return_t decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
