@@ -20,9 +20,21 @@ asn1_resource asn1_resource::_instance;
 
 asn1_resource::asn1_resource() {}
 
-asn1_resource* asn1_resource::get_instance() { return &_instance; }
+asn1_resource* asn1_resource::get_instance() {
+    _instance.load_resource();
+    return &_instance;
+}
 
 void asn1_resource::load_resource() {
+    if (_type_id.empty()) {
+        critical_section_guard guard(_lock);
+        if (_type_id.empty()) {
+            doload_resource();
+        }
+    }
+}
+
+void asn1_resource::doload_resource() {
     if (_type_id.empty()) {
         struct builtintypes {
             asn1_type_t type;
@@ -73,8 +85,6 @@ void asn1_resource::load_resource() {
 }  // namespace io
 
 std::string asn1_resource::get_type_name(asn1_type_t t) {
-    load_resource();
-
     std::string name;
     auto iter = _type_id.find(t);
     if (_type_id.end() != iter) {
@@ -84,8 +94,6 @@ std::string asn1_resource::get_type_name(asn1_type_t t) {
 }
 
 asn1_type_t asn1_resource::get_type(const std::string& name) {
-    load_resource();
-
     asn1_type_t type = asn1_type_primitive;
     auto iter = _type_rid.find(name);
     if (_type_rid.end() != iter) {
@@ -95,8 +103,6 @@ asn1_type_t asn1_resource::get_type(const std::string& name) {
 }
 
 std::string asn1_resource::get_class_name(int c) {
-    load_resource();
-
     std::string name;
     auto iter = _class_id.find(c);
     if (_class_id.end() != iter) {

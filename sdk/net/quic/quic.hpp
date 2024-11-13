@@ -185,6 +185,7 @@ struct preferred_address {
 };
 
 enum quic_initial_keys_t {
+    quic_original_dcid = 0,
     quic_initial_secret = (1 << 0),  // initial secret
     quic_client_secret = (1 << 1),   // client initial secret
     quic_server_secret = (1 << 2),   // server initial secret
@@ -456,11 +457,14 @@ class quic_packet_retry : public quic_packet {
     quic_packet_retry(const quic_packet_retry& rhs);
 
     virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint32 mode = 0);
-    virtual return_t write(binary_t& header, binary_t& encrypted, binary_t& tag, uint32 mode = 0);
+    virtual return_t write(binary_t& packet, uint32 mode = 0);
     virtual void dump(stream_t* s);
 
-    const binary_t get_retry_token();
-    const binary_t get_integrity_tag();
+    quic_packet_retry& set_retry_token(const binary_t& token);
+    quic_packet_retry& set_integrity_tag(const binary_t& tag);
+
+    const binary_t& get_retry_token();
+    const binary_t& get_integrity_tag();
 
    protected:
    private:

@@ -77,8 +77,10 @@ return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& po
 
             // AEAD
             binary_t bin_decrypted;
-            decrypt(mode, _pn, _payload, bin_decrypted, bin_unprotected_header, bin_tag);
-            set_payload(bin_decrypted);
+            ret = decrypt(mode, _pn, _payload, bin_decrypted, bin_unprotected_header, bin_tag);
+            if (errorcode_t::success == ret) {
+                set_payload(bin_decrypted);
+            }
         }
     }
     __finally2 {
@@ -154,32 +156,7 @@ return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binar
             binary_t bin_tag;
 
             // AEAD
-            {
-                encrypt(mode, _pn, get_payload(), bin_encrypted, bin_unprotected_header, bin_tag);
-#if 0
-                openssl_crypt crypt;
-                crypt_context_t* handle = nullptr;
-                quic_initial_keys_t kty_key = quic_initial_keys_t::quic_client_key;
-                quic_initial_keys_t kty_iv = quic_initial_keys_t::quic_client_iv;
-                if (quic_mode_t::quic_mode_server == mode) {
-                    kty_key = quic_initial_keys_t::quic_server_key;
-                    kty_iv = quic_initial_keys_t::quic_server_iv;
-                }
-                const binary_t& bin_key = get_keys()->get_item(kty_key);
-                binary_t bin_iv = get_keys()->get_item(kty_iv);
-                const binary_t& bin_frame = get_payload();
-
-                binary_t bin_pn8;
-                binary_load(bin_pn8, 8, (uint64)_pn, hton64);
-                for (int i = 0; i < 8; i++) {
-                    bin_iv[i + 12 - 8] ^= bin_pn8[i];
-                }
-
-                crypt.open(&handle, "aes-128-gcm", bin_key, bin_iv);
-                crypt.encrypt2(handle, bin_frame, bin_encrypted, &bin_unprotected_header, &bin_tag);
-                crypt.close(handle);
-#endif
-            }
+            { encrypt(mode, _pn, get_payload(), bin_encrypted, bin_unprotected_header, bin_tag); }
 
             // Header Protection
             {

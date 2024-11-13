@@ -58,9 +58,11 @@ class http_resource {
    protected:
     http_resource();
     void load_resources();
+    void doload_resources();
 
    private:
     static http_resource _instance;
+    critical_section _lock;
     std::map<int, std::string> _status_codes;
     std::map<http_method_t, std::string> _methods;
     std::map<uint8, std::string> _frame_names;

@@ -18,11 +18,13 @@ namespace net {
 
 quic_header_protection_keys::quic_header_protection_keys(const binary_t& salt, uint32 flags) {
     _shared.make_share(this);
+    _kv[quic_original_dcid] = salt;
     compute(salt, binary_t(), flags);
 }
 
 quic_header_protection_keys::quic_header_protection_keys(const binary_t& salt, const binary_t& context, uint32 flags) {
     _shared.make_share(this);
+    _kv[quic_original_dcid] = salt;
     compute(salt, context, flags);
 }
 

@@ -167,7 +167,7 @@ return_t quic_packet::read(const byte_t* stream, size_t size, size_t& pos, uint3
             pl.set_reference_value("dcid", "dcid_len");
             pl.set_reference_value("scid", "scid_len");
         }
-        pl.set_group("longheader", is_longheader);
+        pl.set_group("longheader", is_longheader);  // true
 
         pl.read(stream, size, pos);
 
@@ -196,8 +196,21 @@ return_t quic_packet::write(binary_t& packet, uint32 mode) {
         set_type(_type, _ht, is_longheader);
     }
 
+    hdr = _ht;
+    switch (_type) {
+        /**
+         * RFC 9001 17.2.5.  Retry Packet
+         * The value in the Unused field is set to an arbitrary value by the server; a client MUST ignore these bits.
+         */
+        case quic_packet_type_retry:
+            hdr |= 0xf;
+            break;
+        default:
+            break;
+    }
+
     payload pl;
-    pl << new payload_member(_ht, "hdr") << new payload_member(_version, true, "version") << new payload_member((uint8)_dcid.size(), "dcidl", "longheader")
+    pl << new payload_member(hdr, "hdr") << new payload_member(_version, true, "version") << new payload_member((uint8)_dcid.size(), "dcidl", "longheader")
        << new payload_member(_dcid, "dcid") << new payload_member((uint8)_scid.size(), "scidl", "longheader")
        << new payload_member(_scid, "scid", "longheader");
     pl.set_group("longheader", is_longheader);
@@ -470,7 +483,7 @@ return_t quic_packet::encrypt(uint32 mode, uint64 pn, const binary_t& payload, b
         }
 
         crypt.open(&handle, "aes-128-gcm", bin_key, bin_nonce);
-        crypt.encrypt2(handle, payload, encrypted, &aad, &tag);
+        ret = crypt.encrypt2(handle, payload, encrypted, &aad, &tag);
         crypt.close(handle);
     }
     __finally2 {

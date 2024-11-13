@@ -384,9 +384,15 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
     openssl_crypt_context_t *context = static_cast<openssl_crypt_context_t *>(handle);
 
     __try2 {
-        if (nullptr == handle || nullptr == data_plain || nullptr == size_encrypted) {
+        if (nullptr == handle || nullptr == size_encrypted) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
+        }
+        if (nullptr == data_plain) {
+            if (size_plain) {
+                ret = errorcode_t::invalid_parameter;
+                __leave2;
+            }
         }
         if (OPENSSL_CRYPT_CONTEXT_SIGNATURE != context->signature) {
             ret = errorcode_t::invalid_context;
@@ -623,9 +629,15 @@ return_t openssl_crypt::decrypt2(crypt_context_t *handle, const unsigned char *d
     openssl_crypt_context_t *context = static_cast<openssl_crypt_context_t *>(handle);
 
     __try2 {
-        if (nullptr == handle || nullptr == data_encrypted || 0 == size_encrypted || nullptr == size_decrypted) {
+        if (nullptr == handle || nullptr == size_decrypted) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
+        }
+        if (nullptr == data_encrypted) {
+            if (size_encrypted) {
+                ret = errorcode_t::invalid_parameter;
+                __leave2;
+            }
         }
         if (OPENSSL_CRYPT_CONTEXT_SIGNATURE != context->signature) {
             ret = errorcode_t::invalid_context;

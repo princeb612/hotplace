@@ -18,11 +18,23 @@ namespace net {
 
 http_resource http_resource::_instance;
 
-http_resource* http_resource::get_instance() { return &_instance; }
+http_resource* http_resource::get_instance() {
+    _instance.load_resources();
+    return &_instance;
+}
 
 http_resource::http_resource() {}
 
 void http_resource::load_resources() {
+    if (_status_codes.empty()) {
+        critical_section_guard guard(_lock);
+        if (_status_codes.empty()) {
+            doload_resources();
+        }
+    }
+}
+
+void http_resource::doload_resources() {
     // RFC 2616 HTTP/1.1
     // 6.1.1 Status Code and Reason Phrase
     if (_status_codes.empty()) {
@@ -111,8 +123,6 @@ void http_resource::load_resources() {
 }
 
 std::string http_resource::load(int status) {
-    load_resources();
-
     std::string message;
     t_maphint<int, std::string> hint(_status_codes);
     hint.find(status, &message);
@@ -120,8 +130,6 @@ std::string http_resource::load(int status) {
 }
 
 std::string http_resource::get_method(http_method_t method) {
-    load_resources();
-
     std::string resource;
     t_maphint<http_method_t, std::string> hint(_methods);
     hint.find(method, &resource);
@@ -129,8 +137,6 @@ std::string http_resource::get_method(http_method_t method) {
 }
 
 std::string http_resource::get_frame_name(uint8 type) {
-    load_resources();
-
     std::string name;
     t_maphint<uint8, std::string> hint(_frame_names);
     hint.find(type, &name);
@@ -138,8 +144,6 @@ std::string http_resource::get_frame_name(uint8 type) {
 }
 
 std::string http_resource::get_frame_flag(uint8 flag) {
-    load_resources();
-
     std::string flag_name;
     t_maphint<uint8, std::string> hint(_frame_flags);
     hint.find(flag, &flag_name);

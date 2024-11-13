@@ -1,10 +1,14 @@
 # history
 
+* Revision 647
+  * [tested] QUIC (RFC 9001)
+    * A.4.  Retry
+  * [study] TLS (RFC 8446)
+
 * Revision 646
   * [tested] QUIC (RFC 9001)
     * A.2.  Client Initial
     * A.3.  Server Initial
-  * [study] TLS (RFC 8446)
 
 * Revision 644
   * [added] log level

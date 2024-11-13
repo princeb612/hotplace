@@ -381,9 +381,11 @@ class asn1_resource {
    protected:
     asn1_resource();
     void load_resource();
+    void doload_resource();
 
     static asn1_resource _instance;
 
+    critical_section _lock;
     std::map<asn1_type_t, std::string> _type_id;
     std::map<std::string, asn1_type_t> _type_rid;
     std::map<int, std::string> _class_id;

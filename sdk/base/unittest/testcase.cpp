@@ -14,6 +14,7 @@
 #include <sdk/base/string/string.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/datetime.hpp>
+#include <sdk/base/system/error.hpp>
 #include <sdk/base/system/thread.hpp>
 #include <sdk/base/unittest/testcase.hpp>
 

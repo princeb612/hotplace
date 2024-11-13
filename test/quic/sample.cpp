@@ -312,7 +312,7 @@ void test_rfc_9001_a2() {
         bin_expect_unprotected_header = base16_decode_rfc(expect_unprotected_header);
         bin_expect_protected_header = base16_decode_rfc(expect_protected_header);
         bin_frame = base16_decode_rfc(frame);
-        bin_frame.resize(1162);  // pnl 4 + frame 1162 + padding 16 -> length 1182
+        bin_frame.resize(1162);  // pnl 4 + frame 1162 + tag 16 -> length 1182
         bin_expect_result = base16_decode_rfc(result);
     }
 
@@ -353,7 +353,7 @@ void test_rfc_9001_a2() {
         _logger->writeln(" : %s", base16_encode(bin_unprotected_header).c_str());
         _logger->hdump("> protected header", bin_protected_header, 16, 3);
         _logger->writeln(" : %s", base16_encode(bin_protected_header).c_str());
-        _logger->hdump("> payload", bin_payload, 16, 3);
+        _logger->hdump("> payload (encrypted)", bin_payload, 16, 3);
         _logger->hdump("> tag", bin_tag, 16, 3);
         _logger->hdump("> result", bin_result, 16, 3);
 
@@ -409,7 +409,7 @@ void test_rfc_9001_a3() {
     {
         // Destination Connection ID of 0x8394c8f03e515708
         const char* dcid = "0x8394c8f03e515708";
-        const char* scid = "F0 67 A5 50 2A 42 62 B5";
+        const char* scid = "0xf067a5502a4262b5";
         // including an ACK frame, a CRYPTO frame, and no PADDING frames
         const char* frame =
             "02000000000600405a020000560303ee fce7f7b37ba1d1632e96677825ddf739"
@@ -469,18 +469,18 @@ void test_rfc_9001_a3() {
         _logger->writeln(" : %s", base16_encode(bin_unprotected_header).c_str());
         _logger->hdump("> protected header", bin_protected_header, 16, 3);
         _logger->writeln(" : %s", base16_encode(bin_protected_header).c_str());
-        _logger->hdump("> payload", bin_payload, 16, 3);
+        _logger->hdump("> payload (encrypted)", bin_payload, 16, 3);
         _logger->hdump("> tag", bin_tag, 16, 3);
         _logger->hdump("> result", bin_result, 16, 3);
 
-        _test_case.assert(quic_packet_type_initial == initial.get_type(), __FUNCTION__, "initial packet");
-        _test_case.assert(bin_scid == initial.get_scid(), __FUNCTION__, "SCID");
-        _test_case.assert(117 == initial.get_length(), __FUNCTION__, "length");  // packet number length 4
-        _test_case.assert(2 == initial.get_pn_length(), __FUNCTION__, "packet number length");
-        _test_case.assert(1 == initial.get_pn(), __FUNCTION__, "packet number");
-        _test_case.assert(bin_expect_unprotected_header == bin_unprotected_header, __FUNCTION__, "unprotected header");
-        _test_case.assert(bin_expect_protected_header == bin_protected_header, __FUNCTION__, "protected header");
-        _test_case.assert(bin_expect_result == bin_result, __FUNCTION__, "result");
+        _test_case.assert(quic_packet_type_initial == initial.get_type(), __FUNCTION__, "initial packet #1");
+        _test_case.assert(bin_scid == initial.get_scid(), __FUNCTION__, "SCID #1");
+        _test_case.assert(117 == initial.get_length(), __FUNCTION__, "length #1");  // packet number length 4
+        _test_case.assert(2 == initial.get_pn_length(), __FUNCTION__, "packet number length #1");
+        _test_case.assert(1 == initial.get_pn(), __FUNCTION__, "packet number #1");
+        _test_case.assert(bin_expect_unprotected_header == bin_unprotected_header, __FUNCTION__, "unprotected header #1");
+        _test_case.assert(bin_expect_protected_header == bin_protected_header, __FUNCTION__, "protected header #1");
+        _test_case.assert(bin_expect_result == bin_result, __FUNCTION__, "result #1");
     }
 
     // read
@@ -497,30 +497,79 @@ void test_rfc_9001_a3() {
         initial.dump(&bs);
         _logger->writeln(bs);
 
-        _test_case.assert(quic_packet_type_initial == initial.get_type(), __FUNCTION__, "initial packet");
-        _test_case.assert(bin_scid == initial.get_scid(), __FUNCTION__, "SCID");
-        _test_case.assert(117 == initial.get_length(), __FUNCTION__, "length");  // packet number length 2
-        _test_case.assert(2 == initial.get_pn_length(), __FUNCTION__, "packet number length");
-        _test_case.assert(1 == initial.get_pn(), __FUNCTION__, "packet number 2");
+        _test_case.assert(quic_packet_type_initial == initial.get_type(), __FUNCTION__, "initial packet #2");
+        _test_case.assert(bin_scid == initial.get_scid(), __FUNCTION__, "SCID #2");
+        _test_case.assert(117 == initial.get_length(), __FUNCTION__, "length #2");  // packet number length 2
+        _test_case.assert(2 == initial.get_pn_length(), __FUNCTION__, "packet number length #2");
+        _test_case.assert(1 == initial.get_pn(), __FUNCTION__, "packet number #2");
     }
 }
 
 void test_rfc_9001_a4() {
     _test_case.begin("RFC 9001 A.4.  Retry");
 
-    const char* retry_packet =
-        "ff000000010008f067a5502a4262b574 6f6b656e04a265ba2eff4d829058fb3f"
-        "0f2496ba";
-    binary_t bin_retry_packet = base16_decode_rfc(retry_packet);
+    binary_t bin_dcid;
+    binary_t bin_scid;
+    binary_t bin_retry_packet;
+    binary_t bin_result;
+    binary_t bin_token;
+    binary_t bin_tag;
 
-    basic_stream bs;
-    size_t pos = 0;
-    quic_packet_retry packet;
-    packet.read(&bin_retry_packet[0], bin_retry_packet.size(), pos);
-    packet.dump(&bs);
-    _logger->writeln(bs);
+    {
+        // the client-chosen connection ID value of 0x8394c8f03e515708
+        const char* dcid = "0x8394c8f03e515708";
+        // RFC 9001 A.3.  Server Initial
+        const char* scid = "0xf067a5502a4262b5";
+        const char* retry_packet =
+            "ff000000010008f067a5502a4262b574 6f6b656e04a265ba2eff4d829058fb3f"
+            "0f2496ba";
+        // ff                               HF(1) = 1, FB(1) = 1, LPT(2) = 3, UN(4) = 0xf
+        // 00000001                         Version
+        // 00                               DCID Length(8) = 0
+        // 08                               SCID Length(8) = 8
+        // f067a5502a4262b5                 SCID
+        // 746f6b656e                       Retry Token
+        // 04a265ba2eff4d829058fb3f0f2496ba Retry Integrity Tag
+        bin_dcid = base16_decode_rfc(dcid);
+        bin_scid = base16_decode_rfc(scid);
+        bin_retry_packet = base16_decode_rfc(retry_packet);
+    }
 
-    // the client-chosen connection ID value of 0x8394c8f03e515708
+    quic_header_protection_keys keys(bin_dcid);
+
+    // retry integrity tag
+    {
+        const char* token = "0x746f6b656e";  // str2bin("token")
+        const char* tag = "04a265ba2eff4d829058fb3f0f2496ba";
+
+        bin_token = base16_decode(token);
+        bin_tag = base16_decode(tag);
+    }
+
+    // write
+    {
+        quic_packet_retry retry;
+        retry.attach(&keys);
+        retry.set_scid(bin_scid);
+        retry.set_retry_token(bin_token);
+        retry.write(bin_result, quic_mode_server);
+        _test_case.assert(bin_result == bin_retry_packet, __FUNCTION__, "RFC 9001 A.4.  Retry #write");
+    }
+
+    // read
+    {
+        size_t pos = 0;
+        quic_packet_retry retry;
+        retry.attach(&keys);
+        retry.read(&bin_result[0], bin_result.size(), pos);
+
+        basic_stream bs;
+        retry.dump(&bs);
+        _logger->writeln(bs);
+        _test_case.assert(bin_scid == retry.get_scid(), __FUNCTION__, "RFC 9001 A.4.  Retry #scid");
+        _test_case.assert(bin_token == retry.get_retry_token(), __FUNCTION__, "RFC 9001 A.4.  Retry #retry token");
+        _test_case.assert(bin_tag == retry.get_integrity_tag(), __FUNCTION__, "RFC 9001 A.4.  Retry #retry integrity tag");
+    }
 }
 
 void test_rfc_9001_a5() {
@@ -610,7 +659,7 @@ int main(int argc, char** argv) {
     test_rfc_9001_a1();
     test_rfc_9001_a2();
     test_rfc_9001_a3();
-    // test_rfc_9001_a4();
+    test_rfc_9001_a4();
     // test_rfc_9001_a5();
 
     openssl_cleanup();

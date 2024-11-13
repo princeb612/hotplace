@@ -8,10 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
+#include <sdk/base/system/error.hpp>
 
 namespace hotplace {
 
@@ -250,14 +247,22 @@ const error_description error_descriptions[] = {
 
 error_advisor error_advisor::_instance;
 
-error_advisor::error_advisor() { build(); }
+error_advisor::error_advisor() {}
 
-error_advisor* error_advisor::get_instance() { return &_instance; }
+error_advisor* error_advisor::get_instance() {
+    _instance.build();
+    return &_instance;
+}
 
 void error_advisor::build() {
-    for (unsigned i = 0; i < RTL_NUMBER_OF(error_descriptions); i++) {
-        const error_description* item = error_descriptions + i;
-        _table.insert(std::make_pair(item->error, item));
+    if (_table.empty()) {
+        critical_section_guard guard(_lock);
+        if (_table.empty()) {
+            for (unsigned i = 0; i < RTL_NUMBER_OF(error_descriptions); i++) {
+                const error_description* item = error_descriptions + i;
+                _table.insert(std::make_pair(item->error, item));
+            }
+        }
     }
 }
 

@@ -11,6 +11,7 @@
 
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/string/string.hpp>
+#include <sdk/base/system/error.hpp>
 #include <sdk/io/basic/json.hpp>
 #include <sdk/net/http/auth/oauth2.hpp>
 #include <sdk/net/http/http_request.hpp>
