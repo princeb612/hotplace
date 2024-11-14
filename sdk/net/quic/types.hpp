@@ -20,9 +20,15 @@
 namespace hotplace {
 namespace net {
 
+class quic_protection;
 class quic_packet;
-class quic_frame;
-class quic_integer;
+class quic_packet_version_negotiation;
+class quic_packet_initial;
+class quic_packet_0rtt;
+class quic_packet_handshake;
+class quic_packet_retry;
+class quic_packet_1rtt;
+class quic_encoded;
 
 }  // namespace net
 }  // namespace hotplace

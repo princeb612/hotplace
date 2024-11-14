@@ -203,20 +203,27 @@ enum quic_initial_keys_t {
 /**
  * @brief   RFC 9001 5.  Packet Protection
  */
-class quic_header_protection_keys {
+class quic_protection {
    public:
-    quic_header_protection_keys(const binary_t& salt, uint32 flags = -1);
-    quic_header_protection_keys(const binary_t& salt, const binary_t& context, uint32 flags = -1);
+    quic_protection(const binary_t& salt, uint32 flags = -1);
+    quic_protection(const binary_t& salt, const binary_t& context, uint32 flags = -1);
 
     const binary_t& get_item(quic_initial_keys_t mode);
     void get_item(quic_initial_keys_t mode, binary_t& item);
+
+    return_t hpmask(uint32 mode, const byte_t* sample, size_t size_sample, binary_t& mask);
+    return_t hpencode(uint32 mode, const binary_t& mask, byte_t& ht, binary_t& bin_pn);
+    return_t encrypt(uint32 mode, uint64 pn, const binary_t& payload, binary_t& encrypted, const binary_t& aad, binary_t& tag);
+    return_t decrypt(uint32 mode, uint64 pn, const binary_t& payload, binary_t& decrypted, const binary_t& aad, const binary_t& tag);
+    return_t retry_integrity_tag(const quic_packet_retry& retry_packet, binary_t& tag);
 
     void addref();
     void release();
 
    protected:
+    t_shared_reference<quic_protection> _shared;
     std::map<uint16, binary_t> _kv;
-    t_shared_reference<quic_header_protection_keys> _shared;
+    SSL* _ssl;
 
     return_t compute(const binary_t& salt, const binary_t& context, uint32 flags = -1);
 };
@@ -242,8 +249,8 @@ class quic_packet {
     const binary_t& get_dcid();
     const binary_t& get_scid();
 
-    void attach(quic_header_protection_keys* keys);
-    quic_header_protection_keys* get_keys();
+    void attach(quic_protection* keys);
+    quic_protection* get_protection();
 
     /**
      * @brief   read
@@ -345,14 +352,6 @@ class quic_packet {
     const binary_t& get_payload();
 
    protected:
-    void set_binary(binary_t& target, const binary_t& payload);
-    void set_binary(binary_t& target, const byte_t* stream, size_t size);
-
-    return_t header_protection_mask(uint32 mode, const byte_t* sample, size_t size_sample, binary_t& mask);
-    return_t header_protection_encode(uint32 mode, const binary_t& mask, byte_t& ht, binary_t& bin_pn);
-    return_t encrypt(uint32 mode, uint64 pn, const binary_t& payload, binary_t& encrypted, const binary_t& aad, binary_t& tag);
-    return_t decrypt(uint32 mode, uint64 pn, const binary_t& payload, binary_t& decrypted, const binary_t& aad, const binary_t& tag);
-
     uint8 _type;
     uint8 _ht;        // header type, public flag
     uint32 _version;  // version
@@ -362,7 +361,7 @@ class quic_packet {
     uint32 _pn;
     binary_t _payload;
 
-    quic_header_protection_keys* _keys;
+    quic_protection* _keys;
 };
 
 /**
@@ -548,12 +547,12 @@ return_t decode_packet_number(uint64 largest_pn, uint64 truncated_pn, uint8 pn_n
  *          // payload set_reference_value interface
  *          payload pl1;
  *          binary_t bin1;
- *          pl1 << new payload_member(new quic_integer(5)) << new payload_member("token");
+ *          pl1 << new payload_member(new quic_encoded(5)) << new payload_member("token");
  *          pl1.write(bin1);
  *
  *          payload pl2;
  *          binary_t bin2;
- *          pl2 << new payload_member(new quic_integer(int(0)), "len") << new payload_member(binary_t(), "token");
+ *          pl2 << new payload_member(new quic_encoded(int(0)), "len") << new payload_member(binary_t(), "token");
  *          pl2.set_reference_value("token", "len");  // length of "token" is value of "len"
  *          pl2.read(bin1);
  *          pl2.write(bin2);
@@ -561,34 +560,34 @@ return_t decode_packet_number(uint64 largest_pn, uint64 truncated_pn, uint8 pn_n
  *          // simple
  *          payload p3;
  *          binary_t bin3;
- *          pl3 << new payload_member(new quic_integer("token"));
+ *          pl3 << new payload_member(new quic_encoded("token"));
  *          pl3.write(bin3);
  *
  *          payload pl4;
  *          binary_t bin4;
- *          pl4 << new payload_member(new quic_integer);
+ *          pl4 << new payload_member(new quic_encoded);
  *          pl4.read(bin3);
  *          pl4.write(bin4);
  */
-class quic_integer : public payload_encoded {
+class quic_encoded : public payload_encoded {
    public:
-    quic_integer();
-    quic_integer(const quic_integer& rhs);
-    quic_integer(quic_integer&& rhs);
+    quic_encoded();
+    quic_encoded(const quic_encoded& rhs);
+    quic_encoded(quic_encoded&& rhs);
     /**
      * @brief   integers in the range 0 to 2^62-1
      */
-    quic_integer(uint64 data);
+    quic_encoded(uint64 data);
     /**
      * @brief   integer + data
      */
-    quic_integer(const char* data);
-    quic_integer(const std::string& data);
-    quic_integer(const binary_t& data);
+    quic_encoded(const char* data);
+    quic_encoded(const std::string& data);
+    quic_encoded(const binary_t& data);
 
-    quic_integer& set(const char* data);
-    quic_integer& set(const std::string& data);
-    quic_integer& set(const binary_t& data);
+    quic_encoded& set(const char* data);
+    quic_encoded& set(const std::string& data);
+    quic_encoded& set(const binary_t& data);
 
     virtual size_t lsize();
     virtual size_t value();

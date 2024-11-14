@@ -36,7 +36,6 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
 
@@ -45,7 +44,8 @@ namespace net {
 
 quic_packet_retry::quic_packet_retry() : quic_packet(quic_packet_type_retry) {}
 
-quic_packet_retry::quic_packet_retry(const quic_packet_retry& rhs) : quic_packet(rhs) {}
+quic_packet_retry::quic_packet_retry(const quic_packet_retry& rhs)
+    : quic_packet(rhs), _retry_token(rhs._retry_token), _retry_integrity_tag(rhs._retry_integrity_tag) {}
 
 return_t quic_packet_retry::read(const byte_t* stream, size_t size, size_t& pos, uint32 mode) {
     return_t ret = errorcode_t::success;
@@ -75,37 +75,13 @@ return_t quic_packet_retry::write(binary_t& packet, uint32 mode) {
     return_t ret = errorcode_t::success;
     ret = quic_packet::write(packet, mode);
 
-    binary_t bin_retry_pseudo_packet;
+    binary_t bin_integrity_tag;
 
-    if (mode && get_keys()) {
-        // RFC 9001 Figure 8: Retry Pseudo-Packet
-        const char* key = "0xbe0c690b9f66575a1d766b54e368c84e";
-        const char* nonce = "0x461599d35d632bf2239825bb";
-
-        binary_t bin_key = base16_decode_rfc(key);
-        binary_t bin_nonce = base16_decode_rfc(nonce);
-        binary_t bin_plaintext;
-        binary_t bin_encrypted;
-        binary_t bin_tag;
-        const binary_t& bin_dcid = get_keys()->get_item(quic_original_dcid);
-
-        binary_append(bin_retry_pseudo_packet, (uint8)bin_dcid.size());
-        binary_append(bin_retry_pseudo_packet, bin_dcid);
-
-        quic_packet_retry retry;
-        retry.attach(get_keys());
-        retry.set_scid(get_scid());
-        retry.set_retry_token(get_retry_token());
-        retry.write(bin_retry_pseudo_packet);
-
-        openssl_crypt crypt;
-        crypt_context_t* handle = nullptr;
-        crypt.open(&handle, "aes-128-gcm", bin_key, bin_nonce);
-        ret = crypt.encrypt2(handle, bin_plaintext, bin_encrypted, &bin_retry_pseudo_packet, &bin_tag);
+    if (mode && get_protection()) {
+        ret = get_protection()->retry_integrity_tag(*this, bin_integrity_tag);
         if (errorcode_t::success == ret) {
-            _retry_integrity_tag = std::move(bin_tag);
+            _retry_integrity_tag = std::move(bin_integrity_tag);
         }
-        crypt.close(handle);
     }
 
     payload pl;

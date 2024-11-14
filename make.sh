@@ -56,6 +56,7 @@ do_test=0
 
 CXXFLAGS=''
 SUPPORT_PCH=0
+builddir=build
 args=("$@")
 
 export HOTPLACE_HOME=$(pwd)
@@ -121,8 +122,8 @@ if [ $do_redist = 1 ]; then
 fi
 
 # build
-mkdir -p build
-cd build
+mkdir -p ${builddir}
+cd ${builddir}
 cmake -G 'Unix Makefiles' ..
 if [ $do_makefile = 1 ]; then
     exit

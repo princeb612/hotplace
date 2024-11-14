@@ -133,7 +133,7 @@ class payload_member {
 
 /**
  * @brief   encoded data
- * @sa      quic_integer
+ * @sa      quic_encoded
  * @remarks
  *          sketch
  *

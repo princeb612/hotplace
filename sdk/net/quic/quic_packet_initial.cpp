@@ -9,7 +9,6 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
 
@@ -18,7 +17,7 @@ namespace net {
 
 quic_packet_initial::quic_packet_initial() : quic_packet(quic_packet_type_initial), _length(0) {}
 
-quic_packet_initial::quic_packet_initial(const quic_packet_initial& rhs) : quic_packet(rhs), _length(rhs._length) {}
+quic_packet_initial::quic_packet_initial(const quic_packet_initial& rhs) : quic_packet(rhs), _token(rhs._token), _length(rhs._length) {}
 
 return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& pos, uint32 mode) {
     return_t ret = errorcode_t::success;
@@ -41,7 +40,7 @@ return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& po
         uint8 pn_length = mode ? 4 : get_pn_length(stream[0]);
 
         payload pl;
-        pl << new payload_member(new quic_integer(binary_t()), "token") << new payload_member(new quic_integer(uint64(0)), "length")
+        pl << new payload_member(new quic_encoded(binary_t()), "token") << new payload_member(new quic_encoded(uint64(0)), "length")
            << new payload_member(binary_t(), "packet number") << new payload_member(binary_t(), "payload") << new payload_member(binary_t(), "tag");
         pl.select("packet number")->reserve(pn_length);
         pl.select("tag")->reserve(16);
@@ -56,12 +55,17 @@ return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& po
 
         if (mode) {
             binary_t bin_mask;
-            header_protection_mask(mode, &_payload[0], 16, bin_mask);
-            header_protection_encode(mode, bin_mask, _ht, bin_pn);  // update ht
+            get_protection()->hpmask(mode, &_payload[0], 16, bin_mask);
+            get_protection()->hpencode(mode, bin_mask, _ht, bin_pn);  // update ht
 
             // Packet Number Length = 2
             // PN1 PN2 PN3 PN4 | PL1 PL2 ...
             // PN1 PN2 | PL1 PL2 PL3 PL4 ...
+
+            // Packet Number Length = 1
+            // PN1 PN2 PN3 PN4 | PL1 PL2 ...
+            // PN1 | PL1 PL2 PL3 PL4 PL5 ...
+
             auto pn_length = get_pn_length(_ht);
             auto adj = 4 - pn_length;
             if (adj) {
@@ -77,9 +81,11 @@ return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& po
 
             // AEAD
             binary_t bin_decrypted;
-            ret = decrypt(mode, _pn, _payload, bin_decrypted, bin_unprotected_header, bin_tag);
+            ret = get_protection()->decrypt(mode, _pn, _payload, bin_decrypted, bin_unprotected_header, bin_tag);
             if (errorcode_t::success == ret) {
-                set_payload(bin_decrypted);
+                _payload = std::move(bin_decrypted);
+            } else {
+                _payload.clear();
             }
         }
     }
@@ -138,7 +144,7 @@ return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binar
 
             // unprotected header
             payload pl;
-            pl << new payload_member(new quic_integer(get_token()), "token") << new payload_member(new quic_integer(len), "length")
+            pl << new payload_member(new quic_encoded(get_token()), "token") << new payload_member(new quic_encoded(len), "length")
                << new payload_member(bin_pn, "packet number");
             pl.write(bin_unprotected_header);
         }
@@ -151,12 +157,12 @@ return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binar
          *  in sampling header ciphertext for header protection, the Packet Number field is
          *  assumed to be 4 bytes long (its maximum possible encoded length).
          */
-        if (mode && (get_payload().size() >= 0x10)) {
+        if (mode && get_protection() && (get_payload().size() >= 0x10)) {
             binary_t bin_encrypted;
             binary_t bin_tag;
 
             // AEAD
-            { encrypt(mode, _pn, get_payload(), bin_encrypted, bin_unprotected_header, bin_tag); }
+            { get_protection()->encrypt(mode, _pn, get_payload(), bin_encrypted, bin_unprotected_header, bin_tag); }
 
             // Header Protection
             {
@@ -166,15 +172,15 @@ return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binar
 
                 // calcurate mask
                 binary_t bin_mask;
-                header_protection_mask(mode, &bin_encrypted[adj], 0x10, bin_mask);
-                header_protection_encode(mode, bin_mask, ht, bin_pn);  // do not update ht
+                get_protection()->hpmask(mode, &bin_encrypted[adj], 0x10, bin_mask);
+                get_protection()->hpencode(mode, bin_mask, ht, bin_pn);  // do not update ht
                 // encode packet length
                 bin_protected_header[0] = ht;
                 bin_pn.resize(pn_length);
 
                 // encode packet number
                 payload pl;
-                pl << new payload_member(new quic_integer(get_token()), "token") << new payload_member(new quic_integer(len), "length")
+                pl << new payload_member(new quic_encoded(get_token()), "token") << new payload_member(new quic_encoded(len), "length")
                    << new payload_member(bin_pn, "packet number");
 
                 // protected header
@@ -212,7 +218,7 @@ void quic_packet_initial::dump(stream_t* s) {
 }
 
 quic_packet_initial& quic_packet_initial::set_token(const binary_t& token) {
-    set_binary(_token, token);
+    _token = token;
     return *this;
 }
 

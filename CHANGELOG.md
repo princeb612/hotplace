@@ -1,5 +1,9 @@
 # history
 
+* Revision 648
+  * [study] QUIC (RFC 9001)
+  * [study] TLS (RFC 8446)
+
 * Revision 647
   * [tested] QUIC (RFC 9001)
     * A.4.  Retry

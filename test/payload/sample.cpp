@@ -372,16 +372,16 @@ void test_quic_integer() {
     {
         payload pl1;
         binary_t bin1;
-        pl1 << new payload_member(new quic_integer(59), "len1") << new payload_member("RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport", "var1")
-            << new payload_member(new quic_integer(37), "len2") << new payload_member("16.  Variable-Length Integer Encoding", "var2");
+        pl1 << new payload_member(new quic_encoded(59), "len1") << new payload_member("RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport", "var1")
+            << new payload_member(new quic_encoded(37), "len2") << new payload_member("16.  Variable-Length Integer Encoding", "var2");
         pl1.write(bin1);
         _logger->hdump("dump", bin1, 16, 3);
         _test_case.assert(bin1 == bin_expect, __FUNCTION__, "QUIC variable length integer #write");
 
         payload pl2;
         binary_t bin2;
-        pl2 << new payload_member(new quic_integer(uint64(0)), "len1") << new payload_member(binary_t(), "var1")
-            << new payload_member(new quic_integer(uint64(0)), "len2") << new payload_member(binary_t(), "var2");
+        pl2 << new payload_member(new quic_encoded(uint64(0)), "len1") << new payload_member(binary_t(), "var1")
+            << new payload_member(new quic_encoded(uint64(0)), "len2") << new payload_member(binary_t(), "var2");
         pl2.set_reference_value("var1", "len1");  // length of "var1" is value of "len1"
         pl2.set_reference_value("var2", "len2");  // length of "var2" is value of "len2"
         pl2.read(bin1);
@@ -398,8 +398,8 @@ void test_quic_integer() {
     {
         payload pl1;
         binary_t bin1;
-        pl1 << new payload_member(new quic_integer("RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport"), "var1")
-            << new payload_member(new quic_integer("16.  Variable-Length Integer Encoding"), "var2");
+        pl1 << new payload_member(new quic_encoded("RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport"), "var1")
+            << new payload_member(new quic_encoded("16.  Variable-Length Integer Encoding"), "var2");
         pl1.write(bin1);
         _logger->hdump("dump", bin1, 16, 3);
         _test_case.assert(bin1 == bin_expect, __FUNCTION__, "QUIC variable length integer #write");
@@ -407,7 +407,7 @@ void test_quic_integer() {
         // step.2 decode a variable length integer + data
         payload pl2;
         binary_t bin2;
-        pl2 << new payload_member(new quic_integer, "var1") << new payload_member(new quic_integer, "var2");
+        pl2 << new payload_member(new quic_encoded, "var1") << new payload_member(new quic_encoded, "var2");
         pl2.read(bin1);
         pl2.write(bin2);
         _logger->hdump("dump", bin2, 16, 3);
@@ -420,14 +420,14 @@ void test_quic_integer() {
         binary_t bin_expect_zero_length = base16_decode_rfc(expect_zero_length);
         payload pl1;
         binary_t bin1;
-        pl1 << new payload_member(new quic_integer(""));
+        pl1 << new payload_member(new quic_encoded(""));
         pl1.write(bin1);
         _logger->hdump("dump", bin1, 16, 3);
         _test_case.assert(bin1 == bin_expect_zero_length, __FUNCTION__, "zero-length #write");
 
         payload pl2;
         binary_t bin2;
-        pl2 << new payload_member(new quic_integer(binary_t()));
+        pl2 << new payload_member(new quic_encoded(binary_t()));
         pl2.read(bin1);
         pl2.write(bin2);
         _logger->hdump("dump", bin2, 16, 3);
@@ -440,7 +440,7 @@ void test_quic_integer() {
         payload pl1;
         binary_t bin1;
 
-        pl1 << new payload_member(new quic_integer(value));
+        pl1 << new payload_member(new quic_encoded(value));
         pl1.write(bin1);
 
         _logger->hdump("> dump", bin1, 16, 3);
@@ -449,7 +449,7 @@ void test_quic_integer() {
         payload pl2;
         binary_t bin2;
 
-        pl2 << new payload_member(new quic_integer(uint64(0)));
+        pl2 << new payload_member(new quic_encoded(uint64(0)));
         pl2.read(bin1);
         pl2.write(bin2);
 

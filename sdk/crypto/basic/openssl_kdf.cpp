@@ -294,7 +294,7 @@ return_t openssl_kdf::hkdf_expand_label(binary_t& okm, const char* alg, uint16 l
         binary_t bin_hkdflabel;
         uint8 opaque_len_label = 6 + label.size();  // length including "tls13 "
         uint8 opaque_len_context = context.size();
-#if 0
+#if 0  // tested
         payload pl;
         pl << new payload_member(length, true) << new payload_member(opaque_len_label) << new payload_member(std::string("tls13 ")) << new payload_member(label)
            << new payload_member(opaque_len_context) << new payload_member(context);
