@@ -66,7 +66,7 @@ enum quic_frame_t {
     quic_frame_ping = 1,                     // RFC 9000 19.2  IH01
     quic_frame_ack = 2,                      // RFC 9000 19.3  IH_1 0x02-0x03
     quic_frame_reset_stream = 4,             // RFC 9000 19.4  __01
-    quic_frame_stop_pending = 5,             // RFC 9000 19.5  __01
+    quic_frame_stop_sending = 5,             // RFC 9000 19.5  __01
     quic_frame_crypto = 6,                   // RFC 9000 19.6  IH_1
     quic_frame_new_token = 7,                // RFC 9000 19.7  ___1
     quic_frame_stream = 8,                   // RFC 9000 19.8  __01 0x08-0x0f
@@ -166,6 +166,7 @@ enum h3_errorcodes_t {
  *          };
  *      } Handshake;
  */
+
 enum quic_mode_t {
     quic_mode_client = 1,
     quic_mode_server = 2,
@@ -186,35 +187,84 @@ struct preferred_address {
 
 enum quic_initial_keys_t {
     quic_original_dcid = 0,
-    quic_initial_secret = (1 << 0),  // initial secret
-    quic_client_secret = (1 << 1),   // client initial secret
-    quic_server_secret = (1 << 2),   // server initial secret
-    quic_client_key = (1 << 3),      // client initial key
-    quic_server_key = (1 << 4),      // server initial key
-    quic_client_iv = (1 << 5),       // client initial iv
-    quic_server_iv = (1 << 6),       // server initial iv
-    quic_client_hp = (1 << 7),       // client header protection key
-    quic_server_hp = (1 << 8),       // server header protection key
-};
+    quic_initial_secret = 1,  // initial secret
+    quic_client_secret = 2,   // client initial secret
+    quic_server_secret = 3,   // server initial secret
+    quic_client_key = 4,      // client initial key
+    quic_server_key = 5,      // server initial key
+    quic_client_iv = 6,       // client initial iv
+    quic_server_iv = 7,       // server initial iv
+    quic_client_hp = 8,       // client header protection key
+    quic_server_hp = 9,       // server header protection key
 
-#define quic_client_initial_keys (quic_client_hp | quic_client_key | quic_client_iv)
-#define quic_server_initial_keys (quic_server_hp | quic_server_key | quic_server_iv)
+    quic_hello_hash = 10,  // sha256(ClientHello, ServerHello)
+};
 
 /**
  * @brief   RFC 9001 5.  Packet Protection
  */
 class quic_protection {
    public:
-    quic_protection(const binary_t& salt, uint32 flags = -1);
-    quic_protection(const binary_t& salt, const binary_t& context, uint32 flags = -1);
+    /**
+     * @brief   constructor
+     * @param   uint32 mode [inopt] see quic_mode_t
+     */
+    quic_protection(const binary_t& salt, uint32 mode = 0);
+    quic_protection(const binary_t& salt, const binary_t& context, uint32 mode = 0);
 
+    /**
+     * @brief   get item
+     * @param   quic_initial_keys_t mode [in]
+     */
     const binary_t& get_item(quic_initial_keys_t mode);
+    /**
+     * @brief   get item
+     * @param   quic_initial_keys_t mode [in]
+     * @param   binary_t& item [out]
+     */
     void get_item(quic_initial_keys_t mode, binary_t& item);
 
+    /**
+     * @brief   header protection mask
+     * @param   uint32 mode [in]
+     * @param   const byte_t* sample [in]
+     * @param   size_t size_sample [in]
+     * @param   binary_t& mask [out]
+     */
     return_t hpmask(uint32 mode, const byte_t* sample, size_t size_sample, binary_t& mask);
+    /**
+     * @brief   header protection
+     * @param   uint32 mode [in]
+     * @param   const binary_t& mask [in]
+     * @param   byte_t& ht [inout]
+     * @param   binary_t& bin_pn [out]
+     */
     return_t hpencode(uint32 mode, const binary_t& mask, byte_t& ht, binary_t& bin_pn);
+    /**
+     * @brief   encrypt payload
+     * @param   uint32 mode [in]
+     * @param   uint64 pn [in]
+     * @param   const binary_t& payload [in]
+     * @param   binary_t& encrypted [out]
+     * @param   const binary_t& aad [in]
+     * @param   binary_t& tag [out]
+     */
     return_t encrypt(uint32 mode, uint64 pn, const binary_t& payload, binary_t& encrypted, const binary_t& aad, binary_t& tag);
+    /**
+     * @brief   decrypt payload
+     * @param   uint32 mode [in]
+     * @param   uint64 pn [in]
+     * @param   const binary_t& payload [in]
+     * @param   binary_t& decrypted [out]
+     * @param   const binary_t& aad [in]
+     * @param   const binary_t& tag [in]
+     */
     return_t decrypt(uint32 mode, uint64 pn, const binary_t& payload, binary_t& decrypted, const binary_t& aad, const binary_t& tag);
+    /**
+     * @brief   retry packet
+     * @param   const quic_packet_retry& retry_packet [in]
+     * @param   binary_t& tag [out]
+     */
     return_t retry_integrity_tag(const quic_packet_retry& retry_packet, binary_t& tag);
 
     void addref();
@@ -225,7 +275,13 @@ class quic_protection {
     std::map<uint16, binary_t> _kv;
     SSL* _ssl;
 
-    return_t compute(const binary_t& salt, const binary_t& context, uint32 flags = -1);
+    /**
+     * @brief   initial keys calc
+     * @param   const binary_t& salt [in]
+     * @param   const binary_t& context [in]
+     * @param   uint32 mode [in]
+     */
+    return_t calc(const binary_t& salt, const binary_t& context, uint32 mode);
 };
 
 /**
@@ -238,15 +294,51 @@ class quic_packet {
     quic_packet(const quic_packet& rhs);
     ~quic_packet();
 
+    /**
+     * @brief   type
+     */
     uint8 get_type();
+    /**
+     * @brief   type
+     * @param   uint8 hdr [in]
+     * @param   uint8& type [out]
+     * @param   bool& is_longheader [out]
+     */
     void get_type(uint8 hdr, uint8& type, bool& is_longheader);
+    /**
+     * @brief   type
+     * @param   uint8 type [in]
+     * @param   uint8& hdr [out]
+     * @param   bool& is_longheader [out]
+     */
     void set_type(uint8 type, uint8& hdr, bool& is_longheader);
 
+    /**
+     * @brief   version
+     * @param   uint32 version [in] 1
+     */
     quic_packet& set_version(uint32 version);
+    /**
+     * @brief   version
+     */
     uint32 get_version();
+    /**
+     * @brief   DCID
+     * @param   const binary& cid [in] DCID
+     */
     quic_packet& set_dcid(const binary& cid);
+    /**
+     * @brief   SCID
+     * @param   const binary& cid [in] SCID
+     */
     quic_packet& set_scid(const binary& cid);
+    /**
+     * @brief   DCID
+     */
     const binary_t& get_dcid();
+    /**
+     * @brief   SCID
+     */
     const binary_t& get_scid();
 
     void attach(quic_protection* keys);
@@ -490,6 +582,16 @@ class quic_packet_1rtt : public quic_packet {
 };
 
 /**
+ * @brief   read
+ * @param   stream_t* s [out]
+ * @param   const byte_t** stream [in]
+ * @param   size_t size [in]
+ * @param   size_t& pos [inout]
+ */
+return_t quic_dump_frame(stream_t* s, const byte_t* stream, size_t size, size_t& pos);
+return_t quic_dump_frame(stream_t* s, const binary_t frame, size_t& pos);
+
+/**
  * @brief   an integer value using the variable-length encoding
  * @param   const byte_t* stream [in]
  * @param   size_t size [in]
@@ -596,7 +698,7 @@ class quic_encoded : public payload_encoded {
 
     virtual size_t lsize(const byte_t* stream, size_t size);
     virtual size_t value(const byte_t* stream, size_t size);
-    virtual void read(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
 
    protected:
     bool _datalink;

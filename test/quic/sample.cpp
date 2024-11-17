@@ -45,10 +45,9 @@
  *
  */
 
-// write - tested
-// read  - tested
-// AEAD  - studying
 // frame - TODO
+// TLS13 - studying
+// Chacha20-Poly1305 - TODO
 
 #include <stdio.h>
 
@@ -327,8 +326,8 @@ void test_rfc_9001_initial(testvector_initial_packet* item) {
         _logger->hdump("> server key", keys.get_item(quic_server_key), 16, 3);
         _logger->hdump("> server iv", keys.get_item(quic_server_iv), 16, 3);
         _logger->hdump("> server hp", keys.get_item(quic_server_hp), 16, 3);
-        _logger->hdump("> input frame", bin_frame, 16, 3);
-        _logger->hdump("> expect result", bin_expect_result, 16, 3);
+        // _logger->hdump("> input frame", bin_frame, 16, 3);
+        // _logger->hdump("> expect result", bin_expect_result, 16, 3);
     }
 
     // write
@@ -355,9 +354,9 @@ void test_rfc_9001_initial(testvector_initial_packet* item) {
         _logger->writeln(" : %s", base16_encode(bin_protected_header).c_str());
         _logger->hdump("> expected protected header", bin_expect_protected_header, 16, 3);
         _logger->writeln(" : %s", base16_encode(bin_expect_protected_header).c_str());
-        _logger->hdump("> payload (encrypted)", bin_payload, 16, 3);
-        _logger->hdump("> tag", bin_tag, 16, 3);
-        _logger->hdump("> result", bin_result, 16, 3);
+        // _logger->hdump("> payload (encrypted)", bin_payload, 16, 3);
+        // _logger->hdump("> tag", bin_tag, 16, 3);
+        // _logger->hdump("> result", bin_result, 16, 3);
 
         _test_case.assert(quic_packet_type_initial == initial.get_type(), func, "%s #initial packet", text);
         _test_case.assert(bin_dcid == initial.get_dcid(), func, "%s #DCID", text);
@@ -381,13 +380,19 @@ void test_rfc_9001_initial(testvector_initial_packet* item) {
         basic_stream bs;
         initial.dump(&bs);
         _logger->writeln(bs);
+        bs.clear();
+
+        pos = 0;
+        while (errorcode_t::success == quic_dump_frame(&bs, &bin_frame[0], bin_frame.size(), pos)) {
+        };
+        _logger->writeln(bs);
 
         _test_case.assert(quic_packet_type_initial == initial.get_type(), func, "%s #initial packet", text);
         _test_case.assert(bin_dcid == initial.get_dcid(), func, "%s #DCID", text);
         _test_case.assert(bin_scid == initial.get_scid(), func, "%s #SCID", text);
-        _test_case.assert(pn == initial.get_pn(), func, "%s #packet number", text);
-        _test_case.assert(pn_length == initial.get_pn_length(), func, "%s #packet number length", text);
-        _test_case.assert(length == initial.get_length(), func, "%s #length", text);
+        _test_case.assert(pn == initial.get_pn(), func, "%s #packet number %i", text, initial.get_pn());
+        _test_case.assert(pn_length == initial.get_pn_length(), func, "%s #packet number length %i", text, initial.get_pn_length());
+        _test_case.assert(length == initial.get_length(), func, "%s #length %I64u", text, initial.get_length());
     }
 }
 
@@ -475,6 +480,7 @@ void test_rfc_9001_a2() {
     // [0x12] Packet Number : 00000002 ; pnl 0x03 -> 4 bytes
     test.expect_unprotected_header = "c300000001088394c8f03e5157080000 449e00000002";
     test.expect_protected_header = "c000000001088394c8f03e5157080000 449e7b9aec34";
+    // CRYPTO frame, plus enough PADDING frames
     test.frame =
         "060040f1010000ed0303ebf8fa56f129 39b9584a3896472ec40bb863cfd3e868"
         "04fe3a47f06a2b69484c000004130113 02010000c000000010000e00000b6578"
@@ -557,6 +563,15 @@ void test_rfc_9001_a3() {
     test.expect_unprotected_header = "c1000000010008f067a5502a4262b500 40750001";
     test.expect_protected_header = "cf000000010008f067a5502a4262b500 4075c0d9";
     // including an ACK frame, a CRYPTO frame, and no PADDING frames
+    // [0x00] ACK              02
+    // [0x01]  Largest Ack     00
+    // [0x02]  ACK delay       00
+    // [0x03]  ACK Range Count 00
+    // [0x04]  First ACK Range 00
+    // [0x05] CRYPTO           06
+    // [0x06]  offset          00
+    // [0x07]  length          405a(90)
+    // [0x09]  Crypt Data      ...
     test.frame =
         "02000000000600405a020000560303ee fce7f7b37ba1d1632e96677825ddf739"
         "88cfc79825df566dc5430b9a045a1200 130100002e00330024001d00209d3c94"
@@ -625,21 +640,28 @@ void test_rfc_9001_a5() {
 void test_quic_xargs_org() {
     _test_case.begin("https://quic.xargs.org/");
 
-    // https://quic.xargs.org/#client-key-exchange-generation
+    crypto_key key;
+    crypto_keychain keychain;
+    openssl_digest dgst;
+    openssl_kdf kdf;
+
+    /**
+     * https://quic.xargs.org/#client-key-exchange-generation
+     */
     {
         // Client Key Exchange Generation
         const char* x = "358072d6365880d1aeea329adf9121383851ed21a28e3b75e965d0d2cd166254";
         const char* y = "";
         const char* d = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
-        crypto_key key;
-        crypto_keychain keychain;
-        keychain.add_ec_b16(&key, "client key", "DdDSA", "X25519", x, y, d);
+        keychain.add_ec_b16(&key, "client key", "EdDSA", "X25519", x, y, d);
         basic_stream bs;
-        dump_key(key.any(), &bs);
+        dump_key(key.find("client key"), &bs);
         _logger->writeln(bs);
     }
-    // https://quic.xargs.org/#client-initial-keys-calc
-    // https://quic.xargs.org/#server-initial-keys-calc
+    /**
+     * https://quic.xargs.org/#client-initial-keys-calc
+     * https://quic.xargs.org/#server-initial-keys-calc
+     */
     {
         const char* dcid = "00 01 02 03 04 05 06 07";
         binary_t bin_dcid = base16_decode_rfc(dcid);
@@ -652,8 +674,10 @@ void test_quic_xargs_org() {
         _test_case.assert(keys.get_item(quic_server_iv) == base16_decode_rfc("fcb748e37ff79860faa07477"), __FUNCTION__, "server initial iv");
         _test_case.assert(keys.get_item(quic_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__, "server initial hp");
     }
-    // UDP Datagram 1 - Client hello
-    // https://quic.xargs.org/#client-initial-packet
+    /**
+     * UDP Datagram 1 - Client hello
+     * https://quic.xargs.org/#client-initial-packet
+     */
     {
         testvector_initial_packet test;
         memset(&test, 0, sizeof(test));
@@ -681,6 +705,7 @@ void test_quic_xargs_org() {
             "10 00 00 06 04 80 10 00 00 07 04 80 10 00 00 08"
             "01 0A 09 01 0A 0A 01 03 0B 01 19 0F 05 63 5F 63"
             "69 64 -- -- -- -- -- -- -- -- -- -- -- -- -- --";
+        // CRYPTO frame, TLS: ClientHello
         test.expect_result =
             "CD 00 00 00 01 08 00 01 02 03 04 05 06 07 05 63"
             "5F 63 69 64 00 41 03 98 1C 36 A7 ED 78 71 6B E9"
@@ -708,8 +733,10 @@ void test_quic_xargs_org() {
 
         test_rfc_9001_initial(&test);
     }
-    // UDP Datagram 2 - Server hello and handshake
-    // https://quic.xargs.org/#server-initial-packet
+    /**
+     * UDP Datagram 2 - Server hello and handshake
+     * https://quic.xargs.org/#server-initial-packet
+     */
     {
         testvector_initial_packet test;
         memset(&test, 0, sizeof(test));
@@ -728,6 +755,7 @@ void test_quic_xargs_org() {
             "AD 6D CF F4 29 8D D3 F9 6D 5B 1B 2A F9 10 A0 53"
             "5B 14 88 D7 F8 FA BB 34 9A 98 28 80 B6 15 00 2B"
             "00 02 03 04 -- -- -- -- -- -- -- -- -- -- -- --";
+        // CRYPTO frame, TLS: ServerHello
         test.expect_result =
             "CD 00 00 00 01 05 63 5F 63 69 64 05 73 5F 63 69"
             "64 00 40 75 3A 83 68 55 D5 D9 C8 23 D0 7C 61 68"
@@ -746,28 +774,228 @@ void test_quic_xargs_org() {
 
         test_rfc_9001_initial(&test);
     }
-    // UDP Datagram 3 - Server handshake finished
-    // https://quic.xargs.org/#server-handshake-packet-2
+    /**
+     * Server Handshake Keys Calc
+     * https://quic.xargs.org/#server-handshake-keys-calc
+     */
+    {
+        /**
+         * # openssl pkey -in server-ephemeral-private.key -text
+         * -----BEGIN PRIVATE KEY-----
+         * MC4CAQAwBQYDK2VuBCIEIJCRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6v
+         * -----END PRIVATE KEY-----
+         * X25519 Private-Key:
+         * priv:
+         *     90:91:92:93:94:95:96:97:98:99:9a:9b:9c:9d:9e:
+         *     9f:a0:a1:a2:a3:a4:a5:a6:a7:a8:a9:aa:ab:ac:ad:
+         *     ae:af
+         * pub:
+         *     9f:d7:ad:6d:cf:f4:29:8d:d3:f9:6d:5b:1b:2a:f9:
+         *     10:a0:53:5b:14:88:d7:f8:fa:bb:34:9a:98:28:80:
+         *     b6:15
+         *
+         * # openssl pkey -pubin -in client-ephemeral-public.key -text
+         * -----BEGIN PUBLIC KEY-----
+         * MCowBQYDK2VuAyEANYBy1jZYgNGu6jKa35EhODhR7SGijjt16WXQ0s0WYlQ=
+         * -----END PUBLIC KEY-----
+         * X25519 Public-Key:
+         * pub:
+         *     35:80:72:d6:36:58:80:d1:ae:ea:32:9a:df:91:21:
+         *     38:38:51:ed:21:a2:8e:3b:75:e9:65:d0:d2:cd:16:
+         *     62:54
+         */
+
+        binary_t shared_secret;
+        {
+            const char* x = "9fd7ad6dcff4298dd3f96d5b1b2af910a0535b1488d7f8fabb349a982880b615";
+            const char* y = "";
+            const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";
+            keychain.add_ec_b16(&key, "server key", "EdDSA", "X25519", x, y, d);
+
+            const EVP_PKEY* client_key = key.find("client key");
+            const EVP_PKEY* server_key = key.find("server key");
+            const EVP_PKEY* client_pubkey = get_peer_key(client_key);
+            dh_key_agreement(server_key, client_pubkey, shared_secret);
+            EVP_PKEY_free((EVP_PKEY*)client_pubkey);
+
+            basic_stream bs;
+            dump_key(key.find("server key"), &bs);
+            _logger->writeln(bs);
+            _logger->hdump("> shared secret", shared_secret, 16, 3);
+            _test_case.assert(shared_secret == base16_decode("df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624"), __FUNCTION__,
+                              "shared secret");
+        }
+
+        // https://quic.xargs.org/#server-handshake-keys-calc
+        //  It then calculates the SHA256 hash of all handshake messages to this point (ClientHello and ServerHello).
+        //  The hash does not include the 6-byte CRYPTO frame headers.
+        //  This "hello_hash" is ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b:
+        constexpr char alg[] = "sha256";
+
+        auto lambda_expand_label = [&](const char* text, binary_t& result, uint16 length, const binary_t& secret, const binary_t& label,
+                                       const binary_t& context, const char* expect) -> void {
+            openssl_kdf kdf;
+            kdf.hkdf_expand_label(result, alg, length, secret, label, context);
+            _logger->hdump(format("> %s", text), result, 16, 3);
+            _test_case.assert(result == base16_decode_rfc(expect), __FUNCTION__, "##server-handshake-keys-calc #%s", text);
+        };
+
+        binary_t context;
+        binary_t hello_hash;
+        {
+            // Client Initial Packet .. Client Hello (quic_dump_frame)
+            const char* client_hello =
+                "01 00 00 EA 03 03 00 01 02 03 04 05 06 07 08 09"
+                "0A 0B 0C 0D 0E 0F 10 11 12 13 14 15 16 17 18 19"
+                "1A 1B 1C 1D 1E 1F 00 00 06 13 01 13 02 13 03 01"
+                "00 00 BB 00 00 00 18 00 16 00 00 13 65 78 61 6D"
+                "70 6C 65 2E 75 6C 66 68 65 69 6D 2E 6E 65 74 00"
+                "0A 00 08 00 06 00 1D 00 17 00 18 00 10 00 0B 00"
+                "09 08 70 69 6E 67 2F 31 2E 30 00 0D 00 14 00 12"
+                "04 03 08 04 04 01 05 03 08 05 05 01 08 06 06 01"
+                "02 01 00 33 00 26 00 24 00 1D 00 20 35 80 72 D6"
+                "36 58 80 D1 AE EA 32 9A DF 91 21 38 38 51 ED 21"
+                "A2 8E 3B 75 E9 65 D0 D2 CD 16 62 54 00 2D 00 02"
+                "01 01 00 2B 00 03 02 03 04 00 39 00 31 03 04 80"
+                "00 FF F7 04 04 80 A0 00 00 05 04 80 10 00 00 06"
+                "04 80 10 00 00 07 04 80 10 00 00 08 01 0A 09 01"
+                "0A 0A 01 03 0B 01 19 0F 05 63 5F 63 69 64 -- --";
+            // Server Initial Packet .. Server Hello (quic_dump_frame)
+            const char* server_hello =
+                "02 00 00 56 03 03 70 71 72 73 74 75 76 77 78 79"
+                "7A 7B 7C 7D 7E 7F 80 81 82 83 84 85 86 87 88 89"
+                "8A 8B 8C 8D 8E 8F 00 13 01 00 00 2E 00 33 00 24"
+                "00 1D 00 20 9F D7 AD 6D CF F4 29 8D D3 F9 6D 5B"
+                "1B 2A F9 10 A0 53 5B 14 88 D7 F8 FA BB 34 9A 98"
+                "28 80 B6 15 00 2B 00 02 03 04 -- -- -- -- -- --";
+            const char* expect_hello_hash = "ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b";
+
+            openssl_hash hash;
+            hash_context_t* handle = nullptr;
+            hash.open(&handle, alg);
+            hash.update(handle, base16_decode_rfc(client_hello));
+            hash.update(handle, base16_decode_rfc(server_hello));
+            hash.finalize(handle, hello_hash);
+            hash.close(handle);
+
+            _test_case.assert(hello_hash == base16_decode_rfc(expect_hello_hash), __FUNCTION__, "hello hash");
+        }
+        // early_secret: 33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a
+        binary_t early_secret;
+        {
+            binary_t salt;
+            binary_t ikm;
+            salt.resize(1);
+            ikm.resize(32);
+            kdf.hmac_kdf_extract(early_secret, alg, salt, ikm);
+            _logger->hdump("> early secret", early_secret, 16, 3);
+            _test_case.assert(early_secret == base16_decode("33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a"), __FUNCTION__, "early_secret");
+        }
+        // empty_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        binary_t empty_hash;
+        {
+            binary_t empty;
+            dgst.digest(alg, empty, empty_hash);
+            _logger->hdump("> empty hash", empty_hash, 16, 3);
+            _test_case.assert(empty_hash == base16_decode("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"), __FUNCTION__, "empty_hash");
+        }
+        // derived_secret: 6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba
+        binary_t derived_secret;
+        {
+            lambda_expand_label("derived_secret", derived_secret, 32, early_secret, str2bin("derived"), empty_hash,
+                                "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
+        }
+        // handshake_secret: fb9fc80689b3a5d02c33243bf69a1b1b20705588a794304a6e7120155edf149a
+        binary_t handshake_secret;
+        {
+            kdf.hmac_kdf_extract(handshake_secret, alg, derived_secret, shared_secret);
+            _logger->hdump("> handshake_secret", handshake_secret, 16, 3);
+            _test_case.assert(handshake_secret == base16_decode("fb9fc80689b3a5d02c33243bf69a1b1b20705588a794304a6e7120155edf149a"), __FUNCTION__,
+                              "handshake_secret");
+        }
+        // client_secret: b8902ab5f9fe52fdec3aea54e9293e4b8eabf955fcd88536bf44b8b584f14982
+        binary_t client_secret;
+        {
+            lambda_expand_label("client_secret", client_secret, 32, handshake_secret, str2bin("c hs traffic"), hello_hash,
+                                "b8902ab5f9fe52fdec3aea54e9293e4b8eabf955fcd88536bf44b8b584f14982");
+        }
+        // server_secret: 88ad8d3b0986a71965a28d108b0f40ffffe629284a6028c80ddc5dc083b3f5d1
+        binary_t server_secret;
+        {
+            lambda_expand_label("server_secret", server_secret, 32, handshake_secret, str2bin("s hs traffic"), hello_hash,
+                                "88ad8d3b0986a71965a28d108b0f40ffffe629284a6028c80ddc5dc083b3f5d1");
+        }
+        // client handshake key: 30a7e816f6a1e1b3434cf39cf4b415e7
+        binary_t client_handshake_key;
+        {
+            lambda_expand_label("client_handshake_key", client_handshake_key, 16, client_secret, str2bin("quic key"), context,
+                                "30a7e816f6a1e1b3434cf39cf4b415e7");
+        }
+        // client handshake IV: 11e70a5d1361795d2bb04465
+        binary_t client_handshake_iv;
+        {
+            //
+            lambda_expand_label("client_handshake_iv", client_handshake_iv, 12, client_secret, str2bin("quic iv"), context, "11e70a5d1361795d2bb04465");
+        }
+        // client handshake header protection key: 84b3c21cacaf9f54c885e9a506459079
+        binary_t client_handshake_hp;
+        {
+            //
+            lambda_expand_label("client_handshake_hp", client_handshake_hp, 16, client_secret, str2bin("quic hp"), context, "84b3c21cacaf9f54c885e9a506459079");
+        }
+        // server handshake key: 17abbf0a788f96c6986964660414e7ec
+        binary_t server_handshake_key;
+        {
+            lambda_expand_label("server_handshake_key", server_handshake_key, 16, server_secret, str2bin("quic key"), context,
+                                "17abbf0a788f96c6986964660414e7ec");
+        }
+        // server handshake IV: 09597a2ea3b04c00487e71f3
+        binary_t server_handshake_iv;
+        {
+            //
+            lambda_expand_label("server_handshake_iv", server_handshake_iv, 12, server_secret, str2bin("quic iv"), context, "09597a2ea3b04c00487e71f3");
+        }
+        // server handshake header protection key: 2a18061c396c2828582b41b0910ed536
+        binary_t server_handshake_hp;
+        {
+            //
+            lambda_expand_label("server_handshake_hp", server_handshake_hp, 16, server_secret, str2bin("quic hp"), context, "2a18061c396c2828582b41b0910ed536");
+        }
+    }
+    /*
+     * UDP Datagram 3 - Server handshake finished
+     * https://quic.xargs.org/#server-handshake-packet-2
+     */
     {
         // study
     }  // UDP Datagram 4 - Acks
-    // https://quic.xargs.org/#client-initial-packet-2
+    /**
+     * https://quic.xargs.org/#client-initial-packet-2
+     */
     {
         // study
     }  // UDP Datagram 5 - Client handshake finished, "ping"
-    // https://quic.xargs.org/#client-handshake-packet-2
+    /**
+     * https://quic.xargs.org/#client-handshake-packet-2
+     */
     {
         // study
     }  // UDP Datagram 6 - "pong"
-    // https://quic.xargs.org/#server-handshake-packet-3
+    /**
+     * https://quic.xargs.org/#server-handshake-packet-3
+     */
     {
         // study
     }  // UDP Datagram 7 - Acks
-    // https://quic.xargs.org/#client-application-packet-2
+    /**
+     * https://quic.xargs.org/#client-application-packet-2
+     */
     {
         // study
     }  // UDP Datagram 8 - Close connection
-    // https://quic.xargs.org/#server-application-packet-2
+    /**
+     * https://quic.xargs.org/#server-application-packet-2
+     */
     {
         // study
     }
@@ -821,6 +1049,41 @@ void whatsthis() {
     _logger->consoleln(bs);
 }
 
+void test_rfc8448() {
+    _test_case.begin("RFC 8448 TLS 1.3 Traces");
+    // 2.  Private Keys
+    crypto_key keys;
+    crypto_keychain keychain;
+    basic_stream bs;
+    {
+        const char* n =
+            "b4 bb 49 8f 82 79 30 3d 98 08 36 39 9b 36 c6 98 8c"
+            "0c 68 de 55 e1 bd b8 26 d3 90 1a 24 61 ea fd 2d e4 9a 91 d0 15 ab"
+            "bc 9a 95 13 7a ce 6c 1a f1 9e aa 6a f9 8c 7c ed 43 12 09 98 e1 87"
+            "a8 0e e0 cc b0 52 4b 1b 01 8c 3e 0b 63 26 4d 44 9a 6d 38 e2 2a 5f"
+            "da 43 08 46 74 80 30 53 0e f0 46 1c 8c a9 d9 ef bf ae 8e a6 d1 d0"
+            "3e 2b d1 93 ef f0 ab 9a 80 02 c4 74 28 a6 d3 5a 8d 88 d7 9f 7f 1e"
+            "3f";
+        const char* e = "01 00 01";
+        const char* d =
+            "04 de a7 05 d4 3a 6e a7 20 9d d8 07 21 11 a8 3c 81"
+            "e3 22 a5 92 78 b3 34 80 64 1e af 7c 0a 69 85 b8 e3 1c 44 f6 de 62"
+            "e1 b4 c2 30 9f 61 26 e7 7b 7c 41 e9 23 31 4b bf a3 88 13 05 dc 12"
+            "17 f1 6c 81 9c e5 38 e9 22 f3 69 82 8d 0e 57 19 5d 8c 84 88 46 02"
+            "07 b2 fa a7 26 bc f7 08 bb d7 db 7f 67 9f 89 34 92 fc 2a 62 2e 08"
+            "97 0a ac 44 1c e4 e0 c3 08 8d f2 5a e6 79 23 3d f8 a3 bd a2 ff 99"
+            "41";
+        keychain.add_rsa(&keys, "RSA", "RSA", base16_decode_rfc(n), base16_decode_rfc(e), base16_decode_rfc(d));
+        dump_key(keys.any(), &bs);
+        _logger->writeln(bs);
+    }
+    // 3.  Simple 1-RTT Handshake
+    // 4.  Resumed 0-RTT Handshake
+    // 5.  HelloRetryRequest
+    // 6.  Client Authentication
+    // 7.  Compatibility Mode
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -857,7 +1120,9 @@ int main(int argc, char** argv) {
     test_rfc_9001_a3();
     test_rfc_9001_a4();
     test_rfc_9001_a5();
+
     test_quic_xargs_org();
+    test_rfc8448();
 
     openssl_cleanup();
 

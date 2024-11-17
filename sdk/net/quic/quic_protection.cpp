@@ -17,26 +17,29 @@
 namespace hotplace {
 namespace net {
 
-quic_protection::quic_protection(const binary_t& salt, uint32 flags) {
+quic_protection::quic_protection(const binary_t& salt, uint32 mode) {
     _shared.make_share(this);
     _kv[quic_original_dcid] = salt;
-    compute(salt, binary_t(), flags);
+    calc(salt, binary_t(), mode);
 }
 
-quic_protection::quic_protection(const binary_t& salt, const binary_t& context, uint32 flags) {
+quic_protection::quic_protection(const binary_t& salt, const binary_t& context, uint32 mode) {
     _shared.make_share(this);
     _kv[quic_original_dcid] = salt;
-    compute(salt, context, flags);
+    calc(salt, context, mode);
 }
 
 const binary_t& quic_protection::get_item(quic_initial_keys_t mode) { return _kv[mode]; }
 
 void quic_protection::get_item(quic_initial_keys_t mode, binary_t& item) { item = _kv[mode]; }
 
-return_t quic_protection::compute(const binary_t& salt, const binary_t& context, uint32 flags) {
+return_t quic_protection::calc(const binary_t& salt, const binary_t& context, uint32 mode) {
     return_t ret = errorcode_t::success;
-    openssl_kdf kdf;
 
+    bool doclient = (0 == mode) || (quic_mode_t::quic_mode_client == mode);
+    bool doserver = (0 == mode) || (quic_mode_t::quic_mode_server == mode);
+
+    openssl_kdf kdf;
     const char* initial_salt = "0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a";
     binary_t bin_initial_salt = base16_decode_rfc(initial_salt);
     binary_t bin;
@@ -138,44 +141,32 @@ return_t quic_protection::compute(const binary_t& salt, const binary_t& context,
     ret = kdf.hmac_kdf_extract(bin_initial_secret, alg, bin_initial_salt, salt);
     _kv[quic_initial_secret] = bin_initial_secret;
 
-    if ((quic_client_secret | quic_client_key | quic_client_iv | quic_client_hp) & flags) {
+    if (doclient) {
         kdf.hkdf_expand_label(bin_client_initial_secret, alg, 32, bin_initial_secret, str2bin("client in"), context);
         _kv[quic_client_secret] = bin_client_initial_secret;
 
-        if (quic_client_key & flags) {
-            kdf.hkdf_expand_label(bin, alg, 16, bin_client_initial_secret, str2bin("quic key"), context);
-            _kv[quic_client_key] = bin;
-        }
+        kdf.hkdf_expand_label(bin, alg, 16, bin_client_initial_secret, str2bin("quic key"), context);
+        _kv[quic_client_key] = bin;
 
-        if (quic_client_iv & flags) {
-            kdf.hkdf_expand_label(bin, alg, 12, bin_client_initial_secret, str2bin("quic iv"), context);
-            _kv[quic_client_iv] = bin;
-        }
+        kdf.hkdf_expand_label(bin, alg, 12, bin_client_initial_secret, str2bin("quic iv"), context);
+        _kv[quic_client_iv] = bin;
 
-        if (quic_client_hp & flags) {
-            kdf.hkdf_expand_label(bin, alg, 16, bin_client_initial_secret, str2bin("quic hp"), context);
-            _kv[quic_client_hp] = bin;
-        }
+        kdf.hkdf_expand_label(bin, alg, 16, bin_client_initial_secret, str2bin("quic hp"), context);
+        _kv[quic_client_hp] = bin;
     }
 
-    if ((quic_server_secret | quic_server_key | quic_server_iv | quic_server_hp) & flags) {
+    if (doserver) {
         kdf.hkdf_expand_label(bin_server_initial_secret, alg, 32, bin_initial_secret, str2bin("server in"), context);
         _kv[quic_server_secret] = bin_server_initial_secret;
 
-        if (quic_server_key & flags) {
-            kdf.hkdf_expand_label(bin, alg, 16, bin_server_initial_secret, str2bin("quic key"), context);
-            _kv[quic_server_key] = bin;
-        }
+        kdf.hkdf_expand_label(bin, alg, 16, bin_server_initial_secret, str2bin("quic key"), context);
+        _kv[quic_server_key] = bin;
 
-        if (quic_server_iv & flags) {
-            kdf.hkdf_expand_label(bin, alg, 12, bin_server_initial_secret, str2bin("quic iv"), context);
-            _kv[quic_server_iv] = bin;
-        }
+        kdf.hkdf_expand_label(bin, alg, 12, bin_server_initial_secret, str2bin("quic iv"), context);
+        _kv[quic_server_iv] = bin;
 
-        if (quic_server_hp & flags) {
-            kdf.hkdf_expand_label(bin, alg, 16, bin_server_initial_secret, str2bin("quic hp"), context);
-            _kv[quic_server_hp] = bin;
-        }
+        kdf.hkdf_expand_label(bin, alg, 16, bin_server_initial_secret, str2bin("quic hp"), context);
+        _kv[quic_server_hp] = bin;
     }
 
     return ret;

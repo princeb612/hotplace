@@ -192,6 +192,8 @@
   * RFC 7685 A Transport Layer Security (TLS) ClientHello Padding Extension
   * RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
   * RFC 8422 Elliptic Curve Cryptography (ECC) Cipher Suites for Transport Layer Security (TLS) Versions 1.2 and Earlier
+  * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+  * RFC 8448 Example Handshake Traces for TLS 1.3
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
 * ASN.1
   * ITU-T X.680-X.699

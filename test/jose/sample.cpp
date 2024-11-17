@@ -667,15 +667,15 @@ void test_rfc7515_bykeygen() {
     print_text("RFC 7515 by key generation");
 
     constexpr byte_t hs256_header[] = "{\"typ\":\"JWT\",\r\n \"alg\":\"HS256\"}";
-    constexpr byte_t rs256_header[] = "{\"alg\":\"RS256\"}";
-    constexpr byte_t ps256_header[] = "{\"alg\":\"PS256\"}";
-    constexpr byte_t es256_header[] = "{\"alg\":\"ES256\"}";
-    constexpr byte_t rs384_header[] = "{\"alg\":\"RS384\"}";
-    constexpr byte_t ps384_header[] = "{\"alg\":\"PS384\"}";
-    constexpr byte_t es384_header[] = "{\"alg\":\"ES384\"}";
-    constexpr byte_t rs512_header[] = "{\"alg\":\"RS512\"}";
-    constexpr byte_t ps512_header[] = "{\"alg\":\"PS512\"}";
-    constexpr byte_t es512_header[] = "{\"alg\":\"ES512\"}";
+    constexpr byte_t rs256_header[] = R"({"alg":"RS256"})";
+    constexpr byte_t ps256_header[] = R"({"alg":"PS256"})";
+    constexpr byte_t es256_header[] = R"({"alg":"ES256"})";
+    constexpr byte_t rs384_header[] = R"({"alg":"RS384"})";
+    constexpr byte_t ps384_header[] = R"({"alg":"PS384"})";
+    constexpr byte_t es384_header[] = R"({"alg":"ES384"})";
+    constexpr byte_t rs512_header[] = R"({"alg":"RS512"})";
+    constexpr byte_t ps512_header[] = R"({"alg":"PS512"})";
+    constexpr byte_t es512_header[] = R"({"alg":"ES512"})";
     constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
     return_t ret = errorcode_t::success;

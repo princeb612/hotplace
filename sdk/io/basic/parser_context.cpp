@@ -267,7 +267,7 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size, uint32 
                 switch (type) {
                     case token_alpha:
                     case token_number:
-                        get_token().set_type(token_identifier).increase();
+                        get_token().set_type(token_word).increase();
                         break;
                     case token_space:
                         add_context_token(hook);

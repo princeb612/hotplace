@@ -111,14 +111,14 @@ class payload_member {
     payload_member& set_reference_of(payload_member* member);
 
     payload_member& write(binary_t& bin);
-    payload_member& read(const byte_t* ptr, size_t size_ptr, size_t* size_read);
+    payload_member& read(const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read);
     payload_member& reserve(uint16 size);
 
     payload_encoded* get_payload_encoded();
 
    protected:
-    return_t doread(const byte_t* ptr, size_t size_ptr, size_t* size_read);
-    return_t doread_encoded(const byte_t* ptr, size_t size_ptr, size_t* size_read);
+    return_t doread(const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read);
+    return_t doread_encoded(const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read);
 
    private:
     std::string _name;
@@ -169,7 +169,7 @@ class payload_encoded {
 
     virtual size_t lsize(const byte_t* stream, size_t size) = 0;
     virtual size_t value(const byte_t* stream, size_t size) = 0;
-    virtual void read(const byte_t* stream, size_t size, size_t& pos) = 0;
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos) = 0;
 
     virtual void addref() { _shared.addref(); }
     virtual void release() { _shared.delref(); }

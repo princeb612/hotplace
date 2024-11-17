@@ -268,14 +268,14 @@ void test_multipattern_search() {
         t_aho_corasick<int> ac;
         std::multimap<range_t, unsigned> result;
         std::multimap<range_t, unsigned> expect = {{range_t(0, 2), 0}, {range_t(3, 7), 1}, {range_t(8, 12), 1}};
-        std::vector<int> pattern1 = {token_type, token_identifier, token_colon};
-        std::vector<int> pattern2 = {token_type, token_identifier, token_equal, token_identifier, token_colon};
+        std::vector<int> pattern1 = {token_type, token_word, token_colon};
+        std::vector<int> pattern2 = {token_type, token_word, token_equal, token_word, token_colon};
 
         // after parsing
         std::vector<int> sample_parsed = {
-            token_type, token_identifier, token_colon,                                 // int a;
-            token_type, token_identifier, token_equal, token_identifier, token_colon,  // int b = 0;
-            token_type, token_identifier, token_equal, token_identifier, token_colon   // bool b = true;
+            token_type, token_word, token_colon,                           // int a;
+            token_type, token_word, token_equal, token_word, token_colon,  // int b = 0;
+            token_type, token_word, token_equal, token_word, token_colon   // bool b = true;
         };
 
         ac.insert(pattern1);
@@ -374,7 +374,7 @@ void test_patterns() {
         {"$pattern_setof", token_setof},
         {"$pattern_taggedmode", token_taggedmode},
         {"$pattern_assign", token_assign},
-        {"$identifier", token_identifier},
+        {"$identifier", token_word},
     };
     asn1_pattern asn1_patterns[] = {
         {0, "$pattern_builtintype"},

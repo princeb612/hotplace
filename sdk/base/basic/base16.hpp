@@ -49,7 +49,7 @@ enum base16_flag_t {
  * @param   char* buf [out]
  * @param   size_t* buflen [out]
  * @example
- *          binary_t source = str2bin ("wild wild world");
+ *          binary_t source = str2bin ("hello world");
  *          size_t size = 0;
  *          base16_encode (&source[0], source.size, nullptr, &size);
  *          char* buf = (char*) malloc (size);
@@ -64,7 +64,7 @@ return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buf
  * @param   std::string& outpart [out]
  * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc | base16_capital
  * @example
- *          binary_t source = str2bin ("wild wild world");
+ *          binary_t source = str2bin ("hello world");
  *          std::string encoded;
  *          base16_encode (&source[0], source.size, encoded);
  */
@@ -76,7 +76,7 @@ return_t base16_encode(const byte_t* source, size_t size, std::string& outpart, 
  * @param   stream_t* stream [out]
  * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc | base16_capital
  * @example
- *          binary_t source = str2bin ("wild wild world");
+ *          binary_t source = str2bin ("hello world");
  *          basic_stream encoded;
  *          base16_encode (&source[0], source.size, &encoded);
  */
@@ -87,7 +87,7 @@ return_t base16_encode(const byte_t* source, size_t size, stream_t* stream, uint
  * @param   char* buf [out]
  * @param   size_t* buflen [out]
  * @example
- *          binary_t source = str2bin ("wild wild world");
+ *          binary_t source = str2bin ("hello world");
  *          size_t size = 0;
  *          base16_encode (source, nullptr, &size);
  *          char* buf = (char*) malloc (size);
@@ -101,7 +101,7 @@ return_t base16_encode(const binary_t& source, char* buf, size_t* buflen);
  * @param   std::string& outpart [out]
  * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc | base16_capital
  * @example
- *          binary_t source = str2bin ("wild wild world");
+ *          binary_t source = str2bin ("hello world");
  *          std::string encoded;
  *          base16_encode (source, encoded);
  */
@@ -111,7 +111,7 @@ return_t base16_encode(const binary_t& source, std::string& outpart, uint32 flag
  * @param   const binary_t& source [in]
  * @param   stream_t* stream [out]
  * @example
- *          binary_t source = str2bin ("wild wild world");
+ *          binary_t source = str2bin ("hello world");
  *          basic_stream encoded;
  *          base16_encode (source, &encoded);
  */
@@ -120,14 +120,32 @@ return_t base16_encode(const binary_t& source, stream_t* stream);
  * @brief   encode
  * @param   const binary_t& source [in]
  * @example
- *          binary_t source = str2bin ("wild wild world");
+ *          binary_t source = str2bin ("hello world");
  *          std::string encoded = base16_encode (source);;
  */
 std::string base16_encode(const binary_t& source);
-
+/**
+ * @brief   encode
+ * @param   const char* source [in]
+ */
 std::string base16_encode(const char* source);
+/**
+ * @brief   encode
+ * @param   const char* source [in]
+ * @param   std::string& outpart [out]
+ */
 return_t base16_encode(const char* source, std::string& outpart);
+/**
+ * @brief   encode
+ * @param   const char* source [in]
+ * @param   binary_t& outpart [out]
+ */
 return_t base16_encode(const char* source, binary_t& outpart);
+/**
+ * @brief   encode
+ * @param   const std::string& source [in]
+ * @param   binary_t& outpart [out]
+ */
 return_t base16_encode(const std::string& source, binary_t& outpart);
 
 /**
@@ -160,6 +178,7 @@ return_t base16_decode(const std::string& source, binary_t& outpart, uint32 flag
  * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc
  */
 return_t base16_decode(const std::string& source, stream_t* stream, uint32 flags = 0);
+
 /**
  * @brief   decode
  * @param   const char* source [in]
@@ -181,7 +200,9 @@ binary_t base16_decode(const char* source, size_t size);
 binary_t base16_decode(const std::string& source);
 
 /**
- * @brief encode (support various rfc-style)
+ * @brief   encode (support various rfc-style)
+ * @param   const std::string& source [in]
+ * @return  std::string
  * @example
  *      // RFC 7516
  *      // Initialization Vector [227, 197, 117, 252, 2, 219, 233, 68, 180, 225, 77, 219]
@@ -195,6 +216,11 @@ binary_t base16_decode(const std::string& source);
  *                                       "90 91 92 93 94 95 96 97 98 99 9a 9b 9c 9d 9e 9f");
  */
 std::string base16_encode_rfc(const std::string& source);
+/**
+ * @brief   decode
+ * @param   const std::string& source [in]
+ * @return  binary_t
+ */
 binary_t base16_decode_rfc(const std::string& source);
 
 }  // namespace hotplace

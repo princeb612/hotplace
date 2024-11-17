@@ -27,6 +27,10 @@ class client_socket {
 
     /**
      * @brief   open (tcp/udp)
+     * @param   socket_t* sock [out]
+     * @param   sockaddr_storage_t* addr [in]
+     * @param   const char* address [in]
+     * @param   uint16 port [in]
      */
     virtual return_t open(socket_t* sock, sockaddr_storage_t* addr, const char* address, uint16 port) { return errorcode_t::success; }
     /**
@@ -45,7 +49,7 @@ class client_socket {
      * @oaram   tls_context_t** tls_handle [out]
      * @oaram   const char* address [in]
      * @oaram   uint16 port [in]
-     * @oaram   uint32 timeout [in[
+     * @oaram   uint32 timeout [in]
      */
     virtual return_t connectto(socket_t sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) { return errorcode_t::success; }
     /**

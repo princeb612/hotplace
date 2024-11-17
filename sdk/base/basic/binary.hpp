@@ -53,9 +53,11 @@ class binary {
     binary& push_back(byte_t rhs);
 
     /*
+     * @brief   append
      * @sample
      *          uint32 data = 100;
-     *          b.append(data, htonl);
+     *          b.append(data);          // 64000000 little endian
+     *          b.append(data, hton32);  // 00000064 big endian
      */
     binary& append(int16 value, std::function<int16(int16)> func = nullptr);
     binary& append(uint16 value, std::function<uint16(uint16)> func = nullptr);
@@ -67,6 +69,11 @@ class binary {
     binary& append(uint128 value, std::function<uint128(uint128)> func = nullptr);
     binary& append(float value, std::function<uint32(uint32)> func = nullptr);
     binary& append(double value, std::function<uint64(uint64)> func = nullptr);
+    /**
+     * @sample
+     *          b.append("token");
+     *          00000000 : 74 6F 6B 65 6E -- -- -- -- -- -- -- -- -- -- -- | token
+     */
     binary& append(const std::string& value);
     binary& append(const binary_t& value);
     binary& append(const binary& value);
@@ -76,6 +83,16 @@ class binary {
     binary& append(const byte_t* buf, size_t from, size_t to);
 
     binary& fill(size_t count, const byte_t& value);
+
+    /**
+     * @brief   byte order
+     * @sample
+     *          b.byteorder(false);
+     *          b << ui32;          // system endian
+     *          b.byteorder(true);
+     *          b << ui32;          // big endian
+     */
+    binary& byteorder(bool be);
 
     binary& operator<<(char value);
     binary& operator<<(byte_t value);
@@ -120,6 +137,7 @@ class binary {
 
    private:
     binary_t _bin;
+    bool _be;
 };
 
 /**
@@ -185,7 +203,7 @@ return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t 
  * @param   uint32 len [in] limited up to sizeof(T)
  *          in case of (len == sizeof(T)) it works like binary_append
  * @param   T value [in]
- * @param   std::function<T(T)> func [inopt]
+ * @param   std::function<T(T)> func [inopt] hton16, ..., hton128
  */
 template <typename T>
 return_t t_binary_append2(binary_t& target, uint32 bnlen, T value, std::function<T(T)> func = nullptr) {
@@ -317,7 +335,7 @@ static inline binary_t str2bin(const std::string& source) {
 /**
  * @brief   binary to integer (uint16, uint32, ...)
  * @remarks
- *          // sketch
+ *          // sketch .. wide conversion
  *          binary_t bin = base16_decode(0x00000001);
  *          auto i = binary_to_integer<uint32>(bin);
  *          _test_case.assert(1 == i, __FUNCTION__, "binary_to_integer");
@@ -359,7 +377,7 @@ T t_binary_to_integer(const binary_t& bin) {
 /**
  * @brief   binary to integer
  * @remarks
- *          // sketch
+ *          // sketch .. wide/narrow conversion
  *          binary_t bin = base16_decode(0x01);
  *          auto i = binary_to_intger_force<uint32>(bin);
  *          _test_case.assert(1 == i, __FUNCTION__, "binary_to_integer");

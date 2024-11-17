@@ -15,45 +15,45 @@
 
 namespace hotplace {
 
-binary::binary() {}
+binary::binary() : _be(false) {}
 
-binary::binary(const binary& rhs) : _bin(rhs._bin) {}
+binary::binary(const binary& rhs) : _be(false), _bin(rhs._bin) {}
 
-binary::binary(binary&& rhs) : _bin(std::move(rhs._bin)) {}
+binary::binary(binary&& rhs) : _be(false), _bin(std::move(rhs._bin)) {}
 
-binary::binary(char rhs) { push_back(rhs); }
+binary::binary(char rhs) : _be(false) { push_back(rhs); }
 
-binary::binary(byte_t rhs) { push_back(rhs); }
+binary::binary(byte_t rhs) : _be(false) { push_back(rhs); }
 
-binary::binary(int16 rhs) { append(rhs); }
+binary::binary(int16 rhs) : _be(false) { append(rhs); }
 
-binary::binary(uint16 rhs) { append(rhs); }
+binary::binary(uint16 rhs) : _be(false) { append(rhs); }
 
-binary::binary(int32 rhs) { append(rhs); }
+binary::binary(int32 rhs) : _be(false) { append(rhs); }
 
-binary::binary(uint32 rhs) { append(rhs); }
+binary::binary(uint32 rhs) : _be(false) { append(rhs); }
 
-binary::binary(int64 rhs) { append(rhs); }
+binary::binary(int64 rhs) : _be(false) { append(rhs); }
 
-binary::binary(uint64 rhs) { append(rhs); }
+binary::binary(uint64 rhs) : _be(false) { append(rhs); }
 
-binary::binary(int128 rhs) { append(rhs); }
+binary::binary(int128 rhs) : _be(false) { append(rhs); }
 
-binary::binary(uint128 rhs) { append(rhs); }
+binary::binary(uint128 rhs) : _be(false) { append(rhs); }
 
-binary::binary(float rhs) { append(rhs); }
+binary::binary(float rhs) : _be(false) { append(rhs); }
 
-binary::binary(double rhs) { append(rhs); }
+binary::binary(double rhs) : _be(false) { append(rhs); }
 
-binary::binary(const std::string& rhs) { append(rhs); }
+binary::binary(const std::string& rhs) : _be(false) { append(rhs); }
 
-binary::binary(const char* rhs) { append(rhs); }
+binary::binary(const char* rhs) : _be(false) { append(rhs); }
 
-binary::binary(const byte_t* buf, size_t size) { append(buf, size); }
+binary::binary(const byte_t* buf, size_t size) : _be(false) { append(buf, size); }
 
-binary::binary(const binary_t& rhs) : _bin(rhs) {}
+binary::binary(const binary_t& rhs) : _be(false), _bin(rhs) {}
 
-binary::binary(binary_t&& rhs) : _bin(std::move(rhs)) {}
+binary::binary(binary_t&& rhs) : _be(false), _bin(std::move(rhs)) {}
 
 binary& binary::push_back(byte_t rhs) {
     binary_push(_bin, rhs);
@@ -150,29 +150,34 @@ binary& binary::fill(size_t count, const byte_t& value) {
     return *this;
 }
 
+binary& binary::byteorder(bool be) {
+    _be = be;
+    return *this;
+}
+
 binary& binary::operator<<(char value) { return push_back(value); }
 
 binary& binary::operator<<(byte_t value) { return push_back(value); }
 
-binary& binary::operator<<(int16 value) { return append(value); }
+binary& binary::operator<<(int16 value) { return append(value, _be ? hton16 : nullptr); }
 
-binary& binary::operator<<(uint16 value) { return append(value); }
+binary& binary::operator<<(uint16 value) { return append(value, _be ? hton16 : nullptr); }
 
-binary& binary::operator<<(int32 value) { return append(value); }
+binary& binary::operator<<(int32 value) { return append(value, _be ? hton32 : nullptr); }
 
-binary& binary::operator<<(uint32 value) { return append(value); }
+binary& binary::operator<<(uint32 value) { return append(value, _be ? hton32 : nullptr); }
 
-binary& binary::operator<<(int64 value) { return append(value); }
+binary& binary::operator<<(int64 value) { return append(value, _be ? hton64 : nullptr); }
 
-binary& binary::operator<<(uint64 value) { return append(value); }
+binary& binary::operator<<(uint64 value) { return append(value, _be ? hton64 : nullptr); }
 
-binary& binary::operator<<(int128 value) { return append(value); }
+binary& binary::operator<<(int128 value) { return append(value, _be ? hton128 : nullptr); }
 
-binary& binary::operator<<(uint128 value) { return append(value); }
+binary& binary::operator<<(uint128 value) { return append(value, _be ? hton128 : nullptr); }
 
-binary& binary::operator<<(float value) { return append(value); }
+binary& binary::operator<<(float value) { return append(value, _be ? hton32 : nullptr); }
 
-binary& binary::operator<<(double value) { return append(value); }
+binary& binary::operator<<(double value) { return append(value, _be ? hton64 : nullptr); }
 
 binary& binary::operator<<(const std::string& value) { return append(value); }
 
@@ -186,25 +191,25 @@ binary& binary::operator=(char value) { return clear().push_back(value); }
 
 binary& binary::operator=(byte_t value) { return clear().push_back(value); }
 
-binary& binary::operator=(int16 value) { return clear().append(value); }
+binary& binary::operator=(int16 value) { return clear().append(value, _be ? hton16 : nullptr); }
 
-binary& binary::operator=(uint16 value) { return clear().append(value); }
+binary& binary::operator=(uint16 value) { return clear().append(value, _be ? hton16 : nullptr); }
 
-binary& binary::operator=(int32 value) { return clear().append(value); }
+binary& binary::operator=(int32 value) { return clear().append(value, _be ? hton32 : nullptr); }
 
-binary& binary::operator=(uint32 value) { return clear().append(value); }
+binary& binary::operator=(uint32 value) { return clear().append(value, _be ? hton32 : nullptr); }
 
-binary& binary::operator=(int64 value) { return clear().append(value); }
+binary& binary::operator=(int64 value) { return clear().append(value, _be ? hton64 : nullptr); }
 
-binary& binary::operator=(uint64 value) { return clear().append(value); }
+binary& binary::operator=(uint64 value) { return clear().append(value, _be ? hton64 : nullptr); }
 
-binary& binary::operator=(int128 value) { return clear().append(value); }
+binary& binary::operator=(int128 value) { return clear().append(value, _be ? hton128 : nullptr); }
 
-binary& binary::operator=(uint128 value) { return clear().append(value); }
+binary& binary::operator=(uint128 value) { return clear().append(value, _be ? hton128 : nullptr); }
 
-binary& binary::operator=(float value) { return clear().append(value); }
+binary& binary::operator=(float value) { return clear().append(value, _be ? hton32 : nullptr); }
 
-binary& binary::operator=(double value) { return clear().append(value); }
+binary& binary::operator=(double value) { return clear().append(value, _be ? hton64 : nullptr); }
 
 binary& binary::operator=(const std::string& value) { return clear().append(value); }
 

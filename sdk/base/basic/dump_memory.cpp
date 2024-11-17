@@ -134,7 +134,7 @@ return_t dump_memory(bufferio_context_t* handle, stream_t* stream_object, unsign
     return ret;
 }
 
-return_t dump_memory(variant_t vt, stream_t* stream_object, unsigned hex_part, unsigned indent, size_t rebase, int flags) {
+return_t dump_memory(const variant_t& vt, stream_t* stream_object, unsigned hex_part, unsigned indent, size_t rebase, int flags) {
     basic_stream bs;
 
     vtprintf(&bs, vt);

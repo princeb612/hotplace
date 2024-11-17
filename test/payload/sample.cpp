@@ -31,8 +31,8 @@ typedef struct _OPTION {
 
 t_shared_instance<t_cmdline_t<OPTION> > cmdline;
 
-//  test_payload_dump
-//  test_payload_parse
+//  test_payload_write
+//  test_payload_read
 //
 //  type        size    endian      name        group
 //  uint8       1       N/A         "padlen"    "pad"
@@ -40,54 +40,67 @@ t_shared_instance<t_cmdline_t<OPTION> > cmdline;
 //  uint32      4       true        "value"     N/A
 //  binary_t    *       N/A         "pad"       "pad"
 
-void test_payload_dump() {
+void test_payload_write() {
     const OPTION& option = cmdline->value();
     _test_case.begin("payload");
 
+    payload pl;
+    binary_t data = str2bin("data");
+    binary_t pad = str2bin("pad");
+    uint8 padlen = 3;  // "pad"
+    basic_stream bs;
+    binary_t bin_padded;
+    binary_t bin_notpadded;
+
+    pl << new payload_member(padlen, "padlen", "pad") << new payload_member(data, "data") << new payload_member((uint32)0x1000, true, "value")
+       << new payload_member(pad, "pad", "pad");
+
+    // enable "pad" group
     {
-        payload pl;
-        binary_t data = str2bin("data");
-        binary_t pad = str2bin("pad");
-        uint8 padlen = 3;  // "pad"
-        basic_stream bs;
-        binary_t bin_padded;
-        binary_t bin_notpadded;
-
-        pl << new payload_member(padlen, "padlen", "pad") << new payload_member(data, "data") << new payload_member((uint32)0x1000, true, "value")
-           << new payload_member(pad, "pad", "pad");
-
-        pl.set_group("pad", true);  // enable "pad" group
+        pl.set_group("pad", true);
         pl.write(bin_padded);
-        if (option.verbose) {
-            _logger->hdump("padded", bin_padded, 16, 3);
-        }
-        _test_case.assert(bin_padded == base16_decode_rfc("03 64 61 74 61 00 00 10 00 70 61 64"), __FUNCTION__,
-                          "payload padded");  // 3 || "data" || 0x00001000 || "pad"
 
-        pl.set_group("pad", false);  // disable "pad" group
+        // test
+        binary_t data;
+        binary_t pad;
+        auto padlen = t_to_int<uint8>(pl.select("padlen"));
+        auto value = t_to_int<uint32>(pl.select("value"));
+        pl.select("data")->get_variant().to_binary(data);
+        pl.select("pad")->get_variant().to_binary(pad);
+        _test_case.assert(3 == padlen, __FUNCTION__, "write #padlen");
+        _test_case.assert(data == str2bin("data"), __FUNCTION__, "write #value");
+        _test_case.assert(0x1000 == value, __FUNCTION__, "write #data");
+        _test_case.assert(pad == str2bin("pad"), __FUNCTION__, "write #pad");
+        _logger->hdump("padded", bin_padded, 16, 3);
+        _test_case.assert(bin_padded == base16_decode_rfc("03 64 61 74 61 00 00 10 00 70 61 64"), __FUNCTION__,
+                          R"(enable "pad" group)");  // 3 || "data" || 0x00001000 || "pad"
+    }
+
+    // disable "pad" group
+    {
+        pl.set_group("pad", false);
         pl.write(bin_notpadded);
-        if (option.verbose) {
-            _logger->hdump("not padded", bin_notpadded, 16, 3);
-        }
-        _test_case.assert(bin_notpadded == base16_decode_rfc("64 61 74 61 00 00 10 00"), __FUNCTION__, "payload not padded");  // "data" || 0x00001000
+
+        // test
+        _logger->hdump("not padded", bin_notpadded, 16, 3);
+        _test_case.assert(bin_notpadded == base16_decode_rfc("64 61 74 61 00 00 10 00"), __FUNCTION__, R"(disable "pad" group)");  // "data" || 0x00001000
     }
 }
 
-void test_payload_parse() {
+void test_payload_read() {
     const OPTION& option = cmdline->value();
     _test_case.begin("payload");
 
+    payload pl;
+    binary_t bin_dump;
+    binary_t decoded = base16_decode("036461746100001000706164");
+
+    pl << new payload_member((uint8)0, "padlen", "pad") << new payload_member(binary_t(), "data") << new payload_member((uint32)0, true, "value")
+       << new payload_member(binary_t(), "pad", "pad");
+    pl.set_reference_value("pad", "padlen");  // length of "pad" is value of "padlen"
+
+    // read
     {
-        payload pl;
-        binary_t data;
-        binary_t pad;
-        binary_t bin_dump;
-        binary_t decoded = base16_decode("036461746100001000706164");
-
-        pl << new payload_member((uint8)0, "padlen", "pad") << new payload_member(data, "data") << new payload_member((uint32)0, true, "value")
-           << new payload_member(pad, "pad", "pad");
-        pl.set_reference_value("pad", "padlen");  // length of "pad" is value of "padlen"
-
         // pl << padlen(uint8:1) << data(unknown:?) << value(uint32:4) << pad(referenceof.padlen:?)
         //  input  : 036461746100001000706164
         //         : pl << padlen(uint8:1) << data(unknown:?) << value(uint32:4) << pad(referenceof.padlen:?)
@@ -100,15 +113,25 @@ void test_payload_parse() {
         //         : 03 64617461 00001000 706164
         //  result : padlen->3, data->"data", value->0x00001000, pad->"pad"
         pl.read(decoded);
+
+        binary_t data;
+        binary_t pad;
+        auto padlen = t_to_int<uint8>(pl.select("padlen"));
+        auto value = t_to_int<uint32>(pl.select("value"));
+        pl.select("data")->get_variant().to_binary(data);
+        pl.select("pad")->get_variant().to_binary(pad);
+        _test_case.assert(3 == padlen, __FUNCTION__, "read #padlen");
+        _test_case.assert(data == str2bin("data"), __FUNCTION__, "read #value");
+        _test_case.assert(0x1000 == value, __FUNCTION__, "read #data");
+        _test_case.assert(pad == str2bin("pad"), __FUNCTION__, "read #pad");
+    }
+    // write
+    {
         pl.write(bin_dump);
 
         _logger->hdump("decoded", decoded, 16, 3);
         _logger->hdump("dump", bin_dump, 16, 3);
-        _test_case.assert(bin_dump == decoded, __FUNCTION__, "read/parse");
-
-        binary_t data2;
-        pl.select("data")->get_variant().to_binary(data2);
-        _test_case.assert(data2 == str2bin("data"), __FUNCTION__, "read binary");
+        _test_case.assert(bin_dump == decoded, __FUNCTION__, "read (contains one member of arbitrary size)");
     }
 }
 
@@ -128,6 +151,7 @@ void test_payload_uint24() {
     binary_t bin_payload;
     binary_t expect = base16_decode("0310000010000000706164");
 
+    // write
     {
         payload pl;
         uint8 padlen = 3;  // "pad"
@@ -139,12 +163,13 @@ void test_payload_uint24() {
            << new payload_member(pad, "pad");
 
         pl.write(bin_payload);
-        if (option.verbose) {
-            _logger->hdump("uint24", bin_payload, 16, 3);
-        }
+
+        // test
+        _logger->hdump("uint24", bin_payload, 16, 3);
         _test_case.assert(expect == bin_payload, __FUNCTION__, "payload /w i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
     }
 
+    // read
     {
         payload pl;
         uint32_24_t i32_24;
@@ -153,16 +178,14 @@ void test_payload_uint24() {
 
         pl.read(expect);
 
+        // test
         uint8 padlen = t_to_int<uint8>(pl.select("padlen"));
         uint32_24_t i24 = t_to_int<uint32>(pl.select("int32_24"));
         uint32 i32 = t_to_int<uint32>(pl.select("int32_32"));
-
-        if (option.verbose) {
-            uint32 i24_value = i24.get();
-            _logger->writeln("padlen %u uint32_24 %u (0x%08x) uint32_32 %u (0x%08x)", padlen, i24_value, i24_value, i32, i32);
-        }
-
-        _test_case.assert(0x100000 == i24.get(), __FUNCTION__, "payload /w i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
+        uint32 i24_value = i24.get();
+        _logger->writeln("padlen %u uint32_24 %u (0x%08x) uint32_32 %u (0x%08x)", padlen, i24_value, i24_value, i32, i32);
+        _test_case.assert(3 == padlen, __FUNCTION__, "read #padlen");
+        _test_case.assert(0x100000 == i24.get(), __FUNCTION__, "read #i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
 
         binary_t bin_dump;
         pl.write(bin_dump);
@@ -487,8 +510,8 @@ int main(int argc, char** argv) {
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
 
-    test_payload_dump();
-    test_payload_parse();
+    test_payload_write();
+    test_payload_read();
     test_payload_uint24();
     test_http2_frame();
     test_quic_packet();

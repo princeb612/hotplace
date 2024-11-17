@@ -35,7 +35,7 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
     constexpr char constexpr_ec_x[] = "x";
     constexpr char constexpr_ec_y[] = "y";
     constexpr char constexpr_ec_pub[] = "public (04:x:y)";
-    constexpr char constexpr_ec_d[] = "private (d)";
+    constexpr char constexpr_ec_d[] = "d (private)";
 
     std::map<crypt_item_t, const char*> table;
     t_maphint<crypt_item_t, const char*> hint(table);

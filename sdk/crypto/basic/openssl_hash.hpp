@@ -34,7 +34,7 @@ class openssl_hash : public hash_t {
     /**
      * @brief open (hash, HMAC, CMAC)
      * @param hash_context_t** handle [out]
-     * @param const char* algorithm [in] "md5", "sha1", "sha256", "sha384", "sha512"
+     * @param const char* algorithm [in]
      *      "md4", "md5"
      *      "sha1", "sha224", "sha256", "sha384", "sha512", "sha2-512/224", "sha2-512/256"
      *      "sha3-224", "sha3-256", "sha3-384", "sha3-512"
@@ -218,11 +218,12 @@ class openssl_mac {
      * @brief   AES Cipher-Based Message Authentication Code (AES-CMAC)
      * @desc    RFC 4493 The AES-CMAC Algorithm
      *          see also kdf_ckdf
-     * @remarks not the same algorithm AES-CBC-MAC
-     *          see also RFC 8152 9.2.  AES Message Authentication Code (AES-CBC-MAC)
-     *
+     * @remarks
      *          run as openssl_kdf::cmac_kdf_extract
      *          see also RFC 4615 Figure 1.  The AES-CMAC-PRF-128 Algorithm
+     *
+     *          not the same algorithm AES-CBC-MAC
+     *          see also RFC 8152 9.2.  AES Message Authentication Code (AES-CBC-MAC)
      */
     return_t cmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output);
     return_t cmac(crypt_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output);

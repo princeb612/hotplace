@@ -47,6 +47,10 @@ crypto_key::~crypto_key() { clear(); }
 
 return_t crypto_key::load_pem(const char* buffer, int flags, crypto_use_t use) {
     return_t ret = errorcode_t::success;
+    /**
+     * RFC 7468 Textual Encodings of PKIX, PKCS, and CMS Structures
+     */
+
     BIO* bio_pub = BIO_new(BIO_s_mem());
     BIO* bio_priv = BIO_new(BIO_s_mem());
 

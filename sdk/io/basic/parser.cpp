@@ -52,7 +52,7 @@ parser::parser() {
     _token_id.insert({token_newline, "newline"});
     _token_id.insert({token_and, "and"});
     _token_id.insert({token_or, "or"});
-    _token_id.insert({token_identifier, "identifier"});
+    _token_id.insert({token_word, "identifier"});
     _token_id.insert({token_quot_string, "quot_string"});
     _token_id.insert({token_comments, "comments"});
     _token_id.insert({token_assign, "assign"});
@@ -271,7 +271,7 @@ void parser::dump(const parser::context& context, basic_stream& bs) {
     color.insert({token_lvalue, "1;34"});
     color.insert({token_assign, "1;33"});
     color.insert({token_or, "1;32"});
-    color.insert({token_identifier, "1;37"});
+    color.insert({token_word, "1;37"});
     color.insert({token_comments, "0;37"});
     color.insert({token_emphasis, "1;35"});
     color.insert({token_type, "1;36"});

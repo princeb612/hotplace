@@ -85,48 +85,37 @@ return_t payload::read(const binary_t& bin, size_t& pos) { return read((byte_t*)
 
 return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
-    size_t size_payload = 0;
-    size_t size_estimated = 0;
+    size_t len = 0;
+    size_t offset = pos;
 
     __try2 {
-        if ((nullptr == base) || (pos > size)) {
+        if (nullptr == base) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        if (pos >= size) {
+            ret = errorcode_t::no_data;
+            __leave2;
+        }
 
-        auto lambda_postread = [&](byte_t*& p, size_t& l, size_t itemsize, bool sum) -> void {
-            p += itemsize;
-            l -= itemsize;
-            if (sum) {
-                size_payload += itemsize;
-            }
-        };
-        auto lambda_estimate = [&](size_t itemsize) -> void { size_estimated += itemsize; };
-
-        byte_t* baseptr = const_cast<byte_t*>(base);
         size_t size_item = 0;
-        std::list<payload_member*> _size_unknown;
-        std::set<payload_member*> _once_read;
-
-        lambda_postread(baseptr, size, pos, false);
+        std::list<payload_member*> list_size_unknown;
+        std::set<payload_member*> set_once_read;
 
         {
-            byte_t* ptr = baseptr;
-            size_t len = size;
             for (auto item : _members) {
                 bool condition = get_group_condition(item->get_group());
                 if (false == condition) {
                     continue;
                 }
 
-                auto try_read = _size_unknown.empty();
+                auto try_read = list_size_unknown.empty();
                 uint16 space = 0;
                 if (item->encoded()) {
                     if (try_read) {
-                        item->read(ptr, len, &size_item);
-                        lambda_postread(ptr, len, size_item, true);
-                        lambda_estimate(size_item);
-                        _once_read.insert(item);
+                        item->read(base, size, offset, &size_item);
+                        offset += size_item;
+                        set_once_read.insert(item);
                     } else {
                         ret = errorcode_t::bad_data;
                         break;
@@ -138,60 +127,59 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
                         if (ref) {
                             space = ref->get_reference_value();
                             item->reserve(space);
-                            item->read(ptr, len, &size_item);
-                            lambda_postread(ptr, len, size_item, true);
-                            lambda_estimate(size_item);
+                            item->read(base, size, offset, &size_item);
+                            offset += size_item;
+                            set_once_read.insert(item);
                         } else {
-                            _size_unknown.push_back(item);
+                            list_size_unknown.push_back(item);
                         }
                     } else {
                         if (try_read) {
-                            item->read(ptr, len, &size_item);
-                            lambda_postread(ptr, len, size_item, true);
-                            lambda_estimate(size_item);
-                            _once_read.insert(item);
+                            item->read(base, size, offset, &size_item);
+                            offset += size_item;
+                            set_once_read.insert(item);
                         } else {
-                            lambda_estimate(space);
+                            offset += space;
                         }
                     }
+                }
+                if (errorcode_t::success != ret) {
+                    break;
                 }
             }
         }
 
-        if (size < size_estimated) {
-            ret = errorcode_t::bad_data;
-        }
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        auto state = _size_unknown.size();
+
+        auto state = list_size_unknown.size();
         if (0 == state) {
             // nothing to do
             __leave2;
         } else if (1 == state) {
-            size_t remain = size - size_estimated;
-            payload_member* item = *(_size_unknown.begin());
+            size_t remain = size - offset;
+            payload_member* item = *(list_size_unknown.begin());
             item->reserve(remain);
-            _size_unknown.clear();
+            list_size_unknown.clear();
+            offset = pos;
 
-            byte_t* ptr = baseptr;
-            size_t len = size;
             for (auto item : _members) {
                 bool condition = get_group_condition(item->get_group());
                 if (false == condition) {
                     continue;
                 }
 
-                auto iter = _once_read.find(item);
-                if (_once_read.end() == iter) {
+                auto iter = set_once_read.find(item);
+                if (set_once_read.end() == iter) {
                     // not read yet
-                    item->read(ptr, len, &size_item);
-                    lambda_postread(ptr, len, size_item, true);
+                    item->read(base, size, offset, &size_item);
+                    offset += size_item;
                 } else {
                     // once read
                     auto item = *iter;
                     auto space = item->get_space();
-                    lambda_postread(ptr, len, space, false);
+                    offset += space;
                 }
             }
         } else {  // if (state > 1)
@@ -199,7 +187,11 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
             __leave2;
         }
     }
-    __finally2 { pos += size_payload; }
+    __finally2 {
+        if (errorcode_t::success == ret) {
+            pos = offset;
+        }
+    }
 
     return ret;
 }

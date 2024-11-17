@@ -52,7 +52,7 @@ enum token_t {
     token_and = 24,
     token_or = 25,
 
-    token_identifier = 32,   // [a-zA-Z0-9].*
+    token_word = 32,         // [a-zA-Z0-9].*
     token_quot_string = 33,  // \"[a-zA-Z0-9].*\"
     token_comments = 34,     // parser::token.comments .... until the newline
     token_assign = 35,
