@@ -210,11 +210,11 @@ void test_obfuscate_string() {
     _test_case.assert(obf == obf2, __FUNCTION__, "append and operator ==");
 }
 
-typedef struct {
+struct myprintf_context_t : printf_context_t {
     std::string str;
-} myprintf_context_t;
+};
 
-int callback_printf(void* context, const char* buf, int len) {
+int callback_printf(printf_context_t* context, const char* buf, int len) {
     myprintf_context_t* handle = (myprintf_context_t*)context;
 
     handle->str.append(buf, len);
