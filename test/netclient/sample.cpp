@@ -24,6 +24,9 @@ t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
+    int log;
+    int time;
+
     int bufsize;
     std::string address;
     uint16 port;
@@ -31,7 +34,7 @@ typedef struct _OPTION {
     uint16 count;
     std::string message;
 
-    _OPTION() : verbose(0), bufsize(1500), address("127.0.0.1"), port(9000), prot(0), count(1), message("hello") {
+    _OPTION() : verbose(0), log(0), time(0), bufsize(1500), address("127.0.0.1"), port(9000), prot(0), count(1), message("hello") {
         // do nothing
     }
 } OPTION;
@@ -253,10 +256,12 @@ int main(int argc, char** argv) {
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
               << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
               << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
               << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
-              << t_cmdarg_t<OPTION>("-t", "protocol 1|2|3|4 (1 tcp, 2 udp, 3 tls, 4 dtls)", [](OPTION& o, char* param) -> void { o.prot = toprot(param); })
+              << t_cmdarg_t<OPTION>("-P", "protocol 1|2|3|4 (1 tcp, 2 udp, 3 tls, 4 dtls)", [](OPTION& o, char* param) -> void { o.prot = toprot(param); })
                      .optional()
                      .preced()
               << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
@@ -266,7 +271,13 @@ int main(int argc, char** argv) {
     const OPTION& option = _cmdline->value();
 
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    builder.set(logger_t::logger_stdout, option.verbose);
+    if (option.log) {
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log");
+    }
+    if (option.time) {
+        builder.set_timeformat("[Y-M-D h:m:s.f]");
+    }
     _logger.make_share(builder.build());
 
 #if defined _WIN32 || defined _WIN64

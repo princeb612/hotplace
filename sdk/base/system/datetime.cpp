@@ -11,6 +11,7 @@
  */
 
 #include <sdk/base/basic/valist.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/stream/printf.hpp>
 #include <sdk/base/system/datetime.hpp>
 #if defined __linux__

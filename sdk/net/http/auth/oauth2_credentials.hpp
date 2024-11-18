@@ -13,6 +13,7 @@
 
 #include <functional>
 #include <map>
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/net/types.hpp>
 #include <set>

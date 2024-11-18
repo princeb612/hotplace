@@ -23,10 +23,13 @@ test_case _test_case;
 t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
-    std::string content;
     int verbose;
+    int log;
+    int time;
 
-    _OPTION() : verbose(0) {
+    std::string content;
+
+    _OPTION() : verbose(0), log(0), time(0) {
         // do nothing
     }
 } OPTION;
@@ -747,7 +750,9 @@ int main(int argc, char** argv) {
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     *_cmdline << t_cmdarg_t<OPTION>("-d", "decode CBOR", [](OPTION& o, char* param) -> void { o.content = param; }).preced().optional()
-              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -764,6 +769,5 @@ int main(int argc, char** argv) {
 
     _test_case.report(5);
     whatsthis(argc, argv);
-
     return _test_case.result();
 }

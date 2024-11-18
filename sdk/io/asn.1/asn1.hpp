@@ -332,8 +332,10 @@ class asn1_encode {
     asn1_encode& primitive(binary_t& bin, uint32 value);
     asn1_encode& primitive(binary_t& bin, int64 value);
     asn1_encode& primitive(binary_t& bin, uint64 value);
+#if defined __SIZEOF_INT128__
     asn1_encode& primitive(binary_t& bin, int128 value);
     asn1_encode& primitive(binary_t& bin, uint128 value);
+#endif
     asn1_encode& primitive(binary_t& bin, float value);
     asn1_encode& primitive(binary_t& bin, double value);
     asn1_encode& primitive(binary_t& bin, asn1_type_t type, const std::string& value);

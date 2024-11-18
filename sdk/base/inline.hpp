@@ -38,6 +38,7 @@ static inline int bit_length(uint32 v) { return __builtin_clz(v); }
 
 static inline int bit_length(uint64 v) { return __builtin_clzll(v); }
 
+#if defined __SIZEOF_INT128__
 static inline int bit_length(uint128 v) {
     int b = 128;
     uint64 hi = (v >> 64);
@@ -49,6 +50,7 @@ static inline int bit_length(uint128 v) {
     }
     return b;
 }
+#endif
 
 /**
  * @brief   bytes
@@ -67,7 +69,9 @@ static inline int byte_capacity(uint32 v) { return ((sizeof(v) << 3) - bit_lengt
 
 static inline int byte_capacity(uint64 v) { return ((sizeof(v) << 3) - bit_length(v) + 7) >> 3; }
 
+#if defined __SIZEOF_INT128__
 static inline int byte_capacity(uint128 v) { return ((sizeof(v) << 3) - bit_length(v) + 7) >> 3; }
+#endif
 
 static inline int byte_capacity(int16 v) { return byte_capacity_signed<int16>(v); }
 
@@ -75,7 +79,9 @@ static inline int byte_capacity(int32 v) { return byte_capacity_signed<int32>(v)
 
 static inline int byte_capacity(int64 v) { return byte_capacity_signed<int64>(v); }
 
+#if defined __SIZEOF_INT128__
 static inline int byte_capacity(int128 v) { return byte_capacity_signed<int128>(v); }
+#endif
 
 // secure functions
 

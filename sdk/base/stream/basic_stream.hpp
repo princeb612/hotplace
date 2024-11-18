@@ -108,8 +108,10 @@ class basic_stream : public stream_t {
     basic_stream& operator<<(unsigned long value);
     basic_stream& operator<<(long long value);
     basic_stream& operator<<(unsigned long long value);
+#if defined __SIZEOF_INT128__
     basic_stream& operator<<(int128 value);
     basic_stream& operator<<(uint128 value);
+#endif
     basic_stream& operator<<(float value);
     basic_stream& operator<<(double value);
     basic_stream& operator<<(const basic_stream& value);
@@ -152,6 +154,8 @@ class basic_stream : public stream_t {
     friend std::string& operator+=(std::string& lhs, const basic_stream& rhs);
     friend std::string& operator<<(std::string& lhs, const basic_stream& rhs);
     friend std::ostream& operator<<(std::ostream& lhs, const basic_stream& rhs);
+
+    virtual void autoindent(uint8 indent);
 
    protected:
     bufferio _bio;

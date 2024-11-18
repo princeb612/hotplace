@@ -28,9 +28,9 @@ typedef return_t (*TYPE_CALLBACK_HANDLEREXV)(uint32 type, uint32 count, void* da
 
 /**
  * @brief   enumerate
- * @param   LPCTSTR    name     [IN]
- * @param   void*      parameter [IN]
- * @param   void*      context   [IN]
+ * @param   LPCTSTR    name      [in]
+ * @param   void*      parameter [in]
+ * @param   void*      context   [in]
  */
 #if defined _MBCS || defined MBCS
 #define ENUM_CALLBACK_HANDLER ENUM_CALLBACK_HANDLERA
@@ -42,10 +42,10 @@ typedef return_t (*ENUM_CALLBACK_HANDLERW)(const wchar_t* name, void* parameter,
 
 /**
  * @brief   enumerate by type
- * @param   LPCTSTR    name     [IN]
- * @param   intptr_t   type      [IN]
- * @param   void*      parameter [IN]
- * @param   void*      context   [IN]
+ * @param   LPCTSTR    name      [in]
+ * @param   intptr_t   type      [in]
+ * @param   void*      parameter [in]
+ * @param   void*      context   [in]
  */
 #if defined _MBCS || defined MBCS
 #define ENUMTYPE_CALLBACK_HANDLER ENUMTYPE_CALLBACK_HANDLERA

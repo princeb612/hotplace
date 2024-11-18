@@ -17,6 +17,7 @@
 namespace hotplace {
 namespace io {
 
+#if defined __SIZEOF_INT128__
 cbor_bignum_int128::cbor_bignum_int128() { _bn.resize(sizeof(int128)); }
 
 cbor_bignum_int128& cbor_bignum_int128::load(byte_t* data, uint32 len) {
@@ -25,6 +26,7 @@ cbor_bignum_int128& cbor_bignum_int128::load(byte_t* data, uint32 len) {
 }
 
 int128 cbor_bignum_int128::value() { return ntoh128(*(int128*)&_bn[0]); }
+#endif
 
 }  // namespace io
 }  // namespace hotplace

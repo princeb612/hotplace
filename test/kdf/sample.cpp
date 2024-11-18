@@ -22,9 +22,11 @@ t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
+    int log;
+    int time;
     bool test_slow_kdf;
 
-    _OPTION() : verbose(0), test_slow_kdf(false) {}
+    _OPTION() : verbose(0), log(0), time(0), test_slow_kdf(false) {}
 } OPTION;
 
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
@@ -557,6 +559,8 @@ int main(int argc, char** argv) {
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
               << t_cmdarg_t<OPTION>("-s", "test slow pbkdf2/scrypt", [](OPTION& o, char* param) -> void { o.test_slow_kdf = true; }).optional();
 
     _cmdline->parse(argc, argv);
@@ -564,7 +568,13 @@ int main(int argc, char** argv) {
     const OPTION& option = _cmdline->value();
 
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    builder.set(logger_t::logger_stdout, option.verbose);
+    if (option.log) {
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log");
+    }
+    if (option.time) {
+        builder.set_timeformat("[Y-M-D h:m:s.f]");
+    }
     _logger.make_share(builder.build());
 
     __try2 {

@@ -6,16 +6,16 @@
 
 file (GLOB FILEGROUP_SDK_HEADER_CRYPTO
     ${PROJECT_SOURCE_DIR}/sdk/crypto/*.hpp
-    ${PROJECT_SOURCE_DIR}/sdk/crypto/authenticode/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/crypto/authenticode/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/cose/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/jose/*.hpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_CRYPTO
     ${PROJECT_SOURCE_DIR}/sdk/crypto/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/crypto/authenticode/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/crypto/authenticode/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/cose/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/jose/*.cpp
 )

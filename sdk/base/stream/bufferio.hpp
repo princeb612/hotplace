@@ -8,15 +8,13 @@
  * Date         Name                Description
  */
 
-#ifndef __GRAPE_SDK_BASE_STREAM_BUFFERIO__
-#define __GRAPE_SDK_BASE_STREAM_BUFFERIO__
+#ifndef __HOTPLACE_SDK_BASE_STREAM_BUFFERIO__
+#define __HOTPLACE_SDK_BASE_STREAM_BUFFERIO__
 
 #include <list>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
+#include <sdk/base/basic/types.hpp>
+#include <sdk/base/stream/printf.hpp>
 #include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/types.hpp>
 
 namespace hotplace {
 
@@ -45,7 +43,7 @@ typedef std::list<bufferio_t*> bufferin_queue_t;
 
 #define BUFFERIO_CONTEXT_SIGNATURE 0x20080716
 
-typedef struct _bufferio_context_t {
+struct bufferio_context_t : printf_context_t {
     uint32 signature;
     uint32 block_size;  // block size
     byte_t pad_size;    // pad bytes
@@ -54,7 +52,9 @@ typedef struct _bufferio_context_t {
     bufferin_queue_t bufferio_queue;  // in-queue
     critical_section bufferio_lock;   // lock
     size_t bufferio_size;             // data size
-} bufferio_context_t;
+
+    bufferio_context_t() : printf_context_t() {}
+};
 
 class bufferio {
    public:
@@ -266,6 +266,10 @@ class bufferio {
      * @brief unlock
      */
     return_t unlock(bufferio_context_t* handle);
+    /**
+     * @brief auto indent (text mode)
+     */
+    void autoindent(bufferio_context_t* handle, uint8 indent);
 
     /**
      * @brief in-class static const integral initializer

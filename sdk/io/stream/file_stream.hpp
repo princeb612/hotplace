@@ -243,6 +243,11 @@ class file_stream : public stream_t {
     operator handle_t();
 
    protected:
+    /**
+     * @brief   do nothing
+     */
+    virtual void autoindent(uint8 indent);
+
     int _stream_type;
 #if defined __linux__
     int _file_handle;

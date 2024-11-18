@@ -15,12 +15,8 @@
 #include <deque>
 #include <functional>
 #include <map>
-#include <sdk/base/error.hpp>
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/nostd/tree.hpp>
-#include <sdk/base/stream.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/template.hpp>
-#include <sdk/base/types.hpp>
 
 namespace hotplace {
 

@@ -16,7 +16,7 @@
 
 namespace hotplace {
 
-return_t b24_i32(byte_t const* p, uint8 len, uint32& value) {
+return_t b24_i32(const byte_t* p, uint8 len, uint32& value) {
     return_t ret = errorcode_t::success;
 
     __try2 {

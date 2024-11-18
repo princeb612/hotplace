@@ -16,6 +16,7 @@
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/basic/template.hpp>
 #include <sdk/base/basic/variant.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/string/string.hpp>
 #include <sdk/base/system/endian.hpp>
 #include <sdk/base/system/types.hpp>
@@ -56,9 +57,11 @@ variant::variant(int64 value) { set_int64(value); }
 
 variant::variant(uint64 value) { set_uint64(value); }
 
+#if defined __SIZEOF_INT128__
 variant::variant(int128 value) { set_int128(value); }
 
 variant::variant(uint128 value) { set_uint128(value); }
+#endif
 
 variant::variant(float value) { set_float(value); }
 
@@ -492,6 +495,7 @@ return_t variant::to_binary(binary_t &target, uint32 flags) const {
                 binary_append(target, _vt.data.ui64);
             }
             break;
+#if defined __SIZEOF_INT128__
         case TYPE_INT128:
         case TYPE_UINT128:
             if (change_endian) {
@@ -500,6 +504,7 @@ return_t variant::to_binary(binary_t &target, uint32 flags) const {
                 binary_append(target, _vt.data.ui128);
             }
             break;
+#endif
         case TYPE_FLOAT:
             if (change_endian) {
                 binary_append(target, _vt.data.f, hton32);
@@ -580,6 +585,7 @@ return_t variant::to_string(std::string &target) const {
             bs.printf("%I64u", _vt.data.ui64);
             target << bs;
         } break;
+#if defined __SIZEOF_INT128__
         case TYPE_INT128: {
             basic_stream bs;
             bs.printf("%I128i", _vt.data.i128);
@@ -590,6 +596,7 @@ return_t variant::to_string(std::string &target) const {
             bs.printf("%I128u", _vt.data.ui128);
             target << bs;
         } break;
+#endif
         case TYPE_FP16: {
             basic_stream bs;
             float f = float_from_fp16(_vt.data.ui16);

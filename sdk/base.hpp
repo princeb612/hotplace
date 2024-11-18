@@ -35,6 +35,7 @@
 #include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/base/basic/obfuscate_string.hpp>
 #include <sdk/base/basic/template.hpp>
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/basic/valist.hpp>
 #include <sdk/base/basic/variant.hpp>
 
@@ -64,6 +65,7 @@
 #include <sdk/base/stream/bufferio.hpp>
 #include <sdk/base/stream/printf.hpp>
 #include <sdk/base/stream/tstring.hpp>
+#include <sdk/base/stream/types.hpp>
 
 /* string */
 #include <sdk/base/string/string.hpp>

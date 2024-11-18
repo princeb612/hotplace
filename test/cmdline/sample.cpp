@@ -21,29 +21,28 @@ t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
+    int log;
+    int time;
 
-    _OPTION() : verbose(0) {
-        // do nothing
-    }
-} OPTION;
-t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
-
-typedef struct _CMDOPTION {
     std::string infile;
     std::string outfile;
     bool keygen;
 
-    _CMDOPTION() : keygen(false){};
-} CMDOPTION;
+    _OPTION() : verbose(0), log(0), time(0), keygen(false){};
+} OPTION;
+t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 void test_cmdline(bool expect, int argc, char** argv) {
     return_t ret = errorcode_t::success;
 
-    t_cmdline_t<CMDOPTION> cmdline;
+    t_cmdline_t<OPTION> cmdline;
 
-    cmdline << t_cmdarg_t<CMDOPTION>("-in", "input", [&](CMDOPTION& o, char* param) -> void { o.infile = param; }).preced()
-            << t_cmdarg_t<CMDOPTION>("-out", "output", [&](CMDOPTION& o, char* param) -> void { o.outfile = param; }).preced()
-            << t_cmdarg_t<CMDOPTION>("-keygen", "keygen", [&](CMDOPTION& o, char* param) -> void { o.keygen = true; }).optional();
+    cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+            << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+            << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+            << t_cmdarg_t<OPTION>("-in", "input", [&](OPTION& o, char* param) -> void { o.infile = param; }).preced()
+            << t_cmdarg_t<OPTION>("-out", "output", [&](OPTION& o, char* param) -> void { o.outfile = param; }).preced()
+            << t_cmdarg_t<OPTION>("-keygen", "keygen", [&](OPTION& o, char* param) -> void { o.keygen = true; }).optional();
 
     std::string args;
     for (int i = 0; i < argc; i++) {
@@ -59,9 +58,9 @@ void test_cmdline(bool expect, int argc, char** argv) {
         cmdline.help();
     }
 
-    const CMDOPTION& cmdoption = cmdline.value();
+    const OPTION& cmdoption = cmdline.value();
 
-    // CMDOPTION cmdoption = cmdline.value ();
+    // OPTION cmdoption = cmdline.value ();
     basic_stream bs;
     bs << "infile " << cmdoption.infile << "\n"
        << "outfile " << cmdoption.outfile << "\n"

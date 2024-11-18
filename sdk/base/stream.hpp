@@ -39,6 +39,7 @@ class stream_t {
 
     virtual return_t printf(const char *buf, ...) = 0;
     virtual return_t vprintf(const char *buf, va_list ap) = 0;
+    virtual void autoindent(uint8 indent) = 0;
 };
 
 }  // namespace hotplace

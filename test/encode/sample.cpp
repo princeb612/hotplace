@@ -30,11 +30,14 @@ enum {
 };
 typedef struct _OPTION {
     int verbose;
+    int log;
+    int time;
+
     int mode;
     std::string content;
     std::string filename;
 
-    _OPTION() : verbose(0), mode(0) {}
+    _OPTION() : verbose(0), log(0), time(0), mode(0) {}
     void set(int m, char* param) {
         mode = m;
         if (param) {
@@ -315,14 +318,22 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-t", "plaintext", [](OPTION& o, char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-rfc", constexpr_helpmsg_rfc, [](OPTION& o, char* param) -> void { o.set(encode_b16_rfc, param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-out", "write to file", [](OPTION& o, char* param) -> void { o.setfile(param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional();
+                << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
 
     _cmdret = _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
 
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    builder.set(logger_t::logger_stdout, option.verbose);
+    if (option.log) {
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log");
+    }
+    if (option.time) {
+        builder.set_timeformat("[Y-M-D h:m:s.f]");
+    }
     _logger.make_share(builder.build());
 
     _test_case.begin("b16 encoding");

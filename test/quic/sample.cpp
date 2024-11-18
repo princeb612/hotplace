@@ -62,12 +62,6 @@ using namespace hotplace::net;
 test_case _test_case;
 t_shared_instance<logger> _logger;
 
-enum {
-    mode_encnum = 1,
-    mode_encode = 2,
-    mode_decode = 3,
-};
-
 typedef struct _OPTION {
     int verbose;
     int mode;
@@ -82,6 +76,12 @@ typedef struct _OPTION {
     }
 } OPTION;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
+
+enum {
+    mode_encnum = 1,
+    mode_encode = 2,
+    mode_decode = 3,
+};
 
 void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
     std::string ct;
@@ -481,6 +481,29 @@ void test_rfc_9001_a2() {
     test.expect_unprotected_header = "c300000001088394c8f03e5157080000 449e00000002";
     test.expect_protected_header = "c000000001088394c8f03e5157080000 449e7b9aec34";
     // CRYPTO frame, plus enough PADDING frames
+    // > frame CRYPTO @0
+    //  > offset 0
+    //  > length 241
+    //  > crypto data (241)
+    //    00000000 : 01 00 00 ED 03 03 EB F8 FA 56 F1 29 39 B9 58 4A | .........V.)9.XJ
+    //    00000010 : 38 96 47 2E C4 0B B8 63 CF D3 E8 68 04 FE 3A 47 | 8.G....c...h..:G
+    //    00000020 : F0 6A 2B 69 48 4C 00 00 04 13 01 13 02 01 00 00 | .j+iHL..........
+    //    00000030 : C0 00 00 00 10 00 0E 00 00 0B 65 78 61 6D 70 6C | ..........exampl
+    //    00000040 : 65 2E 63 6F 6D FF 01 00 01 00 00 0A 00 08 00 06 | e.com...........
+    //    00000050 : 00 1D 00 17 00 18 00 10 00 07 00 05 04 61 6C 70 | .............alp
+    //    00000060 : 6E 00 05 00 05 01 00 00 00 00 00 33 00 26 00 24 | n..........3.&.$
+    //    00000070 : 00 1D 00 20 93 70 B2 C9 CA A4 7F BA BA F4 55 9F | ... .p........U.
+    //    00000080 : ED BA 75 3D E1 71 FA 71 F5 0F 1C E1 5D 43 E9 94 | ..u=.q.q....]C..
+    //    00000090 : EC 74 D7 48 00 2B 00 03 02 03 04 00 0D 00 10 00 | .t.H.+..........
+    //    000000A0 : 0E 04 03 05 03 06 03 02 03 08 04 08 05 08 06 00 | ................
+    //    000000B0 : 2D 00 02 01 01 00 1C 00 02 40 01 00 39 00 32 04 | -........@..9.2.
+    //    000000C0 : 08 FF FF FF FF FF FF FF FF 05 04 80 00 FF FF 07 | ................
+    //    000000D0 : 04 80 00 FF FF 08 01 10 01 04 80 00 75 30 09 01 | ............u0..
+    //    000000E0 : 10 0F 08 83 94 C8 F0 3E 51 57 08 06 04 80 00 FF | .......>QW......
+    //    000000F0 : FF -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- | .
+    // > frame PADDING @245
+    //   ...
+    // > frame PADDING @1161
     test.frame =
         "060040f1010000ed0303ebf8fa56f129 39b9584a3896472ec40bb863cfd3e868"
         "04fe3a47f06a2b69484c000004130113 02010000c000000010000e00000b6578"
@@ -563,15 +586,21 @@ void test_rfc_9001_a3() {
     test.expect_unprotected_header = "c1000000010008f067a5502a4262b500 40750001";
     test.expect_protected_header = "cf000000010008f067a5502a4262b500 4075c0d9";
     // including an ACK frame, a CRYPTO frame, and no PADDING frames
-    // [0x00] ACK              02
-    // [0x01]  Largest Ack     00
-    // [0x02]  ACK delay       00
-    // [0x03]  ACK Range Count 00
-    // [0x04]  First ACK Range 00
-    // [0x05] CRYPTO           06
-    // [0x06]  offset          00
-    // [0x07]  length          405a(90)
-    // [0x09]  Crypt Data      ...
+    // > frame ACK @0
+    //  > largest ack 0
+    //  > ack delay 0
+    //  > ack range count 0
+    //  > first ack range 0
+    // > frame CRYPTO @5
+    //  > offset 0
+    //  > length 90
+    //  > crypto data (90)
+    //    00000000 : 02 00 00 56 03 03 EE FC E7 F7 B3 7B A1 D1 63 2E | ...V.......{..c.
+    //    00000010 : 96 67 78 25 DD F7 39 88 CF C7 98 25 DF 56 6D C5 | .gx%..9....%.Vm.
+    //    00000020 : 43 0B 9A 04 5A 12 00 13 01 00 00 2E 00 33 00 24 | C...Z........3.$
+    //    00000030 : 00 1D 00 20 9D 3C 94 0D 89 69 0B 84 D0 8A 60 99 | ... .<...i....`.
+    //    00000040 : 3C 14 4E CA 68 4D 10 81 28 7C 83 4D 53 11 BC F3 | <.N.hM..(|.MS...
+    //    00000050 : 2B B9 DA 1A 00 2B 00 02 03 04 -- -- -- -- -- -- | +....+....
     test.frame =
         "02000000000600405a020000560303ee fce7f7b37ba1d1632e96677825ddf739"
         "88cfc79825df566dc5430b9a045a1200 130100002e00330024001d00209d3c94"
@@ -640,7 +669,7 @@ void test_rfc_9001_a5() {
 void test_quic_xargs_org() {
     _test_case.begin("https://quic.xargs.org/");
 
-    crypto_key key;
+    crypto_key keys;
     crypto_keychain keychain;
     openssl_digest dgst;
     openssl_kdf kdf;
@@ -653,9 +682,9 @@ void test_quic_xargs_org() {
         const char* x = "358072d6365880d1aeea329adf9121383851ed21a28e3b75e965d0d2cd166254";
         const char* y = "";
         const char* d = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
-        keychain.add_ec_b16(&key, "client key", "EdDSA", "X25519", x, y, d);
+        keychain.add_ec_b16(&keys, "client key", "EdDSA", "X25519", x, y, d);
         basic_stream bs;
-        dump_key(key.find("client key"), &bs);
+        dump_key(keys.find("client key"), &bs);
         _logger->writeln(bs);
     }
     /**
@@ -688,6 +717,7 @@ void test_quic_xargs_org() {
         test.scid = "63 5f 63 69 64";
         test.expect_unprotected_header = "c00000000108000102030405060705635f63696400410300";
         test.expect_protected_header = "cd0000000108000102030405060705635f63696400410398";
+        // CRYPTO frame, TLS: ClientHello
         test.frame =
             "06 00 40 EE 01 00 00 EA 03 03 00 01 02 03 04 05"
             "06 07 08 09 0A 0B 0C 0D 0E 0F 10 11 12 13 14 15"
@@ -705,7 +735,6 @@ void test_quic_xargs_org() {
             "10 00 00 06 04 80 10 00 00 07 04 80 10 00 00 08"
             "01 0A 09 01 0A 0A 01 03 0B 01 19 0F 05 63 5F 63"
             "69 64 -- -- -- -- -- -- -- -- -- -- -- -- -- --";
-        // CRYPTO frame, TLS: ClientHello
         test.expect_result =
             "CD 00 00 00 01 08 00 01 02 03 04 05 06 07 05 63"
             "5F 63 69 64 00 41 03 98 1C 36 A7 ED 78 71 6B E9"
@@ -747,6 +776,7 @@ void test_quic_xargs_org() {
         test.scid = "73 5f 63 69 64";  // s_cid
         test.expect_unprotected_header = "c0 00 00 00 01 05 63 5f 63 69 64 05 73 5f 63 69 64 00 40 75 00";
         test.expect_protected_header = "cd 00 00 00 01 05 63 5f 63 69 64 05 73 5f 63 69 64 00 40 75 3a";
+        // CRYPTO frame, TLS: ServerHello
         test.frame =
             "02 00 42 40 00 00 06 00 40 5A 02 00 00 56 03 03"
             "70 71 72 73 74 75 76 77 78 79 7A 7B 7C 7D 7E 7F"
@@ -755,7 +785,6 @@ void test_quic_xargs_org() {
             "AD 6D CF F4 29 8D D3 F9 6D 5B 1B 2A F9 10 A0 53"
             "5B 14 88 D7 F8 FA BB 34 9A 98 28 80 B6 15 00 2B"
             "00 02 03 04 -- -- -- -- -- -- -- -- -- -- -- --";
-        // CRYPTO frame, TLS: ServerHello
         test.expect_result =
             "CD 00 00 00 01 05 63 5F 63 69 64 05 73 5F 63 69"
             "64 00 40 75 3A 83 68 55 D5 D9 C8 23 D0 7C 61 68"
@@ -810,16 +839,16 @@ void test_quic_xargs_org() {
             const char* x = "9fd7ad6dcff4298dd3f96d5b1b2af910a0535b1488d7f8fabb349a982880b615";
             const char* y = "";
             const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";
-            keychain.add_ec_b16(&key, "server key", "EdDSA", "X25519", x, y, d);
+            keychain.add_ec_b16(&keys, "server key", "EdDSA", "X25519", x, y, d);
 
-            const EVP_PKEY* client_key = key.find("client key");
-            const EVP_PKEY* server_key = key.find("server key");
+            const EVP_PKEY* client_key = keys.find("client key");
+            const EVP_PKEY* server_key = keys.find("server key");
             const EVP_PKEY* client_pubkey = get_peer_key(client_key);
             dh_key_agreement(server_key, client_pubkey, shared_secret);
             EVP_PKEY_free((EVP_PKEY*)client_pubkey);
 
             basic_stream bs;
-            dump_key(key.find("server key"), &bs);
+            dump_key(keys.find("server key"), &bs);
             _logger->writeln(bs);
             _logger->hdump("> shared secret", shared_secret, 16, 3);
             _test_case.assert(shared_secret == base16_decode("df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624"), __FUNCTION__,
@@ -1049,41 +1078,6 @@ void whatsthis() {
     _logger->consoleln(bs);
 }
 
-void test_rfc8448() {
-    _test_case.begin("RFC 8448 TLS 1.3 Traces");
-    // 2.  Private Keys
-    crypto_key keys;
-    crypto_keychain keychain;
-    basic_stream bs;
-    {
-        const char* n =
-            "b4 bb 49 8f 82 79 30 3d 98 08 36 39 9b 36 c6 98 8c"
-            "0c 68 de 55 e1 bd b8 26 d3 90 1a 24 61 ea fd 2d e4 9a 91 d0 15 ab"
-            "bc 9a 95 13 7a ce 6c 1a f1 9e aa 6a f9 8c 7c ed 43 12 09 98 e1 87"
-            "a8 0e e0 cc b0 52 4b 1b 01 8c 3e 0b 63 26 4d 44 9a 6d 38 e2 2a 5f"
-            "da 43 08 46 74 80 30 53 0e f0 46 1c 8c a9 d9 ef bf ae 8e a6 d1 d0"
-            "3e 2b d1 93 ef f0 ab 9a 80 02 c4 74 28 a6 d3 5a 8d 88 d7 9f 7f 1e"
-            "3f";
-        const char* e = "01 00 01";
-        const char* d =
-            "04 de a7 05 d4 3a 6e a7 20 9d d8 07 21 11 a8 3c 81"
-            "e3 22 a5 92 78 b3 34 80 64 1e af 7c 0a 69 85 b8 e3 1c 44 f6 de 62"
-            "e1 b4 c2 30 9f 61 26 e7 7b 7c 41 e9 23 31 4b bf a3 88 13 05 dc 12"
-            "17 f1 6c 81 9c e5 38 e9 22 f3 69 82 8d 0e 57 19 5d 8c 84 88 46 02"
-            "07 b2 fa a7 26 bc f7 08 bb d7 db 7f 67 9f 89 34 92 fc 2a 62 2e 08"
-            "97 0a ac 44 1c e4 e0 c3 08 8d f2 5a e6 79 23 3d f8 a3 bd a2 ff 99"
-            "41";
-        keychain.add_rsa(&keys, "RSA", "RSA", base16_decode_rfc(n), base16_decode_rfc(e), base16_decode_rfc(d));
-        dump_key(keys.any(), &bs);
-        _logger->writeln(bs);
-    }
-    // 3.  Simple 1-RTT Handshake
-    // 4.  Resumed 0-RTT Handshake
-    // 5.  HelloRetryRequest
-    // 6.  Client Authentication
-    // 7.  Compatibility Mode
-}
-
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -1122,7 +1116,6 @@ int main(int argc, char** argv) {
     test_rfc_9001_a5();
 
     test_quic_xargs_org();
-    test_rfc8448();
 
     openssl_cleanup();
 

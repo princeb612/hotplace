@@ -28,12 +28,7 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_BASE16__
 #define __HOTPLACE_SDK_BASE_BASIC_BASE16__
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/inline.hpp>
-#include <sdk/base/stream.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
+#include <sdk/base/basic/types.hpp>
 
 namespace hotplace {
 

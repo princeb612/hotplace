@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS__
 #define __HOTPLACE_SDK_NET_TLS_TLS__
 
+#include <sdk/base/system/shared_instance.hpp>
 #include <sdk/net/tls/types.hpp>
 
 namespace hotplace {

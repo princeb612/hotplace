@@ -12,11 +12,8 @@
 #define __HOTPLACE_SDK_BASE_BASIC_TEMPLATE__
 
 #include <sdk/base/basic/binary.hpp>
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/basic/variant.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/stream.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
 
 namespace hotplace {
 

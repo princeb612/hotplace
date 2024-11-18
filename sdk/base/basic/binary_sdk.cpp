@@ -48,9 +48,11 @@ return_t binary_append(binary_t& target, int64 value, std::function<int64(int64)
 
 return_t binary_append(binary_t& target, uint64 value, std::function<uint64(uint64)> func) { return t_binary_append<uint64>(target, value, func); }
 
+#if defined __SIZEOF_INT128__
 return_t binary_append(binary_t& target, int64 value, std::function<int128(int128)> func) { return t_binary_append<int128>(target, value, func); }
 
 return_t binary_append(binary_t& target, uint128 value, std::function<uint128(uint128)> func) { return t_binary_append<uint128>(target, value, func); }
+#endif
 
 return_t binary_append(binary_t& target, float value, std::function<uint32(uint32)> func) {
     return_t ret = errorcode_t::success;
@@ -154,6 +156,7 @@ return_t binary_append2(binary_t& target, uint32 len, uint64 value, std::functio
     return t_binary_append2<uint64>(target, len, value, func);
 }
 
+#if defined __SIZEOF_INT128__
 return_t binary_append2(binary_t& target, uint32 len, int128 value, std::function<int128(int128)> func) {
     return t_binary_append2<int128>(target, len, value, func);
 }
@@ -161,6 +164,7 @@ return_t binary_append2(binary_t& target, uint32 len, int128 value, std::functio
 return_t binary_append2(binary_t& target, uint32 len, uint128 value, std::function<uint128(uint128)> func) {
     return t_binary_append2<uint128>(target, len, value, func);
 }
+#endif
 
 return_t binary_load(binary_t& bn, uint32 bnlen, int16 value, std::function<int16(int16)> func) { return t_binary_load<int16>(bn, bnlen, value, func); }
 
@@ -174,9 +178,11 @@ return_t binary_load(binary_t& bn, uint32 bnlen, int64 value, std::function<int6
 
 return_t binary_load(binary_t& bn, uint32 bnlen, uint64 value, std::function<uint64(uint64)> func) { return t_binary_load<uint64>(bn, bnlen, value, func); }
 
+#if defined __SIZEOF_INT128__
 return_t binary_load(binary_t& bn, uint32 bnlen, int128 value, std::function<int128(int128)> func) { return t_binary_load<int128>(bn, bnlen, value, func); }
 
 return_t binary_load(binary_t& bn, uint32 bnlen, uint128 value, std::function<uint128(uint128)> func) { return t_binary_load<uint128>(bn, bnlen, value, func); }
+#endif
 
 return_t binary_load(binary_t& target, uint32 bnlen, const byte_t* data, uint32 len) {
     return_t ret = errorcode_t::success;

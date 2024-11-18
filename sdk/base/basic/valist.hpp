@@ -13,7 +13,9 @@
 
 #include <stdarg.h>
 
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/basic/variant.hpp>
+#include <sdk/base/stream/types.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <vector>
 

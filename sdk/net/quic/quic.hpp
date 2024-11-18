@@ -176,14 +176,14 @@ enum quic_mode_t {
 /**
  * RFC 9000 Figure 22: Preferred Address Format
  */
-struct preferred_address {
-    uint32 ipv4addr;
-    uint16 ipv4port;
-    uint128 ipv6addr;
-    uint16 ipv6port;
-    binary_t cid;
-    uint128 stateless_reset_token;
-};
+// struct preferred_address {
+//     uint32 ipv4addr;
+//     uint16 ipv4port;
+//     uint128 ipv6addr;
+//     uint16 ipv6port;
+//     binary_t cid;
+//     uint128 stateless_reset_token;
+// };
 
 enum quic_initial_keys_t {
     quic_original_dcid = 0,
@@ -207,6 +207,7 @@ class quic_protection {
    public:
     /**
      * @brief   constructor
+     * @param   const binary_t& salt [in] DCID
      * @param   uint32 mode [inopt] see quic_mode_t
      */
     quic_protection(const binary_t& salt, uint32 mode = 0);

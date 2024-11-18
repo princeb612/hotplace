@@ -14,11 +14,8 @@
 #include <string.h>
 
 #include <functional>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/system/endian.hpp>
-#include <sdk/base/types.hpp>
 
 namespace hotplace {
 
@@ -39,8 +36,10 @@ class binary {
     binary(uint32 rhs);
     binary(int64 rhs);
     binary(uint64 rhs);
+#if defined __SIZEOF_INT128__
     binary(int128 rhs);
     binary(uint128 rhs);
+#endif
     binary(float rhs);
     binary(double rhs);
     binary(const std::string& rhs);
@@ -65,8 +64,10 @@ class binary {
     binary& append(uint32 value, std::function<uint32(uint32)> func = nullptr);
     binary& append(int64 value, std::function<int64(int64)> func = nullptr);
     binary& append(uint64 value, std::function<uint64(uint64)> func = nullptr);
+#if defined __SIZEOF_INT128__
     binary& append(int128 value, std::function<int128(int128)> func = nullptr);
     binary& append(uint128 value, std::function<uint128(uint128)> func = nullptr);
+#endif
     binary& append(float value, std::function<uint32(uint32)> func = nullptr);
     binary& append(double value, std::function<uint64(uint64)> func = nullptr);
     /**
@@ -102,8 +103,10 @@ class binary {
     binary& operator<<(uint32 value);
     binary& operator<<(int64 value);
     binary& operator<<(uint64 value);
+#if defined __SIZEOF_INT128__
     binary& operator<<(int128 value);
     binary& operator<<(uint128 value);
+#endif
     binary& operator<<(float value);
     binary& operator<<(double value);
     binary& operator<<(const std::string& value);
@@ -119,8 +122,10 @@ class binary {
     binary& operator=(uint32 value);
     binary& operator=(int64 value);
     binary& operator=(uint64 value);
+#if defined __SIZEOF_INT128__
     binary& operator=(int128 value);
     binary& operator=(uint128 value);
+#endif
     binary& operator=(float value);
     binary& operator=(double value);
     binary& operator=(const std::string& value);
@@ -185,8 +190,10 @@ return_t binary_append(binary_t& target, int32 value, std::function<int32(int32)
 return_t binary_append(binary_t& target, uint32 value, std::function<uint32(uint32)> func = nullptr);
 return_t binary_append(binary_t& target, int64 value, std::function<int64(int64)> func = nullptr);
 return_t binary_append(binary_t& target, uint64 value, std::function<uint64(uint64)> func = nullptr);
+#if defined __SIZEOF_INT128__
 return_t binary_append(binary_t& target, int128 value, std::function<int128(int128)> func = nullptr);
 return_t binary_append(binary_t& target, uint128 value, std::function<uint128(uint128)> func = nullptr);
+#endif
 return_t binary_append(binary_t& target, float value, std::function<uint32(uint32)> func = nullptr);
 return_t binary_append(binary_t& target, double value, std::function<uint64(uint64)> func = nullptr);
 return_t binary_append(binary_t& target, const std::string& rhs);
@@ -241,8 +248,10 @@ return_t binary_append2(binary_t& target, uint32 len, int32 value, std::function
 return_t binary_append2(binary_t& target, uint32 len, uint32 value, std::function<uint32(uint32)> func = nullptr);
 return_t binary_append2(binary_t& target, uint32 len, int64 value, std::function<int64(int64)> func = nullptr);
 return_t binary_append2(binary_t& target, uint32 len, uint64 value, std::function<uint64(uint64)> func = nullptr);
+#if defined __SIZEOF_INT128__
 return_t binary_append2(binary_t& target, uint32 len, int128 value, std::function<int128(int128)> func = nullptr);
 return_t binary_append2(binary_t& target, uint32 len, uint128 value, std::function<uint128(uint128)> func = nullptr);
+#endif
 
 /**
  * @brief   overwrite (resize and fill)
@@ -275,8 +284,10 @@ return_t binary_load(binary_t& target, uint32 limit, int32 value, std::function<
 return_t binary_load(binary_t& target, uint32 limit, uint32 value, std::function<uint32(uint32)> func = nullptr);
 return_t binary_load(binary_t& target, uint32 limit, int64 value, std::function<int64(int64)> func = nullptr);
 return_t binary_load(binary_t& target, uint32 limit, uint64 value, std::function<uint64(uint64)> func = nullptr);
+#if defined __SIZEOF_INT128__
 return_t binary_load(binary_t& target, uint32 limit, int128 value, std::function<int128(int128)> func = nullptr);
 return_t binary_load(binary_t& target, uint32 limit, uint128 value, std::function<uint128(uint128)> func = nullptr);
+#endif
 return_t binary_load(binary_t& target, uint32 limit, const byte_t* data, uint32 len);
 return_t binary_fill(binary_t& target, size_t count, const byte_t& value);
 

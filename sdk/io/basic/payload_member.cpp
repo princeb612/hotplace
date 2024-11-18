@@ -8,18 +8,20 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/system/types.hpp>
 #include <sdk/io/basic/payload.hpp>
 
 namespace hotplace {
 namespace io {
 
-payload_member::payload_member(uint8 value, const char* name, const char* group) : _change_endian(false), _ref(nullptr), _vl(nullptr), _reserve(0) {
+payload_member::payload_member(uint8 value, const char* name, const char* group)
+    : _change_endian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint8(value);
 }
 
 payload_member::payload_member(uint8 value, uint16 repeat, const char* name, const char* group)
-    : _change_endian(false), _ref(nullptr), _vl(nullptr), _reserve(repeat) {
+    : _change_endian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(repeat) {
     set_name(name).set_group(group);
     binary_t bin;
     uint16 temp = repeat;
@@ -30,51 +32,65 @@ payload_member::payload_member(uint8 value, uint16 repeat, const char* name, con
 }
 
 payload_member::payload_member(uint16 value, bool change_endian, const char* name, const char* group)
-    : _change_endian(change_endian), _ref(nullptr), _vl(nullptr), _reserve(0) {
+    : _change_endian(change_endian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint16(value);
 }
 
-payload_member::payload_member(uint32_24_t value, const char* name, const char* group) : _change_endian(true), _ref(nullptr), _vl(nullptr), _reserve(0) {
+payload_member::payload_member(uint24_t value, const char* name, const char* group)
+    : _change_endian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    set_name(name).set_group(group);
+    uint32 ui32 = 0;
+    b24_i32((byte_t*)&value, 3, ui32);
+    get_variant().set_uint24(ui32);
+}
+
+payload_member::payload_member(uint32_24_t value, const char* name, const char* group)
+    : _change_endian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint24(value.get());
 }
 
 payload_member::payload_member(uint32 value, bool change_endian, const char* name, const char* group)
-    : _change_endian(change_endian), _ref(nullptr), _vl(nullptr), _reserve(0) {
+    : _change_endian(change_endian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint32(value);
 }
 
 payload_member::payload_member(uint64 value, bool change_endian, const char* name, const char* group)
-    : _change_endian(change_endian), _ref(nullptr), _vl(nullptr), _reserve(0) {
+    : _change_endian(change_endian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint64(value);
 }
 
+#if defined __SIZEOF_INT128__
 payload_member::payload_member(uint128 value, bool change_endian, const char* name, const char* group)
-    : _change_endian(change_endian), _ref(nullptr), _vl(nullptr), _reserve(0) {
+    : _change_endian(change_endian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint128(value);
 }
+#endif
 
-payload_member::payload_member(const binary_t& value, const char* name, const char* group) : _change_endian(false), _ref(nullptr), _vl(nullptr), _reserve(0) {
+payload_member::payload_member(const binary_t& value, const char* name, const char* group)
+    : _change_endian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_binary_new(value);
 }
 
 payload_member::payload_member(const std::string& value, const char* name, const char* group)
-    : _change_endian(false), _ref(nullptr), _vl(nullptr), _reserve(0) {
+    : _change_endian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_str_new(value);
 }
 
-payload_member::payload_member(const stream_t* value, const char* name, const char* group) : _change_endian(false), _ref(nullptr), _vl(nullptr), _reserve(0) {
+payload_member::payload_member(const stream_t* value, const char* name, const char* group)
+    : _change_endian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_bstr_new(value);
 }
 
-payload_member::payload_member(payload_encoded* value, const char* name, const char* group) : _change_endian(false), _ref(nullptr), _vl(value), _reserve(0) {
+payload_member::payload_member(payload_encoded* value, const char* name, const char* group)
+    : _change_endian(false), _ref(nullptr), _refmulti(1), _vl(value), _reserve(0) {
     set_name(name).set_group(group);
 }
 
@@ -122,7 +138,7 @@ size_t payload_member::get_space() {
     } else if (variant_flag_t::flag_int == get_variant().flag()) {
         space = get_variant().size();
     } else if (_ref) {
-        space = t_to_int<size_t>(_ref);
+        space = t_to_int<size_t>(_ref) * _refmulti;
     }
     return space;
 }
@@ -134,7 +150,7 @@ size_t payload_member::get_capacity() {
     } else if (_reserve) {
         space = _reserve;
     } else if (_ref) {
-        space = t_to_int<size_t>(_ref);
+        space = t_to_int<size_t>(_ref) * _refmulti;
     } else {
         space = get_variant().size();
     }
@@ -148,7 +164,7 @@ size_t payload_member::get_reference_value() {
     } else if (_reserve) {
         size = _reserve;
     } else if (_ref) {
-        size = t_to_int<size_t>(_ref);
+        size = t_to_int<size_t>(_ref) * _refmulti;
     } else {
         size = t_to_int<size_t>(this);
     }
@@ -157,8 +173,9 @@ size_t payload_member::get_reference_value() {
 
 payload_member* payload_member::get_reference_of() { return _ref; }
 
-payload_member& payload_member::set_reference_of(payload_member* member) {
+payload_member& payload_member::set_reference_of(payload_member* member, uint8 multiple) {
     _ref = member;
+    _refmulti = multiple ? multiple : 1;
     return *this;
 }
 
@@ -240,6 +257,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         v.set_uint64(temp);
                         *size_read = vsize;
                     } break;
+#if defined __SIZEOF_INT128__
                     case TYPE_INT128:
                     case TYPE_UINT128: {
                         uint128 temp = *(uint128*)rebase;
@@ -249,6 +267,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         v.set_uint64(temp);
                         *size_read = vsize;
                     } break;
+#endif
                     default:
                         break;
                 }

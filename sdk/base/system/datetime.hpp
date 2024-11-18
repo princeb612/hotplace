@@ -15,17 +15,14 @@
 #include <time.h>
 
 #include <list>
-#include <sdk/base/error.hpp>
-#include <sdk/base/stream.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
+#include <sdk/base/basic/types.hpp>
+#include <sdk/base/stream/types.hpp>
 
 namespace hotplace {
 
 #pragma pack(push, 1)
 
-typedef struct _systemtime_t {
+struct systemtime_t {
     uint16 year;
     uint16 month;
     uint16 dayofweek;
@@ -35,19 +32,19 @@ typedef struct _systemtime_t {
     uint16 second;
     uint16 milliseconds;
 
-    _systemtime_t() : year(0), month(0), dayofweek(0), day(0), hour(0), minute(0), second(0), milliseconds(0) {}
-    _systemtime_t(uint16 yr, uint16 mo, uint16 dw, uint16 d, uint16 hr, uint16 mi, uint16 s, uint16 ms = 0)
+    systemtime_t() : year(0), month(0), dayofweek(0), day(0), hour(0), minute(0), second(0), milliseconds(0) {}
+    systemtime_t(uint16 yr, uint16 mo, uint16 dw, uint16 d, uint16 hr, uint16 mi, uint16 s, uint16 ms = 0)
         : year(yr), month(mo), dayofweek(dw), day(d), hour(hr), minute(mi), second(s), milliseconds(ms) {}
-} systemtime_t;
+};
 
-typedef struct _filetime_t {
+struct filetime_t {
     uint32 low;
     uint32 high;
 
-    _filetime_t() : low(0), high(0) {}
-} filetime_t;
+    filetime_t() : low(0), high(0) {}
+};
 
-typedef struct _datetime_t {
+struct datetime_t {
     uint16 year;
     uint16 month;
     uint16 day;
@@ -56,19 +53,19 @@ typedef struct _datetime_t {
     uint16 second;
     uint32 milliseconds;
 
-    _datetime_t() : year(0), month(0), day(0), hour(0), minute(0), second(0), milliseconds(0) {}
-    _datetime_t(uint16 yr, uint16 mo, uint16 d, uint16 hr, uint16 mi, uint16 s, uint32 ms = 0)
+    datetime_t() : year(0), month(0), day(0), hour(0), minute(0), second(0), milliseconds(0) {}
+    datetime_t(uint16 yr, uint16 mo, uint16 d, uint16 hr, uint16 mi, uint16 s, uint32 ms = 0)
         : year(yr), month(mo), day(d), hour(hr), minute(mi), second(s), milliseconds(ms) {}
-} datetime_t;
+};
 
-typedef struct _timespan_t {
+struct timespan_t {
     int32 days;
     int32 seconds;
     int32 milliseconds;
 
-    _timespan_t() : days(0), seconds(0), milliseconds(0) {}
-    _timespan_t(int32 d, int32 s, int32 ms) : days(d), seconds(s), milliseconds(ms) {}
-} timespan_t;
+    timespan_t() : days(0), seconds(0), milliseconds(0) {}
+    timespan_t(int32 d, int32 s, int32 ms) : days(d), seconds(s), milliseconds(ms) {}
+};
 
 #pragma pack(pop)
 

@@ -32,9 +32,12 @@ class uint32_24_t {
    public:
     uint32_24_t();
     uint32_24_t(byte_t* p, size_t size);
+    uint32_24_t(uint24_t value);
     uint32_24_t(uint32 value);
 
+    operator uint32();
     uint32 get();
+    return_t set(uint24_t value);
     return_t set(uint32 value);
 
     uint32_24_t& operator=(uint32 value);

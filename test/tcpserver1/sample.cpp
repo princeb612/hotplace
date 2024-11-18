@@ -20,6 +20,21 @@ using namespace hotplace::io;
 using namespace hotplace::crypto;
 using namespace hotplace::net;
 
+test_case _test_case;
+t_shared_instance<logger> _logger;
+
+typedef struct _OPTION {
+    int verbose;
+    int log;
+    int time;
+    uint16 port;
+
+    _OPTION() : verbose(0), log(0), time(0), port(9000) {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
+
 #define BUFSIZE 1024
 #define FILENAME_RUN _T (".run")
 
@@ -52,19 +67,6 @@ struct netsocket_event_t {
     wsa_buffer_t netio_read;
 #endif
 };
-
-typedef struct _OPTION {
-    int verbose;
-    uint16 port;
-
-    _OPTION() : verbose(0), port(9000) {
-        // do nothing
-    }
-} OPTION;
-t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
-
-test_case _test_case;
-t_shared_instance<logger> _logger;
 
 return_t accept_thread_routine(void* user_context);
 return_t network_thread_routine(void* user_context);
@@ -410,13 +412,21 @@ int main(int argc, char** argv) {
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
               << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
 
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    builder.set(logger_t::logger_stdout, option.verbose);
+    if (option.log) {
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log");
+    }
+    if (option.time) {
+        builder.set_timeformat("[Y-M-D h:m:s.f]");
+    }
     _logger.make_share(builder.build());
 
 #if defined _WIN32 || defined _WIN64

@@ -110,10 +110,14 @@ uint128 ntoh128(uint128 value);
     static inline T convert_endian(T value) { return value; }
 static_inline_convert_endian(uint32);
 static_inline_convert_endian(uint64);
+#if defined __SIZEOF_INT128__
 static_inline_convert_endian(uint128);
+#endif
 static_inline_convert_endian(int32);
 static_inline_convert_endian(int64);
+#if defined __SIZEOF_INT128__
 static_inline_convert_endian(int128);
+#endif
 
 #elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 
@@ -138,10 +142,14 @@ static inline uint16 convert_endian(int16 value) { return (((((int16)(value)&0xF
 
 static_inline_convert_endian(uint32, uint16);
 static_inline_convert_endian(uint64, uint32);
+#if defined __SIZEOF_INT128__
 static_inline_convert_endian(uint128, uint64);
+#endif
 static_inline_convert_endian(int32, int16);
 static_inline_convert_endian(int64, int32);
+#if defined __SIZEOF_INT128__
 static_inline_convert_endian(int128, int64);
+#endif
 
 #else
 //

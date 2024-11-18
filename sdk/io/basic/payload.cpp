@@ -43,7 +43,7 @@ bool payload::get_group_condition(const std::string& name) {
     return ret;
 }
 
-payload& payload::set_reference_value(const std::string& name, const std::string& ref) {
+payload& payload::set_reference_value(const std::string& name, const std::string& ref, uint8 multiple) {
     size_t space = 0;
     if (name.size() && ref.size()) {
         payload_member* member_ref = nullptr;
@@ -53,7 +53,7 @@ payload& payload::set_reference_value(const std::string& name, const std::string
         hint.find(name, &member);
         if (member && member_ref) {
             if (member_ref->get_space()) {
-                member->set_reference_of(member_ref);
+                member->set_reference_of(member_ref, multiple);
             }
         }
     }

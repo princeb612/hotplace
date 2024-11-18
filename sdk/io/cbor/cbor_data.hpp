@@ -146,6 +146,7 @@ class cbor_simple : public cbor_object {
     uint8 _value;
 };
 
+#if defined __SIZEOF_INT128__
 class cbor_bignum_int128 {
    public:
     cbor_bignum_int128();
@@ -156,6 +157,7 @@ class cbor_bignum_int128 {
    private:
     binary_t _bn;
 };
+#endif
 
 }  // namespace io
 }  // namespace hotplace

@@ -13,6 +13,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOKEY__
 #define __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOKEY__
 
+#include <sdk/base/system/critical_section.hpp>
+#include <sdk/base/system/shared_instance.hpp>
 #include <sdk/crypto/basic/types.hpp>
 
 namespace hotplace {

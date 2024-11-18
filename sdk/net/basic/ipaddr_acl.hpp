@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_NET_BASIC_IPADDRACL__
 
 #include <map>
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/net/basic/types.hpp>
 
 namespace hotplace {

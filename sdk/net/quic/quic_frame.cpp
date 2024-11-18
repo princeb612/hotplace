@@ -11,6 +11,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
+#include <sdk/net/tls/tlsspec.hpp>
 
 namespace hotplace {
 namespace net {
@@ -241,6 +242,9 @@ return_t quic_dump_frame(stream_t* s, const byte_t* stream, size_t size, size_t&
                 s->printf("   > %s (%zi)\n", constexpr_crypto_data, crypto_data.size());
                 dump_memory(crypto_data, s, 16, 5, 0x0, dump_notrunc);
                 s->printf("\n");
+
+                size_t rpos = 0;
+                tls_dump_handshake(s, &crypto_data[0], crypto_data.size(), rpos);
             } break;
             // 19.7.  NEW_TOKEN Frames
             case quic_frame_new_token: {

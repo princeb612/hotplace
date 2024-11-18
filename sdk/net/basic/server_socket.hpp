@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_SERVERSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_SERVERSOCKET__
 
+#include <sdk/base/system/shared_instance.hpp>
 #include <sdk/net/basic/types.hpp>
 #include <sdk/net/tls/types.hpp>
 

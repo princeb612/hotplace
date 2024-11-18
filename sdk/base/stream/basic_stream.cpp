@@ -219,6 +219,7 @@ basic_stream& basic_stream::operator<<(unsigned long long value) {
     return *this;
 }
 
+#if defined __SIZEOF_INT128__
 basic_stream& basic_stream::operator<<(int128 value) {
     printf("%I128i", value);
     return *this;
@@ -228,6 +229,7 @@ basic_stream& basic_stream::operator<<(uint128 value) {
     printf("%I128u", value);
     return *this;
 }
+#endif
 
 basic_stream& basic_stream::operator<<(float value) {
     printf("%f", value);
@@ -280,6 +282,11 @@ std::string& operator<<(std::string& lhs, const basic_stream& rhs) {
 std::ostream& operator<<(std::ostream& lhs, const basic_stream& rhs) {
     lhs << rhs.c_str();
     return lhs;
+}
+
+void basic_stream::autoindent(uint8 indent) {
+    _bio.autoindent(_handle, indent);
+    fill(indent, ' ');
 }
 
 }  // namespace hotplace

@@ -72,6 +72,7 @@ void cbor_data::represent(stream_t* s) {
             switch (tag) {
                 case cbor_tag_t::cbor_tag_positive_bignum:
                 case cbor_tag_t::cbor_tag_negative_bignum:
+#if defined __SIZEOF_INT128__
                     // RFC 8949 Concise Binary Object Representation (CBOR)
                     // 3.4.3.  Bignums
                     // Decoders that understand these tags MUST be able to decode bignums that do have leading zeroes.
@@ -88,6 +89,9 @@ void cbor_data::represent(stream_t* s) {
                     } else {
                         vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
                     }
+#else
+                    vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
+#endif
                     break;
                 default:
                     vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);

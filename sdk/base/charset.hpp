@@ -37,7 +37,7 @@ typedef const char* LPCTSTR;
 
 #include <tchar.h>
 
-#endif  // endof (windows, linux)
+#endif  // __linux__
 
 #if defined _MBCS || defined MBCS
 #elif defined _UNICODE || defined UNICODE

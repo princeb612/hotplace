@@ -15,8 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <sdk/base/inline.hpp>
 #include <sdk/base/stream/bufferio.hpp>
+#include <sdk/base/stream/printf.hpp>
 #include <sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
@@ -669,6 +669,12 @@ return_t bufferio::unlock(bufferio_context_t* handle) {
         // do nothing
     }
     return ret;
+}
+
+void bufferio::autoindent(bufferio_context_t* handle, uint8 indent) {
+    if (handle) {
+        handle->indent = indent;
+    }
 }
 
 }  // namespace hotplace

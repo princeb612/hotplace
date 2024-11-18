@@ -426,7 +426,6 @@ ansi_string& ansi_string::operator<<(uint128 buf) {
     printf("%I128i", buf);
     return *this;
 }
-
 #endif
 
 int ansi_string::compare(const ansi_string& rhs) { return strcmp(c_str(), rhs.c_str()); }
@@ -496,6 +495,11 @@ std::string& operator<<(std::string& lhs, const ansi_string& rhs) {
 std::ostream& operator<<(std::ostream& lhs, const ansi_string& rhs) {
     lhs << rhs.c_str();
     return lhs;
+}
+
+void ansi_string::autoindent(uint8 indent) {
+    _bio.autoindent(_handle, indent);
+    fill(indent, ' ');
 }
 
 }  // namespace hotplace

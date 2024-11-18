@@ -29,8 +29,10 @@ typedef struct _OPTION {
     int mode;
     int connect;
     int verbose;
+    int log;
+    int time;
 
-    _OPTION() : url("https://localhost:9000/"), mode(0), connect(0), verbose(0) {}
+    _OPTION() : url("https://localhost:9000/"), mode(0), connect(0), verbose(0), log(0), time(0) {}
 } OPTION;
 
 t_shared_instance<t_cmdline_t<OPTION>> cmdline;
@@ -912,10 +914,12 @@ int main(int argc, char **argv) {
      */
     *cmdline << t_cmdarg_t<OPTION>("-c", "connect", [](OPTION &o, char *param) -> void { o.connect = 1; }).optional()
              << t_cmdarg_t<OPTION>("-p", "read stream using http_protocol", [](OPTION &o, char *param) -> void { o.mode = 1; }).optional()
-             << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
              << t_cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/) feat. httpauth", [](OPTION &o, char *param) -> void { o.url = param; })
                     .preced()
-                    .optional();
+                    .optional()
+             << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
+             << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION &o, char *param) -> void { o.log = 1; }).optional()
+             << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional();
 
     cmdline->parse(argc, argv);
     const OPTION &option = cmdline->value();

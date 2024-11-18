@@ -28,16 +28,17 @@
 #ifndef __HOTPLACE_SDK_BASE_STREAM_PRINTF__
 #define __HOTPLACE_SDK_BASE_STREAM_PRINTF__
 
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/basic/valist.hpp>
-#include <sdk/base/callback.hpp>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/stream.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
 #include <string>
 
 namespace hotplace {
+
+struct printf_context_t {
+    uint8 indent;
+
+    printf_context_t() : indent(0) {}
+};
 
 /**
  * @brief printf
@@ -64,8 +65,8 @@ namespace hotplace {
 /**
  * @brief callback
  */
-typedef int (*CALLBACK_PRINTFA)(void *context, const char *buf, int len);
-typedef int (*CALLBACK_PRINTFW)(void *context, const wchar_t *buf, int len);
+typedef int (*CALLBACK_PRINTFA)(printf_context_t *context, const char *buf, int len);
+typedef int (*CALLBACK_PRINTFW)(printf_context_t *context, const wchar_t *buf, int len);
 
 #if defined _MBCS || defined MBCS
 #define CALLBACK_PRINTF CALLBACK_PRINTFA
@@ -79,25 +80,25 @@ typedef int (*CALLBACK_PRINTFW)(void *context, const wchar_t *buf, int len);
 
 /**
  * @brief printf
- * @param   void *          context
+ * @param   printf_context_t *          context
  * @param   CALLBACK_PRINTF runtime_printf
  * @param   const char  *   fmt0
  * @param   ...
  */
-int printf_runtime(void *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, ...);
+int printf_runtime(printf_context_t *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, ...);
 #if defined _WIN32 || defined _WIN64
-int printf_runtimew(void *context, CALLBACK_PRINTFW runtime_printf, const wchar_t *fmt0, ...);
+int printf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf, const wchar_t *fmt0, ...);
 #endif
 /**
  * @brief vprintf
- * @param   void *          context
+ * @param   printf_context_t *          context
  * @param   CALLBACK_PRINTF runtime_printf
  * @param   const char  *   fmt0
  * @param   va_list         ap
  */
-int vprintf_runtime(void *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, va_list ap);
+int vprintf_runtime(printf_context_t *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, va_list ap);
 #if defined _WIN32 || defined _WIN64
-int vprintf_runtimew(void *context, CALLBACK_PRINTFW runtime_printf, const wchar_t *fmt0, va_list ap);
+int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf, const wchar_t *fmt0, va_list ap);
 #endif
 
 //

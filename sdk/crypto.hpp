@@ -1,7 +1,7 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
- * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @file    crypto.hpp
+ * @author  Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
  * Revision History
@@ -16,13 +16,6 @@
 #include <sdk/crypto/crypto.hpp>
 #include <sdk/crypto/types.hpp>
 #include <sdk/io.hpp>
-
-/* authenticode */
-#include <sdk/crypto/authenticode/authenticode.hpp>
-#include <sdk/crypto/authenticode/authenticode_plugin.hpp>
-#include <sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
-#include <sdk/crypto/authenticode/authenticode_verifier.hpp>
-#include <sdk/crypto/authenticode/sdk.hpp>
 
 /* basic */
 #include <sdk/crypto/basic/crypto_advisor.hpp>
@@ -39,6 +32,13 @@
 #include <sdk/crypto/basic/openssl_sign.hpp>
 #include <sdk/crypto/basic/time_otp.hpp>
 #include <sdk/crypto/basic/types.hpp>
+
+/* authenticode */
+#include <sdk/crypto/authenticode/authenticode.hpp>
+#include <sdk/crypto/authenticode/authenticode_plugin.hpp>
+#include <sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
+#include <sdk/crypto/authenticode/authenticode_verifier.hpp>
+#include <sdk/crypto/authenticode/sdk.hpp>
 
 /* COSE */
 #include <sdk/crypto/cose/cbor_object_encryption.hpp>

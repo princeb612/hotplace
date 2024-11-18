@@ -150,6 +150,8 @@ class ansi_string : public stream_t {
     friend std::string& operator<<(std::string& lhs, const ansi_string& rhs);
     friend std::ostream& operator<<(std::ostream& lhs, const ansi_string& rhs);
 
+    virtual void autoindent(uint8 indent);
+
    protected:
     bufferio _bio;
     bufferio_context_t* _handle;
@@ -277,6 +279,8 @@ class wide_string : public stream_t {
     friend std::wstring& operator+=(std::wstring& lhs, const wide_string& rhs);
     friend std::wstring& operator<<(std::wstring& lhs, const wide_string& rhs);
     friend std::ostream& operator<<(std::ostream& lhs, const wide_string& rhs);
+
+    virtual void autoindent(uint8 indent);
 
    protected:
     bufferio _bio;

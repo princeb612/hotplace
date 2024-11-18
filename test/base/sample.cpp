@@ -23,11 +23,11 @@ t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
-    int time;
     int log;
+    int time;
     int attach;
 
-    _OPTION() : verbose(0), time(0), log(0), attach(0) {
+    _OPTION() : verbose(0), log(0), time(0), attach(0) {
         // do nothing
     }
 } OPTION;
@@ -439,8 +439,8 @@ int main(int argc, char **argv) {
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
-              << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional()
               << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION &o, char *param) -> void { o.log = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional()
               << t_cmdarg_t<OPTION>("-a", "attach", [](OPTION &o, char *param) -> void { o.attach = 1; }).optional();
     _cmdline->parse(argc, argv);
 
@@ -448,11 +448,11 @@ int main(int argc, char **argv) {
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose);
+    if (option.log) {
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log");
+    }
     if (option.time) {
         builder.set_timeformat("[Y-M-D h:m:s.f]");
-    }
-    if (option.log) {
-        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("unittest.log");
     }
     _logger.make_share(builder.build());
 

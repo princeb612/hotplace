@@ -415,5 +415,7 @@ return_t file_stream::vprintf(const char* fmt, va_list ap) {
     return ret;
 }
 
+void file_stream::autoindent(uint8 indent) {}
+
 }  // namespace io
 }  // namespace hotplace

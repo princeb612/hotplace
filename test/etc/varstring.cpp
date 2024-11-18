@@ -88,7 +88,7 @@ void formatter(std::string input, std::string prefix) {
     var_wide_string.printf(_T (" 0, };"));
 
     ansi_string var_constexpr_string;
-    constexpr TCHAR constexpr_decl_constexprstring[] = _T ("constexpr char constexpr_%s%s[] = {\"%s\"};");
+    constexpr TCHAR constexpr_decl_constexprstring[] = _T ("constexpr char constexpr_%s%s[] = \"%s\";");
     var_constexpr_string.printf(constexpr_decl_constexprstring, prefix.c_str(), constexpr_var.c_str(), input.c_str());
 
     /* on the purpose of copy and paste */

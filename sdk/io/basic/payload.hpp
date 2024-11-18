@@ -17,6 +17,7 @@
 #include <sdk/base/basic/template.hpp>
 #include <sdk/base/basic/variant.hpp>
 #include <sdk/base/system/endian.hpp>
+#include <sdk/base/system/shared_instance.hpp>
 #include <sdk/base/template.hpp>
 #include <sdk/io/system/types.hpp>
 
@@ -84,10 +85,13 @@ class payload_member {
     payload_member(uint8 value, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint8 value, uint16 repeat, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint16 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
+    payload_member(uint24_t value, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint32_24_t value, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint32 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint64 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
+#if defined __SIZEOF_INT128__
     payload_member(uint128 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
+#endif
     payload_member(const binary_t& value, const char* name = nullptr, const char* group = nullptr);
     payload_member(const std::string& value, const char* name = nullptr, const char* group = nullptr);
     payload_member(const stream_t* value, const char* name = nullptr, const char* group = nullptr);
@@ -108,7 +112,7 @@ class payload_member {
     size_t get_capacity();
     size_t get_reference_value();
     payload_member* get_reference_of();
-    payload_member& set_reference_of(payload_member* member);
+    payload_member& set_reference_of(payload_member* member, uint8 multiple = 1);
 
     payload_member& write(binary_t& bin);
     payload_member& read(const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read);
@@ -127,6 +131,7 @@ class payload_member {
     variant _vt;
 
     payload_member* _ref;
+    uint8 _refmulti;
     payload_encoded* _vl;
     uint16 _reserve;
 };
@@ -216,8 +221,35 @@ class payload {
      *          binary_t decoded = base16_decode("036461746100001000706164");
      *          pl.set_reference_value("pad", "padlen"); // padlen=03, so length of pad 3 bytes
      *          pl.read(decoded);
+     * @remarks
+     *          case 1 - opaque data;
+     *           // stream 05 01 02 03 04 05
+     *           //        uint8 len;
+     *           //        uint8 data[];
+     *           pos = 0;
+     *           pl << new payload_member(uint8(0), "len") << new payload_member(binary_t(), "data");
+     *           pl.set_reference_value("data", "len");
+     *           pl.read(stream, 6, pos);
+     *
+     *          case 2
+     *           // stream 05 00 01 00 02 00 03 00 04 00 05
+     *           //        uint8 len;
+     *           //        uint16 data[];
+     *           pl << new payload_member(uint8(0), "len") << new payload_member(binary_t(), "data");
+     *           pl.set_reference_value("data", "len", sizeof(uint16));
+     *           pos = 0;
+     *           pl.read(stream, 11, pos);
+     *
+     *          case 3
+     *           // stream 00 05 00 01 00 02 00 03 00 04 00 05
+     *           //        uint16 len;
+     *           //        uint16 data[];
+     *           pl << new payload_member(uint16(0), true, "len") << new payload_member(binary_t(), "data");
+     *           pl.set_reference_value("data", "len", sizeof(uint16));
+     *           pos = 0;
+     *           pl.read(stream, 12, pos);
      */
-    payload& set_reference_value(const std::string& name, const std::string& ref);
+    payload& set_reference_value(const std::string& name, const std::string& ref, uint8 multiple = 1);
 
     return_t write(binary_t& bin);
     return_t read(const binary_t& bin);

@@ -390,11 +390,11 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
         }                       \
     }
 
-/* int vprintf_runtime (void *context, CALLBACK_PRINTF runtime_printf, const TCHAR * fmt0, va_list ap) */
+/* int vprintf_runtime (printf_context_t *context, CALLBACK_PRINTF runtime_printf, const TCHAR * fmt0, va_list ap) */
 #if defined _MBCS || defined MBCS
-int vprintf_runtime(void *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, va_list ap)
+int vprintf_runtime(printf_context_t *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, va_list ap)
 #elif defined _UNICODE || defined UNICODE
-int vprintf_runtimew(void *context, CALLBACK_PRINTFW runtime_printf, const wchar_t *fmt0, va_list ap)
+int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf, const wchar_t *fmt0, va_list ap)
 #endif
 {
     __register const TCHAR *fmt = nullptr; /* format string */
@@ -470,13 +470,23 @@ int vprintf_runtimew(void *context, CALLBACK_PRINTFW runtime_printf, const wchar
      * Scan the format for conversions (`%' character).
      */
     for (;;) {
-        for (fmark = fmt; (ch = *fmt) != _T('\0') && ch != _T('%'); fmt++) {
+        for (fmark = fmt; (ch = *fmt) != _T('\0') && ch != _T('%') && ch != _T('\n'); fmt++) {
             /* void */;
         }
         if ((n = (int)(fmt - fmark)) != 0) {
             PRINT(fmark, n);
             ret += n;
         }
+        if (ch == _T('\n')) {
+            // auto indent
+            PRINT(fmt, sizeof(TCHAR));
+            ret += 1;
+            if (context->indent) {
+                PAD_SP(context->indent);
+                ret += context->indent;
+            }
+        }
+
         if (ch == _T('\0')) {
             goto done;
         }
@@ -965,11 +975,11 @@ error:
     /* NOTREACHED */
 }
 
-/* int printf_runtime (void *context, CALLBACK_PRINTF runtime_printf, const TCHAR * fmt0, ...) */
+/* int printf_runtime (printf_context_t *context, CALLBACK_PRINTF runtime_printf, const TCHAR * fmt0, ...) */
 #if defined _MBCS || defined MBCS
-int printf_runtime(void *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, ...)
+int printf_runtime(printf_context_t *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, ...)
 #elif defined _UNICODE || defined UNICODE
-int printf_runtimew(void *context, CALLBACK_PRINTFW runtime_printfw, const wchar_t *fmt0, ...)
+int printf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printfw, const wchar_t *fmt0, ...)
 #endif
 {
     int nRet = EOF;

@@ -37,9 +37,11 @@ binary::binary(int64 rhs) : _be(false) { append(rhs); }
 
 binary::binary(uint64 rhs) : _be(false) { append(rhs); }
 
+#if defined __SIZEOF_INT128__
 binary::binary(int128 rhs) : _be(false) { append(rhs); }
 
 binary::binary(uint128 rhs) : _be(false) { append(rhs); }
+#endif
 
 binary::binary(float rhs) : _be(false) { append(rhs); }
 
@@ -90,6 +92,7 @@ binary& binary::append(uint64 value, std::function<uint64(uint64)> func) {
     return *this;
 }
 
+#if defined __SIZEOF_INT128__
 binary& binary::append(int128 value, std::function<int128(int128)> func) {
     t_binary_append<int128>(_bin, value, func);
     return *this;
@@ -99,6 +102,7 @@ binary& binary::append(uint128 value, std::function<uint128(uint128)> func) {
     t_binary_append<uint128>(_bin, value, func);
     return *this;
 }
+#endif
 
 binary& binary::append(float value, std::function<uint32(uint32)> func) {
     binary_append(_bin, value, func);
@@ -171,9 +175,11 @@ binary& binary::operator<<(int64 value) { return append(value, _be ? hton64 : nu
 
 binary& binary::operator<<(uint64 value) { return append(value, _be ? hton64 : nullptr); }
 
+#if defined __SIZEOF_INT128__
 binary& binary::operator<<(int128 value) { return append(value, _be ? hton128 : nullptr); }
 
 binary& binary::operator<<(uint128 value) { return append(value, _be ? hton128 : nullptr); }
+#endif
 
 binary& binary::operator<<(float value) { return append(value, _be ? hton32 : nullptr); }
 
@@ -203,9 +209,11 @@ binary& binary::operator=(int64 value) { return clear().append(value, _be ? hton
 
 binary& binary::operator=(uint64 value) { return clear().append(value, _be ? hton64 : nullptr); }
 
+#if defined __SIZEOF_INT128__
 binary& binary::operator=(int128 value) { return clear().append(value, _be ? hton128 : nullptr); }
 
 binary& binary::operator=(uint128 value) { return clear().append(value, _be ? hton128 : nullptr); }
+#endif
 
 binary& binary::operator=(float value) { return clear().append(value, _be ? hton32 : nullptr); }
 

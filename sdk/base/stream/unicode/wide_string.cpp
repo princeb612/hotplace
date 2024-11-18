@@ -491,4 +491,9 @@ std::ostream& operator<<(std::ostream& lhs, const wide_string& rhs) {
     return lhs;
 }
 
+void wide_string::autoindent(uint8 indent) {
+    _bio.autoindent(_handle, indent);
+    fill(indent, L' ');
+}
+
 }  // namespace hotplace

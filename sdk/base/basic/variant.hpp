@@ -13,13 +13,8 @@
 
 #include <string.h>
 
-#include <sdk/base/error.hpp>
-#include <sdk/base/inline.hpp>
-#include <sdk/base/stream.hpp>
-#include <sdk/base/syntax.hpp>
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/system/datetime.hpp>
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/base/types.hpp>
 
 namespace hotplace {
 
@@ -259,8 +254,10 @@ class variant {
     variant(uint32 value);
     variant(int64 value);
     variant(uint64 value);
+#if defined __SIZEOF_INT128__
     variant(int128 value);
     variant(uint128 value);
+#endif
     variant(float value);
     variant(double value);
     variant(const datetime_t& value);

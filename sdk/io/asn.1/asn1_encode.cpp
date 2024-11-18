@@ -84,6 +84,7 @@ asn1_encode& asn1_encode::primitive(binary_t& bin, uint64 value) {
     return *this;
 }
 
+#if defined __SIZEOF_INT128__
 asn1_encode& asn1_encode::primitive(binary_t& bin, int128 value) {
     t_asn1_encode_integer<int128>(bin, value);
     return *this;
@@ -93,6 +94,7 @@ asn1_encode& asn1_encode::primitive(binary_t& bin, uint128 value) {
     t_asn1_encode_integer<uint128>(bin, value);
     return *this;
 }
+#endif
 
 asn1_encode& asn1_encode::primitive(binary_t& bin, float value) {
     t_asn1_encode_real<float, uint32>(bin, value);

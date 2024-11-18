@@ -45,7 +45,7 @@ namespace hotplace {
  *          b24_i32 - from 24bits byte stream to 32 bit integer
  *          i32_b24 - from 32 bit integer to 24bits byte stream
  */
-return_t b24_i32(byte_t const *p, uint8 len, uint32 &value);
+return_t b24_i32(const byte_t *p, uint8 len, uint32 &value);
 return_t i32_b24(byte_t *p, uint8 len, uint32 value);
 
 struct uint24_t {

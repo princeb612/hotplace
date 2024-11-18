@@ -359,9 +359,9 @@ return_t bufferio::wreplace(bufferio_context_t* handle, const wchar_t* from, con
 }
 
 #if defined _MBCS || defined MBCS
-static int callback_printf(void* handle, const char* buf, int len)
+static int callback_printf(printf_context_t* handle, const char* buf, int len)
 #elif defined _UNICODE || defined UNICODE
-static int callback_printfw(void* handle, const wchar_t* buf, int len)
+static int callback_printfw(printf_context_t* handle, const wchar_t* buf, int len)
 #endif
 {
     return_t ret = errorcode_t::success;

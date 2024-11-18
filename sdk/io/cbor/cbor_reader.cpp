@@ -145,7 +145,11 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
             cur = *(data + i);
             byte_t lead_type = (cur & 0xe0) >> 5;
             byte_t lead_value = (cur & 0x1f);
+#if defined __SIZEOF_INT128__
             int128 value = lead_value;
+#else
+            int64 value = lead_value;
+#endif
             flags = 0;
 
             // cbor_simple_t::cbor_simple_break
@@ -181,7 +185,11 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
             if (cbor_major_t::cbor_major_uint == lead_type) {
                 push(handle, lead_type, value, 0);
             } else if (cbor_major_t::cbor_major_nint == lead_type) {
+#if defined __SIZEOF_INT128__
                 push(handle, lead_type, -((int128)value + 1), 0);
+#else
+                push(handle, lead_type, -((int64)value + 1), 0);
+#endif
             } else if (cbor_major_t::cbor_major_bstr == lead_type) {
                 push(handle, lead_type, (byte_t*)data + i + 1, value, flags);
                 if (0 == (cbor_flag_t::cbor_indef & flags)) {
@@ -240,7 +248,11 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const binary_t& expre
     return ret;
 }
 
+#if defined __SIZEOF_INT128__
 return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, int128 data, uint32 flags) {
+#else
+return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, int64 data, uint32 flags) {
+#endif
     return_t ret = errorcode_t::success;
 
     __try2 {

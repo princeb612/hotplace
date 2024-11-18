@@ -14,6 +14,7 @@
 
 #include <map>
 #include <sdk/base/basic/keyvalue.hpp>
+#include <sdk/base/system/shared_instance.hpp>
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {

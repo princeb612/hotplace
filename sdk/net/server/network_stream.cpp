@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/nostd/list.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_stream.hpp>
 

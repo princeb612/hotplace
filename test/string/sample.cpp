@@ -19,6 +19,17 @@ using namespace hotplace::io;
 test_case _test_case;
 t_shared_instance<logger> _logger;
 
+typedef struct _OPTION {
+    int verbose;
+    int log;
+    int time;
+
+    _OPTION() : verbose(0), log(0), time(0) {
+        // do nothing
+    }
+} OPTION;
+t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
+
 void test_format() {
     _test_case.begin("format");
     _test_case.reset_time();
@@ -327,13 +338,27 @@ void test_tokenize() {
     _test_case.assert(true, __FUNCTION__, "tokenize");
 }
 
-int main() {
+int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
+    _cmdline.make_share(new t_cmdline_t<OPTION>);
+    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+              << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
+    _cmdline->parse(argc, argv);
+
+    const OPTION& option = _cmdline->value();
+
     logger_builder builder;
-    builder.set(logger_t::logger_stdout, 1).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
+    builder.set(logger_t::logger_stdout, option.verbose);
+    if (option.log) {
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log");
+    }
+    if (option.time) {
+        builder.set_timeformat("[Y-M-D h:m:s.f]");
+    }
     _logger.make_share(builder.build());
 
     test_format();
@@ -354,5 +379,6 @@ int main() {
     _logger->flush();
 
     _test_case.report(5);
+    _cmdline->help();
     return _test_case.result();
 }
