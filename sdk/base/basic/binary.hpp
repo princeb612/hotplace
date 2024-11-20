@@ -344,23 +344,36 @@ static inline binary_t str2bin(const std::string& source) {
 }
 
 /**
- * @brief   binary to integer (uint16, uint32, ...)
+ * @brief   binary to integer
  * @remarks
- *          // sketch .. wide conversion
- *          binary_t bin = base16_decode(0x00000001);
- *          auto i = binary_to_integer<uint32>(bin);
- *          _test_case.assert(1 == i, __FUNCTION__, "binary_to_integer");
+ *          bin.clear();
+ *          binary_append(bin, uint32(1), hton32);
+ *          ui32 = t_binary_to_integer<uint32>(bin);
+ *          _test_case.assert(1 == ui32, __FUNCTION__, "bin32 to uint32");
+ *
+ *          bin.clear();
+ *          binary_append(bin, uint32(1), hton32);
+ *          ui64 = t_binary_to_integer<uint64>(bin);
+ *          _test_case.assert(1 == ui64, __FUNCTION__, "bin32 to uint64");
+ *
+ *          bin.clear();
+ *          binary_append(bin, uint8(1));
+ *          ui32 = t_binary_to_integer<uint32>(bin);
+ *          _test_case.assert(1 == ui32, __FUNCTION__, "bin8 to uint32");
  */
 template <typename T>
 T t_binary_to_integer(const byte_t* bstr, size_t size, return_t& errorcode) {
     T value = 0;
-    size_t tsize = sizeof(T);
     if (bstr) {
+        size_t tsize = sizeof(T);
         if (tsize <= size) {
             value = *(T*)bstr;
             value = convert_endian(value);  // host endian
         } else {
-            errorcode = errorcode_t::narrow_type;
+            binary_t bin;
+            binary_load(bin, tsize, bstr, size);
+            value = *(T*)&bin[0];
+            value = convert_endian(value);  // host endian
         }
     } else {
         errorcode = errorcode_t::invalid_parameter;
@@ -382,46 +395,7 @@ T t_binary_to_integer(const binary_t& bin, return_t& errorcode) {
 template <typename T>
 T t_binary_to_integer(const binary_t& bin) {
     return_t errorcode = errorcode_t::success;
-    return t_binary_to_integer<T>(&bin[0], bin.size(), errorcode);
-}
-
-/**
- * @brief   binary to integer
- * @remarks
- *          // sketch .. wide/narrow conversion
- *          binary_t bin = base16_decode(0x01);
- *          auto i = binary_to_intger_force<uint32>(bin);
- *          _test_case.assert(1 == i, __FUNCTION__, "binary_to_integer");
- */
-template <typename T>
-T t_binary_to_integer2(const byte_t* bstr, size_t size, return_t& errorcode) {
-    T value = 0;
-    size_t tsize = sizeof(T);
-    if (tsize <= size) {
-        value = t_binary_to_integer<T>(bstr, size, errorcode);
-    } else {
-        binary_t bin;
-        binary_load(bin, tsize, bstr, size);
-        value = t_binary_to_integer<T>(&bin[0], bin.size(), errorcode);
-    }
-    return value;
-}
-
-template <typename T>
-T t_binary_to_integer2(const byte_t* bstr, size_t size) {
-    return_t errorcode = errorcode_t::success;
-    return t_binary_to_integer2<T>(bstr, size, errorcode);
-}
-
-template <typename T>
-T t_binary_to_integer2(const binary_t& bin, return_t& errorcode) {
-    return t_binary_to_integer2<T>(&bin[0], bin.size(), errorcode);
-}
-
-template <typename T>
-T t_binary_to_integer2(const binary_t& bin) {
-    return_t errorcode = errorcode_t::success;
-    return t_binary_to_integer2<T>(bin, errorcode);
+    return t_binary_to_integer<T>(bin, errorcode);
 }
 
 }  // namespace hotplace

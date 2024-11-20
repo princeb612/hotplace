@@ -175,6 +175,7 @@ class payload_encoded {
     virtual size_t lsize(const byte_t* stream, size_t size) = 0;
     virtual size_t value(const byte_t* stream, size_t size) = 0;
     virtual return_t read(const byte_t* stream, size_t size, size_t& pos) = 0;
+    virtual variant& get_variant() = 0;
 
     virtual void addref() { _shared.addref(); }
     virtual void release() { _shared.delref(); }

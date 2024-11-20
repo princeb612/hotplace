@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace net {
 
-return_t quic_dump_frame(stream_t* s, const byte_t* stream, size_t size, size_t& pos) {
+return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == s || nullptr == stream || 0 == size) {
@@ -244,7 +244,7 @@ return_t quic_dump_frame(stream_t* s, const byte_t* stream, size_t size, size_t&
                 s->printf("\n");
 
                 size_t rpos = 0;
-                tls_dump_handshake(s, &crypto_data[0], crypto_data.size(), rpos);
+                tls_dump_handshake(s, session, &crypto_data[0], crypto_data.size(), rpos);
             } break;
             // 19.7.  NEW_TOKEN Frames
             case quic_frame_new_token: {
@@ -261,7 +261,7 @@ return_t quic_dump_frame(stream_t* s, const byte_t* stream, size_t size, size_t&
                 pl.read(stream, size, pos);
 
                 binary_t token;
-                pl.select("token")->get_variant().to_binary(token);
+                pl.select(constexpr_token)->get_variant().to_binary(token);
 
                 s->printf("  > frame %s @%zi\n", constexpr_frame_new_token, begin);
                 s->printf("   > %s (%zi)\n", constexpr_token, token.size());
@@ -334,7 +334,9 @@ return_t quic_dump_frame(stream_t* s, const byte_t* stream, size_t size, size_t&
     return ret;
 }
 
-return_t quic_dump_frame(stream_t* s, const binary_t frame, size_t& pos) { return quic_dump_frame(s, &frame[0], frame.size(), pos); }
+return_t quic_dump_frame(stream_t* s, tls_session* session, const binary_t frame, size_t& pos) {
+    return quic_dump_frame(s, session, &frame[0], frame.size(), pos);
+}
 
 }  // namespace net
 }  // namespace hotplace

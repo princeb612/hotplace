@@ -45,6 +45,8 @@ return_t openssl_kdf::hmac_kdf(binary_t& derived, hash_algorithm_t alg, size_t d
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
+        derived.clear();
+
         md = advisor->find_evp_md(alg);
         if (nullptr == md) {
             ret = errorcode_t::not_supported;
@@ -87,6 +89,8 @@ return_t openssl_kdf::hmac_kdf(binary_t& derived, const char* alg, size_t dlen, 
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
+        derived.clear();
+
         if (nullptr == alg) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -112,6 +116,8 @@ return_t openssl_kdf::hmac_kdf_extract(binary_t& prk, const char* alg, const bin
     openssl_mac mac;
 
     __try2 {
+        prk.clear();
+
         if (nullptr == alg) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -150,6 +156,8 @@ return_t openssl_kdf::hkdf_expand(binary_t& okm, const char* alg, size_t dlen, c
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
+        okm.clear();
+
         if (nullptr == alg) {
             __leave2;
         }
@@ -278,6 +286,8 @@ return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, si
 return_t openssl_kdf::hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context) {
     return_t ret = errorcode_t::success;
     __try2 {
+        okm.clear();
+
         if (label.empty() || (label.size() > 255) || (context.size() > 255)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -328,6 +338,8 @@ return_t openssl_kdf::cmac_kdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen
     return_t ret = errorcode_t::success;
     binary_t prk;
     __try2 {
+        okm.clear();
+
         ret = cmac_kdf_extract(prk, alg, salt, ikm);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -452,6 +464,8 @@ return_t openssl_kdf::pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dle
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
+        derived.clear();
+
         if (nullptr == password || nullptr == salt) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -478,6 +492,8 @@ return_t openssl_kdf::pbkdf2(binary_t& derived, const char* alg, size_t dlen, co
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
+        derived.clear();
+
         if (nullptr == alg) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -502,6 +518,8 @@ return_t openssl_kdf::scrypt(binary_t& derived, size_t dlen, const std::string& 
     EVP_PKEY_CTX* ctx = nullptr;
     int ret_openssl = 0;
     __try2 {
+        derived.clear();
+
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
         if (0 == salt.size()) {
             ret = errorcode_t::not_supported;
@@ -539,6 +557,8 @@ return_t openssl_kdf::scrypt(binary_t& derived, size_t dlen, const std::string& 
 return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, const binary_t& password, const binary_t& salt, const binary_t& ad,
                              const binary_t& secret, uint32 iteration_cost, uint32 parallel_cost, uint32 memory_cost) {
     return_t ret = errorcode_t::success;
+
+    derived.clear();
 
 #if OPENSSL_VERSION_NUMBER >= 0x30200000L
 

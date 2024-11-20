@@ -167,12 +167,6 @@ enum h3_errorcodes_t {
  *      } Handshake;
  */
 
-enum quic_mode_t {
-    quic_mode_client = 1,
-    quic_mode_server = 2,
-    // ...
-};
-
 /**
  * RFC 9000 Figure 22: Preferred Address Format
  */
@@ -185,7 +179,7 @@ enum quic_mode_t {
 //     uint128 stateless_reset_token;
 // };
 
-enum quic_initial_keys_t {
+enum quic_initial_keys_t : uint16 {
     quic_original_dcid = 0,
     quic_initial_secret = 1,  // initial secret
     quic_client_secret = 2,   // client initial secret
@@ -196,8 +190,6 @@ enum quic_initial_keys_t {
     quic_server_iv = 7,       // server initial iv
     quic_client_hp = 8,       // client header protection key
     quic_server_hp = 9,       // server header protection key
-
-    quic_hello_hash = 10,  // sha256(ClientHello, ServerHello)
 };
 
 /**
@@ -208,10 +200,10 @@ class quic_protection {
     /**
      * @brief   constructor
      * @param   const binary_t& salt [in] DCID
-     * @param   uint32 mode [inopt] see quic_mode_t
+     * @param   uint32 mode [inopt] see tls_mode_t
      */
-    quic_protection(const binary_t& salt, uint32 mode = 0);
-    quic_protection(const binary_t& salt, const binary_t& context, uint32 mode = 0);
+    quic_protection(const binary_t& salt, uint32 mode = -1);
+    quic_protection(const binary_t& salt, const binary_t& context, uint32 mode = -1);
 
     /**
      * @brief   get item
@@ -382,7 +374,7 @@ class quic_packet {
      * @brief   write
      * @param   binary_t& packet [out]
      * @param   uint32 mode [inopt]  RFC 9001 5.4.  Header Protection
-     *                               see quic_mode_t
+     *                               see tls_mode_t
      * @remarks
      *          // sketch
      *
@@ -400,7 +392,7 @@ class quic_packet {
      *
      *          // protected header
      *          packet.set_payload(encrypted_frame); // sample
-     *          packet.write(unprotected_header, quic_mode_client);
+     *          packet.write(unprotected_header, tls_mode_client);
      *
      *          // unprotected_header + encrypted_frame frame + tag
      *          binary_append(bin_packet, protected_header);
@@ -582,15 +574,17 @@ class quic_packet_1rtt : public quic_packet {
      */
 };
 
+class tls_session;
 /**
  * @brief   read
  * @param   stream_t* s [out]
+ * @param   tls_session* session [in]
  * @param   const byte_t** stream [in]
  * @param   size_t size [in]
  * @param   size_t& pos [inout]
  */
-return_t quic_dump_frame(stream_t* s, const byte_t* stream, size_t size, size_t& pos);
-return_t quic_dump_frame(stream_t* s, const binary_t frame, size_t& pos);
+return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+return_t quic_dump_frame(stream_t* s, tls_session* session, const binary_t frame, size_t& pos);
 
 /**
  * @brief   an integer value using the variable-length encoding
@@ -700,6 +694,8 @@ class quic_encoded : public payload_encoded {
     virtual size_t lsize(const byte_t* stream, size_t size);
     virtual size_t value(const byte_t* stream, size_t size);
     virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
+
+    virtual variant& get_variant();
 
    protected:
     bool _datalink;

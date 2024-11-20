@@ -246,7 +246,7 @@ struct testvector_initial_packet {
     const char* expect_protected_header;
     const char* frame;
     const char* expect_result;
-    quic_mode_t mode;
+    tls_mode_t mode;
     bool pad;
     size_t resize;
     uint32 pn;
@@ -263,7 +263,7 @@ struct testvector_retry_packet {
     const char* token;
     const char* expect_result;
     const char* expect_tag;
-    quic_mode_t mode;
+    tls_mode_t mode;
 };
 
 void test_rfc_9001_initial(testvector_initial_packet* item) {
@@ -283,7 +283,7 @@ void test_rfc_9001_initial(testvector_initial_packet* item) {
 
     const char* text = item->text;
     const char* func = item->func;
-    quic_mode_t mode = item->mode;
+    tls_mode_t mode = item->mode;
     uint32 pn = item->pn;
     uint8 pn_length = item->pn_length;
     size_t length = item->length;
@@ -314,18 +314,18 @@ void test_rfc_9001_initial(testvector_initial_packet* item) {
         bin_expect_result = base16_decode_rfc(item->expect_result);
     }
 
-    quic_protection keys(bin_odcid);
+    quic_protection quicpp(bin_odcid);
 
     {
-        _logger->hdump("> initial secret", keys.get_item(quic_initial_secret), 16, 3);
-        _logger->hdump("> client initial secret", keys.get_item(quic_client_secret), 16, 3);
-        _logger->hdump("> client key", keys.get_item(quic_client_key), 16, 3);
-        _logger->hdump("> client iv", keys.get_item(quic_client_iv), 16, 3);
-        _logger->hdump("> client hp", keys.get_item(quic_client_hp), 16, 3);
-        _logger->hdump("> server initial secret", keys.get_item(quic_server_secret), 16, 3);
-        _logger->hdump("> server key", keys.get_item(quic_server_key), 16, 3);
-        _logger->hdump("> server iv", keys.get_item(quic_server_iv), 16, 3);
-        _logger->hdump("> server hp", keys.get_item(quic_server_hp), 16, 3);
+        _logger->hdump("> initial secret", quicpp.get_item(quic_initial_secret), 16, 3);
+        _logger->hdump("> client initial secret", quicpp.get_item(quic_client_secret), 16, 3);
+        _logger->hdump("> client key", quicpp.get_item(quic_client_key), 16, 3);
+        _logger->hdump("> client iv", quicpp.get_item(quic_client_iv), 16, 3);
+        _logger->hdump("> client hp", quicpp.get_item(quic_client_hp), 16, 3);
+        _logger->hdump("> server initial secret", quicpp.get_item(quic_server_secret), 16, 3);
+        _logger->hdump("> server key", quicpp.get_item(quic_server_key), 16, 3);
+        _logger->hdump("> server iv", quicpp.get_item(quic_server_iv), 16, 3);
+        _logger->hdump("> server hp", quicpp.get_item(quic_server_hp), 16, 3);
         // _logger->hdump("> input frame", bin_frame, 16, 3);
         // _logger->hdump("> expect result", bin_expect_result, 16, 3);
     }
@@ -334,7 +334,7 @@ void test_rfc_9001_initial(testvector_initial_packet* item) {
     {
         quic_packet_initial initial;
 
-        initial.attach(&keys);
+        initial.attach(&quicpp);
         initial.set_dcid(bin_dcid).set_scid(bin_scid).set_payload(bin_frame);
         initial.set_token(bin_token);
         initial.set_pn(pn, pn_length);
@@ -373,7 +373,7 @@ void test_rfc_9001_initial(testvector_initial_packet* item) {
     {
         quic_packet_initial initial;
 
-        initial.attach(&keys);
+        initial.attach(&quicpp);
         pos = 0;
         initial.read(&bin_expect_result[0], bin_expect_result.size(), pos, mode);
 
@@ -382,8 +382,9 @@ void test_rfc_9001_initial(testvector_initial_packet* item) {
         _logger->writeln(bs);
         bs.clear();
 
+        tls_session session;
         pos = 0;
-        while (errorcode_t::success == quic_dump_frame(&bs, &bin_frame[0], bin_frame.size(), pos)) {
+        while (errorcode_t::success == quic_dump_frame(&bs, &session, &bin_frame[0], bin_frame.size(), pos)) {
         };
         _logger->writeln(bs);
 
@@ -408,7 +409,7 @@ void test_rfc_9001_retry(testvector_retry_packet* item) {
 
     const char* text = item->text;
     const char* func = item->func;
-    quic_mode_t mode = item->mode;
+    tls_mode_t mode = item->mode;
 
     {
         bin_odcid = base16_decode_rfc(item->odcid);
@@ -552,7 +553,7 @@ void test_rfc_9001_a2() {
         "056df31bd267b6b90a079831aaf579be 0a39013137aac6d404f518cfd4684064"
         "7e78bfe706ca4cf5e9c5453e9f7cfd2b 8b4c8d169a44e55c88d4a9a7f9474241"
         "e221af44860018ab0856972e194cd934";
-    test.mode = quic_mode_client;
+    test.mode = tls_mode_client;
     test.pad = true;
     test.resize = 1162;
     test.pn = 2;
@@ -612,7 +613,7 @@ void test_rfc_9001_a3() {
         "dbcba3f6ea46c5b7684df3548e7ddeb9 c3bf9c73cc3f3bded74b562bfb19fb84"
         "022f8ef4cdd93795d77d06edbb7aaf2f 58891850abbdca3d20398c276456cbc4"
         "2158407dd074ee";
-    test.mode = quic_mode_server;
+    test.mode = tls_mode_server;
     test.pad = false;
     test.resize = 0;
     test.pn = 1;
@@ -636,7 +637,7 @@ void test_rfc_9001_a4() {
         "ff000000010008f067a5502a4262b574 6f6b656e04a265ba2eff4d829058fb3f"
         "0f2496ba";
     test.expect_tag = "04a265ba2eff4d829058fb3f0f2496ba";
-    test.mode = quic_mode_server;
+    test.mode = tls_mode_server;
 
     test_rfc_9001_retry(&test);
 }
@@ -666,10 +667,12 @@ void test_rfc_9001_a5() {
     _test_case.assert(bin_ku == base16_decode("1223504755036d556342ee9361d253421a826c9ecdf3c7148684b36b714881f9"), __FUNCTION__, "ku");
 }
 
+tls_handshake_key handshake_key;
+
 void test_quic_xargs_org() {
     _test_case.begin("https://quic.xargs.org/");
 
-    crypto_key keys;
+    crypto_key& keys = handshake_key.get_key();
     crypto_keychain keychain;
     openssl_digest dgst;
     openssl_kdf kdf;
@@ -694,14 +697,14 @@ void test_quic_xargs_org() {
     {
         const char* dcid = "00 01 02 03 04 05 06 07";
         binary_t bin_dcid = base16_decode_rfc(dcid);
-        quic_protection keys(bin_dcid);
+        quic_protection quicpp(bin_dcid);
 
-        _test_case.assert(keys.get_item(quic_client_key) == base16_decode_rfc("b14b918124fda5c8d79847602fa3520b"), __FUNCTION__, "server initial key");
-        _test_case.assert(keys.get_item(quic_client_iv) == base16_decode_rfc("ddbc15dea80925a55686a7df"), __FUNCTION__, "server initial iv");
-        _test_case.assert(keys.get_item(quic_client_hp) == base16_decode_rfc("6df4e9d737cdf714711d7c617ee82981"), __FUNCTION__, "server initial hp");
-        _test_case.assert(keys.get_item(quic_server_key) == base16_decode_rfc("d77fc4056fcfa32bd1302469ee6ebf90"), __FUNCTION__, "server initial key");
-        _test_case.assert(keys.get_item(quic_server_iv) == base16_decode_rfc("fcb748e37ff79860faa07477"), __FUNCTION__, "server initial iv");
-        _test_case.assert(keys.get_item(quic_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__, "server initial hp");
+        _test_case.assert(quicpp.get_item(quic_client_key) == base16_decode_rfc("b14b918124fda5c8d79847602fa3520b"), __FUNCTION__, "server initial key");
+        _test_case.assert(quicpp.get_item(quic_client_iv) == base16_decode_rfc("ddbc15dea80925a55686a7df"), __FUNCTION__, "server initial iv");
+        _test_case.assert(quicpp.get_item(quic_client_hp) == base16_decode_rfc("6df4e9d737cdf714711d7c617ee82981"), __FUNCTION__, "server initial hp");
+        _test_case.assert(quicpp.get_item(quic_server_key) == base16_decode_rfc("d77fc4056fcfa32bd1302469ee6ebf90"), __FUNCTION__, "server initial key");
+        _test_case.assert(quicpp.get_item(quic_server_iv) == base16_decode_rfc("fcb748e37ff79860faa07477"), __FUNCTION__, "server initial iv");
+        _test_case.assert(quicpp.get_item(quic_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__, "server initial hp");
     }
     /**
      * UDP Datagram 1 - Client hello
@@ -754,7 +757,7 @@ void test_quic_xargs_org() {
             "21 B4 B8 4E 15 65 E3 CA 31 96 7A C8 60 4D 40 32"
             "17 0D EC 28 0A EE FA 09 5D 08 B3 B7 24 1E F6 64"
             "6A 6C 86 E5 C6 2C E0 8B E0 99 -- -- -- -- -- --";
-        test.mode = quic_mode_client;
+        test.mode = tls_mode_client;
         test.pad = false;
         test.pn = 0;
         test.pn_length = 1;
@@ -795,7 +798,7 @@ void test_quic_xargs_org() {
             "2F 66 31 BC AD C7 40 2C 10 F6 5C 52 ED 15 B4 42"
             "9C 9F 64 D8 4D 64 FA 40 6C F0 B5 17 A9 26 D6 2A"
             "54 A9 29 41 36 B1 43 B0 33 -- -- -- -- -- -- --";
-        test.mode = quic_mode_server;
+        test.mode = tls_mode_server;
         test.pad = false;
         test.pn = 0;
         test.pn_length = 1;
@@ -834,23 +837,22 @@ void test_quic_xargs_org() {
          *     62:54
          */
 
-        binary_t shared_secret;
         {
             const char* x = "9fd7ad6dcff4298dd3f96d5b1b2af910a0535b1488d7f8fabb349a982880b615";
             const char* y = "";
             const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";
             keychain.add_ec_b16(&keys, "server key", "EdDSA", "X25519", x, y, d);
+        }
 
-            const EVP_PKEY* client_key = keys.find("client key");
-            const EVP_PKEY* server_key = keys.find("server key");
-            const EVP_PKEY* client_pubkey = get_peer_key(client_key);
-            dh_key_agreement(server_key, client_pubkey, shared_secret);
-            EVP_PKEY_free((EVP_PKEY*)client_pubkey);
+        binary_t shared_secret;
+        {
+            handshake_key.key_agreement("server key", "client key", shared_secret);
 
             basic_stream bs;
             dump_key(keys.find("server key"), &bs);
             _logger->writeln(bs);
-            _logger->hdump("> shared secret", shared_secret, 16, 3);
+            // _logger->hdump("> shared secret", shared_secret, 16, 3);
+            _logger->writeln("> %s : %s", "shared_secret", base16_encode(shared_secret).c_str());
             _test_case.assert(shared_secret == base16_decode("df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624"), __FUNCTION__,
                               "shared secret");
         }
@@ -859,17 +861,7 @@ void test_quic_xargs_org() {
         //  It then calculates the SHA256 hash of all handshake messages to this point (ClientHello and ServerHello).
         //  The hash does not include the 6-byte CRYPTO frame headers.
         //  This "hello_hash" is ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b:
-        constexpr char alg[] = "sha256";
 
-        auto lambda_expand_label = [&](const char* text, binary_t& result, uint16 length, const binary_t& secret, const binary_t& label,
-                                       const binary_t& context, const char* expect) -> void {
-            openssl_kdf kdf;
-            kdf.hkdf_expand_label(result, alg, length, secret, label, context);
-            _logger->hdump(format("> %s", text), result, 16, 3);
-            _test_case.assert(result == base16_decode_rfc(expect), __FUNCTION__, "##server-handshake-keys-calc #%s", text);
-        };
-
-        binary_t context;
         binary_t hello_hash;
         {
             // Client Initial Packet .. Client Hello (quic_dump_frame)
@@ -899,97 +891,73 @@ void test_quic_xargs_org() {
                 "28 80 B6 15 00 2B 00 02 03 04 -- -- -- -- -- --";
             const char* expect_hello_hash = "ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b";
 
-            openssl_hash hash;
-            hash_context_t* handle = nullptr;
-            hash.open(&handle, alg);
-            hash.update(handle, base16_decode_rfc(client_hello));
-            hash.update(handle, base16_decode_rfc(server_hello));
-            hash.finalize(handle, hello_hash);
-            hash.close(handle);
+            // > handshake type 2 (server_hello)
+            //  > cipher suite 0x1301 TLS_AES_128_GCM_SHA256
+            handshake_key.calc_hello_hash(0x1301, hello_hash, base16_decode_rfc(client_hello), base16_decode_rfc(server_hello));
 
+            _logger->writeln("> %s : %s", "hello_hash", base16_encode(hello_hash).c_str());
             _test_case.assert(hello_hash == base16_decode_rfc(expect_hello_hash), __FUNCTION__, "hello hash");
         }
-        // early_secret: 33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a
+
+        // > handshake type 2 (server_hello)
+        //  > cipher suite 0x1301 TLS_AES_128_GCM_SHA256
+        handshake_key.calc(0x1301, hello_hash, shared_secret);
+
+        auto lambda_test = [&](tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect) -> void {
+            handshake_key.get_item(tls_secret, secret);
+            _logger->writeln("> %s : %s", text, base16_encode(secret).c_str());
+            _test_case.assert(secret == base16_decode(expect), __FUNCTION__, text);
+        };
+
+        auto keysize = 0;
+        auto dlen = 0;
+        auto hashalg = 0;
+        std::string hashname;
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        const tls_alg_info_t* hint_tls_alg = tlsadvisor->hintof_tls_algorithm(0x1301);
+        if (hint_tls_alg) {
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(hint_tls_alg->cipher);
+            const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
+            if (hint_cipher) {
+                keysize = hint_cipher->keysize;
+            }
+            if (hint_mac) {
+                dlen = hint_mac->digest_size;
+                hashalg = hint_mac->algorithm;
+                hashname = hint_mac->fetchname;
+            }
+        }
+        _logger->writeln("keysize : %i", keysize);
+        _logger->writeln("hash : %s", hashname.c_str());
+        _logger->writeln("dlen : %i", dlen);
+        _test_case.assert(keysize == 16, __FUNCTION__, "TLS_AES_128_GCM_SHA256 keysize %i", keysize);
+        _test_case.assert(dlen == 32, __FUNCTION__, "TLS_AES_128_GCM_SHA256 dlen %i", dlen);
+
         binary_t early_secret;
-        {
-            binary_t salt;
-            binary_t ikm;
-            salt.resize(1);
-            ikm.resize(32);
-            kdf.hmac_kdf_extract(early_secret, alg, salt, ikm);
-            _logger->hdump("> early secret", early_secret, 16, 3);
-            _test_case.assert(early_secret == base16_decode("33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a"), __FUNCTION__, "early_secret");
-        }
-        // empty_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+        lambda_test(tls_secret_early_secret, early_secret, "early_secret", "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
         binary_t empty_hash;
-        {
-            binary_t empty;
-            dgst.digest(alg, empty, empty_hash);
-            _logger->hdump("> empty hash", empty_hash, 16, 3);
-            _test_case.assert(empty_hash == base16_decode("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"), __FUNCTION__, "empty_hash");
-        }
-        // derived_secret: 6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba
+        lambda_test(tls_secret_empty_hash, empty_hash, "empty_hash", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
         binary_t derived_secret;
-        {
-            lambda_expand_label("derived_secret", derived_secret, 32, early_secret, str2bin("derived"), empty_hash,
-                                "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
-        }
-        // handshake_secret: fb9fc80689b3a5d02c33243bf69a1b1b20705588a794304a6e7120155edf149a
+        lambda_test(tls_secret_derived_secret, derived_secret, "derived_secret", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
         binary_t handshake_secret;
-        {
-            kdf.hmac_kdf_extract(handshake_secret, alg, derived_secret, shared_secret);
-            _logger->hdump("> handshake_secret", handshake_secret, 16, 3);
-            _test_case.assert(handshake_secret == base16_decode("fb9fc80689b3a5d02c33243bf69a1b1b20705588a794304a6e7120155edf149a"), __FUNCTION__,
-                              "handshake_secret");
-        }
-        // client_secret: b8902ab5f9fe52fdec3aea54e9293e4b8eabf955fcd88536bf44b8b584f14982
+        lambda_test(tls_secret_handshake_secret, handshake_secret, "handshake_secret", "fb9fc80689b3a5d02c33243bf69a1b1b20705588a794304a6e7120155edf149a");
         binary_t client_secret;
-        {
-            lambda_expand_label("client_secret", client_secret, 32, handshake_secret, str2bin("c hs traffic"), hello_hash,
-                                "b8902ab5f9fe52fdec3aea54e9293e4b8eabf955fcd88536bf44b8b584f14982");
-        }
-        // server_secret: 88ad8d3b0986a71965a28d108b0f40ffffe629284a6028c80ddc5dc083b3f5d1
+        lambda_test(tls_secret_client_secret, client_secret, "client_secret", "b8902ab5f9fe52fdec3aea54e9293e4b8eabf955fcd88536bf44b8b584f14982");
         binary_t server_secret;
-        {
-            lambda_expand_label("server_secret", server_secret, 32, handshake_secret, str2bin("s hs traffic"), hello_hash,
-                                "88ad8d3b0986a71965a28d108b0f40ffffe629284a6028c80ddc5dc083b3f5d1");
-        }
-        // client handshake key: 30a7e816f6a1e1b3434cf39cf4b415e7
+        lambda_test(tls_secret_server_secret, server_secret, "server_secret", "88ad8d3b0986a71965a28d108b0f40ffffe629284a6028c80ddc5dc083b3f5d1");
         binary_t client_handshake_key;
-        {
-            lambda_expand_label("client_handshake_key", client_handshake_key, 16, client_secret, str2bin("quic key"), context,
-                                "30a7e816f6a1e1b3434cf39cf4b415e7");
-        }
-        // client handshake IV: 11e70a5d1361795d2bb04465
+        lambda_test(tls_secret_client_handshake_quic_key, client_handshake_key, "client_handshake_key", "30a7e816f6a1e1b3434cf39cf4b415e7");
         binary_t client_handshake_iv;
-        {
-            //
-            lambda_expand_label("client_handshake_iv", client_handshake_iv, 12, client_secret, str2bin("quic iv"), context, "11e70a5d1361795d2bb04465");
-        }
-        // client handshake header protection key: 84b3c21cacaf9f54c885e9a506459079
+        lambda_test(tls_secret_client_handshake_quic_iv, client_handshake_iv, "client_handshake_iv", "11e70a5d1361795d2bb04465");
         binary_t client_handshake_hp;
-        {
-            //
-            lambda_expand_label("client_handshake_hp", client_handshake_hp, 16, client_secret, str2bin("quic hp"), context, "84b3c21cacaf9f54c885e9a506459079");
-        }
-        // server handshake key: 17abbf0a788f96c6986964660414e7ec
+        lambda_test(tls_secret_client_handshake_quic_hp, client_handshake_hp, "client_handshake_hp", "84b3c21cacaf9f54c885e9a506459079");
         binary_t server_handshake_key;
-        {
-            lambda_expand_label("server_handshake_key", server_handshake_key, 16, server_secret, str2bin("quic key"), context,
-                                "17abbf0a788f96c6986964660414e7ec");
-        }
-        // server handshake IV: 09597a2ea3b04c00487e71f3
+        lambda_test(tls_secret_server_handshake_quic_key, server_handshake_key, "server_handshake_key", "17abbf0a788f96c6986964660414e7ec");
         binary_t server_handshake_iv;
-        {
-            //
-            lambda_expand_label("server_handshake_iv", server_handshake_iv, 12, server_secret, str2bin("quic iv"), context, "09597a2ea3b04c00487e71f3");
-        }
-        // server handshake header protection key: 2a18061c396c2828582b41b0910ed536
+        lambda_test(tls_secret_server_handshake_quic_iv, server_handshake_iv, "server_handshake_iv", "09597a2ea3b04c00487e71f3");
         binary_t server_handshake_hp;
-        {
-            //
-            lambda_expand_label("server_handshake_hp", server_handshake_hp, 16, server_secret, str2bin("quic hp"), context, "2a18061c396c2828582b41b0910ed536");
-        }
+        lambda_test(tls_secret_server_handshake_quic_hp, server_handshake_hp, "server_handshake_hp", "2a18061c396c2828582b41b0910ed536");
     }
     /*
      * UDP Datagram 3 - Server handshake finished
@@ -1057,7 +1025,7 @@ void whatsthis() {
         } break;
         case mode_encode: {
             bin_input = base16_decode_rfc(option.content);
-            auto i64_input = t_binary_to_integer2<uint64>(bin_input);
+            auto i64_input = t_binary_to_integer<uint64>(bin_input);
             quic_write_vle_int(i64_input, bin_encoded);
             auto encoded = base16_encode(bin_encoded);
             bs.printf("> encode\n");

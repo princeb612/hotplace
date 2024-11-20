@@ -459,6 +459,24 @@ void test_quic_integer() {
         _test_case.assert(bin2 == bin_expect_zero_length, __FUNCTION__, "zero-length #read");
     }
 
+    {
+        constexpr char constexpr_input[] = "input";
+        constexpr char input[] = "05 01 02 03 04 05";
+        constexpr char data[] = "01 02 03 04 05";
+        binary_t bin_input = base16_decode_rfc(input);
+        payload pl;
+        pl << new payload_member(new quic_encoded(binary_t()), constexpr_input);
+        size_t pos = 0;
+        pl.read(&bin_input[0], bin_input.size(), pos);
+        binary_t bin_data;
+        auto encoded = pl.select(constexpr_input)->get_payload_encoded();
+        auto value = encoded->value();
+        encoded->get_variant().to_binary(bin_data);
+        _test_case.assert(5 == value, __FUNCTION__, "opaque #1");
+        _logger->hdump("dump", bin_data);
+        _test_case.assert(bin_data == base16_decode_rfc(data), __FUNCTION__, "opaque #2");
+    }
+
     // integer
     auto test_lambda = [&](uint64 value, const char* expect) -> void {
         binary_t bin_expect = base16_decode_rfc(expect);

@@ -96,7 +96,7 @@ T t_to_int(const variant_t& vt, return_t& errorcode) {
             }
             break;
         case TYPE_BINARY:
-            i = t_binary_to_integer2<T>(vt.data.bstr, vt.size, errorcode);
+            i = t_binary_to_integer<T>(vt.data.bstr, vt.size, errorcode);
             break;
         default:
             break;

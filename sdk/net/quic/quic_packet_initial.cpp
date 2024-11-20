@@ -39,19 +39,26 @@ return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& po
         // RFC 9001 5.4.2.  Header Protection Sample
         uint8 pn_length = mode ? 4 : get_pn_length(stream[0]);
 
+        constexpr char constexpr_token[] = "token";
+        constexpr char constexpr_len[] = "len";
+        constexpr char constexpr_pn[] = "pn";
+        constexpr char constexpr_payload[] = "payload";
+        constexpr char constexpr_tag[] = "tag";
+
         payload pl;
-        pl << new payload_member(new quic_encoded(binary_t()), "token") << new payload_member(new quic_encoded(uint64(0)), "length")
-           << new payload_member(binary_t(), "packet number") << new payload_member(binary_t(), "payload") << new payload_member(binary_t(), "tag");
-        pl.select("packet number")->reserve(pn_length);
-        pl.select("tag")->reserve(16);
+        pl << new payload_member(new quic_encoded(binary_t()), constexpr_token) << new payload_member(new quic_encoded(uint64(0)), constexpr_len)
+           << new payload_member(binary_t(), constexpr_pn) << new payload_member(binary_t(), constexpr_payload)
+           << new payload_member(binary_t(), constexpr_tag);
+        pl.select(constexpr_pn)->reserve(pn_length);
+        pl.select(constexpr_tag)->reserve(16);
         pl.read(stream, size, pos);
 
-        pl.select("token")->get_variant().to_binary(_token);
-        _length = pl.select("length")->get_payload_encoded()->value();
-        pl.select("packet number")->get_variant().to_binary(bin_pn);  // 8..32
-        _pn = t_binary_to_integer2<uint32>(bin_pn);
-        pl.select("payload")->get_variant().to_binary(_payload);
-        pl.select("tag")->get_variant().to_binary(bin_tag);
+        pl.select(constexpr_token)->get_payload_encoded()->get_variant().to_binary(_token);
+        _length = pl.select(constexpr_len)->get_payload_encoded()->value();
+        pl.select(constexpr_pn)->get_variant().to_binary(bin_pn);  // 8..32
+        _pn = t_binary_to_integer<uint32>(bin_pn);
+        pl.select(constexpr_payload)->get_variant().to_binary(_payload);
+        pl.select(constexpr_tag)->get_variant().to_binary(bin_tag);
 
         if (mode) {
             binary_t bin_mask;
@@ -69,12 +76,12 @@ return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& po
             auto pn_length = get_pn_length(_ht);
             auto adj = 4 - pn_length;
             if (adj) {
-                const byte_t* begin = stream + offset_initial + pl.offset_of("packet number") + pn_length;
+                const byte_t* begin = stream + offset_initial + pl.offset_of(constexpr_pn) + pn_length;
                 _payload.insert(_payload.begin(), begin, begin + adj);
                 bin_pn.resize(pn_length);
             }
 
-            _pn = t_binary_to_integer2<uint32>(bin_pn);
+            _pn = t_binary_to_integer<uint32>(bin_pn);
 
             // unprotected header
             write(bin_unprotected_header);
@@ -128,6 +135,10 @@ return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binar
         uint64 len = 0;
         binary_t bin_pn;
 
+        constexpr char constexpr_token[] = "token";
+        constexpr char constexpr_len[] = "len";
+        constexpr char constexpr_pn[] = "pn";
+
         // unprotected header
         {
             ret = quic_packet::write(bin_unprotected_header, mode);
@@ -144,8 +155,8 @@ return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binar
 
             // unprotected header
             payload pl;
-            pl << new payload_member(new quic_encoded(get_token()), "token") << new payload_member(new quic_encoded(len), "length")
-               << new payload_member(bin_pn, "packet number");
+            pl << new payload_member(new quic_encoded(get_token()), constexpr_token) << new payload_member(new quic_encoded(len), constexpr_len)
+               << new payload_member(bin_pn, constexpr_pn);
             pl.write(bin_unprotected_header);
         }
 
@@ -180,8 +191,8 @@ return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binar
 
                 // encode packet number
                 payload pl;
-                pl << new payload_member(new quic_encoded(get_token()), "token") << new payload_member(new quic_encoded(len), "length")
-                   << new payload_member(bin_pn, "packet number");
+                pl << new payload_member(new quic_encoded(get_token()), constexpr_token) << new payload_member(new quic_encoded(len), constexpr_len)
+                   << new payload_member(bin_pn, constexpr_pn);
 
                 // protected header
                 pl.write(bin_protected_header);

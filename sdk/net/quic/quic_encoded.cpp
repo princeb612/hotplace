@@ -118,5 +118,7 @@ return_t quic_encoded::read(const byte_t* stream, size_t size, size_t& pos) {
     return ret;
 }
 
+variant& quic_encoded::get_variant() { return _data; }
+
 }  // namespace net
 }  // namespace hotplace

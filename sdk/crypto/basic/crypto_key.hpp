@@ -22,55 +22,55 @@ namespace crypto {
 
 class crypto_key_object {
    public:
-    crypto_key_object() : pkey(nullptr), use(0) {
+    crypto_key_object() : _pkey(nullptr), _use(0) {
         // do nothing
     }
 
-    crypto_key_object(const EVP_PKEY* _key, crypto_use_t _use, const char* _kid = nullptr, const char* _alg = nullptr) : pkey(_key), use(_use) {
-        if (_kid) {
-            kid = _kid;
+    crypto_key_object(const EVP_PKEY* key, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) : _pkey(key), _use(use) {
+        if (kid) {
+            _kid = kid;
         }
-        if (_alg) {
-            alg = _alg;
+        if (alg) {
+            _alg = alg;
         }
     }
     crypto_key_object(const crypto_key_object& key) {
-        pkey = key.pkey;
-        use = key.use;
-        kid = key.kid;
-        alg = key.alg;
+        _pkey = key._pkey;
+        _use = key._use;
+        _kid = key._kid;
+        _alg = key._alg;
     }
-    crypto_key_object& set(const EVP_PKEY* _key, crypto_use_t _use, const char* _kid = nullptr, const char* _alg = nullptr) {
-        pkey = _key;
-        use = _use;
-        if (_kid) {
-            kid = _kid;
+    crypto_key_object& set(const EVP_PKEY* key, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) {
+        _pkey = key;
+        _use = _use;
+        if (kid) {
+            _kid = kid;
         }
-        if (_alg) {
-            alg = _alg;
+        if (alg) {
+            _alg = alg;
         }
         return *this;
     }
     crypto_key_object& operator=(crypto_key_object& key) {
-        pkey = key.pkey;
-        use = key.use;
-        kid = key.kid;
-        alg = key.alg;
+        _pkey = key._pkey;
+        _use = key._use;
+        _kid = key._kid;
+        _alg = key._alg;
         return *this;
     }
 
-    const EVP_PKEY* get_pkey() { return pkey; }
-    const char* get_kid() { return kid.c_str(); }
-    std::string get_kid_string() { return kid; }
-    uint32 get_use() { return use; }
-    const char* get_alg() { return alg.c_str(); }
-    std::string get_alg_string() { return alg; }
+    const EVP_PKEY* get_pkey() { return _pkey; }
+    const char* get_kid() { return _kid.c_str(); }
+    std::string get_kid_string() { return _kid; }
+    uint32 get_use() { return _use; }
+    const char* get_alg() { return _alg.c_str(); }
+    std::string get_alg_string() { return _alg; }
 
    private:
-    const EVP_PKEY* pkey;
-    std::string kid;
-    uint32 use;  // crypto_use_t
-    std::string alg;
+    const EVP_PKEY* _pkey;
+    std::string _kid;
+    uint32 _use;  // crypto_use_t
+    std::string _alg;
 };
 
 /**

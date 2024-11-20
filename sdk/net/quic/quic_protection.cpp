@@ -13,6 +13,7 @@
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/net/quic/quic.hpp>
+#include <sdk/net/tls/tlsspec.hpp>
 
 namespace hotplace {
 namespace net {
@@ -35,9 +36,6 @@ void quic_protection::get_item(quic_initial_keys_t mode, binary_t& item) { item 
 
 return_t quic_protection::calc(const binary_t& salt, const binary_t& context, uint32 mode) {
     return_t ret = errorcode_t::success;
-
-    bool doclient = (0 == mode) || (quic_mode_t::quic_mode_client == mode);
-    bool doserver = (0 == mode) || (quic_mode_t::quic_mode_server == mode);
 
     openssl_kdf kdf;
     const char* initial_salt = "0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a";
@@ -141,7 +139,7 @@ return_t quic_protection::calc(const binary_t& salt, const binary_t& context, ui
     ret = kdf.hmac_kdf_extract(bin_initial_secret, alg, bin_initial_salt, salt);
     _kv[quic_initial_secret] = bin_initial_secret;
 
-    if (doclient) {
+    if (tls_mode_client & mode) {
         kdf.hkdf_expand_label(bin_client_initial_secret, alg, 32, bin_initial_secret, str2bin("client in"), context);
         _kv[quic_client_secret] = bin_client_initial_secret;
 
@@ -155,7 +153,7 @@ return_t quic_protection::calc(const binary_t& salt, const binary_t& context, ui
         _kv[quic_client_hp] = bin;
     }
 
-    if (doserver) {
+    if (tls_mode_server & mode) {
         kdf.hkdf_expand_label(bin_server_initial_secret, alg, 32, bin_initial_secret, str2bin("server in"), context);
         _kv[quic_server_secret] = bin_server_initial_secret;
 
@@ -212,7 +210,7 @@ return_t quic_protection::hpmask(uint32 mode, const byte_t* sample, size_t size_
         {
             openssl_crypt crypt;
             quic_initial_keys_t kty = quic_initial_keys_t::quic_client_hp;
-            if (quic_mode_t::quic_mode_server == mode) {
+            if (tls_mode_t::tls_mode_server == mode) {
                 kty = quic_initial_keys_t::quic_server_hp;
             }
             auto const& key = get_item(kty);
@@ -310,7 +308,7 @@ return_t quic_protection::encrypt(uint32 mode, uint64 pn, const binary_t& payloa
         crypt_context_t* handle = nullptr;
         quic_initial_keys_t kty_key = quic_initial_keys_t::quic_client_key;
         quic_initial_keys_t kty_iv = quic_initial_keys_t::quic_client_iv;
-        if (quic_mode_t::quic_mode_server == mode) {
+        if (tls_mode_t::tls_mode_server == mode) {
             kty_key = quic_initial_keys_t::quic_server_key;
             kty_iv = quic_initial_keys_t::quic_server_iv;
         }
@@ -342,7 +340,7 @@ return_t quic_protection::decrypt(uint32 mode, uint64 pn, const binary_t& payloa
         crypt_context_t* handle = nullptr;
         quic_initial_keys_t kty_key = quic_initial_keys_t::quic_client_key;
         quic_initial_keys_t kty_iv = quic_initial_keys_t::quic_client_iv;
-        if (quic_mode_t::quic_mode_server == mode) {
+        if (tls_mode_t::tls_mode_server == mode) {
             kty_key = quic_initial_keys_t::quic_server_key;
             kty_iv = quic_initial_keys_t::quic_server_iv;
         }

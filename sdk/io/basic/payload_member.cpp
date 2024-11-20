@@ -131,8 +131,8 @@ variant& payload_member::get_variant() { return _vt; }
 
 size_t payload_member::get_space() {
     size_t space = 0;
-    if (_vl) {  // get_payload_encoded()
-        space = _vl->lsize();
+    if (encoded()) {
+        space = get_payload_encoded()->lsize();
     } else if (_reserve) {
         space = _reserve;
     } else if (variant_flag_t::flag_int == get_variant().flag()) {
@@ -145,8 +145,8 @@ size_t payload_member::get_space() {
 
 size_t payload_member::get_capacity() {
     size_t space = 0;
-    if (_vl) {
-        space = _vl->lsize();
+    if (encoded()) {
+        space = get_payload_encoded()->lsize();
     } else if (_reserve) {
         space = _reserve;
     } else if (_ref) {
@@ -159,8 +159,8 @@ size_t payload_member::get_capacity() {
 
 size_t payload_member::get_reference_value() {
     size_t size = 0;
-    if (_vl) {
-        size = _vl->value();
+    if (encoded()) {
+        size = get_payload_encoded()->value();
     } else if (_reserve) {
         size = _reserve;
     } else if (_ref) {
@@ -181,8 +181,8 @@ payload_member& payload_member::set_reference_of(payload_member* member, uint8 m
 
 payload_member& payload_member::write(binary_t& bin) {
     uint32 flags = 0;
-    if (_vl) {
-        _vl->write(bin);  // delegate
+    if (encoded()) {
+        get_payload_encoded()->write(bin);
     } else {
         if (get_change_endian()) {
             flags |= variant_convendian;
@@ -220,7 +220,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                 switch (type) {
                     case TYPE_INT8:
                     case TYPE_UINT8: {
-                        v.set_uint8(*(uint8*)rebase);
+                        v.clear().set_uint8(*(uint8*)rebase);
                         *size_read = vsize;
                     } break;
                     case TYPE_INT16:
@@ -229,14 +229,14 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         if (get_change_endian()) {
                             temp = ntoh16(temp);
                         }
-                        v.set_uint16(temp);
+                        v.clear().set_uint16(temp);
                         *size_read = vsize;
                     } break;
                     case TYPE_INT24:
                     case TYPE_UINT24: {
                         uint32 temp = 0;
                         b24_i32(rebase, limit, temp);
-                        v.set_uint24(temp);
+                        v.clear().set_uint24(temp);
                         *size_read = vsize;
                     } break;
                     case TYPE_INT32:
@@ -245,7 +245,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         if (get_change_endian()) {
                             temp = ntoh32(temp);
                         }
-                        v.set_uint32(temp);
+                        v.clear().set_uint32(temp);
                         *size_read = vsize;
                     } break;
                     case TYPE_INT64:
@@ -254,7 +254,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         if (get_change_endian()) {
                             temp = ntoh64(temp);
                         }
-                        v.set_uint64(temp);
+                        v.clear().set_uint64(temp);
                         *size_read = vsize;
                     } break;
 #if defined __SIZEOF_INT128__
@@ -264,7 +264,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         if (get_change_endian()) {
                             temp = ntoh128(temp);
                         }
-                        v.set_uint64(temp);
+                        v.clear().set_uint64(temp);
                         *size_read = vsize;
                     } break;
 #endif
@@ -326,7 +326,7 @@ return_t payload_member::doread_encoded(const byte_t* ptr, size_t size_ptr, size
         }
 
         size_t pos = 0;
-        ret = _vl->read(ptr + offset, size_ptr - offset, pos);  // delegate
+        ret = get_payload_encoded()->read(ptr + offset, size_ptr - offset, pos);  // delegate
         if (errorcode_t::success != ret) {
             __leave2;
         }

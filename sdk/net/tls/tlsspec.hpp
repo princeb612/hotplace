@@ -57,6 +57,7 @@
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
+#include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/net/types.hpp>
 
 namespace hotplace {
@@ -65,24 +66,23 @@ namespace net {
 /* RFC 8446 5.  Record Protocol */
 enum tls_content_type_t : uint8 {
     tls_content_type_invalid = 0,
-    tls_content_type_change_cipher_spec = 20,
-    tls_content_type_alert = 21,
-    tls_content_type_handshake = 22,
-    tls_content_type_application_data = 23,
+    tls_content_type_change_cipher_spec = 20,  // 0x14
+    tls_content_type_alert = 21,               // 0x15
+    tls_content_type_handshake = 22,           // 0x16
+    tls_content_type_application_data = 23,    // 0x17
 };
 
-struct tls_plaintext_t {
+struct tls_content_t {
     tls_content_type_t type;
     uint16 version;
     uint16 length;  // 2^14
-    const byte_t* fragment;
 };
 
 /*
  * RFC 8446 4.  Handshake Protocol
  * RFC 5246 7.4.  Handshake Protocol
  */
-enum tls_handshaketype_t : uint8 {
+enum tls_handshake_type_t : uint8 {
     // TLS 1.3
     tls_handshake_client_hello = 1,          // CH
     tls_handshake_server_hello = 2,          // SH
@@ -107,7 +107,7 @@ enum tls_handshaketype_t : uint8 {
 
 /* RFC 8446 4.  Handshake Protocol */
 struct tls_handshake_t {
-    tls_handshaketype_t msg_type;
+    tls_handshake_type_t msg_type;
     uint24_t length;
 };
 
@@ -172,11 +172,31 @@ enum tls_extensions_t : uint16 {
     tls_extension_signature_algorithms_cert = 50,              /* RFC 8446 */
     tls_extension_key_share = 51,                              /* RFC 8446 */
     /* RFC 9001 8.2.  QUIC Transport Parameters Extension */
-    ls_extension_quic_transport_parameters = 57,
+    tls_extension_quic_transport_parameters = 57,  // RFC 9001, see quic_param_t
     // RFC 4366, 6066
     tls_extension_client_certificate_url = 2,  // RFC 4366
     tls_extension_trusted_ca_keys = 3,         // RFC 4366
     tls_extension_truncated_hmac = 4,          // RFC 4366
+    // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#tls-extensiontype-values-1
+    tls_extension_user_mapping = 6,             // RFC 4681
+    tls_extension_ec_point_formats = 11,        // RFC 8422
+    tls_extension_srp = 12,                     // RFC 5054
+    tls_extension_status_request_v2 = 17,       // RFC 6961
+    tls_extension_encrypt_then_mac = 22,        // RFC 7366
+    tls_extension_extended_master_secret = 23,  // RFC 7627
+    tls_extension_token_binding = 24,           // RFC 8472
+    tls_extension_cached_info = 25,             // RFC 7924
+    tls_extension_compress_certificate = 27,    // RFC 8879
+    tls_extension_record_size_limit = 28,       // RFC 8449
+    tls_extension_delegated_credential = 34,    // RFC 9345
+    tls_extension_session_ticket = 35,          // RFC 5077, 8447
+    tls_extension_TLMSP = 36,                   // extended master secret
+    tls_extension_supported_ekt_ciphers = 39,   // RFC 8870
+    tls_extension_transparency_info = 52,       // RFC 9162 Certificate Transparency Version 2.0
+    tls_extension_external_id_hash = 55,        // RFC 8844
+    tls_extension_external_session_id = 56,     // RFC 8844
+    tls_extension_ticket_request = 58,          // RFC 9149 TLS Ticket Requests
+    tls_extension_renegotiation_info = 65281,   // RFC 5746 Transport Layer Security (TLS) Renegotiation Indication Extension
 };
 
 /**
@@ -244,32 +264,121 @@ struct tls_alert_t {
     tls_alertdesc_t desc;
 };
 
-class tls_resource {
-   public:
-    static tls_resource* get_instance();
-    ~tls_resource();
+enum tls_secret_t : uint16 {
+    tls_secret_shared_secret = 1,
+    tls_secret_hello_hash = 2,
+    tls_secret_early_secret = 3,
+    tls_secret_empty_hash = 4,
+    tls_secret_derived_secret = 5,
+    tls_secret_handshake_secret = 6,
+    tls_secret_client_secret = 7,
+    tls_secret_server_secret = 8,
+    tls_secret_client_handshake_key = 9,
+    tls_secret_client_handshake_iv = 10,
+    tls_secret_client_handshake_quic_key = 11,
+    tls_secret_client_handshake_quic_iv = 12,
+    tls_secret_client_handshake_quic_hp = 13,
+    tls_secret_server_handshake_key = 14,
+    tls_secret_server_handshake_iv = 15,
+    tls_secret_server_handshake_quic_key = 16,
+    tls_secret_server_handshake_quic_iv = 17,
+    tls_secret_server_handshake_quic_hp = 18,
+};
 
+enum tls_mode_t : uint8 {
+    tls_mode_tls = (1 << 0),
+    tls_mode_quic = (1 << 1),
+    tls_mode_client = (1 << 2),
+    tls_mode_server = (1 << 3),
+};
+
+class tls_handshake_key {
+   public:
+    tls_handshake_key(uint8 mode = -1);
+
+    crypto_key& get_key();
+    return_t key_agreement(const std::string& priv_key, const std::string& pub_key, binary_t& shared);
+    return_t calc_hello_hash(uint16 alg, binary_t& hello_hash, const binary_t& client_hello, const binary_t& server_hello);
+    return_t calc(uint16 alg, const binary_t& hello_hash, const binary_t& shared_secret);
+
+    void get_item(tls_secret_t mode, binary_t& item);
+    const binary_t& get_item(tls_secret_t mode);
+    uint8 get_mode();
+
+   private:
+    uint8 _mode;
+    crypto_key _key;
+    std::map<uint16, binary_t> _kv;
+};
+
+struct tls_alg_info_t {
+    uint16 alg;
+    crypt_algorithm_t cipher;
+    crypt_mode_t mode;
+    uint8 tagsize;
+    hash_algorithm_t mac;
+};
+
+class tls_advisor {
+   public:
+    static tls_advisor* get_instance();
+    ~tls_advisor();
+
+    std::string content_type_string(uint8 type);
+    std::string handshake_type_string(uint8 type);
     std::string tls_version_string(uint16 code);
+    std::string tls_extension_string(uint16 code);
     std::string cipher_suite_string(uint16 code);
+    const tls_alg_info_t* hintof_tls_algorithm(uint16 code);
     std::string compression_method_string(uint8 code);
+
+    // tls_extension_server_name 0x0000
     std::string sni_nametype_string(uint16 code);
+    // tls_extension_supported_groups 0x000a
     std::string named_curve_string(uint16 code);
+    // tls_extension_ec_point_formats 0x000b
+    std::string ec_point_format_string(uint8 code);
+    // tls_extension_signature_algorithms 0x000d
     std::string signature_scheme_string(uint16 code);
+    // tls_extension_psk_key_exchange_modes 0x002d
+    std::string psk_key_exchange_mode_string(uint8 mode);
+    // tls_extension_quic_transport_parameters 0x0039
+    std::string quic_param_string(uint16 code);
 
    protected:
-    tls_resource();
+    tls_advisor();
     void load_resource();
+    void load_content_types();
+    void load_handshake_types();
     void load_tls_version();
+    void load_tls_extensions();
     void load_cipher_suites();
     void load_named_curves();
+    void load_ec_point_formats();
     void load_signature_schemes();
+    void load_psk_kems();
+    void load_quic_param();
 
-    static tls_resource _instance;
+    static tls_advisor _instance;
     critical_section _lock;
+    std::map<uint8, std::string> _content_types;
+    std::map<uint8, std::string> _handshake_types;
     std::map<uint16, std::string> _tls_version;
+    std::map<uint16, std::string> _tls_extensions;
     std::map<uint16, std::string> _cipher_suites;
+    std::map<uint16, tls_alg_info_t*> _tls_alg_info;
+
+    // tls_extension_supported_groups 0x000a
     std::map<uint16, std::string> _named_curves;
+    // tls_extension_ec_point_formats 0x000b
+    std::map<uint8, std::string> _ec_point_formats;
+    // tls_extension_signature_algorithms 0x000d
     std::map<uint16, std::string> _signature_schemes;
+    // tls_extension_psk_key_exchange_modes 0x0002d
+    std::map<uint8, std::string> _psk_kem;
+    // tls_extension_quic_transport_parameters 0x0039
+    std::map<uint16, std::string> _quic_params;
+
     bool _load;
 };
 
@@ -280,8 +389,27 @@ class tls_resource {
  * @param   size_t size [in]
  * @param   size_t& pos [inout]
  */
-return_t tls_dump_record(stream_t* s, const byte_t* stream, size_t size, size_t& pos);
-return_t tls_dump_handshake(stream_t* s, const byte_t* stream, size_t size, size_t& pos);
+class tls_session;
+return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_change_cipher_spec(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_alert(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_application_data(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_extension(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+
+// studying ...
+class tls_session {
+   public:
+    tls_session() : _alg(0) {}
+
+    tls_handshake_key& get_handshake_key() { return _handshake_key; }
+    uint16 get_cipher_suite() { return _alg; }
+    void set_cipher_suite(uint16 alg) { _alg = alg; }
+
+   protected:
+    uint16 _alg;
+    tls_handshake_key _handshake_key;
+};
 
 }  // namespace net
 }  // namespace hotplace

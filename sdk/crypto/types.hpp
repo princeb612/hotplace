@@ -112,8 +112,8 @@ enum crypt_mode_t {
     wrap = 9,
     ccm = 10,
 
-    stream_cipher = 11,
-    stream_aead = gcm,
+    crypt_cipher = 11,
+    crypt_aead = 12,
 };
 
 enum hash_algorithm_t {

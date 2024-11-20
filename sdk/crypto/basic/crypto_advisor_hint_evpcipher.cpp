@@ -574,17 +574,17 @@ const hint_cipher_t evp_cipher_methods[] = {
 
     {
         crypt_algorithm_t::rc4,
-        crypt_mode_t::stream_cipher,
+        crypt_mode_t::crypt_cipher,
         "rc4",
     },
     {
         crypt_algorithm_t::chacha20,
-        crypt_mode_t::stream_cipher,
+        crypt_mode_t::crypt_cipher,
         "chacha20",
     },
     {
         crypt_algorithm_t::chacha20,
-        crypt_mode_t::stream_aead,
+        crypt_mode_t::crypt_aead,
         "chacha20-poly1305",
     },
 };

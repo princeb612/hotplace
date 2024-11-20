@@ -417,7 +417,7 @@ class openssl_crypt : public crypt_t {
  *
  *          // stream cipher
  *          {
- *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::stream_cipher, key, iv);
+ *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::crypt_cipher, key, iv);
  *              crypt.encrypt (handle, data_plain, size_plain, data_encrypted);
  *              crypt.decrypt (handle, data_encrypted, data_decrypted);
  *              crypt.close (handle);
@@ -429,7 +429,7 @@ class openssl_crypt : public crypt_t {
  *              binary_t tag;
  *              openssl_prng rand;
  *              rand.random (aad, 32);
- *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::stream_aead, key, iv);
+ *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::crypt_aead, key, iv);
  *              crypt.encrypt2 (handle, data_plain, size_plain, data_encrypted, &aad, &tag);
  *              crypt.decrypt2 (handle, data_encrypted, data_decrypted, &aad, &tag);
  *              crypt.close (handle);
