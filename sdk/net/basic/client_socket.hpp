@@ -11,9 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_CLIENTSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_CLIENTSOCKET__
 
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/net/basic/types.hpp>
-#include <sdk/net/tls/types.hpp>
+#include <sdk/net/basic/basic_socket.hpp>
 
 namespace hotplace {
 namespace net {
@@ -21,9 +19,9 @@ namespace net {
 /**
  * @brief   client socket
  */
-class client_socket {
+class client_socket : public basic_socket {
    public:
-    client_socket() : _wto(1000) { _shared.make_share(this); }
+    client_socket() : basic_socket(), _wto(1000) {}
     virtual ~client_socket() {}
 
     /**
@@ -64,28 +62,6 @@ class client_socket {
     virtual return_t connectto(socket_t sock, tls_context_t** tls_handle, const sockaddr* addr, socklen_t addrlen, uint32 timeout) {
         return errorcode_t::success;
     }
-    /**
-     * @brief   close
-     * @param   socket_t        sock            [IN] see connect
-     * @param   tls_context_t*  tls_handle      [IN] ignore, see tls_client_socket
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t close(socket_t sock, tls_context_t* tls_handle) {
-        return_t ret = errorcode_t::success;
-
-        __try2 {
-            if (INVALID_SOCKET == sock) {
-                ret = errorcode_t::invalid_parameter;
-                __leave2;
-            }
-            ret = close_socket(sock, true, 0);
-        }
-        __finally2 {
-            // do nothing
-        }
-        return ret;
-    }
-
     /**
      * @brief   read
      * @param   socket_t        sock            [IN]
@@ -143,20 +119,14 @@ class client_socket {
         return errorcode_t::success;
     }
 
-    bool support_tls() { return false; }
-    virtual int socket_type() { return 0; } /* override */
-
     void set_wto(uint32 milliseconds) {
         if (milliseconds) {
             _wto = milliseconds;
         }
     }
     uint32 get_wto() { return _wto; }
-    int addref() { return _shared.addref(); }
-    int release() { return _shared.delref(); }
 
    protected:
-    t_shared_reference<client_socket> _shared;
     uint32 _wto;  // msec, default 1,000 msec (1 sec)
 };
 

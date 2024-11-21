@@ -292,6 +292,10 @@ enum tls_mode_t : uint8 {
     tls_mode_server = (1 << 3),
 };
 
+// studying ...
+class tls_handshake_key;
+class tls_session;
+
 class tls_handshake_key {
    public:
     tls_handshake_key(uint8 mode = -1);
@@ -301,6 +305,8 @@ class tls_handshake_key {
     return_t calc_hello_hash(uint16 alg, binary_t& hello_hash, const binary_t& client_hello, const binary_t& server_hello);
     return_t calc(uint16 alg, const binary_t& hello_hash, const binary_t& shared_secret);
 
+    return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv);
+
     void get_item(tls_secret_t mode, binary_t& item);
     const binary_t& get_item(tls_secret_t mode);
     uint8 get_mode();
@@ -309,6 +315,28 @@ class tls_handshake_key {
     uint8 _mode;
     crypto_key _key;
     std::map<uint16, binary_t> _kv;
+};
+
+class tls_session {
+   public:
+    tls_session() : _alg(0), _seq(0) {}
+
+    tls_handshake_key& get_handshake_key() { return _handshake_key; }
+
+    uint16 get_cipher_suite() { return _alg; }
+    void set_cipher_suite(uint16 alg) { _alg = alg; }
+
+    uint64 get_sequence(bool inc = false) {
+        uint64 value = inc ? _seq++ : _seq;
+        _seq;
+        return value;
+    }
+    void inc_sequence() { _seq++; }
+
+   protected:
+    uint16 _alg;
+    uint64 _seq;
+    tls_handshake_key _handshake_key;
 };
 
 struct tls_alg_info_t {
@@ -389,27 +417,12 @@ class tls_advisor {
  * @param   size_t size [in]
  * @param   size_t& pos [inout]
  */
-class tls_session;
 return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 return_t tls_dump_change_cipher_spec(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 return_t tls_dump_alert(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 return_t tls_dump_application_data(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 return_t tls_dump_extension(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
-
-// studying ...
-class tls_session {
-   public:
-    tls_session() : _alg(0) {}
-
-    tls_handshake_key& get_handshake_key() { return _handshake_key; }
-    uint16 get_cipher_suite() { return _alg; }
-    void set_cipher_suite(uint16 alg) { _alg = alg; }
-
-   protected:
-    uint16 _alg;
-    tls_handshake_key _handshake_key;
-};
 
 }  // namespace net
 }  // namespace hotplace

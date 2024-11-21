@@ -294,7 +294,6 @@ void test_tls13_xargs_org() {
 
     // > handshake type 2 (server_hello)
     //  > cipher suite 0x1302 TLS_AES_256_GCM_SHA384
-    // ... AES_256_GCM for Protection, SHA384 for KDF
     uint16 cipher_suite = session.get_cipher_suite();
     _test_case.assert(0x1302 == cipher_suite, __FUNCTION__, "cipher suite");
 
@@ -310,11 +309,15 @@ void test_tls13_xargs_org() {
         _logger->writeln("> %s : %s", "shared_secret", base16_encode(shared_secret).c_str());
         _test_case.assert(shared_secret == base16_decode("df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624"), __FUNCTION__, "shared secret");
     }
+
     {
         bin_client_hello.erase(bin_client_hello.begin(), bin_client_hello.begin() + 5);
         bin_server_hello.erase(bin_server_hello.begin(), bin_server_hello.begin() + 5);
         // _logger->hdump("> client hello", bin_client_hello, 16, 3);
         // _logger->hdump("> server hello", bin_server_hello, 16, 3);
+
+        //  > cipher suite 0x1302 TLS_AES_256_GCM_SHA384
+        // ... Cipher AES_256_GCM for Protection, MAC SHA384 for Key Derivation
 
         binary_t hello_hash;
         handshake_key.calc_hello_hash(cipher_suite, hello_hash, bin_client_hello, bin_server_hello);
@@ -368,7 +371,71 @@ void test_tls13_xargs_org() {
     }
     // https://tls13.xargs.org/#wrapped-record
     {
-        const char* record = "17 03 03 00 17 6b e0 2f 9d a7 c2 dc 9d de f5 6f 24 68 b9 0a df a2 51 01 ab 03 44 ae";
+        const char* record =
+            "17 03 03 00 17 6B E0 2F 9D A7 C2 DC 9D DE F5 6F"
+            "24 68 B9 0A DF A2 51 01 AB 03 44 AE -- -- -- --";
+        binary_t bin_record = base16_decode_rfc(record);
+        pos = 0;
+        tls_dump_record(&bs, &session, &bin_record[0], bin_record.size(), pos);
+        _logger->writeln(bs);
+        bs.clear();
+    }
+    // https://tls13.xargs.org/#wrapped-record-2
+    {
+        const char* record =
+            "17 03 03 03 43 BA F0 0A 9B E5 0F 3F 23 07 E7 26"
+            "ED CB DA CB E4 B1 86 16 44 9D 46 C6 20 7A F6 E9"
+            "95 3E E5 D2 41 1B A6 5D 31 FE AF 4F 78 76 4F 2D"
+            "69 39 87 18 6C C0 13 29 C1 87 A5 E4 60 8E 8D 27"
+            "B3 18 E9 8D D9 47 69 F7 73 9C E6 76 83 92 CA CA"
+            "8D CC 59 7D 77 EC 0D 12 72 23 37 85 F6 E6 9D 6F"
+            "43 EF FA 8E 79 05 ED FD C4 03 7E EE 59 33 E9 90"
+            "A7 97 2F 20 69 13 A3 1E 8D 04 93 13 66 D3 D8 BC"
+            "D6 A4 A4 D6 47 DD 4B D8 0B 0F F8 63 CE 35 54 83"
+            "3D 74 4C F0 E0 B9 C0 7C AE 72 6D D2 3F 99 53 DF"
+            "1F 1C E3 AC EB 3B 72 30 87 1E 92 31 0C FB 2B 09"
+            "84 86 F4 35 38 F8 E8 2D 84 04 E5 C6 C2 5F 66 A6"
+            "2E BE 3C 5F 26 23 26 40 E2 0A 76 91 75 EF 83 48"
+            "3C D8 1E 6C B1 6E 78 DF AD 4C 1B 71 4B 04 B4 5F"
+            "6A C8 D1 06 5A D1 8C 13 45 1C 90 55 C4 7D A3 00"
+            "F9 35 36 EA 56 F5 31 98 6D 64 92 77 53 93 C4 CC"
+            "B0 95 46 70 92 A0 EC 0B 43 ED 7A 06 87 CB 47 0C"
+            "E3 50 91 7B 0A C3 0C 6E 5C 24 72 5A 78 C4 5F 9F"
+            "5F 29 B6 62 68 67 F6 F7 9C E0 54 27 35 47 B3 6D"
+            "F0 30 BD 24 AF 10 D6 32 DB A5 4F C4 E8 90 BD 05"
+            "86 92 8C 02 06 CA 2E 28 E4 4E 22 7A 2D 50 63 19"
+            "59 35 DF 38 DA 89 36 09 2E EF 01 E8 4C AD 2E 49"
+            "D6 2E 47 0A 6C 77 45 F6 25 EC 39 E4 FC 23 32 9C"
+            "79 D1 17 28 76 80 7C 36 D7 36 BA 42 BB 69 B0 04"
+            "FF 55 F9 38 50 DC 33 C1 F9 8A BB 92 85 83 24 C7"
+            "6F F1 EB 08 5D B3 C1 FC 50 F7 4E C0 44 42 E6 22"
+            "97 3E A7 07 43 41 87 94 C3 88 14 0B B4 92 D6 29"
+            "4A 05 40 E5 A5 9C FA E6 0B A0 F1 48 99 FC A7 13"
+            "33 31 5E A0 83 A6 8E 1D 7C 1E 4C DC 2F 56 BC D6"
+            "11 96 81 A4 AD BC 1B BF 42 AF D8 06 C3 CB D4 2A"
+            "07 6F 54 5D EE 4E 11 8D 0B 39 67 54 BE 2B 04 2A"
+            "68 5D D4 72 7E 89 C0 38 6A 94 D3 CD 6E CB 98 20"
+            "E9 D4 9A FE ED 66 C4 7E 6F C2 43 EA BE BB CB 0B"
+            "02 45 38 77 F5 AC 5D BF BD F8 DB 10 52 A3 C9 94"
+            "B2 24 CD 9A AA F5 6B 02 6B B9 EF A2 E0 13 02 B3"
+            "64 01 AB 64 94 E7 01 8D 6E 5B 57 3B D3 8B CE F0"
+            "23 B1 FC 92 94 6B BC A0 20 9C A5 FA 92 6B 49 70"
+            "B1 00 91 03 64 5C B1 FC FE 55 23 11 FF 73 05 58"
+            "98 43 70 03 8F D2 CC E2 A9 1F C7 4D 6F 3E 3E A9"
+            "F8 43 EE D3 56 F6 F8 2D 35 D0 3B C2 4B 81 B5 8C"
+            "EB 1A 43 EC 94 37 E6 F1 E5 0E B6 F5 55 E3 21 FD"
+            "67 C8 33 2E B1 B8 32 AA 8D 79 5A 27 D4 79 C6 E2"
+            "7D 5A 61 03 46 83 89 19 03 F6 64 21 D0 94 E1 B0"
+            "0A 9A 13 8D 86 1E 6F 78 A2 0A D3 E1 58 00 54 D2"
+            "E3 05 25 3C 71 3A 02 FE 1E 28 DE EE 73 36 24 6F"
+            "6A E3 43 31 80 6B 46 B4 7B 83 3C 39 B9 D3 1C D3"
+            "00 C2 A6 ED 83 13 99 77 6D 07 F5 70 EA F0 05 9A"
+            "2C 68 A5 F3 AE 16 B6 17 40 4A F7 B7 23 1A 4D 94"
+            "27 58 FC 02 0B 3F 23 EE 8C 15 E3 60 44 CF D6 7C"
+            "D6 40 99 3B 16 20 75 97 FB F3 85 EA 7A 4D 99 E8"
+            "D4 56 FF 83 D4 1F 7B 8B 4F 06 9B 02 8A 2A 63 A9"
+            "19 A7 0E 3A 10 E3 08 41 58 FA A5 BA FA 30 18 6C"
+            "6B 2F 23 8E B5 30 C7 3E -- -- -- -- -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
         pos = 0;
         tls_dump_record(&bs, &session, &bin_record[0], bin_record.size(), pos);

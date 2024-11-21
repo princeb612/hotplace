@@ -15,8 +15,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/basic/template.hpp>
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/net/quic/quic.hpp>
-#include <sdk/net/tls/tlsspec.hpp>
+#include <sdk/net/tlsspec/tlsspec.hpp>
 
 namespace hotplace {
 namespace net {
@@ -61,37 +60,49 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
         // TODO
 
         switch (handshake->msg_type) {
-            case tls_handshake_client_hello: {
+            case tls_handshake_client_hello: /* 1 */ {
                 ret = tls_dump_client_hello(s, session, stream, size, pos);
             } break;
-            case tls_handshake_server_hello: {
+            case tls_handshake_server_hello: /* 2 */ {
                 ret = tls_dump_server_hello(s, session, stream, size, pos);
             } break;
-            case tls_handshake_new_session_ticket: {
+            case tls_handshake_new_session_ticket: /* 4 */ {
                 //
             } break;
-            case tls_handshake_end_of_early_data: {
+            case tls_handshake_end_of_early_data: /* 5 */ {
                 //
             } break;
-            case tls_handshake_encrypted_extensions: {
+            case tls_handshake_encrypted_extensions: /* 8 */ {
+                // RFC 8446 4.3.1.  Encrypted Extensions
+                // struct {
+                //     Extension extensions<0..2^16-1>;
+                // } EncryptedExtensions;
+
+            } break;
+            case tls_handshake_certificate: /* 11 */ {
+                // RFC 4346 7.4.2. Server Certificate
+                //  opaque ASN.1Cert<1..2^24-1>;
+                //  struct {
+                //      ASN.1Cert certificate_list<0..2^24-1>;
+                //  } Certificate;
+                // RFC 4346 7.4.3. Server Key Exchange Message
+                // RFC 4346 7.4.6. Client certificate
+                // RFC 4346 7.4.7. Client Key Exchange Message
+
+            } break;
+            case tls_handshake_certificate_request: /* 13 */ {
+                // RFC 4346 7.4.4. Certificate request
+            } break;
+            case tls_handshake_certificate_verify: /* 15 */ {
+                // RFC 4346 7.4.8. Certificate verify
+            } break;
+            case tls_handshake_finished: /* 20 */ {
                 //
             } break;
-            case tls_handshake_certificate: {
+            case tls_handshake_key_update: /* 24 */ {
                 //
             } break;
-            case tls_handshake_certificate_request: {
-                //
-            } break;
-            case tls_handshake_certificate_verify: {
-                //
-            } break;
-            case tls_handshake_finished: {
-                //
-            } break;
-            case tls_handshake_key_update: {
-                //
-            } break;
-            case tls_handshake_message_hash: {
+            case tls_handshake_message_hash: /* 254 */ {
                 //
             } break;
         }

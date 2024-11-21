@@ -17,7 +17,7 @@
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
-#include <sdk/net/tls/tlsspec.hpp>
+#include <sdk/net/tlsspec/tlsspec.hpp>
 
 namespace hotplace {
 namespace net {
@@ -63,10 +63,17 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
             case tls_content_type_invalid: {
             } break;
             case tls_content_type_change_cipher_spec: {
+                // RFC 5246 7.1.  Change Cipher Spec Protocol
+                // RFC 4346 7.1. Change Cipher Spec Protocol
+                // struct {
+                //     enum { change_cipher_spec(1), (255) } type;
+                // } ChangeCipherSpec;
                 ret = tls_dump_change_cipher_spec(s, session, stream + pos, size - pos, tpos);  // TODO
                 pos += len;
             } break;
             case tls_content_type_alert: {
+                // RFC 8446 6.  Alert Protocol
+                // RFC 5246 7.2.  Alert Protocol
                 ret = tls_dump_alert(s, session, stream + pos, size - pos, tpos);  // TODO
                 pos += len;
             } break;
@@ -90,7 +97,8 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 binary_append(aad, stream, pos);
                 binary_append(tag, stream + pos + len - tagsize, tagsize);
                 auto const& key = handshake_key.get_item(tls_secret_server_handshake_key);
-                auto const& iv = handshake_key.get_item(tls_secret_server_handshake_iv);
+                binary_t iv;  // XOR seq
+                handshake_key.build_iv(session, tls_secret_server_handshake_iv, iv);
 
                 crypt_context_t* handle = nullptr;
                 openssl_crypt crypt;
@@ -111,6 +119,9 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 dump_memory(decrypted, s, 16, 3, 0x0, dump_notrunc);
                 s->autoindent(0);
                 s->printf("\n");
+
+                size_t hpos = 0;
+                tls_dump_handshake(s, session, &decrypted[0], decrypted.size(), hpos);
             } break;
         }
         pos += tpos;

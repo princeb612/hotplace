@@ -65,7 +65,6 @@ class tcp_server_socket : public server_socket {
      */
     virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
 
-    virtual bool support_tls();
     virtual int socket_type();
 
    protected:

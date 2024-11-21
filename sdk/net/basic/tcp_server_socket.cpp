@@ -112,8 +112,6 @@ return_t tcp_server_socket::send(socket_t sock, tls_context_t* tls_handle, const
     return ret;
 }
 
-bool tcp_server_socket::support_tls() { return false; }
-
 int tcp_server_socket::socket_type() { return SOCK_STREAM; }
 
 }  // namespace net

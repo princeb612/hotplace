@@ -11,16 +11,14 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_SERVERSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_SERVERSOCKET__
 
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/net/basic/types.hpp>
-#include <sdk/net/tls/types.hpp>
+#include <sdk/net/basic/basic_socket.hpp>
 
 namespace hotplace {
 namespace net {
 
-class server_socket {
+class server_socket : public basic_socket {
    public:
-    server_socket() { _shared.make_share(this); }
+    server_socket() : basic_socket() {}
     virtual ~server_socket() {}
 
     /**
@@ -31,32 +29,6 @@ class server_socket {
      * @return  error code (see error.hpp)
      */
     virtual return_t open(socket_t* sock, unsigned int family, uint16 port) { return errorcode_t::success; }
-    /**
-     * @brief   close
-     * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  tls_handle      [IN]
-     * @return  error code (see error.hpp)
-     * @remarks
-     *          tls_svr_sock.accept (listen_socket, &cli_socket, &tls_context, &sockaddr, &sockaddrlen);
-     *          // client connection established...
-     *          // ...
-     *          // socket closed
-     *          tls_svr_sock.close (cli_socket, tls_context);
-     */
-    virtual return_t close(socket_t sock, tls_context_t* tls_handle) {
-        return_t ret = errorcode_t::success;
-        __try2 {
-            if (INVALID_SOCKET == sock) {
-                ret = errorcode_t::invalid_parameter;
-                __leave2;
-            }
-            close_socket(sock, true, 0);
-        }
-        __finally2 {
-            // do nothing
-        }
-        return ret;
-    }
     /**
      * @brief   accept
      * @param   socket_t        sock            [IN] listen socket
@@ -146,13 +118,7 @@ class server_socket {
         return errorcode_t::success;
     }
 
-    virtual bool support_tls() { return false; }
-    virtual int socket_type() { return 0; } /* override */
-    int addref() { return _shared.addref(); }
-    int release() { return _shared.delref(); }
-
    protected:
-    t_shared_reference<server_socket> _shared;
 };
 
 }  // namespace net

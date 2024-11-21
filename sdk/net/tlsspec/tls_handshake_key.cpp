@@ -13,7 +13,7 @@
 #include <sdk/crypto/basic/openssl_ecdh.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
-#include <sdk/net/tls/tlsspec.hpp>
+#include <sdk/net/tlsspec/tlsspec.hpp>
 
 namespace hotplace {
 namespace net {
@@ -177,6 +177,33 @@ return_t tls_handshake_key::calc(uint16 alg, const binary_t& hello_hash, const b
                 _kv[tls_secret_server_handshake_quic_hp] = okm;
             }
         }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_handshake_key::build_iv(tls_session* session, tls_secret_t type, binary_t& iv) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        iv = get_item(type);
+        if (iv.empty()) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
+        auto seq = session->get_sequence();
+        for (uint64 i = 0; i < 8; i++) {
+            iv[12 - 1 - i] ^= ((seq >> (i * 8)) & 0xff);
+        }
+
+        session->inc_sequence();
     }
     __finally2 {
         // do nothing
