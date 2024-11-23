@@ -15,6 +15,7 @@
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/basic/crypto_sign.hpp>
 #include <sdk/crypto/basic/openssl_ecdh.hpp>
+#include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/net/tlsspec/tlsspec.hpp>
 
