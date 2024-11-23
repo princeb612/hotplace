@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_BASE_UNITTEST_TRACEABLE__
 #define __HOTPLACE_SDK_BASE_UNITTEST_TRACEABLE__
 
+#include <list>
 #include <sdk/base/system/trace.hpp>
-#include <sdk/net/types.hpp>
 
 namespace hotplace {
 

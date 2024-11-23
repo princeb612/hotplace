@@ -473,18 +473,21 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
         for (fmark = fmt; (ch = *fmt) != _T('\0') && ch != _T('%') && ch != _T('\n'); fmt++) {
             /* void */;
         }
+
         if ((n = (int)(fmt - fmark)) != 0) {
             PRINT(fmark, n);
             ret += n;
         }
         if (ch == _T('\n')) {
-            // auto indent
-            PRINT(fmt, sizeof(TCHAR));
+            PRINT(&ch, sizeof(TCHAR));
             ret += 1;
+            // auto indent
             if (context->indent) {
                 PAD_SP(context->indent);
                 ret += context->indent;
             }
+            fmt++; /* skip over _T('\n') */
+            continue;
         }
 
         if (ch == _T('\0')) {

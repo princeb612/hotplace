@@ -28,11 +28,12 @@ typedef struct _OPTION {
     int log;
     int time;
     bool dump_keys;
+    bool dump_diagnostic;
     bool skip_cbor_basic;
     bool skip_validate;
     bool skip_gen;
 
-    _OPTION() : verbose(false), log(0), time(0), dump_keys(false), skip_cbor_basic(false), skip_validate(false), skip_gen(false) {
+    _OPTION() : verbose(false), log(0), time(0), dump_keys(false), dump_diagnostic(false), skip_cbor_basic(false), skip_validate(false), skip_gen(false) {
         // do nothing
     }
 } OPTION;
@@ -1102,11 +1103,11 @@ void test_github_example() {
                     "HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw", "r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8");
     cwk.add_ec_b64u(&key, "peregrin.took@tuckborough.example", nullptr, "P-256", "mPUKT_bAWGHIhg0TpjjqVsP1rXWQu_vwVOHHtNkdYoA",
                     "8BQAsImGeAS46fyWw5MhYfGTT0IjBpFw2SS34Dv4Irs", "AtH35vJsQ9SGjYfOsjUxYXQKrPH3FjZHmEtSKoSN8cM");
-    cwk.add_ec_b16(&key, "X25519-1", "EdDSA", "X25519", "7FFE91F5F932DAE92BE603F55FAC0F4C4C9328906EE550EDCB7F6F7626EBC07E", "",
+    cwk.add_ec_b16(&key, "X25519-1", "X25519", "X25519", "7FFE91F5F932DAE92BE603F55FAC0F4C4C9328906EE550EDCB7F6F7626EBC07E", "",
                    "00a943daa2e38b2edbf0da0434eaaec6016fe25dcd5ecacbc07dc30300567655");
-    cwk.add_ec_b16(&key, "X25519-bob", "EdDSA", "X25519", "DE9EDB7D7B7DC1B4D35B61C2ECE435373F8343C85B78674DADFC7E146F882B4F", "",
+    cwk.add_ec_b16(&key, "X25519-bob", "X25519", "X25519", "DE9EDB7D7B7DC1B4D35B61C2ECE435373F8343C85B78674DADFC7E146F882B4F", "",
                    "58AB087E624A8A4B79E17F8B83800EE66F3BB1292618B6FD1C2F8B27FF88E06B");
-    cwk.add_ec_b16(&key, "X25519-alice", "EdDSA", "X25519", "8520F0098930A754748B7DDCB43EF75A0DBF3A0D26381AF4EBA4A98EAA9B4E6A", "",
+    cwk.add_ec_b16(&key, "X25519-alice", "X25519", "X25519", "8520F0098930A754748B7DDCB43EF75A0DBF3A0D26381AF4EBA4A98EAA9B4E6A", "",
                    "70076D0A7318A57D3C16C17251B26645DF4C2F87EBC0992AB177FBA51DB92C6A");
 
     cwk.add_oct_b64u(&key, "our-secret", nullptr, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg", crypto_use_t::use_enc);
@@ -1377,6 +1378,22 @@ void test_eckey_compressed() {
     _test_case.assert(test, __FUNCTION__, "EC compressed");
 }
 
+void dump_diagnostic(const binary_t& input) {
+    const OPTION& option = _cmdline->value();
+    if (option.dump_diagnostic) {
+        basic_stream diagnostic;
+        cbor_reader_context_t* handle = nullptr;
+        cbor_reader reader;
+        auto ret = reader.open(&handle);
+        if (errorcode_t::success == ret) {
+            ret = reader.parse(handle, input);
+            reader.publish(handle, &diagnostic);
+            reader.close(handle);
+        }
+        _logger->colorln(diagnostic);
+    }
+}
+
 void test_sign(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, const char* text) {
     _test_case.begin("sign");
 
@@ -1395,6 +1412,8 @@ void test_sign(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& inp
         _logger->writeln("%s", base16_encode(cbor).c_str());
     }
     cose.close(handle);
+
+    dump_diagnostic(cbor);
     _test_case.test(ret, __FUNCTION__, "sign %s", text);
 
     cose.open(&handle);
@@ -1424,6 +1443,8 @@ void test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& 
         _logger->writeln("%s", base16_encode(cbor).c_str());
     }
     cose.close(handle);
+
+    dump_diagnostic(cbor);
     _test_case.test(ret, __FUNCTION__, "encrypt %s", text);
 
     cose.open(&handle);
@@ -1453,6 +1474,8 @@ void test_mac(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& inpu
         _logger->writeln("%s", base16_encode(cbor).c_str());
     }
     cose.close(handle);
+
+    dump_diagnostic(cbor);
     _test_case.test(ret, __FUNCTION__, "mac %s", text);
 
     cose.open(&handle);
@@ -1564,6 +1587,7 @@ void test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const
 
     cose.close(handle);
 
+    dump_diagnostic(cbor);
     _test_case.test(ret, __FUNCTION__, "cose %s", text);
 }
 
@@ -1589,6 +1613,7 @@ void test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const bi
 
     cose.close(handle);
 
+    dump_diagnostic(cbor);
     _test_case.test(ret, __FUNCTION__, "cose %s", text);
 }
 
@@ -1618,6 +1643,7 @@ void test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const bin
 
     cose.close(handle);
 
+    dump_diagnostic(cbor);
     _test_case.test(ret, __FUNCTION__, "cose %s", text);
 }
 
@@ -1735,6 +1761,7 @@ int main(int argc, char** argv) {
               << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
               << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
               << t_cmdarg_t<OPTION>("-k", "dump keys", [](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional()
+              << t_cmdarg_t<OPTION>("-d", "dump diagnostic", [](OPTION& o, char* param) -> void { o.dump_diagnostic = true; }).optional()
               << t_cmdarg_t<OPTION>("-b", "skip basic encoding", [](OPTION& o, char* param) -> void { o.skip_cbor_basic = true; }).optional()
               << t_cmdarg_t<OPTION>("-s", "skip validation w/ test vector", [](OPTION& o, char* param) -> void { o.skip_validate = true; }).optional()
               << t_cmdarg_t<OPTION>("-g", "skip self-generated message", [](OPTION& o, char* param) -> void { o.skip_gen = true; }).optional();

@@ -106,10 +106,12 @@ enum tls_handshake_type_t : uint8 {
 };
 
 /* RFC 8446 4.  Handshake Protocol */
+#pragma pack(push, 1)
 struct tls_handshake_t {
     tls_handshake_type_t msg_type;
     uint24_t length;
 };
+#pragma pack(pop)
 
 enum tls_alertlevel_t : uint8 {
     tls_alertlevel_warning = 1,
@@ -269,20 +271,25 @@ enum tls_secret_t : uint16 {
     tls_secret_hello_hash = 2,
     tls_secret_early_secret = 3,
     tls_secret_empty_hash = 4,
-    tls_secret_derived_secret = 5,
-    tls_secret_handshake_secret = 6,
-    tls_secret_client_secret = 7,
-    tls_secret_server_secret = 8,
-    tls_secret_client_handshake_key = 9,
-    tls_secret_client_handshake_iv = 10,
-    tls_secret_client_handshake_quic_key = 11,
-    tls_secret_client_handshake_quic_iv = 12,
-    tls_secret_client_handshake_quic_hp = 13,
-    tls_secret_server_handshake_key = 14,
-    tls_secret_server_handshake_iv = 15,
-    tls_secret_server_handshake_quic_key = 16,
-    tls_secret_server_handshake_quic_iv = 17,
-    tls_secret_server_handshake_quic_hp = 18,
+    tls_secret_handshake_derived = 0x20,
+    tls_secret_handshake = 0x21,
+    tls_secret_handshake_client = 0x22,
+    tls_secret_handshake_server = 0x23,
+    tls_secret_handshake_client_key = 0x24,
+    tls_secret_handshake_client_iv = 0x25,
+    tls_secret_handshake_quic_client_key = 0x26,
+    tls_secret_handshake_quic_client_iv = 0x27,
+    tls_secret_handshake_quic_client_hp = 0x28,
+    tls_secret_handshake_client_finished = 0x29,
+    tls_secret_handshake_server_key = 0x2a,
+    tls_secret_handshake_server_iv = 0x2b,
+    tls_secret_handshake_quic_server_key = 0x2c,
+    tls_secret_handshake_quic_server_iv = 0x2d,
+    tls_secret_handshake_quic_server_hp = 0x2e,
+    tls_secret_handshake_server_finished = 0x2f,
+
+    tls_secret_master_derived = 0x40,
+    tls_secret_master = 0x41,
 };
 
 enum tls_mode_t : uint8 {
@@ -293,50 +300,77 @@ enum tls_mode_t : uint8 {
 };
 
 // studying ...
-class tls_handshake_key;
+class tls_protection;
 class tls_session;
 
-class tls_handshake_key {
+class tls_protection {
    public:
-    tls_handshake_key(uint8 mode = -1);
+    tls_protection(uint8 mode = -1);
 
     crypto_key& get_key();
-    return_t key_agreement(const std::string& priv_key, const std::string& pub_key, binary_t& shared);
-    return_t calc_hello_hash(uint16 alg, binary_t& hello_hash, const binary_t& client_hello, const binary_t& server_hello);
+    crypto_key& get_keyshare();
+    return_t key_agreement(tls_session* session, binary_t& shared);
+    return_t calc_hello_hash(tls_session* session, binary_t& hello_hash);
+    /**
+     * @brief   calc
+     */
     return_t calc(uint16 alg, const binary_t& hello_hash, const binary_t& shared_secret);
 
     return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv);
 
-    void get_item(tls_secret_t mode, binary_t& item);
-    const binary_t& get_item(tls_secret_t mode);
+    /**
+     * @brief   AEAD
+     */
+    return_t decrypt(tls_session* session, const byte_t* stream, size_t size, binary_t& decrypted, size_t aadlen, binary_t& tag,
+                     stream_t* debugstream = nullptr);
+    /**
+     * @brief   verify
+     */
+    return_t verify(tls_session* session, uint16 scheme, const binary_t& data, const binary_t& signature);
+
+    void get_item(tls_secret_t type, binary_t& item);
+    const binary_t& get_item(tls_secret_t type);
     uint8 get_mode();
 
    private:
     uint8 _mode;
     crypto_key _key;
-    std::map<uint16, binary_t> _kv;
+    crypto_key _keyshare;
+    std::map<tls_secret_t, binary_t> _kv;
+};
+
+enum session_item_t {
+    item_client_hello = 0,
+    item_client_hello_keyshare = 1,
+    item_server_hello = 2,
+    item_server_certificate = 3,
 };
 
 class tls_session {
    public:
-    tls_session() : _alg(0), _seq(0) {}
+    tls_session();
 
-    tls_handshake_key& get_handshake_key() { return _handshake_key; }
+    tls_protection& get_tls_protection();
 
-    uint16 get_cipher_suite() { return _alg; }
-    void set_cipher_suite(uint16 alg) { _alg = alg; }
+    // server_hello cipher_suite
+    uint16 get_cipher_suite();
+    void set_cipher_suite(uint16 alg);
 
-    uint64 get_sequence(bool inc = false) {
-        uint64 value = inc ? _seq++ : _seq;
-        _seq;
-        return value;
-    }
-    void inc_sequence() { _seq++; }
+    // IV
+    uint64 get_sequence(bool inc = false);
+    void inc_sequence();
+
+    // hello_hash, certificate_verify
+    void set(session_item_t type, const byte_t* begin, size_t size);
+    void set(session_item_t type, const binary_t& item);
+    const binary_t& get(session_item_t type);
+    void erase(session_item_t type);
 
    protected:
     uint16 _alg;
     uint64 _seq;
-    tls_handshake_key _handshake_key;
+    tls_protection _tls_protection;
+    std::map<session_item_t, binary_t> _kv;
 };
 
 struct tls_alg_info_t {

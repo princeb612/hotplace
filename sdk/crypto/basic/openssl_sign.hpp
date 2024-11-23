@@ -40,6 +40,7 @@ class openssl_sign {
      * @param   binary_t& signature [out]
      */
     return_t sign(const EVP_PKEY* pkey, crypt_sig_t mode, const binary_t& input, binary_t& signature);
+    return_t sign(const EVP_PKEY* pkey, crypt_sig_t mode, const byte_t* stream, size_t size, binary_t& signature);
     /**
      * @biref   verify
      * @param   const EVP_PKEY* pkey [in]
@@ -48,6 +49,7 @@ class openssl_sign {
      * @param   const binary_t& signature [in]
      */
     return_t verify(const EVP_PKEY* pkey, crypt_sig_t mode, const binary_t& input, const binary_t& signature);
+    return_t verify(const EVP_PKEY* pkey, crypt_sig_t mode, const byte_t* stream, size_t size, const binary_t& signature);
 
     /*
      * @brief   sign
@@ -58,6 +60,7 @@ class openssl_sign {
      * @desc    HS256, HS384, HS512
      */
     return_t sign_digest(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature);
+    return_t sign_digest(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature);
     /*
      * @brief   sign
      * @param   const EVP_PKEY* pkey [in]
@@ -67,6 +70,7 @@ class openssl_sign {
      * @desc    HS256, HS384, HS512
      */
     return_t sign_hmac(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature);
+    return_t sign_hmac(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature);
     /*
      * @brief   sign
      * @param   const EVP_PKEY* pkey [in]
@@ -76,6 +80,7 @@ class openssl_sign {
      * @desc    RS256, RS384, RS512
      */
     return_t sign_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature);
+    return_t sign_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature);
     /*
      * @brief   sign
      * @param   const EVP_PKEY* pkey [in]
@@ -85,6 +90,7 @@ class openssl_sign {
      * @desc    ES256, ES384, ES512, ES256K
      */
     return_t sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature);
+    return_t sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature);
     /*
      * @brief   sign
      * @param   const EVP_PKEY* pkey [in]
@@ -94,6 +100,7 @@ class openssl_sign {
      * @desc    PS256, PS384, PS512
      */
     return_t sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature);
+    return_t sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature);
     /*
      * @brief   sign
      * @param   const EVP_PKEY* pkey [in]
@@ -103,6 +110,7 @@ class openssl_sign {
      * @desc    EdDSA
      */
     return_t sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature);
+    return_t sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature);
     /*
      * @brief   verify
      * @param   const EVP_PKEY* pkey [in]
@@ -112,6 +120,7 @@ class openssl_sign {
      * @desc    HS256, HS384, HS512
      */
     return_t verify_digest(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature);
+    return_t verify_digest(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature);
     /*
      * @brief   verify
      * @param   const EVP_PKEY* pkey [in]
@@ -121,6 +130,7 @@ class openssl_sign {
      * @desc    HS256, HS384, HS512
      */
     return_t verify_hmac(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature);
+    return_t verify_hmac(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature);
     /*
      * @brief   verify
      * @param   const EVP_PKEY* pkey [in]
@@ -130,6 +140,7 @@ class openssl_sign {
      * @desc    RS256, RS384, RS512
      */
     return_t verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature);
+    return_t verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature);
     /*
      * @brief   verify
      * @param   const EVP_PKEY* pkey [in]
@@ -139,6 +150,7 @@ class openssl_sign {
      * @desc    ES256, ES384, ES512, ES256K
      */
     return_t verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature);
+    return_t verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature);
     /*
      * @brief   verify
      * @param   const EVP_PKEY* pkey [in]
@@ -148,6 +160,7 @@ class openssl_sign {
      * @desc    PS256, PS384, PS512
      */
     return_t verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature);
+    return_t verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature);
     /*
      * @brief   verify
      * @param   const EVP_PKEY* pkey [in]
@@ -157,6 +170,7 @@ class openssl_sign {
      * @desc    EdDSA
      */
     return_t verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature);
+    return_t verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature);
 };
 
 }  // namespace crypto

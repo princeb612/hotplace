@@ -50,10 +50,14 @@
 namespace hotplace {
 namespace crypto {
 
+class crypto_aead;
+class crypto_aead_builder;
 class crypto_advisor;
 class crypto_key;
 class crypto_keychain;
 class crypto_key_object;
+class crypto_sign;
+class crypto_sign_builder;
 class hmac_otp;
 class openssl_aead;
 class openssl_crypt;

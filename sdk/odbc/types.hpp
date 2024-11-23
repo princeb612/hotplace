@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_ODBC_TYPES__
 #define __HOTPLACE_SDK_ODBC_TYPES__
 
-#include <sdk/base.hpp>
-#include <sdk/io/system/sdk.hpp>
+#include <sdk/base/types.hpp>
+#include <sdk/io/types.hpp>
 #define SQL_WCHART_CONVERT
 #include <sql.h>
 #include <sqlext.h>

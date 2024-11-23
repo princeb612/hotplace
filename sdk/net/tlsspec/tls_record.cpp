@@ -45,7 +45,7 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
         payload pl;
         pl << new payload_member(uint8(0), constexpr_content_type) << new payload_member(uint16(0), true, constexpr_record_version)
            << new payload_member(uint16(0), true, constexpr_len);
-        pl.read(stream, size, pos);
+        pl.read(stream, size, pos);  // tls_content_t
 
         auto content_type = t_to_int<uint8>(pl.select(constexpr_content_type));
         auto protocol_version = t_to_int<uint16>(pl.select(constexpr_record_version));
@@ -81,47 +81,20 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 ret = tls_dump_handshake(s, session, stream + pos, size - pos, tpos);
             } break;
             case tls_content_type_application_data: {
-                // ret = tls_dump_application_data(s, session, stream + pos, size - pos, tpos);  // TODO
-
-                tls_advisor* advisor = tls_advisor::get_instance();
-
-                uint16 cipher_suite = session->get_cipher_suite();
-                tls_handshake_key& handshake_key = session->get_handshake_key();
-                const tls_alg_info_t* hint = advisor->hintof_tls_algorithm(cipher_suite);
-                auto tagsize = hint->tagsize;
-
+                tls_protection& protection = session->get_tls_protection();
                 binary_t decrypted;
-                binary_t aad;
                 binary_t tag;
 
-                binary_append(aad, stream, pos);
-                binary_append(tag, stream + pos + len - tagsize, tagsize);
-                auto const& key = handshake_key.get_item(tls_secret_server_handshake_key);
-                binary_t iv;  // XOR seq
-                handshake_key.build_iv(session, tls_secret_server_handshake_iv, iv);
+                s->autoindent(3);
 
-                crypt_context_t* handle = nullptr;
-                openssl_crypt crypt;
-                ret = crypt.open(&handle, hint->cipher, hint->mode, key, iv);
+                ret = protection.decrypt(session, stream, len, decrypted, pos, tag, s);
                 if (errorcode_t::success == ret) {
-                    ret = crypt.decrypt2(handle, stream + pos, len - tagsize, decrypted, &aad, &tag);
-                    crypt.close(handle);
+                    size_t hpos = 0;
+                    ret = tls_dump_handshake(s, session, &decrypted[0], decrypted.size(), hpos);
                 }
-
                 pos += len;
 
-                s->autoindent(3);
-                s->printf(" > key %s\n", base16_encode(key).c_str());
-                s->printf(" > iv %s\n", base16_encode(iv).c_str());
-                s->printf(" > aad %s\n", base16_encode(aad).c_str());
-                s->printf(" > tag %s\n", base16_encode(tag).c_str());
-                s->printf(" > decrypted\n");  // RFC 8446 4.3.1.  Encrypted Extensions
-                dump_memory(decrypted, s, 16, 3, 0x0, dump_notrunc);
                 s->autoindent(0);
-                s->printf("\n");
-
-                size_t hpos = 0;
-                tls_dump_handshake(s, session, &decrypted[0], decrypted.size(), hpos);
             } break;
         }
         pos += tpos;

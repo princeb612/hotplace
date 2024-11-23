@@ -415,7 +415,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
 
         EVP_CipherInit(context->encrypt_context, nullptr, nullptr, &iv[0], 1);
 
-        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode)) {
+        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode) || (crypt_mode_t::crypt_aead == context->mode)) {
             if ((nullptr == aad) || (nullptr == tag)) {
                 ret = errorcode_t::invalid_parameter;
                 __leave2_trace(ret);
@@ -432,7 +432,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
             //      If not set a default value is used (12 for AES CCM)
             //      For OCB AES, the default tag length is 16 (i.e. 128 bits).
 
-            if (crypt_mode_t::gcm == context->mode) {
+            if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::crypt_aead == context->mode)) {
                 // 16bytes (128bits)
                 // RFC 7516
                 //      Perform authenticated encryption on the plaintext with the AES GCM
@@ -530,7 +530,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
             __leave2_trace_openssl(ret);
         }
 
-        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode)) {
+        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode) || (crypt_mode_t::crypt_aead == context->mode)) {
             tag->resize(tag_size);
             ret_cipher = EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_GET_TAG, tag->size(), &(*tag)[0]);
             if (1 > ret_cipher) {
@@ -659,7 +659,7 @@ return_t openssl_crypt::decrypt2(crypt_context_t *handle, const unsigned char *d
 
         EVP_CipherInit(context->decrypt_context, nullptr, nullptr, &iv[0], 0);
 
-        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode)) {
+        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode) || (crypt_mode_t::crypt_aead == context->mode)) {
             if ((nullptr == aad) || (nullptr == tag)) {
                 ret = errorcode_t::invalid_parameter;
                 __leave2_trace(ret);
@@ -678,7 +678,7 @@ return_t openssl_crypt::decrypt2(crypt_context_t *handle, const unsigned char *d
                 EVP_CipherInit_ex(context->decrypt_context, nullptr, nullptr, &key[0], &iv[0], 0);
 
                 ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, nullptr, size_encrypted);
-            } else if (crypt_mode_t::gcm == context->mode) {
+            } else if (crypt_mode_t::gcm == context->mode || crypt_mode_t::crypt_aead == context->mode) {
                 ret_cipher = EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag->size(), (void *)&(*tag)[0]);
                 if (1 != ret_cipher) {
                     ret = errorcode_t::internal_error;

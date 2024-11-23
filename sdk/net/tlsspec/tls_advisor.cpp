@@ -218,6 +218,7 @@ void tls_advisor::load_named_curves() {
     _named_curves.insert({0x0019, "secp521r1"});
     _named_curves.insert({0x001d, "x25519"});
     _named_curves.insert({0x001e, "x448"});
+    // RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
     _named_curves.insert({0x0100, "ffdhe2048"});
     _named_curves.insert({0x0101, "ffdhe3072"});
     _named_curves.insert({0x0102, "ffdhe4096"});

@@ -14,6 +14,7 @@
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/basic/template.hpp>
+#include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
 #include <sdk/net/tlsspec/tlsspec.hpp>
@@ -384,6 +385,33 @@ return_t tls_dump_extension(stream_t* s, tls_session* session, const byte_t* str
                             dump_memory(pubkey, s, 16, 3, 0x0, dump_notrunc);
                             s->printf("\n");
                             s->printf("   %s\n", base16_encode(pubkey).c_str());
+
+                            auto& keyshare = session->get_tls_protection().get_keyshare();
+                            crypto_keychain keychain;
+                            switch (group) {
+                                case 0x0017: /* secp256r1 */ {
+                                } break;
+                                case 0x0018: /* secp384r1 */ {
+                                } break;
+                                case 0x0019: /* secp521r1 */ {
+                                } break;
+                                case 0x001d: /* x25519 */ {
+                                    keychain.add_ec(&keyshare, NID_X25519, pubkey, binary_t(), binary_t());
+                                } break;
+                                case 0x001e: /* x448 */ {
+                                    keychain.add_ec(&keyshare, NID_X448, pubkey, binary_t(), binary_t());
+                                } break;
+                                case 0x0100: /* ffdhe2048 */ {
+                                } break;
+                                case 0x0101: /* ffdhe3072 */ {
+                                } break;
+                                case 0x0102: /* ffdhe4096 */ {
+                                } break;
+                                case 0x0103: /* ffdhe6144 */ {
+                                } break;
+                                case 0x0104: /* ffdhe8192 */ {
+                                } break;
+                            }
                         }
                     } break;
                     case tls_handshake_server_hello: {

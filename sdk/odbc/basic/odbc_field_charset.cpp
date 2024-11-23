@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/base16.hpp>
+#include <sdk/base/stream/tstring.hpp>
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/odbc/basic/odbc_field.hpp>
 

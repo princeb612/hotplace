@@ -186,6 +186,73 @@ void test_rfc6979_ecdsa() {
     test_ecdsa_testvector(test_vector_rfc6979, sizeof_test_vector_rfc6979, 0);
 }
 
+void test_crypto_sign() {
+    _test_case.begin("crypto_sign");
+
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    crypto_key key;
+    crypto_keychain keychain;
+    // rfc8037_A_ed25519.jwk
+    {
+        const char* x = "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo";
+        const char* y = "";
+        const char* d = "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A";
+        keychain.add_ec_b64u(&key, "EdDSA.1", "EdDSA", "Ed25519", x, y, d);
+    }
+    // rfc7520_priv.jwk
+    {
+        const char* x = "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt";
+        const char* y = "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVySsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1";
+        const char* d = "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zbKipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt";
+        keychain.add_ec_b64u(&key, "EC.1", "ECDSA", "P-521", x, y, d);
+    }
+    {
+        const char* x = "Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0";
+        const char* y = "HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw";
+        const char* d = "r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8";
+        keychain.add_ec_b64u(&key, "EC.2", "ECDSA", "P-256", x, y, d);
+    }
+    {
+        const char* n =
+            "n4EPtAOCc9AlkeQHPzHStgAbgs7bTZLwUBZdR8_KuKPEHLd4rHVTeT-O-XV2jRojdNhxJWTDvNd7nqQ0VEiZQHz_AJmSCpMaJMRBSFKrKb2wqVwGU_NsYOYL-"
+            "QtiWN2lbzcEe6XC0dApr5ydQLrHqkHHig3RBordaZ6Aj-oBHqFEHYpPe7Tpe-OfVfHd1E6cS6M1FZcD1NNLYD5lFHpPI9bTwJlsde3uhGqC0ZCuEHg8lhzwOHrtIQbS0FVbb9k3-tVTU4fg_"
+            "3L_vniUFAKwuCLqKnS2BYwdq_mzSnbLY7h_qixoR7jig3__kRhuaxwUkRz5iaiQkqgc5gHdrNP5zw";
+        const char* e = "AQAB";
+        const char* d =
+            "bWUC9B-EFRIo8kpGfh0ZuyGPvMNKvYWNtB_ikiH9k20eT-O1q_I78eiZkpXxXQ0UTEs2LsNRS-8uJbvQ-A1irkwMSMkK1J3XTGgdrhCku9gRldY7sNA_AKZGh-Q661_42rINLRCe8W-nZ34ui_"
+            "qOfkLnK9QWDDqpaIsA-bMwWWSDFu2MUBYwkHTMEzLYGqOe04noqeq1hExBTHBOBdkMXiuFhUq1BU6l-DqEiWxqg82sXt2h-"
+            "LMnT3046AOYJoRioz75tSUQfGCshWTBnP5uDjd18kKhyv07lhfSJdrPdM5Plyl21hsFf4L_mHCuoFau7gdsPfHPxxjVOcOpBrQzwQ";
+        keychain.add_rsa_b64u(&key, "RSA.1", "RSA", n, e, d);
+    }
+
+    constexpr char sample[] = "We don't playing because we grow old; we grow old because we stop playing.";
+    binary_t bin_sample = str2bin(sample);
+
+    auto lambda = [&](const char* text, crypto_kty_t kty, crypto_sign_scheme_t scheme, hash_algorithm_t alg) -> void {
+        binary_t signature;
+        const EVP_PKEY* pkey = key.select(kty);
+
+        crypto_sign_builder builder;
+        auto s = builder.set_scheme(sign_scheme_eddsa).set_digest(alg).build();
+        if (s) {
+            ret = s->sign(pkey, bin_sample, signature);
+            _logger->hdump(format("> %s", text), signature);
+            _test_case.test(ret, __FUNCTION__, "%s #sign", text);
+
+            ret = s->verify(pkey, bin_sample, signature);
+            _test_case.test(ret, __FUNCTION__, "%s #verify", text);
+
+            s->release();
+        }
+    };
+    lambda("EdDSA", kty_okp, sign_scheme_eddsa, hash_algorithm_t::sha2_256);
+    lambda("ECDSA", kty_ec, sign_scheme_ecdsa, hash_algorithm_t::hash_alg_unknown);
+    lambda("RSA PKCS 1.5", kty_rsa, sign_scheme_rsa_pkcs1, hash_algorithm_t::sha2_256);
+    lambda("RSA PSS", kty_rsa, sign_scheme_rsa_pss, hash_algorithm_t::sha2_256);
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -224,6 +291,7 @@ int main(int argc, char** argv) {
 
         test_nist_cavp_ecdsa();
         test_rfc6979_ecdsa();
+        test_crypto_sign();
     }
     __finally2 { openssl_cleanup(); }
 

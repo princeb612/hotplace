@@ -24,6 +24,9 @@ namespace net {
 
 static return_t tls_dump_client_hello(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 static return_t tls_dump_server_hello(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+static return_t tls_dump_encrypted_extensions(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+static return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+static return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 
 return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -37,7 +40,10 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
             __leave2;
         }
 
-        // RFC 8446 5.1.  Record Layer
+        // RFC 8446
+        //  5.1.  Record Layer
+        //  5.2.  Record Payload Protection
+
         tls_handshake_t* handshake = (tls_handshake_t*)stream;
         uint32 length = 0;
         b24_i32(handshake->length, length);
@@ -47,17 +53,14 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
         }
 
         auto type = handshake->msg_type;
-        tls_advisor* resource = tls_advisor::get_instance();
+        tls_advisor* advisor = tls_advisor::get_instance();
 
         s->autoindent(3);
-        s->printf(" > handshake type %i (%s)\n", type, resource->handshake_type_string(type).c_str());
+        s->printf(" > handshake type %i (%s)\n", type, advisor->handshake_type_string(type).c_str());
         s->autoindent(0);
         s->printf(" > length 0x%04x(%i)\n", length, length);
 
         pos += sizeof(tls_handshake_type_t) + sizeof(uint24_t);
-
-        /* 5.2.  Record Payload Protection */
-        // TODO
 
         switch (handshake->msg_type) {
             case tls_handshake_client_hello: /* 1 */ {
@@ -77,7 +80,7 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 // struct {
                 //     Extension extensions<0..2^16-1>;
                 // } EncryptedExtensions;
-
+                ret = tls_dump_encrypted_extensions(s, session, stream, size, pos);
             } break;
             case tls_handshake_certificate: /* 11 */ {
                 // RFC 4346 7.4.2. Server Certificate
@@ -88,13 +91,14 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 // RFC 4346 7.4.3. Server Key Exchange Message
                 // RFC 4346 7.4.6. Client certificate
                 // RFC 4346 7.4.7. Client Key Exchange Message
-
+                ret = tls_dump_certificate(s, session, stream, size, pos);
             } break;
             case tls_handshake_certificate_request: /* 13 */ {
                 // RFC 4346 7.4.4. Certificate request
             } break;
             case tls_handshake_certificate_verify: /* 15 */ {
                 // RFC 4346 7.4.8. Certificate verify
+                ret = tls_dump_certificate_verify(s, session, stream, size, pos);
             } break;
             case tls_handshake_finished: /* 20 */ {
                 //
@@ -116,10 +120,12 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
 return_t tls_dump_client_hello(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == s || nullptr == stream) {
+        if (nullptr == s || nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
+        tls_advisor* advisor = tls_advisor::get_instance();
 
         constexpr char constexpr_version[] = "version";
         constexpr char constexpr_random[] = "random";
@@ -189,10 +195,8 @@ return_t tls_dump_client_hello(stream_t* s, tls_session* session, const byte_t* 
         pl.select(constexpr_compression_method)->get_variant().to_binary(compression_method);
         uint8 extension_len = t_to_int<uint16>(pl.select(constexpr_extensions));
 
-        tls_advisor* resource = tls_advisor::get_instance();
-
         s->autoindent(4);
-        s->printf(" > %s 0x%04x (%s)\n", constexpr_version, version, resource->tls_version_string(version).c_str());
+        s->printf(" > %s 0x%04x (%s)\n", constexpr_version, version, advisor->tls_version_string(version).c_str());
         s->printf(" > %s\n", constexpr_random);
         if (random.size()) {
             dump_memory(random, s, 16, 3, 0x0, dump_notrunc);
@@ -206,18 +210,20 @@ return_t tls_dump_client_hello(stream_t* s, tls_session* session, const byte_t* 
         s->printf(" > %s %i\n", constexpr_cipher_suites, cipher_suites);
         for (auto i = 0; i < cipher_suites; i++) {
             auto cs = t_binary_to_integer<uint16>(&cipher_suite[i << 1], sizeof(uint16));
-            s->printf("   0x%04x %s\n", cs, resource->cipher_suite_string(cs).c_str());
+            s->printf("   0x%04x %s\n", cs, advisor->cipher_suite_string(cs).c_str());
         }
         s->printf(" > %s %i\n", constexpr_compression_methods, compression_methods);
         for (auto i = 0; i < compression_methods; i++) {
             auto compr = t_binary_to_integer<uint8>(&compression_method[i], sizeof(uint8));
-            s->printf("   0x%02x %s\n", compr, resource->compression_method_string(compr).c_str());
+            s->printf("   0x%02x %s\n", compr, advisor->compression_method_string(compr).c_str());
         }
         s->autoindent(0);
         s->printf(" > %s %i(0x%02x)\n", constexpr_extensions, extension_len, extension_len);
 
         while (errorcode_t::success == tls_dump_extension(s, session, stream, size, pos)) {
         };
+
+        session->set(session_item_t::item_client_hello, stream, size);  // client_hello for hello_hash
     }
     __finally2 {
         // do nothing
@@ -228,10 +234,12 @@ return_t tls_dump_client_hello(stream_t* s, tls_session* session, const byte_t* 
 return_t tls_dump_server_hello(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == s || nullptr == stream) {
+        if (nullptr == s || nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
+        tls_advisor* advisor = tls_advisor::get_instance();
 
         constexpr char constexpr_version[] = "version";
         constexpr char constexpr_random[] = "random";
@@ -278,10 +286,8 @@ return_t tls_dump_server_hello(stream_t* s, tls_session* session, const byte_t* 
         uint8 compression_method = t_to_int<uint8>(pl.select(constexpr_compression_method));
         uint8 extension_len = t_to_int<uint16>(pl.select(constexpr_extensions));
 
-        tls_advisor* resource = tls_advisor::get_instance();
-
         s->autoindent(4);
-        s->printf(" > %s 0x%04x (%s)\n", constexpr_version, version, resource->tls_version_string(version).c_str());
+        s->printf(" > %s 0x%04x (%s)\n", constexpr_version, version, advisor->tls_version_string(version).c_str());
         s->printf(" > %s\n", constexpr_random);
         if (random.size()) {
             dump_memory(random, s, 16, 3, 0x0, dump_notrunc);
@@ -292,8 +298,8 @@ return_t tls_dump_server_hello(stream_t* s, tls_session* session, const byte_t* 
         if (session_id.size()) {
             s->printf("   %s\n", base16_encode(session_id).c_str());
         }
-        s->printf(" > %s 0x%04x %s\n", constexpr_cipher_suite, cipher_suite, resource->cipher_suite_string(cipher_suite).c_str());
-        s->printf(" > %s %i %s\n", constexpr_compression_method, compression_method, resource->compression_method_string(compression_method).c_str());
+        s->printf(" > %s 0x%04x %s\n", constexpr_cipher_suite, cipher_suite, advisor->cipher_suite_string(cipher_suite).c_str());
+        s->printf(" > %s %i %s\n", constexpr_compression_method, compression_method, advisor->compression_method_string(compression_method).c_str());
         s->autoindent(0);
         s->printf(" > %s %i(0x%02x)\n", constexpr_extensions, extension_len, extension_len);
 
@@ -301,6 +307,136 @@ return_t tls_dump_server_hello(stream_t* s, tls_session* session, const byte_t* 
 
         while (errorcode_t::success == tls_dump_extension(s, session, stream, size, pos)) {
         };
+
+        session->set(session_item_t::item_server_hello, stream, size);  // server_hello for hello_hash
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_dump_encrypted_extensions(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == s || nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // RFC 8446 4.3.1.  Encrypted Extensions
+
+        tls_advisor* advisor = tls_advisor::get_instance();
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == s || nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tls_advisor* advisor = tls_advisor::get_instance();
+
+        s->autoindent(4);
+
+        constexpr char constexpr_request_context_len[] = "request context len";
+        constexpr char constexpr_request_context[] = "request context";
+        constexpr char constexpr_certificates_len[] = "certifcates len";
+        constexpr char constexpr_certificate_len[] = "certifcate len";
+        constexpr char constexpr_certificate[] = "certifcate";
+        payload pl;
+        pl << new payload_member(uint8(0), constexpr_request_context_len) << new payload_member(binary_t(), constexpr_request_context)
+           << new payload_member(uint32_24_t(), constexpr_certificates_len) << new payload_member(uint32_24_t(), constexpr_certificate_len)
+           << new payload_member(binary_t(), constexpr_certificate);
+        pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
+        pl.set_reference_value(constexpr_request_context, constexpr_request_context_len);
+        pl.read(stream, size, pos);
+
+        auto request_context_len = t_to_int<uint8>(pl.select(constexpr_request_context_len));
+        auto certificates_len = t_to_int<uint32>(pl.select(constexpr_certificates_len));
+        auto certificate_len = t_to_int<uint32>(pl.select(constexpr_certificate_len));
+        binary_t cert;
+        pl.select(constexpr_certificate)->get_variant().to_binary(cert);
+
+        constexpr char constexpr_certificate_extensions[] = "certificate extensions";
+        constexpr char constexpr_record_type[] = "record type";
+        payload plext;
+        plext << new payload_member(binary_t(), constexpr_certificate_extensions) << new payload_member(uint8(0), constexpr_record_type);
+        plext.select(constexpr_certificate_extensions)->reserve(certificates_len - certificate_len - sizeof(uint24_t));
+        plext.read(stream, size, pos);
+
+        binary_t cert_extensions;
+        plext.select(constexpr_certificate_extensions)->get_variant().to_binary(cert_extensions);
+        auto record_type = t_to_int<uint32>(plext.select(constexpr_record_type));
+
+        s->printf(" > %s %i\n", constexpr_request_context_len, request_context_len);
+        s->printf(" > %s 0x%04x(%i)\n", constexpr_certificates_len, certificates_len, certificates_len);
+        s->printf(" > %s 0x%04x(%i)\n", constexpr_certificate_len, certificate_len, certificate_len);
+        dump_memory(cert, s, 16, 3, 0x00, dump_notrunc);
+        s->printf("\n");
+        s->printf(" > %s\n", constexpr_certificate_extensions);
+        dump_memory(cert_extensions, s, 16, 3, 0x00, dump_notrunc);
+        s->printf("\n");
+        s->printf(" > %s 0x%02x (%s)\n", constexpr_record_type, record_type, advisor->content_type_string(record_type).c_str());
+        s->autoindent(0);
+        s->printf("\n");
+
+        session->set(session_item_t::item_server_certificate, cert);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == s || nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tls_advisor* advisor = tls_advisor::get_instance();
+
+        constexpr char constexpr_signature[] = "signature algorithm";
+        constexpr char constexpr_len[] = "len";
+        constexpr char constexpr_handshake_hash[] = "handshake's hash";
+        constexpr char constexpr_record[] = "record";
+
+        payload pl;
+        pl << new payload_member(uint16(0), true, constexpr_signature) << new payload_member(uint16(0), true, constexpr_len)
+           << new payload_member(binary_t(), constexpr_handshake_hash) << new payload_member(uint8(0), constexpr_record);
+        pl.set_reference_value(constexpr_handshake_hash, constexpr_len);
+        pl.read(stream, size, pos);
+
+        auto scheme = t_to_int<uint16>(pl.select(constexpr_signature));
+        auto len = t_to_int<uint16>(pl.select(constexpr_len));
+        binary_t handshake_hash;
+        pl.select(constexpr_handshake_hash)->get_variant().to_binary(handshake_hash);
+        auto sign = t_to_int<uint8>(pl.select(constexpr_record));
+
+        s->autoindent(4);
+        s->printf(" > %s 0x%04x %s\n", constexpr_signature, scheme, advisor->signature_scheme_string(scheme).c_str());
+        s->printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
+        dump_memory(handshake_hash, s, 16, 3, 0x00, dump_notrunc);
+        s->printf("\n");
+        s->autoindent(0);
+        s->printf(" > %s %02x\n", constexpr_record, sign);
+        s->autoindent(0);
+
+        tls_protection& protection = session->get_tls_protection();
+        protection.verify(session, scheme, session->get(session_item_t::item_server_certificate), handshake_hash);
+
+        // and then
+        session->erase(session_item_t::item_server_certificate);
     }
     __finally2 {
         // do nothing

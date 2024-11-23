@@ -16,6 +16,7 @@
 #define __HOTPLACE_SDK_ODBC_FIELD__
 
 #include <sdk/base/system/datetime.hpp>
+#include <sdk/base/system/shared_instance.hpp>
 #include <sdk/odbc/types.hpp>
 
 namespace hotplace {
