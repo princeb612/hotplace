@@ -475,6 +475,59 @@ uint32 test_totp_rfc6238(hash_algorithm_t algorithm) {
     return ret;
 }
 
+void test_transcript_hash() {
+    _test_case.begin("test");
+
+    openssl_hash hash;
+    hash_context_t* handle = nullptr;
+
+    const char* stream1 = "client hello";
+    const char* stream2 = "server hello";
+    const char* stream3 = "stream3";
+    const char* stream4 = "stream4";
+
+    // case1
+    binary_t case1_hash_stream2;
+    {
+        hash.open(&handle, "sha256");
+        hash.init(handle);
+        hash.update(handle, (byte_t*)stream1, strlen(stream1));
+        hash.update(handle, (byte_t*)stream2, strlen(stream2));
+        hash.finalize(handle, case1_hash_stream2);
+        hash.close(handle);
+        _logger->hdump("stream1+stream2", case1_hash_stream2);
+    }
+
+    // case2
+    binary_t case2_hash_stream1;
+    binary_t case2_hash_stream2;
+    {
+        hash.open(&handle, "sha256");
+        hash.init(handle);
+        hash.update(handle, (byte_t*)stream1, strlen(stream1), case2_hash_stream1);
+        hash.update(handle, (byte_t*)stream2, strlen(stream2), case2_hash_stream2);
+        hash.close(handle);
+        _logger->hdump("stream1", case2_hash_stream1);
+        _logger->hdump("stream1+stream2", case2_hash_stream2);
+    }
+    _test_case.assert(case2_hash_stream2 == case1_hash_stream2, __FUNCTION__, "hash");
+    // case3
+    binary_t case3_hash_stream1;
+    binary_t case3_hash_stream2;
+    {
+        transcript_hash_builder builder;
+        auto hash = builder.set(sha2_256).build();
+        if (hash) {
+            hash->digest((byte_t*)stream1, strlen(stream1), case3_hash_stream1);
+            hash->digest((byte_t*)stream2, strlen(stream2), case3_hash_stream2);
+            hash->release();
+        }
+        _logger->hdump("stream1", case3_hash_stream1);
+        _logger->hdump("stream1+stream2", case3_hash_stream2);
+    }
+    _test_case.assert(case3_hash_stream2 == case1_hash_stream2, __FUNCTION__, "hash");
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -520,6 +573,8 @@ int main(int argc, char** argv) {
         test_totp_rfc6238(hash_algorithm_t::sha1);
         test_totp_rfc6238(hash_algorithm_t::sha2_256);
         test_totp_rfc6238(hash_algorithm_t::sha2_512);
+
+        test_transcript_hash();
     }
     __finally2 { openssl_cleanup(); }
 

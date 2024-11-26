@@ -311,6 +311,7 @@ class openssl_crypt : public crypt_t {
      * @return error code (see error.hpp)
      */
     return_t encrypt(const EVP_PKEY* pkey, const binary_t& input, binary_t& output, crypt_enc_t mode);
+    return_t encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& output, crypt_enc_t mode);
     /**
      * @biref asymmetric decrypt
      * @param const EVP_PKEY* pkey [in]
@@ -320,6 +321,7 @@ class openssl_crypt : public crypt_t {
      * @return error code (see error.hpp)
      */
     return_t decrypt(const EVP_PKEY* pkey, const binary_t& input, binary_t& output, crypt_enc_t mode);
+    return_t decrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& output, crypt_enc_t mode);
 
     /**
      * @brief simple api
@@ -377,79 +379,15 @@ class openssl_crypt : public crypt_t {
      * @return error code (see error.hpp)
      */
     virtual return_t query(crypt_context_t* handle, size_t cmd, size_t& value);
-};
 
-/**
- * @brief   EVP_chacha20
- * @return  error code (see error.hpp)
- * @desc
- *          RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
- *          RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
- *
- *          key 256bits (32bytes)
- *          iv 96bits (12bytes)
- *          https://www.openssl.org/docs/man1.1.1/man3/EVP_chacha20.html
- *          openssl iv 128bites (16bytes) = counter 32bits(LE) + iv 96bits
- *
- *          cf.
- *          https://www.openssl.org/docs/man3.0/man3/EVP_chacha20.html
- *          openssl iv 128bites (16bytes) = counter 64bits(LE) + iv 64bits - 96 or 64
- * @example
- *          constexpr byte_t data_plain[] = "still a man hears what he wants to hear and disregards the rest";
- *          size_t size_plain = RTL_NUMBER_OF (data_plain);
- *
- *          openssl_crypt crypt;
- *          crypt_context_t* handle = nullptr;
- *          binary_t data_encrypted;
- *          binary_t data_decrypted;
- *
- *          // key
- *          binary_t key;
- *          key.resize (32);
- *          for (int i = 0; i < 32; i++) {
- *              key[i] = i;
- *          }
- *
- *          // initial vector
- *          byte_t nonce_source [12] = { 0, 0, 0, 0, 0, 0, 0, 0x4a, };
- *          binary_t iv;
- *          openssl_chacha20_iv (iv, 1, nonce_source, 12);
- *
- *          // stream cipher
- *          {
- *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::crypt_cipher, key, iv);
- *              crypt.encrypt (handle, data_plain, size_plain, data_encrypted);
- *              crypt.decrypt (handle, data_encrypted, data_decrypted);
- *              crypt.close (handle);
- *          }
- *
- *          // AEAD
- *          {
- *              binary_t aad;
- *              binary_t tag;
- *              openssl_prng rand;
- *              rand.random (aad, 32);
- *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::crypt_aead, key, iv);
- *              crypt.encrypt2 (handle, data_plain, size_plain, data_encrypted, &aad, &tag);
- *              crypt.decrypt2 (handle, data_encrypted, data_decrypted, &aad, &tag);
- *              crypt.close (handle);
- *          }
- */
-return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const binary_t& nonce);
-return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, size_t nonce_size);
-
-/**
- * @brief aes_cbc_hmac_sha2_encrypt
- *        https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
- *        2.4 AEAD_AES_128_CBC_HMAC_SHA_256 AES-128 SHA-256 K 32 MAC_KEY_LEN 16 ENC_KEY_LEN 16 T_LEN=16
- *        2.5 AEAD_AES_192_CBC_HMAC_SHA_384 AES-192 SHA-384 K 48 MAC_KEY_LEN 24 ENC_KEY_LEN 24 T_LEN=24
- *        2.6 AEAD_AES_256_CBC_HMAC_SHA_384 AES-256 SHA-384 K 56 MAC_KEY_LEN 32 ENC_KEY_LEN 24 T_LEN=24
- *        2.7 AEAD_AES_256_CBC_HMAC_SHA_512 AES-256 SHA-512 K 64 MAC_KEY_LEN 32 ENC_KEY_LEN 32 T_LEN=32
- */
-
-class openssl_aead {
-   public:
-    openssl_aead();
+    /**
+     * @brief aes_cbc_hmac_sha2_encrypt
+     *        https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
+     *        2.4 AEAD_AES_128_CBC_HMAC_SHA_256 AES-128 SHA-256 K 32 MAC_KEY_LEN 16 ENC_KEY_LEN 16 T_LEN=16
+     *        2.5 AEAD_AES_192_CBC_HMAC_SHA_384 AES-192 SHA-384 K 48 MAC_KEY_LEN 24 ENC_KEY_LEN 24 T_LEN=24
+     *        2.6 AEAD_AES_256_CBC_HMAC_SHA_384 AES-256 SHA-384 K 56 MAC_KEY_LEN 32 ENC_KEY_LEN 24 T_LEN=24
+     *        2.7 AEAD_AES_256_CBC_HMAC_SHA_512 AES-256 SHA-512 K 64 MAC_KEY_LEN 32 ENC_KEY_LEN 32 T_LEN=32
+     */
     /**
      * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA
      * @param   const char* enc_alg [in] "aes-128-cbc"
@@ -514,6 +452,65 @@ class openssl_aead {
     return_t aes_cbc_hmac_sha2_decrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k,
                                        const binary_t& iv, const binary_t& a, const binary_t& q, binary_t& p, const binary_t& t);
 };
+
+/**
+ * @brief   EVP_chacha20
+ * @return  error code (see error.hpp)
+ * @desc
+ *          RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
+ *          RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
+ *
+ *          key 256bits (32bytes)
+ *          iv 96bits (12bytes)
+ *          https://www.openssl.org/docs/man1.1.1/man3/EVP_chacha20.html
+ *          openssl iv 128bites (16bytes) = counter 32bits(LE) + iv 96bits
+ *
+ *          cf.
+ *          https://www.openssl.org/docs/man3.0/man3/EVP_chacha20.html
+ *          openssl iv 128bites (16bytes) = counter 64bits(LE) + iv 64bits - 96 or 64
+ * @example
+ *          constexpr byte_t data_plain[] = "still a man hears what he wants to hear and disregards the rest";
+ *          size_t size_plain = RTL_NUMBER_OF (data_plain);
+ *
+ *          openssl_crypt crypt;
+ *          crypt_context_t* handle = nullptr;
+ *          binary_t data_encrypted;
+ *          binary_t data_decrypted;
+ *
+ *          // key
+ *          binary_t key;
+ *          key.resize (32);
+ *          for (int i = 0; i < 32; i++) {
+ *              key[i] = i;
+ *          }
+ *
+ *          // initial vector
+ *          byte_t nonce_source [12] = { 0, 0, 0, 0, 0, 0, 0, 0x4a, };
+ *          binary_t iv;
+ *          openssl_chacha20_iv (iv, 1, nonce_source, 12);
+ *
+ *          // stream cipher
+ *          {
+ *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::crypt_cipher, key, iv);
+ *              crypt.encrypt (handle, data_plain, size_plain, data_encrypted);
+ *              crypt.decrypt (handle, data_encrypted, data_decrypted);
+ *              crypt.close (handle);
+ *          }
+ *
+ *          // AEAD
+ *          {
+ *              binary_t aad;
+ *              binary_t tag;
+ *              openssl_prng rand;
+ *              rand.random (aad, 32);
+ *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::crypt_aead, key, iv);
+ *              crypt.encrypt2 (handle, data_plain, size_plain, data_encrypted, &aad, &tag);
+ *              crypt.decrypt2 (handle, data_encrypted, data_decrypted, &aad, &tag);
+ *              crypt.close (handle);
+ *          }
+ */
+return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const binary_t& nonce);
+return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, size_t nonce_size);
 
 }  // namespace crypto
 }  // namespace hotplace

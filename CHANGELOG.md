@@ -1,8 +1,12 @@
 # history
 
-* Revision 654
+* Revision 656
+  * [tested] RSA_PSS key
   * [study] QUIC (RFC 9001)
   * [study] TLS (RFC 4346, 8446, 8448)
+
+* Revision 654
+  * [tested] stream autoindent
 
 * Revision 647
   * [tested] QUIC (RFC 9001)

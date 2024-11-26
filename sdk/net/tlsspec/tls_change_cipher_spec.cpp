@@ -25,8 +25,6 @@ return_t tls_dump_change_cipher_spec(stream_t* s, tls_session* session, const by
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        // studying
     }
     __finally2 {
         // do nothing

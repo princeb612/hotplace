@@ -25,7 +25,7 @@ enum openssl_hash_context_flag_t {
 
 #define OPENSSL_HASH_CONTEXT_SIGNATURE 0x20090912
 #define CRYPT_HASH_DIGESTSIZE (512 >> 3)
-typedef struct _openssl_hash_context_t : public hash_context_t {
+struct openssl_hash_context_t : public hash_context_t {
     uint32 _signature;
     crypt_poweredby_t _hash_type;
     // uint32 _algorithm;
@@ -37,11 +37,40 @@ typedef struct _openssl_hash_context_t : public hash_context_t {
     const EVP_MD* _evp_md;          // hash, HMAC
     binary_t _key;                  // CMAC, HMAC
 
-    _openssl_hash_context_t() : _signature(0), _flags(0), _md_context(nullptr), _cmac_context(nullptr), _hmac_context(nullptr) {
+    openssl_hash_context_t() : _signature(0), _flags(0), _md_context(nullptr), _cmac_context(nullptr), _hmac_context(nullptr) {
         // do nothing
     }
-
-} openssl_hash_context_t;
+    openssl_hash_context_t(const openssl_hash_context_t& rhs)
+        : _signature(rhs._signature),
+          _hash_type(rhs._hash_type),
+          _flags(rhs._flags),
+          _evp_cipher(rhs._evp_cipher),
+          _evp_md(rhs._evp_md),
+          _key(rhs._key),
+          _md_context(nullptr),
+          _cmac_context(nullptr),
+          _hmac_context(nullptr) {
+        if (rhs._md_context) {
+            _md_context = EVP_MD_CTX_create();
+            EVP_MD_CTX_copy(_md_context, rhs._md_context);
+        }
+        if (rhs._cmac_context) {
+            _cmac_context = CMAC_CTX_new();
+            CMAC_CTX_copy(_cmac_context, rhs._cmac_context);
+        }
+        if (rhs._hmac_context) {
+            _hmac_context = HMAC_CTX_new();
+            HMAC_CTX_copy(_hmac_context, rhs._hmac_context);
+        }
+    }
+    void swap(openssl_hash_context_t* rhs) {
+        if (rhs) {
+            std::swap<EVP_MD_CTX*>(_md_context, rhs->_md_context);
+            std::swap<CMAC_CTX*>(_cmac_context, rhs->_cmac_context);
+            std::swap<HMAC_CTX*>(_hmac_context, rhs->_hmac_context);
+        }
+    }
+};
 
 openssl_hash::openssl_hash() {
     openssl_startup();
@@ -323,6 +352,41 @@ return_t openssl_hash::update(hash_context_t* handle, const byte_t* source_data,
 }
 
 return_t openssl_hash::update(hash_context_t* handle, const binary_t& input) { return update(handle, &input[0], input.size()); }
+
+return_t openssl_hash::update(hash_context_t* handle, const byte_t* data, size_t datasize, binary_t& digest) {
+    return_t ret = errorcode_t::success;
+    openssl_hash_context_t* context = static_cast<openssl_hash_context_t*>(handle);
+    openssl_hash_context_t* handle_dup = nullptr;
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (nullptr == data) {
+            if (datasize) {
+                ret = errorcode_t::invalid_parameter;
+                __leave2;
+            }
+        }
+
+        ret = update(handle, data, datasize);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        handle_dup = new openssl_hash_context_t(*context);  // duplicate CTX before finalize
+        finalize(handle, digest);                           // calc MD
+        context->swap(handle_dup);                          // swap CTX
+    }
+    __finally2 {
+        if (handle_dup) {
+            close(handle_dup);  // close a finalized handle
+        }
+    }
+    return ret;
+}
+
+return_t openssl_hash::update(hash_context_t* handle, const binary_t& input, binary_t& digest) { return update(handle, &input[0], input.size(), digest); }
 
 return_t openssl_hash::finalize(hash_context_t* handle, byte_t** hash_data, size_t* hash_size) {
     return_t ret = errorcode_t::success;

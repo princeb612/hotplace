@@ -470,6 +470,14 @@ class crypto_advisor : public traceable {
     uint32 curveof(cose_ec_curve_t curve);
 
     /**
+     * @brief   kty
+     * @param   crypto_kty_t kty [in]
+     * @param   std::string& name [out]
+     */
+    return_t nameof_kty(crypto_kty_t kty, std::string& name);
+    const char* nameof_kty(crypto_kty_t kty);
+
+    /**
      * query_feature("scrypt")
      *  in openssl-1.1.1 return false
      *  in openssl-3.0.x return true
@@ -595,6 +603,8 @@ class crypto_advisor : public traceable {
     typedef std::map<std::string, const hint_cipher_t*> cipher_byname_map_t; /* "aes-256-cbc" to hint_cipher_t* */
     typedef std::map<std::string, const hint_digest_t*> md_byname_map_t;     /* "sha256" to hint_digest_t* */
 
+    typedef std::map<crypto_kty_t, const hint_kty_name_t*> kty_name_t;
+
     int _flag;
 
     blockcipher_map_t _blockcipher_map;
@@ -631,6 +641,8 @@ class crypto_advisor : public traceable {
 
     cipher_byname_map_t _cipher_byname_map;
     md_byname_map_t _md_byname_map;
+
+    kty_name_t _kty_names;
 
     std::map<std::string, uint32> _features;
     std::map<std::string, uint32> _versions;

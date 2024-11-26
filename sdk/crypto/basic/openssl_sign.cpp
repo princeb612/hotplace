@@ -10,6 +10,7 @@
 
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
+#include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/crypto/basic/openssl_sign.hpp>
@@ -241,6 +242,12 @@ return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode, c
             __leave2;
         }
 
+        auto kty = typeof_crypto_key(pkey);
+        if (kty_ec != kty) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
         EC_KEY* ec_key = (EC_KEY*)EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey);
 
         hash.open(&hash_handle, mode);
@@ -301,6 +308,11 @@ return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode, c
         int rlen = BN_num_bytes(bn_r);
         int slen = BN_num_bytes(bn_s);
 
+        if (unitsize < rlen) {
+            ret = errorcode_t::unknown;
+            __leave2;
+        }
+
         /*
          * Signature = I2OSP(R, n) | I2OSP(S, n)
          * if unitsize is 4 and r is 12, s is 34
@@ -337,6 +349,12 @@ return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t mo
 
         if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto kty = typeof_crypto_key(pkey);
+        if (kty_rsa != kty) {
+            ret = errorcode_t::invalid_context;
             __leave2;
         }
 
@@ -383,6 +401,12 @@ return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t mode, c
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto kty = typeof_crypto_key(pkey);
+        if (kty_okp != kty) {
+            ret = errorcode_t::invalid_context;
             __leave2;
         }
 
@@ -521,6 +545,12 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t mode,
             __leave2;
         }
 
+        auto kty = typeof_crypto_key(pkey);
+        if (kty_ec != kty) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
         EC_KEY* ec_key = (EC_KEY*)EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey);
 
         ret = errorcode_t::error_verify;
@@ -582,6 +612,11 @@ return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t 
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        auto kty = typeof_crypto_key(pkey);
+        if (kty_rsa != kty) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
 
         ret = errorcode_t::error_verify;
 
@@ -624,6 +659,12 @@ return_t openssl_sign::verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t mode,
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto kty = typeof_crypto_key(pkey);
+        if (kty_okp != kty) {
+            ret = errorcode_t::invalid_context;
             __leave2;
         }
 

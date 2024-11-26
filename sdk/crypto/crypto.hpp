@@ -280,6 +280,21 @@ class hash_t {
      */
     virtual return_t update(hash_context_t* handle, const byte_t* data, size_t datasize) = 0;
     virtual return_t update(hash_context_t* handle, const binary_t& input) = 0;
+
+    /**
+     * @brief   update and get hash
+     * @sample
+     *          hash.open(&handle, "sha256");
+     *          hash.init(handle);
+     *          hash.update(handle, (byte_t*)stream1, strlen(stream1), hash_stream1);
+     *          _logger->hdump("stream1", hash_stream1);
+     *          hash.update(handle, (byte_t*)stream2, strlen(stream2), hash_stream2);
+     *          _logger->hdump("stream1", hash_stream2);
+     *          hash.close(handle);
+     */
+    virtual return_t update(hash_context_t* handle, const byte_t* data, size_t datasize, binary_t& digest) = 0;
+    virtual return_t update(hash_context_t* handle, const binary_t& input, binary_t& digest) = 0;
+
     /**
      * @brief get
      * @param hash_context_t* handle [in]

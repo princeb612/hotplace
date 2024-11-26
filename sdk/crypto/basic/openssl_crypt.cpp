@@ -774,6 +774,10 @@ return_t openssl_crypt::free_data(unsigned char *data) {
 }
 
 return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const binary_t &input, binary_t &output, crypt_enc_t mode) {
+    return encrypt(pkey, &input[0], input.size(), output, mode);
+}
+
+return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size_t size, binary_t &output, crypt_enc_t mode) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX *pkey_context = nullptr;
     crypto_advisor *advisor = crypto_advisor::get_instance();
@@ -783,7 +787,7 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const binary_t &input, bin
 
         output.resize(0);
 
-        if (nullptr == pkey) {
+        if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -799,19 +803,18 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const binary_t &input, bin
 
         int id = EVP_PKEY_id(pkey);
         if (EVP_PKEY_RSA == id) {
-            // OAEP
-            hash_algorithm_t alg = hash_algorithm_t::sha1;
-            const EVP_MD *md = nullptr;
-
-            // padding
             switch (mode) {
                 case crypt_enc_t::rsa_1_5:
+                    // padding
                     EVP_PKEY_CTX_set_rsa_padding(pkey_context, RSA_PKCS1_PADDING);
                     break;
                 case crypt_enc_t::rsa_oaep:
                 case crypt_enc_t::rsa_oaep256:
                 case crypt_enc_t::rsa_oaep384:
-                case crypt_enc_t::rsa_oaep512:
+                case crypt_enc_t::rsa_oaep512: {
+                    // OAEP
+                    hash_algorithm_t alg = hash_algorithm_t::sha1;
+                    const EVP_MD *md = nullptr;
 
                     switch (mode) {
                         case crypt_enc_t::rsa_oaep:
@@ -834,21 +837,22 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const binary_t &input, bin
                     EVP_PKEY_CTX_set_rsa_padding(pkey_context, RSA_PKCS1_OAEP_PADDING);
                     EVP_PKEY_CTX_set_rsa_oaep_md(pkey_context, md);
                     EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context, md);
-                    break;
+                } break;
                 default:
                     break;
             }
         }
 
-        size_t size = 0;
-        ret_openssl = EVP_PKEY_encrypt(pkey_context, nullptr, &size, &input[0], input.size());
-        if (-2 == ret_openssl) {
+        size_t bufsize = 0;
+        ret_openssl = EVP_PKEY_encrypt(pkey_context, nullptr, &bufsize, stream, size);
+        if (ret_openssl < 1) {
+            // if (-2 == ret_openssl) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        output.resize(size);
-        ret_openssl = EVP_PKEY_encrypt(pkey_context, &output[0], &size, &input[0], input.size());
+        output.resize(bufsize);
+        ret_openssl = EVP_PKEY_encrypt(pkey_context, &output[0], &bufsize, stream, size);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
@@ -863,6 +867,10 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const binary_t &input, bin
 }
 
 return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const binary_t &input, binary_t &output, crypt_enc_t mode) {
+    return decrypt(pkey, &input[0], input.size(), output, mode);
+}
+
+return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size_t size, binary_t &output, crypt_enc_t mode) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX *pkey_context = nullptr;
     crypto_advisor *advisor = crypto_advisor::get_instance();
@@ -872,7 +880,7 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const binary_t &input, bin
 
         output.resize(0);
 
-        if (nullptr == pkey) {
+        if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -894,19 +902,18 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const binary_t &input, bin
         EVP_PKEY_decrypt_init(pkey_context);
 
         if (EVP_PKEY_RSA == EVP_PKEY_id(pkey)) {
-            // OAEP
-            hash_algorithm_t alg = hash_algorithm_t::sha1;
-            const EVP_MD *md = nullptr;
-
-            // padding
             switch (mode) {
                 case crypt_enc_t::rsa_1_5:
+                    // padding
                     EVP_PKEY_CTX_set_rsa_padding(pkey_context, RSA_PKCS1_PADDING);
                     break;
                 case crypt_enc_t::rsa_oaep:
                 case crypt_enc_t::rsa_oaep256:
                 case crypt_enc_t::rsa_oaep384:
-                case crypt_enc_t::rsa_oaep512:
+                case crypt_enc_t::rsa_oaep512: {
+                    // OAEP
+                    hash_algorithm_t alg = hash_algorithm_t::sha1;
+                    const EVP_MD *md = nullptr;
 
                     switch (mode) {
                         case crypt_enc_t::rsa_oaep:
@@ -929,26 +936,27 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const binary_t &input, bin
                     EVP_PKEY_CTX_set_rsa_padding(pkey_context, RSA_PKCS1_OAEP_PADDING);
                     EVP_PKEY_CTX_set_rsa_oaep_md(pkey_context, md);
                     EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context, md);
-                    break;
+                } break;
                 default:
                     break;
             }
         }
 
-        size_t size = 0;
-        ret_openssl = EVP_PKEY_decrypt(pkey_context, nullptr, &size, &input[0], input.size());
-        if (-2 == ret_openssl) {
+        size_t bufsize = 0;
+        ret_openssl = EVP_PKEY_decrypt(pkey_context, nullptr, &bufsize, stream, size);
+        if (ret_openssl < 1) {
+            // if (-2 == ret_openssl) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        output.resize(size);
-        ret_openssl = EVP_PKEY_decrypt(pkey_context, &output[0], &size, &input[0], input.size());
+        output.resize(bufsize);
+        ret_openssl = EVP_PKEY_decrypt(pkey_context, &output[0], &bufsize, stream, size);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
-        output.resize(size);
+        output.resize(bufsize);
     }
     __finally2 {
         if (nullptr != pkey_context) {

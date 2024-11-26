@@ -66,6 +66,8 @@ crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
             kty = crypto_kty_t::kty_oct;
             break;
         case EVP_PKEY_RSA:
+        case EVP_PKEY_RSA2:
+        case EVP_PKEY_RSA_PSS:
             kty = crypto_kty_t::kty_rsa;
             break;
         case EVP_PKEY_EC:
@@ -141,18 +143,8 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
 bool kindof_ecc(crypto_kty_t type) { return (crypto_kty_t::kty_ec == type) || (crypto_kty_t::kty_okp == type); }
 
 const char* nameof_key_type(crypto_kty_t type) {
-    const char* name = "";
-
-    if (crypto_kty_t::kty_oct == type) {
-        name = "oct";
-    } else if (crypto_kty_t::kty_rsa == type) {
-        name = "RSA";
-    } else if (crypto_kty_t::kty_ec == type) {
-        name = "EC";
-    } else if (crypto_kty_t::kty_okp == type) {
-        name = "OKP";
-    }
-    return name;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    return advisor->nameof_kty(type);
 }
 
 bool is_kindof(const EVP_PKEY* pkey, crypto_kty_t type) {

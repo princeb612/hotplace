@@ -8,14 +8,14 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto/basic/crypto_sign.hpp>
+#include <sdk/crypto/crypto/crypto_sign.hpp>
 
 namespace hotplace {
 namespace crypto {
 
-crypto_sign_ecdsa::crypto_sign_ecdsa(hash_algorithm_t hashalg) : crypto_sign(hashalg) {}
+crypto_sign_rsa_pkcs1::crypto_sign_rsa_pkcs1(hash_algorithm_t hashalg) : crypto_sign(hashalg) {}
 
-return_t crypto_sign_ecdsa::sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature) {
+return_t crypto_sign_rsa_pkcs1::sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
@@ -23,7 +23,7 @@ return_t crypto_sign_ecdsa::sign(const EVP_PKEY* pkey, const byte_t* stream, siz
             __leave2;
         }
         openssl_sign s;
-        ret = s.sign_ecdsa(pkey, get_digest(), stream, size, signature);
+        ret = s.sign_rsassa_pkcs15(pkey, get_digest(), stream, size, signature);
     }
     __finally2 {
         // do nothing
@@ -31,7 +31,7 @@ return_t crypto_sign_ecdsa::sign(const EVP_PKEY* pkey, const byte_t* stream, siz
     return ret;
 }
 
-return_t crypto_sign_ecdsa::verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature) {
+return_t crypto_sign_rsa_pkcs1::verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
@@ -39,7 +39,7 @@ return_t crypto_sign_ecdsa::verify(const EVP_PKEY* pkey, const byte_t* stream, s
             __leave2;
         }
         openssl_sign s;
-        ret = s.verify_ecdsa(pkey, get_digest(), stream, size, signature);
+        ret = s.verify_rsassa_pkcs15(pkey, get_digest(), stream, size, signature);
     }
     __finally2 {
         // do nothing
@@ -47,7 +47,7 @@ return_t crypto_sign_ecdsa::verify(const EVP_PKEY* pkey, const byte_t* stream, s
     return ret;
 }
 
-return_t crypto_sign_ecdsa::sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature) {
+return_t crypto_sign_rsa_pkcs1::sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey) {
@@ -55,7 +55,7 @@ return_t crypto_sign_ecdsa::sign(const EVP_PKEY* pkey, const binary_t& input, bi
             __leave2;
         }
         openssl_sign s;
-        ret = s.sign_ecdsa(pkey, get_digest(), input, signature);
+        ret = s.sign_rsassa_pkcs15(pkey, get_digest(), input, signature);
     }
     __finally2 {
         // do nothing
@@ -63,7 +63,7 @@ return_t crypto_sign_ecdsa::sign(const EVP_PKEY* pkey, const binary_t& input, bi
     return ret;
 }
 
-return_t crypto_sign_ecdsa::verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature) {
+return_t crypto_sign_rsa_pkcs1::verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey) {
@@ -71,7 +71,7 @@ return_t crypto_sign_ecdsa::verify(const EVP_PKEY* pkey, const binary_t& input, 
             __leave2;
         }
         openssl_sign s;
-        ret = s.verify_ecdsa(pkey, get_digest(), input, signature);
+        ret = s.verify_rsassa_pkcs15(pkey, get_digest(), input, signature);
     }
     __finally2 {
         // do nothing

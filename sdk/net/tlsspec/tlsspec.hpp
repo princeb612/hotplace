@@ -58,6 +58,7 @@
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
+#include <sdk/crypto/crypto/crypto_hash.hpp>
 #include <sdk/net/types.hpp>
 
 namespace hotplace {
@@ -306,15 +307,28 @@ class tls_session;
 class tls_protection {
    public:
     tls_protection(uint8 mode = -1);
+    ~tls_protection();
 
+    uint8 get_mode();
+
+    // server_hello cipher_suite
+    uint16 get_cipher_suite();
+    void set_cipher_suite(uint16 alg);
+    transcript_hash* begin_transcript_hash();
+    transcript_hash* get_transcript_hash();
+
+    crypto_key& get_cert();
     crypto_key& get_key();
-    crypto_key& get_keyshare();
-    return_t key_agreement(tls_session* session, binary_t& shared);
-    return_t calc_hello_hash(tls_session* session, binary_t& hello_hash);
+    crypto_key& get_keyexchange();
     /**
      * @brief   calc
+     * @remarks generate secrets related to tls_mode_t
      */
-    return_t calc(uint16 alg, const binary_t& hello_hash, const binary_t& shared_secret);
+    return_t calc(tls_session* session);
+
+    void get_item(tls_secret_t type, binary_t& item);
+    const binary_t& get_item(tls_secret_t type);
+    void set_item(tls_secret_t type, const binary_t& item);
 
     return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv);
 
@@ -326,16 +340,15 @@ class tls_protection {
     /**
      * @brief   verify
      */
-    return_t verify(tls_session* session, uint16 scheme, const binary_t& data, const binary_t& signature);
-
-    void get_item(tls_secret_t type, binary_t& item);
-    const binary_t& get_item(tls_secret_t type);
-    uint8 get_mode();
+    return_t certificate_verify(tls_session* session, uint16 scheme, const binary_t& signature);
 
    private:
-    uint8 _mode;
+    uint8 _mode;  // see tls_mode_t
+    uint16 _alg;
+    transcript_hash* _transcript_hash;
+    crypto_key _cert;
     crypto_key _key;
-    crypto_key _keyshare;
+    crypto_key _keyexchange;  // psk_ke, psk_dhe_ke
     std::map<tls_secret_t, binary_t> _kv;
 };
 
@@ -352,10 +365,6 @@ class tls_session {
 
     tls_protection& get_tls_protection();
 
-    // server_hello cipher_suite
-    uint16 get_cipher_suite();
-    void set_cipher_suite(uint16 alg);
-
     // IV
     uint64 get_sequence(bool inc = false);
     void inc_sequence();
@@ -367,7 +376,6 @@ class tls_session {
     void erase(session_item_t type);
 
    protected:
-    uint16 _alg;
     uint64 _seq;
     tls_protection _tls_protection;
     std::map<session_item_t, binary_t> _kv;
@@ -392,6 +400,7 @@ class tls_advisor {
     std::string tls_extension_string(uint16 code);
     std::string cipher_suite_string(uint16 code);
     const tls_alg_info_t* hintof_tls_algorithm(uint16 code);
+    hash_algorithm_t hash_alg_of(uint16 code);
     std::string compression_method_string(uint8 code);
 
     // tls_extension_server_name 0x0000

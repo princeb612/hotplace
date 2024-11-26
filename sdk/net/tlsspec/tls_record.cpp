@@ -85,16 +85,12 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 binary_t decrypted;
                 binary_t tag;
 
-                s->autoindent(3);
-
                 ret = protection.decrypt(session, stream, len, decrypted, pos, tag, s);
                 if (errorcode_t::success == ret) {
                     size_t hpos = 0;
                     ret = tls_dump_handshake(s, session, &decrypted[0], decrypted.size(), hpos);
                 }
                 pos += len;
-
-                s->autoindent(0);
             } break;
         }
         pos += tpos;

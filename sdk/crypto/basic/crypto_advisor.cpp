@@ -274,6 +274,13 @@ return_t crypto_advisor::build() {
         }
     }
 
+    for (i = 0; i < sizeof_hint_kty_names; i++) {
+        auto item = hint_kty_names + i;
+        if (item->name) {
+            _kty_names.insert({item->kty, item});
+        }
+    }
+
     {
         struct mapdata {
             const char* feature;
@@ -854,13 +861,7 @@ return_t crypto_advisor::ktyof_ec_curve(const EVP_PKEY* pkey, std::string& kty) 
         nidof_evp_pkey(pkey, nid);
         const hint_curve_t* item = hintof_curve_nid(nid);
         if (item) {
-            for (uint32 i = 0; i < sizeof_hint_kty_names; i++) {
-                const hint_kty_name_t* k = hint_kty_names + i;
-                if (k->kty == item->kty) {
-                    kty = k->name;
-                    break;
-                }
-            }
+            ret = nameof_kty(item->kty, kty);
         } else {
             ret = errorcode_t::not_found;
             __leave2;
@@ -1102,6 +1103,36 @@ uint32 crypto_advisor::curveof(cose_ec_curve_t curve) {
 
     hint.find(curve, &nid);
     return nid;
+}
+
+return_t crypto_advisor::nameof_kty(crypto_kty_t kty, std::string& name) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        name.clear();
+
+        auto iter = _kty_names.find(kty);
+        if (_kty_names.end() == iter) {
+            ret = errorcode_t::not_found;
+            __leave2;
+        } else {
+            const hint_kty_name_t* item = iter->second;
+            name = item->name;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+const char* crypto_advisor::nameof_kty(crypto_kty_t kty) {
+    const char* value = "";
+    auto iter = _kty_names.find(kty);
+    if (_kty_names.end() != iter) {
+        auto const* item = iter->second;
+        value = item->name;
+    }
+    return value;
 }
 
 bool crypto_advisor::query_feature(const char* feature, uint32 spec) {

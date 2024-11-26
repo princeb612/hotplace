@@ -29,7 +29,7 @@ namespace hotplace {
  *  std::cout << bs << std::endl;
  */
 
-enum dump_memory_flag_t {
+enum dump_memory_flag_t : uint8 {
     dump_header = (1 << 0),
     dump_notrunc = (1 << 1),
 };

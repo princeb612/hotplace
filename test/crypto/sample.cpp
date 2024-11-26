@@ -558,7 +558,7 @@ return_t test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_
 void test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
     return_t ret = errorcode_t::success;
     const OPTION& option = _cmdline->value();
-    openssl_aead aead;
+    openssl_crypt aead;
 
     binary_t q;
     binary_t t;
@@ -589,6 +589,95 @@ void test_aead_aes_cbc_hmac_sha2() {
     }
 }
 
+void test_cipher_encrypt() {
+    _test_case.begin("cipher_encrypt");
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    auto lambda_test = [&](crypt_algorithm_t alg, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size) -> void {
+        return_t ret = errorcode_t::success;
+        cipher_encrypt_builder builder;
+        auto cipher = builder.set(alg, mode).build();
+        if (cipher) {
+            binary_t ciphertext;
+            ret = cipher->encrypt(key, iv, stream, size, ciphertext);
+            _logger->hdump("> encrypt", ciphertext, 16, 3);
+            _test_case.test(ret, __FUNCTION__, "encrypt alg %s", advisor->nameof_cipher(alg, mode));
+            if (errorcode_t::success == ret) {
+                binary_t plaintext;
+                ret = cipher->decrypt(key, iv, ciphertext, plaintext);
+                _logger->hdump("> decrypt", plaintext, 16, 3);
+                _test_case.test(ret, __FUNCTION__, "decrypt alg %s", advisor->nameof_cipher(alg, mode));
+            }
+            cipher->release();
+        }
+    };
+
+    binary_t key = base16_decode("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
+    binary_t iv = base16_decode("000102030405060708090a0b0c0d0e0f");
+    constexpr char sample[] = "We don't playing because we grow old; we grow old because we stop playing.";
+    size_t len = strlen(sample);
+    lambda_test(aes128, cbc, key, iv, (byte_t*)sample, len);
+    lambda_test(aes128, cfb, key, iv, (byte_t*)sample, len);
+    lambda_test(aes128, ofb, key, iv, (byte_t*)sample, len);
+    lambda_test(aes192, cbc, key, iv, (byte_t*)sample, len);
+    lambda_test(aes192, cfb, key, iv, (byte_t*)sample, len);
+    lambda_test(aes192, ofb, key, iv, (byte_t*)sample, len);
+    lambda_test(aes256, cbc, key, iv, (byte_t*)sample, len);
+    lambda_test(aes256, cfb, key, iv, (byte_t*)sample, len);
+    lambda_test(aes256, ofb, key, iv, (byte_t*)sample, len);
+    lambda_test(chacha20, crypt_cipher, key, iv, (byte_t*)sample, len);
+}
+
+void test_crypto_encrypt() {
+    _test_case.begin("crypto_encrypt");
+
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    crypto_key key;
+    crypto_keychain keychain;
+
+    {
+        const char* n =
+            "n4EPtAOCc9AlkeQHPzHStgAbgs7bTZLwUBZdR8_KuKPEHLd4rHVTeT-O-XV2jRojdNhxJWTDvNd7nqQ0VEiZQHz_AJmSCpMaJMRBSFKrKb2wqVwGU_NsYOYL-"
+            "QtiWN2lbzcEe6XC0dApr5ydQLrHqkHHig3RBordaZ6Aj-oBHqFEHYpPe7Tpe-OfVfHd1E6cS6M1FZcD1NNLYD5lFHpPI9bTwJlsde3uhGqC0ZCuEHg8lhzwOHrtIQbS0FVbb9k3-tVTU4fg_"
+            "3L_vniUFAKwuCLqKnS2BYwdq_mzSnbLY7h_qixoR7jig3__kRhuaxwUkRz5iaiQkqgc5gHdrNP5zw";
+        const char* e = "AQAB";
+        const char* d =
+            "bWUC9B-EFRIo8kpGfh0ZuyGPvMNKvYWNtB_ikiH9k20eT-O1q_I78eiZkpXxXQ0UTEs2LsNRS-8uJbvQ-A1irkwMSMkK1J3XTGgdrhCku9gRldY7sNA_AKZGh-Q661_42rINLRCe8W-nZ34ui_"
+            "qOfkLnK9QWDDqpaIsA-bMwWWSDFu2MUBYwkHTMEzLYGqOe04noqeq1hExBTHBOBdkMXiuFhUq1BU6l-DqEiWxqg82sXt2h-"
+            "LMnT3046AOYJoRioz75tSUQfGCshWTBnP5uDjd18kKhyv07lhfSJdrPdM5Plyl21hsFf4L_mHCuoFau7gdsPfHPxxjVOcOpBrQzwQ";
+        keychain.add_rsa_b64u(&key, "RSA", "RSA", n, e, d);
+    }
+
+    auto lambda_test = [&](crypt_enc_t enc, const byte_t* stream, size_t size) -> void {
+        return_t ret = errorcode_t::success;
+        const EVP_PKEY* pkey = key.find("RSA");
+        crypto_encrypt_builder builder;
+        auto crypto = builder.set(enc).build();
+        if (crypto) {
+            binary_t ciphertext;
+            ret = crypto->encrypt(pkey, stream, size, ciphertext);
+            _logger->hdump("> ciphertext", ciphertext, 16, 3);
+            _test_case.test(ret, __FUNCTION__, "encrypt enc %i", enc);
+            if (errorcode_t::success == ret) {
+                binary_t plaintext;
+                ret = crypto->decrypt(pkey, ciphertext, plaintext);
+                _logger->hdump("> ciphertext", plaintext, 16, 3);
+                _test_case.test(ret, __FUNCTION__, "decrypt enc %i", enc);
+            }
+        }
+    };
+
+    constexpr char sample[] = "We don't playing because we grow old; we grow old because we stop playing.";
+    size_t len = strlen(sample);
+    lambda_test(rsa_1_5, (byte_t*)sample, len);
+    lambda_test(rsa_oaep, (byte_t*)sample, len);
+    lambda_test(rsa_oaep256, (byte_t*)sample, len);
+    lambda_test(rsa_oaep384, (byte_t*)sample, len);
+    lambda_test(rsa_oaep512, (byte_t*)sample, len);
+}
+
 void test_crypto_aead() {
     _test_case.begin("crypto_aead");
 
@@ -609,12 +698,12 @@ void test_crypto_aead() {
         binary_t tag;
         if (aead) {
             ret = aead->encrypt(key, iv, stream, size, ciphertext, aad, tag);
-            _logger->hdump("> ciphertext", ciphertext);
-            _logger->hdump("> tag", tag);
+            _logger->hdump("> ciphertext", ciphertext, 16, 3);
+            _logger->hdump("> tag", tag, 16, 3);
             _test_case.test(ret, __FUNCTION__, "%s #encrypt", text);
 
             ret = aead->decrypt(key, iv, ciphertext, plaintext, aad, tag);
-            _logger->hdump("> plaintext", plaintext);
+            _logger->hdump("> plaintext", plaintext, 16, 3);
             _test_case.test(ret, __FUNCTION__, "%s #decrypt", text);
 
             aead->release();
@@ -659,13 +748,13 @@ void test_crypto_aead() {
                 binary_t t;
 
                 ret = aead->encrypt(key, nonce, (byte_t*)msg, strlen(msg), ciphertext, aad, t);
-                _logger->hdump("> ciphertext", ciphertext);
+                _logger->hdump("> ciphertext", ciphertext, 16, 3);
                 _test_case.assert(tag == t, __FUNCTION__, "#tag");
                 _test_case.assert(expect == ciphertext, __FUNCTION__, "#expect");
                 _test_case.test(ret, __FUNCTION__, "#encrypt");
 
                 ret = aead->decrypt(key, nonce, ciphertext, plaintext, aad, t);
-                _logger->hdump("> plaintext", plaintext);
+                _logger->hdump("> plaintext", plaintext, 16, 3);
                 _test_case.test(ret, __FUNCTION__, "#decrypt");
 
                 aead->release();
@@ -723,6 +812,8 @@ int main(int argc, char** argv) {
 
         test_aead_aes_cbc_hmac_sha2();
 
+        test_cipher_encrypt();
+        test_crypto_encrypt();
         test_crypto_aead();
     }
     __finally2 { openssl_cleanup(); }

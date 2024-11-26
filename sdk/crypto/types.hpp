@@ -149,11 +149,13 @@ enum hash_algorithm_t {
 };
 
 enum crypt_enc_t {
+    crypt_enc_undefined = 0,
     rsa_1_5 = 1,
     rsa_oaep = 2,
     rsa_oaep256 = 3,
     rsa_oaep384 = 4,
     rsa_oaep512 = 5,
+    ecies = 6,  // Elliptic Curve Integrated Encryption Scheme (not supported yet)
 };
 
 /**
@@ -291,11 +293,11 @@ enum crypt_access_t {
 
 enum crypto_kty_t {
     kty_unknown = 0,
-    kty_hmac = 1,        // EVP_PKEY_HMAC    NID_hmac
-    kty_oct = kty_hmac,  // synomym
-    kty_rsa = 2,         // EVP_PKEY_RSA     NID_rsaEncryption
-    kty_ec = 3,          // EVP_PKEY_EC      NID_X9_62_id_ecPublicKey
-    kty_okp = 4,         // EVP_PKEY_ED25519 NID_ED25519, EVP_PKEY_ED448   NID_ED448
+    kty_hmac = 1,        // NID_hmac
+    kty_oct = kty_hmac,  // NID_hmac (synomym)
+    kty_rsa = 2,         // NID_rsaEncryption, NID_rsa, NID_rsassaPss
+    kty_ec = 3,          // NID_X9_62_prime256v1, NID_secp384r1, NID_secp521r1
+    kty_okp = 4,         // NID_X25519, NID_X448, NID_ED25519, NID_ED448
     kty_bad = 0xffff,
 };
 

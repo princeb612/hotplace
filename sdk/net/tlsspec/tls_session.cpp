@@ -13,13 +13,9 @@
 namespace hotplace {
 namespace net {
 
-tls_session::tls_session() : _alg(0), _seq(0) {}
+tls_session::tls_session() : _seq(0) {}
 
 tls_protection& tls_session::get_tls_protection() { return _tls_protection; }
-
-uint16 tls_session::get_cipher_suite() { return _alg; }
-
-void tls_session::set_cipher_suite(uint16 alg) { _alg = alg; }
 
 uint64 tls_session::get_sequence(bool inc) {
     uint64 value = inc ? _seq++ : _seq;

@@ -10,110 +10,74 @@
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_aead.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
-#include <sdk/crypto/basic/crypto_sign.hpp>
 #include <sdk/crypto/basic/openssl_ecdh.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
+#include <sdk/crypto/crypto/crypto_aead.hpp>
+#include <sdk/crypto/crypto/crypto_sign.hpp>
 #include <sdk/net/tlsspec/tlsspec.hpp>
-
-//---
+// debug
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {
 namespace net {
 
-tls_protection::tls_protection(uint8 mode) : _mode(mode) {}
+tls_protection::tls_protection(uint8 mode) : _mode(mode), _alg(0), _transcript_hash(nullptr) {}
+
+tls_protection::~tls_protection() {
+    if (_transcript_hash) {
+        _transcript_hash->release();
+    }
+}
+
+uint8 tls_protection::get_mode() { return _mode; }
+
+uint16 tls_protection::get_cipher_suite() { return _alg; }
+
+void tls_protection::set_cipher_suite(uint16 alg) { _alg = alg; }
+
+transcript_hash* tls_protection::begin_transcript_hash() {
+    if (nullptr == _transcript_hash) {
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+        hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(_alg);
+        transcript_hash_builder builder;
+        _transcript_hash = builder.set(hashalg).build();
+    }
+    return _transcript_hash;
+}
+
+transcript_hash* tls_protection::get_transcript_hash() { return _transcript_hash; }
+
+crypto_key& tls_protection::get_cert() { return _cert; }
 
 crypto_key& tls_protection::get_key() { return _key; }
 
-crypto_key& tls_protection::get_keyshare() { return _keyshare; }
+crypto_key& tls_protection::get_keyexchange() { return _keyexchange; }
 
-return_t tls_protection::key_agreement(tls_session* session, binary_t& shared) {
+return_t tls_protection::calc(tls_session* session) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        const EVP_PKEY* pkey_priv = get_key().any();
-        const EVP_PKEY* pkey_pub = get_keyshare().any();
-        if (nullptr == pkey_priv || nullptr == pkey_pub) {
-            ret = errorcode_t::not_found;
-            __leave2;
-        }
-
-        const EVP_PKEY* pubkey = get_peer_key(pkey_pub);
-        ret = dh_key_agreement(pkey_priv, pkey_pub, shared);
-        EVP_PKEY_free((EVP_PKEY*)pubkey);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_protection::calc_hello_hash(tls_session* session, binary_t& hello_hash) {
-    return_t ret = errorcode_t::success;
+    // RFC 8446 7.1.  Key Schedule
     __try2 {
         if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        auto alg = session->get_cipher_suite();
+        uint16 alg = get_cipher_suite();
 
-        tls_advisor* tls_advisor = tls_advisor::get_instance();
-        const tls_alg_info_t* hint = tls_advisor->hintof_tls_algorithm(alg);
-        if (nullptr == hint) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        const binary_t& client_hello = session->get(session_item_t::item_client_hello);
-        const binary_t& server_hello = session->get(session_item_t::item_server_hello);
-        {
-            basic_stream bs;
-            dump_memory(client_hello, &bs, 16, 3);
-            printf("client_hello\n%s\n", bs.c_str());
-            bs.clear();
-            dump_memory(server_hello, &bs, 16, 3);
-            printf("server_hello\n%s\n", bs.c_str());
-            bs.clear();
-        }
-
-        openssl_hash hash;
-        hash_context_t* handle = nullptr;
-        ret = hash.open(&handle, hint->mac);
-        if (errorcode_t::success == ret) {
-            hash.update(handle, client_hello);
-            hash.update(handle, server_hello);
-            hash.finalize(handle, hello_hash);
-            hash.close(handle);
-        }
-
-        session->erase(session_item_t::item_client_hello);
-        session->erase(session_item_t::item_server_hello);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_protection::calc(uint16 alg, const binary_t& hello_hash, const binary_t& shared_secret) {
-    return_t ret = errorcode_t::success;
-    // RFC 8446 7.1.  Key Schedule
-    __try2 {
-        _kv.clear();
-
+        crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
         const tls_alg_info_t* hint_tls_alg = tlsadvisor->hintof_tls_algorithm(alg);
         if (nullptr == hint_tls_alg) {
             ret = errorcode_t::not_supported;
             __leave2;
         }
 
-        crypto_advisor* advisor = crypto_advisor::get_instance();
         const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(hint_tls_alg->cipher);
         if (nullptr == hint_cipher) {
             ret = errorcode_t::invalid_parameter;
@@ -128,6 +92,28 @@ return_t tls_protection::calc(uint16 alg, const binary_t& hello_hash, const bina
         auto keysize = hint_cipher->keysize;
         auto dlen = hint_mac->digest_size;
         auto hashalg = hint_mac->fetchname;
+
+        // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes
+        //  psk_ke      ... pre_shared_key
+        //  psk_dhe_ke  ... key_share
+        binary_t shared_secret;
+        {
+            const EVP_PKEY* pkey_priv = get_key().any();
+            const EVP_PKEY* pkey_pub = get_keyexchange().any();
+            if (nullptr == pkey_priv || nullptr == pkey_pub) {
+                ret = errorcode_t::not_found;
+                __leave2;
+            }
+
+            const EVP_PKEY* pubkey = get_peer_key(pkey_pub);
+            ret = dh_key_agreement(pkey_priv, pkey_pub, shared_secret);
+            EVP_PKEY_free((EVP_PKEY*)pubkey);
+
+            _kv[tls_secret_shared_secret] = shared_secret;
+        }
+
+        binary_t hello_hash;
+        get_item(tls_secret_hello_hash, hello_hash);
 
         openssl_kdf kdf;
         binary_t context;
@@ -282,6 +268,12 @@ return_t tls_protection::calc(uint16 alg, const binary_t& hello_hash, const bina
     return ret;
 }
 
+void tls_protection::get_item(tls_secret_t type, binary_t& item) { item = _kv[type]; }
+
+const binary_t& tls_protection::get_item(tls_secret_t type) { return _kv[type]; }
+
+void tls_protection::set_item(tls_secret_t type, const binary_t& item) { _kv[type] = item; }
+
 return_t tls_protection::build_iv(tls_session* session, tls_secret_t type, binary_t& iv) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -319,10 +311,8 @@ return_t tls_protection::decrypt(tls_session* session, const byte_t* stream, siz
         }
         tag.clear();
 
-        uint16 alg = session->get_cipher_suite();
-
         tls_advisor* advisor = tls_advisor::get_instance();
-        const tls_alg_info_t* hint = advisor->hintof_tls_algorithm(alg);
+        const tls_alg_info_t* hint = advisor->hintof_tls_algorithm(get_cipher_suite());
         if (nullptr == hint) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -347,12 +337,14 @@ return_t tls_protection::decrypt(tls_session* session, const byte_t* stream, siz
         }
 
         if (debugstream) {
+            debugstream->autoindent(3);
             debugstream->printf(" > key %s\n", base16_encode(key).c_str());
             debugstream->printf(" > iv %s\n", base16_encode(iv).c_str());
             debugstream->printf(" > aad %s\n", base16_encode(aad).c_str());
             debugstream->printf(" > tag %s\n", base16_encode(tag).c_str());
             debugstream->printf(" > decrypted\n");
             dump_memory(decrypted, debugstream, 16, 3, 0x0, dump_notrunc);
+            debugstream->autoindent(0);
             debugstream->printf("\n");
         }
     }
@@ -362,64 +354,85 @@ return_t tls_protection::decrypt(tls_session* session, const byte_t* stream, siz
     return ret;
 }
 
-return_t tls_protection::verify(tls_session* session, uint16 scheme, const binary_t& data, const binary_t& signature) {
+return_t tls_protection::certificate_verify(tls_session* session, uint16 scheme, const binary_t& signature) {
     return_t ret = errorcode_t::success;
     __try2 {
-#if 0
-        // RFC 8446 4.4.3.  Certificate Verify
-        //  Transcript-Hash(Handshake Context, Certificate)
-        //  "TLS 1.3, server CertificateVerify" / "TLS 1.3, client CertificateVerify"
-        //  2020202020202020202020202020202020202020202020202020202020202020
-        //  2020202020202020202020202020202020202020202020202020202020202020
-        //  544c5320312e332c207365727665722043657274696669636174655665726966
-        //  79
-        //  00
-        //  0101010101010101010101010101010101010101010101010101010101010101
-        constexpr char constexpr_context[] = "TLS 1.3, server CertificateVerify";
-        // RFC 8446 4.4.1
-        // 
+#if 1
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         crypto_sign_builder builder;
         crypto_sign* sign = nullptr;
-        switch(scheme) {
-            case 0x0401:  /* rsa_pkcs1_sha256 */ {
+        switch (scheme) {
+            case 0x0401: /* rsa_pkcs1_sha256 */ {
             } break;
-            case 0x0501:  /* rsa_pkcs1_sha384 */ {
+            case 0x0501: /* rsa_pkcs1_sha384 */ {
             } break;
-            case 0x0601:  /* rsa_pkcs1_sha512 */ {
+            case 0x0601: /* rsa_pkcs1_sha512 */ {
             } break;
-            case 0x0403:  /* ecdsa_secp256r1_sha256 */ {
+            case 0x0403: /* ecdsa_secp256r1_sha256 */ {
             } break;
-            case 0x0503:  /* ecdsa_secp384r1_sha384 */ {
+            case 0x0503: /* ecdsa_secp384r1_sha384 */ {
             } break;
-            case 0x0603:  /* ecdsa_secp521r1_sha512 */ {
+            case 0x0603: /* ecdsa_secp521r1_sha512 */ {
             } break;
-            case 0x0804:  /* rsa_pss_rsae_sha256 */ {
-                sign = builder.set_tls_scheme(scheme).set_digest(sha2_256).build();
+            case 0x0804: /* rsa_pss_rsae_sha256 */ {
+                sign = builder.tls_sign_scheme(scheme).set_digest(sha2_256).build();
             } break;
-            case 0x0805:  /* rsa_pss_rsae_sha384 */ {
-                sign = builder.set_tls_scheme(scheme).set_digest(sha2_384).build();
+            case 0x0805: /* rsa_pss_rsae_sha384 */ {
+                sign = builder.tls_sign_scheme(scheme).set_digest(sha2_384).build();
             } break;
-            case 0x0806:  /* rsa_pss_rsae_sha512 */ {
-                sign = builder.set_tls_scheme(scheme).set_digest(sha2_512).build();
+            case 0x0806: /* rsa_pss_rsae_sha512 */ {
+                sign = builder.tls_sign_scheme(scheme).set_digest(sha2_512).build();
             } break;
-            case 0x0807:  /* ed25519 */
-            case 0x0808:  /* ed448 */ {
-                sign = builder.set_tls_scheme(scheme).build();
+            case 0x0807: /* ed25519 */
+            case 0x0808: /* ed448 */ {
+                sign = builder.tls_sign_scheme(scheme).build();
             } break;
-            case 0x0809:  /* rsa_pss_pss_sha256 */ {
+            case 0x0809: /* rsa_pss_pss_sha256 */ {
             } break;
-            case 0x080a:  /* rsa_pss_pss_sha384 */ {
+            case 0x080a: /* rsa_pss_pss_sha384 */ {
             } break;
-            case 0x080b:  /* rsa_pss_pss_sha512 */ {
+            case 0x080b: /* rsa_pss_pss_sha512 */ {
             } break;
-            case 0x0201:  /* rsa_pkcs1_sha1 */ {
+            case 0x0201: /* rsa_pkcs1_sha1 */ {
             } break;
-            case 0x0203:  /* ecdsa_sha1 */ {
+            case 0x0203: /* ecdsa_sha1 */ {
             } break;
         }
         if (nullptr == sign) {
             ret = errorcode_t::unknown;
             __leave2;
+        } else {
+            // RFC 8446 4.4.3.  Certificate Verify
+
+            binary_t handshake_hash;
+            auto hash = get_transcript_hash();  // hash(client_hello .. certificate)
+            hash->digest(handshake_hash);
+
+            constexpr char constexpr_context[] = "TLS 1.3, server CertificateVerify";
+            basic_stream tosign;
+            tosign.fill(64, 0x20);
+            tosign << constexpr_context;
+            tosign.fill(1, 0x00);
+            tosign.write(&handshake_hash[0], handshake_hash.size());
+
+            {
+                basic_stream bs;
+                bs.printf("\e[1;36m%s\n", constexpr_context);
+                dump_memory(tosign.data(), tosign.size(), &bs, 16, 3, 0, dump_notrunc);
+                bs.printf("\n\e[0m");
+                std::cout << bs;
+                fflush(stdout);
+            }
+
+            crypto_key& key = session->get_tls_protection().get_cert();
+            auto pkey = key.any();
+            ret = sign->verify(pkey, tosign.data(), tosign.size(), signature);
+
+            sign->release();
         }
 #endif
     }
@@ -428,12 +441,6 @@ return_t tls_protection::verify(tls_session* session, uint16 scheme, const binar
     }
     return ret;
 }
-
-void tls_protection::get_item(tls_secret_t type, binary_t& item) { item = _kv[type]; }
-
-const binary_t& tls_protection::get_item(tls_secret_t type) { return _kv[type]; }
-
-uint8 tls_protection::get_mode() { return _mode; }
 
 }  // namespace net
 }  // namespace hotplace

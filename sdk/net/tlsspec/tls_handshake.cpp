@@ -11,6 +11,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/base16.hpp>
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/basic/template.hpp>
@@ -27,6 +28,7 @@ static return_t tls_dump_server_hello(stream_t* s, tls_session* session, const b
 static return_t tls_dump_encrypted_extensions(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 static return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 static return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+static return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 
 return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -56,18 +58,46 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
         tls_advisor* advisor = tls_advisor::get_instance();
 
         s->autoindent(3);
-        s->printf(" > handshake type %i (%s)\n", type, advisor->handshake_type_string(type).c_str());
+        s->printf(" > handshake type %i(%02x) (%s)\n", type, type, advisor->handshake_type_string(type).c_str());
         s->autoindent(0);
         s->printf(" > length 0x%04x(%i)\n", length, length);
 
-        pos += sizeof(tls_handshake_type_t) + sizeof(uint24_t);
+        pos += sizeof(tls_handshake_t);
+
+        binary_t handshake_hash;
+        auto lambda_do_transcript_hash = [&](tls_session* session, const byte_t* stream, size_t size, binary_t& digest) -> void {
+            auto& protection = session->get_tls_protection();
+            auto hash = protection.get_transcript_hash();
+            hash->digest(stream, size, digest);
+
+            s->printf("\e[1;35m> transcript hash\e[0m\n");
+            s->printf("  %s\n", base16_encode(digest).c_str());
+            s->printf("\e[1;35m  > input stream\e[0m\n");
+            dump_memory(stream, size, s, 16, 5, 0, dump_notrunc);
+            s->printf("\n");
+        };
 
         switch (handshake->msg_type) {
             case tls_handshake_client_hello: /* 1 */ {
                 ret = tls_dump_client_hello(s, session, stream, size, pos);
+                // cipher_suite not selected yet
+                session->set(session_item_t::item_client_hello, stream, size);  // temporary
             } break;
             case tls_handshake_server_hello: /* 2 */ {
                 ret = tls_dump_server_hello(s, session, stream, size, pos);
+
+                const binary_t& client_hello = session->get(session_item_t::item_client_hello);
+
+                auto& protection = session->get_tls_protection();
+                auto hash = protection.begin_transcript_hash();
+
+                // hello_hash = client_hello + server_hello
+                lambda_do_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);
+                binary_t hello_hash;
+                lambda_do_transcript_hash(session, stream, size, hello_hash);
+                protection.set_item(tls_secret_hello_hash, hello_hash);
+
+                session->erase(session_item_t::item_client_hello);
             } break;
             case tls_handshake_new_session_ticket: /* 4 */ {
                 //
@@ -81,6 +111,8 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 //     Extension extensions<0..2^16-1>;
                 // } EncryptedExtensions;
                 ret = tls_dump_encrypted_extensions(s, session, stream, size, pos);
+
+                lambda_do_transcript_hash(session, stream, size, handshake_hash);
             } break;
             case tls_handshake_certificate: /* 11 */ {
                 // RFC 4346 7.4.2. Server Certificate
@@ -92,6 +124,8 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 // RFC 4346 7.4.6. Client certificate
                 // RFC 4346 7.4.7. Client Key Exchange Message
                 ret = tls_dump_certificate(s, session, stream, size, pos);
+
+                lambda_do_transcript_hash(session, stream, size, handshake_hash);
             } break;
             case tls_handshake_certificate_request: /* 13 */ {
                 // RFC 4346 7.4.4. Certificate request
@@ -99,9 +133,11 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
             case tls_handshake_certificate_verify: /* 15 */ {
                 // RFC 4346 7.4.8. Certificate verify
                 ret = tls_dump_certificate_verify(s, session, stream, size, pos);
+
+                lambda_do_transcript_hash(session, stream, size, handshake_hash);
             } break;
             case tls_handshake_finished: /* 20 */ {
-                //
+                ret = tls_dump_finished(s, session, stream, size, pos);
             } break;
             case tls_handshake_key_update: /* 24 */ {
                 //
@@ -222,8 +258,6 @@ return_t tls_dump_client_hello(stream_t* s, tls_session* session, const byte_t* 
 
         while (errorcode_t::success == tls_dump_extension(s, session, stream, size, pos)) {
         };
-
-        session->set(session_item_t::item_client_hello, stream, size);  // client_hello for hello_hash
     }
     __finally2 {
         // do nothing
@@ -303,12 +337,11 @@ return_t tls_dump_server_hello(stream_t* s, tls_session* session, const byte_t* 
         s->autoindent(0);
         s->printf(" > %s %i(0x%02x)\n", constexpr_extensions, extension_len, extension_len);
 
-        session->set_cipher_suite(cipher_suite);
-
         while (errorcode_t::success == tls_dump_extension(s, session, stream, size, pos)) {
         };
 
-        session->set(session_item_t::item_server_hello, stream, size);  // server_hello for hello_hash
+        // cipher_suite
+        session->get_tls_protection().set_cipher_suite(cipher_suite);
     }
     __finally2 {
         // do nothing
@@ -388,7 +421,21 @@ return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* s
         s->autoindent(0);
         s->printf("\n");
 
-        session->set(session_item_t::item_server_certificate, cert);
+        // certificate (DER, public key)
+        if (0) {
+            X509* x509 = nullptr;
+            BIO* bio = BIO_new(BIO_s_mem());
+            BIO_write(bio, &cert[0], cert.size());
+            const byte_t* p = &cert[0];
+            x509 = d2i_X509(nullptr, &p, cert.size());
+            EVP_PKEY* pkey = X509_get_pubkey(x509);
+
+            dump_key(pkey, s, 15, 4, dump_notrunc);
+
+            BIO_free(bio);
+            EVP_PKEY_free(pkey);
+            X509_free(x509);
+        }
     }
     __finally2 {
         // do nothing
@@ -426,17 +473,33 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
         s->autoindent(4);
         s->printf(" > %s 0x%04x %s\n", constexpr_signature, scheme, advisor->signature_scheme_string(scheme).c_str());
         s->printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
+        s->printf(" > %s\n", constexpr_handshake_hash);
         dump_memory(handshake_hash, s, 16, 3, 0x00, dump_notrunc);
         s->printf("\n");
         s->autoindent(0);
         s->printf(" > %s %02x\n", constexpr_record, sign);
-        s->autoindent(0);
 
         tls_protection& protection = session->get_tls_protection();
-        protection.verify(session, scheme, session->get(session_item_t::item_server_certificate), handshake_hash);
+        ret = protection.certificate_verify(session, scheme, handshake_hash);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
 
-        // and then
-        session->erase(session_item_t::item_server_certificate);
+return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == s || nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tls_advisor* advisor = tls_advisor::get_instance();
+
+        payload pl;
+        // pl << new payload_member(
     }
     __finally2 {
         // do nothing

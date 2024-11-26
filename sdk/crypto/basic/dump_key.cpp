@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
@@ -340,7 +341,7 @@ static return_t RSA_solve(RSA* rsa) {
     return ret;
 }
 
-return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 indent) {
+return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 indent, uint8 flag) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -350,7 +351,9 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
             __leave2;
         }
 
-        stream->clear();
+        if (0 == (dump_notrunc & flag)) {
+            stream->clear();
+        }
 
         int type = EVP_PKEY_id(pkey);
         switch (type) {

@@ -49,6 +49,58 @@ void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
     advisor->get_names(category, event, ct, ev);
     bs.printf("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned int)s->size(), s->data());
     _logger->writeln(bs);
+}
+
+return_t dump_record(const char* text, tls_session* session, const binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == text || nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        _logger->hdump("! record", bin, 16, 3);
+
+        basic_stream bs;
+        size_t pos = 0;
+        ret = tls_dump_record(&bs, session, &bin[0], bin.size(), pos);
+
+        _logger->writeln(bs);
+        bs.clear();
+
+        _test_case.test(ret, __FUNCTION__, "%s - dump record", text);
+
+        // https://williamlieurance.com/tls-handshake-parser/
+        // _logger->writeln("copy and paste https://williamlieurance.com/tls-handshake-parser/");
+        // _logger->writeln(base16_encode(bin));
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t dump_handshake(const char* text, tls_session* session, const binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == text || nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        basic_stream bs;
+        size_t pos = 0;
+        ret = tls_dump_handshake(&bs, session, &bin[0], bin.size(), pos);
+
+        _logger->writeln(bs);
+        bs.clear();
+
+        _test_case.test(ret, __FUNCTION__, "%s - dump handshake", text);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 };
 
 tls_session rfc8448_session;
@@ -56,8 +108,8 @@ tls_session rfc8448_session;
 void test_rfc8448_2() {
     _test_case.begin("RFC 8448 2.  Private Keys");
     basic_stream bs;
-    crypto_key key;
     crypto_keychain keychain;
+    tls_protection& protection = rfc8448_session.get_tls_protection();
 
     {
         const char* n =
@@ -78,8 +130,9 @@ void test_rfc8448_2() {
             "97 0a ac 44 1c e4 e0 c3 08 8d f2 5a e6 79 23 3d f8 a3 bd a2 ff 99"
             "41";
 
-        keychain.add_rsa(&key, "server RSA certificate", "RSA", base16_decode_rfc(n), base16_decode_rfc(e), base16_decode_rfc(d));
-        dump_key(key.find("server RSA certificate"), &bs);
+        crypto_key& cert = protection.get_cert();
+        keychain.add_rsa(&cert, "server RSA certificate", "RSA", base16_decode_rfc(n), base16_decode_rfc(e), base16_decode_rfc(d));
+        dump_key(cert.find("server RSA certificate"), &bs);
         _logger->writeln(bs);
     }
 }
@@ -90,38 +143,13 @@ void test_rfc8448_3() {
     basic_stream bs;
     size_t pos = 0;
     crypto_keychain keychain;
-    tls_protection& rfc8448_handshake_key = rfc8448_session.get_tls_protection();
+    tls_protection& protection = rfc8448_session.get_tls_protection();
 
-    auto lambda_dump_record = [&](const char* text, tls_session* session, const binary_t& bin) -> return_t {
-        // _logger->hdump(format("> %s", text), bin, 16, 3);
-
-        return_t ret = errorcode_t::success;
-        pos = 0;
-        ret = tls_dump_record(&bs, session, &bin[0], bin.size(), pos);
-        _logger->writeln(bs);
-        bs.clear();
-
-        // https://williamlieurance.com/tls-handshake-parser/
-        // _logger->writeln("copy and paste https://williamlieurance.com/tls-handshake-parser/");
-        // _logger->writeln(base16_encode(bin));
-
-        return ret;
-    };
-    auto lambda_dump_handshake = [&](const char* text, tls_session* session, const binary_t& bin) -> return_t {
-        // _logger->hdump(format("> %s", text), bin, 16, 3);
-
-        return_t ret = errorcode_t::success;
-        pos = 0;
-        ret = tls_dump_handshake(&bs, session, &bin[0], bin.size(), pos);
-        _logger->writeln(bs);
-        bs.clear();
-
-        return ret;
-    };
-
+    // read client_epk.pub @client_hello
     // {client}  create an ephemeral x25519 key pair:
-    // # ECDH(priv, pub) --> shared_secret
+    // # ECDH(server_epk.priv, client_epk.pub) --> shared_secret
     {
+        constexpr char constexpr_client_epk[] = "client epk";
         const char* x =
             "99 38 1d e5 60 e4 bd 43 d2 3d 8e 43 5a 7d"
             "ba fe b3 c0 6e 51 c1 3c ae 4d 54 13 69 1e 52 9a af 2c";
@@ -130,8 +158,10 @@ void test_rfc8448_3() {
             "49 af 42 ba 7f 79 94 85 2d 71 3e f2 78"
             "4b cb ca a7 91 1d e2 6a dc 56 42 cb 63 45 40 e7 ea 50 05";
         crypto_key key;
-        keychain.add_ec(&key, "client epk", "X25519", "X25519", base16_decode_rfc(x), base16_decode_rfc(y), base16_decode_rfc(d));
-        dump_key(key.find("client epk"), &bs);
+        keychain.add_ec(&key, constexpr_client_epk, "X25519", "X25519", base16_decode_rfc(x), base16_decode_rfc(y), base16_decode_rfc(d));
+
+        _logger->writeln(constexpr_client_epk);
+        dump_key(key.find(constexpr_client_epk), &bs);
         _logger->writeln(bs);
         bs.clear();
     }
@@ -152,40 +182,6 @@ void test_rfc8448_3() {
             "02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01";
 
         // {client}  send handshake record:
-
-        // [
-        //   {
-        //     "ClientHello": {
-        //       "version": "Tls12",
-        //       "random_data": "cb34ecb1e78163ba1c38c6dacb196a6dffa21a8d9912ec18a2ef628324dece7",
-        //       "session_id": "",
-        //       "cipherlist": [
-        //         "0x1301(TLS_AES_128_GCM_SHA256)",
-        //         "0x1303(TLS_CHACHA20_POLY1305_SHA256)",
-        //         "0x1302(TLS_AES_256_GCM_SHA384)"
-        //       ],
-        //       "compressionlist": [
-        //         "Null"
-        //       ],
-        //       "extensions": [
-        //         "TlsExtension::SNI([\"type=HostName,name=server\"])",
-        //         "TlsExtension::RenegotiationInfo(data=[])",
-        //         "TlsExtension::EllipticCurves([\"EcdhX25519\", \"Secp256r1\", \"Secp384r1\", \"Secp521r1\", \"Ffdhe2048\", \"Ffdhe3072\",
-        //              \"Ffdhe4096\", \"Ffdhe6144\", \"Ffdhe8192\"])",
-        //         "TlsExtension::SessionTicket(data=[])",
-        //         "TlsExtension::KeyShare(
-        //              data=[00 24 00 1d 00 20 99 38 1d e5 60 e4 bd 43 d2 3d 8e 43 5a 7d ba fe b3 c0 6e 51 c1 3c ae 4d 54 13 69 1e 52 9a af 2c])",
-        //         "TlsExtension::SupportedVersions(v=[\"Tls13\"])",
-        //         "TlsExtension::SignatureAlgorithms([\"ecdsa_secp256r1_sha256\", \"ecdsa_secp384r1_sha384\", \"ecdsa_secp521r1_sha512\", \"ecdsa_sha1\",
-        //             \"rsa_pss_rsae_sha256\", \"rsa_pss_rsae_sha384\", \"rsa_pss_rsae_sha512\", \"rsa_pkcs1_sha256\", \"rsa_pkcs1_sha384\",
-        //             \"rsa_pkcs1_sha512\", \"rsa_pkcs1_sha1\", \"HashSign(Sha256,Dsa)\", \"HashSign(Sha384,Dsa)\", \"HashSign(Sha512,Dsa)\",
-        //             \"HashSign(Sha1,Dsa)\"])",
-        //         "TlsExtension::PskExchangeModes([1])",
-        //         "TlsExtension::RecordSizeLimit(data=16385)"
-        //       ]
-        //     }
-        //   }
-        // ]
         const char* clienthello_record =
             "16 03 01 00 c4 01 00 00 c0 03 03 cb"
             "34 ec b1 e7 81 63 ba 1c 38 c6 da cb 19 6a 6d ff a2 1a 8d 99 12"
@@ -200,8 +196,24 @@ void test_rfc8448_3() {
 
         binary_t bin_clienthello_record = base16_decode_rfc(clienthello_record);
 
-        ret = lambda_dump_record("ClientHello", &rfc8448_session, bin_clienthello_record);
-        _test_case.test(ret, __FUNCTION__, "dump client_hello record");
+        dump_record("client_hello", &rfc8448_session, bin_clienthello_record);
+    }
+
+    // send server_epk.pub @server_hello
+    // {server}  create an ephemeral x25519 key pair:
+    // # ECDH(server_epk.priv, client_epk.pub) --> shared_secret
+    {
+        constexpr char constexpr_server_epk[] = "server epk";
+        const char* x = "c9828876112095fe66762bdbf7c672e156d6cc253b833df1dd69b1b04e751f0f";
+        const char* y = "";
+        const char* d = "b1580eeadf6dd589b8ef4f2d5652578cc810e9980191ec8d058308cea216a21e";
+        crypto_key key;
+        crypto_key& rfc8448_keys = protection.get_key();
+        keychain.add_ec_b16(&rfc8448_keys, constexpr_server_epk, "X25519", "X25519", x, y, d);
+
+        dump_key(rfc8448_keys.find(constexpr_server_epk), &bs);
+        _logger->writeln(bs);
+        bs.clear();
     }
 
     // {server}  construct a ServerHello handshake message:
@@ -215,39 +227,31 @@ void test_rfc8448_3() {
             "1d 00 20 c9 82 88 76 11 20 95 fe 66 76 2b db f7 c6 72 e1 56 d6"
             "cc 25 3b 83 3d f1 dd 69 b1 b0 4e 75 1f 0f 00 2b 00 02 03 04";
         binary_t bin_serverhello_record = base16_decode_rfc(serverhello_record);
-        ret = lambda_dump_record("ServerHello", &rfc8448_session, bin_serverhello_record);
-        _test_case.test(ret, __FUNCTION__, "dump server_hello record");
+        dump_record("server_hello", &rfc8448_session, bin_serverhello_record);
 
         // > handshake type 2 (server_hello)
         //  > cipher suite 0x1301 TLS_AES_128_GCM_SHA256
-        _test_case.assert(0x1301 == rfc8448_session.get_cipher_suite(), __FUNCTION__, "cipher suite");
+        _test_case.assert(0x1301 == protection.get_cipher_suite(), __FUNCTION__, "cipher suite");
     }
 
     auto lambda_test = [&](tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect) -> void {
-        rfc8448_handshake_key.get_item(tls_secret, secret);
+        protection.get_item(tls_secret, secret);
         _logger->writeln("> %s : %s", text, base16_encode(secret).c_str());
         _test_case.assert(secret == base16_decode(expect), __FUNCTION__, text);
     };
 
-    // {server}  create an ephemeral x25519 key pair:
-    // # ECDH(priv, pub) --> shared_secret
-    {
-        const char* x = "c9828876112095fe66762bdbf7c672e156d6cc253b833df1dd69b1b04e751f0f";
-        const char* y = "";
-        const char* d = "b1580eeadf6dd589b8ef4f2d5652578cc810e9980191ec8d058308cea216a21e";
-        crypto_key& rfc8448_keys = rfc8448_handshake_key.get_key();
-        keychain.add_ec_b16(&rfc8448_keys, "server epk", "X25519", "X25519", x, y, d);
-    }
+    // hello_hash, shared_secret, early_secret, ...
+    auto cipher_suite = protection.get_cipher_suite();
+    protection.calc(&rfc8448_session);
+
     {
         // # hash (ClientHello + ServerHello) --> hello_hash
         binary_t hello_hash;
-        rfc8448_handshake_key.calc_hello_hash(&rfc8448_session, hello_hash);
+        lambda_test(tls_secret_hello_hash, hello_hash, "hello_hash", "860c06edc07858ee8e78f0e7428c58edd6b43f2ca3e6e95f02ed063cf0e1cad8");
         // # ECDH(priv, pub) --> shared_secret
         binary_t shared_secret;
-        rfc8448_handshake_key.key_agreement(&rfc8448_session, shared_secret);
+        lambda_test(tls_secret_shared_secret, shared_secret, "shared_secret", "8bd4054fb55b9d63fdfbacf9f04b9f0d35e6d63f537563efd46272900f89492d");
         // compute ...
-        auto cipher_suite = rfc8448_session.get_cipher_suite();
-        rfc8448_handshake_key.calc(cipher_suite, hello_hash, shared_secret);
         // for more details ... see tls_protection::calc
         // hello_hash               860c06ed..
         // shared_secret            8bd4054f..
@@ -330,8 +334,7 @@ void test_rfc8448_3() {
             "1c 3b 84 e0 a8 b2 f7 59 40 9b a3 ea c9 d9 1d 40 2d cc 0c c8 f8"
             "96 12 29 ac 91 87 b4 2b 4d e1 00 00";
         binary_t bin_certificate = base16_decode_rfc(certificate);
-        ret = lambda_dump_handshake("certificate", &rfc8448_session, bin_certificate);
-        _test_case.test(ret, __FUNCTION__, "dump server_hello record");
+        dump_handshake("certificate", &rfc8448_session, bin_certificate);
     }
     {
         const char* certificate_verify =
@@ -343,8 +346,7 @@ void test_rfc8448_3() {
             "5c 9e a5 8c 18 1e 81 8e 95 b8 c3 fb 0b f3 27 84 09 d3 be 15 2a"
             "3d a5 04 3e 06 3d da 65 cd f5 ae a2 0d 53 df ac d4 2f 74 f3";
         binary_t bin_certificate_vertify = base16_decode_rfc(certificate_verify);
-        ret = lambda_dump_handshake("certificate_verify", &rfc8448_session, bin_certificate_vertify);
-        _test_case.test(ret, __FUNCTION__, "dump server_hello record");
+        dump_handshake("certificate_verify", &rfc8448_session, bin_certificate_vertify);
     }
 }
 
@@ -371,9 +373,10 @@ void test_rfc8448_7() {
 void test_tls13_xargs_org() {
     _test_case.begin("https://tls13.xargs.org/");
 
+    return_t ret = errorcode_t::success;
     tls_session server_session;
     tls_session client_session;
-    tls_protection& rfc8448_handshake_key = server_session.get_tls_protection();
+    tls_protection& protection = server_session.get_tls_protection();
     crypto_keychain keychain;
     openssl_digest dgst;
     openssl_kdf kdf;
@@ -382,6 +385,43 @@ void test_tls13_xargs_org() {
     binary_t bin_clienthello_record;
     binary_t bin_serverhello_record;
     tls_advisor* advisor = tls_advisor::get_instance();
+
+    {
+        const char* servercert =
+            "-----BEGIN CERTIFICATE-----\n"
+            "MIIDITCCAgmgAwIBAgIIFVqSrcIEj5AwDQYJKoZIhvcNAQELBQAwIjELMAkGA1UE\n"
+            "BhMCVVMxEzARBgNVBAoTCkV4YW1wbGUgQ0EwHhcNMTgxMDA1MDEzODE3WhcNMTkx\n"
+            "MDA1MDEzODE3WjArMQswCQYDVQQGEwJVUzEcMBoGA1UEAxMTZXhhbXBsZS51bGZo\n"
+            "ZWltLm5ldDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMSANga650dr\n"
+            "CJQE7Ke2kQQ/95K8Ge77fXTXqA0AHntLOkrmD+jAcfxz5wJMDbz0vdEdOWu6cEZK\n"
+            "E+lK+D3z4QlZVHvJVftBLaN2UhHh89x3bKpTN27KOuy+w6q3OzHVbLZSnICYvMng\n"
+            "KBjiC/f4oDr9FwRQns55vZ858epp7EeXLoMPtcqV3pWh5gQi1e6+UnlUoee/iob2\n"
+            "Rm0NnxaVGkz3oEaSWVwTUvJUnlr7Tr/XejeVAUTkwCaHTGU+QH19IwdEAfSE/9CP\n"
+            "eh+gUhDR9PDVznlwKTLiyr5wH9+ta0u3EQH0S61mahETD+Lugp5NAp3JHN1nFtu5\n"
+            "BhiG7cG6lCECAwEAAaNSMFAwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsG\n"
+            "AQUFBwMCBggrBgEFBQcDATAfBgNVHSMEGDAWgBSJT95bzGniUs8+owDfsZe4HeHB\n"
+            "RjANBgkqhkiG9w0BAQsFAAOCAQEAWRZFppouN3nk9t0nGrocC/1s11WZtefDblM+\n"
+            "/zZZCEMkyeelBAedOeDUKYf/4+vdCcHPHZFEVYcLVx3Rm98dJPi7mhH+gP1ZK6A5\n"
+            "jN4R4mUeYYzlmPqW5Tcu7z0kiv3hdGPrv6u45NGrUCpU7ABk6S94GWYNPyfPIJ5m\n"
+            "f85a4uSsmcfJOBj4slEHIt/tl/MuPpNJ1MZsnqY5bXREYqBrQsbVumiOrDoBe938\n"
+            "jiz8rSfLadPM3KKAQURl0640jODzSrL7nGGDcTErGRBBZBwjfxGl1lyETwQEhJk4\n"
+            "cSuVntaFvFxd1kXtGZCUc0ApJty0DjRpoVlB6OLMqEu2CEY2oA==\n"
+            "-----END CERTIFICATE-----";
+
+        X509* cert = nullptr;
+        BIO* bio = BIO_new(BIO_s_mem());
+        BIO_write(bio, servercert, strlen(servercert));
+        cert = PEM_read_bio_X509(bio, NULL, NULL, NULL);
+        EVP_PKEY* pkey = X509_get_pubkey(cert);
+
+        dump_key(pkey, &bs);
+        _logger->writeln(bs);
+        bs.clear();
+
+        BIO_free(bio);
+        EVP_PKEY_free(pkey);
+        X509_free(cert);
+    }
 
     /**
      * https://tls13.xargs.org/#client-key-exchange-generation
@@ -428,11 +468,7 @@ void test_tls13_xargs_org() {
             "D6 36 58 80 D1 AE EA 32 9A DF 91 21 38 38 51 ED"
             "21 A2 8E 3B 75 E9 65 D0 D2 CD 16 62 54 -- -- --";
         bin_clienthello_record = base16_decode_rfc(clienthello_record);
-        pos = 0;
-        tls_dump_record(&bs, &server_session, &bin_clienthello_record[0], bin_clienthello_record.size(), pos);
-        // _logger->hdump("> client hello", bin_clienthello_record, 16, 3);
-        _logger->writeln(bs);
-        bs.clear();
+        dump_record("client_hello", &server_session, bin_clienthello_record);
     }
     // https://tls13.xargs.org/#server-key-exchange-generation
     binary_t shared_secret;
@@ -440,10 +476,9 @@ void test_tls13_xargs_org() {
         const char* x = "9fd7ad6dcff4298dd3f96d5b1b2af910a0535b1488d7f8fabb349a982880b615";
         const char* y = "";
         const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";
-        crypto_key& server_keys = rfc8448_handshake_key.get_key();
+        crypto_key& server_keys = protection.get_key();
         keychain.add_ec_b16(&server_keys, "server key", "X25519", "X25519", x, y, d);
 
-        basic_stream bs;
         dump_key(server_keys.find("server key"), &bs);
         _logger->writeln(bs);
         bs.clear();
@@ -460,48 +495,30 @@ void test_tls13_xargs_org() {
             "D7 AD 6D CF F4 29 8D D3 F9 6D 5B 1B 2A F9 10 A0"
             "53 5B 14 88 D7 F8 FA BB 34 9A 98 28 80 B6 15 --";
         bin_serverhello_record = base16_decode_rfc(serverhello_record);
-        pos = 0;
-        tls_dump_record(&bs, &server_session, &bin_serverhello_record[0], bin_serverhello_record.size(), pos);
-        // _logger->hdump("> server hello", bin_serverhello_record, 16, 3);
-        _logger->writeln(bs);
-        bs.clear();
+        dump_record("server_hello", &server_session, bin_serverhello_record);
     }
 
     // > handshake type 2 (server_hello)
     //  > cipher suite 0x1302 TLS_AES_256_GCM_SHA384
-    uint16 cipher_suite = server_session.get_cipher_suite();
+    uint16 cipher_suite = protection.get_cipher_suite();
     _test_case.assert(0x1302 == cipher_suite, __FUNCTION__, "cipher suite");
 
     // https://quic.xargs.org/#server-handshake-server_keys-calc
     {
-        rfc8448_handshake_key.key_agreement(&server_session, shared_secret);
-
-        // _logger->hdump("> shared secret", shared_secret, 16, 3);
-        _logger->writeln("> %s : %s", "shared_secret", base16_encode(shared_secret).c_str());
-        _test_case.assert(shared_secret == base16_decode("df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624"), __FUNCTION__, "shared secret");
-    }
-
-    {
-        // handshake
-        binary_t bin_clienthello_handshake;
-        binary_t bin_serverhello_handshake;
-        binary_append(bin_clienthello_handshake, &bin_clienthello_record[5], bin_clienthello_record.size() - 5);
-        binary_append(bin_serverhello_handshake, &bin_serverhello_record[5], bin_serverhello_record.size() - 5);
-
-        //  > cipher suite 0x1302 TLS_AES_256_GCM_SHA384
-        // ... Cipher AES_256_GCM for Protection, MAC SHA384 for Key Derivation
-
-        binary_t hello_hash;
-        rfc8448_handshake_key.calc_hello_hash(&server_session, hello_hash);
-        _test_case.assert(hello_hash == base16_decode_rfc("e05f64fcd082bdb0dce473adf669c2769f257a1c75a51b7887468b5e0e7a7de4f4d34555112077f16e079019d5a845bd"),
-                          __FUNCTION__, "hello_hash");
-        rfc8448_handshake_key.calc(cipher_suite, hello_hash, shared_secret);
+        protection.calc(&server_session);
 
         auto lambda_test = [&](tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect) -> void {
-            rfc8448_handshake_key.get_item(tls_secret, secret);
+            protection.get_item(tls_secret, secret);
             _logger->writeln("> %s : %s", text, base16_encode(secret).c_str());
             _test_case.assert(secret == base16_decode(expect), __FUNCTION__, text);
         };
+
+        binary_t hello_hash;
+        lambda_test(tls_secret_hello_hash, hello_hash, "hello_hash",
+                    "e05f64fcd082bdb0dce473adf669c2769f257a1c75a51b7887468b5e0e7a7de4f4d34555112077f16e079019d5a845bd");
+
+        binary_t shared_secret;
+        lambda_test(tls_secret_shared_secret, shared_secret, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
 
         binary_t early_secret;
         lambda_test(tls_secret_early_secret, early_secret, "early_secret",
@@ -526,8 +543,8 @@ void test_tls13_xargs_org() {
                     "1135b4826a9a70257e5a391ad93093dfd7c4214812f493b3e3daae1eb2b1ac69");
         binary_t client_handshake_iv;
         lambda_test(tls_secret_handshake_client_iv, client_handshake_iv, "client_handshake_iv", "4256d2e0e88babdd05eb2f27");
-        binary_t rfc8448_handshake_key;
-        lambda_test(tls_secret_handshake_server_key, rfc8448_handshake_key, "rfc8448_handshake_key",
+        binary_t server_handshake_key;
+        lambda_test(tls_secret_handshake_server_key, server_handshake_key, "server_handshake_key",
                     "9f13575ce3f8cfc1df64a77ceaffe89700b492ad31b4fab01c4792be1b266b7f");
         binary_t server_handshake_iv;
         lambda_test(tls_secret_handshake_server_iv, server_handshake_iv, "server_handshake_iv", "9563bc8b590f671f488d2da3");
@@ -536,10 +553,7 @@ void test_tls13_xargs_org() {
     {
         const char* change_cipher_spec = "14 03 03 00 01 01";
         binary_t bin_change_cipher_spec = base16_decode_rfc(change_cipher_spec);
-        pos = 0;
-        tls_dump_record(&bs, &server_session, &bin_change_cipher_spec[0], bin_change_cipher_spec.size(), pos);
-        _logger->writeln(bs);
-        bs.clear();
+        dump_record("change cipher spec", &server_session, bin_change_cipher_spec);
 
         _test_case.assert(0 == server_session.get_sequence(), __FUNCTION__, "seq 0");
     }
@@ -550,18 +564,13 @@ void test_tls13_xargs_org() {
             "17 03 03 00 17 6B E0 2F 9D A7 C2 DC 9D DE F5 6F"
             "24 68 B9 0A DF A2 51 01 AB 03 44 AE -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
-        pos = 0;
-        tls_dump_record(&bs, &server_session, &bin_record[0], bin_record.size(), pos);
-        _logger->writeln(bs);
-        bs.clear();
+        dump_record("wrapped-record", &server_session, bin_record);
 
         // TODO
         // https://tls13.xargs.org/#server-encrypted-extensions/annotated
 
         // > decrypted
         //   00000000 : 08 00 00 02 00 00 16 -- -- -- -- -- -- -- -- -- | .......
-
-        _test_case.assert(1 == server_session.get_sequence(), __FUNCTION__, "seq 1");
     }
     // https://tls13.xargs.org/#wrapped-record-2
     {
@@ -620,12 +629,7 @@ void test_tls13_xargs_org() {
             "19 A7 0E 3A 10 E3 08 41 58 FA A5 BA FA 30 18 6C"
             "6B 2F 23 8E B5 30 C7 3E -- -- -- -- -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
-        pos = 0;
-        tls_dump_record(&bs, &server_session, &bin_record[0], bin_record.size(), pos);
-        _logger->writeln(bs);
-        bs.clear();
-
-        _test_case.assert(2 == server_session.get_sequence(), __FUNCTION__, "seq 2");
+        dump_record("wrapped-record-2", &server_session, bin_record);
     }
     // https://tls13.xargs.org/certificate.html#server-certificate-detail/annotated
     // TODO
@@ -788,11 +792,19 @@ void test_tls13_xargs_org() {
         // > handshake type 15 (certificate_verify)
         //  > signature algorithm 0x0804 rsa_pss_rsae_sha256
         //  > len 0x0100(256)
-        pos = 0;
-        tls_dump_record(&bs, &server_session, &bin_record[0], bin_record.size(), pos);
-        _logger->writeln(bs);
-        bs.clear();
-        _test_case.assert(3 == server_session.get_sequence(), __FUNCTION__, "seq 3");
+        dump_record("wrapped-record-3", &server_session, bin_record);
+    }
+    // https://tls13.xargs.org/#wrapped-record-4
+    // https://tls13.xargs.org/#server-handshake-finished
+    {
+        const char* record =
+            "17 03 03 00 45 10 61 DE 27 E5 1C 2C 9F 34 29 11"
+            "80 6F 28 2B 71 0C 10 63 2C A5 00 67 55 88 0D BF"
+            "70 06 00 2D 0E 84 FE D9 AD F2 7A 43 B5 19 23 03"
+            "E4 DF 5C 28 5D 58 E3 C7 62 24 07 84 40 C0 74 23"
+            "74 74 4A EC F2 8C F3 18 2F D0 -- -- -- -- -- --";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("wrapped-record-4", &server_session, bin_record);
     }
 }
 

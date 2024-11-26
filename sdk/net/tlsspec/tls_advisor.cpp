@@ -336,6 +336,15 @@ const tls_alg_info_t* tls_advisor::hintof_tls_algorithm(uint16 code) {
     return item;
 }
 
+hash_algorithm_t tls_advisor::hash_alg_of(uint16 code) {
+    hash_algorithm_t alg = hash_alg_unknown;
+    const tls_alg_info_t* hint_tls_alg = hintof_tls_algorithm(code);
+    if (hint_tls_alg) {
+        alg = hint_tls_alg->mac;
+    }
+    return alg;
+}
+
 std::string tls_advisor::compression_method_string(uint8 code) {
     std::string value;
     if (0 == code) {

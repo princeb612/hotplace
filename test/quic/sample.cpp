@@ -854,39 +854,41 @@ void test_quic_xargs_org() {
             _logger->writeln(bs);
         }
 
-        binary_t shared_secret;
-        {
-            protection.key_agreement(&server_session, shared_secret);
-
-            // _logger->hdump("> shared secret", shared_secret, 16, 3);
-            _logger->writeln("> %s : %s", "shared_secret", base16_encode(shared_secret).c_str());
-            _test_case.assert(shared_secret == base16_decode("df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624"), __FUNCTION__,
-                              "shared secret");
-        }
-
         // https://quic.xargs.org/#server-handshake-keys-calc
         //  It then calculates the SHA256 hash of all handshake messages to this point (ClientHello and ServerHello).
         //  The hash does not include the 6-byte CRYPTO frame headers.
         //  This "hello_hash" is ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b:
 
-        binary_t hello_hash;
-        {
-            // Client Initial Packet .. Client Hello (quic_dump_frame)
-            // Server Initial Packet .. Server Hello (quic_dump_frame)
-            // const char* server_hello =
-            const char* expect_hello_hash = "ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b";
-
-            // > handshake type 2 (server_hello)
-            //  > cipher suite 0x1301 TLS_AES_128_GCM_SHA256
-            protection.calc_hello_hash(&server_session, hello_hash);
-
-            _logger->writeln("> %s : %s", "hello_hash", base16_encode(hello_hash).c_str());
-            _test_case.assert(hello_hash == base16_decode_rfc(expect_hello_hash), __FUNCTION__, "hello hash");
-        }
-
         // > handshake type 2 (server_hello)
         //  > cipher suite 0x1301 TLS_AES_128_GCM_SHA256
-        protection.calc(0x1301, hello_hash, shared_secret);
+        protection.calc(&server_session);
+
+        {
+            auto keysize = 0;
+            auto dlen = 0;
+            auto hashalg = 0;
+            std::string hashname;
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            const tls_alg_info_t* hint_tls_alg = tlsadvisor->hintof_tls_algorithm(0x1301);
+            if (hint_tls_alg) {
+                crypto_advisor* advisor = crypto_advisor::get_instance();
+                const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(hint_tls_alg->cipher);
+                const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
+                if (hint_cipher) {
+                    keysize = hint_cipher->keysize;
+                }
+                if (hint_mac) {
+                    dlen = hint_mac->digest_size;
+                    hashalg = hint_mac->algorithm;
+                    hashname = hint_mac->fetchname;
+                }
+            }
+            _logger->writeln("keysize : %i", keysize);
+            _logger->writeln("hash : %s", hashname.c_str());
+            _logger->writeln("dlen : %i", dlen);
+            _test_case.assert(keysize == 16, __FUNCTION__, "TLS_AES_128_GCM_SHA256 keysize %i", keysize);
+            _test_case.assert(dlen == 32, __FUNCTION__, "TLS_AES_128_GCM_SHA256 dlen %i", dlen);
+        }
 
         auto lambda_test = [&](tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect) -> void {
             protection.get_item(tls_secret, secret);
@@ -894,31 +896,10 @@ void test_quic_xargs_org() {
             _test_case.assert(secret == base16_decode(expect), __FUNCTION__, text);
         };
 
-        auto keysize = 0;
-        auto dlen = 0;
-        auto hashalg = 0;
-        std::string hashname;
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        const tls_alg_info_t* hint_tls_alg = tlsadvisor->hintof_tls_algorithm(0x1301);
-        if (hint_tls_alg) {
-            crypto_advisor* advisor = crypto_advisor::get_instance();
-            const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(hint_tls_alg->cipher);
-            const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
-            if (hint_cipher) {
-                keysize = hint_cipher->keysize;
-            }
-            if (hint_mac) {
-                dlen = hint_mac->digest_size;
-                hashalg = hint_mac->algorithm;
-                hashname = hint_mac->fetchname;
-            }
-        }
-        _logger->writeln("keysize : %i", keysize);
-        _logger->writeln("hash : %s", hashname.c_str());
-        _logger->writeln("dlen : %i", dlen);
-        _test_case.assert(keysize == 16, __FUNCTION__, "TLS_AES_128_GCM_SHA256 keysize %i", keysize);
-        _test_case.assert(dlen == 32, __FUNCTION__, "TLS_AES_128_GCM_SHA256 dlen %i", dlen);
-
+        binary_t shared_secret;
+        lambda_test(tls_secret_shared_secret, shared_secret, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
+        binary_t hello_hash;
+        lambda_test(tls_secret_hello_hash, hello_hash, "hello_hash", "ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b");
         binary_t early_secret;
         lambda_test(tls_secret_early_secret, early_secret, "early_secret", "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
         binary_t empty_hash;

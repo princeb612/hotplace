@@ -497,8 +497,17 @@ crypto_kty_t typeof_crypto_key(crypto_key_object& key);
  * @param   stream_t* stream [out]
  * @param   uint8 hex_part [inopt] default 15
  * @param   uint8 indent [inopt] default 4
+ * @param   uint8 flag [inopt]
+ * @sample
+ *          // case.1
+ *          bs.printf("informations");
+ *          dump_key(pkey, &bs);  // bs.clear()
+ *
+ *          // case.2
+ *          bs.printf("informations");
+ *          dump_key(pkey, &bs, 15, 4, dump_notrunc);
  */
-return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part = 15, uint8 indent = 4);
+return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part = 15, uint8 indent = 4, uint8 flag = 0);
 /**
  * @brief   pem
  * @param   const EVP_PKEY* pkey [in]

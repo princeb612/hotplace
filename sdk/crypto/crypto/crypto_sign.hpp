@@ -9,11 +9,12 @@
  * 2009.06.18   Soo Han, Kim        implemented (codename.merlin)
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_SIGN__
-#define __HOTPLACE_SDK_CRYPTO_SIGN__
+#ifndef __HOTPLACE_SDK_CRYPTO_CRYPTO_SIGN__
+#define __HOTPLACE_SDK_CRYPTO_CRYPTO_SIGN__
 
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/crypto/basic/openssl_sign.hpp>
+#include <sdk/crypto/crypto/types.hpp>
 
 namespace hotplace {
 namespace crypto {

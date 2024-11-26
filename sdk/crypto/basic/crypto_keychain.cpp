@@ -110,11 +110,27 @@ return_t crypto_keychain::write_pem_file(crypto_key* cryptokey, const char* file
     return ret;
 }
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, size_t bits, crypto_use_t use) { return add_rsa(cryptokey, nullptr, nullptr, bits, use); }
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, size_t bits, crypto_use_t use) {
+    return add_rsa(cryptokey, NID_rsaEncryption, nullptr, nullptr, bits, use);
+}
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, size_t bits, crypto_use_t use) { return add_rsa(cryptokey, kid, nullptr, bits, use); }
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, int nid, size_t bits, crypto_use_t use) {
+    return add_rsa(cryptokey, nid, nullptr, nullptr, bits, use);
+}
+
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, size_t bits, crypto_use_t use) {
+    return add_rsa(cryptokey, NID_rsaEncryption, kid, nullptr, bits, use);
+}
+
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, int nid, const char* kid, size_t bits, crypto_use_t use) {
+    return add_rsa(cryptokey, nid, kid, nullptr, bits, use);
+}
 
 return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, size_t bits, crypto_use_t use) {
+    return add_rsa(cryptokey, NID_rsaEncryption, kid, alg, bits, use);
+}
+
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, int nid, const char* kid, const char* alg, size_t bits, crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     EVP_PKEY_CTX* pkey_context = nullptr;
@@ -126,7 +142,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const 
             __leave2;
         }
 
-        pkey_context = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr);
+        pkey_context = EVP_PKEY_CTX_new_id(nid, nullptr);
         if (nullptr == pkey_context) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
@@ -138,8 +154,8 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const 
             __leave2_trace_openssl(ret);
         }
 
-        /* EVP_PKEY_CTX_set_rsa_keygen_bits(pkey_context, bits) */
-        ret_openssl = EVP_PKEY_CTX_ctrl(pkey_context, EVP_PKEY_RSA, EVP_PKEY_OP_KEYGEN, EVP_PKEY_CTRL_RSA_KEYGEN_BITS, bits, nullptr);
+        // ret_openssl = EVP_PKEY_CTX_ctrl(pkey_context, nid, EVP_PKEY_OP_KEYGEN, EVP_PKEY_CTRL_RSA_KEYGEN_BITS, bits, nullptr);
+        ret_openssl = EVP_PKEY_CTX_set_rsa_keygen_bits(pkey_context, bits);
         if (ret_openssl <= 0) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
@@ -171,6 +187,11 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, jwa_t 
 }
 
 return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, const binary_t& n, const binary_t& e, const binary_t& d,
+                                  crypto_use_t use) {
+    return add_rsa(cryptokey, NID_rsaEncryption, kid, alg, n, e, d, use);
+}
+
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, int nid, const char* kid, const char* alg, const binary_t& n, const binary_t& e, const binary_t& d,
                                   crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
@@ -206,6 +227,13 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const 
         RSA_set0_key(rsa, bn_n, bn_e, bn_d);
 
         pkey = EVP_PKEY_new();
+
+        ret_openssl = EVP_PKEY_set_type(pkey, nid);  // NID_rsaEncryption, NID_rsa, NID_rsassaPss
+        if (ret_openssl <= 0) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
+
         ret_openssl = EVP_PKEY_assign_RSA(pkey, rsa);
         if (ret_openssl <= 0) {
             ret = errorcode_t::internal_error;
@@ -215,11 +243,11 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const 
         // RSA_solve (rsa);
 
         crypto_key_object key(pkey, use, kid, alg);
-        cryptokey->add(key);
+        ret = cryptokey->add(key);
     }
     __finally2 {
         if (errorcode_t::success != ret) {
-            if (nullptr != pkey) {
+            if (pkey) {
                 EVP_PKEY_free(pkey);
             }
         }
@@ -236,6 +264,11 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, jwa_t 
 }
 
 return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, const binary_t& n, const binary_t& e, const binary_t& d,
+                                  const binary_t& p, const binary_t& q, const binary_t& dp, const binary_t& dq, const binary_t& qi, crypto_use_t use) {
+    return add_rsa(cryptokey, NID_rsaEncryption, kid, alg, n, e, d, p, q, dp, dq, qi, use);
+}
+
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, int nid, const char* kid, const char* alg, const binary_t& n, const binary_t& e, const binary_t& d,
                                   const binary_t& p, const binary_t& q, const binary_t& dp, const binary_t& dq, const binary_t& qi, crypto_use_t use) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
@@ -294,6 +327,13 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const 
         RSA_set0_crt_params(rsa, bn_dmp1, bn_dmq1, bn_iqmp);
 
         pkey = EVP_PKEY_new();
+
+        ret_openssl = EVP_PKEY_set_type(pkey, nid);  // NID_rsaEncryption, NID_rsa, NID_rsassaPss
+        if (ret_openssl <= 0) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
+
         ret_openssl = EVP_PKEY_assign_RSA(pkey, rsa);
         if (ret_openssl <= 0) {
             ret = errorcode_t::internal_error;
@@ -309,11 +349,11 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const 
 
         crypto_key_object key(pkey, use, kid, alg);
 
-        cryptokey->add(key);
+        ret = cryptokey->add(key);
     }
     __finally2 {
         if (errorcode_t::success != ret) {
-            if (nullptr != pkey) {
+            if (pkey) {
                 EVP_PKEY_free(pkey);
             }
         }
@@ -329,13 +369,19 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, jwa_t 
     return add_rsa(cryptokey, kid, hint ? hint->alg_name : nullptr, n, e, d, p, q, dp, dq, qi, use);
 }
 
-return_t crypto_keychain::add_rsa_b64u(crypto_key* crypto_key, const char* kid, const char* alg, const char* n_value, const char* e_value, const char* d_value,
+return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, const char* kid, const char* alg, const char* n_value, const char* e_value, const char* d_value,
                                        const char* p_value, const char* q_value, const char* dp_value, const char* dq_value, const char* qi_value,
                                        crypto_use_t use) {
+    return add_rsa_b64u(cryptokey, NID_rsaEncryption, kid, alg, n_value, e_value, d_value, p_value, q_value, dp_value, dq_value, qi_value, use);
+}
+
+return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, int nid, const char* kid, const char* alg, const char* n_value, const char* e_value,
+                                       const char* d_value, const char* p_value, const char* q_value, const char* dp_value, const char* dq_value,
+                                       const char* qi_value, crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == n_value || nullptr == e_value) {
+        if (nullptr == cryptokey || nullptr == n_value || nullptr == e_value) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -362,9 +408,9 @@ return_t crypto_keychain::add_rsa_b64u(crypto_key* crypto_key, const char* kid, 
             bin_dp = base64_decode(dp_value, strlen(dp_value), base64_encoding_t::base64url_encoding);
             bin_dq = base64_decode(dq_value, strlen(dq_value), base64_encoding_t::base64url_encoding);
             bin_qi = base64_decode(qi_value, strlen(qi_value), base64_encoding_t::base64url_encoding);
-            add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, use);
+            ret = add_rsa(cryptokey, nid, kid, alg, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, use);
         } else {
-            add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, use);
+            ret = add_rsa(cryptokey, nid, kid, alg, bin_n, bin_e, bin_d, use);
         }
     }
     __finally2 {
@@ -373,13 +419,19 @@ return_t crypto_keychain::add_rsa_b64u(crypto_key* crypto_key, const char* kid, 
     return ret;
 }
 
-return_t crypto_keychain::add_rsa_b64(crypto_key* crypto_key, const char* kid, const char* alg, const char* n_value, const char* e_value, const char* d_value,
+return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, const char* kid, const char* alg, const char* n_value, const char* e_value, const char* d_value,
                                       const char* p_value, const char* q_value, const char* dp_value, const char* dq_value, const char* qi_value,
                                       crypto_use_t use) {
+    return add_rsa_b64(cryptokey, NID_rsaEncryption, kid, alg, n_value, e_value, d_value, p_value, q_value, dp_value, dq_value, qi_value, use);
+}
+
+return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, int nid, const char* kid, const char* alg, const char* n_value, const char* e_value,
+                                      const char* d_value, const char* p_value, const char* q_value, const char* dp_value, const char* dq_value,
+                                      const char* qi_value, crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == n_value || nullptr == e_value) {
+        if (nullptr == cryptokey || nullptr == n_value || nullptr == e_value) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -406,9 +458,9 @@ return_t crypto_keychain::add_rsa_b64(crypto_key* crypto_key, const char* kid, c
             bin_dp = base64_decode(dp_value, strlen(dp_value), base64_encoding_t::base64_encoding);
             bin_dq = base64_decode(dq_value, strlen(dq_value), base64_encoding_t::base64_encoding);
             bin_qi = base64_decode(qi_value, strlen(qi_value), base64_encoding_t::base64_encoding);
-            add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, use);
+            add_rsa(cryptokey, nid, kid, alg, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, use);
         } else {
-            add_rsa(crypto_key, kid, alg, bin_n, bin_e, bin_d, use);
+            add_rsa(cryptokey, nid, kid, alg, bin_n, bin_e, bin_d, use);
         }
     }
     __finally2 {
@@ -417,21 +469,31 @@ return_t crypto_keychain::add_rsa_b64(crypto_key* crypto_key, const char* kid, c
     return ret;
 }
 
-return_t crypto_keychain::add_rsa_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d, crypto_use_t use) {
-    return add_rsa(crypto_key, kid, alg, base16_decode(n), base16_decode(e), base16_decode(d), use);
+return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, const char* kid, const char* alg, const char* n, const char* e, const char* d, crypto_use_t use) {
+    return add_rsa(cryptokey, NID_rsaEncryption, kid, alg, base16_decode(n), base16_decode(e), base16_decode(d), use);
 }
 
-return_t crypto_keychain::add_rsa(crypto_key* crypto_key, const char* kid, const char* alg, const byte_t* n, size_t size_n, const byte_t* e, size_t size_e,
+return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, int nid, const char* kid, const char* alg, const char* n, const char* e, const char* d,
+                                      crypto_use_t use) {
+    return add_rsa(cryptokey, nid, kid, alg, base16_decode(n), base16_decode(e), base16_decode(d), use);
+}
+
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, const byte_t* n, size_t size_n, const byte_t* e, size_t size_e,
                                   const byte_t* d, size_t size_d, crypto_use_t use) {
+    return add_rsa(cryptokey, NID_rsaEncryption, kid, alg, n, size_n, e, size_e, d, size_d, use);
+}
+
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, int nid, const char* kid, const char* alg, const byte_t* n, size_t size_n, const byte_t* e,
+                                  size_t size_e, const byte_t* d, size_t size_d, crypto_use_t use) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == n || nullptr == e) {
+        if (nullptr == cryptokey || nullptr == n || nullptr == e) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = add_rsa(crypto_key, kid, alg, binary(n, size_n), binary(e, size_e), binary(d, size_d), use);
+        ret = add_rsa(cryptokey, nid, kid, alg, binary(n, size_n), binary(e, size_e), binary(d, size_d), use);
     }
     __finally2 {
         // do nothing

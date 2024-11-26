@@ -19,10 +19,8 @@
 
 /* basic */
 #include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_aead.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
-#include <sdk/crypto/basic/crypto_sign.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/hmac_otp.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
@@ -34,6 +32,12 @@
 #include <sdk/crypto/basic/openssl_sign.hpp>
 #include <sdk/crypto/basic/time_otp.hpp>
 #include <sdk/crypto/basic/types.hpp>
+
+/* crypto */
+#include <sdk/crypto/crypto/crypto_aead.hpp>
+#include <sdk/crypto/crypto/crypto_encrypt.hpp>
+#include <sdk/crypto/crypto/crypto_hash.hpp>
+#include <sdk/crypto/crypto/crypto_sign.hpp>
 
 /* authenticode */
 #include <sdk/crypto/authenticode/authenticode.hpp>

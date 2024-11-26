@@ -8,18 +8,18 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto/basic/crypto_aead.hpp>
+#include <sdk/crypto/crypto/crypto_sign.hpp>
 
 namespace hotplace {
 namespace crypto {
 
-crypto_aead::crypto_aead(crypto_aead_scheme_t scheme) : _scheme(scheme) { _shared.make_share(this); }
+crypto_sign::crypto_sign(hash_algorithm_t hashalg) : _hashalg(hashalg) { _shared.make_share(this); }
 
-crypto_aead_scheme_t crypto_aead::get_scheme() { return _scheme; }
+hash_algorithm_t crypto_sign::get_digest() { return _hashalg; }
 
-void crypto_aead::addref() { _shared.addref(); }
+void crypto_sign::addref() { _shared.addref(); }
 
-void crypto_aead::release() { _shared.delref(); }
+void crypto_sign::release() { _shared.delref(); }
 
 }  // namespace crypto
 }  // namespace hotplace

@@ -265,7 +265,7 @@ return_t tls_dump_extension(stream_t* s, tls_session* session, const byte_t* str
                 pos += ext_len;
             } break;
             case tls_extension_pre_shared_key: /* 0x0029 */ {
-                // studying
+                // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_ke)
                 pos += ext_len;
             } break;
             case tls_extension_early_data: /* 0x002a */ {
@@ -353,6 +353,7 @@ return_t tls_dump_extension(stream_t* s, tls_session* session, const byte_t* str
             } break;
             case tls_extension_key_share: /* 0x0033 */ {
                 // RFC 8446 4.2.8.  Key Share
+                // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_dhe_ke)
 
                 constexpr char constexpr_len[] = "len";
                 constexpr char constexpr_group[] = "group";
@@ -386,7 +387,7 @@ return_t tls_dump_extension(stream_t* s, tls_session* session, const byte_t* str
                             s->printf("\n");
                             s->printf("   %s\n", base16_encode(pubkey).c_str());
 
-                            auto& keyshare = session->get_tls_protection().get_keyshare();
+                            auto& keyshare = session->get_tls_protection().get_keyexchange();
                             crypto_keychain keychain;
                             switch (group) {
                                 case 0x0017: /* secp256r1 */ {
