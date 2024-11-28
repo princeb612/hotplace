@@ -615,5 +615,32 @@ const char* nameof_alg(const hint_cipher_t* hint) {
     return ret_value;
 }
 
+const openssl_evp_cipher_method_older_t aes_wrap_methods[] = {
+    {
+        EVP_aes_128_wrap(),
+        {
+            crypt_algorithm_t::aes128,
+            crypt_mode_t::wrap,
+            "aes-128-wrap",
+        },
+    },
+    {EVP_aes_192_wrap(),
+     {
+         crypt_algorithm_t::aes192,
+         crypt_mode_t::wrap,
+         "aes-192-wrap",
+     }},
+    {
+        EVP_aes_256_wrap(),
+        {
+            crypt_algorithm_t::aes256,
+            crypt_mode_t::wrap,
+            "aes-256-wrap",
+        },
+    },
+};
+
+const size_t sizeof_aes_wrap_methods = RTL_NUMBER_OF(aes_wrap_methods);
+
 }  // namespace crypto
 }  // namespace hotplace

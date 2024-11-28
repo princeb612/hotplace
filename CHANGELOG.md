@@ -1,9 +1,14 @@
 # history
 
-* Revision 656
-  * [tested] RSA_PSS key
+* understanding ...
   * [study] QUIC (RFC 9001)
   * [study] TLS (RFC 4346, 8446, 8448)
+
+* Revision 657
+  * [added] ffdhe2048 ffdhe3072 ffdhe4096 ffdhe6144 ffdhe8192
+
+* Revision 656
+  * [tested] RSA_PSS key
 
 * Revision 654
   * [tested] stream autoindent

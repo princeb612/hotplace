@@ -62,6 +62,10 @@ class crypto_hash_builder {
 };
 
 /**
+ * @brief
+ * @remarks
+ *          RFC 8446 4.4.1.  The Transcript Hash
+ *          Transcript-Hash(M1, M2, ... Mn) = Hash(M1 || M2 || ... || Mn)
  * @sample
  *          transcript_hash hash(sha2_256);
  *          hash.digest((byte_t*)"hello", 5, hash1);  // hash1 = sha2_256("hello")

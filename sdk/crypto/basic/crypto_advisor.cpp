@@ -21,36 +21,6 @@ namespace crypto {
 
 #define CRYPT_CIPHER_VALUE(a, m) ((a << 16) | m)
 
-typedef struct _openssl_evp_cipher_method_older_t {
-    const EVP_CIPHER* _cipher;
-    hint_cipher_t method;
-} openssl_evp_cipher_method_older_t;
-
-const openssl_evp_cipher_method_older_t aes_wrap_methods[] = {
-    {
-        EVP_aes_128_wrap(),
-        {
-            crypt_algorithm_t::aes128,
-            crypt_mode_t::wrap,
-            "aes-128-wrap",
-        },
-    },
-    {EVP_aes_192_wrap(),
-     {
-         crypt_algorithm_t::aes192,
-         crypt_mode_t::wrap,
-         "aes-192-wrap",
-     }},
-    {
-        EVP_aes_256_wrap(),
-        {
-            crypt_algorithm_t::aes256,
-            crypt_mode_t::wrap,
-            "aes-256-wrap",
-        },
-    },
-};
-
 crypto_advisor crypto_advisor::_instance;
 
 crypto_advisor* crypto_advisor::get_instance() {
@@ -130,7 +100,7 @@ return_t crypto_advisor::build() {
         }
     }
 
-    for (i = 0; i < RTL_NUMBER_OF(aes_wrap_methods); i++) {
+    for (i = 0; i < sizeof_aes_wrap_methods; i++) {
         const openssl_evp_cipher_method_older_t* item = aes_wrap_methods + i;
         if (osslver < 0x30000000L) {
             _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(item->method.algorithm, item->method.mode), (EVP_CIPHER*)item->_cipher));
@@ -544,7 +514,7 @@ return_t crypto_advisor::cipher_for_each(std::function<void(const char*, uint32,
         const hint_cipher_t* item = evp_cipher_methods + i;
         f(nameof_alg(item), advisor_feature_cipher, user);
     }
-    for (auto i = 0; i < RTL_NUMBER_OF(aes_wrap_methods); i++) {
+    for (auto i = 0; i < sizeof_aes_wrap_methods; i++) {
         const openssl_evp_cipher_method_older_t* item = aes_wrap_methods + i;
         f(item->method.fetchname, advisor_feature_wrap, user);
     }

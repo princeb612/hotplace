@@ -99,6 +99,7 @@ class openssl_kdf {
      * @remarks
      */
     return_t hkdf_expand(binary_t& okm, const char* alg, size_t dlen, const binary_t& prk, const binary_t& info);
+    return_t hkdf_expand(binary_t& okm, hash_algorithm_t alg, size_t dlen, const binary_t& prk, const binary_t& info);
     /**
      * @brief   AES-based KDF_Expand
      * @param   binary_t& okm [out] output key material
@@ -141,6 +142,7 @@ class openssl_kdf {
      *  server_initial_secret = HKDF-Expand-Label(initial_secret, "server in", "", Hash.length)
      */
     return_t hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
+    return_t hkdf_expand_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
     /**
      * @brief   CMAC-based Extract-and-Expand Key Derivation Function (CKDF)
      * @param   binary_t& okm [out] output key material

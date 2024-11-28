@@ -652,7 +652,13 @@ class crypto_advisor : public traceable {
     critical_section _lock;
 };
 
+typedef struct _openssl_evp_cipher_method_older_t {
+    const EVP_CIPHER* _cipher;
+    hint_cipher_t method;
+} openssl_evp_cipher_method_older_t;
+
 extern const hint_cipher_t evp_cipher_methods[];
+extern const openssl_evp_cipher_method_older_t aes_wrap_methods[];
 extern const hint_digest_t evp_md_methods[];
 extern const hint_blockcipher_t hint_blockciphers[];
 extern const hint_curve_t hint_curves[];
@@ -664,6 +670,7 @@ extern const hint_kty_name_t hint_kty_names[];
 extern const hint_signature_t hint_signatures[];
 
 extern const size_t sizeof_evp_cipher_methods;
+extern const size_t sizeof_aes_wrap_methods;
 extern const size_t sizeof_evp_md_methods;
 extern const size_t sizeof_hint_blockciphers;
 extern const size_t sizeof_hint_curves;

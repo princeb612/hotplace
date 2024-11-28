@@ -1470,6 +1470,202 @@ return_t crypto_keychain::add_oct_b16(crypto_key* crypto_key, const char* kid, c
     return add_oct(crypto_key, kid, alg, base16_decode(k), use);
 }
 
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, int nid, const char* kid) {
+    return_t ret = errorcode_t::success;
+    EVP_PKEY* pkey = nullptr;
+    EVP_PKEY_CTX* ctx = nullptr;
+    int ret_openssl = 0;
+    EVP_PKEY* params = nullptr;
+    EVP_PKEY_CTX* keyctx = nullptr;
+
+    __try2 {
+        if (nullptr == cryptokey) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, nullptr);
+        ret_openssl = EVP_PKEY_paramgen_init(ctx);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        ret_openssl = EVP_PKEY_CTX_set_dh_nid(ctx, nid);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        ret_openssl = EVP_PKEY_paramgen(ctx, &params);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        keyctx = EVP_PKEY_CTX_new(params, nullptr);
+        if (nullptr == keyctx) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        ret_openssl = EVP_PKEY_keygen_init(keyctx);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        ret_openssl = EVP_PKEY_keygen(keyctx, &pkey);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        if (nullptr == pkey) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        if (pkey) {
+            crypto_key_object key(pkey, crypto_use_t::use_any, kid);
+            ret = cryptokey->add(key);
+        }
+    }
+    __finally2 {
+        if (keyctx) {
+            EVP_PKEY_CTX_free(keyctx);
+        }
+        if (params) {
+            EVP_PKEY_free(params);
+        }
+
+        if (ctx) {
+            EVP_PKEY_CTX_free(ctx);
+        }
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, int nid, const char* kid, const binary_t& pub, const binary_t& priv) {
+    return_t ret = errorcode_t::success;
+    EVP_PKEY* pkey = nullptr;
+    DH* dh = nullptr;
+    int ret_openssl = 0;
+    __try2 {
+        if (nullptr == cryptokey || pub.empty()) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        /**
+         * RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
+         * dh = DH_new
+         * BN_hex2bn(&p, "ffffffffffffffffadf85458a2bb4a9aafdc5620273d3cf1...")
+         * BN_hex2bn(&g, "02")
+         * DH_set0_pqg(dh, p, nullptr, g)
+         */
+        dh = DH_new_by_nid(nid);  // p, g, length
+        if (nullptr == dh) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        BIGNUM* bn_pub = nullptr;
+        BIGNUM* bn_priv = nullptr;
+
+        bn_pub = BN_bin2bn(&pub[0], pub.size(), nullptr);
+        if (priv.size()) {
+            bn_priv = BN_bin2bn(&priv[0], priv.size(), nullptr);
+        }
+
+        ret_openssl = DH_set0_key(dh, bn_pub, bn_priv);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        pkey = EVP_PKEY_new();
+        if (nullptr == pkey) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        ret_openssl = EVP_PKEY_assign_DH(pkey, dh);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        if (pkey) {
+            crypto_key_object key(pkey, crypto_use_t::use_any, kid);
+            ret = cryptokey->add(key);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, int nid, const char* kid, const char* pub, const char* priv) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == pub) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        binary_t pub_decoded;
+        binary_t priv_decoded;
+        pub_decoded = base64_decode(pub, strlen(pub), base64_encoding_t::base64url_encoding);
+        if (priv) {
+            priv_decoded = base64_decode(priv, strlen(priv), base64_encoding_t::base64url_encoding);
+        }
+        ret = add_dh(cryptokey, nid, kid, pub_decoded, priv_decoded);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, int nid, const char* kid, const char* pub, const char* priv) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == pub) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        binary_t pub_decoded;
+        binary_t priv_decoded;
+        pub_decoded = base64_decode(pub, strlen(pub), base64_encoding_t::base64_encoding);
+        if (priv) {
+            priv_decoded = base64_decode(priv, strlen(priv), base64_encoding_t::base64_encoding);
+        }
+        ret = add_dh(cryptokey, nid, kid, pub_decoded, priv_decoded);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, int nid, const char* kid, const char* pub, const char* priv) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == pub) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        binary_t pub_decoded;
+        binary_t priv_decoded;
+        pub_decoded = base16_decode(pub, strlen(pub));
+        if (priv) {
+            priv_decoded = base16_decode(priv, strlen(priv));
+        }
+        ret = add_dh(cryptokey, nid, kid, pub_decoded, priv_decoded);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 const EVP_PKEY* crypto_keychain::choose(crypto_key* key, const std::string& kid, crypto_kty_t kty, return_t& code) {
     const EVP_PKEY* pkey = nullptr;
     code = errorcode_t::not_exist;

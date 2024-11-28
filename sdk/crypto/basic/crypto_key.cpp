@@ -244,7 +244,9 @@ return_t crypto_key::add(crypto_key_object key, bool up_ref) {
         _key_map.insert(std::make_pair(key.get_kid(), key));
     }
     __finally2 {
-        // do nothing
+        if (errorcode_t::success != ret) {
+            EVP_PKEY_free((EVP_PKEY*)key.get_pkey());
+        }
     }
     return ret;
 }
@@ -340,6 +342,8 @@ return_t crypto_key::generate_nid(crypto_kty_t type, unsigned int param, const c
                     ret = keyset.add_ec(this, kid, param, crypto_use_t(use & ~crypto_use_t::use_enc | crypto_use_t::use_sig));
                     break;
             }
+        } else if (crypto_kty_t::kty_dh == type) {
+            ret = keyset.add_dh(this, param, kid);
         } else {
             ret = errorcode_t::not_supported;
         }
@@ -472,7 +476,7 @@ static bool find_discriminant(crypto_key_object item, const char* kid, const cha
             }
             const hint_signature_t* sig_info = advisor->hintof_jose_signature(alg);
             if (sig_info) {
-                ret = find_discriminant<jws_t>(item, kid, sig_info->jws_type, kt, alt, use, flags);
+                ret = find_discriminant<jws_t>(item, kid, typeof_jws(sig_info), kt, alt, use, flags);
                 if (ret) {
                     __leave2;
                 }
@@ -1040,7 +1044,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypt_sig_t alg, crypto_use_t 
             __leave2;
         }
 
-        const char* alg_str = alg_info->jws_name;
+        const char* alg_str = nameof_jws(alg_info);
         if (nullptr == alg_str) {
             __leave2;
         }
@@ -1049,7 +1053,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypt_sig_t alg, crypto_use_t 
         if (kid) {
             k = kid;
 
-            crypto_kty_t kt = alg_info->kty;
+            crypto_kty_t kt = typeof_kty(alg_info);
 
             crypto_key_map_t::iterator iter;
             crypto_key_map_t::iterator lower_bound;
@@ -1091,7 +1095,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, jws_t alg, crypto_use_t use, b
             __leave2;
         }
 
-        const char* alg_str = alg_info->jws_name;
+        const char* alg_str = nameof_jws(alg_info);
         if (nullptr == alg_str) {
             __leave2;
         }
@@ -1100,7 +1104,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, jws_t alg, crypto_use_t use, b
         if (kid) {
             k = kid;
 
-            crypto_kty_t kt = alg_info->kty;
+            crypto_kty_t kt = typeof_kty(alg_info);
 
             crypto_key_map_t::iterator iter;
             crypto_key_map_t::iterator lower_bound;
@@ -1575,6 +1579,23 @@ void crypto_key::for_each(void (*fp_dump)(crypto_key_object*, void*), void* para
         for (auto& pair : _key_map) {
             crypto_key_object& keyobj = pair.second;
             (*fp_dump)(&keyobj, param);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+}
+
+void crypto_key::for_each(std::function<void(crypto_key_object*, void*)> fp_dump, void* param) {
+    critical_section_guard guard(_lock);
+    __try2 {
+        if (nullptr == fp_dump) {
+            __leave2;
+        }
+
+        for (auto& pair : _key_map) {
+            crypto_key_object& keyobj = pair.second;
+            fp_dump(&keyobj, param);
         }
     }
     __finally2 {

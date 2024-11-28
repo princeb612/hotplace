@@ -98,7 +98,6 @@ void test_hash_hmac_sign() {
 void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const binary_t& input, const binary_t& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    openssl_sign sign;
 
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
     switch (alg) {
@@ -127,7 +126,9 @@ void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const binary_
         }
     }
 
+    // using openssl_sign
     if (errorcode_t::success == ret) {
+        openssl_sign sign;
         ret = sign.verify_ecdsa(pkey, alg, input, signature);
         const OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
 
@@ -145,9 +146,19 @@ void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const binary_
                 _logger->writeln("sig\n%s", bs.c_str());
             }
         }
+        _test_case.test(ret, __FUNCTION__, "ECDSA.openssl_sign %s %s", hint ? hint->name : "", hashalg);
     }
 
-    _test_case.test(ret, __FUNCTION__, "ECDSA %s %s", hint ? hint->name : "", hashalg);
+    // using crypto_sign
+    if (errorcode_t::success == ret) {
+        crypto_sign_builder builder;
+        crypto_sign* sign = builder.set_scheme(crypt_sig_ecdsa).set_digest(alg).build();
+        if (sign) {
+            ret = sign->verify(pkey, input, signature);
+            _test_case.test(ret, __FUNCTION__, "ECDSA.crypto_sign  %s %s", hint ? hint->name : "", hashalg);
+            sign->release();
+        }
+    }
 }
 
 void test_ecdsa_testvector(const test_vector_nist_cavp_ecdsa_t* vector, size_t sizeof_vector, int base16) {
@@ -244,52 +255,54 @@ void test_crypto_sign() {
     constexpr char sample[] = "We don't playing because we grow old; we grow old because we stop playing.";
     binary_t bin_sample = str2bin(sample);
 
-    auto lambda_sign_kid = [&](const char* text, const char* kid, crypto_kty_t kty, crypto_sign_scheme_t scheme, hash_algorithm_t alg, bool expect) -> void {
-        binary_t signature;
+    auto lambda_sign_kid = [&](const char* text, const char* kid, crypto_kty_t kty, crypt_sig_type_t scheme, hash_algorithm_t alg, bool expect) -> void {
+        binary_t signature1;
+        binary_t signature2;
         const EVP_PKEY* pkey = key.find(kid, kty);
         const char* algname = advisor->nameof_md(alg);
 
         crypto_sign_builder builder;
-        auto s = builder.set_scheme(scheme).set_digest(alg).build();
-        if (s) {
-            ret = s->sign(pkey, bin_sample, signature);
-            _logger->hdump(format("> %s", text), signature);
+        auto sign = builder.set_scheme(scheme).set_digest(alg).build();
+        if (sign) {
+            ret = sign->sign(pkey, bin_sample, signature2);
+            _logger->hdump(format("> %s", text), signature2);
             if (expect) {
                 _test_case.test(ret, __FUNCTION__, "%s kid:%s alg:%s #sign", text, kid, algname);
             } else {
                 _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "%s kid:%s alg:%s #sign-fail", text, kid, algname);
             }
 
-            ret = s->verify(pkey, bin_sample, signature);
+            ret = sign->verify(pkey, bin_sample, signature2);
             if (expect) {
                 _test_case.test(ret, __FUNCTION__, "%s kid:%s alg:%s #verify", text, kid, algname);
             } else {
                 _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "%s kid:%s alg:%s #verify-fail", text, kid, algname);
             }
 
-            s->release();
+            sign->release();
         }
     };
-    lambda_sign_kid("EdDSA", "Ed25519", kty_okp, sign_scheme_eddsa, hash_algorithm_t::hash_alg_unknown, true);
-    lambda_sign_kid("EdDSA", "Ed448", kty_okp, sign_scheme_eddsa, hash_algorithm_t::hash_alg_unknown, true);
-    lambda_sign_kid("ECDSA", "P-521", kty_ec, sign_scheme_ecdsa, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("ECDSA", "P-521", kty_ec, sign_scheme_ecdsa, hash_algorithm_t::sha2_384, false);
-    lambda_sign_kid("ECDSA", "P-521", kty_ec, sign_scheme_ecdsa, hash_algorithm_t::sha2_256, false);
-    lambda_sign_kid("ECDSA", "P-384", kty_ec, sign_scheme_ecdsa, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("ECDSA", "P-384", kty_ec, sign_scheme_ecdsa, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("ECDSA", "P-384", kty_ec, sign_scheme_ecdsa, hash_algorithm_t::sha2_256, false);
-    lambda_sign_kid("ECDSA", "P-256", kty_ec, sign_scheme_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "P-256", kty_ec, sign_scheme_ecdsa, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("ECDSA", "P-256", kty_ec, sign_scheme_ecdsa, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("RSA.RSA", "RSA", kty_rsa, sign_scheme_rsa_pkcs1, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("RSA.RSA", "RSA", kty_rsa, sign_scheme_rsa_pkcs1, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("RSA.RSA", "RSA", kty_rsa, sign_scheme_rsa_pkcs1, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("PSS.RSA", "RSA", kty_rsa, sign_scheme_rsa_pss, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("PSS.RSA", "RSA", kty_rsa, sign_scheme_rsa_pss, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("PSS.RSA", "RSA", kty_rsa, sign_scheme_rsa_pss, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("PSS.PSS", "RSA_PSS", kty_rsa, sign_scheme_rsa_pss, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("PSS.PSS", "RSA_PSS", kty_rsa, sign_scheme_rsa_pss, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("PSS.PSS", "RSA_PSS", kty_rsa, sign_scheme_rsa_pss, hash_algorithm_t::sha2_512, true);
+
+    lambda_sign_kid("EdDSA", "Ed25519", kty_okp, crypt_sig_eddsa, hash_algorithm_t::hash_alg_unknown, true);
+    lambda_sign_kid("EdDSA", "Ed448", kty_okp, crypt_sig_eddsa, hash_algorithm_t::hash_alg_unknown, true);
+    lambda_sign_kid("ECDSA", "P-521", kty_ec, crypt_sig_ecdsa, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("ECDSA", "P-521", kty_ec, crypt_sig_ecdsa, hash_algorithm_t::sha2_384, false);
+    lambda_sign_kid("ECDSA", "P-521", kty_ec, crypt_sig_ecdsa, hash_algorithm_t::sha2_256, false);
+    lambda_sign_kid("ECDSA", "P-384", kty_ec, crypt_sig_ecdsa, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("ECDSA", "P-384", kty_ec, crypt_sig_ecdsa, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("ECDSA", "P-384", kty_ec, crypt_sig_ecdsa, hash_algorithm_t::sha2_256, false);
+    lambda_sign_kid("ECDSA", "P-256", kty_ec, crypt_sig_ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "P-256", kty_ec, crypt_sig_ecdsa, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("ECDSA", "P-256", kty_ec, crypt_sig_ecdsa, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("RSA.RSA", "RSA", kty_rsa, crypt_sig_rsassa_pkcs15, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("RSA.RSA", "RSA", kty_rsa, crypt_sig_rsassa_pkcs15, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("RSA.RSA", "RSA", kty_rsa, crypt_sig_rsassa_pkcs15, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("PSS.RSA", "RSA", kty_rsa, crypt_sig_rsassa_pss, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("PSS.RSA", "RSA", kty_rsa, crypt_sig_rsassa_pss, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("PSS.RSA", "RSA", kty_rsa, crypt_sig_rsassa_pss, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("PSS.PSS", "RSA_PSS", kty_rsa, crypt_sig_rsassa_pss, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("PSS.PSS", "RSA_PSS", kty_rsa, crypt_sig_rsassa_pss, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("PSS.PSS", "RSA_PSS", kty_rsa, crypt_sig_rsassa_pss, hash_algorithm_t::sha2_512, true);
 }
 
 int main(int argc, char** argv) {

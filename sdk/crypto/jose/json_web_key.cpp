@@ -275,7 +275,16 @@ static void json_writer(crypto_key_object* key, void* param) {
         json_mapper_item_t item;
         item.key = *key;
         crypto_key::get_key(key->get_pkey(), mapper->flag, item.type, item.pub1, item.pub2, item.priv, true);
-        mapper->items.push_back(item);
+        switch (item.type) {
+            case kty_oct:
+            case kty_rsa:
+            case kty_ec:
+            case kty_okp:
+                mapper->items.push_back(item);
+                break;
+            default:
+                break;
+        }
     }
     __finally2 {
         // do nothing

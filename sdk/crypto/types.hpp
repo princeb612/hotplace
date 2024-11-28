@@ -276,6 +276,9 @@ enum crypt_item_t {
 
     item_ec_pub = 77,
 
+    item_dh_pub = 78,
+    item_dh_priv = 79,
+
     /* string */
     item_header = 128,  // p - header (protected_header.decoded)
     item_kid = 129,     // kid
@@ -298,6 +301,7 @@ enum crypto_kty_t {
     kty_rsa = 2,         // NID_rsaEncryption, NID_rsa, NID_rsassaPss
     kty_ec = 3,          // NID_X9_62_prime256v1, NID_secp384r1, NID_secp521r1
     kty_okp = 4,         // NID_X25519, NID_X448, NID_ED25519, NID_ED448
+    kty_dh = 5,          // NID_dhKeyAgreement
     kty_bad = 0xffff,
 };
 
@@ -380,6 +384,7 @@ enum jwe_t {
 };
 
 enum jws_group_t {
+    jws_group_unknown = 0,
     jws_group_hmac = 1,           // HS256, HS384, HS512
     jws_group_rsassa_pkcs15 = 2,  // RS256, RS384, RS512
     jws_group_ecdsa = 3,          // ES256, ES384, ES512
@@ -559,7 +564,7 @@ enum crypt_category_t {
     crypt_category_mac = 2,
     crypt_category_sign = 3,
     crypt_category_hash = 4,
-    crypt_category_keyagreement = 5,
+    crypt_category_keydistribution = 5,
 };
 
 enum cose_group_t {
@@ -878,6 +883,13 @@ typedef struct _hint_signature_t {
     uint32 count;
     uint32 nid[5];
 } hint_signature_t;
+
+crypt_sig_t typeof_sig(const hint_signature_t* hint);
+jws_t typeof_jws(const hint_signature_t* hint);
+jws_group_t typeof_group(const hint_signature_t* hint);
+crypto_kty_t typeof_kty(const hint_signature_t* hint);
+const char* nameof_jws(const hint_signature_t* hint);
+hash_algorithm_t typeof_alg(const hint_signature_t* hint);
 
 typedef struct _hint_kty_name_t {
     crypto_kty_t kty;

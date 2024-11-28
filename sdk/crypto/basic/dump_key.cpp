@@ -38,6 +38,9 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
     constexpr char constexpr_ec_pub[] = "public (04:x:y)";
     constexpr char constexpr_ec_d[] = "d (private)";
 
+    constexpr char constexpr_dh_pub[] = "public";
+    constexpr char constexpr_dh_priv[] = "private";
+
     std::map<crypt_item_t, const char*> table;
     t_maphint<crypt_item_t, const char*> hint(table);
 
@@ -55,6 +58,8 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
     table[crypt_item_t::item_ec_y] = constexpr_ec_y;
     table[crypt_item_t::item_ec_pub] = constexpr_ec_pub;
     table[crypt_item_t::item_ec_d] = constexpr_ec_d;
+    table[crypt_item_t::item_dh_pub] = constexpr_dh_pub;
+    table[crypt_item_t::item_dh_priv] = constexpr_dh_priv;
 
     __try2 {
         if (nullptr == stream) {
@@ -351,6 +356,9 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
             __leave2;
         }
 
+        if (0 == hex_part) {
+            hex_part = 16;
+        }
         if (0 == (dump_notrunc & flag)) {
             stream->clear();
         }
@@ -377,6 +385,9 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                 break;
             case EVP_PKEY_ED448:
                 stream->printf("Ed448");
+                break;
+            case EVP_PKEY_DH:
+                stream->printf("DH");
                 break;
             default:
                 ret = errorcode_t::not_supported;
@@ -450,26 +461,25 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                     }
                 }
                 break;
-            case EVP_PKEY_EC:
+            case EVP_PKEY_EC: {
                 stream->printf("curve ");
-                {
-                    uint32 nid = 0;
-                    nidof_evp_pkey(pkey, nid);
-                    const hint_curve_t* hint_curve = advisor->hintof_curve_nid(nid);
-                    if (hint_curve) {
-                        constexpr char constexpr_ec_crv[] = "%s aka ";
-                        stream->printf(constexpr_ec_crv, hint_curve->name);
-                        if (hint_curve->aka1) {
-                            stream->printf("%s ", hint_curve->aka1);
-                        }
-                        if (hint_curve->aka2) {
-                            stream->printf("%s ", hint_curve->aka2);
-                        }
-                        if (hint_curve->aka3) {
-                            stream->printf("%s ", hint_curve->aka3);
-                        }
-                        stream->printf("\n");
+
+                uint32 nid = 0;
+                nidof_evp_pkey(pkey, nid);
+                const hint_curve_t* hint_curve = advisor->hintof_curve_nid(nid);
+                if (hint_curve) {
+                    constexpr char constexpr_ec_crv[] = "%s aka ";
+                    stream->printf(constexpr_ec_crv, hint_curve->name);
+                    if (hint_curve->aka1) {
+                        stream->printf("%s ", hint_curve->aka1);
                     }
+                    if (hint_curve->aka2) {
+                        stream->printf("%s ", hint_curve->aka2);
+                    }
+                    if (hint_curve->aka3) {
+                        stream->printf("%s ", hint_curve->aka3);
+                    }
+                    stream->printf("\n");
                 }
 
                 pkey_param_printf(crypt_item_t::item_ec_x, pub1, stream, hex_part, indent);
@@ -484,27 +494,46 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                 if (is_private) {
                     pkey_param_printf(crypt_item_t::item_ec_d, priv, stream, hex_part, indent);
                 }
-                break;
+            } break;
             case EVP_PKEY_X25519:
             case EVP_PKEY_X448:
             case EVP_PKEY_ED25519:
-            case EVP_PKEY_ED448:
+            case EVP_PKEY_ED448: {
                 stream->printf("curve ");
-                {
-                    uint32 nid = 0;
-                    nidof_evp_pkey(pkey, nid);
-                    const hint_curve_t* hint_curve = advisor->hintof_curve_nid(nid);
-                    if (hint_curve) {
-                        stream->printf("%s", hint_curve->name);
-                        stream->printf("\n");
-                    }
+
+                uint32 nid = 0;
+                nidof_evp_pkey(pkey, nid);
+                const hint_curve_t* hint_curve = advisor->hintof_curve_nid(nid);
+                if (hint_curve) {
+                    stream->printf("%s", hint_curve->name);
+                    stream->printf("\n");
                 }
 
                 pkey_param_printf(crypt_item_t::item_ec_x, pub1, stream, hex_part, indent);
                 if (is_private) {
                     pkey_param_printf(crypt_item_t::item_ec_d, priv, stream, hex_part, indent);
                 }
-                break;
+            } break;
+            case EVP_PKEY_DH: {
+                auto dh = EVP_PKEY_get0_DH(pkey);
+                const BIGNUM* bn_pub = nullptr;
+                const BIGNUM* bn_priv = nullptr;
+                DH_get0_key(dh, &bn_pub, &bn_priv);
+                int nid = DH_get_nid(dh);
+                stream->printf(" %i\n", nid);
+
+                binary_t bin_pub;
+                binary_t bin_priv;
+                bin_pub.resize(BN_num_bytes(bn_pub));
+                BN_bn2bin(bn_pub, &bin_pub[0]);
+                pkey_param_printf(crypt_item_t::item_dh_pub, bin_pub, stream, hex_part, indent);
+
+                if (bn_priv) {
+                    bin_priv.resize(BN_num_bytes(bn_priv));
+                    BN_bn2bin(bn_priv, &bin_priv[0]);
+                    pkey_param_printf(crypt_item_t::item_dh_priv, bin_priv, stream, hex_part, indent);
+                }
+            } break;
             default:
                 break;
         }

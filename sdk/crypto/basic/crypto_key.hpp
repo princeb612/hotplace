@@ -454,6 +454,7 @@ class crypto_key {
      *  }
      */
     void for_each(void (*)(crypto_key_object*, void*), void* param);
+    void for_each(std::function<void(crypto_key_object*, void*)>, void* param);
 
    protected:
     /**

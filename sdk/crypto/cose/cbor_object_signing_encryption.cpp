@@ -458,8 +458,8 @@ return_t cbor_object_signing_encryption::subprocess(cose_context_t* handle, cryp
         cose_alg_t alg = layer->get_algorithm();
         crypt_category_t category = advisor->categoryof(alg);
 
-        if (crypt_category_t::crypt_category_keyagreement == category) {
-            ret = process_keyagreement(handle, key, layer, mode);
+        if (crypt_category_t::crypt_category_keydistribution == category) {
+            ret = process_keydistribution(handle, key, layer, mode);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -484,12 +484,12 @@ return_t cbor_object_signing_encryption::subprocess(cose_context_t* handle, cryp
             }
         } else if (crypt_category_t::crypt_category_crypt == category) {
             if (body.get_recipients().empty()) {
-                ret = process_keyagreement(handle, key, layer, mode);
+                ret = process_keydistribution(handle, key, layer, mode);
             }
             ret = docrypt(handle, key, layer, mode);
         } else if (crypt_category_t::crypt_category_mac == category) {
             if (body.get_recipients().empty()) {
-                ret = process_keyagreement(handle, key, layer, mode);
+                ret = process_keydistribution(handle, key, layer, mode);
             }
             ret = domac(handle, key, layer, mode);
         } else if (crypt_category_t::crypt_category_sign == category) {
@@ -606,8 +606,8 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
 
         if (crypt_category_t::crypt_category_crypt == category || crypt_category_t::crypt_category_mac == category) {
             std::multimap<crypt_category_t, cose_alg_t>::iterator lower_bound, upper_bound;
-            lower_bound = algmap.lower_bound(crypt_category_keyagreement);
-            upper_bound = algmap.upper_bound(crypt_category_keyagreement);
+            lower_bound = algmap.lower_bound(crypt_category_keydistribution);
+            upper_bound = algmap.upper_bound(crypt_category_keydistribution);
             for (algmap_iter = lower_bound; algmap_iter != upper_bound; algmap_iter++) {
                 cose_alg_t alg = algmap_iter->second;
                 std::string kid;
@@ -708,7 +708,7 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
         }
 
         // if kid not provided
-        if (crypt_category_t::crypt_category_keyagreement == category && kid.empty()) {
+        if (crypt_category_t::crypt_category_keydistribution == category && kid.empty()) {
             key->select(kid, alg);
             layer->get_unprotected().add(cose_key_t::cose_kid, kid);
         }
@@ -1090,7 +1090,7 @@ return_t cbor_object_signing_encryption::compose_mac_context(cose_context_t* han
     return ret;
 }
 
-return_t cbor_object_signing_encryption::preprocess_keyagreement(cose_context_t* handle, crypto_key* key, cose_layer* layer) {
+return_t cbor_object_signing_encryption::preprocess_keydistribution(cose_context_t* handle, crypto_key* key, cose_layer* layer) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -1165,7 +1165,7 @@ return_t cbor_object_signing_encryption::preprocess_keyagreement(cose_context_t*
     return ret;
 }
 
-return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode) {
+return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -1177,7 +1177,7 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
             __leave2;
         }
 
-        ret = preprocess_keyagreement(handle, key, layer);
+        ret = preprocess_keydistribution(handle, key, layer);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -1226,7 +1226,7 @@ return_t cbor_object_signing_encryption::process_keyagreement(cose_context_t* ha
                 dgst_klen = alg_hint->dgst.dlen;
             }
             if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
-                printf("process_keyagreement alg %i (%s)\n", alg, hint->name);
+                printf("process_keydistribution alg %i (%s)\n", alg, hint->name);
             }
 
             cose_group_t group = alg_hint->group;

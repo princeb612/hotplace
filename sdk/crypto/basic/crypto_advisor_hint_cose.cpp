@@ -54,42 +54,42 @@ const hint_cose_group_t hint_cose_groups[] = {
     },
     {
         cose_group_key_direct,  // 8
-        crypt_category_keyagreement,
+        crypt_category_keydistribution,
         cose_hint_agree | cose_hint_kty_oct,
     },
     {
         cose_group_key_hkdf_hmac,  // 9
-        crypt_category_keyagreement,
+        crypt_category_keydistribution,
         cose_hint_agree | cose_hint_salt | cose_hint_party | cose_hint_kty_oct,
     },
     {
         cose_group_key_hkdf_aes,  // 10
-        crypt_category_keyagreement,
+        crypt_category_keydistribution,
         cose_hint_agree | cose_hint_salt | cose_hint_party | cose_hint_kty_oct,
     },
     {
         cose_group_key_aeskw,  // 11
-        crypt_category_keyagreement,
+        crypt_category_keydistribution,
         cose_hint_agree | cose_hint_kek | cose_hint_kty_oct,
     },
     {
         cose_group_key_ecdhes_hmac,  // 12
-        crypt_category_keyagreement,
+        crypt_category_keydistribution,
         cose_hint_agree | cose_hint_salt | cose_hint_party | cose_hint_epk | cose_hint_kty_ec,
     },
     {
         cose_group_key_ecdhss_hmac,  // 13
-        crypt_category_keyagreement,
+        crypt_category_keydistribution,
         cose_hint_agree | cose_hint_salt | cose_hint_party | cose_hint_static_key | cose_hint_static_kid | cose_hint_kty_ec,
     },
     {
         cose_group_key_ecdhes_aeskw,  // 14
-        crypt_category_keyagreement,
+        crypt_category_keydistribution,
         cose_hint_agree | cose_hint_salt | cose_hint_party | cose_hint_kek | cose_hint_epk | cose_hint_kty_ec,
     },
     {
         cose_group_key_ecdhss_aeskw,  // 15
-        crypt_category_keyagreement,
+        crypt_category_keydistribution,
         cose_hint_agree | cose_hint_salt | cose_hint_party | cose_hint_kek | cose_hint_static_key | cose_hint_static_kid | cose_hint_kty_ec,
     },
     {
@@ -99,7 +99,7 @@ const hint_cose_group_t hint_cose_groups[] = {
     },
     {
         cose_group_key_rsa_oaep,  // 17
-        crypt_category_keyagreement,
+        crypt_category_keydistribution,
         cose_hint_agree | cose_hint_kek | cose_hint_kty_rsa,
     },
     {

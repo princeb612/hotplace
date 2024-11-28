@@ -79,6 +79,9 @@ crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
         case EVP_PKEY_ED448:
             kty = crypto_kty_t::kty_okp;
             break;
+        case EVP_PKEY_DH:
+            kty = crypto_kty_t::kty_dh;
+            break;
         default:
             break;
     }
@@ -129,6 +132,14 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
                 }
                 break;
             }
+            case EVP_PKEY_DH: {
+                auto dh = EVP_PKEY_get0_DH(pkey);
+                const BIGNUM* bn_priv = nullptr;
+                DH_get0_key(dh, nullptr, &bn_priv);
+                if (bn_priv) {
+                    result = true;
+                }
+            } break;
             default:
                 ret = errorcode_t::not_supported;
                 break;

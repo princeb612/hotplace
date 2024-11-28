@@ -200,6 +200,11 @@ return_t openssl_kdf::hkdf_expand(binary_t& okm, const char* alg, size_t dlen, c
     return ret;
 }
 
+return_t openssl_kdf::hkdf_expand(binary_t& okm, hash_algorithm_t alg, size_t dlen, const binary_t& prk, const binary_t& info) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    return hkdf_expand(okm, advisor->nameof_md(alg), dlen, prk, info);
+}
+
 return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, size_t dlen, const binary_t& prk, const binary_t& info) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -330,6 +335,12 @@ return_t openssl_kdf::hkdf_expand_label(binary_t& okm, const char* alg, uint16 l
     return ret;
 }
 
+return_t openssl_kdf::hkdf_expand_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& label,
+                                        const binary_t& context) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    return hkdf_expand_label(okm, advisor->nameof_md(alg), length, secret, label, context);
+}
+
 return_t openssl_kdf::ckdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen, const binary_t& ikm, const binary_t& salt, const binary_t& info) {
     return cmac_kdf(okm, alg, dlen, ikm, salt, info);
 }
@@ -368,7 +379,7 @@ return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, con
         if (0 == blocksize) {
             throw;
         }
-        auto algorithm = hint->algorithm;
+        auto algorithm = typeof_alg(hint);
 
         binary_t k;
         if (0 == salt.size()) {

@@ -2075,7 +2075,7 @@ void key_match(crypto_key* key, jws_t sig, crypto_use_t use) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const hint_signature_t* alg_info = advisor->hintof_jose_signature(sig);
 
-    print_text("try kt %d alg %s", alg_info->kty, alg_info->jws_name);
+    print_text("try kt %d alg %s", typeof_kty(alg_info), nameof_jws(alg_info));
     pkey = key->select(kid, sig, use);
     basic_stream bs;
     if (pkey) {

@@ -166,7 +166,6 @@ void tls_advisor::load_cipher_suites() {
     // RFC 5246 A.5.  The Cipher Suite
     _cipher_suites.insert({0x0000, "TLS_NULL_WITH_NULL_NULL"});  // MUST NOT be negotiated
     _cipher_suites.insert({0x0001, "TLS_RSA_WITH_NULL_MD5"});
-    _cipher_suites.insert({0x0001, "TLS_RSA_WITH_NULL_MD5"});
     _cipher_suites.insert({0x0002, "TLS_RSA_WITH_NULL_SHA"});
     _cipher_suites.insert({0x003b, "TLS_RSA_WITH_NULL_SHA256"});
     _cipher_suites.insert({0x0004, "TLS_RSA_WITH_RC4_128_MD5"});

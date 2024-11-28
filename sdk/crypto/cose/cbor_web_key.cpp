@@ -254,8 +254,6 @@ void cwk_writer(crypto_key_object* key, void* param) {
             __leave2;
         }
 
-        std::string kid = key->get_kid();
-
         crypto_kty_t kty;
         binary_t pub1;
         binary_t pub2;
@@ -269,6 +267,23 @@ void cwk_writer(crypto_key_object* key, void* param) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
+
+        bool skip = false;
+        switch (kty) {
+            case kty_oct:
+            case kty_rsa:
+            case kty_ec:
+            case kty_okp:
+                break;
+            default:
+                skip = true;
+                break;
+        }
+        if (skip) {
+            __leave2;
+        }
+
+        std::string kid = key->get_kid();
 
         cbor_map* keynode = nullptr;
         __try_new_catch(keynode, new cbor_map(), ret, __leave2);

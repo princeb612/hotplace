@@ -291,8 +291,8 @@ class cbor_object_signing_encryption {
     return_t compose_sign_context(cose_context_t* handle, cose_layer* layer, binary_t& tobesigned);
     return_t compose_mac_context(cose_context_t* handle, cose_layer* layer, binary_t& tomac);
 
-    return_t preprocess_keyagreement(cose_context_t* handle, crypto_key* key, cose_layer* layer);
-    return_t process_keyagreement(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode);
+    return_t preprocess_keydistribution(cose_context_t* handle, crypto_key* key, cose_layer* layer);
+    return_t process_keydistribution(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode);
 
     return_t docrypt(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode);
     return_t dosign(cose_context_t* handle, crypto_key* key, cose_layer* layer, cose_mode_t mode);

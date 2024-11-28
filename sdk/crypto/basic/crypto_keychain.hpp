@@ -37,16 +37,16 @@ class crypto_keychain {
      * @param int flags [in] reserved
      * @return error code (see error.hpp)
      */
-    virtual return_t load(crypto_key* crypto_key, const char* buffer, int flags = 0);
+    virtual return_t load(crypto_key* cryptokey, const char* buffer, int flags = 0);
     /**
      * @brief write
-     * @param crypto_key* crypto_key [in]
+     * @param crypto_key* cryptokey [in]
      * @param char* buf [out] null-terminated
      * @param size_t* buflen [inout]
      * @param int flag [in] 0 public only, 1 also private
      * @return error code (see error.hpp)
      */
-    virtual return_t write(crypto_key* crypto_key, char* buf, size_t* buflen, int flags = 0);
+    virtual return_t write(crypto_key* cryptokey, char* buf, size_t* buflen, int flags = 0);
     /**
      * @brief load key from a file
      * @param crypto_key * crypto_key [in]
@@ -54,7 +54,7 @@ class crypto_keychain {
      * @param int flags [in] reserved
      * @return error code (see error.hpp)
      */
-    virtual return_t load_file(crypto_key* crypto_key, const char* file, int flags = 0);
+    virtual return_t load_file(crypto_key* cryptokey, const char* file, int flags = 0);
     /**
      * @brief load PEM from a buffer
      * @param crypto_key * cryptokey [in]
@@ -71,7 +71,7 @@ class crypto_keychain {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
      * @return error code (see error.hpp)
      */
-    return_t load_pem_file(crypto_key* crypto_key, const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
+    return_t load_pem_file(crypto_key* cryptokey, const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief write to file
      * @param crypto_key * cryptokey [in]
@@ -99,14 +99,14 @@ class crypto_keychain {
     return_t write_pem_file(crypto_key* cryptokey, const char* file, int flags = 0);
 
     /**
-     * @brief generate rsa key
+     * @brief rsa key
      * @param crypto_key* cryptokey [in]
      * @param size_t bits [in] 1024, 2048, ...
      * @return error code (see error.hpp)
      */
     return_t add_rsa(crypto_key* cryptokey, size_t bits = 2048, crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate rsa key
+     * @brief rsa key
      * @param crypto_key* cryptokey [in]
      * @param int nid [in]
      *          6   EVP_PKEY_RSA        NID_rsaEncryption
@@ -117,7 +117,7 @@ class crypto_keychain {
      */
     return_t add_rsa(crypto_key* cryptokey, int nid, size_t bits = 2048, crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate rsa key
+     * @brief rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param size_t bits [in] 1024, 2048, ...
@@ -134,7 +134,7 @@ class crypto_keychain {
     return_t add_rsa(crypto_key* cryptokey, const char* kid, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     return_t add_rsa(crypto_key* cryptokey, int nid, const char* kid, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate rsa key
+     * @brief rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
@@ -144,7 +144,7 @@ class crypto_keychain {
     return_t add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     return_t add_rsa(crypto_key* cryptokey, int nid, const char* kid, const char* alg, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate rsa key
+     * @brief rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param jwa_t alg [in]
@@ -153,7 +153,7 @@ class crypto_keychain {
      */
     return_t add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, size_t bits, crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate rsa key
+     * @brief rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
@@ -167,7 +167,7 @@ class crypto_keychain {
     return_t add_rsa(crypto_key* cryptokey, int nid, const char* kid, const char* alg, const binary_t& n, const binary_t& e, const binary_t& d,
                      crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate rsa key
+     * @brief rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param jwa_t alg [inopt]
@@ -179,7 +179,7 @@ class crypto_keychain {
     return_t add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d,
                      crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate rsa key
+     * @brief rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
@@ -194,7 +194,7 @@ class crypto_keychain {
                      const binary_t& p, const binary_t& q, const binary_t& dp, const binary_t& dq, const binary_t& qi,
                      crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate rsa key
+     * @brief rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param jwa_t alg [in]
@@ -214,7 +214,7 @@ class crypto_keychain {
                      const binary_t& q, const binary_t& dp, const binary_t& dq, const binary_t& qi, crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief add
-     * @param crypto_key* crypto_key
+     * @param crypto_key* cryptokey
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
      * @param const char* n [in] public key
@@ -228,30 +228,30 @@ class crypto_keychain {
      * @param crypto_use_t use [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_rsa_b64u(crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d, const char* p = nullptr,
+    return_t add_rsa_b64u(crypto_key* cryptokey, const char* kid, const char* alg, const char* n, const char* e, const char* d, const char* p = nullptr,
                           const char* q = nullptr, const char* dp = nullptr, const char* dq = nullptr, const char* qi = nullptr,
                           crypto_use_t use = crypto_use_t::use_any);
-    return_t add_rsa_b64u(crypto_key* crypto_key, int nid, const char* kid, const char* alg, const char* n, const char* e, const char* d,
+    return_t add_rsa_b64u(crypto_key* cryptokey, int nid, const char* kid, const char* alg, const char* n, const char* e, const char* d,
                           const char* p = nullptr, const char* q = nullptr, const char* dp = nullptr, const char* dq = nullptr, const char* qi = nullptr,
                           crypto_use_t use = crypto_use_t::use_any);
-    return_t add_rsa_b64(crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d, const char* p = nullptr,
+    return_t add_rsa_b64(crypto_key* cryptokey, const char* kid, const char* alg, const char* n, const char* e, const char* d, const char* p = nullptr,
                          const char* q = nullptr, const char* dp = nullptr, const char* dq = nullptr, const char* qi = nullptr,
                          crypto_use_t use = crypto_use_t::use_any);
-    return_t add_rsa_b64(crypto_key* crypto_key, int nid, const char* kid, const char* alg, const char* n, const char* e, const char* d,
-                         const char* p = nullptr, const char* q = nullptr, const char* dp = nullptr, const char* dq = nullptr, const char* qi = nullptr,
+    return_t add_rsa_b64(crypto_key* cryptokey, int nid, const char* kid, const char* alg, const char* n, const char* e, const char* d, const char* p = nullptr,
+                         const char* q = nullptr, const char* dp = nullptr, const char* dq = nullptr, const char* qi = nullptr,
                          crypto_use_t use = crypto_use_t::use_any);
-    return_t add_rsa_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* n, const char* e, const char* d,
+    return_t add_rsa_b16(crypto_key* cryptokey, const char* kid, const char* alg, const char* n, const char* e, const char* d,
                          crypto_use_t use = crypto_use_t::use_any);
-    return_t add_rsa_b16(crypto_key* crypto_key, int nid, const char* kid, const char* alg, const char* n, const char* e, const char* d,
+    return_t add_rsa_b16(crypto_key* cryptokey, int nid, const char* kid, const char* alg, const char* n, const char* e, const char* d,
                          crypto_use_t use = crypto_use_t::use_any);
 
-    return_t add_rsa(crypto_key* crypto_key, const char* kid, const char* alg, const byte_t* n, size_t size_n, const byte_t* e, size_t size_e, const byte_t* d,
+    return_t add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, const byte_t* n, size_t size_n, const byte_t* e, size_t size_e, const byte_t* d,
                      size_t size_d, crypto_use_t use = crypto_use_t::use_any);
-    return_t add_rsa(crypto_key* crypto_key, int nid, const char* kid, const char* alg, const byte_t* n, size_t size_n, const byte_t* e, size_t size_e,
+    return_t add_rsa(crypto_key* cryptokey, int nid, const char* kid, const char* alg, const byte_t* n, size_t size_n, const byte_t* e, size_t size_e,
                      const byte_t* d, size_t size_d, crypto_use_t use = crypto_use_t::use_any);
 
     /**
-     * @brief generate ec key
+     * @brief ec key
      * @param crypto_key* cryptokey [in]
      * @param int nid [in]
      *    415 : NID_X9_62_prime256v1 (prime256v1)
@@ -265,7 +265,7 @@ class crypto_keychain {
      */
     return_t add_ec(crypto_key* cryptokey, int nid, crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate ec key
+     * @brief ec key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param int nid [in] see ec_curve_t
@@ -312,7 +312,7 @@ class crypto_keychain {
      */
     return_t add_ec(crypto_key* cryptokey, const char* kid, int nid, crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate ec key
+     * @brief ec key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
@@ -328,7 +328,7 @@ class crypto_keychain {
      */
     return_t add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate ec key
+     * @brief ec key
      * @param crypto_key* cryptokey [in]
      * @param int nid [in] see ec_curve_t
      *    415 : NID_X9_62_prime256v1 (prime256v1)
@@ -345,7 +345,7 @@ class crypto_keychain {
      */
     return_t add_ec(crypto_key* cryptokey, int nid, const binary_t& x, const binary_t& y, const binary_t& d, crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate ec key
+     * @brief ec key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param int nid [in] see ec_curve_t
@@ -364,7 +364,7 @@ class crypto_keychain {
     return_t add_ec(crypto_key* cryptokey, const char* kid, int nid, const binary_t& x, const binary_t& y, const binary_t& d,
                     crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate ec key
+     * @brief ec key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
@@ -384,7 +384,7 @@ class crypto_keychain {
     return_t add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, const binary_t& y, const binary_t& d,
                     crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate ec key
+     * @brief ec key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
@@ -400,7 +400,7 @@ class crypto_keychain {
     return_t add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, uint8 ybit, const binary_t& d,
                     crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief   generate ec key
+     * @brief   ec key
      * @param   crypto_key* cryptokey [in]
      * @param   const char* kid [inopt]
      * @param   int nid [in] see ec_curve_t
@@ -422,7 +422,7 @@ class crypto_keychain {
     return_t add_ec(crypto_key* cryptokey, const char* kid, int nid, const binary_t& x, uint8 ybit, const binary_t& d,
                     crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate ec key
+     * @brief ec key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
@@ -438,7 +438,7 @@ class crypto_keychain {
     return_t add_ec_nid_EC(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, const binary_t& y, const binary_t& d,
                            crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate ec key
+     * @brief ec key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
@@ -485,7 +485,7 @@ class crypto_keychain {
     return_t add_ec_nid_OKP(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const binary_t& x, const binary_t& d,
                             crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief generate ec key
+     * @brief ec key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param jwa_t alg [in]
@@ -506,7 +506,7 @@ class crypto_keychain {
                     crypto_use_t use = crypto_use_t::use_any);
     /**
      * @brief add
-     * @param crypto_key* crypto_key
+     * @param crypto_key* cryptokey
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
      * @param const char* curve [in]
@@ -516,41 +516,41 @@ class crypto_keychain {
      * @param crypto_use_t use [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_ec_b64u(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, const char* y, const char* d,
+    return_t add_ec_b64u(crypto_key* cryptokey, const char* kid, const char* alg, const char* curve, const char* x, const char* y, const char* d,
                          crypto_use_t use = crypto_use_t::use_any);
-    return_t add_ec_b64u(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const char* x, const char* y, const char* d,
-                         crypto_use_t use = crypto_use_t::use_any);
-
-    return_t add_ec_b64u(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, uint8 ybit, const char* d,
-                         crypto_use_t use = crypto_use_t::use_any);
-    return_t add_ec_b64u(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const char* x, uint8 ybit, const char* d,
+    return_t add_ec_b64u(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const char* x, const char* y, const char* d,
                          crypto_use_t use = crypto_use_t::use_any);
 
-    return_t add_ec_b64(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, uint8 ybit, const char* d,
+    return_t add_ec_b64u(crypto_key* cryptokey, const char* kid, const char* alg, const char* curve, const char* x, uint8 ybit, const char* d,
+                         crypto_use_t use = crypto_use_t::use_any);
+    return_t add_ec_b64u(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const char* x, uint8 ybit, const char* d,
+                         crypto_use_t use = crypto_use_t::use_any);
+
+    return_t add_ec_b64(crypto_key* cryptokey, const char* kid, const char* alg, const char* curve, const char* x, uint8 ybit, const char* d,
                         crypto_use_t use = crypto_use_t::use_any);
-    return_t add_ec_b64(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const char* x, uint8 ybit, const char* d,
+    return_t add_ec_b64(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const char* x, uint8 ybit, const char* d,
                         crypto_use_t use = crypto_use_t::use_any);
 
-    return_t add_ec_b64(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, const char* y, const char* d,
+    return_t add_ec_b64(crypto_key* cryptokey, const char* kid, const char* alg, const char* curve, const char* x, const char* y, const char* d,
                         crypto_use_t use = crypto_use_t::use_any);
-    return_t add_ec_b64(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const char* x, const char* y, const char* d,
-                        crypto_use_t use = crypto_use_t::use_any);
-
-    return_t add_ec_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, const char* y, const char* d,
-                        crypto_use_t use = crypto_use_t::use_any);
-    return_t add_ec_b16(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const char* x, const char* y, const char* d,
+    return_t add_ec_b64(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const char* x, const char* y, const char* d,
                         crypto_use_t use = crypto_use_t::use_any);
 
-    return_t add_ec_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const char* x, uint8 ybit, const char* d,
+    return_t add_ec_b16(crypto_key* cryptokey, const char* kid, const char* alg, const char* curve, const char* x, const char* y, const char* d,
                         crypto_use_t use = crypto_use_t::use_any);
-    return_t add_ec_b16(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const char* x, uint8 ybit, const char* d,
+    return_t add_ec_b16(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const char* x, const char* y, const char* d,
                         crypto_use_t use = crypto_use_t::use_any);
 
-    return_t add_ec(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const byte_t* x, size_t size_x, const byte_t* y, size_t size_y,
+    return_t add_ec_b16(crypto_key* cryptokey, const char* kid, const char* alg, const char* curve, const char* x, uint8 ybit, const char* d,
+                        crypto_use_t use = crypto_use_t::use_any);
+    return_t add_ec_b16(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const char* x, uint8 ybit, const char* d,
+                        crypto_use_t use = crypto_use_t::use_any);
+
+    return_t add_ec(crypto_key* cryptokey, const char* kid, const char* alg, const char* curve, const byte_t* x, size_t size_x, const byte_t* y, size_t size_y,
                     const byte_t* d, size_t size_d, crypto_use_t use = crypto_use_t::use_any);
-    return_t add_ec(crypto_key* crypto_key, const char* kid, const char* alg, int nid, const byte_t* x, size_t size_x, const byte_t* y, size_t size_y,
+    return_t add_ec(crypto_key* cryptokey, const char* kid, const char* alg, int nid, const byte_t* x, size_t size_x, const byte_t* y, size_t size_y,
                     const byte_t* d, size_t size_d, crypto_use_t use = crypto_use_t::use_any);
-    return_t add_ec(crypto_key* crypto_key, const char* kid, const char* alg, const char* curve, const binary_t& x, const binary_t& y, const binary_t& d,
+    return_t add_ec(crypto_key* cryptokey, const char* kid, const char* alg, const char* curve, const binary_t& x, const binary_t& y, const binary_t& d,
                     crypto_use_t use = crypto_use_t::use_any);
 
     /**
@@ -663,17 +663,48 @@ class crypto_keychain {
 
     /**
      * @brief add
-     * @param crypto_key* crypto_key
+     * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
      * @param const char* k [in]
      * @param crypto_use_t use [inopt]
      * @return error code (see error.hpp)
      */
-    return_t add_oct_b64u(crypto_key* crypto_key, const char* kid, const char* alg, const char* k, crypto_use_t use = crypto_use_t::use_any);
-    return_t add_oct_b64(crypto_key* crypto_key, const char* kid, const char* alg, const char* k, crypto_use_t use = crypto_use_t::use_any);
-    return_t add_oct_b16(crypto_key* crypto_key, const char* kid, const char* alg, const char* k, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct_b64u(crypto_key* cryptokey, const char* kid, const char* alg, const char* k, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct_b64(crypto_key* cryptokey, const char* kid, const char* alg, const char* k, crypto_use_t use = crypto_use_t::use_any);
+    return_t add_oct_b16(crypto_key* cryptokey, const char* kid, const char* alg, const char* k, crypto_use_t use = crypto_use_t::use_any);
 
+    /**
+     * @brief   DH key
+     * @param   crypto_key* cryptokey [in]
+     * @param   int nid [in]
+     *              // RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
+     *              1126 NID_ffdhe2048
+     *              1127 NID_ffdhe3072
+     *              1128 NID_ffdhe4096
+     *              1129 NID_ffdhe6144
+     *              1130 NID_ffdhe8192
+     * @param   const char* kid [inopt]
+     */
+    return_t add_dh(crypto_key* cryptokey, int nid, const char* kid);
+    /**
+     * @brief   DH key
+     * @param   crypto_key* cryptokey [in]
+     * @param   int nid [in]
+     *              // RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
+     *              1126 NID_ffdhe2048
+     *              1127 NID_ffdhe3072
+     *              1128 NID_ffdhe4096
+     *              1129 NID_ffdhe6144
+     *              1130 NID_ffdhe8192
+     * @param   const char* kid [inopt]
+     * @param   const binary_t& pub [in]
+     * @param   const binary_t& priv [in]
+     */
+    return_t add_dh(crypto_key* cryptokey, int nid, const char* kid, const binary_t& pub, const binary_t& priv);
+    return_t add_dh_b64u(crypto_key* cryptokey, int nid, const char* kid, const char* pub, const char* priv);
+    return_t add_dh_b64(crypto_key* cryptokey, int nid, const char* kid, const char* pub, const char* priv);
+    return_t add_dh_b16(crypto_key* cryptokey, int nid, const char* kid, const char* pub, const char* priv);
     /**
      * @brief   return key
      * @param   crypto_key* key [in]

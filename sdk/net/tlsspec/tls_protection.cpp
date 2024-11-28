@@ -357,7 +357,7 @@ return_t tls_protection::decrypt(tls_session* session, const byte_t* stream, siz
 return_t tls_protection::certificate_verify(tls_session* session, uint16 scheme, const binary_t& signature) {
     return_t ret = errorcode_t::success;
     __try2 {
-#if 1
+#if 0 // failed
         if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -406,18 +406,50 @@ return_t tls_protection::certificate_verify(tls_session* session, uint16 scheme,
             ret = errorcode_t::unknown;
             __leave2;
         } else {
-            // RFC 8446 4.4.3.  Certificate Verify
+            /**
+             * RFC 8446 4.4.  Authentication Messages
+             *
+             *  CertificateVerify:  A signature over the value
+             *     Transcript-Hash(Handshake Context, Certificate).
+             *
+             *  +-----------+-------------------------+-----------------------------+
+             *  | Mode      | Handshake Context       | Base Key                    |
+             *  +-----------+-------------------------+-----------------------------+
+             *  | Server    | ClientHello ... later   | server_handshake_traffic_   |
+             *  |           | of EncryptedExtensions/ | secret                      |
+             *  |           | CertificateRequest      |                             |
+             *  |           |                         |                             |
+             *  | Client    | ClientHello ... later   | client_handshake_traffic_   |
+             *  |           | of server               | secret                      |
+             *  |           | Finished/EndOfEarlyData |                             |
+             *  |           |                         |                             |
+             *  | Post-     | ClientHello ... client  | client_application_traffic_ |
+             *  | Handshake | Finished +              | secret_N                    |
+             *  |           | CertificateRequest      |                             |
+             *  +-----------+-------------------------+-----------------------------+
+             *
+             * RFC 8446 4.4.3.  Certificate Verify
+             */
 
-            binary_t handshake_hash;
+            // https://tls13.xargs.org/#server-certificate-verify/annotated
+            // ### find the hash of the conversation to this point, excluding
+            // ### 5-byte record headers or 1-byte wrapped record trailers
+            // $ handshake_hash=$((
+            //    tail -c +6 clienthello;
+            //    tail -c +6 serverhello;
+            //    perl -pe 's/.$// if eof' serverextensions;
+            //    perl -pe 's/.$// if eof' servercert) | openssl sha384)
+
+            binary_t hshash;
             auto hash = get_transcript_hash();  // hash(client_hello .. certificate)
-            hash->digest(handshake_hash);
+            hash->digest(hshash);
 
             constexpr char constexpr_context[] = "TLS 1.3, server CertificateVerify";
             basic_stream tosign;
-            tosign.fill(64, 0x20);
-            tosign << constexpr_context;
-            tosign.fill(1, 0x00);
-            tosign.write(&handshake_hash[0], handshake_hash.size());
+            tosign.fill(64, 0x20);                    // octet 32 (0x20) repeated 64 times
+            tosign << constexpr_context;              // context string
+            tosign.fill(1, 0x00);                     // single 0 byte
+            tosign.write(&hshash[0], hshash.size());  // content to be signed
 
             {
                 basic_stream bs;
@@ -428,8 +460,13 @@ return_t tls_protection::certificate_verify(tls_session* session, uint16 scheme,
                 fflush(stdout);
             }
 
+            // $ openssl x509 -pubkey -noout -in server.crt > server.pub
             crypto_key& key = session->get_tls_protection().get_cert();
             auto pkey = key.any();
+
+            // ### verify the signature
+            // $ cat /tmp/tosign | openssl dgst -verify server.pub -sha256 \
+            //     -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-1 -signature /tmp/sig
             ret = sign->verify(pkey, tosign.data(), tosign.size(), signature);
 
             sign->release();
