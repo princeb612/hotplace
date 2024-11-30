@@ -155,7 +155,12 @@ enum crypt_enc_t {
     rsa_oaep256 = 3,
     rsa_oaep384 = 4,
     rsa_oaep512 = 5,
-    ecies = 6,  // Elliptic Curve Integrated Encryption Scheme (not supported yet)
+
+    /* Integrated Encryption Scheme (IES) - not supported yet */
+    ecies = 6,  // Elliptic Curve Integrated Encryption Scheme
+    dlies = 7,  // Discrete Logarithm Integrated Encryption Scheme
+
+    dhies = 8,  // DHIES
 };
 
 /**

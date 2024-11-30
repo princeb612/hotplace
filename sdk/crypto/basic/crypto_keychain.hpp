@@ -34,7 +34,7 @@ class crypto_keychain {
      * @brief load key from a buffer
      * @param crypto_key * crypto_key [in]
      * @param const char* buffer [in]
-     * @param int flags [in] reserved
+     * @param int flag [in] 0 PEM, 1 Certificate
      * @return error code (see error.hpp)
      */
     virtual return_t load(crypto_key* cryptokey, const char* buffer, int flags = 0);
@@ -73,6 +73,23 @@ class crypto_keychain {
      */
     return_t load_pem_file(crypto_key* cryptokey, const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
     /**
+     * @brief load Certificate from a buffer
+     * @param crypto_key * cryptokey [in]
+     * @param const char* buffer [in]
+     * @param int flags [in]
+     * @return error code (see error.hpp)
+     */
+    return_t load_cert(crypto_key* cryptokey, const char* buffer, int flags, crypto_use_t use = crypto_use_t::use_any);
+    /**
+     * @brief load from a Certificate file
+     * @param crypto_key * crypto_key [in]
+     * @param const char* file [in]
+     * @param int flags [in] reserved
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
+     * @return error code (see error.hpp)
+     */
+    return_t load_cert_file(crypto_key* cryptokey, const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
+    /**
      * @brief write to file
      * @param crypto_key * cryptokey [in]
      * @param const char* file [in]
@@ -101,7 +118,7 @@ class crypto_keychain {
     /**
      * @brief rsa key
      * @param crypto_key* cryptokey [in]
-     * @param size_t bits [in] 1024, 2048, ...
+     * @param size_t bits [in] 2048, ...
      * @return error code (see error.hpp)
      */
     return_t add_rsa(crypto_key* cryptokey, size_t bits = 2048, crypto_use_t use = crypto_use_t::use_any);
@@ -112,7 +129,7 @@ class crypto_keychain {
      *          6   EVP_PKEY_RSA        NID_rsaEncryption
      *          19  EVP_PKEY_RSA2       NID_rsa
      *          912 EVP_PKEY_RSA_PSS    NID_rsassaPss
-     * @param size_t bits [in] 1024, 2048, ...
+     * @param size_t bits [in] 2048, ...
      * @return error code (see error.hpp)
      */
     return_t add_rsa(crypto_key* cryptokey, int nid, size_t bits = 2048, crypto_use_t use = crypto_use_t::use_any);
@@ -120,7 +137,7 @@ class crypto_keychain {
      * @brief rsa key
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
-     * @param size_t bits [in] 1024, 2048, ...
+     * @param size_t bits [in] 2048, ...
      * @return error code (see error.hpp)
      * @example
      *    crypto_keychain keyset;
@@ -138,7 +155,7 @@ class crypto_keychain {
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param const char* alg [inopt]
-     * @param size_t bits [in] 1024, 2048, ...
+     * @param size_t bits [in] 2048, ...
      * @return error code (see error.hpp)
      */
     return_t add_rsa(crypto_key* cryptokey, const char* kid, const char* alg, size_t bits, crypto_use_t use = crypto_use_t::use_any);
@@ -148,7 +165,7 @@ class crypto_keychain {
      * @param crypto_key* cryptokey [in]
      * @param const char* kid [inopt]
      * @param jwa_t alg [in]
-     * @param size_t bits [in] 1024, 2048, ...
+     * @param size_t bits [in] 2048, ...
      * @return error code (see error.hpp)
      */
     return_t add_rsa(crypto_key* cryptokey, const char* kid, jwa_t alg, size_t bits, crypto_use_t use = crypto_use_t::use_any);

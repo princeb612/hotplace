@@ -58,7 +58,8 @@
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
-#include <sdk/crypto/crypto/crypto_hash.hpp>
+#include <sdk/crypto/basic/types.hpp>
+#include <sdk/crypto/crypto/types.hpp>
 #include <sdk/net/types.hpp>
 
 namespace hotplace {
@@ -340,7 +341,7 @@ class tls_protection {
     /**
      * @brief   verify
      */
-    return_t certificate_verify(tls_session* session, uint16 scheme, const binary_t& signature);
+    crypto_sign* get_crypto_sign(uint16 scheme);
 
    private:
     uint8 _mode;  // see tls_mode_t
@@ -362,6 +363,7 @@ enum session_item_t {
 class tls_session {
    public:
     tls_session();
+    ~tls_session();
 
     tls_protection& get_tls_protection();
 
@@ -465,7 +467,7 @@ return_t tls_dump_change_cipher_spec(stream_t* s, tls_session* session, const by
 return_t tls_dump_alert(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 return_t tls_dump_application_data(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
-return_t tls_dump_extension(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 
 }  // namespace net
 }  // namespace hotplace

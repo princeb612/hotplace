@@ -838,9 +838,16 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
                     EVP_PKEY_CTX_set_rsa_oaep_md(pkey_context, md);
                     EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context, md);
                 } break;
-                default:
+                case crypt_enc_undefined:
                     break;
+                case ecies:
+                default: {
+                    ret = errorcode_t::not_supported;
+                } break;
             }
+        }
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
 
         size_t bufsize = 0;

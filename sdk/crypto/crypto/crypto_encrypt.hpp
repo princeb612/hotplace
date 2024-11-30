@@ -119,6 +119,27 @@ class crypto_encrypt {
     crypt_enc_t _enc;
 };
 
+class crypto_encrypt_rsa15 : public crypto_encrypt {
+   public:
+    crypto_encrypt_rsa15() : crypto_encrypt(rsa_1_5) {}
+};
+class crypto_encrypt_rsa_oaep : public crypto_encrypt {
+   public:
+    crypto_encrypt_rsa_oaep() : crypto_encrypt(rsa_oaep) {}
+};
+class crypto_encrypt_rsa_oaep256 : public crypto_encrypt {
+   public:
+    crypto_encrypt_rsa_oaep256() : crypto_encrypt(rsa_oaep256) {}
+};
+class crypto_encrypt_rsa_oaep384 : public crypto_encrypt {
+   public:
+    crypto_encrypt_rsa_oaep384() : crypto_encrypt(rsa_oaep384) {}
+};
+class crypto_encrypt_rsa_oaep512 : public crypto_encrypt {
+   public:
+    crypto_encrypt_rsa_oaep512() : crypto_encrypt(rsa_oaep512) {}
+};
+
 /**
  * @sample
  *          crypto_encrypt_builder builder;

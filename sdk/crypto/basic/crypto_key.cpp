@@ -95,7 +95,6 @@ return_t crypto_key::load_pem(const char* buffer, int flags, crypto_use_t use) {
 
 return_t crypto_key::load_pem_file(const char* file, int flags, crypto_use_t use) {
     return_t ret = errorcode_t::success;
-
     __try2 {
         if (nullptr == file) {
             ret = errorcode_t::invalid_parameter;
@@ -112,6 +111,74 @@ return_t crypto_key::load_pem_file(const char* file, int flags, crypto_use_t use
         }
 
         ret = load_pem(buffer.c_str(), flags, use);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_key::load_cert(const char* buffer, int flags, crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+    X509* cert = nullptr;
+    BIO* bio = nullptr;
+    EVP_PKEY* pkey = nullptr;
+    __try2 {
+        if (nullptr == buffer) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        bio = BIO_new(BIO_s_mem());
+        if (nullptr == bio) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        BIO_write(bio, buffer, strlen(buffer));
+        cert = PEM_read_bio_X509(bio, NULL, NULL, NULL);
+        if (nullptr == cert) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        pkey = X509_get_pubkey(cert);
+        if (nullptr == pkey) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        crypto_key_object key(pkey, use);
+        add(key);
+    }
+    __finally2 {
+        if (bio) {
+            BIO_free(bio);
+        }
+        if (cert) {
+            X509_free(cert);
+        }
+    }
+    return ret;
+}
+
+return_t crypto_key::load_cert_file(const char* file, int flags, crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == file) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        std::string buffer;
+        std::ifstream fs(file);
+        if (fs.is_open()) {
+            std::getline(fs, buffer, (char)fs.eof());
+        } else {
+            ret = errorcode_t::failed;
+            __leave2;
+        }
+
+        ret = load_cert(buffer.c_str(), flags, use);
     }
     __finally2 {
         // do nothing

@@ -21,16 +21,24 @@ namespace crypto {
 openssl_mac::openssl_mac() {}
 
 return_t openssl_mac::hmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output) {
+    return hmac(alg, key, &input[0], input.size(), output);
+}
+
+return_t openssl_mac::hmac(const char* alg, const binary_t& key, const byte_t* stream, size_t size, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
     openssl_hash hash;
 
     __try2 {
-        ret = hash.open(&handle, alg, &key[0], key.size());
-        if (errorcode_t::success != ret) {
+        if (nullptr == alg || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        hash.hash(handle, &input[0], input.size(), output);
+
+        ret = hash.open(&handle, alg, &key[0], key.size());
+        if (errorcode_t::success == ret) {
+            ret = hash.hash(handle, stream, size, output);
+        }
         hash.close(handle);
     }
     __finally2 {
@@ -41,16 +49,25 @@ return_t openssl_mac::hmac(const char* alg, const binary_t& key, const binary_t&
 }
 
 return_t openssl_mac::hmac(hash_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output) {
+    return hmac(alg, key, &input[0], input.size(), output);
+}
+
+return_t openssl_mac::hmac(hash_algorithm_t alg, const binary_t& key, const byte_t* stream, size_t size, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;
     openssl_hash hash;
 
     __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         ret = hash.open(&handle, alg, &key[0], key.size());
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        hash.hash(handle, &input[0], input.size(), output);
+        hash.hash(handle, stream, size, output);
         hash.close(handle);
     }
     __finally2 {

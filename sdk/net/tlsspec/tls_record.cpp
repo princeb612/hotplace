@@ -51,11 +51,11 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
         auto protocol_version = t_to_int<uint16>(pl.select(constexpr_record_version));
         auto len = t_to_int<uint16>(pl.select(constexpr_len));
 
-        s->autoindent(2);
         s->printf("# TLS Record\n");
-        s->printf("> content type %i (%s)\n", content_type, resource->content_type_string(content_type).c_str());
-        s->printf("> %s 0x%02x (%s)\n", constexpr_record_version, protocol_version, resource->tls_version_string(protocol_version).c_str());
-        s->autoindent(0);
+        dump_memory(stream, size, s, 16, 3, 0x00, dump_notrunc);
+        s->printf("\n");
+        s->printf("> content type 0x%02x(%i) (%s)\n", content_type, content_type, resource->content_type_string(content_type).c_str());
+        s->printf("> %s 0x%04x (%s)\n", constexpr_record_version, protocol_version, resource->tls_version_string(protocol_version).c_str());
         s->printf("> %s 0x%04x(%i)\n", constexpr_len, len, len);
 
         size_t tpos = 0;
@@ -68,32 +68,31 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 // struct {
                 //     enum { change_cipher_spec(1), (255) } type;
                 // } ChangeCipherSpec;
-                ret = tls_dump_change_cipher_spec(s, session, stream + pos, size - pos, tpos);  // TODO
-                pos += len;
+                tpos = pos;
+                ret = tls_dump_change_cipher_spec(s, session, stream, size, tpos);
             } break;
             case tls_content_type_alert: {
                 // RFC 8446 6.  Alert Protocol
                 // RFC 5246 7.2.  Alert Protocol
-                ret = tls_dump_alert(s, session, stream + pos, size - pos, tpos);  // TODO
-                pos += len;
+                tpos = pos;
+                ret = tls_dump_alert(s, session, stream, size, tpos);
             } break;
             case tls_content_type_handshake: {
-                ret = tls_dump_handshake(s, session, stream + pos, size - pos, tpos);
+                tpos = pos;
+                ret = tls_dump_handshake(s, session, stream, size, tpos);
             } break;
             case tls_content_type_application_data: {
                 tls_protection& protection = session->get_tls_protection();
                 binary_t decrypted;
                 binary_t tag;
-
                 ret = protection.decrypt(session, stream, len, decrypted, pos, tag, s);
                 if (errorcode_t::success == ret) {
-                    size_t hpos = 0;
-                    ret = tls_dump_handshake(s, session, &decrypted[0], decrypted.size(), hpos);
+                    tpos = 0;
+                    ret = tls_dump_handshake(s, session, &decrypted[0], decrypted.size(), tpos);
                 }
-                pos += len;
             } break;
         }
-        pos += tpos;
+        pos += len;
     }
     __finally2 {
         // do nothing

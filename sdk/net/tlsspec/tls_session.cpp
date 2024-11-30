@@ -15,6 +15,11 @@ namespace net {
 
 tls_session::tls_session() : _seq(0) {}
 
+tls_session::~tls_session() {
+    int dbg = 1;
+    _kv.clear();
+}
+
 tls_protection& tls_session::get_tls_protection() { return _tls_protection; }
 
 uint64 tls_session::get_sequence(bool inc) {
@@ -40,8 +45,8 @@ const binary_t& tls_session::get(session_item_t type) { return _kv[type]; }
 void tls_session::erase(session_item_t type) {
     auto iter = _kv.find(type);
     if (_kv.end() != iter) {
-        auto& bin = iter->second;
-        memset(&bin[0], 0, bin.size());
+        // auto& bin = iter->second;
+        // memset(&bin[0], 0, bin.size());
         _kv.erase(iter);
     }
 }

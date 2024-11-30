@@ -13,7 +13,7 @@
 #define __HOTPLACE_SDK_CRYPTO_CRYPTO_HASH__
 
 #include <sdk/base/system/shared_instance.hpp>
-#include <sdk/crypto/basic/openssl_crypt.hpp>
+#include <sdk/crypto/basic/openssl_hash.hpp>
 
 namespace hotplace {
 namespace crypto {

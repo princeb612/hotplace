@@ -4,6 +4,9 @@
   * [study] QUIC (RFC 9001)
   * [study] TLS (RFC 4346, 8446, 8448)
 
+* Revision 658
+  * [tested] TLS 1.3 certificate_verify, finished
+
 * Revision 657
   * [added] ffdhe2048 ffdhe3072 ffdhe4096 ffdhe6144 ffdhe8192
 

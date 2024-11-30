@@ -116,6 +116,21 @@ class crypto_key {
      * @return error code (see error.hpp)
      */
     return_t load_pem_file(const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
+    /**
+     * @brief load Certificate from the buffer
+     * @param const char* buffer [in]
+     * @param int flags [in]
+     * @return error code (see error.hpp)
+     */
+    return_t load_cert(const char* buffer, int flags, crypto_use_t use);
+    /**
+     * @brief load from a Certificate file
+     * @param const char* file [in]
+     * @param int flags [in] reserved
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
+     * @return error code (see error.hpp)
+     */
+    return_t load_cert_file(const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
 
     /**
      * @brief write PEM to the file

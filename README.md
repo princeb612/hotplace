@@ -226,13 +226,17 @@
 ## build
 
 * platform support - mingw, linux
-* packages to install
-  * gcc, g++, binutils, cmake, gdb
-  * openssl-devel jansson-devel zlib-devel unixodbc (MINGW)
-  * openssl-devel jansson zlib-devel unixodbc-devel (Rocky/CentOS/RHEL)
-  * libssl-dev libjansson-dev zlib1g-dev unixodbc-dev (ubuntu)
-  * valgrind (linux)
-  * clang-tools-extra
+  * ubuntu
+    * source env.ubuntu && install_packages
+  * MINGW64
+    * source env.mingw64 && install_packages
+  * packages to install
+    * gcc, g++, binutils, cmake, gdb
+    * openssl-devel jansson-devel zlib-devel unixodbc (MINGW)
+    * openssl-devel jansson zlib-devel unixodbc-devel (Rocky/CentOS/RHEL)
+    * libssl-dev libjansson-dev zlib1g-dev unixodbc-dev (ubuntu)
+    * valgrind (linux)
+    * clang-tools-extra
 * build script
   * cd hotplace
   * ./make.sh debug pch

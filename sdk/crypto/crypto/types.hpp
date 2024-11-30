@@ -24,6 +24,8 @@ class crypto_encrypt;
 class crypto_encrypt_builder;
 class crypto_hash;
 class crypto_hash_builder;
+class crypto_hmac;
+class crypto_hmac_builder;
 class crypto_sign;
 class crypto_sign_builder;
 class transcript_hash;

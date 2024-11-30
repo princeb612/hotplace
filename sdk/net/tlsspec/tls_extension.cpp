@@ -24,7 +24,7 @@ namespace net {
 
 // step.1 ... understanding TLS Extension
 
-return_t tls_dump_extension(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == s || nullptr == session || nullptr == stream) {
@@ -36,7 +36,6 @@ return_t tls_dump_extension(stream_t* s, tls_session* session, const byte_t* str
             __leave2;
         }
 
-        uint8 msg_type = stream[0];
         size_t begin = pos;
 
         tls_advisor* resource = tls_advisor::get_instance();
@@ -58,7 +57,7 @@ return_t tls_dump_extension(stream_t* s, tls_session* session, const byte_t* str
             ext_len = t_to_int<uint16>(pl.select(constexpr_ext_len));
         }
 
-        s->autoindent(6);
+        s->autoindent(3);
         s->printf("> %s - %04x %s\n", constexpr_extension, extension_type, resource->tls_extension_string(extension_type).c_str());
         s->printf(" > %s %i\n", constexpr_ext_len, ext_len);
 
@@ -278,7 +277,7 @@ return_t tls_dump_extension(stream_t* s, tls_session* session, const byte_t* str
                 constexpr char constexpr_versions[] = "supported versions";
                 constexpr char constexpr_version[] = "version";
 
-                switch (msg_type) {
+                switch (hstype) {
                     case tls_handshake_client_hello: {
                         payload pl;
                         pl << new payload_member(uint8(0), constexpr_versions) << new payload_member(binary_t(), constexpr_version);
@@ -364,7 +363,7 @@ return_t tls_dump_extension(stream_t* s, tls_session* session, const byte_t* str
                 //      NamedGroup group;
                 //      opaque key_exchange<1..2^16-1>;
                 //  } KeyShareEntry;
-                switch (msg_type) {
+                switch (hstype) {
                     case tls_handshake_client_hello: {
                         //  struct {
                         //      KeyShareEntry client_shares<0..2^16-1>;

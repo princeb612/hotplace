@@ -228,7 +228,9 @@ class openssl_mac {
     openssl_mac();
 
     return_t hmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output);
+    return_t hmac(const char* alg, const binary_t& key, const byte_t* stream, size_t size, binary_t& output);
     return_t hmac(hash_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output);
+    return_t hmac(hash_algorithm_t alg, const binary_t& key, const byte_t* stream, size_t size, binary_t& output);
     /**
      * @brief   AES Cipher-Based Message Authentication Code (AES-CMAC)
      * @desc    RFC 4493 The AES-CMAC Algorithm

@@ -16,7 +16,6 @@ set (SUPPORT_STATIC 1) # always set 1
 set (SUPPORT_SHARED 0) # set 1 in mingw, ubuntu, custom build
 set (SUPPORT_ODBC 0)   # 
 set (SUPPORT_PCH 0)    # cmake 2.x
-set (SUPPORT_QUIC 0)   # QUIC, HTTP/3 requires openssl minimum version 3.2
 set (SET_STDCPP c++14)
 
 if (NOT "$ENV{CXXFLAGS}" STREQUAL "")
@@ -34,9 +33,6 @@ if (NOT "$ENV{SUPPORT_SHARED}" STREQUAL "")
 endif ()
 if (NOT "$ENV{SUPPORT_ODBC}" STREQUAL "")
     set (SUPPORT_ODBC $ENV{SUPPORT_ODBC})
-endif ()
-if (NOT "$ENV{SUPPORT_QUIC}" STREQUAL "")
-    set (SUPPORT_QUIC $ENV{SUPPORT_QUIC})
 endif ()
 if(CMAKE_VERSION VERSION_GREATER 3.8)
     if (NOT "$ENV{SUPPORT_PCH}" STREQUAL "")
@@ -62,7 +58,6 @@ message (STATUS "SUPPORT_STATIC ${SUPPORT_STATIC}")
 message (STATUS "SUPPORT_SHARED ${SUPPORT_SHARED}")
 message (STATUS "SUPPORT_ODBC ${SUPPORT_ODBC}")
 message (STATUS "SUPPORT_PCH ${SUPPORT_PCH}")
-message (STATUS "SUPPORT_QUIC ${SUPPORT_QUIC}")
 
 # project modules
 set (PROJECT_SDK_MODULE_BASE ${CMAKE_PROJECT_NAME}-sdk-base)

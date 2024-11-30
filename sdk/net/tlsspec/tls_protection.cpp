@@ -16,6 +16,7 @@
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/crypto/crypto_aead.hpp>
+#include <sdk/crypto/crypto/crypto_hash.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
 #include <sdk/net/tlsspec/tlsspec.hpp>
 // debug
@@ -354,129 +355,47 @@ return_t tls_protection::decrypt(tls_session* session, const byte_t* stream, siz
     return ret;
 }
 
-return_t tls_protection::certificate_verify(tls_session* session, uint16 scheme, const binary_t& signature) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-#if 0 // failed
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        crypto_sign_builder builder;
-        crypto_sign* sign = nullptr;
-        switch (scheme) {
-            case 0x0401: /* rsa_pkcs1_sha256 */ {
-            } break;
-            case 0x0501: /* rsa_pkcs1_sha384 */ {
-            } break;
-            case 0x0601: /* rsa_pkcs1_sha512 */ {
-            } break;
-            case 0x0403: /* ecdsa_secp256r1_sha256 */ {
-            } break;
-            case 0x0503: /* ecdsa_secp384r1_sha384 */ {
-            } break;
-            case 0x0603: /* ecdsa_secp521r1_sha512 */ {
-            } break;
-            case 0x0804: /* rsa_pss_rsae_sha256 */ {
-                sign = builder.tls_sign_scheme(scheme).set_digest(sha2_256).build();
-            } break;
-            case 0x0805: /* rsa_pss_rsae_sha384 */ {
-                sign = builder.tls_sign_scheme(scheme).set_digest(sha2_384).build();
-            } break;
-            case 0x0806: /* rsa_pss_rsae_sha512 */ {
-                sign = builder.tls_sign_scheme(scheme).set_digest(sha2_512).build();
-            } break;
-            case 0x0807: /* ed25519 */
-            case 0x0808: /* ed448 */ {
-                sign = builder.tls_sign_scheme(scheme).build();
-            } break;
-            case 0x0809: /* rsa_pss_pss_sha256 */ {
-            } break;
-            case 0x080a: /* rsa_pss_pss_sha384 */ {
-            } break;
-            case 0x080b: /* rsa_pss_pss_sha512 */ {
-            } break;
-            case 0x0201: /* rsa_pkcs1_sha1 */ {
-            } break;
-            case 0x0203: /* ecdsa_sha1 */ {
-            } break;
-        }
-        if (nullptr == sign) {
-            ret = errorcode_t::unknown;
-            __leave2;
-        } else {
-            /**
-             * RFC 8446 4.4.  Authentication Messages
-             *
-             *  CertificateVerify:  A signature over the value
-             *     Transcript-Hash(Handshake Context, Certificate).
-             *
-             *  +-----------+-------------------------+-----------------------------+
-             *  | Mode      | Handshake Context       | Base Key                    |
-             *  +-----------+-------------------------+-----------------------------+
-             *  | Server    | ClientHello ... later   | server_handshake_traffic_   |
-             *  |           | of EncryptedExtensions/ | secret                      |
-             *  |           | CertificateRequest      |                             |
-             *  |           |                         |                             |
-             *  | Client    | ClientHello ... later   | client_handshake_traffic_   |
-             *  |           | of server               | secret                      |
-             *  |           | Finished/EndOfEarlyData |                             |
-             *  |           |                         |                             |
-             *  | Post-     | ClientHello ... client  | client_application_traffic_ |
-             *  | Handshake | Finished +              | secret_N                    |
-             *  |           | CertificateRequest      |                             |
-             *  +-----------+-------------------------+-----------------------------+
-             *
-             * RFC 8446 4.4.3.  Certificate Verify
-             */
-
-            // https://tls13.xargs.org/#server-certificate-verify/annotated
-            // ### find the hash of the conversation to this point, excluding
-            // ### 5-byte record headers or 1-byte wrapped record trailers
-            // $ handshake_hash=$((
-            //    tail -c +6 clienthello;
-            //    tail -c +6 serverhello;
-            //    perl -pe 's/.$// if eof' serverextensions;
-            //    perl -pe 's/.$// if eof' servercert) | openssl sha384)
-
-            binary_t hshash;
-            auto hash = get_transcript_hash();  // hash(client_hello .. certificate)
-            hash->digest(hshash);
-
-            constexpr char constexpr_context[] = "TLS 1.3, server CertificateVerify";
-            basic_stream tosign;
-            tosign.fill(64, 0x20);                    // octet 32 (0x20) repeated 64 times
-            tosign << constexpr_context;              // context string
-            tosign.fill(1, 0x00);                     // single 0 byte
-            tosign.write(&hshash[0], hshash.size());  // content to be signed
-
-            {
-                basic_stream bs;
-                bs.printf("\e[1;36m%s\n", constexpr_context);
-                dump_memory(tosign.data(), tosign.size(), &bs, 16, 3, 0, dump_notrunc);
-                bs.printf("\n\e[0m");
-                std::cout << bs;
-                fflush(stdout);
-            }
-
-            // $ openssl x509 -pubkey -noout -in server.crt > server.pub
-            crypto_key& key = session->get_tls_protection().get_cert();
-            auto pkey = key.any();
-
-            // ### verify the signature
-            // $ cat /tmp/tosign | openssl dgst -verify server.pub -sha256 \
-            //     -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-1 -signature /tmp/sig
-            ret = sign->verify(pkey, tosign.data(), tosign.size(), signature);
-
-            sign->release();
-        }
-#endif
+crypto_sign* tls_protection::get_crypto_sign(uint16 scheme) {
+    crypto_sign_builder builder;
+    crypto_sign* sign = nullptr;
+    switch (scheme) {
+        case 0x0401: /* rsa_pkcs1_sha256 */ {
+        } break;
+        case 0x0501: /* rsa_pkcs1_sha384 */ {
+        } break;
+        case 0x0601: /* rsa_pkcs1_sha512 */ {
+        } break;
+        case 0x0403: /* ecdsa_secp256r1_sha256 */ {
+        } break;
+        case 0x0503: /* ecdsa_secp384r1_sha384 */ {
+        } break;
+        case 0x0603: /* ecdsa_secp521r1_sha512 */ {
+        } break;
+        case 0x0804: /* rsa_pss_rsae_sha256 */ {
+            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_256).build();
+        } break;
+        case 0x0805: /* rsa_pss_rsae_sha384 */ {
+            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_384).build();
+        } break;
+        case 0x0806: /* rsa_pss_rsae_sha512 */ {
+            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_512).build();
+        } break;
+        case 0x0807: /* ed25519 */
+        case 0x0808: /* ed448 */ {
+            sign = builder.tls_sign_scheme(scheme).build();
+        } break;
+        case 0x0809: /* rsa_pss_pss_sha256 */ {
+        } break;
+        case 0x080a: /* rsa_pss_pss_sha384 */ {
+        } break;
+        case 0x080b: /* rsa_pss_pss_sha512 */ {
+        } break;
+        case 0x0201: /* rsa_pkcs1_sha1 */ {
+        } break;
+        case 0x0203: /* ecdsa_sha1 */ {
+        } break;
     }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
+    return sign;
 }
 
 }  // namespace net

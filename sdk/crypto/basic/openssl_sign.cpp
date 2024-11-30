@@ -480,7 +480,7 @@ return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg,
 
         ret_openssl = EVP_DigestVerifyFinal(md_context, &signature[0], signature.size());
         if (ret_openssl < 1) {
-            ret = errorcode_t::internal_error;
+            ret = errorcode_t::error_verify;
             __leave2_trace_openssl(ret);
         }
 
@@ -635,7 +635,7 @@ return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t 
         RSA_public_decrypt(bufsize, &signature[0], &buf[0], rsa, RSA_NO_PADDING);
         ret_openssl = RSA_verify_PKCS1_PSS(rsa, &hash_value[0], evp_md, &buf[0], -1);
         if (ret_openssl < 1) {
-            ret = errorcode_t::internal_error;
+            ret = errorcode_t::error_verify;
             __leave2;
         }
 
@@ -679,7 +679,7 @@ return_t openssl_sign::verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, 
 
         ret_test = EVP_DigestVerify(ctx, &signature[0], signature.size(), stream, size);
         if (1 != ret_test) {
-            ret = errorcode_t::internal_error;
+            ret = errorcode_t::error_verify;
             __leave2_trace_openssl(ret);
         }
 
