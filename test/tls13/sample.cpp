@@ -130,7 +130,7 @@ void test_rfc8448_2() {
             "41";
 
         crypto_key& cert = protection.get_cert();
-        keychain.add_rsa(&cert, "server RSA certificate", "RSA", base16_decode_rfc(n), base16_decode_rfc(e), base16_decode_rfc(d));
+        keychain.add_rsa(&cert, nid_rsa, base16_decode_rfc(n), base16_decode_rfc(e), base16_decode_rfc(d), keydesc("server RSA certificate"));
         dump_key(cert.find("server RSA certificate"), &bs);
         _logger->writeln(bs);
     }
@@ -157,7 +157,7 @@ void test_rfc8448_3() {
             "49 af 42 ba 7f 79 94 85 2d 71 3e f2 78"
             "4b cb ca a7 91 1d e2 6a dc 56 42 cb 63 45 40 e7 ea 50 05";
         crypto_key key;
-        keychain.add_ec(&key, constexpr_client_epk, "X25519", "X25519", base16_decode_rfc(x), base16_decode_rfc(y), base16_decode_rfc(d));
+        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc(constexpr_client_epk));
 
         _logger->writeln(constexpr_client_epk);
         dump_key(key.find(constexpr_client_epk), &bs);
@@ -196,7 +196,7 @@ void test_rfc8448_3() {
         const char* d = "b1580eeadf6dd589b8ef4f2d5652578cc810e9980191ec8d058308cea216a21e";
         crypto_key key;
         crypto_key& rfc8448_keys = protection.get_key();
-        keychain.add_ec_b16(&rfc8448_keys, constexpr_server_epk, "X25519", "X25519", x, y, d);
+        keychain.add_ec_b16(&rfc8448_keys, "X25519", x, y, d, keydesc(constexpr_server_epk));
 
         dump_key(rfc8448_keys.find(constexpr_server_epk), &bs);
         _logger->writeln(bs);
@@ -461,7 +461,7 @@ void test_tls13_xargs_org() {
         const char* x = "358072d6365880d1aeea329adf9121383851ed21a28e3b75e965d0d2cd166254";
         const char* y = "";
         const char* d = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
-        keychain.add_ec_b16(&key, "client key", "X25519", "X25519", x, y, d);
+        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc("client key"));
         basic_stream bs;
         dump_key(key.find("client key"), &bs);
         _logger->writeln(bs);
@@ -506,7 +506,7 @@ void test_tls13_xargs_org() {
         const char* y = "";
         const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";
         crypto_key& server_keys = server_session.get_tls_protection().get_key();
-        keychain.add_ec_b16(&server_keys, "server key", "X25519", "X25519", x, y, d);
+        keychain.add_ec_b16(&server_keys, "X25519", x, y, d, keydesc("server key"));
 
         dump_key(server_keys.find("server key"), &bs);
         _logger->writeln(bs);

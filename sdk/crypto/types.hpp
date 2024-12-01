@@ -165,7 +165,7 @@ enum crypt_enc_t {
 
 /**
  * @brief   Elliptic Curve (use openssl nid definition for convenience)
- * @sa      generate_nid::generate_nid
+ * @sa      crypto_key
  */
 enum ec_curve_t {
     ec_p192 = 409,       // P-192, NID_X9_62_prime192v1
@@ -200,15 +200,17 @@ enum ec_curve_t {
     ec_brainpoolP512t1 = 934,  // brainpoolP512t1, NID_brainpoolP512t1
 };
 
-/**
- * @sa  crypto_key::generate
- */
-enum ec_keyparam_t {
-    ec_keyparam_p256 = 256,
-    ec_keyparam_p384 = 384,
-    ec_keyparam_p521 = 521,
-    ec_keyparam_okp25519 = 25519,
-    ec_keyparam_okp448 = 448,
+/* nid (use openssl nid definition for convenience) */
+enum nid_t {
+    nid_oct = 855,         // EVP_PKEY_HMAC, NID_hmac
+    nid_rsa = 6,           // EVP_PKEY_RSA, NID_rsaEncryption
+    nid_rsa2 = 19,         // EVP_PKEY_RSA2, NID_rsa
+    nid_rsapss = 912,      // EVP_PKEY_RSA_PSS, NID_rsassaPss
+    nid_ffdhe2048 = 1126,  // NID_ffdhe2048
+    nid_ffdhe3072 = 1127,  // NID_ffdhe3072
+    nid_ffdhe4096 = 1128,  // NID_ffdhe4096
+    nid_ffdhe6144 = 1129,  // NID_ffdhe6144
+    nid_ffdhe8192 = 1130,  // NID_ffdhe8192
 };
 
 enum crypt_sig_type_t {
@@ -817,6 +819,7 @@ typedef struct _hint_jose_encryption_t {
     int keysize;                  // 16, 24, 32
     int hash_alg;
 } hint_jose_encryption_t;
+const char* nameof_alg(const hint_jose_encryption_t* hint);
 
 enum cose_hint_flag_t {
     cose_hint_sign = 1 << 0,

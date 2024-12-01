@@ -176,6 +176,7 @@ return_t cbor_web_key::do_load(crypto_key* crypto_key, cbor_object* object, int 
                 }
             }
             t_maphint<int, binary_t> hint_key(keyobj.attrib);
+            keydesc desc(keyobj.kid);
             if (cose_kty_t::cose_kty_okp == keyobj.type || cose_kty_t::cose_kty_ec2 == keyobj.type) {  // 1, 2
                 uint32 nid = advisor->curveof((cose_ec_curve_t)keyobj.curve);
                 binary_t x;
@@ -184,7 +185,7 @@ return_t cbor_web_key::do_load(crypto_key* crypto_key, cbor_object* object, int 
                 hint_key.find(cose_key_lable_t::cose_ec_x, &x);  // -2
                 hint_key.find(cose_key_lable_t::cose_ec_y, &y);  // -3
                 hint_key.find(cose_key_lable_t::cose_ec_d, &d);  // -4
-                add_ec(crypto_key, keyobj.kid.c_str(), nullptr, nid, x, y, d);
+                add_ec(crypto_key, nid, x, y, d, desc);
             } else if (cose_kty_t::cose_kty_rsa == keyobj.type) {  // 3
                 binary_t n;
                 binary_t e;
@@ -192,11 +193,11 @@ return_t cbor_web_key::do_load(crypto_key* crypto_key, cbor_object* object, int 
                 hint_key.find(cose_key_lable_t::cose_rsa_n, &n);  // -1
                 hint_key.find(cose_key_lable_t::cose_rsa_e, &e);  // -2
                 hint_key.find(cose_key_lable_t::cose_rsa_d, &d);  // -3
-                add_rsa(crypto_key, keyobj.kid.c_str(), nullptr, n, e, d);
+                add_rsa(crypto_key, nid_rsa, n, e, d, desc);
             } else if (cose_kty_t::cose_kty_symm == keyobj.type) {  // 4
                 binary_t k;
                 hint_key.find(cose_key_lable_t::cose_symm_k, &k);  // -1
-                add_oct(crypto_key, keyobj.kid.c_str(), nullptr, k);
+                add_oct(crypto_key, k, desc);
             }
         }
     }
@@ -283,7 +284,7 @@ void cwk_writer(crypto_key_object* key, void* param) {
             __leave2;
         }
 
-        std::string kid = key->get_kid();
+        std::string kid = key->get_desc().get_kid_str();
 
         cbor_map* keynode = nullptr;
         __try_new_catch(keynode, new cbor_map(), ret, __leave2);

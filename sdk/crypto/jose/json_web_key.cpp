@@ -100,11 +100,12 @@ return_t json_web_key::read_json_keynode(crypto_key* crypto_key, json_t* json) {
         }
 
         if (nullptr != kty) {
+            keydesc desc(kid, alg, usage);
             if (0 == strcmp(kty, "oct")) {
                 const char* k_value = nullptr;
                 json_unpack(temp, "{s:s}", "k", &k_value);
 
-                add_oct_b64u(crypto_key, kid, alg, k_value, usage);
+                add_oct_b64u(crypto_key, k_value, desc);
             } else if (0 == strcmp(kty, "RSA")) {
                 const char* n_value = nullptr;
                 const char* e_value = nullptr;
@@ -118,7 +119,7 @@ return_t json_web_key::read_json_keynode(crypto_key* crypto_key, json_t* json) {
                 const char* qi_value = nullptr;
                 json_unpack(temp, "{s:s,s:s,s:s,s:s,s:s}", "p", &p_value, "q", &q_value, "dp", &dp_value, "dq", &dq_value, "qi", &qi_value);
 
-                add_rsa_b64u(crypto_key, kid, alg, n_value, e_value, d_value, p_value, q_value, dp_value, dq_value, qi_value, usage);
+                add_rsa_b64u(crypto_key, nid_rsa, n_value, e_value, d_value, p_value, q_value, dp_value, dq_value, qi_value, desc);
             } else if (0 == strcmp(kty, "EC")) {
                 const char* crv_value = nullptr;
                 const char* x_value = nullptr;
@@ -126,14 +127,14 @@ return_t json_web_key::read_json_keynode(crypto_key* crypto_key, json_t* json) {
                 const char* d_value = nullptr;
                 json_unpack(temp, "{s:s,s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "y", &y_value, "d", &d_value);
 
-                add_ec_b64u(crypto_key, kid, alg, crv_value, x_value, y_value, d_value, usage);
+                add_ec_b64u(crypto_key, crv_value, x_value, y_value, d_value, desc);
             } else if (0 == strcmp(kty, "OKP")) {
                 const char* crv_value = nullptr;
                 const char* x_value = nullptr;
                 const char* d_value = nullptr;
                 json_unpack(temp, "{s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "d", &d_value);
 
-                add_ec_b64u(crypto_key, kid, alg, crv_value, x_value, nullptr, d_value, usage);
+                add_ec_b64u(crypto_key, crv_value, x_value, nullptr, d_value, desc);
             } else {
                 // do nothing
             }
@@ -167,20 +168,20 @@ static void jwk_serialize_item(int flag, json_mapper_item_t item, json_t* json_i
     json_object_set_new(json_item, "kty", json_string(nameof_key_type(item.type)));
 
     /* kid */
-    if (item.key.get_kid_string().size()) {
-        json_object_set_new(json_item, "kid", json_string(item.key.get_kid()));
+    if (item.key.get_desc().get_kid_str().size()) {
+        json_object_set_new(json_item, "kid", json_string(item.key.get_desc().get_kid_cstr()));
     }
 
     /* use */
-    if (crypto_use_t::use_sig == item.key.get_use()) {
+    if (crypto_use_t::use_sig == item.key.get_desc().get_use()) {
         json_object_set_new(json_item, "use", json_string("sig"));
     }
-    if (crypto_use_t::use_enc == item.key.get_use()) {
+    if (crypto_use_t::use_enc == item.key.get_desc().get_use()) {
         json_object_set_new(json_item, "use", json_string("enc"));
     }
 
-    if (item.key.get_alg_string().size()) {
-        json_object_set_new(json_item, "alg", json_string(item.key.get_alg()));
+    if (item.key.get_desc().get_alg_str().size()) {
+        json_object_set_new(json_item, "alg", json_string(item.key.get_desc().get_alg_cstr()));
     }
 
     std::string curve_name;

@@ -1122,7 +1122,7 @@ return_t json_object_encryption::composer::docompose_encryption_recipient_random
         crypto_keychain keyset;
         std::string kid;
         nidof_evp_pkey(pkey, nid);                                // "crv" of key
-        keyset.add_ec(&key, nid);                                 // same "crv"
+        keyset.add_ec(&key, nid, keydesc());                      // same "crv"
         recipient.epk = key.select(crypto_use_t::use_enc, true);  // EVP_PKEY_up_ref
         variant vt;
         vt.set_pointer(recipient.epk);
@@ -1525,7 +1525,7 @@ return_t json_object_encryption::composer::doparse_decryption_recipient(jose_con
 
             json_web_key jwk;
             crypto_key key;
-            jwk.add_ec_b64u(&key, nullptr, nullptr, crv_value, x_value, y_value, nullptr);
+            jwk.add_ec_b64u(&key, crv_value, x_value, y_value, nullptr, keydesc());
             recipient.epk = key.select(crypto_use_t::use_enc, true);  // EVP_PKEY_up_ref
             if (apu_value) {
                 base64_decode(apu_value, strlen(apu_value), recipient.datamap[crypt_item_t::item_apu], base64_encoding_t::base64url_encoding);

@@ -293,7 +293,7 @@ return_t crypto_key::add(crypto_key_object key, bool up_ref) {
             __leave2;
         }
 
-        if (crypto_use_t::use_unknown == (key.get_use() & crypto_use_t::use_any)) {
+        if (crypto_use_t::use_unknown == (key.get_desc().get_use() & crypto_use_t::use_any)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -308,7 +308,7 @@ return_t crypto_key::add(crypto_key_object key, bool up_ref) {
             EVP_PKEY_up_ref((EVP_PKEY*)key.get_pkey());  // increments a reference counter
         }
 
-        _key_map.insert(std::make_pair(key.get_kid(), key));
+        _key_map.insert(std::make_pair(key.get_desc().get_kid_str(), key));
     }
     __finally2 {
         if (errorcode_t::success != ret) {
@@ -321,7 +321,6 @@ return_t crypto_key::add(crypto_key_object key, bool up_ref) {
 return_t crypto_key::add(EVP_PKEY* pkey, const char* kid, bool up_ref) {
     return_t ret = errorcode_t::success;
     crypto_key_object key(pkey, crypto_use_t::use_any, kid, nullptr);
-
     ret = add(key, up_ref);
     return ret;
 }
@@ -329,146 +328,35 @@ return_t crypto_key::add(EVP_PKEY* pkey, const char* kid, bool up_ref) {
 return_t crypto_key::add(EVP_PKEY* pkey, const char* kid, crypto_use_t use, bool up_ref) {
     return_t ret = errorcode_t::success;
     crypto_key_object key(pkey, use, kid, nullptr);
-
     ret = add(key, up_ref);
     return ret;
 }
 
-return_t crypto_key::generate(crypto_kty_t type, unsigned int param, const char* kid, crypto_use_t use) {
+return_t crypto_key::generate_oct(int nbits, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     crypto_keychain keyset;
-
-    __try2 {
-        if (crypto_kty_t::kty_oct == type) {
-            ret = keyset.add_oct(this, kid, param, use);
-        } else if (crypto_kty_t::kty_rsa == type) {
-            ret = keyset.add_rsa(this, kid, param, use);
-        } else if (crypto_kty_t::kty_ec == type) {
-            int nid = 0;
-            switch (param) {
-                case 256:
-                    nid = NID_X9_62_prime256v1;
-                    break;
-                case 384:
-                    nid = NID_secp384r1;
-                    break;
-                case 512:  // ES512 .. cover human mistakes
-                case 521:
-                    nid = NID_secp521r1;
-                    break;
-            }
-            ret = keyset.add_ec(this, kid, nid, use);
-        } else if (crypto_kty_t::kty_okp == type) {
-            switch (param) {
-                case 25519:
-                    if (use & crypto_use_t::use_enc) {
-                        ret = keyset.add_ec(this, kid, NID_X25519, use);
-                    }
-                    if (use & crypto_use_t::use_sig) {
-                        ret = keyset.add_ec(this, kid, NID_ED25519, use);
-                    }
-                    break;
-                case 448:
-                    if (use & crypto_use_t::use_enc) {
-                        ret = keyset.add_ec(this, kid, NID_X448, use);
-                    }
-                    if (use & crypto_use_t::use_sig) {
-                        ret = keyset.add_ec(this, kid, NID_ED448, use);
-                    }
-                    break;
-            }
-        } else {
-            ret = errorcode_t::not_supported;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
+    ret = keyset.add_oct(this, nbits, desc);
     return ret;
 }
 
-return_t crypto_key::generate_nid(crypto_kty_t type, unsigned int param, const char* kid, crypto_use_t use) {
+return_t crypto_key::generate_rsa(uint32 nid, int nbits, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     crypto_keychain keyset;
-
-    __try2 {
-        if (crypto_kty_t::kty_oct == type) {
-            ret = keyset.add_oct(this, kid, param, use);
-        } else if (crypto_kty_t::kty_rsa == type) {
-            ret = keyset.add_rsa(this, kid, param, use);
-        } else if (crypto_kty_t::kty_ec == type) {
-            ret = keyset.add_ec(this, kid, param, use);
-        } else if (crypto_kty_t::kty_okp == type) {
-            switch (param) {
-                case ec_curve_t::ec_x25519:  // NID_X25519(1034)
-                case ec_curve_t::ec_x448:    // NID_X448(1035)
-                    ret = keyset.add_ec(this, kid, param, crypto_use_t(use | crypto_use_t::use_enc & ~crypto_use_t::use_sig));
-                    break;
-                case ec_curve_t::ec_ed25519:  // NID_ED25519(1087)
-                case ec_curve_t::ec_ed448:    // NID_ED448(1088)
-                    ret = keyset.add_ec(this, kid, param, crypto_use_t(use & ~crypto_use_t::use_enc | crypto_use_t::use_sig));
-                    break;
-            }
-        } else if (crypto_kty_t::kty_dh == type) {
-            ret = keyset.add_dh(this, param, kid);
-        } else {
-            ret = errorcode_t::not_supported;
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
+    ret = keyset.add_rsa(this, nid, nbits, desc);
     return ret;
 }
 
-return_t crypto_key::generate_cose(cose_kty_t kty, unsigned int param, const char* kid, crypto_use_t use) {
+return_t crypto_key::generate_ec(uint32 nid, const keydesc& desc) {
     return_t ret = errorcode_t::success;
-    switch (kty) {
-        case cose_kty_t::cose_kty_symm:  // 4
-            ret = generate_nid(crypto_kty_t::kty_hmac, param, kid, use);
-            break;
-        case cose_kty_t::cose_kty_rsa:  // 3
-            ret = generate_nid(crypto_kty_t::kty_rsa, param, kid, use);
-            break;
-        case cose_kty_t::cose_kty_ec2:  // 2
-        {
-            unsigned int nid = 0;
-            switch (param) {
-                case cose_ec_curve_t::cose_ec_p256:  // 1
-                    nid = NID_X9_62_prime256v1;      // 415
-                    break;
-                case cose_ec_curve_t::cose_ec_p384:  // 2
-                    nid = NID_secp384r1;             // 715
-                    break;
-                case cose_ec_curve_t::cose_ec_p521:  // 3
-                    nid = NID_secp521r1;             // 716
-                    break;
-                case cose_ec_curve_t::cose_ec_secp256k1:  // 8
-                    nid = NID_secp256k1;
-                    break;
-            }
-            ret = generate_nid(crypto_kty_t::kty_ec, nid, kid, use);
-        } break;
-        case cose_kty_t::cose_kty_okp:  // 1
-        {
-            unsigned int nid = 0;
-            switch (param) {
-                case cose_ec_curve_t::cose_ec_x25519:  // 4
-                    nid = NID_X25519;
-                    break;
-                case cose_ec_curve_t::cose_ec_x448:  // 5
-                    nid = NID_X448;
-                    break;
-                case cose_ec_curve_t::cose_ec_ed25519:  // 6
-                    nid = NID_ED25519;
-                    break;
-                case cose_ec_curve_t::cose_ec_ed448:  // 7
-                    nid = NID_ED448;
-                    break;
-            }
-            ret = generate_nid(crypto_kty_t::kty_okp, nid, kid, use);
-        } break;
-    }
+    crypto_keychain keyset;
+    ret = keyset.add_ec(this, nid, desc);
+    return ret;
+}
+
+return_t crypto_key::generate_dh(uint32 nid, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    crypto_keychain keyset;
+    ret = keyset.add_dh(this, nid, desc);
     return ret;
 }
 
@@ -489,12 +377,12 @@ bool find_discriminant(crypto_key_object item, const char* kid, ALGORITHM alg, c
         bool cond_kid = false;
         bool cond_kty = false;
 
-        cond_use = (item.get_use() & use);
+        cond_use = (item.get_desc().get_use() & use);
         if (false == cond_use) {
             __leave2;
         }
         if (SEARCH_KID & flags) {
-            cond_kid = (kid && (0 == strcmp(item.get_kid(), kid)));
+            cond_kid = (kid && (0 == strcmp(item.get_desc().get_kid_cstr(), kid)));
             if (false == cond_kid) {
                 __leave2;
             }
@@ -560,12 +448,12 @@ static bool find_discriminant(crypto_key_object item, const char* kid, const cha
             bool cond_kid = false;
             bool cond_kty = false;
 
-            cond_use = (item.get_use() & use);
+            cond_use = (item.get_desc().get_use() & use);
             if (false == cond_use) {
                 __leave2;
             }
             if (SEARCH_KID & flags) {
-                cond_kid = (kid && (0 == strcmp(item.get_kid(), kid)));
+                cond_kid = (kid && (0 == strcmp(item.get_desc().get_kid_cstr(), kid)));
                 if (false == cond_kid) {
                     __leave2;
                 }
@@ -778,7 +666,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, crypto_use_t use, bool up_r
             bool test = find_discriminant(keyobj, nullptr, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, 0);
             if (test) {
                 ret_value = keyobj.get_pkey();
-                kid = keyobj.get_kid();
+                kid = keyobj.get_desc().get_kid_str();
                 break;
             }
         }
@@ -811,7 +699,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, crypto_kty_t kty, crypto_us
             bool test = find_discriminant(keyobj, nullptr, nullptr, kty, alt, use, SEARCH_KTY);
             if (test) {
                 ret_value = keyobj.get_pkey();
-                kid = keyobj.get_kid();
+                kid = keyobj.get_desc().get_kid_str();
                 break;
             }
         }
@@ -848,7 +736,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, jwa_t alg, crypto_use_t use
             bool test = find_discriminant<jwa_t>(keyobj, nullptr, alg, kty, alt, use, SEARCH_ALG | SEARCH_KTY | SEARCH_ALT);
             if (test) {
                 ret_value = keyobj.get_pkey();
-                kid = keyobj.get_kid();
+                kid = keyobj.get_desc().get_kid_str();
                 break;
             }
         }
@@ -882,7 +770,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, crypt_sig_t sig, crypto_use
             bool test = find_discriminant<crypt_sig_t>(keyobj, nullptr, sig, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, SEARCH_ALG);
             if (test) {
                 ret_value = keyobj.get_pkey();
-                kid = keyobj.get_kid();
+                kid = keyobj.get_desc().get_kid_str();
                 break;
             }
         }
@@ -916,7 +804,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, jws_t sig, crypto_use_t use
             bool test = find_discriminant<jws_t>(keyobj, nullptr, sig, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, SEARCH_ALG);
             if (test) {
                 ret_value = keyobj.get_pkey();
-                kid = keyobj.get_kid();
+                kid = keyobj.get_desc().get_kid_str();
                 break;
             }
         }
@@ -950,7 +838,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, cose_alg_t alg, crypto_use_
             bool test = find_discriminant<cose_alg_t>(keyobj, nullptr, alg, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, SEARCH_ALG);
             if (test) {
                 ret_value = keyobj.get_pkey();
-                kid = keyobj.get_kid();
+                kid = keyobj.get_desc().get_kid_str();
                 break;
             }
         }

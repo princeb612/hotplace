@@ -20,57 +20,107 @@
 namespace hotplace {
 namespace crypto {
 
+/**
+ * @brief   description - kid, algorithm, usage
+ */
+struct keydesc {
+    std::string kid;
+    std::string alg;
+    uint32 use;
+
+    keydesc() : use(crypto_use_t::use_any) {}
+    keydesc(const char* k) : use(crypto_use_t::use_any) { set_kid(k); }
+    keydesc(const char* k, const char* a) : use(crypto_use_t::use_any) { set_kid(k).set_alg(a); }
+    keydesc(const char* k, const char* a, crypto_use_t u) : use(u) { set_kid(k).set_alg(a); }
+    keydesc(const std::string& k) : use(crypto_use_t::use_any) { set_kid(k); }
+    keydesc(const std::string& k, const std::string& a) : use(crypto_use_t::use_any) { set_kid(k).set_alg(a); }
+    keydesc(const std::string& k, const std::string& a, crypto_use_t u) : use(u) { set_kid(k).set_alg(a); }
+    keydesc(const std::string& k, crypto_use_t u) : use(u) { set_kid(k); }
+    keydesc(crypto_use_t u) : use(u) {}
+    /* copy */
+    keydesc(const keydesc& rhs) : kid(rhs.kid), alg(rhs.alg), use(rhs.use) {}
+    /* move */
+    keydesc(keydesc&& rhs) : kid(std::move(rhs.kid)), alg(std::move(rhs.alg)), use(rhs.use) {}
+
+    keydesc& set_kid(const char* k) {
+        if (k) {
+            kid = k;
+        }
+        return *this;
+    }
+    keydesc& set_kid(const std::string& k) {
+        kid = k;
+        return *this;
+    }
+    keydesc& set_alg(const char* a) {
+        if (a) {
+            alg = a;
+        }
+        return *this;
+    }
+    keydesc& set_alg(const std::string& a) {
+        alg = a;
+        return *this;
+    }
+    keydesc& set_use(crypto_use_t u) {
+        use = u;
+        return *this;
+    }
+    keydesc& set_use_any() {
+        use = crypto_use_t::use_any;
+        return *this;
+    }
+    keydesc& set_use_enc() {
+        use &= (crypto_use_t::use_enc & ~crypto_use_t::use_sig);
+        return *this;
+    }
+    keydesc& set_use_sig() {
+        use &= (~crypto_use_t::use_enc & crypto_use_t::use_sig);
+        return *this;
+    }
+    keydesc& operator=(const keydesc& rhs) {
+        kid = rhs.kid;
+        alg = rhs.alg;
+        use = rhs.use;
+        return *this;
+    }
+
+    const char* get_kid_cstr() { return kid.c_str(); }
+    const std::string& get_kid_str() { return kid; }
+    const char* get_alg_cstr() { return alg.c_str(); }
+    const std::string& get_alg_str() { return alg; }
+    uint32 get_use() { return use; }
+};
+
 class crypto_key_object {
    public:
-    crypto_key_object() : _pkey(nullptr), _use(0) {
+    crypto_key_object() : _pkey(nullptr) {
         // do nothing
     }
 
-    crypto_key_object(const EVP_PKEY* key, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) : _pkey(key), _use(use) {
-        if (kid) {
-            _kid = kid;
-        }
-        if (alg) {
-            _alg = alg;
-        }
+    crypto_key_object(const EVP_PKEY* key, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) : _pkey(key) {
+        _desc.set_kid(kid).set_alg(alg).set_use(use);
     }
-    crypto_key_object(const crypto_key_object& key) {
-        _pkey = key._pkey;
-        _use = key._use;
-        _kid = key._kid;
-        _alg = key._alg;
-    }
+    crypto_key_object(const crypto_key_object& rhs) : _pkey(rhs._pkey), _desc(rhs._desc) {}
+    crypto_key_object(const EVP_PKEY* key, const keydesc& desc) : _pkey(key), _desc(desc) {}
+
     crypto_key_object& set(const EVP_PKEY* key, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) {
         _pkey = key;
-        _use = _use;
-        if (kid) {
-            _kid = kid;
-        }
-        if (alg) {
-            _alg = alg;
-        }
+        _desc.set_kid(kid).set_alg(alg).set_use(use);
         return *this;
     }
     crypto_key_object& operator=(crypto_key_object& key) {
         _pkey = key._pkey;
-        _use = key._use;
-        _kid = key._kid;
-        _alg = key._alg;
+        _desc = key._desc;
         return *this;
     }
 
+    keydesc& get_desc() { return _desc; }
     const EVP_PKEY* get_pkey() { return _pkey; }
-    const char* get_kid() { return _kid.c_str(); }
-    std::string get_kid_string() { return _kid; }
-    uint32 get_use() { return _use; }
-    const char* get_alg() { return _alg.c_str(); }
-    std::string get_alg_string() { return _alg; }
 
    private:
     const EVP_PKEY* _pkey;
-    std::string _kid;
-    uint32 _use;  // crypto_use_t
-    std::string _alg;
+    keydesc _desc;
 };
 
 /**
@@ -171,93 +221,31 @@ class crypto_key {
      * @return error code (see error.hpp)
      */
     return_t add(EVP_PKEY* key, const char* kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /**
-     * @brief generate
-     * @param crypto_kty_t type [in] CRYPTO_KEY_TYPE
-     * @param unsigned int param [in] crypto_kty_t::kty_oct in bytes
-     *                                crypto_kty_t::kty_rsa in bits
-     *                                crypto_kty_t::kty_ec 256, 384, 521
-     *                                crypto_kty_t::kty_okp 25518, 448
-     * @param const char* kid [in]
-     * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
-     * @return error code (see error.hpp)
-     * @remarks
-     *          key.generate (crypto_kty_t::kty_oct,  32,    "kid", crypto_use_t::use_any); // oct
-     *          key.generate (crypto_kty_t::kty_rsa,  2048,  "kid", crypto_use_t::use_any); // RSA
-     *          key.generate (crypto_kty_t::kty_ec,   ec_keyparam_t::ec_keyparam_p256,     "kid", crypto_use_t::use_any); // EC, P-256
-     *          key.generate (crypto_kty_t::kty_ec,   ec_keyparam_t::ec_keyparam_p384,     "kid", crypto_use_t::use_any); // EC, P-384
-     *          key.generate (crypto_kty_t::kty_ec,   ec_keyparam_t::ec_keyparam_p521,     "kid", crypto_use_t::use_any); // EC, P-521
-     *          key.generate (crypto_kty_t::kty_okp,  ec_keyparam_t::ec_keyparam_okp25519, "kid", crypto_use_t::use_any); // OKP, X25519 and Ed25519
-     *          key.generate (crypto_kty_t::kty_okp,  ec_keyparam_t::ec_keyparam_okp448,   "kid", crypto_use_t::use_any); // OKP, X448 and Ed448
-     *          key.generate (crypto_kty_t::kty_okp,  ec_keyparam_t::ec_keyparam_okp25519, "kid", crypto_use_t::use_enc); // OKP, X25519
-     *          key.generate (crypto_kty_t::kty_okp,  ec_keyparam_t::ec_keyparam_okp448,   "kid", crypto_use_t::use_enc); // OKP, X448
-     *          key.generate (crypto_kty_t::kty_okp,  ec_keyparam_t::ec_keyparam_okp25519, "kid", crypto_use_t::use_sig); // OKP, Ed25519
-     *          key.generate (crypto_kty_t::kty_okp,  ec_keyparam_t::ec_keyparam_okp448,   "kid", crypto_use_t::use_sig); // OKP, Ed448
+    /*
+     * @brief   oct
+     * @param   int nbits [in]
+     * @param   const keydesc& desc [in]
      */
-    return_t generate(crypto_kty_t type, unsigned int param, const char* kid, crypto_use_t use = crypto_use_t::use_any);
-    /**
-     * @brief generate
-     * @param crypto_kty_t type [in]
-     * @param unsigned int param [in]
-     *          cose_kty_symm, cose_kty_rsa
-     *              size of key
-     *          cose_kty_ec2
-     *              415 : NID_X9_62_prime256v1 (prime256v1)
-     *              714 : NID_secp256k1 (secp256k1), see RFC 8812 4.2.  COSE Elliptic Curves Registrations "secp256k1"
-     *              715 : NID_secp384r1 (secp384r1)
-     *              716 : NID_secp521r1 (secp521r1)
-     *          cose_kty_okp -
-     *              1034: NID_X25519
-     *              1035: NID_X448
-     *              1087: NID_ED25519
-     *              1088: NID_ED448
-     * @param const char* kid [in]
-     * @param crypto_use_t use [inopt] crypto_use_t::use_any
-     * @return error code (see error.hpp)
-     * @remarks
-     *          key.generate_nid (crypto_kty_t::kty_oct,  32,    "kid", crypto_use_t::use_any); // oct
-     *          key.generate_nid (crypto_kty_t::kty_rsa,  2048,  "kid", crypto_use_t::use_any); // RSA
-     *          key.generate_nid (crypto_kty_t::kty_ec,   ec_curve_t::ec_p256, "kid", crypto_use_t::use_any); // EC, P-256
-     *          key.generate_nid (crypto_kty_t::kty_ec,   ec_curve_t::ec_p256k,    "kid", crypto_use_t::use_any); // EC, secp256k1
-     *          key.generate_nid (crypto_kty_t::kty_ec,   ec_curve_t::ec_p384, "kid", crypto_use_t::use_any); // EC, P-384
-     *          key.generate_nid (crypto_kty_t::kty_ec,   ec_curve_t::ec_p521, "kid", crypto_use_t::use_any); // EC, P-521
-     *          key.generate_nid (crypto_kty_t::kty_okp,  ec_curve_t::ec_x25519,   "kid", crypto_use_t::use_any); // OKP, X25519 only
-     *          key.generate_nid (crypto_kty_t::kty_okp,  ec_curve_t::ec_x448,     "kid", crypto_use_t::use_any); // OKP, X448 only
-     *          key.generate_nid (crypto_kty_t::kty_okp,  ec_curve_t::ec_ed25519,  "kid", crypto_use_t::use_any); // OKP, Ed25519 only
-     *          key.generate_nid (crypto_kty_t::kty_okp,  ec_curve_t::ec_ed448,    "kid", crypto_use_t::use_any); // OKP, Ed448 only
-     *          key.generate_nid (crypto_kty_t::kty_okp,  ec_curve_t::ec_x25519,   "kid", crypto_use_t::use_enc); // OKP, X25519
-     *          key.generate_nid (crypto_kty_t::kty_okp,  ec_curve_t::ec_x448,     "kid", crypto_use_t::use_enc); // OKP, X448
-     *          key.generate_nid (crypto_kty_t::kty_okp,  ec_curve_t::ec_ed25519,  "kid", crypto_use_t::use_sig); // OKP, Ed25519
-     *          key.generate_nid (crypto_kty_t::kty_okp,  ec_curve_t::ec_ed448,    "kid", crypto_use_t::use_sig); // OKP, Ed448
+    return_t generate_oct(int nbits, const keydesc& desc);
+    /*
+     * @brief   RSA
+     * @param   uint32 nid [in]
+     * @param   int nbits [in] bits >= 2048
+     * @param   const keydesc& desc [in]
      */
-    return_t generate_nid(crypto_kty_t type, unsigned int param, const char* kid, crypto_use_t use = crypto_use_t::use_any);
-    /**
-     * @brief generate
-     * @param cose_kty_t kty [in] cose_kty_okp, cose_kty_ec2, cose_kty_symm, cose_kty_rsa, ...
-     * @param unsigned int param [in]
-     *          cose_kty_symm, cose_kty_rsa - size of key
-     *          cose_kty_ec2 - cose_ec_p256, cose_ec_p384, cose_ec_p521
-     *          cose_kty_okp - cose_ec_x25519, cose_ec_x448, cose_ec_ed25519, cose_ec_ed448
-     * @param const char* kid [in]
-     * @param crypto_use_t use [inopt] crypto_use_t::use_any
-     * @return error code (see error.hpp)
-     * @remarks
-     *          key.generate_cose (cose_kty_t::cose_kty_symm, 32,    "kid", crypto_use_t::use_any); // oct
-     *          key.generate_cose (cose_kty_t::cose_kty_rsa,  2048,  "kid", crypto_use_t::use_any); // RSA
-     *          key.generate_cose (cose_kty_t::cose_kty_ec2,  cose_ec_curve_t::cose_ec_p256,      "kid", crypto_use_t::use_any); // EC, P-256
-     *          key.generate_cose (cose_kty_t::cose_kty_ec2,  cose_ec_curve_t::cose_ec_p384,      "kid", crypto_use_t::use_any); // EC, P-384
-     *          key.generate_cose (cose_kty_t::cose_kty_ec2,  cose_ec_curve_t::cose_ec_p521,      "kid", crypto_use_t::use_any); // EC, P-521
-     *          key.generate_cose (cose_kty_t::cose_kty_okp,  cose_ec_curve_t::cose_ec_x25519,    "kid", crypto_use_t::use_any); // OKP, X25519 only
-     *          key.generate_cose (cose_kty_t::cose_kty_okp,  cose_ec_curve_t::cose_ec_x448,      "kid", crypto_use_t::use_any); // OKP, X448 only
-     *          key.generate_cose (cose_kty_t::cose_kty_okp,  cose_ec_curve_t::cose_ec_ed25519,   "kid", crypto_use_t::use_any); // OKP, Ed25519 only
-     *          key.generate_cose (cose_kty_t::cose_kty_okp,  cose_ec_curve_t::cose_ec_ed448,     "kid", crypto_use_t::use_any); // OKP, Ed448 only
-     *          key.generate_cose (cose_kty_t::cose_kty_okp,  cose_ec_curve_t::cose_ec_x25519,    "kid", crypto_use_t::use_enc); // OKP, X25519
-     *          key.generate_cose (cose_kty_t::cose_kty_okp,  cose_ec_curve_t::cose_ec_x448,      "kid", crypto_use_t::use_enc); // OKP, X448
-     *          key.generate_cose (cose_kty_t::cose_kty_okp,  cose_ec_curve_t::cose_ec_ed25519,   "kid", crypto_use_t::use_sig); // OKP, Ed25519
-     *          key.generate_cose (cose_kty_t::cose_kty_okp,  cose_ec_curve_t::cose_ec_ed448,     "kid", crypto_use_t::use_sig); // OKP, Ed448
-     *          key.generate_cose (cose_kty_t::cose_kty_ec2,  cose_ec_curve_t::cose_ec_secp256k1, "kid", crypto_use_t::use_any); // EC, "secp256k1"
+    return_t generate_rsa(uint32 nid, int nbits, const keydesc& desc);
+    /*
+     * @brief   EC2, OKP
+     * @param   uint32 nid [in]
+     * @param   const keydesc& desc [in]
      */
-    return_t generate_cose(cose_kty_t kty, unsigned int param, const char* kid, crypto_use_t use = crypto_use_t::use_any);
+    return_t generate_ec(uint32 nid, const keydesc& desc);
+    /*
+     * @brief   DH
+     * @param   uint32 nid [in]
+     * @param   const keydesc& desc [in]
+     */
+    return_t generate_dh(uint32 nid, const keydesc& desc);
 
     /**
      * @brief return any key
@@ -458,7 +446,7 @@ class crypto_key {
      *  {
      *      uint32 nid = 0;
      *      nidof_evp_pkey (key->get_pkey(), nid);
-     *      printf ("nid %i kid %s alg %s use %i\n", nid, key->get_kid(), key->get_alg(), key->get_use());
+     *      printf ("nid %i kid %s alg %s use %i", nid, key->get_desc().get_kid_cstr(), key->get_desc().get_alg_cstr(), key->get_desc().get_use());
      *  }
      *  void load_key_and_dump ()
      *  {

@@ -396,10 +396,10 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                                 case 0x0019: /* secp521r1 */ {
                                 } break;
                                 case 0x001d: /* x25519 */ {
-                                    keychain.add_ec(&keyshare, NID_X25519, pubkey, binary_t(), binary_t());
+                                    keychain.add_okp(&keyshare, NID_X25519, pubkey, binary_t(), keydesc());
                                 } break;
                                 case 0x001e: /* x448 */ {
-                                    keychain.add_ec(&keyshare, NID_X448, pubkey, binary_t(), binary_t());
+                                    keychain.add_okp(&keyshare, NID_X448, pubkey, binary_t(), keydesc());
                                 } break;
                                 case 0x0100: /* ffdhe2048 */ {
                                 } break;

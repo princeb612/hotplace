@@ -254,7 +254,7 @@ void dump_crypto_key(crypto_key_object* key, void*) {
         uint32 nid = 0;
 
         nidof_evp_pkey(key->get_pkey(), nid);
-        _logger->writeln("nid %i kid %s alg %s use %i", nid, key->get_kid(), key->get_alg(), key->get_use());
+        _logger->writeln("nid %i kid %s alg %s use %i", nid, key->get_desc().get_kid_cstr(), key->get_desc().get_alg_cstr(), key->get_desc().get_use());
 
         basic_stream bs;
         dump_key(key->get_pkey(), &bs);
@@ -684,17 +684,17 @@ void test_rfc7515_bykeygen() {
     return_t ret = errorcode_t::success;
     crypto_key key;
 
-    key.generate(crypto_kty_t::kty_oct, 256, "sample");
-    key.generate(crypto_kty_t::kty_rsa, 2048, "sample");
-    key.generate(crypto_kty_t::kty_ec, ec_keyparam_t::ec_keyparam_p256, "sample");
+    key.generate_oct(256, keydesc("sample"));
+    key.generate_rsa(nid_rsa, 2048, keydesc("sample"));
+    key.generate_ec(ec_p256, keydesc("sample"));
 
-    key.generate(crypto_kty_t::kty_oct, 256, "HS256");
-    key.generate(crypto_kty_t::kty_rsa, 2048, "RS256");
-    key.generate(crypto_kty_t::kty_rsa, 2048, "RS384");
-    key.generate(crypto_kty_t::kty_rsa, 2048, "RS512");
-    key.generate(crypto_kty_t::kty_ec, ec_keyparam_t::ec_keyparam_p256, "ES256");
-    key.generate(crypto_kty_t::kty_ec, ec_keyparam_t::ec_keyparam_p384, "ES384");
-    key.generate(crypto_kty_t::kty_ec, ec_keyparam_t::ec_keyparam_p521, "ES512");
+    key.generate_oct(256, keydesc("HS256"));
+    key.generate_rsa(nid_rsa, 2048, keydesc("RS256"));
+    key.generate_rsa(nid_rsa, 2048, keydesc("RS384"));
+    key.generate_rsa(nid_rsa, 2048, keydesc("RS512"));
+    key.generate_ec(ec_p256, keydesc("ES256"));
+    key.generate_ec(ec_p384, keydesc("ES384"));
+    key.generate_ec(ec_p521, keydesc("ES512"));
 
     json_web_signature jws;
     std::string signature;
@@ -1324,7 +1324,7 @@ void test_rfc7517_C() {
 
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
     constexpr char passphrase[] = "Thus from my lips, by yours, my sin is purged.";
-    keygen.add_oct(&key, nullptr, jwa_t::jwa_pbes2_hs256_a128kw, (byte_t*)passphrase, strlen(passphrase), crypto_use_t::use_enc);
+    keygen.add_oct(&key, jwa_t::jwa_pbes2_hs256_a128kw, str2bin(passphrase), keydesc(crypto_use_t::use_enc));
 
     jose.open(&context, &key);
     jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_pbes2_hs256_a128kw, str2bin(input), output, jose_serialization_t::jose_compact);
@@ -1379,8 +1379,8 @@ int test_ecdh() {
     binary_t secret_alice;
     binary_t secret_bob;
 
-    keyset.add_ec(&keys, "alice", NID_secp384r1);
-    keyset.add_ec(&keys, "bob", NID_secp384r1);
+    keyset.add_ec(&keys, NID_secp384r1, keydesc("alice"));
+    keyset.add_ec(&keys, NID_secp384r1, keydesc("bob"));
 
     const EVP_PKEY* alicePrivateKey = keys.find("alice", crypto_kty_t::kty_ec);
     const EVP_PKEY* bobPrivateKey = keys.find("bob", crypto_kty_t::kty_ec);
@@ -1600,7 +1600,7 @@ void test_rfc7520() {
         "entrap_o\xe2\x80\x93"
         "peter_long\xe2\x80\x93"
         "credit_tun";
-    keygen.add_oct(&crypto_key2, nullptr, jwa_t::jwa_pbes2_hs512_a256kw, (byte_t*)figure96, strlen(figure96), crypto_use_t::use_enc);
+    keygen.add_oct(&crypto_key2, jwa_t::jwa_pbes2_hs512_a256kw, str2bin(figure96), keydesc(crypto_use_t::use_enc));
     test_rfc7520_jwe(&crypto_key2, "rfc7520_figure105.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 105)");
     test_rfc7520_jwe(&crypto_key2, "rfc7520_figure106.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 106)");
     test_rfc7520_jwe(&crypto_key2, "rfc7520_figure107.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 107)");
@@ -1988,10 +1988,10 @@ void test_okp() {
     binary_t source;
     std::string signature;
 
-    key.generate(crypto_kty_t::kty_okp, ec_keyparam_t::ec_keyparam_okp25519, "test1", crypto_use_t::use_enc);
-    key.generate(crypto_kty_t::kty_okp, ec_keyparam_t::ec_keyparam_okp25519, "test2", crypto_use_t::use_sig);
-    key.generate(crypto_kty_t::kty_okp, ec_keyparam_t::ec_keyparam_okp448, "test3", crypto_use_t::use_enc);
-    key.generate(crypto_kty_t::kty_okp, ec_keyparam_t::ec_keyparam_okp448, "test4", crypto_use_t::use_sig);
+    key.generate_ec(ec_x25519, keydesc("test1", crypto_use_t::use_enc));
+    key.generate_ec(ec_ed25519, keydesc("test2", crypto_use_t::use_sig));
+    key.generate_ec(ec_x448, keydesc("test3", crypto_use_t::use_enc));
+    key.generate_ec(ec_ed448, keydesc("test4", crypto_use_t::use_sig));
     key.for_each(dump_crypto_key, nullptr);
 
     jose.open(&handle, &key);
