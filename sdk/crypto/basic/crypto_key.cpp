@@ -16,6 +16,7 @@
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
+#include <sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -179,6 +180,61 @@ return_t crypto_key::load_cert_file(const char* file, int flags, crypto_use_t us
         }
 
         ret = load_cert(buffer.c_str(), flags, use);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_key::load_der(const byte_t* stream, size_t size, int flags, crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+    X509* x509 = nullptr;
+    BIO* bio = nullptr;
+    EVP_PKEY* pkey = nullptr;
+    __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        bio = BIO_new(BIO_s_mem());
+        BIO_write(bio, stream, size);
+        const byte_t* p = stream;
+        // The letters i and d in i2d_TYPE() stand for "internal" (that is, an internal C structure) and "DER" respectively.
+        // So i2d_TYPE() converts from internal to DER. d2i_ vice versa
+        pkey = d2i_PrivateKey_bio(bio, nullptr);
+        if (nullptr == pkey) {
+            x509 = d2i_X509(nullptr, &p, size);
+            pkey = X509_get_pubkey(x509);
+        }
+
+        crypto_key_object key(pkey, use);
+        add(key);
+    }
+    __finally2 {
+        if (bio) {
+            BIO_free(bio);
+        }
+        if (x509) {
+            X509_free(x509);
+        }
+    }
+    return ret;
+}
+
+return_t crypto_key::load_der_file(const char* file, int flags, crypto_use_t use) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == file) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        file_stream fs(file);
+        fs.begin_mmap();
+
+        ret = load_der(fs.data(), fs.size(), flags, use);
     }
     __finally2 {
         // do nothing

@@ -152,14 +152,14 @@ class crypto_key {
     ~crypto_key();
 
     /**
-     * @brief load PEM from the buffer
+     * @brief PEM
      * @param const char* buffer [in]
      * @param int flags [in]
      * @return error code (see error.hpp)
      */
     return_t load_pem(const char* buffer, int flags, crypto_use_t use);
     /**
-     * @brief load from a PEM file
+     * @brief PEM file
      * @param const char* file [in]
      * @param int flags [in] reserved
      * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
@@ -167,20 +167,37 @@ class crypto_key {
      */
     return_t load_pem_file(const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
     /**
-     * @brief load Certificate from the buffer
+     * @brief Certificate
      * @param const char* buffer [in]
      * @param int flags [in]
      * @return error code (see error.hpp)
      */
     return_t load_cert(const char* buffer, int flags, crypto_use_t use);
     /**
-     * @brief load from a Certificate file
+     * @brief Certificate file
      * @param const char* file [in]
      * @param int flags [in] reserved
      * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
      * @return error code (see error.hpp)
      */
     return_t load_cert_file(const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
+
+    /**
+     * @brief DER
+     * @param const char* stream [in]
+     * @param size_t size [in]
+     * @param int flags [in]
+     * @return error code (see error.hpp)
+     */
+    return_t load_der(const byte_t* stream, size_t size, int flags, crypto_use_t use);
+    /**
+     * @brief DER file
+     * @param const char* file [in]
+     * @param int flags [in] reserved
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any by default
+     * @return error code (see error.hpp)
+     */
+    return_t load_der_file(const char* file, int flags, crypto_use_t use = crypto_use_t::use_any);
 
     /**
      * @brief write PEM to the file

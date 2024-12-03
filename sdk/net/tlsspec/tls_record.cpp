@@ -24,15 +24,15 @@ namespace net {
 
 // step.1 ... understanding TLS Record
 
-return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == s || nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (size < 5) {
-            ret = errorcode_t::bad_data;
+        if ((size < pos) || (size - pos < 5)) {
+            ret = errorcode_t::no_data;
             __leave2;
         }
 
@@ -70,6 +70,7 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 // } ChangeCipherSpec;
                 tpos = pos;
                 ret = tls_dump_change_cipher_spec(s, session, stream, size, tpos);
+                session->get_roleinfo(role).change_cipher_spec();
             } break;
             case tls_content_type_alert: {
                 // RFC 8446 6.  Alert Protocol
@@ -79,16 +80,48 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
             } break;
             case tls_content_type_handshake: {
                 tpos = pos;
-                ret = tls_dump_handshake(s, session, stream, size, tpos);
+                while (tpos < size) {
+                    ret = tls_dump_handshake(s, session, stream, size, tpos);
+                    if (errorcode_t::success != ret) {
+                        break;
+                    }
+                }
             } break;
             case tls_content_type_application_data: {
-                tls_protection& protection = session->get_tls_protection();
-                binary_t decrypted;
-                binary_t tag;
-                ret = protection.decrypt(session, stream, len, decrypted, pos, tag, s);
-                if (errorcode_t::success == ret) {
-                    tpos = 0;
-                    ret = tls_dump_handshake(s, session, &decrypted[0], decrypted.size(), tpos);
+                auto protect = session->get_roleinfo(role).doprotect();
+                if (protect) {
+                    tls_protection& protection = session->get_tls_protection();
+                    binary_t plaintext;
+                    binary_t tag;
+                    ret = protection.decrypt(session, role, stream, len, plaintext, pos, tag, s);
+                    if (errorcode_t::success == ret) {
+                        auto plainsize = plaintext.size();
+                        // still ambiguous plaintext is handshake or not
+                        // ... 0x16
+                        if (plainsize && (tls_content_type_handshake == *plaintext.rbegin())) {
+                            tpos = 0;
+                            while (tpos < plainsize) {
+                                auto test = tls_dump_handshake(s, session, &plaintext[0], plainsize, tpos, role);
+                                if (errorcode_t::success != test) {
+                                    if (errorcode_t::no_data != test) {
+                                        ret = test;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    tpos = pos;
+                    while (tpos < size) {
+                        auto test = tls_dump_handshake(s, session, stream, size, tpos, role);
+                        if (errorcode_t::success != test) {
+                            if (errorcode_t::no_data != test) {
+                                ret = test;
+                            }
+                            break;
+                        }
+                    }
                 }
             } break;
         }

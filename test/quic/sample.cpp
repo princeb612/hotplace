@@ -767,6 +767,52 @@ void test_quic_xargs_org() {
 
         test_rfc_9001_initial(&test, &server_session);
     }
+
+    /**
+     * Server Handshake Keys Calc
+     * https://quic.xargs.org/#server-handshake-keys-calc
+     */
+    {
+        /**
+         * # openssl pkey -in server-ephemeral-private.key -text
+         * -----BEGIN PRIVATE KEY-----
+         * MC4CAQAwBQYDK2VuBCIEIJCRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6v
+         * -----END PRIVATE KEY-----
+         * X25519 Private-Key:
+         * priv:
+         *     90:91:92:93:94:95:96:97:98:99:9a:9b:9c:9d:9e:
+         *     9f:a0:a1:a2:a3:a4:a5:a6:a7:a8:a9:aa:ab:ac:ad:
+         *     ae:af
+         * pub:
+         *     9f:d7:ad:6d:cf:f4:29:8d:d3:f9:6d:5b:1b:2a:f9:
+         *     10:a0:53:5b:14:88:d7:f8:fa:bb:34:9a:98:28:80:
+         *     b6:15
+         *
+         * # openssl pkey -pubin -in client-ephemeral-public.key -text
+         * -----BEGIN PUBLIC KEY-----
+         * MCowBQYDK2VuAyEANYBy1jZYgNGu6jKa35EhODhR7SGijjt16WXQ0s0WYlQ=
+         * -----END PUBLIC KEY-----
+         * X25519 Public-Key:
+         * pub:
+         *     35:80:72:d6:36:58:80:d1:ae:ea:32:9a:df:91:21:
+         *     38:38:51:ed:21:a2:8e:3b:75:e9:65:d0:d2:cd:16:
+         *     62:54
+         */
+
+        const char* x = "9fd7ad6dcff4298dd3f96d5b1b2af910a0535b1488d7f8fabb349a982880b615";
+        const char* y = "";
+        const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";
+
+        crypto_key& server_keys = protection.get_key();
+        crypto_key& key = protection.get_key();
+
+        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc("server key"));
+
+        basic_stream bs;
+        dump_key(key.find("server key"), &bs);
+        _logger->writeln(bs);
+    }
+
     /**
      * UDP Datagram 2 - Server hello and handshake
      * https://quic.xargs.org/#server-initial-packet
@@ -808,87 +854,37 @@ void test_quic_xargs_org() {
 
         test_rfc_9001_initial(&test, &server_session);
     }
-    /**
-     * Server Handshake Keys Calc
-     * https://quic.xargs.org/#server-handshake-keys-calc
-     */
+
     {
-        /**
-         * # openssl pkey -in server-ephemeral-private.key -text
-         * -----BEGIN PRIVATE KEY-----
-         * MC4CAQAwBQYDK2VuBCIEIJCRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6v
-         * -----END PRIVATE KEY-----
-         * X25519 Private-Key:
-         * priv:
-         *     90:91:92:93:94:95:96:97:98:99:9a:9b:9c:9d:9e:
-         *     9f:a0:a1:a2:a3:a4:a5:a6:a7:a8:a9:aa:ab:ac:ad:
-         *     ae:af
-         * pub:
-         *     9f:d7:ad:6d:cf:f4:29:8d:d3:f9:6d:5b:1b:2a:f9:
-         *     10:a0:53:5b:14:88:d7:f8:fa:bb:34:9a:98:28:80:
-         *     b6:15
-         *
-         * # openssl pkey -pubin -in client-ephemeral-public.key -text
-         * -----BEGIN PUBLIC KEY-----
-         * MCowBQYDK2VuAyEANYBy1jZYgNGu6jKa35EhODhR7SGijjt16WXQ0s0WYlQ=
-         * -----END PUBLIC KEY-----
-         * X25519 Public-Key:
-         * pub:
-         *     35:80:72:d6:36:58:80:d1:ae:ea:32:9a:df:91:21:
-         *     38:38:51:ed:21:a2:8e:3b:75:e9:65:d0:d2:cd:16:
-         *     62:54
-         */
-
-        {
-            const char* x = "9fd7ad6dcff4298dd3f96d5b1b2af910a0535b1488d7f8fabb349a982880b615";
-            const char* y = "";
-            const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";
-
-            crypto_key& server_keys = protection.get_key();
-            crypto_key& key = protection.get_key();
-
-            keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc("server key"));
-
-            basic_stream bs;
-            dump_key(key.find("server key"), &bs);
-            _logger->writeln(bs);
-        }
-
         // https://quic.xargs.org/#server-handshake-keys-calc
         //  It then calculates the SHA256 hash of all handshake messages to this point (ClientHello and ServerHello).
         //  The hash does not include the 6-byte CRYPTO frame headers.
         //  This "hello_hash" is ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b:
 
-        // > handshake type 2 (server_hello)
-        //  > cipher suite 0x1301 TLS_AES_128_GCM_SHA256
-        protection.calc(&server_session);
-
-        {
-            auto keysize = 0;
-            auto dlen = 0;
-            auto hashalg = 0;
-            std::string hashname;
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            const tls_alg_info_t* hint_tls_alg = tlsadvisor->hintof_tls_algorithm(0x1301);
-            if (hint_tls_alg) {
-                crypto_advisor* advisor = crypto_advisor::get_instance();
-                const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(hint_tls_alg->cipher);
-                const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
-                if (hint_cipher) {
-                    keysize = hint_cipher->keysize;
-                }
-                if (hint_mac) {
-                    dlen = hint_mac->digest_size;
-                    hashalg = hint_mac->algorithm;
-                    hashname = hint_mac->fetchname;
-                }
+        auto keysize = 0;
+        auto dlen = 0;
+        auto hashalg = 0;
+        std::string hashname;
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        const tls_alg_info_t* hint_tls_alg = tlsadvisor->hintof_tls_algorithm(0x1301);
+        if (hint_tls_alg) {
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(hint_tls_alg->cipher);
+            const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
+            if (hint_cipher) {
+                keysize = hint_cipher->keysize;
             }
-            _logger->writeln("keysize : %i", keysize);
-            _logger->writeln("hash : %s", hashname.c_str());
-            _logger->writeln("dlen : %i", dlen);
-            _test_case.assert(keysize == 16, __FUNCTION__, "TLS_AES_128_GCM_SHA256 keysize %i", keysize);
-            _test_case.assert(dlen == 32, __FUNCTION__, "TLS_AES_128_GCM_SHA256 dlen %i", dlen);
+            if (hint_mac) {
+                dlen = hint_mac->digest_size;
+                hashalg = hint_mac->algorithm;
+                hashname = hint_mac->fetchname;
+            }
         }
+        _logger->writeln("keysize : %i", keysize);
+        _logger->writeln("hash : %s", hashname.c_str());
+        _logger->writeln("dlen : %i", dlen);
+        _test_case.assert(keysize == 16, __FUNCTION__, "TLS_AES_128_GCM_SHA256 keysize %i", keysize);
+        _test_case.assert(dlen == 32, __FUNCTION__, "TLS_AES_128_GCM_SHA256 dlen %i", dlen);
 
         auto lambda_test = [&](tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect) -> void {
             protection.get_item(tls_secret, secret);

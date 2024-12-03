@@ -16,8 +16,6 @@
 namespace hotplace {
 namespace net {
 
-// step.1 ... understanding TLS alert
-
 return_t tls_dump_alert(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -25,8 +23,6 @@ return_t tls_dump_alert(stream_t* s, tls_session* session, const byte_t* stream,
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        // studying
     }
     __finally2 {
         // do nothing

@@ -52,15 +52,15 @@
  *                Figure 1: Message Flow for Full TLS Handshake
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_SPEC__
-#define __HOTPLACE_SDK_NET_TLS_SPEC__
+#ifndef __HOTPLACE_SDK_NET_TLSSPEC__
+#define __HOTPLACE_SDK_NET_TLSSPEC__
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/types.hpp>
 #include <sdk/crypto/crypto/types.hpp>
-#include <sdk/net/types.hpp>
+#include <sdk/net/tlsspec/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -273,32 +273,53 @@ enum tls_secret_t : uint16 {
     tls_secret_hello_hash = 2,
     tls_secret_early_secret = 3,
     tls_secret_empty_hash = 4,
-    tls_secret_handshake_derived = 0x20,
-    tls_secret_handshake = 0x21,
-    tls_secret_handshake_client = 0x22,
-    tls_secret_handshake_server = 0x23,
-    tls_secret_handshake_client_key = 0x24,
-    tls_secret_handshake_client_iv = 0x25,
-    tls_secret_handshake_quic_client_key = 0x26,
-    tls_secret_handshake_quic_client_iv = 0x27,
-    tls_secret_handshake_quic_client_hp = 0x28,
-    tls_secret_handshake_client_finished = 0x29,
-    tls_secret_handshake_server_key = 0x2a,
-    tls_secret_handshake_server_iv = 0x2b,
-    tls_secret_handshake_quic_server_key = 0x2c,
-    tls_secret_handshake_quic_server_iv = 0x2d,
-    tls_secret_handshake_quic_server_hp = 0x2e,
-    tls_secret_handshake_server_finished = 0x2f,
 
-    tls_secret_master_derived = 0x40,
-    tls_secret_master = 0x41,
+    tls_context_client_hello = 5,
+    tls_context_server_hello = 6,
+    tls_context_server_finished = 7,
+    tls_context_client_finished = 8,
+
+    tls_secret_handshake_derived = 0x10,
+    tls_secret_handshake = 0x11,
+    tls_secret_handshake_client = 0x12,
+    tls_secret_handshake_server = 0x13,
+    tls_secret_handshake_client_key = 0x14,
+    tls_secret_handshake_client_iv = 0x15,
+    tls_secret_handshake_quic_client_key = 0x16,
+    tls_secret_handshake_quic_client_iv = 0x17,
+    tls_secret_handshake_quic_client_hp = 0x18,
+    tls_secret_handshake_client_finished = 0x19,
+    tls_secret_handshake_server_key = 0x1a,
+    tls_secret_handshake_server_iv = 0x1b,
+    tls_secret_handshake_quic_server_key = 0x1c,
+    tls_secret_handshake_quic_server_iv = 0x1d,
+    tls_secret_handshake_quic_server_hp = 0x1e,
+
+    tls_secret_application_derived = 0x20,
+    tls_secret_application = 0x21,
+    tls_secret_application_client = 0x22,
+    tls_secret_application_server = 0x23,
+    tls_secret_application_client_key = 0x24,
+    tls_secret_application_client_iv = 0x25,
+    tls_secret_application_quic_client_key = 0x26,
+    tls_secret_application_quic_client_iv = 0x27,
+    tls_secret_application_quic_client_hp = 0x28,
+    tls_secret_application_client_finished = 0x29,
+    tls_secret_application_server_key = 0x2a,
+    tls_secret_application_server_iv = 0x2b,
+    tls_secret_application_quic_server_key = 0x2c,
+    tls_secret_application_quic_server_iv = 0x2d,
+    tls_secret_application_quic_server_hp = 0x2e,
+
+    tls_secret_exporter = 0x31,
+    tls_secret_resumption = 0x41,
 };
 
 enum tls_mode_t : uint8 {
-    tls_mode_tls = (1 << 0),
-    tls_mode_quic = (1 << 1),
-    tls_mode_client = (1 << 2),
-    tls_mode_server = (1 << 3),
+    tls_mode_client = (1 << 0),
+    tls_mode_server = (1 << 1),
+    tls_mode_tls = (1 << 2),
+    tls_mode_quic = (1 << 3),
 };
 
 // studying ...
@@ -307,15 +328,35 @@ class tls_session;
 
 class tls_protection {
    public:
+    /**
+     * @brief    TLS protection
+     * @param    uint8 mode [inopt] see tls_mode_t
+     */
     tls_protection(uint8 mode = -1);
     ~tls_protection();
 
     uint8 get_mode();
 
-    // server_hello cipher_suite
+    /**
+     * @brief   cipher suite
+     * @remarks after server_hello
+     */
     uint16 get_cipher_suite();
     void set_cipher_suite(uint16 alg);
+    /**
+     * @brief   transcript hash
+     * @remarks after server_hello
+     */
     transcript_hash* begin_transcript_hash();
+    /**
+     * @brief   transcript hash
+     * @sample
+     *          auto hash = get_transcript_hash;
+     *          if (hash) {
+     *              hash->digest(stream, size, context_hash);
+     *              hash->release();
+     *          }
+     */
     transcript_hash* get_transcript_hash();
 
     crypto_key& get_cert();
@@ -323,23 +364,40 @@ class tls_protection {
     crypto_key& get_keyexchange();
     /**
      * @brief   calc
+     * @param   tls_session* session [in]
+     * @param   uint16 type [in]
      * @remarks generate secrets related to tls_mode_t
      */
-    return_t calc(tls_session* session);
+    return_t calc(tls_session* session, uint16 type);
 
     void get_item(tls_secret_t type, binary_t& item);
     const binary_t& get_item(tls_secret_t type);
     void set_item(tls_secret_t type, const binary_t& item);
+    void set_item(tls_secret_t type, const byte_t* stream, size_t size);
 
-    return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv);
+    return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv, uint64 recordno);
 
     /**
-     * @brief   AEAD
+     * @brief   C <- S
+     * @remarks
+     *          application_data
+     *          |   role                    | client  | server  | key/iv        |
+     *          | 0 client session (C <- S) | decrypt | encrypt | server key/iv |
+     *          | 1 server session (C -> S) | encrypt | decrypt | client key/iv |
+     *
+     *          encrypt(&server_session, record, protected_record);
+     *          decrypt(&client_session, protected_record, record);
      */
-    return_t decrypt(tls_session* session, const byte_t* stream, size_t size, binary_t& decrypted, size_t aadlen, binary_t& tag,
+    return_t decrypt(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, binary_t& plaintext, size_t aadlen, binary_t& tag,
                      stream_t* debugstream = nullptr);
     /**
      * @brief   verify
+     * @sample
+     *          auto sign = get_crypto_sign(scheme);
+     *          if (sign) {
+     *              ret = sign->verify(pkey, stream, sign, signature);
+     *              sign->release();
+     *          }
      */
     crypto_sign* get_crypto_sign(uint16 scheme);
 
@@ -353,34 +411,39 @@ class tls_protection {
     std::map<tls_secret_t, binary_t> _kv;
 };
 
-enum session_item_t {
-    item_client_hello = 0,
-    item_client_hello_keyshare = 1,
-    item_server_hello = 2,
-    item_server_certificate = 3,
-};
-
 class tls_session {
+    friend class tls_protection;
+
    public:
-    tls_session();
-    ~tls_session();
+    tls_session() {}
 
-    tls_protection& get_tls_protection();
+    tls_protection& get_tls_protection() { return _tls_protection; }
 
-    // IV
-    uint64 get_sequence(bool inc = false);
-    void inc_sequence();
+    struct roleinfo {
+        tls_handshake_type_t hstype;
+        bool apply_cipher_spec;
+        uint64 record_no;
 
-    // hello_hash, certificate_verify
-    void set(session_item_t type, const byte_t* begin, size_t size);
-    void set(session_item_t type, const binary_t& item);
-    const binary_t& get(session_item_t type);
-    void erase(session_item_t type);
+        roleinfo() : hstype(tls_handshake_hello_request), apply_cipher_spec(false), record_no(0) {}
+
+        void set_status(tls_handshake_type_t type) { hstype = type; }
+        tls_handshake_type_t get_status() { return hstype; }
+        void change_cipher_spec() { apply_cipher_spec = true; }
+        bool doprotect() { return apply_cipher_spec; }
+        uint64 get_recordno(bool inc = false) { return inc ? record_no++ : record_no; }
+        void inc_recordno() { ++record_no; }
+        void reset_recordno() { record_no = 0; }
+    };
+    roleinfo& get_roleinfo(tls_role_t role) { return _roles[role]; }
+    void handshake_finished() {
+        for (auto& item : _roles) {
+            item.second.reset_recordno();
+        }
+    }
 
    protected:
-    uint64 _seq;
+    std::map<tls_role_t, roleinfo> _roles;
     tls_protection _tls_protection;
-    std::map<session_item_t, binary_t> _kv;
 };
 
 struct tls_alg_info_t {
@@ -461,11 +524,12 @@ class tls_advisor {
  * @param   const byte_t* stream [in]
  * @param   size_t size [in]
  * @param   size_t& pos [inout]
+ * @remarks
  */
-return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role = role_server);
 return_t tls_dump_change_cipher_spec(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 return_t tls_dump_alert(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
-return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role = role_server);
 return_t tls_dump_application_data(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 

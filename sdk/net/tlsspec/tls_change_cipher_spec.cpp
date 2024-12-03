@@ -16,8 +16,6 @@
 namespace hotplace {
 namespace net {
 
-// step.1 ... understanding TLS Change Cipher Spec
-
 return_t tls_dump_change_cipher_spec(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

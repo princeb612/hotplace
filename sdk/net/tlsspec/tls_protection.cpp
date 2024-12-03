@@ -51,7 +51,12 @@ transcript_hash* tls_protection::begin_transcript_hash() {
     return _transcript_hash;
 }
 
-transcript_hash* tls_protection::get_transcript_hash() { return _transcript_hash; }
+transcript_hash* tls_protection::get_transcript_hash() {
+    if (_transcript_hash) {
+        _transcript_hash->addref();
+    }
+    return _transcript_hash;
+}
 
 crypto_key& tls_protection::get_cert() { return _cert; }
 
@@ -59,7 +64,7 @@ crypto_key& tls_protection::get_key() { return _key; }
 
 crypto_key& tls_protection::get_keyexchange() { return _keyexchange; }
 
-return_t tls_protection::calc(tls_session* session) {
+return_t tls_protection::calc(tls_session* session, uint16 type) {
     return_t ret = errorcode_t::success;
     // RFC 8446 7.1.  Key Schedule
     __try2 {
@@ -94,173 +99,200 @@ return_t tls_protection::calc(tls_session* session) {
         auto dlen = hint_mac->digest_size;
         auto hashalg = hint_mac->fetchname;
 
-        // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes
-        //  psk_ke      ... pre_shared_key
-        //  psk_dhe_ke  ... key_share
-        binary_t shared_secret;
-        {
-            const EVP_PKEY* pkey_priv = get_key().any();
-            const EVP_PKEY* pkey_pub = get_keyexchange().any();
-            if (nullptr == pkey_priv || nullptr == pkey_pub) {
-                ret = errorcode_t::not_found;
-                __leave2;
-            }
-
-            const EVP_PKEY* pubkey = get_peer_key(pkey_pub);
-            ret = dh_key_agreement(pkey_priv, pkey_pub, shared_secret);
-            EVP_PKEY_free((EVP_PKEY*)pubkey);
-
-            _kv[tls_secret_shared_secret] = shared_secret;
-        }
-
-        binary_t hello_hash;
-        get_item(tls_secret_hello_hash, hello_hash);
-
         openssl_kdf kdf;
         binary_t context;
-        binary_t early_secret;
+
         binary_t ikm_empty;
-        ikm_empty.resize(dlen);
-        {
-            binary_t salt;
-            salt.resize(1);
-            kdf.hmac_kdf_extract(early_secret, hashalg, salt, ikm_empty);
-            _kv[tls_secret_early_secret] = early_secret;
-        }
         binary_t empty_hash;
+
         {
             openssl_digest dgst;
             binary_t empty;
             dgst.digest(hashalg, empty, empty_hash);
             _kv[tls_secret_empty_hash] = empty_hash;
         }
+        ikm_empty.resize(dlen);
 
-        /**
-         *             0
-         *             |
-         *             v
-         *   PSK ->  HKDF-Extract = Early Secret
-         *             |
-         *             +-----> Derive-Secret(., "ext binder" | "res binder", "")
-         *             |                     = binder_key
-         *             |
-         *             +-----> Derive-Secret(., "c e traffic", ClientHello)
-         *             |                     = client_early_traffic_secret
-         *             |
-         *             +-----> Derive-Secret(., "e exp master", ClientHello)
-         *             |                     = early_exporter_master_secret
-         *             v
-         *       Derive-Secret(., "derived", "")
-         *             |
-         *             v
-         */
-
-        /**
-         *   (EC)DHE -> HKDF-Extract = Handshake Secret
-         *             |
-         *             +-----> Derive-Secret(., "c hs traffic",
-         *             |                     ClientHello...ServerHello)
-         *             |                     = client_handshake_traffic_secret
-         *             |
-         *             +-----> Derive-Secret(., "s hs traffic",
-         *             |                     ClientHello...ServerHello)
-         *             |                     = server_handshake_traffic_secret
-         *             v
-         *       Derive-Secret(., "derived", "")
-         *             |
-         *             v
-         */
-
-        binary_t handshake_derived_secret;
-        {
-            kdf.hkdf_expand_label(handshake_derived_secret, hashalg, dlen, early_secret, str2bin("derived"), empty_hash);
-            _kv[tls_secret_handshake_derived] = handshake_derived_secret;
-        }
-        binary_t handshake_secret;
-        {
-            kdf.hmac_kdf_extract(handshake_secret, hashalg, handshake_derived_secret, shared_secret);
-            _kv[tls_secret_handshake] = handshake_secret;
+        binary_t context_hash;
+        auto tshash = get_transcript_hash();
+        if (tshash) {
+            tshash->digest(context_hash);
+            tshash->release();
         }
 
-        binary_t okm;
-        if (tls_mode_client & get_mode()) {
-            binary_t handshake_client_secret;
+        auto lambda_expand_label = [&](tls_secret_t sec, binary_t& okm, const char* alg, uint16 dlen, const binary_t& secret, const char* label,
+                                       const binary_t& context) -> void {
+            kdf.hkdf_expand_label(okm, alg, dlen, secret, str2bin(label), context);
+            _kv[sec] = okm;
+        };
+        auto lambda_extract = [&](tls_secret_t sec, binary_t& prk, const char* alg, const binary_t& salt, const binary_t& ikm) -> void {
+            kdf.hmac_kdf_extract(prk, alg, salt, ikm);
+            _kv[sec] = prk;
+        };
+
+        // binary_t hello_hash;
+        if (tls_context_server_hello == type) {
+            // hello_hash = context_hash;
+            _kv[tls_secret_hello_hash] = context_hash;
+
+            /**
+             *             0
+             *             |
+             *             v
+             *   PSK ->  HKDF-Extract = Early Secret
+             *             |
+             *             +-----> Derive-Secret(., "ext binder" | "res binder", "")
+             *             |                     = binder_key
+             *             |
+             *             +-----> Derive-Secret(., "c e traffic", ClientHello)
+             *             |                     = client_early_traffic_secret
+             *             |
+             *             +-----> Derive-Secret(., "e exp master", ClientHello)
+             *             |                     = early_exporter_master_secret
+             *             v
+             *       Derive-Secret(., "derived", "")
+             *             |
+             *             v
+             */
+
+            // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes
+            //  psk_ke      ... pre_shared_key
+            //  psk_dhe_ke  ... key_share
+            binary_t shared_secret;
             {
-                kdf.hkdf_expand_label(handshake_client_secret, hashalg, dlen, handshake_secret, str2bin("c hs traffic"), hello_hash);
-                _kv[tls_secret_handshake_client] = handshake_client_secret;
+                const EVP_PKEY* pkey_priv = get_key().any();
+                const EVP_PKEY* pkey_pub = get_keyexchange().any();
+                if (nullptr == pkey_priv || nullptr == pkey_pub) {
+                    ret = errorcode_t::not_found;
+                    __leave2;
+                }
+
+                const EVP_PKEY* pubkey = get_peer_key(pkey_pub);
+                ret = dh_key_agreement(pkey_priv, pkey_pub, shared_secret);
+                EVP_PKEY_free((EVP_PKEY*)pubkey);
+
+                _kv[tls_secret_shared_secret] = shared_secret;
             }
 
-            if (tls_mode_tls & get_mode()) {
-                kdf.hkdf_expand_label(okm, hashalg, keysize, handshake_client_secret, str2bin("key"), context);
-                _kv[tls_secret_handshake_client_key] = okm;
-
-                kdf.hkdf_expand_label(okm, hashalg, 12, handshake_client_secret, str2bin("iv"), context);
-                _kv[tls_secret_handshake_client_iv] = okm;
-            }
-            if (tls_mode_quic & get_mode()) {
-                kdf.hkdf_expand_label(okm, hashalg, keysize, handshake_client_secret, str2bin("quic key"), context);
-                _kv[tls_secret_handshake_quic_client_key] = okm;
-
-                kdf.hkdf_expand_label(okm, hashalg, 12, handshake_client_secret, str2bin("quic iv"), context);
-                _kv[tls_secret_handshake_quic_client_iv] = okm;
-
-                kdf.hkdf_expand_label(okm, hashalg, keysize, handshake_client_secret, str2bin("quic hp"), context);
-                _kv[tls_secret_handshake_quic_client_hp] = okm;
-            }
-        }
-        if (tls_mode_server & get_mode()) {
-            binary_t handshake_server_secret;
+            binary_t early_secret;
             {
-                kdf.hkdf_expand_label(handshake_server_secret, hashalg, dlen, handshake_secret, str2bin("s hs traffic"), hello_hash);
-                _kv[tls_secret_handshake_server] = handshake_server_secret;
+                binary_t salt;
+                salt.resize(1);
+                lambda_extract(tls_secret_early_secret, early_secret, hashalg, salt, ikm_empty);
             }
 
-            if (tls_mode_tls & get_mode()) {
-                kdf.hkdf_expand_label(okm, hashalg, keysize, handshake_server_secret, str2bin("key"), context);
-                _kv[tls_secret_handshake_server_key] = okm;
+            /**
+             *   (EC)DHE -> HKDF-Extract = Handshake Secret
+             *             |
+             *             +-----> Derive-Secret(., "c hs traffic",
+             *             |                     ClientHello...ServerHello)
+             *             |                     = client_handshake_traffic_secret
+             *             |
+             *             +-----> Derive-Secret(., "s hs traffic",
+             *             |                     ClientHello...ServerHello)
+             *             |                     = server_handshake_traffic_secret
+             *             v
+             *       Derive-Secret(., "derived", "")
+             *             |
+             *             v
+             */
 
-                kdf.hkdf_expand_label(okm, hashalg, 12, handshake_server_secret, str2bin("iv"), context);
-                _kv[tls_secret_handshake_server_iv] = okm;
+            binary_t handshake_derived_secret;
+            lambda_expand_label(tls_secret_handshake_derived, handshake_derived_secret, hashalg, dlen, early_secret, "derived", empty_hash);
+            binary_t handshake_secret;
+            lambda_extract(tls_secret_handshake, handshake_secret, hashalg, handshake_derived_secret, shared_secret);
+
+            binary_t okm;
+            if (tls_mode_client & get_mode()) {
+                binary_t handshake_client_secret;
+                lambda_expand_label(tls_secret_handshake_client, handshake_client_secret, hashalg, dlen, handshake_secret, "c hs traffic", context_hash);
+
+                if (tls_mode_tls & get_mode()) {
+                    lambda_expand_label(tls_secret_handshake_client_key, okm, hashalg, keysize, handshake_client_secret, "key", context);
+                    lambda_expand_label(tls_secret_handshake_client_iv, okm, hashalg, 12, handshake_client_secret, "iv", context);
+                }
+                if (tls_mode_quic & get_mode()) {
+                    lambda_expand_label(tls_secret_handshake_quic_client_key, okm, hashalg, keysize, handshake_client_secret, "quic key", context);
+                    lambda_expand_label(tls_secret_handshake_quic_client_iv, okm, hashalg, 12, handshake_client_secret, "quic iv", context);
+                    lambda_expand_label(tls_secret_handshake_quic_client_hp, okm, hashalg, keysize, handshake_client_secret, "quic hp", context);
+                }
             }
-            if (tls_mode_quic & get_mode()) {
-                kdf.hkdf_expand_label(okm, hashalg, keysize, handshake_server_secret, str2bin("quic key"), context);
-                _kv[tls_secret_handshake_quic_server_key] = okm;
+            if (tls_mode_server & get_mode()) {
+                binary_t handshake_server_secret;
+                lambda_expand_label(tls_secret_handshake_server, handshake_server_secret, hashalg, dlen, handshake_secret, "s hs traffic", context_hash);
 
-                kdf.hkdf_expand_label(okm, hashalg, 12, handshake_server_secret, str2bin("quic iv"), context);
-                _kv[tls_secret_handshake_quic_server_iv] = okm;
-
-                kdf.hkdf_expand_label(okm, hashalg, keysize, handshake_server_secret, str2bin("quic hp"), context);
-                _kv[tls_secret_handshake_quic_server_hp] = okm;
+                if (tls_mode_tls & get_mode()) {
+                    lambda_expand_label(tls_secret_handshake_server_key, okm, hashalg, keysize, handshake_server_secret, "key", context);
+                    lambda_expand_label(tls_secret_handshake_server_iv, okm, hashalg, 12, handshake_server_secret, "iv", context);
+                }
+                if (tls_mode_quic & get_mode()) {
+                    lambda_expand_label(tls_secret_handshake_quic_server_key, okm, hashalg, keysize, handshake_server_secret, "quic key", context);
+                    lambda_expand_label(tls_secret_handshake_quic_server_iv, okm, hashalg, 12, handshake_server_secret, "quic iv", context);
+                    lambda_expand_label(tls_secret_handshake_quic_server_hp, okm, hashalg, keysize, handshake_server_secret, "quic hp", context);
+                }
             }
-        }
-        /**
-         *   0 -> HKDF-Extract = Master Secret
-         *             |
-         *             +-----> Derive-Secret(., "c ap traffic",
-         *             |                     ClientHello...server Finished)
-         *             |                     = client_application_traffic_secret_0
-         *             |
-         *             +-----> Derive-Secret(., "s ap traffic",
-         *             |                     ClientHello...server Finished)
-         *             |                     = server_application_traffic_secret_0
-         *             |
-         *             +-----> Derive-Secret(., "exp master",
-         *             |                     ClientHello...server Finished)
-         *             |                     = exporter_master_secret
-         *             |
-         *             +-----> Derive-Secret(., "res master",
-         *                                   ClientHello...client Finished)
-         *                                   = resumption_master_secret
-         */
-        binary_t master_derived_secret;
-        {
-            kdf.hkdf_expand_label(master_derived_secret, hashalg, dlen, handshake_secret, str2bin("derived"), empty_hash);
-            _kv[tls_secret_master_derived] = master_derived_secret;
-        }
-        binary_t master_secret;
-        {
-            kdf.hmac_kdf_extract(master_secret, hashalg, master_derived_secret, ikm_empty);
-            _kv[tls_secret_master] = master_secret;
+        } else if (tls_context_server_finished == type) {
+            _kv[tls_context_server_finished] = context_hash;
+            /**
+             *   0 -> HKDF-Extract = Master Secret
+             *             |
+             *             +-----> Derive-Secret(., "c ap traffic",
+             *             |                     ClientHello...server Finished)
+             *             |                     = client_application_traffic_secret_0
+             *             |
+             *             +-----> Derive-Secret(., "s ap traffic",
+             *             |                     ClientHello...server Finished)
+             *             |                     = server_application_traffic_secret_0
+             *             |
+             *             +-----> Derive-Secret(., "exp master",
+             *             |                     ClientHello...server Finished)
+             *             |                     = exporter_master_secret
+             *             |
+             *             +-----> Derive-Secret(., "res master",
+             *                                   ClientHello...client Finished)
+             *                                   = resumption_master_secret
+             */
+            const binary_t& handshake_secret = _kv[tls_secret_handshake];
+
+            binary_t application_derived_secret;
+            lambda_expand_label(tls_secret_application_derived, application_derived_secret, hashalg, dlen, handshake_secret, "derived", empty_hash);
+            binary_t application_secret;
+            lambda_extract(tls_secret_application, application_secret, hashalg, application_derived_secret, ikm_empty);
+
+            binary_t okm;
+            if (tls_mode_client & get_mode()) {
+                binary_t application_client_secret;
+                lambda_expand_label(tls_secret_application_client, application_client_secret, hashalg, dlen, application_secret, "c ap traffic", context_hash);
+
+                if (tls_mode_tls & get_mode()) {
+                    lambda_expand_label(tls_secret_application_client_key, okm, hashalg, keysize, application_client_secret, "key", context);
+                    lambda_expand_label(tls_secret_application_client_iv, okm, hashalg, 12, application_client_secret, "iv", context);
+                }
+                if (tls_mode_quic & get_mode()) {
+                    lambda_expand_label(tls_secret_application_quic_client_key, okm, hashalg, keysize, application_client_secret, "quic key", context);
+                    lambda_expand_label(tls_secret_application_quic_client_iv, okm, hashalg, 12, application_client_secret, "quic iv", context);
+                    lambda_expand_label(tls_secret_application_quic_client_hp, okm, hashalg, keysize, application_client_secret, "quic hp", context);
+                }
+            }
+            if (tls_mode_server & get_mode()) {
+                binary_t application_server_secret;
+                lambda_expand_label(tls_secret_application_server, application_server_secret, hashalg, dlen, application_secret, "s ap traffic", context_hash);
+
+                if (tls_mode_tls & get_mode()) {
+                    lambda_expand_label(tls_secret_application_server_key, okm, hashalg, keysize, application_server_secret, "key", context);
+                    lambda_expand_label(tls_secret_application_server_iv, okm, hashalg, 12, application_server_secret, "iv", context);
+                }
+                if (tls_mode_quic & get_mode()) {
+                    lambda_expand_label(tls_secret_application_quic_server_key, okm, hashalg, keysize, application_server_secret, "quic key", context);
+                    lambda_expand_label(tls_secret_application_quic_server_iv, okm, hashalg, 12, application_server_secret, "quic iv", context);
+                    lambda_expand_label(tls_secret_application_quic_server_hp, okm, hashalg, keysize, application_server_secret, "quic hp", context);
+                }
+            }
+
+            binary_t exporter_secret;
+            lambda_expand_label(tls_secret_exporter, exporter_secret, hashalg, dlen, application_secret, "exp master", context_hash);
+        } else if (tls_context_client_finished == type) {
+            //
         }
     }
     __finally2 {
@@ -275,7 +307,15 @@ const binary_t& tls_protection::get_item(tls_secret_t type) { return _kv[type]; 
 
 void tls_protection::set_item(tls_secret_t type, const binary_t& item) { _kv[type] = item; }
 
-return_t tls_protection::build_iv(tls_session* session, tls_secret_t type, binary_t& iv) {
+void tls_protection::set_item(tls_secret_t type, const byte_t* stream, size_t size) {
+    if (stream) {
+        binary_t bin;
+        bin.insert(bin.end(), stream, stream + size);
+        _kv[type] = std::move(bin);
+    }
+}
+
+return_t tls_protection::build_iv(tls_session* session, tls_secret_t type, binary_t& iv, uint64 recordno) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -289,12 +329,9 @@ return_t tls_protection::build_iv(tls_session* session, tls_secret_t type, binar
             __leave2;
         }
 
-        auto seq = session->get_sequence();
         for (uint64 i = 0; i < 8; i++) {
-            iv[12 - 1 - i] ^= ((seq >> (i * 8)) & 0xff);
+            iv[12 - 1 - i] ^= ((recordno >> (i * 8)) & 0xff);
         }
-
-        session->inc_sequence();
     }
     __finally2 {
         // do nothing
@@ -302,7 +339,7 @@ return_t tls_protection::build_iv(tls_session* session, tls_secret_t type, binar
     return ret;
 }
 
-return_t tls_protection::decrypt(tls_session* session, const byte_t* stream, size_t size, binary_t& decrypted, size_t aadlen, binary_t& tag,
+return_t tls_protection::decrypt(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, binary_t& plaintext, size_t aadlen, binary_t& tag,
                                  stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -325,15 +362,40 @@ return_t tls_protection::decrypt(tls_session* session, const byte_t* stream, siz
         binary_append(aad, stream, aadlen);
         binary_append(tag, stream + aadlen + size - tagsize, tagsize);
 
-        auto const& key = get_item(tls_secret_handshake_server_key);
-        binary_t iv;  // XOR seq
-        build_iv(session, tls_secret_handshake_server_iv, iv);
-
         crypt_context_t* handle = nullptr;
         openssl_crypt crypt;
-        ret = crypt.open(&handle, hint->cipher, hint->mode, key, iv);
+
+        tls_secret_t secret_key;
+        tls_secret_t secret_iv;
+        uint64 record_no = 0;
+        auto& ri = session->get_roleinfo(role);
+        auto hsstatus = ri.get_status();
+        record_no = ri.get_recordno(true);
+        if (role_client == role) {
+            if (tls_handshake_finished == hsstatus) {
+                secret_key = tls_secret_application_client_key;
+                secret_iv = tls_secret_application_client_iv;
+            } else {
+                secret_key = tls_secret_handshake_client_key;
+                secret_iv = tls_secret_handshake_client_iv;
+            }
+        } else {
+            if (tls_handshake_finished == hsstatus) {
+                secret_key = tls_secret_application_server_key;
+                secret_iv = tls_secret_application_server_iv;
+            } else {
+                secret_key = tls_secret_handshake_server_key;
+                secret_iv = tls_secret_handshake_server_iv;
+            }
+        }
+
+        auto const& key = get_item(secret_key);
+        auto const& iv = get_item(secret_iv);
+        binary_t nonce = iv;
+        build_iv(session, secret_iv, nonce, record_no);
+        ret = crypt.open(&handle, hint->cipher, hint->mode, key, nonce);
         if (errorcode_t::success == ret) {
-            ret = crypt.decrypt2(handle, stream + aadlen, size - tagsize, decrypted, &aad, &tag);
+            ret = crypt.decrypt2(handle, stream + aadlen, size - tagsize, plaintext, &aad, &tag);
             crypt.close(handle);
         }
 
@@ -341,10 +403,12 @@ return_t tls_protection::decrypt(tls_session* session, const byte_t* stream, siz
             debugstream->autoindent(3);
             debugstream->printf(" > key %s\n", base16_encode(key).c_str());
             debugstream->printf(" > iv %s\n", base16_encode(iv).c_str());
+            debugstream->printf(" > record no %i\n", record_no);
+            debugstream->printf(" > nonce %s\n", base16_encode(nonce).c_str());
             debugstream->printf(" > aad %s\n", base16_encode(aad).c_str());
             debugstream->printf(" > tag %s\n", base16_encode(tag).c_str());
-            debugstream->printf(" > decrypted\n");
-            dump_memory(decrypted, debugstream, 16, 3, 0x0, dump_notrunc);
+            debugstream->printf(" > plaintext\n");
+            dump_memory(plaintext, debugstream, 16, 3, 0x0, dump_notrunc);
             debugstream->autoindent(0);
             debugstream->printf("\n");
         }

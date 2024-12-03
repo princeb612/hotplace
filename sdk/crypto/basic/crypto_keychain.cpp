@@ -405,7 +405,7 @@ return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const c
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base64_decode(input, strlen(input), base64_encoding_t::base64_encoding);
             }
@@ -415,9 +415,9 @@ return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const c
         binary_t bin_e;
         binary_t bin_d;
 
-        c2b(n, bin_n);
-        c2b(e, bin_e);
-        c2b(d, bin_d);
+        os2b(n, bin_n);
+        os2b(e, bin_e);
+        os2b(d, bin_d);
 
         binary_t bin_p;
         binary_t bin_q;
@@ -426,11 +426,11 @@ return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const c
         binary_t bin_qi;
 
         if (p && q && dp && dq && qi) {
-            c2b(p, bin_p);
-            c2b(q, bin_q);
-            c2b(dp, bin_dp);
-            c2b(dq, bin_dq);
-            c2b(qi, bin_qi);
+            os2b(p, bin_p);
+            os2b(q, bin_q);
+            os2b(dp, bin_dp);
+            os2b(dq, bin_dq);
+            os2b(qi, bin_qi);
             ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, desc);
         } else {
             ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);
@@ -456,7 +456,7 @@ return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const 
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base64_decode(input, strlen(input), base64_encoding_t::base64url_encoding);
             }
@@ -466,9 +466,9 @@ return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const 
         binary_t bin_e;
         binary_t bin_d;
 
-        c2b(n, bin_n);
-        c2b(e, bin_e);
-        c2b(d, bin_d);
+        os2b(n, bin_n);
+        os2b(e, bin_e);
+        os2b(d, bin_d);
 
         binary_t bin_p;
         binary_t bin_q;
@@ -477,11 +477,11 @@ return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const 
         binary_t bin_qi;
 
         if (p && q && dp && dq && qi) {
-            c2b(p, bin_p);
-            c2b(q, bin_q);
-            c2b(dp, bin_dp);
-            c2b(dq, bin_dq);
-            c2b(qi, bin_qi);
+            os2b(p, bin_p);
+            os2b(q, bin_q);
+            os2b(dp, bin_dp);
+            os2b(dq, bin_dq);
+            os2b(qi, bin_qi);
             ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, desc);
         } else {
             ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);
@@ -507,7 +507,7 @@ return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const c
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base16_decode(input, strlen(input));
             }
@@ -517,9 +517,9 @@ return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const c
         binary_t bin_e;
         binary_t bin_d;
 
-        c2b(n, bin_n);
-        c2b(e, bin_e);
-        c2b(d, bin_d);
+        os2b(n, bin_n);
+        os2b(e, bin_e);
+        os2b(d, bin_d);
 
         binary_t bin_p;
         binary_t bin_q;
@@ -528,11 +528,11 @@ return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const c
         binary_t bin_qi;
 
         if (p && q && dp && dq && qi) {
-            c2b(p, bin_p);
-            c2b(q, bin_q);
-            c2b(dp, bin_dp);
-            c2b(dq, bin_dq);
-            c2b(qi, bin_qi);
+            os2b(p, bin_p);
+            os2b(q, bin_q);
+            os2b(dp, bin_dp);
+            os2b(dq, bin_dq);
+            os2b(qi, bin_qi);
             ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, desc);
         } else {
             ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);
@@ -990,7 +990,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const ch
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base64_decode(input, strlen(input), base64_encoding_t::base64_encoding);
             }
@@ -1000,9 +1000,9 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const ch
         binary_t bin_y;
         binary_t bin_d;
 
-        c2b(x, bin_x);
-        c2b(y, bin_y);
-        c2b(d, bin_d);
+        os2b(x, bin_x);
+        os2b(y, bin_y);
+        os2b(d, bin_d);
 
         ret = add_ec(cryptokey, nid, bin_x, bin_y, bin_d, desc);
     }
@@ -1020,7 +1020,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const c
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base64_decode(input, strlen(input), base64_encoding_t::base64url_encoding);
             }
@@ -1030,9 +1030,9 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const c
         binary_t bin_y;
         binary_t bin_d;
 
-        c2b(x, bin_x);
-        c2b(y, bin_y);
-        c2b(d, bin_d);
+        os2b(x, bin_x);
+        os2b(y, bin_y);
+        os2b(d, bin_d);
 
         ret = add_ec(cryptokey, nid, bin_x, bin_y, bin_d, desc);
     }
@@ -1050,7 +1050,7 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const ch
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base16_decode(input, strlen(input));
             }
@@ -1060,9 +1060,9 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const ch
         binary_t bin_y;
         binary_t bin_d;
 
-        c2b(x, bin_x);
-        c2b(y, bin_y);
-        c2b(d, bin_d);
+        os2b(x, bin_x);
+        os2b(y, bin_y);
+        os2b(d, bin_d);
 
         ret = add_ec(cryptokey, nid, bin_x, bin_y, bin_d, desc);
     }
@@ -1080,7 +1080,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const ch
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base64_decode(input, strlen(input), base64_encoding_t::base64_encoding);
             }
@@ -1089,8 +1089,8 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const ch
         binary_t bin_x;
         binary_t bin_d;
 
-        c2b(x, bin_x);
-        c2b(d, bin_d);
+        os2b(x, bin_x);
+        os2b(d, bin_d);
 
         ret = add_ec2(cryptokey, nid, bin_x, ybit, bin_d, desc);
     }
@@ -1108,7 +1108,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const c
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base64_decode(input, strlen(input), base64_encoding_t::base64url_encoding);
             }
@@ -1117,8 +1117,8 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const c
         binary_t bin_x;
         binary_t bin_d;
 
-        c2b(x, bin_x);
-        c2b(d, bin_d);
+        os2b(x, bin_x);
+        os2b(d, bin_d);
 
         ret = add_ec2(cryptokey, nid, bin_x, ybit, bin_d, desc);
     }
@@ -1136,7 +1136,7 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const ch
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base16_decode(input, strlen(input));
             }
@@ -1145,8 +1145,8 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const ch
         binary_t bin_x;
         binary_t bin_d;
 
-        c2b(x, bin_x);
-        c2b(d, bin_d);
+        os2b(x, bin_x);
+        os2b(d, bin_d);
 
         ret = add_ec2(cryptokey, nid, bin_x, ybit, bin_d, desc);
     }
@@ -1375,7 +1375,7 @@ return_t crypto_keychain::add_oct_b64(crypto_key* cryptokey, const char* k, cons
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base64_decode(input, strlen(input), base64_encoding_t::base64_encoding);
             }
@@ -1383,7 +1383,7 @@ return_t crypto_keychain::add_oct_b64(crypto_key* cryptokey, const char* k, cons
 
         binary_t bin_k;
 
-        c2b(k, bin_k);
+        os2b(k, bin_k);
 
         ret = add_oct(cryptokey, bin_k, desc);
     }
@@ -1401,7 +1401,7 @@ return_t crypto_keychain::add_oct_b64u(crypto_key* cryptokey, const char* k, con
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base64_decode(input, strlen(input), base64_encoding_t::base64url_encoding);
             }
@@ -1409,7 +1409,7 @@ return_t crypto_keychain::add_oct_b64u(crypto_key* cryptokey, const char* k, con
 
         binary_t bin_k;
 
-        c2b(k, bin_k);
+        os2b(k, bin_k);
 
         ret = add_oct(cryptokey, bin_k, desc);
     }
@@ -1427,14 +1427,14 @@ return_t crypto_keychain::add_oct_b16(crypto_key* cryptokey, const char* k, cons
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base16_decode(input, strlen(input));
             }
         };
 
         binary_t bin_k;
-        c2b(k, bin_k);
+        os2b(k, bin_k);
 
         ret = add_oct(cryptokey, bin_k, desc);
     }
@@ -1591,7 +1591,7 @@ return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const ch
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base64_decode(input, strlen(input), base64_encoding_t::base64_encoding);
             }
@@ -1600,8 +1600,8 @@ return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const ch
         binary_t bin_pub;
         binary_t bin_priv;
 
-        c2b(pub, bin_pub);
-        c2b(priv, bin_priv);
+        os2b(pub, bin_pub);
+        os2b(priv, bin_priv);
 
         ret = add_dh(cryptokey, nid, bin_pub, bin_priv, desc);
     }
@@ -1619,7 +1619,7 @@ return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const c
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base64_decode(input, strlen(input), base64_encoding_t::base64url_encoding);
             }
@@ -1628,8 +1628,8 @@ return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const c
         binary_t bin_pub;
         binary_t bin_priv;
 
-        c2b(pub, bin_pub);
-        c2b(priv, bin_priv);
+        os2b(pub, bin_pub);
+        os2b(priv, bin_priv);
 
         ret = add_dh(cryptokey, nid, bin_pub, bin_priv, desc);
     }
@@ -1647,7 +1647,7 @@ return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const ch
             __leave2;
         }
 
-        auto c2b = [](const char* input, binary_t& output) -> void {
+        auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base16_decode(input, strlen(input));
             }
@@ -1656,8 +1656,8 @@ return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const ch
         binary_t bin_pub;
         binary_t bin_priv;
 
-        c2b(pub, bin_pub);
-        c2b(priv, bin_priv);
+        os2b(pub, bin_pub);
+        os2b(priv, bin_priv);
 
         ret = add_dh(cryptokey, nid, bin_pub, bin_priv, desc);
     }
