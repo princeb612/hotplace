@@ -585,16 +585,8 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
             record = t_to_int<uint8>(pl.select(constexpr_record));
         }
 
-        s->autoindent(1);
-        s->printf(" > %s 0x%04x %s\n", constexpr_signature, scheme, advisor->signature_scheme_string(scheme).c_str());
-        s->printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
-        s->printf(" > %s\n", constexpr_handshake_hash);
-        dump_memory(handshake_hash, s, 16, 3, 0x00, dump_notrunc);
-        s->printf("\n");
-        s->autoindent(0);
-        s->printf(" > %s %02x\n", constexpr_record, record);
-
         tls_protection& protection = session->get_tls_protection();
+        binary_t hshash;
         auto sign = session->get_tls_protection().get_crypto_sign(scheme);
         if (sign) {
             /**
@@ -616,7 +608,6 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
              *     perl -pe 's/.$// if eof' servercert) | openssl sha384)
              */
 
-            binary_t hshash;
             auto hash = protection.get_transcript_hash();  // hash(client_hello .. certificate)
             if (hash) {
                 hash->digest(hshash);
@@ -644,6 +635,15 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
         } else {
             ret = errorcode_t::not_supported;
         }
+
+        s->autoindent(1);
+        s->printf(" > %s 0x%04x %s\n", constexpr_signature, scheme, advisor->signature_scheme_string(scheme).c_str());
+        s->printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
+        s->printf(" > %s %s %s\n", constexpr_handshake_hash, base16_encode(handshake_hash).c_str(), (errorcode_t::success == ret) ? "true" : "false");
+        dump_memory(handshake_hash, s, 16, 3, 0x00, dump_notrunc);
+        s->printf("\n");
+        s->autoindent(0);
+        s->printf(" > %s %02x\n", constexpr_record, record);
     }
     __finally2 {
         // do nothing
@@ -736,7 +736,9 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
             s->printf("  > ht_secret %s\n", base16_encode(ht_secret).c_str());
             s->printf("  > fin_key   %s\n", base16_encode(fin_key).c_str());
             s->printf("  > fin_hash  %s\n", base16_encode(fin_hash).c_str());
-            s->printf("  > maced     %s\n", base16_encode(maced).c_str());
+            s->printf("  > maced     %s %s\n", base16_encode(maced).c_str(), (errorcode_t::success == ret) ? "true" : "false");
+            dump_memory(maced, s, 16, 3, 0x00, dump_notrunc);
+            s->printf("\n");
             s->printf("> %s %02x", constexpr_record, record);
             s->autoindent(0);
             s->printf("\n");

@@ -88,17 +88,17 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 }
             } break;
             case tls_content_type_application_data: {
-                auto protect = session->get_roleinfo(role).doprotect();
-                if (protect) {
-                    tls_protection& protection = session->get_tls_protection();
-                    binary_t plaintext;
-                    binary_t tag;
-                    ret = protection.decrypt(session, role, stream, len, plaintext, pos, tag, s);
-                    if (errorcode_t::success == ret) {
-                        auto plainsize = plaintext.size();
-                        // still ambiguous plaintext is handshake or not
-                        // ... 0x16
-                        if (plainsize && (tls_content_type_handshake == *plaintext.rbegin())) {
+                tls_protection& protection = session->get_tls_protection();
+                binary_t plaintext;
+                binary_t tag;
+                ret = protection.decrypt(session, role, stream, len, plaintext, pos, tag, s);
+                if (errorcode_t::success == ret) {
+                    auto plainsize = plaintext.size();
+                    // still ambiguous plaintext is handshake or not
+                    // ... 0x16
+                    if (plainsize) {
+                        uint8 record_type = *plaintext.rbegin();
+                        if (tls_content_type_handshake == record_type) {
                             tpos = 0;
                             while (tpos < plainsize) {
                                 auto test = tls_dump_handshake(s, session, &plaintext[0], plainsize, tpos, role);
@@ -109,17 +109,12 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                                     break;
                                 }
                             }
-                        }
-                    }
-                } else {
-                    tpos = pos;
-                    while (tpos < size) {
-                        auto test = tls_dump_handshake(s, session, stream, size, tpos, role);
-                        if (errorcode_t::success != test) {
-                            if (errorcode_t::no_data != test) {
-                                ret = test;
-                            }
-                            break;
+                        } else if (tls_content_type_application_data == record_type) {
+                            s->autoindent(5);
+                            s->printf("> payload\n");
+                            dump_memory(&plaintext[0], plainsize - 1, s, 16, 3, 0x0, dump_notrunc);
+                            s->autoindent(0);
+                            s->printf("\n");
                         }
                     }
                 }

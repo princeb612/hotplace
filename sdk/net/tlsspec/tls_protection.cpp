@@ -285,10 +285,16 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
                 }
             }
 
-            binary_t exporter_secret;
-            lambda_expand_label(tls_secret_exporter, exporter_secret, hashalg, dlen, application_secret, "exp master", context_hash);
+            binary_t exporter_master_secret;
+            lambda_expand_label(tls_secret_exporter_master, exporter_master_secret, hashalg, dlen, application_secret, "exp master", context_hash);
         } else if (tls_context_client_finished == type) {
-            //
+            binary_t resumption_master_secret;
+            const binary_t& application_secret = get_item(tls_secret_application);
+            lambda_expand_label(tls_secret_resumption_master, resumption_master_secret, hashalg, dlen, application_secret, "res master", context_hash);
+            binary_t resumption_secret;
+            binary_t reshash;
+            reshash.resize(2);
+            lambda_expand_label(tls_secret_resumption, resumption_secret, hashalg, dlen, resumption_master_secret, "resumption", reshash);
         }
     }
     __finally2 {

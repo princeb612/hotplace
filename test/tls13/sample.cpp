@@ -101,6 +101,9 @@ void test_keycalc(tls_session* session, tls_secret_t tls_secret, binary_t& secre
     _test_case.assert(secret == base16_decode(expect), __FUNCTION__, text);
 };
 
+tls_session rfc8448_session;
+tls_session rfc8448_session2;
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);

@@ -311,7 +311,9 @@ enum tls_secret_t : uint16 {
     tls_secret_application_quic_server_iv = 0x2d,
     tls_secret_application_quic_server_hp = 0x2e,
 
+    tls_secret_exporter_master = 0x30,
     tls_secret_exporter = 0x31,
+    tls_secret_resumption_master = 0x40,
     tls_secret_resumption = 0x41,
 };
 

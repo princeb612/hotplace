@@ -17,43 +17,6 @@
 
 #include "sample.hpp"
 
-tls_session rfc8448_session;
-tls_session rfc8448_session2;
-
-void test_rfc8448_2() {
-    _test_case.begin("RFC 8448 2.  Private Keys");
-    basic_stream bs;
-    crypto_keychain keychain;
-
-    {
-        const char* n =
-            "b4 bb 49 8f 82 79 30 3d 98 08 36 39 9b 36 c6 98 8c"
-            "0c 68 de 55 e1 bd b8 26 d3 90 1a 24 61 ea fd 2d e4 9a 91 d0 15 ab"
-            "bc 9a 95 13 7a ce 6c 1a f1 9e aa 6a f9 8c 7c ed 43 12 09 98 e1 87"
-            "a8 0e e0 cc b0 52 4b 1b 01 8c 3e 0b 63 26 4d 44 9a 6d 38 e2 2a 5f"
-            "da 43 08 46 74 80 30 53 0e f0 46 1c 8c a9 d9 ef bf ae 8e a6 d1 d0"
-            "3e 2b d1 93 ef f0 ab 9a 80 02 c4 74 28 a6 d3 5a 8d 88 d7 9f 7f 1e"
-            "3f";
-        const char* e = "01 00 01";
-        const char* d =
-            "04 de a7 05 d4 3a 6e a7 20 9d d8 07 21 11 a8 3c 81"
-            "e3 22 a5 92 78 b3 34 80 64 1e af 7c 0a 69 85 b8 e3 1c 44 f6 de 62"
-            "e1 b4 c2 30 9f 61 26 e7 7b 7c 41 e9 23 31 4b bf a3 88 13 05 dc 12"
-            "17 f1 6c 81 9c e5 38 e9 22 f3 69 82 8d 0e 57 19 5d 8c 84 88 46 02"
-            "07 b2 fa a7 26 bc f7 08 bb d7 db 7f 67 9f 89 34 92 fc 2a 62 2e 08"
-            "97 0a ac 44 1c e4 e0 c3 08 8d f2 5a e6 79 23 3d f8 a3 bd a2 ff 99"
-            "41";
-
-        crypto_key key;
-        keychain.add_rsa_b16rfc(&key, nid_rsa, n, e, d, keydesc("server RSA certificate"));
-        dump_key(key.find("server RSA certificate"), &bs);
-        _logger->writeln(bs);
-    }
-}
-
-/**
- *
- */
 void test_rfc8448_3() {
     _test_case.begin("RFC 8448 3.  Simple 1-RTT Handshake");
     return_t ret = errorcode_t::success;
@@ -84,7 +47,7 @@ void test_rfc8448_3() {
         _test_case.test(ret, __FUNCTION__, "ephemeral x25519 key pair");
     }
 
-    // #1
+    // #1 client_hello
     // {client}  construct a ClientHello handshake message:
     // # hash (ClientHello + ServerHello) --> hello_hash
     {
@@ -128,7 +91,7 @@ void test_rfc8448_3() {
         bs.clear();
     }
 
-    // #2
+    // #2 server_hello
     // {server}  construct a ServerHello handshake message:
     // {server}  send handshake record:
     // # hash (ClientHello + ServerHello) --> hello_hash
@@ -200,12 +163,17 @@ void test_rfc8448_3() {
 
         binary_t secret_handshake_server_key;
         binary_t secret_handshake_server_iv;
-
         test_keycalc(&rfc8448_session, tls_secret_handshake_server_key, secret_handshake_server_key, "secret_handshake_server_key",
                      "3fce516009c21727d0f2e4e86ee403bc");
         test_keycalc(&rfc8448_session, tls_secret_handshake_server_iv, secret_handshake_server_iv, "secret_handshake_server_iv", "5d313eb2671276ee13000b30");
+
+        binary_t secret_handshake_client_key;
+        binary_t secret_handshake_client_iv;
+        test_keycalc(&rfc8448_session, tls_secret_handshake_client_key, secret_handshake_client_key, "secret_handshake_client_key",
+                     "dbfaa693d1762c5b666af5d950258d01");
+        test_keycalc(&rfc8448_session, tls_secret_handshake_client_iv, secret_handshake_client_iv, "secret_handshake_client_iv", "5bd3c71b836e0b76bb73265f");
     }
-    // #3A1
+    // #3A1 encrypted_extensions
     // {server}  construct an EncryptedExtensions handshake message:
     {
         const char* handshake =
@@ -215,7 +183,7 @@ void test_rfc8448_3() {
         binary_t bin_handshake = base16_decode_rfc(handshake);
         dump_handshake("#3A1 encrypted_extensions", &rfc8448_session, bin_handshake);
     }
-    // #3A2
+    // #3A2 certificate
     // {server}  construct a Certificate handshake message:
     {
         const char* handshake =
@@ -244,7 +212,7 @@ void test_rfc8448_3() {
         binary_t bin_handshake = base16_decode_rfc(handshake);
         dump_handshake("#3A2 certificate", &rfc8448_session, bin_handshake);
     }
-    // #3A3
+    // #3A3 certificate_verify
     // {server}  construct a CertificateVerify handshake message:
     {
         const char* handshake =
@@ -258,7 +226,7 @@ void test_rfc8448_3() {
         binary_t bin_handshake = base16_decode_rfc(handshake);
         dump_handshake("#3A3 certificate_verify", &rfc8448_session, bin_handshake);
     }
-    // #3A4
+    // #3A4 finished
     // {server}  construct a Finished handshake message:
     {
         const char* handshake =
@@ -270,42 +238,6 @@ void test_rfc8448_3() {
     }
     // #3B = #3A1 + #3A2 + #3A3 + #3A4
     {
-        const char* handshake =
-            "08 00 00 24 00 22 00 0a 00 14 00 12 00 1d"
-            "00 17 00 18 00 19 01 00 01 01 01 02 01 03 01 04 00 1c 00 02 40"
-            "01 00 00 00 00 0b 00 01 b9 00 00 01 b5 00 01 b0 30 82 01 ac 30"
-            "82 01 15 a0 03 02 01 02 02 01 02 30 0d 06 09 2a 86 48 86 f7 0d"
-            "01 01 0b 05 00 30 0e 31 0c 30 0a 06 03 55 04 03 13 03 72 73 61"
-            "30 1e 17 0d 31 36 30 37 33 30 30 31 32 33 35 39 5a 17 0d 32 36"
-            "30 37 33 30 30 31 32 33 35 39 5a 30 0e 31 0c 30 0a 06 03 55 04"
-            "03 13 03 72 73 61 30 81 9f 30 0d 06 09 2a 86 48 86 f7 0d 01 01"
-            "01 05 00 03 81 8d 00 30 81 89 02 81 81 00 b4 bb 49 8f 82 79 30"
-            "3d 98 08 36 39 9b 36 c6 98 8c 0c 68 de 55 e1 bd b8 26 d3 90 1a"
-            "24 61 ea fd 2d e4 9a 91 d0 15 ab bc 9a 95 13 7a ce 6c 1a f1 9e"
-            "aa 6a f9 8c 7c ed 43 12 09 98 e1 87 a8 0e e0 cc b0 52 4b 1b 01"
-            "8c 3e 0b 63 26 4d 44 9a 6d 38 e2 2a 5f da 43 08 46 74 80 30 53"
-            "0e f0 46 1c 8c a9 d9 ef bf ae 8e a6 d1 d0 3e 2b d1 93 ef f0 ab"
-            "9a 80 02 c4 74 28 a6 d3 5a 8d 88 d7 9f 7f 1e 3f 02 03 01 00 01"
-            "a3 1a 30 18 30 09 06 03 55 1d 13 04 02 30 00 30 0b 06 03 55 1d"
-            "0f 04 04 03 02 05 a0 30 0d 06 09 2a 86 48 86 f7 0d 01 01 0b 05"
-            "00 03 81 81 00 85 aa d2 a0 e5 b9 27 6b 90 8c 65 f7 3a 72 67 17"
-            "06 18 a5 4c 5f 8a 7b 33 7d 2d f7 a5 94 36 54 17 f2 ea e8 f8 a5"
-            "8c 8f 81 72 f9 31 9c f3 6b 7f d6 c5 5b 80 f2 1a 03 01 51 56 72"
-            "60 96 fd 33 5e 5e 67 f2 db f1 02 70 2e 60 8c ca e6 be c1 fc 63"
-            "a4 2a 99 be 5c 3e b7 10 7c 3c 54 e9 b9 eb 2b d5 20 3b 1c 3b 84"
-            "e0 a8 b2 f7 59 40 9b a3 ea c9 d9 1d 40 2d cc 0c c8 f8 96 12 29"
-            "ac 91 87 b4 2b 4d e1 00 00 0f 00 00 84 08 04 00 80 5a 74 7c 5d"
-            "88 fa 9b d2 e5 5a b0 85 a6 10 15 b7 21 1f 82 4c d4 84 14 5a b3"
-            "ff 52 f1 fd a8 47 7b 0b 7a bc 90 db 78 e2 d3 3a 5c 14 1a 07 86"
-            "53 fa 6b ef 78 0c 5e a2 48 ee aa a7 85 c4 f3 94 ca b6 d3 0b be"
-            "8d 48 59 ee 51 1f 60 29 57 b1 54 11 ac 02 76 71 45 9e 46 44 5c"
-            "9e a5 8c 18 1e 81 8e 95 b8 c3 fb 0b f3 27 84 09 d3 be 15 2a 3d"
-            "a5 04 3e 06 3d da 65 cd f5 ae a2 0d 53 df ac d4 2f 74 f3 14 00"
-            "00 20 9b 9b 14 1d 90 63 37 fb d2 cb dc e7 1d f4 de da 4a b4 2c"
-            "30 95 72 cb 7f ff ee 54 54 b7 8f 07 18";
-        binary_t bin_handshake = base16_decode_rfc(handshake);
-        dump_handshake("#3B (#3A1..#3A4)", &rfc8448_session2, bin_handshake);
-
         const char* record =
             "17 03 03 02 a2 d1 ff 33 4a 56 f5 bf"
             "f6 59 4a 07 cc 87 b5 80 23 3f 50 0f 45 e4 89 e7 f3 3a f3 5e df"
@@ -340,11 +272,26 @@ void test_rfc8448_3() {
             "d5 02 78 40 16 e4 b3 be 7e f0 4d da 49 f4 b4 40 a3 0c b5 d2 af"
             "93 98 28 fd 4a e3 79 4e 44 f9 4d f5 a6 31 ed e4 2c 17 19 bf da"
             "bf 02 53 fe 51 75 be 89 8e 75 0e dc 53 37 0d 2b";
-        // binary_t bin_record = base16_decode_rfc(record);
-        // dump_record("#3B (#3A1..#3A4)", &rfc8448_session2, bin_record);
+
+        // {server}  derive read traffic keys for handshake data:
+        // PRK          (32) secret_handshake_client       b3eddb126e067f35a780b3abf45e2d8f3b1a950738f52e9600746a0e27a55a21
+        // key info     (13) hkdflabel("key")              001009746c733133206b657900
+        // key expanded (16) secret_handshake_client_key   dbfaa693d1762c5b666af5d950258d01
+        // iv info      (12) hkdflabel("iv")               000c08746c73313320697600
+        // iv expanded  (12) secret_handshake_client_iv    5bd3c71b836e0b76bb73265f
+        //
+        //  > key 3fce516009c21727d0f2e4e86ee403bc
+        //  > iv 5d313eb2671276ee13000b30
+        //  > record no 0
+        //  > nonce 5d313eb2671276ee13000b30
+        //  > aad 17030302a2
+        //  > tag bf0253fe5175be898e750edc53370d2b
+
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("#3B (#3A1..#3A4)", &rfc8448_session2, bin_record);
     }
 
-    // server finished
+    // after server finished
     {
         binary_t secret_application_derived;
         test_keycalc(&rfc8448_session, tls_secret_application_derived, secret_application_derived, "secret_application_derived",
@@ -375,12 +322,11 @@ void test_rfc8448_3() {
         test_keycalc(&rfc8448_session, tls_secret_application_server_iv, secret_application_server_iv, "secret_application_server_iv",
                      "cf782b88dd83549aadf1e984");
         // {server}  derive secret "tls13 exp master":
-        binary_t secret_exporter;
-        test_keycalc(&rfc8448_session, tls_secret_exporter, secret_exporter, "secret_exporter",
+        binary_t secret_exporter_master;
+        test_keycalc(&rfc8448_session, tls_secret_exporter_master, secret_exporter_master, "secret_exporter_master",
                      "fe22f881176eda18eb8f44529e6792c50c9a3f89452f68d8ae311b4309d3cf50");
     }
-
-    // #4
+    // #4 client finished
     // {client}  construct a Finished handshake message:
     // {client}  send handshake record:
     {
@@ -389,26 +335,91 @@ void test_rfc8448_3() {
             "0b 29 80 44 a7 1e 21 9c 56 cc 77 b0 51 7f e9 b9 3c 7a 4b fc 44"
             "d8 7f 38 f8 03 38 ac 98 fc 46 de b3 84 bd 1c ae ac ab 68 67 d7"
             "26 c4 05 46";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("#4 client finished", &rfc8448_session, bin_record, role_client);
+        dump_record("#4 client finished", &rfc8448_session2, bin_record, role_client);
     }
-    // {client}  derive secret "tls13 res master":
-}
-
-void test_rfc8448_4() {
-    _test_case.begin("RFC 8448 4.  Resumed 0-RTT Handshake");
-    //
-}
-
-void test_rfc8448_5() {
-    _test_case.begin("RFC 8448 5.  HelloRetryRequest");
-    //
-}
-
-void test_rfc8448_6() {
-    _test_case.begin("RFC 8448 6.  Client Authentication");
-    //
-}
-
-void test_rfc8448_7() {
-    _test_case.begin("RFC 8448 7.  Compatibility Mode");
-    //
+    // after client finished
+    {
+        // {client}  derive secret "tls13 res master":
+        // PRK (32)      secret_application                  18df06843d13a08bf2a449844c5f8a478001bc4d4c627984d5a41da8d0402919
+        // hash (32)     hash(client_hello..client finished) 209145a96ee8e2a122ff810047cc952684658d6049e86429426db87c54ad143d
+        // info (52)     hkdflabel("res master")
+        // expanded (32)
+        binary_t secret_resumption_master;
+        test_keycalc(&rfc8448_session, tls_secret_resumption_master, secret_resumption_master, "secret_resumption_master",
+                     "7df235f2031d2a051287d02b0241b0bfdaf86cc856231f2d5aba46c434ec196c");
+        // {server} generate resumption secret "tls13 resumption":
+        // PRK (32)      secret_resumption_master 7df235f2031d2a051287d02b0241b0bfdaf86cc856231f2d5aba46c434ec196c
+        // hash (2)      0000
+        // info (22)     hkdflabel("resumption")
+        // expanded (32)
+        binary_t secret_resumption;
+        test_keycalc(&rfc8448_session, tls_secret_resumption, secret_resumption, "secret_resumption",
+                     "4ecd0eb6ec3b4d87f5d6028f922ca4c5851a277fd41311c9e62d2c9492e1c4f3");
+    }
+    // #5
+    // {server}  construct a NewSessionTicket handshake message:
+    {
+        const char* record =
+            "17 03 03 00 de 3a 6b 8f 90 41 4a 97"
+            "d6 95 9c 34 87 68 0d e5 13 4a 2b 24 0e 6c ff ac 11 6e 95 d4 1d"
+            "6a f8 f6 b5 80 dc f3 d1 1d 63 c7 58 db 28 9a 01 59 40 25 2f 55"
+            "71 3e 06 1d c1 3e 07 88 91 a3 8e fb cf 57 53 ad 8e f1 70 ad 3c"
+            "73 53 d1 6d 9d a7 73 b9 ca 7f 2b 9f a1 b6 c0 d4 a3 d0 3f 75 e0"
+            "9c 30 ba 1e 62 97 2a c4 6f 75 f7 b9 81 be 63 43 9b 29 99 ce 13"
+            "06 46 15 13 98 91 d5 e4 c5 b4 06 f1 6e 3f c1 81 a7 7c a4 75 84"
+            "00 25 db 2f 0a 77 f8 1b 5a b0 5b 94 c0 13 46 75 5f 69 23 2c 86"
+            "51 9d 86 cb ee ac 87 aa c3 47 d1 43 f9 60 5d 64 f6 50 db 4d 02"
+            "3e 70 e9 52 ca 49 fe 51 37 12 1c 74 bc 26 97 68 7e 24 87 46 d6"
+            "df 35 30 05 f3 bc e1 86 96 12 9c 81 53 55 6b 3b 6c 67 79 b3 7b"
+            "f1 59 85 68 4f";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("#5 new_session_ticket", &rfc8448_session, bin_record);
+        dump_record("#5 new_session_ticket", &rfc8448_session2, bin_record);
+    }
+    // #6
+    // {client}  send application_data record:
+    {
+        const char* record =
+            "17 03 03 00 43 a2 3f 70 54 b6 2c 94"
+            "d0 af fa fe 82 28 ba 55 cb ef ac ea 42 f9 14 aa 66 bc ab 3f 2b"
+            "98 19 a8 a5 b4 6b 39 5b d5 4a 9a 20 44 1e 2b 62 97 4e 1f 5a 62"
+            "92 a2 97 70 14 bd 1e 3d ea e6 3a ee bb 21 69 49 15 e4";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("#6 ", &rfc8448_session, bin_record, role_client);
+        dump_record("#6 ", &rfc8448_session2, bin_record, role_client);
+    }
+    // #7
+    // {server}  send application_data record:
+    {
+        const char* record =
+            "17 03 03 00 43 2e 93 7e 11 ef 4a c7"
+            "40 e5 38 ad 36 00 5f c4 a4 69 32 fc 32 25 d0 5f 82 aa 1b 36 e3"
+            "0e fa f9 7d 90 e6 df fc 60 2d cb 50 1a 59 a8 fc c4 9c 4b f2 e5"
+            "f0 a2 1c 00 47 c2 ab f3 32 54 0d d0 32 e1 67 c2 95 5d";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("#7 ", &rfc8448_session, bin_record);
+        dump_record("#7 ", &rfc8448_session2, bin_record);
+    }
+    // #8
+    // {client}  send alert record:
+    {
+        const char* record =
+            "17 03 03 00 13 c9 87 27 60 65 56 66"
+            "b7 4d 7f f1 15 3e fd 6d b6 d0 b0 e3";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("#8 ", &rfc8448_session, bin_record, role_client);
+        dump_record("#8 ", &rfc8448_session2, bin_record, role_client);
+    }
+    // #9
+    // {server}  send alert record:
+    {
+        const char* record =
+            "17 03 03 00 13 b5 8f d6 71 66 eb f5"
+            "99 d2 47 20 cf be 7e fa 7a 88 64 a9";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("#9 ", &rfc8448_session, bin_record);
+        dump_record("#9 ", &rfc8448_session2, bin_record);
+    }
 }

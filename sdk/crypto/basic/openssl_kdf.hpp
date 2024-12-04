@@ -140,9 +140,18 @@ class openssl_kdf {
      *
      *  client_initial_secret = HKDF-Expand-Label(initial_secret, "client in", "", Hash.length)
      *  server_initial_secret = HKDF-Expand-Label(initial_secret, "server in", "", Hash.length)
+     *
+     * @sample
+     *          kdf.hkdf_expand_label(handshake_derived_secret, hashalg, dlen, early_secret, "derived", empty_hash);
+     *          kdf.hkdf_expand_label(handshake_derived_secret, hashalg, dlen, early_secret, str2bin("derived"), empty_hash);
      */
+    return_t hkdf_label(binary_t& hkdflabel, uint16 length, const char* label, const binary_t& context);
+    return_t hkdf_label(binary_t& hkdflabel, uint16 length, const binary_t& label, const binary_t& context);
+    return_t hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context);
+    return_t hkdf_expand_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context);
     return_t hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
     return_t hkdf_expand_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
+
     /**
      * @brief   CMAC-based Extract-and-Expand Key Derivation Function (CKDF)
      * @param   binary_t& okm [out] output key material

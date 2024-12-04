@@ -13,6 +13,8 @@ using namespace hotplace::net;
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
+extern tls_session rfc8448_session;
+extern tls_session rfc8448_session2;
 
 return_t dump_record(const char* text, tls_session* session, const binary_t& bin, tls_role_t role = role_server);
 return_t dump_handshake(const char* text, tls_session* session, const binary_t& bin, tls_role_t role = role_server);
