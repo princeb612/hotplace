@@ -16,6 +16,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/basic/template.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/crypto/crypto_hash.hpp>
 #include <sdk/crypto/crypto/crypto_mac.hpp>
@@ -245,6 +246,12 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             pl.set_reference_value(constexpr_extensions, constexpr_extension);
             pl.read(stream, size, pos);
 
+            // RFC 8446 4.1.1.  Cryptographic Negotiation
+            // -  A list of cipher suites
+            // -  A "supported_groups" (Section 4.2.7) extension
+            // -  A "signature_algorithms" (Section 4.2.3) extension
+            // -  A "pre_shared_key" (Section 4.2.11) extension
+
             pl.select(constexpr_random)->get_variant().to_binary(random);
             session_ids = t_to_int<uint8>(pl.select(constexpr_session_ids));
             pl.select(constexpr_session_id)->get_variant().to_binary(session_id);
@@ -341,6 +348,11 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             pl.select(constexpr_random)->reserve(32);
             pl.set_reference_value(constexpr_session_id, constexpr_session_ids);
             pl.read(stream, size, pos);
+
+            // RFC 8446 4.1.1.  Cryptographic Negotiation
+            // If PSK is being used, ... "pre_shared_key" extension indicating the selected key
+            // When (EC)DHE is in use, ... "key_share" extension
+            // When authenticating via a certificate, ... Certificate (Section 4.4.2) and CertificateVerify (Section 4.4.3)
 
             pl.select(constexpr_random)->get_variant().to_binary(random);
             session_ids = t_to_int<uint8>(pl.select(constexpr_session_ids));
@@ -484,6 +496,7 @@ return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* s
         constexpr char constexpr_certificate[] = "certifcate";
 
         binary_t cert;
+        crypto_keychain keychain;
         uint8 request_context_len = 0;
         uint32 certificates_len = 0;
         uint32 certificate_len = 0;
@@ -531,7 +544,7 @@ return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* s
         s->printf("\n");
 
         auto& servercert = session->get_tls_protection().get_cert();
-        ret = servercert.load_der(&cert[0], cert.size(), 0, use_sig);
+        ret = keychain.load_der(&servercert, &cert[0], cert.size(), keydesc(use_sig));
         if (errorcode_t::success == ret) {
             dump_key(servercert.any(), s, 15, 4, dump_notrunc);
         }

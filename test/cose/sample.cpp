@@ -1008,10 +1008,10 @@ void test_jose_from_cwk() {
     // load keys from CBOR
     cbor_web_key cwk;
     crypto_key pubkey;
-    cwk.load_file(&pubkey, "rfc8152_c_7_1.cbor");
+    cwk.load_file(&pubkey, key_ownspec, "rfc8152_c_7_1.cbor");
     pubkey.for_each(dump_crypto_key, nullptr);
     crypto_key privkey;
-    cwk.load_file(&privkey, "rfc8152_c_7_2.cbor");
+    cwk.load_file(&privkey, key_ownspec, "rfc8152_c_7_2.cbor");
     privkey.for_each(dump_crypto_key, nullptr);
 
     // dump keys JWK formatted
@@ -1725,9 +1725,9 @@ void test_cwt_rfc8392() {
     const OPTION& option = _cmdline->value();
     crypto_key key;
     cbor_web_key cwk;
-    cwk.load(&key, symm128);
-    cwk.load(&key, symm256);
-    cwk.load(&key, ec256p);
+    cwk.load_b16(&key, symm128);
+    cwk.load_b16(&key, symm256);
+    cwk.load_b16(&key, ec256p);
 
     key.for_each(dump_crypto_key, nullptr);
 
@@ -1815,8 +1815,8 @@ int main(int argc, char** argv) {
     // Test Vector comparison
     {
         cbor_web_key cwk;
-        cwk.load_file(&rfc8152_privkeys, "rfc8152_c_7_2.cbor");
-        cwk.load_file(&rfc8152_pubkeys, "rfc8152_c_7_1.cbor");
+        cwk.load_file(&rfc8152_privkeys, key_ownspec, "rfc8152_c_7_2.cbor");
+        cwk.load_file(&rfc8152_pubkeys, key_ownspec, "rfc8152_c_7_1.cbor");
 
         // RFC8152/Appendix_C_4_1.json
         cwk.add_oct_b64u(&rfc8152_privkeys_c4, "hJtXhkV8FJG-Onbc6mxCcY", keydesc("our-secret2", crypto_use_t::use_enc));

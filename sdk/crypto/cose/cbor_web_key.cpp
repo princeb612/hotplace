@@ -31,19 +31,20 @@ cbor_web_key::~cbor_web_key() {
     // do nothing
 }
 
-return_t cbor_web_key::load(crypto_key* crypto_key, const char* buffer, int flags) {
+return_t cbor_web_key::load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == buffer) {
+        if (nullptr == cryptokey || nullptr == buffer) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        binary_t bin;
-        bin = base16_decode(buffer);
-
-        ret = load(crypto_key, &bin[0], bin.size(), flags);
+        if (key_ownspec == mode) {
+            ret = load(cryptokey, (byte_t*)buffer, size, flag);  // binary
+        } else {
+            ret = crypto_keychain::load(cryptokey, mode, buffer, size, desc, flag);
+        }
     }
     __finally2 {
         // do nothing
@@ -51,7 +52,24 @@ return_t cbor_web_key::load(crypto_key* crypto_key, const char* buffer, int flag
     return ret;
 }
 
-return_t cbor_web_key::load(crypto_key* crypto_key, const std::string& buf, int flags) { return load(crypto_key, buf.c_str(), flags); }
+return_t cbor_web_key::load_b16(crypto_key* cryptokey, const std::string& buf, int flag) { return load_b16(cryptokey, buf.c_str(), buf.size(), flag); }
+
+return_t cbor_web_key::load_b16(crypto_key* cryptokey, const char* buffer, size_t size, int flag) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == buffer) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        binary_t bin = base16_decode(buffer, size);
+        ret = load(cryptokey, &bin[0], bin.size(), flag);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
 
 typedef struct _cose_object_key {
     int type;
@@ -64,11 +82,11 @@ typedef struct _cose_object_key {
     }
 } cose_key_object;
 
-return_t cbor_web_key::load(crypto_key* crypto_key, const byte_t* buffer, size_t size, int flags) {
+return_t cbor_web_key::load(crypto_key* cryptokey, const byte_t* buffer, size_t size, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == buffer) {
+        if (nullptr == cryptokey || nullptr == buffer) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -82,7 +100,7 @@ return_t cbor_web_key::load(crypto_key* crypto_key, const byte_t* buffer, size_t
         ret = reader.publish(handle, &root);
         reader.close(handle);
 
-        ret = load(crypto_key, root);
+        ret = load(cryptokey, root);
 
         root->release();
     }
@@ -92,16 +110,16 @@ return_t cbor_web_key::load(crypto_key* crypto_key, const byte_t* buffer, size_t
     return ret;
 }
 
-return_t cbor_web_key::load(crypto_key* crypto_key, const binary_t& buffer, int flags) {
+return_t cbor_web_key::load(crypto_key* cryptokey, const binary_t& buffer, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == crypto_key) {
+        if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = load(crypto_key, &buffer[0], buffer.size(), flags);
+        ret = load(cryptokey, &buffer[0], buffer.size(), flag);
     }
     __finally2 {
         // do nothing
@@ -109,7 +127,7 @@ return_t cbor_web_key::load(crypto_key* crypto_key, const binary_t& buffer, int 
     return ret;
 }
 
-return_t cbor_web_key::load(crypto_key* key, cbor_object* root, int flags) {
+return_t cbor_web_key::load(crypto_key* key, cbor_object* root, int flag) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -122,10 +140,10 @@ return_t cbor_web_key::load(crypto_key* key, cbor_object* root, int flags) {
         if (cbor_type_t::cbor_type_array == root->type()) {
             const std::list<cbor_object*>& keys = ((cbor_array*)root)->accessor();
             for (cbor_object* child : keys) {
-                do_load(key, child, flags);
+                do_load(key, child, flag);
             }
         } else if (cbor_type_t::cbor_type_map == root->type()) {
-            do_load(key, root, flags);
+            do_load(key, root, flag);
         }
     }
     __finally2 {
@@ -134,12 +152,12 @@ return_t cbor_web_key::load(crypto_key* key, cbor_object* root, int flags) {
     return ret;
 }
 
-return_t cbor_web_key::do_load(crypto_key* crypto_key, cbor_object* object, int flags) {
+return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int flag) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == object) {
+        if (nullptr == cryptokey || nullptr == object) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -185,7 +203,7 @@ return_t cbor_web_key::do_load(crypto_key* crypto_key, cbor_object* object, int 
                 hint_key.find(cose_key_lable_t::cose_ec_x, &x);  // -2
                 hint_key.find(cose_key_lable_t::cose_ec_y, &y);  // -3
                 hint_key.find(cose_key_lable_t::cose_ec_d, &d);  // -4
-                add_ec(crypto_key, nid, x, y, d, desc);
+                add_ec(cryptokey, nid, x, y, d, desc);
             } else if (cose_kty_t::cose_kty_rsa == keyobj.type) {  // 3
                 binary_t n;
                 binary_t e;
@@ -193,11 +211,11 @@ return_t cbor_web_key::do_load(crypto_key* crypto_key, cbor_object* object, int 
                 hint_key.find(cose_key_lable_t::cose_rsa_n, &n);  // -1
                 hint_key.find(cose_key_lable_t::cose_rsa_e, &e);  // -2
                 hint_key.find(cose_key_lable_t::cose_rsa_d, &d);  // -3
-                add_rsa(crypto_key, nid_rsa, n, e, d, desc);
+                add_rsa(cryptokey, nid_rsa, n, e, d, desc);
             } else if (cose_kty_t::cose_kty_symm == keyobj.type) {  // 4
                 binary_t k;
                 hint_key.find(cose_key_lable_t::cose_symm_k, &k);  // -1
-                add_oct(crypto_key, k, desc);
+                add_oct(cryptokey, k, desc);
             }
         }
     }
@@ -207,22 +225,43 @@ return_t cbor_web_key::do_load(crypto_key* crypto_key, cbor_object* object, int 
     return ret;
 }
 
-return_t cbor_web_key::write(crypto_key* crypto_key, char* buf, size_t* buflen, int flags) {
+return_t cbor_web_key::write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (key_ownspec == mode) {
+            ret = write(cryptokey, stream, flag);
+        } else {
+            ret = crypto_keychain::write(cryptokey, mode, stream, flag);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t cbor_web_key::write(crypto_key* cryptokey, stream_t* stream, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == buflen) {
+        if (nullptr == cryptokey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         binary_t cbor;
-        ret = write(crypto_key, cbor, flags);
+        ret = write(cryptokey, cbor, flag);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        ret = base16_encode(cbor, buf, buflen);
+        stream->write(&cbor[0], cbor.size());  // binary
+        // ret = base16_encode(cbor, stream); // base16
     }
     __finally2 {
         // do nothing
@@ -328,12 +367,12 @@ void cwk_writer(crypto_key_object* key, void* param) {
     }
 }
 
-return_t cbor_web_key::write(crypto_key* crypto_key, std::string& buf, int flags) {
+return_t cbor_web_key::write(crypto_key* cryptokey, std::string& buf, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {
         binary_t cbor;
-        ret = write(crypto_key, cbor, flags);
+        ret = write(cryptokey, cbor, flag);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -345,17 +384,17 @@ return_t cbor_web_key::write(crypto_key* crypto_key, std::string& buf, int flags
     return ret;
 }
 
-return_t cbor_web_key::write(crypto_key* crypto_key, binary_t& cbor, int flags) {
+return_t cbor_web_key::write(crypto_key* cryptokey, binary_t& cbor, int flag) {
     return_t ret = errorcode_t::success;
     cbor_object* root = nullptr;
 
     __try2 {
-        if (nullptr == crypto_key) {
+        if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = write(crypto_key, &root, flags);
+        ret = write(cryptokey, &root, flag);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -371,12 +410,12 @@ return_t cbor_web_key::write(crypto_key* crypto_key, binary_t& cbor, int flags) 
     return ret;
 }
 
-return_t cbor_web_key::write(crypto_key* crypto_key, cbor_object** root, int flags) {
+return_t cbor_web_key::write(crypto_key* cryptokey, cbor_object** root, int flag) {
     return_t ret = errorcode_t::success;
     cbor_array* cbor_root = nullptr;
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == root) {
+        if (nullptr == cryptokey || nullptr == root) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -386,7 +425,7 @@ return_t cbor_web_key::write(crypto_key* crypto_key, cbor_object** root, int fla
         cose_mapper_t mapper;
         mapper.root = cbor_root;
 
-        crypto_key->for_each(cwk_writer, &mapper);
+        cryptokey->for_each(cwk_writer, &mapper);
 
         *root = cbor_root;
     }
@@ -396,19 +435,19 @@ return_t cbor_web_key::write(crypto_key* crypto_key, cbor_object** root, int fla
     return ret;
 }
 
-return_t cbor_web_key::diagnose(crypto_key* crypto_key, stream_t* stream, int flags) {
+return_t cbor_web_key::diagnose(crypto_key* cryptokey, stream_t* stream, int flag) {
     return_t ret = errorcode_t::success;
     cbor_object* root = nullptr;
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == stream) {
+        if (nullptr == cryptokey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         stream->clear();
 
-        ret = write(crypto_key, &root, flags);
+        ret = write(cryptokey, &root, flag);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -421,56 +460,6 @@ return_t cbor_web_key::diagnose(crypto_key* crypto_key, stream_t* stream, int fl
         if (root) {
             root->release();
         }
-    }
-    return ret;
-}
-
-return_t cbor_web_key::load_file(crypto_key* crypto_key, const char* file, int flags) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == crypto_key || nullptr == file) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        file_stream fs;
-        ret = fs.open(file);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        fs.begin_mmap();
-        ret = load(crypto_key, (byte_t*)fs.data(), fs.size(), flags);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t cbor_web_key::write_file(crypto_key* crypto_key, const char* file, int flags) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == crypto_key || nullptr == file) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        file_stream fs;
-        ret = fs.open(file, filestream_flag_t::open_write);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        fs.truncate(0);
-
-        binary_t cbor;
-        write(crypto_key, cbor, flags);
-        fs.write(&cbor[0], cbor.size());
-    }
-    __finally2 {
-        // do nothing
     }
     return ret;
 }

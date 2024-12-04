@@ -8,12 +8,15 @@
  * Date         Name                Description
  */
 
+#include <fstream>
 #include <sdk/base/basic/binary.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -26,37 +29,28 @@ crypto_keychain::~crypto_keychain() {
     // do nothing
 }
 
-return_t crypto_keychain::load(crypto_key* cryptokey, const char* buffer, int flag) {
+return_t crypto_keychain::load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc, int flags) {
     return_t ret = errorcode_t::success;
-    switch (flag) {
-        case 0:
-            ret = load_pem(cryptokey, buffer, 0 /* reserved */);
-            break;
-        case 1:
-            ret = load_cert(cryptokey, buffer, 0 /* reserved */);
-            break;
-    }
-    return ret;
-}
-
-return_t crypto_keychain::write(crypto_key* cryptokey, char* buf, size_t* buflen, int flags) {
-    return_t ret = errorcode_t::success;
-
-    return ret;
-}
-
-return_t crypto_keychain::load_file(crypto_key* cryptokey, const char* file, int flags) { return errorcode_t::success; }
-
-return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, int flags, crypto_use_t use) {
-    return_t ret = errorcode_t::success;
-
     __try2 {
-        if (nullptr == cryptokey) {
+        if (nullptr == cryptokey || nullptr == buffer) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = cryptokey->load_pem(buffer, flags, use);
+        switch (mode) {
+            case key_pemfile:
+                ret = load_pem(cryptokey, buffer, size, desc, flags);
+                break;
+            case key_certfile:
+                ret = load_cert(cryptokey, buffer, size, desc, flags);
+                break;
+            case key_derfile:
+                ret = load_der(cryptokey, (byte_t*)buffer, size, desc, flags);
+                break;
+            default:
+                ret = errorcode_t::not_supported;
+                break;
+        }
     }
     __finally2 {
         // do nothing
@@ -64,16 +58,182 @@ return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, in
     return ret;
 }
 
-return_t crypto_keychain::load_pem_file(crypto_key* cryptokey, const char* file, int flags, crypto_use_t use) {
+return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flags) {
     return_t ret = errorcode_t::success;
+    /**
+     * RFC 7468 Textual Encodings of PKIX, PKCS, and CMS Structures
+     */
+    BIO* bio_pub = nullptr;
+    BIO* bio_priv = nullptr;
 
     __try2 {
-        if (nullptr == cryptokey) {
+        if (nullptr == cryptokey || nullptr == buffer) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = cryptokey->load_pem_file(file, flags, use);
+        bio_pub = BIO_new(BIO_s_mem());
+        bio_priv = BIO_new(BIO_s_mem());
+        if (nullptr == bio_pub || nullptr == bio_priv) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        BIO_write(bio_pub, buffer, size);
+        BIO_write(bio_priv, buffer, size);
+
+        while (1) {
+            EVP_PKEY* pkey_pub = nullptr;
+            pkey_pub = PEM_read_bio_PUBKEY(bio_pub, nullptr, nullptr, nullptr);
+            if (pkey_pub) {
+                crypto_key_object key(pkey_pub, desc);
+                cryptokey->add(key);
+            } else {
+                break;
+            }
+        }
+
+        while (1) {
+            EVP_PKEY* pkey_priv = nullptr;
+            pkey_priv = PEM_read_bio_PrivateKey(bio_priv, nullptr, nullptr, nullptr);
+            if (pkey_priv) {
+                crypto_key_object key(pkey_priv, desc);
+                cryptokey->add(key);
+            } else {
+                break;
+            }
+        }
+        ERR_clear_error();
+    }
+    __finally2 {
+        if (bio_pub) {
+            BIO_free_all(bio_pub);
+        }
+        if (bio_priv) {
+            BIO_free_all(bio_priv);
+        }
+    }
+    return ret;
+}
+
+return_t crypto_keychain::load_cert(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flags) {
+    return_t ret = errorcode_t::success;
+    X509* cert = nullptr;
+    BIO* bio = nullptr;
+    EVP_PKEY* pkey = nullptr;
+    __try2 {
+        if (nullptr == buffer) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        bio = BIO_new(BIO_s_mem());
+        if (nullptr == bio) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        BIO_write(bio, buffer, size);
+        cert = PEM_read_bio_X509(bio, NULL, NULL, NULL);
+        if (nullptr == cert) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        pkey = X509_get_pubkey(cert);
+        if (nullptr == pkey) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        crypto_key_object key(pkey, desc);
+        cryptokey->add(key);
+
+        ERR_clear_error();
+    }
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            if (pkey) {
+                EVP_PKEY_free(pkey);
+            }
+        }
+        if (bio) {
+            BIO_free(bio);
+        }
+        if (cert) {
+            X509_free(cert);
+        }
+    }
+    return ret;
+}
+
+return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, size_t size, const keydesc& desc, int flags) {
+    return_t ret = errorcode_t::success;
+    X509* x509 = nullptr;
+    BIO* bio = nullptr;
+    EVP_PKEY* pkey = nullptr;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == buffer) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        bio = BIO_new(BIO_s_mem());
+        if (nullptr == bio) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        BIO_write(bio, buffer, size);
+        const byte_t* p = buffer;
+        // The letters i and d in i2d_TYPE() stand for "internal" (that is, an internal C structure) and "DER" respectively.
+        // So i2d_TYPE() converts from internal to DER. d2i_ vice versa
+        pkey = d2i_PrivateKey_bio(bio, nullptr);
+        if (nullptr == pkey) {
+            x509 = d2i_X509(nullptr, &p, size);
+            pkey = X509_get_pubkey(x509);
+        }
+        if (nullptr == pkey) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        crypto_key_object key(pkey, desc);
+        cryptokey->add(key);
+
+        ERR_clear_error();
+    }
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            if (pkey) {
+                EVP_PKEY_free(pkey);
+            }
+        }
+        if (bio) {
+            BIO_free(bio);
+        }
+        if (x509) {
+            X509_free(x509);
+        }
+    }
+    return ret;
+}
+
+return_t crypto_keychain::write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        switch (mode) {
+            case key_pemfile:
+                ret = write_pem(cryptokey, stream, flag);
+                break;
+            default:
+                ret = errorcode_t::not_supported;
+                break;
+        }
     }
     __finally2 {
         // do nothing
@@ -81,16 +241,62 @@ return_t crypto_keychain::load_pem_file(crypto_key* cryptokey, const char* file,
     return ret;
 }
 
-return_t crypto_keychain::load_cert(crypto_key* cryptokey, const char* buffer, int flags, crypto_use_t use) {
+return_t crypto_keychain::write_pem(crypto_key* cryptokey, stream_t* stream, int flag) {
     return_t ret = errorcode_t::success;
+    BIO* out = nullptr;
 
     __try2 {
-        if (nullptr == cryptokey) {
+        if (nullptr == cryptokey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = cryptokey->load_cert(buffer, flags, use);
+        stream->clear();
+
+        out = BIO_new(BIO_s_mem());
+        if (nullptr == out) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        auto lambda = [](crypto_key_object* key, void* param) -> void { dump_pem(key->get_pkey(), (BIO*)param); };
+
+        cryptokey->for_each(lambda, (void*)out);
+
+        binary_t buf;
+        buf.resize(64);
+        int len = 0;
+        while (1) {
+            len = BIO_read(out, &buf[0], buf.size());
+            if (0 >= len) {
+                break;
+            }
+            stream->write(&buf[0], len);
+        }
+    }
+    __finally2 {
+        if (out) {
+            BIO_free_all(out);
+        }
+    }
+    return ret;
+}
+
+return_t crypto_keychain::load_file(crypto_key* cryptokey, keyflag_t mode, const char* filename, const keydesc& desc, int flags) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == filename) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        file_stream fs;
+        ret = fs.open(filename);
+        if (errorcode_t::success == ret) {
+            fs.begin_mmap();
+            ret = load(cryptokey, mode, (char*)fs.data(), fs.size(), desc, flags);
+            fs.close();
+        }
     }
     __finally2 {
         // do nothing
@@ -98,52 +304,23 @@ return_t crypto_keychain::load_cert(crypto_key* cryptokey, const char* buffer, i
     return ret;
 }
 
-return_t crypto_keychain::load_cert_file(crypto_key* cryptokey, const char* file, int flags, crypto_use_t use) {
+return_t crypto_keychain::write_file(crypto_key* cryptokey, keyflag_t mode, const char* filename, int flag) {
     return_t ret = errorcode_t::success;
-
     __try2 {
-        if (nullptr == cryptokey) {
+        if (nullptr == cryptokey || nullptr == filename) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = cryptokey->load_cert_file(file, flags, use);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t crypto_keychain::write_file(crypto_key* cryptokey, const char* file, int flags) { return errorcode_t::success; }
-
-return_t crypto_keychain::write_pem(crypto_key* cryptokey, stream_t* stream, int flags) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == cryptokey) {
-            ret = errorcode_t::invalid_parameter;
+        basic_stream bs;
+        ret = write(cryptokey, mode, &bs, flag);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        ret = cryptokey->write_pem(stream, flags);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t crypto_keychain::write_pem_file(crypto_key* cryptokey, const char* file, int flags) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == cryptokey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        ret = cryptokey->write_pem_file(file, flags);
+        std::ofstream file(filename, std::ios::trunc);
+        file.write(bs.c_str(), bs.size());
+        file.close();
     }
     __finally2 {
         // do nothing
@@ -544,6 +721,57 @@ return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const c
     return ret;
 }
 
+return_t crypto_keychain::add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const keydesc& desc) {
+    return add_rsa_b16rfc(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, desc);
+}
+
+return_t crypto_keychain::add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q,
+                                         const char* dp, const char* dq, const char* qi, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == cryptokey || nullptr == n || nullptr == e) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = base16_decode_rfc(std::string(input));
+            }
+        };
+
+        binary_t bin_n;
+        binary_t bin_e;
+        binary_t bin_d;
+
+        os2b(n, bin_n);
+        os2b(e, bin_e);
+        os2b(d, bin_d);
+
+        binary_t bin_p;
+        binary_t bin_q;
+        binary_t bin_dp;
+        binary_t bin_dq;
+        binary_t bin_qi;
+
+        if (p && q && dp && dq && qi) {
+            os2b(p, bin_p);
+            os2b(q, bin_q);
+            os2b(dp, bin_dp);
+            os2b(dq, bin_dq);
+            os2b(qi, bin_qi);
+            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, desc);
+        } else {
+            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
@@ -842,7 +1070,7 @@ return_t crypto_keychain::add_ec2(crypto_key* cryptokey, uint32 nid, const binar
     return ret;
 }
 
-return_t crypto_keychain::add_ec2(crypto_key* cryptokey, uint32 nid, const binary_t& x, uint8 ybit, const binary_t& d, const keydesc& desc) {
+return_t crypto_keychain::add_ec2(crypto_key* cryptokey, uint32 nid, const binary_t& x, bool ysign, const binary_t& d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     EC_KEY* ec = nullptr;
@@ -898,7 +1126,7 @@ return_t crypto_keychain::add_ec2(crypto_key* cryptokey, uint32 nid, const binar
             // RFC8152 13.1.1.  Double Coordinate Curves
             // Compute the sign bit as laid out in the Elliptic-Curve-Point-to-Octet-String Conversion function of [SEC1]
             // If the sign bit is zero, then encode y as a CBOR false value; otherwise, encode y as a CBOR true value.
-            ret_openssl = EC_POINT_set_compressed_coordinates(group, point, bn_x, ybit, nullptr);  // EC_POINT_set_compressed_coordinates_GFp
+            ret_openssl = EC_POINT_set_compressed_coordinates(group, point, bn_x, ysign, nullptr);  // EC_POINT_set_compressed_coordinates_GFp
             if (ret_openssl != 1) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace_openssl(ret);
@@ -1072,7 +1300,37 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const ch
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* x, uint8 ybit, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = base16_decode_rfc(std::string(input));
+            }
+        };
+
+        binary_t bin_x;
+        binary_t bin_y;
+        binary_t bin_d;
+
+        os2b(x, bin_x);
+        os2b(y, bin_y);
+        os2b(d, bin_d);
+
+        ret = add_ec(cryptokey, nid, bin_x, bin_y, bin_d, desc);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == x) {
@@ -1092,7 +1350,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const ch
         os2b(x, bin_x);
         os2b(d, bin_d);
 
-        ret = add_ec2(cryptokey, nid, bin_x, ybit, bin_d, desc);
+        ret = add_ec2(cryptokey, nid, bin_x, ysign, bin_d, desc);
     }
     __finally2 {
         // do nothing
@@ -1100,7 +1358,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const ch
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const char* x, uint8 ybit, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == x) {
@@ -1120,7 +1378,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const c
         os2b(x, bin_x);
         os2b(d, bin_d);
 
-        ret = add_ec2(cryptokey, nid, bin_x, ybit, bin_d, desc);
+        ret = add_ec2(cryptokey, nid, bin_x, ysign, bin_d, desc);
     }
     __finally2 {
         // do nothing
@@ -1128,7 +1386,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const c
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const char* x, uint8 ybit, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == x) {
@@ -1148,7 +1406,35 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const ch
         os2b(x, bin_x);
         os2b(d, bin_d);
 
-        ret = add_ec2(cryptokey, nid, bin_x, ybit, bin_d, desc);
+        ret = add_ec2(cryptokey, nid, bin_x, ysign, bin_d, desc);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = base16_decode_rfc(std::string(input));
+            }
+        };
+
+        binary_t bin_x;
+        binary_t bin_d;
+
+        os2b(x, bin_x);
+        os2b(d, bin_d);
+
+        ret = add_ec2(cryptokey, nid, bin_x, ysign, bin_d, desc);
     }
     __finally2 {
         // do nothing
@@ -1225,7 +1511,7 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, const char* curve, c
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, const char* curve, const char* x, uint8 ybit, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
@@ -1240,7 +1526,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, const char* curve, c
             __leave2;
         }
 
-        ret = add_ec_b64(cryptokey, nid, x, ybit, d, desc);
+        ret = add_ec_b16rfc(cryptokey, nid, x, y, d, desc);
     }
     __finally2 {
         // do nothing
@@ -1248,7 +1534,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, const char* curve, c
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, const char* curve, const char* x, uint8 ybit, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
@@ -1263,7 +1549,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, const char* curve, 
             __leave2;
         }
 
-        ret = add_ec_b64u(cryptokey, nid, x, ybit, d, desc);
+        ret = add_ec_b64(cryptokey, nid, x, ysign, d, desc);
     }
     __finally2 {
         // do nothing
@@ -1271,7 +1557,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, const char* curve, 
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, const char* curve, const char* x, uint8 ybit, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
@@ -1286,7 +1572,53 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, const char* curve, c
             __leave2;
         }
 
-        ret = add_ec_b16(cryptokey, nid, x, ybit, d, desc);
+        ret = add_ec_b64u(cryptokey, nid, x, ysign, d, desc);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        uint32 nid = 0;
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        ret = advisor->nidof_ec_curve(curve, nid);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = add_ec_b16(cryptokey, nid, x, ysign, d, desc);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        uint32 nid = 0;
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        ret = advisor->nidof_ec_curve(curve, nid);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = add_ec_b16rfc(cryptokey, nid, x, ysign, d, desc);
     }
     __finally2 {
         // do nothing
@@ -1430,6 +1762,31 @@ return_t crypto_keychain::add_oct_b16(crypto_key* cryptokey, const char* k, cons
         auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base16_decode(input, strlen(input));
+            }
+        };
+
+        binary_t bin_k;
+        os2b(k, bin_k);
+
+        ret = add_oct(cryptokey, bin_k, desc);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_oct_b16rfc(crypto_key* cryptokey, const char* k, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == k) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = base16_decode_rfc(std::string(input));
             }
         };
 
@@ -1650,6 +2007,34 @@ return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const ch
         auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
                 output = base16_decode(input, strlen(input));
+            }
+        };
+
+        binary_t bin_pub;
+        binary_t bin_priv;
+
+        os2b(pub, bin_pub);
+        os2b(priv, bin_priv);
+
+        ret = add_dh(cryptokey, nid, bin_pub, bin_priv, desc);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == pub) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = base16_decode_rfc(std::string(input));
             }
         };
 

@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t write_pem(const EVP_PKEY* pkey, stream_t* stream) {
+return_t dump_pem(const EVP_PKEY* pkey, stream_t* stream) {
     return_t ret = errorcode_t::success;
     BIO* out = nullptr;
 
@@ -32,7 +32,7 @@ return_t write_pem(const EVP_PKEY* pkey, stream_t* stream) {
             __leave2;
         }
 
-        write_pem(pkey, out);
+        dump_pem(pkey, out);
 
         binary_t buf;
         buf.resize(64);
@@ -53,7 +53,7 @@ return_t write_pem(const EVP_PKEY* pkey, stream_t* stream) {
     return ret;
 }
 
-return_t write_pem(const EVP_PKEY* pkey, BIO* out) {
+return_t dump_pem(const EVP_PKEY* pkey, BIO* out) {
     return_t ret = errorcode_t::success;
 
     __try2 {

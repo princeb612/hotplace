@@ -23,55 +23,67 @@ class cbor_web_key : public crypto_keychain {
     virtual ~cbor_web_key();
 
     /**
-     * @brief   load key from a buffer
-     * @param   crypto_key * crypto_key [in] base16 encoded string
-     * @param   const char* buffer [in]
-     * @param   int flags [inopt] reserved
-     * @return  error code (see error.hpp)
+     * @brief load from buffer
+     * @param crypto_key* cryptokey [in]
+     * @param keyflag_t mode [in] see keyflag_t
+     * @param const char* buffer [in]
+     * @param size_t size [in]
+     * @param const keydesc& desc [inopt]
+     * @param int flag [inopt]
+     * @return error code (see error.hpp)
      */
-    virtual return_t load(crypto_key* crypto_key, const char* buffer, int flags = 0);
+    virtual return_t load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]
      * @param   const std::string& buf [in]
-     * @param   int flags [inopt] reserved
+     * @param   int flag [inopt] reserved
      * @return  error code (see error.hpp)
      */
-    return_t load(crypto_key* crypto_key, const std::string& buf, int flags = 0);
+    return_t load_b16(crypto_key* crypto_key, const std::string& buf, int flag = 0);
+    return_t load_b16(crypto_key* crypto_key, const char* buffer, size_t size, int flag = 0);
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]
      * @param   byte_t* const buffer [in]
      * @param   size_t size [in]
-     * @param   int flags [inopt] reserved
+     * @param   int flag [inopt] reserved
      * @return  error code (see error.hpp)
      */
-    return_t load(crypto_key* crypto_key, const byte_t* buffer, size_t size, int flags = 0);
+    return_t load(crypto_key* crypto_key, const byte_t* buffer, size_t size, int flag = 0);
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]
      * @param   const binary_t& buffer [in]
-     * @param   int flags [in] reserved
+     * @param   int flag [in] reserved
      * @return  error code (see error.hpp)
      */
-    return_t load(crypto_key* crypto_key, const binary_t& buffer, int flags = 0);
+    return_t load(crypto_key* crypto_key, const binary_t& buffer, int flag = 0);
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]
      * @param   cbor_object* root [in]
-     * @param   int flags [inopt] reserved
+     * @param   int flag [inopt] reserved
      * @return  error code (see error.hpp)
      */
-    return_t load(crypto_key* crypto_key, cbor_object* root, int flags = 0);
+    return_t load(crypto_key* crypto_key, cbor_object* root, int flag = 0);
+    /**
+     * @brief write into buffer
+     * @param crypto_key* cryptokey [in]
+     * @param keyflag_t mode [in] see keyflag_t
+     * @param stream_t* stream [in]
+     * @param int flag [in] key_public, key_private
+     * @return error code (see error.hpp)
+     */
+    virtual return_t write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag = 0);
     /**
      * @brief   write
      * @param   crypto_key* crypto_key [in]
-     * @param   char* buf [out] base16 null-terminated
-     * @param   size_t* buflen [inout]
+     * @param   stream_t* stream [in]
      * @param   int flag [inopt] 0 public only, 1 also private
      * @return  error code (see error.hpp)
      */
-    virtual return_t write(crypto_key* crypto_key, char* buf, size_t* buflen, int flags = 0);
+    return_t write(crypto_key* cryptokey, stream_t* stream, int flag = 0);
     /**
      * @brief   write
      * @param   crypto_key* crypto_key [in]
@@ -79,7 +91,7 @@ class cbor_web_key : public crypto_keychain {
      * @param   int flag [inopt] 0 public only, 1 also private
      * @return  error code (see error.hpp)
      */
-    return_t write(crypto_key* crypto_key, std::string& buf, int flags = 0);
+    return_t write(crypto_key* crypto_key, std::string& buf, int flag = 0);
     /**
      * @brief   write
      * @param   crypto_key* crypto_key [in]
@@ -87,12 +99,12 @@ class cbor_web_key : public crypto_keychain {
      * @param   int flag [inopt] 0 public only, 1 also private
      * @return  error code (see error.hpp)
      */
-    return_t write(crypto_key* crypto_key, binary_t& cbor, int flags = 0);
+    return_t write(crypto_key* crypto_key, binary_t& cbor, int flag = 0);
     /**
      * @brief   key member function to write
      * @param   crypto_key* crypto_key [in]
      * @param   cbor_object** root [out] call release to free
-     * @param   int flags [inopt]
+     * @param   int flag [inopt]
      * @return  error code (see error.hpp)
      * @example
      *          crypto_key key;
@@ -106,34 +118,17 @@ class cbor_web_key : public crypto_keychain {
      *          publisher.publish (root, &diagnostic); // same diagnose
      *          root->release ();
      */
-    return_t write(crypto_key* crypto_key, cbor_object** root, int flags = 0);
+    return_t write(crypto_key* crypto_key, cbor_object** root, int flag = 0);
     /**
      * @brief   diagnostic
      * @param   crypto_key* crypto_key [in]
      * @param   stream_t* stream [out]
-     * @param   int flags [inopt]
+     * @param   int flag [inopt]
      */
-    return_t diagnose(crypto_key* crypto_key, stream_t* stream, int flags = 0);
-
-    /**
-     * @brief load key from a file
-     * @param crypto_key * crypto_key [in]
-     * @param const char* file [in]
-     * @param int flags [in] reserved
-     * @return error code (see error.hpp)
-     */
-    virtual return_t load_file(crypto_key* crypto_key, const char* file, int flags = 0);
-    /**
-     * @brief write to file
-     * @param crypto_key * cryptokey [in]
-     * @param const char* file [in]
-     * @param int flag [in] reserved
-     * @return error code (see error.hpp)
-     */
-    virtual return_t write_file(crypto_key* cryptokey, const char* file, int flags = 0);
+    return_t diagnose(crypto_key* crypto_key, stream_t* stream, int flag = 0);
 
    protected:
-    return_t do_load(crypto_key* crypto_key, cbor_object* object, int flags);
+    return_t do_load(crypto_key* crypto_key, cbor_object* object, int flag);
 };
 
 }  // namespace crypto

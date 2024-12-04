@@ -31,7 +31,17 @@ json_web_key::~json_web_key() {
     // do nothing
 }
 
-return_t json_web_key::load(crypto_key* crypto_key, const char* buffer, int flags) {
+return_t json_web_key::load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc, int flag) {
+    return_t ret = errorcode_t::success;
+    if (key_ownspec == mode) {
+        ret = load_pem(cryptokey, buffer, size, desc, flag);
+    } else {
+        ret = crypto_keychain::load(cryptokey, mode, buffer, size, desc, flag);
+    }
+    return ret;
+}
+
+return_t json_web_key::load_pem(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flag) {
     return_t ret = errorcode_t::success;
     json_t* root = nullptr;
 
@@ -56,10 +66,10 @@ return_t json_web_key::load(crypto_key* crypto_key, const char* buffer, int flag
             size_t size = json_array_size(keys_node);
             for (size_t i = 0; i < size; i++) {
                 json_t* temp = json_array_get(keys_node, i);
-                read_json_keynode(crypto_key, temp);
+                read_json_keynode(cryptokey, temp);
             }  // json_array_size
         } else {
-            read_json_keynode(crypto_key, root);
+            read_json_keynode(cryptokey, root);
         }
     }
     __finally2 {
@@ -70,13 +80,23 @@ return_t json_web_key::load(crypto_key* crypto_key, const char* buffer, int flag
     return ret;
 }
 
-return_t json_web_key::read_json_keynode(crypto_key* crypto_key, json_t* json) {
+return_t json_web_key::write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag) {
+    return_t ret = errorcode_t::success;
+    if (key_ownspec == mode) {
+        ret = write(cryptokey, stream, flag);
+    } else {
+        ret = crypto_keychain::write(cryptokey, mode, stream, flag);
+    }
+    return ret;
+}
+
+return_t json_web_key::read_json_keynode(crypto_key* cryptokey, json_t* json) {
     return_t ret = errorcode_t::success;
     json_t* temp = json;
     crypto_keychain keyset;
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == temp) {
+        if (nullptr == cryptokey || nullptr == temp) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -105,7 +125,7 @@ return_t json_web_key::read_json_keynode(crypto_key* crypto_key, json_t* json) {
                 const char* k_value = nullptr;
                 json_unpack(temp, "{s:s}", "k", &k_value);
 
-                add_oct_b64u(crypto_key, k_value, desc);
+                add_oct_b64u(cryptokey, k_value, desc);
             } else if (0 == strcmp(kty, "RSA")) {
                 const char* n_value = nullptr;
                 const char* e_value = nullptr;
@@ -119,7 +139,7 @@ return_t json_web_key::read_json_keynode(crypto_key* crypto_key, json_t* json) {
                 const char* qi_value = nullptr;
                 json_unpack(temp, "{s:s,s:s,s:s,s:s,s:s}", "p", &p_value, "q", &q_value, "dp", &dp_value, "dq", &dq_value, "qi", &qi_value);
 
-                add_rsa_b64u(crypto_key, nid_rsa, n_value, e_value, d_value, p_value, q_value, dp_value, dq_value, qi_value, desc);
+                add_rsa_b64u(cryptokey, nid_rsa, n_value, e_value, d_value, p_value, q_value, dp_value, dq_value, qi_value, desc);
             } else if (0 == strcmp(kty, "EC")) {
                 const char* crv_value = nullptr;
                 const char* x_value = nullptr;
@@ -127,14 +147,14 @@ return_t json_web_key::read_json_keynode(crypto_key* crypto_key, json_t* json) {
                 const char* d_value = nullptr;
                 json_unpack(temp, "{s:s,s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "y", &y_value, "d", &d_value);
 
-                add_ec_b64u(crypto_key, crv_value, x_value, y_value, d_value, desc);
+                add_ec_b64u(cryptokey, crv_value, x_value, y_value, d_value, desc);
             } else if (0 == strcmp(kty, "OKP")) {
                 const char* crv_value = nullptr;
                 const char* x_value = nullptr;
                 const char* d_value = nullptr;
                 json_unpack(temp, "{s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "d", &d_value);
 
-                add_ec_b64u(crypto_key, crv_value, x_value, nullptr, d_value, desc);
+                add_ec_b64u(cryptokey, crv_value, x_value, nullptr, d_value, desc);
             } else {
                 // do nothing
             }
@@ -293,50 +313,11 @@ static void json_writer(crypto_key_object* key, void* param) {
     // do not return
 }
 
-return_t json_web_key::write(crypto_key* crypto_key, char* buf, size_t* buflen, int flags) {
+return_t json_web_key::write(crypto_key* cryptokey, std::string& buf, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == buflen) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        size_t size_request = *buflen;
-        json_mapper_t mapper;
-
-        mapper.flag = flags;
-        crypto_key->for_each(json_writer, &mapper);
-
-        std::string buffer;
-        auto lambda = [](char* data, std::string& buffer) -> void { buffer = data; };
-        jwk_serialize_t<std::string>(mapper, lambda, buffer);
-
-        *buflen = buffer.size() + 1;
-        if (buffer.size() + 1 > size_request) {
-            ret = errorcode_t::insufficient_buffer;
-            __leave2;
-        } else {
-            if (buf) {
-                memcpy(buf, buffer.c_str(), buffer.size());
-                *(buf + buffer.size()) = 0;
-            } else {
-                ret = errorcode_t::invalid_parameter;
-                __leave2;
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t json_web_key::write(crypto_key* crypto_key, std::string& buf, int flags) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == crypto_key) {
+        if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -345,8 +326,8 @@ return_t json_web_key::write(crypto_key* crypto_key, std::string& buf, int flags
 
         json_mapper_t mapper;
 
-        mapper.flag = flags;
-        crypto_key->for_each(json_writer, &mapper);
+        mapper.flag = flag;
+        cryptokey->for_each(json_writer, &mapper);
 
         auto lambda = [](char* data, std::string& buffer) -> void { buffer = data; };
         jwk_serialize_t<std::string>(mapper, lambda, buf);
@@ -357,11 +338,11 @@ return_t json_web_key::write(crypto_key* crypto_key, std::string& buf, int flags
     return ret;
 }
 
-return_t json_web_key::write(crypto_key* crypto_key, stream_t* buf, int flags) {
+return_t json_web_key::write(crypto_key* cryptokey, stream_t* buf, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == crypto_key || nullptr == buf) {
+        if (nullptr == cryptokey || nullptr == buf) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -370,60 +351,11 @@ return_t json_web_key::write(crypto_key* crypto_key, stream_t* buf, int flags) {
 
         json_mapper_t mapper;
 
-        mapper.flag = flags;
-        crypto_key->for_each(json_writer, &mapper);
+        mapper.flag = flag;
+        cryptokey->for_each(json_writer, &mapper);
 
         auto lambda = [](char* data, stream_t*& stream) -> void { stream->printf("%s", data); };
         jwk_serialize_t<stream_t*>(mapper, lambda, buf);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t json_web_key::load_file(crypto_key* crypto_key, const char* file, int flags) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == crypto_key || nullptr == file) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        std::string buffer;
-        std::ifstream fs(file);
-        if (fs.is_open()) {
-            std::getline(fs, buffer, (char)fs.eof());
-
-            ret = load(crypto_key, buffer.c_str(), flags);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t json_web_key::write_file(crypto_key* crypto_key, const char* file, int flags) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == crypto_key || nullptr == file) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        file_stream fs;
-        ret = fs.open(file, filestream_flag_t::open_write);
-        if (errorcode_t::success == ret) {
-            fs.truncate(0);
-
-            ret = write(crypto_key, &fs, flags);
-        }
     }
     __finally2 {
         // do nothing

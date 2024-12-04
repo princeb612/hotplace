@@ -86,25 +86,25 @@ struct tls_content_t {
  */
 enum tls_handshake_type_t : uint8 {
     // TLS 1.3
-    tls_handshake_client_hello = 1,          // CH
-    tls_handshake_server_hello = 2,          // SH
-    tls_handshake_new_session_ticket = 4,    // NST
-    tls_handshake_end_of_early_data = 5,     //
-    tls_handshake_encrypted_extensions = 8,  // EE
-    tls_handshake_certificate = 11,          // CT
-    tls_handshake_certificate_request = 13,  // CR
-    tls_handshake_certificate_verify = 15,   //
-    tls_handshake_finished = 20,             //
-    tls_handshake_key_update = 24,           //
-    tls_handshake_message_hash = 254,        //
+    tls_handshake_client_hello = 1,          // 0x01 CH
+    tls_handshake_server_hello = 2,          // 0x02 SH
+    tls_handshake_new_session_ticket = 4,    // 0x04 NST
+    tls_handshake_end_of_early_data = 5,     // 0x05
+    tls_handshake_encrypted_extensions = 8,  // 0x08 EE
+    tls_handshake_certificate = 11,          // 0x0b CT
+    tls_handshake_certificate_request = 13,  // 0x0d CR
+    tls_handshake_certificate_verify = 15,   // 0x0f
+    tls_handshake_finished = 20,             // 0x14
+    tls_handshake_key_update = 24,           // 0x18
+    tls_handshake_message_hash = 254,        // 0xfe
     // TLS 1.2
-    tls_handshake_server_key_exchange = 12,
-    tls_handshake_server_hello_done = 14,
-    tls_handshake_client_key_exchange = 16,
+    tls_handshake_server_key_exchange = 12,  // 0x0c
+    tls_handshake_server_hello_done = 14,    // 0x0e
+    tls_handshake_client_key_exchange = 16,  // 0x10
     //
-    tls_handshake_hello_request = 0,
-    tls_handshake_certificate_url = 21,
-    tls_handshake_certificate_status = 22,
+    tls_handshake_hello_request = 0,        // 0x00
+    tls_handshake_certificate_url = 21,     // 0x15
+    tls_handshake_certificate_status = 22,  // 0x16
 };
 
 /* RFC 8446 4.  Handshake Protocol */

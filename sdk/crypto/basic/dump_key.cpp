@@ -540,7 +540,7 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
 
         /* PEM */
         basic_stream pem_encoded;
-        write_pem(pkey, &pem_encoded);
+        dump_pem(pkey, &pem_encoded);
         stream->printf("%.*s", pem_encoded.size(), pem_encoded.data());
         stream->printf("\n");
 
