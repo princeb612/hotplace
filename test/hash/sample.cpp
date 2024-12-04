@@ -510,7 +510,7 @@ void test_transcript_hash() {
         _logger->hdump("stream1", case2_hash_stream1);
         _logger->hdump("stream1+stream2", case2_hash_stream2);
     }
-    _test_case.assert(case2_hash_stream2 == case1_hash_stream2, __FUNCTION__, "hash");
+    _test_case.assert(case2_hash_stream2 == case1_hash_stream2, __FUNCTION__, "transcript_hash");
     // case3
     binary_t case3_hash_stream1;
     binary_t case3_hash_stream2;
@@ -525,7 +525,7 @@ void test_transcript_hash() {
         _logger->hdump("stream1", case3_hash_stream1);
         _logger->hdump("stream1+stream2", case3_hash_stream2);
     }
-    _test_case.assert(case3_hash_stream2 == case1_hash_stream2, __FUNCTION__, "hash");
+    _test_case.assert(case3_hash_stream2 == case1_hash_stream2, __FUNCTION__, "transcript_hash");
 }
 
 int main(int argc, char** argv) {

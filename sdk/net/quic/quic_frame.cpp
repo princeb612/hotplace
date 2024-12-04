@@ -26,6 +26,11 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
             __leave2;
         }
 
+        if (pos > size) {
+            ret = errorcode_t::no_data;
+            __leave2;
+        }
+
         auto begin = pos;
 
         // RFC 9001 19.  Frame Types and Formats

@@ -90,9 +90,7 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
             case tls_handshake_server_hello: /* 2 */ {
                 ret = tls_dump_server_hello(hstype, s, session, stream, size, pos);
 
-                auto hash = protection.begin_transcript_hash();
                 binary_t hello_hash;
-
                 // hello_hash = hash(client_hello + server_hello)
                 const binary_t& client_hello = protection.get_item(tls_context_client_hello);
                 lambda_do_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);

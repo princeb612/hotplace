@@ -15,8 +15,6 @@
  *  RFC 2246
  */
 
-// studying ...
-
 #include "sample.hpp"
 
 tls_session rfc8448_session;

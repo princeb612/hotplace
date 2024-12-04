@@ -345,14 +345,9 @@ class tls_protection {
     void set_cipher_suite(uint16 alg);
     /**
      * @brief   transcript hash
-     * @remarks after server_hello
-     */
-    transcript_hash* begin_transcript_hash();
-    /**
-     * @brief   transcript hash
      * @sample
      *          auto hash = get_transcript_hash;
-     *          if (hash) {
+     *          if (hash) { // after server_hello
      *              hash->digest(stream, size, context_hash);
      *              hash->release();
      *          }
@@ -405,6 +400,7 @@ class tls_protection {
     uint8 _mode;  // see tls_mode_t
     uint16 _alg;
     transcript_hash* _transcript_hash;
+    critical_section _lock;
     crypto_key _cert;
     crypto_key _key;
     crypto_key _keyexchange;  // psk_ke, psk_dhe_ke

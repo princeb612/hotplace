@@ -666,6 +666,7 @@ void test_crypto_encrypt() {
                 _logger->hdump("> ciphertext", plaintext, 16, 3);
                 _test_case.test(ret, __FUNCTION__, "decrypt enc %i", enc);
             }
+            crypto->release();
         }
     };
 

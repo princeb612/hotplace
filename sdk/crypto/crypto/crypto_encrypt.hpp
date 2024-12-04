@@ -112,6 +112,9 @@ class crypto_encrypt {
     return_t decrypt(const EVP_PKEY* pkey, const binary_t& ciphertext, binary_t& plaintext);
     return_t decrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& plaintext);
 
+    void addref();
+    void release();
+
    protected:
     crypto_encrypt(crypt_enc_t enc);
 

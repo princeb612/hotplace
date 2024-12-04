@@ -37,6 +37,10 @@ return_t crypto_encrypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, siz
     return ret;
 }
 
+void crypto_encrypt::addref() { _shared.addref(); }
+
+void crypto_encrypt::release() { _shared.delref(); }
+
 crypto_encrypt_builder::crypto_encrypt_builder() : _enc(crypt_enc_undefined) {}
 
 crypto_encrypt* crypto_encrypt_builder::build() {

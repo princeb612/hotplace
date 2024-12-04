@@ -93,12 +93,10 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
 } openssl_crypt_context_t;
 
 openssl_crypt::openssl_crypt() {
-    openssl_startup();
     // do nothing
 }
 
 openssl_crypt::~openssl_crypt() {
-    openssl_cleanup();
     // do nothing
 }
 

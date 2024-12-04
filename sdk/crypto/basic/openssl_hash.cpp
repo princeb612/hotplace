@@ -73,12 +73,10 @@ struct openssl_hash_context_t : public hash_context_t {
 };
 
 openssl_hash::openssl_hash() {
-    openssl_startup();
     // do nothing
 }
 
 openssl_hash::~openssl_hash() {
-    openssl_cleanup();
     // do nothing
 }
 

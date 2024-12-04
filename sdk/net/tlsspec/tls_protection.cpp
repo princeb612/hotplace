@@ -40,18 +40,14 @@ uint16 tls_protection::get_cipher_suite() { return _alg; }
 
 void tls_protection::set_cipher_suite(uint16 alg) { _alg = alg; }
 
-transcript_hash* tls_protection::begin_transcript_hash() {
+transcript_hash* tls_protection::get_transcript_hash() {
+    critical_section_guard guard(_lock);
     if (nullptr == _transcript_hash) {
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
-        hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(_alg);
+        hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(get_cipher_suite());
         transcript_hash_builder builder;
         _transcript_hash = builder.set(hashalg).build();
     }
-    return _transcript_hash;
-}
-
-transcript_hash* tls_protection::get_transcript_hash() {
     if (_transcript_hash) {
         _transcript_hash->addref();
     }
