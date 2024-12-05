@@ -1,9 +1,36 @@
-#ifndef __HOTPLACE_TEST_HASH__
-#define __HOTPLACE_TEST_HASH__
+#ifndef __HOTPLACE_TEST_SIGN__
+#define __HOTPLACE_TEST_SIGN__
 
+#include <stdio.h>
+
+#include <iostream>
 #include <sdk/sdk.hpp>
 
+#include "sample.hpp"
+
+using namespace hotplace;
+using namespace hotplace::io;
 using namespace hotplace::crypto;
+
+typedef struct _OPTION {
+    bool verbose;
+    int log;
+    int time;
+    bool dump_keys;
+
+    _OPTION() : verbose(false), log(0), time(0), dump_keys(false) {
+        // do nothing
+    }
+} OPTION;
+
+extern test_case _test_case;
+extern t_shared_instance<logger> _logger;
+extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
+
+void test_hash_hmac_sign();
+void test_nist_cavp_ecdsa();
+void test_rfc6979_ecdsa();
+void test_crypto_sign();
 
 typedef struct _nist_cavp_ecdsa_test_vector_t {
     int nid;

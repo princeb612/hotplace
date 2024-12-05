@@ -8,16 +8,7 @@
  * Date         Name                Description
  */
 
-#include <stdio.h>
-
-#include <iostream>
-#include <sdk/sdk.hpp>
-
 #include "sample.hpp"
-
-using namespace hotplace;
-using namespace hotplace::io;
-using namespace hotplace::crypto;
 
 const test_vector_nist_cavp_ecdsa_t test_vector_rfc6979[] = {
     // A.2.3.  ECDSA, 192 Bits (Prime Field)
