@@ -17,7 +17,7 @@
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
-#include <sdk/net/tlsspec/tlsspec.hpp>
+#include <sdk/net/tlsspec/tls.hpp>
 
 namespace hotplace {
 namespace net {
@@ -41,6 +41,7 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
         constexpr char constexpr_content_type[] = "content type";
         constexpr char constexpr_record_version[] = "legacy record version";
         constexpr char constexpr_len[] = "len";
+        constexpr char constexpr_application_data[] = "application data";
 
         payload pl;
         pl << new payload_member(uint8(0), constexpr_content_type) << new payload_member(uint16(0), true, constexpr_record_version)
@@ -94,11 +95,11 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 ret = protection.decrypt(session, role, stream, len, plaintext, pos, tag, s);
                 if (errorcode_t::success == ret) {
                     auto plainsize = plaintext.size();
-                    // still ambiguous plaintext is handshake or not
-                    // ... 0x16
                     if (plainsize) {
                         uint8 record_type = *plaintext.rbegin();
-                        if (tls_content_type_handshake == record_type) {
+                        if (tls_content_type_alert == record_type) {
+                            ret = tls_dump_alert(s, session, &plaintext[0], plainsize - 1, tpos);
+                        } else if (tls_content_type_handshake == record_type) {
                             tpos = 0;
                             while (tpos < plainsize) {
                                 auto test = tls_dump_handshake(s, session, &plaintext[0], plainsize, tpos, role);
@@ -111,7 +112,7 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                             }
                         } else if (tls_content_type_application_data == record_type) {
                             s->autoindent(5);
-                            s->printf("> payload\n");
+                            s->printf("> %s\n", constexpr_application_data);
                             dump_memory(&plaintext[0], plainsize - 1, s, 16, 3, 0x0, dump_notrunc);
                             s->autoindent(0);
                             s->printf("\n");

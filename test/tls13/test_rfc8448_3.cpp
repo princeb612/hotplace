@@ -387,8 +387,8 @@ void test_rfc8448_3() {
             "98 19 a8 a5 b4 6b 39 5b d5 4a 9a 20 44 1e 2b 62 97 4e 1f 5a 62"
             "92 a2 97 70 14 bd 1e 3d ea e6 3a ee bb 21 69 49 15 e4";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#6 ", &rfc8448_session, bin_record, role_client);
-        dump_record("#6 ", &rfc8448_session2, bin_record, role_client);
+        dump_record("#6 application data", &rfc8448_session, bin_record, role_client);
+        dump_record("#6 application data", &rfc8448_session2, bin_record, role_client);
     }
     // #7
     // {server}  send application_data record:
@@ -399,8 +399,8 @@ void test_rfc8448_3() {
             "0e fa f9 7d 90 e6 df fc 60 2d cb 50 1a 59 a8 fc c4 9c 4b f2 e5"
             "f0 a2 1c 00 47 c2 ab f3 32 54 0d d0 32 e1 67 c2 95 5d";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#7 ", &rfc8448_session, bin_record);
-        dump_record("#7 ", &rfc8448_session2, bin_record);
+        dump_record("#7 application data", &rfc8448_session, bin_record);
+        dump_record("#7 application data", &rfc8448_session2, bin_record);
     }
     // #8
     // {client}  send alert record:
@@ -409,8 +409,8 @@ void test_rfc8448_3() {
             "17 03 03 00 13 c9 87 27 60 65 56 66"
             "b7 4d 7f f1 15 3e fd 6d b6 d0 b0 e3";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#8 ", &rfc8448_session, bin_record, role_client);
-        dump_record("#8 ", &rfc8448_session2, bin_record, role_client);
+        dump_record("#8 alert", &rfc8448_session, bin_record, role_client);
+        dump_record("#8 alert", &rfc8448_session2, bin_record, role_client);
     }
     // #9
     // {server}  send alert record:
@@ -419,7 +419,7 @@ void test_rfc8448_3() {
             "17 03 03 00 13 b5 8f d6 71 66 eb f5"
             "99 d2 47 20 cf be 7e fa 7a 88 64 a9";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#9 ", &rfc8448_session, bin_record);
-        dump_record("#9 ", &rfc8448_session2, bin_record);
+        dump_record("#9 alert", &rfc8448_session, bin_record);
+        dump_record("#9 alert", &rfc8448_session2, bin_record);
     }
 }

@@ -194,6 +194,19 @@ return_t crypto_advisor::build() {
 
         if (item->name) {
             set_feature(item->name, advisor_feature_curve);
+            _curve_name_map.insert({item->name, item});
+        }
+        if (item->group) {
+            _tls_group_map.insert({item->group, item});
+        }
+        if (item->aka1) {
+            _curve_name_map.insert({item->aka1, item});
+        }
+        if (item->aka2) {
+            _curve_name_map.insert({item->aka2, item});
+        }
+        if (item->aka3) {
+            _curve_name_map.insert({item->aka3, item});
         }
     }
 
@@ -627,6 +640,24 @@ const hint_curve_t* crypto_advisor::hintof_curve(cose_ec_curve_t curve) {
     t_maphint<cose_ec_curve_t, const hint_curve_t*> hint(_cose_curve_map);
 
     hint.find(curve, &item);
+    return item;
+}
+
+const hint_curve_t* crypto_advisor::hintof_tls_group(uint16 group) {
+    const hint_curve_t* item = nullptr;
+    t_maphint<uint16, const hint_curve_t*> hint(_tls_group_map);
+
+    hint.find(group, &item);
+    return item;
+}
+
+const hint_curve_t* crypto_advisor::hintof_curve_name(const char* name) {
+    const hint_curve_t* item = nullptr;
+    if (name) {
+        t_maphint<std::string, const hint_curve_t*> hint(_curve_name_map);
+
+        hint.find(name, &item);
+    }
     return item;
 }
 

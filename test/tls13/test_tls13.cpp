@@ -136,7 +136,7 @@ void test_tls13_xargs_org() {
             "D7 AD 6D CF F4 29 8D D3 F9 6D 5B 1B 2A F9 10 A0"
             "53 5B 14 88 D7 F8 FA BB 34 9A 98 28 80 B6 15 --";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("server_hello", &session, bin_record);
+        dump_record("server_hello", &session, bin_record, role_server);
     }
 
     // > handshake type 2 (server_hello)
@@ -191,7 +191,7 @@ void test_tls13_xargs_org() {
     {
         const char* record = "14 03 03 00 01 01";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("change cipher spec", &session, bin_record);
+        dump_record("change cipher spec", &session, bin_record, role_server);
     }
 
     /**
@@ -203,7 +203,7 @@ void test_tls13_xargs_org() {
             "17 03 03 00 17 6B E0 2F 9D A7 C2 DC 9D DE F5 6F"
             "24 68 B9 0A DF A2 51 01 AB 03 44 AE -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("wrapped-record (encrypted_extensions)", &session, bin_record);
+        dump_record("wrapped-record (encrypted_extensions)", &session, bin_record, role_server);
 
         // TODO
         // https://tls13.xargs.org/#server-encrypted-extensions/annotated
@@ -271,7 +271,7 @@ void test_tls13_xargs_org() {
             "19 A7 0E 3A 10 E3 08 41 58 FA A5 BA FA 30 18 6C"
             "6B 2F 23 8E B5 30 C7 3E -- -- -- -- -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("wrapped-record-2 (certificate)", &session, bin_record);
+        dump_record("wrapped-record-2 (certificate)", &session, bin_record, role_server);
     }
     /**
      * S -> C
@@ -362,7 +362,7 @@ void test_tls13_xargs_org() {
         // > handshake type 15 (certificate_verify)
         //  > signature algorithm 0x0804 rsa_pss_rsae_sha256
         //  > len 0x0100(256)
-        dump_record("wrapped-record-3 (certificate_verify)", &session, bin_record);
+        dump_record("wrapped-record-3 (certificate_verify)", &session, bin_record, role_server);
     }
     /**
      * S -> C
@@ -377,7 +377,7 @@ void test_tls13_xargs_org() {
             "E4 DF 5C 28 5D 58 E3 C7 62 24 07 84 40 C0 74 23"
             "74 74 4A EC F2 8C F3 18 2F D0 -- -- -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("wrapped-record-4 (finished)", &session, bin_record);
+        dump_record("wrapped-record-4 (finished)", &session, bin_record, role_server);
     }
     /**
      * https://tls13.xargs.org/#server-application-keys-calc
@@ -451,7 +451,7 @@ void test_tls13_xargs_org() {
             "e6 d8 4d 29 29 b7 88 3d c9 a3 c3 c7 31 3a 87 29 3f 31 b6 1d 24 d9 90 97 c8 85 3b fb eb 95 d1 d0 1f 99 ca 05 b0 50 18 59 cf 63 40 e8 37 70 75 97 "
             "01 52 fa 94 f5 f5 be 29 06 e7 2a 15 e4 08 36 a4 1f 4c d3 db e7 d5 13 c1 6e 88 61 1d 3e ae 93 38 d9 db 1f 91 ca 3d 58 42 60 2a 61 0b 43 a4 63";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("wrapped-record-7 (new_session_ticket)", &session, bin_record);
+        dump_record("wrapped-record-7 (new_session_ticket)", &session, bin_record, role_server);
     }
     /**
      * C <- S
@@ -466,7 +466,7 @@ void test_tls13_xargs_org() {
             "57 b0 89 80 cd 08 ba f9 69 8b 89 29 98 6d 11 74 d4 aa 6d d7 a7 e8 c0 86 05 2c 3c 76 d8 19 34 bd f5 9b 96 6e 39 20 31 f3 47 1a de bd dd db e8 4f "
             "cf 1f f4 08 84 6a e9 b2 8c a4 a9 e7 28 84 4a 49 3d 80 45 5d 6e af f2 05 b4 0a 1e f1 85 74 ef c0 b9 6a d3 83 af bd 8d fc 86 f8 08 7c 1f 7d c8";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("wrapped-record-8 (new_session_ticket)", &session, bin_record);
+        dump_record("wrapped-record-8 (new_session_ticket)", &session, bin_record, role_server);
     }
     /**
      * C <- S
@@ -476,6 +476,6 @@ void test_tls13_xargs_org() {
     {
         const char* record = "17 03 03 00 15 0c da 85 f1 44 7a e2 3f a6 6d 56 f4 c5 40 84 82 b1 b1 d4 c9 98";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("wrapped-record-9 (pong)", &session, bin_record);
+        dump_record("wrapped-record-9 (pong)", &session, bin_record, role_server);
     }
 }

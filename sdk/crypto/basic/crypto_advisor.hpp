@@ -202,6 +202,17 @@ class crypto_advisor : public traceable {
     const hint_curve_t* hintof_curve(cose_ec_curve_t curve);
     /**
      * @brief hint
+     * @param uint16 group [in] TLS supported group
+     * @return const hint_curve_t*
+     */
+    const hint_curve_t* hintof_tls_group(uint16 group);
+    /**
+     * @brief hint
+     * @param const char* name [in]
+     */
+    const hint_curve_t* hintof_curve_name(const char* name);
+    /**
+     * @brief hint
      * @param const char* alg [in]
      *          "RSA1_5", "RSA-OAEP", "RSA-OAEP-256",
      *          "A128KW" series,
@@ -591,6 +602,8 @@ class crypto_advisor : public traceable {
     typedef std::map<std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
     typedef std::map<uint32, const hint_curve_t*> jose_curve_bynid_map_t;
     typedef std::map<cose_ec_curve_t, const hint_curve_t*> cose_curve_map_t;
+    typedef std::map<uint16, const hint_curve_t*> tls_group_map_t;
+    typedef std::map<std::string, const hint_curve_t*> curve_name_map_t;
     typedef std::map<crypto_kty_t, cose_kty_t> kty2cose_map_t;
     typedef std::map<cose_kty_t, crypto_kty_t> cose2kty_map_t;
     typedef std::map<crypt_sig_t, jws_t> sig2jws_map_t;
@@ -629,6 +642,8 @@ class crypto_advisor : public traceable {
     jose_nid_bycurve_map_t _nid_bycurve_map;
     jose_curve_bynid_map_t _curve_bynid_map;
     cose_curve_map_t _cose_curve_map;
+    tls_group_map_t _tls_group_map;
+    curve_name_map_t _curve_name_map;
 
     kty2cose_map_t _kty2cose_map;
     cose2kty_map_t _cose2kty_map;

@@ -18,7 +18,7 @@
 #include <sdk/crypto/crypto/crypto_aead.hpp>
 #include <sdk/crypto/crypto/crypto_hash.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
-#include <sdk/net/tlsspec/tlsspec.hpp>
+#include <sdk/net/tlsspec/tls.hpp>
 // debug
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
@@ -26,7 +26,7 @@
 namespace hotplace {
 namespace net {
 
-tls_protection::tls_protection(uint8 mode) : _mode(mode), _alg(0), _transcript_hash(nullptr) {}
+tls_protection::tls_protection(uint8 mode) : _mode(mode), _alg(0), _version(0), _transcript_hash(nullptr) {}
 
 tls_protection::~tls_protection() {
     if (_transcript_hash) {
@@ -39,6 +39,10 @@ uint8 tls_protection::get_mode() { return _mode; }
 uint16 tls_protection::get_cipher_suite() { return _alg; }
 
 void tls_protection::set_cipher_suite(uint16 alg) { _alg = alg; }
+
+uint16 tls_protection::get_tls_version() { return _version; }
+
+void tls_protection::set_tls_version(uint16 version) { _version = version; }
 
 transcript_hash* tls_protection::get_transcript_hash() {
     critical_section_guard guard(_lock);
@@ -157,7 +161,7 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
             binary_t shared_secret;
             {
                 const EVP_PKEY* pkey_priv = get_key().any();
-                const EVP_PKEY* pkey_pub = get_keyexchange().any();
+                const EVP_PKEY* pkey_pub = get_keyexchange().find("CH");  // client_hello
                 if (nullptr == pkey_priv || nullptr == pkey_pub) {
                     ret = errorcode_t::not_found;
                     __leave2;
@@ -295,6 +299,12 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
             binary_t reshash;
             reshash.resize(2);
             lambda_expand_label(tls_secret_resumption, resumption_secret, hashalg, dlen, resumption_master_secret, "resumption", reshash);
+
+            // RFC 8448 4.  Resumed 0-RTT Handshake
+            binary_t resumption_early_secret;
+            lambda_extract(tls_secret_resumption_early, resumption_early_secret, hashalg, ikm_empty, resumption_secret);
+        } else if (tls_context_client_key_exchange == type) {
+            //
         }
     }
     __finally2 {
@@ -426,16 +436,22 @@ crypto_sign* tls_protection::get_crypto_sign(uint16 scheme) {
     crypto_sign* sign = nullptr;
     switch (scheme) {
         case 0x0401: /* rsa_pkcs1_sha256 */ {
+            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_256).build();
         } break;
         case 0x0501: /* rsa_pkcs1_sha384 */ {
+            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_384).build();
         } break;
         case 0x0601: /* rsa_pkcs1_sha512 */ {
+            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_512).build();
         } break;
         case 0x0403: /* ecdsa_secp256r1_sha256 */ {
+            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_256).build();
         } break;
         case 0x0503: /* ecdsa_secp384r1_sha384 */ {
+            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_384).build();
         } break;
         case 0x0603: /* ecdsa_secp521r1_sha512 */ {
+            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_512).build();
         } break;
         case 0x0804: /* rsa_pss_rsae_sha256 */ {
             sign = builder.tls_sign_scheme(scheme).set_digest(sha2_256).build();

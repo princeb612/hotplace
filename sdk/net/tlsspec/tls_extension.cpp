@@ -17,7 +17,7 @@
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
-#include <sdk/net/tlsspec/tlsspec.hpp>
+#include <sdk/net/tlsspec/tls.hpp>
 
 namespace hotplace {
 namespace net {
@@ -115,8 +115,33 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 pos += ext_len;
             } break;
             case tls_extension_status_request: /* 0x0005 */ {
-                // studying
-                pos += ext_len;
+                constexpr char constexpr_cert_status_type[] = "certificate status type";
+                constexpr char constexpr_responderid_info_len[] = "responderid information len";
+                constexpr char constexpr_responderid_info[] = "responderid information";
+                constexpr char constexpr_request_ext_info_len[] = "request extension information len";
+                constexpr char constexpr_request_ext_info[] = "request extension information";
+                payload pl;
+                pl << new payload_member(uint8(0), constexpr_cert_status_type) << new payload_member(uint16(), true, constexpr_responderid_info_len)
+                   << new payload_member(binary_t(), constexpr_responderid_info) << new payload_member(uint16(0), true, constexpr_request_ext_info_len)
+                   << new payload_member(binary_t(), constexpr_request_ext_info);
+                pl.set_reference_value(constexpr_responderid_info, constexpr_responderid_info_len);
+                pl.set_reference_value(constexpr_request_ext_info, constexpr_request_ext_info_len);
+                pl.read(stream, size, pos);
+
+                uint8 cert_status_type = t_to_int<uint8>(pl.select(constexpr_cert_status_type));
+                uint16 responderid_info_len = t_to_int<uint8>(pl.select(constexpr_responderid_info_len));
+                uint16 request_ext_info_len = t_to_int<uint8>(pl.select(constexpr_request_ext_info_len));
+                binary_t responderid_info;
+                binary_t request_ext_info;
+                pl.select(constexpr_responderid_info)->get_variant().to_binary(responderid_info);
+                pl.select(constexpr_request_ext_info)->get_variant().to_binary(request_ext_info);
+                s->printf(" > %s %i %s\n", constexpr_cert_status_type, cert_status_type, resource->cert_status_type_string(cert_status_type).c_str());
+                s->printf(" > %s %i\n", constexpr_responderid_info_len, responderid_info_len);
+                dump_memory(responderid_info, s, 16, 3, 0x0, dump_notrunc);
+                s->printf("\n");
+                s->printf(" > %s %i\n", constexpr_request_ext_info_len, request_ext_info_len);
+                dump_memory(request_ext_info, s, 16, 3, 0x0, dump_notrunc);
+                s->printf("\n");
             } break;
             case tls_extension_supported_groups: /* 0x000a */ {
                 // RFC 8422 5.  Data Structures and Computations
@@ -301,6 +326,8 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
 
                         uint16 ver = t_to_int<uint16>(pl.select(constexpr_version));
                         s->printf(" > 0x%04x %s\n", ver, resource->tls_version_string(ver).c_str());
+
+                        session->get_tls_protection().set_tls_version(ver);
                     } break;
                 }
 
@@ -388,6 +415,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
 
                             auto& keyshare = session->get_tls_protection().get_keyexchange();
                             crypto_keychain keychain;
+                            keydesc desc("CH");
                             switch (group) {
                                 case 0x0017: /* secp256r1 */ {
                                 } break;
@@ -396,10 +424,10 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                                 case 0x0019: /* secp521r1 */ {
                                 } break;
                                 case 0x001d: /* x25519 */ {
-                                    keychain.add_okp(&keyshare, NID_X25519, pubkey, binary_t(), keydesc());
+                                    keychain.add_okp(&keyshare, NID_X25519, pubkey, binary_t(), desc);
                                 } break;
                                 case 0x001e: /* x448 */ {
-                                    keychain.add_okp(&keyshare, NID_X448, pubkey, binary_t(), keydesc());
+                                    keychain.add_okp(&keyshare, NID_X448, pubkey, binary_t(), desc);
                                 } break;
                                 case 0x0100: /* ffdhe2048 */ {
                                 } break;

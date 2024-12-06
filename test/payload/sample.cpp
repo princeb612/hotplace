@@ -42,6 +42,7 @@ int main(int argc, char** argv) {
 
     test_payload_write();
     test_payload_read();
+    test_uint24();
     test_payload_uint24();
     test_http2_frame();
     test_quic_packet();

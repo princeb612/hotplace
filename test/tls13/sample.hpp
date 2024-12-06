@@ -21,6 +21,8 @@ return_t dump_handshake(const char* text, tls_session* session, const binary_t& 
 void test_keycalc(tls_session* session, tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect);
 
 void test_tls13_xargs_org();
+void test_tls12_xargs_org();
+void test_dtls13_xargs_org();
 
 void test_rfc8448_2();
 void test_rfc8448_3();

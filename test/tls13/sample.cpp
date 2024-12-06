@@ -145,6 +145,16 @@ int main(int argc, char** argv) {
     test_rfc8448_6();
     test_rfc8448_7();
 
+    // tipping
+    {
+        // https://tls12.xargs.org/
+        test_tls12_xargs_org();
+
+        // TODO
+        // https://dtls13.xargs.org/
+        // test_dtls13_xargs_org();
+    }
+
     openssl_cleanup();
 
     _logger->flush();

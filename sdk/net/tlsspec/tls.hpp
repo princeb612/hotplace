@@ -72,6 +72,9 @@ enum tls_content_type_t : uint8 {
     tls_content_type_alert = 21,               // 0x15
     tls_content_type_handshake = 22,           // 0x16
     tls_content_type_application_data = 23,    // 0x17
+    tls_content_type_heartbeat = 24,           // 0x18
+    tls_content_type_tls12_cid = 25,           // 0x19
+    tls_content_type_ack = 26,                 // 0x20
 };
 
 struct tls_content_t {
@@ -80,31 +83,41 @@ struct tls_content_t {
     uint16 length;  // 2^14
 };
 
+enum tls_version_t {
+    tls_13 = 0x0304,
+    tls_12 = 0x0303,
+    tls_11 = 0x0302,
+    tls_10 = 0x0301,
+    dtls_12 = 0xfefd,
+};
+
 /*
  * RFC 8446 4.  Handshake Protocol
  * RFC 5246 7.4.  Handshake Protocol
+ * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  */
 enum tls_handshake_type_t : uint8 {
-    // TLS 1.3
-    tls_handshake_client_hello = 1,          // 0x01 CH
-    tls_handshake_server_hello = 2,          // 0x02 SH
-    tls_handshake_new_session_ticket = 4,    // 0x04 NST
-    tls_handshake_end_of_early_data = 5,     // 0x05
-    tls_handshake_encrypted_extensions = 8,  // 0x08 EE
-    tls_handshake_certificate = 11,          // 0x0b CT
-    tls_handshake_certificate_request = 13,  // 0x0d CR
-    tls_handshake_certificate_verify = 15,   // 0x0f
-    tls_handshake_finished = 20,             // 0x14
-    tls_handshake_key_update = 24,           // 0x18
-    tls_handshake_message_hash = 254,        // 0xfe
-    // TLS 1.2
-    tls_handshake_server_key_exchange = 12,  // 0x0c
-    tls_handshake_server_hello_done = 14,    // 0x0e
-    tls_handshake_client_key_exchange = 16,  // 0x10
-    //
-    tls_handshake_hello_request = 0,        // 0x00
-    tls_handshake_certificate_url = 21,     // 0x15
-    tls_handshake_certificate_status = 22,  // 0x16
+    tls_handshake_hello_request = 0,                // 0x00
+    tls_handshake_client_hello = 1,                 // 0x01 CH
+    tls_handshake_server_hello = 2,                 // 0x02 SH
+    tls_handshake_new_session_ticket = 4,           // 0x04 NST
+    tls_handshake_end_of_early_data = 5,            // 0x05
+    tls_handshake_encrypted_extensions = 8,         // 0x08 EE
+    tls_handshake_request_connection_id = 9,        //
+    tls_handshake_new_connection_id = 10,           //
+    tls_handshake_certificate = 11,                 // 0x0b CT
+    tls_handshake_server_key_exchange = 12,         // 0x0c
+    tls_handshake_certificate_request = 13,         // 0x0d CR
+    tls_handshake_server_hello_done = 14,           // 0x0e
+    tls_handshake_certificate_verify = 15,          // 0x0f
+    tls_handshake_client_key_exchange = 16,         // 0x10
+    tls_handshake_client_certificate_request = 17,  //
+    tls_handshake_finished = 20,                    // 0x14
+    tls_handshake_certificate_url = 21,             // 0x15
+    tls_handshake_certificate_status = 22,          // 0x16
+    tls_handshake_key_update = 24,                  // 0x18
+    tls_handshake_compressed_certificate = 25,      //
+    tls_handshake_message_hash = 254,               // 0xfe
 };
 
 /* RFC 8446 4.  Handshake Protocol */
@@ -115,17 +128,23 @@ struct tls_handshake_t {
 };
 #pragma pack(pop)
 
+/**
+ * RFC 5246 7.2.  Alert Protocol
+ * RFC 8446 6.  Alert Protocol
+ */
 enum tls_alertlevel_t : uint8 {
     tls_alertlevel_warning = 1,
     tls_alertlevel_fatal = 2,
 };
-
 enum tls_alertdesc_t : uint8 {
     tls_alertdesc_close_notify = 0,
     tls_alertdesc_unexpected_message = 10,
     tls_alertdesc_bad_record_mac = 20,
+    tls_alertdesc_decryption_failed_RESERVED = 21,  // TLS 1.2
     tls_alertdesc_record_overflow = 22,
+    tls_alertdesc_decompression_failure = 30,  // TLS 1.2
     tls_alertdesc_handshake_failure = 40,
+    tls_alertdesc_no_certificate_RESERVED = 41,  // TLS 1.2
     tls_alertdesc_bad_certificate = 42,
     tls_alertdesc_unsupported_certificate = 43,
     tls_alertdesc_certificate_revoked = 44,
@@ -136,11 +155,13 @@ enum tls_alertdesc_t : uint8 {
     tls_alertdesc_access_denied = 49,
     tls_alertdesc_decode_error = 50,
     tls_alertdesc_decrypt_error = 51,
+    tls_alertdesc_export_restriction_RESERVED = 60,  // TLS 1.2
     tls_alertdesc_protocol_version = 70,
     tls_alertdesc_insufficient_security = 71,
     tls_alertdesc_internal_error = 80,
     tls_alertdesc_inappropriate_fallback = 86,
     tls_alertdesc_user_canceled = 90,
+    tls_alertdesc_no_renegotiation = 100,  // TLS 1.2
     tls_alertdesc_missing_extension = 109,
     tls_alertdesc_unsupported_extension = 110,
     tls_alertdesc_unrecognized_name = 112,
@@ -274,11 +295,6 @@ enum tls_secret_t : uint16 {
     tls_secret_early_secret = 3,
     tls_secret_empty_hash = 4,
 
-    tls_context_client_hello = 5,
-    tls_context_server_hello = 6,
-    tls_context_server_finished = 7,
-    tls_context_client_finished = 8,
-
     tls_secret_handshake_derived = 0x10,
     tls_secret_handshake = 0x11,
     tls_secret_handshake_client = 0x12,
@@ -315,6 +331,16 @@ enum tls_secret_t : uint16 {
     tls_secret_exporter = 0x31,
     tls_secret_resumption_master = 0x40,
     tls_secret_resumption = 0x41,
+    tls_secret_resumption_early = 0x42,
+
+    tls_context_client_hello = 0x101,         // CH client_hello
+    tls_context_server_hello = 0x102,         // SH server_hello (handshake)
+    tls_context_server_finished = 0x103,      // F server finished (application, exporter)
+    tls_context_client_finished = 0x104,      // F client finished (resumption)
+    tls_context_client_hello_random = 0x105,  // CH client_hello (server_key_update)
+    tls_context_server_hello_random = 0x106,  // SH server_hello (server_key_update)
+    tls_context_server_key_exchange = 0x107,  // SKE server_key_exchange (pre_master_secret)
+    tls_context_client_key_exchange = 0x108,  // CKE client_key_exchange (pre_master_secret)
 };
 
 enum tls_mode_t : uint8 {
@@ -345,6 +371,8 @@ class tls_protection {
      */
     uint16 get_cipher_suite();
     void set_cipher_suite(uint16 alg);
+    uint16 get_tls_version();
+    void set_tls_version(uint16 version);
     /**
      * @brief   transcript hash
      * @sample
@@ -401,6 +429,7 @@ class tls_protection {
    private:
     uint8 _mode;  // see tls_mode_t
     uint16 _alg;
+    uint16 _version;
     transcript_hash* _transcript_hash;
     critical_section _lock;
     crypto_key _cert;
@@ -466,8 +495,17 @@ class tls_advisor {
     hash_algorithm_t hash_alg_of(uint16 code);
     std::string compression_method_string(uint8 code);
 
+    /**
+     * RFC 5246 7.2.  Alert Protocol
+     * RFC 8446 6.  Alert Protocol
+     */
+    std::string alert_level_string(uint8 code);
+    std::string alert_desc_string(uint8 code);
+
     // tls_extension_server_name 0x0000
     std::string sni_nametype_string(uint16 code);
+    // tls_extension_status_request 0x0005
+    std::string cert_status_type_string(uint8 code);
     // tls_extension_supported_groups 0x000a
     std::string named_curve_string(uint16 code);
     // tls_extension_ec_point_formats 0x000b
@@ -487,10 +525,12 @@ class tls_advisor {
     void load_tls_version();
     void load_tls_extensions();
     void load_cipher_suites();
+    void load_tls_alerts();
     void load_named_curves();
     void load_ec_point_formats();
     void load_signature_schemes();
-    void load_psk_kems();
+    void load_psk_kem();
+    void load_certificate_related();
     void load_quic_param();
 
     static tls_advisor _instance;
@@ -501,6 +541,9 @@ class tls_advisor {
     std::map<uint16, std::string> _tls_extensions;
     std::map<uint16, std::string> _cipher_suites;
     std::map<uint16, tls_alg_info_t*> _tls_alg_info;
+    std::map<uint8, std::string> _tls_alert_level;
+    std::map<uint16, std::string> _tls_alert_descriptions;
+    std::map<uint8, std::string> _cert_status_types;
 
     // tls_extension_supported_groups 0x000a
     std::map<uint16, std::string> _named_curves;

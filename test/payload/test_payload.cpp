@@ -117,6 +117,20 @@ void test_payload_read() {
     }
 }
 
+void test_uint24() {
+    _test_case.begin("uint24");
+    const char* sample = "00 03 28";
+    binary_t bin = base16_decode_rfc(sample);
+
+    uint32 ui32 = 0;
+    b24_i32(&bin[0], bin.size(), ui32);
+    _test_case.assert(0x0328 == ui32, __FUNCTION__, "b24_i32");
+
+    byte_t buf[3];
+    i32_b24(buf, 3, ui32);
+    _test_case.assert(0 == memcmp(buf, &bin[0], 3), __FUNCTION__, "i32_b24");
+}
+
 //  test_payload_uint24
 //
 //  type        size    endian      name        group

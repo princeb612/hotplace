@@ -870,16 +870,55 @@ typedef struct _hint_cose_algorithm_t {
     } enc;
 } hint_cose_algorithm_t;
 
+/**
+ * @brief  curve information
+ *              nid         openssl nid             NID_X9_62_prime256v1
+ *              cose_crv    cose curve              cose_ec_p256
+ *              kty         key type                kty_ec
+ *              use         usage(enc, sig)         use_any
+ *              group       TLS supported group     0x0017
+ *              oid         OID
+ *              name        NIST
+ *              aka1        X9.62, X9.63
+ *              aka2        Standards for Efficient Cryptography (SEC)
+ *              aka3
+ * @remarks
+ *         references
+ *             TLS supported groups
+ *                 https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-8
+ *             Standard curve database - NIST, ANSI X9.62 & X9.63, SECG, ...
+ *                 https://neuromancer.sk/std/
+ *
+ *          Verifiably random algorithms
+ *              ANSI X9.62
+ *              SECG
+ *              NIST
+ *              Brainpool
+ *          Pairing-friendly curves
+ *              BN
+ *              BLS
+ *              MNT
+ *              KSS
+ *          Other
+ *              Complex multiplication
+ */
 typedef struct _hint_curves_t {
     uint32 nid;
     cose_ec_curve_t cose_crv;
     crypto_kty_t kty;
     crypto_use_t use;
-    const char* name;  // NIST CURVE
-    const char* aka1;  // X9.62, X9.63
-    const char* aka2;  // Standards for Efficient Cryptography (SEC)
+    uint16 group;      // TLS
+    const char* oid;   // OID
+    const char* name;  // NIST (CURVE P-256, P-384, P-521, ...)
+    const char* aka1;  // X9.62, X9.63 (ansip384r1, ansip521r1, ...)
+    const char* aka2;  // Standards for Efficient Cryptography (SEC) (secp256r1, secp384r1, secp521r1, ...)
     const char* aka3;
 } hint_curve_t;
+uint32 nidof(const hint_curve_t* hint);
+cose_ec_curve_t coseof(const hint_curve_t* hint);
+crypto_kty_t ktyof(const hint_curve_t* hint);
+uint16 groupof(const hint_curve_t* hint);
+const char* oidof(const hint_curve_t* hint);
 
 typedef struct _hint_signature_t {
     crypt_sig_t sig_type;

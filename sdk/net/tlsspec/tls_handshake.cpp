@@ -22,7 +22,7 @@
 #include <sdk/crypto/crypto/crypto_mac.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/net/tlsspec/tlsspec.hpp>
+#include <sdk/net/tlsspec/tls.hpp>
 
 namespace hotplace {
 namespace net {
@@ -34,7 +34,10 @@ static return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, 
 static return_t tls_dump_new_session_ticket(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 static return_t tls_dump_encrypted_extensions(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 static return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+static return_t tls_dump_server_key_exchange(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role);
+static return_t tls_dump_server_hello_done(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role);
 static return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+static return_t tls_dump_client_key_exchange(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role);
 static return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role);
 
 return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role) {
@@ -74,6 +77,9 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
             auto hash = protection.get_transcript_hash();
             if (hash) {
                 hash->digest(stream, size, digest);
+                // s->printf(" > transcript hash\n");
+                // dump_memory(digest, s, 16, 3, 0x0, dump_notrunc);
+                // s->printf("\n");
                 hash->release();
             }
         };
@@ -126,16 +132,25 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
 
                 lambda_do_transcript_hash(session, stream + hspos, sizeof(tls_handshake_t) + length, handshake_hash);
             } break;
+            case tls_handshake_server_key_exchange: /* 12 */ {
+                ret = tls_dump_server_key_exchange(s, session, stream, size, pos, role);
+            } break;
             case tls_handshake_certificate_request: /* 13 */ {
                 // RFC 4346 7.4.4. Certificate request
                 // do something
                 lambda_do_transcript_hash(session, stream + hspos, sizeof(tls_handshake_t) + length, handshake_hash);
+            } break;
+            case tls_handshake_server_hello_done: /* 14 */ {
+                ret = tls_dump_server_hello_done(s, session, stream, size, pos, role);
             } break;
             case tls_handshake_certificate_verify: /* 15 */ {
                 // RFC 4346 7.4.8. Certificate verify
                 ret = tls_dump_certificate_verify(s, session, stream, size, pos);
 
                 lambda_do_transcript_hash(session, stream + hspos, sizeof(tls_handshake_t) + length, handshake_hash);
+            } break;
+            case tls_handshake_client_key_exchange: /* 16 */ {
+                ret = tls_dump_client_key_exchange(s, session, stream, size, pos, role);
             } break;
             case tls_handshake_finished: /* 20 */ {
                 ret = tls_dump_finished(s, session, stream, size, pos, role);
@@ -260,6 +275,11 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             extension_len = t_to_int<uint16>(pl.select(constexpr_extensions));
         }
 
+        {
+            // server_key_update
+            session->get_tls_protection().set_item(tls_context_client_hello_random, random);
+        }
+
         s->autoindent(1);
         s->printf(" > %s 0x%04x (%s)\n", constexpr_version, version, advisor->tls_version_string(version).c_str());
         s->printf(" > %s\n", constexpr_random);
@@ -322,13 +342,6 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             pl.read(stream, size, pos);
 
             version = t_to_int<uint16>(pl.select(constexpr_version));
-
-            if (version < 0x0303) {
-                // RFC 8996
-                // TLS 1.0, 1.1
-                ret = errorcode_t::not_supported;
-                __leave2;
-            }
         }
 
         binary_t random;
@@ -358,6 +371,11 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             cipher_suite = t_to_int<uint16>(pl.select(constexpr_cipher_suite));
             compression_method = t_to_int<uint8>(pl.select(constexpr_compression_method));
             extension_len = t_to_int<uint16>(pl.select(constexpr_extensions));
+        }
+
+        {
+            // server_key_update
+            session->get_tls_protection().set_item(tls_context_server_hello_random, random);
         }
 
         s->autoindent(1);
@@ -492,6 +510,7 @@ return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* s
         constexpr char constexpr_certificates_len[] = "certifcates len";
         constexpr char constexpr_certificate_len[] = "certifcate len";
         constexpr char constexpr_certificate[] = "certifcate";
+        constexpr char constexpr_group_tls13[] = "tls1.3";
 
         binary_t cert;
         crypto_keychain keychain;
@@ -500,11 +519,14 @@ return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* s
         uint32 certificate_len = 0;
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_request_context_len) << new payload_member(binary_t(), constexpr_request_context)
+            pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)  // TLS 1.3
+               << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)    // TLS 1.3
                << new payload_member(uint32_24_t(), constexpr_certificates_len) << new payload_member(uint32_24_t(), constexpr_certificate_len)
                << new payload_member(binary_t(), constexpr_certificate);
             pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
             pl.set_reference_value(constexpr_request_context, constexpr_request_context_len);
+            auto tls_version = session->get_tls_protection().get_tls_version();
+            pl.set_group(constexpr_group_tls13, tls_version == tls_13 ? true : false);  // tls_extension_supported_versions 0x002b server_hello
             pl.read(stream, size, pos);
 
             request_context_len = t_to_int<uint8>(pl.select(constexpr_request_context_len));
@@ -545,6 +567,118 @@ return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* s
         ret = keychain.load_der(&servercert, &cert[0], cert.size(), keydesc(use_sig));
         if (errorcode_t::success == ret) {
             dump_key(servercert.any(), s, 15, 4, dump_notrunc);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_dump_server_key_exchange(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == s || nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto& protection = session->get_tls_protection();
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+        size_t hspos = pos;
+        uint8 curve_info = 0;
+        uint16 curve = 0;
+        uint8 pubkey_len = 0;
+        binary_t pubkey;
+        uint16 signature = 0;
+        uint16 sig_len = 0;
+        binary_t sig;
+
+        constexpr char constexpr_curve_info[] = "curve info";
+        constexpr char constexpr_curve[] = "curve";
+        constexpr char constexpr_pubkey_len[] = "public key len";
+        constexpr char constexpr_pubkey[] = "public key";
+        constexpr char constexpr_signature[] = "signature";
+        constexpr char constexpr_sig_len[] = "signature len";
+        constexpr char constexpr_sig[] = "computed signature";
+
+        // RFC 5246 7.4.3.  Server Key Exchange Message
+        {
+            payload pl;
+            pl << new payload_member(uint8(0), constexpr_curve_info) << new payload_member(uint16(0), true, constexpr_curve)
+               << new payload_member(uint8(0), constexpr_pubkey_len) << new payload_member(binary_t(), constexpr_pubkey)
+               << new payload_member(uint16(0), true, constexpr_signature) << new payload_member(uint16(0), true, constexpr_sig_len)
+               << new payload_member(binary_t(), constexpr_sig);
+            pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
+            pl.set_reference_value(constexpr_sig, constexpr_sig_len);
+            pl.read(stream, size, pos);
+
+            curve_info = t_to_int<uint8>(pl.select(constexpr_curve_info));
+            curve = t_to_int<uint16>(pl.select(constexpr_curve));
+            pubkey_len = t_to_int<uint8>(pl.select(constexpr_pubkey_len));
+            pl.select(constexpr_pubkey)->get_variant().to_binary(pubkey);
+            signature = t_to_int<uint16>(pl.select(constexpr_signature));
+            sig_len = t_to_int<uint16>(pl.select(constexpr_sig_len));
+            pl.select(constexpr_sig)->get_variant().to_binary(sig);
+        }
+
+        {
+            //
+            // protection.set_item(tls_context_server_public_key, pubkey);
+            auto& keyexchange = protection.get_keyexchange();
+            if (3 == curve_info) {  // named_curve
+                //
+            }
+        }
+
+        {
+            // hash(client_hello_random + server_hello_random + curve_info + public_key)
+            binary_t message;
+            binary_append(message, protection.get_item(tls_context_client_hello_random));
+            binary_append(message, protection.get_item(tls_context_server_hello_random));
+            binary_append(message, stream + hspos, 3);
+            binary_append(message, pubkey_len);
+            binary_append(message, pubkey);
+
+            auto sign = session->get_tls_protection().get_crypto_sign(signature);
+            if (sign) {
+                crypto_key& key = session->get_tls_protection().get_cert();
+                auto pkey = key.any();
+                ret = sign->verify(pkey, message, sig);
+                sign->release();
+            } else {
+                ret = errorcode_t::not_supported;
+            }
+        }
+
+        {
+            s->autoindent(1);
+            s->printf(" > %s %i\n", constexpr_curve_info, curve_info);
+            s->printf(" > %s 0x%04x %s\n", constexpr_curve, curve, tlsadvisor->named_curve_string(curve).c_str());
+            s->printf(" > %s %i\n", constexpr_pubkey_len, pubkey_len);
+            dump_memory(pubkey, s, 16, 3, 0x0, dump_notrunc);
+            s->printf("\n");
+            s->printf(" > %s 0x%04x %s\n", constexpr_signature, signature, tlsadvisor->signature_scheme_string(signature).c_str());
+            s->printf(" > %s %i\n", constexpr_sig_len, sig_len);
+            dump_memory(sig, s, 16, 3, 0x0, dump_notrunc);
+            s->printf("\n");
+            s->autoindent(0);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_dump_server_hello_done(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == s || nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
         }
     }
     __finally2 {
@@ -644,6 +778,51 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
         s->printf("\n");
         s->autoindent(0);
         s->printf(" > %s %02x\n", constexpr_record, record);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_dump_client_key_exchange(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == s || nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        constexpr char constexpr_pubkey_len[] = "public key len";
+        constexpr char constexpr_pubkey[] = "public key";
+
+        uint8 pubkey_len = 0;
+        binary_t pubkey;
+        {
+            payload pl;
+            pl << new payload_member(uint8(0), constexpr_pubkey_len) << new payload_member(binary_t(), constexpr_pubkey);
+            pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
+            pl.read(stream, size, pos);
+
+            pubkey_len = t_to_int<uint8>(pl.select(constexpr_pubkey_len));
+            pl.select(constexpr_pubkey)->get_variant().to_binary(pubkey);
+        }
+
+        {
+            //
+            // session->get_tls_protection().set_item(tls_context_client_public_key, pubkey);
+            // get_keyexchange ...
+
+        }
+
+        {
+            s->autoindent(1);
+            s->printf(" > %s %i\n", constexpr_pubkey_len, pubkey_len);
+            s->printf(" > %s\n", constexpr_pubkey);
+            dump_memory(pubkey, s, 16, 3, 0x0, dump_notrunc);
+            s->autoindent(0);
+            s->printf("\n");
+        }
     }
     __finally2 {
         // do nothing
