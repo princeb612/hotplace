@@ -464,41 +464,45 @@ const hint_curve_t hint_curves[] = {
         "ansit571r1",
         "sect571r1",
     },
-    {
-        NID_ED25519,
-        cose_ec_curve_t::cose_ec_ed25519,
-        crypto_kty_t::kty_okp,
-        crypto_use_t::use_sig,
-        0x0000,  // TODO
-        nullptr,
-        "Ed25519",
-    },
-    {
-        NID_ED448,
-        cose_ec_curve_t::cose_ec_ed448,
-        crypto_kty_t::kty_okp,
-        crypto_use_t::use_sig,
-        0x0000,  // TODO
-        nullptr,
-        "Ed448",
-    },
+    //
     {
         NID_X25519,
         cose_ec_curve_t::cose_ec_x25519,
         crypto_kty_t::kty_okp,
         crypto_use_t::use_enc,
-        0x0000,  // TODO
-        nullptr,
+        0x001d,
+        "1.3.101.110",  // RFC 8410
         "X25519",
     },
+    //
     {
         NID_X448,
         cose_ec_curve_t::cose_ec_x448,
         crypto_kty_t::kty_okp,
         crypto_use_t::use_enc,
-        0x0000,  // TODO
-        nullptr,
+        0x001e,
+        "1.3.101.111",  // RFC 8410
         "X448",
+    },
+    //
+    {
+        NID_ED25519,
+        cose_ec_curve_t::cose_ec_ed25519,
+        crypto_kty_t::kty_okp,
+        crypto_use_t::use_sig,
+        0x0000,         // TODO
+        "1.3.101.112",  // RFC 8410
+        "Ed25519",
+    },
+    //
+    {
+        NID_ED448,
+        cose_ec_curve_t::cose_ec_ed448,
+        crypto_kty_t::kty_okp,
+        crypto_use_t::use_sig,
+        0x0000,         // TODO
+        "1.3.101.113",  // RFC 8410
+        "Ed448",
     },
     // https://neuromancer.sk/std/brainpool/brainpoolP160r1
     {

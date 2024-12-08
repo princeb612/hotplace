@@ -62,14 +62,15 @@ void test_tls13_xargs_org() {
      * https://tls13.xargs.org/#client-key-exchange-generation
      */
     {
-        crypto_key key;
+        constexpr char constexpr_client[] = "client";
+        crypto_key& keyexchange = session.get_tls_protection().get_keyexchange();
         // Client Key Exchange Generation
         const char* x = "358072d6365880d1aeea329adf9121383851ed21a28e3b75e965d0d2cd166254";
         const char* y = "";
         const char* d = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
-        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc("client key"));
+        keychain.add_ec_b16(&keyexchange, ec_x25519, x, y, d, keydesc(constexpr_client));
         basic_stream bs;
-        dump_key(key.find("client key"), &bs);
+        dump_key(keyexchange.find(constexpr_client), &bs);
         _logger->writeln(bs);
 
         // > handshake type 1 (client_hello)
@@ -111,13 +112,14 @@ void test_tls13_xargs_org() {
      */
     binary_t shared_secret;
     {
+        constexpr char constexpr_server[] = "server";
         const char* x = "9fd7ad6dcff4298dd3f96d5b1b2af910a0535b1488d7f8fabb349a982880b615";
         const char* y = "";
         const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";
-        crypto_key& server_keys = session.get_tls_protection().get_key();
-        keychain.add_ec_b16(&server_keys, "X25519", x, y, d, keydesc("server key"));
+        crypto_key& keyexchange = session.get_tls_protection().get_keyexchange();
+        keychain.add_ec_b16(&keyexchange, ec_x25519, x, y, d, keydesc(constexpr_server));
 
-        dump_key(server_keys.find("server key"), &bs);
+        dump_key(keyexchange.find(constexpr_server), &bs);
         _logger->writeln(bs);
         bs.clear();
     }
@@ -423,8 +425,11 @@ void test_tls13_xargs_org() {
      */
     {
         const char* record =
-            "17 03 03 00 45 9f f9 b0 63 17 51 77 32 2a 46 dd 98 96 f3 c3 bb 82 0a b5 17 43 eb c2 5f da dd 53 45 4b 73 de b5 4c c7 24 8d 41 1a 18 bc cf 65 7a "
-            "96 08 24 e9 a1 93 64 83 7c 35 0a 69 a8 8d 4b f6 35 c8 5e b8 74 ae bc 9d fd e8";
+            "17 03 03 00 45 9F F9 B0 63 17 51 77 32 2A 46 DD"
+            "98 96 F3 C3 BB 82 0A B5 17 43 EB C2 5F DA DD 53"
+            "45 4B 73 DE B5 4C C7 24 8D 41 1A 18 BC CF 65 7A"
+            "96 08 24 E9 A1 93 64 83 7C 35 0A 69 A8 8D 4B F6"
+            "35 C8 5E B8 74 AE BC 9D FD E8 -- -- -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("wrapped-record-5 (finished)", &session, bin_record, role_client);  // 1 for C -> S
     }
@@ -434,7 +439,9 @@ void test_tls13_xargs_org() {
      * https://tls13.xargs.org/#client-application-data
      */
     {
-        const char* record = "17 03 03 00 15 82 81 39 cb 7b 73 aa ab f5 b8 2f bf 9a 29 61 bc de 10 03 8a 32";
+        const char* record =
+            "17 03 03 00 15 82 81 39 CB 7B 73 AA AB F5 B8 2F"
+            "BF 9A 29 61 BC DE 10 03 8A 32 -- -- -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("wrapped-record-6 (ping)", &session, bin_record, role_client);  // 1 for C -> S
     }
@@ -445,11 +452,21 @@ void test_tls13_xargs_org() {
      */
     {
         const char* record =
-            "17 03 03 00 ea 38 2d 8c 19 a4 7f 4e 8d 9b 0c 51 0b c3 48 db 2c c9 9b 24 1c d0 d1 8b 31 d0 ca 1a c1 2d c1 e3 03 c5 8d 0c 7e 9e 27 29 4c 6b 0e 31 "
-            "98 f7 d3 19 eb 14 62 2e c4 8b 6a c8 f8 66 d7 49 4f a7 75 c8 80 ff 43 ad 4b 1a f5 3a 03 ca 19 77 95 77 8f ff 2f fe 1d 3b 99 b3 4d e7 82 a7 6a bf "
-            "a8 40 e6 36 6c d7 34 9d 9b cf f6 41 f5 e0 df f9 5e 40 d7 2e 09 ef fe 18 ee 64 67 2c b9 60 05 40 44 88 ad 18 96 c4 4a 5f d1 74 99 8e 9b 00 94 d8 "
-            "e6 d8 4d 29 29 b7 88 3d c9 a3 c3 c7 31 3a 87 29 3f 31 b6 1d 24 d9 90 97 c8 85 3b fb eb 95 d1 d0 1f 99 ca 05 b0 50 18 59 cf 63 40 e8 37 70 75 97 "
-            "01 52 fa 94 f5 f5 be 29 06 e7 2a 15 e4 08 36 a4 1f 4c d3 db e7 d5 13 c1 6e 88 61 1d 3e ae 93 38 d9 db 1f 91 ca 3d 58 42 60 2a 61 0b 43 a4 63";
+            "17 03 03 00 EA 38 2D 8C 19 A4 7F 4E 8D 9B 0C 51"
+            "0B C3 48 DB 2C C9 9B 24 1C D0 D1 8B 31 D0 CA 1A"
+            "C1 2D C1 E3 03 C5 8D 0C 7E 9E 27 29 4C 6B 0E 31"
+            "98 F7 D3 19 EB 14 62 2E C4 8B 6A C8 F8 66 D7 49"
+            "4F A7 75 C8 80 FF 43 AD 4B 1A F5 3A 03 CA 19 77"
+            "95 77 8F FF 2F FE 1D 3B 99 B3 4D E7 82 A7 6A BF"
+            "A8 40 E6 36 6C D7 34 9D 9B CF F6 41 F5 E0 DF F9"
+            "5E 40 D7 2E 09 EF FE 18 EE 64 67 2C B9 60 05 40"
+            "44 88 AD 18 96 C4 4A 5F D1 74 99 8E 9B 00 94 D8"
+            "E6 D8 4D 29 29 B7 88 3D C9 A3 C3 C7 31 3A 87 29"
+            "3F 31 B6 1D 24 D9 90 97 C8 85 3B FB EB 95 D1 D0"
+            "1F 99 CA 05 B0 50 18 59 CF 63 40 E8 37 70 75 97"
+            "01 52 FA 94 F5 F5 BE 29 06 E7 2A 15 E4 08 36 A4"
+            "1F 4C D3 DB E7 D5 13 C1 6E 88 61 1D 3E AE 93 38"
+            "D9 DB 1F 91 CA 3D 58 42 60 2A 61 0B 43 A4 63 --";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("wrapped-record-7 (new_session_ticket)", &session, bin_record, role_server);
     }
@@ -460,11 +477,21 @@ void test_tls13_xargs_org() {
      */
     {
         const char* record =
-            "17 03 03 00 ea 38 ad fb 1d 01 fd 95 a6 03 85 e8 bb f1 fd 8d cb 46 70 98 97 e7 d6 74 c2 f7 37 0e c1 1d 8e 33 eb 4f 4f e7 f5 4b f4 dc 0b 92 fa e7 "
-            "42 1c 33 c6 45 3c eb c0 73 15 96 10 a0 97 40 ab 2d 05 6f 8d 51 cf a2 62 00 7d 40 12 36 da fc 2f 72 92 ff 0c c8 86 a4 ef 38 9f 2c ed 12 26 c6 b4 "
-            "dc f6 9d 99 4f f9 14 8e f9 69 bc 77 d9 43 3a b1 d3 a9 32 54 21 82 82 9f 88 9a d9 5f 04 c7 52 f9 4a ce 57 14 6a 5d 84 b0 42 bf b3 48 5a 64 e7 e9 "
-            "57 b0 89 80 cd 08 ba f9 69 8b 89 29 98 6d 11 74 d4 aa 6d d7 a7 e8 c0 86 05 2c 3c 76 d8 19 34 bd f5 9b 96 6e 39 20 31 f3 47 1a de bd dd db e8 4f "
-            "cf 1f f4 08 84 6a e9 b2 8c a4 a9 e7 28 84 4a 49 3d 80 45 5d 6e af f2 05 b4 0a 1e f1 85 74 ef c0 b9 6a d3 83 af bd 8d fc 86 f8 08 7c 1f 7d c8";
+            "17 03 03 00 EA 38 AD FB 1D 01 FD 95 A6 03 85 E8"
+            "BB F1 FD 8D CB 46 70 98 97 E7 D6 74 C2 F7 37 0E"
+            "C1 1D 8E 33 EB 4F 4F E7 F5 4B F4 DC 0B 92 FA E7"
+            "42 1C 33 C6 45 3C EB C0 73 15 96 10 A0 97 40 AB"
+            "2D 05 6F 8D 51 CF A2 62 00 7D 40 12 36 DA FC 2F"
+            "72 92 FF 0C C8 86 A4 EF 38 9F 2C ED 12 26 C6 B4"
+            "DC F6 9D 99 4F F9 14 8E F9 69 BC 77 D9 43 3A B1"
+            "D3 A9 32 54 21 82 82 9F 88 9A D9 5F 04 C7 52 F9"
+            "4A CE 57 14 6A 5D 84 B0 42 BF B3 48 5A 64 E7 E9"
+            "57 B0 89 80 CD 08 BA F9 69 8B 89 29 98 6D 11 74"
+            "D4 AA 6D D7 A7 E8 C0 86 05 2C 3C 76 D8 19 34 BD"
+            "F5 9B 96 6E 39 20 31 F3 47 1A DE BD DD DB E8 4F"
+            "CF 1F F4 08 84 6A E9 B2 8C A4 A9 E7 28 84 4A 49"
+            "3D 80 45 5D 6E AF F2 05 B4 0A 1E F1 85 74 EF C0"
+            "B9 6A D3 83 AF BD 8D FC 86 F8 08 7C 1F 7D C8 --";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("wrapped-record-8 (new_session_ticket)", &session, bin_record, role_server);
     }
@@ -474,7 +501,9 @@ void test_tls13_xargs_org() {
      * https://tls13.xargs.org/#server-application-data
      */
     {
-        const char* record = "17 03 03 00 15 0c da 85 f1 44 7a e2 3f a6 6d 56 f4 c5 40 84 82 b1 b1 d4 c9 98";
+        const char* record =
+            "17 03 03 00 15 0C DA 85 F1 44 7A E2 3F A6 6D 56"
+            "F4 C5 40 84 82 B1 B1 D4 C9 98 -- -- -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("wrapped-record-9 (pong)", &session, bin_record, role_server);
     }

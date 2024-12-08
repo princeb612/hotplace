@@ -4,8 +4,9 @@
   * [study] QUIC (RFC 9001)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 665
+* Revision 666
   * [study] https://tls12.xargs.org/
+  * [TODO] TLS 1.2 client finished
 
 * Revision 663
   * [tested] RFC 8448 3.  Simple 1-RTT Handshake

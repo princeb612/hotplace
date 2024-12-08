@@ -83,5 +83,6 @@
 #include <sdk/net/tls/tls_server_socket.hpp>
 #include <sdk/net/tls/tlscert.hpp>
 #include <sdk/net/tlsspec/tls.hpp>
+#include <sdk/net/tlsspec/tls_advisor.hpp>
 
 #endif

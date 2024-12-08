@@ -28,7 +28,7 @@ void test_rfc8448_3() {
     // {client}  create an ephemeral x25519 key pair:
     // # ECDH(server_epk.priv, client_epk.pub) --> shared_secret
     {
-        constexpr char constexpr_client_epk[] = "client epk";
+        constexpr char constexpr_client[] = "client";
         const char* x =
             "99 38 1d e5 60 e4 bd 43 d2 3d 8e 43 5a 7d"
             "ba fe b3 c0 6e 51 c1 3c ae 4d 54 13 69 1e 52 9a af 2c";
@@ -37,10 +37,13 @@ void test_rfc8448_3() {
             "49 af 42 ba 7f 79 94 85 2d 71 3e f2 78"
             "4b cb ca a7 91 1d e2 6a dc 56 42 cb 63 45 40 e7 ea 50 05";
         crypto_key key;
-        ret = keychain.add_ec_b16rfc(&key, "X25519", x, y, d, keydesc(constexpr_client_epk));
+        ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, y, d, keydesc(constexpr_client));
 
-        _logger->writeln(constexpr_client_epk);
-        dump_key(key.find(constexpr_client_epk), &bs);
+        rfc8448_session.get_tls_protection().get_keyexchange().add((EVP_PKEY*)key.any(), constexpr_client, true);
+        rfc8448_session2.get_tls_protection().get_keyexchange().add((EVP_PKEY*)key.any(), constexpr_client, true);
+
+        _logger->writeln(constexpr_client);
+        dump_key(key.find(constexpr_client), &bs);
         _logger->writeln(bs);
         bs.clear();
 
@@ -73,20 +76,20 @@ void test_rfc8448_3() {
     // {server}  create an ephemeral x25519 key pair:
     // # ECDH(server_epk.priv, client_epk.pub) --> shared_secret
     {
-        constexpr char constexpr_server_epk[] = "server epk";
+        constexpr char constexpr_server[] = "server";
         const char* x = "c9828876112095fe66762bdbf7c672e156d6cc253b833df1dd69b1b04e751f0f";
         const char* y = "";
         const char* d = "b1580eeadf6dd589b8ef4f2d5652578cc810e9980191ec8d058308cea216a21e";
 
         crypto_key key;
         crypto_keychain keychain;
-        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc(constexpr_server_epk));
+        keychain.add_ec_b16(&key, ec_x25519, x, y, d, keydesc(constexpr_server));
 
         // from key to rfc8448_session, rfc8448_session2
-        rfc8448_session.get_tls_protection().get_key().add((EVP_PKEY*)key.any(), constexpr_server_epk, true);
-        rfc8448_session2.get_tls_protection().get_key().add((EVP_PKEY*)key.any(), constexpr_server_epk, true);
+        rfc8448_session.get_tls_protection().get_keyexchange().add((EVP_PKEY*)key.any(), constexpr_server, true);
+        rfc8448_session2.get_tls_protection().get_keyexchange().add((EVP_PKEY*)key.any(), constexpr_server, true);
 
-        dump_key(key.find(constexpr_server_epk), &bs);
+        dump_key(key.find(constexpr_server), &bs);
         _logger->writeln(bs);
         bs.clear();
     }

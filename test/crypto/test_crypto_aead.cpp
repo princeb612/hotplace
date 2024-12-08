@@ -30,6 +30,9 @@ void test_crypto_aead() {
         binary_t tag;
         if (aead) {
             ret = aead->encrypt(key, iv, stream, size, ciphertext, aad, tag);
+            _logger->hdump("> key", key, 16, 3);
+            _logger->hdump("> iv", iv, 16, 3);
+            _logger->hdump("> aad", aad, 16, 3);
             _logger->hdump("> ciphertext", ciphertext, 16, 3);
             _logger->hdump("> tag", tag, 16, 3);
             _test_case.test(ret, __FUNCTION__, "%s #encrypt", text);

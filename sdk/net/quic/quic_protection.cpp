@@ -13,7 +13,7 @@
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/net/quic/quic.hpp>
-#include <sdk/net/tlsspec/tls.hpp>
+#include <sdk/net/tlsspec/types.hpp>
 
 namespace hotplace {
 namespace net {

@@ -17,8 +17,10 @@
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/crypto/crypto_aead.hpp>
 #include <sdk/crypto/crypto/crypto_hash.hpp>
+#include <sdk/crypto/crypto/crypto_mac.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
 #include <sdk/net/tlsspec/tls.hpp>
+#include <sdk/net/tlsspec/tls_advisor.hpp>
 // debug
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
@@ -48,7 +50,9 @@ transcript_hash* tls_protection::get_transcript_hash() {
     critical_section_guard guard(_lock);
     if (nullptr == _transcript_hash) {
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(get_cipher_suite());
+        // hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(get_cipher_suite()); // TLS 1.3
+        const tls_alg_info_t* hint_tls_alg = tlsadvisor->hintof_tls_algorithm(get_cipher_suite());  // TLS 1.0~
+        auto hashalg = algof_mac1(hint_tls_alg);
         transcript_hash_builder builder;
         _transcript_hash = builder.set(hashalg).build();
     }
@@ -59,8 +63,6 @@ transcript_hash* tls_protection::get_transcript_hash() {
 }
 
 crypto_key& tls_protection::get_cert() { return _cert; }
-
-crypto_key& tls_protection::get_key() { return _key; }
 
 crypto_key& tls_protection::get_keyexchange() { return _keyexchange; }
 
@@ -160,16 +162,21 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
             //  psk_dhe_ke  ... key_share
             binary_t shared_secret;
             {
-                const EVP_PKEY* pkey_priv = get_key().any();
+#if 1
+                // in server ... priv("server") + pub("CH") <-- this case
+                const EVP_PKEY* pkey_priv = get_keyexchange().find("server");
                 const EVP_PKEY* pkey_pub = get_keyexchange().find("CH");  // client_hello
+#else
+                // in client ... priv("client") + pub("SH")
+                const EVP_PKEY* pkey_priv = get_keyexchange().find("client");
+                const EVP_PKEY* pkey_pub = get_keyexchange().find("SH");  // server_hello
+#endif
                 if (nullptr == pkey_priv || nullptr == pkey_pub) {
                     ret = errorcode_t::not_found;
                     __leave2;
                 }
 
-                const EVP_PKEY* pubkey = get_peer_key(pkey_pub);
                 ret = dh_key_agreement(pkey_priv, pkey_pub, shared_secret);
-                EVP_PKEY_free((EVP_PKEY*)pubkey);
 
                 _kv[tls_secret_shared_secret] = shared_secret;
             }
@@ -304,7 +311,160 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
             binary_t resumption_early_secret;
             lambda_extract(tls_secret_resumption_early, resumption_early_secret, hashalg, ikm_empty, resumption_secret);
         } else if (tls_context_client_key_exchange == type) {
-            //
+            /**
+             * RFC 5246 8.1.  Computing the Master Secret
+             * master_secret = PRF(pre_master_secret, "master secret",
+             *                     ClientHello.random + ServerHello.random)
+             *                     [0..47];
+             */
+
+            hash_algorithm_t hmac_alg = algof_mac1(hint_tls_alg);
+
+            binary_t pre_master_secret;
+            binary_t master_secret;
+            const binary_t& client_hello_random = get_item(tls_context_client_hello_random);
+            const binary_t& server_hello_random = get_item(tls_context_server_hello_random);
+
+            {
+#if 1
+                const EVP_PKEY* pkey_priv = get_keyexchange().find("server");
+                const EVP_PKEY* pkey_pub = get_keyexchange().find("CKE");
+#else
+                const EVP_PKEY* pkey_priv = get_keyexchange().find("client");
+                const EVP_PKEY* pkey_pub = get_keyexchange().find("SKE");
+#endif
+                if (nullptr == pkey_priv || nullptr == pkey_pub) {
+                    ret = errorcode_t::not_found;
+                    __leave2;
+                }
+                ret = dh_key_agreement(pkey_priv, pkey_pub, pre_master_secret);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
+
+                set_item(tls_secret_pre_master, pre_master_secret);
+            }
+
+            crypto_hmac_builder builder;
+            auto hmac_master = builder.set(hmac_alg).set(pre_master_secret).build();
+            if (hmac_master) {
+                /**
+                 * master secret
+                 * RFC 2246 5. HMAC and the pseudorandom function
+                 * RFC 2246 8.1. Computing the master secret
+                 * master_secret = PRF(pre_master_secret, "master secret",
+                 *                     ClientHello.random + ServerHello.random)
+                 *                     [0..47];
+                 */
+                binary_t seed;
+                hash_context_t* hmac_handle = nullptr;
+                size_t size_master_secret = 48;
+
+                binary_append(seed, str2bin("master secret"));
+                binary_append(seed, client_hello_random);
+                binary_append(seed, server_hello_random);
+
+                binary_t temp = seed;
+                binary_t atemp;
+                binary_t ptemp;
+                while (master_secret.size() < size_master_secret) {
+                    hmac_master->mac(temp, atemp);
+                    hmac_master->update(atemp).update(seed).finalize(ptemp);
+                    binary_append(master_secret, ptemp);
+                    temp = atemp;
+                }
+
+                master_secret.resize(48);
+
+                set_item(tls_secret_master, master_secret);
+
+                hmac_master->release();
+            } else {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+
+            auto hmac_expansion = builder.set(hmac_alg).set(master_secret).build();
+            if (hmac_expansion) {
+                /**
+                 * key expansion
+                 * RFC 2246 5. HMAC and the pseudorandom function
+                 * RFC 2246 6.3. Key calculation
+                 * key_block = PRF(SecurityParameters.master_secret,
+                 *                    "key expansion",
+                 *                    SecurityParameters.server_random +
+                 *                    SecurityParameters.client_random);
+                 *
+                 * client_write_MAC_secret[SecurityParameters.hash_size]
+                 * server_write_MAC_secret[SecurityParameters.hash_size]
+                 * client_write_key[SecurityParameters.key_material_length]
+                 * server_write_key[SecurityParameters.key_material_length]
+                 * client_write_IV[SecurityParameters.IV_size]
+                 * server_write_IV[SecurityParameters.IV_size]
+                 */
+                binary_t seed;
+                binary_append(seed, str2bin("key expansion"));
+                binary_append(seed, server_hello_random);
+                binary_append(seed, client_hello_random);
+
+                uint16 ciphersuite = get_cipher_suite();
+                auto hint_cipher = tlsadvisor->hintof_blockcipher(ciphersuite);
+                auto hint_digest = tlsadvisor->hintof_digest(ciphersuite);
+                if (nullptr == hint_cipher || nullptr == hint_digest) {
+                    ret = errorcode_t::not_supported;
+                    __leave2;
+                }
+                auto keysize = sizeof_key(hint_cipher);
+                auto ivsize = sizeof_iv(hint_cipher);
+                auto dlen = sizeof_digest(hint_digest);
+                size_t size_keycalc = (dlen << 1) + (keysize << 1) + (ivsize << 1);
+                size_t offset = 0;
+
+                // until enough output has been generated
+                binary_t p;
+                binary_t temp = seed;
+                binary_t atemp;
+                binary_t ptemp;
+                while (p.size() < size_keycalc) {
+                    hmac_expansion->mac(temp, atemp);
+                    hmac_expansion->update(atemp).update(seed).finalize(ptemp);
+                    binary_append(p, ptemp);
+                    temp = atemp;
+                }
+
+                binary_t secret_client_mac_key;
+                binary_t secret_server_mac_key;
+                binary_t secret_client_key;
+                binary_t secret_server_key;
+                binary_t secret_client_iv;
+                binary_t secret_server_iv;
+
+                // partition
+                binary_append(secret_client_mac_key, &p[offset], dlen);
+                offset += dlen;
+                binary_append(secret_server_mac_key, &p[offset], dlen);
+                offset += dlen;
+                binary_append(secret_client_key, &p[offset], keysize);
+                offset += keysize;
+                binary_append(secret_server_key, &p[offset], keysize);
+                offset += keysize;
+                binary_append(secret_client_iv, &p[offset], ivsize);
+                offset += ivsize;
+                binary_append(secret_server_iv, &p[offset], ivsize);
+                offset += ivsize;
+
+                set_item(tls_secret_client_mac_key, secret_client_mac_key);
+                set_item(tls_secret_server_mac_key, secret_server_mac_key);
+                set_item(tls_secret_client_key, secret_client_key);
+                set_item(tls_secret_server_key, secret_server_key);
+                set_item(tls_secret_client_iv, secret_client_iv);
+                set_item(tls_secret_server_iv, secret_server_iv);
+
+                hmac_expansion->release();
+            } else {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
         }
     }
     __finally2 {
@@ -351,8 +511,8 @@ return_t tls_protection::build_iv(tls_session* session, tls_secret_t type, binar
     return ret;
 }
 
-return_t tls_protection::decrypt(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, binary_t& plaintext, size_t aadlen, binary_t& tag,
-                                 stream_t* debugstream) {
+return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, binary_t& plaintext, size_t aadlen,
+                                       binary_t& tag, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -361,8 +521,8 @@ return_t tls_protection::decrypt(tls_session* session, tls_role_t role, const by
         }
         tag.clear();
 
-        tls_advisor* advisor = tls_advisor::get_instance();
-        const tls_alg_info_t* hint = advisor->hintof_tls_algorithm(get_cipher_suite());
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        const tls_alg_info_t* hint = tlsadvisor->hintof_tls_algorithm(get_cipher_suite());
         if (nullptr == hint) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -421,6 +581,143 @@ return_t tls_protection::decrypt(tls_session* session, tls_role_t role, const by
             debugstream->printf(" > tag %s\n", base16_encode(tag).c_str());
             debugstream->printf(" > plaintext\n");
             dump_memory(plaintext, debugstream, 16, 3, 0x0, dump_notrunc);
+            debugstream->autoindent(0);
+            debugstream->printf("\n");
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_protection::decrypt_tls1(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, binary_t& plaintext, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto ciphersuite = get_cipher_suite();
+        const tls_alg_info_t* hint_tls_alg = tlsadvisor->hintof_tls_algorithm(ciphersuite);
+        if (nullptr == hint_tls_alg) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        const tls_alg_info_t* hint = tlsadvisor->hintof_tls_algorithm(ciphersuite);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        auto hint_cipher = advisor->hintof_blockcipher(hint->cipher);
+        if (nullptr == hint_cipher) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        auto ivsize = sizeof_iv(hint_cipher);
+
+        crypt_context_t* handle = nullptr;
+        openssl_crypt crypt;
+
+        tls_secret_t secret_mac_key;
+        tls_secret_t secret_key;
+        uint64 record_no = 0;
+        auto& ri = session->get_roleinfo(role);
+        auto hsstatus = ri.get_status();
+        record_no = ri.get_recordno(true);
+        if (role_client == role) {
+            secret_mac_key = tls_secret_server_mac_key;
+            secret_key = tls_secret_server_key;
+        } else {
+            secret_mac_key = tls_secret_client_mac_key;
+            secret_key = tls_secret_client_key;
+        }
+
+        const binary_t& key = get_item(secret_key);
+        binary_t iv;
+        binary_append(iv, stream + sizeof(tls_content_t), ivsize);
+        size_t bpos = sizeof(tls_content_t) + ivsize;
+
+        ret = crypt.open(&handle, hint->cipher, hint->mode, key, iv);
+        if (errorcode_t::success == ret) {
+            crypt.set(handle, crypt_ctrl_padding, 0);
+            ret = crypt.decrypt(handle, stream + bpos, size - bpos, plaintext);
+            crypt.close(handle);
+        }
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // MAC
+        binary_t content;
+        binary_t verifydata;
+        binary_t maced;
+        const binary_t& mackey = get_item(secret_mac_key);
+        {
+            auto hmac_alg = algof_mac(hint_tls_alg);
+            auto hint_digest = advisor->hintof_digest(hmac_alg);
+            auto dlen = sizeof_digest(hint_digest);
+            /**
+             * sequence='0000000000000000'
+             * rechdr='16 03 03' ; content_type version
+             * datalen='00 10'
+             * data='00 01 ... 0f'
+             * > data.data = &protectedtext[0]
+             * > data.size = protectedtext.size() - 32
+             * verifydata
+             * > verifydata.data = &protectedtext[datasize]
+             * > verifydata.size = 32
+             */
+            size_t size_mackey = (dlen + 31) & ~31;  // sha1 20 -> 32
+            size_t datalen = plaintext.size() - size_mackey;
+            binary_append(content, uint64(record_no), hton64);            // sequence
+            binary_append(content, stream, 3);                            // rechdr (content_type, version)
+            binary_append(content, uint16(datalen), hton16);              // datalen
+            binary_append(content, &plaintext[0], datalen);               // data
+            binary_append(verifydata, &plaintext[datalen], size_mackey);  // verifydata
+
+            // plaintext.resize(datalen);
+
+            uint8 pad = *verifydata.rbegin();
+            size_t verifydatasize = verifydata.size() - pad - 1;
+            verifydata.resize(verifydatasize);
+
+            crypto_hmac_builder builder;
+            auto hmac = builder.set(hint_tls_alg->mac).set(mackey).build();
+            if (hmac) {
+                hmac->update(content).finalize(maced);
+                hmac->release();
+            }
+            if (maced != verifydata) {
+                ret = errorcode_t::mismatch;
+            }
+        }
+
+        if (debugstream) {
+            debugstream->autoindent(3);
+            debugstream->printf(" > key %s\n", base16_encode(key).c_str());
+            debugstream->printf(" > iv %s\n", base16_encode(iv).c_str());
+            debugstream->printf(" > record no %i\n", record_no);
+            debugstream->printf(" > ciphertext\n");
+            dump_memory(stream + bpos, size - bpos, debugstream, 16, 3, 0x0, dump_notrunc);
+            debugstream->printf("\n");
+            debugstream->printf(" > plaintext\n");
+            dump_memory(plaintext, debugstream, 16, 3, 0x0, dump_notrunc);
+            debugstream->printf("\n");
+            debugstream->printf(" > verifydata\n");
+            dump_memory(verifydata, debugstream, 16, 3, 0x0, dump_notrunc);
+            debugstream->printf("\n");
+            debugstream->printf(" > content\n");
+            dump_memory(content, debugstream, 16, 3, 0x0, dump_notrunc);
+            debugstream->printf("\n");
+            debugstream->printf(" > mackey\n");
+            dump_memory(mackey, debugstream, 16, 3, 0x0, dump_notrunc);
+            debugstream->printf("\n");
+            debugstream->printf(" > maced\n");
+            dump_memory(maced, debugstream, 16, 3, 0x0, dump_notrunc);
             debugstream->autoindent(0);
             debugstream->printf("\n");
         }

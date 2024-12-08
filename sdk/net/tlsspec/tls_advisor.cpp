@@ -8,10 +8,22 @@
  * Date         Name                Description
  */
 
+#include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/net/tlsspec/tls.hpp>
+#include <sdk/net/tlsspec/tls_advisor.hpp>
 
 namespace hotplace {
 namespace net {
+
+hash_algorithm_t algof_mac(const tls_alg_info_t* info) { return info ? info->mac : hash_alg_unknown; }
+
+hash_algorithm_t algof_mac1(const tls_alg_info_t* info) {
+    hash_algorithm_t hash_alg = hash_alg_unknown;
+    if (info) {
+        hash_alg = (info->mac_tls1) ? info->mac_tls1 : info->mac;
+    }
+    return hash_alg;
+}
 
 tls_advisor tls_advisor::_instance;
 
@@ -119,44 +131,6 @@ void tls_advisor::load_tls_extensions() {
     _tls_extensions.insert({0x0039, "quic_transport_parameters"});
     _tls_extensions.insert({0xff01, "renegotiation_info"});
 }
-
-tls_alg_info_t tls_alg_info[] = {
-    {
-        0x1301,  // TLS_AES_128_GCM_SHA256
-        aes128,
-        gcm,
-        16,
-        sha2_256,
-    },
-    {
-        0x1302,  // TLS_AES_256_GCM_SHA384
-        aes256,
-        gcm,
-        16,
-        sha2_384,
-    },
-    {
-        0x1303,  // TLS_CHACHA20_POLY1305_SHA256
-        chacha20,
-        crypt_aead,
-        16,
-        sha2_256,
-    },
-    {
-        0x1304,  // TLS_AES_128_CCM_SHA256, Tag 16
-        aes128,
-        ccm,
-        16,
-        sha2_256,
-    },
-    {
-        0x1305,  // TLS_AES_128_CCM_8_SHA256, Tag 8
-        aes128,
-        ccm,
-        8,
-        sha2_256,
-    },
-};
 
 void tls_advisor::load_cipher_suites() {
     // TLS_{Key Exchange}_{Cipher}_{Mac}
@@ -517,7 +491,7 @@ void tls_advisor::load_cipher_suites() {
     _cipher_suites.insert({0xd003, "TLS_ECDHE_PSK_WITH_AES_128_CCM_8_SHA256"});
     _cipher_suites.insert({0xd005, "TLS_ECDHE_PSK_WITH_AES_128_CCM_SHA256"});
 
-    for (auto i = 0; i < RTL_NUMBER_OF(tls_alg_info); i++) {
+    for (auto i = 0; i < sizeof_tls_alg_info; i++) {
         auto item = tls_alg_info + i;
         _tls_alg_info.insert({item->alg, item});
     }
@@ -569,6 +543,7 @@ void tls_advisor::load_named_curves() {
     // RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
     // ffdhe2048~ffdhe8192
 
+    // sa. const hint_curve_t hint_curves[]
     _named_curves.insert({0x0001, "sect163k1"});  // K-163, ansit163k1
     _named_curves.insert({0x0002, "sect163r1"});  // ansit163r1
     _named_curves.insert({0x0003, "sect163r2"});  // B-163, ansit163r2
@@ -599,6 +574,7 @@ void tls_advisor::load_named_curves() {
     _named_curves.insert({0x001c, "brainpoolP512r1"});
     _named_curves.insert({0x001d, "x25519"});
     _named_curves.insert({0x001e, "x448"});
+
     _named_curves.insert({0x001f, "brainpoolP256r1tls13"});
     _named_curves.insert({0x0020, "brainpoolP384r1tls13"});
     _named_curves.insert({0x0021, "brainpoolP512r1tls13"});
@@ -754,12 +730,32 @@ std::string tls_advisor::cipher_suite_string(uint16 code) {
 }
 
 const tls_alg_info_t* tls_advisor::hintof_tls_algorithm(uint16 code) {
-    tls_alg_info_t* item = nullptr;
+    const tls_alg_info_t* item = nullptr;
     auto iter = _tls_alg_info.find(code);
     if (_tls_alg_info.end() != iter) {
         item = iter->second;
     }
     return item;
+}
+
+const hint_blockcipher_t* tls_advisor::hintof_blockcipher(uint16 code) {
+    const hint_blockcipher_t* hint = nullptr;
+    auto hint_alg = hintof_tls_algorithm(code);
+    if (hint_alg) {
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        hint = advisor->hintof_blockcipher(hint_alg->cipher);
+    }
+    return hint;
+}
+
+const hint_digest_t* tls_advisor::hintof_digest(uint16 code) {
+    const hint_digest_t* hint = nullptr;
+    auto hint_alg = hintof_tls_algorithm(code);
+    if (hint_alg) {
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        hint = advisor->hintof_digest(hint_alg->mac);
+    }
+    return hint;
 }
 
 hash_algorithm_t tls_advisor::hash_alg_of(uint16 code) {

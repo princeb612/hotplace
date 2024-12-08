@@ -22,28 +22,61 @@ class crypto_hmac {
     friend class crypto_hmac_builder;
 
    public:
-    return_t mac(const binary_t& key, const binary_t& input, binary_t& output);
-    return_t mac(const binary_t& key, const byte_t* stream, size_t size, binary_t& output);
+    ~crypto_hmac();
+
+    /**
+     * @sample
+     *      crypto_hmac_builder builder;
+     *      auto hmac = builder.set(sha2_256).set(key).build();
+     *      if (hmac) {
+     *          hmac->mac(key, mesage, size, md);
+     *      }
+     */
+    return_t mac(const binary_t& input, binary_t& output);
+    return_t mac(const byte_t* stream, size_t size, binary_t& output);
+
+    /**
+     * @sample
+     *      crypto_hmac_builder builder;
+     *      auto hmac = builder.set(sha2_256).set(key).build();
+     *      if (hmac) {
+     *          *hmac << "hello" << "world";
+     *          hmac->finalize(md);
+     *          hmac->release();
+     *      }
+     */
+    crypto_hmac& init();
+    crypto_hmac& operator<<(const char* message);
+    crypto_hmac& operator<<(const binary_t& message);
+    crypto_hmac& update(const binary_t& message);
+    crypto_hmac& update(const byte_t* stream, size_t size);
+    crypto_hmac& digest(binary_t& md);
+    crypto_hmac& finalize(binary_t& md);
+
     hash_algorithm_t get_digest();
 
     void addref();
     void release();
 
    protected:
-    crypto_hmac(hash_algorithm_t alg);
+    crypto_hmac(hash_algorithm_t alg, const binary_t& key);
 
     t_shared_reference<crypto_hmac> _shared;
+    hash_context_t* _handle;
     hash_algorithm_t _alg;
+    binary_t _key;
 };
 
 class crypto_hmac_builder {
    public:
     crypto_hmac_builder();
     crypto_hmac_builder& set(hash_algorithm_t alg);
+    crypto_hmac_builder& set(const binary_t& key);
     crypto_hmac* build();
 
    protected:
     hash_algorithm_t _alg;
+    binary_t _key;
 };
 
 }  // namespace crypto

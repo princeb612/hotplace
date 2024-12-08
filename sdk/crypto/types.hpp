@@ -167,7 +167,7 @@ enum crypt_enc_t {
  * @brief   Elliptic Curve (use openssl nid definition for convenience)
  * @sa      crypto_key
  */
-enum ec_curve_t {
+enum ec_curve_t : uint32 {
     ec_p192 = 409,       // P-192, NID_X9_62_prime192v1
     ec_p224 = 713,       // P-224, NID_secp224r1
     ec_p256 = 415,       // P-256, NID_X9_62_prime256v1
@@ -201,7 +201,7 @@ enum ec_curve_t {
 };
 
 /* nid (use openssl nid definition for convenience) */
-enum nid_t {
+enum nid_t : uint32 {
     nid_oct = 855,         // EVP_PKEY_HMAC, NID_hmac
     nid_rsa = 6,           // EVP_PKEY_RSA, NID_rsaEncryption
     nid_rsa2 = 19,         // EVP_PKEY_RSA2, NID_rsa
@@ -213,7 +213,7 @@ enum nid_t {
     nid_ffdhe8192 = 1130,  // NID_ffdhe8192
 };
 
-enum crypt_sig_type_t {
+enum crypt_sig_type_t : uint8 {
     crypt_sig_dgst = 0,
     crypt_sig_hmac = 1,
     crypt_sig_rsassa_pkcs15 = 2,
@@ -221,7 +221,7 @@ enum crypt_sig_type_t {
     crypt_sig_rsassa_pss = 4,
     crypt_sig_eddsa = 5,
 };
-enum crypt_sig_t {
+enum crypt_sig_t : uint16 {
     sig_unknown = 0,
 
     sig_hs256 = 1,
@@ -253,7 +253,7 @@ enum crypt_sig_t {
     sig_es256k = 22,
 };
 
-enum crypt_item_t {
+enum crypt_item_t : uint16 {
     /* binary */
     item_aad = 1,           // P - protected_header.encoded, additional authenticated data
     item_cek = 2,           // k - content encryption key
@@ -301,7 +301,7 @@ enum crypt_access_t {
     private_key = (1 << 1),
 };
 
-enum crypto_kty_t {
+enum crypto_kty_t : uint16 {
     kty_unknown = 0,
     kty_hmac = 1,        // NID_hmac
     kty_oct = kty_hmac,  // NID_hmac (synomym)
@@ -317,7 +317,7 @@ enum crypto_kty_t {
  *          JOSE use - enc, sig
  *          COSE keyop - sign, verify, ...
  */
-enum crypto_use_t {
+enum crypto_use_t : uint16 {
     use_unknown = 0,
 
     // JOSE

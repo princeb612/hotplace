@@ -18,6 +18,7 @@
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
 #include <sdk/net/tlsspec/tls.hpp>
+#include <sdk/net/tlsspec/tls_advisor.hpp>
 
 namespace hotplace {
 namespace net {
@@ -71,7 +72,9 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 // } ChangeCipherSpec;
                 tpos = pos;
                 ret = tls_dump_change_cipher_spec(s, session, stream, size, tpos);
-                session->get_roleinfo(role).change_cipher_spec();
+                // session->get_roleinfo(role).change_cipher_spec();
+                session->change_cipher_spec();
+                session->reset_recordno();
             } break;
             case tls_content_type_alert: {
                 // RFC 8446 6.  Alert Protocol
@@ -80,11 +83,60 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 ret = tls_dump_alert(s, session, stream, size, tpos);
             } break;
             case tls_content_type_handshake: {
-                tpos = pos;
-                while (tpos < size) {
-                    ret = tls_dump_handshake(s, session, stream, size, tpos);
-                    if (errorcode_t::success != ret) {
-                        break;
+                auto roleinfo = session->get_roleinfo(role);
+                if (roleinfo.doprotect()) {
+                    /**
+                     * RFC 2246 6.2.3. Record payload protection
+                     *     struct {
+                     *         ContentType type;
+                     *         ProtocolVersion version;
+                     *         uint16 length;
+                     *         select (CipherSpec.cipher_type) {
+                     *             case stream: GenericStreamCipher;
+                     *             case block: GenericBlockCipher;
+                     *         } fragment;
+                     *     } TLSCiphertext;
+                     * RFC 2246 6.2.3.1. Null or standard stream cipher
+                     *     stream-ciphered struct {
+                     *         opaque content[TLSCompressed.length];
+                     *         opaque MAC[CipherSpec.hash_size];
+                     *     } GenericStreamCipher;
+                     *     HMAC_hash(MAC_write_secret, seq_num + TLSCompressed.type +
+                     *                   TLSCompressed.version + TLSCompressed.length +
+                     *                   TLSCompressed.fragment));
+                     * RFC 2246 6.2.3.2. CBC block cipher
+                     *     block-ciphered struct {
+                     *         opaque content[TLSCompressed.length];
+                     *         opaque MAC[CipherSpec.hash_size];
+                     *         uint8 padding[GenericBlockCipher.padding_length];
+                     *         uint8 padding_length;
+                     *     } GenericBlockCipher;
+                     */
+                    tls_protection& protection = session->get_tls_protection();
+                    binary_t plaintext;
+                    binary_t tag;
+                    auto version = protection.get_tls_version();
+                    if (tls_13 == version) {
+                        ret = protection.decrypt_tls13(session, role, stream, len, plaintext, pos, tag, s);
+                    } else {
+                        ret = protection.decrypt_tls1(session, role, stream, size, plaintext, s);
+                    }
+                    if (errorcode_t::success == ret) {
+                        tpos = 0;
+                        while (tpos < size) {
+                            ret = tls_dump_handshake(s, session, &plaintext[0], plaintext.size(), tpos);
+                            if (errorcode_t::success != ret) {
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    tpos = pos;
+                    while (tpos < size) {
+                        ret = tls_dump_handshake(s, session, stream, size, tpos);
+                        if (errorcode_t::success != ret) {
+                            break;
+                        }
                     }
                 }
             } break;
@@ -92,7 +144,12 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 tls_protection& protection = session->get_tls_protection();
                 binary_t plaintext;
                 binary_t tag;
-                ret = protection.decrypt(session, role, stream, len, plaintext, pos, tag, s);
+                auto version = protection.get_tls_version();
+                if (tls_13 == version) {
+                    ret = protection.decrypt_tls13(session, role, stream, len, plaintext, pos, tag, s);
+                } else {
+                    ret = protection.decrypt_tls1(session, role, stream, size, plaintext, s);
+                }
                 if (errorcode_t::success == ret) {
                     auto plainsize = plaintext.size();
                     if (plainsize) {

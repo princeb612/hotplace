@@ -65,8 +65,8 @@ void test_quic_xargs_org() {
         const char* x = "358072d6365880d1aeea329adf9121383851ed21a28e3b75e965d0d2cd166254";
         const char* y = "";
         const char* d = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
-        crypto_key key;
-        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc("client key"));
+        crypto_key& key = protection.get_keyexchange();
+        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc("client"));
         basic_stream bs;
         dump_key(key.find("client key"), &bs);
         _logger->writeln(bs);
@@ -182,10 +182,9 @@ void test_quic_xargs_org() {
         const char* y = "";
         const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";
 
-        crypto_key& server_keys = protection.get_key();
-        crypto_key& key = protection.get_key();
+        crypto_key& key = protection.get_keyexchange();
 
-        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc("server key"));
+        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc("server"));
 
         basic_stream bs;
         dump_key(key.find("server key"), &bs);

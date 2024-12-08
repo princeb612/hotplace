@@ -12,6 +12,7 @@
  */
 
 #include <sdk/net/tlsspec/tls.hpp>
+#include <sdk/net/tlsspec/tls_advisor.hpp>
 
 namespace hotplace {
 namespace net {

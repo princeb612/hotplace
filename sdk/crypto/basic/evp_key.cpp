@@ -59,31 +59,33 @@ bool kindof_ecc(const EVP_PKEY* pkey) {
 
 crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
     crypto_kty_t kty = crypto_kty_t::kty_unknown;
-    int type = EVP_PKEY_id(pkey);
+    if (pkey) {
+        int type = EVP_PKEY_id(pkey);
 
-    switch (type) {
-        case EVP_PKEY_HMAC:
-            kty = crypto_kty_t::kty_oct;
-            break;
-        case EVP_PKEY_RSA:
-        case EVP_PKEY_RSA2:
-        case EVP_PKEY_RSA_PSS:
-            kty = crypto_kty_t::kty_rsa;
-            break;
-        case EVP_PKEY_EC:
-            kty = crypto_kty_t::kty_ec;
-            break;
-        case EVP_PKEY_X25519:
-        case EVP_PKEY_X448:
-        case EVP_PKEY_ED25519:
-        case EVP_PKEY_ED448:
-            kty = crypto_kty_t::kty_okp;
-            break;
-        case EVP_PKEY_DH:
-            kty = crypto_kty_t::kty_dh;
-            break;
-        default:
-            break;
+        switch (type) {
+            case EVP_PKEY_HMAC:
+                kty = crypto_kty_t::kty_oct;
+                break;
+            case EVP_PKEY_RSA:
+            case EVP_PKEY_RSA2:
+            case EVP_PKEY_RSA_PSS:
+                kty = crypto_kty_t::kty_rsa;
+                break;
+            case EVP_PKEY_EC:
+                kty = crypto_kty_t::kty_ec;
+                break;
+            case EVP_PKEY_X25519:
+            case EVP_PKEY_X448:
+            case EVP_PKEY_ED25519:
+            case EVP_PKEY_ED448:
+                kty = crypto_kty_t::kty_okp;
+                break;
+            case EVP_PKEY_DH:
+                kty = crypto_kty_t::kty_dh;
+                break;
+            default:
+                break;
+        }
     }
     return kty;
 }

@@ -152,7 +152,72 @@ class openssl_crypt : public crypt_t {
      * @param crypt_context_t* handle [in]
      * @param crypt_ctrl_t id [in]
      * @param uint16 param [in]
-     * @return error code (see error.hpp)
+     * @return  error code (see error.hpp)
+     * @sample
+     *
+     *          {
+     *              // > key 752a18e7a9fcb7cbcdd8f98dd8f769eb
+     *              // > iv 5152535455565758595a5b5c5d5e5f60
+     *              // > ciphertext
+     *              //   00000000 : 18 E0 75 31 7B 10 03 15 F6 08 1F CB F3 13 78 1A | ..u1{.........x.
+     *              //   00000010 : AC 73 EF E1 9F E2 5B A1 AF 59 C2 0B E9 4F C0 1B | .s....[..Y...O..
+     *              //   00000020 : DA 2D 68 00 29 8B 73 A7 E8 49 D7 4B D4 94 CF 7D | .-h.).s..I.K...}
+     *
+     *              crypt.set(handle, crypt_ctrl_padding, 1);
+     *
+     *              // > plaintext
+     *              //   00000000 : 14 00 00 0C 84 4D 3C 10 74 6D D7 22 F9 2F 0C 7E | .....M<.tm."./.~
+     *              //   00000010 : 20 C4 97 46 D2 A3 0F 23 57 39 90 58 07 53 52 43 |  ..F...#W9.X.SRC
+     *              //   00000020 : AF F2 BF E0 0B -- -- -- -- -- -- -- -- -- -- -- | .....
+     *
+     *              crypt.set(handle, crypt_ctrl_padding, 0);
+     *
+     *              // > plaintext
+     *              //   00000000 : 14 00 00 0C 84 4D 3C 10 74 6D D7 22 F9 2F 0C 7E | .....M<.tm."./.~
+     *              //   00000010 : 20 C4 97 46 D2 A3 0F 23 57 39 90 58 07 53 52 43 |  ..F...#W9.X.SRC
+     *              //   00000020 : AF F2 BF E0 0B 0B 0B 0B 0B 0B 0B 0B 0B 0B 0B 0B | ................
+     *          }
+     *
+     *          {
+     *              // AES-128-CCM8
+     *              crypt.set(handle, crypt_ctrl_tsize, 8);
+     *
+     *              // > key
+     *              //    00000000 : 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F | ................
+     *              //    00000010 : 10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F | ................
+     *              // > iv
+     *              //    00000000 : 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F | ................
+     *              // > aad
+     *              //    00000000 : 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F | ................
+     *              // > ciphertext
+     *              //    00000000 : 00 71 93 88 52 E8 26 7B 8C 7C C3 84 ED 8F 69 D8 | .q..R.&{.|....i.
+     *              //    00000010 : FF 52 7E FC 0E E6 36 57 A1 E5 D9 DC 75 DA EF FD | .R~...6W....u...
+     *              //    00000020 : C6 6E A6 36 72 91 72 17 B7 CD 87 9F CC 5D 25 9A | .n.6r.r......]%.
+     *              //    00000030 : 41 04 C5 97 D0 C5 FC 64 DE 27 62 90 E9 4F CA BF | A......d.'b..O..
+     *              //    00000040 : 6E D4 8D 6A F5 AD 49 6A 0F 24 -- -- -- -- -- -- | n..j..Ij.$
+     *              // > tag
+     *              //    00000000 : DF 1A C9 09 08 53 E0 B5 -- -- -- -- -- -- -- -- | .....S..
+     *              // > plaintext
+     *              //    00000000 : 57 65 20 64 6F 6E 27 74 20 70 6C 61 79 69 6E 67 | We don't playing
+     *              //    00000010 : 20 62 65 63 61 75 73 65 20 77 65 20 67 72 6F 77 |  because we grow
+     *              //    00000020 : 20 6F 6C 64 3B 20 77 65 20 67 72 6F 77 20 6F 6C |  old; we grow ol
+     *              //    00000030 : 64 20 62 65 63 61 75 73 65 20 77 65 20 73 74 6F | d because we sto
+     *              //    00000040 : 70 20 70 6C 61 79 69 6E 67 2E -- -- -- -- -- -- | p playing.
+     *          }
+     *
+     *          {
+     *              // AES-128-CCM
+     *              // crypt.set(handle, crypt_ctrl_tsize, 14);
+     *
+     *              // > ciphertext
+     *              //    00000000 : 00 71 93 88 52 E8 26 7B 8C 7C C3 84 ED 8F 69 D8 | .q..R.&{.|....i.
+     *              //    00000010 : FF 52 7E FC 0E E6 36 57 A1 E5 D9 DC 75 DA EF FD | .R~...6W....u...
+     *              //    00000020 : C6 6E A6 36 72 91 72 17 B7 CD 87 9F CC 5D 25 9A | .n.6r.r......]%.
+     *              //    00000030 : 41 04 C5 97 D0 C5 FC 64 DE 27 62 90 E9 4F CA BF | A......d.'b..O..
+     *              //    00000040 : 6E D4 8D 6A F5 AD 49 6A 0F 24 -- -- -- -- -- -- | n..j..Ij.$
+     *              // > tag
+     *              //    00000000 : 81 22 4B 18 4D A8 70 75 2A 31 46 C5 D7 5B -- -- | ."K.M.pu*1F..[
+     *          }
      */
     virtual return_t set(crypt_context_t* handle, crypt_ctrl_t id, uint16 param);
 
