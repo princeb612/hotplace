@@ -79,9 +79,9 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
             auto hash = protection.get_transcript_hash();
             if (hash) {
                 hash->digest(stream, size, digest);
-                s->printf("\e[1;35m > transcript hash\e[0m\n");
-                dump_memory(digest, s, 16, 3, 0x0, dump_notrunc);
-                s->printf("\n");
+                // s->printf("\e[1;35m > transcript hash\e[0m : %s\n", base16_encode(digest).c_str());
+                // dump_memory(digest, s, 16, 3, 0x0, dump_notrunc);
+                // s->printf("\n");
                 hash->release();
             }
         };
@@ -173,7 +173,7 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                     protection.calc(session, tls_context_client_finished);  // resumption related
                 }
                 session->get_roleinfo(role).set_status(handshake->msg_type);
-                session->reset_recordno();
+                session->reset_recordno(role);
             } break;
             case tls_handshake_key_update: /* 24 */ {
             } break;
@@ -868,6 +868,10 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         const tls_alg_info_t* hint_tls_alg = tlsadvisor->hintof_tls_algorithm(protection.get_cipher_suite());
+        if (nullptr == hint_tls_alg) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
         auto dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
 
         constexpr char constexpr_verify_data[] = "verify data";
@@ -904,37 +908,65 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
             binary_t fin_hash;
             auto hash = protection.get_transcript_hash();
             if (hash) {
-                // https://tls12.xargs.org/#server-handshake-finished/
-                if ((protection.get_tls_version() < tls_13)) {
-                    // if (session->get_roleinfo(role).doprotect())) { ... }
-                    // clientfinishedplain TODO
-                    hash->update(stream, size);
-                }
                 hash->digest(fin_hash);
                 hash->release();
             }
 
-            auto typeof_secret = tls_secret_handshake_server;
-            if (role) {
-                typeof_secret = tls_secret_handshake_client;
-            }
-            const binary_t& ht_secret = protection.get_item(typeof_secret);
-            // $ fin_key=$(./hkdf-384 expandlabel $ht_secret "finished" "" 48)
-            hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(protection.get_cipher_suite());
+            tls_secret_t typeof_secret;
             binary_t fin_key;
-            openssl_kdf kdf;
-            binary_t context;
-            kdf.hkdf_expand_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
-            // $ echo $fin_hash | xxd -r -p \
-            //     | openssl dgst -sha384 -mac HMAC -macopt hexkey:$fin_key
             binary_t maced;
-            crypto_hmac_builder builder;
-            crypto_hmac* hmac = builder.set(hashalg).set(fin_key).build();
-            if (hmac) {
-                hmac->mac(fin_hash, maced);
-                hmac->release();
+            auto tlsversion = protection.get_tls_version();
+            if (tls_13 == tlsversion) {
+                typeof_secret = tls_secret_handshake_server;
+                if (role) {
+                    typeof_secret = tls_secret_handshake_client;
+                }
+                const binary_t& ht_secret = protection.get_item(typeof_secret);
+                // $ fin_key=$(./hkdf-384 expandlabel $ht_secret "finished" "" 48)
+                hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(protection.get_cipher_suite());
+                openssl_kdf kdf;
+                binary_t context;
+                kdf.hkdf_expand_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
+                // $ echo $fin_hash | xxd -r -p \
+                //     | openssl dgst -sha384 -mac HMAC -macopt hexkey:$fin_key
+                crypto_hmac_builder builder;
+                crypto_hmac* hmac = builder.set(hashalg).set(fin_key).build();
+                if (hmac) {
+                    hmac->mac(fin_hash, maced);
+                    hmac->release();
+                }
+            } else {
+                binary_t seed;
+                if (role_client == role) {
+                    binary_append(seed, "client finished");
+                } else {
+                    binary_append(seed, "server finished");
+                }
+                binary_append(seed, fin_hash);
+
+                typeof_secret = tls_secret_master;
+                const binary_t& fin_key = protection.get_item(typeof_secret);
+                auto hmac_alg = algof_mac1(hint_tls_alg);
+
+                crypto_hmac_builder builder;
+                auto hmac = builder.set(hmac_alg).set(fin_key).build();
+                size_t size_maced = 12;
+                if (hmac) {
+                    binary_t temp = seed;
+                    binary_t atemp;
+                    binary_t ptemp;
+                    while (maced.size() < size_maced) {
+                        hmac->mac(temp, atemp);
+                        hmac->update(atemp).update(seed).finalize(ptemp);
+                        binary_append(maced, ptemp);
+                        temp = atemp;
+                    }
+                    hmac->release();
+                    maced.resize(size_maced);
+                }
             }
 
+            verify_data.resize(maced.size());
             if (verify_data != maced) {
                 ret = errorcode_t::error_verify;
             }
@@ -944,12 +976,8 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
             dump_memory(verify_data, s, 16, 3, 0x00, dump_notrunc);
             s->printf("\n");
             s->printf("  > secret (internal) %02x\n", typeof_secret);
-            s->printf("  > ht_secret %s\n", base16_encode(ht_secret).c_str());
-            s->printf("  > fin_key   %s\n", base16_encode(fin_key).c_str());
-            s->printf("  > fin_hash  %s\n", base16_encode(fin_hash).c_str());
-            s->printf("  > maced     %s %s\n", base16_encode(maced).c_str(), (errorcode_t::success == ret) ? "true" : "false");
-            dump_memory(maced, s, 16, 3, 0x00, dump_notrunc);
-            s->printf("\n");
+            s->printf("  > verify data %s \n", base16_encode(maced).c_str());
+            s->printf("  > maced       %s \e[1;33m%s\e[0m\n", base16_encode(maced).c_str(), (errorcode_t::success == ret) ? "true" : "false");
             s->printf("> %s %02x", constexpr_record, record);
             s->autoindent(0);
             s->printf("\n");

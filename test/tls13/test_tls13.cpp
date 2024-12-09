@@ -139,6 +139,8 @@ void test_tls13_xargs_org() {
             "53 5B 14 88 D7 F8 FA BB 34 9A 98 28 80 B6 15 --";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("server_hello", &session, bin_record, role_server);
+
+        test_transcript_hash(&session, base16_decode_rfc("e05f64fcd082bdb0dce473adf669c2769f257a1c75a51b7887468b5e0e7a7de4f4d34555112077f16e079019d5a845bd"));
     }
 
     // > handshake type 2 (server_hello)
@@ -207,6 +209,8 @@ void test_tls13_xargs_org() {
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("wrapped-record (encrypted_extensions)", &session, bin_record, role_server);
 
+        test_transcript_hash(&session, base16_decode_rfc("e5fd6bf6b5ed5ac5c86681cf91e804b4884c9199ab5a863d1ecd2469edc64e126f798bedf1362f384e7f091dfe8bd46b"));
+
         // TODO
         // https://tls13.xargs.org/#server-encrypted-extensions/annotated
 
@@ -274,6 +278,8 @@ void test_tls13_xargs_org() {
             "6B 2F 23 8E B5 30 C7 3E -- -- -- -- -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("wrapped-record-2 (certificate)", &session, bin_record, role_server);
+
+        test_transcript_hash(&session, base16_decode_rfc("21b247c6683dabfa05de7135250552028184f98348c97b2a44f390fffb9880be6b55efeba044fd00930999ae4caae963"));
     }
     /**
      * S -> C
@@ -365,6 +371,8 @@ void test_tls13_xargs_org() {
         //  > signature algorithm 0x0804 rsa_pss_rsae_sha256
         //  > len 0x0100(256)
         dump_record("wrapped-record-3 (certificate_verify)", &session, bin_record, role_server);
+
+        test_transcript_hash(&session, base16_decode_rfc("e50a22307719ae4a157cebd424331b060490c351244e15d8d6375518a74c555b0ebca6a7929e6acfc4845d4f6ec0b9b9"));
     }
     /**
      * S -> C
@@ -380,6 +388,8 @@ void test_tls13_xargs_org() {
             "74 74 4A EC F2 8C F3 18 2F D0 -- -- -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("wrapped-record-4 (finished)", &session, bin_record, role_server);
+
+        test_transcript_hash(&session, base16_decode_rfc("fa6800169a6baac19159524fa7b9721b41be3c9db6f3f93fa5ff7e3db3ece204d2b456c51046e40ec5312c55a86126f5"));
     }
     /**
      * https://tls13.xargs.org/#server-application-keys-calc

@@ -101,6 +101,19 @@ void test_keycalc(tls_session* session, tls_secret_t tls_secret, binary_t& secre
     _test_case.assert(secret == base16_decode(expect), __FUNCTION__, text);
 };
 
+void test_transcript_hash(tls_session* session, const binary_t& expect) {
+    if (session) {
+        auto hash = session->get_tls_protection().get_transcript_hash();
+        if (hash) {
+            binary_t tshash;
+            hash->digest(tshash);
+            hash->release();
+            _logger->hdump(" > transcript hash", tshash);
+            _test_case.assert(tshash == expect, __FUNCTION__, "transcript hash");
+        }
+    }
+}
+
 tls_session rfc8448_session;
 tls_session rfc8448_session2;
 
@@ -136,6 +149,8 @@ int main(int argc, char** argv) {
 
     // https://tls13.xargs.org/
     test_tls13_xargs_org();
+    // https://tls12.xargs.org/
+    test_tls12_xargs_org();
 
     // RFC 8448 Example Handshake Traces for TLS 1.3
     test_rfc8448_2();
@@ -145,15 +160,9 @@ int main(int argc, char** argv) {
     test_rfc8448_6();
     test_rfc8448_7();
 
-    // tipping
-    {
-        // https://tls12.xargs.org/
-        test_tls12_xargs_org();
-
-        // TODO
-        // https://dtls13.xargs.org/
-        // test_dtls13_xargs_org();
-    }
+    // TODO
+    // https://dtls13.xargs.org/
+    // test_dtls13_xargs_org();
 
     openssl_cleanup();
 

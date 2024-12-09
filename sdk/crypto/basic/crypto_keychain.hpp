@@ -62,7 +62,7 @@ enum keyflag_t {
  *                      x, ysign : public key (compressed coordinates)
  *                      d        : private key
  *                  OKP
- *                      nid      : ec_x25519, nid_x448, nid_ed25519, nid_ed448
+ *                      nid      : ec_x25519, ec_x448, ec_ed25519, ec_ed448
  *                      x        : public key
  *                      d        : private key
  *                  OCT(HMAC)

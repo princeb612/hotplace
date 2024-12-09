@@ -177,14 +177,10 @@ class tls_session {
         void reset_recordno() { record_no = 0; }
     };
     roleinfo& get_roleinfo(tls_role_t role) { return _roles[role]; }
-    void change_cipher_spec() {
-        for (auto& item : _roles) {
-            item.second.change_cipher_spec();
-        }
-    }
-    void reset_recordno() {
-        for (auto& item : _roles) {
-            item.second.reset_recordno();
+    uint64 get_recordno(tls_role_t role, bool inc = false) { return get_roleinfo(role).get_recordno(inc); }
+    void reset_recordno(tls_role_t role) {
+        if (tls_13 == get_tls_protection().get_tls_version()) {
+            get_roleinfo(role).reset_recordno();
         }
     }
 

@@ -112,6 +112,8 @@ void test_rfc8448_3() {
         // > handshake type 2 (server_hello)
         //  > cipher suite 0x1301 TLS_AES_128_GCM_SHA256
         _test_case.assert(0x1301 == rfc8448_session.get_tls_protection().get_cipher_suite(), __FUNCTION__, "cipher suite");
+
+        test_transcript_hash(&rfc8448_session, base16_decode_rfc("860c06edc07858ee8e78f0e7428c58edd6b43f2ca3e6e95f02ed063cf0e1cad8"));
     }
 
     // hello_hash, shared_secret, early_secret, ...
@@ -185,6 +187,8 @@ void test_rfc8448_3() {
             "00 02 40 01 00 00 00 00";
         binary_t bin_handshake = base16_decode_rfc(handshake);
         dump_handshake("#3A1 encrypted_extensions", &rfc8448_session, bin_handshake);
+
+        test_transcript_hash(&rfc8448_session, base16_decode_rfc("28477e0227567481e5ee83016a3e447840200586cf01526781898a964a45caf9"));
     }
     // #3A2 certificate
     // {server}  construct a Certificate handshake message:
@@ -214,6 +218,8 @@ void test_rfc8448_3() {
             "96 12 29 ac 91 87 b4 2b 4d e1 00 00";
         binary_t bin_handshake = base16_decode_rfc(handshake);
         dump_handshake("#3A2 certificate", &rfc8448_session, bin_handshake);
+
+        test_transcript_hash(&rfc8448_session, base16_decode_rfc("764d6632b3c35c3f3205e3499ac3edbaabb88295fba751461d3678e2e5ea0687"));
     }
     // #3A3 certificate_verify
     // {server}  construct a CertificateVerify handshake message:
@@ -228,6 +234,8 @@ void test_rfc8448_3() {
             "3d a5 04 3e 06 3d da 65 cd f5 ae a2 0d 53 df ac d4 2f 74 f3";
         binary_t bin_handshake = base16_decode_rfc(handshake);
         dump_handshake("#3A3 certificate_verify", &rfc8448_session, bin_handshake);
+
+        test_transcript_hash(&rfc8448_session, base16_decode_rfc("edb7725fa7a3473b031ec8ef65a2485493900138a2b91291407d7951a06110ed"));
     }
     // #3A4 finished
     // {server}  construct a Finished handshake message:
@@ -238,6 +246,8 @@ void test_rfc8448_3() {
             "18";
         binary_t bin_handshake = base16_decode_rfc(handshake);
         dump_handshake("#3A4 server finished", &rfc8448_session, bin_handshake);
+
+        test_transcript_hash(&rfc8448_session, base16_decode_rfc("9608102a0f1ccc6db6250b7b7e417b1a000eaada3daae4777a7686c9ff83df13"));
     }
     // #3B = #3A1 + #3A2 + #3A3 + #3A4
     {
@@ -292,6 +302,8 @@ void test_rfc8448_3() {
 
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("#3B (#3A1..#3A4)", &rfc8448_session2, bin_record);
+
+        test_transcript_hash(&rfc8448_session2, base16_decode_rfc("9608102a0f1ccc6db6250b7b7e417b1a000eaada3daae4777a7686c9ff83df13"));
     }
 
     // after server finished

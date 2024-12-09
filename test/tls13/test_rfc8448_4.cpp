@@ -74,7 +74,7 @@ void test_rfc8448_4() {
             "3c f7 67 8e f5 e8 8d ae 99 01 41 c5 92 4d 57 bb 6f a3 1b 9e 5f"
             "9d";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#1A client_hello", &rfc8448_session, bin_record, role_client);
+        dump_record("client_hello", &rfc8448_session, bin_record, role_client);
     }
     {
         binary_t resumption_early;
@@ -82,10 +82,6 @@ void test_rfc8448_4() {
                      "9b2188e9b2fc6d64d71dc329900e20bb41915000f678aa839cbb797cb7d8332c");
     }
     {
-        const char* record =
-            "17 03 03 00 17 ab 1d f4 20 e7 5c 45"
-            "7a 7c c5 d2 84 4f 76 d5 ae e4 b4 ed bf 04 9b e0";
-        // binary_t bin_record = base16_decode_rfc(record);
-        // dump_record("#1A client_hello", &rfc8448_session, bin_record, role_client);
+        // ...
     }
 }

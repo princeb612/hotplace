@@ -540,9 +540,8 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
         tls_secret_t secret_key;
         tls_secret_t secret_iv;
         uint64 record_no = 0;
-        auto& ri = session->get_roleinfo(role);
-        auto hsstatus = ri.get_status();
-        record_no = ri.get_recordno(true);
+        auto hsstatus = session->get_roleinfo(role).get_status();
+        record_no = session->get_recordno(role, true);
         if (role_client == role) {
             if (tls_handshake_finished == hsstatus) {
                 secret_key = tls_secret_application_client_key;
@@ -625,15 +624,14 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_role_t role, con
         tls_secret_t secret_mac_key;
         tls_secret_t secret_key;
         uint64 record_no = 0;
-        auto& ri = session->get_roleinfo(role);
-        auto hsstatus = ri.get_status();
-        record_no = ri.get_recordno(true);
+        auto hsstatus = session->get_roleinfo(role).get_status();
+        record_no = session->get_recordno(role, true);
         if (role_client == role) {
-            secret_mac_key = tls_secret_server_mac_key;
-            secret_key = tls_secret_server_key;
-        } else {
             secret_mac_key = tls_secret_client_mac_key;
             secret_key = tls_secret_client_key;
+        } else {
+            secret_mac_key = tls_secret_server_mac_key;
+            secret_key = tls_secret_server_key;
         }
 
         const binary_t& key = get_item(secret_key);
@@ -660,30 +658,16 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_role_t role, con
             auto hmac_alg = algof_mac(hint_tls_alg);
             auto hint_digest = advisor->hintof_digest(hmac_alg);
             auto dlen = sizeof_digest(hint_digest);
-            /**
-             * sequence='0000000000000000'
-             * rechdr='16 03 03' ; content_type version
-             * datalen='00 10'
-             * data='00 01 ... 0f'
-             * > data.data = &protectedtext[0]
-             * > data.size = protectedtext.size() - 32
-             * verifydata
-             * > verifydata.data = &protectedtext[datasize]
-             * > verifydata.size = 32
-             */
-            size_t size_mackey = (dlen + 31) & ~31;  // sha1 20 -> 32
-            size_t datalen = plaintext.size() - size_mackey;
-            binary_append(content, uint64(record_no), hton64);            // sequence
-            binary_append(content, stream, 3);                            // rechdr (content_type, version)
-            binary_append(content, uint16(datalen), hton16);              // datalen
-            binary_append(content, &plaintext[0], datalen);               // data
-            binary_append(verifydata, &plaintext[datalen], size_mackey);  // verifydata
 
-            // plaintext.resize(datalen);
+            uint8 pad = *plaintext.rbegin();
+            size_t plaintextsize = plaintext.size() - pad - 1;
 
-            uint8 pad = *verifydata.rbegin();
-            size_t verifydatasize = verifydata.size() - pad - 1;
-            verifydata.resize(verifydatasize);
+            size_t datalen = plaintextsize - dlen;
+            binary_append(content, uint64(record_no), hton64);     // sequence
+            binary_append(content, stream, 3);                     // rechdr (content_type, version)
+            binary_append(content, uint16(datalen), hton16);       // datalen
+            binary_append(content, &plaintext[0], datalen);        // data
+            binary_append(verifydata, &plaintext[datalen], dlen);  // verifydata
 
             crypto_hmac_builder builder;
             auto hmac = builder.set(hint_tls_alg->mac).set(mackey).build();
@@ -707,17 +691,8 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_role_t role, con
             debugstream->printf(" > plaintext\n");
             dump_memory(plaintext, debugstream, 16, 3, 0x0, dump_notrunc);
             debugstream->printf("\n");
-            debugstream->printf(" > verifydata\n");
-            dump_memory(verifydata, debugstream, 16, 3, 0x0, dump_notrunc);
-            debugstream->printf("\n");
             debugstream->printf(" > content\n");
             dump_memory(content, debugstream, 16, 3, 0x0, dump_notrunc);
-            debugstream->printf("\n");
-            debugstream->printf(" > mackey\n");
-            dump_memory(mackey, debugstream, 16, 3, 0x0, dump_notrunc);
-            debugstream->printf("\n");
-            debugstream->printf(" > maced\n");
-            dump_memory(maced, debugstream, 16, 3, 0x0, dump_notrunc);
             debugstream->autoindent(0);
             debugstream->printf("\n");
         }

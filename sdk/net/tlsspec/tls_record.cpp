@@ -14,6 +14,7 @@
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/basic/template.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
@@ -37,7 +38,7 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
             __leave2;
         }
 
-        tls_advisor* resource = tls_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         constexpr char constexpr_content_type[] = "content type";
         constexpr char constexpr_record_version[] = "legacy record version";
@@ -56,8 +57,8 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
         s->printf("# TLS Record\n");
         dump_memory(stream, size, s, 16, 3, 0x00, dump_notrunc);
         s->printf("\n");
-        s->printf("> content type 0x%02x(%i) (%s)\n", content_type, content_type, resource->content_type_string(content_type).c_str());
-        s->printf("> %s 0x%04x (%s)\n", constexpr_record_version, protocol_version, resource->tls_version_string(protocol_version).c_str());
+        s->printf("> content type 0x%02x(%i) (%s)\n", content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
+        s->printf("> %s 0x%04x (%s)\n", constexpr_record_version, protocol_version, tlsadvisor->tls_version_string(protocol_version).c_str());
         s->printf("> %s 0x%04x(%i)\n", constexpr_len, len, len);
 
         size_t tpos = 0;
@@ -72,15 +73,31 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 // } ChangeCipherSpec;
                 tpos = pos;
                 ret = tls_dump_change_cipher_spec(s, session, stream, size, tpos);
-                // session->get_roleinfo(role).change_cipher_spec();
-                session->change_cipher_spec();
-                session->reset_recordno();
+                session->get_roleinfo(role).change_cipher_spec();
+                session->reset_recordno(role);
             } break;
             case tls_content_type_alert: {
                 // RFC 8446 6.  Alert Protocol
                 // RFC 5246 7.2.  Alert Protocol
-                tpos = pos;
-                ret = tls_dump_alert(s, session, stream, size, tpos);
+                auto roleinfo = session->get_roleinfo(role);
+                if (roleinfo.doprotect()) {
+                    tls_protection& protection = session->get_tls_protection();
+                    binary_t plaintext;
+                    binary_t tag;
+                    auto tlsversion = protection.get_tls_version();
+                    if (tls_13 == tlsversion) {
+                        ret = protection.decrypt_tls13(session, role, stream, len, plaintext, pos, tag, s);
+                    } else {
+                        ret = protection.decrypt_tls1(session, role, stream, size, plaintext, s);
+                    }
+                    if (errorcode_t::success == ret) {
+                        tpos = 0;
+                        ret = tls_dump_alert(s, session, &plaintext[0], plaintext.size(), tpos);
+                    }
+                } else {
+                    tpos = pos;
+                    ret = tls_dump_alert(s, session, stream, size, tpos);
+                }
             } break;
             case tls_content_type_handshake: {
                 auto roleinfo = session->get_roleinfo(role);
@@ -115,64 +132,70 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                     tls_protection& protection = session->get_tls_protection();
                     binary_t plaintext;
                     binary_t tag;
-                    auto version = protection.get_tls_version();
-                    if (tls_13 == version) {
+                    auto tlsversion = protection.get_tls_version();
+                    if (tls_13 == tlsversion) {
                         ret = protection.decrypt_tls13(session, role, stream, len, plaintext, pos, tag, s);
                     } else {
                         ret = protection.decrypt_tls1(session, role, stream, size, plaintext, s);
                     }
                     if (errorcode_t::success == ret) {
                         tpos = 0;
-                        while (tpos < size) {
-                            ret = tls_dump_handshake(s, session, &plaintext[0], plaintext.size(), tpos);
-                            if (errorcode_t::success != ret) {
-                                break;
-                            }
-                        }
+                        ret = tls_dump_handshake(s, session, &plaintext[0], plaintext.size(), tpos, role);
                     }
                 } else {
                     tpos = pos;
-                    while (tpos < size) {
-                        ret = tls_dump_handshake(s, session, stream, size, tpos);
-                        if (errorcode_t::success != ret) {
-                            break;
-                        }
-                    }
+                    ret = tls_dump_handshake(s, session, stream, size, tpos, role);
                 }
             } break;
             case tls_content_type_application_data: {
                 tls_protection& protection = session->get_tls_protection();
                 binary_t plaintext;
                 binary_t tag;
-                auto version = protection.get_tls_version();
-                if (tls_13 == version) {
-                    ret = protection.decrypt_tls13(session, role, stream, len, plaintext, pos, tag, s);
+                auto tlsversion = protection.get_tls_version();
+                if (tls_13 == tlsversion) {
+                    ret = protection.decrypt_tls13(session, role, stream, len, plaintext, pos, tag, s);  // pos = aadlen
                 } else {
                     ret = protection.decrypt_tls1(session, role, stream, size, plaintext, s);
                 }
                 if (errorcode_t::success == ret) {
                     auto plainsize = plaintext.size();
                     if (plainsize) {
-                        uint8 record_type = *plaintext.rbegin();
-                        if (tls_content_type_alert == record_type) {
-                            ret = tls_dump_alert(s, session, &plaintext[0], plainsize - 1, tpos);
-                        } else if (tls_content_type_handshake == record_type) {
-                            tpos = 0;
-                            while (tpos < plainsize) {
-                                auto test = tls_dump_handshake(s, session, &plaintext[0], plainsize, tpos, role);
-                                if (errorcode_t::success != test) {
-                                    if (errorcode_t::no_data != test) {
-                                        ret = test;
+                        auto tlsversion = protection.get_tls_version();
+                        uint8 last_byte = *plaintext.rbegin();
+                        if (tls_13 == tlsversion) {
+                            if (tls_content_type_alert == last_byte) {
+                                ret = tls_dump_alert(s, session, &plaintext[0], plainsize - 1, tpos);
+                            } else if (tls_content_type_handshake == last_byte) {
+                                tpos = 0;
+                                while (tpos < plainsize) {
+                                    auto test = tls_dump_handshake(s, session, &plaintext[0], plainsize, tpos, role);
+                                    if (errorcode_t::success != test) {
+                                        if (errorcode_t::no_data != test) {
+                                            ret = test;
+                                        }
+                                        break;
                                     }
-                                    break;
                                 }
+                            } else if (tls_content_type_application_data == last_byte) {
+                                s->autoindent(5);
+                                s->printf("> %s\n", constexpr_application_data);
+                                dump_memory(&plaintext[0], plainsize - 1, s, 16, 3, 0x0, dump_notrunc);
+                                s->autoindent(0);
+                                s->printf("\n");
                             }
-                        } else if (tls_content_type_application_data == record_type) {
-                            s->autoindent(5);
-                            s->printf("> %s\n", constexpr_application_data);
-                            dump_memory(&plaintext[0], plainsize - 1, s, 16, 3, 0x0, dump_notrunc);
-                            s->autoindent(0);
-                            s->printf("\n");
+                        } else {
+                            crypto_advisor* advisor = crypto_advisor::get_instance();
+                            const tls_alg_info_t* hint_tls_alg = tlsadvisor->hintof_tls_algorithm(protection.get_cipher_suite());
+                            const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
+                            auto dlen = hint_mac->digest_size;
+                            size_t extra = last_byte + dlen + 1;
+                            if (plaintext.size() > extra) {
+                                s->autoindent(3);
+                                s->printf(" > %s\n", constexpr_application_data);  // data
+                                dump_memory(&plaintext[0], plaintext.size() - extra, s, 16, 3, 0x0, dump_notrunc);
+                                s->autoindent(0);
+                                s->printf("\n");
+                            }
                         }
                     }
                 }
