@@ -17,6 +17,7 @@
 #include <sdk/crypto/authenticode/authenticode_verifier.hpp>
 #include <sdk/crypto/authenticode/sdk.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/io/stream/file_stream.hpp>
 #include <sdk/io/string/string.hpp>  // split_url
 #include <set>
 
@@ -29,7 +30,8 @@ typedef std::set<std::string> authenticode_signer_set_t; /* signer */
 typedef std::map<std::string, std::string> authenticode_trusted_cert_map_t;
 typedef std::map<std::string, X509_CRL*> authenticode_crl_map_t;        /* pair(crl distribution point, X509_CRL pointer) */
 typedef std::map<int, authenticode_plugin*> authenticode_engines_map_t; /* pair of authenticode_engine_id_t and authenticode_plugin* */
-typedef struct _authenticode_context_t {
+
+struct authenticode_context_t {
     uint32 signature;       //<<< AUTHENTICODE_CONTEXT_SIGNATURE
     critical_section lock;  //<< lock
     authenticode_engines_map_t engines;
@@ -50,8 +52,8 @@ typedef struct _authenticode_context_t {
     std::string crl_path;
     bool gender;
 
-    _authenticode_context_t() : load_root_cert(0), crl_download(1), crl_download_timeout(3), crl_download_retry(1), gender(false) {}
-} authenticode_context_t;
+    authenticode_context_t() : load_root_cert(0), crl_download(1), crl_download_timeout(3), crl_download_retry(1), gender(false) {}
+};
 
 typedef std::map<arch_t, authenticode_context_t*> authenticode_contexts_map_t;
 typedef std::pair<authenticode_contexts_map_t::iterator, bool> authenticode_contexts_map_pib_t;

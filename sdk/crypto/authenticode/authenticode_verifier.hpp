@@ -23,19 +23,10 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_VERIFIER__
 #define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_VERIFIER__
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/crypto/authenticode/authenticode_plugin.hpp>
-#include <sdk/crypto/basic/openssl_hash.hpp>
+#include <sdk/crypto/authenticode/types.hpp>
 
 namespace hotplace {
 namespace crypto {
-
-class authenticode_plugin;
-struct _authenticode_context_t;
-typedef struct _authenticode_context_t authenticode_context_t;
 
 enum authenticode_ctrl_t {
     set_proxy = 1,          // "http://127.0.0.1:3128/"

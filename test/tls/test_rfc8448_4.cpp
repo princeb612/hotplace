@@ -25,6 +25,13 @@ void test_rfc8448_4() {
     size_t pos = 0;
     crypto_keychain keychain;
 
+    // RFC 8448 3. client finished
+    {
+        binary_t secret_resumption_early;
+        test_keycalc(&rfc8448_session, tls_secret_resumption_early, secret_resumption_early, "secret_resumption_early",
+                     "9b2188e9b2fc6d64d71dc329900e20bb41915000f678aa839cbb797cb7d8332c");
+    }
+
     // {client}  create an ephemeral x25519 key pair:
     {
         constexpr char constexpr_client_epk[] = "client epk";
@@ -75,11 +82,6 @@ void test_rfc8448_4() {
             "9d";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("client_hello", &rfc8448_session, bin_record, role_client);
-    }
-    {
-        binary_t resumption_early;
-        test_keycalc(&rfc8448_session, tls_secret_resumption_early, resumption_early, "resumption_early",
-                     "9b2188e9b2fc6d64d71dc329900e20bb41915000f678aa839cbb797cb7d8332c");
     }
     {
         // ...

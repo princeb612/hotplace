@@ -19,12 +19,11 @@
 #include <sdk/base/system/endian.hpp>
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/base/template.hpp>
+#include <sdk/io/basic/types.hpp>
 #include <sdk/io/system/types.hpp>
 
 namespace hotplace {
 namespace io {
-
-class payload_encoded;
 
 /**
  * @brief   payload

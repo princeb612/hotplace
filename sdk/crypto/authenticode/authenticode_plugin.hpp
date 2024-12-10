@@ -16,27 +16,11 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_PLUGIN__
 #define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_PLUGIN__
 
-#include <list>
 #include <sdk/base/system/shared_instance.hpp>
-#include <sdk/crypto/types.hpp>
-#include <sdk/io/stream/file_stream.hpp>
-#include <string>
+#include <sdk/crypto/authenticode/types.hpp>
 
 namespace hotplace {
 namespace crypto {
-
-enum authenticode_engine_id_t {
-    authenticode_engine_id_pe = 1,
-    authenticode_engine_id_msi = 2,
-    authenticode_engine_id_cab = 3,
-};
-
-enum authenticode_verify_t {
-    verify_ok = 0,
-    verify_unknown = 1,
-    verify_fail = 2,
-    verify_hash = 3,  // hash mismatch
-};
 
 /**
  * @brief abstract engine class for PE, MSI, Cabinet

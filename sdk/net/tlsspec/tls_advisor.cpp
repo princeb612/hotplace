@@ -138,6 +138,16 @@ void tls_advisor::load_cipher_suites() {
     // RFC 8446 B.4.  Cipher Suites
     // RFC 5246 A.5.  The Cipher Suite
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
+
+    // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+    // --1 ----2 --3 ---------------4 -----5
+    //
+    // 1 protocol
+    // 2 key agreement
+    // 3 signature
+    // 4 cipher + size + mode
+    // 5 HMAC + size
+
     _cipher_suites.insert({0x0000, "TLS_NULL_WITH_NULL_NULL"});  // MUST NOT be negotiated
     _cipher_suites.insert({0x0001, "TLS_RSA_WITH_NULL_MD5"});
     _cipher_suites.insert({0x0002, "TLS_RSA_WITH_NULL_SHA"});
@@ -180,9 +190,9 @@ void tls_advisor::load_cipher_suites() {
     _cipher_suites.insert({0x0029, "TLS_KRB5_EXPORT_WITH_DES_CBC_40_MD5"});
     _cipher_suites.insert({0x002a, "TLS_KRB5_EXPORT_WITH_RC2_CBC_40_MD5"});
     _cipher_suites.insert({0x002b, "TLS_KRB5_EXPORT_WITH_RC4_40_MD5"});
-    _cipher_suites.insert({0x002c, "TLS_PSK_WITH_NULL_SHA"});
-    _cipher_suites.insert({0x002d, "TLS_DHE_PSK_WITH_NULL_SHA"});
-    _cipher_suites.insert({0x002e, "TLS_RSA_PSK_WITH_NULL_SHA"});
+    _cipher_suites.insert({0x002c, "TLS_PSK_WITH_NULL_SHA"});      // RFC 4785
+    _cipher_suites.insert({0x002d, "TLS_DHE_PSK_WITH_NULL_SHA"});  // RFC 4785
+    _cipher_suites.insert({0x002e, "TLS_RSA_PSK_WITH_NULL_SHA"});  // RFC 4785
     _cipher_suites.insert({0x002f, "TLS_RSA_WITH_AES_128_CBC_SHA"});
     _cipher_suites.insert({0x0030, "TLS_DH_DSS_WITH_AES_128_CBC_SHA"});
     _cipher_suites.insert({0x0031, "TLS_DH_RSA_WITH_AES_128_CBC_SHA"});
@@ -250,24 +260,24 @@ void tls_advisor::load_cipher_suites() {
     _cipher_suites.insert({0x00a5, "TLS_DH_DSS_WITH_AES_256_GCM_SHA384"});
     _cipher_suites.insert({0x00a6, "TLS_DH_anon_WITH_AES_128_GCM_SHA256"});
     _cipher_suites.insert({0x00a7, "TLS_DH_anon_WITH_AES_256_GCM_SHA384"});
-    _cipher_suites.insert({0x00a8, "TLS_PSK_WITH_AES_128_GCM_SHA256"});
-    _cipher_suites.insert({0x00a9, "TLS_PSK_WITH_AES_256_GCM_SHA384"});
-    _cipher_suites.insert({0x00aa, "TLS_DHE_PSK_WITH_AES_128_GCM_SHA256"});
-    _cipher_suites.insert({0x00ab, "TLS_DHE_PSK_WITH_AES_256_GCM_SHA384"});
-    _cipher_suites.insert({0x00ac, "TLS_RSA_PSK_WITH_AES_128_GCM_SHA256"});
-    _cipher_suites.insert({0x00ad, "TLS_RSA_PSK_WITH_AES_256_GCM_SHA384"});
-    _cipher_suites.insert({0x00ae, "TLS_PSK_WITH_AES_128_CBC_SHA256"});
-    _cipher_suites.insert({0x00af, "TLS_PSK_WITH_AES_256_CBC_SHA384"});
-    _cipher_suites.insert({0x00b0, "TLS_PSK_WITH_NULL_SHA256"});
-    _cipher_suites.insert({0x00b1, "TLS_PSK_WITH_NULL_SHA384"});
-    _cipher_suites.insert({0x00b2, "TLS_DHE_PSK_WITH_AES_128_CBC_SHA256"});
-    _cipher_suites.insert({0x00b3, "TLS_DHE_PSK_WITH_AES_256_CBC_SHA384"});
-    _cipher_suites.insert({0x00b4, "TLS_DHE_PSK_WITH_NULL_SHA256"});
-    _cipher_suites.insert({0x00b5, "TLS_DHE_PSK_WITH_NULL_SHA384"});
-    _cipher_suites.insert({0x00b6, "TLS_RSA_PSK_WITH_AES_128_CBC_SHA256"});
-    _cipher_suites.insert({0x00b7, "TLS_RSA_PSK_WITH_AES_256_CBC_SHA384"});
-    _cipher_suites.insert({0x00b8, "TLS_RSA_PSK_WITH_NULL_SHA256"});
-    _cipher_suites.insert({0x00b9, "TLS_RSA_PSK_WITH_NULL_SHA384"});
+    _cipher_suites.insert({0x00a8, "TLS_PSK_WITH_AES_128_GCM_SHA256"});      // RFC 5487 2
+    _cipher_suites.insert({0x00a9, "TLS_PSK_WITH_AES_256_GCM_SHA384"});      // RFC 5487 2
+    _cipher_suites.insert({0x00aa, "TLS_DHE_PSK_WITH_AES_128_GCM_SHA256"});  // RFC 5487 2
+    _cipher_suites.insert({0x00ab, "TLS_DHE_PSK_WITH_AES_256_GCM_SHA384"});  // RFC 5487 2
+    _cipher_suites.insert({0x00ac, "TLS_RSA_PSK_WITH_AES_128_GCM_SHA256"});  // RFC 5487 2
+    _cipher_suites.insert({0x00ad, "TLS_RSA_PSK_WITH_AES_256_GCM_SHA384"});  // RFC 5487 2
+    _cipher_suites.insert({0x00ae, "TLS_PSK_WITH_AES_128_CBC_SHA256"});      // RFC 5487 3.1
+    _cipher_suites.insert({0x00af, "TLS_PSK_WITH_AES_256_CBC_SHA384"});      // RFC 5487 3.1
+    _cipher_suites.insert({0x00b0, "TLS_PSK_WITH_NULL_SHA256"});             // RFC 5487 3.1
+    _cipher_suites.insert({0x00b1, "TLS_PSK_WITH_NULL_SHA384"});             // RFC 5487 3.1
+    _cipher_suites.insert({0x00b2, "TLS_DHE_PSK_WITH_AES_128_CBC_SHA256"});  // RFC 5487 3.2
+    _cipher_suites.insert({0x00b3, "TLS_DHE_PSK_WITH_AES_256_CBC_SHA384"});  // RFC 5487 3.2
+    _cipher_suites.insert({0x00b4, "TLS_DHE_PSK_WITH_NULL_SHA256"});         // RFC 5487 3.2
+    _cipher_suites.insert({0x00b5, "TLS_DHE_PSK_WITH_NULL_SHA384"});         // RFC 5487 3.2
+    _cipher_suites.insert({0x00b6, "TLS_RSA_PSK_WITH_AES_128_CBC_SHA256"});  // RFC 5487 3.3
+    _cipher_suites.insert({0x00b7, "TLS_RSA_PSK_WITH_AES_256_CBC_SHA384"});  // RFC 5487 3.3
+    _cipher_suites.insert({0x00b8, "TLS_RSA_PSK_WITH_NULL_SHA256"});         // RFC 5487 3.3
+    _cipher_suites.insert({0x00b9, "TLS_RSA_PSK_WITH_NULL_SHA384"});         // RFC 5487 3.3
     _cipher_suites.insert({0x00ba, "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256"});
     _cipher_suites.insert({0x00bb, "TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA256"});
     _cipher_suites.insert({0x00bc, "TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA256"});
@@ -283,11 +293,11 @@ void tls_advisor::load_cipher_suites() {
     _cipher_suites.insert({0x00c6, "TLS_SM4_GCM_SM3"});
     _cipher_suites.insert({0x00c7, "TLS_SM4_CCM_SM3"});
     _cipher_suites.insert({0x00ff, "TLS_EMPTY_RENEGOTIATION_INFO_SCSV"});
-    _cipher_suites.insert({0x1301, "TLS_AES_128_GCM_SHA256"});        // TLS 1.3, mandatory, MUST
-    _cipher_suites.insert({0x1302, "TLS_AES_256_GCM_SHA384"});        // TLS 1.3, mandatory, SHOULD
-    _cipher_suites.insert({0x1303, "TLS_CHACHA20_POLY1305_SHA256"});  // TLS 1.3, mandatory, SHOULD
-    _cipher_suites.insert({0x1304, "TLS_AES_128_CCM_SHA256"});        // TLS 1.3
-    _cipher_suites.insert({0x1305, "TLS_AES_128_CCM_8_SHA256"});      // TLS 1.3
+    _cipher_suites.insert({0x1301, "TLS_AES_128_GCM_SHA256"});        // RFC 8446 B.4 TLS 1.3, 9.1 mandatory-to-implement, MUST
+    _cipher_suites.insert({0x1302, "TLS_AES_256_GCM_SHA384"});        // RFC 8446 B.4 TLS 1.3, 9.1 mandatory-to-implement, SHOULD
+    _cipher_suites.insert({0x1303, "TLS_CHACHA20_POLY1305_SHA256"});  // RFC 8446 B.4 TLS 1.3, 9.1 mandatory-to-implement, SHOULD
+    _cipher_suites.insert({0x1304, "TLS_AES_128_CCM_SHA256"});        // RFC 8446 B.4 TLS 1.3
+    _cipher_suites.insert({0x1305, "TLS_AES_128_CCM_8_SHA256"});      // RFC 8446 B.4 TLS 1.3
     _cipher_suites.insert({0x1306, "TLS_AEGIS_256_SHA512"});
     _cipher_suites.insert({0x1307, "TLS_AEGIS_128L_SHA256"});
     _cipher_suites.insert({0x5600, "TLS_FALLBACK_SCSV"});

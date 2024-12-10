@@ -95,50 +95,43 @@ typedef struct {
 } SpcAttributeTypeAndOptionalValue;
 
 // DECLARE_ASN1_FUNCTIONS(SpcAttributeTypeAndOptionalValue)
-
 ASN1_SEQUENCE(SpcAttributeTypeAndOptionalValue) = {ASN1_SIMPLE(SpcAttributeTypeAndOptionalValue, type, ASN1_OBJECT),
-                                                   ASN1_OPT(SpcAttributeTypeAndOptionalValue, value,
-                                                            ASN1_ANY)} ASN1_SEQUENCE_END(SpcAttributeTypeAndOptionalValue)
+                                                   ASN1_OPT(SpcAttributeTypeAndOptionalValue, value, ASN1_ANY)};
+ASN1_SEQUENCE_END(SpcAttributeTypeAndOptionalValue);
+// IMPLEMENT_ASN1_FUNCTIONS(SpcAttributeTypeAndOptionalValue)
 
-    // IMPLEMENT_ASN1_FUNCTIONS(SpcAttributeTypeAndOptionalValue)
-
-    typedef struct {
+typedef struct {
     ASN1_OBJECT *algorithm;
     ASN1_TYPE *parameters;
 } AlgorithmIdentifier;
 
 // DECLARE_ASN1_FUNCTIONS(AlgorithmIdentifier)
+ASN1_SEQUENCE(AlgorithmIdentifier) = {ASN1_SIMPLE(AlgorithmIdentifier, algorithm, ASN1_OBJECT), ASN1_OPT(AlgorithmIdentifier, parameters, ASN1_ANY)};
+ASN1_SEQUENCE_END(AlgorithmIdentifier);
+// IMPLEMENT_ASN1_FUNCTIONS(AlgorithmIdentifier)
 
-ASN1_SEQUENCE(AlgorithmIdentifier) = {ASN1_SIMPLE(AlgorithmIdentifier, algorithm, ASN1_OBJECT),
-                                      ASN1_OPT(AlgorithmIdentifier, parameters, ASN1_ANY)} ASN1_SEQUENCE_END(AlgorithmIdentifier)
-
-    // IMPLEMENT_ASN1_FUNCTIONS(AlgorithmIdentifier)
-
-    typedef struct {
+typedef struct {
     AlgorithmIdentifier *digestAlgorithm;
     ASN1_OCTET_STRING *digest;
 } DigestInfo;
 
 // DECLARE_ASN1_FUNCTIONS(DigestInfo)
+ASN1_SEQUENCE(DigestInfo) = {ASN1_SIMPLE(DigestInfo, digestAlgorithm, AlgorithmIdentifier), ASN1_SIMPLE(DigestInfo, digest, ASN1_OCTET_STRING)};
+ASN1_SEQUENCE_END(DigestInfo);
+// IMPLEMENT_ASN1_FUNCTIONS(DigestInfo)
 
-ASN1_SEQUENCE(DigestInfo) = {ASN1_SIMPLE(DigestInfo, digestAlgorithm, AlgorithmIdentifier),
-                             ASN1_SIMPLE(DigestInfo, digest, ASN1_OCTET_STRING)} ASN1_SEQUENCE_END(DigestInfo)
-
-    // IMPLEMENT_ASN1_FUNCTIONS(DigestInfo)
-
-    typedef struct {
+typedef struct {
     SpcAttributeTypeAndOptionalValue *data;
     DigestInfo *messageDigest;
 } SpcIndirectDataContent;
 
 // DECLARE_ASN1_FUNCTIONS(SpcIndirectDataContent)
-
 ASN1_SEQUENCE(SpcIndirectDataContent) = {ASN1_SIMPLE(SpcIndirectDataContent, data, SpcAttributeTypeAndOptionalValue),
-                                         ASN1_SIMPLE(SpcIndirectDataContent, messageDigest, DigestInfo)} ASN1_SEQUENCE_END(SpcIndirectDataContent)
+                                         ASN1_SIMPLE(SpcIndirectDataContent, messageDigest, DigestInfo)};
+ASN1_SEQUENCE_END(SpcIndirectDataContent);
+IMPLEMENT_ASN1_FUNCTIONS(SpcIndirectDataContent);
 
-    IMPLEMENT_ASN1_FUNCTIONS(SpcIndirectDataContent)
-
-        return_t pkcs7_digest_info(PKCS7 * pkcs7, std::string &md, binary_t &digest) {
+return_t pkcs7_digest_info(PKCS7 *pkcs7, std::string &md, binary_t &digest) {
     return_t ret = errorcode_t::success;
 
     __try2 {

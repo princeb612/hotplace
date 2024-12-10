@@ -2,7 +2,7 @@
 @author Soo Han, Kim (princeb612.kr@gmail.com)
 @remarks
 
-  * openssl
+  * openssl https://openssl-library.org/policies/releasestrat/index.html
     Version 3.3 will be supported until 2026-04-09
     Version 3.2 will be supported until 2025-11-23
     Version 3.1 will be supported until 2025-03-14

@@ -1,3 +1,4 @@
+
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file {file}
@@ -8,18 +9,15 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_BASIC_TYPES__
-#define __HOTPLACE_SDK_IO_BASIC_TYPES__
+#ifndef __HOTPLACE_SDK_IO_STREAM_TYPES__
+#define __HOTPLACE_SDK_IO_STREAM_TYPES__
 
 #include <sdk/io/types.hpp>
 
 namespace hotplace {
 namespace io {
 
-class parser;
-class payload_encoded;
-class payload_member;
-class payload;
+class file_stream;
 
 }  // namespace io
 }  // namespace hotplace
