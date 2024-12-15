@@ -153,14 +153,12 @@
     * sdk/net/tls/
     * test/tlsserver/
     * test/dtlsserver/
+  * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
 
-* HTTP/1
+* Compression
   * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
   * RFC 1952 GZIP file format specification version 4.3
     * Accept-Encoding, Content-Encoding
-
-* HTTP/2
-  * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
 
 * JOSE
   * RFC 7638 3.1.  Example JWK Thumbprint Computation
@@ -240,11 +238,11 @@
 * build script
   * cd hotplace
   * ./make.sh debug pch
-* os support
+* os support (x64)
   * tested
     * RHEL 7 and newer, (including CentOS, Rocky Linux)
     * ubuntu 20.04 and newer
-    * mingw
+    * mingw x64
     * Fedora Core release 4 (Stentz) w/ custom toolchain (GCC 4.8)
 
 ## custom toolchain

@@ -289,10 +289,10 @@ binary_t base16_decode(const std::string& source) {
 }
 
 std::string base16_encode_rfc(const std::string& source) {
-    std::string inpart = source;
     std::string outpart;
 
-    if (false == inpart.empty()) {
+    if (false == source.empty()) {
+        std::string inpart = source;
         ltrim(rtrim(inpart));
 
         // pattern 1 [ decimal, decimal, ..., decimal ]
@@ -322,6 +322,8 @@ std::string base16_encode_rfc(const std::string& source) {
         }
         // pattern 2 hex:hex:...:hex
         else {
+#if 0
+            // multi phase
             replace(inpart, ":", "");
             replace(inpart, " ", "");
             replace(inpart, "\t", "");
@@ -329,16 +331,24 @@ std::string base16_encode_rfc(const std::string& source) {
             replace(inpart, "\n", "");
             replace(inpart, "-", "");
             outpart = inpart;
+#else
+            // single phase
+            for (auto e : inpart) {
+                if (('9' >= e && e >= '0') || ('f' >= e && e >= 'a') || ('F' >= e && e >= 'A') || ('x' == e)) {
+                    outpart.push_back(e);
+                }
+            }
+#endif
         }
     }
     return outpart;
 }
 
 binary_t base16_decode_rfc(const std::string& source) {
-    std::string inpart = source;
     binary_t outpart;
 
-    if (false == inpart.empty()) {
+    if (false == source.empty()) {
+        std::string inpart = source;
         ltrim(rtrim(inpart));
 
         // pattern 1 [ decimal, decimal, ..., decimal ]
@@ -367,6 +377,8 @@ binary_t base16_decode_rfc(const std::string& source) {
         // pattern 2 hex:hex:...:hex
         // pattern 3 hex hex ... hex\nhex hex
         else {
+#if 0
+            // multi phase
             replace(inpart, ":", "");
             replace(inpart, " ", "");
             replace(inpart, "\t", "");
@@ -374,6 +386,16 @@ binary_t base16_decode_rfc(const std::string& source) {
             replace(inpart, "\n", "");
             replace(inpart, "-", "");
             outpart = base16_decode(inpart);
+#else
+            // single phase
+            std::string temp;
+            for (auto e : inpart) {
+                if (('9' >= e && e >= '0') || ('F' >= e && e >= 'A') || ('f' >= e && e >= 'a') || ('x' == e)) {
+                    temp.push_back(e);
+                }
+            }
+            outpart = base16_decode(temp);
+#endif
         }
     }
     return outpart;

@@ -56,6 +56,8 @@ enum keyflag_t {
  *                  RSA
  *                      nid      : nid_rsa, nid_rsapss
  *                      bits     : MUST greater than 2048
+ *                      p, q     : public key
+ *                      d        : private key
  *                  EC
  *                      nid      : see ec_curve_t
  *                      x, y     : public key

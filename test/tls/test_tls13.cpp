@@ -153,17 +153,17 @@ void test_tls13_xargs_org() {
      */
     {
         binary_t hello_hash;
-        test_keycalc(&session, tls_secret_hello_hash, hello_hash, "hello_hash",
+        test_keycalc(&session, tls_context_transcript_hash, hello_hash, "hello_hash",
                      "e05f64fcd082bdb0dce473adf669c2769f257a1c75a51b7887468b5e0e7a7de4f4d34555112077f16e079019d5a845bd");
 
         binary_t shared_secret;
-        test_keycalc(&session, tls_secret_shared_secret, shared_secret, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
+        test_keycalc(&session, tls_context_shared_secret, shared_secret, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
 
         binary_t early_secret;
         test_keycalc(&session, tls_secret_early_secret, early_secret, "early_secret",
                      "7ee8206f5570023e6dc7519eb1073bc4e791ad37b5c382aa10ba18e2357e716971f9362f2c2fe2a76bfd78dfec4ea9b5");
         binary_t empty_hash;
-        test_keycalc(&session, tls_secret_empty_hash, empty_hash, "empty_hash",
+        test_keycalc(&session, tls_context_empty_hash, empty_hash, "empty_hash",
                      "38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b");
         binary_t secret_handshake_derived;
         test_keycalc(&session, tls_secret_handshake_derived, secret_handshake_derived, "secret_handshake_derived",

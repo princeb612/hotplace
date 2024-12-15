@@ -176,7 +176,10 @@ enum tls_extensions_t : uint16 {
     tls_extension_external_id_hash = 55,        // RFC 8844
     tls_extension_external_session_id = 56,     // RFC 8844
     tls_extension_ticket_request = 58,          // RFC 9149 TLS Ticket Requests
-    tls_extension_renegotiation_info = 65281,   // RFC 5746 Transport Layer Security (TLS) Renegotiation Indication Extension
+    tls_extension_application_layer_protocol_settings = 17513,
+    tls_extension_alps = 17513,
+    tls_extension_encrypted_client_hello = 65037,
+    tls_extension_renegotiation_info = 65281,  // RFC 5746 Transport Layer Security (TLS) Renegotiation Indication Extension
 };
 
 /**
@@ -244,67 +247,104 @@ struct tls_alert_t {
     tls_alertdesc_t desc;
 };
 
+/**
+ * 15..8
+ *    00 pre
+ *    01 handshake
+ *    02 application
+ *    03 exporter
+ *    04 resumption
+ *    f0 userspace/usercontext
+ * 7..6
+ *    80 reserved
+ *    40 reserved
+ * 5..0
+ */
+#define TLS_SECRET 0x0000
+#define TLS_SECRET_HANDSHAKE 0x0100
+#define TLS_SECRET_APPLICATION 0x0200
+#define TLS_SECRET_EXPORTER 0x0300
+#define TLS_SECRET_RESUMPTION 0x0400
+#define TLS_SECRET_USERCONTEXT 0xf000
+
+#define TLS_SECRET_EARLY 0x0001
+#define TLS_SECRET_CLIENT_MAC_KEY 0x0002
+#define TLS_SECRET_SERVER_MAC_KEY 0x0003
+#define TLS_SECRET_BINDER 0x0004
+#define TLS_SECRET_DERIVED 0x0005
+#define TLS_SECRET_MASTER 0x0006
+#define TLS_SECRET_CLIENT 0x0007
+#define TLS_SECRET_CLIENT_KEY 0x0008
+#define TLS_SECRET_CLIENT_IV 0x0009
+#define TLS_SECRET_SERVER 0x000a
+#define TLS_SECRET_SERVER_KEY 0x000b
+#define TLS_SECRET_SERVER_IV 0x000c
+#define TLS_SECRET_CLIENT_QUIC_KEY 0x0011
+#define TLS_SECRET_CLIENT_QUIC_IV 0x0012
+#define TLS_SECRET_CLIENT_QUIC_HP 0x0013
+#define TLS_SECRET_SERVER_QUIC_KEY 0x0014
+#define TLS_SECRET_SERVER_QUIC_IV 0x0015
+#define TLS_SECRET_SERVER_QUIC_HP 0x0016
+
 enum tls_secret_t : uint16 {
-    tls_secret_pre_master = 0x01,
-    tls_secret_master = 0x02,
-    tls_secret_client_mac_key = 0x03,
-    tls_secret_server_mac_key = 0x04,
-    tls_secret_client_key = 0x05,
-    tls_secret_server_key = 0x06,
-    tls_secret_client_iv = 0x07,
-    tls_secret_server_iv = 0x08,
+    tls_secret_early_secret = (TLS_SECRET | TLS_SECRET_EARLY),
+    tls_secret_master = (TLS_SECRET | TLS_SECRET_MASTER),
+    tls_secret_client_mac_key = (TLS_SECRET | TLS_SECRET_CLIENT_MAC_KEY),
+    tls_secret_server_mac_key = (TLS_SECRET | TLS_SECRET_SERVER_MAC_KEY),
+    tls_secret_client_key = (TLS_SECRET | TLS_SECRET_CLIENT_KEY),
+    tls_secret_client_iv = (TLS_SECRET | TLS_SECRET_CLIENT_IV),
+    tls_secret_server_key = (TLS_SECRET | TLS_SECRET_SERVER_KEY),
+    tls_secret_server_iv = (TLS_SECRET | TLS_SECRET_SERVER_IV),
 
-    tls_secret_shared_secret = 0x0a,
-    tls_secret_hello_hash = 0x0b,
-    tls_secret_early_secret = 0x0c,
-    tls_secret_empty_hash = 0x0d,
+    tls_secret_handshake_derived = (TLS_SECRET_HANDSHAKE | TLS_SECRET_DERIVED),
+    tls_secret_handshake = (TLS_SECRET_HANDSHAKE | TLS_SECRET_MASTER),
+    tls_secret_handshake_client = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT),
+    tls_secret_handshake_server = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER),
+    tls_secret_handshake_client_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_KEY),
+    tls_secret_handshake_client_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_IV),
+    tls_secret_handshake_quic_client_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_QUIC_KEY),
+    tls_secret_handshake_quic_client_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_QUIC_IV),
+    tls_secret_handshake_quic_client_hp = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_QUIC_HP),
+    tls_secret_handshake_server_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_KEY),
+    tls_secret_handshake_server_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_IV),
+    tls_secret_handshake_quic_server_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_KEY),
+    tls_secret_handshake_quic_server_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_IV),
+    tls_secret_handshake_quic_server_hp = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_HP),
 
-    tls_secret_handshake_derived = 0x10,
-    tls_secret_handshake = 0x11,
-    tls_secret_handshake_client = 0x12,
-    tls_secret_handshake_server = 0x13,
-    tls_secret_handshake_client_key = 0x14,
-    tls_secret_handshake_client_iv = 0x15,
-    tls_secret_handshake_quic_client_key = 0x16,
-    tls_secret_handshake_quic_client_iv = 0x17,
-    tls_secret_handshake_quic_client_hp = 0x18,
-    tls_secret_handshake_client_finished = 0x19,
-    tls_secret_handshake_server_key = 0x1a,
-    tls_secret_handshake_server_iv = 0x1b,
-    tls_secret_handshake_quic_server_key = 0x1c,
-    tls_secret_handshake_quic_server_iv = 0x1d,
-    tls_secret_handshake_quic_server_hp = 0x1e,
+    tls_secret_application_derived = (TLS_SECRET_APPLICATION | TLS_SECRET_DERIVED),
+    tls_secret_application = (TLS_SECRET_APPLICATION | TLS_SECRET_MASTER),
+    tls_secret_application_client = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT),
+    tls_secret_application_server = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER),
+    tls_secret_application_client_key = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_KEY),
+    tls_secret_application_client_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_IV),
+    tls_secret_application_server_key = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_KEY),
+    tls_secret_application_server_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_IV),
 
-    tls_secret_application_derived = 0x20,
-    tls_secret_application = 0x21,
-    tls_secret_application_client = 0x22,
-    tls_secret_application_server = 0x23,
-    tls_secret_application_client_key = 0x24,
-    tls_secret_application_client_iv = 0x25,
-    tls_secret_application_quic_client_key = 0x26,
-    tls_secret_application_quic_client_iv = 0x27,
-    tls_secret_application_quic_client_hp = 0x28,
-    tls_secret_application_client_finished = 0x29,
-    tls_secret_application_server_key = 0x2a,
-    tls_secret_application_server_iv = 0x2b,
-    tls_secret_application_quic_server_key = 0x2c,
-    tls_secret_application_quic_server_iv = 0x2d,
-    tls_secret_application_quic_server_hp = 0x2e,
+    tls_secret_application_quic_client_key = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_QUIC_KEY),
+    tls_secret_application_quic_client_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_QUIC_IV),
+    tls_secret_application_quic_client_hp = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_QUIC_HP),
+    tls_secret_application_quic_server_key = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_KEY),
+    tls_secret_application_quic_server_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_IV),
+    tls_secret_application_quic_server_hp = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_HP),
 
-    tls_secret_exporter_master = 0x30,
-    tls_secret_exporter = 0x31,
-    tls_secret_resumption_master = 0x40,
-    tls_secret_resumption = 0x41,
-    tls_secret_resumption_early = 0x42,
+    tls_secret_exporter_master = (TLS_SECRET_EXPORTER | TLS_SECRET_MASTER),
 
-    tls_context_client_hello = 0x101,         // CH client_hello
-    tls_context_server_hello = 0x102,         // SH server_hello (handshake)
-    tls_context_server_finished = 0x103,      // F server finished (application, exporter)
-    tls_context_client_finished = 0x104,      // F client finished (resumption)
-    tls_context_client_hello_random = 0x105,  // CH client_hello (server_key_update)
-    tls_context_server_hello_random = 0x106,  // SH server_hello (server_key_update)
-    tls_context_server_key_exchange = 0x107,  // SKE server_key_exchange (pre_master_secret)
-    tls_context_client_key_exchange = 0x108,  // CKE client_key_exchange (pre_master_secret)
+    tls_secret_resumption_binder = (TLS_SECRET_RESUMPTION | TLS_SECRET_BINDER),
+    tls_secret_resumption_master = (TLS_SECRET_RESUMPTION | TLS_SECRET_MASTER),
+    tls_secret_resumption = (TLS_SECRET_RESUMPTION),
+    tls_secret_resumption_early = (TLS_SECRET_RESUMPTION | TLS_SECRET_EARLY),
+
+    tls_context_shared_secret = (TLS_SECRET_USERCONTEXT | 0x01),
+    tls_context_transcript_hash = (TLS_SECRET_USERCONTEXT | 0x02),
+    tls_context_empty_hash = (TLS_SECRET_USERCONTEXT | 0x04),
+    tls_context_client_hello = (TLS_SECRET_USERCONTEXT | 0x05),         // CH client_hello
+    tls_context_server_hello = (TLS_SECRET_USERCONTEXT | 0x06),         // SH server_hello (handshake)
+    tls_context_server_finished = (TLS_SECRET_USERCONTEXT | 0x07),      // F server finished (application, exporter)
+    tls_context_client_finished = (TLS_SECRET_USERCONTEXT | 0x08),      // F client finished (resumption)
+    tls_context_client_hello_random = (TLS_SECRET_USERCONTEXT | 0x09),  // CH client_hello (server_key_update)
+    tls_context_server_hello_random = (TLS_SECRET_USERCONTEXT | 0x0a),  // SH server_hello (server_key_update)
+    tls_context_server_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0b),  // SKE server_key_exchange (pre_master_secret)
+    tls_context_client_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0c),  // CKE client_key_exchange (pre_master_secret)
 };
 
 enum tls_mode_t : uint8 {

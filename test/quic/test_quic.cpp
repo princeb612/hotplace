@@ -244,7 +244,7 @@ void test_quic_xargs_org() {
         auto hashalg = 0;
         std::string hashname;
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        const tls_alg_info_t* hint_tls_alg = tlsadvisor->hintof_tls_algorithm(0x1301);
+        const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(0x1301);
         if (hint_tls_alg) {
             crypto_advisor* advisor = crypto_advisor::get_instance();
             const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(hint_tls_alg->cipher);
@@ -271,13 +271,13 @@ void test_quic_xargs_org() {
         };
 
         binary_t shared_secret;
-        lambda_test(tls_secret_shared_secret, shared_secret, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
+        lambda_test(tls_context_shared_secret, shared_secret, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
         binary_t hello_hash;
-        lambda_test(tls_secret_hello_hash, hello_hash, "hello_hash", "ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b");
+        lambda_test(tls_context_transcript_hash, hello_hash, "hello_hash", "ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b");
         binary_t early_secret;
         lambda_test(tls_secret_early_secret, early_secret, "early_secret", "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
         binary_t empty_hash;
-        lambda_test(tls_secret_empty_hash, empty_hash, "empty_hash", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        lambda_test(tls_context_empty_hash, empty_hash, "empty_hash", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
         binary_t derived_secret;
         lambda_test(tls_secret_handshake_derived, derived_secret, "derived_secret", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
         binary_t handshake_secret;

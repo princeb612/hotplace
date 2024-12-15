@@ -32,4 +32,6 @@ void test_rfc8448_5();
 void test_rfc8448_6();
 void test_rfc8448_7();
 
+void test_capture();
+
 #endif

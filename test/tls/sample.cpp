@@ -51,9 +51,17 @@ return_t dump_record(const char* text, tls_session* session, const binary_t& bin
             __leave2;
         }
 
+        // _logger->hdump("! input", bin);
+
         basic_stream bs;
         size_t pos = 0;
-        ret = tls_dump_record(&bs, session, &bin[0], bin.size(), pos, role);
+        size_t size = bin.size();
+        while (pos < size) {
+            ret = tls_dump_record(&bs, session, &bin[0], bin.size(), pos, role);
+            if (errorcode_t::success != ret) {
+                break;
+            }
+        }
 
         _logger->writeln(bs);
         bs.clear();
@@ -159,6 +167,8 @@ int main(int argc, char** argv) {
     test_rfc8448_5();
     test_rfc8448_6();
     test_rfc8448_7();
+
+    test_capture();
 
     // TODO
     // https://dtls13.xargs.org/

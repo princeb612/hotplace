@@ -38,6 +38,7 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
             __leave2;
         }
 
+        size_t recpos = pos;
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         constexpr char constexpr_content_type[] = "content type";
@@ -55,7 +56,7 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
         auto len = t_to_int<uint16>(pl.select(constexpr_len));
 
         s->printf("# TLS Record\n");
-        dump_memory(stream, size, s, 16, 3, 0x00, dump_notrunc);
+        dump_memory(stream + recpos, sizeof(tls_content_t) + len, s, 16, 3, 0x00, dump_notrunc);
         s->printf("\n");
         s->printf("> content type 0x%02x(%i) (%s)\n", content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
         s->printf("> %s 0x%04x (%s)\n", constexpr_record_version, protocol_version, tlsadvisor->tls_version_string(protocol_version).c_str());
@@ -86,9 +87,9 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                     binary_t tag;
                     auto tlsversion = protection.get_tls_version();
                     if (tls_13 == tlsversion) {
-                        ret = protection.decrypt_tls13(session, role, stream, len, plaintext, pos, tag, s);
+                        ret = protection.decrypt_tls13(session, role, stream, len, recpos, plaintext, tag, s);
                     } else {
-                        ret = protection.decrypt_tls1(session, role, stream, size, plaintext, s);
+                        ret = protection.decrypt_tls1(session, role, stream, size, recpos, plaintext, s);
                     }
                     if (errorcode_t::success == ret) {
                         tpos = 0;
@@ -134,9 +135,9 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                     binary_t tag;
                     auto tlsversion = protection.get_tls_version();
                     if (tls_13 == tlsversion) {
-                        ret = protection.decrypt_tls13(session, role, stream, len, plaintext, pos, tag, s);
+                        ret = protection.decrypt_tls13(session, role, stream, len, recpos, plaintext, tag, s);
                     } else {
-                        ret = protection.decrypt_tls1(session, role, stream, size, plaintext, s);
+                        ret = protection.decrypt_tls1(session, role, stream, size, recpos, plaintext, s);
                     }
                     if (errorcode_t::success == ret) {
                         tpos = 0;
@@ -144,7 +145,7 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                     }
                 } else {
                     tpos = pos;
-                    ret = tls_dump_handshake(s, session, stream, size, tpos, role);
+                    ret = tls_dump_handshake(s, session, stream, pos + len, tpos, role);
                 }
             } break;
             case tls_content_type_application_data: {
@@ -153,9 +154,9 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 binary_t tag;
                 auto tlsversion = protection.get_tls_version();
                 if (tls_13 == tlsversion) {
-                    ret = protection.decrypt_tls13(session, role, stream, len, plaintext, pos, tag, s);  // pos = aadlen
+                    ret = protection.decrypt_tls13(session, role, stream, len, recpos, plaintext, tag, s);  // pos = aadlen
                 } else {
-                    ret = protection.decrypt_tls1(session, role, stream, size, plaintext, s);
+                    ret = protection.decrypt_tls1(session, role, stream, pos + len, recpos, plaintext, s);
                 }
                 if (errorcode_t::success == ret) {
                     auto plainsize = plaintext.size();
@@ -185,7 +186,7 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                             }
                         } else {
                             crypto_advisor* advisor = crypto_advisor::get_instance();
-                            const tls_alg_info_t* hint_tls_alg = tlsadvisor->hintof_tls_algorithm(protection.get_cipher_suite());
+                            const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
                             const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
                             auto dlen = hint_mac->digest_size;
                             size_t extra = last_byte + dlen + 1;

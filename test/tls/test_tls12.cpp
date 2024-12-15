@@ -191,9 +191,6 @@ void test_tls12_xargs_org() {
     }
     // https://tls12.xargs.org/#client-encryption-keys-calculation
     {
-        binary_t secret_pre_master;
-        test_keycalc(&session, tls_secret_pre_master, secret_pre_master, "secret_pre_master",
-                     "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
         binary_t secret_master;
         test_keycalc(&session, tls_secret_master, secret_master, "secret_master",
                      "916abf9da55973e13614ae0a3f5d3f37b023ba129aee02cc9134338127cd7049781c8e19fc1eb2a7387ac06ae237344c");

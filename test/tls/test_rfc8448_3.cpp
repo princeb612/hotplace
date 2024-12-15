@@ -122,10 +122,11 @@ void test_rfc8448_3() {
     {
         // # hash (ClientHello + ServerHello) --> hello_hash
         binary_t hello_hash;
-        test_keycalc(&rfc8448_session, tls_secret_hello_hash, hello_hash, "hello_hash", "860c06edc07858ee8e78f0e7428c58edd6b43f2ca3e6e95f02ed063cf0e1cad8");
+        test_keycalc(&rfc8448_session, tls_context_transcript_hash, hello_hash, "hello_hash",
+                     "860c06edc07858ee8e78f0e7428c58edd6b43f2ca3e6e95f02ed063cf0e1cad8");
         // # ECDH(priv, pub) --> shared_secret
         binary_t shared_secret;
-        test_keycalc(&rfc8448_session, tls_secret_shared_secret, shared_secret, "shared_secret",
+        test_keycalc(&rfc8448_session, tls_context_shared_secret, shared_secret, "shared_secret",
                      "8bd4054fb55b9d63fdfbacf9f04b9f0d35e6d63f537563efd46272900f89492d");
         // compute ...
         // for more details ... see tls_protection::calc
@@ -390,8 +391,8 @@ void test_rfc8448_3() {
             "df 35 30 05 f3 bc e1 86 96 12 9c 81 53 55 6b 3b 6c 67 79 b3 7b"
             "f1 59 85 68 4f";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#5 new_session_ticket", &rfc8448_session, bin_record);
-        dump_record("#5 new_session_ticket", &rfc8448_session2, bin_record);
+        dump_record("#5 new_session_ticket (new_session_ticket)", &rfc8448_session, bin_record, role_server);
+        dump_record("#5 new_session_ticket (new_session_ticket)", &rfc8448_session2, bin_record, role_server);
     }
     // #6
     // {client}  send application_data record:
@@ -414,8 +415,8 @@ void test_rfc8448_3() {
             "0e fa f9 7d 90 e6 df fc 60 2d cb 50 1a 59 a8 fc c4 9c 4b f2 e5"
             "f0 a2 1c 00 47 c2 ab f3 32 54 0d d0 32 e1 67 c2 95 5d";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#7 application data", &rfc8448_session, bin_record);
-        dump_record("#7 application data", &rfc8448_session2, bin_record);
+        dump_record("#7 application data", &rfc8448_session, bin_record, role_server);
+        dump_record("#7 application data", &rfc8448_session2, bin_record, role_server);
     }
     // #8
     // {client}  send alert record:
@@ -424,8 +425,8 @@ void test_rfc8448_3() {
             "17 03 03 00 13 c9 87 27 60 65 56 66"
             "b7 4d 7f f1 15 3e fd 6d b6 d0 b0 e3";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#8 alert", &rfc8448_session, bin_record, role_client);
-        dump_record("#8 alert", &rfc8448_session2, bin_record, role_client);
+        dump_record("#8 alert (close_notify)", &rfc8448_session, bin_record, role_client);
+        dump_record("#8 alert (close_notify)", &rfc8448_session2, bin_record, role_client);
     }
     // #9
     // {server}  send alert record:
@@ -434,7 +435,7 @@ void test_rfc8448_3() {
             "17 03 03 00 13 b5 8f d6 71 66 eb f5"
             "99 d2 47 20 cf be 7e fa 7a 88 64 a9";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#9 alert", &rfc8448_session, bin_record);
-        dump_record("#9 alert", &rfc8448_session2, bin_record);
+        dump_record("#9 alert (close_notify)", &rfc8448_session, bin_record, role_server);
+        dump_record("#9 alert (close_notify)", &rfc8448_session2, bin_record, role_server);
     }
 }

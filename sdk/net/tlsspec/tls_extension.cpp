@@ -158,14 +158,14 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 pl.set_reference_value(constexpr_curve, constexpr_curves);
                 pl.read(stream, size, pos);
 
-                binary_t named_curve;
+                binary_t supported_groups;
                 uint16 curves = t_to_int<uint16>(pl.select(constexpr_curves)) >> 1;
-                pl.select(constexpr_curve)->get_variant().to_binary(named_curve);
+                pl.select(constexpr_curve)->get_variant().to_binary(supported_groups);
 
                 s->printf(" > %s %i\n", constexpr_curves, curves);
                 for (auto i = 0; i < curves; i++) {
-                    auto curve = t_binary_to_integer<uint16>(&named_curve[i << 1], sizeof(uint16));
-                    s->printf("   0x%04x(%i) %s\n", curve, curve, tlsadvisor->named_curve_string(curve).c_str());
+                    auto curve = t_binary_to_integer<uint16>(&supported_groups[i << 1], sizeof(uint16));
+                    s->printf("   [%i] 0x%04x(%i) %s\n", i, curve, curve, tlsadvisor->supported_group_string(curve).c_str());
                 }
             } break;
             case tls_extension_ec_point_formats: /* 0x000b */ {
@@ -194,7 +194,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 s->printf(" > %s %i\n", constexpr_formats, len);
                 for (auto i = 0; i < len; i++) {
                     auto fmt = formats[i];
-                    s->printf("   0x%02x(%i) %s\n", fmt, fmt, tlsadvisor->ec_point_format_string(fmt).c_str());
+                    s->printf("   [%i] 0x%02x(%i) %s\n", i, fmt, fmt, tlsadvisor->ec_point_format_string(fmt).c_str());
                 }
             } break;
             case tls_extension_signature_algorithms: /* 0x000d */ {
@@ -215,7 +215,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 s->printf(" > %s %i\n", constexpr_algorithms, algorithms);
                 for (auto i = 0; i < algorithms; i++) {
                     auto alg = t_binary_to_integer<uint16>(&algorithm[i << 1], sizeof(uint16));
-                    s->printf("   0x%04x %s\n", alg, tlsadvisor->signature_scheme_string(alg).c_str());
+                    s->printf("   [%i] 0x%04x %s\n", i, alg, tlsadvisor->signature_scheme_string(alg).c_str());
                 }
 
             } break;
@@ -231,23 +231,20 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 // RFC 7301
 
                 constexpr char constexpr_alpn_len[] = "alpn len";
-                constexpr char constexpr_protocol_len[] = "alpn protocol len";
                 constexpr char constexpr_protocol[] = "alpn protocol";
 
                 payload pl;
-                pl << new payload_member(uint16(0), true, constexpr_alpn_len) << new payload_member(uint8(0), constexpr_protocol_len)
-                   << new payload_member(binary_t(0), constexpr_protocol);
-                pl.set_reference_value(constexpr_protocol, constexpr_protocol_len);
+                pl << new payload_member(uint16(0), true, constexpr_alpn_len) << new payload_member(binary_t(0), constexpr_protocol);
+                pl.set_reference_value(constexpr_protocol, constexpr_alpn_len);
                 pl.read(stream, size, pos);
 
                 uint16 alpn_len = t_to_int<uint16>(pl.select(constexpr_alpn_len));
-                uint8 proto_len = t_to_int<uint16>(pl.select(constexpr_protocol_len));
                 binary_t protocol;
                 pl.select(constexpr_protocol)->get_variant().to_binary(protocol);
 
-                s->printf(" > %s %i\n", constexpr_protocol_len, proto_len);
-                s->printf(" > %s %s\n", constexpr_protocol, bin2str(protocol).c_str());
-
+                s->printf(" > %s %i\n", constexpr_alpn_len, alpn_len);
+                dump_memory(protocol, s, 16, 3, 0x0, dump_notrunc);
+                s->printf("\n");
             } break;
             case tls_extension_signed_certificate_timestamp: /* 0x0012 */ {
                 // studying
@@ -272,6 +269,28 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
             case tls_extension_extended_master_secret: /* 0x0017 */ {
                 pos += ext_len;
             } break;
+            case tls_extension_compress_certificate: /* 0x001b */ {
+                constexpr char constexpr_algorithm_len[] = "algorithm len";
+                constexpr char constexpr_algorithm[] = "algorithm";
+                uint8 algorithm_len = 0;
+                binary_t algorithm;
+                {
+                    payload pl;
+                    pl << new payload_member(uint8(0), constexpr_algorithm_len) << new payload_member(binary_t(), constexpr_algorithm);
+                    pl.set_reference_value(constexpr_algorithm, constexpr_algorithm_len);
+                    pl.read(stream, size, pos);
+
+                    algorithm_len = t_to_int<uint8>(pl.select(constexpr_algorithm_len));
+                    pl.select(constexpr_algorithm)->get_variant().to_binary(algorithm);
+                }
+                {
+                    s->printf(" > %s %i (%i)\n", constexpr_algorithm_len, algorithm_len, algorithm_len >> 1);
+                    for (auto i = 0; i < algorithm_len / sizeof(uint16); i++) {
+                        auto alg = t_binary_to_integer<uint16>(&algorithm[i << 1], sizeof(uint16));
+                        s->printf("   [%i] 0x%04x %s\n", i, alg, tlsadvisor->cert_compression_algid_string(alg).c_str());
+                    }
+                }
+            } break;
             case tls_extension_record_size_limit: /* 0x001c */ {
                 // studying
                 pos += ext_len;
@@ -291,7 +310,32 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
             } break;
             case tls_extension_pre_shared_key: /* 0x0029 */ {
                 // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_ke)
-                pos += ext_len;
+                // RFC 8446 4.2.11. Pre-Shared Key Extension
+                //
+                // struct {
+                //     opaque identity<1..2^16-1>;
+                //     uint32 obfuscated_ticket_age;
+                // } PskIdentity;
+                //
+                // opaque PskBinderEntry<32..255>;
+                //
+                // struct {
+                //     PskIdentity identities<7..2^16-1>;
+                //     PskBinderEntry binders<33..2^16-1>;
+                // } OfferedPsks;
+                //
+                // struct {
+                //     select (Handshake.msg_type) {
+                //         case client_hello: OfferedPsks;
+                //         case server_hello: uint16 selected_identity;
+                //     };
+                // } PreSharedKeyExtension;
+
+                s->printf(" > pre shared key\n");
+                dump_memory(stream + tpos, ext_len, s, 16, 3, 0x0, dump_notrunc);
+                s->printf("\n");
+
+                // pos += ext_len;
             } break;
             case tls_extension_early_data: /* 0x002a */ {
                 // studying
@@ -317,7 +361,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                         s->printf(" > %s %i\n", constexpr_versions, versions);
                         for (auto i = 0; i < versions; i++) {
                             auto ver = t_binary_to_integer<uint16>(&version[i << 1], sizeof(uint16));
-                            s->printf("   0x%04x %s\n", ver, tlsadvisor->tls_version_string(ver).c_str());
+                            s->printf("   [%i] 0x%04x %s\n", i, ver, tlsadvisor->tls_version_string(ver).c_str());
                         }
                     } break;
                     case tls_handshake_server_hello: {
@@ -359,7 +403,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 s->printf(" > %s\n", constexpr_modes);
                 for (auto i = 0; i < modes; i++) {
                     auto m = mode[i];
-                    s->printf("   %i %s\n", m, tlsadvisor->psk_key_exchange_mode_string(m).c_str());
+                    s->printf("   [%i] %i %s\n", i, m, tlsadvisor->psk_key_exchange_mode_string(m).c_str());
                 }
             } break;
             case tls_extension_certificate_authorities: /* 0x002f */ {
@@ -379,9 +423,40 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 pos += ext_len;
             } break;
             case tls_extension_key_share: /* 0x0033 */ {
+                auto lambda_keyshare = [](tls_session* session, uint16 group, const binary_t& pubkey, const keydesc& desc) -> void {
+                    auto& keyshare = session->get_tls_protection().get_keyexchange();
+                    crypto_keychain keychain;
+                    switch (group) {
+                        // TODO ...
+                        case 0x0017: /* secp256r1 */ {
+                        } break;
+                        case 0x0018: /* secp384r1 */ {
+                        } break;
+                        case 0x0019: /* secp521r1 */ {
+                        } break;
+                        case 0x001d: /* x25519 */ {
+                            keychain.add_okp(&keyshare, NID_X25519, pubkey, binary_t(), desc);
+                        } break;
+                        case 0x001e: /* x448 */ {
+                            keychain.add_okp(&keyshare, NID_X448, pubkey, binary_t(), desc);
+                        } break;
+                        case 0x0100: /* ffdhe2048 */ {
+                        } break;
+                        case 0x0101: /* ffdhe3072 */ {
+                        } break;
+                        case 0x0102: /* ffdhe4096 */ {
+                        } break;
+                        case 0x0103: /* ffdhe6144 */ {
+                        } break;
+                        case 0x0104: /* ffdhe8192 */ {
+                        } break;
+                    }
+                };
+
                 // RFC 8446 4.2.8.  Key Share
                 // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_dhe_ke)
 
+                constexpr char constexpr_key_share_entry[] = "key share entry";
                 constexpr char constexpr_len[] = "len";
                 constexpr char constexpr_group[] = "group";
                 constexpr char constexpr_pubkey_len[] = "public key len";
@@ -401,22 +476,35 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                         //  struct {
                         //      KeyShareEntry client_shares<0..2^16-1>;
                         //  } KeyShareClientHello;
+                        {
+                            payload pl;
+                            pl << new payload_member(uint16(0), true, constexpr_len);
+                            pl.read(stream, size, pos);
+
+                            uint16 len = 0;
+                            len = t_to_int<uint16>(pl.select(constexpr_len));
+
+                            s->printf(" > %s %i(0x%04x)\n", constexpr_len, len, len);
+                        }
                         while (pos < tpos + ext_len) {
                             payload pl;
-                            pl << new payload_member(uint16(0), true, constexpr_len) << new payload_member(uint16(0), true, constexpr_group)
-                               << new payload_member(uint16(0), true, constexpr_pubkey_len) << new payload_member(binary_t(), constexpr_pubkey);
+                            pl << new payload_member(uint16(0), true, constexpr_group) << new payload_member(uint16(0), true, constexpr_pubkey_len)
+                               << new payload_member(binary_t(), constexpr_pubkey);
                             pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
                             pl.read(stream, size, pos);
 
                             group = t_to_int<uint16>(pl.select(constexpr_group));
                             uint16 pubkeylen = t_to_int<uint16>(pl.select(constexpr_pubkey_len));
-                            pl.select(constexpr_pubkey)->get_variant().to_binary(pubkey);
+                            pl.select(constexpr_pubkey)->get_variant().to_binary(pubkey, variant_trunc);
 
-                            s->printf(" > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->named_curve_string(group).c_str());
-                            s->printf(" > %s %i\n", constexpr_pubkey_len, pubkeylen);
-                            dump_memory(pubkey, s, 16, 3, 0x0, dump_notrunc);
+                            lambda_keyshare(session, group, pubkey, desc);
+
+                            s->printf("  > %s\n", constexpr_key_share_entry);
+                            s->printf("   > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_string(group).c_str());
+                            s->printf("   > %s %i(%04x)\n", constexpr_pubkey_len, pubkeylen, pubkeylen);
+                            dump_memory(pubkey, s, 16, 5, 0x0, dump_notrunc);
                             s->printf("\n");
-                            s->printf("   %s\n", base16_encode(pubkey).c_str());
+                            s->printf("     %s\n", base16_encode(pubkey).c_str());
                         }
                     } break;
                     case tls_handshake_server_hello: {
@@ -434,39 +522,13 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                         uint16 pubkeylen = t_to_int<uint16>(pl.select(constexpr_pubkey_len));
                         pl.select(constexpr_pubkey)->get_variant().to_binary(pubkey);
 
-                        s->printf(" > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->named_curve_string(group).c_str());
+                        lambda_keyshare(session, group, pubkey, desc);
+
+                        s->printf(" > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_string(group).c_str());
                         s->printf(" > %s %i\n", constexpr_pubkey_len, pubkeylen);
                         dump_memory(pubkey, s, 16, 3, 0x0, dump_notrunc);
                         s->printf("\n");
                         s->printf("   %s\n", base16_encode(pubkey).c_str());
-                    } break;
-                }
-
-                auto& keyshare = session->get_tls_protection().get_keyexchange();
-                crypto_keychain keychain;
-                switch (group) {
-                    // TODO ...
-                    case 0x0017: /* secp256r1 */ {
-                    } break;
-                    case 0x0018: /* secp384r1 */ {
-                    } break;
-                    case 0x0019: /* secp521r1 */ {
-                    } break;
-                    case 0x001d: /* x25519 */ {
-                        keychain.add_okp(&keyshare, NID_X25519, pubkey, binary_t(), desc);
-                    } break;
-                    case 0x001e: /* x448 */ {
-                        keychain.add_okp(&keyshare, NID_X448, pubkey, binary_t(), desc);
-                    } break;
-                    case 0x0100: /* ffdhe2048 */ {
-                    } break;
-                    case 0x0101: /* ffdhe3072 */ {
-                    } break;
-                    case 0x0102: /* ffdhe4096 */ {
-                    } break;
-                    case 0x0103: /* ffdhe6144 */ {
-                    } break;
-                    case 0x0104: /* ffdhe8192 */ {
                     } break;
                 }
             } break;
@@ -501,6 +563,83 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                     }
                 }
 
+            } break;
+            case tls_extension_application_layer_protocol_settings: /* 0x4469 */ {
+                // ALPS
+                constexpr char constexpr_alps_len[] = "alps len";
+                constexpr char constexpr_alpn_len[] = "alpn len";
+                constexpr char constexpr_alpn[] = "alpn";
+                uint16 alps_len = 0;
+                uint8 alpn_len = 0;
+                binary_t alpn;
+                {
+                    payload pl;
+                    pl << new payload_member(uint16(0), true, constexpr_alps_len) << new payload_member(binary_t(), constexpr_alpn);
+                    pl.set_reference_value(constexpr_alpn, constexpr_alps_len);
+                    pl.read(stream, size, pos);
+
+                    alps_len = t_to_int<uint16>(pl.select(constexpr_alps_len));
+                    pl.select(constexpr_alpn)->get_variant().to_binary(alpn);
+                }
+                {
+                    s->printf(" > %s %i\n", constexpr_alps_len, alps_len);
+                    dump_memory(alpn, s, 16, 3, 0x0, dump_notrunc);
+                    s->printf("\n");
+                }
+            } break;
+            case tls_extension_encrypted_client_hello: /* 0xfe0d */ {
+                constexpr char constexpr_client_hello_type[] = "client hello type";
+                constexpr char constexpr_kdf[] = "kdf";
+                constexpr char constexpr_aead[] = "aead";
+                constexpr char constexpr_config_id[] = "config id";
+                constexpr char constexpr_enc_len[] = "enc len";
+                constexpr char constexpr_enc[] = "enc";
+                constexpr char constexpr_payload_len[] = "payload len";
+                constexpr char constexpr_payload[] = "payload";
+
+                uint8 client_hello_type = 0;
+                uint16 kdf = 0;
+                uint16 aead = 0;
+                uint8 config_id = 0;
+                uint16 enc_len = 0;
+                binary_t enc;
+                uint16 enc_payload_len = 0;
+                binary_t enc_payload;
+
+                {
+                    payload pl;
+                    pl << new payload_member(uint8(0), constexpr_client_hello_type) << new payload_member(uint16(0), true, constexpr_kdf)
+                       << new payload_member(uint16(0), true, constexpr_aead) << new payload_member(uint8(0), constexpr_config_id)
+                       << new payload_member(uint16(0), true, constexpr_enc_len) << new payload_member(binary_t(), constexpr_enc)
+                       << new payload_member(uint16(0), true, constexpr_payload_len) << new payload_member(binary_t(), constexpr_payload);
+                    pl.set_reference_value(constexpr_enc, constexpr_enc_len);
+                    pl.set_reference_value(constexpr_payload, constexpr_payload_len);
+                    pl.read(stream, size, pos);
+
+                    client_hello_type = t_to_int<uint8>(pl.select(constexpr_client_hello_type));
+                    kdf = t_to_int<uint16>(pl.select(constexpr_kdf));
+                    aead = t_to_int<uint16>(pl.select(constexpr_aead));
+                    config_id = t_to_int<uint8>(pl.select(constexpr_config_id));
+                    enc_len = t_to_int<uint16>(pl.select(constexpr_enc_len));
+                    pl.select(constexpr_enc)->get_variant().to_binary(enc);
+                    enc_payload_len = t_to_int<uint16>(pl.select(constexpr_payload_len));
+                    pl.select(constexpr_payload)->get_variant().to_binary(enc_payload);
+                }
+
+                // TODO - decrypt
+
+                {
+                    s->printf(" > %s %i\n", constexpr_client_hello_type, client_hello_type);
+                    s->printf(" > %s %i %s\n", constexpr_kdf, kdf, tlsadvisor->kdf_id_string(kdf).c_str());
+                    s->printf(" > %s %i %s\n", constexpr_aead, aead, tlsadvisor->aead_alg_string(aead).c_str());
+                    s->printf(" > %s %i\n", constexpr_config_id, config_id);
+                    s->printf(" > %s %i\n", constexpr_enc_len, enc_len);
+                    dump_memory(enc, s, 16, 3, 0x0, dump_notrunc);
+                    s->printf("\n");
+                    s->printf(" > %s %i\n", constexpr_payload_len, enc_payload_len);
+                    dump_memory(enc_payload, s, 16, 3, 0x0, dump_notrunc);
+                    s->printf("\n");
+                }
             } break;
             case tls_extension_renegotiation_info: /* 0xff01 */ {
                 // RFC 5746 3.2.  Extension Definition

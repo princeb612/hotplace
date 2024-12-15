@@ -99,6 +99,9 @@ class tls_protection {
 
     crypto_key& get_cert();
     crypto_key& get_keyexchange();
+
+    void use_pre_master_secret(bool use);
+    bool use_pre_master_secret();
     /**
      * @brief   calc
      * @param   tls_session* session [in]
@@ -111,6 +114,7 @@ class tls_protection {
     const binary_t& get_item(tls_secret_t type);
     void set_item(tls_secret_t type, const binary_t& item);
     void set_item(tls_secret_t type, const byte_t* stream, size_t size);
+    void clear_item(tls_secret_t type);
 
     return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv, uint64 recordno);
 
@@ -125,12 +129,12 @@ class tls_protection {
      *          encrypt(&server_session, record, protected_record);
      *          decrypt(&client_session, protected_record, record);
      */
-    return_t decrypt_tls13(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, binary_t& plaintext, size_t aadlen, binary_t& tag,
+    return_t decrypt_tls13(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& tag,
                            stream_t* debugstream = nullptr);
     /**
      * @brief   TLS 1 decrypt
      */
-    return_t decrypt_tls1(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, binary_t& plaintext, stream_t* debugstream);
+    return_t decrypt_tls1(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, stream_t* debugstream);
     /**
      * @brief   verify
      * @sample
@@ -151,6 +155,7 @@ class tls_protection {
     crypto_key _cert;
     crypto_key _keyexchange;  // psk_ke, psk_dhe_ke
     std::map<tls_secret_t, binary_t> _kv;
+    bool _use_pre_master_secret;
 };
 
 class tls_session {
