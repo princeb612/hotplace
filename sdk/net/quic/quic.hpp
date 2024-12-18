@@ -27,7 +27,7 @@
 
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/types.hpp>
-#include <sdk/net/tlsspec/types.hpp>
+#include <sdk/net/tls1/types.hpp>
 
 namespace hotplace {
 namespace net {

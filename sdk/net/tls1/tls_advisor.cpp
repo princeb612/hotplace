@@ -9,8 +9,8 @@
  */
 
 #include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/net/tlsspec/tls.hpp>
-#include <sdk/net/tlsspec/tls_advisor.hpp>
+#include <sdk/net/tls1/tls.hpp>
+#include <sdk/net/tls1/tls_advisor.hpp>
 
 namespace hotplace {
 namespace net {
@@ -45,6 +45,7 @@ tls_advisor::~tls_advisor() {}
 void tls_advisor::load_resource() {
     load_tls_parameters();
     load_tls_extensiontype_values();
+    load_tls_quic();
     load_tls_aead_parameters();
 
     load_tls_version();
@@ -120,6 +121,13 @@ void tls_advisor::load_tls_extensiontype_values() {
     }
 }
 
+void tls_advisor::load_tls_quic() {
+    for (auto i = 0; i < sizeof_tls_quic_trans_param_descs; i++) {
+        auto item = tls_quic_trans_param_descs + i;
+        _quic_trans_param_descs.insert({item->code, item});
+    }
+}
+
 void tls_advisor::load_tls_aead_parameters() {
     for (auto i = 0; i < sizeof_tls_aead_alg_descs; i++) {
         auto item = tls_aead_alg_descs + i;
@@ -137,6 +145,7 @@ void tls_advisor::load_tls_version() {
 
     _tls_version.insert({0x0304, "TLS v1.3"});
     _tls_version.insert({0x0303, "TLS v1.2"});  // RFC 5246 A.1.  Record Layer
+    _tls_version.insert({0xfefc, "DTLS 1.3"});
     _tls_version.insert({0xfefd, "DTLS 1.2"});
 
     // deprecated
@@ -379,6 +388,42 @@ std::string tls_advisor::sni_nametype_string(uint16 code) {
     }
     return value;
 }
+
+bool tls_advisor::is_basedon_tls13(uint16 ver) { return (tls_13 == ver) || (dtls_13 == ver); }
+
+bool tls_advisor::is_kindof_tls(uint16 ver) {
+    bool ret = false;
+    switch (ver) {
+        case tls_10:
+        case tls_11:
+        case tls_12:
+        case tls_13:
+            ret = true;
+            break;
+        default:
+            break;
+    }
+    return ret;
+}
+
+bool tls_advisor::is_kindof_dtls(uint16 ver) {
+    bool ret = false;
+    switch (ver) {
+        case dtls_12:
+        case dtls_13:
+            ret = true;
+            break;
+        default:
+            break;
+    }
+    return ret;
+}
+
+bool is_basedon_tls13(uint16 ver) { return tls_advisor::get_instance()->is_basedon_tls13(ver); }
+
+bool is_kindof_tls(uint16 ver) { return tls_advisor::get_instance()->is_kindof_tls(ver); }
+
+bool is_kindof_dtls(uint16 ver) { return tls_advisor::get_instance()->is_kindof_dtls(ver); }
 
 }  // namespace net
 }  // namespace hotplace

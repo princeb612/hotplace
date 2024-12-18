@@ -21,10 +21,21 @@ transcript_hash::transcript_hash(hash_algorithm_t alg) : _handle(nullptr) {
     hash.init(_handle);
 }
 
+transcript_hash::transcript_hash(const transcript_hash& rhs) {
+    _shared.make_share(this);
+
+    openssl_hash hash;
+    hash.dup(&_handle, rhs._handle);
+}
+
 transcript_hash::~transcript_hash() {
     openssl_hash hash;
     hash.close(_handle);
 }
+
+transcript_hash* transcript_hash::dup() { return new transcript_hash(*this); }
+
+return_t transcript_hash::update(const binary_t& message) { return update(&message[0], message.size()); }
 
 return_t transcript_hash::update(const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;

@@ -17,8 +17,8 @@
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
-#include <sdk/net/tlsspec/tls.hpp>
-#include <sdk/net/tlsspec/tls_advisor.hpp>
+#include <sdk/net/tls1/tls.hpp>
+#include <sdk/net/tls1/tls_advisor.hpp>
 
 namespace hotplace {
 namespace net {
@@ -37,7 +37,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
             __leave2;
         }
 
-        size_t begin = pos;
+        size_t extpos = pos;
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
@@ -56,6 +56,11 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
 
             extension_type = t_to_int<uint16>(pl.select(constexpr_extension_type));
             ext_len = t_to_int<uint16>(pl.select(constexpr_ext_len));
+        }
+
+        if (size - pos < ext_len) {
+            ret = errorcode_t::bad_data;
+            __leave2;
         }
 
         s->autoindent(3);
@@ -330,12 +335,72 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 //         case server_hello: uint16 selected_identity;
                 //     };
                 // } PreSharedKeyExtension;
+                //
+                // RFC 9257 Guidance for External Pre-Shared Key (PSK) Usage in TLS
 
-                s->printf(" > pre shared key\n");
-                dump_memory(stream + tpos, ext_len, s, 16, 3, 0x0, dump_notrunc);
-                s->printf("\n");
-
+                // s->printf(" > pre shared key\n");
+                // dump_memory(stream + tpos, ext_len, s, 16, 3, 0x0, dump_notrunc);
+                // s->printf("\n");
                 // pos += ext_len;
+
+                switch (hstype) {
+                    case tls_handshake_client_hello: {
+                        constexpr char constexpr_psk_identities_len[] = "psk identities len";
+                        constexpr char constexpr_psk_identity_len[] = "psk identity len";
+                        constexpr char constexpr_psk_identity[] = "psk identity";
+                        constexpr char constexpr_obfuscated_ticket_age[] = "obfuscated ticket age";
+                        constexpr char constexpr_psk_binders_len[] = "psk binders len";
+                        constexpr char constexpr_psk_binders[] = "psk binders";
+                        uint16 psk_identities_len = 0;
+                        uint16 psk_identity_len = 0;
+                        binary_t psk_identity;
+                        uint32 obfuscated_ticket_age = 0;
+                        uint16 psk_binders_len = 0;
+                        binary_t psk_binders;
+                        {
+                            payload pl;
+                            pl << new payload_member(uint16(0), true, constexpr_psk_identities_len)
+                               << new payload_member(uint16(0), true, constexpr_psk_identity_len) << new payload_member(binary_t(), constexpr_psk_identity)
+                               << new payload_member(uint32(0), true, constexpr_obfuscated_ticket_age)
+                               << new payload_member(uint16(0), true, constexpr_psk_binders_len) << new payload_member(binary_t(), constexpr_psk_binders);
+                            pl.set_reference_value(constexpr_psk_identity, constexpr_psk_identity_len);
+                            pl.set_reference_value(constexpr_psk_binders, constexpr_psk_binders_len);
+                            pl.read(stream, size, pos);
+
+                            psk_identities_len = t_to_int<uint16>(pl.select(constexpr_psk_identities_len));
+                            psk_identity_len = t_to_int<uint16>(pl.select(constexpr_psk_identity_len));
+                            pl.select(constexpr_psk_identity)->get_variant().to_binary(psk_identity);
+                            obfuscated_ticket_age = t_to_int<uint32>(pl.select(constexpr_obfuscated_ticket_age));
+                            psk_binders_len = t_to_int<uint16>(pl.select(constexpr_psk_binders_len));
+                            pl.select(constexpr_psk_binders)->get_variant().to_binary(psk_binders);
+                        }
+                        {
+                            s->printf(" > %s 0x%04x(%i)\n", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
+                            dump_memory(psk_identity, s, 16, 3, 0x0, dump_notrunc);
+                            s->printf("\n");
+                            s->printf(" > %s 0x%08x\n", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
+                            s->printf(" > %s 0x%04x(%i)\n", constexpr_psk_binders_len, psk_binders_len, psk_binders_len);
+                            dump_memory(psk_binders, s, 16, 3, 0x0, dump_notrunc);
+                            s->printf("\n");
+                        }
+                    } break;
+                    case tls_handshake_server_hello: {
+                        constexpr char constexpr_selected_identity[] = "selected identity";
+                        uint16 selected_identity = 0;
+                        {
+                            payload pl;
+                            pl << new payload_member(uint16(0), true, constexpr_selected_identity);
+                            pl.read(stream, size, pos);
+
+                            selected_identity = t_to_int<uint16>(pl.select(constexpr_selected_identity));
+                        }
+                        {
+                            //
+                            s->printf(" > %s %i\n", constexpr_selected_identity, selected_identity);
+                        }
+                    } break;
+                }
+
             } break;
             case tls_extension_early_data: /* 0x002a */ {
                 // studying
@@ -649,7 +714,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 pos += ext_len;
             } break;
             default:
-                s->printf("### studying %04x @handshake[0x%08x]\n", extension_type, (uint64)begin);
+                s->printf("### studying %04x @handshake[0x%08x]\n", extension_type, (uint64)extpos);
                 pos += ext_len;
                 break;
         }

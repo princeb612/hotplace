@@ -544,6 +544,26 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
     return ret;
 }
 
+return_t openssl_hash::dup(hash_context_t** duplicated, hash_context_t* handle) {
+    return_t ret = errorcode_t::success;
+    openssl_hash_context_t* context = nullptr;
+    __try2 {
+        if (nullptr == duplicated || nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        openssl_hash_context_t* rhs = (openssl_hash_context_t*)handle;
+        __try_new_catch(context, new openssl_hash_context_t(*rhs), ret, __leave2);
+
+        *duplicated = context;
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 crypt_poweredby_t openssl_hash::get_type() { return crypt_poweredby_t::openssl; }
 
 }  // namespace crypto

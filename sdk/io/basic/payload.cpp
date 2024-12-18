@@ -60,10 +60,65 @@ payload& payload::set_reference_value(const std::string& name, const std::string
     return *this;
 }
 
+payload& payload::set_group_condition(const std::string& group, const std::string& name, std::function<bool(payload_member*)> discriminant) {
+    if (discriminant) {
+        cond_t cond;
+        cond.group = group;
+        cond.discriminant = discriminant;
+        _cond_map.insert({name, cond});
+    }
+    return *this;
+}
+
+payload& payload::set_group_condition(const std::string& group, uint8 value, std::function<bool(uint8)> discriminant) {
+    if (discriminant) {
+        bool enable = discriminant(value);
+        set_group(group, enable);
+    }
+    return *this;
+}
+
+payload& payload::set_group_condition(const std::string& group, uint16 value, std::function<bool(uint16)> discriminant) {
+    if (discriminant) {
+        bool enable = discriminant(value);
+        set_group(group, enable);
+    }
+    return *this;
+}
+
+payload& payload::set_group_condition(const std::string& group, uint32 value, std::function<bool(uint32)> discriminant) {
+    if (discriminant) {
+        bool enable = discriminant(value);
+        set_group(group, enable);
+    }
+    return *this;
+}
+
 return_t payload::write(binary_t& bin) {
     return_t ret = errorcode_t::success;
     for (auto item : _members) {
         bool condition = get_group_condition(item->get_group());
+        if (condition) {
+            item->write(bin);
+        }
+    }
+    return ret;
+}
+
+return_t payload::write(binary_t& bin, const std::set<std::string>& groups) {
+    return_t ret = errorcode_t::success;
+    bool condition = false;
+    for (auto item : _members) {
+        condition = false;
+        auto const& group = item->get_group();
+        if (group.empty()) {
+            condition = true;
+        } else {
+            auto iter = groups.find(group);
+            if (groups.end() != iter) {
+                condition = true;
+            }
+        }
         if (condition) {
             item->write(bin);
         }
@@ -102,6 +157,20 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
         std::list<payload_member*> list_size_unknown;
         std::set<payload_member*> set_once_read;
 
+        auto lambda_readitem = [&](payload_member* item, const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read) -> void {
+            item->read(ptr, size_ptr, offset, size_read);
+            if (false == _cond_map.empty()) {
+                auto const& name = item->get_name();
+                auto lbound = _cond_map.lower_bound(name);
+                auto ubound = _cond_map.upper_bound(name);
+                for (auto iter = lbound; iter != ubound; iter++) {
+                    auto cond = iter->second;
+                    bool enable = cond.discriminant(item);
+                    set_group(cond.group, enable);
+                }
+            }
+        };
+
         {
             for (auto item : _members) {
                 bool condition = get_group_condition(item->get_group());
@@ -113,7 +182,7 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
                 uint16 space = 0;
                 if (item->encoded()) {
                     if (try_read) {
-                        item->read(base, size, offset, &size_item);
+                        lambda_readitem(item, base, size, offset, &size_item);
                         offset += size_item;
                         set_once_read.insert(item);
                     } else {
@@ -127,7 +196,7 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
                         if (ref) {
                             space = ref->get_reference_value();
                             item->reserve(space);
-                            item->read(base, size, offset, &size_item);
+                            lambda_readitem(item, base, size, offset, &size_item);
                             offset += size_item;
                             set_once_read.insert(item);
                         } else {
@@ -135,7 +204,7 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
                         }
                     } else {
                         if (try_read) {
-                            item->read(base, size, offset, &size_item);
+                            lambda_readitem(item, base, size, offset, &size_item);
                             offset += size_item;
                             set_once_read.insert(item);
                         } else {
@@ -173,7 +242,7 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
                 auto iter = set_once_read.find(item);
                 if (set_once_read.end() == iter) {
                     // not read yet
-                    item->read(base, size, offset, &size_item);
+                    lambda_readitem(item, base, size, offset, &size_item);
                     offset += size_item;
                 } else {
                     // once read

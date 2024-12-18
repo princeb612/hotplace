@@ -508,10 +508,10 @@ void test_rfc_9001_a5() {
     binary_t bin_hp;
     binary_t bin_ku;
     const char* alg = "sha256";
-    kdf.hkdf_expand_label(bin_key, alg, 32, bin_secret, str2bin("quic key"), context);
-    kdf.hkdf_expand_label(bin_iv, alg, 12, bin_secret, str2bin("quic iv"), context);
-    kdf.hkdf_expand_label(bin_hp, alg, 32, bin_secret, str2bin("quic hp"), context);
-    kdf.hkdf_expand_label(bin_ku, alg, 32, bin_secret, str2bin("quic ku"), context);
+    kdf.hkdf_expand_tls13_label(bin_key, alg, 32, bin_secret, str2bin("quic key"), context);
+    kdf.hkdf_expand_tls13_label(bin_iv, alg, 12, bin_secret, str2bin("quic iv"), context);
+    kdf.hkdf_expand_tls13_label(bin_hp, alg, 32, bin_secret, str2bin("quic hp"), context);
+    kdf.hkdf_expand_tls13_label(bin_ku, alg, 32, bin_secret, str2bin("quic ku"), context);
     _logger->hdump("> key", bin_key, 16, 3);
     _test_case.assert(bin_key == base16_decode("c6d98ff3441c3fe1b2182094f69caa2ed4b716b65488960a7a984979fb23e1c8"), __FUNCTION__, "key");
     _logger->hdump("> iv", bin_iv, 16, 3);

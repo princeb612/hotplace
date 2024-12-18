@@ -21,6 +21,7 @@
 #include <sdk/base/template.hpp>
 #include <sdk/io/basic/types.hpp>
 #include <sdk/io/system/types.hpp>
+#include <set>
 
 namespace hotplace {
 namespace io {
@@ -250,8 +251,74 @@ class payload {
      *           pl.read(stream, 12, pos);
      */
     payload& set_reference_value(const std::string& name, const std::string& ref, uint8 multiple = 1);
+    /**
+     * @brief   heuristic read
+     * @sample
+     *          // sketch
+     *
+     *          // case.1
+     *          // 00000000 : 01 00 05 64 61 74 61 31 00 05 64 61 74 61 32 -- | ...data1..data2
+     *          // case.2
+     *          // 00000000 : 00 00 05 64 61 74 61 31 -- -- -- -- -- -- -- -- | ...data1
+     *
+     *          const char* case = "01 00 05 64 61 74 61 31 00 05 64 61 74 61 32";
+     *          binary_t bin = base16_decode_rfc(case);
+     *          byte_t* stream = &bin[0];
+     *          size_t size = stream.size();
+     *          size_t pos = 0;
+     *
+     *          pl << new payload_member(uint8(0), "hdr")
+     *             << new payload_member(uint16(0), true, "len1", "group1")
+     *             << new payload_member(binary_t(), "data1", "group1")
+     *             << new payload_member(uint16(0), true, "len2", "group2")
+     *             << new payload_member(binary_t(), "data2", "group2");
+     *          auto lambda = [](payload_member* member) -> bool {
+     *              // value(hdr)   group2
+     *              //     01       enable
+     *              //     00       disable
+     *              auto hdr = t_to_int<uint8>(member);
+     *              return (0 != hdr);
+     *          };
+     *          pl.set_group_condition("group2", "hdr", lambda);
+     *          pl.read(stream, size, pos);
+     *
+     *          uint8 hdr = t_to_int<uint8>(pl.select("hdr"));
+     *          uint16 len1 = 0;
+     *          uint16 len2 = 0;
+     *          binary_t data1;
+     *          binary_t data2;
+     *
+     *          len1 = t_to_int<uint16>(pl.select("len1"));
+     *          pl.select("data1")->get_variant().to_binary(data1);
+     *
+     *          bool cond_group2 = pl.get_group_condition("group2");
+     *          if (cond_group2) {
+     *              len2 = t_to_int<uint16>(pl.select("len2"));
+     *              pl.select("data2")->get_variant().to_binary(data2);
+     *          }
+     *
+     *          // case.1
+     *          write(bin_nogroup, {});                   // no group
+     *          // 00000000 : 01 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- | .
+     *          write(bin_group1, {"group1"});            // no group2
+     *          // 00000000 : 00 00 05 64 61 74 61 31 -- -- -- -- -- -- -- -- | ...data1
+     *          write(bin_group2, {"group2"});            // no group1
+     *          // 00000000 : 00 00 05 64 61 74 61 32 -- -- -- -- -- -- -- -- | ...data2
+     *          write(bin_groups, {"group1", "group2"});  // all group
+     *          // 00000000 : 01 00 05 64 61 74 61 31 00 05 64 61 74 61 32 -- | ...data1..data2
+     */
+    payload& set_group_condition(const std::string& group, const std::string& name, std::function<bool(payload_member*)> discriminant);
+    /**
+     * @sample
+     *          uint8 val = 0;
+     *          pl.set_group_condition("group2", val, [](uint8 val) -> bool { return (1 != value); });
+     */
+    payload& set_group_condition(const std::string& group, uint8 value, std::function<bool(uint8)> discriminant);
+    payload& set_group_condition(const std::string& group, uint16 value, std::function<bool(uint16)> discriminant);
+    payload& set_group_condition(const std::string& group, uint32 value, std::function<bool(uint32)> discriminant);
 
     return_t write(binary_t& bin);
+    return_t write(binary_t& bin, const std::set<std::string>& groups);
     return_t read(const binary_t& bin);
     return_t read(const byte_t* p, size_t size);
     return_t read(const binary_t& bin, size_t& pos);
@@ -281,6 +348,11 @@ class payload {
     // read(parse)
     std::map<std::string, payload_member*> _members_map;  // search
     std::map<std::string, bool> _option;                  // map<group, true/false>
+    struct cond_t {
+        std::string group;
+        std::function<bool(payload_member*)> discriminant;
+    };
+    std::multimap<std::string, cond_t> _cond_map;
 };
 
 template <typename T>

@@ -52,15 +52,15 @@
  *                Figure 1: Message Flow for Full TLS Handshake
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLSSPEC__
-#define __HOTPLACE_SDK_NET_TLSSPEC__
+#ifndef __HOTPLACE_SDK_NET_TLS1X__
+#define __HOTPLACE_SDK_NET_TLS1X__
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/types.hpp>
 #include <sdk/crypto/crypto/types.hpp>
-#include <sdk/net/tlsspec/types.hpp>
+#include <sdk/net/tls1/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -83,7 +83,11 @@ class tls_protection {
      * @remarks after server_hello
      */
     uint16 get_cipher_suite();
-    void set_cipher_suite(uint16 alg);
+    void set_cipher_suite(uint16 ciphersuite);
+    uint16 get_record_version();
+    void set_record_version(uint16 version);
+    bool is_kindof_tls();
+    bool is_kindof_dtls();
     uint16 get_tls_version();
     void set_tls_version(uint16 version);
     /**
@@ -148,7 +152,8 @@ class tls_protection {
 
    private:
     uint8 _mode;  // see tls_mode_t
-    uint16 _alg;
+    uint16 _ciphersuite;
+    uint16 _record_version;
     uint16 _version;
     transcript_hash* _transcript_hash;
     critical_section _lock;
@@ -208,6 +213,10 @@ return_t tls_dump_alert(stream_t* s, tls_session* session, const byte_t* stream,
 return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role = role_server);
 return_t tls_dump_application_data(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+
+bool is_basedon_tls13(uint16 ver);
+bool is_kindof_tls(uint16 ver);
+bool is_kindof_dtls(uint16 ver);
 
 }  // namespace net
 }  // namespace hotplace

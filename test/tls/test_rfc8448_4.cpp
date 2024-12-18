@@ -82,11 +82,8 @@ void test_rfc8448_4() {
             "9d";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("client_hello", &rfc8448_session, bin_record, role_client);
-
-        // rfc8448_session.get_tls_protection().
-        // test_transcript_hash(&rfc8448_session, base16_decode_rfc(""));
     }
     {
-        // ...
+        //
     }
 }

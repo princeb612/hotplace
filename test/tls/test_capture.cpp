@@ -13,7 +13,7 @@
 #include "sample.hpp"
 
 void test_capture() {
-    _test_case.begin("https://github.com/syncsynchalt/illustrated-tls13");
+    _test_case.begin("https://github.com/syncsynchalt/illustrated-tls13/captures/");
 
     /**
      * https://github.com/syncsynchalt/illustrated-tls13/captures/
@@ -36,19 +36,19 @@ void test_capture() {
     auto& protection = session.get_tls_protection();
     protection.use_pre_master_secret(true);
     // SERVER_HANDSHAKE_TRAFFIC_SECRET (server_handshake_traffic_secret)
-    protection.set_item(tls_secret_handshake_server,
+    protection.set_item(server_handshake_traffic_secret,
                         base16_decode_rfc("23323da031634b241dd37d61032b62a4f450584d1f7f47983ba2f7cc0cdcc39a68f481f2b019f9403a3051908a5d1622"));
     // CLIENT_HANDSHAKE_TRAFFIC_SECRET (client_handshake_traffic_secret)
-    protection.set_item(tls_secret_handshake_client,
+    protection.set_item(client_handshake_traffic_secret,
                         base16_decode_rfc("db89d2d6df0e84fed74a2288f8fd4d0959f790ff23946cdf4c26d85e51bebd42ae184501972f8d30c4a3e4a3693d0ef0"));
     // EXPORTER_SECRET
     protection.set_item(tls_secret_exporter_master,
                         base16_decode_rfc("5da16dd8325dd8279e4535363384d9ad0dbe370538fc3ad74e53d533b77ac35ee072d56c90871344e6857ccb2efc9e14"));
     // SERVER_TRAFFIC_SECRET_0 (server_application_traffic_secret_0)
-    protection.set_item(tls_secret_application_server,
+    protection.set_item(server_application_traffic_secret_0,
                         base16_decode_rfc("86c967fd7747a36a0685b4ed8d0e6b4c02b4ddaf3cd294aa44e9f6b0183bf911e89a189ba5dfd71fccffb5cc164901f8"));
     // CLIENT_TRAFFIC_SECRET_0 (client_application_traffic_secret_0)
-    protection.set_item(tls_secret_application_client,
+    protection.set_item(client_application_traffic_secret_0,
                         base16_decode_rfc("9e47af27cb60d818a9ea7d233cb5ed4cc525fcd74614fb24b0ee59acb8e5aa7ff8d88b89792114208fec291a6fa96bad"));
     {
         const char* record =
@@ -85,7 +85,8 @@ void test_capture() {
     }
     {
         const char* record =
-            "14030300010117030300459ff9b063175177322a46dd9896f3c3bb820ab51743ebc25fdadd53454b73deb54cc7248d411a18bccf657a960824e9a19364837c350a69a88d4bf635c85eb874aebc9dfde8";
+            "14030300010117030300459ff9b063175177322a46dd9896f3c3bb820ab51743ebc25fdadd53454b73deb54cc7248d411a18bccf657a960824e9a19364837c350a69a88d4bf635c85e"
+            "b874aebc9dfde8";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("change_cipher_spec ... client finished", &session, bin_record, role_client);
     }

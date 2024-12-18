@@ -159,6 +159,8 @@ int main(int argc, char** argv) {
     test_tls13_xargs_org();
     // https://tls12.xargs.org/
     test_tls12_xargs_org();
+    // https://github.com/syncsynchalt/illustrated-tls13/captures/
+    test_capture();
 
     // RFC 8448 Example Handshake Traces for TLS 1.3
     test_rfc8448_2();
@@ -168,11 +170,7 @@ int main(int argc, char** argv) {
     test_rfc8448_6();
     test_rfc8448_7();
 
-    test_capture();
-
-    // TODO
-    // https://dtls13.xargs.org/
-    // test_dtls13_xargs_org();
+    test_dtls_xargs_org();
 
     openssl_cleanup();
 

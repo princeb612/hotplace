@@ -13,7 +13,7 @@ file (GLOB FILEGROUP_SDK_HEADER_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/http/http3/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/server/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.hpp
-    ${PROJECT_SOURCE_DIR}/sdk/net/tlsspec/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls1/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/quic/*.hpp
 )
 
@@ -26,7 +26,7 @@ file (GLOB FILEGROUP_SDK_SOURCE_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/http/http3/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/server/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/net/tlsspec/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls1/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/quic/*.cpp
 )
 

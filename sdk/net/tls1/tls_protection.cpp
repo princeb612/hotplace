@@ -19,8 +19,8 @@
 #include <sdk/crypto/crypto/crypto_hash.hpp>
 #include <sdk/crypto/crypto/crypto_mac.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
-#include <sdk/net/tlsspec/tls.hpp>
-#include <sdk/net/tlsspec/tls_advisor.hpp>
+#include <sdk/net/tls1/tls.hpp>
+#include <sdk/net/tls1/tls_advisor.hpp>
 // debug
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
@@ -28,7 +28,8 @@
 namespace hotplace {
 namespace net {
 
-tls_protection::tls_protection(uint8 mode) : _mode(mode), _alg(0), _version(0), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
+tls_protection::tls_protection(uint8 mode)
+    : _mode(mode), _ciphersuite(0), _record_version(0), _version(0), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
 
 tls_protection::~tls_protection() {
     if (_transcript_hash) {
@@ -38,9 +39,17 @@ tls_protection::~tls_protection() {
 
 uint8 tls_protection::get_mode() { return _mode; }
 
-uint16 tls_protection::get_cipher_suite() { return _alg; }
+uint16 tls_protection::get_cipher_suite() { return _ciphersuite; }
 
-void tls_protection::set_cipher_suite(uint16 alg) { _alg = alg; }
+void tls_protection::set_cipher_suite(uint16 ciphersuite) { _ciphersuite = ciphersuite; }
+
+uint16 tls_protection::get_record_version() { return _record_version; }
+
+void tls_protection::set_record_version(uint16 version) { _record_version = version; }
+
+bool tls_protection::is_kindof_tls() { return (false == tls_advisor::get_instance()->is_kindof_dtls(_record_version)); }
+
+bool tls_protection::is_kindof_dtls() { return tls_advisor::get_instance()->is_kindof_dtls(_record_version); }
 
 uint16 tls_protection::get_tls_version() { return _version; }
 
@@ -120,7 +129,11 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
 
         auto lambda_expand_label = [&](tls_secret_t sec, binary_t& okm, const char* cipher_suite, uint16 dlen, const binary_t& secret, const char* label,
                                        const binary_t& context) -> void {
-            kdf.hkdf_expand_label(okm, cipher_suite, dlen, secret, str2bin(label), context);
+            if (session->get_tls_protection().is_kindof_dtls()) {
+                kdf.hkdf_expand_dtls13_label(okm, cipher_suite, dlen, secret, str2bin(label), context);
+            } else {
+                kdf.hkdf_expand_tls13_label(okm, cipher_suite, dlen, secret, str2bin(label), context);
+            }
             _kv[sec] = okm;
         };
         auto lambda_extract = [&](tls_secret_t sec, binary_t& prk, const char* cipher_suite, const binary_t& salt, const binary_t& ikm) -> void {
@@ -146,8 +159,13 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
              *             v
              *   PSK ->  HKDF-Extract = Early Secret
              *             |
-             *             +-----> Derive-Secret(., "ext binder" | "res binder", "")
+             *             +-----> Derive-Secret(., "ext binder"
+             *             |                      | "res binder"
+             *             |                      | "imp binder", "")
              *             |                     = binder_key
+             *             |     ; RFC 9258 Importing External Pre-Shared Keys (PSKs) for TLS 1.3
+             *             |       5.2.  Binder Key Derivation
+             *             |       Imported PSKs use the string "imp binder" rather than "ext binder" or "res binder" when deriving binder_key.
              *             |
              *             +-----> Derive-Secret(., "c e traffic", ClientHello)
              *             |                     = client_early_traffic_secret
@@ -228,11 +246,15 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
 
             // calc
             binary_t okm;
-            if (tls_mode_tls & get_mode()) {
+            {
                 lambda_expand_label(tls_secret_handshake_client_key, okm, hashalg, keysize, secret_handshake_client, "key", context);
                 lambda_expand_label(tls_secret_handshake_client_iv, okm, hashalg, 12, secret_handshake_client, "iv", context);
                 lambda_expand_label(tls_secret_handshake_server_key, okm, hashalg, keysize, secret_handshake_server, "key", context);
                 lambda_expand_label(tls_secret_handshake_server_iv, okm, hashalg, 12, secret_handshake_server, "iv", context);
+            }
+            if (tls_mode_dtls & get_mode()) {
+                lambda_expand_label(tls_secret_handshake_client_sn_key, okm, hashalg, keysize, secret_handshake_client, "sn", context);
+                lambda_expand_label(tls_secret_handshake_server_sn_key, okm, hashalg, keysize, secret_handshake_server, "sn", context);
             }
             if (tls_mode_quic & get_mode()) {
                 lambda_expand_label(tls_secret_handshake_quic_client_key, okm, hashalg, keysize, secret_handshake_client, "quic key", context);
@@ -288,7 +310,7 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
 
             // calc
             binary_t okm;
-            if (tls_mode_tls & get_mode()) {
+            {
                 lambda_expand_label(tls_secret_application_client_key, okm, hashalg, keysize, secret_application_client, "key", context);
                 lambda_expand_label(tls_secret_application_client_iv, okm, hashalg, 12, secret_application_client, "iv", context);
                 lambda_expand_label(tls_secret_application_server_key, okm, hashalg, keysize, secret_application_server, "key", context);
@@ -554,10 +576,18 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
             ret = errorcode_t::not_supported;
             __leave2;
         }
+        auto& protection = session->get_tls_protection();
+        auto record_version = protection.get_record_version();
+        size_t content_header_size = 0;
+        if (tlsadvisor->is_kindof_dtls(record_version)) {
+            content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
+        } else {
+            content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
+        }
 
         auto tagsize = hint->tagsize;
 
-        size_t aadlen = sizeof(tls_content_t);
+        size_t aadlen = content_header_size;
         binary_t aad;
         binary_append(aad, stream + pos, aadlen);
         binary_append(tag, stream + pos + aadlen + size - tagsize, tagsize);
@@ -647,6 +677,15 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_role_t role, con
         }
         auto ivsize = sizeof_iv(hint_cipher);
 
+        auto& protection = session->get_tls_protection();
+        auto record_version = protection.get_record_version();
+        size_t content_header_size = 0;
+        if (tlsadvisor->is_kindof_dtls(record_version)) {
+            content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
+        } else {
+            content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
+        }
+
         crypt_context_t* handle = nullptr;
         openssl_crypt crypt;
 
@@ -665,8 +704,8 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_role_t role, con
 
         const binary_t& key = get_item(secret_key);
         binary_t iv;
-        binary_append(iv, stream + sizeof(tls_content_t), ivsize);
-        size_t bpos = sizeof(tls_content_t) + ivsize;
+        binary_append(iv, stream + content_header_size, ivsize);
+        size_t bpos = content_header_size + ivsize;
 
         ret = crypt.open(&handle, hint->cipher, hint->mode, key, iv);
         if (errorcode_t::success == ret) {

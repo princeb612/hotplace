@@ -13,7 +13,7 @@
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/net/quic/quic.hpp>
-#include <sdk/net/tlsspec/types.hpp>
+#include <sdk/net/tls1/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -140,30 +140,30 @@ return_t quic_protection::calc(const binary_t& salt, const binary_t& context, ui
     _kv[quic_initial_secret] = bin_initial_secret;
 
     if (tls_mode_client & mode) {
-        kdf.hkdf_expand_label(bin_client_initial_secret, alg, 32, bin_initial_secret, str2bin("client in"), context);
+        kdf.hkdf_expand_tls13_label(bin_client_initial_secret, alg, 32, bin_initial_secret, str2bin("client in"), context);
         _kv[quic_client_secret] = bin_client_initial_secret;
 
-        kdf.hkdf_expand_label(bin, alg, 16, bin_client_initial_secret, str2bin("quic key"), context);
+        kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_client_initial_secret, str2bin("quic key"), context);
         _kv[quic_client_key] = bin;
 
-        kdf.hkdf_expand_label(bin, alg, 12, bin_client_initial_secret, str2bin("quic iv"), context);
+        kdf.hkdf_expand_tls13_label(bin, alg, 12, bin_client_initial_secret, str2bin("quic iv"), context);
         _kv[quic_client_iv] = bin;
 
-        kdf.hkdf_expand_label(bin, alg, 16, bin_client_initial_secret, str2bin("quic hp"), context);
+        kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_client_initial_secret, str2bin("quic hp"), context);
         _kv[quic_client_hp] = bin;
     }
 
     if (tls_mode_server & mode) {
-        kdf.hkdf_expand_label(bin_server_initial_secret, alg, 32, bin_initial_secret, str2bin("server in"), context);
+        kdf.hkdf_expand_tls13_label(bin_server_initial_secret, alg, 32, bin_initial_secret, str2bin("server in"), context);
         _kv[quic_server_secret] = bin_server_initial_secret;
 
-        kdf.hkdf_expand_label(bin, alg, 16, bin_server_initial_secret, str2bin("quic key"), context);
+        kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_server_initial_secret, str2bin("quic key"), context);
         _kv[quic_server_key] = bin;
 
-        kdf.hkdf_expand_label(bin, alg, 12, bin_server_initial_secret, str2bin("quic iv"), context);
+        kdf.hkdf_expand_tls13_label(bin, alg, 12, bin_server_initial_secret, str2bin("quic iv"), context);
         _kv[quic_server_iv] = bin;
 
-        kdf.hkdf_expand_label(bin, alg, 16, bin_server_initial_secret, str2bin("quic hp"), context);
+        kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_server_initial_secret, str2bin("quic hp"), context);
         _kv[quic_server_hp] = bin;
     }
 

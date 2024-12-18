@@ -188,3 +188,85 @@ void test_payload_uint24() {
         _test_case.assert(expect == bin_dump, __FUNCTION__, "payload /w i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
     }
 }
+
+void test_group(const char* input, bool expect) {
+    constexpr char constexpr_hdr[] = "hdr";
+    constexpr char constexpr_len1[] = "len1";
+    constexpr char constexpr_data1[] = "data1";
+    constexpr char constexpr_group1[] = "group1";
+    constexpr char constexpr_len2[] = "len2";
+    constexpr char constexpr_data2[] = "data2";
+    constexpr char constexpr_group2[] = "group2";
+
+    binary_t bin = base16_decode_rfc(input);
+    size_t pos = 0;
+
+    bool cond_group2 = false;
+    uint8 hdr = 0;
+    uint16 len1 = 0;
+    binary_t data1;
+    uint16 len2 = 0;
+    binary_t data2;
+    binary_t dump_group1;
+    binary_t dump_groups;
+    binary_t dump_all;
+    {
+        payload pl;
+        pl << new payload_member(uint8(0), constexpr_hdr)                            //
+           << new payload_member(uint16(0), true, constexpr_len1, constexpr_group1)  // group1
+           << new payload_member(binary_t(), constexpr_data1, constexpr_group1)      // group1
+           << new payload_member(uint16(0), true, constexpr_len2, constexpr_group2)  // group2
+           << new payload_member(binary_t(), constexpr_data2, constexpr_group2);     // group2
+        // value(hdr)   group2
+        //     01       enable
+        //     00       disable
+        auto lambda = [](payload_member* member) -> bool {
+            auto hdr = t_to_int<uint8>(member);
+            return (0 != hdr);
+        };
+        pl.set_group_condition(constexpr_group2, constexpr_hdr, lambda);
+        pl.set_reference_value(constexpr_data1, constexpr_len1);
+        pl.set_reference_value(constexpr_data2, constexpr_len2);
+
+        pl.read(&bin[0], bin.size(), pos);
+
+        cond_group2 = pl.get_group_condition(constexpr_group2);
+
+        hdr = t_to_int<uint8>(pl.select(constexpr_hdr));
+        len1 = t_to_int<uint16>(pl.select(constexpr_len1));
+        pl.select(constexpr_data1)->get_variant().to_binary(data1);
+
+        if (cond_group2) {
+            len2 = t_to_int<uint16>(pl.select(constexpr_len2));
+            pl.select(constexpr_data2)->get_variant().to_binary(data2);
+        }
+
+        pl.write(dump_group1, {"group1"});         // write including "group1"
+        pl.write(dump_all, {"group1", "group2"});  // write including "group1" and "group2"
+    }
+    {
+        _logger->writeln("hdr %i", hdr);
+        _logger->writeln("len1 %i", len1);
+        _logger->dump(data1, 16, 3);
+        if (cond_group2) {
+            _logger->writeln("len2 %i", len2);
+            _logger->dump(data2, 16, 3);
+        }
+        _logger->hdump("dump except group2", dump_group1, 16, 3);
+        _logger->hdump("dump all", dump_all, 16, 3);
+    }
+
+    _test_case.assert(cond_group2 == expect, __FUNCTION__, "group");
+}
+
+void test_group() {
+    _test_case.begin("group");
+    // case.1
+    // 00000000 : 01 00 05 64 61 74 61 31 00 05 64 61 74 61 32 -- | ...data1..data2
+    // case.2
+    // 00000000 : 00 00 05 64 61 74 61 31 -- -- -- -- -- -- -- -- | ...data1
+    const char* case1 = "01 00 05 64 61 74 61 31 00 05 64 61 74 61 32";
+    const char* case2 = "00 00 05 64 61 74 61 31";
+    test_group(case1, true);
+    test_group(case2, false);
+}

@@ -75,11 +75,15 @@ class crypto_hash_builder {
 class transcript_hash {
    public:
     transcript_hash(hash_algorithm_t alg);
+    transcript_hash(const transcript_hash& rhs);
     ~transcript_hash();
+
+    transcript_hash* dup();
 
     /**
      * @brief   update only
      */
+    return_t update(const binary_t& message);
     return_t update(const byte_t* stream, size_t size);
     /**
      * @brief   update and digest

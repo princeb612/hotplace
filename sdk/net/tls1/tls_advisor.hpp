@@ -9,15 +9,15 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLSADVISOR__
-#define __HOTPLACE_SDK_NET_TLSADVISOR__
+#ifndef __HOTPLACE_SDK_NET_TLS1X_TLSADVISOR__
+#define __HOTPLACE_SDK_NET_TLS1X_TLSADVISOR__
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/types.hpp>
 #include <sdk/crypto/crypto/types.hpp>
-#include <sdk/net/tlsspec/types.hpp>
+#include <sdk/net/tls1/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -132,11 +132,16 @@ class tls_advisor {
     std::string compression_method_string(uint8 code);
     std::string sni_nametype_string(uint16 code);
 
+    bool is_basedon_tls13(uint16 ver);
+    bool is_kindof_tls(uint16 ver);
+    bool is_kindof_dtls(uint16 ver);
+
    protected:
     tls_advisor();
     void load_resource();
     void load_tls_parameters();
     void load_tls_extensiontype_values();
+    void load_tls_quic();
     void load_tls_aead_parameters();
 
     void load_tls_version();

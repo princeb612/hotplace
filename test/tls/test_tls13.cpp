@@ -152,13 +152,11 @@ void test_tls13_xargs_org() {
      * https://quic.xargs.org/#server-handshake-server_keys-calc
      */
     {
+        binary_t shared_secret;
+        test_keycalc(&session, tls_context_shared_secret, shared_secret, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
         binary_t hello_hash;
         test_keycalc(&session, tls_context_transcript_hash, hello_hash, "hello_hash",
                      "e05f64fcd082bdb0dce473adf669c2769f257a1c75a51b7887468b5e0e7a7de4f4d34555112077f16e079019d5a845bd");
-
-        binary_t shared_secret;
-        test_keycalc(&session, tls_context_shared_secret, shared_secret, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
-
         binary_t early_secret;
         test_keycalc(&session, tls_secret_early_secret, early_secret, "early_secret",
                      "7ee8206f5570023e6dc7519eb1073bc4e791ad37b5c382aa10ba18e2357e716971f9362f2c2fe2a76bfd78dfec4ea9b5");
@@ -441,7 +439,7 @@ void test_tls13_xargs_org() {
             "96 08 24 E9 A1 93 64 83 7C 35 0A 69 A8 8D 4B F6"
             "35 C8 5E B8 74 AE BC 9D FD E8 -- -- -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("wrapped-record-5 (finished)", &session, bin_record, role_client);  // 1 for C -> S
+        dump_record("wrapped-record-5 (finished)", &session, bin_record, role_client);
     }
     /**
      * C -> S
@@ -453,7 +451,7 @@ void test_tls13_xargs_org() {
             "17 03 03 00 15 82 81 39 CB 7B 73 AA AB F5 B8 2F"
             "BF 9A 29 61 BC DE 10 03 8A 32 -- -- -- -- -- --";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("wrapped-record-6 (ping)", &session, bin_record, role_client);  // 1 for C -> S
+        dump_record("wrapped-record-6 (ping)", &session, bin_record, role_client);
     }
     /**
      * C <- S

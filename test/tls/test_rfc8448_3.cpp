@@ -120,31 +120,31 @@ void test_rfc8448_3() {
     auto cipher_suite = rfc8448_session.get_tls_protection().get_cipher_suite();
 
     {
-        // # hash (ClientHello + ServerHello) --> hello_hash
-        binary_t hello_hash;
-        test_keycalc(&rfc8448_session, tls_context_transcript_hash, hello_hash, "hello_hash",
-                     "860c06edc07858ee8e78f0e7428c58edd6b43f2ca3e6e95f02ed063cf0e1cad8");
         // # ECDH(priv, pub) --> shared_secret
         binary_t shared_secret;
         test_keycalc(&rfc8448_session, tls_context_shared_secret, shared_secret, "shared_secret",
                      "8bd4054fb55b9d63fdfbacf9f04b9f0d35e6d63f537563efd46272900f89492d");
+        // # hash (ClientHello + ServerHello) --> hello_hash
+        binary_t hello_hash;
+        test_keycalc(&rfc8448_session, tls_context_transcript_hash, hello_hash, "hello_hash",
+                     "860c06edc07858ee8e78f0e7428c58edd6b43f2ca3e6e95f02ed063cf0e1cad8");
         // compute ...
         // for more details ... see tls_protection::calc
         // hello_hash               860c06ed..
         // shared_secret            8bd4054f..
         // early_secret             33ad0a1c.. salt(1)=00,ikm(32)=00..
         // empty_hash               e3b0c442.. hash(0)=empty
-        // secret_handshake_derived 6f2615a1.. hkdf_expand_label, prk(32)=early, info(49)=HkdfLabel("derived"), hash/context=empty_hash
+        // secret_handshake_derived 6f2615a1.. hkdf_expand_tls13_label, prk(32)=early, info(49)=HkdfLabel("derived"), hash/context=empty_hash
         // secret_handshake         1dc826e9.. hmac_kdf_extract, salt(32)=secret_handshake_derived, ikm(32)=shared_secret
-        // secret_handshake_client  b3eddb12.. hkdf_expand_label prk(32)=secret_handshake info(54)=HkdfLabel("c hs traffic"), hash/context=hello_hash
-        // secret_handshake_server  b67b7d69.. hkdf_expand_label prk(32)=secret_handshake info(54)=HkdfLabel("s hs traffic"), hash/context=hello_hash
+        // secret_handshake_client  b3eddb12.. hkdf_expand_tls13_label prk(32)=secret_handshake info(54)=HkdfLabel("c hs traffic"), hash/context=hello_hash
+        // secret_handshake_server  b67b7d69.. hkdf_expand_tls13_label prk(32)=secret_handshake info(54)=HkdfLabel("s hs traffic"), hash/context=hello_hash
 
-        // secret_master_derived    43de77e0.. hkdf_expand_label prk(32)=secret_handshake info(49)=HkdfLabel("derived"), hash/context=empty_hash
+        // secret_master_derived    43de77e0.. hkdf_expand_tls13_label prk(32)=secret_handshake info(49)=HkdfLabel("derived"), hash/context=empty_hash
         // secret_master            18df0684.. hmac_kdf_extract, salt(32)=secret_master_derived, ikm(32)=00..
 
         // ..
-        // client_key       dbfaa693.. hkdf_expand_label prk(32)=secret_handshake_client info=HkdfLabel("key"), hash/context=empty
-        // client_iv        5bd3c71b.. hkdf_expand_label prk(32)=secret_handshake_client info=HkdfLabel("iv"), hash/context=empty
+        // client_key       dbfaa693.. hkdf_expand_tls13_label prk(32)=secret_handshake_client info=HkdfLabel("key"), hash/context=empty
+        // client_iv        5bd3c71b.. hkdf_expand_tls13_label prk(32)=secret_handshake_client info=HkdfLabel("iv"), hash/context=empty
 
         // {server}  extract secret "early":
         binary_t early_secret;

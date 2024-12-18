@@ -94,46 +94,46 @@ class crypto_aead_aes : public crypto_aead {
 
    public:
     crypto_aead_aes(crypto_aead_scheme_t scheme);
-    std::string _alg;
+    std::string algorithm_str();
 };
 
 class crypto_aead_aes128gcm : public crypto_aead_aes {
    public:
-    crypto_aead_aes128gcm();
+    crypto_aead_aes128gcm() : crypto_aead_aes(aead_scheme_aes128_gcm) {}
 };
 class crypto_aead_aes192gcm : public crypto_aead_aes {
    public:
-    crypto_aead_aes192gcm();
+    crypto_aead_aes192gcm() : crypto_aead_aes(aead_scheme_aes192_gcm) {}
 };
 class crypto_aead_aes256gcm : public crypto_aead_aes {
    public:
-    crypto_aead_aes256gcm();
+    crypto_aead_aes256gcm() : crypto_aead_aes(aead_scheme_aes256_gcm) {}
 };
 
 class crypto_aead_aes128ccm : public crypto_aead_aes {
    public:
-    crypto_aead_aes128ccm();
+    crypto_aead_aes128ccm() : crypto_aead_aes(aead_scheme_aes128_ccm) {}
 };
 class crypto_aead_aes192ccm : public crypto_aead_aes {
    public:
-    crypto_aead_aes192ccm();
+    crypto_aead_aes192ccm() : crypto_aead_aes(aead_scheme_aes192_ccm) {}
 };
 class crypto_aead_aes256ccm : public crypto_aead_aes {
    public:
-    crypto_aead_aes256ccm();
+    crypto_aead_aes256ccm() : crypto_aead_aes(aead_scheme_aes256_ccm) {}
 };
 
 class crypto_aead_aes128ccm8 : public crypto_aead_aes {
    public:
-    crypto_aead_aes128ccm8();
+    crypto_aead_aes128ccm8() : crypto_aead_aes(aead_scheme_aes128_ccm8) {}
 };
 class crypto_aead_aes192ccm8 : public crypto_aead_aes {
    public:
-    crypto_aead_aes192ccm8();
+    crypto_aead_aes192ccm8() : crypto_aead_aes(aead_scheme_aes192_ccm8) {}
 };
 class crypto_aead_aes256ccm8 : public crypto_aead_aes {
    public:
-    crypto_aead_aes256ccm8();
+    crypto_aead_aes256ccm8() : crypto_aead_aes(aead_scheme_aes256_ccm8) {}
 };
 
 // class aead_scheme_aes192_cbc_hmac_sha2 : public crypto_aead {};

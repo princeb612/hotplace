@@ -18,8 +18,8 @@
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
-#include <sdk/net/tlsspec/tls.hpp>
-#include <sdk/net/tlsspec/tls_advisor.hpp>
+#include <sdk/net/tls1/tls.hpp>
+#include <sdk/net/tls1/tls_advisor.hpp>
 
 namespace hotplace {
 namespace net {
@@ -42,25 +42,73 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         constexpr char constexpr_content_type[] = "content type";
-        constexpr char constexpr_record_version[] = "legacy record version";
+        constexpr char constexpr_legacy_version[] = "legacy record version";
         constexpr char constexpr_len[] = "len";
         constexpr char constexpr_application_data[] = "application data";
 
-        payload pl;
-        pl << new payload_member(uint8(0), constexpr_content_type) << new payload_member(uint16(0), true, constexpr_record_version)
-           << new payload_member(uint16(0), true, constexpr_len);
-        pl.read(stream, size, pos);  // tls_content_t
+        constexpr char constexpr_group_dtls[] = "dtls";
+        constexpr char constexpr_key_epoch[] = "key epoch";
+        constexpr char constexpr_dtls_record_seq[] = "dtls record sequence number";
 
-        auto content_type = t_to_int<uint8>(pl.select(constexpr_content_type));
-        auto protocol_version = t_to_int<uint16>(pl.select(constexpr_record_version));
-        auto len = t_to_int<uint16>(pl.select(constexpr_len));
+        uint8 content_type = 0;
+        uint16 legacy_version = 0;
+        uint16 len = 0;
+        bool cond_dtls = false;
+        uint16 key_epoch = 0;
+        binary_t dtls_record_seq;
 
-        s->printf("# TLS Record\n");
-        dump_memory(stream + recpos, sizeof(tls_content_t) + len, s, 16, 3, 0x00, dump_notrunc);
-        s->printf("\n");
-        s->printf("> content type 0x%02x(%i) (%s)\n", content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
-        s->printf("> %s 0x%04x (%s)\n", constexpr_record_version, protocol_version, tlsadvisor->tls_version_string(protocol_version).c_str());
-        s->printf("> %s 0x%04x(%i)\n", constexpr_len, len, len);
+        {
+            // TLS  5 bytes
+            // DTLS 13 bytes
+            payload pl;
+            pl << new payload_member(uint8(0), constexpr_content_type)                             // tls, dtls
+               << new payload_member(uint16(0), true, constexpr_legacy_version)                    // tls, dtls
+               << new payload_member(uint16(0), true, constexpr_key_epoch, constexpr_group_dtls)   // dtls
+               << new payload_member(binary_t(), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
+               << new payload_member(uint16(0), true, constexpr_len);                              // tls, dtls
+
+            auto lambda_check_dtls = [&](payload_member* item) -> bool {
+                auto ver = t_to_int<uint16>(item);
+                return (ver >= dtls_13);
+            };
+            pl.set_group_condition(constexpr_group_dtls, constexpr_legacy_version, lambda_check_dtls);
+            pl.select(constexpr_dtls_record_seq)->reserve(6);
+            pl.read(stream, size, pos);
+
+            content_type = t_to_int<uint8>(pl.select(constexpr_content_type));
+            legacy_version = t_to_int<uint16>(pl.select(constexpr_legacy_version));
+            len = t_to_int<uint16>(pl.select(constexpr_len));
+            cond_dtls = pl.get_group_condition(constexpr_group_dtls);
+            if (cond_dtls) {
+                key_epoch = t_to_int<uint16>(pl.select(constexpr_key_epoch));
+                pl.select(constexpr_dtls_record_seq)->get_variant().to_binary(dtls_record_seq);
+            }
+        }
+
+        if (size - pos < len) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
+        {
+            auto& protection = session->get_tls_protection();
+            protection.set_record_version(legacy_version);
+        }
+
+        {
+            s->printf("# TLS Record\n");
+            dump_memory(stream + recpos, (pos - recpos) + len, s, 16, 3, 0x00, dump_notrunc);
+            s->printf("\n");
+            s->printf("> content type 0x%02x(%i) (%s)\n", content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
+            s->printf("> %s 0x%04x (%s)\n", constexpr_legacy_version, legacy_version, tlsadvisor->tls_version_string(legacy_version).c_str());
+            if (cond_dtls) {
+                s->printf("> %s 0x%04x\n", constexpr_key_epoch, key_epoch);
+                s->printf("> %s %s\n", constexpr_dtls_record_seq, base16_encode(dtls_record_seq).c_str());
+                // dump_memory(dtls_record_seq, s, 16, 3, 0x0, dump_notrunc);
+                // s->printf("\n");
+            }
+            s->printf("> %s 0x%04x(%i)\n", constexpr_len, len, len);
+        }
 
         size_t tpos = 0;
         switch (content_type) {
@@ -86,7 +134,7 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                     binary_t plaintext;
                     binary_t tag;
                     auto tlsversion = protection.get_tls_version();
-                    if (tls_13 == tlsversion) {
+                    if (is_basedon_tls13(tlsversion)) {
                         ret = protection.decrypt_tls13(session, role, stream, len, recpos, plaintext, tag, s);
                     } else {
                         ret = protection.decrypt_tls1(session, role, stream, size, recpos, plaintext, s);
@@ -134,7 +182,7 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                     binary_t plaintext;
                     binary_t tag;
                     auto tlsversion = protection.get_tls_version();
-                    if (tls_13 == tlsversion) {
+                    if (is_basedon_tls13(tlsversion)) {
                         ret = protection.decrypt_tls13(session, role, stream, len, recpos, plaintext, tag, s);
                     } else {
                         ret = protection.decrypt_tls1(session, role, stream, size, recpos, plaintext, s);
@@ -153,8 +201,8 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                 binary_t plaintext;
                 binary_t tag;
                 auto tlsversion = protection.get_tls_version();
-                if (tls_13 == tlsversion) {
-                    ret = protection.decrypt_tls13(session, role, stream, len, recpos, plaintext, tag, s);  // pos = aadlen
+                if (is_basedon_tls13(tlsversion)) {
+                    ret = protection.decrypt_tls13(session, role, stream, len, recpos, plaintext, tag, s);
                 } else {
                     ret = protection.decrypt_tls1(session, role, stream, pos + len, recpos, plaintext, s);
                 }
@@ -163,7 +211,7 @@ return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream
                     if (plainsize) {
                         auto tlsversion = protection.get_tls_version();
                         uint8 last_byte = *plaintext.rbegin();
-                        if (tls_13 == tlsversion) {
+                        if (is_basedon_tls13(tlsversion)) {
                             if (tls_content_type_alert == last_byte) {
                                 ret = tls_dump_alert(s, session, &plaintext[0], plainsize - 1, tpos);
                             } else if (tls_content_type_handshake == last_byte) {

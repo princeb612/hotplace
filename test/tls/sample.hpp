@@ -23,7 +23,7 @@ void test_transcript_hash(tls_session* session, const binary_t& expect);
 
 void test_tls13_xargs_org();
 void test_tls12_xargs_org();
-void test_dtls13_xargs_org();
+void test_dtls_xargs_org();
 
 void test_rfc8448_2();
 void test_rfc8448_3();

@@ -142,15 +142,40 @@ class openssl_kdf {
      *  server_initial_secret = HKDF-Expand-Label(initial_secret, "server in", "", Hash.length)
      *
      * @sample
-     *          kdf.hkdf_expand_label(handshake_derived_secret, hashalg, dlen, early_secret, "derived", empty_hash);
-     *          kdf.hkdf_expand_label(handshake_derived_secret, hashalg, dlen, early_secret, str2bin("derived"), empty_hash);
+     *          kdf.hkdf_expand_tls13_label(handshake_derived_secret, hashalg, dlen, early_secret, "derived", empty_hash);
+     *          kdf.hkdf_expand_tls13_label(handshake_derived_secret, hashalg, dlen, early_secret, str2bin("derived"), empty_hash);
      */
-    return_t hkdf_label(binary_t& hkdflabel, uint16 length, const char* label, const binary_t& context);
-    return_t hkdf_label(binary_t& hkdflabel, uint16 length, const binary_t& label, const binary_t& context);
-    return_t hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context);
-    return_t hkdf_expand_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context);
-    return_t hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
-    return_t hkdf_expand_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
+    return_t hkdf_tls13_label(binary_t& hkdflabel, uint16 length, const char* label, const binary_t& context);
+    return_t hkdf_dtls13_label(binary_t& hkdflabel, uint16 length, const char* label, const binary_t& context);
+    return_t hkdf_expand_tls13_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context);
+    return_t hkdf_expand_tls13_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context);
+    return_t hkdf_expand_tls13_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
+    return_t hkdf_expand_tls13_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& label,
+                                     const binary_t& context);
+    return_t hkdf_expand_dtls13_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context);
+    return_t hkdf_expand_dtls13_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context);
+    return_t hkdf_expand_dtls13_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
+    return_t hkdf_expand_dtls13_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& label,
+                                      const binary_t& context);
+    /*
+     * @param   binary_t& hkdflabel [out]
+     * @param   uint16 length [in]
+     * @param   const binary_t& prefix [in] str2bin("tls13 "), str2bin("dtls13")
+     * @param   const binary_t& label [in]
+     * @param   const binary_t& context [in]
+     * @sample
+     *          kdf.hkdf_expand_label(handshake_derived_secret, hashalg, dlen, early_secret, str2bin("tls13 "), "derived", empty_hash);
+     *          kdf.hkdf_expand_label(handshake_derived_secret, hashalg, dlen, early_secret, str2bin("tls13 "), str2bin("derived"), empty_hash);
+     */
+    return_t hkdf_label(binary_t& hkdflabel, uint16 length, const binary_t& prefix, const binary_t& label, const binary_t& context);
+    return_t hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const char* prefix, const char* label,
+                               const binary_t& context);
+    return_t hkdf_expand_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const char* prefix, const char* label,
+                               const binary_t& context);
+    return_t hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& prefix, const binary_t& label,
+                               const binary_t& context);
+    return_t hkdf_expand_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& prefix, const binary_t& label,
+                               const binary_t& context);
 
     /**
      * @brief   CMAC-based Extract-and-Expand Key Derivation Function (CKDF)

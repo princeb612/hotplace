@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLSSPEC_TYPES__
-#define __HOTPLACE_SDK_NET_TLSSPEC_TYPES__
+#ifndef __HOTPLACE_SDK_NET_TLS1X_TYPES__
+#define __HOTPLACE_SDK_NET_TLS1X_TYPES__
 
 #include <sdk/base/system/types.hpp>
 #include <sdk/net/types.hpp>
@@ -31,10 +31,19 @@ enum tls_content_type_t : uint8 {
 };
 
 #pragma pack(push, 1)
-struct tls_content_t {
-    tls_content_type_t type;
-    uint16 version;
-    uint16 length;  // 2^14
+union tls_content_t {
+    struct {
+        tls_content_type_t type;
+        uint16 version;
+        uint16 length;
+    } tls;
+    struct {
+        tls_content_type_t type;
+        uint16 version;
+        uint16 keyepoch;
+        byte_t recordseq[6];
+        uint16 length;
+    } dtls;
 };
 #pragma pack(pop)
 
@@ -43,6 +52,7 @@ enum tls_version_t {
     tls_12 = 0x0303,
     tls_11 = 0x0302,
     tls_10 = 0x0301,
+    dtls_13 = 0xfefc,
     dtls_12 = 0xfefd,
 };
 
@@ -249,7 +259,7 @@ struct tls_alert_t {
 
 /**
  * 15..8
- *    00 pre
+ *    00
  *    01 handshake
  *    02 application
  *    03 exporter
@@ -279,6 +289,8 @@ struct tls_alert_t {
 #define TLS_SECRET_SERVER 0x000a
 #define TLS_SECRET_SERVER_KEY 0x000b
 #define TLS_SECRET_SERVER_IV 0x000c
+#define TLS_SECRET_CLIENT_SN_KEY 0x000e
+#define TLS_SECRET_SERVER_SN_KEY 0x000f
 #define TLS_SECRET_CLIENT_QUIC_KEY 0x0011
 #define TLS_SECRET_CLIENT_QUIC_IV 0x0012
 #define TLS_SECRET_CLIENT_QUIC_HP 0x0013
@@ -298,8 +310,10 @@ enum tls_secret_t : uint16 {
 
     tls_secret_handshake_derived = (TLS_SECRET_HANDSHAKE | TLS_SECRET_DERIVED),
     tls_secret_handshake = (TLS_SECRET_HANDSHAKE | TLS_SECRET_MASTER),
-    tls_secret_handshake_client = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT),
-    tls_secret_handshake_server = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER),
+    tls_secret_handshake_client = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT),  // CLIENT_HANDSHAKE_TRAFFIC_SECRET, client_handshake_traffic_secret
+    client_handshake_traffic_secret = tls_secret_handshake_client,
+    tls_secret_handshake_server = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER),  // SERVER_HANDSHAKE_TRAFFIC_SECRET, server_handshake_traffic_secret
+    server_handshake_traffic_secret = tls_secret_handshake_server,
     tls_secret_handshake_client_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_KEY),
     tls_secret_handshake_client_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_IV),
     tls_secret_handshake_quic_client_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_QUIC_KEY),
@@ -307,14 +321,18 @@ enum tls_secret_t : uint16 {
     tls_secret_handshake_quic_client_hp = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_QUIC_HP),
     tls_secret_handshake_server_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_KEY),
     tls_secret_handshake_server_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_IV),
+    tls_secret_handshake_client_sn_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_SN_KEY),  // DTLS
+    tls_secret_handshake_server_sn_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_SN_KEY),  // DTLS
     tls_secret_handshake_quic_server_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_KEY),
     tls_secret_handshake_quic_server_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_IV),
     tls_secret_handshake_quic_server_hp = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_HP),
 
     tls_secret_application_derived = (TLS_SECRET_APPLICATION | TLS_SECRET_DERIVED),
     tls_secret_application = (TLS_SECRET_APPLICATION | TLS_SECRET_MASTER),
-    tls_secret_application_client = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT),
-    tls_secret_application_server = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER),
+    tls_secret_application_client = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT),  // CLIENT_TRAFFIC_SECRET_0, client_application_traffic_secret_0
+    client_application_traffic_secret_0 = tls_secret_application_client,
+    tls_secret_application_server = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER),  // SERVER_TRAFFIC_SECRET_0, server_application_traffic_secret_0
+    server_application_traffic_secret_0 = tls_secret_application_server,
     tls_secret_application_client_key = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_KEY),
     tls_secret_application_client_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_IV),
     tls_secret_application_server_key = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_KEY),
@@ -327,10 +345,10 @@ enum tls_secret_t : uint16 {
     tls_secret_application_quic_server_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_IV),
     tls_secret_application_quic_server_hp = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_HP),
 
-    tls_secret_exporter_master = (TLS_SECRET_EXPORTER | TLS_SECRET_MASTER),
+    tls_secret_exporter_master = (TLS_SECRET_EXPORTER | TLS_SECRET_MASTER),  // EXPORTER_SECRET, exporter_master_secret, secret_exporter_master
 
     tls_secret_resumption_binder = (TLS_SECRET_RESUMPTION | TLS_SECRET_BINDER),
-    tls_secret_resumption_master = (TLS_SECRET_RESUMPTION | TLS_SECRET_MASTER),
+    tls_secret_resumption_master = (TLS_SECRET_RESUMPTION | TLS_SECRET_MASTER),  // secret_resumption_master
     tls_secret_resumption = (TLS_SECRET_RESUMPTION),
     tls_secret_resumption_early = (TLS_SECRET_RESUMPTION | TLS_SECRET_EARLY),
 
@@ -351,7 +369,8 @@ enum tls_mode_t : uint8 {
     tls_mode_client = (1 << 0),
     tls_mode_server = (1 << 1),
     tls_mode_tls = (1 << 2),
-    tls_mode_quic = (1 << 3),
+    tls_mode_dtls = (1 << 3),
+    tls_mode_quic = (1 << 4),
 };
 
 // TODO

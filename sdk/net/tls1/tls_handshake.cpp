@@ -23,8 +23,8 @@
 #include <sdk/crypto/crypto/crypto_mac.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/net/tlsspec/tls.hpp>
-#include <sdk/net/tlsspec/tls_advisor.hpp>
+#include <sdk/net/tls1/tls.hpp>
+#include <sdk/net/tls1/tls_advisor.hpp>
 
 namespace hotplace {
 namespace net {
@@ -58,6 +58,23 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
         //  5.1.  Record Layer
         //  5.2.  Record Payload Protection
         auto& protection = session->get_tls_protection();
+        auto record_version = protection.get_record_version();
+        size_t sizeof_dtls_recons = 0;
+        if (is_kindof_dtls(record_version)) {
+            // problem
+            //    do_something(stream + hspos, sizeof(tls_handshake_t) + length, ...) -> DTLS fails
+            //    contrast...
+            //    do_something(stream + hspos, size - hspos, ...) -> pass
+            //    do_something(stream + hspos, sizeof(tls_handshake_t) + length + sizeof_dtls_recons, ...) -> pass
+            // checkpoint
+            //    1) reconstruction_data size (8 bytes)
+            //       tls_content_t::length    included
+            //       tls_handshake_t::length  excluded
+            //    2) tls_handshake_t::length == reconstruction_data::fragment_len
+            //       lengthof(record) = record_header(13) + tls_handshake_t(4) + reconstruction_data(8) + tls_handshake_t::length
+
+            sizeof_dtls_recons = 8;
+        }
 
         tls_handshake_t* handshake = (tls_handshake_t*)(stream + pos);
         uint32 length = 0;
@@ -69,19 +86,38 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
 
         size_t hspos = pos;
         auto hstype = handshake->msg_type;
+        size_t hssize = sizeof(tls_handshake_t) + length + sizeof_dtls_recons;  // see sizeof_dtls_recons
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        s->printf(" > handshake type %i(0x%02x) (%s)\n", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
-        s->printf(" > length %i(0x%04x)\n", length, length);
+        s->printf(" > handshake type 0x%02x(%i) (%s)\n", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+        s->printf(" > length 0x%04x(%i)\n", length, length);
 
         binary_t handshake_hash;
         auto lambda_do_transcript_hash = [&](tls_session* session, const byte_t* stream, size_t size, binary_t& digest) -> void {
+            // The hash does not include DTLS-only bytes in the records.
+            // --> The hash does not include handshake reconstruction data bytes in the records.
+
             auto hash = protection.get_transcript_hash();
             if (hash) {
-                hash->digest(stream, size, digest);
-                // s->printf("\e[1;35m > transcript hash\e[0m : %s\n", base16_encode(digest).c_str());
-                // dump_memory(digest, s, 16, 3, 0x0, dump_notrunc);
-                // s->printf("\n");
+                if (is_kindof_dtls(record_version)) {
+                    basic_stream bs;
+                    // DTLS
+                    size_t offset_version = 12;
+                    size_t sizeof_reconstruction_data = 8;
+                    //  0.. 3 handshake header
+                    hash->update(stream, sizeof(tls_handshake_t));
+                    //  4..11 handshake reconstruction data (8 bytes)
+                    //
+                    // 12.. $ handshake, extension
+                    hash->update(stream + offset_version, size - offset_version);
+                    hash->digest(digest);
+                } else {
+                    // TLS
+                    // hash->digest(stream, size, digest);
+                    hash->update(stream, size);
+                    hash->digest(digest);
+                }
+
                 hash->release();
             }
         };
@@ -91,22 +127,16 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
         switch (handshake->msg_type) {
             case tls_handshake_client_hello: /* 1 */ {
                 ret = tls_dump_client_hello(hstype, s, session, stream, size, pos);
-                auto cs = protection.get_cipher_suite();
-                if (cs) {
-                    // res
-                } else {
-                    // cipher_suite not selected yet
-                    protection.set_item(tls_context_client_hello, stream + hspos, size - hspos);  // transcript hash, see server_hello
-                }
+                protection.set_item(tls_context_client_hello, stream + hspos, hssize);  // transcript hash, see server_hello
             } break;
             case tls_handshake_server_hello: /* 2 */ {
                 ret = tls_dump_server_hello(hstype, s, session, stream, size, pos);
 
+                // calculates the hash of all handshake messages to this point (ClientHello and ServerHello).
                 binary_t hello_hash;
-                // hello_hash = hash(client_hello + server_hello)
                 const binary_t& client_hello = protection.get_item(tls_context_client_hello);
                 lambda_do_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);  // client_hello
-                lambda_do_transcript_hash(session, stream + hspos, size - hspos, hello_hash);               // server_hello
+                lambda_do_transcript_hash(session, stream + hspos, hssize, hello_hash);                     // server_hello
                 protection.calc(session, tls_context_server_hello);                                         // handshake related
                 session->get_roleinfo(role).set_status(handshake->msg_type);
                 protection.clear_item(tls_context_client_hello);
@@ -128,9 +158,10 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 // struct {
                 //     Extension extensions<0..2^16-1>;
                 // } EncryptedExtensions;
+
                 ret = tls_dump_encrypted_extensions(s, session, stream, size, pos);
 
-                lambda_do_transcript_hash(session, stream + hspos, sizeof(tls_handshake_t) + length, handshake_hash);
+                lambda_do_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
             case tls_handshake_certificate: /* 11 */ {
                 // RFC 8446 2.  Protocol Overview
@@ -154,22 +185,22 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 // RFC 4346 7.4.7. Client Key Exchange Message
                 ret = tls_dump_certificate(s, session, stream, size, pos);
 
-                lambda_do_transcript_hash(session, stream + hspos, sizeof(tls_handshake_t) + length, handshake_hash);
+                lambda_do_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
             case tls_handshake_server_key_exchange: /* 12 */ {
                 ret = tls_dump_server_key_exchange(s, session, stream, size, pos, role);
 
-                lambda_do_transcript_hash(session, stream + hspos, sizeof(tls_handshake_t) + length, handshake_hash);
+                lambda_do_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
             case tls_handshake_certificate_request: /* 13 */ {
                 // RFC 4346 7.4.4. Certificate request
                 // do something
-                lambda_do_transcript_hash(session, stream + hspos, sizeof(tls_handshake_t) + length, handshake_hash);
+                lambda_do_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
             case tls_handshake_server_hello_done: /* 14 */ {
                 ret = tls_dump_server_hello_done(s, session, stream, size, pos, role);
 
-                lambda_do_transcript_hash(session, stream + hspos, sizeof(tls_handshake_t) + length, handshake_hash);
+                lambda_do_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
             case tls_handshake_certificate_verify: /* 15 */ {
                 // RFC 8446 2.  Protocol Overview
@@ -181,14 +212,14 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 // RFC 4346 7.4.8. Certificate verify
                 ret = tls_dump_certificate_verify(s, session, stream, size, pos);
 
-                lambda_do_transcript_hash(session, stream + hspos, sizeof(tls_handshake_t) + length, handshake_hash);
+                lambda_do_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
             case tls_handshake_client_key_exchange: /* 16 */ {
                 ret = tls_dump_client_key_exchange(s, session, stream, size, pos, role);
 
                 protection.calc(session, tls_context_client_key_exchange);
 
-                lambda_do_transcript_hash(session, stream + hspos, sizeof(tls_handshake_t) + length, handshake_hash);
+                lambda_do_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
             case tls_handshake_finished: /* 20 */ {
                 // RFC 8446 2.  Protocol Overview
@@ -198,7 +229,7 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 //    authenticates the handshake.  [Section 4.4.4]
 
                 ret = tls_dump_finished(s, session, stream, size, pos, role);
-                lambda_do_transcript_hash(session, stream + hspos, sizeof(tls_handshake_t) + length, handshake_hash);
+                lambda_do_transcript_hash(session, stream + hspos, hssize, handshake_hash);
 
                 if (role_server == role) {
                     protection.calc(session, tls_context_server_finished);  // application, exporter related
@@ -247,7 +278,15 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         constexpr char constexpr_compression_method_len[] = "compression method len";
         constexpr char constexpr_compression_method[] = "compression method";
         constexpr char constexpr_extension_len[] = "extension len";
-        // constexpr char constexpr_extension[] = "extension";
+
+        constexpr char constexpr_group_dtls[] = "dtls";
+        // handshake reconstruction data
+        constexpr char constexpr_handshake_message_seq[] = "handshake message sequence number";
+        constexpr char constexpr_fragment_offset[] = "fragment offset";
+        constexpr char constexpr_fragment_len[] = "fragment len";
+        constexpr char constexpr_dtls_version[] = "dtls legacy client version";
+        constexpr char constexpr_cookie_len[] = "cookie len";
+        constexpr char constexpr_cookie[] = "cookie";
 
         /* RFC 8446 4.1.2.  Client Hello
          *  uint16 ProtocolVersion;
@@ -265,21 +304,9 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
          *  } ClientHello;
          */
 
+        auto& protection = session->get_tls_protection();
+        uint16 record_version = protection.get_record_version();
         uint16 version = 0;
-        {
-            payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_version);
-            pl.read(stream, size, pos);
-
-            version = t_to_int<uint16>(pl.select(constexpr_version));
-
-            if (version < 0x0303) {
-                // RFC 8996
-                ret = errorcode_t::not_supported;
-                __leave2;
-            }
-        }
-
         binary_t random;
         binary_t session_id;
         binary_t cipher_suite;
@@ -288,18 +315,34 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         uint16 cipher_suite_len = 0;
         uint8 compression_method_len = 0;
         uint16 extension_len = 0;
+
+        // DTLS
+        uint16 dtls_seq = 0;
+        uint32 fragment_offset = 0;
+        uint32 fragment_len = 0;
+
+        bool cond_dtls = false;
+
         {
             payload pl;
-            pl << new payload_member(binary_t(), constexpr_random) << new payload_member(uint8(0), constexpr_session_id_len)
-               << new payload_member(binary_t(), constexpr_session_id) << new payload_member(uint16(0), true, constexpr_cipher_suite_len)
-               << new payload_member(binary_t(), constexpr_cipher_suite) << new payload_member(uint8(0), constexpr_compression_method_len)
-               << new payload_member(binary_t(), constexpr_compression_method) << new payload_member(uint16(0), true, constexpr_extension_len);
+            pl << new payload_member(uint16(0), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
+               << new payload_member(uint32_24_t(), constexpr_fragment_offset, constexpr_group_dtls)          // dtls
+               << new payload_member(uint32_24_t(), constexpr_fragment_len, constexpr_group_dtls)             // dtls
+               << new payload_member(uint16(0), true, constexpr_version) << new payload_member(binary_t(), constexpr_random)
+               << new payload_member(uint8(0), constexpr_session_id_len) << new payload_member(binary_t(), constexpr_session_id)
+               << new payload_member(uint8(0), constexpr_cookie_len, constexpr_group_dtls)  // dtls
+               << new payload_member(binary_t(), constexpr_cookie, constexpr_group_dtls)    // dtls
+               << new payload_member(uint16(0), true, constexpr_cipher_suite_len) << new payload_member(binary_t(), constexpr_cipher_suite)
+               << new payload_member(uint8(0), constexpr_compression_method_len) << new payload_member(binary_t(), constexpr_compression_method)
+               << new payload_member(uint16(0), true, constexpr_extension_len);
+
+            pl.set_group_condition(constexpr_group_dtls, record_version, [](uint16 ver) -> bool { return (ver >= dtls_12); });
 
             pl.select(constexpr_random)->reserve(32);
             pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
             pl.set_reference_value(constexpr_cipher_suite, constexpr_cipher_suite_len);
             pl.set_reference_value(constexpr_compression_method, constexpr_compression_method_len);
-            // pl.set_reference_value(constexpr_extension_len, constexpr_extension);
+            pl.set_reference_value(constexpr_cookie, constexpr_cookie_len);  // dtls
             pl.read(stream, size, pos);
 
             // RFC 8446 4.1.1.  Cryptographic Negotiation
@@ -307,6 +350,15 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             // -  A "supported_groups" (Section 4.2.7) extension
             // -  A "signature_algorithms" (Section 4.2.3) extension
             // -  A "pre_shared_key" (Section 4.2.11) extension
+
+            cond_dtls = pl.get_group_condition(constexpr_group_dtls);
+            if (cond_dtls) {
+                dtls_seq = t_to_int<uint32>(pl.select(constexpr_handshake_message_seq));
+                fragment_offset = t_to_int<uint32>(pl.select(constexpr_fragment_offset));
+                fragment_len = t_to_int<uint32>(pl.select(constexpr_fragment_len));
+            }
+
+            version = t_to_int<uint16>(pl.select(constexpr_version));
 
             pl.select(constexpr_random)->get_variant().to_binary(random);
             session_id_len = t_to_int<uint8>(pl.select(constexpr_session_id_len));
@@ -318,12 +370,12 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             extension_len = t_to_int<uint16>(pl.select(constexpr_extension_len));
         }
 
-        {
-            // server_key_update
-            session->get_tls_protection().set_item(tls_context_client_hello_random, random);
-        }
-
         s->autoindent(1);
+        if (cond_dtls) {
+            s->printf(" > %s 0x%04x\n", constexpr_handshake_message_seq, dtls_seq);
+            s->printf(" > %s 0x%06x(%i)\n", constexpr_fragment_offset, fragment_offset, fragment_offset);
+            s->printf(" > %s 0x%06x(%i)\n", constexpr_fragment_len, fragment_len, fragment_len);
+        }
         s->printf(" > %s 0x%04x (%s)\n", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
         s->printf(" > %s\n", constexpr_random);
         if (random.size()) {
@@ -331,7 +383,7 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             // s->printf("\n");
             s->printf("   %s\n", base16_encode(random).c_str());
         }
-        s->printf(" > %s %i(%02x)\n", constexpr_session_id, session_id_len, session_id_len);
+        s->printf(" > %s %02x(%i)\n", constexpr_session_id, session_id_len, session_id_len);
         if (session_id.size()) {
             s->printf("   %s\n", base16_encode(session_id).c_str());
         }
@@ -346,10 +398,13 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             s->printf("   [%i] 0x%02x %s\n", i, compr, tlsadvisor->compression_method_string(compr).c_str());
         }
         s->autoindent(0);
-        s->printf(" > %s %i(0x%04x)\n", constexpr_extension_len, extension_len, extension_len);
+        s->printf(" > %s 0x%04x(%i)\n", constexpr_extension_len, extension_len, extension_len);
 
         while (errorcode_t::success == tls_dump_extension(hstype, s, session, stream, size, pos)) {
         };
+
+        // server_key_update
+        protection.set_item(tls_context_client_hello_random, random);
     }
     __finally2 {
         // do nothing
@@ -376,16 +431,20 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         constexpr char constexpr_extension_len[] = "extension len";
         constexpr char constexpr_extension[] = "extension";
 
+        constexpr char constexpr_group_dtls[] = "dtls";
+        // handshake reconstruction data
+        constexpr char constexpr_handshake_message_seq[] = "handshake message sequence number";
+        constexpr char constexpr_fragment_offset[] = "fragment offset";
+        constexpr char constexpr_fragment_len[] = "fragment len";
+        constexpr char constexpr_dtls_version[] = "dtls legacy client version";
+        constexpr char constexpr_cookie_len[] = "cookie len";
+        constexpr char constexpr_cookie[] = "cookie";
+
         /* RFC 8446 4.1.3.  Server Hello */
 
+        auto& protection = session->get_tls_protection();
+        uint16 record_version = protection.get_record_version();
         uint16 version = 0;
-        {
-            payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_version);
-            pl.read(stream, size, pos);
-
-            version = t_to_int<uint16>(pl.select(constexpr_version));
-        }
 
         binary_t random;
         binary_t session_id;
@@ -393,11 +452,26 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         uint16 cipher_suite = 0;
         uint8 compression_method = 0;
         uint8 extension_len = 0;
+
+        // DTLS
+        uint16 dtls_seq = 0;
+        uint32 fragment_offset = 0;
+        uint32 fragment_len = 0;
+
+        bool cond_dtls = false;
+        binary_t bin_server_hello;
+
         {
             payload pl;
-            pl << new payload_member(binary_t(), constexpr_random) << new payload_member(uint8(0), constexpr_session_id_len)
-               << new payload_member(binary_t(), constexpr_session_id) << new payload_member(uint16(0), true, constexpr_cipher_suite)
-               << new payload_member(uint8(0), constexpr_compression_method) << new payload_member(uint16(0), true, constexpr_extension_len);
+            pl << new payload_member(uint16(0), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
+               << new payload_member(uint32_24_t(), constexpr_fragment_offset, constexpr_group_dtls)          // dtls
+               << new payload_member(uint32_24_t(), constexpr_fragment_len, constexpr_group_dtls)             // dtls
+               << new payload_member(uint16(0), true, constexpr_version) << new payload_member(binary_t(), constexpr_random)
+               << new payload_member(uint8(0), constexpr_session_id_len) << new payload_member(binary_t(), constexpr_session_id)
+               << new payload_member(uint16(0), true, constexpr_cipher_suite) << new payload_member(uint8(0), constexpr_compression_method)
+               << new payload_member(uint16(0), true, constexpr_extension_len);
+
+            pl.set_group_condition(constexpr_group_dtls, record_version, [](uint16 ver) -> bool { return (ver >= dtls_12); });
 
             pl.select(constexpr_random)->reserve(32);
             pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
@@ -408,6 +482,15 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             // When (EC)DHE is in use, ... "key_share" extension
             // When authenticating via a certificate, ... Certificate (Section 4.4.2) and CertificateVerify (Section 4.4.3)
 
+            cond_dtls = pl.get_group_condition(constexpr_group_dtls);
+            if (cond_dtls) {
+                dtls_seq = t_to_int<uint32>(pl.select(constexpr_handshake_message_seq));
+                fragment_offset = t_to_int<uint32>(pl.select(constexpr_fragment_offset));
+                fragment_len = t_to_int<uint32>(pl.select(constexpr_fragment_len));
+            }
+
+            version = t_to_int<uint16>(pl.select(constexpr_version));
+
             pl.select(constexpr_random)->get_variant().to_binary(random);
             session_ids = t_to_int<uint8>(pl.select(constexpr_session_id_len));
             pl.select(constexpr_session_id)->get_variant().to_binary(session_id);
@@ -416,12 +499,12 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             extension_len = t_to_int<uint16>(pl.select(constexpr_extension_len));
         }
 
-        {
-            // server_key_update
-            session->get_tls_protection().set_item(tls_context_server_hello_random, random);
-        }
-
         s->autoindent(1);
+        if (cond_dtls) {
+            s->printf(" > %s 0x%04x\n", constexpr_handshake_message_seq, dtls_seq);
+            s->printf(" > %s 0x%06x(%i)\n", constexpr_fragment_offset, fragment_offset, fragment_offset);
+            s->printf(" > %s 0x%06x(%i)\n", constexpr_fragment_len, fragment_len, fragment_len);
+        }
         s->printf(" > %s 0x%04x (%s)\n", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
         s->printf(" > %s\n", constexpr_random);
         if (random.size()) {
@@ -442,7 +525,10 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         };
 
         // cipher_suite
-        session->get_tls_protection().set_cipher_suite(cipher_suite);
+        protection.set_cipher_suite(cipher_suite);
+
+        // server_key_update
+        session->get_tls_protection().set_item(tls_context_server_hello_random, random);
     }
     __finally2 {
         // do nothing
@@ -569,7 +655,7 @@ return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* s
             pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
             pl.set_reference_value(constexpr_request_context, constexpr_request_context_len);
             auto tls_version = session->get_tls_protection().get_tls_version();
-            pl.set_group(constexpr_group_tls13, tls_version == tls_13 ? true : false);  // tls_extension_supported_versions 0x002b server_hello
+            pl.set_group(constexpr_group_tls13, is_basedon_tls13(tls_version));  // tls_extension_supported_versions 0x002b server_hello
             pl.read(stream, size, pos);
 
             request_context_len = t_to_int<uint8>(pl.select(constexpr_request_context_len));
@@ -953,7 +1039,7 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
             binary_t fin_key;
             binary_t maced;
             auto tlsversion = protection.get_tls_version();
-            if (tls_13 == tlsversion) {
+            if (is_basedon_tls13(tlsversion)) {
                 typeof_secret = tls_secret_handshake_server;
                 if (role) {
                     typeof_secret = tls_secret_handshake_client;
@@ -963,7 +1049,11 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
                 hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(protection.get_cipher_suite());
                 openssl_kdf kdf;
                 binary_t context;
-                kdf.hkdf_expand_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
+                if (session->get_tls_protection().is_kindof_dtls()) {
+                    kdf.hkdf_expand_dtls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
+                } else {
+                    kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
+                }
                 // $ echo $fin_hash | xxd -r -p \
                 //     | openssl dgst -sha384 -mac HMAC -macopt hexkey:$fin_key
                 crypto_hmac_builder builder;

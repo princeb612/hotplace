@@ -4,8 +4,11 @@
   * [study] QUIC (RFC 9001)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
+* Revision 670
+  * [study] https://dtls.xargs.org/
+
 * Revision 669
-  * [tested] SSLKEYFILE
+  * [tested] SSLKEYLOGFILE
 
 * Revision 667
   * [tested] https://tls12.xargs.org/

@@ -203,6 +203,13 @@ class openssl_hash : public hash_t {
     virtual return_t hash(hash_context_t* handle, const byte_t* data, size_t datasize, binary_t& output);
 
     /**
+     * @brief duplicate
+     * @param hash_context_t** duplicated [out]
+     * @param hash_context_t* handle [in]
+     */
+    return_t dup(hash_context_t** duplicated, hash_context_t* handle);
+
+    /**
      * @brief type
      * @return crypt_poweredby_t
      */

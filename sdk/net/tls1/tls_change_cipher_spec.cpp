@@ -11,7 +11,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/tlsspec/tls.hpp>
+#include <sdk/net/tls1/tls.hpp>
 
 namespace hotplace {
 namespace net {
