@@ -150,3 +150,80 @@ Auth | {CertificateVerify*}
                Figure 4: Message Flow for a 0-RTT Handshake
 
 ````
+#### RFC 9147 Figure 2: DTLS 1.3 Record Formats
+````
+       struct {
+           ContentType type;
+           ProtocolVersion legacy_record_version;
+           uint16 epoch = 0
+           uint48 sequence_number;
+           uint16 length;
+           opaque fragment[DTLSPlaintext.length];
+       } DTLSPlaintext;
+
+       struct {
+            opaque content[DTLSPlaintext.length];
+            ContentType type;
+            uint8 zeros[length_of_padding];
+       } DTLSInnerPlaintext;
+
+       struct {
+           opaque unified_hdr[variable];
+           opaque encrypted_record[length];
+       } DTLSCiphertext;
+
+                     Figure 2: DTLS 1.3 Record Formats
+````
+#### RFC 9147 Figure 3: DTLS 1.3 Unified Header
+````
+       0 1 2 3 4 5 6 7
+       +-+-+-+-+-+-+-+-+
+       |0|0|1|C|S|L|E E|
+       +-+-+-+-+-+-+-+-+
+       | Connection ID |   Legend:
+       | (if any,      |
+       /  length as    /   C   - Connection ID (CID) present
+       |  negotiated)  |   S   - Sequence number length
+       +-+-+-+-+-+-+-+-+   L   - Length present
+       |  8 or 16 bit  |   E   - Epoch
+       |Sequence Number|
+       +-+-+-+-+-+-+-+-+
+       | 16 bit Length |
+       | (if present)  |
+       +-+-+-+-+-+-+-+-+
+
+                     Figure 3: DTLS 1.3 Unified Header
+````
+#### RFC 9147 Figure 4: DTLS 1.3 Header Examples
+````
+    0 1 2 3 4 5 6 7       0 1 2 3 4 5 6 7       0 1 2 3 4 5 6 7
+   +-+-+-+-+-+-+-+-+     +-+-+-+-+-+-+-+-+     +-+-+-+-+-+-+-+-+
+   | Content Type  |     |0|0|1|1|1|1|E E|     |0|0|1|0|0|0|E E|
+   +-+-+-+-+-+-+-+-+     +-+-+-+-+-+-+-+-+     +-+-+-+-+-+-+-+-+
+   |   16 bit      |     |               |     |8 bit Seq. No. |
+   |   Version     |     / Connection ID /     +-+-+-+-+-+-+-+-+
+   +-+-+-+-+-+-+-+-+     |               |     |               |
+   |   16 bit      |     +-+-+-+-+-+-+-+-+     |   Encrypted   |
+   |    Epoch      |     |    16 bit     |     /   Record      /
+   +-+-+-+-+-+-+-+-+     |Sequence Number|     |               |
+   |               |     +-+-+-+-+-+-+-+-+     +-+-+-+-+-+-+-+-+
+   |               |     |   16 bit      |
+   |   48 bit      |     |   Length      |       DTLSCiphertext
+   |Sequence Number|     +-+-+-+-+-+-+-+-+         Structure
+   |               |     |               |         (minimal)
+   |               |     |  Encrypted    |
+   +-+-+-+-+-+-+-+-+     /  Record       /
+   |    16 bit     |     |               |
+   |    Length     |     +-+-+-+-+-+-+-+-+
+   +-+-+-+-+-+-+-+-+
+   |               |      DTLSCiphertext
+   |               |        Structure
+   /   Fragment    /          (full)
+   |               |
+   +-+-+-+-+-+-+-+-+
+
+    DTLSPlaintext
+      Structure
+
+                     Figure 4: DTLS 1.3 Header Examples
+````

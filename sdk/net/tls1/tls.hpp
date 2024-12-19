@@ -135,6 +135,9 @@ class tls_protection {
      */
     return_t decrypt_tls13(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& tag,
                            stream_t* debugstream = nullptr);
+
+    return_t decrypt_tls13(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
+                           binary_t& tag, stream_t* debugstream = nullptr);
     /**
      * @brief   TLS 1 decrypt
      */
@@ -189,7 +192,8 @@ class tls_session {
     roleinfo& get_roleinfo(tls_role_t role) { return _roles[role]; }
     uint64 get_recordno(tls_role_t role, bool inc = false) { return get_roleinfo(role).get_recordno(inc); }
     void reset_recordno(tls_role_t role) {
-        if (tls_13 == get_tls_protection().get_tls_version()) {
+        auto ver = get_tls_protection().get_tls_version();
+        if ((tls_13 == ver) || (dtls_13 == ver)) {
             get_roleinfo(role).reset_recordno();
         }
     }
@@ -213,6 +217,7 @@ return_t tls_dump_alert(stream_t* s, tls_session* session, const byte_t* stream,
 return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role = role_server);
 return_t tls_dump_application_data(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_ack(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role = role_server);
 
 bool is_basedon_tls13(uint16 ver);
 bool is_kindof_tls(uint16 ver);

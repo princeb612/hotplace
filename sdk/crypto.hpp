@@ -37,6 +37,7 @@
 #include <sdk/crypto/crypto/crypto_aead.hpp>
 #include <sdk/crypto/crypto/crypto_encrypt.hpp>
 #include <sdk/crypto/crypto/crypto_hash.hpp>
+#include <sdk/crypto/crypto/crypto_mac.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
 
 /* authenticode */

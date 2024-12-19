@@ -129,6 +129,7 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
 
         auto lambda_expand_label = [&](tls_secret_t sec, binary_t& okm, const char* cipher_suite, uint16 dlen, const binary_t& secret, const char* label,
                                        const binary_t& context) -> void {
+            okm.clear();
             if (session->get_tls_protection().is_kindof_dtls()) {
                 kdf.hkdf_expand_dtls13_label(okm, cipher_suite, dlen, secret, str2bin(label), context);
             } else {
@@ -316,6 +317,10 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
                 lambda_expand_label(tls_secret_application_server_key, okm, hashalg, keysize, secret_application_server, "key", context);
                 lambda_expand_label(tls_secret_application_server_iv, okm, hashalg, 12, secret_application_server, "iv", context);
             }
+            if (tls_mode_dtls & get_mode()) {
+                lambda_expand_label(tls_secret_application_server_sn_key, okm, hashalg, keysize, secret_application_server, "sn", context);
+            }
+
             if (tls_mode_quic & get_mode()) {
                 lambda_expand_label(tls_secret_application_quic_client_key, okm, hashalg, keysize, secret_application_client, "quic key", context);
                 lambda_expand_label(tls_secret_application_quic_client_iv, okm, hashalg, 12, secret_application_client, "quic iv", context);
@@ -345,6 +350,13 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
             // RFC 8448 4.  Resumed 0-RTT Handshake
             binary_t resumption_early_secret;
             lambda_extract(tls_secret_resumption_early, resumption_early_secret, hashalg, ikm_empty, secret_resumption);
+
+            binary_t okm;
+            if (tls_mode_dtls & get_mode()) {
+                auto const& secret_application_client = get_item(tls_secret_application_client);
+                lambda_expand_label(tls_secret_application_client_sn_key, okm, hashalg, keysize, secret_application_client, "sn", context);
+            }
+
         } else if (tls_context_client_key_exchange == type) {
             /**
              * RFC 5246 8.1.  Computing the Master Secret
@@ -568,28 +580,60 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        tag.clear();
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
-        if (nullptr == hint) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
         auto& protection = session->get_tls_protection();
         auto record_version = protection.get_record_version();
         size_t content_header_size = 0;
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         if (tlsadvisor->is_kindof_dtls(record_version)) {
             content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
         } else {
             content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
         }
-
-        auto tagsize = hint->tagsize;
-
         size_t aadlen = content_header_size;
+
         binary_t aad;
         binary_append(aad, stream + pos, aadlen);
+
+        ret = decrypt_tls13(session, role, stream, size, pos, plaintext, aad, tag, debugstream);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
+                                       const binary_t& aad, binary_t& tag, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        tag.clear();
+
+        auto cipher = crypt_alg_unknown;
+        auto mode = crypt_mode_unknown;
+        uint8 tagsize = 0;
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        {
+            const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+            if (nullptr == hint) {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+            cipher = hint->cipher;
+            mode = hint->mode;
+            tagsize = hint->tagsize;
+        }
+
+        auto& protection = session->get_tls_protection();
+        auto record_version = protection.get_record_version();
+
+        // ... aad(aadlen) encdata tag(tagsize)
+        //     \_ pos
+        size_t aadlen = aad.size();
         binary_append(tag, stream + pos + aadlen + size - tagsize, tagsize);
 
         crypt_context_t* handle = nullptr;
@@ -622,7 +666,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
         auto const& iv = get_item(secret_iv);
         binary_t nonce = iv;
         build_iv(session, secret_iv, nonce, record_no);
-        ret = crypt.open(&handle, hint->cipher, hint->mode, key, nonce);
+        ret = crypt.open(&handle, cipher, mode, key, nonce);
         if (errorcode_t::success == ret) {
             ret = crypt.decrypt2(handle, stream + pos + aadlen, size - tagsize, plaintext, &aad, &tag);
             crypt.close(handle);

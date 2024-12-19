@@ -81,39 +81,39 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 }
 
                 /* .. tpos + ext_len */
-                while (pos < tpos + ext_len) {
-                    /**
-                     *  struct {
-                     *      NameType name_type;
-                     *      select (name_type) {
-                     *          case host_name: HostName;
-                     *      } name;
-                     *  } ServerName;
-                     *  enum {
-                     *      host_name(0), (255)
-                     *  } NameType;
-                     *  opaque HostName<1..2^16-1>;
-                     *  struct {
-                     *      ServerName server_name_list<1..2^16-1>
-                     *  } ServerNameList;
-                     */
-                    constexpr char constexpr_name_type[] = "name type";
-                    constexpr char constexpr_hostname_len[] = "hostname len";
-                    constexpr char constexpr_hostname[] = "hostname";
-                    payload server_name_list;
-                    server_name_list << new payload_member(uint8(0), constexpr_name_type) << new payload_member(uint16(0), true, constexpr_hostname_len)
-                                     << new payload_member(binary_t(), constexpr_hostname);
-                    server_name_list.set_reference_value(constexpr_hostname, constexpr_hostname_len);
-                    server_name_list.read(stream, size, pos);
+                // while (pos < tpos + ext_len) {
+                /**
+                 *  struct {
+                 *      NameType name_type;
+                 *      select (name_type) {
+                 *          case host_name: HostName;
+                 *      } name;
+                 *  } ServerName;
+                 *  enum {
+                 *      host_name(0), (255)
+                 *  } NameType;
+                 *  opaque HostName<1..2^16-1>;
+                 *  struct {
+                 *      ServerName server_name_list<1..2^16-1>
+                 *  } ServerNameList;
+                 */
+                constexpr char constexpr_name_type[] = "name type";
+                constexpr char constexpr_hostname_len[] = "hostname len";
+                constexpr char constexpr_hostname[] = "hostname";
+                payload server_name_list;
+                server_name_list << new payload_member(uint8(0), constexpr_name_type) << new payload_member(uint16(0), true, constexpr_hostname_len)
+                                 << new payload_member(binary_t(), constexpr_hostname);
+                server_name_list.set_reference_value(constexpr_hostname, constexpr_hostname_len);
+                server_name_list.read(stream, size, pos);
 
-                    uint8 type = t_to_int<uint8>(server_name_list.select(constexpr_name_type));
-                    uint16 hostname_len = t_to_int<uint16>(server_name_list.select(constexpr_hostname_len));
-                    binary_t hostname;
-                    server_name_list.select(constexpr_hostname)->get_variant().to_binary(hostname);
+                uint8 type = t_to_int<uint8>(server_name_list.select(constexpr_name_type));
+                uint16 hostname_len = t_to_int<uint16>(server_name_list.select(constexpr_hostname_len));
+                binary_t hostname;
+                server_name_list.select(constexpr_hostname)->get_variant().to_binary(hostname);
 
-                    s->printf(" > %s %i (%s)\n", constexpr_name_type, type, tlsadvisor->sni_nametype_string(type).c_str());  // 00 host_name
-                    s->printf(" > %s %s\n", constexpr_hostname, bin2str(hostname).c_str());
-                }
+                s->printf(" > %s %i (%s)\n", constexpr_name_type, type, tlsadvisor->sni_nametype_string(type).c_str());  // 00 host_name
+                s->printf(" > %s %s\n", constexpr_hostname, bin2str(hostname).c_str());
+                // }
 
             } break;
             case tls_extension_max_fragment_length: /* 0x0001 */ {
@@ -616,7 +616,8 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                     switch (param_id) {
                         case quic_param_initial_source_connection_id:
                         case quic_param_retry_source_connection_id:
-                            s->printf(R"( > %I64i (%s) "%s")", param_id, tlsadvisor->quic_param_string(param_id).c_str(), bin2str(param).c_str());
+                            s->printf(" > %I64i (%s)\n", param_id, tlsadvisor->quic_param_string(param_id).c_str());
+                            dump_memory(param, s, 16, 5, 0x0, dump_notrunc);
                             s->printf("\n");
                             break;
                         default: {

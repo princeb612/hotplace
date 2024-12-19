@@ -34,7 +34,7 @@ namespace net {
 static return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 static return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 static return_t tls_dump_new_session_ticket(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
-static return_t tls_dump_encrypted_extensions(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+static return_t tls_dump_encrypted_extensions(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 static return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 static return_t tls_dump_server_key_exchange(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role);
 static return_t tls_dump_server_hello_done(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role);
@@ -76,6 +76,7 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
             sizeof_dtls_recons = 8;
         }
 
+        size_t hspos = pos;
         tls_handshake_t* handshake = (tls_handshake_t*)(stream + pos);
         uint32 length = 0;
         b24_i32(handshake->length, length);
@@ -83,14 +84,45 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
             ret = errorcode_t::bad_data;
             __leave2;
         }
+        pos += sizeof(tls_handshake_t);
 
-        size_t hspos = pos;
         auto hstype = handshake->msg_type;
         size_t hssize = sizeof(tls_handshake_t) + length + sizeof_dtls_recons;  // see sizeof_dtls_recons
+
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+        // DTLS handshake reconstruction data
+        constexpr char constexpr_group_dtls[] = "dtls";
+        constexpr char constexpr_handshake_message_seq[] = "handshake message sequence number";
+        constexpr char constexpr_fragment_offset[] = "fragment offset";
+        constexpr char constexpr_fragment_len[] = "fragment len";
+        bool cond_dtls = false;
+        uint16 dtls_seq = 0;
+        uint32 fragment_offset = 0;
+        uint32 fragment_len = 0;
+        {
+            payload pl;
+            pl << new payload_member(uint16(0), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
+               << new payload_member(uint32_24_t(), constexpr_fragment_offset, constexpr_group_dtls)          // dtls
+               << new payload_member(uint32_24_t(), constexpr_fragment_len, constexpr_group_dtls);            // dtls;
+            pl.set_group_condition(constexpr_group_dtls, record_version, [](uint16 ver) -> bool { return (ver >= dtls_12); });
+            pl.read(stream, size, pos);
+
+            cond_dtls = pl.get_group_condition(constexpr_group_dtls);
+            if (cond_dtls) {
+                dtls_seq = t_to_int<uint32>(pl.select(constexpr_handshake_message_seq));
+                fragment_offset = t_to_int<uint32>(pl.select(constexpr_fragment_offset));
+                fragment_len = t_to_int<uint32>(pl.select(constexpr_fragment_len));
+            }
+        }
 
         s->printf(" > handshake type 0x%02x(%i) (%s)\n", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
         s->printf(" > length 0x%04x(%i)\n", length, length);
+        if (cond_dtls) {
+            s->printf(" > %s 0x%04x\n", constexpr_handshake_message_seq, dtls_seq);
+            s->printf(" > %s 0x%06x(%i)\n", constexpr_fragment_offset, fragment_offset, fragment_offset);
+            s->printf(" > %s 0x%06x(%i)\n", constexpr_fragment_len, fragment_len, fragment_len);
+        }
 
         binary_t handshake_hash;
         auto lambda_do_transcript_hash = [&](tls_session* session, const byte_t* stream, size_t size, binary_t& digest) -> void {
@@ -122,8 +154,41 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
             }
         };
 
-        pos += sizeof(tls_handshake_t);
-
+        /**
+         * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+         *  4.  Handshake Protocol
+         *      enum {
+         *          client_hello(1),
+         *          server_hello(2),
+         *          new_session_ticket(4),
+         *          end_of_early_data(5),
+         *          encrypted_extensions(8),
+         *          certificate(11),
+         *          certificate_request(13),
+         *          certificate_verify(15),
+         *          finished(20),
+         *          key_update(24),
+         *          message_hash(254),
+         *          (255)
+         *      } HandshakeType;
+         *
+         *      struct {
+         *          HandshakeType msg_type;    // handshake type
+         *          uint24 length;             // remaining bytes in message
+         *          select (Handshake.msg_type) {
+         *              case client_hello:          ClientHello;
+         *              case server_hello:          ServerHello;
+         *              case end_of_early_data:     EndOfEarlyData;
+         *              case encrypted_extensions:  EncryptedExtensions;
+         *              case certificate_request:   CertificateRequest;
+         *              case certificate:           Certificate;
+         *              case certificate_verify:    CertificateVerify;
+         *              case finished:              Finished;
+         *              case new_session_ticket:    NewSessionTicket;
+         *              case key_update:            KeyUpdate;
+         *          };
+         *      } Handshake;
+         */
         switch (handshake->msg_type) {
             case tls_handshake_client_hello: /* 1 */ {
                 ret = tls_dump_client_hello(hstype, s, session, stream, size, pos);
@@ -159,7 +224,7 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 //     Extension extensions<0..2^16-1>;
                 // } EncryptedExtensions;
 
-                ret = tls_dump_encrypted_extensions(s, session, stream, size, pos);
+                ret = tls_dump_encrypted_extensions(hstype, s, session, stream, size, pos);
 
                 lambda_do_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
@@ -280,11 +345,6 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         constexpr char constexpr_extension_len[] = "extension len";
 
         constexpr char constexpr_group_dtls[] = "dtls";
-        // handshake reconstruction data
-        constexpr char constexpr_handshake_message_seq[] = "handshake message sequence number";
-        constexpr char constexpr_fragment_offset[] = "fragment offset";
-        constexpr char constexpr_fragment_len[] = "fragment len";
-        constexpr char constexpr_dtls_version[] = "dtls legacy client version";
         constexpr char constexpr_cookie_len[] = "cookie len";
         constexpr char constexpr_cookie[] = "cookie";
 
@@ -316,19 +376,9 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         uint8 compression_method_len = 0;
         uint16 extension_len = 0;
 
-        // DTLS
-        uint16 dtls_seq = 0;
-        uint32 fragment_offset = 0;
-        uint32 fragment_len = 0;
-
-        bool cond_dtls = false;
-
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
-               << new payload_member(uint32_24_t(), constexpr_fragment_offset, constexpr_group_dtls)          // dtls
-               << new payload_member(uint32_24_t(), constexpr_fragment_len, constexpr_group_dtls)             // dtls
-               << new payload_member(uint16(0), true, constexpr_version) << new payload_member(binary_t(), constexpr_random)
+            pl << new payload_member(uint16(0), true, constexpr_version) << new payload_member(binary_t(), constexpr_random)
                << new payload_member(uint8(0), constexpr_session_id_len) << new payload_member(binary_t(), constexpr_session_id)
                << new payload_member(uint8(0), constexpr_cookie_len, constexpr_group_dtls)  // dtls
                << new payload_member(binary_t(), constexpr_cookie, constexpr_group_dtls)    // dtls
@@ -351,12 +401,12 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             // -  A "signature_algorithms" (Section 4.2.3) extension
             // -  A "pre_shared_key" (Section 4.2.11) extension
 
-            cond_dtls = pl.get_group_condition(constexpr_group_dtls);
-            if (cond_dtls) {
-                dtls_seq = t_to_int<uint32>(pl.select(constexpr_handshake_message_seq));
-                fragment_offset = t_to_int<uint32>(pl.select(constexpr_fragment_offset));
-                fragment_len = t_to_int<uint32>(pl.select(constexpr_fragment_len));
-            }
+            // cond_dtls = pl.get_group_condition(constexpr_group_dtls);
+            // if (cond_dtls) {
+            //     dtls_seq = t_to_int<uint32>(pl.select(constexpr_handshake_message_seq));
+            //     fragment_offset = t_to_int<uint32>(pl.select(constexpr_fragment_offset));
+            //     fragment_len = t_to_int<uint32>(pl.select(constexpr_fragment_len));
+            // }
 
             version = t_to_int<uint16>(pl.select(constexpr_version));
 
@@ -371,11 +421,6 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         }
 
         s->autoindent(1);
-        if (cond_dtls) {
-            s->printf(" > %s 0x%04x\n", constexpr_handshake_message_seq, dtls_seq);
-            s->printf(" > %s 0x%06x(%i)\n", constexpr_fragment_offset, fragment_offset, fragment_offset);
-            s->printf(" > %s 0x%06x(%i)\n", constexpr_fragment_len, fragment_len, fragment_len);
-        }
         s->printf(" > %s 0x%04x (%s)\n", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
         s->printf(" > %s\n", constexpr_random);
         if (random.size()) {
@@ -432,11 +477,6 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         constexpr char constexpr_extension[] = "extension";
 
         constexpr char constexpr_group_dtls[] = "dtls";
-        // handshake reconstruction data
-        constexpr char constexpr_handshake_message_seq[] = "handshake message sequence number";
-        constexpr char constexpr_fragment_offset[] = "fragment offset";
-        constexpr char constexpr_fragment_len[] = "fragment len";
-        constexpr char constexpr_dtls_version[] = "dtls legacy client version";
         constexpr char constexpr_cookie_len[] = "cookie len";
         constexpr char constexpr_cookie[] = "cookie";
 
@@ -453,20 +493,11 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         uint8 compression_method = 0;
         uint8 extension_len = 0;
 
-        // DTLS
-        uint16 dtls_seq = 0;
-        uint32 fragment_offset = 0;
-        uint32 fragment_len = 0;
-
-        bool cond_dtls = false;
         binary_t bin_server_hello;
 
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
-               << new payload_member(uint32_24_t(), constexpr_fragment_offset, constexpr_group_dtls)          // dtls
-               << new payload_member(uint32_24_t(), constexpr_fragment_len, constexpr_group_dtls)             // dtls
-               << new payload_member(uint16(0), true, constexpr_version) << new payload_member(binary_t(), constexpr_random)
+            pl << new payload_member(uint16(0), true, constexpr_version) << new payload_member(binary_t(), constexpr_random)
                << new payload_member(uint8(0), constexpr_session_id_len) << new payload_member(binary_t(), constexpr_session_id)
                << new payload_member(uint16(0), true, constexpr_cipher_suite) << new payload_member(uint8(0), constexpr_compression_method)
                << new payload_member(uint16(0), true, constexpr_extension_len);
@@ -482,13 +513,6 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             // When (EC)DHE is in use, ... "key_share" extension
             // When authenticating via a certificate, ... Certificate (Section 4.4.2) and CertificateVerify (Section 4.4.3)
 
-            cond_dtls = pl.get_group_condition(constexpr_group_dtls);
-            if (cond_dtls) {
-                dtls_seq = t_to_int<uint32>(pl.select(constexpr_handshake_message_seq));
-                fragment_offset = t_to_int<uint32>(pl.select(constexpr_fragment_offset));
-                fragment_len = t_to_int<uint32>(pl.select(constexpr_fragment_len));
-            }
-
             version = t_to_int<uint16>(pl.select(constexpr_version));
 
             pl.select(constexpr_random)->get_variant().to_binary(random);
@@ -500,11 +524,6 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         }
 
         s->autoindent(1);
-        if (cond_dtls) {
-            s->printf(" > %s 0x%04x\n", constexpr_handshake_message_seq, dtls_seq);
-            s->printf(" > %s 0x%06x(%i)\n", constexpr_fragment_offset, fragment_offset, fragment_offset);
-            s->printf(" > %s 0x%06x(%i)\n", constexpr_fragment_len, fragment_len, fragment_len);
-        }
         s->printf(" > %s 0x%04x (%s)\n", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
         s->printf(" > %s\n", constexpr_random);
         if (random.size()) {
@@ -606,7 +625,7 @@ return_t tls_dump_new_session_ticket(stream_t* s, tls_session* session, const by
     return ret;
 }
 
-return_t tls_dump_encrypted_extensions(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_dump_encrypted_extensions(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == s || nullptr == session || nullptr == stream) {
@@ -616,7 +635,12 @@ return_t tls_dump_encrypted_extensions(stream_t* s, tls_session* session, const 
 
         // RFC 8446 4.3.1.  Encrypted Extensions
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        // DTLS 1.3 ciphertext
+        if (session->get_tls_protection().is_kindof_dtls()) {
+            pos += 2;  // len
+            while (errorcode_t::success == tls_dump_extension(hstype, s, session, stream, size, pos)) {
+            };
+        }
     }
     __finally2 {
         // do nothing
@@ -911,11 +935,14 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
         s->autoindent(1);
         s->printf(" > %s 0x%04x %s\n", constexpr_signature, scheme, tlsadvisor->signature_scheme_string(scheme).c_str());
         s->printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
-        s->printf(" > %s %s %s\n", constexpr_handshake_hash, base16_encode(handshake_hash).c_str(), (errorcode_t::success == ret) ? "true" : "false");
+        s->printf(" > %s %s \e[1;33m%s\e[0m\n", constexpr_handshake_hash, base16_encode(handshake_hash).c_str(),
+                  (errorcode_t::success == ret) ? "true" : "false");
         dump_memory(handshake_hash, s, 16, 3, 0x00, dump_notrunc);
         s->printf("\n");
         s->autoindent(0);
-        s->printf(" > %s %02x\n", constexpr_record, record);
+        if (record) {
+            s->printf(" > %s %02x\n", constexpr_record, record);
+        }
     }
     __finally2 {
         // do nothing

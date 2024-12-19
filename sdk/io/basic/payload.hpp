@@ -59,15 +59,20 @@ namespace io {
  *
  *          // sketch.2 (parse)
  *          payload pl;
- *          binary_t data;
- *          binary_t pad;
- *          pl << new payload_member((uint8)0, "padlen", "pad")
- *             << new payload_member(data, "data")
- *             << new payload_member((uint32)0, true, "value")
- *             << new payload_member(pad, "pad", "pad");
+ *          pl << new payload_member(uint8(0), "padlen", "pad")
+ *             << new payload_member(binary_t(), "data")
+ *             << new payload_member(uint32(0), true, "value")
+ *             << new payload_member(binary_t(), "pad", "pad");
  *          binary_t decoded = base16_decode("036461746100001000706164");
  *          pl.set_reference_value("pad", "padlen");
  *          pl.read(decoded); // sizeof "pad" refers "padlen" value
+ *
+ *          binary_t data;
+ *          binary_t pad;
+ *          auto padlen = t_to_int<uint8>(pl.select("padlen"));
+ *          pl.select("data")->get_variant().to_binary(data);
+ *          auto value = t_to_int<uint32>(pl.select("value"));
+ *          pl.select("pad")->get_variant().to_binary(pad);
  *
  *          // computation
  *          // pl << padlen(uint8:1) << data(unknown:?) << value(uint32:4) << pad(referenceof.padlen:?)
@@ -198,7 +203,7 @@ class payload {
     /**
      * @brief   enable/disable group
      */
-    payload& set_group(const std::string& name, bool optional);
+    payload& set_group(const std::string& name, bool enable);
     /**
      * @brief   set_group(name, true);
      */
@@ -253,6 +258,9 @@ class payload {
     payload& set_reference_value(const std::string& name, const std::string& ref, uint8 multiple = 1);
     /**
      * @brief   heuristic read
+     * @param   const std::string& group [in] object
+     * @param   const std::string& name [in] subject
+     * @param   std::function<bool(payload_member*)> discriminant [in]
      * @sample
      *          // sketch
      *
@@ -297,15 +305,6 @@ class payload {
      *              pl.select("data2")->get_variant().to_binary(data2);
      *          }
      *
-     *          // case.1
-     *          write(bin_nogroup, {});                   // no group
-     *          // 00000000 : 01 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- | .
-     *          write(bin_group1, {"group1"});            // no group2
-     *          // 00000000 : 00 00 05 64 61 74 61 31 -- -- -- -- -- -- -- -- | ...data1
-     *          write(bin_group2, {"group2"});            // no group1
-     *          // 00000000 : 00 00 05 64 61 74 61 32 -- -- -- -- -- -- -- -- | ...data2
-     *          write(bin_groups, {"group1", "group2"});  // all group
-     *          // 00000000 : 01 00 05 64 61 74 61 31 00 05 64 61 74 61 32 -- | ...data1..data2
      */
     payload& set_group_condition(const std::string& group, const std::string& name, std::function<bool(payload_member*)> discriminant);
     /**
@@ -317,8 +316,44 @@ class payload {
     payload& set_group_condition(const std::string& group, uint16 value, std::function<bool(uint16)> discriminant);
     payload& set_group_condition(const std::string& group, uint32 value, std::function<bool(uint32)> discriminant);
 
+    /**
+     * @brief   heuristic read
+     * @param   const std::string& name [in]
+     * @param   std::function<void(payload*, payload_member*)> hook [in]
+     * @sample
+     *          pl.set_hook("hdr", [](payload* pl, payload_member* item) -> void {
+     *              // 7 6 5 4 3 2 1 0
+     *              // \ \_ groupB
+     *              // \___ groupA
+     *              auto val = t_to_int<uint8>(item);
+     *              pl->set_group_condition("groupA", (val & 0x80));
+     *              pl->set_group_condition("groupB", (val & 0x40));
+     *          });
+     *          pl.read(stream, size, pos);
+     */
+    payload& set_hook(const std::string& name, std::function<void(payload*, payload_member*)> hook);
+
+    /**
+     * @brief   write
+     * @param   binary_t& bin [out]
+     */
     return_t write(binary_t& bin);
+    /**
+     * @param   binary_t& bin [out]
+     * @param   const std::set<std::string>& groups [in]
+     * @sample
+     *
+     *          pl.write(bin_nogroup, {});                   // no group
+     *          // 00000000 : 01 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- | .
+     *          pl.write(bin_group1, {"group1"});            // no group2
+     *          // 00000000 : 00 00 05 64 61 74 61 31 -- -- -- -- -- -- -- -- | ...data1
+     *          pl.write(bin_group2, {"group2"});            // no group1
+     *          // 00000000 : 00 00 05 64 61 74 61 32 -- -- -- -- -- -- -- -- | ...data2
+     *          pl.write(bin_groups, {"group1", "group2"});  // all group
+     *          // 00000000 : 01 00 05 64 61 74 61 31 00 05 64 61 74 61 32 -- | ...data1..data2
+     */
     return_t write(binary_t& bin, const std::set<std::string>& groups);
+
     return_t read(const binary_t& bin);
     return_t read(const byte_t* p, size_t size);
     return_t read(const binary_t& bin, size_t& pos);
@@ -349,10 +384,13 @@ class payload {
     std::map<std::string, payload_member*> _members_map;  // search
     std::map<std::string, bool> _option;                  // map<group, true/false>
     struct cond_t {
+        // group control (see set_group_condition)
         std::string group;
         std::function<bool(payload_member*)> discriminant;
+        // control by item (see set_hook)
+        std::function<void(payload*, payload_member*)> hook;
     };
-    std::multimap<std::string, cond_t> _cond_map;
+    std::multimap<std::string, cond_t> _cond_map;  // std::map<name, cond_t>
 };
 
 template <typename T>

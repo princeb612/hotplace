@@ -27,7 +27,7 @@ enum tls_content_type_t : uint8 {
     tls_content_type_application_data = 23,    // 0x17
     tls_content_type_heartbeat = 24,           // 0x18
     tls_content_type_tls12_cid = 25,           // 0x19
-    tls_content_type_ack = 26,                 // 0x20
+    tls_content_type_ack = 26,                 // 0x1a
 };
 
 #pragma pack(push, 1)
@@ -337,6 +337,8 @@ enum tls_secret_t : uint16 {
     tls_secret_application_client_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_IV),
     tls_secret_application_server_key = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_KEY),
     tls_secret_application_server_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_IV),
+    tls_secret_application_client_sn_key = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_SN_KEY),  // DTLS
+    tls_secret_application_server_sn_key = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_SN_KEY),  // DTLS
 
     tls_secret_application_quic_client_key = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_QUIC_KEY),
     tls_secret_application_quic_client_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_QUIC_IV),

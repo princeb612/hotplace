@@ -31,8 +31,8 @@ payload& payload::operator<<(payload_member* member) {
     return *this;
 }
 
-payload& payload::set_group(const std::string& name, bool optional) {
-    _option[name] = optional;
+payload& payload::set_group(const std::string& name, bool enable) {
+    _option[name] = enable;
     return *this;
 }
 
@@ -105,6 +105,13 @@ return_t payload::write(binary_t& bin) {
     return ret;
 }
 
+payload& payload::set_hook(const std::string& name, std::function<void(payload*, payload_member*)> hook) {
+    cond_t cond;
+    cond.hook = hook;
+    _cond_map.insert({name, cond});
+    return *this;
+}
+
 return_t payload::write(binary_t& bin, const std::set<std::string>& groups) {
     return_t ret = errorcode_t::success;
     bool condition = false;
@@ -114,6 +121,10 @@ return_t payload::write(binary_t& bin, const std::set<std::string>& groups) {
         if (group.empty()) {
             condition = true;
         } else {
+            if (false == get_group_condition(group)) {
+                continue;
+            }
+
             auto iter = groups.find(group);
             if (groups.end() != iter) {
                 condition = true;
@@ -165,56 +176,61 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
                 auto ubound = _cond_map.upper_bound(name);
                 for (auto iter = lbound; iter != ubound; iter++) {
                     auto cond = iter->second;
-                    bool enable = cond.discriminant(item);
-                    set_group(cond.group, enable);
+                    // see set_group_condition
+                    if (cond.discriminant) {
+                        bool enable = cond.discriminant(item);
+                        set_group(cond.group, enable);
+                    }
+                    // see set_hook
+                    if (cond.hook) {
+                        cond.hook(this, item);
+                    }
                 }
             }
         };
 
-        {
-            for (auto item : _members) {
-                bool condition = get_group_condition(item->get_group());
-                if (false == condition) {
-                    continue;
-                }
+        for (auto item : _members) {
+            bool condition = get_group_condition(item->get_group());
+            if (false == condition) {
+                continue;
+            }
 
-                auto try_read = list_size_unknown.empty();
-                uint16 space = 0;
-                if (item->encoded()) {
+            auto try_read = list_size_unknown.empty();
+            uint16 space = 0;
+            if (item->encoded()) {
+                if (try_read) {
+                    lambda_readitem(item, base, size, offset, &size_item);
+                    offset += size_item;
+                    set_once_read.insert(item);
+                } else {
+                    ret = errorcode_t::bad_data;
+                    break;
+                }
+            } else {
+                space = item->get_space();
+                if (0 == space) {
+                    auto ref = item->get_reference_of();
+                    if (ref) {
+                        space = ref->get_reference_value();
+                        item->reserve(space);
+                        lambda_readitem(item, base, size, offset, &size_item);
+                        offset += size_item;
+                        set_once_read.insert(item);
+                    } else {
+                        list_size_unknown.push_back(item);
+                    }
+                } else {
                     if (try_read) {
                         lambda_readitem(item, base, size, offset, &size_item);
                         offset += size_item;
                         set_once_read.insert(item);
                     } else {
-                        ret = errorcode_t::bad_data;
-                        break;
-                    }
-                } else {
-                    space = item->get_space();
-                    if (0 == space) {
-                        auto ref = item->get_reference_of();
-                        if (ref) {
-                            space = ref->get_reference_value();
-                            item->reserve(space);
-                            lambda_readitem(item, base, size, offset, &size_item);
-                            offset += size_item;
-                            set_once_read.insert(item);
-                        } else {
-                            list_size_unknown.push_back(item);
-                        }
-                    } else {
-                        if (try_read) {
-                            lambda_readitem(item, base, size, offset, &size_item);
-                            offset += size_item;
-                            set_once_read.insert(item);
-                        } else {
-                            offset += space;
-                        }
+                        offset += space;
                     }
                 }
-                if (errorcode_t::success != ret) {
-                    break;
-                }
+            }
+            if (errorcode_t::success != ret) {
+                break;
             }
         }
 
@@ -284,6 +300,9 @@ payload_member* payload::select(const std::string& name) {
 size_t payload::offset_of(const std::string& name) {
     size_t offset = 0;
     for (auto item : _members) {
+        if (false == get_group_condition(item->get_group())) {
+            continue;
+        }
         if (name == item->get_name()) {
             break;
         }
@@ -322,6 +341,7 @@ payload& payload::clear() {
     for (auto item : _members) {
         delete item;
     }
+    _cond_map.clear();
     return *this;
 }
 
