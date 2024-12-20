@@ -81,6 +81,7 @@ return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* str
                 dumped_hex_part = 0;
             }
         }
+        stream->printf("\n");
     }
     __finally2 {
         // do nothing

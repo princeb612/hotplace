@@ -683,7 +683,6 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
             debugstream->printf(" > plaintext\n");
             dump_memory(plaintext, debugstream, 16, 3, 0x0, dump_notrunc);
             debugstream->autoindent(0);
-            debugstream->printf("\n");
         }
     }
     __finally2 {
@@ -799,14 +798,11 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_role_t role, con
             debugstream->printf(" > record no %i\n", record_no);
             debugstream->printf(" > ciphertext\n");
             dump_memory(stream + bpos, size - bpos, debugstream, 16, 3, 0x0, dump_notrunc);
-            debugstream->printf("\n");
             debugstream->printf(" > plaintext\n");
             dump_memory(plaintext, debugstream, 16, 3, 0x0, dump_notrunc);
-            debugstream->printf("\n");
             debugstream->printf(" > content\n");
             dump_memory(content, debugstream, 16, 3, 0x0, dump_notrunc);
             debugstream->autoindent(0);
-            debugstream->printf("\n");
         }
     }
     __finally2 {

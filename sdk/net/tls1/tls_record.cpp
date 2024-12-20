@@ -153,7 +153,6 @@ return_t tls_dump_tls_record(stream_t* s, tls_session* session, const byte_t* st
                 s->printf("> %s 0x%04x\n", constexpr_key_epoch, key_epoch);
                 s->printf("> %s %s\n", constexpr_dtls_record_seq, base16_encode(dtls_record_seq).c_str());
                 // dump_memory(dtls_record_seq, s, 16, 3, 0x0, dump_notrunc);
-                // s->printf("\n");
             }
             s->printf("> %s 0x%04x(%i)\n", constexpr_len, len, len);
         }
@@ -274,11 +273,10 @@ return_t tls_dump_tls_record(stream_t* s, tls_session* session, const byte_t* st
                                     }
                                 }
                             } else if (tls_content_type_application_data == last_byte) {
-                                s->autoindent(5);
+                                s->autoindent(3);
                                 s->printf("> %s\n", constexpr_application_data);
                                 dump_memory(&plaintext[0], plainsize - 1, s, 16, 3, 0x0, dump_notrunc);
                                 s->autoindent(0);
-                                s->printf("\n");
                             }
                         } else {
                             crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -291,7 +289,6 @@ return_t tls_dump_tls_record(stream_t* s, tls_session* session, const byte_t* st
                                 s->printf(" > %s\n", constexpr_application_data);  // data
                                 dump_memory(&plaintext[0], plaintext.size() - extra, s, 16, 3, 0x0, dump_notrunc);
                                 s->autoindent(0);
-                                s->printf("\n");
                             }
                         }
                     }
@@ -394,7 +391,6 @@ return_t tls_dump_dtls13_ciphertext(stream_t* s, tls_session* session, const byt
         s->printf("> %s %04x\n", constexpr_len, len);
         s->printf("> %s\n", constexpr_encdata);
         dump_memory(encdata, s, 16, 3, 0x0, dump_notrunc);
-        s->printf("\n");
     }
 
     uint16 rec_enc = 0;
@@ -447,7 +443,6 @@ return_t tls_dump_dtls13_ciphertext(stream_t* s, tls_session* session, const byt
         // s->printf("> %s %04x\n", constexpr_recno, recno);
         s->printf("> %s %04x (%04x XOR %s)\n", constexpr_recno, recno, sequence, base16_encode(ciphertext).substr(0, sequence_len << 1).c_str());
         dump_memory(ciphertext, s, 16, 3, 0x0, dump_notrunc);
-        s->printf("\n");
     }
 
     binary_t plaintext;
@@ -460,10 +455,8 @@ return_t tls_dump_dtls13_ciphertext(stream_t* s, tls_session* session, const byt
     {
         s->printf("> aad\n");
         dump_memory(aad, s, 16, 3, 0x0, dump_notrunc);
-        s->printf("\n");
         s->printf("> plaintext\n");
         dump_memory(plaintext, s, 16, 3, 0x0, dump_notrunc);
-        s->printf("\n");
     }
 
     // record
@@ -473,18 +466,17 @@ return_t tls_dump_dtls13_ciphertext(stream_t* s, tls_session* session, const byt
 
         switch (hstype) {
             case tls_content_type_alert: {
-                ret = tls_dump_alert(s, session, &plaintext[0], plaintext.size(), tpos);
+                ret = tls_dump_alert(s, session, &plaintext[0], plaintext.size() - 1, tpos);
             } break;
             case tls_content_type_handshake: {
-                ret = tls_dump_handshake(s, session, &plaintext[0], plaintext.size(), tpos, role);
+                ret = tls_dump_handshake(s, session, &plaintext[0], plaintext.size() - 1, tpos, role);
             } break;
             case tls_content_type_application_data: {
                 s->printf("> application data\n");
                 dump_memory(&plaintext[0], plaintext.size() - 1, s, 16, 3, 0x0, dump_notrunc);
-                s->printf("\n");
             } break;
             case tls_content_type_ack: {
-                ret = tls_dump_ack(s, session, &plaintext[0], plaintext.size(), tpos, role);
+                ret = tls_dump_ack(s, session, &plaintext[0], plaintext.size() - 1, tpos, role);
             } break;
         }
     }

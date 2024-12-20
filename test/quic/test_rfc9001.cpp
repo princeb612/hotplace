@@ -75,8 +75,8 @@ void test_rfc_9001_a1() {
     _logger->hdump("> DCID", bin_dcid, 16, 3);
 
     auto lambda_test = [&](const char* func, const char* text, const binary_t& bin_expect_result, const binary_t& bin_expect) -> void {
-        _logger->hdump(format("> %s", text), bin_expect_result, 16, 3);
-        _logger->writeln(" : %s", base16_encode(bin_expect_result).c_str());
+        // _logger->hdump(format("> %s", text), bin_expect_result, 16, 3);
+        _logger->writeln("> %s : %s", text, base16_encode(bin_expect_result).c_str());
         _test_case.assert(bin_expect == bin_expect_result, func, text);
     };
 
@@ -170,20 +170,20 @@ void test_rfc_9001_initial(testvector_initial_packet* item, tls_session* session
         bin_expect_result = base16_decode_rfc(item->expect_result);
     }
 
+    auto lambda_dump = [&](const char* text, const binary_t& bin) -> void { _logger->writeln("> %-21s : %s", text, base16_encode(bin).c_str()); };
+
     quic_protection quicpp(bin_odcid);
 
     {
-        _logger->hdump("> initial secret", quicpp.get_item(quic_initial_secret), 16, 3);
-        _logger->hdump("> client initial secret", quicpp.get_item(quic_client_secret), 16, 3);
-        _logger->hdump("> client key", quicpp.get_item(quic_client_key), 16, 3);
-        _logger->hdump("> client iv", quicpp.get_item(quic_client_iv), 16, 3);
-        _logger->hdump("> client hp", quicpp.get_item(quic_client_hp), 16, 3);
-        _logger->hdump("> server initial secret", quicpp.get_item(quic_server_secret), 16, 3);
-        _logger->hdump("> server key", quicpp.get_item(quic_server_key), 16, 3);
-        _logger->hdump("> server iv", quicpp.get_item(quic_server_iv), 16, 3);
-        _logger->hdump("> server hp", quicpp.get_item(quic_server_hp), 16, 3);
-        // _logger->hdump("> input frame", bin_frame, 16, 3);
-        // _logger->hdump("> expect result", bin_expect_result, 16, 3);
+        lambda_dump("initial secret", quicpp.get_item(quic_initial_secret));
+        lambda_dump("client initial secret", quicpp.get_item(quic_client_secret));
+        lambda_dump("client key", quicpp.get_item(quic_client_key));
+        lambda_dump("client iv", quicpp.get_item(quic_client_iv));
+        lambda_dump("client hp", quicpp.get_item(quic_client_hp));
+        lambda_dump("server initial secret", quicpp.get_item(quic_server_secret));
+        lambda_dump("server key", quicpp.get_item(quic_server_key));
+        lambda_dump("server iv", quicpp.get_item(quic_server_iv));
+        lambda_dump("server hp", quicpp.get_item(quic_server_hp));
     }
 
     // write
@@ -203,13 +203,13 @@ void test_rfc_9001_initial(testvector_initial_packet* item, tls_session* session
         initial.write(bin_result, mode);
 
         _logger->hdump("> unprotected header (AAD)", bin_unprotected_header, 16, 3);
-        _logger->writeln(" : %s", base16_encode(bin_unprotected_header).c_str());
+        _logger->writeln("   %s", base16_encode(bin_unprotected_header).c_str());
         _logger->hdump("> expected unprotected header (AAD)", bin_expect_unprotected_header, 16, 3);
-        _logger->writeln(" : %s", base16_encode(bin_expect_unprotected_header).c_str());
+        _logger->writeln("   %s", base16_encode(bin_expect_unprotected_header).c_str());
         _logger->hdump("> protected header", bin_protected_header, 16, 3);
-        _logger->writeln(" : %s", base16_encode(bin_protected_header).c_str());
+        _logger->writeln("   %s", base16_encode(bin_protected_header).c_str());
         _logger->hdump("> expected protected header", bin_expect_protected_header, 16, 3);
-        _logger->writeln(" : %s", base16_encode(bin_expect_protected_header).c_str());
+        _logger->writeln("   %s", base16_encode(bin_expect_protected_header).c_str());
         // _logger->hdump("> payload (encrypted)", bin_payload, 16, 3);
         // _logger->hdump("> tag", bin_tag, 16, 3);
         // _logger->hdump("> result", bin_result, 16, 3);

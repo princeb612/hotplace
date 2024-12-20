@@ -401,13 +401,6 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             // -  A "signature_algorithms" (Section 4.2.3) extension
             // -  A "pre_shared_key" (Section 4.2.11) extension
 
-            // cond_dtls = pl.get_group_condition(constexpr_group_dtls);
-            // if (cond_dtls) {
-            //     dtls_seq = t_to_int<uint32>(pl.select(constexpr_handshake_message_seq));
-            //     fragment_offset = t_to_int<uint32>(pl.select(constexpr_fragment_offset));
-            //     fragment_len = t_to_int<uint32>(pl.select(constexpr_fragment_len));
-            // }
-
             version = t_to_int<uint16>(pl.select(constexpr_version));
 
             pl.select(constexpr_random)->get_variant().to_binary(random);
@@ -425,7 +418,6 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         s->printf(" > %s\n", constexpr_random);
         if (random.size()) {
             // dump_memory(random, s, 16, 3, 0x0, dump_notrunc);
-            // s->printf("\n");
             s->printf("   %s\n", base16_encode(random).c_str());
         }
         s->printf(" > %s %02x(%i)\n", constexpr_session_id, session_id_len, session_id_len);
@@ -442,8 +434,8 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             auto compr = t_binary_to_integer<uint8>(&compression_method[i], sizeof(uint8));
             s->printf("   [%i] 0x%02x %s\n", i, compr, tlsadvisor->compression_method_string(compr).c_str());
         }
-        s->autoindent(0);
         s->printf(" > %s 0x%04x(%i)\n", constexpr_extension_len, extension_len, extension_len);
+        s->autoindent(0);
 
         while (errorcode_t::success == tls_dump_extension(hstype, s, session, stream, size, pos)) {
         };
@@ -528,7 +520,6 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         s->printf(" > %s\n", constexpr_random);
         if (random.size()) {
             // dump_memory(random, s, 16, 3, 0x0, dump_notrunc);
-            // s->printf("\n");
             s->printf("   %s\n", base16_encode(random).c_str());
         }
         s->printf(" > %s\n", constexpr_session_id);
@@ -537,8 +528,8 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         }
         s->printf(" > %s 0x%04x %s\n", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
         s->printf(" > %s %i %s\n", constexpr_compression_method, compression_method, tlsadvisor->compression_method_string(compression_method).c_str());
-        s->autoindent(0);
         s->printf(" > %s %i(0x%02x)\n", constexpr_extension_len, extension_len, extension_len);
+        s->autoindent(0);
 
         while (errorcode_t::success == tls_dump_extension(hstype, s, session, stream, size, pos)) {
         };
@@ -614,10 +605,8 @@ return_t tls_dump_new_session_ticket(stream_t* s, tls_session* session, const by
         s->printf(" > %s %s\n", constexpr_ticket_nonce, base16_encode(ticket_nonce).c_str());
         s->printf(" > %s\n", constexpr_session_ticket);
         dump_memory(session_ticket, s, 16, 3, 0x0, dump_notrunc);
-        s->printf("\n");
         s->printf(" > %s %s\n", constexpr_ticket_extensions, base16_encode(ticket_extensions).c_str());
         s->autoindent(0);
-        s->printf("\n");
     }
     __finally2 {
         // do nothing
@@ -708,13 +697,10 @@ return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* s
         s->printf(" > %s 0x%04x(%i)\n", constexpr_certificates_len, certificates_len, certificates_len);
         s->printf(" > %s 0x%04x(%i)\n", constexpr_certificate_len, certificate_len, certificate_len);
         dump_memory(cert, s, 16, 3, 0x00, dump_notrunc);
-        s->printf("\n");
         s->printf(" > %s\n", constexpr_certificate_extensions);
         dump_memory(cert_extensions, s, 16, 3, 0x00, dump_notrunc);
-        s->printf("\n");
         s->printf(" > %s 0x%02x (%s)\n", constexpr_record_type, record_type, tlsadvisor->content_type_string(record_type).c_str());
         s->autoindent(0);
-        s->printf("\n");
 
         auto& servercert = session->get_tls_protection().get_cert();
         ret = keychain.load_der(&servercert, &cert[0], cert.size(), keydesc(use_sig));
@@ -821,11 +807,9 @@ return_t tls_dump_server_key_exchange(stream_t* s, tls_session* session, const b
             s->printf(" > %s 0x%04x %s\n", constexpr_curve, curve, tlsadvisor->supported_group_string(curve).c_str());
             s->printf(" > %s %i\n", constexpr_pubkey_len, pubkey_len);
             dump_memory(pubkey, s, 16, 3, 0x0, dump_notrunc);
-            s->printf("\n");
             s->printf(" > %s 0x%04x %s\n", constexpr_signature, signature, tlsadvisor->signature_scheme_string(signature).c_str());
             s->printf(" > %s %i\n", constexpr_sig_len, sig_len);
             dump_memory(sig, s, 16, 3, 0x0, dump_notrunc);
-            s->printf("\n");
             s->autoindent(0);
         }
     }
@@ -862,23 +846,20 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
         constexpr char constexpr_signature[] = "signature algorithm";
         constexpr char constexpr_len[] = "len";
         constexpr char constexpr_handshake_hash[] = "handshake's hash";
-        constexpr char constexpr_record[] = "record";
 
         uint16 scheme = 0;
         uint16 len = 0;
-        uint8 record = 0;
         binary_t handshake_hash;
         {
             payload pl;
             pl << new payload_member(uint16(0), true, constexpr_signature) << new payload_member(uint16(0), true, constexpr_len)
-               << new payload_member(binary_t(), constexpr_handshake_hash) << new payload_member(uint8(0), constexpr_record);
+               << new payload_member(binary_t(), constexpr_handshake_hash);
             pl.set_reference_value(constexpr_handshake_hash, constexpr_len);
             pl.read(stream, size, pos);
 
             scheme = t_to_int<uint16>(pl.select(constexpr_signature));
             len = t_to_int<uint16>(pl.select(constexpr_len));
             pl.select(constexpr_handshake_hash)->get_variant().to_binary(handshake_hash);
-            record = t_to_int<uint8>(pl.select(constexpr_record));
         }
 
         tls_protection& protection = session->get_tls_protection();
@@ -894,14 +875,6 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
              * RFC 8446 4.4.3.  Certificate Verify
              *
              * https://tls13.xargs.org/#server-certificate-verify/annotated
-             *  ### find the hash of the conversation to this point, excluding
-             *  ### 5-byte record headers or 1-byte wrapped record trailers
-             *  Each TLS 1.3 record disguised as TLS 1.2 application data has a final byte which indicates its actual record type.
-             *  $ handshake_hash=$((
-             *     tail -c +6 clienthello;
-             *     tail -c +6 serverhello;
-             *     perl -pe 's/.$// if eof' serverextensions;
-             *     perl -pe 's/.$// if eof' servercert) | openssl sha384)
              */
 
             auto hash = protection.get_transcript_hash();  // hash(client_hello .. certificate)
@@ -922,9 +895,6 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
             crypto_key& key = session->get_tls_protection().get_cert();
             auto pkey = key.any();
 
-            // ### verify the signature
-            // $ cat /tmp/tosign | openssl dgst -verify server.pub -sha256 \
-            //     -sigopt rsa_padding_mode:pss -sigopt rsa_pss_saltlen:-1 -signature /tmp/sig
             ret = sign->verify(pkey, tosign.data(), tosign.size(), handshake_hash);
 
             sign->release();
@@ -938,11 +908,7 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
         s->printf(" > %s %s \e[1;33m%s\e[0m\n", constexpr_handshake_hash, base16_encode(handshake_hash).c_str(),
                   (errorcode_t::success == ret) ? "true" : "false");
         dump_memory(handshake_hash, s, 16, 3, 0x00, dump_notrunc);
-        s->printf("\n");
         s->autoindent(0);
-        if (record) {
-            s->printf(" > %s %02x\n", constexpr_record, record);
-        }
     }
     __finally2 {
         // do nothing
@@ -997,7 +963,6 @@ return_t tls_dump_client_key_exchange(stream_t* s, tls_session* session, const b
             s->printf(" > %s\n", constexpr_pubkey);
             dump_memory(pubkey, s, 16, 3, 0x0, dump_notrunc);
             s->autoindent(0);
-            s->printf("\n");
         }
     }
     __finally2 {
@@ -1025,36 +990,21 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
         auto dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
 
         constexpr char constexpr_verify_data[] = "verify data";
-        constexpr char constexpr_record[] = "record";
 
-        uint8 record = 0;
         binary_t verify_data;
 
         {
             // RFC 8448 record not exist
             payload pl;
-            pl << new payload_member(binary_t(), constexpr_verify_data) << new payload_member(uint8(0), constexpr_record);
+            pl << new payload_member(binary_t(), constexpr_verify_data);
             pl.select(constexpr_verify_data)->reserve(dlen);
             pl.read(stream, size, pos);
 
             pl.select(constexpr_verify_data)->get_variant().to_binary(verify_data);
-            record = t_to_int<uint8>(pl.select(constexpr_record));
         }
 
         {
             // https://tls13.xargs.org/#server-handshake-finished/annotated
-            //
-            // finished_key = HKDF-Expand-Label(key: server_secret, label: "finished", ctx: "", len: 48)
-            // finished_hash = SHA384(Client Hello ... Server Cert Verify)
-            // verify_data = HMAC-SHA384(key: finished_key, msg: finished_hash)
-
-            // ### excluding 5-byte record headers or 1-byte wrapped record trailers
-            // $ fin_hash=$((
-            //     tail -c +6 clienthello;
-            //     tail -c +6 serverhello;
-            //     perl -pe 's/.$// if eof' serverextensions;
-            //     perl -pe 's/.$// if eof' servercert;
-            //     perl -pe 's/.$// if eof' servercertverify) | openssl sha384)
             binary_t fin_hash;
             auto hash = protection.get_transcript_hash();
             if (hash) {
@@ -1072,7 +1022,6 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
                     typeof_secret = tls_secret_handshake_client;
                 }
                 const binary_t& ht_secret = protection.get_item(typeof_secret);
-                // $ fin_key=$(./hkdf-384 expandlabel $ht_secret "finished" "" 48)
                 hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(protection.get_cipher_suite());
                 openssl_kdf kdf;
                 binary_t context;
@@ -1081,8 +1030,6 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
                 } else {
                     kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
                 }
-                // $ echo $fin_hash | xxd -r -p \
-                //     | openssl dgst -sha384 -mac HMAC -macopt hexkey:$fin_key
                 crypto_hmac_builder builder;
                 crypto_hmac* hmac = builder.set(hashalg).set(fin_key).build();
                 if (hmac) {
@@ -1128,13 +1075,10 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
             s->autoindent(1);
             s->printf("> %s\n", constexpr_verify_data);
             dump_memory(verify_data, s, 16, 3, 0x00, dump_notrunc);
-            s->printf("\n");
             s->printf("  > secret (internal) %02x\n", typeof_secret);
             s->printf("  > verify data %s \n", base16_encode(maced).c_str());
             s->printf("  > maced       %s \e[1;33m%s\e[0m\n", base16_encode(maced).c_str(), (errorcode_t::success == ret) ? "true" : "false");
-            s->printf("> %s %02x", constexpr_record, record);
             s->autoindent(0);
-            s->printf("\n");
         }
     }
     __finally2 {

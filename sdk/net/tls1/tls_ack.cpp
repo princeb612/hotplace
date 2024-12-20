@@ -30,13 +30,11 @@ return_t tls_dump_ack(stream_t* s, tls_session* session, const byte_t* stream, s
 
         constexpr char constexpr_ack_len[] = "ack len";
         constexpr char constexpr_ack[] = "record ack";
-        constexpr char constexpr_record[] = "record";
         uint16 ack_len = 0;
         binary_t ack;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_ack_len) << new payload_member(binary_t(), constexpr_ack)
-               << new payload_member(uint8(0), constexpr_record);
+            pl << new payload_member(uint16(0), true, constexpr_ack_len) << new payload_member(binary_t(), constexpr_ack);
             pl.set_reference_value(constexpr_ack, constexpr_ack_len);
             pl.read(stream, size, pos);
 
@@ -47,7 +45,6 @@ return_t tls_dump_ack(stream_t* s, tls_session* session, const byte_t* stream, s
         {
             s->printf("> %s %04x(%i)\n", constexpr_ack_len, ack_len, ack_len);
             dump_memory(ack, s, 16, 3, 0x0, dump_notrunc);
-            s->printf("\n");
         }
     }
     __finally2 {

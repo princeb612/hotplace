@@ -322,23 +322,12 @@ std::string base16_encode_rfc(const std::string& source) {
         }
         // pattern 2 hex:hex:...:hex
         else {
-#if 0
-            // multi phase
-            replace(inpart, ":", "");
-            replace(inpart, " ", "");
-            replace(inpart, "\t", "");
-            replace(inpart, "\r", "");
-            replace(inpart, "\n", "");
-            replace(inpart, "-", "");
-            outpart = inpart;
-#else
             // single phase
             for (auto e : inpart) {
                 if (('9' >= e && e >= '0') || ('f' >= e && e >= 'a') || ('F' >= e && e >= 'A') || ('x' == e)) {
                     outpart.push_back(e);
                 }
             }
-#endif
         }
     }
     return outpart;
@@ -377,16 +366,6 @@ binary_t base16_decode_rfc(const std::string& source) {
         // pattern 2 hex:hex:...:hex
         // pattern 3 hex hex ... hex\nhex hex
         else {
-#if 0
-            // multi phase
-            replace(inpart, ":", "");
-            replace(inpart, " ", "");
-            replace(inpart, "\t", "");
-            replace(inpart, "\r", "");
-            replace(inpart, "\n", "");
-            replace(inpart, "-", "");
-            outpart = base16_decode(inpart);
-#else
             // single phase
             std::string temp;
             for (auto e : inpart) {
@@ -395,7 +374,6 @@ binary_t base16_decode_rfc(const std::string& source) {
                 }
             }
             outpart = base16_decode(temp);
-#endif
         }
     }
     return outpart;

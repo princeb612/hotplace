@@ -232,7 +232,6 @@ void quic_packet::dump(stream_t* s) {
         s->printf(" > version %08x\n", get_version());
         s->printf(" > destination connection id\n");
         dump_memory(_dcid, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
-        s->printf("\n");
         switch (get_type()) {
             // long header
             case quic_packet_type_version_negotiation:
@@ -242,7 +241,6 @@ void quic_packet::dump(stream_t* s) {
             case quic_packet_type_retry:
                 s->printf(" > source connection id\n");
                 dump_memory(_scid, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
-                s->printf("\n");
                 break;
             // short header
             case quic_packet_type_1_rtt:

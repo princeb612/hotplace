@@ -88,10 +88,8 @@ void http2_frame_alt_svc::dump(stream_t* s) {
         s->printf(" > %s %u\n", constexpr_frame_origin_len, _origin.size());
         s->printf(" > %s\n", constexpr_frame_origin);
         dump_memory(_origin, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
-        s->printf("\n");
         s->printf(" > %s\n", constexpr_frame_alt_svc_field_value);
         dump_memory(_altsvc, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
-        s->printf("\n");
     }
 }
 

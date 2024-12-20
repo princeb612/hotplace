@@ -248,7 +248,6 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                 s->printf("   > %s %I64i\n", constexpr_length, length);
                 s->printf("   > %s (%zi)\n", constexpr_crypto_data, crypto_data.size());
                 dump_memory(crypto_data, s, 16, 5, 0x0, dump_notrunc);
-                s->printf("\n");
 
                 size_t hpos = 0;
                 tls_dump_handshake(s, session, &crypto_data[0], crypto_data.size(), hpos, role);
@@ -273,7 +272,6 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                 s->printf("  > frame %s @%zi\n", constexpr_frame_new_token, begin);
                 s->printf("   > %s (%zi)\n", constexpr_token, token.size());
                 dump_memory(token, s, 16, 5, 0x0, dump_notrunc);
-                s->printf("\n");
             } break;
             // 19.8.  STREAM Frames
             case quic_frame_stream:      // 0x8

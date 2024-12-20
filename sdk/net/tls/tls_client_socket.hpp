@@ -73,7 +73,7 @@ namespace net {
  *
  *                  basic_stream bs;
  *                  dump_memory((byte_t*)data->content(), data->size(), &bs);
- *                  printf("%s\n", bs.c_str());
+ *                  printf("%s", bs.c_str());
  *                  data->release();
  *              }
  *          }

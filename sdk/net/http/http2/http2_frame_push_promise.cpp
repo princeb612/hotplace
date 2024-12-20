@@ -102,7 +102,6 @@ void http2_frame_push_promise::dump(stream_t* s) {
         s->printf(" > %s %u\n", constexpr_frame_promised_stream_id, _promised_id);
         s->printf(" > %s\n", constexpr_frame_fragment);
         dump_memory(_fragment, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
-        s->printf("\n");
 
         auto reader = [&](const std::string& name, const std::string& value) -> void { s->printf(" > %s: %s\n", name.c_str(), value.c_str()); };
         http2_frame::read_compressed_header(_fragment, reader);

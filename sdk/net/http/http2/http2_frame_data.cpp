@@ -95,7 +95,6 @@ void http2_frame_data::dump(stream_t* s) {
         http2_frame::dump(s);
         s->printf(" > %s\n", constexpr_frame_data);
         dump_memory(_data, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
-        s->printf("\n");
     }
 }
 

@@ -78,18 +78,20 @@ void test_dtls_xargs_org() {
         test_keycalc(&session, tls_context_shared_secret, shared_secret, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
         binary_t hello_hash;
         test_keycalc(&session, tls_context_transcript_hash, hello_hash, "hello_hash", "aee8eba0d2ee87052fbbc6864c1514c5a927d6f0ffb4f7954c7f379d95f1b1d7");
-        binary_t client_handshake_key;
-        test_keycalc(&session, tls_secret_handshake_client_key, client_handshake_key, "client_handshake_key", "6caa2633d5e48f10051e69dc45549c97");
-        binary_t client_handshake_iv;
-        test_keycalc(&session, tls_secret_handshake_client_iv, client_handshake_iv, "client_handshake_iv", "106dc6e393b7a9ea8ef29dd7");
-        binary_t server_handshake_key;
-        test_keycalc(&session, tls_secret_handshake_server_key, server_handshake_key, "server_handshake_key", "004e03e64ab6cba6b542775ec230e20a");
-        binary_t server_handshake_iv;
-        test_keycalc(&session, tls_secret_handshake_server_iv, server_handshake_iv, "server_handshake_iv", "6d9924be044ee97c624913f2");
-        binary_t client_sn_key;
-        test_keycalc(&session, tls_secret_handshake_client_sn_key, client_sn_key, "client_sn_key", "beed6218676635c2cb46a45694144fec");
-        binary_t server_sn_key;
-        test_keycalc(&session, tls_secret_handshake_server_sn_key, server_sn_key, "server_sn_key", "7173fac51194e775001d625ef69d7c9f");
+        binary_t secret_handshake_client_key;
+        test_keycalc(&session, tls_secret_handshake_client_key, secret_handshake_client_key, "secret_handshake_client_key", "6caa2633d5e48f10051e69dc45549c97");
+        binary_t secret_handshake_client_iv;
+        test_keycalc(&session, tls_secret_handshake_client_iv, secret_handshake_client_iv, "secret_handshake_client_iv", "106dc6e393b7a9ea8ef29dd7");
+        binary_t secret_handshake_server_key;
+        test_keycalc(&session, tls_secret_handshake_server_key, secret_handshake_server_key, "secret_handshake_server_key", "004e03e64ab6cba6b542775ec230e20a");
+        binary_t secret_handshake_server_iv;
+        test_keycalc(&session, tls_secret_handshake_server_iv, secret_handshake_server_iv, "secret_handshake_server_iv", "6d9924be044ee97c624913f2");
+        binary_t secret_handshake_client_sn_key;
+        test_keycalc(&session, tls_secret_handshake_client_sn_key, secret_handshake_client_sn_key, "secret_handshake_client_sn_key",
+                     "beed6218676635c2cb46a45694144fec");
+        binary_t secret_handshake_server_sn_key;
+        test_keycalc(&session, tls_secret_handshake_server_sn_key, secret_handshake_server_sn_key, "secret_handshake_server_sn_key",
+                     "7173fac51194e775001d625ef69d7c9f");
     }
     // https://dtls.xargs.org/#server-encrypted-extensions-datagram
     {

@@ -225,7 +225,6 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
                 byte_t* buf = (byte_t*)data_array[1];
                 size_t bufsize = (size_t)data_array[2];
                 dump_memory((byte_t*)buf, bufsize, &bs, 16, 2, 0, dump_memory_flag_t::dump_notrunc);
-                bs.printf("\n");
             } break;
             case mux_disconnect:
                 bs.printf("disconnect %i\n", session_socket->event_socket);

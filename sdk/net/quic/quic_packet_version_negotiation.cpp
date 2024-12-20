@@ -8,7 +8,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
 

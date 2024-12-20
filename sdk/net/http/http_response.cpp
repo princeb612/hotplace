@@ -309,7 +309,6 @@ http_response& http_response::get_response(basic_stream& bs) {
         if (istraceable()) {
             basic_stream dbs;
             dump_memory(bs.data(), bs.size(), &dbs, 16, 2, 0, dump_notrunc);
-            dbs.printf("\n");
 
             traceevent(category_http_response, http_response_event_getresponse, &dbs);
         }

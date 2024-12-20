@@ -144,10 +144,8 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 s->printf(" > %s %i %s\n", constexpr_cert_status_type, cert_status_type, tlsadvisor->cert_status_type_string(cert_status_type).c_str());
                 s->printf(" > %s %i\n", constexpr_responderid_info_len, responderid_info_len);
                 dump_memory(responderid_info, s, 16, 3, 0x0, dump_notrunc);
-                s->printf("\n");
                 s->printf(" > %s %i\n", constexpr_request_ext_info_len, request_ext_info_len);
                 dump_memory(request_ext_info, s, 16, 3, 0x0, dump_notrunc);
-                s->printf("\n");
             } break;
             case tls_extension_supported_groups: /* 0x000a */ {
                 // RFC 8422 5.  Data Structures and Computations
@@ -249,7 +247,6 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
 
                 s->printf(" > %s %i\n", constexpr_alpn_len, alpn_len);
                 dump_memory(protocol, s, 16, 3, 0x0, dump_notrunc);
-                s->printf("\n");
             } break;
             case tls_extension_signed_certificate_timestamp: /* 0x0012 */ {
                 // studying
@@ -340,7 +337,6 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
 
                 // s->printf(" > pre shared key\n");
                 // dump_memory(stream + tpos, ext_len, s, 16, 3, 0x0, dump_notrunc);
-                // s->printf("\n");
                 // pos += ext_len;
 
                 switch (hstype) {
@@ -377,11 +373,9 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                         {
                             s->printf(" > %s 0x%04x(%i)\n", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
                             dump_memory(psk_identity, s, 16, 3, 0x0, dump_notrunc);
-                            s->printf("\n");
                             s->printf(" > %s 0x%08x\n", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
                             s->printf(" > %s 0x%04x(%i)\n", constexpr_psk_binders_len, psk_binders_len, psk_binders_len);
                             dump_memory(psk_binders, s, 16, 3, 0x0, dump_notrunc);
-                            s->printf("\n");
                         }
                     } break;
                     case tls_handshake_server_hello: {
@@ -568,7 +562,6 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                             s->printf("   > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_string(group).c_str());
                             s->printf("   > %s %i(%04x)\n", constexpr_pubkey_len, pubkeylen, pubkeylen);
                             dump_memory(pubkey, s, 16, 5, 0x0, dump_notrunc);
-                            s->printf("\n");
                             s->printf("     %s\n", base16_encode(pubkey).c_str());
                         }
                     } break;
@@ -592,7 +585,6 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                         s->printf(" > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_string(group).c_str());
                         s->printf(" > %s %i\n", constexpr_pubkey_len, pubkeylen);
                         dump_memory(pubkey, s, 16, 3, 0x0, dump_notrunc);
-                        s->printf("\n");
                         s->printf("   %s\n", base16_encode(pubkey).c_str());
                     } break;
                 }
@@ -618,7 +610,6 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                         case quic_param_retry_source_connection_id:
                             s->printf(" > %I64i (%s)\n", param_id, tlsadvisor->quic_param_string(param_id).c_str());
                             dump_memory(param, s, 16, 5, 0x0, dump_notrunc);
-                            s->printf("\n");
                             break;
                         default: {
                             size_t epos = 0;
@@ -650,7 +641,6 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 {
                     s->printf(" > %s %i\n", constexpr_alps_len, alps_len);
                     dump_memory(alpn, s, 16, 3, 0x0, dump_notrunc);
-                    s->printf("\n");
                 }
             } break;
             case tls_extension_encrypted_client_hello: /* 0xfe0d */ {
@@ -701,10 +691,8 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                     s->printf(" > %s %i\n", constexpr_config_id, config_id);
                     s->printf(" > %s %i\n", constexpr_enc_len, enc_len);
                     dump_memory(enc, s, 16, 3, 0x0, dump_notrunc);
-                    s->printf("\n");
                     s->printf(" > %s %i\n", constexpr_payload_len, enc_payload_len);
                     dump_memory(enc_payload, s, 16, 3, 0x0, dump_notrunc);
-                    s->printf("\n");
                 }
             } break;
             case tls_extension_renegotiation_info: /* 0xff01 */ {
@@ -721,7 +709,6 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
         }
 
         s->autoindent(0);
-        s->printf("\n");
     }
     __finally2 {
         // do nothing

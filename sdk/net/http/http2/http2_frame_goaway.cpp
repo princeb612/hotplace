@@ -86,7 +86,6 @@ void http2_frame_goaway::dump(stream_t* s) {
         s->printf(" > %s %u\n", constexpr_frame_error_code, _errorcode);
         s->printf(" > %s\n", constexpr_frame_debug_data);
         dump_memory(_debug, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
-        s->printf("\n");
     }
 }
 

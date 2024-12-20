@@ -97,7 +97,6 @@ void quic_packet_retry::dump(stream_t* s) {
 
         s->printf(" > retry token\n");
         dump_memory(_retry_token, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
-        s->printf("\n");
         s->printf(" > retry integrity tag\n");
         dump_memory(_retry_integrity_tag, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
     }

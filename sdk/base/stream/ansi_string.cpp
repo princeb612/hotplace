@@ -499,7 +499,11 @@ std::ostream& operator<<(std::ostream& lhs, const ansi_string& rhs) {
 
 void ansi_string::autoindent(uint8 indent) {
     _bio.autoindent(_handle, indent);
-    fill(indent, ' ');
+    if (indent) {
+        fill(indent, ' ');
+    } else {
+        *this << '\r';
+    }
 }
 
 }  // namespace hotplace
