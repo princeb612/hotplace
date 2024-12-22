@@ -60,40 +60,6 @@ payload& payload::set_reference_value(const std::string& name, const std::string
     return *this;
 }
 
-payload& payload::set_group_condition(const std::string& group, const std::string& name, std::function<bool(payload_member*)> discriminant) {
-    if (discriminant) {
-        cond_t cond;
-        cond.group = group;
-        cond.discriminant = discriminant;
-        _cond_map.insert({name, cond});
-    }
-    return *this;
-}
-
-payload& payload::set_group_condition(const std::string& group, uint8 value, std::function<bool(uint8)> discriminant) {
-    if (discriminant) {
-        bool enable = discriminant(value);
-        set_group(group, enable);
-    }
-    return *this;
-}
-
-payload& payload::set_group_condition(const std::string& group, uint16 value, std::function<bool(uint16)> discriminant) {
-    if (discriminant) {
-        bool enable = discriminant(value);
-        set_group(group, enable);
-    }
-    return *this;
-}
-
-payload& payload::set_group_condition(const std::string& group, uint32 value, std::function<bool(uint32)> discriminant) {
-    if (discriminant) {
-        bool enable = discriminant(value);
-        set_group(group, enable);
-    }
-    return *this;
-}
-
 return_t payload::write(binary_t& bin) {
     return_t ret = errorcode_t::success;
     for (auto item : _members) {
@@ -105,7 +71,7 @@ return_t payload::write(binary_t& bin) {
     return ret;
 }
 
-payload& payload::set_hook(const std::string& name, std::function<void(payload*, payload_member*)> hook) {
+payload& payload::set_condition(const std::string& name, std::function<void(payload*, payload_member*)> hook) {
     cond_t cond;
     cond.hook = hook;
     _cond_map.insert({name, cond});
@@ -176,12 +142,6 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
                 auto ubound = _cond_map.upper_bound(name);
                 for (auto iter = lbound; iter != ubound; iter++) {
                     auto cond = iter->second;
-                    // see set_group_condition
-                    if (cond.discriminant) {
-                        bool enable = cond.discriminant(item);
-                        set_group(cond.group, enable);
-                    }
-                    // see set_hook
                     if (cond.hook) {
                         cond.hook(this, item);
                     }
@@ -346,6 +306,13 @@ payload& payload::clear() {
 }
 
 size_t payload::numberof_members() { return _members.size(); }
+
+void payload::get_binary(const std::string& name, binary_t& bin, uint32 flags) {
+    auto item = select(name);
+    if (item) {
+        item->get_variant().to_binary(bin, flags);
+    }
+}
 
 }  // namespace io
 }  // namespace hotplace

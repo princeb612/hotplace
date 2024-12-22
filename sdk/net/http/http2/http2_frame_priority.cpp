@@ -50,10 +50,10 @@ return_t http2_frame_priority::read(http2_frame_header_t const* header, size_t s
 
         pl.read(ptr_payload, get_payload_size());
 
-        uint32 temp = t_to_int<uint32>(pl.select(constexpr_frame_stream_dependency));
+        uint32 temp = pl.t_value_of<uint32>(constexpr_frame_stream_dependency);
         _exclusive = (temp & 0x80000000) ? true : false;
         _dependency = (temp & 0x7fffffff);
-        _weight = t_to_int<uint8>(pl.select(constexpr_frame_weight));
+        _weight = pl.t_value_of<uint8>(constexpr_frame_weight);
     }
     __finally2 {
         // do nothing

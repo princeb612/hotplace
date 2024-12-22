@@ -84,13 +84,13 @@ return_t dump_pem(const EVP_PKEY* pkey, BIO* out) {
             }
             PEM_write_bio_EC_PUBKEY(out, ec_key);  // same PEM_write_bio_PUBKEY
         } else if (EVP_PKEY_DH == type) {
-            auto dh = EVP_PKEY_get0_DH(pkey);
+            auto dh = EVP_PKEY_get0_DH((EVP_PKEY*)pkey);
             const BIGNUM* bn_priv = nullptr;
             DH_get0_key(dh, nullptr, &bn_priv);
             if (bn_priv) {
-                PEM_write_bio_PrivateKey(out, pkey, nullptr, nullptr, 0, nullptr, nullptr);
+                PEM_write_bio_PrivateKey(out, (EVP_PKEY*)pkey, nullptr, nullptr, 0, nullptr, nullptr);
             }
-            PEM_write_bio_Parameters(out, pkey);
+            PEM_write_bio_Parameters(out, (EVP_PKEY*)pkey);
         }
     }
     __finally2 {

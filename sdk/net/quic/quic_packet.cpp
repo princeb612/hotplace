@@ -171,7 +171,7 @@ return_t quic_packet::read(const byte_t* stream, size_t size, size_t& pos, uint3
         pl.read(stream, size, pos);
 
         _ht = hdr;
-        _version = t_to_int<uint32>(pl.select("version"));
+        _version = pl.t_value_of<uint32>("version");
         pl.select("dcid")->get_variant().to_binary(_dcid);
         pl.select("scid")->get_variant().to_binary(_scid);
     }

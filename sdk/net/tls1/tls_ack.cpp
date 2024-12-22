@@ -38,7 +38,7 @@ return_t tls_dump_ack(stream_t* s, tls_session* session, const byte_t* stream, s
             pl.set_reference_value(constexpr_ack, constexpr_ack_len);
             pl.read(stream, size, pos);
 
-            ack_len = t_to_int<uint16>(pl.select(constexpr_ack_len));
+            ack_len = pl.t_value_of<uint16>(constexpr_ack_len);
             pl.select(constexpr_ack)->get_variant().to_binary(ack);
         }
 

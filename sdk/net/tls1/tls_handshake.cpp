@@ -105,14 +105,14 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
             pl << new payload_member(uint16(0), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
                << new payload_member(uint32_24_t(), constexpr_fragment_offset, constexpr_group_dtls)          // dtls
                << new payload_member(uint32_24_t(), constexpr_fragment_len, constexpr_group_dtls);            // dtls;
-            pl.set_group_condition(constexpr_group_dtls, record_version, [](uint16 ver) -> bool { return (ver >= dtls_12); });
+            pl.set_group(constexpr_group_dtls, (record_version >= dtls_12));
             pl.read(stream, size, pos);
 
             cond_dtls = pl.get_group_condition(constexpr_group_dtls);
             if (cond_dtls) {
-                dtls_seq = t_to_int<uint32>(pl.select(constexpr_handshake_message_seq));
-                fragment_offset = t_to_int<uint32>(pl.select(constexpr_fragment_offset));
-                fragment_len = t_to_int<uint32>(pl.select(constexpr_fragment_len));
+                dtls_seq = pl.t_value_of<uint32>(constexpr_handshake_message_seq);
+                fragment_offset = pl.t_value_of<uint32>(constexpr_fragment_offset);
+                fragment_len = pl.t_value_of<uint32>(constexpr_fragment_len);
             }
         }
 
@@ -386,7 +386,7 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
                << new payload_member(uint8(0), constexpr_compression_method_len) << new payload_member(binary_t(), constexpr_compression_method)
                << new payload_member(uint16(0), true, constexpr_extension_len);
 
-            pl.set_group_condition(constexpr_group_dtls, record_version, [](uint16 ver) -> bool { return (ver >= dtls_12); });
+            pl.set_group(constexpr_group_dtls, (record_version >= dtls_12));
 
             pl.select(constexpr_random)->reserve(32);
             pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
@@ -401,16 +401,16 @@ return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             // -  A "signature_algorithms" (Section 4.2.3) extension
             // -  A "pre_shared_key" (Section 4.2.11) extension
 
-            version = t_to_int<uint16>(pl.select(constexpr_version));
+            version = pl.t_value_of<uint16>(constexpr_version);
 
-            pl.select(constexpr_random)->get_variant().to_binary(random);
-            session_id_len = t_to_int<uint8>(pl.select(constexpr_session_id_len));
-            pl.select(constexpr_session_id)->get_variant().to_binary(session_id);
-            cipher_suite_len = t_to_int<uint16>(pl.select(constexpr_cipher_suite_len));
-            pl.select(constexpr_cipher_suite)->get_variant().to_binary(cipher_suite);
-            compression_method_len = t_to_int<uint8>(pl.select(constexpr_compression_method_len));
-            pl.select(constexpr_compression_method)->get_variant().to_binary(compression_method);
-            extension_len = t_to_int<uint16>(pl.select(constexpr_extension_len));
+            pl.get_binary(constexpr_random, random);
+            session_id_len = pl.t_value_of<uint8>(constexpr_session_id_len);
+            pl.get_binary(constexpr_session_id, session_id);
+            cipher_suite_len = pl.t_value_of<uint16>(constexpr_cipher_suite_len);
+            pl.get_binary(constexpr_cipher_suite, cipher_suite);
+            compression_method_len = pl.t_value_of<uint8>(constexpr_compression_method_len);
+            pl.get_binary(constexpr_compression_method, compression_method);
+            extension_len = pl.t_value_of<uint16>(constexpr_extension_len);
         }
 
         s->autoindent(1);
@@ -494,7 +494,7 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
                << new payload_member(uint16(0), true, constexpr_cipher_suite) << new payload_member(uint8(0), constexpr_compression_method)
                << new payload_member(uint16(0), true, constexpr_extension_len);
 
-            pl.set_group_condition(constexpr_group_dtls, record_version, [](uint16 ver) -> bool { return (ver >= dtls_12); });
+            pl.set_group(constexpr_group_dtls, (record_version >= dtls_12));
 
             pl.select(constexpr_random)->reserve(32);
             pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
@@ -505,14 +505,14 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
             // When (EC)DHE is in use, ... "key_share" extension
             // When authenticating via a certificate, ... Certificate (Section 4.4.2) and CertificateVerify (Section 4.4.3)
 
-            version = t_to_int<uint16>(pl.select(constexpr_version));
+            version = pl.t_value_of<uint16>(constexpr_version);
 
-            pl.select(constexpr_random)->get_variant().to_binary(random);
-            session_ids = t_to_int<uint8>(pl.select(constexpr_session_id_len));
-            pl.select(constexpr_session_id)->get_variant().to_binary(session_id);
-            cipher_suite = t_to_int<uint16>(pl.select(constexpr_cipher_suite));
-            compression_method = t_to_int<uint8>(pl.select(constexpr_compression_method));
-            extension_len = t_to_int<uint16>(pl.select(constexpr_extension_len));
+            pl.get_binary(constexpr_random, random);
+            session_ids = pl.t_value_of<uint8>(constexpr_session_id_len);
+            pl.get_binary(constexpr_session_id, session_id);
+            cipher_suite = pl.t_value_of<uint16>(constexpr_cipher_suite);
+            compression_method = pl.t_value_of<uint8>(constexpr_compression_method);
+            extension_len = pl.t_value_of<uint16>(constexpr_extension_len);
         }
 
         s->autoindent(1);
@@ -592,11 +592,11 @@ return_t tls_dump_new_session_ticket(stream_t* s, tls_session* session, const by
             pl.set_reference_value(constexpr_ticket_extensions, constexpr_ticket_extension_len);
             pl.read(stream, size, pos);
 
-            ticket_lifetime = t_to_int<uint32>(pl.select(constexpr_ticket_lifetime));
-            ticket_age_add = t_to_int<uint32>(pl.select(constexpr_ticket_age_add));
-            pl.select(constexpr_ticket_nonce)->get_variant().to_binary(ticket_nonce);
-            pl.select(constexpr_session_ticket)->get_variant().to_binary(session_ticket);
-            pl.select(constexpr_ticket_extensions)->get_variant().to_binary(ticket_extensions);
+            ticket_lifetime = pl.t_value_of<uint32>(constexpr_ticket_lifetime);
+            ticket_age_add = pl.t_value_of<uint32>(constexpr_ticket_age_add);
+            pl.get_binary(constexpr_ticket_nonce, ticket_nonce);
+            pl.get_binary(constexpr_session_ticket, session_ticket);
+            pl.get_binary(constexpr_ticket_extensions, ticket_extensions);
         }
 
         s->autoindent(1);
@@ -671,10 +671,10 @@ return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* s
             pl.set_group(constexpr_group_tls13, is_basedon_tls13(tls_version));  // tls_extension_supported_versions 0x002b server_hello
             pl.read(stream, size, pos);
 
-            request_context_len = t_to_int<uint8>(pl.select(constexpr_request_context_len));
-            certificates_len = t_to_int<uint32>(pl.select(constexpr_certificates_len));
-            certificate_len = t_to_int<uint32>(pl.select(constexpr_certificate_len));
-            pl.select(constexpr_certificate)->get_variant().to_binary(cert);
+            request_context_len = pl.t_value_of<uint8>(constexpr_request_context_len);
+            certificates_len = pl.t_value_of<uint32>(constexpr_certificates_len);
+            certificate_len = pl.t_value_of<uint32>(constexpr_certificate_len);
+            pl.get_binary(constexpr_certificate, cert);
         }
 
         constexpr char constexpr_certificate_extensions[] = "certificate extensions";
@@ -688,8 +688,8 @@ return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* s
             pl.select(constexpr_certificate_extensions)->reserve(certificates_len - certificate_len - sizeof(uint24_t));
             pl.read(stream, size, pos);
 
-            pl.select(constexpr_certificate_extensions)->get_variant().to_binary(cert_extensions);
-            record_type = t_to_int<uint8>(pl.select(constexpr_record_type));
+            pl.get_binary(constexpr_certificate_extensions, cert_extensions);
+            record_type = pl.t_value_of<uint8>(constexpr_record_type);
         }
 
         s->autoindent(1);
@@ -754,13 +754,13 @@ return_t tls_dump_server_key_exchange(stream_t* s, tls_session* session, const b
             pl.set_reference_value(constexpr_sig, constexpr_sig_len);
             pl.read(stream, size, pos);
 
-            curve_info = t_to_int<uint8>(pl.select(constexpr_curve_info));
-            curve = t_to_int<uint16>(pl.select(constexpr_curve));
-            pubkey_len = t_to_int<uint8>(pl.select(constexpr_pubkey_len));
-            pl.select(constexpr_pubkey)->get_variant().to_binary(pubkey);
-            signature = t_to_int<uint16>(pl.select(constexpr_signature));
-            sig_len = t_to_int<uint16>(pl.select(constexpr_sig_len));
-            pl.select(constexpr_sig)->get_variant().to_binary(sig);
+            curve_info = pl.t_value_of<uint8>(constexpr_curve_info);
+            curve = pl.t_value_of<uint16>(constexpr_curve);
+            pubkey_len = pl.t_value_of<uint8>(constexpr_pubkey_len);
+            pl.get_binary(constexpr_pubkey, pubkey);
+            signature = pl.t_value_of<uint16>(constexpr_signature);
+            sig_len = pl.t_value_of<uint16>(constexpr_sig_len);
+            pl.get_binary(constexpr_sig, sig);
         }
 
         {
@@ -857,9 +857,9 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
             pl.set_reference_value(constexpr_handshake_hash, constexpr_len);
             pl.read(stream, size, pos);
 
-            scheme = t_to_int<uint16>(pl.select(constexpr_signature));
-            len = t_to_int<uint16>(pl.select(constexpr_len));
-            pl.select(constexpr_handshake_hash)->get_variant().to_binary(handshake_hash);
+            scheme = pl.t_value_of<uint16>(constexpr_signature);
+            len = pl.t_value_of<uint16>(constexpr_len);
+            pl.get_binary(constexpr_handshake_hash, handshake_hash);
         }
 
         tls_protection& protection = session->get_tls_protection();
@@ -935,8 +935,8 @@ return_t tls_dump_client_key_exchange(stream_t* s, tls_session* session, const b
             pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
             pl.read(stream, size, pos);
 
-            pubkey_len = t_to_int<uint8>(pl.select(constexpr_pubkey_len));
-            pl.select(constexpr_pubkey)->get_variant().to_binary(pubkey);
+            pubkey_len = pl.t_value_of<uint8>(constexpr_pubkey_len);
+            pl.get_binary(constexpr_pubkey, pubkey);
         }
 
         {
@@ -1000,7 +1000,7 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
             pl.select(constexpr_verify_data)->reserve(dlen);
             pl.read(stream, size, pos);
 
-            pl.select(constexpr_verify_data)->get_variant().to_binary(verify_data);
+            pl.get_binary(constexpr_verify_data, verify_data);
         }
 
         {

@@ -45,10 +45,10 @@ void test_payload_write() {
         // test
         binary_t data;
         binary_t pad;
-        auto padlen = t_to_int<uint8>(pl.select("padlen"));
-        auto value = t_to_int<uint32>(pl.select("value"));
-        pl.select("data")->get_variant().to_binary(data);
-        pl.select("pad")->get_variant().to_binary(pad);
+        auto padlen = pl.t_value_of<uint8>("padlen");
+        auto value = pl.t_value_of<uint32>("value");
+        pl.get_binary("data", data);
+        pl.get_binary("pad", pad);
         _test_case.assert(3 == padlen, __FUNCTION__, "write #padlen");
         _test_case.assert(data == str2bin("data"), __FUNCTION__, "write #value");
         _test_case.assert(0x1000 == value, __FUNCTION__, "write #data");
@@ -98,10 +98,10 @@ void test_payload_read() {
 
         binary_t data;
         binary_t pad;
-        auto padlen = t_to_int<uint8>(pl.select("padlen"));
-        auto value = t_to_int<uint32>(pl.select("value"));
-        pl.select("data")->get_variant().to_binary(data);
-        pl.select("pad")->get_variant().to_binary(pad);
+        auto padlen = pl.t_value_of<uint8>("padlen");
+        auto value = pl.t_value_of<uint32>("value");
+        pl.get_binary("data", data);
+        pl.get_binary("pad", pad);
         _test_case.assert(3 == padlen, __FUNCTION__, "read #padlen");
         _test_case.assert(data == str2bin("data"), __FUNCTION__, "read #value");
         _test_case.assert(0x1000 == value, __FUNCTION__, "read #data");
@@ -175,9 +175,9 @@ void test_payload_uint24() {
         pl.read(expect);
 
         // test
-        uint8 padlen = t_to_int<uint8>(pl.select("padlen"));
-        uint32_24_t i24 = t_to_int<uint32>(pl.select("int32_24"));
-        uint32 i32 = t_to_int<uint32>(pl.select("int32_32"));
+        uint8 padlen = pl.t_value_of<uint8>("padlen");
+        uint32_24_t i24 = pl.t_value_of<uint32>("int32_24");
+        uint32 i32 = pl.t_value_of<uint32>("int32_32");
         uint32 i24_value = i24.get();
         _logger->writeln("padlen %u uint32_24 %u (0x%08x) uint32_32 %u (0x%08x)", padlen, i24_value, i24_value, i32, i32);
         _test_case.assert(3 == padlen, __FUNCTION__, "read #padlen");
@@ -220,11 +220,11 @@ void test_group(const char* input, bool expect) {
         // value(hdr)   group2
         //     01       enable
         //     00       disable
-        auto lambda = [](payload_member* member) -> bool {
-            auto hdr = t_to_int<uint8>(member);
-            return (0 != hdr);
+        auto lambda = [&](payload* pl, payload_member* member) -> void {
+            auto hdr = pl->t_value_of<uint8>(member);
+            pl->set_group(constexpr_group2, (0 != hdr));
         };
-        pl.set_group_condition(constexpr_group2, constexpr_hdr, lambda);
+        pl.set_condition(constexpr_hdr, lambda);
         pl.set_reference_value(constexpr_data1, constexpr_len1);
         pl.set_reference_value(constexpr_data2, constexpr_len2);
 
@@ -232,13 +232,13 @@ void test_group(const char* input, bool expect) {
 
         cond_group2 = pl.get_group_condition(constexpr_group2);
 
-        hdr = t_to_int<uint8>(pl.select(constexpr_hdr));
-        len1 = t_to_int<uint16>(pl.select(constexpr_len1));
-        pl.select(constexpr_data1)->get_variant().to_binary(data1);
+        hdr = pl.t_value_of<uint8>(constexpr_hdr);
+        len1 = pl.t_value_of<uint16>(constexpr_len1);
+        pl.get_binary(constexpr_data1, data1);
 
         if (cond_group2) {
-            len2 = t_to_int<uint16>(pl.select(constexpr_len2));
-            pl.select(constexpr_data2)->get_variant().to_binary(data2);
+            len2 = pl.t_value_of<uint16>(constexpr_len2);
+            pl.get_binary(constexpr_data2, data2);
         }
 
         pl.write(dump_group1, {"group1"});         // write including "group1"

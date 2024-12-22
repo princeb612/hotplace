@@ -56,11 +56,11 @@ return_t http2_frame_push_promise::read(http2_frame_header_t const* header, size
         pl.read(ptr_payload, get_payload_size());
 
         if (get_flags() & h2_flag_t::h2_flag_padded) {
-            _padlen = t_to_int<uint8>(pl.select(constexpr_frame_pad_length));
+            _padlen = pl.t_value_of<uint8>(constexpr_frame_pad_length);
         }
 
-        _promised_id = t_to_int<uint32>(pl.select(constexpr_frame_promised_stream_id));
-        pl.select(constexpr_frame_fragment)->get_variant().to_binary(_fragment);
+        _promised_id = pl.t_value_of<uint32>(constexpr_frame_promised_stream_id);
+        pl.get_binary(constexpr_frame_fragment, _fragment);
     }
     __finally2 {
         // do nothing

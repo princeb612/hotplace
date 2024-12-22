@@ -69,9 +69,9 @@ namespace io {
  *
  *          binary_t data;
  *          binary_t pad;
- *          auto padlen = t_to_int<uint8>(pl.select("padlen"));
+ *          auto padlen = pl.t_value_of<uint8>("padlen");
  *          pl.select("data")->get_variant().to_binary(data);
- *          auto value = t_to_int<uint32>(pl.select("value"));
+ *          auto value = pl.t_value_of<uint32>("value");
  *          pl.select("pad")->get_variant().to_binary(pad);
  *
  *          // computation
@@ -258,9 +258,8 @@ class payload {
     payload& set_reference_value(const std::string& name, const std::string& ref, uint8 multiple = 1);
     /**
      * @brief   heuristic read
-     * @param   const std::string& group [in] object
-     * @param   const std::string& name [in] subject
-     * @param   std::function<bool(payload_member*)> discriminant [in]
+     * @param   const std::string& name [in]
+     * @param   std::function<void(payload*, payload_member*)> hook [in]
      * @sample
      *          // sketch
      *
@@ -269,6 +268,7 @@ class payload {
      *          // case.2
      *          // 00000000 : 00 00 05 64 61 74 61 31 -- -- -- -- -- -- -- -- | ...data1
      *
+     *          // sample #1
      *          const char* case = "01 00 05 64 61 74 61 31 00 05 64 61 74 61 32";
      *          binary_t bin = base16_decode_rfc(case);
      *          byte_t* stream = &bin[0];
@@ -280,58 +280,43 @@ class payload {
      *             << new payload_member(binary_t(), "data1", "group1")
      *             << new payload_member(uint16(0), true, "len2", "group2")
      *             << new payload_member(binary_t(), "data2", "group2");
-     *          auto lambda = [](payload_member* member) -> bool {
+     *          auto lambda = [](payload* pl, payload_member* member) -> void {
      *              // value(hdr)   group2
      *              //     01       enable
      *              //     00       disable
-     *              auto hdr = t_to_int<uint8>(member);
-     *              return (0 != hdr);
+     *              auto hdr = pl->t_value_of<uint8>(member);
+     *              pl->set_group ("group2", (0 != hdr));
      *          };
-     *          pl.set_group_condition("group2", "hdr", lambda);
+     *          pl.set_condition("hdr", lambda);
      *          pl.read(stream, size, pos);
      *
-     *          uint8 hdr = t_to_int<uint8>(pl.select("hdr"));
+     *          uint8 hdr = pl.t_value_of<uint8>("hdr");
      *          uint16 len1 = 0;
      *          uint16 len2 = 0;
      *          binary_t data1;
      *          binary_t data2;
      *
-     *          len1 = t_to_int<uint16>(pl.select("len1"));
+     *          len1 = pl.t_value_of<uint16>("len1");
      *          pl.select("data1")->get_variant().to_binary(data1);
      *
      *          bool cond_group2 = pl.get_group_condition("group2");
      *          if (cond_group2) {
-     *              len2 = t_to_int<uint16>(pl.select("len2"));
+     *              len2 = pl.t_value_of<uint16>("len2");
      *              pl.select("data2")->get_variant().to_binary(data2);
      *          }
      *
-     */
-    payload& set_group_condition(const std::string& group, const std::string& name, std::function<bool(payload_member*)> discriminant);
-    /**
-     * @sample
-     *          uint8 val = 0;
-     *          pl.set_group_condition("group2", val, [](uint8 val) -> bool { return (1 != value); });
-     */
-    payload& set_group_condition(const std::string& group, uint8 value, std::function<bool(uint8)> discriminant);
-    payload& set_group_condition(const std::string& group, uint16 value, std::function<bool(uint16)> discriminant);
-    payload& set_group_condition(const std::string& group, uint32 value, std::function<bool(uint32)> discriminant);
-
-    /**
-     * @brief   heuristic read
-     * @param   const std::string& name [in]
-     * @param   std::function<void(payload*, payload_member*)> hook [in]
-     * @sample
-     *          pl.set_hook("hdr", [](payload* pl, payload_member* item) -> void {
+     *          // sample #2
+     *          pl.set_condition("hdr", [](payload* pl, payload_member* item) -> void {
      *              // 7 6 5 4 3 2 1 0
      *              // \ \_ groupB
      *              // \___ groupA
-     *              auto val = t_to_int<uint8>(item);
+     *              auto val = pl->t_value_of<uint8>(item);
      *              pl->set_group_condition("groupA", (val & 0x80));
      *              pl->set_group_condition("groupB", (val & 0x40));
      *          });
      *          pl.read(stream, size, pos);
      */
-    payload& set_hook(const std::string& name, std::function<void(payload*, payload_member*)> hook);
+    payload& set_condition(const std::string& name, std::function<void(payload*, payload_member*)> hook);
 
     /**
      * @brief   write
@@ -364,6 +349,32 @@ class payload {
     size_t offset_of(const std::string& name);
     size_t numberof_members();
 
+    /**
+     * @sample
+     *          pl << new payload_member(uint8(), "len") << new payload_member(binary_t(), "data");
+     *          pl.read(stream, size, pos);
+     *          auto len = pl.t_value_of<uint8>("len");
+     *          auto data = pl.to_bin("data");
+     */
+    template <typename T>
+    T t_value_of(const std::string& name) {
+        T i = 0;
+        auto item = select(name);
+        if (item) {
+            i = t_to_int<T>(item->get_variant());
+        }
+        return i;
+    }
+    template <typename T>
+    T t_value_of(payload_member* item) {
+        T i = 0;
+        if (item) {
+            i = t_to_int<T>(item->get_variant());
+        }
+        return i;
+    }
+    void get_binary(const std::string& name, binary_t& bin, uint32 flags = 0);
+
    private:
     /**
      * @brief   size
@@ -384,23 +395,10 @@ class payload {
     std::map<std::string, payload_member*> _members_map;  // search
     std::map<std::string, bool> _option;                  // map<group, true/false>
     struct cond_t {
-        // group control (see set_group_condition)
-        std::string group;
-        std::function<bool(payload_member*)> discriminant;
-        // control by item (see set_hook)
         std::function<void(payload*, payload_member*)> hook;
     };
     std::multimap<std::string, cond_t> _cond_map;  // std::map<name, cond_t>
 };
-
-template <typename T>
-T t_to_int(payload_member* v) {
-    T i = 0;
-    if (v) {
-        i = t_to_int<T>(v->get_variant());
-    }
-    return i;
-}
 
 }  // namespace io
 }  // namespace hotplace

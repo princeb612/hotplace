@@ -158,10 +158,10 @@ return_t http2_frame::read(http2_frame_header_t const* header, size_t size) {
 
         pl.read((byte_t*)header, size);
 
-        _payload_size = t_to_int<uint32>(pl.select(constexpr_frame_length));
-        _type = t_to_int<uint8>(pl.select(constexpr_frame_type));
-        _flags = t_to_int<uint8>(pl.select(constexpr_frame_flags));
-        _stream_id = t_to_int<uint32>(pl.select(constexpr_frame_stream_identifier));
+        _payload_size = pl.t_value_of<uint32>(constexpr_frame_length);
+        _type = pl.t_value_of<uint8>(constexpr_frame_type);
+        _flags = pl.t_value_of<uint8>(constexpr_frame_flags);
+        _stream_id = pl.t_value_of<uint32>(constexpr_frame_stream_identifier);
     }
     __finally2 {
         // do nothing

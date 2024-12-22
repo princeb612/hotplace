@@ -47,7 +47,7 @@ return_t http2_frame_ping::read(http2_frame_header_t const* header, size_t size)
 
         pl.read(ptr_payload, get_payload_size());
 
-        _opaque = t_to_int<uint32>(pl.select(constexpr_frame_opaque));
+        _opaque = pl.t_value_of<uint32>(constexpr_frame_opaque);
     }
     __finally2 {
         // do nothing

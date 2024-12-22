@@ -235,7 +235,7 @@ void test_rfc_9001_initial(testvector_initial_packet* item, tls_session* session
 
         basic_stream bs;
         initial.dump(&bs);
-        _logger->writeln(bs);
+        _logger->write(bs);
         bs.clear();
 
         pos = 0;
@@ -302,7 +302,7 @@ void test_rfc_9001_retry(testvector_retry_packet* item) {
 
         basic_stream bs;
         retry.dump(&bs);
-        _logger->writeln(bs);
+        _logger->write(bs);
         _test_case.assert(bin_dcid == retry.get_dcid(), func, "RFC 9001 A.4.  Retry #dcid");
         _test_case.assert(bin_scid == retry.get_scid(), func, "RFC 9001 A.4.  Retry #scid");
         _test_case.assert(bin_token == retry.get_retry_token(), func, "RFC 9001 A.4.  Retry #retry token");

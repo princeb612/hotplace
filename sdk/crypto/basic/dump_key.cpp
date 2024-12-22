@@ -515,7 +515,7 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                 }
             } break;
             case EVP_PKEY_DH: {
-                auto dh = EVP_PKEY_get0_DH(pkey);
+                auto dh = EVP_PKEY_get0_DH((EVP_PKEY*)pkey);
                 const BIGNUM* bn_pub = nullptr;
                 const BIGNUM* bn_priv = nullptr;
                 DH_get0_key(dh, &bn_pub, &bn_priv);

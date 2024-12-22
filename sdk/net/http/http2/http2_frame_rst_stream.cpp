@@ -47,7 +47,7 @@ return_t http2_frame_rst_stream::read(http2_frame_header_t const* header, size_t
 
         pl.read(ptr_payload, get_payload_size());
 
-        _errorcode = t_to_int<uint32>(pl.select(constexpr_frame_error_code));
+        _errorcode = pl.t_value_of<uint32>(constexpr_frame_error_code);
     }
     __finally2 {
         // do nothing

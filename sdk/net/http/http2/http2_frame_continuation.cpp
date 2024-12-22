@@ -47,7 +47,7 @@ return_t http2_frame_continuation::read(http2_frame_header_t const* header, size
 
         pl.read(ptr_payload, get_payload_size());
 
-        pl.select(constexpr_frame_fragment)->get_variant().to_binary(_fragment);
+        pl.get_binary(constexpr_frame_fragment, _fragment);
     }
     __finally2 {
         // do nothing

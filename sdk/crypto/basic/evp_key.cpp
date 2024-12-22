@@ -135,7 +135,7 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
                 break;
             }
             case EVP_PKEY_DH: {
-                auto dh = EVP_PKEY_get0_DH(pkey);
+                auto dh = EVP_PKEY_get0_DH((EVP_PKEY*)pkey);
                 const BIGNUM* bn_priv = nullptr;
                 DH_get0_key(dh, nullptr, &bn_priv);
                 if (bn_priv) {

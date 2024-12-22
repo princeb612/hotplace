@@ -47,7 +47,7 @@ return_t http2_frame_window_update::read(http2_frame_header_t const* header, siz
 
         pl.read(ptr_payload, get_payload_size());
 
-        _increment = t_to_int<uint32>(pl.select(constexpr_frame_window_size_increment));
+        _increment = pl.t_value_of<uint32>(constexpr_frame_window_size_increment);
     }
     __finally2 {
         // do nothing

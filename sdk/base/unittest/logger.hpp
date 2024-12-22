@@ -227,8 +227,8 @@ class logger {
     logger& do_color_write_raw(const char* buf, size_t bufsize, bool lf = false);
     logger& do_color_write_stream(stream_t* s, bool lf = false);
 
-    logger& do_dump(const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0, bool lf = false);
-    logger& do_hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0, bool lf = false);
+    logger& do_dump(const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
+    logger& do_hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
 
     void start_consumer();
     void stop_consumer();

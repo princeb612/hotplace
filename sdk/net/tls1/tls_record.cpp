@@ -115,20 +115,20 @@ return_t tls_dump_tls_record(stream_t* s, tls_session* session, const byte_t* st
                << new payload_member(binary_t(), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                << new payload_member(uint16(0), true, constexpr_len);                              // tls, dtls
 
-            auto lambda_check_dtls = [&](payload_member* item) -> bool {
-                auto ver = t_to_int<uint16>(item);
-                return (ver >= dtls_13);
+            auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
+                auto ver = pl->t_value_of<uint16>(item);
+                pl->set_group(constexpr_group_dtls, (ver >= dtls_13));
             };
-            pl.set_group_condition(constexpr_group_dtls, constexpr_legacy_version, lambda_check_dtls);
+            pl.set_condition(constexpr_legacy_version, lambda_check_dtls);
             pl.select(constexpr_dtls_record_seq)->reserve(6);
             pl.read(stream, size, pos);
 
-            content_type = t_to_int<uint8>(pl.select(constexpr_content_type));
-            legacy_version = t_to_int<uint16>(pl.select(constexpr_legacy_version));
-            len = t_to_int<uint16>(pl.select(constexpr_len));
+            content_type = pl.t_value_of<uint8>(constexpr_content_type);
+            legacy_version = pl.t_value_of<uint16>(constexpr_legacy_version);
+            len = pl.t_value_of<uint16>(constexpr_len);
             cond_dtls = pl.get_group_condition(constexpr_group_dtls);
             if (cond_dtls) {
-                key_epoch = t_to_int<uint16>(pl.select(constexpr_key_epoch));
+                key_epoch = pl.t_value_of<uint16>(constexpr_key_epoch);
                 pl.select(constexpr_dtls_record_seq)->get_variant().to_binary(dtls_record_seq);
             }
         }
@@ -348,8 +348,8 @@ return_t tls_dump_dtls13_ciphertext(stream_t* s, tls_session* session, const byt
          * +-+-+-+-+-+-+-+-+
          */
 
-        pl.set_hook(constexpr_unified_header, [&](payload* pl, payload_member* item) -> void {
-            auto uhdr = t_to_int<uint8>(item);
+        auto lambda_condition = [&](payload* pl, payload_member* item) -> void {
+            auto uhdr = pl->t_value_of<uint8>(item);
             pl->set_group(constexpr_group_c, (0x10 & uhdr));
             pl->set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
             pl->set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
@@ -357,25 +357,26 @@ return_t tls_dump_dtls13_ciphertext(stream_t* s, tls_session* session, const byt
             if (0x04 & uhdr) {
                 pl->set_reference_value(constexpr_encdata, constexpr_len);
             }
-        });
+        };
+        pl.set_condition(constexpr_unified_header, lambda_condition);
         pl.read(stream, size, pos);
 
-        uhdr = t_to_int<uint8>(pl.select(constexpr_unified_header));
+        uhdr = pl.t_value_of<uint8>(constexpr_unified_header);
         if (pl.get_group_condition(constexpr_group_c)) {
             pl.select(constexpr_connection_id)->get_variant().to_binary(connection_id);
         }
         if (pl.get_group_condition(constexpr_group_s16)) {
-            sequence = t_to_int<uint16>(pl.select(constexpr_sequence16));
+            sequence = pl.t_value_of<uint16>(constexpr_sequence16);
             sequence_len = 2;
             offset_sequence = pl.offset_of(constexpr_group_s16);
         }
         if (pl.get_group_condition(constexpr_group_s8)) {
-            sequence = t_to_int<uint16>(pl.select(constexpr_sequence8));
+            sequence = pl.t_value_of<uint16>(constexpr_sequence8);
             sequence_len = 1;
             offset_sequence = pl.offset_of(constexpr_group_s8);
         }
         if (pl.get_group_condition(constexpr_group_l)) {
-            len = t_to_int<uint16>(pl.select(constexpr_len));
+            len = pl.t_value_of<uint16>(constexpr_len);
         }
         pl.select(constexpr_encdata)->get_variant().to_binary(encdata);
         offset_encdata = pl.offset_of(constexpr_encdata);

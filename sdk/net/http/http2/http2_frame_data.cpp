@@ -54,8 +54,8 @@ return_t http2_frame_data::read(http2_frame_header_t const* header, size_t size)
 
         pl.read(ptr_payload, get_payload_size());
 
-        _padlen = t_to_int<uint8>(pl.select(constexpr_frame_pad_length));
-        pl.select(constexpr_frame_data)->get_variant().to_binary(_data);
+        _padlen = pl.t_value_of<uint8>(constexpr_frame_pad_length);
+        pl.get_binary(constexpr_frame_data, _data);
     }
     __finally2 {
         // do nothing

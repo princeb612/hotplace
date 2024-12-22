@@ -55,8 +55,8 @@ return_t http2_frame_alt_svc::read(http2_frame_header_t const* header, size_t si
 
         pl.read(ptr_payload, get_payload_size());
 
-        pl.select(constexpr_frame_origin)->get_variant().to_binary(_origin);
-        pl.select(constexpr_frame_alt_svc_field_value)->get_variant().to_binary(_altsvc);
+        pl.get_binary(constexpr_frame_origin, _origin);
+        pl.get_binary(constexpr_frame_alt_svc_field_value, _altsvc);
     }
     __finally2 {
         // do nothing

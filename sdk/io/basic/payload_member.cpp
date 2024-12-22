@@ -138,7 +138,7 @@ size_t payload_member::get_space() {
     } else if (variant_flag_t::flag_int == get_variant().flag()) {
         space = get_variant().size();
     } else if (_ref) {
-        space = t_to_int<size_t>(_ref) * _refmulti;
+        space = t_to_int<size_t>(_ref->get_variant()) * _refmulti;
     }
     return space;
 }
@@ -150,7 +150,7 @@ size_t payload_member::get_capacity() {
     } else if (_reserve) {
         space = _reserve;
     } else if (_ref) {
-        space = t_to_int<size_t>(_ref) * _refmulti;
+        space = t_to_int<size_t>(_ref->get_variant()) * _refmulti;
     } else {
         space = get_variant().size();
     }
@@ -164,9 +164,9 @@ size_t payload_member::get_reference_value() {
     } else if (_reserve) {
         size = _reserve;
     } else if (_ref) {
-        size = t_to_int<size_t>(_ref) * _refmulti;
+        size = t_to_int<size_t>(_ref->get_variant()) * _refmulti;
     } else {
-        size = t_to_int<size_t>(this);
+        size = t_to_int<size_t>(get_variant());
     }
     return size;
 }
@@ -282,7 +282,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                 if (encoded) {
                     size = encoded->value();
                 } else {
-                    size = t_to_int<size_t>(ref);
+                    size = t_to_int<size_t>(ref->get_variant());
                 }
             }
 

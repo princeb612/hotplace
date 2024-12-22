@@ -351,168 +351,168 @@ logger& logger::write(loglevel_t level, stream_t* s) {
 
 logger& logger::dump(const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_dump(addr, size, hexpart, indent, true);
+        do_dump(addr, size, hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::dump(const char* addr, size_t size, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_dump((byte_t*)addr, size, hexpart, indent, true);
+        do_dump((byte_t*)addr, size, hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::dump(const binary_t& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_dump(&msg[0], msg.size(), hexpart, indent, true);
+        do_dump(&msg[0], msg.size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::dump(const binary& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_dump(&msg.get()[0], msg.get().size(), hexpart, indent, true);
+        do_dump(&msg.get()[0], msg.get().size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::dump(const std::string& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_dump((byte_t*)msg.c_str(), msg.size(), hexpart, indent, true);
+        do_dump((byte_t*)msg.c_str(), msg.size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::dump(const basic_stream& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_dump(msg.data(), msg.size(), hexpart, indent, true);
+        do_dump(msg.data(), msg.size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::dump(loglevel_t level, const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_dump(addr, size, hexpart, indent, true);
+        do_dump(addr, size, hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::dump(loglevel_t level, const char* addr, size_t size, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_dump((byte_t*)addr, size, hexpart, indent, true);
+        do_dump((byte_t*)addr, size, hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::dump(loglevel_t level, const binary_t& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_dump(&msg[0], msg.size(), hexpart, indent, true);
+        do_dump(&msg[0], msg.size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::dump(loglevel_t level, const binary& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_dump(&msg.get()[0], msg.get().size(), hexpart, indent, true);
+        do_dump(&msg.get()[0], msg.get().size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::dump(loglevel_t level, const std::string& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_dump((byte_t*)msg.c_str(), msg.size(), hexpart, indent, true);
+        do_dump((byte_t*)msg.c_str(), msg.size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::dump(loglevel_t level, const basic_stream& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_dump(msg.data(), msg.size(), hexpart, indent, true);
+        do_dump(msg.data(), msg.size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_hdump(header, addr, size, hexpart, indent, true);
+        do_hdump(header, addr, size, hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::hdump(const std::string& header, const char* addr, size_t size, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_hdump(header, (byte_t*)addr, size, hexpart, indent, true);
+        do_hdump(header, (byte_t*)addr, size, hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::hdump(const std::string& header, const binary_t& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_hdump(header, &msg[0], msg.size(), hexpart, indent, true);
+        do_hdump(header, &msg[0], msg.size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::hdump(const std::string& header, const binary& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_hdump(header, &msg.get()[0], msg.get().size(), hexpart, indent, true);
+        do_hdump(header, &msg.get()[0], msg.get().size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::hdump(const std::string& header, const std::string& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_hdump(header, (byte_t*)msg.c_str(), msg.size(), hexpart, indent, true);
+        do_hdump(header, (byte_t*)msg.c_str(), msg.size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::hdump(const std::string& header, const basic_stream& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_hdump(header, msg.data(), msg.size(), hexpart, indent, true);
+        do_hdump(header, msg.data(), msg.size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::hdump(loglevel_t level, const std::string& header, const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_hdump(header, addr, size, hexpart, indent, true);
+        do_hdump(header, addr, size, hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::hdump(loglevel_t level, const std::string& header, const char* addr, size_t size, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_hdump(header, (byte_t*)addr, size, hexpart, indent, true);
+        do_hdump(header, (byte_t*)addr, size, hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::hdump(loglevel_t level, const std::string& header, const binary_t& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_hdump(header, &msg[0], msg.size(), hexpart, indent, true);
+        do_hdump(header, &msg[0], msg.size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::hdump(loglevel_t level, const std::string& header, const binary& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_hdump(header, &msg.get()[0], msg.get().size(), hexpart, indent, true);
+        do_hdump(header, &msg.get()[0], msg.get().size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::hdump(loglevel_t level, const std::string& header, const std::string& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_hdump(header, (byte_t*)msg.c_str(), msg.size(), hexpart, indent, true);
+        do_hdump(header, (byte_t*)msg.c_str(), msg.size(), hexpart, indent);
     }
     return *this;
 }
 
 logger& logger::hdump(loglevel_t level, const std::string& header, const basic_stream& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_hdump(header, msg.data(), msg.size(), hexpart, indent, true);
+        do_hdump(header, msg.data(), msg.size(), hexpart, indent);
     }
     return *this;
 }
@@ -665,27 +665,19 @@ logger& logger::do_write_stream(stream_t* s, bool lf) {
     return do_write(lambda);
 }
 
-logger& logger::do_dump(const byte_t* addr, size_t size, unsigned hexpart, unsigned indent, bool lf) {
+logger& logger::do_dump(const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
     if (addr) {
-        auto lambda = [&](logger_item* item) -> void {
-            dump_memory(addr, size, &item->bs, hexpart, indent, 0, dump_memory_flag_t::dump_notrunc);
-            if (lf) {
-                item->bs.printf("\n");
-            }
-        };
+        auto lambda = [&](logger_item* item) -> void { dump_memory(addr, size, &item->bs, hexpart, indent, 0, dump_memory_flag_t::dump_notrunc); };
         do_write(lambda);
     }
     return *this;
 }
 
-logger& logger::do_hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart, unsigned indent, bool lf) {
+logger& logger::do_hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
     if (addr) {
         auto lambda = [&](logger_item* item) -> void {
             item->bs.printf("%s\n", header.c_str());
             dump_memory(addr, size, &item->bs, hexpart, indent, 0, dump_memory_flag_t::dump_notrunc);
-            if (lf) {
-                item->bs.printf("\n");
-            }
         };
         do_write(lambda);
     }
