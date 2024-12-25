@@ -1304,6 +1304,15 @@ void crypto_key::for_each(std::function<void(crypto_key_object*, void*)> fp_dump
     }
 }
 
+void crypto_key::erase(const std::string& kid) {
+    critical_section_guard guard(_lock);
+    auto lbound = _key_map.lower_bound(kid);
+    auto ubound = _key_map.upper_bound(kid);
+    for (auto iter = lbound; iter != ubound;) {
+        _key_map.erase(iter++);
+    }
+}
+
 crypto_kty_t typeof_crypto_key(crypto_key_object& key) { return typeof_crypto_key(key.get_pkey()); }
 
 }  // namespace crypto

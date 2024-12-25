@@ -66,6 +66,10 @@ namespace hotplace {
 namespace net {
 
 // studying ...
+enum tls_message_flow_t {
+    tls_1_rtt = 0,
+    tls_0_rtt = 1,
+};
 
 class tls_protection {
    public:
@@ -77,6 +81,8 @@ class tls_protection {
     ~tls_protection();
 
     uint8 get_mode();
+    tls_message_flow_t get_flow();
+    void set_flow(tls_message_flow_t flow);
 
     /**
      * @brief   cipher suite
@@ -100,6 +106,11 @@ class tls_protection {
      *          }
      */
     transcript_hash* get_transcript_hash();
+    /**
+     * hash(handshake)
+     */
+    return_t calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest, bool reset = false);
+    return_t calc_context_hash(tls_session* session, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& digest);
 
     crypto_key& get_cert();
     crypto_key& get_keyexchange();
@@ -113,6 +124,7 @@ class tls_protection {
      * @remarks generate secrets related to tls_mode_t
      */
     return_t calc(tls_session* session, uint16 type);
+    return_t calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder);
 
     void get_item(tls_secret_t type, binary_t& item);
     const binary_t& get_item(tls_secret_t type);
@@ -155,6 +167,7 @@ class tls_protection {
 
    private:
     uint8 _mode;  // see tls_mode_t
+    tls_message_flow_t _flow;
     uint16 _ciphersuite;
     uint16 _record_version;
     uint16 _version;

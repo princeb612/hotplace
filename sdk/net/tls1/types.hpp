@@ -266,9 +266,10 @@ struct tls_alert_t {
  *    04 resumption
  *    f0 userspace/usercontext
  * 7..6
- *    80 reserved
+ *    80 early
  *    40 reserved
  * 5..0
+ *    assign
  */
 #define TLS_SECRET 0x0000
 #define TLS_SECRET_HANDSHAKE 0x0100
@@ -276,8 +277,8 @@ struct tls_alert_t {
 #define TLS_SECRET_EXPORTER 0x0300
 #define TLS_SECRET_RESUMPTION 0x0400
 #define TLS_SECRET_USERCONTEXT 0xf000
+#define TLS_SECRET_EARLY 0x0080
 
-#define TLS_SECRET_EARLY 0x0001
 #define TLS_SECRET_CLIENT_MAC_KEY 0x0002
 #define TLS_SECRET_SERVER_MAC_KEY 0x0003
 #define TLS_SECRET_BINDER 0x0004
@@ -310,10 +311,12 @@ enum tls_secret_t : uint16 {
 
     tls_secret_handshake_derived = (TLS_SECRET_HANDSHAKE | TLS_SECRET_DERIVED),
     tls_secret_handshake = (TLS_SECRET_HANDSHAKE | TLS_SECRET_MASTER),
-    tls_secret_handshake_client = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT),  // CLIENT_HANDSHAKE_TRAFFIC_SECRET, client_handshake_traffic_secret
-    client_handshake_traffic_secret = tls_secret_handshake_client,
-    tls_secret_handshake_server = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER),  // SERVER_HANDSHAKE_TRAFFIC_SECRET, server_handshake_traffic_secret
-    server_handshake_traffic_secret = tls_secret_handshake_server,
+    tls_secret_c_hs_traffic = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT),  // CLIENT_HANDSHAKE_TRAFFIC_SECRET, client_handshake_traffic_secret
+    tls_client_handshake_server = tls_secret_c_hs_traffic,
+    client_handshake_traffic_secret = tls_secret_c_hs_traffic,
+    tls_secret_s_hs_traffic = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER),  // SERVER_HANDSHAKE_TRAFFIC_SECRET, server_handshake_traffic_secret
+    tls_secret_handshake_server = tls_secret_s_hs_traffic,
+    server_handshake_traffic_secret = tls_secret_s_hs_traffic,
     tls_secret_handshake_client_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_KEY),
     tls_secret_handshake_client_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_IV),
     tls_secret_handshake_quic_client_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_QUIC_KEY),
@@ -329,10 +332,12 @@ enum tls_secret_t : uint16 {
 
     tls_secret_application_derived = (TLS_SECRET_APPLICATION | TLS_SECRET_DERIVED),
     tls_secret_application = (TLS_SECRET_APPLICATION | TLS_SECRET_MASTER),
-    tls_secret_application_client = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT),  // CLIENT_TRAFFIC_SECRET_0, client_application_traffic_secret_0
-    client_application_traffic_secret_0 = tls_secret_application_client,
-    tls_secret_application_server = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER),  // SERVER_TRAFFIC_SECRET_0, server_application_traffic_secret_0
-    server_application_traffic_secret_0 = tls_secret_application_server,
+    tls_secret_c_ap_traffic = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT),  // CLIENT_TRAFFIC_SECRET_0, client_application_traffic_secret_0
+    tls_secret_application_client = tls_secret_c_ap_traffic,
+    client_application_traffic_secret_0 = tls_secret_c_ap_traffic,
+    tls_secret_s_ap_traffic = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER),  // SERVER_TRAFFIC_SECRET_0, server_application_traffic_secret_0
+    tls_secret_application_server = tls_secret_s_ap_traffic,
+    server_application_traffic_secret_0 = tls_secret_s_ap_traffic,
     tls_secret_application_client_key = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_KEY),
     tls_secret_application_client_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_IV),
     tls_secret_application_server_key = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_KEY),
@@ -347,24 +352,38 @@ enum tls_secret_t : uint16 {
     tls_secret_application_quic_server_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_IV),
     tls_secret_application_quic_server_hp = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_HP),
 
-    tls_secret_exporter_master = (TLS_SECRET_EXPORTER | TLS_SECRET_MASTER),  // EXPORTER_SECRET, exporter_master_secret, secret_exporter_master
+    tls_secret_exp_master = (TLS_SECRET_EXPORTER | TLS_SECRET_MASTER),  // EXPORTER_SECRET, exporter_master_secret, secret_exporter_master
+    tls_secret_exporter_master = tls_secret_exp_master,
+
+    tls_secret_e_exp_master = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_MASTER),  // e exp master
+    tls_secret_c_e_traffic = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_CLIENT),   // c e traffic
+    tls_secret_s_e_traffic = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_SERVER),   // s e traffic
+    tls_secret_c_e_traffic_key = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_CLIENT_KEY),
+    tls_secret_c_e_traffic_iv = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_CLIENT_IV),
+    tls_secret_s_e_traffic_key = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_SERVER_KEY),
+    tls_secret_s_e_traffic_iv = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_SERVER_IV),
 
     tls_secret_resumption_binder = (TLS_SECRET_RESUMPTION | TLS_SECRET_BINDER),
-    tls_secret_resumption_master = (TLS_SECRET_RESUMPTION | TLS_SECRET_MASTER),  // secret_resumption_master
+    tls_secret_res_master = (TLS_SECRET_RESUMPTION | TLS_SECRET_MASTER),  // secret_resumption_master
+    tls_secret_resumption_master = tls_secret_res_master,
     tls_secret_resumption = (TLS_SECRET_RESUMPTION),
     tls_secret_resumption_early = (TLS_SECRET_RESUMPTION | TLS_SECRET_EARLY),
 
     tls_context_shared_secret = (TLS_SECRET_USERCONTEXT | 0x01),
     tls_context_transcript_hash = (TLS_SECRET_USERCONTEXT | 0x02),
     tls_context_empty_hash = (TLS_SECRET_USERCONTEXT | 0x04),
-    tls_context_client_hello = (TLS_SECRET_USERCONTEXT | 0x05),         // CH client_hello
-    tls_context_server_hello = (TLS_SECRET_USERCONTEXT | 0x06),         // SH server_hello (handshake)
-    tls_context_server_finished = (TLS_SECRET_USERCONTEXT | 0x07),      // F server finished (application, exporter)
-    tls_context_client_finished = (TLS_SECRET_USERCONTEXT | 0x08),      // F client finished (resumption)
-    tls_context_client_hello_random = (TLS_SECRET_USERCONTEXT | 0x09),  // CH client_hello (server_key_update)
-    tls_context_server_hello_random = (TLS_SECRET_USERCONTEXT | 0x0a),  // SH server_hello (server_key_update)
-    tls_context_server_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0b),  // SKE server_key_exchange (pre_master_secret)
-    tls_context_client_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0c),  // CKE client_key_exchange (pre_master_secret)
+    tls_context_client_hello = (TLS_SECRET_USERCONTEXT | 0x05),             // CH client_hello
+    tls_context_server_hello = (TLS_SECRET_USERCONTEXT | 0x06),             // SH server_hello (handshake)
+    tls_context_server_finished = (TLS_SECRET_USERCONTEXT | 0x07),          // F server finished (application, exporter)
+    tls_context_client_finished = (TLS_SECRET_USERCONTEXT | 0x08),          // F client finished (resumption)
+    tls_context_client_hello_random = (TLS_SECRET_USERCONTEXT | 0x09),      // CH client_hello (server_key_update)
+    tls_context_server_hello_random = (TLS_SECRET_USERCONTEXT | 0x0a),      // SH server_hello (server_key_update)
+    tls_context_server_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0b),      // SKE server_key_exchange (pre_master_secret)
+    tls_context_client_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0c),      // CKE client_key_exchange (pre_master_secret)
+    tls_context_resumption_binder_key = (TLS_SECRET_USERCONTEXT | 0x0d),    // CH 0-RTT
+    tls_context_resumption_finished_key = (TLS_SECRET_USERCONTEXT | 0x0e),  // CH 0-RTT
+    tls_context_resumption_finished = (TLS_SECRET_USERCONTEXT | 0x0f),      // CH 0-RTT
+    tls_context_resumption_binder_hash = (TLS_SECRET_USERCONTEXT | 0x10),   // CH 0-RTT
 };
 
 enum tls_mode_t : uint8 {

@@ -30,7 +30,7 @@ return_t openssl_mac::hmac(const char* alg, const binary_t& key, const byte_t* s
     openssl_hash hash;
 
     __try2 {
-        if (nullptr == alg || nullptr == stream) {
+        if (nullptr == alg || (size && (nullptr == stream))) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -58,7 +58,7 @@ return_t openssl_mac::hmac(hash_algorithm_t alg, const binary_t& key, const byte
     openssl_hash hash;
 
     __try2 {
-        if (nullptr == stream) {
+        if (size && (nullptr == stream)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }

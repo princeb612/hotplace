@@ -88,6 +88,7 @@ class openssl_kdf {
      * @return  error code (see error.hpp)
      */
     return_t hmac_kdf_extract(binary_t& prk, const char* alg, const binary_t& salt, const binary_t& ikm);
+    return_t hmac_kdf_extract(binary_t& prk, hash_algorithm_t alg, const binary_t& salt, const binary_t& ikm);
     /**
      * @brief   HKDF_Expand
      * @param   binary_t& okm [out] output key material

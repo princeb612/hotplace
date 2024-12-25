@@ -80,6 +80,7 @@ class transcript_hash {
 
     transcript_hash* dup();
 
+    void reset();
     /**
      * @brief   update only
      */

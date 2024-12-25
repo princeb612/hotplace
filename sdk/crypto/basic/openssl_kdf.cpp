@@ -150,6 +150,25 @@ return_t openssl_kdf::hmac_kdf_extract(binary_t& prk, const char* alg, const bin
     return ret;
 }
 
+return_t openssl_kdf::hmac_kdf_extract(binary_t& prk, hash_algorithm_t alg, const binary_t& salt, const binary_t& ikm) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        const hint_digest_t* hint = advisor->hintof_digest(alg);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        ret = hmac_kdf_extract(prk, nameof_alg(hint), salt, ikm);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t openssl_kdf::hkdf_expand(binary_t& okm, const char* alg, size_t dlen, const binary_t& prk, const binary_t& info) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();

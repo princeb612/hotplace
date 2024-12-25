@@ -464,6 +464,8 @@ class crypto_key {
      */
     void for_each(std::function<void(crypto_key_object*, void*)>, void* param);
 
+    void erase(const std::string& kid);
+
    protected:
     /**
      * @brief extract

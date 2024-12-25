@@ -120,6 +120,8 @@ void test_rfc8448_3() {
     auto cipher_suite = rfc8448_session.get_tls_protection().get_cipher_suite();
 
     {
+        binary_t empty_hash;
+        test_keycalc(&rfc8448_session, tls_context_empty_hash, empty_hash, "empty_hash", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
         // # ECDH(priv, pub) --> shared_secret
         binary_t shared_secret;
         test_keycalc(&rfc8448_session, tls_context_shared_secret, shared_secret, "shared_secret",
@@ -160,11 +162,11 @@ void test_rfc8448_3() {
                      "1dc826e93606aa6fdc0aadc12f741b01046aa6b99f691ed221a9f0ca043fbeac");
         // {server}  derive secret "tls13 c hs traffic":
         binary_t secret_handshake_client;
-        test_keycalc(&rfc8448_session, tls_secret_handshake_client, secret_handshake_client, "secret_handshake_client",
+        test_keycalc(&rfc8448_session, tls_secret_c_hs_traffic, secret_handshake_client, "secret_handshake_client",
                      "b3eddb126e067f35a780b3abf45e2d8f3b1a950738f52e9600746a0e27a55a21");
         // {server}  derive secret "tls13 s hs traffic":
         binary_t secret_handshake_server;
-        test_keycalc(&rfc8448_session, tls_secret_handshake_server, secret_handshake_server, "secret_handshake_server",
+        test_keycalc(&rfc8448_session, tls_secret_s_hs_traffic, secret_handshake_server, "secret_handshake_server",
                      "b67b7d690cc16c4e75e54213cb2d37b4e9c912bcded9105d42befd59d391ad38");
 
         binary_t secret_handshake_server_key;
@@ -317,7 +319,7 @@ void test_rfc8448_3() {
                      "18df06843d13a08bf2a449844c5f8a478001bc4d4c627984d5a41da8d0402919");
         // {server}  derive secret "tls13 c ap traffic":
         binary_t secret_application_client;
-        test_keycalc(&rfc8448_session, tls_secret_application_client, secret_application_client, "secret_application_client",
+        test_keycalc(&rfc8448_session, tls_secret_c_ap_traffic, secret_application_client, "secret_application_client",
                      "9e40646ce79a7f9dc05af8889bce6552875afa0b06df0087f792ebb7c17504a5");
         binary_t secret_application_client_key;
         test_keycalc(&rfc8448_session, tls_secret_application_client_key, secret_application_client_key, "secret_application_client_key",
@@ -328,7 +330,7 @@ void test_rfc8448_3() {
                      "5b78923dee08579033e523d9");
         // {server}  derive secret "tls13 s ap traffic":
         binary_t secret_application_server;
-        test_keycalc(&rfc8448_session, tls_secret_application_server, secret_application_server, "secret_application_server",
+        test_keycalc(&rfc8448_session, tls_secret_s_ap_traffic, secret_application_server, "secret_application_server",
                      "a11af9f05531f856ad47116b45a950328204b4f44bfb6b3a4b4f1f3fcb631643");
         binary_t secret_application_server_key;
         test_keycalc(&rfc8448_session, tls_secret_application_server_key, secret_application_server_key, "secret_application_server_key",
@@ -339,7 +341,7 @@ void test_rfc8448_3() {
                      "cf782b88dd83549aadf1e984");
         // {server}  derive secret "tls13 exp master":
         binary_t secret_exporter_master;
-        test_keycalc(&rfc8448_session, tls_secret_exporter_master, secret_exporter_master, "secret_exporter_master",
+        test_keycalc(&rfc8448_session, tls_secret_exp_master, secret_exporter_master, "secret_exporter_master",
                      "fe22f881176eda18eb8f44529e6792c50c9a3f89452f68d8ae311b4309d3cf50");
     }
     // #4 client finished
@@ -363,7 +365,7 @@ void test_rfc8448_3() {
         // info (52)     hkdflabel("res master")
         // expanded (32)
         binary_t secret_resumption_master;
-        test_keycalc(&rfc8448_session, tls_secret_resumption_master, secret_resumption_master, "secret_resumption_master",
+        test_keycalc(&rfc8448_session, tls_secret_res_master, secret_resumption_master, "secret_resumption_master",
                      "7df235f2031d2a051287d02b0241b0bfdaf86cc856231f2d5aba46c434ec196c");
         // {server} generate resumption secret "tls13 resumption":
         // PRK (32)      secret_resumption_master 7df235f2031d2a051287d02b0241b0bfdaf86cc856231f2d5aba46c434ec196c

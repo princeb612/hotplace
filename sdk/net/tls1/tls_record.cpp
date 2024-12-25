@@ -61,7 +61,7 @@ return_t tls_dump_tls_record(stream_t* s, tls_session* session, const byte_t* st
             __leave2;
         }
         if ((size < pos) || (size - pos < 5)) {
-            ret = errorcode_t::no_data;
+            ret = errorcode_t::no_more;
             __leave2;
         }
 
@@ -264,9 +264,9 @@ return_t tls_dump_tls_record(stream_t* s, tls_session* session, const byte_t* st
                             } else if (tls_content_type_handshake == last_byte) {
                                 tpos = 0;
                                 while (tpos < plainsize) {
-                                    auto test = tls_dump_handshake(s, session, &plaintext[0], plainsize, tpos, role);
+                                    auto test = tls_dump_handshake(s, session, &plaintext[0], plainsize - 1, tpos, role);
                                     if (errorcode_t::success != test) {
-                                        if (errorcode_t::no_data != test) {
+                                        if (errorcode_t::no_more != test) {
                                             ret = test;
                                         }
                                         break;

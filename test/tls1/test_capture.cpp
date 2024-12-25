@@ -42,7 +42,7 @@ void test_capture() {
     protection.set_item(client_handshake_traffic_secret,
                         base16_decode_rfc("db89d2d6df0e84fed74a2288f8fd4d0959f790ff23946cdf4c26d85e51bebd42ae184501972f8d30c4a3e4a3693d0ef0"));
     // EXPORTER_SECRET
-    protection.set_item(tls_secret_exporter_master,
+    protection.set_item(tls_secret_exp_master,
                         base16_decode_rfc("5da16dd8325dd8279e4535363384d9ad0dbe370538fc3ad74e53d533b77ac35ee072d56c90871344e6857ccb2efc9e14"));
     // SERVER_TRAFFIC_SECRET_0 (server_application_traffic_secret_0)
     protection.set_item(server_application_traffic_secret_0,

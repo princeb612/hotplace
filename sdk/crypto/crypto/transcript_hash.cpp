@@ -35,6 +35,11 @@ transcript_hash::~transcript_hash() {
 
 transcript_hash* transcript_hash::dup() { return new transcript_hash(*this); }
 
+void transcript_hash::reset() {
+    openssl_hash hash;
+    hash.init(_handle);
+}
+
 return_t transcript_hash::update(const binary_t& message) { return update(&message[0], message.size()); }
 
 return_t transcript_hash::update(const byte_t* stream, size_t size) {

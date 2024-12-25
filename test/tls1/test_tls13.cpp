@@ -170,10 +170,10 @@ void test_tls13_xargs_org() {
         test_keycalc(&session, tls_secret_handshake, secret_handshake, "secret_handshake",
                      "bdbbe8757494bef20de932598294ea65b5e6bf6dc5c02a960a2de2eaa9b07c929078d2caa0936231c38d1725f179d299");
         binary_t secret_handshake_client;
-        test_keycalc(&session, tls_secret_handshake_client, secret_handshake_client, "secret_handshake_client",
+        test_keycalc(&session, tls_secret_c_hs_traffic, secret_handshake_client, "secret_handshake_client",
                      "db89d2d6df0e84fed74a2288f8fd4d0959f790ff23946cdf4c26d85e51bebd42ae184501972f8d30c4a3e4a3693d0ef0");
         binary_t secret_handshake_server;
-        test_keycalc(&session, tls_secret_handshake_server, secret_handshake_server, "secret_handshake_server",
+        test_keycalc(&session, tls_secret_s_hs_traffic, secret_handshake_server, "secret_handshake_server",
                      "23323da031634b241dd37d61032b62a4f450584d1f7f47983ba2f7cc0cdcc39a68f481f2b019f9403a3051908a5d1622");
         binary_t client_handshake_key;
         test_keycalc(&session, tls_secret_handshake_client_key, client_handshake_key, "client_handshake_key",
@@ -401,7 +401,7 @@ void test_tls13_xargs_org() {
         test_keycalc(&session, tls_secret_application, secret_application, "secret_application",
                      "2931209e1b7840e16d0d6bfd4bda1102f3a984f1162dc450f9606654f45bd55d9cb8857a8d14b59b98d7250fee55d3c3");
         binary_t secret_application_client;
-        test_keycalc(&session, tls_secret_application_client, secret_application_client, "secret_application_client",
+        test_keycalc(&session, tls_secret_c_ap_traffic, secret_application_client, "secret_application_client",
                      "9e47af27cb60d818a9ea7d233cb5ed4cc525fcd74614fb24b0ee59acb8e5aa7ff8d88b89792114208fec291a6fa96bad");
         binary_t secret_application_client_key;
         test_keycalc(&session, tls_secret_application_client_key, secret_application_client_key, "secret_application_client_key",
@@ -409,7 +409,7 @@ void test_tls13_xargs_org() {
         binary_t secret_application_client_iv;
         test_keycalc(&session, tls_secret_application_client_iv, secret_application_client_iv, "secret_application_client_iv", "bb007956f474b25de902432f");
         binary_t secret_application_server;
-        test_keycalc(&session, tls_secret_application_server, secret_application_server, "secret_application_server",
+        test_keycalc(&session, tls_secret_s_ap_traffic, secret_application_server, "secret_application_server",
                      "86c967fd7747a36a0685b4ed8d0e6b4c02b4ddaf3cd294aa44e9f6b0183bf911e89a189ba5dfd71fccffb5cc164901f8");
         binary_t secret_application_server_key;
         test_keycalc(&session, tls_secret_application_server_key, secret_application_server_key, "secret_application_server_key",

@@ -80,13 +80,11 @@ define_tls_variable(extension_type_desc) = {
     ENTRY(0x0025, "TLMSP_proxying"),
     ENTRY(0x0026, "TLMSP_delegate"),
     ENTRY(0x0027, "supported_ekt_ciphers"),
-    ENTRY(0x0028, "Reserved"),
     ENTRY(0x0029, "pre_shared_key"),
     ENTRY(0x002a, "early_data"),
     ENTRY(0x002b, "supported_versions"),  // RFC 8446 4.2.1, 9.2
     ENTRY(0x002c, "cookie"),              // RFC 8446 4.2.2, 9.2
     ENTRY(0x002d, "psk_key_exchange_modes"),
-    ENTRY(0x002e, "Reserved"),
     ENTRY(0x002f, "certificate_authorities"),
     ENTRY(0x0030, "oid_filters"),
     ENTRY(0x0031, "post_handshake_auth"),

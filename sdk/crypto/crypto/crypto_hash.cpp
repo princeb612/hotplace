@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_hash::crypto_hash(hash_algorithm_t alg) : _alg(hash_alg_unknown) { _shared.make_share(this); }
+crypto_hash::crypto_hash(hash_algorithm_t alg) : _alg(alg) { _shared.make_share(this); }
 
 return_t crypto_hash::digest(const binary_t& message, binary_t& result) { return digest(&message[0], message.size(), result); }
 

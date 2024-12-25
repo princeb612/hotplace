@@ -29,7 +29,7 @@ namespace hotplace {
 namespace net {
 
 tls_protection::tls_protection(uint8 mode)
-    : _mode(mode), _ciphersuite(0), _record_version(0), _version(0), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
+    : _mode(mode), _flow(tls_1_rtt), _ciphersuite(0), _record_version(0), _version(0), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
 
 tls_protection::~tls_protection() {
     if (_transcript_hash) {
@@ -38,6 +38,10 @@ tls_protection::~tls_protection() {
 }
 
 uint8 tls_protection::get_mode() { return _mode; }
+
+tls_message_flow_t tls_protection::get_flow() { return _flow; }
+
+void tls_protection::set_flow(tls_message_flow_t flow) { _flow = flow; }
 
 uint16 tls_protection::get_cipher_suite() { return _ciphersuite; }
 
@@ -58,16 +62,106 @@ void tls_protection::set_tls_version(uint16 version) { _version = version; }
 transcript_hash* tls_protection::get_transcript_hash() {
     critical_section_guard guard(_lock);
     if (nullptr == _transcript_hash) {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
-        auto hashalg = algof_mac1(hint_tls_alg);
-        transcript_hash_builder builder;
-        _transcript_hash = builder.set(hashalg).build();
+        if (get_cipher_suite()) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+            auto hashalg = algof_mac1(hint_tls_alg);
+            transcript_hash_builder builder;
+            _transcript_hash = builder.set(hashalg).build();
+        }
     }
     if (_transcript_hash) {
         _transcript_hash->addref();
     }
     return _transcript_hash;
+}
+
+return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest, bool reset) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || (size && (nullptr == stream))) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // The hash does not include DTLS-only bytes in the records.
+        // --> The hash does not include handshake reconstruction data bytes in the records.
+
+        auto& protection = session->get_tls_protection();
+        auto hash = protection.get_transcript_hash();
+        if (hash) {
+            if (reset) {
+                // 0-RTT client_hello
+                hash->reset();
+            }
+            if (is_kindof_dtls()) {
+                basic_stream bs;
+                // DTLS
+                size_t offset_version = 12;
+                size_t sizeof_reconstruction_data = 8;
+                //  0.. 3 handshake header
+                hash->update(stream, sizeof(tls_handshake_t));
+                //  4..11 handshake reconstruction data (8 bytes)
+                //
+                // 12.. $ handshake, extension
+                hash->update(stream + offset_version, size - offset_version);
+                hash->digest(digest);
+            } else {
+                // TLS
+                // hash->digest(stream, size, digest);
+                hash->update(stream, size);
+                hash->digest(digest);
+            }
+
+            hash->release();
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+};
+
+return_t tls_protection::calc_context_hash(tls_session* session, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& digest) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || (size && (nullptr == stream))) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // The hash does not include DTLS-only bytes in the records.
+        // --> The hash does not include handshake reconstruction data bytes in the records.
+
+        transcript_hash_builder builder;
+        auto hash = builder.set(alg).build();
+        if (hash) {
+            if (is_kindof_dtls()) {
+                basic_stream bs;
+                // DTLS
+                size_t offset_version = 12;
+                size_t sizeof_reconstruction_data = 8;
+                //  0.. 3 handshake header
+                hash->update(stream, sizeof(tls_handshake_t));
+                //  4..11 handshake reconstruction data (8 bytes)
+                //
+                // 12.. $ handshake, extension
+                hash->update(stream + offset_version, size - offset_version);
+                hash->digest(digest);
+            } else {
+                // TLS
+                // hash->digest(stream, size, digest);
+                hash->update(stream, size);
+                hash->digest(digest);
+            }
+
+            hash->release();
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
 crypto_key& tls_protection::get_cert() { return _cert; }
@@ -114,9 +208,8 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
         auto hashalg = hint_mac->fetchname;
 
         openssl_kdf kdf;
-        binary_t context;
-
-        binary_t ikm_empty;
+        binary_t context;    // empty
+        binary_t empty_ikm;  // dlen 00..
         binary_t empty_hash;
 
         {
@@ -125,32 +218,30 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
             dgst.digest(hashalg, empty, empty_hash);
             _kv[tls_context_empty_hash] = empty_hash;
         }
-        ikm_empty.resize(dlen);
+        empty_ikm.resize(dlen);
 
-        auto lambda_expand_label = [&](tls_secret_t sec, binary_t& okm, const char* cipher_suite, uint16 dlen, const binary_t& secret, const char* label,
+        auto lambda_expand_label = [&](tls_secret_t sec, binary_t& okm, const char* hashalg, uint16 dlen, const binary_t& secret, const char* label,
                                        const binary_t& context) -> void {
             okm.clear();
             if (session->get_tls_protection().is_kindof_dtls()) {
-                kdf.hkdf_expand_dtls13_label(okm, cipher_suite, dlen, secret, str2bin(label), context);
+                kdf.hkdf_expand_dtls13_label(okm, hashalg, dlen, secret, str2bin(label), context);
             } else {
-                kdf.hkdf_expand_tls13_label(okm, cipher_suite, dlen, secret, str2bin(label), context);
+                kdf.hkdf_expand_tls13_label(okm, hashalg, dlen, secret, str2bin(label), context);
             }
             _kv[sec] = okm;
         };
-        auto lambda_extract = [&](tls_secret_t sec, binary_t& prk, const char* cipher_suite, const binary_t& salt, const binary_t& ikm) -> void {
-            kdf.hmac_kdf_extract(prk, cipher_suite, salt, ikm);
+        auto lambda_extract = [&](tls_secret_t sec, binary_t& prk, const char* hashalg, const binary_t& salt, const binary_t& ikm) -> void {
+            kdf.hmac_kdf_extract(prk, hashalg, salt, ikm);
             _kv[sec] = prk;
         };
 
         binary_t context_hash;
-        if (tls_context_client_hello != type) {
-            // server_hello~
-            auto tshash = get_transcript_hash();
-            if (tshash) {
-                tshash->digest(context_hash);
-                tshash->release();
-                _kv[tls_context_transcript_hash] = context_hash;
-            }
+        // server_hello~ or 0-RTT client_hello~
+        auto tshash = get_transcript_hash();
+        if (tshash) {
+            tshash->digest(context_hash);
+            tshash->release();
+            _kv[tls_context_transcript_hash] = context_hash;
         }
 
         if (tls_context_client_hello == type) {
@@ -178,6 +269,26 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
              *             |
              *             v
              */
+
+            // res binder (see tls_extension_pre_shared_key)
+            // exp master (see tls_context_server_finished)
+
+            if (tls_0_rtt == get_flow()) {
+                // 0-RTT
+                const binary_t& secret_resumption_early = get_item(tls_secret_resumption_early);  // client finished
+
+                // {client}  derive secret "tls13 c e traffic"
+                binary_t secret_c_e_traffic;
+                lambda_expand_label(tls_secret_c_e_traffic, secret_c_e_traffic, hashalg, dlen, secret_resumption_early, "c e traffic", context_hash);
+                // {client}  derive secret "tls13 e exp master"
+                binary_t secret_e_exp_master;
+                lambda_expand_label(tls_secret_e_exp_master, secret_e_exp_master, hashalg, dlen, secret_resumption_early, "e exp master", context_hash);
+                // {client}  derive write traffic keys for early application data
+                binary_t secret_c_e_traffic_key;
+                lambda_expand_label(tls_secret_c_e_traffic_key, secret_c_e_traffic_key, hashalg, keysize, secret_c_e_traffic, "key", context);
+                binary_t secret_c_e_traffic_iv;
+                lambda_expand_label(tls_secret_c_e_traffic_iv, secret_c_e_traffic_iv, hashalg, 12, secret_c_e_traffic, "iv", context);
+            }
         } else if (tls_context_server_hello == type) {
             /**
              *   (EC)DHE -> HKDF-Extract = Handshake Secret
@@ -200,8 +311,8 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
 
             if (use_pre_master_secret()) {
                 // from SSLKEYLOGFILE
-                secret_handshake_client = get_item(tls_secret_handshake_client);
-                secret_handshake_server = get_item(tls_secret_handshake_server);
+                secret_handshake_client = get_item(tls_secret_c_hs_traffic);
+                secret_handshake_server = get_item(tls_secret_s_hs_traffic);
             } else {
                 // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes
                 //  psk_ke      ... pre_shared_key
@@ -231,18 +342,34 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
                 {
                     binary_t salt;
                     salt.resize(1);
-                    lambda_extract(tls_secret_early_secret, early_secret, hashalg, salt, ikm_empty);
+                    lambda_extract(tls_secret_early_secret, early_secret, hashalg, salt, empty_ikm);
                 }
 
                 binary_t secret_handshake_derived;
-                lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, early_secret, "derived", empty_hash);
+                if (tls_1_rtt == get_flow()) {
+                    lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, early_secret, "derived", empty_hash);
+                } else {
+                    const binary_t& secret_resumption_early = get_item(tls_secret_resumption_early);
+                    lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, secret_resumption_early, "derived", empty_hash);
+                }
+
                 binary_t secret_handshake;
                 lambda_extract(tls_secret_handshake, secret_handshake, hashalg, secret_handshake_derived, shared_secret);
 
                 // client_handshake_traffic_secret
-                lambda_expand_label(tls_secret_handshake_client, secret_handshake_client, hashalg, dlen, secret_handshake, "c hs traffic", context_hash);
+                lambda_expand_label(tls_secret_c_hs_traffic, secret_handshake_client, hashalg, dlen, secret_handshake, "c hs traffic", context_hash);
                 // server_handshake_traffic_secret
-                lambda_expand_label(tls_secret_handshake_server, secret_handshake_server, hashalg, dlen, secret_handshake, "s hs traffic", context_hash);
+                lambda_expand_label(tls_secret_s_hs_traffic, secret_handshake_server, hashalg, dlen, secret_handshake, "s hs traffic", context_hash);
+
+                // if (tls_0_rtt == get_flow()) {
+                //     // tls13 derived
+                //     // extract secret "master"
+                //     binary_t secret_s_e_traffic_key;
+                //     lambda_expand_label(tls_secret_s_e_traffic_key, secret_s_e_traffic_key, hashalg, keysize, secret_s_e_traffic, "key", context);
+                //     binary_t secret_s_e_traffic_iv;
+                //     lambda_expand_label(tls_secret_s_e_traffic_iv, secret_s_e_traffic_iv, hashalg, 12, secret_s_e_traffic, "iv", context);
+                //
+                // }
             }
 
             // calc
@@ -293,9 +420,9 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
 
             if (use_pre_master_secret()) {
                 // from SSLKEYLOGFILE
-                secret_application_client = get_item(tls_secret_application_client);
-                secret_application_server = get_item(tls_secret_application_server);
-                // secret_exporter_master = get_item(tls_secret_exporter_master);
+                secret_application_client = get_item(tls_secret_c_ap_traffic);
+                secret_application_server = get_item(tls_secret_s_ap_traffic);
+                secret_exporter_master = get_item(tls_secret_exp_master);
             } else {
                 const binary_t& secret_handshake = _kv[tls_secret_handshake];
 
@@ -303,10 +430,10 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
                 lambda_expand_label(tls_secret_application_derived, secret_application_derived, hashalg, dlen, secret_handshake, "derived", empty_hash);
 
                 binary_t secret_application;
-                lambda_extract(tls_secret_application, secret_application, hashalg, secret_application_derived, ikm_empty);
-                lambda_expand_label(tls_secret_application_client, secret_application_client, hashalg, dlen, secret_application, "c ap traffic", context_hash);
-                lambda_expand_label(tls_secret_application_server, secret_application_server, hashalg, dlen, secret_application, "s ap traffic", context_hash);
-                lambda_expand_label(tls_secret_exporter_master, secret_exporter_master, hashalg, dlen, secret_application, "exp master", context_hash);
+                lambda_extract(tls_secret_application, secret_application, hashalg, secret_application_derived, empty_ikm);
+                lambda_expand_label(tls_secret_c_ap_traffic, secret_application_client, hashalg, dlen, secret_application, "c ap traffic", context_hash);
+                lambda_expand_label(tls_secret_s_ap_traffic, secret_application_server, hashalg, dlen, secret_application, "s ap traffic", context_hash);
+                lambda_expand_label(tls_secret_exp_master, secret_exporter_master, hashalg, dlen, secret_application, "exp master", context_hash);
             }
 
             // calc
@@ -340,7 +467,7 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
 
             binary_t secret_resumption_master;
             const binary_t& secret_application = get_item(tls_secret_application);
-            lambda_expand_label(tls_secret_resumption_master, secret_resumption_master, hashalg, dlen, secret_application, "res master", context_hash);
+            lambda_expand_label(tls_secret_res_master, secret_resumption_master, hashalg, dlen, secret_application, "res master", context_hash);
 
             binary_t secret_resumption;
             binary_t reshash;
@@ -349,11 +476,11 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
 
             // RFC 8448 4.  Resumed 0-RTT Handshake
             binary_t resumption_early_secret;
-            lambda_extract(tls_secret_resumption_early, resumption_early_secret, hashalg, ikm_empty, secret_resumption);
+            lambda_extract(tls_secret_resumption_early, resumption_early_secret, hashalg, empty_ikm, secret_resumption);
 
             binary_t okm;
             if (tls_mode_dtls & get_mode()) {
-                auto const& secret_application_client = get_item(tls_secret_application_client);
+                auto const& secret_application_client = get_item(tls_secret_c_ap_traffic);
                 lambda_expand_label(tls_secret_application_client_sn_key, okm, hashalg, keysize, secret_application_client, "sn", context);
             }
 
@@ -527,6 +654,50 @@ return_t tls_protection::calc(tls_session* session, uint16 type) {
     return ret;
 }
 
+return_t tls_protection::calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        set_item(tls_context_resumption_binder_hash, binder_hash);  // debug
+
+        // RFC 8448 4.  Resumed 0-RTT Handshake
+
+        openssl_kdf kdf;
+        // PRK
+        binary_t context_resumption_binder_key;
+        const binary_t& secret_resumption_early = get_item(tls_secret_resumption_early);
+        const binary_t& context_empty_hash = get_item(tls_context_empty_hash);
+        kdf.hkdf_expand_tls13_label(context_resumption_binder_key, sha2_256, 32, secret_resumption_early, "res binder", context_empty_hash);
+        set_item(tls_context_resumption_binder_key, context_resumption_binder_key);
+
+        // expanded
+        binary_t context_resumption_finished_key;
+        binary_t empty_ikm;
+        kdf.hkdf_expand_tls13_label(context_resumption_finished_key, sha2_256, 32, context_resumption_binder_key, "finished", empty_ikm);
+        set_item(tls_context_resumption_finished_key, context_resumption_finished_key);
+
+        // finished
+        binary_t context_resumption_finished;
+        openssl_mac mac;
+        mac.hmac(sha2_256, context_resumption_finished_key, binder_hash, context_resumption_finished);
+        set_item(tls_context_resumption_finished, context_resumption_finished);
+
+        if (psk_binder != context_resumption_finished) {
+            ret = errorcode_t::mismatch;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+
+    return ret;
+}
+
 void tls_protection::get_item(tls_secret_t type, binary_t& item) { item = _kv[type]; }
 
 const binary_t& tls_protection::get_item(tls_secret_t type) { return _kv[type]; }
@@ -645,12 +816,18 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
         auto hsstatus = session->get_roleinfo(role).get_status();
         record_no = session->get_recordno(role, true);
         if (role_client == role) {
-            if (tls_handshake_finished == hsstatus) {
-                secret_key = tls_secret_application_client_key;
-                secret_iv = tls_secret_application_client_iv;
+            if (tls_1_rtt == get_flow()) {
+                if (tls_handshake_finished == hsstatus) {
+                    secret_key = tls_secret_application_client_key;
+                    secret_iv = tls_secret_application_client_iv;
+                } else {
+                    secret_key = tls_secret_handshake_client_key;
+                    secret_iv = tls_secret_handshake_client_iv;
+                }
             } else {
-                secret_key = tls_secret_handshake_client_key;
-                secret_iv = tls_secret_handshake_client_iv;
+                // use early traffic
+                secret_key = tls_secret_c_e_traffic_key;
+                secret_iv = tls_secret_c_e_traffic_iv;
             }
         } else {
             if (tls_handshake_finished == hsstatus) {
@@ -666,11 +843,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
         auto const& iv = get_item(secret_iv);
         binary_t nonce = iv;
         build_iv(session, secret_iv, nonce, record_no);
-        ret = crypt.open(&handle, cipher, mode, key, nonce);
-        if (errorcode_t::success == ret) {
-            ret = crypt.decrypt2(handle, stream + pos + aadlen, size - tagsize, plaintext, &aad, &tag);
-            crypt.close(handle);
-        }
+        ret = crypt.decrypt(cipher, mode, key, nonce, stream + pos + aadlen, size - tagsize, plaintext, aad, tag);
 
         if (debugstream) {
             debugstream->autoindent(3);

@@ -283,9 +283,9 @@ void test_quic_xargs_org() {
         binary_t handshake_secret;
         lambda_test(tls_secret_handshake, handshake_secret, "handshake_secret", "fb9fc80689b3a5d02c33243bf69a1b1b20705588a794304a6e7120155edf149a");
         binary_t client_secret;
-        lambda_test(tls_secret_handshake_client, client_secret, "client_secret", "b8902ab5f9fe52fdec3aea54e9293e4b8eabf955fcd88536bf44b8b584f14982");
+        lambda_test(tls_secret_c_hs_traffic, client_secret, "client_secret", "b8902ab5f9fe52fdec3aea54e9293e4b8eabf955fcd88536bf44b8b584f14982");
         binary_t server_secret;
-        lambda_test(tls_secret_handshake_server, server_secret, "server_secret", "88ad8d3b0986a71965a28d108b0f40ffffe629284a6028c80ddc5dc083b3f5d1");
+        lambda_test(tls_secret_s_hs_traffic, server_secret, "server_secret", "88ad8d3b0986a71965a28d108b0f40ffffe629284a6028c80ddc5dc083b3f5d1");
         binary_t client_handshake_key;
         lambda_test(tls_secret_handshake_quic_client_key, client_handshake_key, "client_handshake_key", "30a7e816f6a1e1b3434cf39cf4b415e7");
         binary_t client_handshake_iv;

@@ -48,92 +48,11 @@ return_t quic_protection::calc(const binary_t& salt, const binary_t& context, ui
 
     /**
      * RFC 5869
-     *   HKDF-Extract(salt, IKM) -> PRK
-     *   HKDF-Expand(PRK, info, L) -> OKM
-     *
      * RFC 8446 7.1.  Key Schedule
-     *   HKDF-Expand-Label(Secret, Label, Context, Length) =
-     *        HKDF-Expand(Secret, HkdfLabel, Length)
-     *
-     *   Where HkdfLabel is specified as:
-     *
-     *   struct {
-     *       uint16 length = Length;
-     *       opaque label<7..255> = "tls13 " + Label;
-     *       opaque context<0..255> = Context;
-     *   } HkdfLabel;
-     *
-     *   Derive-Secret(Secret, Label, Messages) =
-     *        HKDF-Expand-Label(Secret, Label,
-     *                          Transcript-Hash(Messages), Hash.length)
-     *
      * RFC 9001 5.2.  Initial Secrets
-     *   initial_salt = 0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a
-     *   quic_initial_secret = HKDF-Extract(initial_salt, client_dst_connection_id)
-     *   client_initial_secret = HKDF-Expand-Label(quic_initial_secret, "client in", "", Hash.length)
-     *   server_initial_secret = HKDF-Expand-Label(quic_initial_secret, "server in", "", Hash.length)
-     *
      * RFC 9001 A.1.  Keys
-     *   client in:  00200f746c73313320636c69656e7420696e00
-     *   server in:  00200f746c7331332073657276657220696e00
-     *   quic key:  00100e746c7331332071756963206b657900
-     *   quic iv:  000c0d746c733133207175696320697600
-     *   quic hp:  00100d746c733133207175696320687000
-     *
-     *   The initial secret is common:
-     *   quic_initial_secret = HKDF-Extract(initial_salt, cid)
-     *       = 7db5df06e7a69e432496adedb0085192
-     *         3595221596ae2ae9fb8115c1e9ed0a44
-     *
-     *   The secrets for protecting client packets are:
-     *   client_initial_secret
-     *       = HKDF-Expand-Label(quic_initial_secret, "client in", "", 32)
-     *       = c00cf151ca5be075ed0ebfb5c80323c4
-     *         2d6b7db67881289af4008f1f6c357aea
-     *
-     *    key = HKDF-Expand-Label(client_initial_secret, "quic key", "", 16)
-     *        = 1f369613dd76d5467730efcbe3b1a22d
-     *
-     *    iv  = HKDF-Expand-Label(client_initial_secret, "quic iv", "", 12)
-     *        = fa044b2f42a3fd3b46fb255c
-     *
-     *    hp  = HKDF-Expand-Label(client_initial_secret, "quic hp", "", 16)
-     *        = 9f50449e04a0e810283a1e9933adedd2
-     *
-     *    The secrets for protecting server packets are:
-     *    server_initial_secret
-     *        = HKDF-Expand-Label(quic_initial_secret, "server in", "", 32)
-     *        = 3c199828fd139efd216c155ad844cc81
-     *          fb82fa8d7446fa7d78be803acdda951b
-     *    key = HKDF-Expand-Label(server_initial_secret, "quic key", "", 16)
-     *        = cf3a5331653c364c88f0f379b6067e37
-     *    iv  = HKDF-Expand-Label(server_initial_secret, "quic iv", "", 12)
-     *        = 0ac1493ca1905853b0bba03e
-     *    hp  = HKDF-Expand-Label(server_initial_secret, "quic hp", "", 16)
-     *        = c206b8d9b9f0f37644430b490eeaa314
-     *
      * RFC 9001 5.4.4.  ChaCha20-Based Header Protection
-     *    header_protection(hp_key, sample):
-     *      counter = sample[0..3]
-     *      nonce = sample[4..15]
-     *      mask = ChaCha20(hp_key, counter, nonce, {0,0,0,0,0})
-     *
      * RFC 9001 A.5.  ChaCha20-Poly1305 Short Header Packet
-     *
-     *    secret
-     *        = 9ac312a7f877468ebe69422748ad00a1
-     *          5443f18203a07d6060f688f30f21632b
-     *    key = HKDF-Expand-Label(secret, "quic key", "", 32)
-     *        = c6d98ff3441c3fe1b2182094f69caa2e
-     *          d4b716b65488960a7a984979fb23e1c8
-     *    iv  = HKDF-Expand-Label(secret, "quic iv", "", 12)
-     *        = e0459b3474bdd0e44a41c144
-     *    hp  = HKDF-Expand-Label(secret, "quic hp", "", 32)
-     *        = 25a282b9e82f06f21f488917a4fc8f1b
-     *          73573685608597d0efcb076b0ab7a7a4
-     *    ku  = HKDF-Expand-Label(secret, "quic ku", "", 32)
-     *        = 1223504755036d556342ee9361d25342
-     *          1a826c9ecdf3c7148684b36b714881f9
      */
 
     ret = kdf.hmac_kdf_extract(bin_initial_secret, alg, bin_initial_salt, salt);
@@ -179,7 +98,6 @@ return_t quic_protection::hpmask(uint32 mode, const byte_t* sample, size_t size_
         }
 
         /**
-         *
          * RFC 9001 5.4.3.  AES-Based Header Protection
          *
          *  header_protection(hp_key, sample):
@@ -321,9 +239,7 @@ return_t quic_protection::encrypt(uint32 mode, uint64 pn, const binary_t& payloa
             bin_nonce[i + 12 - 8] ^= bin_pn8[i];
         }
 
-        crypt.open(&handle, "aes-128-gcm", bin_key, bin_nonce);
-        ret = crypt.encrypt2(handle, payload, encrypted, &aad, &tag);
-        crypt.close(handle);
+        ret = crypt.encrypt("aes-128-gcm", bin_key, bin_nonce, payload, encrypted, aad, tag);
     }
     __finally2 {
         // do nothing
@@ -353,9 +269,7 @@ return_t quic_protection::decrypt(uint32 mode, uint64 pn, const binary_t& payloa
             bin_nonce[i + 12 - 8] ^= bin_pn8[i];
         }
 
-        crypt.open(&handle, "aes-128-gcm", bin_key, bin_nonce);
-        crypt.decrypt2(handle, payload, decrypted, &aad, &tag);
-        crypt.close(handle);
+        ret = crypt.decrypt("aes-128-gcm", bin_key, bin_nonce, payload, decrypted, aad, tag);
     }
     __finally2 {
         // do nothing
