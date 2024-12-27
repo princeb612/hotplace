@@ -193,7 +193,6 @@ void test_rfc8448_4() {
         // {server}  derive write traffic keys for application data
         test_keycalc(&rfc8448_session, tls_secret_application_server_key, bin, "secret_application_server_key", "e857c690a34c5a9129d833619684f95e");
         test_keycalc(&rfc8448_session, tls_secret_application_server_iv, bin, "secret_application_server_iv", "0685d6b561aab9ef1013faf9");
-        // {server}  derive read traffic keys for early application data (same as client early application data write traffic keys)
     }
     // {client}  construct an EndOfEarlyData handshake message
     // {client}  send handshake record
@@ -205,6 +204,11 @@ void test_rfc8448_4() {
         dump_record("end_of_early_data", &rfc8448_session, bin_record, role_client);
     }
     {
+        // {client}  derive write traffic keys for handshake data
+        test_keycalc(&rfc8448_session, tls_secret_handshake_client_key, bin, "secret_handshake_client_key", "b1530806f4adfeac83f1413032bbfa82");
+        test_keycalc(&rfc8448_session, tls_secret_handshake_client_iv, bin, "secret_handshake_client_iv", "eb50c16be7654abf99dd06d9");
+    }
+    {
         // {client}  construct a Finished handshake message
         // {client}  send handshake record
         const char* record =
@@ -212,8 +216,13 @@ void test_rfc8448_4() {
             "2a 4b 3f 0b 6a e0 d8 e6 cc 8d 08 e0 db 35 15 ef 5c 2b df 19 22"
             "ea fb b7 00 09 96 47 16 d8 34 fb 70 c3 d2 a5 6c 5b 1f 5f 6b db"
             "a6 c3 33 cf";
-        // binary_t bin_record = base16_decode_rfc(record);
-        // dump_record("finished", &rfc8448_session, bin_record, role_client);
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("finished", &rfc8448_session, bin_record, role_client);
+    }
+    {
+        test_keycalc(&rfc8448_session, tls_secret_application_client_key, bin, "secret_application_client_key", "3cf122f301c6358ca7989553250efd72");
+        test_keycalc(&rfc8448_session, tls_secret_application_client_iv, bin, "secret_application_client_iv", "ab1aec26aa78b8fc1176b9ac");
+        test_keycalc(&rfc8448_session, tls_secret_res_master, bin, "secret_res_master", "5e95bdf1f89005ea2e9aa0ba85e728e3c19c5fe0c699e3f5bee59faebd0b5406");
     }
     {
         // {client}  send application_data record
@@ -222,6 +231,8 @@ void test_rfc8448_4() {
             "1b e9 ae 5e 1c b2 a9 aa 4b 33 d4 e8 66 af 1e db 06 89 19 23 77"
             "41 aa 03 1d 7a 74 d4 91 c9 9b 9d 4e 23 2b 74 20 6b c6 fb aa 04"
             "fe 78 be 44 a9 b4 f5 43 20 a1 7e b7 69 92 af ac 31 03";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("application_data", &rfc8448_session, bin_record, role_client);
     }
     {
         // {server}  send application_data record
@@ -230,17 +241,23 @@ void test_rfc8448_4() {
             "bc 00 06 57 d3 86 7d f0 39 cc cf 79 04 78 84 cf 75 77 17 46 f7"
             "40 b5 a8 3f 46 2a 09 54 c3 58 13 93 a2 03 a2 5a 7d d1 41 41 ef"
             "1a 37 90 0c db 62 ff 62 de e1 ba 39 ab 25 90 cb f1 94";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("application_data", &rfc8448_session, bin_record, role_server);
     }
     {
         // {client}  send alert record
         const char* record =
             "17 03 03 00 13 0f ac ce 32 46 bd fc"
             "63 69 83 8d 6a 82 ae 6d e5 d4 22 dc";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("alert", &rfc8448_session, bin_record, role_client);
     }
     {
         // {server}  send alert record
         const char* record =
             "17 03 03 00 13 5b 18 af 44 4e 8e 1e"
             "ec 71 58 fb 62 d8 f2 57 7d 37 ba 5d";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("alert", &rfc8448_session, bin_record, role_server);
     }
 }

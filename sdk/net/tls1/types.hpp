@@ -330,6 +330,13 @@ enum tls_secret_t : uint16 {
     tls_secret_handshake_quic_server_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_IV),
     tls_secret_handshake_quic_server_hp = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_HP),
 
+    tls_secret_c_e_traffic = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_CLIENT),  // c e traffic
+    tls_secret_s_e_traffic = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_SERVER),  // s e traffic
+    tls_secret_c_e_traffic_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_CLIENT_KEY),
+    tls_secret_c_e_traffic_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_CLIENT_IV),
+    tls_secret_s_e_traffic_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_SERVER_KEY),
+    tls_secret_s_e_traffic_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_SERVER_IV),
+
     tls_secret_application_derived = (TLS_SECRET_APPLICATION | TLS_SECRET_DERIVED),
     tls_secret_application = (TLS_SECRET_APPLICATION | TLS_SECRET_MASTER),
     tls_secret_c_ap_traffic = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT),  // CLIENT_TRAFFIC_SECRET_0, client_application_traffic_secret_0
@@ -356,12 +363,6 @@ enum tls_secret_t : uint16 {
     tls_secret_exporter_master = tls_secret_exp_master,
 
     tls_secret_e_exp_master = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_MASTER),  // e exp master
-    tls_secret_c_e_traffic = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_CLIENT),   // c e traffic
-    tls_secret_s_e_traffic = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_SERVER),   // s e traffic
-    tls_secret_c_e_traffic_key = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_CLIENT_KEY),
-    tls_secret_c_e_traffic_iv = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_CLIENT_IV),
-    tls_secret_s_e_traffic_key = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_SERVER_KEY),
-    tls_secret_s_e_traffic_iv = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_SERVER_IV),
 
     tls_secret_resumption_binder = (TLS_SECRET_RESUMPTION | TLS_SECRET_BINDER),
     tls_secret_res_master = (TLS_SECRET_RESUMPTION | TLS_SECRET_MASTER),  // secret_resumption_master

@@ -120,10 +120,9 @@ class tls_protection {
     /**
      * @brief   calc
      * @param   tls_session* session [in]
-     * @param   uint16 type [in]
-     * @remarks generate secrets related to tls_mode_t
+     * @param   tls_handshake_type_t type [in]
      */
-    return_t calc(tls_session* session, uint16 type);
+    return_t calc(tls_session* session, tls_handshake_type_t type, tls_role_t role);
     return_t calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder);
 
     void get_item(tls_secret_t type, binary_t& item);

@@ -177,11 +177,13 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
 
                 if (tls_handshake_finished == hsstatus) {
                     protection.calc_transcript_hash(session, stream + hspos, hssize, handshake_hash, true);  // client_hello
-                    protection.calc(session, tls_context_client_hello);
+                    protection.calc(session, tls_handshake_client_hello, role);
                 } else {
                     // 1-RTT
                     protection.set_item(tls_context_client_hello, stream + hspos, hssize);  // transcript hash, see server_hello
                 }
+
+                session->get_roleinfo(role).set_status(handshake->msg_type);
 
             } break;
             case tls_handshake_server_hello: /* 2 */ {
@@ -192,18 +194,23 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 if (tls_1_rtt == protection.get_flow()) {
                     const binary_t& client_hello = protection.get_item(tls_context_client_hello);
                     protection.calc_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);  // client_hello
-                    // protection.calc(session, tls_context_client_hello);
+                    // protection.calc(session, tls_handshake_client_hello, role);
                     protection.clear_item(tls_context_client_hello);
                 }
                 protection.calc_transcript_hash(session, stream + hspos, hssize, hello_hash);  // server_hello
-                protection.calc(session, tls_context_server_hello);
+                protection.calc(session, tls_handshake_server_hello, role);
                 session->get_roleinfo(role).set_status(handshake->msg_type);
             } break;
             case tls_handshake_new_session_ticket: /* 4 */ {
                 ret = tls_dump_new_session_ticket(s, session, stream, size, pos);
             } break;
             case tls_handshake_end_of_early_data: /* 5 */ {
-                //
+                protection.calc(session, tls_handshake_end_of_early_data, role);
+                session->reset_recordno(role_client);
+                session->reset_recordno(role_server);
+                session->get_roleinfo(role).set_status(handshake->msg_type);
+
+                protection.calc_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
             case tls_handshake_encrypted_extensions: /* 8 */ {
                 // RFC 8446 2.  Protocol Overview
@@ -275,7 +282,7 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
             case tls_handshake_client_key_exchange: /* 16 */ {
                 ret = tls_dump_client_key_exchange(s, session, stream, size, pos, role);
 
-                protection.calc(session, tls_context_client_key_exchange);
+                protection.calc(session, tls_handshake_client_key_exchange, role);
 
                 protection.calc_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
@@ -289,20 +296,18 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 ret = tls_dump_finished(s, session, stream, size, pos, role);
                 protection.calc_transcript_hash(session, stream + hspos, hssize, handshake_hash);
 
-                if (role_server == role) {
-                    protection.calc(session, tls_context_server_finished);  // application, exporter related
-                } else {
-                    protection.calc(session, tls_context_client_finished);  // resumption related
-                }
+                // role_server : application, exporter related
+                // role_client : resumption related
+                protection.calc(session, tls_handshake_finished, role);
+
                 session->get_roleinfo(role).set_status(handshake->msg_type);
 
                 session->reset_recordno(role);
             } break;
-            case tls_handshake_key_update: /* 24 */ {
-            } break;
-            case tls_handshake_message_hash: /* 254 */ {
-            } break;
+            case tls_handshake_key_update:   /* 24 */
+            case tls_handshake_message_hash: /* 254 */
             default: {
+                protection.calc_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
         }
 
@@ -1018,7 +1023,6 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
         binary_t verify_data;
 
         {
-            // RFC 8448 record not exist
             payload pl;
             pl << new payload_member(binary_t(), constexpr_verify_data);
             pl.select(constexpr_verify_data)->reserve(dlen);
@@ -1036,6 +1040,9 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
                 hash->release();
             }
 
+            // calculate finished "tls13 finished"
+            // fin_key : expanded
+            // finished == maced
             tls_secret_t typeof_secret;
             binary_t fin_key;
             binary_t maced;
@@ -1099,8 +1106,8 @@ return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stre
             s->autoindent(1);
             s->printf("> %s\n", constexpr_verify_data);
             dump_memory(verify_data, s, 16, 3, 0x00, dump_notrunc);
-            s->printf("  > secret (internal) %02x\n", typeof_secret);
-            s->printf("  > verify data %s \n", base16_encode(maced).c_str());
+            s->printf("  > secret (internal) 0x%08x\n", typeof_secret);
+            s->printf("  > verify data %s \n", base16_encode(verify_data).c_str());
             s->printf("  > maced       %s \e[1;33m%s\e[0m\n", base16_encode(maced).c_str(), (errorcode_t::success == ret) ? "true" : "false");
             s->autoindent(0);
         }
