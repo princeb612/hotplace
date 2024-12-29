@@ -258,7 +258,7 @@ enum errorcode_t {
     /* 0xef01003d 4009820221 */ abandoned,
     /* 0xef01003e 4009820222 */ different_type,
     /* 0xef01003f 4009820223 */ narrow_type,
-    /* 0xef01003f 4009820224 */ no_more,
+    /* 0xef010040 4009820224 */ no_more,
 
     /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,
@@ -282,6 +282,7 @@ enum errorcode_t {
     /* 0xef010101 4009820417 */ low_security,
     /* 0xef010102 4009820418 */ debug,
     /* 0xef010103 4009820419 */ do_nothing,
+    /* 0xef010104 4009820420 */ expect_failure,
 };
 
 /*

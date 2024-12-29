@@ -1123,7 +1123,7 @@ return_t cbor_object_signing_encryption::preprocess_keydistribution(cose_context
             crypto_kty_t kty = alg_hint->kty;
             crypto_keychain keychain;
             const EVP_PKEY* epk = nullptr;
-            const EVP_PKEY* pkey = keychain.choose(key, kid, kty, check);
+            const EVP_PKEY* pkey = key->choose(kid, kty, check);
             if (nullptr == pkey) {
                 handle->debug_flags |= cose_debug_notfound_key;
                 __leave2;
@@ -1325,7 +1325,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
                     default:
                         break;
                 }
-                const EVP_PKEY* pkey = keychain.choose(key, kid, kty, check);
+                const EVP_PKEY* pkey = key->choose(kid, kty, check);
                 binary_t payload;
                 if (mode) {
                     uint32 ksize = hint->enc.ksize ? hint->enc.ksize : 32;
@@ -1366,7 +1366,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
             }
         } else {
             binary_t cek;
-            const EVP_PKEY* pkey = keychain.choose(key, kid, kty, check);
+            const EVP_PKEY* pkey = key->choose(kid, kty, check);
             key->get_privkey(pkey, kty, cek, true);
 
             layer->setparam(cose_param_t::cose_param_cek, cek);

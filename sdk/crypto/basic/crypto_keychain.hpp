@@ -169,26 +169,60 @@ class crypto_keychain {
     return_t add_ec(crypto_key* cryptokey, const char* curve, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc);
 
     return_t add_ec2(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc);
-    return_t add_ec2(crypto_key* cryptokey, uint32 nid, const binary_t& x, bool ysign, const binary_t& d, const keydesc& desc);
     return_t add_okp(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& d, const keydesc& desc);
 
     return_t add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
     return_t add_ec_b64u(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
     return_t add_ec_b16(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
     return_t add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
-    return_t add_ec_b64u(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
-    return_t add_ec_b16(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
-    return_t add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
 
     return_t add_ec_b64(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc);
     return_t add_ec_b64u(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc);
     return_t add_ec_b16(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc);
     return_t add_ec_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc);
+
+    /**
+     * @brief   EC compressed
+     * @remarks
+     *          y^2 = x^3 + ax + b (mod p)
+     *          y0 (even), y1 (odd)
+     *
+     *          02 || x (ysign 0, y0)
+     *          03 || x (ysign 1, y1)
+     *
+     *          ex. P-256 33 byts
+     *          02 || x (32 bytes)
+     *          03 || x (32 bytes)
+     */
+    return_t add_ec2(crypto_key* cryptokey, uint32 nid, const binary_t& x, bool ysign, const binary_t& d, const keydesc& desc);
+    return_t add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
+    return_t add_ec_b64u(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
+    return_t add_ec_b16(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
+    return_t add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
     return_t add_ec_b64(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc);
     return_t add_ec_b64u(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc);
     return_t add_ec_b16(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc);
     return_t add_ec_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc);
+
+    /**
+     * @brief   EC uncompressed
+     * @remarks
+     *
+     *          04 || x || y
+     *
+     *          ex. P-256 65 byts
+     *          04 || x (32 bytes) || y (32 bytes)
+     */
+    return_t add_ec(crypto_key* cryptokey, uint32 nid, const binary_t& pubkey, const binary_t& privkey, const keydesc& desc);
+    return_t add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc);
+    return_t add_ec_b64u(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc);
+    return_t add_ec_b16(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc);
+    return_t add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc);
+    return_t add_ec(crypto_key* cryptokey, const char* curve, const binary_t& pubkey, const binary_t& privkey, const keydesc& desc);
+    return_t add_ec_b64(crypto_key* cryptokey, const char* curve, const char* pubkey, const char* privkey, const keydesc& desc);
+    return_t add_ec_b64u(crypto_key* cryptokey, const char* curve, const char* pubkey, const char* privkey, const keydesc& desc);
+    return_t add_ec_b16(crypto_key* cryptokey, const char* curve, const char* pubkey, const char* privkey, const keydesc& desc);
+    return_t add_ec_b16rfc(crypto_key* cryptokey, const char* curve, const char* pubkey, const char* privkey, const keydesc& desc);
 
     /**
      * @brief   OCT
@@ -211,19 +245,6 @@ class crypto_keychain {
     return_t add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc);
     return_t add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc);
     return_t add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc);
-
-    /**
-     * @brief   return key
-     * @param   crypto_key* key [in]
-     * @param   const std::string& kid [in]
-     * @param   crypto_kty_t kty [in]
-     * @param   return_t& code [out]
-     * @remarks
-     *          return key, errorcode_t::success       : kid found
-     *          return key, errorcode_t::inaccurate    : not found kid, but kty exists
-     *          return nullptr, errorcode_t::not_exist : not exist kid nor kty
-     */
-    const EVP_PKEY* choose(crypto_key* key, const std::string& kid, crypto_kty_t kty, return_t& code);
 
    protected:
 };

@@ -163,24 +163,43 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
          */
         switch (handshake->msg_type) {
             case tls_handshake_client_hello: /* 1 */ {
+                auto& keyexchange = protection.get_keyexchange();
+                keyexchange.erase("CH");
+                keyexchange.erase("SH");
+
                 auto hsstatus = session->get_roleinfo(role).get_status();
                 if (tls_handshake_finished == hsstatus) {
                     // 0-RTT
                     protection.set_flow(tls_0_rtt);
-                    protection.get_keyexchange().clear();
+                }
+                switch (protection.get_flow()) {
+                    case tls_1_rtt: {
+                    } break;
+                    case tls_0_rtt: {
+                        protection.get_keyexchange().clear();
 
-                    session->reset_recordno(role_client);
-                    session->reset_recordno(role_server);
+                        session->reset_recordno(role_client);
+                        session->reset_recordno(role_server);
+                    } break;
+                    default: {
+                    } break;
                 }
 
                 ret = tls_dump_client_hello(hstype, s, session, stream, size, pos);
 
-                if (tls_handshake_finished == hsstatus) {
-                    protection.calc_transcript_hash(session, stream + hspos, hssize, handshake_hash, true);  // client_hello
-                    protection.calc(session, tls_handshake_client_hello, role);
-                } else {
-                    // 1-RTT
-                    protection.set_item(tls_context_client_hello, stream + hspos, hssize);  // transcript hash, see server_hello
+                switch (protection.get_flow()) {
+                    case tls_1_rtt: {
+                        // 1-RTT
+                        protection.set_item(tls_context_client_hello, stream + hspos, hssize);  // transcript hash, see server_hello
+                    } break;
+                    case tls_0_rtt: {
+                        protection.reset_transcript_hash(session);
+                        protection.calc_transcript_hash(session, stream + hspos, hssize, handshake_hash);  // client_hello
+                        ret = protection.calc(session, tls_handshake_client_hello, role);
+                    } break;
+                    case tls_hello_retry_request: {
+                        protection.calc_transcript_hash(session, stream + hspos, hssize, handshake_hash);  // client_hello
+                    } break;
                 }
 
                 session->get_roleinfo(role).set_status(handshake->msg_type);
@@ -194,12 +213,43 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 if (tls_1_rtt == protection.get_flow()) {
                     const binary_t& client_hello = protection.get_item(tls_context_client_hello);
                     protection.calc_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);  // client_hello
-                    // protection.calc(session, tls_handshake_client_hello, role);
-                    protection.clear_item(tls_context_client_hello);
                 }
+
                 protection.calc_transcript_hash(session, stream + hspos, hssize, hello_hash);  // server_hello
-                protection.calc(session, tls_handshake_server_hello, role);
+                ret = protection.calc(session, tls_handshake_server_hello, role);
                 session->get_roleinfo(role).set_status(handshake->msg_type);
+                if (errorcode_t::success != ret) {
+                    protection.set_flow(tls_hello_retry_request);
+
+                    /**
+                     *    RFC 8446 4.4.1.  The Transcript Hash
+                     *
+                     *       As an exception to this general rule, when the server responds to a
+                     *       ClientHello with a HelloRetryRequest, the value of ClientHello1 is
+                     *       replaced with a special synthetic handshake message of handshake type
+                     *       "message_hash" containing Hash(ClientHello1).  I.e.,
+                     *
+                     *       Transcript-Hash(ClientHello1, HelloRetryRequest, ... Mn) =
+                     *           Hash(message_hash ||        // Handshake type
+                     *                00 00 Hash.length  ||  // Handshake message length (bytes)
+                     *                Hash(ClientHello1) ||  // Hash of ClientHello1
+                     *                HelloRetryRequest  || ... || Mn)
+                     */
+                    const binary_t& client_hello = protection.get_item(tls_context_client_hello);
+                    protection.reset_transcript_hash(session);
+                    protection.calc_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);
+
+                    binary message_hash;
+                    message_hash << uint8(tls_handshake_message_hash) << uint16(0) << byte_t(handshake_hash.size()) << handshake_hash;
+                    const binary_t& synthetic_handshake_message = message_hash.get();
+
+                    protection.reset_transcript_hash(session);
+                    protection.calc_transcript_hash(session, &synthetic_handshake_message[0], synthetic_handshake_message.size(), handshake_hash);
+                    protection.calc_transcript_hash(session, stream + hspos, hssize, hello_hash);
+                }
+
+                protection.clear_item(tls_context_client_hello);
+
             } break;
             case tls_handshake_new_session_ticket: /* 4 */ {
                 ret = tls_dump_new_session_ticket(s, session, stream, size, pos);
@@ -536,7 +586,7 @@ return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_ses
         }
         s->printf(" > %s 0x%04x %s\n", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
         s->printf(" > %s %i %s\n", constexpr_compression_method, compression_method, tlsadvisor->compression_method_string(compression_method).c_str());
-        s->printf(" > %s %i(0x%02x)\n", constexpr_extension_len, extension_len, extension_len);
+        s->printf(" > %s 0x%02x(%i)\n", constexpr_extension_len, extension_len, extension_len);
         s->autoindent(0);
 
         for (return_t test = errorcode_t::success;;) {

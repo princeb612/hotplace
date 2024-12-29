@@ -41,6 +41,12 @@ void test_crypto_key() {
     keychain.add_oct_b64u(&key, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJico", keydesc("sec-48", nullptr, crypto_use_t::use_enc));
     keychain.add_oct_b64u(&key, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJicoqrvM3e7_paanqKmgsbKztA",
                           keydesc("sec-64", nullptr, crypto_use_t::use_enc));
+
+    keychain.add_ec_b16(
+        &key, "P-256",
+        "04a6da7392ec591e17abfd535964b99894d13befb221b3def2ebe3830eac8f0151812677c4d6d2237e85cf01d6910cfb83954e76ba7352830534159897e8065780",  // 04 + x + y
+        "ab5473467e19346ceb0a0414e41da21d4d2445bc3025afe97c4e8dc8d513da39", keydesc("P-256 uncompressed"));
+
     keychain.add_rsa_b16(
         &key, nid_rsa,
         "bc7e29d0df7e20cc9dc8d509e0f68895922af0ef452190d402c61b554334a7bf91c9a570240f994fae1b69035bcfad4f7e249eb26087c2665e7c958c967b1517413dc3f97a"
@@ -74,11 +80,28 @@ void test_crypto_key() {
     ret = jwk.write(&key, &bs);
     _logger->writeln(bs);
     bs.clear();
-    _test_case.test(ret, __FUNCTION__, "test #1");
+    _test_case.test(ret, __FUNCTION__, "JWK");
 
     cbor_web_key cwk;
     ret = cwk.diagnose(&key, &bs);
     _logger->writeln(bs);
     bs.clear();
-    _test_case.test(ret, __FUNCTION__, "test #2");
+    _test_case.test(ret, __FUNCTION__, "CWK");
+
+    auto uncompressed_key = key.find("P-256 uncompressed", use_any, true);  // refcounter ++
+    if (uncompressed_key) {
+        const char* x = "a6da7392ec591e17abfd535964b99894d13befb221b3def2ebe3830eac8f0151";
+        const char* y = "812677c4d6d2237e85cf01d6910cfb83954e76ba7352830534159897e8065780";
+        const char* d = "ab5473467e19346ceb0a0414e41da21d4d2445bc3025afe97c4e8dc8d513da39";
+
+        binary_t bin_x, bin_y, bin_d;
+        key.get_key(uncompressed_key, bin_x, bin_y, bin_d);
+        EVP_PKEY_free((EVP_PKEY*)uncompressed_key);  // refcounter --
+
+        _test_case.assert(bin_x == base16_decode(x), __FUNCTION__, "uncompressed key x");
+        _test_case.assert(bin_y == base16_decode(y), __FUNCTION__, "uncompressed key y");
+        _test_case.assert(bin_d == base16_decode(d), __FUNCTION__, "d");
+    } else {
+        _test_case.test(errorcode_t::not_found, __FUNCTION__, "uncompressed key");
+    }
 }

@@ -244,6 +244,7 @@ const error_description error_descriptions[] = {
     errordef(low_security, "low security"),
     errordef(debug, "debug"),
     errordef(do_nothing, "nothing to do"),
+    errordef(expect_failure, "expect failure (negative test)"),
 };
 
 error_advisor error_advisor::_instance;

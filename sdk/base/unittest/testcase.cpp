@@ -332,6 +332,11 @@ void test_case::test(return_t result, const char* test_function, const char* mes
                 color = console_color_t::white;
                 _total._count_trivial++;
                 break;
+            case errorcode_t::expect_failure:
+                color = console_color_t::magenta;
+                // _total._count_expect_failure++;
+                _total._count_success++;
+                break;
             default:
                 color = console_color_t::red;
                 _total._count_fail++;
@@ -369,6 +374,10 @@ void test_case::test(return_t result, const char* test_function, const char* mes
             case errorcode_t::do_nothing:
                 status._test_stat._count_trivial++;
                 break;
+            case errorcode_t::expect_failure:
+                // status._test_stat._count_expect_failure++;
+                status._test_stat._count_success++;
+                break;
             default:
                 status._test_stat._count_fail++;
                 break;
@@ -402,6 +411,7 @@ constexpr char constexpr_pass[] = "pass";
 constexpr char constexpr_fail[] = "fail";
 constexpr char constexpr_skip[] = "skip";
 constexpr char constexpr_low[] = "low ";
+constexpr char constexpr_expect_failure[] = "expt";
 
 constexpr char constexpr_report[] = "report";
 constexpr char constexpr_testcase[] = "test case";
@@ -454,6 +464,9 @@ void test_case::dump_list_into_stream(unittest_list_t& array, basic_stream& stre
                 break;
             case errorcode_t::low_security:
                 cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_low);
+                break;
+            case errorcode_t::expect_failure:
+                cprint(console_colored_stream, _concolor, console_color_t::magenta, fgcolor, constexpr_expect_failure);
                 break;
             default:
                 cprint(console_colored_stream, _concolor, console_color_t::red, fgcolor, constexpr_fail);
@@ -648,6 +661,7 @@ void test_case::report_failed(basic_stream& stream) {
                 case errorcode_t::low_security:
                 case errorcode_t::not_supported:
                 case errorcode_t::pending:
+                case errorcode_t::expect_failure:
                 case errorcode_t::success:
                     break;
                 default:

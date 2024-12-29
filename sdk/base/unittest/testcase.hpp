@@ -143,7 +143,8 @@ class test_case {
         uint32 _count_not_supported;
         uint32 _count_low_security;
         uint32 _count_trivial;
-        _test_stat_t() : _count_success(0), _count_fail(0), _count_not_supported(0), _count_low_security(0), _count_trivial(0) {
+        uint32 _count_expect_failure;
+        _test_stat_t() : _count_success(0), _count_fail(0), _count_not_supported(0), _count_low_security(0), _count_trivial(0), _count_expect_failure(0) {
             // do nothing
         }
     } test_stat_t;

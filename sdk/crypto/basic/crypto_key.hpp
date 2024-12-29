@@ -466,6 +466,18 @@ class crypto_key {
 
     void erase(const std::string& kid);
 
+    /**
+     * @brief   choose key
+     * @param   const std::string& kid [in]
+     * @param   crypto_kty_t kty [in]
+     * @param   return_t& code [out]
+     * @remarks
+     *          return key, errorcode_t::success       : kid found
+     *          return key, errorcode_t::inaccurate    : not found kid, but kty exists
+     *          return nullptr, errorcode_t::not_exist : not exist kid nor kty
+     */
+    const EVP_PKEY* choose(const std::string& kid, crypto_kty_t kty, return_t& code);
+
    protected:
     /**
      * @brief extract

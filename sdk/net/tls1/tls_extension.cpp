@@ -63,13 +63,15 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
         }
 
         if (size - pos < ext_len) {
-            ret = errorcode_t::bad_data;
+            ret = errorcode_t::no_more;
             __leave2;
         }
 
+        size_t extsize = pos + ext_len;
+
         s->autoindent(3);
         s->printf("> %s - %04x %s\n", constexpr_extension, extension_type, tlsadvisor->tls_extension_string(extension_type).c_str());
-        s->printf(" > %s %i\n", constexpr_ext_len, ext_len);
+        s->printf(" > %s 0x%04x(%i)\n", constexpr_ext_len, ext_len, ext_len);
 
         size_t tpos = pos;
         switch (extension_type) {
@@ -81,7 +83,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                     constexpr char constexpr_entry_len[] = "entry len";
                     payload pl;
                     pl << new payload_member(uint16(0), true, constexpr_entry_len);
-                    pl.read(stream, size, pos);
+                    pl.read(stream, extsize, pos);
                 }
 
                 /* .. tpos + ext_len */
@@ -108,7 +110,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 pl << new payload_member(uint8(0), constexpr_name_type) << new payload_member(uint16(0), true, constexpr_hostname_len)
                    << new payload_member(binary_t(), constexpr_hostname);
                 pl.set_reference_value(constexpr_hostname, constexpr_hostname_len);
-                pl.read(stream, size, pos);
+                pl.read(stream, extsize, pos);
 
                 uint8 type = pl.t_value_of<uint8>(constexpr_name_type);
                 uint16 hostname_len = pl.t_value_of<uint16>(constexpr_hostname_len);
@@ -136,7 +138,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                    << new payload_member(binary_t(), constexpr_request_ext_info);
                 pl.set_reference_value(constexpr_responderid_info, constexpr_responderid_info_len);
                 pl.set_reference_value(constexpr_request_ext_info, constexpr_request_ext_info_len);
-                pl.read(stream, size, pos);
+                pl.read(stream, extsize, pos);
 
                 uint8 cert_status_type = pl.t_value_of<uint8>(constexpr_cert_status_type);
                 uint16 responderid_info_len = pl.t_value_of<uint8>(constexpr_responderid_info_len);
@@ -163,7 +165,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 payload pl;
                 pl << new payload_member(uint16(0), true, constexpr_curves) << new payload_member(binary_t(0), constexpr_curve);
                 pl.set_reference_value(constexpr_curve, constexpr_curves);
-                pl.read(stream, size, pos);
+                pl.read(stream, extsize, pos);
 
                 binary_t supported_groups;
                 uint16 curves = pl.t_value_of<uint16>(constexpr_curves) >> 1;
@@ -192,7 +194,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 payload pl;
                 pl << new payload_member(uint8(0), constexpr_len) << new payload_member(binary_t(0), constexpr_formats);
                 pl.set_reference_value(constexpr_formats, constexpr_len);
-                pl.read(stream, size, pos);
+                pl.read(stream, extsize, pos);
 
                 binary_t formats;
                 uint8 len = pl.t_value_of<uint8>(constexpr_len);
@@ -213,7 +215,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 payload pl;
                 pl << new payload_member(uint16(0), true, constexpr_algorithms) << new payload_member(binary_t(), constexpr_algorithm);
                 pl.set_reference_value(constexpr_algorithm, constexpr_algorithms);
-                pl.read(stream, size, pos);
+                pl.read(stream, extsize, pos);
 
                 binary_t algorithm;
                 uint16 algorithms = pl.t_value_of<uint16>(constexpr_algorithms) >> 1;
@@ -243,7 +245,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 payload pl;
                 pl << new payload_member(uint16(0), true, constexpr_alpn_len) << new payload_member(binary_t(0), constexpr_protocol);
                 pl.set_reference_value(constexpr_protocol, constexpr_alpn_len);
-                pl.read(stream, size, pos);
+                pl.read(stream, extsize, pos);
 
                 uint16 alpn_len = pl.t_value_of<uint16>(constexpr_alpn_len);
                 binary_t protocol;
@@ -284,7 +286,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                     payload pl;
                     pl << new payload_member(uint8(0), constexpr_algorithm_len) << new payload_member(binary_t(), constexpr_algorithm);
                     pl.set_reference_value(constexpr_algorithm, constexpr_algorithm_len);
-                    pl.read(stream, size, pos);
+                    pl.read(stream, extsize, pos);
 
                     algorithm_len = pl.t_value_of<uint8>(constexpr_algorithm_len);
                     pl.get_binary(constexpr_algorithm, algorithm);
@@ -373,7 +375,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                                << new payload_member(binary_t(), constexpr_psk_binder);
                             pl.set_reference_value(constexpr_psk_identity, constexpr_psk_identity_len);
                             pl.set_reference_value(constexpr_psk_binder, constexpr_psk_binder_len);
-                            pl.read(stream, size, pos);
+                            pl.read(stream, extsize, pos);
 
                             psk_identities_len = pl.t_value_of<uint16>(constexpr_psk_identities_len);
                             psk_identity_len = pl.t_value_of<uint16>(constexpr_psk_identity_len);
@@ -422,7 +424,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                         {
                             payload pl;
                             pl << new payload_member(uint16(0), true, constexpr_selected_identity);
-                            pl.read(stream, size, pos);
+                            pl.read(stream, extsize, pos);
 
                             selected_identity = pl.t_value_of<uint16>(constexpr_selected_identity);
                         }
@@ -449,7 +451,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                         payload pl;
                         pl << new payload_member(uint8(0), constexpr_versions) << new payload_member(binary_t(), constexpr_version);
                         pl.set_reference_value(constexpr_version, constexpr_versions);
-                        pl.read(stream, size, pos);
+                        pl.read(stream, extsize, pos);
 
                         binary_t version;
                         uint16 versions = pl.t_value_of<uint8>(constexpr_versions) >> 1;
@@ -464,7 +466,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                     case tls_handshake_server_hello: {
                         payload pl;
                         pl << new payload_member(uint16(0), true, constexpr_version);
-                        pl.read(stream, size, pos);
+                        pl.read(stream, extsize, pos);
 
                         uint16 ver = pl.t_value_of<uint16>(constexpr_version);
                         s->printf(" > 0x%04x %s\n", ver, tlsadvisor->tls_version_string(ver).c_str());
@@ -491,7 +493,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                 payload pl;
                 pl << new payload_member(uint8(0), constexpr_modes) << new payload_member(binary_t(), constexpr_mode);
                 pl.set_reference_value(constexpr_mode, constexpr_modes);
-                pl.read(stream, size, pos);
+                pl.read(stream, extsize, pos);
 
                 uint8 modes = pl.t_value_of<uint8>(constexpr_modes);
                 binary_t mode;
@@ -526,10 +528,13 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                     switch (group) {
                         // TODO ...
                         case 0x0017: /* secp256r1 */ {
+                            keychain.add_ec(&keyshare, NID_X9_62_prime256v1, pubkey, binary_t(), desc);
                         } break;
                         case 0x0018: /* secp384r1 */ {
+                            keychain.add_ec(&keyshare, NID_secp384r1, pubkey, binary_t(), desc);
                         } break;
                         case 0x0019: /* secp521r1 */ {
+                            keychain.add_ec(&keyshare, NID_secp521r1, pubkey, binary_t(), desc);
                         } break;
                         case 0x001d: /* x25519 */ {
                             keychain.add_okp(&keyshare, NID_X25519, pubkey, binary_t(), desc);
@@ -576,7 +581,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                         {
                             payload pl;
                             pl << new payload_member(uint16(0), true, constexpr_len);
-                            pl.read(stream, size, pos);
+                            pl.read(stream, extsize, pos);
 
                             uint16 len = 0;
                             len = pl.t_value_of<uint16>(constexpr_len);
@@ -588,7 +593,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                             pl << new payload_member(uint16(0), true, constexpr_group) << new payload_member(uint16(0), true, constexpr_pubkey_len)
                                << new payload_member(binary_t(), constexpr_pubkey);
                             pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
-                            pl.read(stream, size, pos);
+                            pl.read(stream, extsize, pos);
 
                             group = pl.t_value_of<uint16>(constexpr_group);
                             uint16 pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
@@ -598,7 +603,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
 
                             s->printf("  > %s\n", constexpr_key_share_entry);
                             s->printf("   > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_string(group).c_str());
-                            s->printf("   > %s %i(%04x)\n", constexpr_pubkey_len, pubkeylen, pubkeylen);
+                            s->printf("   > %s %04x(%i)\n", constexpr_pubkey_len, pubkeylen, pubkeylen);
                             dump_memory(pubkey, s, 16, 5, 0x0, dump_notrunc);
                             s->printf("     %s\n", base16_encode(pubkey).c_str());
                         }
@@ -612,7 +617,10 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                         pl << new payload_member(uint16(0), true, constexpr_group) << new payload_member(uint16(0), true, constexpr_pubkey_len)
                            << new payload_member(binary_t(), constexpr_pubkey);
                         pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
-                        pl.read(stream, size, pos);
+                        pl.read(stream, extsize, pos);
+
+                        // RFC 8448 5.  HelloRetryRequest
+                        // if (0 == pubkeylen) hello_retry_request
 
                         group = pl.t_value_of<uint16>(constexpr_group);
                         uint16 pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
@@ -621,9 +629,11 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                         lambda_keyshare(session, group, pubkey, desc);
 
                         s->printf(" > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_string(group).c_str());
-                        s->printf(" > %s %i\n", constexpr_pubkey_len, pubkeylen);
-                        dump_memory(pubkey, s, 16, 3, 0x0, dump_notrunc);
-                        s->printf("   %s\n", base16_encode(pubkey).c_str());
+                        if (pubkeylen) {
+                            s->printf(" > %s %i\n", constexpr_pubkey_len, pubkeylen);
+                            dump_memory(pubkey, s, 16, 3, 0x0, dump_notrunc);
+                            s->printf("   %s\n", base16_encode(pubkey).c_str());
+                        }
                     } break;
                 }
             } break;
@@ -638,7 +648,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                     payload pl;
                     pl << new payload_member(new quic_encoded(uint64(0)), constexpr_param_id)
                        << new payload_member(new quic_encoded(binary_t()), constexpr_param);
-                    pl.read(stream, size, pos);
+                    pl.read(stream, extsize, pos);
 
                     binary_t param;
                     uint64 param_id = pl.select(constexpr_param_id)->get_payload_encoded()->value();
@@ -671,7 +681,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                     payload pl;
                     pl << new payload_member(uint16(0), true, constexpr_alps_len) << new payload_member(binary_t(), constexpr_alpn);
                     pl.set_reference_value(constexpr_alpn, constexpr_alps_len);
-                    pl.read(stream, size, pos);
+                    pl.read(stream, extsize, pos);
 
                     alps_len = pl.t_value_of<uint16>(constexpr_alps_len);
                     pl.get_binary(constexpr_alpn, alpn);
@@ -708,7 +718,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
                        << new payload_member(uint16(0), true, constexpr_payload_len) << new payload_member(binary_t(), constexpr_payload);
                     pl.set_reference_value(constexpr_enc, constexpr_enc_len);
                     pl.set_reference_value(constexpr_payload, constexpr_payload_len);
-                    pl.read(stream, size, pos);
+                    pl.read(stream, extsize, pos);
 
                     client_hello_type = pl.t_value_of<uint8>(constexpr_client_hello_type);
                     kdf = pl.t_value_of<uint16>(constexpr_kdf);

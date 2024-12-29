@@ -69,6 +69,7 @@ namespace net {
 enum tls_message_flow_t {
     tls_1_rtt = 0,
     tls_0_rtt = 1,
+    tls_hello_retry_request = 2,
 };
 
 class tls_protection {
@@ -109,7 +110,8 @@ class tls_protection {
     /**
      * hash(handshake)
      */
-    return_t calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest, bool reset = false);
+    return_t calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest);
+    return_t reset_transcript_hash(tls_session* session);
     return_t calc_context_hash(tls_session* session, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& digest);
 
     crypto_key& get_cert();

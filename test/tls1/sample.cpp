@@ -43,7 +43,7 @@ void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
     _logger->writeln(bs);
 }
 
-return_t dump_record(const char* text, tls_session* session, const binary_t& bin, tls_role_t role) {
+return_t dump_record(const char* text, tls_session* session, const binary_t& bin, tls_role_t role, bool expect) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == text || nullptr == session) {
@@ -65,6 +65,10 @@ return_t dump_record(const char* text, tls_session* session, const binary_t& bin
 
         _logger->writeln(bs);
         bs.clear();
+
+        if ((false == expect) && (success != ret)) {
+            ret = expect_failure;
+        }
 
         _test_case.test(ret, __FUNCTION__, "%s : %s", (role_client == role) ? "C -> S" : "C <- S", text);
     }

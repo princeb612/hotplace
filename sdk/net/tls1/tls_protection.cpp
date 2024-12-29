@@ -76,7 +76,7 @@ transcript_hash* tls_protection::get_transcript_hash() {
     return _transcript_hash;
 }
 
-return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest, bool reset) {
+return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || (size && (nullptr == stream))) {
@@ -87,13 +87,8 @@ return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t
         // The hash does not include DTLS-only bytes in the records.
         // --> The hash does not include handshake reconstruction data bytes in the records.
 
-        auto& protection = session->get_tls_protection();
-        auto hash = protection.get_transcript_hash();
+        auto hash = get_transcript_hash();
         if (hash) {
-            if (reset) {
-                // 0-RTT client_hello
-                hash->reset();
-            }
             if (is_kindof_dtls()) {
                 basic_stream bs;
                 // DTLS
@@ -121,6 +116,16 @@ return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t
     }
     return ret;
 };
+
+return_t tls_protection::reset_transcript_hash(tls_session* session) {
+    return_t ret = errorcode_t::success;
+    auto hash = get_transcript_hash();
+    if (hash) {
+        hash->reset();
+        hash->release();
+    }
+    return ret;
+}
 
 return_t tls_protection::calc_context_hash(tls_session* session, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& digest) {
     return_t ret = errorcode_t::success;
@@ -290,6 +295,9 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                 lambda_expand_label(tls_secret_c_e_traffic_iv, secret_c_e_traffic_iv, hashalg, 12, secret_c_e_traffic, "iv", empty);
             }
         } else if (tls_handshake_server_hello == type) {
+            // ~ TLS 1.2 see client_key_exchange, server_key_exchange
+            // TLS 1.3 server_hello legacy_version
+
             /**
              *   (EC)DHE -> HKDF-Extract = Handshake Secret
              *             |
@@ -319,17 +327,23 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                 //  psk_dhe_ke  ... key_share
                 binary_t shared_secret;
                 {
-#if 1
-                    // in server ... priv("server") + pub("CH") <-- this case
-                    const EVP_PKEY* pkey_priv = get_keyexchange().find("server");
-                    const EVP_PKEY* pkey_pub = get_keyexchange().find("CH");  // client_hello
-#else
-                    // in client ... priv("client") + pub("SH")
-                    const EVP_PKEY* pkey_priv = get_keyexchange().find("client");
-                    const EVP_PKEY* pkey_pub = get_keyexchange().find("SH");  // server_hello
-#endif
+                    const EVP_PKEY* pkey_priv = nullptr;
+                    const EVP_PKEY* pkey_pub = nullptr;
+                    pkey_priv = get_keyexchange().find("server");
+                    if (pkey_priv) {
+                        // in server ... priv("server") + pub("CH")
+                        pkey_pub = get_keyexchange().find("CH");  // client_hello
+                    } else {
+                        // in client ... priv("client") + pub("SH")
+                        pkey_priv = get_keyexchange().find("client");
+                        pkey_pub = get_keyexchange().find("SH");  // server_hello
+                    }
+
                     if (nullptr == pkey_priv || nullptr == pkey_pub) {
-                        ret = errorcode_t::not_found;
+                        auto tlsversion = get_tls_version();
+                        if (is_basedon_tls13(tlsversion)) {
+                            ret = errorcode_t::not_found;
+                        }
                         __leave2;
                     }
 
@@ -346,20 +360,36 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                 }
 
                 binary_t secret_handshake_derived;
-                if (tls_1_rtt == get_flow()) {
-                    lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, early_secret, "derived", empty_hash);
-                } else {
-                    const binary_t& secret_resumption_early = get_item(tls_secret_resumption_early);
-                    lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, secret_resumption_early, "derived", empty_hash);
+                switch (get_flow()) {
+                    case tls_1_rtt:
+                    case tls_hello_retry_request: {
+                        lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, early_secret, "derived", empty_hash);
+                    } break;
+                    case tls_0_rtt: {
+                        const binary_t& secret_resumption_early = get_item(tls_secret_resumption_early);
+                        lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, secret_resumption_early, "derived",
+                                            empty_hash);
+                    } break;
                 }
 
                 binary_t secret_handshake;
                 lambda_extract(tls_secret_handshake, secret_handshake, hashalg, secret_handshake_derived, shared_secret);
 
-                // client_handshake_traffic_secret
-                lambda_expand_label(tls_secret_c_hs_traffic, secret_handshake_client, hashalg, dlen, secret_handshake, "c hs traffic", context_hash);
-                // server_handshake_traffic_secret
-                lambda_expand_label(tls_secret_s_hs_traffic, secret_handshake_server, hashalg, dlen, secret_handshake, "s hs traffic", context_hash);
+                switch (get_flow()) {
+                    case tls_1_rtt:
+                    case tls_0_rtt: {
+                        // client_handshake_traffic_secret
+                        lambda_expand_label(tls_secret_c_hs_traffic, secret_handshake_client, hashalg, dlen, secret_handshake, "c hs traffic", context_hash);
+                        // server_handshake_traffic_secret
+                        lambda_expand_label(tls_secret_s_hs_traffic, secret_handshake_server, hashalg, dlen, secret_handshake, "s hs traffic", context_hash);
+                    } break;
+                    case tls_hello_retry_request: {
+                        // client_handshake_traffic_secret
+                        lambda_expand_label(tls_secret_c_hs_traffic, secret_handshake_client, hashalg, dlen, secret_handshake, "c hs traffic", context_hash);
+                        // server_handshake_traffic_secret
+                        lambda_expand_label(tls_secret_s_hs_traffic, secret_handshake_server, hashalg, dlen, secret_handshake, "s hs traffic", context_hash);
+                    } break;
+                }
             }
 
             // calc

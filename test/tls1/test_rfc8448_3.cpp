@@ -393,8 +393,8 @@ void test_rfc8448_3() {
             "df 35 30 05 f3 bc e1 86 96 12 9c 81 53 55 6b 3b 6c 67 79 b3 7b"
             "f1 59 85 68 4f";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#5 new_session_ticket (new_session_ticket)", &rfc8448_session, bin_record, role_server);
-        dump_record("#5 new_session_ticket (new_session_ticket)", &rfc8448_session2, bin_record, role_server);
+        dump_record("#5 new_session_ticket", &rfc8448_session, bin_record, role_server);
+        dump_record("#5 new_session_ticket", &rfc8448_session2, bin_record, role_server);
     }
     // #6
     // {client}  send application_data record:
