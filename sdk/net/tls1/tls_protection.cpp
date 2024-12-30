@@ -12,6 +12,7 @@
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
+#include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_ecdh.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
@@ -168,8 +169,6 @@ return_t tls_protection::calc_context_hash(tls_session* session, hash_algorithm_
     }
     return ret;
 }
-
-crypto_key& tls_protection::get_cert() { return _cert; }
 
 crypto_key& tls_protection::get_keyexchange() { return _keyexchange; }
 
@@ -345,6 +344,15 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                             ret = errorcode_t::not_found;
                         }
                         __leave2;
+                    }
+
+                    uint32 nid_priv = 0;
+                    uint32 nid_pub = 0;
+                    nidof_evp_pkey(pkey_priv, nid_priv);
+                    nidof_evp_pkey(pkey_pub, nid_pub);
+                    if (nid_priv != nid_pub) {
+                        ret = errorcode_t::different_type;
+                        __leave2;  // HRR
                     }
 
                     ret = dh_key_agreement(pkey_priv, pkey_pub, shared_secret);
@@ -1035,46 +1043,35 @@ crypto_sign* tls_protection::get_crypto_sign(uint16 scheme) {
     crypto_sign_builder builder;
     crypto_sign* sign = nullptr;
     switch (scheme) {
-        case 0x0401: /* rsa_pkcs1_sha256 */ {
+        case 0x0401: /* rsa_pkcs1_sha256 */
+        case 0x0403: /* ecdsa_secp256r1_sha256 */
+        case 0x0804: /* rsa_pss_rsae_sha256 */
+        case 0x0809: /* rsa_pss_pss_sha256 */
+        {
             sign = builder.tls_sign_scheme(scheme).set_digest(sha2_256).build();
         } break;
-        case 0x0501: /* rsa_pkcs1_sha384 */ {
+        case 0x0501: /* rsa_pkcs1_sha384 */
+        case 0x0503: /* ecdsa_secp384r1_sha384 */
+        case 0x0805: /* rsa_pss_rsae_sha384 */
+        case 0x080a: /* rsa_pss_pss_sha384 */
+        {
             sign = builder.tls_sign_scheme(scheme).set_digest(sha2_384).build();
         } break;
-        case 0x0601: /* rsa_pkcs1_sha512 */ {
-            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_512).build();
-        } break;
-        case 0x0403: /* ecdsa_secp256r1_sha256 */ {
-            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_256).build();
-        } break;
-        case 0x0503: /* ecdsa_secp384r1_sha384 */ {
-            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_384).build();
-        } break;
-        case 0x0603: /* ecdsa_secp521r1_sha512 */ {
-            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_512).build();
-        } break;
-        case 0x0804: /* rsa_pss_rsae_sha256 */ {
-            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_256).build();
-        } break;
-        case 0x0805: /* rsa_pss_rsae_sha384 */ {
-            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_384).build();
-        } break;
-        case 0x0806: /* rsa_pss_rsae_sha512 */ {
+        case 0x0601: /* rsa_pkcs1_sha512 */
+        case 0x0603: /* ecdsa_secp521r1_sha512 */
+        case 0x0806: /* rsa_pss_rsae_sha512 */
+        case 0x080b: /* rsa_pss_pss_sha512 */
+        {
             sign = builder.tls_sign_scheme(scheme).set_digest(sha2_512).build();
         } break;
         case 0x0807: /* ed25519 */
         case 0x0808: /* ed448 */ {
             sign = builder.tls_sign_scheme(scheme).build();
         } break;
-        case 0x0809: /* rsa_pss_pss_sha256 */ {
-        } break;
-        case 0x080a: /* rsa_pss_pss_sha384 */ {
-        } break;
-        case 0x080b: /* rsa_pss_pss_sha512 */ {
-        } break;
-        case 0x0201: /* rsa_pkcs1_sha1 */ {
-        } break;
-        case 0x0203: /* ecdsa_sha1 */ {
+        case 0x0201: /* rsa_pkcs1_sha1 */
+        case 0x0203: /* ecdsa_sha1 */
+        {
+            sign = builder.tls_sign_scheme(scheme).set_digest(sha1).build();
         } break;
     }
     return sign;

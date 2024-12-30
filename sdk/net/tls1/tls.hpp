@@ -113,8 +113,14 @@ class tls_protection {
     return_t calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest);
     return_t reset_transcript_hash(tls_session* session);
     return_t calc_context_hash(tls_session* session, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& digest);
-
-    crypto_key& get_cert();
+    /**
+     *      "CH"  : client_hello key_share
+     *      "SH"  : server_hello key_share
+     *      "CKE" : client key exchange
+     *      "SKE" : server key exchange
+     *      "CC"  : client certificate
+     *      "SC"  : server certifcate
+     */
     crypto_key& get_keyexchange();
 
     void use_pre_master_secret(bool use);
@@ -174,7 +180,6 @@ class tls_protection {
     uint16 _version;
     transcript_hash* _transcript_hash;
     critical_section _lock;
-    crypto_key _cert;
     crypto_key _keyexchange;  // psk_ke, psk_dhe_ke
     std::map<tls_secret_t, binary_t> _kv;
     bool _use_pre_master_secret;

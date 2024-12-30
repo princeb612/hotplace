@@ -47,6 +47,12 @@ void test_rfc8448_5() {
         _test_case.test(ret, __FUNCTION__, "ephemeral x25519 key pair");
     }
     {
+        // > extension - 0033 key_share
+        //  > extension len 0x0026(38)
+        //  > len 36(0x0024)
+        //   > key share entry
+        //    > group 0x001d (x25519)
+        //    > public key len 0020(32)
         const char* record =
             "16 03 01 00 b4 01 00 00 b0 03 03 b0"
             "b1 c5 a5 aa 37 c5 91 9f 2e d1 d5 c6 ff f7 fc b7 84 97 16 94 5a"
@@ -83,7 +89,9 @@ void test_rfc8448_5() {
         _test_case.test(ret, __FUNCTION__, "P-256 key pair");
     }
     {
-        // key_share extension len 2 (group secp256r1)
+        // > extension - 0033 key_share
+        //  > extension len 0x0002(2)
+        //  > group 0x0017 (secp256r1)
         const char* record =
             "16 03 03 00 b0 02 00 00 ac 03 03 cf"
             "21 ad 74 e5 9a 61 11 be 1d 8c 02 1e 65 b8 91 c2 a2 11 16 7a bb"

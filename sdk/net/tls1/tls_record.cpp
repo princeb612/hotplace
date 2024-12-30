@@ -266,10 +266,11 @@ return_t tls_dump_tls_record(stream_t* s, tls_session* session, const byte_t* st
                                 while (tpos < plainsize) {
                                     auto test = tls_dump_handshake(s, session, &plaintext[0], plainsize - 1, tpos, role);
                                     if (errorcode_t::success != test) {
-                                        if (errorcode_t::no_more != test) {
+                                        if (errorcode_t::no_more == test) {
+                                            break;
+                                        } else {
                                             ret = test;
                                         }
-                                        break;
                                     }
                                 }
                             } else if (tls_content_type_application_data == last_byte) {

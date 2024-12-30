@@ -35,10 +35,10 @@ static return_t tls_dump_client_hello(tls_handshake_type_t hstype, stream_t* s, 
 static return_t tls_dump_server_hello(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 static return_t tls_dump_new_session_ticket(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 static return_t tls_dump_encrypted_extensions(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
-static return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+static return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role);
 static return_t tls_dump_server_key_exchange(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role);
 static return_t tls_dump_server_hello_done(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role);
-static return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+static return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role);
 static return_t tls_dump_client_key_exchange(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role);
 static return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role);
 
@@ -163,10 +163,6 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
          */
         switch (handshake->msg_type) {
             case tls_handshake_client_hello: /* 1 */ {
-                auto& keyexchange = protection.get_keyexchange();
-                keyexchange.erase("CH");
-                keyexchange.erase("SH");
-
                 auto hsstatus = session->get_roleinfo(role).get_status();
                 if (tls_handshake_finished == hsstatus) {
                     // 0-RTT
@@ -180,6 +176,11 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
 
                         session->reset_recordno(role_client);
                         session->reset_recordno(role_server);
+                    } break;
+                    case tls_hello_retry_request: {
+                        auto& keyexchange = protection.get_keyexchange();
+                        keyexchange.erase("CH");  // client_hello key_share
+                        keyexchange.erase("SH");  // server_hello key_share
                     } break;
                     default: {
                     } break;
@@ -253,6 +254,8 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
             } break;
             case tls_handshake_new_session_ticket: /* 4 */ {
                 ret = tls_dump_new_session_ticket(s, session, stream, size, pos);
+
+                protection.calc_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
             case tls_handshake_end_of_early_data: /* 5 */ {
                 protection.calc(session, tls_handshake_end_of_early_data, role);
@@ -298,7 +301,7 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 // RFC 4346 7.4.3. Server Key Exchange Message
                 // RFC 4346 7.4.6. Client certificate
                 // RFC 4346 7.4.7. Client Key Exchange Message
-                ret = tls_dump_certificate(s, session, stream, size, pos);
+                ret = tls_dump_certificate(s, session, stream, size, pos, role);
 
                 protection.calc_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
@@ -325,7 +328,7 @@ return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* str
                 //    authenticating via a certificate.  [Section 4.4.3]
 
                 // RFC 4346 7.4.8. Certificate verify
-                ret = tls_dump_certificate_verify(s, session, stream, size, pos);
+                ret = tls_dump_certificate_verify(s, session, stream, size, pos, role);
 
                 protection.calc_transcript_hash(session, stream + hspos, hssize, handshake_hash);
             } break;
@@ -716,7 +719,7 @@ return_t tls_dump_encrypted_extensions(tls_handshake_type_t hstype, stream_t* s,
     return ret;
 }
 
-return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == s || nullptr == session || nullptr == stream) {
@@ -781,10 +784,16 @@ return_t tls_dump_certificate(stream_t* s, tls_session* session, const byte_t* s
         s->printf(" > %s 0x%02x (%s)\n", constexpr_record_type, record_type, tlsadvisor->content_type_string(record_type).c_str());
         s->autoindent(0);
 
-        auto& servercert = session->get_tls_protection().get_cert();
-        ret = keychain.load_der(&servercert, &cert[0], cert.size(), keydesc(use_sig));
+        auto& servercert = session->get_tls_protection().get_keyexchange();
+        keydesc desc(use_sig);
+        if (role_server == role) {
+            desc.set_kid("SC");
+        } else {
+            desc.set_kid("CC");
+        }
+        ret = keychain.load_der(&servercert, &cert[0], cert.size(), desc);
         if (errorcode_t::success == ret) {
-            dump_key(servercert.any(), s, 15, 4, dump_notrunc);
+            dump_key(servercert.find(desc.get_kid_cstr()), s, 15, 4, dump_notrunc);
         }
     }
     __finally2 {
@@ -871,7 +880,7 @@ return_t tls_dump_server_key_exchange(stream_t* s, tls_session* session, const b
 
             auto sign = session->get_tls_protection().get_crypto_sign(signature);
             if (sign) {
-                crypto_key& key = session->get_tls_protection().get_cert();
+                crypto_key& key = session->get_tls_protection().get_keyexchange();
                 auto pkey = key.any();
                 ret = sign->verify(pkey, message, sig);
                 sign->release();
@@ -912,7 +921,7 @@ return_t tls_dump_server_hello_done(stream_t* s, tls_session* session, const byt
     return ret;
 }
 
-return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == s || nullptr == session || nullptr == stream) {
@@ -942,8 +951,9 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
         }
 
         tls_protection& protection = session->get_tls_protection();
-        binary_t hshash;
-        auto sign = session->get_tls_protection().get_crypto_sign(scheme);
+        basic_stream tosign;
+        binary_t transcripthash;
+        auto sign = protection.get_crypto_sign(scheme);
         if (sign) {
             /**
              * RFC 8446 4.4.  Authentication Messages
@@ -958,21 +968,26 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
 
             auto hash = protection.get_transcript_hash();  // hash(client_hello .. certificate)
             if (hash) {
-                hash->digest(hshash);
+                hash->digest(transcripthash);
                 hash->release();
             }
 
             constexpr char constexpr_context[] = "TLS 1.3, server CertificateVerify";
-            basic_stream tosign;
-            tosign.fill(64, 0x20);                    // octet 32 (0x20) repeated 64 times
-            tosign << constexpr_context;              // context string
-            tosign.fill(1, 0x00);                     // single 0 byte
-            tosign.write(&hshash[0], hshash.size());  // content to be signed
+            tosign.fill(64, 0x20);                                    // octet 32 (0x20) repeated 64 times
+            tosign << constexpr_context;                              // context string
+            tosign.fill(1, 0x00);                                     // single 0 byte
+            tosign.write(&transcripthash[0], transcripthash.size());  // content to be signed
 
             // $ openssl x509 -pubkey -noout -in server.crt > server.pub
             // public key from server certificate or handshake 0x11 certificate
-            crypto_key& key = session->get_tls_protection().get_cert();
-            auto pkey = key.any();
+            crypto_key& key = session->get_tls_protection().get_keyexchange();
+            const char* kid = nullptr;
+            if (role_server == role) {
+                kid = "SC";  // Server Certificate
+            } else {
+                kid = "CC";  // Client Certificate (Client Authentication, optional)
+            }
+            auto pkey = key.find(kid);
 
             ret = sign->verify(pkey, tosign.data(), tosign.size(), handshake_hash);
 
@@ -984,8 +999,11 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
         s->autoindent(1);
         s->printf(" > %s 0x%04x %s\n", constexpr_signature, scheme, tlsadvisor->signature_scheme_string(scheme).c_str());
         s->printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
-        s->printf(" > %s %s \e[1;33m%s\e[0m\n", constexpr_handshake_hash, base16_encode(handshake_hash).c_str(),
-                  (errorcode_t::success == ret) ? "true" : "false");
+        s->printf(" > transcript-hash\n");
+        dump_memory(transcripthash, s, 16, 3, 0x00, dump_notrunc);
+        s->printf(" > tosign\n");
+        dump_memory(tosign, s, 16, 3, 0x00, dump_notrunc);
+        s->printf(" > %s \e[1;33m%s\e[0m\n", constexpr_handshake_hash, (errorcode_t::success == ret) ? "true" : "false");
         dump_memory(handshake_hash, s, 16, 3, 0x00, dump_notrunc);
         s->autoindent(0);
     }

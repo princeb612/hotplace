@@ -57,9 +57,9 @@ return_t dump_record(const char* text, tls_session* session, const binary_t& bin
         size_t pos = 0;
         size_t size = bin.size();
         while (pos < size) {
-            ret = tls_dump_record(&bs, session, &bin[0], bin.size(), pos, role);
-            if (errorcode_t::success != ret) {
-                break;
+            auto test = tls_dump_record(&bs, session, &bin[0], bin.size(), pos, role);
+            if (errorcode_t::success != test) {
+                ret = test;
             }
         }
 

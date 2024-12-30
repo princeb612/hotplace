@@ -578,7 +578,9 @@ void crypto_key::erase(const std::string& kid) {
     auto lbound = _key_map.lower_bound(kid);
     auto ubound = _key_map.upper_bound(kid);
     for (auto iter = lbound; iter != ubound;) {
+        auto pkey = iter->second.get_pkey();
         _key_map.erase(iter++);
+        EVP_PKEY_free((EVP_PKEY*)pkey);  // reference counter --
     }
 }
 
