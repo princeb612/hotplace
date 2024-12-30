@@ -4,8 +4,8 @@
   * [study] QUIC (RFC 9001)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 676
-  * [study] RFC 8448 5.  HelloRetryRequest
+* Revision 677
+  * [tested] RFC 8448 5.  HelloRetryRequest
 
 * Revision 675
   * [tested] RFC 8448 4.  Resumed 0-RTT Handshake

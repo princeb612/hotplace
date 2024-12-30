@@ -182,6 +182,9 @@ void test_rfc8448_5() {
         // {server}  derive secret "tls13 s hs traffic"
         test_keycalc(&session, tls_secret_s_hs_traffic, bin, "s hs traffic", "3403e781e2af7b6508da28574f6e95a1abf162de83a97927c37672a4a0cef8a1");
         // {server}  derive secret for master "tls13 derived"
+        test_keycalc(&session, tls_secret_application_derived, bin, "application_derived", "ad1cbcd3a0dc7053eeb3ed3a47901d16a9fc63a73c64beb567481a7dfb3a2cb3");
+        // {server}  extract secret "master"
+        test_keycalc(&session, tls_secret_application, bin, "secret_application", "1131545d0baf79ddce9b87f06945781a57dd18ef378dcd2060f8f9a569027ed8");
     }
     {
         const char* record =
@@ -222,12 +225,55 @@ void test_rfc8448_5() {
         dump_record("encrypted_extensions certificate certificate_verify finished", &session, bin_record, role_server);
     }
     {
+        binary_t bin;
+        // {server}  derive write traffic keys for handshake data
+        test_keycalc(&session, tls_secret_handshake_server_key, bin, "handshake_server_key", "4646bfac1712c426cd78d8a24a8a6f6b");
+        test_keycalc(&session, tls_secret_handshake_server_iv, bin, "handshake_server_iv", "c7d395c08d62f297d13768ea");
+
+        // {server}  derive secret "tls13 c ap traffic"
+        test_keycalc(&session, tls_secret_c_ap_traffic, bin, "c ap traffic", "75ecf4b972525aa0dcd057c9944d4cd5d82671d8843141d7dc2a4ff15a21dc51");
+        // {server}  derive secret "tls13 s ap traffic"
+        test_keycalc(&session, tls_secret_s_ap_traffic, bin, "s ap traffic", "5c74f87df04225db0f8209c9de6429e49435fdefa7cad61864874d12f31cfc8d");
+        // {server}  derive secret "tls13 exp master"
+        test_keycalc(&session, tls_secret_exp_master, bin, "exp master", "7c06d3ae106a3a374ace4837b3985cac67780a6e2c5c04b58319d584df09d223");
+        // {server}  derive write traffic keys for application data
+        test_keycalc(&session, tls_secret_application_server_key, bin, "application_server_key", "f27a5d97bd25550c4823b0f3e5d29388");
+        test_keycalc(&session, tls_secret_application_server_iv, bin, "application_server_iv", "0dd631f7b71cbbc797c35fe7");
+        // {server}  derive read traffic keys for handshake data
+        test_keycalc(&session, tls_secret_handshake_client_key, bin, "handshake_client_key", "2f1f918663d590e7421149a29d94b0b6");
+        test_keycalc(&session, tls_secret_handshake_client_iv, bin, "handshake_client_iv", "414d5485235e1a688793bd74");
+    }
+    {
         const char* record =
             "17 03 03 00 35 d7 4f 19 23 c6 62 fd"
             "34 13 7c 6f 50 2f 3d d2 b9 3d 95 1d 1b 3b c9 7e 42 af e2 3c 31"
             "ab ea 92 fe 91 b4 74 99 9e 85 e3 b7 91 ce 25 2f e8 c3 e9 f9 39"
             "a4 12 0c b2";
-        // binary_t bin_record = base16_decode_rfc(record);
-        // dump_record("...", &session, bin_record, role_client);
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("finished", &session, bin_record, role_client);
+    }
+    {
+        binary_t bin;
+        // {client}  derive write traffic keys for application data
+        test_keycalc(&session, tls_secret_application_client_key, bin, "application_client_key", "a7eb2a0525eb4331d58fcbf9f7ca2e9c");
+        test_keycalc(&session, tls_secret_application_client_iv, bin, "application_client_iv", "86e8be227c1bd2b3e39cb444");
+        // {client}  derive secret "tls13 res master"
+        test_keycalc(&session, tls_secret_res_master, bin, "res master", "09170c6d472721566f9cf99b08699daff561ec8fb22d5a32c3f94ce009b69975");
+    }
+    {
+        // {client}  send alert record
+        const char* record =
+            "17 03 03 00 13 2e a6 cd f7 49 19 60"
+            "23 e2 b3 a4 94 91 69 55 36 42 60 47";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("alert (close_notify)", &session, bin_record, role_client);
+    }
+    {
+        // {server}  send alert record
+        const char* record =
+            "17 03 03 00 13 51 9f c5 07 5c b0 88"
+            "43 49 75 9f f9 ef 6f 01 1b b4 c6 f2";
+        binary_t bin_record = base16_decode_rfc(record);
+        dump_record("alert (close_notify)", &session, bin_record, role_server);
     }
 }

@@ -390,6 +390,11 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                         lambda_expand_label(tls_secret_s_hs_traffic, secret_handshake_server, hashalg, dlen, secret_handshake, "s hs traffic", context_hash);
                     } break;
                 }
+
+                binary_t secret_application_derived;
+                lambda_expand_label(tls_secret_application_derived, secret_application_derived, hashalg, dlen, secret_handshake, "derived", empty_hash);
+                binary_t secret_application;
+                lambda_extract(tls_secret_application, secret_application, hashalg, secret_application_derived, empty_ikm);
             }
 
             // calc
@@ -452,13 +457,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                 secret_application_server = get_item(tls_secret_s_ap_traffic);
                 secret_exporter_master = get_item(tls_secret_exp_master);
             } else {
-                const binary_t& secret_handshake = _kv[tls_secret_handshake];
-
-                binary_t secret_application_derived;
-                lambda_expand_label(tls_secret_application_derived, secret_application_derived, hashalg, dlen, secret_handshake, "derived", empty_hash);
-
-                binary_t secret_application;
-                lambda_extract(tls_secret_application, secret_application, hashalg, secret_application_derived, empty_ikm);
+                const binary_t& secret_application = get_item(tls_secret_application);
                 lambda_expand_label(tls_secret_c_ap_traffic, secret_application_client, hashalg, dlen, secret_application, "c ap traffic", context_hash);
                 lambda_expand_label(tls_secret_s_ap_traffic, secret_application_server, hashalg, dlen, secret_application, "s ap traffic", context_hash);
                 lambda_expand_label(tls_secret_exp_master, secret_exporter_master, hashalg, dlen, secret_application, "exp master", context_hash);
@@ -844,7 +843,8 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
         auto hsstatus = session->get_roleinfo(role).get_status();
         record_no = session->get_recordno(role, true);
         if (role_client == role) {
-            if (tls_1_rtt == get_flow()) {
+            auto flow = get_flow();
+            if (tls_1_rtt == flow || tls_hello_retry_request == flow) {
                 if (tls_handshake_finished == hsstatus) {
                     secret_key = tls_secret_application_client_key;
                     secret_iv = tls_secret_application_client_iv;
