@@ -16,7 +16,7 @@
 #include <sdk/base/basic/template.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
-#include <sdk/crypto/crypto/crypto_encrypt.hpp>
+#include <sdk/crypto/crypto/cipher_encrypt.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
 #include <sdk/net/tls1/tls.hpp>

@@ -34,11 +34,13 @@
 #include <sdk/crypto/basic/types.hpp>
 
 /* crypto */
+#include <sdk/crypto/crypto/cipher_encrypt.hpp>
 #include <sdk/crypto/crypto/crypto_aead.hpp>
 #include <sdk/crypto/crypto/crypto_encrypt.hpp>
 #include <sdk/crypto/crypto/crypto_hash.hpp>
-#include <sdk/crypto/crypto/crypto_mac.hpp>
+#include <sdk/crypto/crypto/crypto_hmac.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
+#include <sdk/crypto/crypto/transcript_hash.hpp>
 
 /* authenticode */
 #include <sdk/crypto/authenticode/authenticode.hpp>

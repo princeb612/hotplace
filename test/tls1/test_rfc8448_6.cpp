@@ -111,8 +111,6 @@ void test_rfc8448_6() {
         test_keycalc(&session, tls_secret_application, bin, "application", "57c15d7b9d441b3d40a9c6ea8a3d730e07b3a1ea7a3339ed7070b9a74a3f4f28");
     }
     {
-        // TODO
-        // certificate_verify - failed
         const char* record =
             "17 03 03 02 16 6d 0a 7a c0 79 b3 2a"
             "94 aa 68 c4 e2 89 3e 8b d0 d3 c1 85 f5 49 c2 36 fb bc e3 d6 47"

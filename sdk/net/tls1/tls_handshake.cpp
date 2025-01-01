@@ -20,8 +20,9 @@
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/crypto/crypto_hash.hpp>
-#include <sdk/crypto/crypto/crypto_mac.hpp>
+#include <sdk/crypto/crypto/crypto_hmac.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
+#include <sdk/crypto/crypto/transcript_hash.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
