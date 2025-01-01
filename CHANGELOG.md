@@ -4,9 +4,9 @@
   * [study] QUIC (RFC 9001)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 678
-  * [study] RFC 8448 6.  Client Authentication
-  * [study] RFC 8448 7.  Compatibility Mode
+* Revision 679
+  * [tested] RFC 8448 6.  Client Authentication
+  * [tested] RFC 8448 7.  Compatibility Mode
 
 * Revision 677
   * [tested] RFC 8448 5.  HelloRetryRequest

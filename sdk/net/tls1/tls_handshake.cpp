@@ -921,6 +921,54 @@ return_t tls_dump_server_hello_done(stream_t* s, tls_session* session, const byt
     return ret;
 }
 
+void asn1_der_ecdsa_signature(const EVP_PKEY* pkey, const binary_t& signature, binary_t& r, binary_t& s) {
+    // ASN.1 DER
+    constexpr char constexpr_sequence[] = "sequence";
+    constexpr char constexpr_len[] = "len";
+    constexpr char constexpr_rlen[] = "rlen";
+    constexpr char constexpr_r[] = "r";
+    constexpr char constexpr_slen[] = "slen";
+    constexpr char constexpr_s[] = "s";
+    payload pl;
+    pl << new payload_member(uint8(0), constexpr_sequence) << new payload_member(uint8(0), constexpr_len) << new payload_member(uint8(0))  // 2 asn1_tag_integer
+       << new payload_member(uint8(0), constexpr_rlen) << new payload_member(binary_t(), constexpr_r) << new payload_member(uint8(0))      // 2 asn1_tag_integer
+       << new payload_member(uint8(0), constexpr_slen) << new payload_member(binary_t(), constexpr_s);
+
+    pl.set_reference_value(constexpr_r, constexpr_rlen);
+    pl.set_reference_value(constexpr_s, constexpr_slen);
+
+    size_t spos = 0;
+    pl.read(&signature[0], signature.size(), spos);
+
+    pl.get_binary(constexpr_r, r);
+    pl.get_binary(constexpr_s, s);
+
+    uint32 unitsize = 0;
+    uint32 nid = 0;
+    nidof_evp_pkey(pkey, nid);
+
+    switch (nid) {
+        case ec_p256:
+            unitsize = 32;
+            break;
+        case ec_p384:
+            unitsize = 48;
+            break;
+        case ec_p521:
+            unitsize = 66;
+            break;
+    }
+
+    if (r.size() > unitsize) {
+        auto d = r.size() - unitsize;
+        r.erase(r.begin(), r.begin() + d);
+    }
+    if (s.size() > unitsize) {
+        auto d = s.size() - unitsize;
+        s.erase(s.begin(), s.begin() + d);
+    }
+}
+
 return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -931,26 +979,60 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        constexpr char constexpr_signature[] = "signature algorithm";
+        constexpr char constexpr_signature_alg[] = "signature algorithm";
         constexpr char constexpr_len[] = "len";
-        constexpr char constexpr_handshake_hash[] = "handshake's hash";
+        constexpr char constexpr_signature[] = "signature";
 
         uint16 scheme = 0;
         uint16 len = 0;
-        binary_t handshake_hash;
+        binary_t signature;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_signature) << new payload_member(uint16(0), true, constexpr_len)
-               << new payload_member(binary_t(), constexpr_handshake_hash);
-            pl.set_reference_value(constexpr_handshake_hash, constexpr_len);
+            pl << new payload_member(uint16(0), true, constexpr_signature_alg) << new payload_member(uint16(0), true, constexpr_len)
+               << new payload_member(binary_t(), constexpr_signature);
+            pl.set_reference_value(constexpr_signature, constexpr_len);
             pl.read(stream, size, pos);
 
-            scheme = pl.t_value_of<uint16>(constexpr_signature);
+            scheme = pl.t_value_of<uint16>(constexpr_signature_alg);
             len = pl.t_value_of<uint16>(constexpr_len);
-            pl.get_binary(constexpr_handshake_hash, handshake_hash);
+            pl.get_binary(constexpr_signature, signature);
         }
 
         tls_protection& protection = session->get_tls_protection();
+
+        // $ openssl x509 -pubkey -noout -in server.crt > server.pub
+        // public key from server certificate or handshake 0x11 certificate
+        crypto_key& key = protection.get_keyexchange();
+        const char* kid = nullptr;
+        if (role_server == role) {
+            kid = "SC";  // Server Certificate
+        } else {
+            kid = "CC";  // Client Certificate (Client Authentication, optional)
+        }
+        auto pkey = key.find(kid);
+
+        /**
+         * RSASSA-PSS     | RSA     |
+         * ECDSA          | ECDSA   | ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
+         * EdDSA          | Ed25519 | 64 bytes
+         * EdDSA          | Ed448   | 114 bytes
+         * RSA-PCKS1 v1.5 | RSA     |
+         *
+         */
+        auto kty = typeof_crypto_key(pkey);
+        binary_t ecdsa_sig;
+        binary_t ecdsa_sig_r, ecdsa_sig_s;
+        switch (kty) {
+            case kty_rsa:
+            case kty_okp: {
+            } break;
+            case kty_ec: {
+                asn1_der_ecdsa_signature(pkey, signature, ecdsa_sig_r, ecdsa_sig_s);
+                binary_append(ecdsa_sig, ecdsa_sig_r);
+                binary_append(ecdsa_sig, ecdsa_sig_s);
+            } break;
+        }
+
         basic_stream tosign;
         binary_t transcripthash;
         auto sign = protection.get_crypto_sign(scheme);
@@ -972,24 +1054,22 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
                 hash->release();
             }
 
-            constexpr char constexpr_context[] = "TLS 1.3, server CertificateVerify";
-            tosign.fill(64, 0x20);                                    // octet 32 (0x20) repeated 64 times
-            tosign << constexpr_context;                              // context string
+            constexpr char constexpr_context_server[] = "TLS 1.3, server CertificateVerify";
+            constexpr char constexpr_context_client[] = "TLS 1.3, client CertificateVerify";
+            tosign.fill(64, 0x20);  // octet 32 (0x20) repeated 64 times
+            if (role_server == role) {
+                tosign << constexpr_context_server;  // context string
+            } else {
+                tosign << constexpr_context_client;
+            }
             tosign.fill(1, 0x00);                                     // single 0 byte
             tosign.write(&transcripthash[0], transcripthash.size());  // content to be signed
 
-            // $ openssl x509 -pubkey -noout -in server.crt > server.pub
-            // public key from server certificate or handshake 0x11 certificate
-            crypto_key& key = session->get_tls_protection().get_keyexchange();
-            const char* kid = nullptr;
-            if (role_server == role) {
-                kid = "SC";  // Server Certificate
+            if (ecdsa_sig.empty()) {
+                ret = sign->verify(pkey, tosign.data(), tosign.size(), signature);
             } else {
-                kid = "CC";  // Client Certificate (Client Authentication, optional)
+                ret = sign->verify(pkey, tosign.data(), tosign.size(), ecdsa_sig);
             }
-            auto pkey = key.find(kid);
-
-            ret = sign->verify(pkey, tosign.data(), tosign.size(), handshake_hash);
 
             sign->release();
         } else {
@@ -997,14 +1077,20 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
         }
 
         s->autoindent(1);
-        s->printf(" > %s 0x%04x %s\n", constexpr_signature, scheme, tlsadvisor->signature_scheme_string(scheme).c_str());
+        s->printf(" > %s 0x%04x %s\n", constexpr_signature_alg, scheme, tlsadvisor->signature_scheme_string(scheme).c_str());
         s->printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
         s->printf(" > transcript-hash\n");
         dump_memory(transcripthash, s, 16, 3, 0x00, dump_notrunc);
         s->printf(" > tosign\n");
         dump_memory(tosign, s, 16, 3, 0x00, dump_notrunc);
-        s->printf(" > %s \e[1;33m%s\e[0m\n", constexpr_handshake_hash, (errorcode_t::success == ret) ? "true" : "false");
-        dump_memory(handshake_hash, s, 16, 3, 0x00, dump_notrunc);
+        s->printf(" > %s \e[1;33m%s\e[0m\n", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
+        dump_memory(signature, s, 16, 3, 0x00, dump_notrunc);
+        if (ecdsa_sig.size()) {
+            s->printf(" > ecdsa r\n");
+            dump_memory(ecdsa_sig_r, s, 16, 3, 0x00, dump_notrunc);
+            s->printf(" > ecdsa s\n");
+            dump_memory(ecdsa_sig_s, s, 16, 3, 0x00, dump_notrunc);
+        }
         s->autoindent(0);
     }
     __finally2 {

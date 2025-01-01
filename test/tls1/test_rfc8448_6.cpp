@@ -142,7 +142,7 @@ void test_rfc8448_6() {
             "1f 1a d4 aa 62 c3 60 49 71 3a 7b b1 35 fd da 66 61 a0 5a 93 f8"
             "c1 6f";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("encrypted_extensions certificate_request certificate certificate_verify", &session, bin_record, role_server);
+        dump_record("encrypted_extensions certificate_request certificate certificate_verify finished", &session, bin_record, role_server);
     }
     {
         // {server}  derive write traffic keys for handshake data
@@ -167,9 +167,6 @@ void test_rfc8448_6() {
         // {client}  construct a Certificate handshake message
         // {client}  construct a CertificateVerify handshake message
         // {client}  calculate finished "tls13 finished"
-
-        // TODO
-        // certificate_verify - failed
 
         const char* record =
             "17 03 03 02 80 b4 6a 63 93 4e 67 38"

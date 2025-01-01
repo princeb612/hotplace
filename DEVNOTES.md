@@ -201,7 +201,7 @@ flowchart LR
 
 sub-tasks
 
-- [ ] CBOR partial iv
+- [ ] COSE partial iv
 - [ ] shutdown DTLS peer connection
 - [ ] br(Brotli), zstd(Zstandard) HTTP encoding
 - [ ] HTTP/2 Authentication Scheme

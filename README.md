@@ -134,6 +134,7 @@
   * RFC 9106 Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications
   * [Authenticated Encryption with AES-CBC and HMAC-SHA](https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt)
     * sdk/crypto/basic/
+    * sdk/crypto/crypto/
     * test/crypto/
     * test/kdf/
 
@@ -143,17 +144,22 @@
   * RFC 6979 Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA)
   * [NIST CAVP (Cryptographic Algorithm Validation Program) ECDSA](https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures)
     * sdk/crypto/basic/
+    * sdk/crypto/crypto/
     * test/hash/
     * test/sign/
 
   * RFC 4347 Datagram Transport Layer Security
   * RFC 6347 Datagram Transport Layer Security Version 1.2
+  * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
   * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+  * RFC 8448 Example Handshake Traces for TLS 1.3
   * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
+  * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
     * sdk/net/tls/
     * test/tlsserver/
     * test/dtlsserver/
-  * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
+    * sdk/net/tls1/
+    * test/tls1/
 
 * Compression
   * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
@@ -191,8 +197,6 @@
   * RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
   * RFC 8422 Elliptic Curve Cryptography (ECC) Cipher Suites for Transport Layer Security (TLS) Versions 1.2 and Earlier
   * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
-  * RFC 8448 Example Handshake Traces for TLS 1.3
-  * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
 * ASN.1
   * ITU-T X.680-X.699
     * [X.680-X.693 : Information Technology - Abstract Syntax Notation One (ASN.1) & ASN.1 encoding rules](https://www.itu.int/rec/T-REC-X.680-X.693-202102-I/en)

@@ -67,6 +67,26 @@ void test_rfc8448_7() {
         dump_record("client_hello", &session, bin_record, role_client);
     }
     {
+        // {server}  create an ephemeral x25519 key pair
+        constexpr char constexpr_server[] = "server";
+        const char* x =
+            "3e 30 f0 f4 ba 55 1a fd 62 76 83 41 17 5f"
+            "52 65 e4 da f0 c8 84 16 17 aa 4f af dd 21 42 32 0c 22";
+        const char* y = nullptr;
+        const char* d =
+            "01 7c 38 a3 64 79 21 ca 2d 9e d6 bd 7a"
+            "e7 13 2b 94 21 1b 13 31 bb 20 8c 8c cd d5 15 56 40 99 95";
+        crypto_key& key = protection.get_keyexchange();
+        ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, nullptr, d, keydesc(constexpr_server));
+
+        _logger->writeln(constexpr_server);
+        dump_key(key.find(constexpr_server), &bs);
+        _logger->writeln(bs);
+        bs.clear();
+
+        _test_case.test(ret, __FUNCTION__, "ephemeral x25519 key pair");
+    }
+    {
         const char* record =
             "16 03 03 00 7a 02 00 00 76 03 03 e5"
             "dd 59 48 c4 35 f7 a3 8f 0f 01 30 70 8d c3 22 d9 df 09 ab d4 83"
@@ -77,6 +97,23 @@ void test_rfc8448_7() {
             "42 32 0c 22 00 2b 00 02 03 04";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("server_hello", &session, bin_record, role_server);
+    }
+    {
+        // {server}  extract secret "early"
+        test_keycalc(&session, tls_secret_early_secret, bin, "early", "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
+        // {server}  derive secret for handshake "tls13 derived"
+        test_keycalc(&session, tls_secret_handshake_derived, bin, "derived", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
+        // {server}  extract secret "handshake"
+        test_keycalc(&session, tls_secret_handshake, bin, "handshake", "f91761354a67e9b07c6dcc3a55707efa69c4519d8040e5f215121e0df69afa4a");
+        // {server}  derive secret "tls13 c hs traffic"
+        test_keycalc(&session, tls_secret_c_hs_traffic, bin, "c hs traffic", "2c3cb24a1081edb59518ee6861e89a6b72b3801afe7713e4cbbc21c0795bf831");
+        // {server}  derive secret "tls13 s hs traffic"
+        test_keycalc(&session, tls_secret_s_hs_traffic, bin, "s hs traffic", "cace3d555cc1c577cf970cff28cf978d6a9800085442e18d695b50f3151d18c8");
+        // {server}  derive secret for master "tls13 derived"
+        test_keycalc(&session, tls_secret_application_derived, bin, "application_derived", "5da12dc47835ba73fdd994b14ab7e63cc63f0d79162f6756e9a46756c8b2b642");
+        // {server}  derive write traffic keys for handshake data
+        test_keycalc(&session, tls_secret_handshake_server_key, bin, "handshake_server_key", "041091fdab29f2c8abfb156dc5fc8d54");
+        test_keycalc(&session, tls_secret_handshake_server_iv, bin, "handshake_server_iv", "7464d791685de05998fcbadb");
     }
     {
         const char* record = "14 03 03 00 01 01";
@@ -122,6 +159,22 @@ void test_rfc8448_7() {
         dump_record("encrypted_extensions certificate certificate_verify finished", &session, bin_record, role_server);
     }
     {
+        // {server}  derive secret "tls13 c ap traffic"
+        test_keycalc(&session, tls_secret_c_ap_traffic, bin, "c ap traffic", "743e4c6b56cf3909d1b06d01956ccd2c4b37758449aec41d98dae44924eaa299");
+        // {server}  derive secret "tls13 s ap traffic"
+        test_keycalc(&session, tls_secret_s_ap_traffic, bin, "s ap traffic", "b6b8144aa335ed3059c0c9c8f0ecabf7afc94af6643bdecdfd9210188fab7451");
+        // {server}  derive secret "tls13 exp master"
+        test_keycalc(&session, tls_secret_exp_master, bin, "exp master", "fb69121cea334db459e12272d179baca2369b643d11a6ac72b8b27a5c964feb1");
+        // {server}  derive write traffic keys for application data
+        test_keycalc(&session, tls_secret_application_server_key, bin, "application_server_key", "edc4cbd0041c28cc7167441d7ca53e6a");
+        test_keycalc(&session, tls_secret_application_server_iv, bin, "application_server_iv", "bf6c7d8e0a9545b427dcf139");
+        // {server}  derive read traffic keys for handshake data
+        test_keycalc(&session, tls_secret_handshake_client_key, bin, "handshake_client_key", "62d13c13ffd7402fc1c09e3d163665cb");
+        test_keycalc(&session, tls_secret_handshake_client_iv, bin, "handshake_client_iv", "7166f20028bf146dcfbd5a40");
+        // {client}  derive secret for handshake "tls13 derived"
+        test_keycalc(&session, tls_secret_handshake_derived, bin, "handshake_derived", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
+    }
+    {
         const char* record = "14 03 03 00 01 01";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("change_cipher_spec", &session, bin_record, role_client);
@@ -134,6 +187,13 @@ void test_rfc8448_7() {
             "dd 3c 6d 16";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("finished", &session, bin_record, role_client);
+    }
+    {
+        // {client}  derive write traffic keys for application data
+        test_keycalc(&session, tls_secret_application_client_key, bin, "application_client_key", "33d7f9709756c966488ad4438437e673");
+        test_keycalc(&session, tls_secret_application_client_iv, bin, "application_client_iv", "c5f30d34b0e91b7d6c8eea65");
+        // {client}  derive secret "tls13 res master"
+        test_keycalc(&session, tls_secret_res_master, bin, "res master", "0b5d4407cea0a42a3a81dd477647b7fe9180db297e5114f1ad8796b4dc475004");
     }
     {
         const char* record =
