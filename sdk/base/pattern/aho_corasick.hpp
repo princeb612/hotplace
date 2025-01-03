@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_BASE_PATTERN_AHO_CORASICK__
 #define __HOTPLACE_SDK_BASE_PATTERN_AHO_CORASICK__
 
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/pattern/pattern.hpp>
 
 namespace hotplace {
@@ -123,7 +124,7 @@ class t_aho_corasick {
         size_t size = 0;
         auto iter = _patterns.find(index);
         if (_patterns.end() != iter) {
-            size = iter->second;
+            size = iter->second.size();
         }
         return size;
     }
@@ -153,13 +154,27 @@ class t_aho_corasick {
         _patterns.clear();
     }
 
+    return_t get_pattern(size_t index, std::vector<BT>& pattern) {
+        return_t ret = errorcode_t::success;
+        auto iter = _patterns.find(index);
+        if (_patterns.end() != iter) {
+            pattern = iter->second;
+        } else {
+            ret = errorcode_t::not_found;
+            pattern.clear();
+        }
+        return ret;
+    }
+
    protected:
     virtual void doinsert(const T* pattern, size_t size) {
         if (pattern) {
             trienode* current = _root;
 
+            std::vector<BT> pat;
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(pattern, i);
+                pat.push_back(t);
                 trienode* child = current->children[t];
                 if (nullptr == child) {
                     child = new trienode;
@@ -170,7 +185,7 @@ class t_aho_corasick {
 
             size_t index = _patterns.size();
             current->output.insert(index);
-            _patterns.insert({index, size});
+            _patterns.insert({index, std::move(pat)});
         }
     }
     virtual void dobuild() {
@@ -260,7 +275,7 @@ class t_aho_corasick {
     virtual void dodestroy() { delete _root; }
 
     trienode* _root;
-    std::unordered_map<size_t, size_t> _patterns;
+    std::unordered_map<size_t, std::vector<BT>> _patterns;
     memberof_t _memberof;
 };
 

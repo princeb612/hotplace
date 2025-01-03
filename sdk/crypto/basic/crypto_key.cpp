@@ -95,34 +95,6 @@ return_t crypto_key::add(EVP_PKEY* pkey, const char* kid, crypto_use_t use, bool
     return ret;
 }
 
-return_t crypto_key::generate_oct(int nbits, const keydesc& desc) {
-    return_t ret = errorcode_t::success;
-    crypto_keychain keyset;
-    ret = keyset.add_oct(this, nbits, desc);
-    return ret;
-}
-
-return_t crypto_key::generate_rsa(uint32 nid, int nbits, const keydesc& desc) {
-    return_t ret = errorcode_t::success;
-    crypto_keychain keyset;
-    ret = keyset.add_rsa(this, nid, nbits, desc);
-    return ret;
-}
-
-return_t crypto_key::generate_ec(uint32 nid, const keydesc& desc) {
-    return_t ret = errorcode_t::success;
-    crypto_keychain keyset;
-    ret = keyset.add_ec(this, nid, desc);
-    return ret;
-}
-
-return_t crypto_key::generate_dh(uint32 nid, const keydesc& desc) {
-    return_t ret = errorcode_t::success;
-    crypto_keychain keyset;
-    ret = keyset.add_dh(this, nid, desc);
-    return ret;
-}
-
 return_t crypto_key::get_public_key(const EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2) {
     return_t ret = errorcode_t::success;
 

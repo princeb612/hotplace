@@ -83,7 +83,7 @@ class html_documents {
 
    private:
     critical_section _lock;
-    std::map<std::string, std::string> _root;           // map(uri, directory)
+    std::map<std::string, std::string> _urimap;         // map(uri, directory)
     std::map<std::string, time_t> _timestamp_map;       // store file timestamp
     std::map<std::string, binary_t> _cache_map;         // cache
     std::map<std::string, std::string> _content_types;  // map(ext, content_type)

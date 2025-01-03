@@ -151,7 +151,7 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
     __register TCHAR *p, *t;
     __register double fract;
     int dotrim = 0, expcnt, gformat = 0;
-    double integer, tmp;
+    double integer = 0, tmp = 0;
 
     expcnt = 0;
 
@@ -412,10 +412,10 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
     int fpprec = 0;                        /* `extra' floating precision in [eEfgG] */
 
 #if defined __SIZEOF_INT128__
-    // IPv6 128bits processing (supports %I128x)
+    // 128bits (supports %I128x)
     uint128 _ulong = 0;
 #else
-    // 64 bits 처리를 위해 변경하였다.
+    // 64 bits
     uint64 _ulong = 0; /* integer arguments %[diouxX] (including __int64) */
 #endif
 

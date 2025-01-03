@@ -132,11 +132,11 @@ time make
 
 # ctest
 if [ $do_ctest = 1 ]; then
-    cd ${HOTPLACE_HOME}/build/test/
+    cd ${HOTPLACE_HOME}/${builddir}/test/
     ctest
 fi
 # run build/test/test.sh
 if [ $do_test = 1 ]; then
-    cd ${HOTPLACE_HOME}/build/test/
+    cd ${HOTPLACE_HOME}/${builddir}/test/
     ./test.sh
 fi

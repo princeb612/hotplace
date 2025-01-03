@@ -10,6 +10,29 @@
 
 #include "sample.hpp"
 
+void test_aho_corasick_simple() {
+    t_aho_corasick<char> ac;
+    ac.insert("he", 2);
+    ac.insert("she", 3);
+    ac.insert("hers", 4);
+    ac.insert("his", 3);
+    ac.build();
+    const char* source = "ahishers";
+    std::multimap<range_t, unsigned> result;
+    std::multimap<range_t, unsigned> expect = {{range_t(1, 3), 3}, {range_t(3, 5), 1}, {range_t(4, 5), 0}, {range_t(4, 7), 2}};
+    result = ac.search(source, strlen(source));
+
+    _logger->writeln(R"(source "%s")", source);
+    for (auto item : result) {
+        size_t begin = item.first.begin;
+        unsigned patid = item.second;
+        std::vector<char> pat;
+        ac.get_pattern(patid, pat);
+        _logger->writeln(R"(pos [%zi] pattern[%i] "%.*s")", begin, patid, pat.size(), &pat[0]);
+    }
+    _test_case.assert(result == expect, __FUNCTION__, "Aho Corasick algorithm");
+}
+
 void test_aho_corasick() {
     _test_case.begin("t_aho_corasick");
 
@@ -98,19 +121,4 @@ void test_aho_corasick() {
 
         _test_case.assert(item.expects == result, __FUNCTION__, R"(multiple pattern search "%s")", item.source);
     }
-
-    t_aho_corasick<char> ac;
-    ac.insert("he", 2);
-    ac.insert("she", 3);
-    ac.insert("hers", 4);
-    ac.insert("his", 3);
-    ac.build();
-    const char* source = "ahishers";
-    std::multimap<range_t, unsigned> result;
-    std::multimap<range_t, unsigned> expect = {{range_t(1, 3), 3}, {range_t(3, 5), 1}, {range_t(4, 5), 0}, {range_t(4, 7), 2}};
-    result = ac.search(source, strlen(source));
-    for (auto item : result) {
-        _logger->writeln("pos [%zi] pattern[%i]", item.first, item.second);
-    }
-    _test_case.assert(result == expect, __FUNCTION__, "Aho Corasick algorithm");
 }

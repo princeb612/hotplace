@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/pattern/aho_corasick.hpp>
 #include <sdk/base/string/string.hpp>
 #include <sdk/io/stream/file_stream.hpp>
 #include <sdk/net/http/html_documents.hpp>
@@ -36,7 +37,7 @@ html_documents& html_documents::add_documents_root(const std::string& root_uri, 
     if (false == ends_with(tdir, DIR_SEP_T)) {
         tdir += DIR_SEP_T;
     }
-    _root.insert(std::make_pair(turi, tdir));
+    _urimap.insert(std::make_pair(turi, tdir));
 
     _use = true;
 
@@ -60,19 +61,22 @@ bool html_documents::get_local(const std::string& uri, std::string& local) {
     local.clear();
 
     critical_section_guard guard(_lock);
-    for (auto item : _root) {
-        size_t pos = uri.find(item.first);
-        if (std::string::npos != pos) {
-            local = uri;
-            replace(local, item.first, item.second);
-            if (ends_with(uri, "/")) {
-                local += _document;  // index.html
+    size_t pos = 0;
+    pos = uri.find("..");
+    if (std::string::npos == pos) {
+        for (auto item : _urimap) {
+            pos = uri.find(item.first);
+            if (std::string::npos != pos) {
+                local = uri;
+                replace(local, item.first, item.second);
+                if (ends_with(uri, "/")) {
+                    local += _document;  // index.html
+                }
+                ret_value = true;
+                break;
             }
-            ret_value = true;
-            break;
         }
     }
-
     return ret_value;
 }
 

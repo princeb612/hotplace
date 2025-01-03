@@ -55,10 +55,8 @@ void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const binary_
                 _logger->writeln("%s", bs.c_str());
             }
             if (option.verbose) {
-                dump_memory(input, &bs);
-                _logger->writeln("input\n%s", bs.c_str());
-                dump_memory(signature, &bs);
-                _logger->writeln("sig\n%s", bs.c_str());
+                _logger->hdump("input", input);
+                _logger->hdump("signature", signature);
             }
         }
         _test_case.test(ret, __FUNCTION__, "ECDSA.openssl_sign %s %s", hint ? hint->name : "", hashalg);

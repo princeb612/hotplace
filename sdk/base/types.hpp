@@ -95,6 +95,8 @@ enum encoding_t {
     encoding_base64url,
 };
 
+#define UINT128(hi, lo) (((__uint128_t)(hi)) << 64 | (lo))
+
 #ifndef _WIN32  // winnt.h
 #define RTL_NUMBER_OF(x) (sizeof(x) / sizeof(x[0]))
 #define RTL_FIELD_TYPE(type, field) (((type *)0)->field)

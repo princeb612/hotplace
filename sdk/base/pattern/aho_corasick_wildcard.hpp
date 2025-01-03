@@ -162,8 +162,10 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
             size_t count_any = 0;
             int modes = 0;  // begins with *, ends with * (see hidden_tag_mode_t)
 
+            std::vector<BT> pat;
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(pattern, i);
+                pat.push_back(t);
 
                 trienode* child = current->children[t];
                 if (nullptr == child) {
@@ -195,7 +197,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
             }
 
             current->output.insert(index);
-            _patterns.insert({index, size});
+            _patterns.insert({index, std::move(pat)});
             if (count_any) {
                 auto prefix_index = index + baseof_prefix;
                 _hidden[prefix_index].adjust = size - count_any;

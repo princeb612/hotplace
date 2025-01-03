@@ -89,9 +89,9 @@ void tls_advisor::load_tls_parameters() {
         auto item = tls_psk_keyexchange_descs + i;
         _psk_keyexchange_descs.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_sig_scheme_descs; i++) {
-        auto item = tls_sig_scheme_descs + i;
-        _sig_scheme_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_sig_schemes; i++) {
+        auto item = tls_sig_schemes + i;
+        _sig_schemes.insert({item->code, item});
     }
     for (auto i = 0; i < sizeof_tls_supported_group_descs; i++) {
         auto item = tls_supported_group_descs + i;
@@ -178,6 +178,15 @@ const hint_digest_t* tls_advisor::hintof_digest(uint16 code) {
     if (hint_alg) {
         crypto_advisor* advisor = crypto_advisor::get_instance();
         hint = advisor->hintof_digest(hint_alg->mac);
+    }
+    return hint;
+}
+
+const tls_sig_scheme_t* tls_advisor::hintof_signature_scheme(uint16 code) {
+    const tls_sig_scheme_t* hint = nullptr;
+    auto iter = _sig_schemes.find(code);
+    if (_sig_schemes.end() != iter) {
+        hint = iter->second;
     }
     return hint;
 }
@@ -288,8 +297,8 @@ std::string tls_advisor::psk_key_exchange_mode_string(uint8 mode) {
 
 std::string tls_advisor::signature_scheme_string(uint16 code) {
     std::string value;
-    auto iter = _sig_scheme_descs.find(code);
-    if (_sig_scheme_descs.end() != iter) {
+    auto iter = _sig_schemes.find(code);
+    if (_sig_schemes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }

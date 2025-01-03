@@ -64,7 +64,6 @@ declare_tls_resource(hash_alg_desc, uint8);
 declare_tls_resource(kdf_id_desc, uint16);
 declare_tls_resource(psk_keyexchange_desc, uint8);
 declare_tls_resource(sig_alg_desc, uint8);
-declare_tls_resource(sig_scheme_desc, uint16);
 declare_tls_resource(supported_group_desc, uint16);
 
 // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
@@ -92,6 +91,16 @@ extern const size_t sizeof_tls_cipher_suites;
 hash_algorithm_t algof_mac(const tls_cipher_suite_t* info);
 hash_algorithm_t algof_mac1(const tls_cipher_suite_t* info);
 
+struct tls_sig_scheme_t {
+    uint16 code;
+    crypt_sig_type_t sigtype;  // crypt_sig_rsassa_pkcs15, crypt_sig_ecdsa, crypt_sig_rsassa_pss, crypt_sig_eddsa
+    uint32 nid;
+    crypt_sig_t sig;  // sig_rs256, ..., sig_es256, ..., sig_ps256, ..., sig_eddsa, sig_sha1, sig_sha256, ...
+    const char* desc;
+};
+extern const tls_sig_scheme_t tls_sig_schemes[];
+extern const size_t sizeof_tls_sig_schemes;
+
 class tls_advisor {
    public:
     static tls_advisor* get_instance();
@@ -100,6 +109,7 @@ class tls_advisor {
     const tls_cipher_suite_t* hintof_cipher_suite(uint16 code);
     const hint_blockcipher_t* hintof_blockcipher(uint16 code);
     const hint_digest_t* hintof_digest(uint16 code);
+    const tls_sig_scheme_t* hintof_signature_scheme(uint16 code);
     hash_algorithm_t hash_alg_of(uint16 code);
 
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
@@ -160,7 +170,7 @@ class tls_advisor {
     std::map<uint8, const tls_handshake_type_desc_t*> _handshake_type_descs;
     std::map<uint8, const tls_kdf_id_desc_t*> _kdf_id_descs;
     std::map<uint8, const tls_psk_keyexchange_desc_t*> _psk_keyexchange_descs;
-    std::map<uint16, const tls_sig_scheme_desc_t*> _sig_scheme_descs;
+    std::map<uint16, const tls_sig_scheme_t*> _sig_schemes;
     std::map<uint16, const tls_supported_group_desc_t*> _supported_group_descs;
 
     // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml

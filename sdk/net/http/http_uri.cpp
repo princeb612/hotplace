@@ -44,7 +44,10 @@ return_t http_uri::open(const char* uri) {
         close();
 
         url_info_t url_info;
-        split_url(uri, &url_info);
+        ret = split_url(uri, &url_info);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         _uri = url_info.uri;
         _uripath = url_info.uripath;

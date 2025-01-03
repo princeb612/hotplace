@@ -214,12 +214,14 @@ enum nid_t : uint32 {
 };
 
 enum crypt_sig_type_t : uint8 {
+    crypt_sig_unknown = 255,
     crypt_sig_dgst = 0,
     crypt_sig_hmac = 1,
     crypt_sig_rsassa_pkcs15 = 2,
     crypt_sig_ecdsa = 3,
     crypt_sig_rsassa_pss = 4,
     crypt_sig_eddsa = 5,
+    crypt_sig_dsa = 6,
 };
 enum crypt_sig_t : uint16 {
     sig_unknown = 0,

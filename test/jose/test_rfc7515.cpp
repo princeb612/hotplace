@@ -538,18 +538,19 @@ void test_rfc7515_bykeygen() {
 
     return_t ret = errorcode_t::success;
     crypto_key key;
+    crypto_keychain keychain;
 
-    key.generate_oct(256, keydesc("sample"));
-    key.generate_rsa(nid_rsa, 2048, keydesc("sample"));
-    key.generate_ec(ec_p256, keydesc("sample"));
+    keychain.add_oct(&key, 256, keydesc("sample"));
+    keychain.add_rsa(&key, nid_rsa, 2048, keydesc("sample"));
+    keychain.add_ec(&key, ec_p256, keydesc("sample"));
 
-    key.generate_oct(256, keydesc("HS256"));
-    key.generate_rsa(nid_rsa, 2048, keydesc("RS256"));
-    key.generate_rsa(nid_rsa, 2048, keydesc("RS384"));
-    key.generate_rsa(nid_rsa, 2048, keydesc("RS512"));
-    key.generate_ec(ec_p256, keydesc("ES256"));
-    key.generate_ec(ec_p384, keydesc("ES384"));
-    key.generate_ec(ec_p521, keydesc("ES512"));
+    keychain.add_oct(&key, 256, keydesc("HS256"));
+    keychain.add_rsa(&key, nid_rsa, 2048, keydesc("RS256"));
+    keychain.add_rsa(&key, nid_rsa, 2048, keydesc("RS384"));
+    keychain.add_rsa(&key, nid_rsa, 2048, keydesc("RS512"));
+    keychain.add_ec(&key, ec_p256, keydesc("ES256"));
+    keychain.add_ec(&key, ec_p384, keydesc("ES384"));
+    keychain.add_ec(&key, ec_p521, keydesc("ES512"));
 
     json_web_signature jws;
     std::string signature;

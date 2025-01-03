@@ -704,6 +704,18 @@ void test_documents() {
     _test_case.assert("text/css" == content_type, __FUNCTION__, "content-type #2");
     docs.get_content_type("/index.json", content_type);
     _test_case.assert("text/json" == content_type, __FUNCTION__, "content-type #3");
+
+    bool test = true;
+    std::string local;
+    std::string uri;
+
+    uri = "/test.html";
+    test = docs.get_local(uri, local);
+    _test_case.assert(test, __FUNCTION__, "uri %s local %s", uri.c_str(), local.c_str());
+
+    uri = "/../test.html";
+    test = docs.get_local(uri, local);
+    _test_case.nassert(test, __FUNCTION__, "uri %s local %s", uri.c_str(), local.c_str());
 }
 
 /*
@@ -757,15 +769,13 @@ void test_get_tlsclient() {
                     ret = cli.read(sock, handle, buf, sizeof(buf), &sizeread);
 
                     if (option.verbose) {
-                        dump_memory((byte_t *)buf, sizeread, &bs);
-                        _logger->writeln("%s", bs.c_str());
+                        _logger->dump((byte_t *)buf, sizeread);
                     }
                     while (errorcode_t::more_data == ret) {
                         ret = cli.more(sock, handle, buf, sizeof(buf), &sizeread);
 
                         if (option.verbose) {
-                            dump_memory((byte_t *)buf, sizeread, &bs);
-                            _logger->writeln("%s", bs.c_str());
+                            _logger->dump((byte_t *)buf, sizeread);
                         }
                     }
                 } else {

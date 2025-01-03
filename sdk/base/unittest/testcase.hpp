@@ -99,6 +99,11 @@ class test_case {
     void assert(bool expect, const char* test_function, const char* message, ...);
     void assert(bool expect, const char* test_function, const char* message, va_list ap);
     /**
+     * @brief   expect failure
+     */
+    void nassert(bool expect, const char* test_function, const char* message, ...);
+    void nassert(bool expect, const char* test_function, const char* message, va_list ap);
+    /**
      * @brief   test
      * @param   return_t result [in]
      * @param   const char* test_function [in]
@@ -107,6 +112,11 @@ class test_case {
      */
     void test(return_t result, const char* test_function, const char* message, ...);
     void test(return_t result, const char* test_function, const char* message, va_list ap);
+    /**
+     * @brief   expect failure
+     */
+    void ntest(return_t result, const char* test_function, const char* message, ...);
+    void ntest(return_t result, const char* test_function, const char* message, va_list ap);
     /**
      * @brief   report
      * @param   uint32 top_count [inopt] oder by test-time, and list top

@@ -523,6 +523,7 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
         }
         if ((cose_hint_flag_t::cose_hint_epk | cose_hint_static_key) & flags) {
             crypto_key statickey;
+            crypto_keychain keychain;
             binary_t bin_x;
             binary_t bin_y;
             cose_ec_curve_t curve = hint->eckey.curve;
@@ -534,7 +535,7 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
                 cosekey = cose_static_key;  // -2
             }
             uint32 nid = advisor->curveof(curve);
-            statickey.generate_ec(nid, keydesc());
+            keychain.add_ec(&statickey, nid, keydesc());
             statickey.get_public_key(statickey.any(), bin_x, bin_y);
             layer->get_unprotected().add(cosekey, curve, bin_x, bin_y);
         }

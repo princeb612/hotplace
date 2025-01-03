@@ -30,6 +30,7 @@ struct pattern_t {
 };
 
 void test_kmp();
+void test_aho_corasick_simple();
 void test_aho_corasick();
 void test_trie();
 void test_trie_autocompletion();

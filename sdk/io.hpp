@@ -54,4 +54,10 @@
 #include <sdk/io/system/windows/windows_registry.hpp>
 #endif
 
+/* asn.1 */
+#include <sdk/io/asn.1/asn1.hpp>
+#include <sdk/io/asn.1/asn1_visitor.hpp>
+#include <sdk/io/asn.1/template.hpp>
+#include <sdk/io/asn.1/types.hpp>
+
 #endif

@@ -292,6 +292,22 @@ void test_case::assert(bool expect, const char* test_function, const char* messa
     test(ret, test_function, tltle.c_str());
 }
 
+void test_case::nassert(bool expect, const char* test_function, const char* message, ...) {
+    va_list ap;
+    va_start(ap, message);
+    nassert(expect, test_function, message, ap);
+    va_end(ap);
+}
+
+void test_case::nassert(bool expect, const char* test_function, const char* message, va_list ap) {
+    return_t ret = (false == expect) ? expect_failure : unexpected;
+    basic_stream tltle;
+    if (message) {
+        tltle.vprintf(message, ap);
+    }
+    test(ret, test_function, tltle.c_str());
+}
+
 void test_case::test(return_t result, const char* test_function, const char* message, ...) {
     va_list ap;
     va_start(ap, message);
@@ -404,6 +420,18 @@ void test_case::test(return_t result, const char* test_function, const char* mes
         }
     }
     __finally2 { reset_time(); }
+}
+
+void test_case::ntest(return_t result, const char* test_function, const char* message, ...) {
+    va_list ap;
+    va_start(ap, message);
+    ntest(result, test_function, message, ap);
+    va_end(ap);
+}
+
+void test_case::ntest(return_t result, const char* test_function, const char* message, va_list ap) {
+    return_t ret = (errorcode_t::success != result) ? expect_failure : unexpected;
+    test(ret, test_function, message, ap);
 }
 
 constexpr char constexpr_success[] = "success";

@@ -48,7 +48,7 @@ uint8 ieee754_as_small_as_possible(variant& vt, float fp) {
 
     vt.set_fp32(fp);
     fp32.fp = fp;
-    if ((0 == (0x3ff & fp32.storage)) && (0x7f800000 != (0x7f800000 & fp32.storage))) {
+    if ((0 == (0x3ff & fp32.storage)) && (fp32_pinf != (fp32_pinf & fp32.storage))) {
         uint16 bin16 = fp16_from_fp32(fp32.storage);
         if (0x7c00 != (0x7c00 & bin16)) {
             vt.set_fp16(bin16);
@@ -65,11 +65,11 @@ uint8 ieee754_as_small_as_possible(variant& vt, double fp) {
     vt.set_fp64(fp);
     fp64.fp = fp;
     bool cond1 = (0 == (0x7fffff & fp64.storage));
-    bool cond2 = (0x7ff0000000000000 == (0x7ff0000000000000 & fp64.storage));
+    bool cond2 = (fp64_pinf == (fp64_pinf & fp64.storage));
     if (cond1 && !cond2) {
         fp32_t fp32;
         fp32.fp = fp;
-        if (0x7f800000 != (0x7f800000 & fp32.storage)) {
+        if (fp32_pinf != (fp32_pinf & fp32.storage)) {
             // variant_set_float (fp32.fp);
             // ret = 4;
             ret = ieee754_as_small_as_possible(vt, fp32.fp);
@@ -372,7 +372,7 @@ ieee754_typeof_t ieee754_exp(float value, int* s, int* e, float* m) {
                 break;
             default:
                 exponent = ((b32 >> 23) & 0x000000ff) - bias_m1;
-                mantissa = fp32_from_binary32((b32 & 0x807fffff) | (bias_m1 << 23));
+                mantissa = fp32_from_binary32((b32 & ~fp32_pinf) | (bias_m1 << 23));
                 break;
         }
     }
@@ -415,7 +415,7 @@ ieee754_typeof_t ieee754_exp(double value, int* s, int* e, double* m) {
                 break;
             default:
                 exponent = ((b64 >> 52) & 0x000007ff) - bias_m1;
-                mantissa = fp64_from_binary64((b64 & 0x800fffffffffffff) | (bias_m1 << 52));
+                mantissa = fp64_from_binary64((b64 & ~fp64_pinf) | (bias_m1 << 52));
                 break;
         }
     }

@@ -89,6 +89,7 @@ void test_okp() {
     return_t ret = errorcode_t::success;
     json_object_signing_encryption jose;
     crypto_key key;
+    crypto_keychain keychain;
     bool result = true;
     jose_context_t* handle = nullptr;
 
@@ -98,10 +99,10 @@ void test_okp() {
     binary_t source;
     std::string signature;
 
-    key.generate_ec(ec_x25519, keydesc("test1", crypto_use_t::use_enc));
-    key.generate_ec(ec_ed25519, keydesc("test2", crypto_use_t::use_sig));
-    key.generate_ec(ec_x448, keydesc("test3", crypto_use_t::use_enc));
-    key.generate_ec(ec_ed448, keydesc("test4", crypto_use_t::use_sig));
+    keychain.add_ec(&key, ec_x25519, keydesc("test1", crypto_use_t::use_enc));
+    keychain.add_ec(&key, ec_ed25519, keydesc("test2", crypto_use_t::use_sig));
+    keychain.add_ec(&key, ec_x448, keydesc("test3", crypto_use_t::use_enc));
+    keychain.add_ec(&key, ec_ed448, keydesc("test4", crypto_use_t::use_sig));
     key.for_each(dump_crypto_key, nullptr);
 
     jose.open(&handle, &key);

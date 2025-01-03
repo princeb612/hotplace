@@ -17,6 +17,8 @@ namespace net {
 // keep single line
 #define ENTRY(x, y) \
     { x, y }
+#define ENTRY5(e1, e2, e3, e4, e5) \
+    { e1, e2, e3, e4, e5 }
 
 define_tls_variable(alert_level_desc) = {
     ENTRY(1, "warning"),
@@ -513,47 +515,47 @@ define_tls_variable(sig_alg_desc) = {
 };
 define_tls_sizeof_variable(sig_alg_desc);
 
-define_tls_variable(sig_scheme_desc) = {
-    ENTRY(0x0201, "rsa_pkcs1_sha1"),
-    ENTRY(0x0203, "ecdsa_sha1"),
-    ENTRY(0x0401, "rsa_pkcs1_sha256"),        // RFC 8446 9.1 MUST
-    ENTRY(0x0403, "ecdsa_secp256r1_sha256"),  // RFC 8446 9.1 MUST
-    ENTRY(0x0420, "rsa_pkcs1_sha256_legacy"),
-    ENTRY(0x0501, "rsa_pkcs1_sha384"),
-    ENTRY(0x0503, "ecdsa_secp384r1_sha384"),
-    ENTRY(0x0520, "rsa_pkcs1_sha384_legacy"),
-    ENTRY(0x0601, "rsa_pkcs1_sha512"),
-    ENTRY(0x0603, "ecdsa_secp521r1_sha512"),
-    ENTRY(0x0620, "rsa_pkcs1_sha512_legacy"),
-    ENTRY(0x0704, "eccsi_sha256"),
-    ENTRY(0x0705, "iso_ibs1"),
-    ENTRY(0x0706, "iso_ibs2"),
-    ENTRY(0x0707, "iso_chinese_ibs"),
-    ENTRY(0x0708, "sm2sig_sm3"),
-    ENTRY(0x0709, "gostr34102012_256a"),
-    ENTRY(0x070a, "gostr34102012_256b"),
-    ENTRY(0x070b, "gostr34102012_256c"),
-    ENTRY(0x070c, "gostr34102012_256d"),
-    ENTRY(0x070d, "gostr34102012_512a"),
-    ENTRY(0x070e, "gostr34102012_512b"),
-    ENTRY(0x070f, "gostr34102012_512c"),
-    ENTRY(0x0804, "rsa_pss_rsae_sha256"),  // RFC 8446 9.1 MUST
-    ENTRY(0x0805, "rsa_pss_rsae_sha384"),
-    ENTRY(0x0806, "rsa_pss_rsae_sha512"),
-    ENTRY(0x0807, "ed25519"),
-    ENTRY(0x0808, "ed448"),
-    ENTRY(0x0809, "rsa_pss_pss_sha256"),
-    ENTRY(0x080a, "rsa_pss_pss_sha384"),
-    ENTRY(0x080b, "rsa_pss_pss_sha512"),
-    ENTRY(0x081a, "ecdsa_brainpoolP256r1tls13_sha256"),
-    ENTRY(0x081b, "ecdsa_brainpoolP384r1tls13_sha384"),
-    ENTRY(0x081c, "ecdsa_brainpoolP512r1tls13_sha512"),
-    ENTRY(0x0202, "dsa_sha1_RESERVED"),
-    ENTRY(0x0402, "dsa_sha256_RESERVED"),
-    ENTRY(0x0502, "dsa_sha384_RESERVED"),
-    ENTRY(0x0602, "dsa_sha512_RESERVED"),
+const tls_sig_scheme_t tls_sig_schemes[] = {
+    ENTRY5(0x0201, crypt_sig_rsassa_pkcs15, nid_rsa, sig_sha1, "rsa_pkcs1_sha1"),
+    ENTRY5(0x0203, crypt_sig_ecdsa, 0, sig_sha1, "ecdsa_sha1"),
+    ENTRY5(0x0401, crypt_sig_rsassa_pkcs15, nid_rsa, sig_sha256, "rsa_pkcs1_sha256"),             // RFC 8446 9.1 MUST
+    ENTRY5(0x0403, crypt_sig_ecdsa, NID_X9_62_prime256v1, sig_sha256, "ecdsa_secp256r1_sha256"),  // RFC 8446 9.1 MUST
+    ENTRY5(0x0420, crypt_sig_rsassa_pkcs15, nid_rsa, sig_sha256, "rsa_pkcs1_sha256_legacy"),
+    ENTRY5(0x0501, crypt_sig_rsassa_pkcs15, nid_rsa, sig_sha384, "rsa_pkcs1_sha384"),
+    ENTRY5(0x0503, crypt_sig_ecdsa, NID_secp384r1, sig_sha384, "ecdsa_secp384r1_sha384"),
+    ENTRY5(0x0520, crypt_sig_rsassa_pkcs15, nid_rsa, sig_sha384, "rsa_pkcs1_sha384_legacy"),
+    ENTRY5(0x0601, crypt_sig_rsassa_pkcs15, nid_rsa, sig_sha512, "rsa_pkcs1_sha512"),
+    ENTRY5(0x0603, crypt_sig_ecdsa, NID_secp521r1, sig_sha512, "ecdsa_secp521r1_sha512"),
+    ENTRY5(0x0620, crypt_sig_rsassa_pkcs15, nid_rsa, sig_sha512, "rsa_pkcs1_sha512_legacy"),
+    ENTRY5(0x0704, crypt_sig_unknown, 0, sig_sha256, "eccsi_sha256"),                  // TODO
+    ENTRY5(0x0705, crypt_sig_unknown, 0, sig_unknown, "iso_ibs1"),                     // TODO
+    ENTRY5(0x0706, crypt_sig_unknown, 0, sig_unknown, "iso_ibs2"),                     // TODO
+    ENTRY5(0x0707, crypt_sig_unknown, 0, sig_unknown, "iso_chinese_ibs"),              // TODO
+    ENTRY5(0x0708, crypt_sig_unknown, 0, sig_unknown, "sm2sig_sm3"),                   // TODO
+    ENTRY5(0x0709, crypt_sig_unknown, 0, sig_unknown, "gostr34102012_256a"),           // TODO
+    ENTRY5(0x070a, crypt_sig_unknown, 0, sig_unknown, "gostr34102012_256b"),           // TODO
+    ENTRY5(0x070b, crypt_sig_unknown, 0, sig_unknown, "gostr34102012_256c"),           // TODO
+    ENTRY5(0x070c, crypt_sig_unknown, 0, sig_unknown, "gostr34102012_256d"),           // TODO
+    ENTRY5(0x070d, crypt_sig_unknown, 0, sig_unknown, "gostr34102012_512a"),           // TODO
+    ENTRY5(0x070e, crypt_sig_unknown, 0, sig_unknown, "gostr34102012_512b"),           // TODO
+    ENTRY5(0x070f, crypt_sig_unknown, 0, sig_unknown, "gostr34102012_512c"),           // TODO
+    ENTRY5(0x0804, crypt_sig_rsassa_pss, nid_rsa, sig_sha256, "rsa_pss_rsae_sha256"),  // RFC 8446 9.1 MUST
+    ENTRY5(0x0805, crypt_sig_rsassa_pss, nid_rsa, sig_sha384, "rsa_pss_rsae_sha384"),
+    ENTRY5(0x0806, crypt_sig_rsassa_pss, nid_rsa, sig_sha512, "rsa_pss_rsae_sha512"),
+    ENTRY5(0x0807, crypt_sig_eddsa, NID_ED25519, sig_unknown, "ed25519"),
+    ENTRY5(0x0808, crypt_sig_eddsa, NID_ED448, sig_unknown, "ed448"),
+    ENTRY5(0x0809, crypt_sig_rsassa_pss, nid_rsapss, sig_sha256, "rsa_pss_pss_sha256"),
+    ENTRY5(0x080a, crypt_sig_rsassa_pss, nid_rsapss, sig_sha384, "rsa_pss_pss_sha384"),
+    ENTRY5(0x080b, crypt_sig_rsassa_pss, nid_rsapss, sig_sha512, "rsa_pss_pss_sha512"),
+    ENTRY5(0x081a, crypt_sig_ecdsa, NID_brainpoolP256r1, sig_sha256, "ecdsa_brainpoolP256r1tls13_sha256"),
+    ENTRY5(0x081b, crypt_sig_ecdsa, NID_brainpoolP384r1, sig_sha384, "ecdsa_brainpoolP384r1tls13_sha384"),
+    ENTRY5(0x081c, crypt_sig_ecdsa, NID_brainpoolP512r1, sig_sha512, "ecdsa_brainpoolP512r1tls13_sha512"),
+    ENTRY5(0x0202, crypt_sig_dsa, 0, sig_sha1, "dsa_sha1_RESERVED"),      // TODO
+    ENTRY5(0x0402, crypt_sig_dsa, 0, sig_sha256, "dsa_sha256_RESERVED"),  // TODO
+    ENTRY5(0x0502, crypt_sig_dsa, 0, sig_sha384, "dsa_sha384_RESERVED"),  // TODO
+    ENTRY5(0x0602, crypt_sig_dsa, 0, sig_sha512, "dsa_sha512_RESERVED"),  // TODO
 };
-define_tls_sizeof_variable(sig_scheme_desc);
+define_tls_sizeof_variable(sig_scheme);
 
 define_tls_variable(supported_group_desc) = {
     // RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)

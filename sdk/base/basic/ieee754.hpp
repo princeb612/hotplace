@@ -117,6 +117,8 @@ typedef union _fp64_t {
     double fp;
 } fp64_t;
 
+// long double - x86 extended precision (80 bits)
+
 static inline uint32 binary32_from_fp32(float fp) {
     fp32_t temp;
 
@@ -173,7 +175,10 @@ enum ieee754_typeof_t {
     ieee754_half_precision,
     ieee754_single_precision,
     ieee754_double_precision,
+
+    ieee754_extended_precision,
     ieee754_quadruple_precision,
+    ieee754_octuple_precision,
 };
 ieee754_typeof_t ieee754_typeof(uint16 f);
 ieee754_typeof_t ieee754_typeof(float f);

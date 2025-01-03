@@ -922,52 +922,75 @@ return_t tls_dump_server_hello_done(stream_t* s, tls_session* session, const byt
     return ret;
 }
 
-void asn1_der_ecdsa_signature(const EVP_PKEY* pkey, const binary_t& signature, binary_t& r, binary_t& s) {
-    // ASN.1 DER
-    constexpr char constexpr_sequence[] = "sequence";
-    constexpr char constexpr_len[] = "len";
-    constexpr char constexpr_rlen[] = "rlen";
-    constexpr char constexpr_r[] = "r";
-    constexpr char constexpr_slen[] = "slen";
-    constexpr char constexpr_s[] = "s";
-    payload pl;
-    pl << new payload_member(uint8(0), constexpr_sequence) << new payload_member(uint8(0), constexpr_len) << new payload_member(uint8(0))  // 2 asn1_tag_integer
-       << new payload_member(uint8(0), constexpr_rlen) << new payload_member(binary_t(), constexpr_r) << new payload_member(uint8(0))      // 2 asn1_tag_integer
-       << new payload_member(uint8(0), constexpr_slen) << new payload_member(binary_t(), constexpr_s);
+return_t asn1_der_ecdsa_signature(uint16 scheme, const binary_t& signature, binary_t& r, binary_t& s) {
+    return_t ret = errorcode_t::success;
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-    pl.set_reference_value(constexpr_r, constexpr_rlen);
-    pl.set_reference_value(constexpr_s, constexpr_slen);
+    __try2 {
+        auto hint = tlsadvisor->hintof_signature_scheme(scheme);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        if (crypt_sig_ecdsa != hint->sigtype) {
+            ret = errorcode_t::bad_request;
+            __leave2;
+        }
+        auto sig = hint->sig;
+        uint32 unitsize = 0;
 
-    size_t spos = 0;
-    pl.read(&signature[0], signature.size(), spos);
+        switch (sig) {
+            case sig_sha256:
+                unitsize = 32;
+                break;
+            case sig_sha384:
+                unitsize = 48;
+                break;
+            case sig_sha512:
+                unitsize = 66;
+                break;
+        }
+        if (0 == unitsize) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
 
-    pl.get_binary(constexpr_r, r);
-    pl.get_binary(constexpr_s, s);
+        // ASN.1 DER
+        constexpr char constexpr_sequence[] = "sequence";
+        constexpr char constexpr_len[] = "len";
+        constexpr char constexpr_rlen[] = "rlen";
+        constexpr char constexpr_r[] = "r";
+        constexpr char constexpr_slen[] = "slen";
+        constexpr char constexpr_s[] = "s";
+        payload pl;
+        pl << new payload_member(uint8(0), constexpr_sequence) << new payload_member(uint8(0), constexpr_len)
+           << new payload_member(uint8(0))                                                                 // 2 asn1_tag_integer
+           << new payload_member(uint8(0), constexpr_rlen) << new payload_member(binary_t(), constexpr_r)  //
+           << new payload_member(uint8(0))                                                                 // 2 asn1_tag_integer
+           << new payload_member(uint8(0), constexpr_slen) << new payload_member(binary_t(), constexpr_s);
 
-    uint32 unitsize = 0;
-    uint32 nid = 0;
-    nidof_evp_pkey(pkey, nid);
+        pl.set_reference_value(constexpr_r, constexpr_rlen);
+        pl.set_reference_value(constexpr_s, constexpr_slen);
 
-    switch (nid) {
-        case ec_p256:
-            unitsize = 32;
-            break;
-        case ec_p384:
-            unitsize = 48;
-            break;
-        case ec_p521:
-            unitsize = 66;
-            break;
+        size_t spos = 0;
+        pl.read(&signature[0], signature.size(), spos);
+
+        pl.get_binary(constexpr_r, r);
+        pl.get_binary(constexpr_s, s);
+
+        if (r.size() > unitsize) {
+            auto d = r.size() - unitsize;
+            r.erase(r.begin(), r.begin() + d);
+        }
+        if (s.size() > unitsize) {
+            auto d = s.size() - unitsize;
+            s.erase(s.begin(), s.begin() + d);
+        }
     }
-
-    if (r.size() > unitsize) {
-        auto d = r.size() - unitsize;
-        r.erase(r.begin(), r.begin() + d);
+    __finally2 {
+        // do nothing
     }
-    if (s.size() > unitsize) {
-        auto d = s.size() - unitsize;
-        s.erase(s.begin(), s.begin() + d);
-    }
+    return ret;
 }
 
 return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role) {
@@ -1019,6 +1042,11 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
          * EdDSA          | Ed448   | 114 bytes
          * RSA-PCKS1 v1.5 | RSA     |
          *
+         * ECDSA signature
+         * hash     | R  | S  | R||S
+         * sha2-256 | 32 | 32 | 64
+         * sha2-384 | 48 | 48 | 96
+         * sha2-512 | 66 | 66 | 132
          */
         auto kty = typeof_crypto_key(pkey);
         binary_t ecdsa_sig;
@@ -1028,7 +1056,7 @@ return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, const by
             case kty_okp: {
             } break;
             case kty_ec: {
-                asn1_der_ecdsa_signature(pkey, signature, ecdsa_sig_r, ecdsa_sig_s);
+                asn1_der_ecdsa_signature(scheme, signature, ecdsa_sig_r, ecdsa_sig_s);
                 binary_append(ecdsa_sig, ecdsa_sig_r);
                 binary_append(ecdsa_sig, ecdsa_sig_s);
             } break;

@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
     _logger.make_share(builder.build());
 
     test_kmp();
+    test_aho_corasick_simple();
     test_aho_corasick();
     test_trie();
     test_trie_autocompletion();

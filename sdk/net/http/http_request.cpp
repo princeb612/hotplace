@@ -230,7 +230,7 @@ http_request& http_request::compose(http_method_t method, const std::string& uri
         http_resource* resource = http_resource::get_instance();
         basic_stream stream;
 
-        stream << resource->get_method(method) << " " << uri << " " << get_version() << "\r\n";
+        stream << resource->get_method(method) << " " << uri << " " << get_version_str() << "\r\n";
         // RFC 2616 14.13 Content-Length
         if (body.size()) {
             stream << "Content-Length"
@@ -254,7 +254,7 @@ http_request& http_request::get_request(basic_stream& bs) {
         bs.clear();
         get_http_header().add("Content-Length", format("%zi", _content.size())).add("Connection", "Keep-Alive").get_headers(headers);
 
-        bs << get_method() << " " << get_http_uri().get_uri() << " " << get_version() << "\r\n" << headers << "\r\n" << get_content();
+        bs << get_method() << " " << get_http_uri().get_uri() << " " << get_version_str() << "\r\n" << headers << "\r\n" << get_content();
     }
     return *this;
 }

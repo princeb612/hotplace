@@ -227,32 +227,6 @@ class crypto_key {
      * @return error code (see error.hpp)
      */
     return_t add(EVP_PKEY* key, const char* kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    /*
-     * @brief   oct
-     * @param   int nbits [in]
-     * @param   const keydesc& desc [in]
-     */
-    return_t generate_oct(int nbits, const keydesc& desc);
-    /*
-     * @brief   RSA
-     * @param   uint32 nid [in]
-     * @param   int nbits [in] bits >= 2048
-     * @param   const keydesc& desc [in]
-     */
-    return_t generate_rsa(uint32 nid, int nbits, const keydesc& desc);
-    /*
-     * @brief   EC2, OKP
-     * @param   uint32 nid [in]
-     * @param   const keydesc& desc [in]
-     */
-    return_t generate_ec(uint32 nid, const keydesc& desc);
-    /*
-     * @brief   DH
-     * @param   uint32 nid [in]
-     * @param   const keydesc& desc [in]
-     */
-    return_t generate_dh(uint32 nid, const keydesc& desc);
-
     /**
      * @brief return any key
      * @param bool up_ref [inopt]
