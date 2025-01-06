@@ -8,7 +8,9 @@
 ### Plan
 
 - in progress
-  - QUIC, HTTP/3
+  - TLS
+  - QUIC
+  - HTTP/3
 - holding
   - asn1
 - flowchart

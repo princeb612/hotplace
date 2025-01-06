@@ -8,7 +8,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/pattern/aho_corasick.hpp>
 #include <sdk/base/string/string.hpp>
 #include <sdk/io/stream/file_stream.hpp>
 #include <sdk/net/http/html_documents.hpp>

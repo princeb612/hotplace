@@ -87,19 +87,5 @@ void crypto_hmac::addref() { _shared.addref(); }
 
 void crypto_hmac::release() { _shared.delref(); }
 
-crypto_hmac_builder::crypto_hmac_builder() : _alg(hash_alg_unknown) {}
-
-crypto_hmac_builder& crypto_hmac_builder::set(hash_algorithm_t alg) {
-    _alg = alg;
-    return *this;
-}
-
-crypto_hmac_builder& crypto_hmac_builder::set(const binary_t& key) {
-    _key = key;
-    return *this;
-}
-
-crypto_hmac* crypto_hmac_builder::build() { return new crypto_hmac(_alg, _key); }
-
 }  // namespace crypto
 }  // namespace hotplace

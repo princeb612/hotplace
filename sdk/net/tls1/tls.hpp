@@ -52,8 +52,8 @@
  *                Figure 1: Message Flow for Full TLS Handshake
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS1X__
-#define __HOTPLACE_SDK_NET_TLS1X__
+#ifndef __HOTPLACE_SDK_NET_TLS1__
+#define __HOTPLACE_SDK_NET_TLS1__
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
@@ -130,7 +130,7 @@ class tls_protection {
      * @param   tls_session* session [in]
      * @param   tls_handshake_type_t type [in]
      */
-    return_t calc(tls_session* session, tls_handshake_type_t type, tls_role_t role);
+    return_t calc(tls_session* session, tls_handshake_type_t type, tls_direction_t dir);
     return_t calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder);
 
     void get_item(tls_secret_t type, binary_t& item);
@@ -145,22 +145,22 @@ class tls_protection {
      * @brief   TLS 1.3 decrypt
      * @remarks
      *          application_data
-     *          |   role                    | client  | server  | key/iv        |
+     *          |   dir                     | client  | server  | key/iv        |
      *          | 0 client session (C <- S) | decrypt | encrypt | server key/iv |
      *          | 1 server session (C -> S) | encrypt | decrypt | client key/iv |
      *
      *          encrypt(&server_session, record, protected_record);
      *          decrypt(&client_session, protected_record, record);
      */
-    return_t decrypt_tls13(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& tag,
+    return_t decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& tag,
                            stream_t* debugstream = nullptr);
 
-    return_t decrypt_tls13(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
+    return_t decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
                            binary_t& tag, stream_t* debugstream = nullptr);
     /**
      * @brief   TLS 1 decrypt
      */
-    return_t decrypt_tls1(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, stream_t* debugstream);
+    return_t decrypt_tls1(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, stream_t* debugstream);
     /**
      * @brief   verify
      * @sample
@@ -189,37 +189,42 @@ class tls_session {
     friend class tls_protection;
 
    public:
-    tls_session() {}
+    tls_session();
 
-    tls_protection& get_tls_protection() { return _tls_protection; }
+    void set_status(tls_handshake_type_t type);
+    tls_handshake_type_t get_status();
+    tls_protection& get_tls_protection();
 
-    struct roleinfo {
+    class session_info {
+       public:
+        session_info();
+
+        void set_status(tls_handshake_type_t type);
+        tls_handshake_type_t get_status();
+        void change_cipher_spec();
+        bool doprotect();
+        uint64 get_recordno(bool inc = false);
+        void inc_recordno();
+        void reset_recordno();
+
+       private:
         tls_handshake_type_t hstype;
         bool apply_cipher_spec;
         uint64 record_no;
-
-        roleinfo() : hstype(tls_handshake_hello_request), apply_cipher_spec(false), record_no(0) {}
-
-        void set_status(tls_handshake_type_t type) { hstype = type; }
-        tls_handshake_type_t get_status() { return hstype; }
-        void change_cipher_spec() { apply_cipher_spec = true; }
-        bool doprotect() { return apply_cipher_spec; }
-        uint64 get_recordno(bool inc = false) { return inc ? record_no++ : record_no; }
-        void inc_recordno() { ++record_no; }
-        void reset_recordno() { record_no = 0; }
     };
-    roleinfo& get_roleinfo(tls_role_t role) { return _roles[role]; }
-    uint64 get_recordno(tls_role_t role, bool inc = false) { return get_roleinfo(role).get_recordno(inc); }
-    void reset_recordno(tls_role_t role) {
-        auto ver = get_tls_protection().get_tls_version();
-        if ((tls_13 == ver) || (dtls_13 == ver)) {
-            get_roleinfo(role).reset_recordno();
-        }
-    }
 
-   protected:
-    std::map<tls_role_t, roleinfo> _roles;
+    session_info& get_session_info(tls_direction_t dir);
+    uint64 get_recordno(tls_direction_t dir, bool inc = false);
+    void reset_recordno(tls_direction_t dir);
+
+    void addref();
+    void release();
+
+   private:
+    tls_handshake_type_t _hstype;
+    std::map<tls_direction_t, session_info> _direction;
     tls_protection _tls_protection;
+    t_shared_reference<tls_session> _shared;
 };
 
 /**
@@ -230,13 +235,11 @@ class tls_session {
  * @param   size_t& pos [inout]
  * @remarks
  */
-return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role = role_server);
-return_t tls_dump_change_cipher_spec(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_record(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
 return_t tls_dump_alert(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
-return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role = role_server);
+return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
 return_t tls_dump_application_data(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
-return_t tls_dump_ack(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role = role_server);
 
 bool is_basedon_tls13(uint16 ver);
 bool is_kindof_tls(uint16 ver);

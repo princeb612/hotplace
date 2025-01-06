@@ -48,7 +48,7 @@ void test_dtls_xargs_org() {
             "91 21 38 38 51 ed 21 a2 8e 3b 75 e9 65 d0 d2 cd 16 62 54 00 2b 00 03 02 fe fc 00 0d 00 20 00 1e 06 03 05 03 04 03 02 03 08 06 08 0b 08 05 08 0a "
             "08 04 08 09 06 01 05 01 04 01 03 01 02 01 00 16 00 00 00 0a 00 04 00 02 00 1d";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("client_hello", &session, bin_record, role_client);
+        dump_record("client_hello", &session, bin_record, from_client);
     }
     // https://dtls.xargs.org/#server-key-exchange-generation
     {
@@ -69,7 +69,7 @@ void test_dtls_xargs_org() {
             "85 86 87 88 89 8a 8b 8c 8d 8e 8f 00 13 01 00 00 2e 00 33 00 24 00 1d 00 20 9f d7 ad 6d cf f4 29 8d d3 f9 6d 5b 1b 2a f9 10 a0 53 5b 14 88 d7 f8 "
             "fa bb 34 9a 98 28 80 b6 15 00 2b 00 02 fe fc";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("server_hello", &session, bin_record, role_server);
+        dump_record("server_hello", &session, bin_record, from_server);
     }
     // https://dtls.xargs.org/#server-handshake-keys-calc
     // https://dtls.xargs.org/#client-handshake-keys-calc
@@ -99,7 +99,7 @@ void test_dtls_xargs_org() {
             "2e 79 fa 00 2f ee 9d cf f3 f8 67 9a 48 59 fe 68 37 7f b3 4a da 85 df 87 9c 67 3e 50 1d 7a 4e 8f 19 50 e0 fc f6 7f e4 42 e7 d7 d2 b8 a3 d5 fa 59"
             "57 4f fd 00";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("encrypted-extensions-datagram", &session, bin_record, role_server);
+        dump_record("encrypted-extensions-datagram", &session, bin_record, from_server);
     }
     // https://dtls.xargs.org/#server-certificate-datagram
     {
@@ -123,7 +123,7 @@ void test_dtls_xargs_org() {
             "20 e4 96 37 0d 25 f7 52 99 e5 91 8c b9 4b a5 b5 ef db 84 7d 9c a5 44 a5 38 65 a3 6d 69 1e be 8b e8 e2 da 08 c1 7b e9 02 38 0d b9 a3 d7 04 91 b8 "
             "98 f8 c5 88 e7 44 64 8e b9 37 70 53 0c 83 ce cf a4 30 70 21 45 22 93 8c 0e 66 82 9e f1 33 34 9b";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("server-certificate-datagram", &session, bin_record, role_server);
+        dump_record("server-certificate-datagram", &session, bin_record, from_server);
     }
     // https://dtls.xargs.org/#server-cert-verify-datagram
     {
@@ -136,7 +136,7 @@ void test_dtls_xargs_org() {
             "8d 5a 33 9f d7 61 31 43 bc b8 5d 96 10 41 22 f6 17 e5 39 3b 4c ba 44 d0 86 e5 32 c7 39 e8 15 ea dc 2a 84 07 c4 72 bd f0 f6 f0 06 0d b4 71 19 71 "
             "38 7c 21 89 39 4f";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("server-cert-verify-datagram", &session, bin_record, role_server);
+        dump_record("server-cert-verify-datagram", &session, bin_record, from_server);
     }
     // https://dtls.xargs.org/#server-handshake-finished-datagram
     {
@@ -144,7 +144,7 @@ void test_dtls_xargs_org() {
             "2e 0b b8 00 3d a4 41 35 73 2a 09 98 23 b8 a5 f6 1a 2b 35 ce 92 1a 89 ab b1 52 f8 76 cd 26 79 7d c3 ed 73 d9 17 b2 99 c1 69 28 b9 cf 9e 58 d1 cd "
             "58 68 6b 8b 90 ce 9f e6 45 4e 0c ef 9e fc 40 f2 39 7a";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("server-handshake-finished-datagram", &session, bin_record, role_server);
+        dump_record("server-handshake-finished-datagram", &session, bin_record, from_server);
     }
     // https://dtls.xargs.org/#server-application-keys-calc
     {
@@ -157,7 +157,7 @@ void test_dtls_xargs_org() {
             "2e c2 48 00 3d 8a 2c d5 2d 50 00 f8 78 6a fb 47 cd f0 b8 f2 b8 13 42 b0 0c 43 dc e6 4b 1d 01 94 d2 e2 01 f6 81 75 09 78 52 8b be 26 af 79 61 24 "
             "01 c0 07 a2 c5 f7 5f 7c ff b7 46 5b c0 1d 23 d8 51 1f";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("client-handshake-finished-datagram", &session, bin_record, role_client);
+        dump_record("client-handshake-finished-datagram", &session, bin_record, from_client);
     }
     // https://dtls.xargs.org/#server-application-keys-calc
     // https://dtls.xargs.org/#client-application-keys-calc
@@ -183,24 +183,24 @@ void test_dtls_xargs_org() {
     {
         const char* record = "2f 31 50 00 23 ea 80 ab 8e 08 c9 38 95 41 8d 24 35 71 ea 6d e7 d8 63 ee 84 23 0b b6 04 3c b3 84 df 94 b6 da 28 5a 3b c4";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("server-ack-datagram", &session, bin_record, role_server);
+        dump_record("server-ack-datagram", &session, bin_record, from_server);
     }
     // https://dtls.xargs.org/#client-application-data-datagram
     {
         const char* record = "2f 68 3f 00 15 7d 72 27 8b 6c 64 9f 1e 7b 56 b3 ca d4 11 fa f7 bd 51 8b fb 15";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("client-application-data-datagram (ping)", &session, bin_record, role_client);
+        dump_record("client-application-data-datagram (ping)", &session, bin_record, from_client);
     }
     // https://dtls.xargs.org/#server-application-data-datagram
     {
         const char* record = "2f a2 58 00 15 f5 bd 33 f2 7b 72 78 0e 35 1f a0 07 03 fb 9f 65 8c 68 9f 95 ae";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("server-application-data-datagram (pong)", &session, bin_record, role_server);
+        dump_record("server-application-data-datagram (pong)", &session, bin_record, from_server);
     }
     // https://dtls.xargs.org/#server-alert-datagram
     {
         const char* record = "2f 69 0c 00 13 dd 8c d0 7d aa 96 4f d1 ab 50 88 25 37 8f c9 6f a8 b1 e8";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("server-alert-datagram", &session, bin_record, role_server);
+        dump_record("server-alert-datagram", &session, bin_record, from_server);
     }
 }

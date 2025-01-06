@@ -3,7 +3,10 @@
 * TLS
   * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
   * RFC 8446 Example Handshake Traces for TLS 1.3
+  * https://tls13.xargs.org/
+  * https://tls12.xargs.org/
   * https://dtls.xargs.org/
+  * https://quic.xargs.org/
   * wireshark.exe
 
 

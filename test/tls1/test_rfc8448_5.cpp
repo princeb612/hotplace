@@ -65,7 +65,7 @@ void test_rfc8448_5() {
             "05 01 06 01 02 01 04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00"
             "1c 00 02 40 01";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("client_hello", &session, bin_record, role_client);
+        dump_record("client_hello", &session, bin_record, from_client);
     }
     {
         // {client}  create an ephemeral P-256 key pair
@@ -104,7 +104,7 @@ void test_rfc8448_5() {
             "34 22 67 e8 ca 0c af 57 1f b2 b7 cf f0 f9 34 b0 00 2b 00 02 03"
             "04";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("server_hello", &session, bin_record, role_server, false);
+        dump_record("server_hello", &session, bin_record, from_server, false);
     }
     {
         // {client}  construct a ClientHello handshake message
@@ -137,7 +137,7 @@ void test_rfc8448_5() {
             "00";
 
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("client_hello", &session, bin_record, role_client);
+        dump_record("client_hello", &session, bin_record, from_client);
     }
     {
         // {server}  create an ephemeral P-256 key pair
@@ -170,7 +170,7 @@ void test_rfc8448_5() {
             "04 ac 07 d8 35 40 ea b3 e3 d9 c5 47 bc 65 28 c4 31 7d 29 46 86"
             "09 3a 6c ad 7d 00 2b 00 02 03 04";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("server_hello", &session, bin_record, role_server);
+        dump_record("server_hello", &session, bin_record, from_server);
     }
     {
         binary_t bin;
@@ -230,7 +230,7 @@ void test_rfc8448_5() {
             "07 ec 1c d1 3c 85 a6 c1 49 62 1e 77 b7 d7 8d 80 5a 30 f0 be 03"
             "0c 31 5e 54";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("encrypted_extensions certificate certificate_verify finished", &session, bin_record, role_server);
+        dump_record("encrypted_extensions certificate certificate_verify finished", &session, bin_record, from_server);
     }
     {
         binary_t bin;
@@ -258,7 +258,7 @@ void test_rfc8448_5() {
             "ab ea 92 fe 91 b4 74 99 9e 85 e3 b7 91 ce 25 2f e8 c3 e9 f9 39"
             "a4 12 0c b2";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("finished", &session, bin_record, role_client);
+        dump_record("finished", &session, bin_record, from_client);
     }
     {
         binary_t bin;
@@ -274,7 +274,7 @@ void test_rfc8448_5() {
             "17 03 03 00 13 2e a6 cd f7 49 19 60"
             "23 e2 b3 a4 94 91 69 55 36 42 60 47";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("alert (close_notify)", &session, bin_record, role_client);
+        dump_record("alert (close_notify)", &session, bin_record, from_client);
     }
     {
         // {server}  send alert record
@@ -282,6 +282,6 @@ void test_rfc8448_5() {
             "17 03 03 00 13 51 9f c5 07 5c b0 88"
             "43 49 75 9f f9 ef 6f 01 1b b4 c6 f2";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("alert (close_notify)", &session, bin_record, role_server);
+        dump_record("alert (close_notify)", &session, bin_record, from_server);
     }
 }

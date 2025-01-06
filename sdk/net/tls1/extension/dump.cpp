@@ -12,16 +12,36 @@
  */
 
 #include <sdk/net/tls1/tls.hpp>
+#include <sdk/net/tls1/tls_extension.hpp>
 
 namespace hotplace {
 namespace net {
 
-return_t tls_dump_change_cipher_spec(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == s || nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
+        }
+        if (pos + 4 >= size) {
+            ret = errorcode_t::no_more;
+            __leave2;
+        }
+
+        {
+            s->autoindent(3);
+
+            uint16 extension_type = ntoh16(*(uint16*)(stream + pos));
+            tls_extension_builder builder;
+            auto extension = builder.set(session).set(extension_type).build();
+            if (extension) {
+                ret = extension->read(stream, size, pos);
+                extension->dump(stream, size, s);
+                extension->release();
+            }
+
+            s->autoindent(0);
         }
     }
     __finally2 {

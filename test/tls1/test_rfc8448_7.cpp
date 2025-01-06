@@ -64,7 +64,7 @@ void test_rfc8448_7() {
             "04 01 05 01 06 01 02 01 04 02 05 02 06 02 02 02 00 2d 00 02 01"
             "01 00 1c 00 02 40 01";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("client_hello", &session, bin_record, role_client);
+        dump_record("client_hello", &session, bin_record, from_client);
     }
     {
         // {server}  create an ephemeral x25519 key pair
@@ -96,7 +96,7 @@ void test_rfc8448_7() {
             "fd 62 76 83 41 17 5f 52 65 e4 da f0 c8 84 16 17 aa 4f af dd 21"
             "42 32 0c 22 00 2b 00 02 03 04";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("server_hello", &session, bin_record, role_server);
+        dump_record("server_hello", &session, bin_record, from_server);
     }
     {
         // {server}  extract secret "early"
@@ -118,7 +118,7 @@ void test_rfc8448_7() {
     {
         const char* record = "14 03 03 00 01 01";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("change_cipher_spec", &session, bin_record, role_server);
+        dump_record("change_cipher_spec", &session, bin_record, from_server);
     }
     {
         const char* record =
@@ -156,7 +156,7 @@ void test_rfc8448_7() {
             "fd 5b 31 a3 59 04 2f bd 67 39 1e c5 e4 d1 89 2a 2e 52 10 14 1a"
             "49 4e 93 01 b2 4a 11 3c 47 4c 7f 2a 73 45 78 47";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("encrypted_extensions certificate certificate_verify finished", &session, bin_record, role_server);
+        dump_record("encrypted_extensions certificate certificate_verify finished", &session, bin_record, from_server);
     }
     {
         // {server}  derive secret "tls13 c ap traffic"
@@ -177,7 +177,7 @@ void test_rfc8448_7() {
     {
         const char* record = "14 03 03 00 01 01";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("change_cipher_spec", &session, bin_record, role_client);
+        dump_record("change_cipher_spec", &session, bin_record, from_client);
     }
     {
         const char* record =
@@ -186,7 +186,7 @@ void test_rfc8448_7() {
             "f3 3d f3 d6 5b 75 06 f1 a6 26 af 91 d4 82 1d 5f 7a 1f 21 0e f8"
             "dd 3c 6d 16";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("finished", &session, bin_record, role_client);
+        dump_record("finished", &session, bin_record, from_client);
     }
     {
         // {client}  derive write traffic keys for application data
@@ -200,13 +200,13 @@ void test_rfc8448_7() {
             "17 03 03 00 13 0f 62 91 55 38 2d ba"
             "23 c4 e2 c5 f7 f8 4e 6f 2e d3 08 3d";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("alert (close_notify)", &session, bin_record, role_client);
+        dump_record("alert (close_notify)", &session, bin_record, from_client);
     }
     {
         const char* record =
             "17 03 03 00 13 b7 25 7b 0f ec af 69"
             "d4 f0 9e 3f 89 1e 2a 25 d1 e2 88 45";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("alert (close_notify)", &session, bin_record, role_server);
+        dump_record("alert (close_notify)", &session, bin_record, from_server);
     }
 }

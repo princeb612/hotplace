@@ -43,15 +43,13 @@ void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
     _logger->writeln(bs);
 }
 
-return_t dump_record(const char* text, tls_session* session, const binary_t& bin, tls_role_t role, bool expect) {
+return_t dump_record(const char* text, tls_session* session, const binary_t& bin, tls_direction_t role, bool expect) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == text || nullptr == session) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        // _logger->hdump("! input", bin);
 
         basic_stream bs;
         size_t pos = 0;
@@ -70,7 +68,7 @@ return_t dump_record(const char* text, tls_session* session, const binary_t& bin
             ret = expect_failure;
         }
 
-        _test_case.test(ret, __FUNCTION__, "%s : %s", (role_client == role) ? "C -> S" : "C <- S", text);
+        _test_case.test(ret, __FUNCTION__, "%s : %s", (from_client == role) ? "C -> S" : "C <- S", text);
     }
     __finally2 {
         // do nothing
@@ -78,7 +76,7 @@ return_t dump_record(const char* text, tls_session* session, const binary_t& bin
     return ret;
 }
 
-return_t dump_handshake(const char* text, tls_session* session, const binary_t& bin, tls_role_t role) {
+return_t dump_handshake(const char* text, tls_session* session, const binary_t& bin, tls_direction_t role) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == text || nullptr == session) {
@@ -99,7 +97,7 @@ return_t dump_handshake(const char* text, tls_session* session, const binary_t& 
         _logger->writeln(bs);
         bs.clear();
 
-        _test_case.test(ret, __FUNCTION__, "%s : %s", (role_client == role) ? "C -> S" : "C <- S", text);
+        _test_case.test(ret, __FUNCTION__, "%s : %s", (from_client == role) ? "C -> S" : "C <- S", text);
     }
     __finally2 {
         // do nothing
@@ -120,7 +118,8 @@ void test_transcript_hash(tls_session* session, const binary_t& expect) {
             binary_t tshash;
             hash->digest(tshash);
             hash->release();
-            _logger->hdump(" > transcript hash", tshash);
+            _logger->writeln(" > transcript hash");
+            _logger->writeln("   %s", base16_encode(tshash).c_str());
             _test_case.assert(tshash == expect, __FUNCTION__, "transcript hash");
         }
     }

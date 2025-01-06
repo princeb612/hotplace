@@ -68,8 +68,8 @@ void test_rfc8448_3() {
             "01 04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01";
 
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#1A client_hello", &rfc8448_session, bin_record, role_client);
-        dump_record("#1B client_hello", &rfc8448_session2, bin_record, role_client);
+        dump_record("#1A client_hello", &rfc8448_session, bin_record, from_client);
+        dump_record("#1B client_hello", &rfc8448_session2, bin_record, from_client);
     }
 
     // send server_epk.pub @server_hello
@@ -354,8 +354,8 @@ void test_rfc8448_3() {
             "d8 7f 38 f8 03 38 ac 98 fc 46 de b3 84 bd 1c ae ac ab 68 67 d7"
             "26 c4 05 46";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#4 client finished", &rfc8448_session, bin_record, role_client);
-        dump_record("#4 client finished", &rfc8448_session2, bin_record, role_client);
+        dump_record("#4 client finished", &rfc8448_session, bin_record, from_client);
+        dump_record("#4 client finished", &rfc8448_session2, bin_record, from_client);
     }
     // after client finished
     {
@@ -393,8 +393,8 @@ void test_rfc8448_3() {
             "df 35 30 05 f3 bc e1 86 96 12 9c 81 53 55 6b 3b 6c 67 79 b3 7b"
             "f1 59 85 68 4f";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#5 new_session_ticket", &rfc8448_session, bin_record, role_server);
-        dump_record("#5 new_session_ticket", &rfc8448_session2, bin_record, role_server);
+        dump_record("#5 new_session_ticket", &rfc8448_session, bin_record, from_server);
+        dump_record("#5 new_session_ticket", &rfc8448_session2, bin_record, from_server);
     }
     // #6
     // {client}  send application_data record:
@@ -405,8 +405,8 @@ void test_rfc8448_3() {
             "98 19 a8 a5 b4 6b 39 5b d5 4a 9a 20 44 1e 2b 62 97 4e 1f 5a 62"
             "92 a2 97 70 14 bd 1e 3d ea e6 3a ee bb 21 69 49 15 e4";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#6 application data", &rfc8448_session, bin_record, role_client);
-        dump_record("#6 application data", &rfc8448_session2, bin_record, role_client);
+        dump_record("#6 application data", &rfc8448_session, bin_record, from_client);
+        dump_record("#6 application data", &rfc8448_session2, bin_record, from_client);
     }
     // #7
     // {server}  send application_data record:
@@ -417,8 +417,8 @@ void test_rfc8448_3() {
             "0e fa f9 7d 90 e6 df fc 60 2d cb 50 1a 59 a8 fc c4 9c 4b f2 e5"
             "f0 a2 1c 00 47 c2 ab f3 32 54 0d d0 32 e1 67 c2 95 5d";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#7 application data", &rfc8448_session, bin_record, role_server);
-        dump_record("#7 application data", &rfc8448_session2, bin_record, role_server);
+        dump_record("#7 application data", &rfc8448_session, bin_record, from_server);
+        dump_record("#7 application data", &rfc8448_session2, bin_record, from_server);
     }
     // #8
     // {client}  send alert record:
@@ -427,8 +427,8 @@ void test_rfc8448_3() {
             "17 03 03 00 13 c9 87 27 60 65 56 66"
             "b7 4d 7f f1 15 3e fd 6d b6 d0 b0 e3";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#8 alert (close_notify)", &rfc8448_session, bin_record, role_client);
-        dump_record("#8 alert (close_notify)", &rfc8448_session2, bin_record, role_client);
+        dump_record("#8 alert (close_notify)", &rfc8448_session, bin_record, from_client);
+        dump_record("#8 alert (close_notify)", &rfc8448_session2, bin_record, from_client);
     }
     // #9
     // {server}  send alert record:
@@ -437,7 +437,7 @@ void test_rfc8448_3() {
             "17 03 03 00 13 b5 8f d6 71 66 eb f5"
             "99 d2 47 20 cf be 7e fa 7a 88 64 a9";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("#9 alert (close_notify)", &rfc8448_session, bin_record, role_server);
-        dump_record("#9 alert (close_notify)", &rfc8448_session2, bin_record, role_server);
+        dump_record("#9 alert (close_notify)", &rfc8448_session, bin_record, from_server);
+        dump_record("#9 alert (close_notify)", &rfc8448_session2, bin_record, from_server);
     }
 }

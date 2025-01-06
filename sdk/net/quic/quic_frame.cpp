@@ -18,7 +18,7 @@ namespace net {
 
 // understanding ...
 
-return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role) {
+return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == s || nullptr == stream || 0 == size) {
@@ -250,7 +250,7 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                 dump_memory(crypto_data, s, 16, 5, 0x0, dump_notrunc);
 
                 size_t hpos = 0;
-                tls_dump_handshake(s, session, &crypto_data[0], crypto_data.size(), hpos, role);
+                tls_dump_handshake(s, session, &crypto_data[0], crypto_data.size(), hpos, dir);
             } break;
             // 19.7.  NEW_TOKEN Frames
             case quic_frame_new_token: {
@@ -339,7 +339,7 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
     return ret;
 }
 
-return_t quic_dump_frame(stream_t* s, tls_session* session, const binary_t frame, size_t& pos, tls_role_t role) {
+return_t quic_dump_frame(stream_t* s, tls_session* session, const binary_t frame, size_t& pos, tls_direction_t dir) {
     return quic_dump_frame(s, session, &frame[0], frame.size(), pos);
 }
 

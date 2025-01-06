@@ -184,7 +184,15 @@ class crypto_keychain {
     /**
      * @brief   EC compressed
      * @remarks
-     *          y^2 = x^3 + ax + b (mod p)
+     *          ansiX962_compressed_prime
+     *              prime field
+     *              y^2 = x^3 + ax + b (mod p)
+     *              NID_X9_62_prime256v1
+     *          ansiX962_compressed_char2
+     *              characteristics-2 field
+     *              y^2 + xy = x^3 + ax^2 + b (over GF(2^m))
+     *              NID_sectXXXr1, NID_sectXXXk1
+     *
      *          y0 (even), y1 (odd)
      *
      *          02 || x (ysign 0, y0)

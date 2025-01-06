@@ -468,8 +468,10 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                 nidof_evp_pkey(pkey, nid);
                 const hint_curve_t* hint_curve = advisor->hintof_curve_nid(nid);
                 if (hint_curve) {
-                    constexpr char constexpr_ec_crv[] = "%s aka ";
-                    stream->printf(constexpr_ec_crv, hint_curve->name);
+                    if (hint_curve->name) {
+                        stream->printf("%s ", hint_curve->name);
+                    }
+                    stream->printf("aka ");
                     if (hint_curve->aka1) {
                         stream->printf("%s ", hint_curve->aka1);
                     }

@@ -551,8 +551,8 @@ class tls_session;
  * @param   size_t size [in]
  * @param   size_t& pos [inout]
  */
-return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_role_t role = role_server);
-return_t quic_dump_frame(stream_t* s, tls_session* session, const binary_t frame, size_t& pos, tls_role_t role = role_server);
+return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
+return_t quic_dump_frame(stream_t* s, tls_session* session, const binary_t frame, size_t& pos, tls_direction_t dir = from_server);
 
 /**
  * @brief   an integer value using the variable-length encoding

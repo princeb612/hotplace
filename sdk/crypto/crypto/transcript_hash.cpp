@@ -69,18 +69,5 @@ void transcript_hash::addref() { _shared.addref(); }
 
 void transcript_hash::release() { _shared.delref(); }
 
-transcript_hash_builder::transcript_hash_builder() : _alg(hash_alg_unknown) {}
-
-transcript_hash* transcript_hash_builder::build() {
-    transcript_hash* obj = nullptr;
-    __try_new_catch_only(obj, new transcript_hash(_alg));
-    return obj;
-}
-
-transcript_hash_builder& transcript_hash_builder::set(hash_algorithm_t alg) {
-    _alg = alg;
-    return *this;
-}
-
 }  // namespace crypto
 }  // namespace hotplace

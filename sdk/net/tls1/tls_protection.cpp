@@ -177,7 +177,7 @@ void tls_protection::use_pre_master_secret(bool use) { _use_pre_master_secret = 
 
 bool tls_protection::use_pre_master_secret() { return _use_pre_master_secret; }
 
-return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, tls_role_t role) {
+return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     // RFC 8446 7.1.  Key Schedule
     __try2 {
@@ -226,12 +226,12 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
         empty_ikm.resize(dlen);
 
         auto lambda_expand_label = [&](tls_secret_t sec, binary_t& okm, const char* hashalg, uint16 dlen, const binary_t& secret, const char* label,
-                                       const binary_t& empty) -> void {
+                                       const binary_t& context) -> void {
             okm.clear();
             if (session->get_tls_protection().is_kindof_dtls()) {
-                kdf.hkdf_expand_dtls13_label(okm, hashalg, dlen, secret, str2bin(label), empty);
+                kdf.hkdf_expand_dtls13_label(okm, hashalg, dlen, secret, str2bin(label), context);
             } else {
-                kdf.hkdf_expand_tls13_label(okm, hashalg, dlen, secret, str2bin(label), empty);
+                kdf.hkdf_expand_tls13_label(okm, hashalg, dlen, secret, str2bin(label), context);
             }
             _kv[sec] = okm;
         };
@@ -275,7 +275,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
              *             v
              */
 
-            // res binder (see tls_extension_pre_shared_key)
+            // res binder (see tls1_ext_pre_shared_key)
             // exp master (see tls_context_server_finished)
 
             if (tls_0_rtt == get_flow()) {
@@ -434,7 +434,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
             const binary_t& secret_s_hs_traffic = get_item(tls_secret_s_hs_traffic);
             lambda_expand_label(tls_secret_handshake_server_key, okm, hashalg, keysize, secret_s_hs_traffic, "key", empty);
             lambda_expand_label(tls_secret_handshake_server_iv, okm, hashalg, 12, secret_s_hs_traffic, "iv", empty);
-        } else if ((tls_handshake_finished == type) && (role_server == role)) {
+        } else if ((tls_handshake_finished == type) && (from_server == dir)) {
             /**
              *   0 -> HKDF-Extract = Master Secret
              *             |
@@ -492,7 +492,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                 lambda_expand_label(tls_secret_application_quic_server_iv, okm, hashalg, 12, secret_application_server, "quic iv", empty);
                 lambda_expand_label(tls_secret_application_quic_server_hp, okm, hashalg, keysize, secret_application_server, "quic hp", empty);
             }
-        } else if ((tls_handshake_finished == type) && (role_client == role)) {
+        } else if ((tls_handshake_finished == type) && (from_client == dir)) {
             /**
              *   0 -> HKDF-Extract = Master Secret
              *             |
@@ -779,8 +779,8 @@ return_t tls_protection::build_iv(tls_session* session, tls_secret_t type, binar
     return ret;
 }
 
-return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& tag,
-                                       stream_t* debugstream) {
+return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
+                                       binary_t& tag, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -802,7 +802,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
         binary_t aad;
         binary_append(aad, stream + pos, aadlen);
 
-        ret = decrypt_tls13(session, role, stream, size, pos, plaintext, aad, tag, debugstream);
+        ret = decrypt_tls13(session, dir, stream, size, pos, plaintext, aad, tag, debugstream);
     }
     __finally2 {
         // do nothing
@@ -810,7 +810,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
     return ret;
 }
 
-return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
+return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
                                        const binary_t& aad, binary_t& tag, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -849,9 +849,9 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
         tls_secret_t secret_key;
         tls_secret_t secret_iv;
         uint64 record_no = 0;
-        auto hsstatus = session->get_roleinfo(role).get_status();
-        record_no = session->get_recordno(role, true);
-        if (role_client == role) {
+        auto hsstatus = session->get_session_info(dir).get_status();
+        record_no = session->get_recordno(dir, true);
+        if (from_client == dir) {
             auto flow = get_flow();
             if (tls_1_rtt == flow || tls_hello_retry_request == flow) {
                 if (tls_handshake_finished == hsstatus) {
@@ -885,7 +885,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
                 }
             }
         } else {
-            // role_server
+            // from_server
             if (tls_handshake_finished == hsstatus) {
                 secret_key = tls_secret_application_server_key;
                 secret_iv = tls_secret_application_server_iv;
@@ -920,7 +920,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_role_t role, co
     return ret;
 }
 
-return_t tls_protection::decrypt_tls1(tls_session* session, tls_role_t role, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
+return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
                                       stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -964,9 +964,9 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_role_t role, con
         tls_secret_t secret_mac_key;
         tls_secret_t secret_key;
         uint64 record_no = 0;
-        auto hsstatus = session->get_roleinfo(role).get_status();
-        record_no = session->get_recordno(role, true);
-        if (role_client == role) {
+        auto hsstatus = session->get_session_info(dir).get_status();
+        record_no = session->get_recordno(dir, true);
+        if (from_client == dir) {
             secret_mac_key = tls_secret_client_mac_key;
             secret_key = tls_secret_client_key;
         } else {
@@ -1041,39 +1041,54 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_role_t role, con
 }
 
 crypto_sign* tls_protection::get_crypto_sign(uint16 scheme) {
-    crypto_sign_builder builder;
     crypto_sign* sign = nullptr;
-    switch (scheme) {
-        case 0x0401: /* rsa_pkcs1_sha256 */
-        case 0x0403: /* ecdsa_secp256r1_sha256 */
-        case 0x0804: /* rsa_pss_rsae_sha256 */
-        case 0x0809: /* rsa_pss_pss_sha256 */
-        {
-            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_256).build();
-        } break;
-        case 0x0501: /* rsa_pkcs1_sha384 */
-        case 0x0503: /* ecdsa_secp384r1_sha384 */
-        case 0x0805: /* rsa_pss_rsae_sha384 */
-        case 0x080a: /* rsa_pss_pss_sha384 */
-        {
-            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_384).build();
-        } break;
-        case 0x0601: /* rsa_pkcs1_sha512 */
-        case 0x0603: /* ecdsa_secp521r1_sha512 */
-        case 0x0806: /* rsa_pss_rsae_sha512 */
-        case 0x080b: /* rsa_pss_pss_sha512 */
-        {
-            sign = builder.tls_sign_scheme(scheme).set_digest(sha2_512).build();
-        } break;
-        case 0x0807: /* ed25519 */
-        case 0x0808: /* ed448 */ {
+    __try2 {
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto hint = tlsadvisor->hintof_signature_scheme(scheme);
+        if (nullptr == hint) {
+            __leave2;
+        }
+        auto sigtype = hint->sigtype;
+        auto sig = hint->sig;
+
+        crypto_sign_builder builder;
+        if (crypt_sig_eddsa == sigtype) {
+            /* ed25519 */
+            /* ed448 */
             sign = builder.tls_sign_scheme(scheme).build();
-        } break;
-        case 0x0201: /* rsa_pkcs1_sha1 */
-        case 0x0203: /* ecdsa_sha1 */
-        {
-            sign = builder.tls_sign_scheme(scheme).set_digest(sha1).build();
-        } break;
+        } else {
+            switch (sig) {
+                case sig_sha256: {
+                    /* rsa_pkcs1_sha256 */
+                    /* ecdsa_secp256r1_sha256 */
+                    /* rsa_pss_rsae_sha256 */
+                    /* rsa_pss_pss_sha256 */
+                    sign = builder.tls_sign_scheme(scheme).set_digest(sha2_256).build();
+                } break;
+                case sig_sha384: {
+                    /* rsa_pkcs1_sha384 */
+                    /* ecdsa_secp384r1_sha384 */
+                    /* rsa_pss_rsae_sha384 */
+                    /* rsa_pss_pss_sha384 */
+                    sign = builder.tls_sign_scheme(scheme).set_digest(sha2_384).build();
+                } break;
+                case sig_sha512: {
+                    /* rsa_pkcs1_sha512 */
+                    /* ecdsa_secp521r1_sha512 */
+                    /* rsa_pss_rsae_sha512 */
+                    /* rsa_pss_pss_sha512 */
+                    sign = builder.tls_sign_scheme(scheme).set_digest(sha2_512).build();
+                } break;
+                case sig_sha1: {
+                    /* rsa_pkcs1_sha1 */
+                    /* ecdsa_sha1 */
+                    sign = builder.tls_sign_scheme(scheme).set_digest(sha1).build();
+                } break;
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
     }
     return sign;
 }

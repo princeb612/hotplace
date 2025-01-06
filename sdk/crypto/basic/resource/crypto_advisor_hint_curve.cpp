@@ -23,7 +23,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.132.0.6",
         nullptr,
         nullptr,
@@ -36,7 +36,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.132.0.7",
         nullptr,
         nullptr,
@@ -48,7 +48,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.132.0.28",
         nullptr,
         nullptr,
@@ -60,7 +60,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.132.0.29",
         nullptr,
         nullptr,
@@ -225,7 +225,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.132.0.4",
         nullptr,
         nullptr,
@@ -238,7 +238,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.132.0.5",
         nullptr,
         nullptr,
@@ -250,7 +250,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.132.0.22",
         nullptr,
         nullptr,
@@ -262,7 +262,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.132.0.23",
         nullptr,
         nullptr,
@@ -490,7 +490,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_ed25519,
         crypto_kty_t::kty_okp,
         crypto_use_t::use_sig,
-        0x0000,         // TODO
+        0x0000,
         "1.3.101.112",  // RFC 8410
         "Ed25519",
     },
@@ -500,7 +500,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_ed448,
         crypto_kty_t::kty_okp,
         crypto_use_t::use_sig,
-        0x0000,         // TODO
+        0x0000,
         "1.3.101.113",  // RFC 8410
         "Ed448",
     },
@@ -510,7 +510,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.36.3.3.2.8.1.1.1",
         nullptr,
         nullptr,
@@ -523,7 +523,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.36.3.3.2.8.1.1.2",
         nullptr,
         nullptr,
@@ -536,7 +536,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.36.3.3.2.8.1.1.3",
         nullptr,
         nullptr,
@@ -549,7 +549,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.36.3.3.2.8.1.1.4",
         nullptr,
         nullptr,
@@ -562,7 +562,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.36.3.3.2.8.1.1.5",
         nullptr,
         nullptr,
@@ -575,7 +575,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.36.3.3.2.8.1.1.6",
         nullptr,
         nullptr,
@@ -601,7 +601,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.36.3.3.2.8.1.1.8",
         nullptr,
         nullptr,
@@ -614,7 +614,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.36.3.3.2.8.1.1.9",
         nullptr,
         nullptr,
@@ -627,7 +627,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.36.3.3.2.8.1.1.10",
         nullptr,
         nullptr,
@@ -653,7 +653,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.36.3.3.2.8.1.1.12",
         nullptr,
         nullptr,
@@ -679,7 +679,7 @@ const hint_curve_t hint_curves[] = {
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        0x0000,  // TODO
+        0x0000,
         "1.3.36.3.3.2.8.1.1.14",
         nullptr,
         nullptr,

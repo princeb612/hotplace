@@ -57,7 +57,7 @@ void test_capture() {
             "010201030104002300000016000000170000000d001e001c040305030603080708080809080a080b080408050806040105010601002b0003020304002d00020101003300260024001d"
             "0020358072d6365880d1aeea329adf9121383851ed21a28e3b75e965d0d2cd166254";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("client hello", &session, bin_record, role_client);
+        dump_record("client hello", &session, bin_record, from_client);
     }
     {
         const char* record =
@@ -81,19 +81,19 @@ void test_capture() {
             "b4ace0c0f330c0fcd5aa9deef969ae8ab2d98da88ebb6ea80a3a11f00ea296a3232367ff075e1c66dd9cbedc471317030300451061de27e51c2c9f342911806f282b710c10632ca500"
             "6755880dbf7006002d0e84fed9adf27a43b5192303e4df5c285d58e3c76224078440c0742374744aecf28cf3182fd0";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("server hello ... server finished", &session, bin_record, role_server);
+        dump_record("server hello ... server finished", &session, bin_record, from_server);
     }
     {
         const char* record =
             "14030300010117030300459ff9b063175177322a46dd9896f3c3bb820ab51743ebc25fdadd53454b73deb54cc7248d411a18bccf657a960824e9a19364837c350a69a88d4bf635c85e"
             "b874aebc9dfde8";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("change_cipher_spec ... client finished", &session, bin_record, role_client);
+        dump_record("change_cipher_spec ... client finished", &session, bin_record, from_client);
     }
     {
         const char* record = "1703030015828139cb7b73aaabf5b82fbf9a2961bcde10038a32";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("application_data (ping)", &session, bin_record, role_client);
+        dump_record("application_data (ping)", &session, bin_record, from_client);
     }
     {
         const char* record =
@@ -102,7 +102,7 @@ void test_capture() {
             "4d2929b7883dc9a3c3c7313a87293f31b61d24d99097c8853bfbeb95d1d01f99ca05b0501859cf6340e8377075970152fa94f5f5be2906e72a15e40836a41f4cd3dbe7d513c16e8861"
             "1d3eae9338d9db1f91ca3d5842602a610b43a463";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("application_data (new_session_ticket)", &session, bin_record, role_server);
+        dump_record("application_data (new_session_ticket)", &session, bin_record, from_server);
     }
     {
         const char* record =
@@ -111,11 +111,11 @@ void test_capture() {
             "8980cd08baf9698b8929986d1174d4aa6dd7a7e8c086052c3c76d81934bdf59b966e392031f3471adebddddbe84fcf1ff408846ae9b28ca4a9e728844a493d80455d6eaff205b40a1e"
             "f18574efc0b96ad383afbd8dfc86f8087c1f7dc8";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("application_data (new_session_ticket)", &session, bin_record, role_server);
+        dump_record("application_data (new_session_ticket)", &session, bin_record, from_server);
     }
     {
         const char* record = "17030300150cda85f1447ae23fa66d56f4c5408482b1b1d4c998";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("application_data (pong)", &session, bin_record, role_server);
+        dump_record("application_data (pong)", &session, bin_record, from_server);
     }
 }
