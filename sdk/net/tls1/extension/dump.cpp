@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_dump_extension(tls_handshake_type_t hstype, tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* s) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == s || nullptr == session || nullptr == stream) {
@@ -36,8 +36,7 @@ return_t tls_dump_extension(tls_handshake_type_t hstype, stream_t* s, tls_sessio
             tls_extension_builder builder;
             auto extension = builder.set(session).set(extension_type).build();
             if (extension) {
-                ret = extension->read(stream, size, pos);
-                extension->dump(stream, size, s);
+                ret = extension->read(stream, size, pos, s);
                 extension->release();
             }
 

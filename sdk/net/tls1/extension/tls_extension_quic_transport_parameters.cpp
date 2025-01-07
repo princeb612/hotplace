@@ -24,14 +24,9 @@ constexpr char constexpr_param[] = "param";
 tls_extension_quic_transport_parameters::tls_extension_quic_transport_parameters(tls_session* session)
     : tls_extension(tls1_ext_quic_transport_parameters, session) {}
 
-return_t tls_extension_quic_transport_parameters::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_quic_transport_parameters::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = tls_extension::read(stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         auto tpos = get_header_range().begin;
         auto ext_len = get_length();
 
@@ -49,42 +44,28 @@ return_t tls_extension_quic_transport_parameters::read(const byte_t* stream, siz
             _keys.push_back(param_id);
             _params.insert({param_id, std::move(param)});
         }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
 
-return_t tls_extension_quic_transport_parameters::write(binary_t& bin) { return errorcode_t::not_supported; }
+        if (debugstream) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            for (auto item : _keys) {
+                auto iter = _params.find(item);
 
-return_t tls_extension_quic_transport_parameters::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = tls_extension::dump(stream, size, s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+                auto param_id = item;
+                const binary_t& param = iter->second;
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        for (auto item : _keys) {
-            auto iter = _params.find(item);
-
-            auto param_id = item;
-            const binary_t& param = iter->second;
-
-            switch (param_id) {
-                case quic_param_initial_source_connection_id:
-                case quic_param_retry_source_connection_id:
-                    s->printf(" > %I64i (%s)\n", param_id, tlsadvisor->quic_param_string(param_id).c_str());
-                    dump_memory(param, s, 16, 5, 0x0, dump_notrunc);
-                    break;
-                default: {
-                    size_t epos = 0;
-                    uint64 value = 0;
-                    quic_read_vle_int(&param[0], param.size(), epos, value);
-                    s->printf(" > %I64i (%s) %I64i\n", param_id, tlsadvisor->quic_param_string(param_id).c_str(), value);
-                } break;
+                switch (param_id) {
+                    case quic_param_initial_source_connection_id:
+                    case quic_param_retry_source_connection_id:
+                        debugstream->printf(" > %I64i (%s)\n", param_id, tlsadvisor->quic_param_string(param_id).c_str());
+                        dump_memory(param, debugstream, 16, 5, 0x0, dump_notrunc);
+                        break;
+                    default: {
+                        size_t epos = 0;
+                        uint64 value = 0;
+                        quic_read_vle_int(&param[0], param.size(), epos, value);
+                        debugstream->printf(" > %I64i (%s) %I64i\n", param_id, tlsadvisor->quic_param_string(param_id).c_str(), value);
+                    } break;
+                }
             }
         }
     }
@@ -93,6 +74,8 @@ return_t tls_extension_quic_transport_parameters::dump(const byte_t* stream, siz
     }
     return ret;
 }
+
+return_t tls_extension_quic_transport_parameters::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -23,15 +23,10 @@ tls_extension_supported_versions::tls_extension_supported_versions(tls_session* 
 
 tls_extension_client_supported_versions::tls_extension_client_supported_versions(tls_session* session) : tls_extension_supported_versions(session) {}
 
-return_t tls_extension_client_supported_versions::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_client_supported_versions::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = tls_extension::read(stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        // uint16 count = 0;
+        uint16 count = 0;
         binary_t versions;
         {
             payload pl;
@@ -39,9 +34,20 @@ return_t tls_extension_client_supported_versions::read(const byte_t* stream, siz
             pl.set_reference_value(constexpr_version, constexpr_versions);
             pl.read(stream, endpos_extension(), pos);
 
-            // count = pl.t_value_of<uint8>(constexpr_versions) >> 1;
+            count = pl.t_value_of<uint8>(constexpr_versions) >> 1;
             pl.get_binary(constexpr_version, versions);
         }
+
+        if (debugstream) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+            debugstream->printf(" > %s %i\n", constexpr_versions, count);
+            for (auto i = 0; i < count; i++) {
+                auto ver = t_binary_to_integer<uint16>(&versions[i << 1], sizeof(uint16));
+                debugstream->printf("   [%i] 0x%04x %s\n", i, ver, tlsadvisor->tls_version_string(ver).c_str());
+            }
+        }
+
         {
             //
             _versions = std::move(versions);
@@ -53,47 +59,17 @@ return_t tls_extension_client_supported_versions::read(const byte_t* stream, siz
     return ret;
 }
 
-return_t tls_extension_client_supported_versions::write(binary_t& bin) { return errorcode_t::not_supported; }
-
-return_t tls_extension_client_supported_versions::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = tls_extension::dump(stream, size, s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            const binary_t& versions = _versions;
-            uint8 count = versions.size() >> 1;
-
-            s->printf(" > %s %i\n", constexpr_versions, count);
-            for (auto i = 0; i < count; i++) {
-                auto ver = t_binary_to_integer<uint16>(&versions[i << 1], sizeof(uint16));
-                s->printf("   [%i] 0x%04x %s\n", i, ver, tlsadvisor->tls_version_string(ver).c_str());
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+return_t tls_extension_client_supported_versions::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 tls_extension_server_supported_versions::tls_extension_server_supported_versions(tls_session* session)
     : tls_extension_supported_versions(session), _version(0) {}
 
-return_t tls_extension_server_supported_versions::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_server_supported_versions::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
         if (nullptr == session) {
             ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        ret = tls_extension::read(stream, size, pos);
-        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -112,6 +88,12 @@ return_t tls_extension_server_supported_versions::read(const byte_t* stream, siz
             protection.set_tls_version(version);
         }
 
+        if (debugstream) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+            debugstream->printf(" > 0x%04x %s\n", version, tlsadvisor->tls_version_string(version).c_str());
+        }
+
         {
             //
             _version = version;
@@ -123,28 +105,7 @@ return_t tls_extension_server_supported_versions::read(const byte_t* stream, siz
     return ret;
 }
 
-return_t tls_extension_server_supported_versions::write(binary_t& bin) { return errorcode_t::not_supported; }
-
-return_t tls_extension_server_supported_versions::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = tls_extension::dump(stream, size, s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            uint16 version = get_version();
-
-            s->printf(" > 0x%04x %s\n", version, tlsadvisor->tls_version_string(version).c_str());
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+return_t tls_extension_server_supported_versions::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 uint16 tls_extension_server_supported_versions::get_version() { return _version; }
 

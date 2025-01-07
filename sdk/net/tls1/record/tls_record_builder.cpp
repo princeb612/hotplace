@@ -50,7 +50,13 @@ tls_record* tls_record_builder::build() {
         case tls_content_type_heartbeat:
         case tls_content_type_tls12_cid:
         default: {
-            __try_new_catch_only(record, new tls_record_unknown(get_type(), get_session()));
+            if (TLS_CONTENT_TYPE_MASK_CIPHERTEXT & get_type()) {
+                // DTLS 1.3 Ciphertext
+                __try_new_catch_only(record, new dtls13_ciphertext(get_type(), get_session()));
+            } else {
+                // TLS 1.2~, DTLS 1.3 Plaintext
+                __try_new_catch_only(record, new tls_record_unknown(get_type(), get_session()));
+            }
         } break;
     }
     return record;

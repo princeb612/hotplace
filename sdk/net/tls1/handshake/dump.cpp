@@ -43,7 +43,7 @@ static return_t tls_dump_certificate_verify(stream_t* s, tls_session* session, c
 static return_t tls_dump_client_key_exchange(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir);
 static return_t tls_dump_finished(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir);
 
-return_t tls_dump_handshake(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir) {
+return_t tls_dump_handshake(tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* s, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == s || nullptr == session || nullptr == stream) {
@@ -492,7 +492,7 @@ return_t tls_dump_client_hello(stream_t* s, tls_session* session, const byte_t* 
         s->autoindent(0);
 
         for (return_t test = errorcode_t::success;;) {
-            test = tls_dump_extension(tls_handshake_client_hello, s, session, stream, size, pos);
+            test = tls_dump_extension(tls_handshake_client_hello, session, stream, size, pos, s);
             if (errorcode_t::no_more == test) {
                 break;
             } else if (errorcode_t::success == test) {
@@ -595,7 +595,7 @@ return_t tls_dump_server_hello(stream_t* s, tls_session* session, const byte_t* 
         s->autoindent(0);
 
         for (return_t test = errorcode_t::success;;) {
-            test = tls_dump_extension(tls_handshake_server_hello, s, session, stream, size, pos);
+            test = tls_dump_extension(tls_handshake_server_hello, session, stream, size, pos, s);
             if (errorcode_t::no_more == test) {
                 break;
             } else if (errorcode_t::success == test) {
@@ -703,7 +703,7 @@ return_t tls_dump_encrypted_extensions(stream_t* s, tls_session* session, const 
 
             pos += 2;  // len
             for (return_t test = errorcode_t::success;;) {
-                test = tls_dump_extension(tls_handshake_encrypted_extensions, s, session, stream, size, pos);
+                test = tls_dump_extension(tls_handshake_encrypted_extensions, session, stream, size, pos, s);
                 if (errorcode_t::no_more == test) {
                     break;
                 } else if (errorcode_t::success == test) {

@@ -18,35 +18,16 @@ namespace net {
 
 tls_extension_unknown::tls_extension_unknown(uint16 type, tls_session* session) : tls_extension(type, session) {}
 
-return_t tls_extension_unknown::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_unknown::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
-    ret = tls_extension::read(stream, size, pos);
-    if (errorcode_t::success == ret) {
-        pos += get_length();
+    if (debugstream) {
+        //
+        // s->printf(" > not supported yet\n");
     }
     return ret;
 }
 
-return_t tls_extension_unknown::write(binary_t& bin) { return not_supported; }
-
-return_t tls_extension_unknown::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = tls_extension::dump(stream, size, s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        {
-            //
-            // s->printf(" > not supported yet\n");
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+return_t tls_extension_unknown::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

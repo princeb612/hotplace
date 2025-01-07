@@ -32,9 +32,10 @@ class tls_extension {
     tls_extension(uint16 type, tls_session* session);
     ~tls_extension();
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t read_header(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
     tls_session* get_session();
     void set_type(uint16 type);
@@ -75,9 +76,8 @@ class tls_extension_unknown : public tls_extension {
    public:
     tls_extension_unknown(uint16 type, tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:
 };
@@ -89,9 +89,8 @@ class tls_extension_sni : public tls_extension {
    public:
     tls_extension_sni(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
     uint8 get_nametype();
     void set_hostname(const std::string& hostname);
@@ -110,9 +109,8 @@ class tls_extension_status_request : public tls_extension {
    public:
     tls_extension_status_request(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
     uint8 get_cert_status_type();
     void set_responderid_info(const binary_t& info);
@@ -134,9 +132,8 @@ class tls_extension_supported_groups : public tls_extension {
    public:
     tls_extension_supported_groups(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
     tls_extension_supported_groups& add_group(uint16 group);
     const binary_t& get_supported_groups();
@@ -153,9 +150,8 @@ class tls_extension_ec_point_formats : public tls_extension {
    public:
     tls_extension_ec_point_formats(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
     tls_extension_ec_point_formats& add_format(uint8 fmt);
     const binary_t& get_formats();
@@ -172,9 +168,8 @@ class tls_extension_signature_algorithms : public tls_extension {
    public:
     tls_extension_signature_algorithms(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
     tls_extension_signature_algorithms& add_algorithm(uint16 alg);
     const binary_t& get_algorithms();
@@ -191,9 +186,8 @@ class tls_extension_alpn : public tls_extension {
    public:
     tls_extension_alpn(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
     const binary_t& get_protocols();
 
@@ -209,9 +203,8 @@ class tls_extension_compress_certificate : public tls_extension {
    public:
     tls_extension_compress_certificate(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
     tls_extension_compress_certificate& add_algorithm(uint16 alg);
     const binary_t& get_algorithms();
@@ -233,9 +226,8 @@ class tls_extension_client_psk : public tls_extension_psk {
    public:
     tls_extension_client_psk(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:
    private:
@@ -251,9 +243,8 @@ class tls_extension_server_psk : public tls_extension_psk {
    public:
     tls_extension_server_psk(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:
    private:
@@ -272,9 +263,8 @@ class tls_extension_client_supported_versions : public tls_extension_supported_v
    public:
     tls_extension_client_supported_versions(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:
    private:
@@ -285,9 +275,8 @@ class tls_extension_server_supported_versions : public tls_extension_supported_v
    public:
     tls_extension_server_supported_versions(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
     uint16 get_version();
 
@@ -303,9 +292,8 @@ class tls_extension_psk_key_exchange_modes : public tls_extension {
    public:
     tls_extension_psk_key_exchange_modes(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:
    private:
@@ -326,9 +314,8 @@ class tls_extension_client_key_share : public tls_extension_key_share {
    public:
     tls_extension_client_key_share(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:
    private:
@@ -341,9 +328,8 @@ class tls_extension_server_key_share : public tls_extension_key_share {
    public:
     tls_extension_server_key_share(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:
    private:
@@ -358,9 +344,8 @@ class tls_extension_quic_transport_parameters : public tls_extension {
    public:
     tls_extension_quic_transport_parameters(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:
    private:
@@ -375,9 +360,8 @@ class tls_extension_alps : public tls_extension {
    public:
     tls_extension_alps(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
     const binary_t& get_alpn();
 
@@ -394,9 +378,8 @@ class tls_extension_encrypted_client_hello : public tls_extension {
    public:
     tls_extension_encrypted_client_hello(tls_session* session);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
-    virtual return_t dump(const byte_t* stream, size_t size, stream_t* s);
+    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:
    private:

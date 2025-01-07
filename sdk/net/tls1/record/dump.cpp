@@ -11,35 +11,38 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/binary.hpp>
+#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/basic/template.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/openssl_crypt.hpp>
+#include <sdk/crypto/crypto/cipher_encrypt.hpp>
+#include <sdk/io/basic/payload.hpp>
+#include <sdk/net/quic/quic.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_record.hpp>
 
 namespace hotplace {
 namespace net {
 
-return_t tls_dump_alert(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_dump_record(tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* s, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == s || nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (pos + 2 > size) {
-            ret = errorcode_t::bad_data;
-            __leave2;
+
+        {
+            uint8 content_type = stream[pos];
+            tls_record_builder builder;
+            auto record = builder.set(session).set(content_type).build();
+            if (record) {
+                ret = record->read(dir, stream, size, pos, s);
+                record->release();
+            }
         }
-
-        tls_advisor* advisor = tls_advisor::get_instance();
-        uint8 level = stream[pos++];
-        uint8 desc = stream[pos++];
-
-        constexpr char constexpr_level[] = "alert level";
-        constexpr char constexpr_desc[] = "alert desc ";
-
-        s->autoindent(1);
-        s->printf(" > %s %i %s\n", constexpr_level, level, advisor->alert_level_string(level).c_str());
-        s->printf(" > %s %i %s\n", constexpr_desc, desc, advisor->alert_desc_string(desc).c_str());
-        s->autoindent(0);
     }
     __finally2 {
         // do nothing

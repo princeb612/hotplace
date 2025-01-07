@@ -40,7 +40,6 @@ class tls_record {
    protected:
     tls_record(uint8 type, tls_session* session);
 
-   private:
     uint8 _content_type;
     uint16 _legacy_version;
     bool _cond_dtls;
@@ -83,11 +82,10 @@ class tls_alert : public tls_record {
     tls_alert(tls_session* session);
 
     virtual return_t read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t read_plaintext(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:
-    virtual return_t doread(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-
    private:
     uint8 _level;
     uint8 _desc;
@@ -135,6 +133,20 @@ class tls_record_unknown : public tls_record {
 
     virtual return_t read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+};
+
+class dtls13_ciphertext : public tls_record {
+   public:
+    dtls13_ciphertext(uint8 type, tls_session* session);
+
+    virtual return_t read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+
+   protected:
+    uint16 _sequence;
+    uint8 _sequence_len;
+    size_t _offset_encdata;
 };
 
 }  // namespace net

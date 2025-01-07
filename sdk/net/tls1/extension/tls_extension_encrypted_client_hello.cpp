@@ -29,14 +29,9 @@ constexpr char constexpr_payload[] = "payload";
 tls_extension_encrypted_client_hello::tls_extension_encrypted_client_hello(tls_session* session)
     : tls_extension(tls1_ext_encrypted_client_hello, session), _client_hello_type(0), _kdf(0), _aead(0), _config_id(0), _enc_len(0), _enc_payload_len(0) {}
 
-return_t tls_extension_encrypted_client_hello::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_encrypted_client_hello::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = tls_extension::read(stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         uint8 client_hello_type = 0;
         uint16 kdf = 0;
         uint16 aead = 0;
@@ -66,6 +61,19 @@ return_t tls_extension_encrypted_client_hello::read(const byte_t* stream, size_t
             pl.get_binary(constexpr_payload, enc_payload);
         }
 
+        if (debugstream) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+            debugstream->printf(" > %s %i\n", constexpr_client_hello_type, client_hello_type);
+            debugstream->printf(" > %s %i %s\n", constexpr_kdf, kdf, tlsadvisor->kdf_id_string(kdf).c_str());
+            debugstream->printf(" > %s %i %s\n", constexpr_aead, aead, tlsadvisor->aead_alg_string(aead).c_str());
+            debugstream->printf(" > %s %i\n", constexpr_config_id, config_id);
+            debugstream->printf(" > %s %i\n", constexpr_enc_len, enc_len);
+            dump_memory(enc, debugstream, 16, 3, 0x0, dump_notrunc);
+            debugstream->printf(" > %s %i\n", constexpr_payload_len, enc_payload_len);
+            dump_memory(enc_payload, debugstream, 16, 3, 0x0, dump_notrunc);
+        }
+
         {
             _client_hello_type = client_hello_type;
             _kdf = kdf;
@@ -83,42 +91,7 @@ return_t tls_extension_encrypted_client_hello::read(const byte_t* stream, size_t
     return ret;
 }
 
-return_t tls_extension_encrypted_client_hello::write(binary_t& bin) { return not_supported; }
-
-return_t tls_extension_encrypted_client_hello::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = tls_extension::dump(stream, size, s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            uint8 client_hello_type = _client_hello_type;
-            uint16 kdf = _kdf;
-            uint16 aead = _aead;
-            uint8 config_id = _config_id;
-            uint16 enc_len = _enc_len;
-            const binary_t& enc = _enc;
-            uint16 enc_payload_len = _enc_payload_len;
-            const binary_t& enc_payload = _enc_payload;
-
-            s->printf(" > %s %i\n", constexpr_client_hello_type, client_hello_type);
-            s->printf(" > %s %i %s\n", constexpr_kdf, kdf, tlsadvisor->kdf_id_string(kdf).c_str());
-            s->printf(" > %s %i %s\n", constexpr_aead, aead, tlsadvisor->aead_alg_string(aead).c_str());
-            s->printf(" > %s %i\n", constexpr_config_id, config_id);
-            s->printf(" > %s %i\n", constexpr_enc_len, enc_len);
-            dump_memory(enc, s, 16, 3, 0x0, dump_notrunc);
-            s->printf(" > %s %i\n", constexpr_payload_len, enc_payload_len);
-            dump_memory(enc_payload, s, 16, 3, 0x0, dump_notrunc);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+return_t tls_extension_encrypted_client_hello::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

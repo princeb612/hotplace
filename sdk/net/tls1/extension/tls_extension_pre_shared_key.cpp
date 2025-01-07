@@ -31,16 +31,12 @@ tls_extension_psk::tls_extension_psk(tls_session* session) : tls_extension(tls1_
 tls_extension_client_psk::tls_extension_client_psk(tls_session* session)
     : tls_extension_psk(session), _psk_identities_len(0), _obfuscated_ticket_age(0), _psk_binders_len(0) {}
 
-return_t tls_extension_client_psk::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_client_psk::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
         if (nullptr == session) {
             ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        ret = tls_extension::read(stream, size, pos);
-        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -75,11 +71,11 @@ return_t tls_extension_client_psk::read(const byte_t* stream, size_t size, size_
         // RFC 9257 Guidance for External Pre-Shared Key (PSK) Usage in TLS
 
         uint16 psk_identities_len = 0;
-        // uint16 psk_identity_len = 0;
+        uint16 psk_identity_len = 0;
         binary_t psk_identity;
         uint32 obfuscated_ticket_age = 0;
         uint16 psk_binders_len = 0;
-        // uint8 psk_binder_len = 0;
+        uint8 psk_binder_len = 0;
         binary_t psk_binder;
         // openssl_kdf kdf;
 
@@ -95,12 +91,12 @@ return_t tls_extension_client_psk::read(const byte_t* stream, size_t size, size_
             pl.read(stream, endpos_extension(), pos);
 
             psk_identities_len = pl.t_value_of<uint16>(constexpr_psk_identities_len);
-            // psk_identity_len = pl.t_value_of<uint16>(constexpr_psk_identity_len);
+            psk_identity_len = pl.t_value_of<uint16>(constexpr_psk_identity_len);
             pl.get_binary(constexpr_psk_identity, psk_identity);
             obfuscated_ticket_age = pl.t_value_of<uint32>(constexpr_obfuscated_ticket_age);
             offset_psk_binders_len = get_header_range().begin + pl.offset_of(constexpr_psk_binders_len);  // 0-RTT "res binder"
             psk_binders_len = pl.t_value_of<uint16>(constexpr_psk_binders_len);
-            // psk_binder_len = pl.t_value_of<uint8>(constexpr_psk_binder_len);
+            psk_binder_len = pl.t_value_of<uint8>(constexpr_psk_binder_len);
             pl.get_binary(constexpr_psk_binder, psk_binder);
         }
 
@@ -127,6 +123,16 @@ return_t tls_extension_client_psk::read(const byte_t* stream, size_t size, size_
             ret = protection.calc_psk(session, context_resumption_binder_hash, psk_binder);
         }
 
+        if (debugstream) {
+            debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
+            dump_memory(psk_identity, debugstream, 16, 3, 0x0, dump_notrunc);
+            debugstream->printf(" > %s 0x%08x\n", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
+            debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_psk_binders_len, psk_binders_len, psk_binders_len);
+            debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_psk_binder_len, psk_binder_len, psk_binder_len);
+            debugstream->printf(" > %s %s \e[1;33m%s\e[0m\n", constexpr_psk_binder, base16_encode(psk_binder).c_str(),
+                                (errorcode_t::success == ret) ? "true" : "false");
+        }
+
         {
             _psk_identities_len = psk_identities_len;
             _psk_identity = std::move(psk_identity);
@@ -142,49 +148,13 @@ return_t tls_extension_client_psk::read(const byte_t* stream, size_t size, size_
     return ret;
 }
 
-return_t tls_extension_client_psk::write(binary_t& bin) { return not_supported; }
-
-return_t tls_extension_client_psk::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = tls_extension::dump(stream, size, s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        uint16 psk_identities_len = _psk_identities_len;
-        const binary_t& psk_identity = _psk_identity;
-        uint16 psk_identity_len = psk_identity.size();
-        uint32 obfuscated_ticket_age = _obfuscated_ticket_age;
-        uint16 psk_binders_len = _psk_binders_len;
-        const binary_t& psk_binder = _psk_binder;
-        uint8 psk_binder_len = psk_binder.size();
-
-        {
-            s->printf(" > %s 0x%04x(%i)\n", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
-            dump_memory(psk_identity, s, 16, 3, 0x0, dump_notrunc);
-            s->printf(" > %s 0x%08x\n", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
-            s->printf(" > %s 0x%04x(%i)\n", constexpr_psk_binders_len, psk_binders_len, psk_binders_len);
-            s->printf(" > %s 0x%04x(%i)\n", constexpr_psk_binder_len, psk_binder_len, psk_binder_len);
-            s->printf(" > %s %s \e[1;33m%s\e[0m\n", constexpr_psk_binder, base16_encode(psk_binder).c_str(), (errorcode_t::success == ret) ? "true" : "false");
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+return_t tls_extension_client_psk::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
 
 tls_extension_server_psk::tls_extension_server_psk(tls_session* session) : tls_extension_psk(session), _selected_identity(0) {}
 
-return_t tls_extension_server_psk::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_server_psk::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = tls_extension::read(stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         uint16 selected_identity = 0;
         {
             payload pl;
@@ -192,6 +162,11 @@ return_t tls_extension_server_psk::read(const byte_t* stream, size_t size, size_
             pl.read(stream, endpos_extension(), pos);
 
             selected_identity = pl.t_value_of<uint16>(constexpr_selected_identity);
+        }
+
+        if (debugstream) {
+            //
+            debugstream->printf(" > %s %i\n", constexpr_selected_identity, selected_identity);
         }
 
         {
@@ -205,27 +180,7 @@ return_t tls_extension_server_psk::read(const byte_t* stream, size_t size, size_
     return ret;
 }
 
-return_t tls_extension_server_psk::write(binary_t& bin) { return not_supported; }
-
-return_t tls_extension_server_psk::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = tls_extension::dump(stream, size, s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        auto selected_identity = _selected_identity;
-        {
-            //
-            s->printf(" > %s %i\n", constexpr_selected_identity, selected_identity);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+return_t tls_extension_server_psk::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

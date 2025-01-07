@@ -23,14 +23,9 @@ constexpr char constexpr_alpn[] = "alpn";
 
 tls_extension_alps::tls_extension_alps(tls_session* session) : tls_extension(tls1_ext_application_layer_protocol_settings, session), _alps_len(0) {}
 
-return_t tls_extension_alps::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_alps::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = tls_extension::read(stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         uint16 alps_len = 0;
         uint8 alpn_len = 0;
         binary_t alpn;
@@ -44,6 +39,11 @@ return_t tls_extension_alps::read(const byte_t* stream, size_t size, size_t& pos
             pl.get_binary(constexpr_alpn, alpn);
         }
 
+        if (debugstream) {
+            debugstream->printf(" > %s %i\n", constexpr_alps_len, alps_len);
+            dump_memory(alpn, debugstream, 16, 3, 0x0, dump_notrunc);
+        }
+
         {
             _alps_len = alps_len;
             _alpn = std::move(alpn);
@@ -55,29 +55,7 @@ return_t tls_extension_alps::read(const byte_t* stream, size_t size, size_t& pos
     return ret;
 }
 
-return_t tls_extension_alps::write(binary_t& bin) { return errorcode_t::not_supported; }
-
-return_t tls_extension_alps::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = tls_extension::dump(stream, size, s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        uint16 alps_len = _alps_len;
-        const binary_t& alpn = get_alpn();
-        uint8 alpn_len = alpn.size();
-        {
-            s->printf(" > %s %i\n", constexpr_alps_len, alps_len);
-            dump_memory(alpn, s, 16, 3, 0x0, dump_notrunc);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+return_t tls_extension_alps::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 const binary_t& tls_extension_alps::get_alpn() { return _alpn; }
 

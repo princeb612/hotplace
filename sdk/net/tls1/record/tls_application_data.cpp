@@ -48,11 +48,13 @@ return_t tls_application_data::read_data(tls_direction_t dir, const byte_t* stre
                     uint8 last_byte = *plaintext.rbegin();
                     if (is_basedon_tls13(tlsversion)) {
                         if (tls_content_type_alert == last_byte) {
-                            ret = tls_dump_alert(debugstream, session, &plaintext[0], plainsize - 1, tpos);
+                            // ret = tls_dump_alert(session, &plaintext[0], plainsize - 1, tpos, debugstream);
+                            tls_alert alert(session);
+                            alert.read_plaintext(dir, &plaintext[0], plainsize - 1, tpos, debugstream);
                         } else if (tls_content_type_handshake == last_byte) {
                             tpos = 0;
                             while (tpos < plainsize) {
-                                auto test = tls_dump_handshake(debugstream, session, &plaintext[0], plainsize - 1, tpos, dir);
+                                auto test = tls_dump_handshake(session, &plaintext[0], plainsize - 1, tpos, debugstream, dir);
                                 if (errorcode_t::success != test) {
                                     if (errorcode_t::no_more == test) {
                                         break;

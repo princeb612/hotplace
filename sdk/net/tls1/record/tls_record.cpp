@@ -52,11 +52,9 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
             __leave2;
         }
 
-        size_t tpos = pos;
-
+        size_t tpos = pos;  // responding to unhandled records
         ret = read_data(dir, stream, size, tpos, debugstream);
-
-        pos += get_length();
+        pos += get_length();  // responding to unhandled records
     }
     __finally2 {
         // do nothing
@@ -153,7 +151,6 @@ return_t tls_record::read_header(tls_direction_t dir, const byte_t* stream, size
             _cond_dtls = cond_dtls;
             if (cond_dtls) {
                 _key_epoch = key_epoch;
-                _dtls_record_seq = std::move(dtls_record_seq);
             }
             _range.begin = recpos;
             _range.end = pos;
@@ -178,6 +175,11 @@ return_t tls_record::read_header(tls_direction_t dir, const byte_t* stream, size
         {
             auto& protection = session->get_tls_protection();
             protection.set_record_version(_legacy_version);
+        }
+        {
+            if (cond_dtls) {
+                _dtls_record_seq = std::move(dtls_record_seq);
+            }
         }
     }
     __finally2 {

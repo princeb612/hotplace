@@ -22,14 +22,9 @@ constexpr char constexpr_mode[] = "mode";
 tls_extension_psk_key_exchange_modes::tls_extension_psk_key_exchange_modes(tls_session* session)
     : tls_extension(tls1_ext_psk_key_exchange_modes, session), _modes(0) {}
 
-return_t tls_extension_psk_key_exchange_modes::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_psk_key_exchange_modes::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = tls_extension::read(stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes
         // enum { psk_ke(0), psk_dhe_ke(1), (255) } PskKeyExchangeMode;
         // struct {
@@ -48,6 +43,16 @@ return_t tls_extension_psk_key_exchange_modes::read(const byte_t* stream, size_t
             pl.get_binary(constexpr_mode, mode);
         }
 
+        if (debugstream) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+            debugstream->printf(" > %s\n", constexpr_modes);
+            for (auto i = 0; i < modes; i++) {
+                auto m = mode[i];
+                debugstream->printf("   [%i] %i %s\n", i, m, tlsadvisor->psk_key_exchange_mode_string(m).c_str());
+            }
+        }
+
         {
             _modes = modes;
             _mode = std::move(mode);
@@ -59,33 +64,7 @@ return_t tls_extension_psk_key_exchange_modes::read(const byte_t* stream, size_t
     return ret;
 }
 
-return_t tls_extension_psk_key_exchange_modes::write(binary_t& bin) { return errorcode_t::not_supported; }
-
-return_t tls_extension_psk_key_exchange_modes::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = tls_extension::dump(stream, size, s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            uint8 modes = _modes;
-            const binary_t& mode = _mode;
-
-            s->printf(" > %s\n", constexpr_modes);
-            for (auto i = 0; i < modes; i++) {
-                auto m = mode[i];
-                s->printf("   [%i] %i %s\n", i, m, tlsadvisor->psk_key_exchange_mode_string(m).c_str());
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+return_t tls_extension_psk_key_exchange_modes::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

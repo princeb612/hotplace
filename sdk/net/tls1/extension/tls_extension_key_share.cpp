@@ -82,14 +82,9 @@ constexpr char constexpr_pubkey[] = "public key";
 
 tls_extension_client_key_share::tls_extension_client_key_share(tls_session* session) : tls_extension_key_share(session) {}
 
-return_t tls_extension_client_key_share::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_client_key_share::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = tls_extension::read(stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         // RFC 8446 4.2.8.  Key Share
         // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_dhe_ke)
 
@@ -130,6 +125,25 @@ return_t tls_extension_client_key_share::read(const byte_t* stream, size_t size,
             _keys.push_back(group);
             _keyshares.insert({group, pubkey});
         }
+
+        if (debugstream) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            debugstream->printf(" > %s %i(0x%04x)\n", constexpr_len, len, len);
+
+            for (auto item : _keys) {
+                auto group = item;
+                auto iter = _keyshares.find(item);
+                auto const& pubkey = iter->second;
+                uint16 pubkeylen = pubkey.size();
+
+                debugstream->printf("  > %s\n", constexpr_key_share_entry);
+                debugstream->printf("   > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_string(group).c_str());
+                debugstream->printf("   > %s %04x(%i)\n", constexpr_pubkey_len, pubkeylen, pubkeylen);
+                dump_memory(pubkey, debugstream, 16, 5, 0x0, dump_notrunc);
+                debugstream->printf("     %s\n", base16_encode(pubkey).c_str());
+            }
+        }
+
         {
             //
             _key_share_len = len;
@@ -141,54 +155,17 @@ return_t tls_extension_client_key_share::read(const byte_t* stream, size_t size,
     return ret;
 }
 
-return_t tls_extension_client_key_share::write(binary_t& bin) { return errorcode_t::not_supported; }
-
-return_t tls_extension_client_key_share::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = tls_extension::dump(stream, size, s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto len = _key_share_len;
-            s->printf(" > %s %i(0x%04x)\n", constexpr_len, len, len);
-
-            for (auto item : _keys) {
-                auto group = item;
-                auto iter = _keyshares.find(item);
-                auto const& pubkey = iter->second;
-                uint16 pubkeylen = pubkey.size();
-
-                s->printf("  > %s\n", constexpr_key_share_entry);
-                s->printf("   > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_string(group).c_str());
-                s->printf("   > %s %04x(%i)\n", constexpr_pubkey_len, pubkeylen, pubkeylen);
-                dump_memory(pubkey, s, 16, 5, 0x0, dump_notrunc);
-                s->printf("     %s\n", base16_encode(pubkey).c_str());
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+return_t tls_extension_client_key_share::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 tls_extension_server_key_share::tls_extension_server_key_share(tls_session* session) : tls_extension_key_share(session), _group(0) {}
 
-return_t tls_extension_server_key_share::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_server_key_share::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = tls_extension::read(stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         uint16 group = 0;
         keydesc desc;
         binary_t pubkey;
+        uint16 pubkeylen = 0;
         {
             desc.set_kid("SH");
             //  struct {
@@ -204,11 +181,23 @@ return_t tls_extension_server_key_share::read(const byte_t* stream, size_t size,
             // if (0 == pubkeylen) hello_retry_request
 
             group = pl.t_value_of<uint16>(constexpr_group);
-            uint16 pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
+            pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
             pl.get_binary(constexpr_pubkey, pubkey);
 
             add_pubkey(group, pubkey, desc);
         }
+
+        if (debugstream) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+            debugstream->printf(" > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_string(group).c_str());
+            if (pubkeylen) {
+                debugstream->printf(" > %s %i\n", constexpr_pubkey_len, pubkeylen);
+                dump_memory(pubkey, debugstream, 16, 3, 0x0, dump_notrunc);
+                debugstream->printf("   %s\n", base16_encode(pubkey).c_str());
+            }
+        }
+
         {
             _group = group;
             _pubkey = std::move(pubkey);
@@ -220,35 +209,7 @@ return_t tls_extension_server_key_share::read(const byte_t* stream, size_t size,
     return ret;
 }
 
-return_t tls_extension_server_key_share::write(binary_t& bin) { return errorcode_t::not_supported; }
-
-return_t tls_extension_server_key_share::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = tls_extension::dump(stream, size, s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto group = _group;
-            auto const& pubkey = _pubkey;
-            uint16 pubkeylen = pubkey.size();
-
-            s->printf(" > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_string(group).c_str());
-            if (pubkeylen) {
-                s->printf(" > %s %i\n", constexpr_pubkey_len, pubkeylen);
-                dump_memory(pubkey, s, 16, 3, 0x0, dump_notrunc);
-                s->printf("   %s\n", base16_encode(pubkey).c_str());
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+return_t tls_extension_server_key_share::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

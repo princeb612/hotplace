@@ -43,7 +43,7 @@ void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
     _logger->writeln(bs);
 }
 
-return_t dump_record(const char* text, tls_session* session, const binary_t& bin, tls_direction_t role, bool expect) {
+return_t dump_record(const char* text, tls_session* session, const binary_t& bin, tls_direction_t dir, bool expect) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == text || nullptr == session) {
@@ -55,7 +55,7 @@ return_t dump_record(const char* text, tls_session* session, const binary_t& bin
         size_t pos = 0;
         size_t size = bin.size();
         while (pos < size) {
-            auto test = tls_dump_record(&bs, session, &bin[0], bin.size(), pos, role);
+            auto test = tls_dump_record(session, &bin[0], bin.size(), pos, &bs, dir);
             if (errorcode_t::success != test) {
                 ret = test;
             }
@@ -68,7 +68,7 @@ return_t dump_record(const char* text, tls_session* session, const binary_t& bin
             ret = expect_failure;
         }
 
-        _test_case.test(ret, __FUNCTION__, "%s : %s", (from_client == role) ? "C -> S" : "C <- S", text);
+        _test_case.test(ret, __FUNCTION__, "%s : %s", (from_client == dir) ? "C -> S" : "C <- S", text);
     }
     __finally2 {
         // do nothing
@@ -76,7 +76,7 @@ return_t dump_record(const char* text, tls_session* session, const binary_t& bin
     return ret;
 }
 
-return_t dump_handshake(const char* text, tls_session* session, const binary_t& bin, tls_direction_t role) {
+return_t dump_handshake(const char* text, tls_session* session, const binary_t& bin, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == text || nullptr == session) {
@@ -88,7 +88,7 @@ return_t dump_handshake(const char* text, tls_session* session, const binary_t& 
         size_t pos = 0;
         size_t size = bin.size();
         while (pos < size) {
-            ret = tls_dump_handshake(&bs, session, &bin[0], bin.size(), pos, role);
+            ret = tls_dump_handshake(session, &bin[0], bin.size(), pos, &bs, dir);
             if (errorcode_t::success != ret) {
                 break;
             }
@@ -97,7 +97,7 @@ return_t dump_handshake(const char* text, tls_session* session, const binary_t& 
         _logger->writeln(bs);
         bs.clear();
 
-        _test_case.test(ret, __FUNCTION__, "%s : %s", (from_client == role) ? "C -> S" : "C <- S", text);
+        _test_case.test(ret, __FUNCTION__, "%s : %s", (from_client == dir) ? "C -> S" : "C <- S", text);
     }
     __finally2 {
         // do nothing

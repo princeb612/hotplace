@@ -68,11 +68,11 @@ return_t tls_handshake::read_data(tls_direction_t dir, const byte_t* stream, siz
                 }
                 if (errorcode_t::success == ret) {
                     tpos = 0;
-                    ret = tls_dump_handshake(debugstream, session, &plaintext[0], plaintext.size(), tpos, dir);
+                    ret = tls_dump_handshake(session, &plaintext[0], plaintext.size(), tpos, debugstream, dir);
                 }
             } else {
                 tpos = pos;
-                ret = tls_dump_handshake(debugstream, session, stream, pos + len, tpos, dir);
+                ret = tls_dump_handshake(session, stream, pos + len, tpos, debugstream, dir);
             }
         }
     }

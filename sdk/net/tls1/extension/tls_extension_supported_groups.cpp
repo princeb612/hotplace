@@ -21,16 +21,11 @@ constexpr char constexpr_curve[] = "curve";
 
 tls_extension_supported_groups::tls_extension_supported_groups(tls_session* session) : tls_extension(tls1_ext_supported_groups, session) {}
 
-return_t tls_extension_supported_groups::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_supported_groups::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = tls_extension::read(stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         binary_t supported_groups;
-        // uint16 curves = 0;
+        uint16 curves = 0;
 
         {
             // RFC 8422 5.  Data Structures and Computations
@@ -43,8 +38,18 @@ return_t tls_extension_supported_groups::read(const byte_t* stream, size_t size,
             pl.set_reference_value(constexpr_curve, constexpr_curves);
             pl.read(stream, endpos_extension(), pos);
 
-            // curves = pl.t_value_of<uint16>(constexpr_curves) >> 1;
+            curves = pl.t_value_of<uint16>(constexpr_curves) >> 1;
             pl.get_binary(constexpr_curve, supported_groups);
+        }
+
+        if (debugstream) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+            debugstream->printf(" > %s %i\n", constexpr_curves, curves);
+            for (auto i = 0; i < curves; i++) {
+                auto curve = t_binary_to_integer<uint16>(&supported_groups[i << 1], sizeof(uint16));
+                debugstream->printf("   [%i] 0x%04x(%i) %s\n", i, curve, curve, tlsadvisor->supported_group_string(curve).c_str());
+            }
         }
 
         {
@@ -58,33 +63,7 @@ return_t tls_extension_supported_groups::read(const byte_t* stream, size_t size,
     return ret;
 }
 
-return_t tls_extension_supported_groups::write(binary_t& bin) { return not_supported; }
-
-return_t tls_extension_supported_groups::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = tls_extension::dump(stream, size, s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto const& supported_groups = get_supported_groups();
-            uint16 curves = supported_groups.size() >> 1;
-
-            s->printf(" > %s %i\n", constexpr_curves, curves);
-            for (auto i = 0; i < curves; i++) {
-                auto curve = t_binary_to_integer<uint16>(&supported_groups[i << 1], sizeof(uint16));
-                s->printf("   [%i] 0x%04x(%i) %s\n", i, curve, curve, tlsadvisor->supported_group_string(curve).c_str());
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+return_t tls_extension_supported_groups::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
 
 tls_extension_supported_groups& tls_extension_supported_groups::add_group(uint16 group) {
     binary_append(_supported_groups, group, hton16);

@@ -45,11 +45,11 @@ return_t tls_alert::read_data(tls_direction_t dir, const byte_t* stream, size_t 
                 }
                 if (errorcode_t::success == ret) {
                     tpos = 0;
-                    ret = doread(dir, &plaintext[0], plaintext.size(), tpos);
+                    ret = read_plaintext(dir, &plaintext[0], plaintext.size(), tpos);
                 }
             } else {
                 tpos = pos;
-                ret = doread(dir, stream, size, tpos);
+                ret = read_plaintext(dir, stream, size, tpos);
             }
         }
     }
@@ -59,9 +59,7 @@ return_t tls_alert::read_data(tls_direction_t dir, const byte_t* stream, size_t 
     return ret;
 }
 
-return_t tls_alert::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
-
-return_t tls_alert::doread(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_alert::read_plaintext(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -96,6 +94,8 @@ return_t tls_alert::doread(tls_direction_t dir, const byte_t* stream, size_t siz
     }
     return ret;
 }
+
+return_t tls_alert::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

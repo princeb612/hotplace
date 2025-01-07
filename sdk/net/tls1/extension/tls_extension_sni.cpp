@@ -11,7 +11,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
@@ -27,14 +26,9 @@ constexpr char constexpr_hostname[] = "hostname";
 
 tls_extension_sni::tls_extension_sni(tls_session* session) : tls_extension(tls1_ext_server_name, session), _nametype(0) {}
 
-return_t tls_extension_sni::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_sni::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = tls_extension::read(stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         // RFC 6066 3.  Server Name Indication
 
         uint16 first_entry_len = 0;
@@ -74,6 +68,13 @@ return_t tls_extension_sni::read(const byte_t* stream, size_t size, size_t& pos)
             pl.get_binary(constexpr_hostname, hostname);
         }
 
+        if (debugstream) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+            debugstream->printf(" > %s %i (%s)\n", constexpr_name_type, type, tlsadvisor->sni_nametype_string(type).c_str());  // 00 host_name
+            debugstream->printf(" > %s %s\n", constexpr_hostname, bin2str(hostname).c_str());
+        }
+
         {
             _nametype = type;
             _hostname = std::move(hostname);
@@ -85,32 +86,7 @@ return_t tls_extension_sni::read(const byte_t* stream, size_t size, size_t& pos)
     return ret;
 }
 
-return_t tls_extension_sni::write(binary_t& bin) { return not_supported; }
-
-return_t tls_extension_sni::dump(const byte_t* stream, size_t size, stream_t* s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == s) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        tls_extension::dump(stream, size, s);
-
-        {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto type = get_nametype();
-            const binary_t& hostname = get_hostname();
-
-            s->printf(" > %s %i (%s)\n", constexpr_name_type, type, tlsadvisor->sni_nametype_string(type).c_str());  // 00 host_name
-            s->printf(" > %s %s\n", constexpr_hostname, bin2str(hostname).c_str());
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+return_t tls_extension_sni::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
 
 uint8 tls_extension_sni::get_nametype() { return _nametype; }
 
