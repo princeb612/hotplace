@@ -33,19 +33,19 @@ tls_record* tls_record_builder::build() {
     tls_record* record = nullptr;
     switch (get_type()) {
         case tls_content_type_change_cipher_spec: {
-            __try_new_catch_only(record, new tls_change_cipher_spec(get_session()));
+            __try_new_catch_only(record, new tls_record_change_cipher_spec(get_session()));
         } break;
         case tls_content_type_alert: {
-            __try_new_catch_only(record, new tls_alert(get_session()));
+            __try_new_catch_only(record, new tls_record_alert(get_session()));
         } break;
         case tls_content_type_handshake: {
-            __try_new_catch_only(record, new tls_handshake(get_session()));
+            __try_new_catch_only(record, new tls_record_handshake(get_session()));
         } break;
         case tls_content_type_application_data: {
             __try_new_catch_only(record, new tls_application_data(get_session()));
         } break;
         case tls_content_type_ack: {
-            __try_new_catch_only(record, new tls_ack(get_session()));
+            __try_new_catch_only(record, new tls_record_ack(get_session()));
         } break;
         case tls_content_type_heartbeat:
         case tls_content_type_tls12_cid:

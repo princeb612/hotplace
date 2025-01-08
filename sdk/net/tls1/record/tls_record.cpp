@@ -158,7 +158,7 @@ return_t tls_record::read_header(tls_direction_t dir, const byte_t* stream, size
 
         if (debugstream) {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto range = get_header_range();
+            auto const& range = get_header_range();
 
             debugstream->printf("# TLS Record\n");
             dump_memory(stream + range.begin, range.end - range.begin + get_length(), debugstream, 16, 3, 0x00, dump_notrunc);

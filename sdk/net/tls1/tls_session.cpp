@@ -16,11 +16,7 @@
 namespace hotplace {
 namespace net {
 
-tls_session::tls_session() : _hstype(tls_handshake_client_hello) { _shared.make_share(this); }
-
-void tls_session::set_status(tls_handshake_type_t type) { _hstype = type; }
-
-tls_handshake_type_t tls_session::get_status() { return _hstype; }
+tls_session::tls_session() { _shared.make_share(this); }
 
 tls_protection& tls_session::get_tls_protection() { return _tls_protection; }
 
@@ -39,11 +35,11 @@ void tls_session::addref() { _shared.addref(); }
 
 void tls_session::release() { _shared.delref(); }
 
-tls_session::session_info::session_info() : hstype(tls_handshake_client_hello), apply_cipher_spec(false), record_no(0) {}
+tls_session::session_info::session_info() : hstype(tls_hs_client_hello), apply_cipher_spec(false), record_no(0) {}
 
-void tls_session::session_info::set_status(tls_handshake_type_t type) { hstype = type; }
+void tls_session::session_info::set_status(tls_hs_type_t type) { hstype = type; }
 
-tls_handshake_type_t tls_session::session_info::get_status() { return hstype; }
+tls_hs_type_t tls_session::session_info::get_status() { return hstype; }
 
 void tls_session::session_info::change_cipher_spec() { apply_cipher_spec = true; }
 

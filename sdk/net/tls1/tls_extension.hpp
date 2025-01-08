@@ -63,13 +63,16 @@ class tls_extension_builder {
     tls_extension_builder();
     tls_extension_builder& set(tls_session* session);
     tls_extension_builder& set(uint16 type);
+    tls_extension_builder& set(tls_hs_type_t handshake);
     tls_extension* build();
 
-   private:
     tls_session* get_session();
+    tls_hs_type_t get_handshake();
 
+   private:
     tls_session* _session;
     uint16 _type;
+    tls_hs_type_t _handshake;
 };
 
 class tls_extension_unknown : public tls_extension {

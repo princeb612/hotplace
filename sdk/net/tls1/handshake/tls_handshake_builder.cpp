@@ -1,0 +1,89 @@
+/* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
+/**
+ * @file {file}
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @desc
+ *
+ * Revision History
+ * Date         Name                Description
+ */
+
+#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls1/tls.hpp>
+#include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_handshake.hpp>
+
+namespace hotplace {
+namespace net {
+
+tls_handshake_builder::tls_handshake_builder() : _type(tls_hs_client_hello), _session(nullptr) {}
+
+tls_handshake_builder& tls_handshake_builder::set(tls_hs_type_t type) {
+    _type = type;
+    return *this;
+}
+
+tls_handshake_builder& tls_handshake_builder::set(tls_session* session) {
+    _session = session;
+    return *this;
+}
+
+tls_handshake* tls_handshake_builder::build() {
+    tls_handshake* handshake = nullptr;
+    auto hstype = get_type();
+    auto session = get_session();
+    switch (hstype) {
+        case tls_hs_client_hello: {
+            __try_new_catch_only(handshake, new tls_handshake_client_hello(session));
+        } break;
+        case tls_hs_server_hello: {
+            __try_new_catch_only(handshake, new tls_handshake_server_hello(session));
+        } break;
+        case tls_hs_new_session_ticket: {
+            __try_new_catch_only(handshake, new tls_handshake_new_session_ticket(session));
+        } break;
+        case tls_hs_end_of_early_data: {
+            __try_new_catch_only(handshake, new tls_handshake_end_of_early_data(session));
+        } break;
+        case tls_hs_encrypted_extensions: {
+            __try_new_catch_only(handshake, new tls_handshake_encrypted_extensions(session));
+        } break;
+        case tls_hs_certificate: {
+            __try_new_catch_only(handshake, new tls_handshake_certificate(session));
+        } break;
+        case tls_hs_server_key_exchange: {
+            __try_new_catch_only(handshake, new tls_handshake_server_key_exchange(session));
+        } break;
+        case tls_hs_certificate_verify: {
+            __try_new_catch_only(handshake, new tls_handshake_certificate_verify(session));
+        } break;
+        case tls_hs_client_key_exchange: {
+            __try_new_catch_only(handshake, new tls_handshake_client_key_exchange(session));
+        } break;
+        case tls_hs_finished: {
+            __try_new_catch_only(handshake, new tls_handshake_finished(session));
+        } break;
+        case tls_hs_hello_request:
+        case tls_hs_request_connection_id:
+        case tls_hs_new_connection_id:
+        case tls_hs_certificate_request:  // RFC 4346 7.4.4. Certificate request
+        case tls_hs_server_hello_done:
+        case tls_hs_client_certificate_request:
+        case tls_hs_certificate_url:
+        case tls_hs_certificate_status:
+        case tls_hs_key_update:
+        case tls_hs_compressed_certificate:
+        default: {
+            __try_new_catch_only(handshake, new tls_handshake_unknown(hstype, session));
+        } break;
+    }
+    return handshake;
+}
+
+tls_hs_type_t tls_handshake_builder::get_type() { return _type; }
+
+tls_session* tls_handshake_builder::get_session() { return _session; }
+
+}  // namespace net
+}  // namespace hotplace

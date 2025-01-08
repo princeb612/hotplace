@@ -110,6 +110,7 @@ class tls_protection {
     /**
      * hash(handshake)
      */
+    return_t calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size);
     return_t calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest);
     return_t reset_transcript_hash(tls_session* session);
     return_t calc_context_hash(tls_session* session, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& digest);
@@ -128,9 +129,9 @@ class tls_protection {
     /**
      * @brief   calc
      * @param   tls_session* session [in]
-     * @param   tls_handshake_type_t type [in]
+     * @param   tls_hs_type_t type [in]
      */
-    return_t calc(tls_session* session, tls_handshake_type_t type, tls_direction_t dir);
+    return_t calc(tls_session* session, tls_hs_type_t type, tls_direction_t dir);
     return_t calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder);
 
     void get_item(tls_secret_t type, binary_t& item);
@@ -191,16 +192,14 @@ class tls_session {
    public:
     tls_session();
 
-    void set_status(tls_handshake_type_t type);
-    tls_handshake_type_t get_status();
     tls_protection& get_tls_protection();
 
     class session_info {
        public:
         session_info();
 
-        void set_status(tls_handshake_type_t type);
-        tls_handshake_type_t get_status();
+        void set_status(tls_hs_type_t type);
+        tls_hs_type_t get_status();
         void change_cipher_spec();
         bool doprotect();
         uint64 get_recordno(bool inc = false);
@@ -208,7 +207,7 @@ class tls_session {
         void reset_recordno();
 
        private:
-        tls_handshake_type_t hstype;
+        tls_hs_type_t hstype;
         bool apply_cipher_spec;
         uint64 record_no;
     };
@@ -221,7 +220,6 @@ class tls_session {
     void release();
 
    private:
-    tls_handshake_type_t _hstype;
     std::map<tls_direction_t, session_info> _direction;
     tls_protection _tls_protection;
     t_shared_reference<tls_session> _shared;
@@ -237,7 +235,7 @@ class tls_session {
  */
 return_t tls_dump_record(tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* s, tls_direction_t dir = from_server);
 return_t tls_dump_handshake(tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* s, tls_direction_t dir = from_server);
-return_t tls_dump_extension(tls_handshake_type_t hstype, tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* s);
+return_t tls_dump_extension(tls_hs_type_t hstype, tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* s);
 
 bool is_basedon_tls13(uint16 ver);
 bool is_kindof_tls(uint16 ver);

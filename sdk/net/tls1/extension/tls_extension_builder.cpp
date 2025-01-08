@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace net {
 
-tls_extension_builder::tls_extension_builder() : _session(nullptr), _type(-1) {}
+tls_extension_builder::tls_extension_builder() : _session(nullptr), _type(-1), _handshake(tls_hs_client_hello) {}
 
 tls_extension_builder& tls_extension_builder::set(tls_session* session) {
     _session = session;
@@ -29,7 +29,14 @@ tls_extension_builder& tls_extension_builder::set(uint16 type) {
     return *this;
 }
 
+tls_extension_builder& tls_extension_builder::set(tls_hs_type_t handshake) {
+    _handshake = handshake;
+    return *this;
+}
+
 tls_session* tls_extension_builder::get_session() { return _session; }
+
+tls_hs_type_t tls_extension_builder::get_handshake() { return _handshake; }
 
 tls_extension* tls_extension_builder::build() {
     tls_extension* extension = nullptr;
@@ -58,10 +65,10 @@ tls_extension* tls_extension_builder::build() {
         case tls1_ext_pre_shared_key: /* 0x0029 */ {
             auto session = get_session();
             if (session) {
-                auto hstype = session->get_status();
-                if (tls_handshake_client_hello == hstype) {
+                auto hstype = get_handshake();
+                if (tls_hs_client_hello == hstype) {
                     __try_new_catch_only(extension, new tls_extension_client_psk(get_session()));
-                } else if (tls_handshake_server_hello == hstype) {
+                } else if (tls_hs_server_hello == hstype) {
                     __try_new_catch_only(extension, new tls_extension_server_psk(get_session()));
                 }
             }
@@ -69,10 +76,10 @@ tls_extension* tls_extension_builder::build() {
         case tls1_ext_supported_versions: /* 0x002b */ {
             auto session = get_session();
             if (session) {
-                auto hstype = session->get_status();
-                if (tls_handshake_client_hello == hstype) {
+                auto hstype = get_handshake();
+                if (tls_hs_client_hello == hstype) {
                     __try_new_catch_only(extension, new tls_extension_client_supported_versions(get_session()));
-                } else if (tls_handshake_server_hello == hstype) {
+                } else if (tls_hs_server_hello == hstype) {
                     __try_new_catch_only(extension, new tls_extension_server_supported_versions(get_session()));
                 }
             }
@@ -83,10 +90,10 @@ tls_extension* tls_extension_builder::build() {
         case tls1_ext_key_share: /* 0x0033 */ {
             auto session = get_session();
             if (session) {
-                auto hstype = session->get_status();
-                if (tls_handshake_client_hello == hstype) {
+                auto hstype = get_handshake();
+                if (tls_hs_client_hello == hstype) {
                     __try_new_catch_only(extension, new tls_extension_client_key_share(get_session()));
-                } else if (tls_handshake_server_hello == hstype) {
+                } else if (tls_hs_server_hello == hstype) {
                     __try_new_catch_only(extension, new tls_extension_server_key_share(get_session()));
                 }
             }

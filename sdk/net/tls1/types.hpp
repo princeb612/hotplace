@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS1X_TYPES__
-#define __HOTPLACE_SDK_NET_TLS1X_TYPES__
+#ifndef __HOTPLACE_SDK_NET_TLS1_TYPES__
+#define __HOTPLACE_SDK_NET_TLS1_TYPES__
 
 #include <sdk/base/system/types.hpp>
 #include <sdk/net/types.hpp>
@@ -62,34 +62,34 @@ enum tls_version_t {
  * RFC 5246 7.4.  Handshake Protocol
  * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  */
-enum tls_handshake_type_t : uint8 {
-    tls_handshake_hello_request = 0,                // 0x00
-    tls_handshake_client_hello = 1,                 // 0x01 CH
-    tls_handshake_server_hello = 2,                 // 0x02 SH
-    tls_handshake_new_session_ticket = 4,           // 0x04 NST
-    tls_handshake_end_of_early_data = 5,            // 0x05
-    tls_handshake_encrypted_extensions = 8,         // 0x08 EE
-    tls_handshake_request_connection_id = 9,        //
-    tls_handshake_new_connection_id = 10,           //
-    tls_handshake_certificate = 11,                 // 0x0b CT
-    tls_handshake_server_key_exchange = 12,         // 0x0c
-    tls_handshake_certificate_request = 13,         // 0x0d CR
-    tls_handshake_server_hello_done = 14,           // 0x0e
-    tls_handshake_certificate_verify = 15,          // 0x0f
-    tls_handshake_client_key_exchange = 16,         // 0x10
-    tls_handshake_client_certificate_request = 17,  //
-    tls_handshake_finished = 20,                    // 0x14
-    tls_handshake_certificate_url = 21,             // 0x15
-    tls_handshake_certificate_status = 22,          // 0x16
-    tls_handshake_key_update = 24,                  // 0x18
-    tls_handshake_compressed_certificate = 25,      //
-    tls_handshake_message_hash = 254,               // 0xfe
+enum tls_hs_type_t : uint8 {
+    tls_hs_hello_request = 0,                // 0x00
+    tls_hs_client_hello = 1,                 // 0x01 CH
+    tls_hs_server_hello = 2,                 // 0x02 SH
+    tls_hs_new_session_ticket = 4,           // 0x04 NST
+    tls_hs_end_of_early_data = 5,            // 0x05
+    tls_hs_encrypted_extensions = 8,         // 0x08 EE
+    tls_hs_request_connection_id = 9,        //
+    tls_hs_new_connection_id = 10,           //
+    tls_hs_certificate = 11,                 // 0x0b CT
+    tls_hs_server_key_exchange = 12,         // 0x0c
+    tls_hs_certificate_request = 13,         // 0x0d CR
+    tls_hs_server_hello_done = 14,           // 0x0e
+    tls_hs_certificate_verify = 15,          // 0x0f
+    tls_hs_client_key_exchange = 16,         // 0x10
+    tls_hs_client_certificate_request = 17,  //
+    tls_hs_finished = 20,                    // 0x14
+    tls_hs_certificate_url = 21,             // 0x15
+    tls_hs_certificate_status = 22,          // 0x16
+    tls_hs_key_update = 24,                  // 0x18
+    tls_hs_compressed_certificate = 25,      //
+    tls_hs_message_hash = 254,               // 0xfe
 };
 
 /* RFC 8446 4.  Handshake Protocol */
 #pragma pack(push, 1)
 struct tls_handshake_t {
-    tls_handshake_type_t msg_type;
+    tls_hs_type_t msg_type;
     uint24_t length;
 };
 #pragma pack(pop)
@@ -137,7 +137,7 @@ enum tls_alertdesc_t : uint8 {
     tls_alertdesc_no_application_protocol = 120,
 };
 
-enum tls1_ext_t : uint16 {
+enum tls1_ext_type_t : uint16 {
     tls1_ext_server_name = 0,                             /* RFC 6066 */
     tls1_ext_max_fragment_length = 1,                     /* RFC 6066 */
     tls1_ext_client_certificate_url = 2,                  // RFC 4366
@@ -503,7 +503,30 @@ enum tls_direction_t {
 class tls_protection;
 class tls_session;
 class tls_advisor;
-class tls_content_type;
+
+// record
+class tls_record;
+class tls_record_builder;
+class tls_record_change_cipher_spec;
+class tls_record_alert;
+class tls_record_handshake;
+class tls_application_data;
+class tls_record_ack;
+class tls_record_unknown;
+class dtls13_ciphertext;
+
+// handshake
+class tls_handshake;
+class tls_handshake_client_hello;
+class tls_handshake_server_hello;
+class tls_handshake_new_session_ticket;
+class tls_handshake_encrypted_extensions;
+class tls_handshake_certificate;
+class tls_handshake_server_key_exchange;
+class tls_handshake_server_hello_done;
+class tls_handshake_certificate_verify;
+class tls_handshake_client_key_exchange;
+class tls_handshake_finished;
 
 // extension
 class tls_extension;

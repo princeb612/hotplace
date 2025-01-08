@@ -15,9 +15,9 @@
 namespace hotplace {
 namespace net {
 
-tls_change_cipher_spec::tls_change_cipher_spec(tls_session* session) : tls_record(tls_content_type_change_cipher_spec, session) {}
+tls_record_change_cipher_spec::tls_record_change_cipher_spec(tls_session* session) : tls_record(tls_content_type_change_cipher_spec, session) {}
 
-return_t tls_change_cipher_spec::read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_record_change_cipher_spec::read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         {
@@ -44,7 +44,7 @@ return_t tls_change_cipher_spec::read_data(tls_direction_t dir, const byte_t* st
     return ret;
 }
 
-return_t tls_change_cipher_spec::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_record_change_cipher_spec::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

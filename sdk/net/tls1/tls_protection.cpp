@@ -78,7 +78,7 @@ transcript_hash* tls_protection::get_transcript_hash() {
     return _transcript_hash;
 }
 
-return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest) {
+return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || (size && (nullptr == stream))) {
@@ -102,14 +102,37 @@ return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t
                 //
                 // 12.. $ handshake, extension
                 hash->update(stream + offset_version, size - offset_version);
-                hash->digest(digest);
             } else {
                 // TLS
                 // hash->digest(stream, size, digest);
                 hash->update(stream, size);
-                hash->digest(digest);
             }
 
+            hash->release();
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || (size && (nullptr == stream))) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        calc_transcript_hash(session, stream, size);
+
+        // The hash does not include DTLS-only bytes in the records.
+        // --> The hash does not include handshake reconstruction data bytes in the records.
+
+        auto hash = get_transcript_hash();
+        if (hash) {
+            hash->digest(digest);
             hash->release();
         }
     }
@@ -177,7 +200,7 @@ void tls_protection::use_pre_master_secret(bool use) { _use_pre_master_secret = 
 
 bool tls_protection::use_pre_master_secret() { return _use_pre_master_secret; }
 
-return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, tls_direction_t dir) {
+return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     // RFC 8446 7.1.  Key Schedule
     __try2 {
@@ -249,7 +272,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
             _kv[tls_context_transcript_hash] = context_hash;
         }
 
-        if (tls_handshake_client_hello == type) {
+        if (tls_hs_client_hello == type) {
             /**
              *             0
              *             |
@@ -294,7 +317,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                 binary_t secret_c_e_traffic_iv;
                 lambda_expand_label(tls_secret_c_e_traffic_iv, secret_c_e_traffic_iv, hashalg, 12, secret_c_e_traffic, "iv", empty);
             }
-        } else if (tls_handshake_server_hello == type) {
+        } else if (tls_hs_server_hello == type) {
             // ~ TLS 1.2 see client_key_exchange, server_key_exchange
             // TLS 1.3 server_hello legacy_version
 
@@ -426,7 +449,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                 lambda_expand_label(tls_secret_handshake_quic_server_iv, okm, hashalg, 12, secret_handshake_server, "quic iv", empty);
                 lambda_expand_label(tls_secret_handshake_quic_server_hp, okm, hashalg, keysize, secret_handshake_server, "quic hp", empty);
             }
-        } else if (tls_handshake_end_of_early_data == type) {
+        } else if (tls_hs_end_of_early_data == type) {
             binary_t okm;
             const binary_t& secret_c_hs_traffic = get_item(tls_secret_c_hs_traffic);
             lambda_expand_label(tls_secret_handshake_client_key, okm, hashalg, keysize, secret_c_hs_traffic, "key", empty);
@@ -434,7 +457,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
             const binary_t& secret_s_hs_traffic = get_item(tls_secret_s_hs_traffic);
             lambda_expand_label(tls_secret_handshake_server_key, okm, hashalg, keysize, secret_s_hs_traffic, "key", empty);
             lambda_expand_label(tls_secret_handshake_server_iv, okm, hashalg, 12, secret_s_hs_traffic, "iv", empty);
-        } else if ((tls_handshake_finished == type) && (from_server == dir)) {
+        } else if ((tls_hs_finished == type) && (from_server == dir)) {
             /**
              *   0 -> HKDF-Extract = Master Secret
              *             |
@@ -492,7 +515,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                 lambda_expand_label(tls_secret_application_quic_server_iv, okm, hashalg, 12, secret_application_server, "quic iv", empty);
                 lambda_expand_label(tls_secret_application_quic_server_hp, okm, hashalg, keysize, secret_application_server, "quic hp", empty);
             }
-        } else if ((tls_handshake_finished == type) && (from_client == dir)) {
+        } else if ((tls_hs_finished == type) && (from_client == dir)) {
             /**
              *   0 -> HKDF-Extract = Master Secret
              *             |
@@ -520,7 +543,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                 lambda_expand_label(tls_secret_application_client_sn_key, okm, hashalg, keysize, secret_application_client, "sn", empty);
             }
 
-        } else if (tls_handshake_client_key_exchange == type) {
+        } else if (tls_hs_client_key_exchange == type) {
             /**
              * RFC 5246 8.1.  Computing the Master Secret
              * master_secret = PRF(pre_master_secret, "master secret",
@@ -854,7 +877,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
         if (from_client == dir) {
             auto flow = get_flow();
             if (tls_1_rtt == flow || tls_hello_retry_request == flow) {
-                if (tls_handshake_finished == hsstatus) {
+                if (tls_hs_finished == hsstatus) {
                     secret_key = tls_secret_application_client_key;
                     secret_iv = tls_secret_application_client_iv;
                 } else {
@@ -868,15 +891,15 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
                 // end_of_early_data    c hs traffic
                 // finished             c ap traffic
                 switch (hsstatus) {
-                    case tls_handshake_end_of_early_data: {
+                    case tls_hs_end_of_early_data: {
                         secret_key = tls_secret_handshake_client_key;
                         secret_iv = tls_secret_handshake_client_iv;
                     } break;
-                    case tls_handshake_finished: {
+                    case tls_hs_finished: {
                         secret_key = tls_secret_application_client_key;
                         secret_iv = tls_secret_application_client_iv;
                     } break;
-                    case tls_handshake_client_hello:
+                    case tls_hs_client_hello:
                     default: {
                         // use early traffic
                         secret_key = tls_secret_c_e_traffic_key;
@@ -886,7 +909,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
             }
         } else {
             // from_server
-            if (tls_handshake_finished == hsstatus) {
+            if (tls_hs_finished == hsstatus) {
                 secret_key = tls_secret_application_server_key;
                 secret_iv = tls_secret_application_server_iv;
             } else {

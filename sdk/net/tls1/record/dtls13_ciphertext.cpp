@@ -153,13 +153,13 @@ return_t dtls13_ciphertext::read_data(tls_direction_t dir, const byte_t* stream,
                 size_t blocksize = 16;  // minimal block
                 if (cipher) {
                     if (from_server == dir) {
-                        if (tls_handshake_finished == hsstatus) {
+                        if (tls_hs_finished == hsstatus) {
                             sn_key = tls_secret_application_server_sn_key;
                         } else {
                             sn_key = tls_secret_handshake_server_sn_key;
                         }
                     } else {
-                        if (tls_handshake_finished == hsstatus) {
+                        if (tls_hs_finished == hsstatus) {
                             sn_key = tls_secret_application_client_sn_key;
                         } else {
                             sn_key = tls_secret_handshake_client_sn_key;
@@ -216,8 +216,7 @@ return_t dtls13_ciphertext::read_data(tls_direction_t dir, const byte_t* stream,
 
                 switch (hstype) {
                     case tls_content_type_alert: {
-                        // ret = tls_dump_alert(session, &plaintext[0], plaintext.size() - 1, tpos, debugstream);
-                        tls_alert alert(session);
+                        tls_record_alert alert(session);
                         ret = alert.read_plaintext(dir, &plaintext[0], plaintext.size() - 1, tpos, debugstream);
                     } break;
                     case tls_content_type_handshake: {
@@ -230,8 +229,7 @@ return_t dtls13_ciphertext::read_data(tls_direction_t dir, const byte_t* stream,
                         }
                     } break;
                     case tls_content_type_ack: {
-                        // ret = tls_dump_ack(s, session, &plaintext[0], plaintext.size() - 1, tpos, dir);
-                        tls_ack ack(session);
+                        tls_record_ack ack(session);
                         ret = ack.read_data(dir, &plaintext[0], plaintext.size() - 1, tpos, debugstream);
                     } break;
                 }

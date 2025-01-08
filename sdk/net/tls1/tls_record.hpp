@@ -69,17 +69,17 @@ class tls_record_builder {
     uint8 _type;
 };
 
-class tls_change_cipher_spec : public tls_record {
+class tls_record_change_cipher_spec : public tls_record {
    public:
-    tls_change_cipher_spec(tls_session* session);
+    tls_record_change_cipher_spec(tls_session* session);
 
     virtual return_t read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
 };
 
-class tls_alert : public tls_record {
+class tls_record_alert : public tls_record {
    public:
-    tls_alert(tls_session* session);
+    tls_record_alert(tls_session* session);
 
     virtual return_t read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t read_plaintext(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
@@ -91,9 +91,9 @@ class tls_alert : public tls_record {
     uint8 _desc;
 };
 
-class tls_handshake : public tls_record {
+class tls_record_handshake : public tls_record {
    public:
-    tls_handshake(tls_session* session);
+    tls_record_handshake(tls_session* session);
     virtual return_t read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
 
@@ -101,7 +101,7 @@ class tls_handshake : public tls_record {
     void release();
 
    protected:
-    t_shared_reference<tls_handshake> _shared;
+    t_shared_reference<tls_record_handshake> _shared;
     // std::list<tls_extension*> _extensions;
 };
 
@@ -119,9 +119,9 @@ class tls_application_data : public tls_record {
     // std::list<tls_extension*> _extensions;
 };
 
-class tls_ack : public tls_record {
+class tls_record_ack : public tls_record {
    public:
-    tls_ack(tls_session* session);
+    tls_record_ack(tls_session* session);
 
     virtual return_t read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);

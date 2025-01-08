@@ -49,7 +49,7 @@ return_t tls_application_data::read_data(tls_direction_t dir, const byte_t* stre
                     if (is_basedon_tls13(tlsversion)) {
                         if (tls_content_type_alert == last_byte) {
                             // ret = tls_dump_alert(session, &plaintext[0], plainsize - 1, tpos, debugstream);
-                            tls_alert alert(session);
+                            tls_record_alert alert(session);
                             alert.read_plaintext(dir, &plaintext[0], plainsize - 1, tpos, debugstream);
                         } else if (tls_content_type_handshake == last_byte) {
                             tpos = 0;
