@@ -10,9 +10,10 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
-#include <sdk/net/tls1/tls_handshake.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
@@ -181,7 +182,13 @@ return_t tls_handshake::do_read(tls_direction_t dir, const byte_t* stream, size_
     return errorcode_t::not_supported;
 }
 
-return_t tls_handshake::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_handshake::do_construct(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+
+return_t tls_handshake::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    ret = do_construct(dir, bin, debugstream);
+    return ret;
+}
 
 void tls_handshake::addref() { _shared.addref(); }
 

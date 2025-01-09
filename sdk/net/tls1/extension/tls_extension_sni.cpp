@@ -12,9 +12,10 @@
  */
 
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls1/extension/tls_extension_sni.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
-#include <sdk/net/tls1/tls_extension.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {

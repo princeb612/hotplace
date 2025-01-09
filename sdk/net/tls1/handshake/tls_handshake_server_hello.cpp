@@ -10,9 +10,10 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_server_hello.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
-#include <sdk/net/tls1/tls_handshake.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
@@ -194,6 +195,15 @@ return_t tls_handshake_server_hello::do_read(tls_direction_t dir, const byte_t* 
             session->get_tls_protection().set_item(tls_context_server_hello_random, random);
         }
     }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_handshake_server_hello::do_construct(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 { auto session = get_session(); }
     __finally2 {
         // do nothing
     }

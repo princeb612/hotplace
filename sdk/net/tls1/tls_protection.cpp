@@ -23,6 +23,7 @@
 #include <sdk/crypto/crypto/transcript_hash.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
 // debug
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>

@@ -18,7 +18,7 @@ namespace net {
 #define ENTRY(x, y) \
     { x, y }
 
-define_tls_variable(aead_alg_desc) = {
+define_tls_variable(aead_alg_code) = {
     ENTRY(1, "AEAD_AES_128_GCM"),
     ENTRY(2, "AEAD_AES_256_GCM"),
     ENTRY(3, "AEAD_AES_128_CCM"),
@@ -53,7 +53,7 @@ define_tls_variable(aead_alg_desc) = {
     ENTRY(32, "AEAD_AEGIS128L"),
     ENTRY(33, "AEAD_AEGIS256"),
 };
-define_tls_sizeof_variable(aead_alg_desc);
+define_tls_sizeof_variable(aead_alg_code);
 
 }  // namespace net
 }  // namespace hotplace

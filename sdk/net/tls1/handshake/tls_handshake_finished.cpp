@@ -14,9 +14,10 @@
 #include <sdk/crypto/crypto/crypto_hmac.hpp>
 #include <sdk/crypto/crypto/transcript_hash.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_finished.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
-#include <sdk/net/tls1/tls_handshake.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
@@ -115,8 +116,9 @@ return_t tls_handshake_finished::do_read(tls_direction_t dir, const byte_t* stre
                 binary_t maced;
                 auto tlsversion = protection.get_tls_version();
                 if (is_basedon_tls13(tlsversion)) {
-                    typeof_secret = tls_secret_s_hs_traffic;
-                    if (dir) {
+                    if (from_server == dir) {
+                        typeof_secret = tls_secret_s_hs_traffic;
+                    } else {
                         typeof_secret = tls_secret_c_hs_traffic;
                     }
                     const binary_t& ht_secret = protection.get_item(typeof_secret);

@@ -23,23 +23,23 @@ namespace hotplace {
 namespace net {
 
 /**
- * declare_tls_resource(cipher_suite_desc, uint16);
- * define_tls_variable(cipher_suite_desc) = {
+ * declare_tls_resource(cipher_suite_code, uint16);
+ * define_tls_variable(cipher_suite_code) = {
  *   // ...
  * };
  *
  *
- * struct tls_cipher_suite_desc_t {
+ * struct tls_cipher_suite_code_t {
  *     uint16 code;
  *     const char* desc;
  * };
- * extern const tls_cipher_suite_desc_t tls_cipher_suite_descs[];
- * extern const size_t sizeof_tls_cipher_suite_descs;
+ * extern const tls_cipher_suite_code_t tls_cipher_suite_codes[];
+ * extern const size_t sizeof_tls_cipher_suite_codes;
  *
- * const tls_cipher_suite_desc_t tls_cipher_suite_descs[] = {
+ * const tls_cipher_suite_code_t tls_cipher_suite_codes[] = {
  *     // ...
  * };
- * const size_t sizeof_tls_cipher_suite_descs = RTL_NUMBER_OF(tls_cipher_suite_descs);
+ * const size_t sizeof_tls_cipher_suite_codes = RTL_NUMBER_OF(tls_cipher_suite_codes);
  */
 #define declare_tls_resource(name, code_type)    \
     struct tls_##name##_t {                      \
@@ -52,31 +52,31 @@ namespace net {
 #define define_tls_sizeof_variable(name) const size_t sizeof_tls_##name##s = RTL_NUMBER_OF(tls_##name##s)
 
 // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
-declare_tls_resource(alert_desc, uint8);
-declare_tls_resource(alert_level_desc, uint8);
-declare_tls_resource(cipher_suite_desc, uint16);
-declare_tls_resource(client_cert_type_desc, uint8);
-declare_tls_resource(content_type_desc, uint8);
-declare_tls_resource(ec_curve_type_desc, uint8);
-declare_tls_resource(ec_point_format_desc, uint8);
-declare_tls_resource(handshake_type_desc, uint8);
-declare_tls_resource(hash_alg_desc, uint8);
-declare_tls_resource(kdf_id_desc, uint16);
-declare_tls_resource(psk_keyexchange_desc, uint8);
-declare_tls_resource(sig_alg_desc, uint8);
-declare_tls_resource(supported_group_desc, uint16);
+declare_tls_resource(alert_code, uint8);
+declare_tls_resource(alert_level_code, uint8);
+declare_tls_resource(cipher_suite_code, uint16);
+declare_tls_resource(client_cert_type_code, uint8);
+declare_tls_resource(content_type_code, uint8);
+declare_tls_resource(ec_curve_type_code, uint8);
+declare_tls_resource(ec_point_format_code, uint8);
+declare_tls_resource(handshake_type_code, uint8);
+declare_tls_resource(hash_alg_code, uint8);
+declare_tls_resource(kdf_id_code, uint16);
+declare_tls_resource(psk_keyexchange_code, uint8);
+declare_tls_resource(sig_alg_code, uint8);
+declare_tls_resource(supported_group_code, uint16);
 
 // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
-declare_tls_resource(cert_compression_algid_desc, uint16);
-declare_tls_resource(cert_status_type_desc, uint8);
-declare_tls_resource(cert_type_desc, uint8);
-declare_tls_resource(extension_type_desc, uint16);
+declare_tls_resource(cert_compression_algid_code, uint16);
+declare_tls_resource(cert_status_type_code, uint8);
+declare_tls_resource(cert_type_code, uint8);
+declare_tls_resource(extension_type_code, uint16);
 
 // https://www.iana.org/assignments/quic/quic.xhtml
-declare_tls_resource(quic_trans_param_desc, uint64);
+declare_tls_resource(quic_trans_param_code, uint64);
 
 // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
-declare_tls_resource(aead_alg_desc, uint16);
+declare_tls_resource(aead_alg_code, uint16);
 
 struct tls_cipher_suite_t {
     uint16 alg;
@@ -96,7 +96,7 @@ struct tls_sig_scheme_t {
     crypt_sig_type_t sigtype;  // crypt_sig_rsassa_pkcs15, crypt_sig_ecdsa, crypt_sig_rsassa_pss, crypt_sig_eddsa
     uint32 nid;
     crypt_sig_t sig;  // sig_rs256, ..., sig_es256, ..., sig_ps256, ..., sig_eddsa, sig_sha1, sig_sha256, ...
-    const char* desc;
+    const char* name;
 };
 extern const tls_sig_scheme_t tls_sig_schemes[];
 extern const size_t sizeof_tls_sig_schemes;
@@ -116,6 +116,7 @@ class tls_advisor {
     std::string alert_level_string(uint8 code);
     std::string alert_desc_string(uint8 code);
     std::string cipher_suite_string(uint16 code);
+    uint16 cipher_suite_code(const std::string& ciphersuite);
     std::string content_type_string(uint8 type);
     std::string ec_curve_type_string(uint8 code);
     std::string ec_point_format_string(uint8 code);
@@ -160,31 +161,31 @@ class tls_advisor {
     critical_section _lock;
 
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
-    std::map<uint8, const tls_alert_level_desc_t*> _alert_level_descs;
-    std::map<uint8, const tls_alert_desc_t*> _alert_descs;
-    std::map<uint16, const tls_cipher_suite_desc_t*> _cipher_suite_descs;
-    std::map<uint8, const tls_client_cert_type_desc_t*> _client_cert_type_descs;
-    std::map<uint8, const tls_content_type_desc_t*> _content_type_descs;
-    std::map<uint8, const tls_ec_curve_type_desc_t*> _ec_curve_type_descs;
-    std::map<uint8, const tls_ec_point_format_desc_t*> _ec_point_format_descs;
-    std::map<uint8, const tls_handshake_type_desc_t*> _handshake_type_descs;
-    std::map<uint8, const tls_kdf_id_desc_t*> _kdf_id_descs;
-    std::map<uint8, const tls_psk_keyexchange_desc_t*> _psk_keyexchange_descs;
+    std::map<uint8, const tls_alert_level_code_t*> _alert_level_codes;
+    std::map<uint8, const tls_alert_code_t*> _alert_codes;
+    std::map<uint16, const tls_cipher_suite_code_t*> _cipher_suite_codes;
+    std::map<std::string, const tls_cipher_suite_code_t*> _cipher_suite_names;
+    std::map<uint8, const tls_client_cert_type_code_t*> _client_cert_type_codes;
+    std::map<uint8, const tls_content_type_code_t*> _content_type_codes;
+    std::map<uint8, const tls_ec_curve_type_code_t*> _ec_curve_type_codes;
+    std::map<uint8, const tls_ec_point_format_code_t*> _ec_point_format_codes;
+    std::map<uint8, const tls_handshake_type_code_t*> _handshake_type_codes;
+    std::map<uint8, const tls_kdf_id_code_t*> _kdf_id_codes;
+    std::map<uint8, const tls_psk_keyexchange_code_t*> _psk_keyexchange_codes;
     std::map<uint16, const tls_sig_scheme_t*> _sig_schemes;
-    std::map<uint16, const tls_supported_group_desc_t*> _supported_group_descs;
+    std::map<uint16, const tls_supported_group_code_t*> _supported_group_codes;
 
     // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
-    std::map<uint16, const tls_cert_compression_algid_desc_t*> _cert_compression_algid_descs;
-    std::map<uint16, const tls_extension_type_desc_t*> _extension_type_descs;
-    std::map<uint8, const tls_cert_status_type_desc_t*> _cert_status_type_descs;
+    std::map<uint16, const tls_cert_compression_algid_code_t*> _cert_compression_algid_codes;
+    std::map<uint16, const tls_extension_type_code_t*> _extension_type_codes;
+    std::map<uint8, const tls_cert_status_type_code_t*> _cert_status_type_codes;
 
     // https://www.iana.org/assignments/quic/quic.xhtml
-    std::map<uint64, const tls_quic_trans_param_desc_t*> _quic_trans_param_descs;
+    std::map<uint64, const tls_quic_trans_param_code_t*> _quic_trans_param_codes;
 
     // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
-    std::map<uint16, const tls_aead_alg_desc_t*> _aead_alg_descs;
+    std::map<uint16, const tls_aead_alg_code_t*> _aead_alg_codes;
 
-    // todo ...
     std::map<uint16, const tls_cipher_suite_t*> _cipher_suites;
 
     std::map<uint16, std::string> _tls_version;

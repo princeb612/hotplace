@@ -9,13 +9,30 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/string/string.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_client_hello.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
-#include <sdk/net/tls1/tls_handshake.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
+
+constexpr char constexpr_version[] = "version";
+constexpr char constexpr_random[] = "random";
+constexpr char constexpr_session_id[] = "session id";
+constexpr char constexpr_session_id_len[] = "session id len";
+constexpr char constexpr_cipher_suite[] = "cipher suite";
+constexpr char constexpr_cipher_suite_len[] = "cipher suite len";
+constexpr char constexpr_compression_method_len[] = "compression method len";
+constexpr char constexpr_compression_method[] = "compression method";
+constexpr char constexpr_extension_len[] = "extension len";
+
+constexpr char constexpr_group_dtls[] = "dtls";
+constexpr char constexpr_cookie_len[] = "cookie len";
+constexpr char constexpr_cookie[] = "cookie";
 
 tls_handshake_client_hello::tls_handshake_client_hello(tls_session* session) : tls_handshake(tls_hs_client_hello, session) {}
 
@@ -97,20 +114,6 @@ return_t tls_handshake_client_hello::do_read(tls_direction_t dir, const byte_t* 
         {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            constexpr char constexpr_version[] = "version";
-            constexpr char constexpr_random[] = "random";
-            constexpr char constexpr_session_id[] = "session id";
-            constexpr char constexpr_session_id_len[] = "session id len";
-            constexpr char constexpr_cipher_suite[] = "cipher suite";
-            constexpr char constexpr_cipher_suite_len[] = "cipher suite len";
-            constexpr char constexpr_compression_method_len[] = "compression method len";
-            constexpr char constexpr_compression_method[] = "compression method";
-            constexpr char constexpr_extension_len[] = "extension len";
-
-            constexpr char constexpr_group_dtls[] = "dtls";
-            constexpr char constexpr_cookie_len[] = "cookie len";
-            constexpr char constexpr_cookie[] = "cookie";
-
             /* RFC 8446 4.1.2.  Client Hello
              *  uint16 ProtocolVersion;
              *  opaque Random[32];
@@ -132,7 +135,7 @@ return_t tls_handshake_client_hello::do_read(tls_direction_t dir, const byte_t* 
             uint16 version = 0;
             binary_t random;
             binary_t session_id;
-            binary_t cipher_suite;
+            binary_t cipher_suites;
             binary_t compression_method;
             uint8 session_id_len = 0;
             uint16 cipher_suite_len = 0;
@@ -170,7 +173,7 @@ return_t tls_handshake_client_hello::do_read(tls_direction_t dir, const byte_t* 
                 session_id_len = pl.t_value_of<uint8>(constexpr_session_id_len);
                 pl.get_binary(constexpr_session_id, session_id);
                 cipher_suite_len = pl.t_value_of<uint16>(constexpr_cipher_suite_len);
-                pl.get_binary(constexpr_cipher_suite, cipher_suite);
+                pl.get_binary(constexpr_cipher_suite, cipher_suites);
                 compression_method_len = pl.t_value_of<uint8>(constexpr_compression_method_len);
                 pl.get_binary(constexpr_compression_method, compression_method);
                 extension_len = pl.t_value_of<uint16>(constexpr_extension_len);
@@ -190,7 +193,7 @@ return_t tls_handshake_client_hello::do_read(tls_direction_t dir, const byte_t* 
                 }
                 debugstream->printf(" > %s %i (%i entry)\n", constexpr_cipher_suite_len, cipher_suite_len, cipher_suite_len / sizeof(uint16));
                 for (auto i = 0; i < cipher_suite_len / sizeof(uint16); i++) {
-                    auto cs = t_binary_to_integer<uint16>(&cipher_suite[i << 1], sizeof(uint16));
+                    auto cs = t_binary_to_integer<uint16>(&cipher_suites[i << 1], sizeof(uint16));
                     debugstream->printf("   [%i] 0x%04x %s\n", i, cs, tlsadvisor->cipher_suite_string(cs).c_str());
                 }
                 debugstream->printf(" > %s %i\n", constexpr_compression_method_len, compression_method_len);
@@ -214,14 +217,86 @@ return_t tls_handshake_client_hello::do_read(tls_direction_t dir, const byte_t* 
                 }
             }
 
-            // server_key_update
-            protection.set_item(tls_context_client_hello_random, random);
+            {
+                // server_key_update
+                protection.set_item(tls_context_client_hello_random, random);
+            }
+
+            {
+                _random = random;
+                _session_id = session_id;
+                _cipher_suites = cipher_suites;
+            }
         }
     }
     __finally2 {
         // do nothing
     }
     return ret;
+}
+
+return_t tls_handshake_client_hello::do_construct(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        openssl_prng prng;
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+tls_handshake_client_hello& tls_handshake_client_hello::set_random(const binary_t& bin) {
+    _random = bin;
+    return *this;
+}
+
+tls_handshake_client_hello& tls_handshake_client_hello::set_random(binary_t&& bin) {
+    _random = std::move(bin);
+    return *this;
+}
+
+tls_handshake_client_hello& tls_handshake_client_hello::gen_random(uint8 len) {
+    openssl_prng prng;
+    prng.random(_random, len);
+    return *this;
+}
+
+tls_handshake_client_hello& tls_handshake_client_hello::set_session_id(const binary_t& bin) {
+    _session_id = bin;
+    return *this;
+}
+
+tls_handshake_client_hello& tls_handshake_client_hello::set_session_id(binary_t&& bin) {
+    _session_id = std::move(bin);
+    return *this;
+}
+
+tls_handshake_client_hello& tls_handshake_client_hello::gen_session_id(uint8 len) {
+    openssl_prng prng;
+    prng.random(_session_id, len);
+    return *this;
+}
+
+tls_handshake_client_hello& tls_handshake_client_hello::add_ciphersuites(const char* ciphersuites) {
+    split_context_t* context = nullptr;
+    if (ciphersuites) {
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto lambda = [&](const std::string& item) -> void {
+            auto code = tlsadvisor->cipher_suite_code(item);
+            add_ciphersuite(code);
+        };
+        split_begin(&context, ciphersuites, ":");
+        split_foreach(context, lambda);
+        split_end(context);
+    }
+    return *this;
+}
+
+tls_handshake_client_hello& tls_handshake_client_hello::add_ciphersuite(uint16 suite) {
+    binary_append(_cipher_suites, suite, hton16);
+    return *this;
 }
 
 }  // namespace net

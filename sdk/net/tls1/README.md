@@ -9,7 +9,6 @@
   * https://quic.xargs.org/
   * wireshark.exe
 
-
 #### RFC 8446 Figure 1: Message Flow for Full TLS Handshake
 ````
        Client                                           Server

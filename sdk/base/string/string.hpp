@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_STRING_STRING__
 #define __HOTPLACE_SDK_BASE_STRING_STRING__
 
+#include <functional>
 #include <list>
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
@@ -151,6 +152,7 @@ return_t split_count(split_context_t* handle, size_t& result);
 return_t split_get(split_context_t* handle, unsigned int index, binary_t& data);
 return_t split_get(split_context_t* handle, unsigned int index, std::string& data);
 return_t split_end(split_context_t* handle);
+return_t split_foreach(split_context_t* handle, std::function<void(const std::string&)> func);
 
 }  // namespace hotplace
 

@@ -11,8 +11,25 @@
  * Date         Name                Description
  */
 
+// #include <sdk/base/basic/types.hpp>
+#include <sdk/net/tls1/extension/tls_extension.hpp>
+#include <sdk/net/tls1/extension/tls_extension_alpn.hpp>
+#include <sdk/net/tls1/extension/tls_extension_alps.hpp>
+#include <sdk/net/tls1/extension/tls_extension_builder.hpp>
+#include <sdk/net/tls1/extension/tls_extension_compress_certificate.hpp>
+#include <sdk/net/tls1/extension/tls_extension_ec_point_formats.hpp>
+#include <sdk/net/tls1/extension/tls_extension_encrypted_client_hello.hpp>
+#include <sdk/net/tls1/extension/tls_extension_key_share.hpp>
+#include <sdk/net/tls1/extension/tls_extension_pre_shared_key.hpp>
+#include <sdk/net/tls1/extension/tls_extension_psk_key_exchange_modes.hpp>
+#include <sdk/net/tls1/extension/tls_extension_quic_transport_parameters.hpp>
+#include <sdk/net/tls1/extension/tls_extension_signature_algorithms.hpp>
+#include <sdk/net/tls1/extension/tls_extension_sni.hpp>
+#include <sdk/net/tls1/extension/tls_extension_status_request.hpp>
+#include <sdk/net/tls1/extension/tls_extension_supported_groups.hpp>
+#include <sdk/net/tls1/extension/tls_extension_supported_versions.hpp>
+#include <sdk/net/tls1/extension/tls_extension_unknown.hpp>
 #include <sdk/net/tls1/tls.hpp>
-#include <sdk/net/tls1/tls_extension.hpp>
 
 namespace hotplace {
 namespace net {

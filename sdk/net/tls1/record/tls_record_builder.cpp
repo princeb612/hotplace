@@ -11,8 +11,15 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/tls1/tls.hpp>
-#include <sdk/net/tls1/tls_record.hpp>
+#include <sdk/net/tls1/record/dtls13_ciphertext.hpp>
+#include <sdk/net/tls1/record/tls_record.hpp>
+#include <sdk/net/tls1/record/tls_record_ack.hpp>
+#include <sdk/net/tls1/record/tls_record_alert.hpp>
+#include <sdk/net/tls1/record/tls_record_application_data.hpp>
+#include <sdk/net/tls1/record/tls_record_builder.hpp>
+#include <sdk/net/tls1/record/tls_record_change_cipher_spec.hpp>
+#include <sdk/net/tls1/record/tls_record_handshake.hpp>
+#include <sdk/net/tls1/record/tls_record_unknown.hpp>
 
 namespace hotplace {
 namespace net {
@@ -42,7 +49,7 @@ tls_record* tls_record_builder::build() {
             __try_new_catch_only(record, new tls_record_handshake(get_session()));
         } break;
         case tls_content_type_application_data: {
-            __try_new_catch_only(record, new tls_application_data(get_session()));
+            __try_new_catch_only(record, new tls_record_application_data(get_session()));
         } break;
         case tls_content_type_ack: {
             __try_new_catch_only(record, new tls_record_ack(get_session()));

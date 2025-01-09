@@ -175,6 +175,8 @@ int main(int argc, char** argv) {
     test_rfc8448_6();
     test_rfc8448_7();
 
+    test_construct();
+
     openssl_cleanup();
 
     _logger->flush();

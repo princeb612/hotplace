@@ -74,7 +74,7 @@
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/server/network_stream.hpp>
 
-/* TLS */
+/* TLS openssl */
 #include <sdk/net/tls/dtls_client_socket.hpp>
 #include <sdk/net/tls/dtls_server_socket.hpp>
 #include <sdk/net/tls/sdk.hpp>
@@ -82,7 +82,56 @@
 #include <sdk/net/tls/tls_client_socket.hpp>
 #include <sdk/net/tls/tls_server_socket.hpp>
 #include <sdk/net/tls/tlscert.hpp>
+
+/* TLS */
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
+#include <sdk/net/tls1/types.hpp>
+
+/* TLS record */
+#include <sdk/net/tls1/record/dtls13_ciphertext.hpp>
+#include <sdk/net/tls1/record/tls_record.hpp>
+#include <sdk/net/tls1/record/tls_record_ack.hpp>
+#include <sdk/net/tls1/record/tls_record_alert.hpp>
+#include <sdk/net/tls1/record/tls_record_application_data.hpp>
+#include <sdk/net/tls1/record/tls_record_builder.hpp>
+#include <sdk/net/tls1/record/tls_record_change_cipher_spec.hpp>
+#include <sdk/net/tls1/record/tls_record_handshake.hpp>
+#include <sdk/net/tls1/record/tls_record_unknown.hpp>
+
+/* TLS handshake */
+#include <sdk/net/tls1/handshake/tls_handshake.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_builder.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_certificate.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_certificate_verify.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_client_hello.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_client_key_exchange.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_encrypted_extensions.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_end_of_early_data.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_finished.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_new_session_ticket.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_server_hello.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_server_key_exchange.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_unknown.hpp>
+
+/* TLS extension */
+#include <sdk/net/tls1/extension/tls_extension.hpp>
+#include <sdk/net/tls1/extension/tls_extension_alpn.hpp>
+#include <sdk/net/tls1/extension/tls_extension_alps.hpp>
+#include <sdk/net/tls1/extension/tls_extension_builder.hpp>
+#include <sdk/net/tls1/extension/tls_extension_compress_certificate.hpp>
+#include <sdk/net/tls1/extension/tls_extension_ec_point_formats.hpp>
+#include <sdk/net/tls1/extension/tls_extension_encrypted_client_hello.hpp>
+#include <sdk/net/tls1/extension/tls_extension_key_share.hpp>
+#include <sdk/net/tls1/extension/tls_extension_pre_shared_key.hpp>
+#include <sdk/net/tls1/extension/tls_extension_psk_key_exchange_modes.hpp>
+#include <sdk/net/tls1/extension/tls_extension_quic_transport_parameters.hpp>
+#include <sdk/net/tls1/extension/tls_extension_signature_algorithms.hpp>
+#include <sdk/net/tls1/extension/tls_extension_sni.hpp>
+#include <sdk/net/tls1/extension/tls_extension_status_request.hpp>
+#include <sdk/net/tls1/extension/tls_extension_supported_groups.hpp>
+#include <sdk/net/tls1/extension/tls_extension_supported_versions.hpp>
+#include <sdk/net/tls1/extension/tls_extension_unknown.hpp>
 
 #endif

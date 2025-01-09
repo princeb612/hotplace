@@ -65,13 +65,6 @@
 namespace hotplace {
 namespace net {
 
-// studying ...
-enum tls_message_flow_t {
-    tls_1_rtt = 0,
-    tls_0_rtt = 1,
-    tls_hello_retry_request = 2,
-};
-
 class tls_protection {
    public:
     /**
@@ -184,45 +177,6 @@ class tls_protection {
     crypto_key _keyexchange;  // psk_ke, psk_dhe_ke
     std::map<tls_secret_t, binary_t> _kv;
     bool _use_pre_master_secret;
-};
-
-class tls_session {
-    friend class tls_protection;
-
-   public:
-    tls_session();
-
-    tls_protection& get_tls_protection();
-
-    class session_info {
-       public:
-        session_info();
-
-        void set_status(tls_hs_type_t type);
-        tls_hs_type_t get_status();
-        void change_cipher_spec();
-        bool doprotect();
-        uint64 get_recordno(bool inc = false);
-        void inc_recordno();
-        void reset_recordno();
-
-       private:
-        tls_hs_type_t hstype;
-        bool apply_cipher_spec;
-        uint64 record_no;
-    };
-
-    session_info& get_session_info(tls_direction_t dir);
-    uint64 get_recordno(tls_direction_t dir, bool inc = false);
-    void reset_recordno(tls_direction_t dir);
-
-    void addref();
-    void release();
-
-   private:
-    std::map<tls_direction_t, session_info> _direction;
-    tls_protection _tls_protection;
-    t_shared_reference<tls_session> _shared;
 };
 
 /**

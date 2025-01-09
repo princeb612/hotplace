@@ -496,8 +496,15 @@ enum tls_mode_t : uint8 {
 };
 
 enum tls_direction_t {
-    from_server = 0,  // server -> client
-    from_client = 1,  // client -> server
+    from_origin = 0,  //
+    from_server = 1,  // server -> client
+    from_client = 2,  // client -> server
+};
+
+enum tls_message_flow_t {
+    tls_1_rtt = 0,
+    tls_0_rtt = 1,
+    tls_hello_retry_request = 2,
 };
 
 class tls_protection;
@@ -510,23 +517,25 @@ class tls_record_builder;
 class tls_record_change_cipher_spec;
 class tls_record_alert;
 class tls_record_handshake;
-class tls_application_data;
+class tls_record_application_data;
 class tls_record_ack;
 class tls_record_unknown;
 class dtls13_ciphertext;
 
 // handshake
 class tls_handshake;
+class tls_handshake_builder;
 class tls_handshake_client_hello;
 class tls_handshake_server_hello;
 class tls_handshake_new_session_ticket;
+class tls_handshake_end_of_early_data;
 class tls_handshake_encrypted_extensions;
 class tls_handshake_certificate;
 class tls_handshake_server_key_exchange;
-class tls_handshake_server_hello_done;
 class tls_handshake_certificate_verify;
 class tls_handshake_client_key_exchange;
 class tls_handshake_finished;
+class tls_handshake_unknown;
 
 // extension
 class tls_extension;

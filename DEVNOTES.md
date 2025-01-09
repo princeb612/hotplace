@@ -156,6 +156,19 @@ flowchart LR
   - [x] encoder
   - [x] static table
   - [x] dynamic table
+- TLS
+  - [x] understanding record, handshake, extension
+    - RFC 8448
+      - [x] 1-RTT
+      - [x] 0-RTT
+      - [x] HelloRetryRequest
+      - [x] Client Authentication
+      - [x] compatibility mode
+    - [x] verify
+      - [x] psk binder
+      - [x] certificate verify
+      - [x] finished
+    - [ ] construct
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)
   - [x] integration - network_server

@@ -10,18 +10,20 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/net/tls1/record/tls_record_alert.hpp>
+#include <sdk/net/tls1/record/tls_record_application_data.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
-#include <sdk/net/tls1/tls_record.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
 constexpr char constexpr_application_data[] = "application data";
 
-tls_application_data::tls_application_data(tls_session* session) : tls_record(tls_content_type_application_data, session) {}
+tls_record_application_data::tls_record_application_data(tls_session* session) : tls_record(tls_content_type_application_data, session) {}
 
-return_t tls_application_data::read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_record_application_data::read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 len = get_length();
@@ -96,7 +98,7 @@ return_t tls_application_data::read_data(tls_direction_t dir, const byte_t* stre
     return ret;
 }
 
-return_t tls_application_data::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_record_application_data::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

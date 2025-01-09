@@ -12,6 +12,7 @@
  */
 
 #include <sdk/net/tls1/tls.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {

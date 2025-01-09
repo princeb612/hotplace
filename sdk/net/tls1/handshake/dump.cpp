@@ -11,22 +11,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/base16.hpp>
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/basic/template.hpp>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_keychain.hpp>
-#include <sdk/crypto/basic/evp_key.hpp>
-#include <sdk/crypto/basic/openssl_kdf.hpp>
-#include <sdk/crypto/crypto/crypto_hash.hpp>
-#include <sdk/crypto/crypto/crypto_hmac.hpp>
-#include <sdk/crypto/crypto/crypto_sign.hpp>
-#include <sdk/crypto/crypto/transcript_hash.hpp>
-#include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_builder.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
-#include <sdk/net/tls1/tls_handshake.hpp>
 
 namespace hotplace {
 namespace net {
@@ -49,7 +37,7 @@ return_t tls_dump_handshake(tls_session* session, const byte_t* stream, size_t s
             tls_handshake_builder builder;
             auto handshake = builder.set(hs).set(session).build();
             if (handshake) {
-                handshake->read(dir, stream, size, pos, s);
+                ret = handshake->read(dir, stream, size, pos, s);
                 handshake->release();
             }
         }

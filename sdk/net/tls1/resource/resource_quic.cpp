@@ -18,7 +18,7 @@ namespace net {
 #define ENTRY(x, y) \
     { x, y }
 
-define_tls_variable(quic_trans_param_desc) = {
+define_tls_variable(quic_trans_param_code) = {
     ENTRY(0x00, "original_destination_connection_id"),
     ENTRY(0x01, "max_idle_timeout"),
     ENTRY(0x02, "stateless_reset_token"),
@@ -50,7 +50,7 @@ define_tls_variable(quic_trans_param_desc) = {
     ENTRY(0x0f739bbc1b666d06, "enable_multipath(-06)"),
     ENTRY(0x4143414213370002, "bdp_frame"),
 };
-define_tls_sizeof_variable(quic_trans_param_desc);
+define_tls_sizeof_variable(quic_trans_param_code);
 
 }  // namespace net
 }  // namespace hotplace

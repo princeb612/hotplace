@@ -18,28 +18,28 @@ namespace net {
 #define ENTRY(x, y) \
     { x, y }
 
-define_tls_variable(cert_compression_algid_desc) = {
+define_tls_variable(cert_compression_algid_code) = {
     ENTRY(1, "zlib"),
     ENTRY(2, "brotli"),
     ENTRY(3, "zstd"),
 };
-define_tls_sizeof_variable(cert_compression_algid_desc);
+define_tls_sizeof_variable(cert_compression_algid_code);
 
-define_tls_variable(cert_status_type_desc) = {
+define_tls_variable(cert_status_type_code) = {
     ENTRY(1, "ocsp"),
     ENTRY(2, "ocsp_multi_RESERVED"),
 };
-define_tls_sizeof_variable(cert_status_type_desc);
+define_tls_sizeof_variable(cert_status_type_code);
 
-define_tls_variable(cert_type_desc) = {
+define_tls_variable(cert_type_code) = {
     ENTRY(0, "X509"),
     ENTRY(1, "OpenPGP_RESERVED"),
     ENTRY(2, "Raw Public Key"),
     ENTRY(3, "1609Dot2"),
 };
-define_tls_sizeof_variable(cert_type_desc);
+define_tls_sizeof_variable(cert_type_code);
 
-define_tls_variable(extension_type_desc) = {
+define_tls_variable(extension_type_code) = {
     ENTRY(0x0000, "server_name"),  // RFC 8446 9.2, RFC 6066
     ENTRY(0x0001, "max_fragment_length"),
     ENTRY(0x0002, "client_certificate_url"),
@@ -106,7 +106,7 @@ define_tls_variable(extension_type_desc) = {
     ENTRY(0xfe0d, "encrypted_client_hello"),
     ENTRY(0xff01, "renegotiation_info"),
 };
-define_tls_sizeof_variable(extension_type_desc);
+define_tls_sizeof_variable(extension_type_code);
 
 }  // namespace net
 }  // namespace hotplace

@@ -20,13 +20,13 @@ namespace net {
 #define ENTRY5(e1, e2, e3, e4, e5) \
     { e1, e2, e3, e4, e5 }
 
-define_tls_variable(alert_level_desc) = {
+define_tls_variable(alert_level_code) = {
     ENTRY(1, "warning"),
     ENTRY(2, "fatal"),
 };
-define_tls_sizeof_variable(alert_level_desc);
+define_tls_sizeof_variable(alert_level_code);
 
-define_tls_variable(alert_desc) = {
+define_tls_variable(alert_code) = {
     ENTRY(0, "close_notify"),
     ENTRY(10, "unexpected_message"),
     ENTRY(20, "bad_record_mac"),
@@ -64,9 +64,9 @@ define_tls_variable(alert_desc) = {
     ENTRY(120, "no_application_protocol"),
     ENTRY(121, "ech_required"),
 };
-define_tls_sizeof_variable(alert_desc);
+define_tls_sizeof_variable(alert_code);
 
-define_tls_variable(cipher_suite_desc) = {
+define_tls_variable(cipher_suite_code) = {
     ENTRY(0x0000, "TLS_NULL_WITH_NULL_NULL"),  // MUST NOT be negotiated
     ENTRY(0x0001, "TLS_RSA_WITH_NULL_MD5"),
     ENTRY(0x0002, "TLS_RSA_WITH_NULL_SHA"),
@@ -420,9 +420,9 @@ define_tls_variable(cipher_suite_desc) = {
     ENTRY(0xd003, "TLS_ECDHE_PSK_WITH_AES_128_CCM_8_SHA256"),
     ENTRY(0xd005, "TLS_ECDHE_PSK_WITH_AES_128_CCM_SHA256"),
 };
-define_tls_sizeof_variable(cipher_suite_desc);
+define_tls_sizeof_variable(cipher_suite_code);
 
-define_tls_variable(client_cert_type_desc) = {
+define_tls_variable(client_cert_type_code) = {
     ENTRY(1, "rsa_sign"),
     ENTRY(2, "dss_sign"),
     ENTRY(3, "rsa_fixed_dh"),
@@ -436,9 +436,9 @@ define_tls_variable(client_cert_type_desc) = {
     ENTRY(67, "gost_sign256"),
     ENTRY(68, "gost_sign512"),
 };
-define_tls_sizeof_variable(client_cert_type_desc);
+define_tls_sizeof_variable(client_cert_type_code);
 
-define_tls_variable(content_type_desc) = {
+define_tls_variable(content_type_code) = {
     ENTRY(20, "change_cipher_spec"),        // RFC 8446
     ENTRY(21, "alert"),                     // RFC 8446
     ENTRY(22, "handshake"),                 // RFC 8446
@@ -448,30 +448,30 @@ define_tls_variable(content_type_desc) = {
     ENTRY(26, "ack"),                       // RFC 9147
     ENTRY(27, "return_routability_check"),  // draft-ietf-tls-dtls-rrc-10
 };
-define_tls_sizeof_variable(content_type_desc);
+define_tls_sizeof_variable(content_type_code);
 
-define_tls_variable(ec_curve_type_desc) = {
+define_tls_variable(ec_curve_type_code) = {
     ENTRY(1, "explicit_prime"),  // RFC 8422
     ENTRY(2, "explicit_char2"),  // RFC 8422
     ENTRY(3, "named_curve"),     // RFC 8422
 };
-define_tls_sizeof_variable(ec_curve_type_desc);
+define_tls_sizeof_variable(ec_curve_type_code);
 
-define_tls_variable(ec_point_format_desc) = {
+define_tls_variable(ec_point_format_code) = {
     ENTRY(0, "uncompressed"),
     ENTRY(1, "ansiX962_compressed_prime"),
     ENTRY(2, "ansiX962_compressed_char2"),
 };
-define_tls_sizeof_variable(ec_point_format_desc);
+define_tls_sizeof_variable(ec_point_format_code);
 
-define_tls_variable(kdf_id_desc) = {
+define_tls_variable(kdf_id_code) = {
     // RFC 9258 Table 1: TLS KDF Identifiers Registry
     ENTRY(0x0001, "HKDF_SHA256"),
     ENTRY(0x0002, "HKDF_SHA384"),
 };
-define_tls_sizeof_variable(kdf_id_desc);
+define_tls_sizeof_variable(kdf_id_code);
 
-define_tls_variable(handshake_type_desc) = {
+define_tls_variable(handshake_type_code) = {
     ENTRY(1, "client_hello"),
     ENTRY(2, "server_hello"),
     ENTRY(3, "hello_verify_request_RESERVED"),
@@ -497,23 +497,23 @@ define_tls_variable(handshake_type_desc) = {
     ENTRY(26, "ekt_key"),
     ENTRY(254, "message_hash"),
 };
-define_tls_sizeof_variable(handshake_type_desc);
+define_tls_sizeof_variable(handshake_type_code);
 
-define_tls_variable(hash_alg_desc) = {
+define_tls_variable(hash_alg_code) = {
     ENTRY(1, "md5"), ENTRY(2, "sha1"), ENTRY(3, "sha224"), ENTRY(4, "sha256"), ENTRY(5, "sha384"), ENTRY(6, "sha512"), ENTRY(8, "intrinsic"),
 };
-define_tls_sizeof_variable(hash_alg_desc);
+define_tls_sizeof_variable(hash_alg_code);
 
-define_tls_variable(psk_keyexchange_desc) = {
+define_tls_variable(psk_keyexchange_code) = {
     ENTRY(0, "psk_ke"),      // PSK-only key establishment
     ENTRY(1, "psk_dhe_ke"),  // PSK with (EC)DHE key establishment
 };
-define_tls_sizeof_variable(psk_keyexchange_desc);
+define_tls_sizeof_variable(psk_keyexchange_code);
 
-define_tls_variable(sig_alg_desc) = {
+define_tls_variable(sig_alg_code) = {
     ENTRY(1, "rsa"), ENTRY(2, "dsa"), ENTRY(3, "ecdsa"), ENTRY(7, "ed25519"), ENTRY(8, "ed448"), ENTRY(64, "gostr34102012_256"), ENTRY(65, "gostr34102012_512"),
 };
-define_tls_sizeof_variable(sig_alg_desc);
+define_tls_sizeof_variable(sig_alg_code);
 
 const tls_sig_scheme_t tls_sig_schemes[] = {
     ENTRY5(0x0201, crypt_sig_rsassa_pkcs15, nid_rsa, sig_sha1, "rsa_pkcs1_sha1"),
@@ -557,7 +557,7 @@ const tls_sig_scheme_t tls_sig_schemes[] = {
 };
 define_tls_sizeof_variable(sig_scheme);
 
-define_tls_variable(supported_group_desc) = {
+define_tls_variable(supported_group_code) = {
     // RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
     // ffdhe2048~ffdhe8192
 
@@ -619,7 +619,7 @@ define_tls_variable(supported_group_desc) = {
     ENTRY(0xff01, "arbitrary_explicit_prime_curves"),
     ENTRY(0xff02, "arbitrary_explicit_char2_curves"),
 };
-define_tls_sizeof_variable(supported_group_desc);
+define_tls_sizeof_variable(supported_group_code);
 
 }  // namespace net
 }  // namespace hotplace

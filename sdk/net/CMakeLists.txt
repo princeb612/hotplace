@@ -14,6 +14,10 @@ file (GLOB FILEGROUP_SDK_HEADER_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/server/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls1/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls1/extension/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls1/handshake/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls1/record/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls1/resource/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/quic/*.hpp
 )
 

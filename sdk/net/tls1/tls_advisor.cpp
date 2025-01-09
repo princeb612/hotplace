@@ -53,49 +53,50 @@ void tls_advisor::load_resource() {
 
 void tls_advisor::load_tls_parameters() {
     // code, name
-    for (auto i = 0; i < sizeof_tls_alert_level_descs; i++) {
-        auto item = tls_alert_level_descs + i;
-        _alert_level_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_alert_level_codes; i++) {
+        auto item = tls_alert_level_codes + i;
+        _alert_level_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_alert_descs; i++) {
-        auto item = tls_alert_descs + i;
-        _alert_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_alert_codes; i++) {
+        auto item = tls_alert_codes + i;
+        _alert_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_cipher_suite_descs; i++) {
-        auto item = tls_cipher_suite_descs + i;
-        _cipher_suite_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_cipher_suite_codes; i++) {
+        auto item = tls_cipher_suite_codes + i;
+        _cipher_suite_codes.insert({item->code, item});
+        _cipher_suite_names.insert({item->desc, item});
     }
-    for (auto i = 0; i < sizeof_tls_content_type_descs; i++) {
-        auto item = tls_content_type_descs + i;
-        _content_type_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_content_type_codes; i++) {
+        auto item = tls_content_type_codes + i;
+        _content_type_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_ec_curve_type_descs; i++) {
-        auto item = tls_ec_curve_type_descs + i;
-        _ec_curve_type_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_ec_curve_type_codes; i++) {
+        auto item = tls_ec_curve_type_codes + i;
+        _ec_curve_type_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_ec_point_format_descs; i++) {
-        auto item = tls_ec_point_format_descs + i;
-        _ec_point_format_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_ec_point_format_codes; i++) {
+        auto item = tls_ec_point_format_codes + i;
+        _ec_point_format_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_handshake_type_descs; i++) {
-        auto item = tls_handshake_type_descs + i;
-        _handshake_type_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_handshake_type_codes; i++) {
+        auto item = tls_handshake_type_codes + i;
+        _handshake_type_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_kdf_id_descs; i++) {
-        auto item = tls_kdf_id_descs + i;
-        _kdf_id_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_kdf_id_codes; i++) {
+        auto item = tls_kdf_id_codes + i;
+        _kdf_id_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_psk_keyexchange_descs; i++) {
-        auto item = tls_psk_keyexchange_descs + i;
-        _psk_keyexchange_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_psk_keyexchange_codes; i++) {
+        auto item = tls_psk_keyexchange_codes + i;
+        _psk_keyexchange_codes.insert({item->code, item});
     }
     for (auto i = 0; i < sizeof_tls_sig_schemes; i++) {
         auto item = tls_sig_schemes + i;
         _sig_schemes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_supported_group_descs; i++) {
-        auto item = tls_supported_group_descs + i;
-        _supported_group_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_supported_group_codes; i++) {
+        auto item = tls_supported_group_codes + i;
+        _supported_group_codes.insert({item->code, item});
     }
 
     // cipher suites
@@ -106,32 +107,32 @@ void tls_advisor::load_tls_parameters() {
 }
 
 void tls_advisor::load_tls_extensiontype_values() {
-    // cert_compression_algid_desc
-    for (auto i = 0; i < sizeof_tls_cert_compression_algid_descs; i++) {
-        auto item = tls_cert_compression_algid_descs + i;
-        _cert_compression_algid_descs.insert({item->code, item});
+    // cert_compression_algid_code
+    for (auto i = 0; i < sizeof_tls_cert_compression_algid_codes; i++) {
+        auto item = tls_cert_compression_algid_codes + i;
+        _cert_compression_algid_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_extension_type_descs; i++) {
-        auto item = tls_extension_type_descs + i;
-        _extension_type_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_extension_type_codes; i++) {
+        auto item = tls_extension_type_codes + i;
+        _extension_type_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_cert_status_type_descs; i++) {
-        auto item = tls_cert_status_type_descs + i;
-        _cert_status_type_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_cert_status_type_codes; i++) {
+        auto item = tls_cert_status_type_codes + i;
+        _cert_status_type_codes.insert({item->code, item});
     }
 }
 
 void tls_advisor::load_tls_quic() {
-    for (auto i = 0; i < sizeof_tls_quic_trans_param_descs; i++) {
-        auto item = tls_quic_trans_param_descs + i;
-        _quic_trans_param_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_quic_trans_param_codes; i++) {
+        auto item = tls_quic_trans_param_codes + i;
+        _quic_trans_param_codes.insert({item->code, item});
     }
 }
 
 void tls_advisor::load_tls_aead_parameters() {
-    for (auto i = 0; i < sizeof_tls_aead_alg_descs; i++) {
-        auto item = tls_aead_alg_descs + i;
-        _aead_alg_descs.insert({item->code, item});
+    for (auto i = 0; i < sizeof_tls_aead_alg_codes; i++) {
+        auto item = tls_aead_alg_codes + i;
+        _aead_alg_codes.insert({item->code, item});
     }
 }
 
@@ -204,8 +205,8 @@ hash_algorithm_t tls_advisor::hash_alg_of(uint16 code) {
 
 std::string tls_advisor::alert_level_string(uint8 code) {
     std::string value;
-    auto iter = _alert_level_descs.find(code);
-    if (_alert_level_descs.end() != iter) {
+    auto iter = _alert_level_codes.find(code);
+    if (_alert_level_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -217,8 +218,8 @@ std::string tls_advisor::alert_desc_string(uint8 code) {
      * RFC 8446 6.  Alert Protocol
      */
     std::string value;
-    auto iter = _alert_descs.find(code);
-    if (_alert_descs.end() != iter) {
+    auto iter = _alert_codes.find(code);
+    if (_alert_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -227,18 +228,28 @@ std::string tls_advisor::alert_desc_string(uint8 code) {
 
 std::string tls_advisor::cipher_suite_string(uint16 code) {
     std::string value;
-    auto iter = _cipher_suite_descs.find(code);
-    if (_cipher_suite_descs.end() != iter) {
+    auto iter = _cipher_suite_codes.find(code);
+    if (_cipher_suite_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
     return value;
 }
 
+uint16 tls_advisor::cipher_suite_code(const std::string& ciphersuite) {
+    uint16 code = 0;
+    auto iter = _cipher_suite_names.find(ciphersuite);
+    if (_cipher_suite_names.end() != iter) {
+        auto item = iter->second;
+        code = item->code;
+    }
+    return code;
+}
+
 std::string tls_advisor::content_type_string(uint8 type) {
     std::string value;
-    auto iter = _content_type_descs.find(type);
-    if (_content_type_descs.end() != iter) {
+    auto iter = _content_type_codes.find(type);
+    if (_content_type_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -247,8 +258,8 @@ std::string tls_advisor::content_type_string(uint8 type) {
 
 std::string tls_advisor::ec_curve_type_string(uint8 code) {
     std::string value;
-    auto iter = _ec_curve_type_descs.find(code);
-    if (_ec_curve_type_descs.end() != iter) {
+    auto iter = _ec_curve_type_codes.find(code);
+    if (_ec_curve_type_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -257,8 +268,8 @@ std::string tls_advisor::ec_curve_type_string(uint8 code) {
 
 std::string tls_advisor::ec_point_format_string(uint8 code) {
     std::string value;
-    auto iter = _ec_point_format_descs.find(code);
-    if (_ec_point_format_descs.end() != iter) {
+    auto iter = _ec_point_format_codes.find(code);
+    if (_ec_point_format_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -267,8 +278,8 @@ std::string tls_advisor::ec_point_format_string(uint8 code) {
 
 std::string tls_advisor::handshake_type_string(uint8 type) {
     std::string value;
-    auto iter = _handshake_type_descs.find(type);
-    if (_handshake_type_descs.end() != iter) {
+    auto iter = _handshake_type_codes.find(type);
+    if (_handshake_type_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -277,8 +288,8 @@ std::string tls_advisor::handshake_type_string(uint8 type) {
 
 std::string tls_advisor::kdf_id_string(uint16 type) {
     std::string value;
-    auto iter = _kdf_id_descs.find(type);
-    if (_kdf_id_descs.end() != iter) {
+    auto iter = _kdf_id_codes.find(type);
+    if (_kdf_id_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -287,8 +298,8 @@ std::string tls_advisor::kdf_id_string(uint16 type) {
 
 std::string tls_advisor::psk_key_exchange_mode_string(uint8 mode) {
     std::string value;
-    auto iter = _psk_keyexchange_descs.find(mode);
-    if (_psk_keyexchange_descs.end() != iter) {
+    auto iter = _psk_keyexchange_codes.find(mode);
+    if (_psk_keyexchange_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -300,15 +311,15 @@ std::string tls_advisor::signature_scheme_string(uint16 code) {
     auto iter = _sig_schemes.find(code);
     if (_sig_schemes.end() != iter) {
         auto item = iter->second;
-        value = item->desc;
+        value = item->name;
     }
     return value;
 }
 
 std::string tls_advisor::supported_group_string(uint16 code) {
     std::string value;
-    auto iter = _supported_group_descs.find(code);
-    if (_supported_group_descs.end() != iter) {
+    auto iter = _supported_group_codes.find(code);
+    if (_supported_group_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -319,8 +330,8 @@ std::string tls_advisor::supported_group_string(uint16 code) {
 
 std::string tls_advisor::cert_compression_algid_string(uint16 code) {
     std::string value;
-    auto iter = _cert_compression_algid_descs.find(code);
-    if (_cert_compression_algid_descs.end() != iter) {
+    auto iter = _cert_compression_algid_codes.find(code);
+    if (_cert_compression_algid_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -329,8 +340,8 @@ std::string tls_advisor::cert_compression_algid_string(uint16 code) {
 
 std::string tls_advisor::tls_extension_string(uint16 code) {
     std::string value;
-    auto iter = _extension_type_descs.find(code);
-    if (_extension_type_descs.end() != iter) {
+    auto iter = _extension_type_codes.find(code);
+    if (_extension_type_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -339,8 +350,8 @@ std::string tls_advisor::tls_extension_string(uint16 code) {
 
 std::string tls_advisor::cert_status_type_string(uint8 code) {
     std::string value;
-    auto iter = _cert_status_type_descs.find(code);
-    if (_cert_status_type_descs.end() != iter) {
+    auto iter = _cert_status_type_codes.find(code);
+    if (_cert_status_type_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -351,8 +362,8 @@ std::string tls_advisor::cert_status_type_string(uint8 code) {
 
 std::string tls_advisor::quic_param_string(uint64 code) {
     std::string value;
-    auto iter = _quic_trans_param_descs.find(code);
-    if (_quic_trans_param_descs.end() != iter) {
+    auto iter = _quic_trans_param_codes.find(code);
+    if (_quic_trans_param_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
@@ -363,8 +374,8 @@ std::string tls_advisor::quic_param_string(uint64 code) {
 
 std::string tls_advisor::aead_alg_string(uint16 code) {
     std::string value;
-    auto iter = _aead_alg_descs.find(code);
-    if (_aead_alg_descs.end() != iter) {
+    auto iter = _aead_alg_codes.find(code);
+    if (_aead_alg_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
     }
