@@ -12,6 +12,7 @@
 #include <sdk/base/string/string.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls1/extension/tls_extension.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_client_hello.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
@@ -34,9 +35,11 @@ constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_cookie_len[] = "cookie len";
 constexpr char constexpr_cookie[] = "cookie";
 
-tls_handshake_client_hello::tls_handshake_client_hello(tls_session* session) : tls_handshake(tls_hs_client_hello, session) {}
+tls_handshake_client_hello::tls_handshake_client_hello(tls_session* session) : tls_handshake(tls_hs_client_hello, session), _version(tls_12) {}
 
-return_t tls_handshake_client_hello::do_handshake(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+tls_handshake_client_hello::~tls_handshake_client_hello() { clear(); }
+
+return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -44,8 +47,6 @@ return_t tls_handshake_client_hello::do_handshake(tls_direction_t dir, const byt
             ret = errorcode_t::invalid_context;
             __leave2;
         }
-        auto hspos = get_header_range().begin;
-        auto hdrsize = get_header_size();
         auto& protection = session->get_tls_protection();
 
         {
@@ -71,25 +72,6 @@ return_t tls_handshake_client_hello::do_handshake(tls_direction_t dir, const byt
                 default: {
                 } break;
             }
-
-            ret = do_read(dir, stream, size, pos, debugstream);
-
-            switch (protection.get_flow()) {
-                case tls_1_rtt: {
-                    // 1-RTT
-                    protection.set_item(tls_context_client_hello, stream + hspos, hdrsize);  // transcript hash, see server_hello
-                } break;
-                case tls_0_rtt: {
-                    protection.reset_transcript_hash(session);
-                    protection.calc_transcript_hash(session, stream + hspos, hdrsize /*, handshake_hash */);  // client_hello
-                    ret = protection.calc(session, tls_hs_client_hello, dir);
-                } break;
-                case tls_hello_retry_request: {
-                    protection.calc_transcript_hash(session, stream + hspos, hdrsize /*, handshake_hash */);  // client_hello
-                } break;
-            }
-
-            session->get_session_info(dir).set_status(get_type());
         }
     }
     __finally2 {
@@ -98,7 +80,7 @@ return_t tls_handshake_client_hello::do_handshake(tls_direction_t dir, const byt
     return ret;
 }
 
-return_t tls_handshake_client_hello::do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -136,7 +118,7 @@ return_t tls_handshake_client_hello::do_read(tls_direction_t dir, const byte_t* 
             binary_t random;
             binary_t session_id;
             binary_t cipher_suites;
-            binary_t compression_method;
+            binary_t compression_methods;
             uint8 session_id_len = 0;
             uint16 cipher_suite_len = 0;
             uint8 compression_method_len = 0;
@@ -168,42 +150,39 @@ return_t tls_handshake_client_hello::do_read(tls_direction_t dir, const byte_t* 
                 // -  A "pre_shared_key" (Section 4.2.11) extension
 
                 version = pl.t_value_of<uint16>(constexpr_version);
-
                 pl.get_binary(constexpr_random, random);
                 session_id_len = pl.t_value_of<uint8>(constexpr_session_id_len);
                 pl.get_binary(constexpr_session_id, session_id);
                 cipher_suite_len = pl.t_value_of<uint16>(constexpr_cipher_suite_len);
                 pl.get_binary(constexpr_cipher_suite, cipher_suites);
                 compression_method_len = pl.t_value_of<uint8>(constexpr_compression_method_len);
-                pl.get_binary(constexpr_compression_method, compression_method);
+                pl.get_binary(constexpr_compression_method, compression_methods);
                 extension_len = pl.t_value_of<uint16>(constexpr_extension_len);
             }
 
-            if (debugstream) {
-                debugstream->autoindent(1);
-                debugstream->printf(" > %s 0x%04x (%s)\n", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
-                debugstream->printf(" > %s\n", constexpr_random);
-                if (random.size()) {
-                    // dump_memory(random, s, 16, 3, 0x0, dump_notrunc);
-                    debugstream->printf("   %s\n", base16_encode(random).c_str());
-                }
-                debugstream->printf(" > %s %02x(%i)\n", constexpr_session_id, session_id_len, session_id_len);
-                if (session_id.size()) {
-                    debugstream->printf("   %s\n", base16_encode(session_id).c_str());
-                }
-                debugstream->printf(" > %s %i (%i entry)\n", constexpr_cipher_suite_len, cipher_suite_len, cipher_suite_len / sizeof(uint16));
+            {
                 for (auto i = 0; i < cipher_suite_len / sizeof(uint16); i++) {
                     auto cs = t_binary_to_integer<uint16>(&cipher_suites[i << 1], sizeof(uint16));
-                    debugstream->printf("   [%i] 0x%04x %s\n", i, cs, tlsadvisor->cipher_suite_string(cs).c_str());
+                    _cipher_suites.push_back(cs);
                 }
-                debugstream->printf(" > %s %i\n", constexpr_compression_method_len, compression_method_len);
                 for (auto i = 0; i < compression_method_len; i++) {
-                    auto compr = t_binary_to_integer<uint8>(&compression_method[i], sizeof(uint8));
-                    debugstream->printf("   [%i] 0x%02x %s\n", i, compr, tlsadvisor->compression_method_string(compr).c_str());
+                    auto compr = t_binary_to_integer<uint8>(&compression_methods[i], sizeof(uint8));
+                    _compression_methods.push_back(compr);
                 }
-                debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_extension_len, extension_len, extension_len);
-                debugstream->autoindent(0);
             }
+
+            {
+                _random = random;
+                _session_id = session_id;
+                _extension_len = extension_len;
+            }
+
+            {
+                // server_key_update
+                protection.set_item(tls_context_client_hello_random, random);
+            }
+
+            do_dump_body(stream, size, debugstream);
 
             for (return_t test = errorcode_t::success;;) {
                 test = tls_dump_extension(tls_hs_client_hello, session, stream, size, pos, debugstream);
@@ -216,17 +195,6 @@ return_t tls_handshake_client_hello::do_read(tls_direction_t dir, const byte_t* 
                     break;
                 }
             }
-
-            {
-                // server_key_update
-                protection.set_item(tls_context_client_hello_random, random);
-            }
-
-            {
-                _random = random;
-                _session_id = session_id;
-                _cipher_suites = cipher_suites;
-            }
         }
     }
     __finally2 {
@@ -235,11 +203,36 @@ return_t tls_handshake_client_hello::do_read(tls_direction_t dir, const byte_t* 
     return ret;
 }
 
-return_t tls_handshake_client_hello::do_construct(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        openssl_prng prng;
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        auto hspos = offsetof_header();
+        auto hdrsize = get_header_size();
+        auto& protection = session->get_tls_protection();
+
+        {
+            switch (protection.get_flow()) {
+                case tls_1_rtt: {
+                    // 1-RTT
+                    protection.set_item(tls_context_client_hello, stream + hspos, hdrsize);  // transcript hash, see server_hello
+                } break;
+                case tls_0_rtt: {
+                    protection.reset_transcript_hash(session);
+                    protection.calc_transcript_hash(session, stream + hspos, hdrsize /*, handshake_hash */);  // client_hello
+                    ret = protection.calc(session, tls_hs_client_hello, dir);
+                } break;
+                case tls_hello_retry_request: {
+                    protection.calc_transcript_hash(session, stream + hspos, hdrsize /*, handshake_hash */);  // client_hello
+                } break;
+            }
+
+            session->get_session_info(dir).set_status(get_type());
+        }
     }
     __finally2 {
         // do nothing
@@ -247,56 +240,146 @@ return_t tls_handshake_client_hello::do_construct(tls_direction_t dir, binary_t&
     return ret;
 }
 
-tls_handshake_client_hello& tls_handshake_client_hello::set_random(const binary_t& bin) {
-    _random = bin;
-    return *this;
+return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        binary_t extensions;
+        {
+            for (auto ext : _extensions) {
+                ext->write(extensions);
+            }
+        }
+
+        {
+            auto record_version = session->get_tls_protection().get_record_version();
+
+            binary_t cipher_suites;
+            for (auto item : _cipher_suites) {
+                binary_append(cipher_suites, item, hton16);
+            }
+            binary_t compression_methods;
+            // for (auto item : _compression_methods) {
+            //     binary_append(compression_methods, item);
+            // }
+            compression_methods.resize(1);
+
+            payload pl;
+            pl << new payload_member(uint16(_version), true, constexpr_version) << new payload_member(_random, constexpr_random)
+               << new payload_member(uint8(_session_id.size()), constexpr_session_id_len) << new payload_member(_session_id, constexpr_session_id)
+               << new payload_member(uint8(0), constexpr_cookie_len, constexpr_group_dtls)  // dtls
+               << new payload_member(binary_t(), constexpr_cookie, constexpr_group_dtls)    // dtls
+               << new payload_member(uint16(cipher_suites.size()), true, constexpr_cipher_suite_len)
+               << new payload_member(cipher_suites, constexpr_cipher_suite)
+               << new payload_member(uint8(compression_methods.size()), constexpr_compression_method_len)
+               << new payload_member(compression_methods, constexpr_compression_method)
+               << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);
+
+            pl.set_group(constexpr_group_dtls, (record_version >= dtls_12));
+            pl.write(bin);
+        }
+
+        binary_append(bin, extensions);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
-tls_handshake_client_hello& tls_handshake_client_hello::set_random(binary_t&& bin) {
-    _random = std::move(bin);
-    return *this;
+return_t tls_handshake_client_hello::do_dump_body(const byte_t* stream, size_t size, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == debugstream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto version = get_version();
+        auto& random = get_random();
+        auto& session_id = get_session_id();
+        auto const& cipher_suites = get_cipher_suites();
+        auto const& compression_methods = get_compression_methods();
+        uint16 cipher_suite_len = cipher_suites.size();
+        uint8 compression_method_len = compression_methods.size();
+        auto extension_len = _extension_len;
+
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        uint16 i = 0;
+
+        debugstream->autoindent(1);
+        debugstream->printf(" > %s 0x%04x (%s)\n", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
+        debugstream->printf(" > %s\n", constexpr_random);
+        if (random.size()) {
+            debugstream->printf("   %s\n", base16_encode(random).c_str());
+        }
+        debugstream->printf(" > %s %02x(%zi)\n", constexpr_session_id, session_id.size(), session_id.size());
+        if (session_id.size()) {
+            debugstream->printf("   %s\n", base16_encode(session_id).c_str());
+        }
+        debugstream->printf(" > %s %04x(%i ent.)\n", constexpr_cipher_suite_len, cipher_suite_len << 1, cipher_suite_len);
+        i = 0;
+        for (auto cs : cipher_suites) {
+            debugstream->printf("   [%i] 0x%04x %s\n", i++, cs, tlsadvisor->cipher_suite_string(cs).c_str());
+        }
+        debugstream->printf(" > %s %i\n", constexpr_compression_method_len, compression_method_len);
+        i = 0;
+        for (auto compr : compression_methods) {
+            debugstream->printf("   [%i] 0x%02x %s\n", i++, compr, tlsadvisor->compression_method_string(compr).c_str());
+        }
+        debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_extension_len, extension_len, extension_len);
+        debugstream->autoindent(0);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
-tls_handshake_client_hello& tls_handshake_client_hello::gen_random(uint8 len) {
-    openssl_prng prng;
-    prng.random(_random, len);
-    return *this;
-}
+uint16 tls_handshake_client_hello::get_version() { return _version; }
 
-tls_handshake_client_hello& tls_handshake_client_hello::set_session_id(const binary_t& bin) {
-    _session_id = bin;
-    return *this;
-}
+binary& tls_handshake_client_hello::get_random() { return _random; }
 
-tls_handshake_client_hello& tls_handshake_client_hello::set_session_id(binary_t&& bin) {
-    _session_id = std::move(bin);
-    return *this;
-}
+binary& tls_handshake_client_hello::get_session_id() { return _session_id; }
 
-tls_handshake_client_hello& tls_handshake_client_hello::gen_session_id(uint8 len) {
-    openssl_prng prng;
-    prng.random(_session_id, len);
-    return *this;
-}
+const std::vector<uint16>& tls_handshake_client_hello::get_cipher_suites() { return _cipher_suites; }
 
-tls_handshake_client_hello& tls_handshake_client_hello::add_ciphersuites(const char* ciphersuites) {
-    split_context_t* context = nullptr;
-    if (ciphersuites) {
+const std::vector<uint8>& tls_handshake_client_hello::get_compression_methods() { return _compression_methods; }
+
+return_t tls_handshake_client_hello::add_ciphersuites(const char* ciphersuites) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == ciphersuites) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto lambda = [&](const std::string& item) -> void {
             auto code = tlsadvisor->cipher_suite_code(item);
-            add_ciphersuite(code);
+            _cipher_suites.push_back(code);
         };
+
+        split_context_t* context = nullptr;
         split_begin(&context, ciphersuites, ":");
         split_foreach(context, lambda);
         split_end(context);
     }
-    return *this;
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
-tls_handshake_client_hello& tls_handshake_client_hello::add_ciphersuite(uint16 suite) {
-    binary_append(_cipher_suites, suite, hton16);
-    return *this;
+return_t tls_handshake_client_hello::add_ciphersuite(uint16 ciphersuite) {
+    return_t ret = errorcode_t::success;
+    _cipher_suites.push_back(ciphersuite);
+    return ret;
 }
 
 }  // namespace net

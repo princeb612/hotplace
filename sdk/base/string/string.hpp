@@ -12,12 +12,12 @@
 #define __HOTPLACE_SDK_BASE_STRING_STRING__
 
 #include <functional>
-#include <list>
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
 #include <string>
+#include <vector>
 
 namespace hotplace {
 
@@ -142,7 +142,7 @@ typedef struct _split_map_item {
     uint32 begin;
     uint32 length;
 } split_map_item;
-typedef std::list<split_map_item> split_map_list;
+typedef std::vector<split_map_item> split_map_list;
 typedef struct _split_context_t {
     std::string source;
     split_map_list info;

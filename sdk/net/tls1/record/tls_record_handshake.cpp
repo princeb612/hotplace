@@ -18,7 +18,7 @@ namespace net {
 
 tls_record_handshake::tls_record_handshake(tls_session* session) : tls_record(tls_content_type_handshake, session) {}
 
-return_t tls_record_handshake::read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_record_handshake::read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 len = get_length();
@@ -26,7 +26,7 @@ return_t tls_record_handshake::read_data(tls_direction_t dir, const byte_t* stre
         {
             auto session = get_session();
             size_t tpos = 0;
-            size_t recpos = get_header_range().begin;
+            size_t recpos = offsetof_header();
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
             auto session_info = session->get_session_info(dir);
@@ -83,7 +83,17 @@ return_t tls_record_handshake::read_data(tls_direction_t dir, const byte_t* stre
     return ret;
 }
 
-return_t tls_record_handshake::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_record_handshake::write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        //
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

@@ -49,6 +49,10 @@ class binary {
     binary(const binary_t& rhs);
     binary(binary_t&& rhs);
 
+    binary& set(const binary& rhs);
+    binary& set(const binary_t& rhs);
+    binary& set(binary_t&& rhs);
+
     binary& push_back(byte_t rhs);
 
     /*
@@ -130,6 +134,7 @@ class binary {
     binary& operator=(double value);
     binary& operator=(const std::string& value);
     binary& operator=(const binary_t& value);
+    binary& operator=(binary_t&& value);
     binary& operator=(const binary& value);
     binary& operator=(const char* value);
 
@@ -139,6 +144,8 @@ class binary {
     const binary_t& get() const;
     operator binary_t();
     operator const binary_t&() const;
+    size_t size();
+    size_t size() const;
 
    private:
     binary_t _bin;

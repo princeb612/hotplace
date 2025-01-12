@@ -9,7 +9,6 @@
  */
 
 #include <sdk/base/system/critical_section.hpp>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {

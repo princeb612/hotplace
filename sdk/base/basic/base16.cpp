@@ -13,8 +13,7 @@
 #include <string.h>
 
 #include <sdk/base/basic/base16.hpp>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/inline.hpp>
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/string/string.hpp>
 
 namespace hotplace {
@@ -307,16 +306,15 @@ std::string base16_encode_rfc(const std::string& source) {
             split_context_t* handle = nullptr;
             size_t count = 0;
             std::string data;
-            split_begin(&handle, inpart.c_str(), ",");
-            split_count(handle, count);
             binary_t temp;
-            for (size_t i = 0; i < count; i++) {
-                split_get(handle, i, data);
+            split_begin(&handle, inpart.c_str(), ",");
+            auto lambda = [&](const std::string& item) -> void {
                 int value = atoi(data.c_str());
                 if (value < 256) {
                     temp.push_back((byte_t)value);
                 }
-            }
+            };
+            split_foreach(handle, lambda);
             split_end(handle);
             outpart = base16_encode(temp);
         }

@@ -10,7 +10,6 @@
 
 #include <sdk/base/basic/valist.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
 

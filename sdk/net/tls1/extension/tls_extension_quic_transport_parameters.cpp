@@ -25,10 +25,10 @@ constexpr char constexpr_param[] = "param";
 tls_extension_quic_transport_parameters::tls_extension_quic_transport_parameters(tls_session* session)
     : tls_extension(tls1_ext_quic_transport_parameters, session) {}
 
-return_t tls_extension_quic_transport_parameters::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto tpos = get_header_range().begin;
+        auto tpos = offsetof_header();
         auto ext_len = get_length();
 
         // RFC 9001 8.2.  QUIC Transport Parameters Extension

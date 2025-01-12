@@ -9,7 +9,6 @@
  */
 
 #include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 

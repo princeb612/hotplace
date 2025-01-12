@@ -54,7 +54,6 @@ namespace net {
 // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
 declare_tls_resource(alert_code, uint8);
 declare_tls_resource(alert_level_code, uint8);
-declare_tls_resource(cipher_suite_code, uint16);
 declare_tls_resource(client_cert_type_code, uint8);
 declare_tls_resource(content_type_code, uint8);
 declare_tls_resource(ec_curve_type_code, uint8);
@@ -78,18 +77,26 @@ declare_tls_resource(quic_trans_param_code, uint64);
 // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
 declare_tls_resource(aead_alg_code, uint16);
 
+/**
+ * @brief   cipher suites
+ * @remarks
+ *          cs_std, cs_ossl https://docs.openssl.org/1.1.1/man1/ciphers/
+ */
 struct tls_cipher_suite_t {
-    uint16 alg;
-    crypt_algorithm_t cipher;
-    crypt_mode_t mode;
-    uint8 tagsize;
-    hash_algorithm_t mac;
-    hash_algorithm_t mac_tls1;
+    uint16 code;                // 0xc023
+    tls_version_t version;      // tls_12
+    uint8 secure;               // 0 : insecure or weak
+    const char* name_iana;      // TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+    const char* name_ossl;      // ECDHE-ECDSA-AES128-SHA256
+    keyexchange_t keyexchange;  // keyexchange_ecdhe
+    auth_t auth;                // auth_ecdsa
+    crypt_algorithm_t cipher;   // aes128
+    crypt_mode_t mode;          // cbc
+    hash_algorithm_t mac;       // sha2_256
 };
 extern const tls_cipher_suite_t tls_cipher_suites[];
 extern const size_t sizeof_tls_cipher_suites;
 hash_algorithm_t algof_mac(const tls_cipher_suite_t* info);
-hash_algorithm_t algof_mac1(const tls_cipher_suite_t* info);
 
 struct tls_sig_scheme_t {
     uint16 code;
@@ -107,6 +114,7 @@ class tls_advisor {
     ~tls_advisor();
 
     const tls_cipher_suite_t* hintof_cipher_suite(uint16 code);
+    const tls_cipher_suite_t* hintof_cipher_suite(const std::string& name);
     const hint_blockcipher_t* hintof_blockcipher(uint16 code);
     const hint_digest_t* hintof_digest(uint16 code);
     const tls_sig_scheme_t* hintof_signature_scheme(uint16 code);
@@ -163,8 +171,8 @@ class tls_advisor {
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
     std::map<uint8, const tls_alert_level_code_t*> _alert_level_codes;
     std::map<uint8, const tls_alert_code_t*> _alert_codes;
-    std::map<uint16, const tls_cipher_suite_code_t*> _cipher_suite_codes;
-    std::map<std::string, const tls_cipher_suite_code_t*> _cipher_suite_names;
+    std::map<uint16, const tls_cipher_suite_t*> _cipher_suite_codes;
+    std::map<std::string, const tls_cipher_suite_t*> _cipher_suite_names;
     std::map<uint8, const tls_client_cert_type_code_t*> _client_cert_type_codes;
     std::map<uint8, const tls_content_type_code_t*> _content_type_codes;
     std::map<uint8, const tls_ec_curve_type_code_t*> _ec_curve_type_codes;
@@ -185,8 +193,6 @@ class tls_advisor {
 
     // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
     std::map<uint16, const tls_aead_alg_code_t*> _aead_alg_codes;
-
-    std::map<uint16, const tls_cipher_suite_t*> _cipher_suites;
 
     std::map<uint16, std::string> _tls_version;
     std::map<uint8, std::string> _cert_status_types;

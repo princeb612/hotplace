@@ -8,15 +8,10 @@
  * Date         Name                Description
  */
 
-#include <fstream>
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
 namespace crypto {

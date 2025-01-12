@@ -23,37 +23,6 @@ namespace net {
 
 tls_handshake_certificate_verify::tls_handshake_certificate_verify(tls_session* session) : tls_handshake(tls_hs_certificate_verify, session) {}
 
-return_t tls_handshake_certificate_verify::do_handshake(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        auto hspos = get_header_range().begin;
-        auto hdrsize = get_header_size();
-        auto& protection = session->get_tls_protection();
-
-        {
-            // RFC 8446 2.  Protocol Overview
-            // CertificateVerify:  A signature over the entire handshake using the
-            //    private key corresponding to the public key in the Certificate
-            //    message.  This message is omitted if the endpoint is not
-            //    authenticating via a certificate.  [Section 4.4.3]
-
-            // RFC 4346 7.4.8. Certificate verify
-            ret = do_read(dir, stream, size, pos, debugstream);
-
-            protection.calc_transcript_hash(session, stream + hspos, hdrsize);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
 return_t asn1_der_ecdsa_signature(uint16 scheme, const binary_t& signature, binary_t& r, binary_t& s) {
     return_t ret = errorcode_t::success;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -61,7 +30,7 @@ return_t asn1_der_ecdsa_signature(uint16 scheme, const binary_t& signature, bina
     __try2 {
         auto hint = tlsadvisor->hintof_signature_scheme(scheme);
         if (nullptr == hint) {
-            ret = errorcode_t::not_supported;
+            ret = errorcode_t::success;
             __leave2;
         }
         if (crypt_sig_ecdsa != hint->sigtype) {
@@ -83,7 +52,7 @@ return_t asn1_der_ecdsa_signature(uint16 scheme, const binary_t& signature, bina
                 break;
         }
         if (0 == unitsize) {
-            ret = errorcode_t::not_supported;
+            ret = errorcode_t::success;
             __leave2;
         }
 
@@ -125,7 +94,7 @@ return_t asn1_der_ecdsa_signature(uint16 scheme, const binary_t& signature, bina
     return ret;
 }
 
-return_t tls_handshake_certificate_verify::do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -139,6 +108,14 @@ return_t tls_handshake_certificate_verify::do_read(tls_direction_t dir, const by
         }
 
         {
+            // RFC 8446 2.  Protocol Overview
+            // CertificateVerify:  A signature over the entire handshake using the
+            //    private key corresponding to the public key in the Certificate
+            //    message.  This message is omitted if the endpoint is not
+            //    authenticating via a certificate.  [Section 4.4.3]
+
+            // RFC 4346 7.4.8. Certificate verify
+
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
             constexpr char constexpr_signature_alg[] = "signature algorithm";
@@ -240,7 +217,7 @@ return_t tls_handshake_certificate_verify::do_read(tls_direction_t dir, const by
 
                 sign->release();
             } else {
-                ret = errorcode_t::not_supported;
+                ret = errorcode_t::success;
             }
 
             if (debugstream) {
@@ -268,6 +245,28 @@ return_t tls_handshake_certificate_verify::do_read(tls_direction_t dir, const by
     }
     return ret;
 }
+
+return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        auto hspos = offsetof_header();
+        auto hdrsize = get_header_size();
+        auto& protection = session->get_tls_protection();
+
+        protection.calc_transcript_hash(session, stream + hspos, hdrsize);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -83,7 +83,7 @@ constexpr char constexpr_pubkey[] = "public key";
 
 tls_extension_client_key_share::tls_extension_client_key_share(tls_session* session) : tls_extension_key_share(session) {}
 
-return_t tls_extension_client_key_share::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 8446 4.2.8.  Key Share
@@ -160,7 +160,7 @@ return_t tls_extension_client_key_share::write(binary_t& bin, stream_t* debugstr
 
 tls_extension_server_key_share::tls_extension_server_key_share(tls_session* session) : tls_extension_key_share(session), _group(0) {}
 
-return_t tls_extension_server_key_share::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 group = 0;

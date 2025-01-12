@@ -57,6 +57,21 @@ binary::binary(const binary_t& rhs) : _be(false), _bin(rhs) {}
 
 binary::binary(binary_t&& rhs) : _be(false), _bin(std::move(rhs)) {}
 
+binary& binary::set(const binary& rhs) {
+    _bin = rhs.get();
+    return *this;
+}
+
+binary& binary::set(const binary_t& rhs) {
+    _bin = rhs;
+    return *this;
+}
+
+binary& binary::set(binary_t&& rhs) {
+    _bin = std::move(rhs);
+    return *this;
+}
+
 binary& binary::push_back(byte_t rhs) {
     binary_push(_bin, rhs);
     return *this;
@@ -223,6 +238,8 @@ binary& binary::operator=(const std::string& value) { return clear().append(valu
 
 binary& binary::operator=(const binary_t& value) { return clear().append(value); }
 
+binary& binary::operator=(binary_t&& value) { return set(value); }
+
 binary& binary::operator=(const binary& value) { return clear().append(value); }
 
 binary& binary::operator=(const char* value) { return clear().append(value); }
@@ -239,5 +256,9 @@ const binary_t& binary::get() const { return _bin; }
 binary::operator binary_t() { return _bin; }
 
 binary::operator const binary_t&() const { return _bin; }
+
+size_t binary::size() { return _bin.size(); }
+
+size_t binary::size() const { return _bin.size(); }
 
 }  // namespace hotplace

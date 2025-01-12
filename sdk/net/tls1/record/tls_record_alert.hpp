@@ -18,11 +18,12 @@ class tls_record_alert : public tls_record {
    public:
     tls_record_alert(tls_session* session);
 
-    virtual return_t read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t read_plaintext(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:
+    virtual return_t write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+
    private:
     uint8 _level;
     uint8 _desc;

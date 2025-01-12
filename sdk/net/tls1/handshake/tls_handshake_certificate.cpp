@@ -19,9 +19,18 @@
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_request_context_len[] = "request context len";
+constexpr char constexpr_request_context[] = "request context";
+constexpr char constexpr_certificates_len[] = "certifcates len";
+constexpr char constexpr_certificate_len[] = "certifcate len";
+constexpr char constexpr_certificate[] = "certifcate";
+constexpr char constexpr_group_tls13[] = "tls1.3";
+constexpr char constexpr_certificate_extensions[] = "certificate extensions";
+constexpr char constexpr_record_type[] = "record type";
+
 tls_handshake_certificate::tls_handshake_certificate(tls_session* session) : tls_handshake(tls_hs_certificate, session) {}
 
-return_t tls_handshake_certificate::do_handshake(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -29,9 +38,10 @@ return_t tls_handshake_certificate::do_handshake(tls_direction_t dir, const byte
             ret = errorcode_t::invalid_context;
             __leave2;
         }
-        auto hspos = get_header_range().begin;
-        auto hdrsize = get_header_size();
-        auto& protection = session->get_tls_protection();
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
         {
             // RFC 8446 2.  Protocol Overview
@@ -53,39 +63,8 @@ return_t tls_handshake_certificate::do_handshake(tls_direction_t dir, const byte
             // RFC 4346 7.4.3. Server Key Exchange Message
             // RFC 4346 7.4.6. Client certificate
             // RFC 4346 7.4.7. Client Key Exchange Message
-            ret = do_read(dir, stream, size, pos, debugstream);
 
-            protection.calc_transcript_hash(session, stream + hspos, hdrsize);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_handshake_certificate::do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
-            constexpr char constexpr_request_context_len[] = "request context len";
-            constexpr char constexpr_request_context[] = "request context";
-            constexpr char constexpr_certificates_len[] = "certifcates len";
-            constexpr char constexpr_certificate_len[] = "certifcate len";
-            constexpr char constexpr_certificate[] = "certifcate";
-            constexpr char constexpr_group_tls13[] = "tls1.3";
 
             binary_t cert;
             crypto_keychain keychain;
@@ -109,9 +88,6 @@ return_t tls_handshake_certificate::do_read(tls_direction_t dir, const byte_t* s
                 certificate_len = pl.t_value_of<uint32>(constexpr_certificate_len);
                 pl.get_binary(constexpr_certificate, cert);
             }
-
-            constexpr char constexpr_certificate_extensions[] = "certificate extensions";
-            constexpr char constexpr_record_type[] = "record type";
 
             binary_t cert_extensions;
             uint8 record_type = 0;
@@ -157,6 +133,28 @@ return_t tls_handshake_certificate::do_read(tls_direction_t dir, const byte_t* s
     }
     return ret;
 }
+
+return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        auto hspos = offsetof_header();
+        auto hdrsize = get_header_size();
+        auto& protection = session->get_tls_protection();
+
+        protection.calc_transcript_hash(session, stream + hspos, hdrsize);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

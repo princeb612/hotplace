@@ -21,10 +21,11 @@ class dtls13_ciphertext : public tls_record {
     dtls13_ciphertext(uint8 type, tls_session* session);
 
     virtual return_t read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+    virtual return_t read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
 
    protected:
+    virtual return_t write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+
     uint16 _sequence;
     uint8 _sequence_len;
     size_t _offset_encdata;

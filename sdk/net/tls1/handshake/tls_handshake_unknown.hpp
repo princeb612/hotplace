@@ -19,7 +19,8 @@ class tls_handshake_unknown : public tls_handshake {
     tls_handshake_unknown(tls_hs_type_t type, tls_session* session);
 
    protected:
-    virtual return_t do_handshake(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
 };
 
 }  // namespace net

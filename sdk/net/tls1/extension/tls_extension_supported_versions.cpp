@@ -24,7 +24,7 @@ tls_extension_supported_versions::tls_extension_supported_versions(tls_session* 
 
 tls_extension_client_supported_versions::tls_extension_client_supported_versions(tls_session* session) : tls_extension_supported_versions(session) {}
 
-return_t tls_extension_client_supported_versions::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_client_supported_versions::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 count = 0;
@@ -65,7 +65,7 @@ return_t tls_extension_client_supported_versions::write(binary_t& bin, stream_t*
 tls_extension_server_supported_versions::tls_extension_server_supported_versions(tls_session* session)
     : tls_extension_supported_versions(session), _version(0) {}
 
-return_t tls_extension_server_supported_versions::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_server_supported_versions::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();

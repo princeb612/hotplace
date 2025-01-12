@@ -17,13 +17,14 @@ namespace net {
 class tls_record_application_data : public tls_record {
    public:
     tls_record_application_data(tls_session* session);
-    virtual return_t read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+    virtual return_t read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
 
     void addref();
     void release();
 
    protected:
+    virtual return_t write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+
     t_shared_reference<tls_record_application_data> _shared;
     // std::list<tls_extension*> _extensions;
 };

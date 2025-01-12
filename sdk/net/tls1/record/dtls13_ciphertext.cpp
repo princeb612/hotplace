@@ -134,10 +134,10 @@ return_t dtls13_ciphertext::read_header(tls_direction_t dir, const byte_t* strea
     return ret;
 }
 
-return_t dtls13_ciphertext::read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t dtls13_ciphertext::read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto recpos = get_header_range().begin;
+        auto recpos = offsetof_header();
         auto sequence = _sequence;
         auto sequence_len = _sequence_len;
         auto offset_encdata = _offset_encdata;
@@ -233,7 +233,7 @@ return_t dtls13_ciphertext::read_data(tls_direction_t dir, const byte_t* stream,
                     } break;
                     case tls_content_type_ack: {
                         tls_record_ack ack(session);
-                        ret = ack.read_data(dir, &plaintext[0], plaintext.size() - 1, tpos, debugstream);
+                        ret = ack.read_body(dir, &plaintext[0], plaintext.size() - 1, tpos, debugstream);
                     } break;
                 }
             }
@@ -245,7 +245,7 @@ return_t dtls13_ciphertext::read_data(tls_direction_t dir, const byte_t* stream,
     return ret;
 }
 
-return_t dtls13_ciphertext::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t dtls13_ciphertext::write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

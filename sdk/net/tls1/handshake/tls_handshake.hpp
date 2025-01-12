@@ -23,23 +23,37 @@ class tls_handshake {
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+    virtual return_t dump(const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
 
     void addref();
     void release();
+
+    return_t add(tls_extension* extension, bool upref = false);
+    tls_handshake& operator<<(tls_extension* extension);
 
     tls_hs_type_t get_type();
     tls_session* get_session();
     size_t get_header_size();
     const range_t& get_header_range();
+    size_t offsetof_header();
+    size_t offsetof_body();
     uint32 get_length();
 
    protected:
     virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t do_handshake(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t do_construct(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+    virtual return_t do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
+    virtual return_t do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body, stream_t* debugstream = nullptr);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+    virtual return_t dump_header(const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
+    virtual return_t do_dump_body(const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
+
+    void clear();
 
     range_t _range;
+    uint16 _extension_len;
+    std::list<tls_extension*> _extensions;
 
    private:
     tls_hs_type_t _type;

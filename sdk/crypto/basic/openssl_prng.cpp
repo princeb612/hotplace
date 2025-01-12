@@ -8,8 +8,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/system/datetime.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 
 namespace hotplace {

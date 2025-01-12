@@ -33,14 +33,14 @@ class tls_extension {
     ~tls_extension();
 
     virtual return_t read(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t read_header(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
     tls_session* get_session();
     void set_type(uint16 type);
     uint16 get_type();
     const range_t& get_header_range();
+    size_t offsetof_header();
+    size_t offsetof_body();
     uint16 get_length();
     size_t get_extsize();
     size_t endpos_extension();
@@ -49,6 +49,11 @@ class tls_extension {
     void release();
 
    protected:
+    virtual return_t do_read_header(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t do_write_header(binary_t& bin, const binary_t& body, stream_t* debugstream = nullptr);
+    virtual return_t do_write_body(binary_t& bin, stream_t* debugstream = nullptr);
+
     t_shared_reference<tls_extension> _shared;
 
     tls_session* _session;

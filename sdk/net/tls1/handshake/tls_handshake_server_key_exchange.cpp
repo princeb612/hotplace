@@ -23,31 +23,7 @@ namespace net {
 
 tls_handshake_server_key_exchange::tls_handshake_server_key_exchange(tls_session* session) : tls_handshake(tls_hs_server_key_exchange, session) {}
 
-return_t tls_handshake_server_key_exchange::do_handshake(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        auto hspos = get_header_range().begin;
-        auto hdrsize = get_header_size();
-        auto& protection = session->get_tls_protection();
-
-        {
-            ret = do_read(dir, stream, size, pos, debugstream);
-
-            protection.calc_transcript_hash(session, stream + hspos, hdrsize);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_handshake_server_key_exchange::do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -115,7 +91,7 @@ return_t tls_handshake_server_key_exchange::do_read(tls_direction_t dir, const b
                     if (nid) {
                         ret = keychain.add_ec(&keyexchange, nid, pubkey, binary_t(), binary_t(), keydesc("SKE"));
                     } else {
-                        ret = errorcode_t::not_supported;
+                        ret = errorcode_t::success;
                     }
                 }
             }
@@ -136,7 +112,7 @@ return_t tls_handshake_server_key_exchange::do_read(tls_direction_t dir, const b
                     ret = sign->verify(pkey, message, sig);
                     sign->release();
                 } else {
-                    ret = errorcode_t::not_supported;
+                    ret = errorcode_t::success;
                 }
             }
 
@@ -158,6 +134,28 @@ return_t tls_handshake_server_key_exchange::do_read(tls_direction_t dir, const b
     }
     return ret;
 }
+
+return_t tls_handshake_server_key_exchange::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        auto hspos = offsetof_header();
+        auto hdrsize = get_header_size();
+        auto& protection = session->get_tls_protection();
+
+        { protection.calc_transcript_hash(session, stream + hspos, hdrsize); }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

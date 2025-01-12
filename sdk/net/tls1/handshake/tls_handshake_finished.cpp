@@ -24,45 +24,7 @@ namespace net {
 
 tls_handshake_finished::tls_handshake_finished(tls_session* session) : tls_handshake(tls_hs_finished, session) {}
 
-return_t tls_handshake_finished::do_handshake(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        auto hspos = get_header_range().begin;
-        auto hdrsize = get_header_size();
-        auto& protection = session->get_tls_protection();
-
-        {
-            // RFC 8446 2.  Protocol Overview
-            // Finished:  A MAC (Message Authentication Code) over the entire
-            //    handshake.  This message provides key confirmation, binds the
-            //    endpoint's identity to the exchanged keys, and in PSK mode also
-            //    authenticates the handshake.  [Section 4.4.4]
-
-            ret = do_read(dir, stream, size, pos, debugstream);
-
-            protection.calc_transcript_hash(session, stream + hspos, hdrsize);
-
-            // from_server : application, exporter related
-            // from_client : resumption related
-            protection.calc(session, tls_hs_finished, dir);
-
-            session->get_session_info(dir).set_status(get_type());
-
-            session->reset_recordno(dir);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_handshake_finished::do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -76,12 +38,18 @@ return_t tls_handshake_finished::do_read(tls_direction_t dir, const byte_t* stre
         }
 
         {
+            // RFC 8446 2.  Protocol Overview
+            // Finished:  A MAC (Message Authentication Code) over the entire
+            //    handshake.  This message provides key confirmation, binds the
+            //    endpoint's identity to the exchanged keys, and in PSK mode also
+            //    authenticates the handshake.  [Section 4.4.4]
+
             auto& protection = session->get_tls_protection();
             crypto_advisor* advisor = crypto_advisor::get_instance();
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
             if (nullptr == hint_tls_alg) {
-                ret = errorcode_t::not_supported;
+                ret = errorcode_t::success;
                 __leave2;
             }
             auto dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
@@ -147,7 +115,7 @@ return_t tls_handshake_finished::do_read(tls_direction_t dir, const byte_t* stre
 
                     typeof_secret = tls_secret_master;
                     const binary_t& fin_key = protection.get_item(typeof_secret);
-                    auto hmac_alg = algof_mac1(hint_tls_alg);
+                    auto hmac_alg = algof_mac(hint_tls_alg);
 
                     crypto_hmac_builder builder;
                     auto hmac = builder.set(hmac_alg).set(fin_key).build();
@@ -174,11 +142,13 @@ return_t tls_handshake_finished::do_read(tls_direction_t dir, const byte_t* stre
 
                 if (debugstream) {
                     debugstream->autoindent(1);
-                    debugstream->printf("> %s\n", constexpr_verify_data);
+                    debugstream->printf("> %s", constexpr_verify_data);
+                    debugstream->printf(" \e[1;33m%s\e[0m", (errorcode_t::success == ret) ? "true" : "false");
+                    debugstream->printf("\n");
                     dump_memory(verify_data, debugstream, 16, 3, 0x00, dump_notrunc);
                     debugstream->printf("  > secret (internal) 0x%08x\n", typeof_secret);
                     debugstream->printf("  > verify data %s \n", base16_encode(verify_data).c_str());
-                    debugstream->printf("  > maced       %s \e[1;33m%s\e[0m\n", base16_encode(maced).c_str(), (errorcode_t::success == ret) ? "true" : "false");
+                    debugstream->printf("  > maced       %s\n", base16_encode(maced).c_str());
                     debugstream->autoindent(0);
                 }
             }
@@ -189,6 +159,38 @@ return_t tls_handshake_finished::do_read(tls_direction_t dir, const byte_t* stre
     }
     return ret;
 }
+
+return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        auto hspos = offsetof_header();
+        auto hdrsize = get_header_size();
+        auto& protection = session->get_tls_protection();
+
+        {
+            protection.calc_transcript_hash(session, stream + hspos, hdrsize);
+
+            // from_server : application, exporter related
+            // from_client : resumption related
+            protection.calc(session, tls_hs_finished, dir);
+
+            session->get_session_info(dir).set_status(get_type());
+
+            session->reset_recordno(dir);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -10,7 +10,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>

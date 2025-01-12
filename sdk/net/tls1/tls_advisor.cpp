@@ -15,14 +15,21 @@
 namespace hotplace {
 namespace net {
 
-hash_algorithm_t algof_mac(const tls_cipher_suite_t* info) { return info ? info->mac : hash_alg_unknown; }
-
-hash_algorithm_t algof_mac1(const tls_cipher_suite_t* info) {
-    hash_algorithm_t hash_alg = hash_alg_unknown;
+hash_algorithm_t algof_mac(const tls_cipher_suite_t* info) {
+    hash_algorithm_t alg = hash_alg_unknown;
     if (info) {
-        hash_alg = (info->mac_tls1) ? info->mac_tls1 : info->mac;
+        alg = info->mac;
+        switch (alg) {
+            case md5:
+            case sha1:
+                // insecure algorithm promotion
+                alg = sha2_256;
+                break;
+            default:
+                break;
+        }
     }
-    return hash_alg;
+    return alg;
 }
 
 tls_advisor tls_advisor::_instance;
@@ -61,10 +68,15 @@ void tls_advisor::load_tls_parameters() {
         auto item = tls_alert_codes + i;
         _alert_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_cipher_suite_codes; i++) {
-        auto item = tls_cipher_suite_codes + i;
+    for (auto i = 0; i < sizeof_tls_cipher_suites; i++) {
+        auto item = tls_cipher_suites + i;
         _cipher_suite_codes.insert({item->code, item});
-        _cipher_suite_names.insert({item->desc, item});
+        if (item->name_iana) {
+            _cipher_suite_names.insert({item->name_iana, item});
+        }
+        if (item->name_ossl) {
+            _cipher_suite_names.insert({item->name_ossl, item});
+        }
     }
     for (auto i = 0; i < sizeof_tls_content_type_codes; i++) {
         auto item = tls_content_type_codes + i;
@@ -97,12 +109,6 @@ void tls_advisor::load_tls_parameters() {
     for (auto i = 0; i < sizeof_tls_supported_group_codes; i++) {
         auto item = tls_supported_group_codes + i;
         _supported_group_codes.insert({item->code, item});
-    }
-
-    // cipher suites
-    for (auto i = 0; i < sizeof_tls_cipher_suites; i++) {
-        auto item = tls_cipher_suites + i;
-        _cipher_suites.insert({item->alg, item});
     }
 }
 
@@ -156,8 +162,17 @@ void tls_advisor::load_tls_version() {
 
 const tls_cipher_suite_t* tls_advisor::hintof_cipher_suite(uint16 code) {
     const tls_cipher_suite_t* item = nullptr;
-    auto iter = _cipher_suites.find(code);
-    if (_cipher_suites.end() != iter) {
+    auto iter = _cipher_suite_codes.find(code);
+    if (_cipher_suite_codes.end() != iter) {
+        item = iter->second;
+    }
+    return item;
+}
+
+const tls_cipher_suite_t* tls_advisor::hintof_cipher_suite(const std::string& name) {
+    const tls_cipher_suite_t* item = nullptr;
+    auto iter = _cipher_suite_names.find(name);
+    if (_cipher_suite_names.end() != iter) {
         item = iter->second;
     }
     return item;
@@ -231,7 +246,7 @@ std::string tls_advisor::cipher_suite_string(uint16 code) {
     auto iter = _cipher_suite_codes.find(code);
     if (_cipher_suite_codes.end() != iter) {
         auto item = iter->second;
-        value = item->desc;
+        value = item->name_iana;
     }
     return value;
 }

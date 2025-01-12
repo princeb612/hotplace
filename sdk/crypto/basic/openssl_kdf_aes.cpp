@@ -17,7 +17,6 @@
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/io/basic/payload.hpp>
 
 #if defined __linux__
 #include <dlfcn.h>

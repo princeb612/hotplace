@@ -24,7 +24,7 @@ class tls_extension_psk_key_exchange_modes : public tls_extension {
    public:
     tls_extension_psk_key_exchange_modes(tls_session* session);
 
-    virtual return_t read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:

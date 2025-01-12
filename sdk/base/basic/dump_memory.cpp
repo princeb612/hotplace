@@ -11,7 +11,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/syntax.hpp>
+#include <sdk/base/basic/types.hpp>
 
 namespace hotplace {
 

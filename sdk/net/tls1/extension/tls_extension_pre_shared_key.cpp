@@ -32,7 +32,7 @@ tls_extension_psk::tls_extension_psk(tls_session* session) : tls_extension(tls1_
 tls_extension_client_psk::tls_extension_client_psk(tls_session* session)
     : tls_extension_psk(session), _psk_identities_len(0), _obfuscated_ticket_age(0), _psk_binders_len(0) {}
 
-return_t tls_extension_client_psk::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -95,7 +95,7 @@ return_t tls_extension_client_psk::read_data(const byte_t* stream, size_t size, 
             psk_identity_len = pl.t_value_of<uint16>(constexpr_psk_identity_len);
             pl.get_binary(constexpr_psk_identity, psk_identity);
             obfuscated_ticket_age = pl.t_value_of<uint32>(constexpr_obfuscated_ticket_age);
-            offset_psk_binders_len = get_header_range().begin + pl.offset_of(constexpr_psk_binders_len);  // 0-RTT "res binder"
+            offset_psk_binders_len = offsetof_header() + pl.offset_of(constexpr_psk_binders_len);  // 0-RTT "res binder"
             psk_binders_len = pl.t_value_of<uint16>(constexpr_psk_binders_len);
             psk_binder_len = pl.t_value_of<uint8>(constexpr_psk_binder_len);
             pl.get_binary(constexpr_psk_binder, psk_binder);
@@ -153,7 +153,7 @@ return_t tls_extension_client_psk::write(binary_t& bin, stream_t* debugstream) {
 
 tls_extension_server_psk::tls_extension_server_psk(tls_session* session) : tls_extension_psk(session), _selected_identity(0) {}
 
-return_t tls_extension_server_psk::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_server_psk::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 selected_identity = 0;

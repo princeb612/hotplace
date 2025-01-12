@@ -20,72 +20,7 @@ namespace net {
 
 tls_handshake_server_hello::tls_handshake_server_hello(tls_session* session) : tls_handshake(tls_hs_server_hello, session) {}
 
-return_t tls_handshake_server_hello::do_handshake(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        auto hspos = get_header_range().begin;
-        auto hdrsize = get_header_size();
-        auto& protection = session->get_tls_protection();
-
-        {
-            ret = do_read(dir, stream, size, pos, debugstream);
-
-            // calculates the hash of all handshake messages to this point (ClientHello and ServerHello).
-            binary_t hello_hash;
-            if (tls_1_rtt == protection.get_flow()) {
-                const binary_t& client_hello = protection.get_item(tls_context_client_hello);
-                protection.calc_transcript_hash(session, &client_hello[0], client_hello.size());  // client_hello
-            }
-
-            protection.calc_transcript_hash(session, stream + hspos, hdrsize, hello_hash);  // server_hello
-            ret = protection.calc(session, tls_hs_server_hello, dir);
-            session->get_session_info(dir).set_status(get_type());
-            if (errorcode_t::success != ret) {
-                protection.set_flow(tls_hello_retry_request);
-
-                /**
-                 *    RFC 8446 4.4.1.  The Transcript Hash
-                 *
-                 *       As an exception to this general rule, when the server responds to a
-                 *       ClientHello with a HelloRetryRequest, the value of ClientHello1 is
-                 *       replaced with a special synthetic handshake message of handshake type
-                 *       "message_hash" containing Hash(ClientHello1).  I.e.,
-                 *
-                 *       Transcript-Hash(ClientHello1, HelloRetryRequest, ... Mn) =
-                 *           Hash(message_hash ||        // Handshake type
-                 *                00 00 Hash.length  ||  // Handshake message length (bytes)
-                 *                Hash(ClientHello1) ||  // Hash of ClientHello1
-                 *                HelloRetryRequest  || ... || Mn)
-                 */
-                binary_t handshake_hash;
-                const binary_t& client_hello = protection.get_item(tls_context_client_hello);
-                protection.reset_transcript_hash(session);
-                protection.calc_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);
-
-                binary message_hash;
-                message_hash << uint8(tls_hs_message_hash) << uint16(0) << byte_t(handshake_hash.size()) << handshake_hash;
-                const binary_t& synthetic_handshake_message = message_hash.get();
-
-                protection.reset_transcript_hash(session);
-                protection.calc_transcript_hash(session, &synthetic_handshake_message[0], synthetic_handshake_message.size());
-                protection.calc_transcript_hash(session, stream + hspos, hdrsize, hello_hash);
-            }
-
-            protection.clear_item(tls_context_client_hello);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_handshake_server_hello::do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -201,7 +136,70 @@ return_t tls_handshake_server_hello::do_read(tls_direction_t dir, const byte_t* 
     return ret;
 }
 
-return_t tls_handshake_server_hello::do_construct(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        auto hspos = offsetof_header();
+        auto hdrsize = get_header_size();
+        auto& protection = session->get_tls_protection();
+
+        {
+            // calculates the hash of all handshake messages to this point (ClientHello and ServerHello).
+            binary_t hello_hash;
+            if (tls_1_rtt == protection.get_flow()) {
+                const binary_t& client_hello = protection.get_item(tls_context_client_hello);
+                protection.calc_transcript_hash(session, &client_hello[0], client_hello.size());  // client_hello
+            }
+
+            protection.calc_transcript_hash(session, stream + hspos, hdrsize, hello_hash);  // server_hello
+            ret = protection.calc(session, tls_hs_server_hello, dir);
+            session->get_session_info(dir).set_status(get_type());
+            if (errorcode_t::success != ret) {
+                protection.set_flow(tls_hello_retry_request);
+
+                /**
+                 *    RFC 8446 4.4.1.  The Transcript Hash
+                 *
+                 *       As an exception to this general rule, when the server responds to a
+                 *       ClientHello with a HelloRetryRequest, the value of ClientHello1 is
+                 *       replaced with a special synthetic handshake message of handshake type
+                 *       "message_hash" containing Hash(ClientHello1).  I.e.,
+                 *
+                 *       Transcript-Hash(ClientHello1, HelloRetryRequest, ... Mn) =
+                 *           Hash(message_hash ||        // Handshake type
+                 *                00 00 Hash.length  ||  // Handshake message length (bytes)
+                 *                Hash(ClientHello1) ||  // Hash of ClientHello1
+                 *                HelloRetryRequest  || ... || Mn)
+                 */
+                binary_t handshake_hash;
+                const binary_t& client_hello = protection.get_item(tls_context_client_hello);
+                protection.reset_transcript_hash(session);
+                protection.calc_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);
+
+                binary message_hash;
+                message_hash << uint8(tls_hs_message_hash) << uint16(0) << byte_t(handshake_hash.size()) << handshake_hash;
+                const binary_t& synthetic_handshake_message = message_hash.get();
+
+                protection.reset_transcript_hash(session);
+                protection.calc_transcript_hash(session, &synthetic_handshake_message[0], synthetic_handshake_message.size());
+                protection.calc_transcript_hash(session, stream + hspos, hdrsize, hello_hash);
+            }
+
+            protection.clear_item(tls_context_client_hello);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 { auto session = get_session(); }
     __finally2 {

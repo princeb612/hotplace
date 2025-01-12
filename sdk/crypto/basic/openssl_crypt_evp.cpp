@@ -11,14 +11,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/system/datetime.hpp>
-#include <sdk/base/system/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
-#include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {

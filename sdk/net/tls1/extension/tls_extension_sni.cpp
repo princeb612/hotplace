@@ -27,7 +27,7 @@ constexpr char constexpr_hostname[] = "hostname";
 
 tls_extension_sni::tls_extension_sni(tls_session* session) : tls_extension(tls1_ext_server_name, session), _nametype(0) {}
 
-return_t tls_extension_sni::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 6066 3.  Server Name Indication
@@ -78,7 +78,7 @@ return_t tls_extension_sni::read_data(const byte_t* stream, size_t size, size_t&
 
         {
             _nametype = type;
-            _hostname = std::move(hostname);
+            _hostname.set(std::move(hostname));
         }
     }
     __finally2 {
@@ -87,16 +87,25 @@ return_t tls_extension_sni::read_data(const byte_t* stream, size_t size, size_t&
     return ret;
 }
 
-return_t tls_extension_sni::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
+return_t tls_extension_sni::do_write_body(binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+
+    {
+        uint8 type = get_nametype();
+        const binary_t& hostname = get_hostname();
+
+        payload pl;
+        pl << new payload_member(uint8(type), constexpr_name_type) << new payload_member(uint16(hostname.size()), true, constexpr_hostname_len)
+           << new payload_member(hostname, constexpr_hostname);
+        pl.write(bin);
+    }
+
+    return ret;
+}
 
 uint8 tls_extension_sni::get_nametype() { return _nametype; }
 
-void tls_extension_sni::set_hostname(const std::string& hostname) {
-    _hostname.clear();
-    _hostname << hostname;
-}
-
-const binary_t& tls_extension_sni::get_hostname() { return _hostname; }
+binary& tls_extension_sni::get_hostname() { return _hostname; }
 
 }  // namespace net
 }  // namespace hotplace

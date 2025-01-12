@@ -23,7 +23,7 @@ constexpr char constexpr_protocol[] = "alpn protocol";
 
 tls_extension_alpn::tls_extension_alpn(tls_session* session) : tls_extension(tls1_ext_application_layer_protocol_negotiation, session) {}
 
-return_t tls_extension_alpn::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_alpn::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 alpn_len = 0;
@@ -56,7 +56,7 @@ return_t tls_extension_alpn::read_data(const byte_t* stream, size_t size, size_t
     return ret;
 }
 
-return_t tls_extension_alpn::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension_alpn::do_write_body(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 const binary_t& tls_extension_alpn::get_protocols() { return _protocols; }
 

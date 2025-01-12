@@ -22,7 +22,7 @@ constexpr char constexpr_algorithm[] = "algorithm";
 
 tls_extension_signature_algorithms::tls_extension_signature_algorithms(tls_session* session) : tls_extension(tls1_ext_signature_algorithms, session) {}
 
-return_t tls_extension_signature_algorithms::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_signature_algorithms::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 8446 4.2.3.  Signature Algorithms

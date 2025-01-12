@@ -68,7 +68,7 @@ transcript_hash* tls_protection::get_transcript_hash() {
         if (get_cipher_suite()) {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
-            auto hashalg = algof_mac1(hint_tls_alg);
+            auto hashalg = algof_mac(hint_tls_alg);
             transcript_hash_builder builder;
             _transcript_hash = builder.set(hashalg).build();
         }
@@ -552,7 +552,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
              *                     [0..47];
              */
 
-            hash_algorithm_t hmac_alg = algof_mac1(hint_tls_alg);
+            hash_algorithm_t hmac_alg = algof_mac(hint_tls_alg);
 
             binary_t pre_master_secret;
             binary_t master_secret;
@@ -803,6 +803,24 @@ return_t tls_protection::build_iv(tls_session* session, tls_secret_t type, binar
     return ret;
 }
 
+return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& ciphertext,
+                                       binary_t& tag, stream_t* debugstream) {
+    return_t ret = errorcode_t::not_supported;
+    return ret;
+}
+
+return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& ciphertext,
+                                       const binary_t& aad, binary_t& tag, stream_t* debugstream) {
+    return_t ret = errorcode_t::not_supported;
+    return ret;
+}
+
+return_t tls_protection::encrypt_tls1(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& ciphertext,
+                                      stream_t* debugstream) {
+    return_t ret = errorcode_t::not_supported;
+    return ret;
+}
+
 return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
                                        binary_t& tag, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
@@ -856,7 +874,17 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
             }
             cipher = hint->cipher;
             mode = hint->mode;
-            tagsize = hint->tagsize;
+            switch (mode) {
+                case gcm:
+                case ccm:
+                    tagsize = 16;
+                    break;
+                case ccm8:
+                    tagsize = 8;
+                    break;
+                default:
+                    break;
+            }
         }
 
         auto& protection = session->get_tls_protection();
@@ -1019,7 +1047,7 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir,
         binary_t maced;
         const binary_t& mackey = get_item(secret_mac_key);
         {
-            auto hmac_alg = algof_mac(hint_tls_alg);
+            auto hmac_alg = hint_tls_alg->mac;  // do not promote insecure algorithm (ex. don't call algof_mac)
             auto hint_digest = advisor->hintof_digest(hmac_alg);
             auto dlen = sizeof_digest(hint_digest);
 

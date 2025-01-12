@@ -86,10 +86,7 @@ return_t split_get(split_context_t* handle, unsigned int index, binary_t& data) 
             __leave2;
         }
 
-        split_map_list::iterator it = handle->info.begin();
-        std::advance(it, index);
-
-        const split_map_item& item = *it;
+        const split_map_item& item = handle->info[index];
         data.resize(item.length);
         memcpy(&data[0], handle->source.c_str() + item.begin, item.length);
     }
@@ -113,10 +110,7 @@ return_t split_get(split_context_t* handle, unsigned int index, std::string& dat
             __leave2;
         }
 
-        split_map_list::iterator it = handle->info.begin();
-        std::advance(it, index);
-
-        const split_map_item& item = *it;
+        const split_map_item& item = handle->info[index];
         data.assign(handle->source.c_str() + item.begin, item.length);
     }
     __finally2 {

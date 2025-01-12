@@ -8,10 +8,8 @@
  * Date         Name                Description
  */
 
-#include <iostream>
-#include <sdk/base/stream/tstring.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/trace.hpp>
-#include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {

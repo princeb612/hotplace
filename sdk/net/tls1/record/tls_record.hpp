@@ -21,24 +21,32 @@ class tls_record {
     ~tls_record();
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
 
-    tls_session* get_session();
-    tls_content_type_t get_type();
-    uint16 get_legacy_version();
+    tls_session* get_session();  // session
+
+    tls_content_type_t get_type();  // content type
+    uint16 get_legacy_version();    // legacy version
+
     bool is_dtls();
-    uint16 get_key_epoch();
-    const binary_t& get_dtls_record_seq();
-    uint16 get_length();
-    const range_t& get_header_range();
+    uint16 get_key_epoch();                 // DTLS key epoch
+    const binary_t& get_dtls_record_seq();  // DTLS record sequence number
 
     void addref();
     void release();
 
    protected:
     tls_record(uint8 type, tls_session* session);
+
+    virtual return_t read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t write_header(tls_direction_t dir, binary_t& bin, const binary_t& body, stream_t* debugstream = nullptr);
+    virtual return_t write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+
+    const range_t& get_header_range();
+    uint16 get_length();
+    size_t offsetof_header();
+    size_t offsetof_body();
 
     uint8 _content_type;
     uint16 _legacy_version;

@@ -57,14 +57,30 @@ tls_extension::~tls_extension() {
 return_t tls_extension::read(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = read_header(stream, size, pos, debugstream);
-        if (errorcode_t::success != ret) {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        size_t tpos = pos;  // responding to unhandled extentions
-        ret = read_data(stream, size, tpos, debugstream);
-        pos += get_length();  // responding to unhandled extentions
+        if (debugstream) {
+            debugstream->autoindent(3);
+        }
+
+        __try2 {
+            ret = do_read_header(stream, size, pos, debugstream);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+
+            size_t tpos = pos;  // responding to unhandled extentions
+            ret = do_read_body(stream, size, tpos, debugstream);
+            pos += get_length();  // responding to unhandled extentions
+        }
+        __finally2 {}
+
+        if (debugstream) {
+            debugstream->autoindent(0);
+        }
     }
     __finally2 {
         // do nothing
@@ -72,14 +88,14 @@ return_t tls_extension::read(const byte_t* stream, size_t size, size_t& pos, str
     return ret;
 }
 
-return_t tls_extension::read_header(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (pos + 4 >= size) {
+        if (pos + 4 > size) {
             ret = errorcode_t::no_more;
             __leave2;
         }
@@ -114,11 +130,11 @@ return_t tls_extension::read_header(const byte_t* stream, size_t size, size_t& p
 
         if (debugstream) {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto extension_type = get_type();
-            auto ext_len = get_length();
 
             debugstream->printf("> %s - %04x %s\n", constexpr_extension, extension_type, tlsadvisor->tls_extension_string(extension_type).c_str());
-            dump_memory(stream + get_header_range().begin, get_extsize(), debugstream, 16, 3, 0x0, dump_notrunc);
+            if (stream) {
+                dump_memory(stream + offsetof_header(), get_extsize(), debugstream, 16, 3, 0x0, dump_notrunc);
+            }
             debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_ext_len, ext_len, ext_len);
         }
     }
@@ -128,9 +144,47 @@ return_t tls_extension::read_header(const byte_t* stream, size_t size, size_t& p
     return ret;
 }
 
-return_t tls_extension::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) { return errorcode_t::not_supported; }
 
-return_t tls_extension::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
+return_t tls_extension::write(binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        binary_t body;
+        ret = do_write_body(body);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_write_header(bin, body, debugstream);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_extension::do_write_header(binary_t& bin, const binary_t& body, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    {
+        _header_range.begin = bin.size();
+        _header_range.end = 4 + bin.size();
+        _payload_len = body.size();
+        _size = 4 + _payload_len;
+    }
+    {
+        // header
+        payload pl;
+        pl << new payload_member(uint16(get_type()), true, constexpr_extension_type) << new payload_member(uint16(_payload_len), true, constexpr_ext_len);
+        pl.write(bin);
+    }
+    {
+        // body
+        bin.insert(bin.end(), body.begin(), body.end());
+    }
+    return ret;
+}
+
+return_t tls_extension::do_write_body(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 tls_session* tls_extension::get_session() { return _session; }
 
@@ -139,6 +193,10 @@ void tls_extension::set_type(uint16 type) { _type = type; }
 uint16 tls_extension::get_type() { return _type; }
 
 const range_t& tls_extension::get_header_range() { return _header_range; }
+
+size_t tls_extension::offsetof_header() { return _header_range.begin; }
+
+size_t tls_extension::offsetof_body() { return _header_range.end; }
 
 uint16 tls_extension::get_length() { return _payload_len; }
 

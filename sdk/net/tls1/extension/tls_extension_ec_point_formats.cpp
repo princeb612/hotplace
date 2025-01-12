@@ -22,7 +22,7 @@ constexpr char constexpr_formats[] = "formats";
 
 tls_extension_ec_point_formats::tls_extension_ec_point_formats(tls_session* session) : tls_extension(tls1_ext_ec_point_formats, session) {}
 
-return_t tls_extension_ec_point_formats::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 8422 5.1.2.  Supported Point Formats Extension
@@ -48,19 +48,20 @@ return_t tls_extension_ec_point_formats::read_data(const byte_t* stream, size_t 
             pl.get_binary(constexpr_formats, formats);
         }
 
+        {
+            for (auto fmt : formats) {
+                _ec_point_formats.push_back(fmt);
+            }
+        }
+
         if (debugstream) {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
             debugstream->printf(" > %s %i\n", constexpr_formats, len);
-            for (auto i = 0; i < len; i++) {
-                auto fmt = formats[i];
-                debugstream->printf("   [%i] 0x%02x(%i) %s\n", i, fmt, fmt, tlsadvisor->ec_point_format_string(fmt).c_str());
+            uint8 i = 0;
+            for (auto fmt : _ec_point_formats) {
+                debugstream->printf("   [%i] 0x%02x(%i) %s\n", i++, fmt, fmt, tlsadvisor->ec_point_format_string(fmt).c_str());
             }
-        }
-
-        {
-            //
-            _formats = std::move(formats);
         }
     }
     __finally2 {
@@ -69,14 +70,35 @@ return_t tls_extension_ec_point_formats::read_data(const byte_t* stream, size_t 
     return ret;
 }
 
-return_t tls_extension_ec_point_formats::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
+return_t tls_extension_ec_point_formats::do_write_body(binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        binary_t formats;
+        uint8 len = 0;
+        {
+            for (auto item : _ec_point_formats) {
+                binary_append(formats, item);
+            }
+            len = formats.size();
+        }
+        {
+            payload pl;
+            pl << new payload_member(uint8(len), constexpr_len) << new payload_member(formats, constexpr_formats);
+            pl.write(bin);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
 
 tls_extension_ec_point_formats& tls_extension_ec_point_formats::add_format(uint8 fmt) {
-    binary_append(_formats, fmt);
+    _ec_point_formats.push_back(fmt);
     return *this;
 }
 
-const binary_t& tls_extension_ec_point_formats::get_formats() { return _formats; }
+std::list<uint8>& tls_extension_ec_point_formats::get_formats() { return _ec_point_formats; }
 
 }  // namespace net
 }  // namespace hotplace

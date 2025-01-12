@@ -22,7 +22,7 @@ constexpr char constexpr_algorithm[] = "algorithm";
 
 tls_extension_compress_certificate::tls_extension_compress_certificate(tls_session* session) : tls_extension(tls1_ext_compress_certificate, session) {}
 
-return_t tls_extension_compress_certificate::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_compress_certificate::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint8 algorithm_len = 0;

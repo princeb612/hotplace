@@ -23,7 +23,7 @@ constexpr char constexpr_application_data[] = "application data";
 
 tls_record_application_data::tls_record_application_data(tls_session* session) : tls_record(tls_content_type_application_data, session) {}
 
-return_t tls_record_application_data::read_data(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_record_application_data::read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 len = get_length();
@@ -31,7 +31,7 @@ return_t tls_record_application_data::read_data(tls_direction_t dir, const byte_
         {
             auto session = get_session();
             size_t tpos = 0;
-            size_t recpos = get_header_range().begin;
+            size_t recpos = offsetof_header();
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
             tls_protection& protection = session->get_tls_protection();
@@ -98,7 +98,7 @@ return_t tls_record_application_data::read_data(tls_direction_t dir, const byte_
     return ret;
 }
 
-return_t tls_record_application_data::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_record_application_data::write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

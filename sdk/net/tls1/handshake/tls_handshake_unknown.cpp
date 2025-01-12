@@ -20,7 +20,7 @@ namespace net {
 
 tls_handshake_unknown::tls_handshake_unknown(tls_hs_type_t type, tls_session* session) : tls_handshake(type, session) {}
 
-return_t tls_handshake_unknown::do_handshake(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_unknown::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -28,7 +28,7 @@ return_t tls_handshake_unknown::do_handshake(tls_direction_t dir, const byte_t* 
             ret = errorcode_t::invalid_context;
             __leave2;
         }
-        auto hspos = get_header_range().begin;
+        auto hspos = offsetof_header();
         auto hdrsize = get_header_size();
         auto& protection = session->get_tls_protection();
 
@@ -42,6 +42,8 @@ return_t tls_handshake_unknown::do_handshake(tls_direction_t dir, const byte_t* 
     }
     return ret;
 }
+
+return_t tls_handshake_unknown::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

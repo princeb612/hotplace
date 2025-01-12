@@ -14,7 +14,6 @@
 
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/io/basic/payload.hpp>

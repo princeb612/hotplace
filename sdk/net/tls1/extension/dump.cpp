@@ -18,30 +18,30 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_dump_extension(tls_hs_type_t hstype, tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* s) {
+return_t tls_dump_extension(tls_hs_type_t hstype, tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == s || nullptr == session || nullptr == stream) {
+        if (nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (pos + 4 >= size) {
+        // extension
+        //  uint16 type
+        //  uint16 len
+        //  ...
+        if (pos + 4 > size) {
             ret = errorcode_t::no_more;
             __leave2;
         }
 
         {
-            s->autoindent(3);
-
             uint16 extension_type = ntoh16(*(uint16*)(stream + pos));
             tls_extension_builder builder;
             auto extension = builder.set(session).set(hstype).set(extension_type).build();
             if (extension) {
-                ret = extension->read(stream, size, pos, s);
+                ret = extension->read(stream, size, pos, debugstream);
                 extension->release();
             }
-
-            s->autoindent(0);
         }
     }
     __finally2 {

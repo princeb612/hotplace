@@ -26,7 +26,7 @@ constexpr char constexpr_request_ext_info[] = "request extension information";
 
 tls_extension_status_request::tls_extension_status_request(tls_session* session) : tls_extension(tls1_ext_status_request, session) {}
 
-return_t tls_extension_status_request::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_status_request::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint8 cert_status_type = 0;

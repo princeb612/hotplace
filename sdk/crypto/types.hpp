@@ -27,6 +27,34 @@ enum crypt_poweredby_t {
     openssl = 1,
 };
 
+enum keyexchange_t {
+    keyexchange_null = 0,
+    keyexchange_rsa = 1,     // Rivest Shamir Adleman algorithm (RSA)
+    keyexchange_dh = 2,      // Diffie-Hellman (DH)
+    keyexchange_dhe = 3,     // Diffie-Hellman Ephemeral (DHE)
+    keyexchange_krb5 = 4,    // Kerberos 5 (KRB5)
+    keyexchange_psk = 5,     // Pre-Shared Key (PSK)
+    keyexchange_ecdh = 6,    // Elliptic Curve Diffie-Hellman (ECDH)
+    keyexchange_ecdhe = 7,   // Elliptic Curve Diffie-Hellman Ephemeral (ECDHE)
+    keyexchange_srp = 8,     // Secure Remote Password (SRP)
+    keyexchange_eccpwd = 9,  // ECCPWD
+    keyexchange_gost = 10,   // Russian cryptographic standard algorithms
+};
+
+enum auth_t {
+    auth_null = 0,
+    auth_dss = 1,       // Digital Signature Standard (DSS)
+    auth_rsa = 2,       // Rivest Shamir Adleman algorithm (RSA)
+    auth_anon = 3,      // Anonymous (anon)
+    auth_psk = 4,       // Pre-Shared Key (PSK)
+    auth_ecdsa = 5,     // Elliptic Curve Digital Signature Algorithm (ECDSA)
+    auth_sha1 = 6,      // Secure Hash Algorithm 1 with Rivest Shamir Adleman algorithm (SHA RSA)
+    auth_sha2_256 = 7,  // SHA256
+    auth_sha2_384 = 8,  // SHA384
+    auth_eccpwd = 9,    // ECCPWD
+    auth_gost = 10,     // GOST R 34.10-2012 Digital Signature Algorithm (GOSTR341012)
+};
+
 /**
  * RFC 2144 The CAST-128 Encryption Algorithm (May 1997)
  * RFC 2612 The CAST-256 Encryption Algorithm (June 1999)
@@ -111,6 +139,7 @@ enum crypt_mode_t {
     gcm = 8,
     wrap = 9,
     ccm = 10,
+    ccm8 = 13,
 
     crypt_cipher = 11,
     crypt_aead = 12,

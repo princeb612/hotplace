@@ -135,6 +135,14 @@ class tls_protection {
 
     return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv, uint64 recordno);
 
+    return_t encrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& ciphertext, binary_t& tag,
+                           stream_t* debugstream = nullptr);
+
+    return_t encrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& ciphertext, const binary_t& aad,
+                           binary_t& tag, stream_t* debugstream = nullptr);
+    return_t encrypt_tls1(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& ciphertext,
+                          stream_t* debugstream);
+
     /**
      * @brief   TLS 1.3 decrypt
      * @remarks

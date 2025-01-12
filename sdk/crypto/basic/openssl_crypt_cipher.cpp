@@ -11,14 +11,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/system/datetime.hpp>
-#include <sdk/base/system/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
-#include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {
@@ -176,6 +172,10 @@ return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorit
         EVP_CIPHER_CTX_set_padding(context->encrypt_context, 1);
         EVP_CIPHER_CTX_set_padding(context->decrypt_context, 1);
 
+        if (ccm8 == mode) {
+            context->tsize = 8;
+        }
+
         *handle = context;
     }
     __finally2 {
@@ -296,7 +296,19 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
 
         EVP_CipherInit(context->encrypt_context, nullptr, nullptr, &iv[0], 1);
 
-        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode) || (crypt_mode_t::crypt_aead == context->mode)) {
+        bool is_aead = false;
+        switch (context->mode) {
+            case crypt_mode_t::gcm:
+            case crypt_mode_t::ccm:
+            case crypt_mode_t::ccm8:
+            case crypt_mode_t::crypt_aead:
+                is_aead = true;
+                break;
+            default:
+                break;
+        }
+
+        if (is_aead) {
             if ((nullptr == aad) || (nullptr == tag)) {
                 ret = errorcode_t::invalid_parameter;
                 __leave2_trace(ret);
@@ -335,7 +347,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
                  * the size of the authentication tag is fixed at 128 bits
                  */
                 tag_size = context->tsize ? context->tsize : 16;
-            } else if (crypt_mode_t::ccm == context->mode) {
+            } else if ((crypt_mode_t::ccm == context->mode) || (crypt_mode_t::ccm8 == context->mode)) {
                 tag_size = context->tsize ? context->tsize : 14;
                 uint16 lsize = context->lsize ? context->lsize : 8;
                 uint16 nonce_size = 15 - lsize;
@@ -475,13 +487,25 @@ return_t openssl_crypt::decrypt2(crypt_context_t *handle, const unsigned char *d
 
         EVP_CipherInit(context->decrypt_context, nullptr, nullptr, &iv[0], 0);
 
-        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode) || (crypt_mode_t::crypt_aead == context->mode)) {
+        bool is_aead = false;
+        switch (context->mode) {
+            case crypt_mode_t::gcm:
+            case crypt_mode_t::ccm:
+            case crypt_mode_t::ccm8:
+            case crypt_mode_t::crypt_aead:
+                is_aead = true;
+                break;
+            default:
+                break;
+        }
+
+        if (is_aead) {
             if ((nullptr == aad) || (nullptr == tag)) {
                 ret = errorcode_t::invalid_parameter;
                 __leave2_trace(ret);
             }
 
-            if (crypt_mode_t::ccm == context->mode) {
+            if ((crypt_mode_t::ccm) == context->mode || (crypt_mode_t::ccm8 == context->mode)) {
                 uint16 lsize = context->lsize ? context->lsize : 8;
                 uint16 nonce_size = 15 - lsize;
 

@@ -20,42 +20,7 @@ namespace net {
 
 tls_handshake_encrypted_extensions::tls_handshake_encrypted_extensions(tls_session* session) : tls_handshake(tls_hs_encrypted_extensions, session) {}
 
-return_t tls_handshake_encrypted_extensions::do_handshake(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        auto hspos = get_header_range().begin;
-        auto hdrsize = get_header_size();
-        auto& protection = session->get_tls_protection();
-
-        {
-            // RFC 8446 2.  Protocol Overview
-            // EncryptedExtensions:  responses to ClientHello extensions that are
-            //    not required to determine the cryptographic parameters, other than
-            //    those that are specific to individual certificates.
-            //    [Section 4.3.1]
-
-            // RFC 8446 4.3.1.  Encrypted Extensions
-            // struct {
-            //     Extension extensions<0..2^16-1>;
-            // } EncryptedExtensions;
-
-            ret = do_read(dir, stream + hspos, hdrsize, pos, debugstream);
-
-            protection.calc_transcript_hash(session, stream + hspos, hdrsize);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_handshake_encrypted_extensions::do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -69,13 +34,24 @@ return_t tls_handshake_encrypted_extensions::do_read(tls_direction_t dir, const 
         }
 
         {
+            // RFC 8446 2.  Protocol Overview
+            // EncryptedExtensions:  responses to ClientHello extensions that are
+            //    not required to determine the cryptographic parameters, other than
+            //    those that are specific to individual certificates.
+            //    [Section 4.3.1]
+
+            // RFC 8446 4.3.1.  Encrypted Extensions
+            // struct {
+            //     Extension extensions<0..2^16-1>;
+            // } EncryptedExtensions;
+
             // RFC 8446 4.3.1.  Encrypted Extensions
 
             auto& protection = session->get_tls_protection();
             // if (protection.is_kindof_dtls() /* || (tls_0_rtt == protection.get_flow()) */) {
             if (protection.is_kindof_dtls() || (tls_0_rtt == protection.get_flow())) {
                 // DTLS 1.3 ciphertext
-
+                // uint16 len = ntoh16(*(uint16*)(stream + pos));
                 pos += 2;  // len
                 for (return_t test = errorcode_t::success;;) {
                     test = tls_dump_extension(tls_hs_encrypted_extensions, session, stream, size, pos, debugstream);
@@ -96,6 +72,28 @@ return_t tls_handshake_encrypted_extensions::do_read(tls_direction_t dir, const 
     }
     return ret;
 }
+
+return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        auto hspos = offsetof_header();
+        auto hdrsize = get_header_size();
+        auto& protection = session->get_tls_protection();
+
+        { protection.calc_transcript_hash(session, stream + hspos, hdrsize); }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_handshake_encrypted_extensions::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

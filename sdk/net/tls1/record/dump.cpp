@@ -18,10 +18,10 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_dump_record(tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* s, tls_direction_t dir) {
+return_t tls_dump_record(tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == s || nullptr == session || nullptr == stream) {
+        if (nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -31,7 +31,7 @@ return_t tls_dump_record(tls_session* session, const byte_t* stream, size_t size
             tls_record_builder builder;
             auto record = builder.set(session).set(content_type).build();
             if (record) {
-                ret = record->read(dir, stream, size, pos, s);
+                ret = record->read(dir, stream, size, pos, debugstream);
                 record->release();
             }
         }

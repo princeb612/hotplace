@@ -24,7 +24,7 @@ constexpr char constexpr_alpn[] = "alpn";
 
 tls_extension_alps::tls_extension_alps(tls_session* session) : tls_extension(tls1_ext_application_layer_protocol_settings, session), _alps_len(0) {}
 
-return_t tls_extension_alps::read_data(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_alps::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 alps_len = 0;
