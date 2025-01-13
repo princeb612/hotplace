@@ -119,10 +119,10 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             if (debugstream) {
                 debugstream->autoindent(1);
                 debugstream->printf(" > %s %i (%s)\n", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
-                debugstream->printf(" > %s 0x%04x %s\n", constexpr_curve, curve, tlsadvisor->supported_group_string(curve).c_str());
+                debugstream->printf(" > %s 0x%04x %s\n", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
                 debugstream->printf(" > %s %i\n", constexpr_pubkey_len, pubkey_len);
                 dump_memory(pubkey, debugstream, 16, 3, 0x0, dump_notrunc);
-                debugstream->printf(" > %s 0x%04x %s\n", constexpr_signature, signature, tlsadvisor->signature_scheme_string(signature).c_str());
+                debugstream->printf(" > %s 0x%04x %s\n", constexpr_signature, signature, tlsadvisor->signature_scheme_name(signature).c_str());
                 debugstream->printf(" > %s %i\n", constexpr_sig_len, sig_len);
                 dump_memory(sig, debugstream, 16, 3, 0x0, dump_notrunc);
                 debugstream->autoindent(0);

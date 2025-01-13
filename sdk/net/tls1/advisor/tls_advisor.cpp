@@ -89,6 +89,7 @@ void tls_advisor::load_tls_parameters() {
     for (auto i = 0; i < sizeof_tls_ec_point_format_codes; i++) {
         auto item = tls_ec_point_format_codes + i;
         _ec_point_format_codes.insert({item->code, item});
+        _ec_point_format_names.insert({item->desc, item});
     }
     for (auto i = 0; i < sizeof_tls_handshake_type_codes; i++) {
         auto item = tls_handshake_type_codes + i;
@@ -101,22 +102,26 @@ void tls_advisor::load_tls_parameters() {
     for (auto i = 0; i < sizeof_tls_psk_keyexchange_codes; i++) {
         auto item = tls_psk_keyexchange_codes + i;
         _psk_keyexchange_codes.insert({item->code, item});
+        _psk_keyexchange_names.insert({item->desc, item});
     }
     for (auto i = 0; i < sizeof_tls_sig_schemes; i++) {
         auto item = tls_sig_schemes + i;
-        _sig_schemes.insert({item->code, item});
+        _sig_scheme_codes.insert({item->code, item});
+        _sig_scheme_names.insert({item->name, item});
     }
     for (auto i = 0; i < sizeof_tls_supported_group_codes; i++) {
         auto item = tls_supported_group_codes + i;
         _supported_group_codes.insert({item->code, item});
+        _supported_group_names.insert({item->desc, item});
     }
 }
 
 void tls_advisor::load_tls_extensiontype_values() {
-    // cert_compression_algid_code
-    for (auto i = 0; i < sizeof_tls_cert_compression_algid_codes; i++) {
-        auto item = tls_cert_compression_algid_codes + i;
-        _cert_compression_algid_codes.insert({item->code, item});
+    // compression_alg_code
+    for (auto i = 0; i < sizeof_tls_compression_alg_codes; i++) {
+        auto item = tls_compression_alg_codes + i;
+        _compression_alg_codes.insert({item->code, item});
+        _compression_alg_names.insert({item->desc, item});
     }
     for (auto i = 0; i < sizeof_tls_extension_type_codes; i++) {
         auto item = tls_extension_type_codes + i;
@@ -200,8 +205,8 @@ const hint_digest_t* tls_advisor::hintof_digest(uint16 code) {
 
 const tls_sig_scheme_t* tls_advisor::hintof_signature_scheme(uint16 code) {
     const tls_sig_scheme_t* hint = nullptr;
-    auto iter = _sig_schemes.find(code);
-    if (_sig_schemes.end() != iter) {
+    auto iter = _sig_scheme_codes.find(code);
+    if (_sig_scheme_codes.end() != iter) {
         hint = iter->second;
     }
     return hint;
@@ -281,12 +286,22 @@ std::string tls_advisor::ec_curve_type_string(uint8 code) {
     return value;
 }
 
-std::string tls_advisor::ec_point_format_string(uint8 code) {
+std::string tls_advisor::ec_point_format_name(uint8 code) {
     std::string value;
     auto iter = _ec_point_format_codes.find(code);
     if (_ec_point_format_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
+    }
+    return value;
+}
+
+uint16 tls_advisor::ec_point_format_code(const std::string& name) {
+    uint16 value = 0;
+    auto iter = _ec_point_format_names.find(name);
+    if (_ec_point_format_names.end() != iter) {
+        auto item = iter->second;
+        value = item->code;
     }
     return value;
 }
@@ -311,9 +326,9 @@ std::string tls_advisor::kdf_id_string(uint16 type) {
     return value;
 }
 
-std::string tls_advisor::psk_key_exchange_mode_string(uint8 mode) {
+std::string tls_advisor::psk_key_exchange_mode_name(uint8 code) {
     std::string value;
-    auto iter = _psk_keyexchange_codes.find(mode);
+    auto iter = _psk_keyexchange_codes.find(code);
     if (_psk_keyexchange_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
@@ -321,17 +336,37 @@ std::string tls_advisor::psk_key_exchange_mode_string(uint8 mode) {
     return value;
 }
 
-std::string tls_advisor::signature_scheme_string(uint16 code) {
+uint8 tls_advisor::psk_key_exchange_mode_code(const std::string& name) {
+    uint8 value = 0;
+    auto iter = _psk_keyexchange_names.find(name);
+    if (_psk_keyexchange_names.end() != iter) {
+        auto item = iter->second;
+        value = item->code;
+    }
+    return value;
+}
+
+std::string tls_advisor::signature_scheme_name(uint16 code) {
     std::string value;
-    auto iter = _sig_schemes.find(code);
-    if (_sig_schemes.end() != iter) {
+    auto iter = _sig_scheme_codes.find(code);
+    if (_sig_scheme_codes.end() != iter) {
         auto item = iter->second;
         value = item->name;
     }
     return value;
 }
 
-std::string tls_advisor::supported_group_string(uint16 code) {
+uint16 tls_advisor::signature_scheme_code(const std::string& name) {
+    uint16 value;
+    auto iter = _sig_scheme_names.find(name);
+    if (_sig_scheme_names.end() != iter) {
+        auto item = iter->second;
+        value = item->code;
+    }
+    return value;
+}
+
+std::string tls_advisor::supported_group_name(uint16 code) {
     std::string value;
     auto iter = _supported_group_codes.find(code);
     if (_supported_group_codes.end() != iter) {
@@ -341,14 +376,34 @@ std::string tls_advisor::supported_group_string(uint16 code) {
     return value;
 }
 
+uint16 tls_advisor::supported_group_code(const std::string& name) {
+    uint16 value = 0;
+    auto iter = _supported_group_names.find(name);
+    if (_supported_group_names.end() != iter) {
+        auto item = iter->second;
+        value = item->code;
+    }
+    return value;
+}
+
 // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
 
-std::string tls_advisor::cert_compression_algid_string(uint16 code) {
+std::string tls_advisor::compression_alg_name(uint16 code) {
     std::string value;
-    auto iter = _cert_compression_algid_codes.find(code);
-    if (_cert_compression_algid_codes.end() != iter) {
+    auto iter = _compression_alg_codes.find(code);
+    if (_compression_alg_codes.end() != iter) {
         auto item = iter->second;
         value = item->desc;
+    }
+    return value;
+}
+
+uint16 tls_advisor::compression_alg_code(const std::string& name) {
+    uint16 value = 0;
+    auto iter = _compression_alg_names.find(name);
+    if (_compression_alg_names.end() != iter) {
+        auto item = iter->second;
+        value = item->code;
     }
     return value;
 }

@@ -21,8 +21,13 @@ namespace net {
  * @brief   tls1_ext_key_share (0x0033)
  */
 class tls_extension_key_share : public tls_extension {
+   public:
+    return_t add(tls_direction_t dir, uint16 group);
+    return_t add(tls_direction_t dir, const std::string& group);
+
    protected:
     tls_extension_key_share(tls_session* session);
+
     return_t add_pubkey(uint16 group, const binary_t& pubkey, const keydesc& desc);
 };
 
@@ -30,27 +35,27 @@ class tls_extension_client_key_share : public tls_extension_key_share {
    public:
     tls_extension_client_key_share(tls_session* session);
 
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
-
    protected:
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t do_write_body(binary_t& bin, stream_t* debugstream = nullptr);
+
    private:
-    uint16 _key_share_len;
-    std::list<uint16> _keys;
-    std::map<uint16, binary_t> _keyshares;
+    // uint16 _key_share_len;
+    // std::list<uint16> _keys;
+    // std::map<uint16, binary_t> _keyshares;
 };
 
 class tls_extension_server_key_share : public tls_extension_key_share {
    public:
     tls_extension_server_key_share(tls_session* session);
 
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
-
    protected:
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t do_write_body(binary_t& bin, stream_t* debugstream = nullptr);
+
    private:
-    uint16 _group;
-    binary_t _pubkey;
+    // uint16 _group;
+    // binary_t _pubkey;
 };
 
 }  // namespace net

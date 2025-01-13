@@ -17,7 +17,6 @@ file (GLOB FILEGROUP_SDK_HEADER_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/tls1/extension/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls1/handshake/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls1/record/*.hpp
-    ${PROJECT_SOURCE_DIR}/sdk/net/tls1/resource/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/quic/*.hpp
 )
 
@@ -31,10 +30,11 @@ file (GLOB FILEGROUP_SDK_SOURCE_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/server/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls1/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls1/advisor/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls1/extension/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls1/handshake/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls1/protection/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls1/record/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/net/tls1/resource/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/quic/*.cpp
 )
 

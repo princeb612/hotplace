@@ -222,7 +222,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
 
             if (debugstream) {
                 debugstream->autoindent(1);
-                debugstream->printf(" > %s 0x%04x %s\n", constexpr_signature_alg, scheme, tlsadvisor->signature_scheme_string(scheme).c_str());
+                debugstream->printf(" > %s 0x%04x %s\n", constexpr_signature_alg, scheme, tlsadvisor->signature_scheme_name(scheme).c_str());
                 debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
                 debugstream->printf(" > transcript-hash\n");
                 dump_memory(transcripthash, debugstream, 16, 3, 0x00, dump_notrunc);

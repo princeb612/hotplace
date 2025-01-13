@@ -183,24 +183,6 @@ class crypto_keychain {
 
     /**
      * @brief   EC compressed
-     * @remarks
-     *          ansiX962_compressed_prime
-     *              prime field
-     *              y^2 = x^3 + ax + b (mod p)
-     *              NID_X9_62_prime256v1
-     *          ansiX962_compressed_char2
-     *              characteristics-2 field
-     *              y^2 + xy = x^3 + ax^2 + b (over GF(2^m))
-     *              NID_sectXXXr1, NID_sectXXXk1
-     *
-     *          y0 (even), y1 (odd)
-     *
-     *          02 || x (ysign 0, y0)
-     *          03 || x (ysign 1, y1)
-     *
-     *          ex. P-256 33 byts
-     *          02 || x (32 bytes)
-     *          03 || x (32 bytes)
      */
     return_t add_ec2(crypto_key* cryptokey, uint32 nid, const binary_t& x, bool ysign, const binary_t& d, const keydesc& desc);
     return_t add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
@@ -214,12 +196,6 @@ class crypto_keychain {
 
     /**
      * @brief   EC uncompressed
-     * @remarks
-     *
-     *          04 || x || y
-     *
-     *          ex. P-256 65 byts
-     *          04 || x (32 bytes) || y (32 bytes)
      */
     return_t add_ec(crypto_key* cryptokey, uint32 nid, const binary_t& pubkey, const binary_t& privkey, const keydesc& desc);
     return_t add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc);

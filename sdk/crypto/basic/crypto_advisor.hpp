@@ -84,6 +84,7 @@ class crypto_advisor : public traceable {
      * @param const char* name [in] ex. "aes-128-cbc"
      */
     const hint_cipher_t* hintof_cipher(const char* name);
+    const hint_cipher_t* hintof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
     /**
      * @brief hint
      * @param const EVP_CIPHER* cipher [in]

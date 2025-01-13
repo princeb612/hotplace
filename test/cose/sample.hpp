@@ -62,8 +62,6 @@ extern crypto_key rfc8152_privkeys;
 extern crypto_key rfc8152_pubkeys;
 extern crypto_key rfc8152_privkeys_c4;
 
-void test_eckey_compressed();
-
 // part 0 .. try to decode
 void test_rfc8152_read_cbor();
 

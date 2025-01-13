@@ -32,7 +32,6 @@ void test_aead_aes_cbc_hmac_sha2();
 void test_cipher_encrypt();
 void test_crypto_encrypt();
 void test_crypto_aead();
-void test_crypto_key();
 
 typedef struct _test_vector_nist_cavp_blockcipher_t {
     const char* desc;

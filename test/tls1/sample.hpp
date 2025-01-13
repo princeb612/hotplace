@@ -35,5 +35,6 @@ void test_rfc8448_7();
 void test_capture();
 
 void test_construct();
+void test_validate();
 
 #endif

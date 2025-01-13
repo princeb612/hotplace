@@ -28,7 +28,7 @@ return_t tls_extension_unknown::do_read_body(const byte_t* stream, size_t size, 
     return ret;
 }
 
-return_t tls_extension_unknown::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
+return_t tls_extension_unknown::do_write_body(binary_t& bin, stream_t* debugstream) { return not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

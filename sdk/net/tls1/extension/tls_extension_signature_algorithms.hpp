@@ -24,15 +24,17 @@ class tls_extension_signature_algorithms : public tls_extension {
    public:
     tls_extension_signature_algorithms(tls_session* session);
 
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
+    tls_extension_signature_algorithms& add(uint16 code);
+    tls_extension_signature_algorithms& add(const std::string& name);
 
-    tls_extension_signature_algorithms& add_algorithm(uint16 alg);
-    const binary_t& get_algorithms();
+    void clear();
 
    protected:
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t do_write_body(binary_t& bin, stream_t* debugstream = nullptr);
+
    private:
-    binary_t _algorithms;
+    std::list<uint16> _algorithms;
 };
 
 }  // namespace net

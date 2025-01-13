@@ -1,0 +1,175 @@
+/* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
+/**
+ * @file {file}
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @desc
+ * @remarks
+ *
+ * Revision History
+ * Date         Name                Description
+ *
+ */
+
+#include "sample.hpp"
+
+static void validate_resource_cipher_suite() {
+    // validate const tls_cipher_suite_t tls_cipher_suites[] = ...
+
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    struct keyex_item_t {
+        keyexchange_t keyex;
+        const char* name;
+    } keyex_table[] = {
+        {keyexchange_null, "NULL"},
+        {keyexchange_rsa, "RSA"},
+        {keyexchange_dh, "DH"},
+        {keyexchange_dhe, "DHE"},
+        {keyexchange_krb5, "KRB5"},
+        {keyexchange_psk, "PSK"},
+        {keyexchange_ecdh, "ECDH"},
+        {keyexchange_ecdhe, "ECDHE"},
+        {keyexchange_srp, "SRP"},
+        {keyexchange_eccpwd, "ECCPWD"},
+        {keyexchange_gost, "GOSTR341112_256"},
+    };
+    struct auth_item_t {
+        auth_t auth;
+        const char* name;
+    } auth_table[] = {
+        {auth_null, "NULL"},       {auth_dss, "DSS"},         {auth_rsa, "RSA"},       {auth_anon, "anon"},
+        {auth_krb5, "KRB5"},       {auth_psk, "PSK"},         {auth_ecdsa, "ECDSA"},   {auth_sha1, "SHA"},
+        {auth_sha2_256, "SHA256"}, {auth_sha2_384, "SHA384"}, {auth_eccpwd, "ECCPWD"}, {auth_gost, "GOSTR341112_256"},
+    };
+    struct alg_t {
+        crypt_algorithm_t alg;
+        crypt_mode_t mode;
+        const char* name;
+    } alg_table[] = {
+        {idea, cbc, "IDEA"}, {aes128, cbc, "AES_128_CBC"}, {aes256, cbc, "AES_256_CBC"}, {aes128, cbc, "AES_128_CBC"}, {aes256, cbc, "AES_256_CBC"},
+    };
+    struct mac_t {
+        hash_algorithm_t alg;
+        const char* name;
+    } mac_table[] = {
+        {md5, "MD5"},
+        {sha1, "SHA"},
+        {sha2_256, "SHA256"},
+        {sha2_384, "SHA384"},
+    };
+    struct iana_except_t {
+        keyexchange_t keyex;
+        auth_t auth;
+        const char* iana;
+        const char* expected;
+        const char* comments;
+    } except_table[] = {
+        // keyexchange DHE, authentication PSK
+        //   https://ciphersuite.info/cs/TLS_PSK_DHE_WITH_AES_128_CCM_8/
+        //   https://ciphersuite.info/cs/TLS_PSK_DHE_WITH_AES_256_CCM_8/
+        // so name must be TLS_DHE_PSK_...
+        // but registered as TLS_PSK_DHE_...
+        {keyexchange_dhe, auth_psk, "TLS_PSK_DHE_WITH_AES_128_CCM_8", "TLS_DHE_PSK_WITH_AES_128_CCM_8_SHA256", "DHE_PSK as PSK_DHE"},
+        {keyexchange_dhe, auth_psk, "TLS_PSK_DHE_WITH_AES_256_CCM_8", "TLS_DHE_PSK_WITH_AES_256_CCM_8_SHA256", "DHE_PSK as PSK_DHE"},
+    };
+
+    std::map<keyexchange_t, std::string> keyex_map;
+    for (auto item : keyex_table) {
+        keyex_map.insert({item.keyex, item.name});
+    }
+    std::map<auth_t, std::string> auth_map;
+    for (auto item : auth_table) {
+        auth_map.insert({item.auth, item.name});
+    }
+    std::map<std::string, const iana_except_t*> except_map;
+    for (int i = 0; i < RTL_NUMBER_OF(except_table); i++) {
+        const iana_except_t* item = except_table + i;
+        except_map.insert({item->iana, item});
+    }
+
+    auto lambda = [&](keyexchange_t keyex, auth_t auth, std::string& keyexauth) -> void {
+        auto const& keyex_val = keyex_map[keyex];
+        auto const& auth_val = auth_map[auth];
+        keyexauth = keyex_val;
+        if (keyex_val != auth_val) {
+            keyexauth += "_";
+            keyexauth += auth_val;
+        }
+    };
+
+    for (size_t i = 0; i < sizeof_tls_cipher_suites; i++) {
+        auto item = tls_cipher_suites + i;
+        std::string keyexauth;
+        if (item->keyexchange && item->auth) {
+            lambda(item->keyexchange, item->auth, keyexauth);
+
+            if (keyexauth.empty()) {
+                continue;
+            }
+
+            if (idea == item->cipher) {
+                int dbg = 1;
+            }
+
+            std::string cipher_name;
+            if (ccm8 == item->mode) {
+                auto hint_cipher = advisor->hintof_cipher(item->cipher, cbc);
+                if (hint_cipher) {
+                    cipher_name = hint_cipher->fetchname;
+                    replace(cipher_name, "cbc", "CCM_8");
+                    replace(cipher_name, "-", "_");
+                } else {
+                    cipher_name = "NULL";
+                }
+            } else {
+                auto hint_cipher = advisor->hintof_cipher(item->cipher, item->mode);
+                if (hint_cipher) {
+                    cipher_name = hint_cipher->fetchname;
+                    replace(cipher_name, "-", "_");
+                } else {
+                    cipher_name = "NULL";
+                }
+            }
+
+            auto hint_digest = advisor->hintof_digest(item->mac);
+            std::string digest_name = hint_digest->fetchname;
+            replace(digest_name, "sha1", "sha");
+
+            std::string name_iana = item->name_iana;
+            std::string name = format("TLS_%s_WITH_%s_%s", keyexauth.c_str(), cipher_name.c_str(), digest_name.c_str());
+            std::transform(name.begin(), name.end(), name.begin(), toupper);
+
+            // exceptions
+            bool test = false;
+            std::string comments;
+            test = (name_iana == name);
+            if (false == test) {
+                if (false == test) {
+                    auto iter = except_map.find(name_iana);
+                    if (except_map.end() != iter) {
+                        auto eitem = iter->second;
+                        test = (eitem->expected == name);
+                        comments = "\e[1;31m";
+                        comments += eitem->comments;
+                        comments += "\e[0m";
+                    }
+                }
+                if (false == test) {
+                    if (sha2_256 == item->mac) {
+                        std::string name2_iana = name_iana + "_SHA256";
+                        // name2_iana += "_SHA256";
+                        test = (name2_iana == name);
+                    }
+                }
+            }
+
+            _test_case.assert(test, __FUNCTION__, "%-50s -> %s %s", name_iana.c_str(), name.c_str(), comments.c_str());
+        }
+    }
+}
+
+void test_validate() {
+    _test_case.begin("validate resources");
+
+    validate_resource_cipher_suite();
+}

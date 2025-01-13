@@ -149,7 +149,7 @@ return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t siz
     return ret;
 }
 
-return_t tls_extension_client_psk::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
+return_t tls_extension_client_psk::do_write_body(binary_t& bin, stream_t* debugstream) { return not_supported; }
 
 tls_extension_server_psk::tls_extension_server_psk(tls_session* session) : tls_extension_psk(session), _selected_identity(0) {}
 
@@ -181,7 +181,7 @@ return_t tls_extension_server_psk::do_read_body(const byte_t* stream, size_t siz
     return ret;
 }
 
-return_t tls_extension_server_psk::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
+return_t tls_extension_server_psk::do_write_body(binary_t& bin, stream_t* debugstream) { return not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

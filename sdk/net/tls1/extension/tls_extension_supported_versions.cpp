@@ -37,21 +37,21 @@ return_t tls_extension_client_supported_versions::do_read_body(const byte_t* str
 
             count = pl.t_value_of<uint8>(constexpr_versions) >> 1;
             pl.get_binary(constexpr_version, versions);
+
+            for (auto i = 0; i < count; i++) {
+                auto ver = t_binary_to_integer<uint16>(&versions[i << 1], sizeof(uint16));
+                add(ver);
+            }
         }
 
         if (debugstream) {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
             debugstream->printf(" > %s %i\n", constexpr_versions, count);
-            for (auto i = 0; i < count; i++) {
-                auto ver = t_binary_to_integer<uint16>(&versions[i << 1], sizeof(uint16));
-                debugstream->printf("   [%i] 0x%04x %s\n", i, ver, tlsadvisor->tls_version_string(ver).c_str());
+            int i = 0;
+            for (auto ver : _versions) {
+                debugstream->printf("   [%i] 0x%04x %s\n", i++, ver, tlsadvisor->tls_version_string(ver).c_str());
             }
-        }
-
-        {
-            //
-            _versions = std::move(versions);
         }
     }
     __finally2 {
@@ -60,7 +60,28 @@ return_t tls_extension_client_supported_versions::do_read_body(const byte_t* str
     return ret;
 }
 
-return_t tls_extension_client_supported_versions::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension_client_supported_versions::do_write_body(binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    uint8 cbsize_versions = 0;
+    binary_t bin_versions;
+    {
+        for (auto ver : _versions) {
+            binary_append(bin_versions, ver, hton16);
+        }
+        cbsize_versions = bin_versions.size();
+    }
+    {
+        payload pl;
+        pl << new payload_member(cbsize_versions, constexpr_versions) << new payload_member(bin_versions, constexpr_version);
+        pl.write(bin);
+    }
+    return ret;
+}
+
+tls_extension_client_supported_versions& tls_extension_client_supported_versions::add(uint16 code) {
+    _versions.push_back(code);
+    return *this;
+}
 
 tls_extension_server_supported_versions::tls_extension_server_supported_versions(tls_session* session)
     : tls_extension_supported_versions(session), _version(0) {}
@@ -106,7 +127,7 @@ return_t tls_extension_server_supported_versions::do_read_body(const byte_t* str
     return ret;
 }
 
-return_t tls_extension_server_supported_versions::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension_server_supported_versions::do_write_body(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 uint16 tls_extension_server_supported_versions::get_version() { return _version; }
 

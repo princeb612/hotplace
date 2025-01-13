@@ -56,7 +56,7 @@ return_t tls_extension_alps::do_read_body(const byte_t* stream, size_t size, siz
     return ret;
 }
 
-return_t tls_extension_alps::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension_alps::do_write_body(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 const binary_t& tls_extension_alps::get_alpn() { return _alpn; }
 

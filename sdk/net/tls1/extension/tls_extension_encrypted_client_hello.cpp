@@ -92,7 +92,7 @@ return_t tls_extension_encrypted_client_hello::do_read_body(const byte_t* stream
     return ret;
 }
 
-return_t tls_extension_encrypted_client_hello::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
+return_t tls_extension_encrypted_client_hello::do_write_body(binary_t& bin, stream_t* debugstream) { return not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

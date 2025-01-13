@@ -66,7 +66,7 @@ declare_tls_resource(sig_alg_code, uint8);
 declare_tls_resource(supported_group_code, uint16);
 
 // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
-declare_tls_resource(cert_compression_algid_code, uint16);
+declare_tls_resource(compression_alg_code, uint16);
 declare_tls_resource(cert_status_type_code, uint8);
 declare_tls_resource(cert_type_code, uint8);
 declare_tls_resource(extension_type_code, uint16);
@@ -118,6 +118,7 @@ class tls_advisor {
     const hint_blockcipher_t* hintof_blockcipher(uint16 code);
     const hint_digest_t* hintof_digest(uint16 code);
     const tls_sig_scheme_t* hintof_signature_scheme(uint16 code);
+    const tls_sig_scheme_t* hintof_signature_scheme(const std::string& name);
     hash_algorithm_t hash_alg_of(uint16 code);
 
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
@@ -127,15 +128,20 @@ class tls_advisor {
     uint16 cipher_suite_code(const std::string& ciphersuite);
     std::string content_type_string(uint8 type);
     std::string ec_curve_type_string(uint8 code);
-    std::string ec_point_format_string(uint8 code);
+    std::string ec_point_format_name(uint8 code);
+    uint16 ec_point_format_code(const std::string& name);
     std::string handshake_type_string(uint8 type);
     std::string kdf_id_string(uint16 type);
-    std::string psk_key_exchange_mode_string(uint8 mode);
-    std::string signature_scheme_string(uint16 code);
-    std::string supported_group_string(uint16 code);
+    std::string psk_key_exchange_mode_name(uint8 code);
+    uint8 psk_key_exchange_mode_code(const std::string& name);
+    std::string signature_scheme_name(uint16 code);
+    uint16 signature_scheme_code(const std::string& name);
+    std::string supported_group_name(uint16 code);
+    uint16 supported_group_code(const std::string& name);
 
     // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
-    std::string cert_compression_algid_string(uint16 code);
+    std::string compression_alg_name(uint16 code);
+    uint16 compression_alg_code(const std::string& name);
     std::string tls_extension_string(uint16 code);
     std::string cert_status_type_string(uint8 code);
 
@@ -177,14 +183,19 @@ class tls_advisor {
     std::map<uint8, const tls_content_type_code_t*> _content_type_codes;
     std::map<uint8, const tls_ec_curve_type_code_t*> _ec_curve_type_codes;
     std::map<uint8, const tls_ec_point_format_code_t*> _ec_point_format_codes;
+    std::map<std::string, const tls_ec_point_format_code_t*> _ec_point_format_names;
     std::map<uint8, const tls_handshake_type_code_t*> _handshake_type_codes;
     std::map<uint8, const tls_kdf_id_code_t*> _kdf_id_codes;
     std::map<uint8, const tls_psk_keyexchange_code_t*> _psk_keyexchange_codes;
-    std::map<uint16, const tls_sig_scheme_t*> _sig_schemes;
+    std::map<std::string, const tls_psk_keyexchange_code_t*> _psk_keyexchange_names;
+    std::map<uint16, const tls_sig_scheme_t*> _sig_scheme_codes;
+    std::map<std::string, const tls_sig_scheme_t*> _sig_scheme_names;
     std::map<uint16, const tls_supported_group_code_t*> _supported_group_codes;
+    std::map<std::string, const tls_supported_group_code_t*> _supported_group_names;
 
     // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
-    std::map<uint16, const tls_cert_compression_algid_code_t*> _cert_compression_algid_codes;
+    std::map<uint16, const tls_compression_alg_code_t*> _compression_alg_codes;
+    std::map<std::string, const tls_compression_alg_code_t*> _compression_alg_names;
     std::map<uint16, const tls_extension_type_code_t*> _extension_type_codes;
     std::map<uint8, const tls_cert_status_type_code_t*> _cert_status_type_codes;
 

@@ -158,6 +158,8 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
+    test_validate();
+
     // https://tls13.xargs.org/
     test_tls13_xargs_org();
     // https://tls12.xargs.org/

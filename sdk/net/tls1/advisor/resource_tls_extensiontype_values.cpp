@@ -16,12 +16,12 @@ namespace net {
 
 #define ENDOF_DATA
 
-define_tls_variable(cert_compression_algid_code) = {
+define_tls_variable(compression_alg_code) = {
     {1, "zlib"},
     {2, "brotli"},
     {3, "zstd"},
 };
-define_tls_sizeof_variable(cert_compression_algid_code);
+define_tls_sizeof_variable(compression_alg_code);
 
 define_tls_variable(cert_status_type_code) = {
     {1, "ocsp"},

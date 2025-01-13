@@ -38,21 +38,21 @@ return_t tls_extension_signature_algorithms::do_read_body(const byte_t* stream, 
 
             count = pl.t_value_of<uint16>(constexpr_algorithms) >> 1;
             pl.get_binary(constexpr_algorithm, algorithms);
+
+            for (auto i = 0; i < count; i++) {
+                auto alg = t_binary_to_integer<uint16>(&algorithms[i << 1], sizeof(uint16));
+                add(alg);
+            }
         }
 
         if (debugstream) {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
             debugstream->printf(" > %s %i\n", constexpr_algorithms, count);
-            for (auto i = 0; i < count; i++) {
-                auto alg = t_binary_to_integer<uint16>(&algorithms[i << 1], sizeof(uint16));
-                debugstream->printf("   [%i] 0x%04x %s\n", i, alg, tlsadvisor->signature_scheme_string(alg).c_str());
+            int i = 0;
+            for (auto alg : _algorithms) {
+                debugstream->printf("   [%i] 0x%04x %s\n", i++, alg, tlsadvisor->signature_scheme_name(alg).c_str());
             }
-        }
-
-        {
-            //
-            _algorithms = std::move(algorithms);
         }
     }
     __finally2 {
@@ -61,14 +61,36 @@ return_t tls_extension_signature_algorithms::do_read_body(const byte_t* stream, 
     return ret;
 }
 
-return_t tls_extension_signature_algorithms::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension_signature_algorithms::do_write_body(binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    uint16 cbsize_algorithms = 0;
+    binary_t bin_algorithms;
+    {
+        for (auto alg : _algorithms) {
+            binary_append(bin_algorithms, alg, hton16);
+        }
+        cbsize_algorithms = bin_algorithms.size();
+    }
+    {
+        payload pl;
+        pl << new payload_member(cbsize_algorithms, true, constexpr_algorithms) << new payload_member(bin_algorithms, constexpr_algorithm);
+        pl.write(bin);
+    }
+    return ret;
+}
 
-tls_extension_signature_algorithms& tls_extension_signature_algorithms::add_algorithm(uint16 alg) {
-    binary_append(_algorithms, alg, hton16);
+tls_extension_signature_algorithms& tls_extension_signature_algorithms::add(uint16 code) {
+    _algorithms.push_back(code);
     return *this;
 }
 
-const binary_t& tls_extension_signature_algorithms::get_algorithms() { return _algorithms; }
+tls_extension_signature_algorithms& tls_extension_signature_algorithms::add(const std::string& name) {
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    auto code = tlsadvisor->signature_scheme_code(name);
+    return add(code);
+}
+
+void tls_extension_signature_algorithms::clear() { _algorithms.clear(); }
 
 }  // namespace net
 }  // namespace hotplace

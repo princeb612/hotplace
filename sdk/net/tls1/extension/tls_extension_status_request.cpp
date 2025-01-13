@@ -72,7 +72,7 @@ return_t tls_extension_status_request::do_read_body(const byte_t* stream, size_t
     return ret;
 }
 
-return_t tls_extension_status_request::write(binary_t& bin, stream_t* debugstream) { return not_supported; }
+return_t tls_extension_status_request::do_write_body(binary_t& bin, stream_t* debugstream) { return not_supported; }
 
 uint8 tls_extension_status_request::get_cert_status_type() { return _cert_status_type; }
 

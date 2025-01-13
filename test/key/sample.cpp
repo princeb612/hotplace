@@ -41,31 +41,9 @@ int main(int argc, char** argv) {
     __try2 {
         openssl_startup();
 
-        auto lambda = [&](trace_category_t category, uint32 event, stream_t* s) -> void {
-            std::string ct;
-            std::string ev;
-            auto advisor = trace_advisor::get_instance();
-            advisor->get_names(category, event, ct, ev);
-            _logger->writeln("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned)s->size(), s->data());
-        };
-        crypto_advisor::trace(lambda);
-
-        test_features();
-
-        validate_openssl_crypt();  // validate wrapper class openssl_crypt
-
-        test_crypt_algorithms(10, 4096);  // performance (for large stream encryption performance, just check error occurrence)
-        test_crypt_algorithms(0, 0);      // speed
-
-        test_keywrap_rfc3394();
-
-        test_chacha20_rfc7539();
-
-        test_aead_aes_cbc_hmac_sha2();
-
-        test_cipher_encrypt();
-        test_crypto_encrypt();
-        test_crypto_aead();
+        test_crypto_key();
+        test_eckey_compressed();
+        test_ffdhe();
     }
     __finally2 { openssl_cleanup(); }
 
@@ -73,6 +51,5 @@ int main(int argc, char** argv) {
 
     _test_case.report(5);
     _cmdline->help();
-    _logger->consoleln("openssl 3 deprected bf, idea, seed");
     return _test_case.result();
 }

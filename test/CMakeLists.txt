@@ -30,6 +30,7 @@ add_subdirectory (sysmon)
 # crypto
 add_subdirectory (random)
 add_subdirectory (crypto)
+add_subdirectory (key)
 add_subdirectory (kdf)
 add_subdirectory (hash)
 add_subdirectory (sign)

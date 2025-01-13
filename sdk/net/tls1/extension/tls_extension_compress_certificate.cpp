@@ -25,31 +25,31 @@ tls_extension_compress_certificate::tls_extension_compress_certificate(tls_sessi
 return_t tls_extension_compress_certificate::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        uint8 algorithm_len = 0;
-        binary_t algorithms;
+        uint8 algorithms_len = 0;
+        binary_t bin_algorithms;
         {
             payload pl;
             pl << new payload_member(uint8(0), constexpr_algorithm_len) << new payload_member(binary_t(), constexpr_algorithm);
             pl.set_reference_value(constexpr_algorithm, constexpr_algorithm_len);
             pl.read(stream, endpos_extension(), pos);
 
-            algorithm_len = pl.t_value_of<uint8>(constexpr_algorithm_len);
-            pl.get_binary(constexpr_algorithm, algorithms);
+            algorithms_len = pl.t_value_of<uint8>(constexpr_algorithm_len) >> 1;
+            pl.get_binary(constexpr_algorithm, bin_algorithms);
+
+            for (auto i = 0; i < algorithms_len; i++) {
+                auto alg = t_binary_to_integer<uint16>(&bin_algorithms[i << 1], sizeof(uint16));
+                add(alg);
+            }
         }
 
         if (debugstream) {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            debugstream->printf(" > %s %i (%i)\n", constexpr_algorithm_len, algorithm_len, algorithm_len >> 1);
-            for (auto i = 0; i < algorithm_len / sizeof(uint16); i++) {
-                auto alg = t_binary_to_integer<uint16>(&algorithms[i << 1], sizeof(uint16));
-                debugstream->printf("   [%i] 0x%04x %s\n", i, alg, tlsadvisor->cert_compression_algid_string(alg).c_str());
+            debugstream->printf(" > %s %i (%i)\n", constexpr_algorithm_len, algorithms_len << 1, algorithms_len);
+            int i = 0;
+            for (auto alg : _algorithms) {
+                debugstream->printf("   [%i] 0x%04x %s\n", i++, alg, tlsadvisor->compression_alg_name(alg).c_str());
             }
-        }
-
-        {
-            //
-            _algorithms = std::move(algorithms);
         }
     }
     __finally2 {
@@ -58,14 +58,37 @@ return_t tls_extension_compress_certificate::do_read_body(const byte_t* stream, 
     return ret;
 }
 
-return_t tls_extension_compress_certificate::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension_compress_certificate::do_write_body(binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    uint8 cbsize_algorithms = 0;
+    binary_t bin_algorithms;
+    {
+        for (auto alg : _algorithms) {
+            binary_append(bin_algorithms, alg, hton16);
+        }
+        cbsize_algorithms = bin_algorithms.size();
+    }
+    {
+        payload pl;
+        pl << new payload_member(uint8(cbsize_algorithms), constexpr_algorithm_len) << new payload_member(bin_algorithms, constexpr_algorithm);
+        pl.write(bin);
+    }
+    return ret;
+}
 
-tls_extension_compress_certificate& tls_extension_compress_certificate::add_algorithm(uint16 alg) {
-    binary_append(_algorithms, alg, hton16);
+tls_extension_compress_certificate& tls_extension_compress_certificate::add(uint16 code) {
+    if (_algorithms.size() < 0xfe) {
+        _algorithms.push_back(code);
+    }
     return *this;
 }
 
-const binary_t& tls_extension_compress_certificate::get_algorithms() { return _algorithms; }
+tls_extension_compress_certificate& tls_extension_compress_certificate::add(const std::string& name) {
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    return *this;
+}
+
+void tls_extension_compress_certificate::clear() { _algorithms.clear(); }
 
 }  // namespace net
 }  // namespace hotplace

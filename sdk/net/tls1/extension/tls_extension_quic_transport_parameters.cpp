@@ -76,7 +76,7 @@ return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* str
     return ret;
 }
 
-return_t tls_extension_quic_transport_parameters::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension_quic_transport_parameters::do_write_body(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

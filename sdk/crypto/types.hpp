@@ -46,13 +46,14 @@ enum auth_t {
     auth_dss = 1,       // Digital Signature Standard (DSS)
     auth_rsa = 2,       // Rivest Shamir Adleman algorithm (RSA)
     auth_anon = 3,      // Anonymous (anon)
-    auth_psk = 4,       // Pre-Shared Key (PSK)
-    auth_ecdsa = 5,     // Elliptic Curve Digital Signature Algorithm (ECDSA)
-    auth_sha1 = 6,      // Secure Hash Algorithm 1 with Rivest Shamir Adleman algorithm (SHA RSA)
-    auth_sha2_256 = 7,  // SHA256
-    auth_sha2_384 = 8,  // SHA384
-    auth_eccpwd = 9,    // ECCPWD
-    auth_gost = 10,     // GOST R 34.10-2012 Digital Signature Algorithm (GOSTR341012)
+    auth_krb5 = 4,      // Kerberos 5 (KRB5)
+    auth_psk = 5,       // Pre-Shared Key (PSK)
+    auth_ecdsa = 6,     // Elliptic Curve Digital Signature Algorithm (ECDSA)
+    auth_sha1 = 7,      // Secure Hash Algorithm 1 with Rivest Shamir Adleman algorithm (SHA RSA)
+    auth_sha2_256 = 8,  // SHA256
+    auth_sha2_384 = 9,  // SHA384
+    auth_eccpwd = 10,   // ECCPWD
+    auth_gost = 11,     // GOST R 34.10-2012 Digital Signature Algorithm (GOSTR341012)
 };
 
 /**
@@ -939,6 +940,7 @@ typedef struct _hint_curves_t {
     crypto_kty_t kty;
     crypto_use_t use;
     uint16 group;      // TLS
+    uint8 keysize;     // key size (preserve leading zero)
     const char* oid;   // OID
     const char* name;  // NIST (CURVE P-256, P-384, P-521, ...)
     const char* aka1;  // X9.62, X9.63 (ansip384r1, ansip521r1, ...)
@@ -949,6 +951,7 @@ uint32 nidof(const hint_curve_t* hint);
 cose_ec_curve_t coseof(const hint_curve_t* hint);
 crypto_kty_t ktyof(const hint_curve_t* hint);
 uint16 groupof(const hint_curve_t* hint);
+uint8 keysizeof(const hint_curve_t* hint);
 const char* oidof(const hint_curve_t* hint);
 
 typedef struct _hint_signature_t {

@@ -24,12 +24,12 @@ class tls_extension_alps : public tls_extension {
    public:
     tls_extension_alps(tls_session* session);
 
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
-
     const binary_t& get_alpn();
 
    protected:
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t do_write_body(binary_t& bin, stream_t* debugstream = nullptr);
+
    private:
     uint16 _alps_len;
     binary_t _alpn;

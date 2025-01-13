@@ -82,8 +82,6 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
-    test_eckey_compressed();
-
     // check format
     // install
     //      pacman -S rubygems (MINGW)

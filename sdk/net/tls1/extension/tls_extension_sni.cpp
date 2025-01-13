@@ -33,12 +33,6 @@ return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size
         // RFC 6066 3.  Server Name Indication
 
         uint16 first_entry_len = 0;
-        {
-            payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_entry_len);
-            pl.read(stream, endpos_extension(), pos);
-        }
-
         uint8 type = 0;
         uint16 hostname_len = 0;
         binary_t hostname;
@@ -59,8 +53,8 @@ return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size
              *  } ServerNameList;
              */
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_name_type) << new payload_member(uint16(0), true, constexpr_hostname_len)
-               << new payload_member(binary_t(), constexpr_hostname);
+            pl << new payload_member(uint16(0), true, constexpr_entry_len) << new payload_member(uint8(0), constexpr_name_type)
+               << new payload_member(uint16(0), true, constexpr_hostname_len) << new payload_member(binary_t(), constexpr_hostname);
             pl.set_reference_value(constexpr_hostname, constexpr_hostname_len);
             pl.read(stream, endpos_extension(), pos);
 
@@ -93,10 +87,11 @@ return_t tls_extension_sni::do_write_body(binary_t& bin, stream_t* debugstream) 
     {
         uint8 type = get_nametype();
         const binary_t& hostname = get_hostname();
+        uint16 entry_len = 1 + hostname.size();
 
         payload pl;
-        pl << new payload_member(uint8(type), constexpr_name_type) << new payload_member(uint16(hostname.size()), true, constexpr_hostname_len)
-           << new payload_member(hostname, constexpr_hostname);
+        pl << new payload_member(uint16(entry_len), true, constexpr_entry_len) << new payload_member(uint8(type), constexpr_name_type)
+           << new payload_member(uint16(hostname.size()), true, constexpr_hostname_len) << new payload_member(hostname, constexpr_hostname);
         pl.write(bin);
     }
 

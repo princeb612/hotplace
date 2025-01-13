@@ -21,8 +21,9 @@ class tls_extension_unknown : public tls_extension {
    public:
     tls_extension_unknown(uint16 type, tls_session* session);
 
+   protected:
     virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
+    virtual return_t do_write_body(binary_t& bin, stream_t* debugstream = nullptr);
 
    protected:
 };

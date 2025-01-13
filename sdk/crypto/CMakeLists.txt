@@ -16,7 +16,16 @@ file (GLOB FILEGROUP_SDK_HEADER_CRYPTO
 file (GLOB FILEGROUP_SDK_SOURCE_CRYPTO
     ${PROJECT_SOURCE_DIR}/sdk/crypto/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/resource/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/advisor/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/crypt/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/digest/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/kdf/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/key/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/keyexchange/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/mac/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/prng/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/sdk/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/sign/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/crypto/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/authenticode/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/cose/*.cpp

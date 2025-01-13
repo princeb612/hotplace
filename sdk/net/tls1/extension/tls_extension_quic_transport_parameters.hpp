@@ -24,10 +24,10 @@ class tls_extension_quic_transport_parameters : public tls_extension {
    public:
     tls_extension_quic_transport_parameters(tls_session* session);
 
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t write(binary_t& bin, stream_t* debugstream = nullptr);
-
    protected:
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t do_write_body(binary_t& bin, stream_t* debugstream = nullptr);
+
    private:
     std::list<uint64> _keys;
     std::map<uint64, binary_t> _params;

@@ -361,11 +361,54 @@ class crypto_key {
      */
     static return_t get_public_key(const EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2);
     /**
+     * EC uncompressed key
+     * @remarks
+     *
+     *          04 || x || y
+     *
+     *          ex. P-256 65 byts
+     *          04 || x (32 bytes) || y (32 bytes)
+     */
+    static return_t ec_uncompressed_key(const EVP_PKEY* pkey, binary_t& uncompressed, binary_t& priv);
+    /**
+     * EC compressed key
+     * @remarks
+     *          ansiX962_compressed_prime
+     *              prime field
+     *              y^2 = x^3 + ax + b (mod p)
+     *              NID_X9_62_prime256v1
+     *          ansiX962_compressed_char2
+     *              characteristics-2 field
+     *              y^2 + xy = x^3 + ax^2 + b (over GF(2^m))
+     *              NID_sectXXXr1, NID_sectXXXk1
+     *
+     *          y0 (even), y1 (odd)
+     *
+     *          02 || x (ysign 0, y0)
+     *          03 || x (ysign 1, y1)
+     *
+     *          ex. P-256 33 byts
+     *          02 || x (32 bytes)
+     *          03 || x (32 bytes)
+     */
+    static return_t ec_compressed_key(const EVP_PKEY* pkey, binary_t& compressed, binary_t& priv);
+    /**
      * @brief private key
      * @param const EVP_PKEY* pkey [in]
-     * @parambinary_t& priv [out]
+     * @param binary_t& priv [out]
      */
     static return_t get_private_key(const EVP_PKEY* pkey, binary_t& priv);
+    /**
+     * @brief key
+     * @remarks
+     *          key type | pubkey
+     *          kty_oct  | symmetric
+     *          kty_ec   | uncompressed format (4 || x || y)
+     *          kty_okp  | pub
+     *          kty_rsa  | not supported
+     *          kty_dh   | pub
+     */
+    static return_t get_key(const EVP_PKEY* pkey, binary_t& pub, binary_t& priv, bool preserve = false);
     /**
      * @brief key
      * @param const EVP_PKEY* pkey [in]
@@ -462,6 +505,11 @@ class crypto_key {
      * @param bool plzero [inopt] preserve leading zero (default false)
      */
     static return_t extract(const EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
+    static return_t extract_oct(const EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
+    static return_t extract_rsa(const EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
+    static return_t extract_ec(const EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
+    static return_t extract_okp(const EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
+    static return_t extract_dh(const EVP_PKEY* pkey, int flag, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
 
    private:
     /**

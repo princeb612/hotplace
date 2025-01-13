@@ -25,8 +25,13 @@ class tls_extension_ec_point_formats : public tls_extension {
    public:
     tls_extension_ec_point_formats(tls_session* session);
 
-    tls_extension_ec_point_formats& add_format(uint8 fmt);
-    std::list<uint8>& get_formats();
+    /**
+     *  add("x25519") or add(0x001d)
+     */
+    tls_extension_ec_point_formats& add(uint8 code);
+    tls_extension_ec_point_formats& add(const std::string& name);
+
+    void clear();
 
    protected:
     virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);

@@ -42,22 +42,24 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(const byte_t* stream
 
             modes = pl.t_value_of<uint8>(constexpr_modes);
             pl.get_binary(constexpr_mode, mode);
+
+            for (auto i = 0; i < modes; i++) {
+                auto m = mode[i];
+                add(m);
+            }
         }
 
         if (debugstream) {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
             debugstream->printf(" > %s\n", constexpr_modes);
-            for (auto i = 0; i < modes; i++) {
-                auto m = mode[i];
-                debugstream->printf("   [%i] %i %s\n", i, m, tlsadvisor->psk_key_exchange_mode_string(m).c_str());
+            int i = 0;
+            for (auto m : _modes) {
+                debugstream->printf("   [%i] %i %s\n", i++, m, tlsadvisor->psk_key_exchange_mode_name(m).c_str());
             }
         }
 
-        {
-            _modes = modes;
-            _mode = std::move(mode);
-        }
+        {}
     }
     __finally2 {
         // do nothing
@@ -65,7 +67,34 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(const byte_t* stream
     return ret;
 }
 
-return_t tls_extension_psk_key_exchange_modes::write(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension_psk_key_exchange_modes::do_write_body(binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    uint8 cbsize_modes = 0;
+    binary_t bin_modes;
+    {
+        for (auto m : _modes) {
+            binary_append(bin_modes, m);
+        }
+        cbsize_modes = bin_modes.size();
+    }
+    {
+        payload pl;
+        pl << new payload_member(cbsize_modes, constexpr_modes) << new payload_member(bin_modes, constexpr_mode);
+        pl.write(bin);
+    }
+    return ret;
+}
+
+tls_extension_psk_key_exchange_modes& tls_extension_psk_key_exchange_modes::add(uint8 code) {
+    _modes.push_back(code);
+    return *this;
+}
+
+tls_extension_psk_key_exchange_modes& tls_extension_psk_key_exchange_modes::add(const std::string& name) {
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    auto code = tlsadvisor->psk_key_exchange_mode_code(name);
+    return add(code);
+}
 
 }  // namespace net
 }  // namespace hotplace

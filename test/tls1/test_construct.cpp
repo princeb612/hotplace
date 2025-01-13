@@ -61,8 +61,57 @@ void test_construct() {
     }
     {
         auto ec_point_formats = new tls_extension_ec_point_formats(&client_session);
-        (*ec_point_formats).add_format(0).add_format(1).add_format(2);
+        (*ec_point_formats).add("uncompressed").add("ansiX962_compressed_prime").add("ansiX962_compressed_char2");
         handshake_client_hello << ec_point_formats;
+    }
+    {
+        auto supported_groups = new tls_extension_supported_groups(&client_session);
+        (*supported_groups)
+            .add("x25519")
+            .add("secp256r1")
+            .add("x448")
+            .add("secp521r1")
+            .add("secp384r1")
+            .add("ffdhe2048")
+            .add("ffdhe3072")
+            .add("ffdhe4096")
+            .add("ffdhe6144")
+            .add("ffdhe8192");
+        handshake_client_hello << supported_groups;
+    }
+    {
+        auto signature_algorithms = new tls_extension_signature_algorithms(&client_session);
+        (*signature_algorithms)
+            .add("ecdsa_secp256r1_sha256")
+            .add("ecdsa_secp384r1_sha384")
+            .add("ecdsa_secp521r1_sha512")
+            .add("ed25519")
+            .add("ed448")
+            .add("rsa_pss_pss_sha256")
+            .add("rsa_pss_pss_sha384")
+            .add("rsa_pss_pss_sha512")
+            .add("rsa_pss_rsae_sha256")
+            .add("rsa_pss_rsae_sha384")
+            .add("rsa_pss_rsae_sha512")
+            .add("rsa_pkcs1_sha256")
+            .add("rsa_pkcs1_sha384")
+            .add("rsa_pkcs1_sha512");
+        handshake_client_hello << signature_algorithms;
+    }
+    {
+        auto supported_versions = new tls_extension_client_supported_versions(&client_session);
+        (*supported_versions).add(tls_13).add(tls_12);
+        handshake_client_hello << supported_versions;
+    }
+    {
+        auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(&client_session);
+        (*psk_key_exchange_modes).add("psk_dhe_ke");
+        handshake_client_hello << psk_key_exchange_modes;
+    }
+    {
+        auto key_share = new tls_extension_client_key_share(&client_session);
+        (*key_share).add(from_client, "x25519");
+        handshake_client_hello << key_share;
     }
 
     {

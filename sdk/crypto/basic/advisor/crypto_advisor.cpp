@@ -379,6 +379,13 @@ const hint_cipher_t* crypto_advisor::hintof_cipher(const char* name) {
     return ret_value;
 }
 
+const hint_cipher_t* crypto_advisor::hintof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
+    const hint_cipher_t* ret_value = nullptr;
+    t_maphint<uint32, const hint_cipher_t*> hint(_cipher_fetch_map);
+    hint.find(CRYPT_CIPHER_VALUE(algorithm, mode), &ret_value);
+    return ret_value;
+}
+
 const hint_cipher_t* crypto_advisor::hintof_cipher(const EVP_CIPHER* cipher) {
     const hint_cipher_t* ret_value = nullptr;
 
@@ -885,7 +892,9 @@ return_t crypto_advisor::nameof_ec_curve(const EVP_PKEY* pkey, std::string& name
         t_maphint<uint32, const hint_curve_t*> hint(_curve_bynid_map);
         ret = hint.find(nid, &item);
         if (errorcode_t::success == ret) {
-            name = item->name;
+            if (item->name) {
+                name = item->name;
+            }
         }
     }
     return ret;
