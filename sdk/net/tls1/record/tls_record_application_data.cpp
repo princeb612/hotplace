@@ -23,7 +23,9 @@ constexpr char constexpr_application_data[] = "application data";
 
 tls_record_application_data::tls_record_application_data(tls_session* session) : tls_record(tls_content_type_application_data, session) {}
 
-return_t tls_record_application_data::read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+tls_handshakes& tls_record_application_data::get_handshakes() { return _handshakes; }
+
+return_t tls_record_application_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 len = get_length();
@@ -50,21 +52,10 @@ return_t tls_record_application_data::read_body(tls_direction_t dir, const byte_
                     uint8 last_byte = *plaintext.rbegin();
                     if (is_basedon_tls13(tlsversion)) {
                         if (tls_content_type_alert == last_byte) {
-                            // ret = tls_dump_alert(session, &plaintext[0], plainsize - 1, tpos, debugstream);
                             tls_record_alert alert(session);
                             alert.read_plaintext(dir, &plaintext[0], plainsize - 1, tpos, debugstream);
                         } else if (tls_content_type_handshake == last_byte) {
-                            tpos = 0;
-                            while (tpos < plainsize) {
-                                auto test = tls_dump_handshake(session, &plaintext[0], plainsize - 1, tpos, debugstream, dir);
-                                if (errorcode_t::success != test) {
-                                    if (errorcode_t::no_more == test) {
-                                        break;
-                                    } else {
-                                        ret = test;
-                                    }
-                                }
-                            }
+                            get_handshakes().read(session, dir, &plaintext[0], plainsize - 1, tpos, debugstream);
                         } else if (tls_content_type_application_data == last_byte) {
                             if (debugstream) {
                                 debugstream->autoindent(3);
@@ -98,7 +89,7 @@ return_t tls_record_application_data::read_body(tls_direction_t dir, const byte_
     return ret;
 }
 
-return_t tls_record_application_data::write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

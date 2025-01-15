@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/net/tls1/handshake/tls_handshake.hpp>
 #include <sdk/net/tls1/record/tls_record_handshake.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
@@ -18,7 +19,9 @@ namespace net {
 
 tls_record_handshake::tls_record_handshake(tls_session* session) : tls_record(tls_content_type_handshake, session) {}
 
-return_t tls_record_handshake::read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+tls_handshakes& tls_record_handshake::get_handshakes() { return _handshakes; }
+
+return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 len = get_length();
@@ -69,11 +72,15 @@ return_t tls_record_handshake::read_body(tls_direction_t dir, const byte_t* stre
                 }
                 if (errorcode_t::success == ret) {
                     tpos = 0;
-                    ret = tls_dump_handshake(session, &plaintext[0], plaintext.size(), tpos, debugstream, dir);
+                    // ret = tls_dump_handshake(session, &plaintext[0], plaintext.size(), tpos, debugstream, dir);
+                    auto handshake = tls_handshake::read(session, dir, &plaintext[0], plaintext.size(), tpos, debugstream);
+                    get_handshakes().add(handshake);
                 }
             } else {
                 tpos = pos;
-                ret = tls_dump_handshake(session, stream, pos + len, tpos, debugstream, dir);
+                // ret = tls_dump_handshake(session, stream, pos + len, tpos, debugstream, dir);
+                auto handshake = tls_handshake::read(session, dir, stream, pos + len, tpos, debugstream);
+                get_handshakes().add(handshake);
             }
         }
     }
@@ -83,11 +90,12 @@ return_t tls_record_handshake::read_body(tls_direction_t dir, const byte_t* stre
     return ret;
 }
 
-return_t tls_record_handshake::write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+return_t tls_record_handshake::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        //
+        auto lambda = [&](tls_handshake* item) -> void { item->write(dir, bin, debugstream); };
+        get_handshakes().for_each(lambda);
     }
     __finally2 {
         // do nothing

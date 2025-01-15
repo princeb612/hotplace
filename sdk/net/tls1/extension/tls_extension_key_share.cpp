@@ -21,9 +21,19 @@
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_key_share_entry[] = "key share entry";
+constexpr char constexpr_len[] = "len";
+constexpr char constexpr_group[] = "group";
+constexpr char constexpr_pubkey_len[] = "public key len";
+constexpr char constexpr_pubkey[] = "public key";
+
 tls_extension_key_share::tls_extension_key_share(tls_session* session) : tls_extension(tls1_ext_key_share, session) {}
 
-return_t tls_extension_key_share::add(tls_direction_t dir, uint16 group) {
+return_t tls_extension_key_share::add(uint16 group) { return errorcode_t::success; }
+
+return_t tls_extension_key_share::add(const std::string& group) { return errorcode_t::success; }
+
+return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -95,11 +105,11 @@ return_t tls_extension_key_share::add(tls_direction_t dir, uint16 group) {
     return ret;
 }
 
-return_t tls_extension_key_share::add(tls_direction_t dir, const std::string& group) {
+return_t tls_extension_key_share::add(const std::string& group, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     auto code = tlsadvisor->supported_group_code(group);
-    ret = add(dir, code);
+    ret = add(code, dir);
     return ret;
 }
 
@@ -158,13 +168,13 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
     return ret;
 }
 
-constexpr char constexpr_key_share_entry[] = "key share entry";
-constexpr char constexpr_len[] = "len";
-constexpr char constexpr_group[] = "group";
-constexpr char constexpr_pubkey_len[] = "public key len";
-constexpr char constexpr_pubkey[] = "public key";
+std::string tls_extension_key_share::get_kid() { return ""; }
 
 tls_extension_client_key_share::tls_extension_client_key_share(tls_session* session) : tls_extension_key_share(session) {}
+
+return_t tls_extension_client_key_share::add(uint16 group) { return tls_extension_key_share::add(group, from_client); }
+
+return_t tls_extension_client_key_share::add(const std::string& group) { return tls_extension_key_share::add(group, from_client); }
 
 return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
@@ -242,7 +252,7 @@ return_t tls_extension_client_key_share::do_write_body(binary_t& bin, stream_t* 
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto& keyexchange = protection.get_keyexchange();
-        auto pkey = keyexchange.find("CH");
+        auto pkey = keyexchange.find(get_kid().c_str());
         if (nullptr == pkey) {
             ret = errorcode_t::not_ready;
             __leave2;
@@ -277,15 +287,21 @@ return_t tls_extension_client_key_share::do_write_body(binary_t& bin, stream_t* 
         }
 
         payload pl;
-        pl << new payload_member(uint16(4 + pubkeylen), true, constexpr_len) << new payload_member(group, true, constexpr_group)
-           << new payload_member(pubkeylen, true, constexpr_pubkey_len) << new payload_member(pubkey, constexpr_pubkey);
+        pl << new payload_member(uint16(4 + pubkeylen), true, constexpr_len) << new payload_member(uint16(group), true, constexpr_group)
+           << new payload_member(uint16(pubkeylen), true, constexpr_pubkey_len) << new payload_member(pubkey, constexpr_pubkey);
         pl.write(bin);
     }
     __finally2 {}
     return ret;
 }
 
+std::string tls_extension_client_key_share::get_kid() { return "CH"; }
+
 tls_extension_server_key_share::tls_extension_server_key_share(tls_session* session) : tls_extension_key_share(session) {}
+
+return_t tls_extension_server_key_share::add(uint16 group) { return tls_extension_key_share::add(group, from_server); }
+
+return_t tls_extension_server_key_share::add(const std::string& group) { return tls_extension_key_share::add(group, from_server); }
 
 return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
@@ -337,8 +353,55 @@ return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size
 
 return_t tls_extension_server_key_share::do_write_body(binary_t& bin, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+        auto& keyexchange = protection.get_keyexchange();
+        auto pkey = keyexchange.find(get_kid().c_str());
+        if (nullptr == pkey) {
+            ret = errorcode_t::not_ready;
+            __leave2;
+        }
+
+        binary_t pubkey;
+        auto kty = typeof_crypto_key(pkey);
+        if (kty_ec == kty) {
+            binary_t privkey;
+            keyexchange.ec_uncompressed_key(pkey, pubkey, privkey);
+        } else if (kty_okp == kty) {
+            binary_t temp;
+            binary_t privkey;
+            keyexchange.get_key(pkey, pubkey, temp, privkey, true);
+        }
+        uint16 group = 0;
+        uint16 pubkeylen = pubkey.size();
+        uint32 nid = 0;
+        nidof_evp_pkey(pkey, nid);
+        switch (kty) {
+            case kty_ec:
+            case kty_okp: {
+                auto hint = advisor->hintof_curve_nid(nid);
+                if (hint) {
+                    group = groupof(hint);
+                }
+            } break;
+        }
+        if (0 == group) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        payload pl;
+        pl << new payload_member(uint16(group), true, constexpr_group) << new payload_member(uint16(pubkeylen), true, constexpr_pubkey_len)
+           << new payload_member(pubkey, constexpr_pubkey);
+        pl.write(bin);
+    }
+    __finally2 {}
     return ret;
 }
+
+std::string tls_extension_server_key_share::get_kid() { return "SH"; }
 
 }  // namespace net
 }  // namespace hotplace

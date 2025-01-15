@@ -87,31 +87,28 @@ static void validate_resource_cipher_suite() {
         except_map.insert({item->iana, item});
     }
 
-    auto lambda = [&](keyexchange_t keyex, auth_t auth, std::string& keyexauth) -> void {
-        auto const& keyex_val = keyex_map[keyex];
-        auto const& auth_val = auth_map[auth];
-        keyexauth = keyex_val;
-        if (keyex_val != auth_val) {
-            keyexauth += "_";
-            keyexauth += auth_val;
-        }
-    };
-
     for (size_t i = 0; i < sizeof_tls_cipher_suites; i++) {
         auto item = tls_cipher_suites + i;
-        std::string keyexauth;
-        if (item->keyexchange && item->auth) {
-            lambda(item->keyexchange, item->auth, keyexauth);
 
-            if (keyexauth.empty()) {
+        bool test = false;
+        std::string name_iana = item->name_iana;
+        std::string name;
+        __try2 {
+            std::string keyexauth;
+            std::string comments;
+            std::string cipher_name;
+            std::string digest_name;
+
+            auto hint_digest = advisor->hintof_digest(item->mac);
+            if (hint_digest) {
+                digest_name = hint_digest->fetchname;
+                if (sha1 == item->mac) {
+                    replace(digest_name, "sha1", "sha");
+                }
+            } else {
                 continue;
             }
 
-            if (idea == item->cipher) {
-                int dbg = 1;
-            }
-
-            std::string cipher_name;
             if (ccm8 == item->mode) {
                 auto hint_cipher = advisor->hintof_cipher(item->cipher, cbc);
                 if (hint_cipher) {
@@ -131,17 +128,37 @@ static void validate_resource_cipher_suite() {
                 }
             }
 
-            auto hint_digest = advisor->hintof_digest(item->mac);
-            std::string digest_name = hint_digest->fetchname;
-            replace(digest_name, "sha1", "sha");
+            auto const& keyex_val = keyex_map[item->keyexchange];
+            auto const& auth_val = auth_map[item->auth];
+            if (tls_13 == item->version) {
+                name += "TLS";
+                if ("NULL" != keyex_val) {
+                    name += "_";
+                    name += keyex_val;
+                }
+                if ("NULL" != auth_val) {
+                    name += "_";
+                    name += auth_val;
+                }
+                if ("NULL" != cipher_name) {
+                    name += "_";
+                    name += cipher_name;
+                }
+                if ("NULL" != digest_name) {
+                    name += "_";
+                    name += digest_name;
+                }
+            } else {
+                keyexauth = keyex_val;
+                if (keyex_val != auth_val) {
+                    keyexauth += "_";
+                    keyexauth += auth_val;
+                }
+                name = format("TLS_%s_WITH_%s_%s", keyexauth.c_str(), cipher_name.c_str(), digest_name.c_str());
+            }
 
-            std::string name_iana = item->name_iana;
-            std::string name = format("TLS_%s_WITH_%s_%s", keyexauth.c_str(), cipher_name.c_str(), digest_name.c_str());
             std::transform(name.begin(), name.end(), name.begin(), toupper);
 
-            // exceptions
-            bool test = false;
-            std::string comments;
             test = (name_iana == name);
             if (false == test) {
                 if (false == test) {
@@ -157,13 +174,17 @@ static void validate_resource_cipher_suite() {
                 if (false == test) {
                     if (sha2_256 == item->mac) {
                         std::string name2_iana = name_iana + "_SHA256";
-                        // name2_iana += "_SHA256";
                         test = (name2_iana == name);
                     }
                 }
             }
 
             _test_case.assert(test, __FUNCTION__, "%-50s -> %s %s", name_iana.c_str(), name.c_str(), comments.c_str());
+        }
+        __finally2 {
+            if (item->secure && (false == test)) {
+                _test_case.test(not_ready, __FUNCTION__, "%s not defined", name_iana.c_str());
+            }
         }
     }
 }

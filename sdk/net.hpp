@@ -99,6 +99,7 @@
 #include <sdk/net/tls1/record/tls_record_change_cipher_spec.hpp>
 #include <sdk/net/tls1/record/tls_record_handshake.hpp>
 #include <sdk/net/tls1/record/tls_record_unknown.hpp>
+#include <sdk/net/tls1/record/tls_records.hpp>
 
 /* TLS handshake */
 #include <sdk/net/tls1/handshake/tls_handshake.hpp>
@@ -114,6 +115,7 @@
 #include <sdk/net/tls1/handshake/tls_handshake_server_hello.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_server_key_exchange.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_unknown.hpp>
+#include <sdk/net/tls1/handshake/tls_handshakes.hpp>
 
 /* TLS extension */
 #include <sdk/net/tls1/extension/tls_extension.hpp>
@@ -133,5 +135,6 @@
 #include <sdk/net/tls1/extension/tls_extension_supported_groups.hpp>
 #include <sdk/net/tls1/extension/tls_extension_supported_versions.hpp>
 #include <sdk/net/tls1/extension/tls_extension_unknown.hpp>
+#include <sdk/net/tls1/extension/tls_extensions.hpp>
 
 #endif

@@ -10,6 +10,7 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls1/extension/tls_extension.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_server_hello.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
@@ -18,7 +19,36 @@
 namespace hotplace {
 namespace net {
 
-tls_handshake_server_hello::tls_handshake_server_hello(tls_session* session) : tls_handshake(tls_hs_server_hello, session) {}
+constexpr char constexpr_version[] = "version";
+constexpr char constexpr_random[] = "random";
+constexpr char constexpr_session_id_len[] = "session id len";
+constexpr char constexpr_session_id[] = "session id";
+constexpr char constexpr_cipher_suite[] = "cipher suite";
+constexpr char constexpr_compression_method[] = "compression method";
+constexpr char constexpr_extension_len[] = "extension len";
+constexpr char constexpr_extension[] = "extension";
+
+constexpr char constexpr_group_dtls[] = "dtls";
+constexpr char constexpr_cookie_len[] = "cookie len";
+constexpr char constexpr_cookie[] = "cookie";
+
+tls_handshake_server_hello::tls_handshake_server_hello(tls_session* session)
+    : tls_handshake(tls_hs_server_hello, session), _version(tls_12), _cipher_suite(0), _compression_method(0) {}
+
+uint16 tls_handshake_server_hello::get_version() { return _version; }
+
+binary& tls_handshake_server_hello::get_random() { return _random; }
+
+binary& tls_handshake_server_hello::get_session_id() { return _session_id; }
+
+uint16 tls_handshake_server_hello::get_cipher_suite() { return _cipher_suite; }
+
+tls_handshake_server_hello& tls_handshake_server_hello::set_cipher_suite(uint16 cs) {
+    _cipher_suite = cs;
+    return *this;
+}
+
+uint8 tls_handshake_server_hello::get_compression_method() { return _compression_method; }
 
 return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
@@ -35,19 +65,6 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
 
         {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
-            constexpr char constexpr_version[] = "version";
-            constexpr char constexpr_random[] = "random";
-            constexpr char constexpr_session_id_len[] = "session id len";
-            constexpr char constexpr_session_id[] = "session id";
-            constexpr char constexpr_cipher_suite[] = "cipher suite";
-            constexpr char constexpr_compression_method[] = "compression method";
-            constexpr char constexpr_extension_len[] = "extension len";
-            constexpr char constexpr_extension[] = "extension";
-
-            constexpr char constexpr_group_dtls[] = "dtls";
-            constexpr char constexpr_cookie_len[] = "cookie len";
-            constexpr char constexpr_cookie[] = "cookie";
 
             /* RFC 8446 4.1.3.  Server Hello */
 
@@ -71,7 +88,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                    << new payload_member(uint16(0), true, constexpr_cipher_suite) << new payload_member(uint8(0), constexpr_compression_method)
                    << new payload_member(uint16(0), true, constexpr_extension_len);
 
-                pl.set_group(constexpr_group_dtls, (record_version >= dtls_12));
+                pl.set_group(constexpr_group_dtls, is_kindof_dtls(record_version));
 
                 pl.select(constexpr_random)->reserve(32);
                 pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
@@ -111,17 +128,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 debugstream->autoindent(0);
             }
 
-            for (return_t test = errorcode_t::success;;) {
-                test = tls_dump_extension(tls_hs_server_hello, session, stream, size, pos, debugstream);
-                if (errorcode_t::no_more == test) {
-                    break;
-                } else if (errorcode_t::success == test) {
-                    continue;
-                } else {
-                    ret = test;
-                    break;
-                }
-            }
+            ret = get_extensions().read(tls_hs_server_hello, session, dir, stream, size, pos, debugstream);
 
             // cipher_suite
             protection.set_cipher_suite(cipher_suite);
@@ -201,7 +208,27 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
 
 return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
-    __try2 { auto session = get_session(); }
+    __try2 {
+        auto session = get_session();
+
+        auto record_version = session->get_tls_protection().get_record_version();
+
+        binary_t extensions;
+        get_extensions().for_each([&](tls_extension* item) -> void { item->write(extensions); });
+
+        {
+            payload pl;
+            pl << new payload_member(uint16(_version), true, constexpr_version) << new payload_member(_random, constexpr_random)
+               << new payload_member(uint8(_session_id.size()), constexpr_session_id_len) << new payload_member(_session_id, constexpr_session_id)
+               << new payload_member(uint16(_cipher_suite), true, constexpr_cipher_suite) << new payload_member(uint8(0), constexpr_compression_method)
+               << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);
+
+            pl.set_group(constexpr_group_dtls, is_kindof_dtls(record_version));
+            pl.write(bin);
+        }
+
+        binary_append(bin, extensions);
+    }
     __finally2 {
         // do nothing
     }

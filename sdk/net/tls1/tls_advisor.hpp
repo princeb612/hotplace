@@ -86,6 +86,7 @@ struct tls_cipher_suite_t {
     uint16 code;                // 0xc023
     tls_version_t version;      // tls_12
     uint8 secure;               // 0 : insecure or weak
+    uint8 mandatory;            // 1 : mandatory
     const char* name_iana;      // TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
     const char* name_ossl;      // ECDHE-ECDSA-AES128-SHA256
     keyexchange_t keyexchange;  // keyexchange_ecdhe

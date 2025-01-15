@@ -13,7 +13,10 @@
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension.hpp>
+#include <sdk/net/tls1/extension/tls_extension_supported_versions.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_client_hello.hpp>
+#include <sdk/net/tls1/record/tls_record_handshake.hpp>
+#include <sdk/net/tls1/record/tls_records.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
@@ -36,8 +39,6 @@ constexpr char constexpr_cookie_len[] = "cookie len";
 constexpr char constexpr_cookie[] = "cookie";
 
 tls_handshake_client_hello::tls_handshake_client_hello(tls_session* session) : tls_handshake(tls_hs_client_hello, session), _version(tls_12) {}
-
-tls_handshake_client_hello::~tls_handshake_client_hello() { clear(); }
 
 return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
@@ -134,7 +135,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                    << new payload_member(uint8(0), constexpr_compression_method_len) << new payload_member(binary_t(), constexpr_compression_method)
                    << new payload_member(uint16(0), true, constexpr_extension_len);
 
-                pl.set_group(constexpr_group_dtls, (record_version >= dtls_12));
+                pl.set_group(constexpr_group_dtls, is_kindof_dtls(record_version));
 
                 pl.select(constexpr_random)->reserve(32);
                 pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
@@ -184,17 +185,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
 
             do_dump_body(stream, size, debugstream);
 
-            for (return_t test = errorcode_t::success;;) {
-                test = tls_dump_extension(tls_hs_client_hello, session, stream, size, pos, debugstream);
-                if (errorcode_t::no_more == test) {
-                    break;
-                } else if (errorcode_t::success == test) {
-                    continue;
-                } else {
-                    ret = test;
-                    break;
-                }
-            }
+            ret = get_extensions().read(tls_hs_client_hello, session, dir, stream, size, pos, debugstream);
         }
     }
     __finally2 {
@@ -250,11 +241,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
         }
 
         binary_t extensions;
-        {
-            for (auto ext : _extensions) {
-                ext->write(extensions);
-            }
-        }
+        get_extensions().for_each([&](tls_extension* item) -> void { item->write(extensions); });
 
         {
             auto record_version = session->get_tls_protection().get_record_version();
@@ -280,7 +267,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
                << new payload_member(compression_methods, constexpr_compression_method)
                << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);
 
-            pl.set_group(constexpr_group_dtls, (record_version >= dtls_12));
+            pl.set_group(constexpr_group_dtls, is_kindof_dtls(record_version));
             pl.write(bin);
         }
 
@@ -381,6 +368,79 @@ return_t tls_handshake_client_hello::add_ciphersuite(uint16 ciphersuite) {
     _cipher_suites.push_back(ciphersuite);
     return ret;
 }
+
+tls_handshake_client_hello_selector::tls_handshake_client_hello_selector(const tls_records* records) : _records(records), _version(0), _cipher_suite(0) {}
+
+const tls_records* tls_handshake_client_hello_selector::get_records() { return _records; }
+
+return_t tls_handshake_client_hello_selector::select() {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto records = get_records();
+        if (nullptr == records) {
+            ret = errorcode_t::not_ready;
+            __leave2;
+        }
+
+        auto record = records->getat(0);
+        if (nullptr == record) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+
+        tls_record_handshake* record_handshake = (tls_record_handshake*)record;
+        tls_handshake* handshake_client_hello = record_handshake->get_handshakes().get(tls_hs_client_hello);
+        if (handshake_client_hello) {
+            tls_handshake_client_hello* ch = (tls_handshake_client_hello*)handshake_client_hello;
+
+            uint16 version = ch->get_version();
+
+            tls_extension* extension_supp_ver = ch->get_extensions().get(tls1_ext_supported_versions);
+            if (extension_supp_ver) {
+                tls_extension_client_supported_versions* supp_ver = (tls_extension_client_supported_versions*)extension_supp_ver;
+                for (auto item : supp_ver->get_versions()) {
+                    if ((tls_13 == item) || (dtls_13 == item)) {
+                        _version = tls_13;
+                        _cipher_suite = 0x1301;  // TLS_AES_128_GCM_SHA256
+                        break;
+                    } else {
+                        _version = tls_12;
+                        _cipher_suite = 0x002f;  // TLS_RSA_WITH_AES_128_CBC_SHA
+                    }
+                }
+            }
+
+            // TODO
+
+            // RFC 5246 TLS 1.2
+            //  9.  Mandatory Cipher Suites
+            //  TLS_RSA_WITH_AES_128_CBC_SHA (mandatory)
+            // RFC 8446 TLS 1.3
+            //  9.1.  Mandatory-to-Implement Cipher Suites
+            //  TLS_AES_128_GCM_SHA256 (MUST)
+            //  TLS_AES_256_GCM_SHA384 (SHOULD)
+            //  TLS_CHACHA20_POLY1305_SHA256 (SHOULD)
+
+#if 0
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            for (auto cs : ch->get_cipher_suites()) {
+                auto hint = tlsadvisor->hintof_cipher_suite(cs);
+                if (hint) {
+                    // if (hint->secure && hint->mandatory)
+                }
+            }
+#endif
+        } else {
+            ret = errorcode_t::bad_data;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+uint16 tls_handshake_client_hello_selector::get_version() { return _version; }
+
+uint16 tls_handshake_client_hello_selector::get_cipher_suite() { return _cipher_suite; }
 
 }  // namespace net
 }  // namespace hotplace

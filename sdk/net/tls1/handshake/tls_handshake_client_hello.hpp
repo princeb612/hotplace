@@ -18,7 +18,6 @@ namespace net {
 class tls_handshake_client_hello : public tls_handshake {
    public:
     tls_handshake_client_hello(tls_session* session);
-    ~tls_handshake_client_hello();
 
     uint16 get_version();
     binary& get_random();
@@ -42,6 +41,21 @@ class tls_handshake_client_hello : public tls_handshake {
     binary _session_id;
     std::vector<uint16> _cipher_suites;
     std::vector<uint8> _compression_methods;
+};
+
+class tls_handshake_client_hello_selector {
+   public:
+    tls_handshake_client_hello_selector(const tls_records* records);
+
+    const tls_records* get_records();
+    return_t select();
+    uint16 get_version();
+    uint16 get_cipher_suite();
+
+   protected:
+    const tls_records* _records;
+    uint16 _version;
+    uint16 _cipher_suite;
 };
 
 }  // namespace net

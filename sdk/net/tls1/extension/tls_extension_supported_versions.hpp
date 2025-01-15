@@ -30,6 +30,7 @@ class tls_extension_client_supported_versions : public tls_extension_supported_v
     tls_extension_client_supported_versions(tls_session* session);
 
     tls_extension_client_supported_versions& add(uint16 code);
+    const std::list<uint16>& get_versions();
 
    protected:
     virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
@@ -44,6 +45,7 @@ class tls_extension_server_supported_versions : public tls_extension_supported_v
     tls_extension_server_supported_versions(tls_session* session);
 
     uint16 get_version();
+    tls_extension_server_supported_versions& set(uint16 code);
 
    protected:
     virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);

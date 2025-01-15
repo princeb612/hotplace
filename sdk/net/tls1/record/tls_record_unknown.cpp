@@ -18,7 +18,7 @@ namespace net {
 
 tls_record_unknown::tls_record_unknown(uint8 type, tls_session* session) : tls_record(type, session) {}
 
-return_t tls_record_unknown::read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_record_unknown::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         //
@@ -29,7 +29,7 @@ return_t tls_record_unknown::read_body(tls_direction_t dir, const byte_t* stream
     return ret;
 }
 
-return_t tls_record_unknown::write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_record_unknown::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

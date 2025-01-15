@@ -14,6 +14,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/record/tls_record.hpp>
+#include <sdk/net/tls1/record/tls_record_builder.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
@@ -48,13 +49,13 @@ tls_record::~tls_record() {
 return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = read_header(dir, stream, size, pos, debugstream);
+        ret = do_read_header(dir, stream, size, pos, debugstream);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         size_t tpos = pos;  // responding to unhandled records
-        ret = read_body(dir, stream, size, tpos, debugstream);
+        ret = do_read_body(dir, stream, size, tpos, debugstream);
         pos += get_length();  // responding to unhandled records
     }
     __finally2 {
@@ -63,7 +64,7 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
     return ret;
 }
 
-return_t tls_record::read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -189,29 +190,33 @@ return_t tls_record::read_header(tls_direction_t dir, const byte_t* stream, size
     return ret;
 }
 
-return_t tls_record::read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) { return not_supported; }
+return_t tls_record::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) { return not_supported; }
 
 return_t tls_record::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         binary_t body;
-        ret = write_body(dir, body, debugstream);
+        ret = do_write_body(dir, body, debugstream);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        ret = write_header(dir, bin, body, debugstream);
+        ret = do_write_header(dir, bin, body, debugstream);
     }
     __finally2 {}
     return ret;
 }
 
-return_t tls_record::write_header(tls_direction_t dir, binary_t& bin, const binary_t& body, stream_t* debugstream) {
+return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     {
         {
             _range.begin = bin.size();
             _len = body.size();
+
+            auto session = get_session();
+            auto& protection = session->get_tls_protection();
+            _legacy_version = protection.get_record_version();
         }
 
         payload pl;
@@ -221,24 +226,22 @@ return_t tls_record::write_header(tls_direction_t dir, binary_t& bin, const bina
            << new payload_member(binary_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
            << new payload_member(uint16(body.size()), true, constexpr_len);                                         // tls, dtls
 
-        auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
-            auto ver = pl->t_value_of<uint16>(item);
-            pl->set_group(constexpr_group_dtls, (ver >= dtls_13));
-        };
+        pl.set_group(constexpr_group_dtls, is_kindof_dtls(_legacy_version));
         pl.write(bin);
 
         {
-            auto session = get_session();
-            auto& protection = session->get_tls_protection();
-
+            //
             _range.end = bin.size();
-            _legacy_version = protection.get_record_version();
+        }
+        {
+            //
+            binary_append(bin, body);
         }
     }
     return ret;
 }
 
-return_t tls_record::write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
+return_t tls_record::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
 
 tls_session* tls_record::get_session() { return _session; }
 

@@ -52,17 +52,10 @@ return_t dump_record(const char* text, tls_session* session, const binary_t& bin
         }
 
         basic_stream bs;
-        size_t pos = 0;
-        size_t size = bin.size();
-        while (pos < size) {
-            auto test = tls_dump_record(session, &bin[0], bin.size(), pos, &bs, dir);
-            if (errorcode_t::success != test) {
-                ret = test;
-            }
-        }
+        tls_records records;
+        ret = records.read(session, dir, bin, &bs);
 
         _logger->writeln(bs);
-        bs.clear();
 
         if ((false == expect) && (success != ret)) {
             ret = expect_failure;
@@ -85,17 +78,10 @@ return_t dump_handshake(const char* text, tls_session* session, const binary_t& 
         }
 
         basic_stream bs;
-        size_t pos = 0;
-        size_t size = bin.size();
-        while (pos < size) {
-            ret = tls_dump_handshake(session, &bin[0], bin.size(), pos, &bs, dir);
-            if (errorcode_t::success != ret) {
-                break;
-            }
-        }
+        tls_handshakes handshakes;
+        ret = handshakes.read(session, dir, bin, &bs);
 
         _logger->writeln(bs);
-        bs.clear();
 
         _test_case.test(ret, __FUNCTION__, "%s : %s", (from_client == dir) ? "C -> S" : "C <- S", text);
     }

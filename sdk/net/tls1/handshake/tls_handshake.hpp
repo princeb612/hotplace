@@ -11,6 +11,7 @@
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
+#include <sdk/net/tls1/extension/tls_extensions.hpp>
 #include <sdk/net/tls1/tls.hpp>
 
 namespace hotplace {
@@ -21,6 +22,8 @@ class tls_handshake {
     tls_handshake(tls_hs_type_t type, tls_session* session);
     ~tls_handshake();
 
+    static tls_handshake* read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
     virtual return_t dump(const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
@@ -28,8 +31,7 @@ class tls_handshake {
     void addref();
     void release();
 
-    return_t add(tls_extension* extension, bool upref = false);
-    tls_handshake& operator<<(tls_extension* extension);
+    tls_extensions& get_extensions();
 
     tls_hs_type_t get_type();
     tls_session* get_session();
@@ -49,11 +51,9 @@ class tls_handshake {
     virtual return_t dump_header(const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
     virtual return_t do_dump_body(const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
 
-    void clear();
-
     range_t _range;
     uint16 _extension_len;
-    std::list<tls_extension*> _extensions;
+    tls_extensions _extensions;
 
    private:
     tls_hs_type_t _type;

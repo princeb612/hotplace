@@ -14,6 +14,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension.hpp>
+#include <sdk/net/tls1/extension/tls_extension_builder.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
@@ -52,6 +53,44 @@ tls_extension::~tls_extension() {
     if (session) {
         session->release();
     }
+}
+
+tls_extension* tls_extension::read(tls_hs_type_t hstype, tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos,
+                                   stream_t* debugstream) {
+    tls_extension* obj = nullptr;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        // extension
+        //  uint16 type
+        //  uint16 len
+        //  ...
+        if (pos + 4 > size) {
+            ret = errorcode_t::no_more;
+            __leave2;
+        }
+
+        {
+            uint16 extension_type = ntoh16(*(uint16*)(stream + pos));
+            tls_extension_builder builder;
+            auto extension = builder.set(session).set(hstype).set(extension_type).build();
+            if (extension) {
+                ret = extension->read(stream, size, pos, debugstream);
+                if (errorcode_t::success == ret) {
+                    obj = extension;
+                } else {
+                    extension->release();
+                }
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return obj;
 }
 
 return_t tls_extension::read(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {

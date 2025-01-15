@@ -12,6 +12,7 @@
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake.hpp>
+#include <sdk/net/tls1/handshake/tls_handshake_builder.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
@@ -39,6 +40,36 @@ tls_handshake::~tls_handshake() {
     if (session) {
         session->release();
     }
+}
+
+tls_handshake* tls_handshake::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+    tls_handshake* obj = nullptr;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (size - pos < 4) {
+            ret = errorcode_t::no_more;
+            __leave2;
+        }
+
+        tls_hs_type_t hs = (tls_hs_type_t)stream[pos];
+        tls_handshake_builder builder;
+        auto handshake = builder.set(hs).set(session).build();
+        if (handshake) {
+            ret = handshake->read(dir, stream, size, pos, debugstream);
+            if (errorcode_t::success == ret) {
+                obj = handshake;
+            } else {
+                handshake->release();
+            }
+        }
+    }
+    __finally2 {}
+    return obj;
 }
 
 return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
@@ -213,7 +244,9 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
     //   TLS 1.3 ClientHellos are identified as having a legacy_version of 0x0303 and a supported_versions extension
     //   present with 0x0304 as the highest version indicated therein.
 
-    auto legacy_version = tls_12;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto record_version = protection.get_record_version();
 
     payload pl;
     pl << new payload_member(uint8(get_type()), constexpr_message_type)
@@ -224,7 +257,7 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
        << new payload_member(uint32_24_t(_fragment_len), constexpr_fragment_len, constexpr_group_dtls);       // dtls
     ;
 
-    pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
+    pl.set_group(constexpr_group_dtls, is_kindof_dtls(record_version));
     pl.write(bin);
     binary_append(bin, body);
 
@@ -287,35 +320,7 @@ void tls_handshake::addref() { _shared.addref(); }
 
 void tls_handshake::release() { _shared.delref(); }
 
-return_t tls_handshake::add(tls_extension* extension, bool upref) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == extension) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (upref) {
-            extension->addref();
-        }
-        _extensions.push_back(extension);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-tls_handshake& tls_handshake::operator<<(tls_extension* extension) {
-    add(extension, false);
-    return *this;
-}
-
-void tls_handshake::clear() {
-    for (auto item : _extensions) {
-        item->release();
-    }
-    _extensions.clear();
-}
+tls_extensions& tls_handshake::get_extensions() { return _extensions; }
 
 tls_hs_type_t tls_handshake::get_type() { return _type; }
 

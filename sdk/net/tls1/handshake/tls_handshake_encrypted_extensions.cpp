@@ -53,17 +53,7 @@ return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, c
                 // DTLS 1.3 ciphertext
                 // uint16 len = ntoh16(*(uint16*)(stream + pos));
                 pos += 2;  // len
-                for (return_t test = errorcode_t::success;;) {
-                    test = tls_dump_extension(tls_hs_encrypted_extensions, session, stream, size, pos, debugstream);
-                    if (errorcode_t::no_more == test) {
-                        break;
-                    } else if (errorcode_t::success == test) {
-                        continue;
-                    } else {
-                        ret = test;
-                        break;
-                    }
-                }
+                ret = get_extensions().read(tls_hs_encrypted_extensions, session, dir, stream, size, pos, debugstream);
             }
         }
     }

@@ -41,7 +41,9 @@ constexpr char constexpr_recno[] = "record no";
 
 dtls13_ciphertext::dtls13_ciphertext(uint8 type, tls_session* session) : tls_record(type, session), _sequence(0), _sequence_len(0), _offset_encdata(0) {}
 
-return_t dtls13_ciphertext::read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+tls_handshakes& dtls13_ciphertext::get_handshakes() { return _handshakes; }
+
+return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         size_t recpos = pos;
@@ -134,7 +136,7 @@ return_t dtls13_ciphertext::read_header(tls_direction_t dir, const byte_t* strea
     return ret;
 }
 
-return_t dtls13_ciphertext::read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto recpos = offsetof_header();
@@ -223,7 +225,9 @@ return_t dtls13_ciphertext::read_body(tls_direction_t dir, const byte_t* stream,
                         ret = alert.read_plaintext(dir, &plaintext[0], plaintext.size() - 1, tpos, debugstream);
                     } break;
                     case tls_content_type_handshake: {
-                        ret = tls_dump_handshake(session, &plaintext[0], plaintext.size() - 1, tpos, debugstream, dir);
+                        // ret = tls_dump_handshake(session, &plaintext[0], plaintext.size() - 1, tpos, debugstream, dir);
+                        auto handshake = tls_handshake::read(session, dir, &plaintext[0], plaintext.size() - 1, tpos, debugstream);
+                        get_handshakes().add(handshake);
                     } break;
                     case tls_content_type_application_data: {
                         if (debugstream) {
@@ -233,7 +237,7 @@ return_t dtls13_ciphertext::read_body(tls_direction_t dir, const byte_t* stream,
                     } break;
                     case tls_content_type_ack: {
                         tls_record_ack ack(session);
-                        ret = ack.read_body(dir, &plaintext[0], plaintext.size() - 1, tpos, debugstream);
+                        ret = ack.do_read_body(dir, &plaintext[0], plaintext.size() - 1, tpos, debugstream);
                     } break;
                 }
             }
@@ -245,7 +249,7 @@ return_t dtls13_ciphertext::read_body(tls_direction_t dir, const byte_t* stream,
     return ret;
 }
 
-return_t dtls13_ciphertext::write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t dtls13_ciphertext::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

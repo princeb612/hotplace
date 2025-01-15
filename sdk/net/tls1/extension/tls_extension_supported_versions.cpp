@@ -83,8 +83,10 @@ tls_extension_client_supported_versions& tls_extension_client_supported_versions
     return *this;
 }
 
+const std::list<uint16>& tls_extension_client_supported_versions::get_versions() { return _versions; }
+
 tls_extension_server_supported_versions::tls_extension_server_supported_versions(tls_session* session)
-    : tls_extension_supported_versions(session), _version(0) {}
+    : tls_extension_supported_versions(session), _version(tls_12) {}
 
 return_t tls_extension_server_supported_versions::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
@@ -127,9 +129,20 @@ return_t tls_extension_server_supported_versions::do_read_body(const byte_t* str
     return ret;
 }
 
-return_t tls_extension_server_supported_versions::do_write_body(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension_server_supported_versions::do_write_body(binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    payload pl;
+    pl << new payload_member(uint16(_version), true, constexpr_version);
+    pl.write(bin);
+    return ret;
+}
 
 uint16 tls_extension_server_supported_versions::get_version() { return _version; }
+
+tls_extension_server_supported_versions& tls_extension_server_supported_versions::set(uint16 code) {
+    _version = code;
+    return *this;
+}
 
 }  // namespace net
 }  // namespace hotplace
