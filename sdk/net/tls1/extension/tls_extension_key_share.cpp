@@ -14,8 +14,8 @@
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension_key_share.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {

@@ -114,6 +114,11 @@ class crypto_keychain {
      */
     virtual return_t write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag = 0);
     return_t write_pem(crypto_key* cryptokey, stream_t* stream, int flag = 0);
+
+    template <typename TYPE>
+    return_t t_write_der(const X509* x509, TYPE& buffer, std::function<void(const byte_t*, int, TYPE&)> func);
+    return_t write_der(const X509* x509, stream_t* stream);
+    return_t write_der(const X509* x509, binary_t& bin);
     /**
      * @brief load from file
      * @param crypto_key * crypto_key [in]

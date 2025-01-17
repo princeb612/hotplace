@@ -94,15 +94,19 @@ struct keydesc {
 
 class crypto_key_object {
    public:
-    crypto_key_object() : _pkey(nullptr) {
+    crypto_key_object() : _pkey(nullptr), _x509(nullptr) {
         // do nothing
     }
 
-    crypto_key_object(const EVP_PKEY* key, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) : _pkey(key) {
+    crypto_key_object(const EVP_PKEY* key, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) : _pkey(key), _x509(nullptr) {
         _desc.set_kid(kid).set_alg(alg).set_use(use);
     }
-    crypto_key_object(const crypto_key_object& rhs) : _pkey(rhs._pkey), _desc(rhs._desc) {}
-    crypto_key_object(const EVP_PKEY* key, const keydesc& desc) : _pkey(key), _desc(desc) {}
+    crypto_key_object(const EVP_PKEY* key, const X509* x509, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) : _pkey(key), _x509(x509) {
+        _desc.set_kid(kid).set_alg(alg).set_use(use);
+    }
+    crypto_key_object(const crypto_key_object& rhs) : _pkey(rhs._pkey), _x509(rhs._x509), _desc(rhs._desc) {}
+    crypto_key_object(const EVP_PKEY* key, const keydesc& desc) : _pkey(key), _x509(nullptr), _desc(desc) {}
+    crypto_key_object(const EVP_PKEY* key, const X509* x509, const keydesc& desc) : _pkey(key), _x509(x509), _desc(desc) {}
 
     crypto_key_object& set(const EVP_PKEY* key, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) {
         _pkey = key;
@@ -111,15 +115,18 @@ class crypto_key_object {
     }
     crypto_key_object& operator=(crypto_key_object& key) {
         _pkey = key._pkey;
+        _x509 = key._x509;
         _desc = key._desc;
         return *this;
     }
 
     keydesc& get_desc() { return _desc; }
     const EVP_PKEY* get_pkey() { return _pkey; }
+    const X509* get_x509() { return _x509; }
 
    private:
     const EVP_PKEY* _pkey;
+    const X509* _x509;  // certificate
     keydesc _desc;
 };
 
@@ -352,6 +359,20 @@ class crypto_key {
      * @param bool up_ref [inopt]
      */
     const EVP_PKEY* find(const char* kid, jws_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+
+    /**
+     * @brief find
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
+     * @param bool up_ref [inopt]
+     */
+    const X509* select_x509(crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    /**
+     * @brief find
+     * @param const char* kid [in]
+     * @param crypto_use_t use [inopt] crypto_use_t::use_any
+     * @param bool up_ref [inopt]
+     */
+    const X509* find_x509(const char* kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
 
     /**
      * @brief public key

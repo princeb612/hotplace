@@ -52,7 +52,6 @@ class tls_extension_server_supported_versions : public tls_extension_supported_v
     virtual return_t do_write_body(binary_t& bin, stream_t* debugstream = nullptr);
 
    private:
-    uint16 _version;
 };
 
 }  // namespace net

@@ -8,17 +8,37 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_encrypted_extensions.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
 tls_handshake_encrypted_extensions::tls_handshake_encrypted_extensions(tls_session* session) : tls_handshake(tls_hs_encrypted_extensions, session) {}
+
+return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        auto hspos = offsetof_header();
+        auto& protection = session->get_tls_protection();
+
+        { protection.calc_transcript_hash(session, stream + hspos, get_size()); }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
 
 return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
@@ -63,27 +83,14 @@ return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, c
     return ret;
 }
 
-return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+return_t tls_handshake_encrypted_extensions::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        auto hspos = offsetof_header();
-        auto hdrsize = get_header_size();
-        auto& protection = session->get_tls_protection();
-
-        { protection.calc_transcript_hash(session, stream + hspos, hdrsize); }
-    }
-    __finally2 {
-        // do nothing
-    }
+    binary_t extensions;
+    ret = get_extensions().write(extensions, debugstream);
+    binary_append(bin, uint16(extensions.size()), hton16);
+    binary_append(bin, extensions);
     return ret;
 }
-
-return_t tls_handshake_encrypted_extensions::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

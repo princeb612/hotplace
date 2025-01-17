@@ -10,8 +10,8 @@
 
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension_supported_versions.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
@@ -85,8 +85,7 @@ tls_extension_client_supported_versions& tls_extension_client_supported_versions
 
 const std::list<uint16>& tls_extension_client_supported_versions::get_versions() { return _versions; }
 
-tls_extension_server_supported_versions::tls_extension_server_supported_versions(tls_session* session)
-    : tls_extension_supported_versions(session), _version(tls_12) {}
+tls_extension_server_supported_versions::tls_extension_server_supported_versions(tls_session* session) : tls_extension_supported_versions(session) {}
 
 return_t tls_extension_server_supported_versions::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
@@ -117,11 +116,6 @@ return_t tls_extension_server_supported_versions::do_read_body(const byte_t* str
 
             debugstream->printf(" > 0x%04x %s\n", version, tlsadvisor->tls_version_string(version).c_str());
         }
-
-        {
-            //
-            _version = version;
-        }
     }
     __finally2 {
         // do nothing
@@ -131,16 +125,37 @@ return_t tls_extension_server_supported_versions::do_read_body(const byte_t* str
 
 return_t tls_extension_server_supported_versions::do_write_body(binary_t& bin, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
-    payload pl;
-    pl << new payload_member(uint16(_version), true, constexpr_version);
-    pl.write(bin);
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        payload pl;
+        pl << new payload_member(uint16(get_version()), true, constexpr_version);
+        pl.write(bin);
+    }
+    __finally2 {}
     return ret;
 }
 
-uint16 tls_extension_server_supported_versions::get_version() { return _version; }
+uint16 tls_extension_server_supported_versions::get_version() {
+    uint16 version = 0;
+    auto session = get_session();
+    if (session) {
+        auto& protection = session->get_tls_protection();
+        version = protection.get_tls_version();
+    }
+    return version;
+}
 
 tls_extension_server_supported_versions& tls_extension_server_supported_versions::set(uint16 code) {
-    _version = code;
+    auto session = get_session();
+    if (session) {
+        auto& protection = session->get_tls_protection();
+        protection.set_tls_version(code);
+    }
     return *this;
 }
 

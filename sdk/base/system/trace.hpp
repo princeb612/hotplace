@@ -36,6 +36,7 @@ enum trace_category_t {
     category_http_response = 67,       // see category_http_response_event_t
     category_header_compression = 68,  // see category_header_compression_event_t
     category_http2_serverpush = 69,    // see category_http2_push_event_t
+    category_tls1 = 70,
 };
 
 enum category_crypto_event_t {
@@ -67,6 +68,11 @@ enum category_header_compression_event_t {
 
 enum category_http2_push_event_t {
     http2_push_event_push_promise = 1,  // http2_serverpush::push_promise
+};
+
+enum category_tls_event_t {
+    tls_event_read = 1,
+    tls_event_write = 2,
 };
 
 uint32 set_trace_option(uint32 option);

@@ -26,7 +26,7 @@ tls_record_ack::tls_record_ack(tls_session* session) : tls_record(tls_content_ty
 return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        uint16 len = get_length();
+        uint16 len = get_body_size();
 
         {
             // RFC 9147 7.  ACK Message

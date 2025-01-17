@@ -25,5 +25,6 @@ extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 void test_crypto_key();
 void test_eckey_compressed();
 void test_ffdhe();
+void test_der();
 
 #endif

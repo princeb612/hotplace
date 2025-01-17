@@ -38,13 +38,16 @@ class tls_record {
    protected:
     tls_record(uint8 type, tls_session* session);
 
+    virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
+    // virtual return_t do_encrypt(tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, stream_t* debugstream = nullptr);
+    // virtual return_t do_decrypt(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, binary_t& plaintext, stream_t* debugstream = nullptr);
     virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body, stream_t* debugstream = nullptr);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
 
     const range_t& get_header_range();
-    uint16 get_length();
+    uint16 get_body_size();
     size_t offsetof_header();
     size_t offsetof_body();
 
@@ -53,7 +56,7 @@ class tls_record {
     bool _cond_dtls;
     uint16 _key_epoch;
     binary_t _dtls_record_seq;
-    uint16 _len;
+    uint16 _bodysize;
 
     tls_session* _session;
     range_t _range;

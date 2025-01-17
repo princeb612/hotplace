@@ -81,6 +81,43 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir, const by
     return ret;
 }
 
+return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        auto hspos = offsetof_header();
+        auto size_header_body = get_size();
+        auto& protection = session->get_tls_protection();
+
+        {
+            switch (protection.get_flow()) {
+                case tls_1_rtt: {
+                    // 1-RTT
+                    protection.set_item(tls_context_client_hello, stream + hspos, size_header_body);  // transcript hash, see server_hello
+                } break;
+                case tls_0_rtt: {
+                    protection.reset_transcript_hash(session);
+                    protection.calc_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
+                    ret = protection.calc(session, tls_hs_client_hello, dir);
+                } break;
+                case tls_hello_retry_request: {
+                    protection.calc_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
+                } break;
+            }
+
+            session->get_session_info(dir).set_status(get_type());
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -194,43 +231,6 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
     return ret;
 }
 
-return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        auto hspos = offsetof_header();
-        auto hdrsize = get_header_size();
-        auto& protection = session->get_tls_protection();
-
-        {
-            switch (protection.get_flow()) {
-                case tls_1_rtt: {
-                    // 1-RTT
-                    protection.set_item(tls_context_client_hello, stream + hspos, hdrsize);  // transcript hash, see server_hello
-                } break;
-                case tls_0_rtt: {
-                    protection.reset_transcript_hash(session);
-                    protection.calc_transcript_hash(session, stream + hspos, hdrsize /*, handshake_hash */);  // client_hello
-                    ret = protection.calc(session, tls_hs_client_hello, dir);
-                } break;
-                case tls_hello_retry_request: {
-                    protection.calc_transcript_hash(session, stream + hspos, hdrsize /*, handshake_hash */);  // client_hello
-                } break;
-            }
-
-            session->get_session_info(dir).set_status(get_type());
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
 return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -241,7 +241,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
         }
 
         binary_t extensions;
-        get_extensions().for_each([&](tls_extension* item) -> void { item->write(extensions); });
+        get_extensions().write(extensions, debugstream);
 
         {
             auto record_version = session->get_tls_protection().get_record_version();
@@ -399,8 +399,12 @@ return_t tls_handshake_client_hello_selector::select() {
             if (extension_supp_ver) {
                 tls_extension_client_supported_versions* supp_ver = (tls_extension_client_supported_versions*)extension_supp_ver;
                 for (auto item : supp_ver->get_versions()) {
-                    if ((tls_13 == item) || (dtls_13 == item)) {
+                    if (tls_13 == item) {
                         _version = tls_13;
+                        _cipher_suite = 0x1301;  // TLS_AES_128_GCM_SHA256
+                        break;
+                    } else if (dtls_13 == item) {
+                        _version = dtls_13;
                         _cipher_suite = 0x1301;  // TLS_AES_128_GCM_SHA256
                         break;
                     } else {

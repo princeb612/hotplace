@@ -15,8 +15,8 @@
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/record/tls_record.hpp>
 #include <sdk/net/tls1/record/tls_record_builder.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
@@ -32,7 +32,7 @@ constexpr char constexpr_key_epoch[] = "key epoch";
 constexpr char constexpr_dtls_record_seq[] = "dtls record sequence number";
 
 tls_record::tls_record(uint8 type, tls_session* session)
-    : _content_type(type), _legacy_version(0), _cond_dtls(false), _key_epoch(0), _len(0), _session(session) {
+    : _content_type(type), _legacy_version(0), _cond_dtls(false), _key_epoch(0), _bodysize(0), _session(session) {
     if (session) {
         session->addref();
     }
@@ -54,15 +54,37 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
             __leave2;
         }
 
+        // binary_t plaintext;
+        // ret = do_decrypt(dir, stream, size, pos, plaintext, debugstream);
+
         size_t tpos = pos;  // responding to unhandled records
         ret = do_read_body(dir, stream, size, tpos, debugstream);
-        pos += get_length();  // responding to unhandled records
+        pos += get_body_size();  // responding to unhandled records
+
+        do_postprocess(dir, stream, size, debugstream);
     }
     __finally2 {
         // do nothing
     }
     return ret;
 }
+
+return_t tls_record::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        binary_t body;
+        ret = do_write_body(dir, body, debugstream);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = do_write_header(dir, bin, body, debugstream);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_record::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) { return errorcode_t::success; }
 
 return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
@@ -149,7 +171,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         {
             _content_type = content_type;
             _legacy_version = legacy_version;
-            _len = len;
+            _bodysize = len;
             _cond_dtls = cond_dtls;
             if (cond_dtls) {
                 _key_epoch = key_epoch;
@@ -163,7 +185,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             auto const& range = get_header_range();
 
             debugstream->printf("# TLS Record\n");
-            dump_memory(stream + range.begin, range.end - range.begin + get_length(), debugstream, 16, 3, 0x00, dump_notrunc);
+            dump_memory(stream + range.begin, range.end - range.begin + get_body_size(), debugstream, 16, 3, 0x00, dump_notrunc);
             debugstream->printf("> content type 0x%02x(%i) (%s)\n", content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
             debugstream->printf("> %s 0x%04x (%s)\n", constexpr_legacy_version, legacy_version, tlsadvisor->tls_version_string(legacy_version).c_str());
             if (is_dtls()) {
@@ -192,27 +214,12 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
 
 return_t tls_record::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) { return not_supported; }
 
-return_t tls_record::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        binary_t body;
-        ret = do_write_body(dir, body, debugstream);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        ret = do_write_header(dir, bin, body, debugstream);
-    }
-    __finally2 {}
-    return ret;
-}
-
 return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     {
         {
             _range.begin = bin.size();
-            _len = body.size();
+            _bodysize = body.size();
 
             auto session = get_session();
             auto& protection = session->get_tls_protection();
@@ -255,7 +262,7 @@ uint16 tls_record::get_key_epoch() { return _key_epoch; }
 
 const binary_t& tls_record::get_dtls_record_seq() { return _dtls_record_seq; }
 
-uint16 tls_record::get_length() { return _len; }
+uint16 tls_record::get_body_size() { return _bodysize; }
 
 const range_t& tls_record::get_header_range() { return _range; }
 

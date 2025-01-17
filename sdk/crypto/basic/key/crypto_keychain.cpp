@@ -9,6 +9,7 @@
  */
 
 #include <fstream>
+#include <sdk/base/basic/binary.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
@@ -142,7 +143,7 @@ return_t crypto_keychain::load_cert(crypto_key* cryptokey, const char* buffer, s
             __leave2;
         }
 
-        crypto_key_object key(pkey, desc);
+        crypto_key_object key(pkey, cert, desc);
         cryptokey->add(key);
 
         ERR_clear_error();
@@ -155,9 +156,6 @@ return_t crypto_keychain::load_cert(crypto_key* cryptokey, const char* buffer, s
         }
         if (bio) {
             BIO_free(bio);
-        }
-        if (cert) {
-            X509_free(cert);
         }
     }
     return ret;
@@ -190,11 +188,11 @@ return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, 
             pkey = X509_get_pubkey(x509);
         }
         if (nullptr == pkey) {
-            ret = errorcode_t::internal_error;
+            ret = errorcode_t::bad_format;
             __leave2;
         }
 
-        crypto_key_object key(pkey, desc);
+        crypto_key_object key(pkey, x509, desc);
         cryptokey->add(key);
 
         ERR_clear_error();
@@ -204,12 +202,12 @@ return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, 
             if (pkey) {
                 EVP_PKEY_free(pkey);
             }
+            if (x509) {
+                X509_free(x509);
+            }
         }
         if (bio) {
             BIO_free(bio);
-        }
-        if (x509) {
-            X509_free(x509);
         }
     }
     return ret;
@@ -276,6 +274,57 @@ return_t crypto_keychain::write_pem(crypto_key* cryptokey, stream_t* stream, int
             BIO_free_all(out);
         }
     }
+    return ret;
+}
+
+template <typename TYPE>
+return_t crypto_keychain::t_write_der(const X509* x509, TYPE& buffer, std::function<void(const byte_t*, int, TYPE&)> func) {
+    return_t ret = errorcode_t::success;
+    BIO* out = nullptr;
+
+    __try2 {
+        if (nullptr == x509 || nullptr == func) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        out = BIO_new(BIO_s_mem());
+        if (nullptr == out) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        i2d_X509_bio(out, x509);
+
+        binary_t buf;
+        buf.resize(64);
+        int len = 0;
+        while (1) {
+            len = BIO_read(out, &buf[0], buf.size());
+            if (0 >= len) {
+                break;
+            }
+
+            func(&buf[0], len, buffer);
+        }
+    }
+    __finally2 {
+        if (out) {
+            BIO_free_all(out);
+        }
+    }
+    return ret;
+}
+
+return_t crypto_keychain::write_der(const X509* x509, stream_t* stream) {
+    return_t ret = errorcode_t::success;
+    ret = t_write_der<stream_t*>(x509, stream, [&](const byte_t* source, int len, stream_t*& target) -> void { target->write(source, len); });
+    return ret;
+}
+
+return_t crypto_keychain::write_der(const X509* x509, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    ret = t_write_der<binary_t>(x509, bin, [&](const byte_t* source, int len, binary_t& target) -> void { binary_append(target, source, len); });
     return ret;
 }
 

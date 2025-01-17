@@ -17,8 +17,8 @@
 #include <sdk/net/tls1/record/dtls13_ciphertext.hpp>
 #include <sdk/net/tls1/record/tls_record_ack.hpp>
 #include <sdk/net/tls1/record/tls_record_alert.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
@@ -120,7 +120,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
 
         {
             _content_type = uhdr;
-            _len = len;
+            _bodysize = len;
 
             _range.begin = recpos;
             _range.end = pos;

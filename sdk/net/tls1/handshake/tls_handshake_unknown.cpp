@@ -11,8 +11,8 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_unknown.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
@@ -29,12 +29,11 @@ return_t tls_handshake_unknown::do_postprocess(tls_direction_t dir, const byte_t
             __leave2;
         }
         auto hspos = offsetof_header();
-        auto hdrsize = get_header_size();
         auto& protection = session->get_tls_protection();
 
         {
             //
-            protection.calc_transcript_hash(session, stream + hspos, hdrsize);
+            protection.calc_transcript_hash(session, stream + hspos, get_size());
         }
     }
     __finally2 {

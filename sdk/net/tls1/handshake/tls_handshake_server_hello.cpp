@@ -12,8 +12,8 @@
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_server_hello.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
@@ -33,7 +33,7 @@ constexpr char constexpr_cookie_len[] = "cookie len";
 constexpr char constexpr_cookie[] = "cookie";
 
 tls_handshake_server_hello::tls_handshake_server_hello(tls_session* session)
-    : tls_handshake(tls_hs_server_hello, session), _version(tls_12), _cipher_suite(0), _compression_method(0) {}
+    : tls_handshake(tls_hs_server_hello, session), _version(tls_12), _compression_method(0) {}
 
 uint16 tls_handshake_server_hello::get_version() { return _version; }
 
@@ -41,14 +41,96 @@ binary& tls_handshake_server_hello::get_random() { return _random; }
 
 binary& tls_handshake_server_hello::get_session_id() { return _session_id; }
 
-uint16 tls_handshake_server_hello::get_cipher_suite() { return _cipher_suite; }
+uint16 tls_handshake_server_hello::get_cipher_suite() {
+    uint16 cs = 0;
+    auto session = get_session();
+    if (session) {
+        auto& protection = session->get_tls_protection();
+        cs = protection.get_cipher_suite();
+    }
+    return cs;
+}
 
-tls_handshake_server_hello& tls_handshake_server_hello::set_cipher_suite(uint16 cs) {
-    _cipher_suite = cs;
-    return *this;
+return_t tls_handshake_server_hello::set_cipher_suite(uint16 cs) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        auto& protection = session->get_tls_protection();
+        protection.set_cipher_suite(cs);
+    }
+    __finally2 {}
+    return ret;
 }
 
 uint8 tls_handshake_server_hello::get_compression_method() { return _compression_method; }
+
+return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        auto hspos = offsetof_header();
+        auto size_header_body = get_size();
+        auto& protection = session->get_tls_protection();
+
+        {
+            // calculates the hash of all handshake messages to this point (ClientHello and ServerHello).
+            binary_t hello_hash;
+            if (tls_1_rtt == protection.get_flow()) {
+                const binary_t& client_hello = protection.get_item(tls_context_client_hello);
+                protection.calc_transcript_hash(session, &client_hello[0], client_hello.size());  // client_hello
+            }
+
+            protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);  // server_hello
+            ret = protection.calc(session, tls_hs_server_hello, dir);
+            session->get_session_info(dir).set_status(get_type());
+            if (errorcode_t::success != ret) {
+                protection.set_flow(tls_hello_retry_request);
+
+                /**
+                 *    RFC 8446 4.4.1.  The Transcript Hash
+                 *
+                 *       As an exception to this general rule, when the server responds to a
+                 *       ClientHello with a HelloRetryRequest, the value of ClientHello1 is
+                 *       replaced with a special synthetic handshake message of handshake type
+                 *       "message_hash" containing Hash(ClientHello1).  I.e.,
+                 *
+                 *       Transcript-Hash(ClientHello1, HelloRetryRequest, ... Mn) =
+                 *           Hash(message_hash ||        // Handshake type
+                 *                00 00 Hash.length  ||  // Handshake message length (bytes)
+                 *                Hash(ClientHello1) ||  // Hash of ClientHello1
+                 *                HelloRetryRequest  || ... || Mn)
+                 */
+                binary_t handshake_hash;
+                const binary_t& client_hello = protection.get_item(tls_context_client_hello);
+                protection.reset_transcript_hash(session);
+                protection.calc_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);
+
+                binary message_hash;
+                message_hash << uint8(tls_hs_message_hash) << uint16(0) << byte_t(handshake_hash.size()) << handshake_hash;
+                const binary_t& synthetic_handshake_message = message_hash.get();
+
+                protection.reset_transcript_hash(session);
+                protection.calc_transcript_hash(session, &synthetic_handshake_message[0], synthetic_handshake_message.size());
+                protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);
+            }
+
+            protection.clear_item(tls_context_client_hello);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
 
 return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
@@ -131,73 +213,10 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             ret = get_extensions().read(tls_hs_server_hello, session, dir, stream, size, pos, debugstream);
 
             // cipher_suite
-            protection.set_cipher_suite(cipher_suite);
+            set_cipher_suite(cipher_suite);
 
             // server_key_update
             session->get_tls_protection().set_item(tls_context_server_hello_random, random);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        auto hspos = offsetof_header();
-        auto hdrsize = get_header_size();
-        auto& protection = session->get_tls_protection();
-
-        {
-            // calculates the hash of all handshake messages to this point (ClientHello and ServerHello).
-            binary_t hello_hash;
-            if (tls_1_rtt == protection.get_flow()) {
-                const binary_t& client_hello = protection.get_item(tls_context_client_hello);
-                protection.calc_transcript_hash(session, &client_hello[0], client_hello.size());  // client_hello
-            }
-
-            protection.calc_transcript_hash(session, stream + hspos, hdrsize, hello_hash);  // server_hello
-            ret = protection.calc(session, tls_hs_server_hello, dir);
-            session->get_session_info(dir).set_status(get_type());
-            if (errorcode_t::success != ret) {
-                protection.set_flow(tls_hello_retry_request);
-
-                /**
-                 *    RFC 8446 4.4.1.  The Transcript Hash
-                 *
-                 *       As an exception to this general rule, when the server responds to a
-                 *       ClientHello with a HelloRetryRequest, the value of ClientHello1 is
-                 *       replaced with a special synthetic handshake message of handshake type
-                 *       "message_hash" containing Hash(ClientHello1).  I.e.,
-                 *
-                 *       Transcript-Hash(ClientHello1, HelloRetryRequest, ... Mn) =
-                 *           Hash(message_hash ||        // Handshake type
-                 *                00 00 Hash.length  ||  // Handshake message length (bytes)
-                 *                Hash(ClientHello1) ||  // Hash of ClientHello1
-                 *                HelloRetryRequest  || ... || Mn)
-                 */
-                binary_t handshake_hash;
-                const binary_t& client_hello = protection.get_item(tls_context_client_hello);
-                protection.reset_transcript_hash(session);
-                protection.calc_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);
-
-                binary message_hash;
-                message_hash << uint8(tls_hs_message_hash) << uint16(0) << byte_t(handshake_hash.size()) << handshake_hash;
-                const binary_t& synthetic_handshake_message = message_hash.get();
-
-                protection.reset_transcript_hash(session);
-                protection.calc_transcript_hash(session, &synthetic_handshake_message[0], synthetic_handshake_message.size());
-                protection.calc_transcript_hash(session, stream + hspos, hdrsize, hello_hash);
-            }
-
-            protection.clear_item(tls_context_client_hello);
         }
     }
     __finally2 {
@@ -214,13 +233,13 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         auto record_version = session->get_tls_protection().get_record_version();
 
         binary_t extensions;
-        get_extensions().for_each([&](tls_extension* item) -> void { item->write(extensions); });
+        get_extensions().write(extensions, debugstream);
 
         {
             payload pl;
             pl << new payload_member(uint16(_version), true, constexpr_version) << new payload_member(_random, constexpr_random)
                << new payload_member(uint8(_session_id.size()), constexpr_session_id_len) << new payload_member(_session_id, constexpr_session_id)
-               << new payload_member(uint16(_cipher_suite), true, constexpr_cipher_suite) << new payload_member(uint8(0), constexpr_compression_method)
+               << new payload_member(uint16(get_cipher_suite()), true, constexpr_cipher_suite) << new payload_member(uint8(0), constexpr_compression_method)
                << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);
 
             pl.set_group(constexpr_group_dtls, is_kindof_dtls(record_version));

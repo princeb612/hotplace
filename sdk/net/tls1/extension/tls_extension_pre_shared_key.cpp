@@ -11,8 +11,8 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension_pre_shared_key.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {

@@ -746,6 +746,70 @@ const EVP_PKEY* crypto_key::find(const char* kid, jws_t alg, crypto_use_t use, b
     return ret_value;
 }
 
+const X509* crypto_key::select_x509(crypto_use_t use, bool up_ref) {
+    const X509* ret_value = nullptr;
+    critical_section_guard guard(_lock);
+    __try2 {
+        for (auto& pair : _key_map) {
+            crypto_key_object& keyobj = pair.second;
+            bool test = find_discriminant(keyobj, nullptr, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, 0);
+            if (test) {
+                ret_value = keyobj.get_x509();
+                break;
+            }
+        }
+        if (nullptr == ret_value) {
+            __leave2;
+        }
+        if (up_ref) {
+            X509_up_ref((X509*)ret_value);  // increments a reference counter
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret_value;
+}
+
+const X509* crypto_key::find_x509(const char* kid, crypto_use_t use, bool up_ref) {
+    const X509* ret_value = nullptr;
+    critical_section_guard guard(_lock);
+    __try2 {
+        std::string k;
+        if (kid) {
+            k = kid;
+
+            crypto_key_map_t::iterator iter;
+            crypto_key_map_t::iterator lower_bound;
+            crypto_key_map_t::iterator upper_bound;
+            lower_bound = _key_map.lower_bound(k);
+            upper_bound = _key_map.upper_bound(k);
+
+            for (iter = lower_bound; iter != upper_bound; iter++) {
+                crypto_key_object& item = iter->second;
+                bool test =
+                    find_discriminant(item, kid, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, 0);  // using map, so don't care SEARCH_KID
+                if (test) {
+                    ret_value = item.get_x509();
+                    break;
+                }
+            }
+            if (nullptr == ret_value) {
+                __leave2;
+            }
+            if (up_ref) {
+                X509_up_ref((X509*)ret_value);  // increments a reference counter
+            }
+        } else {
+            ret_value = select_x509(use, up_ref);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret_value;
+}
+
 const EVP_PKEY* crypto_key::choose(const std::string& kid, crypto_kty_t kty, return_t& code) {
     const EVP_PKEY* pkey = nullptr;
     code = errorcode_t::not_exist;

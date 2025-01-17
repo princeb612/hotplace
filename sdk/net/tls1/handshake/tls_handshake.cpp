@@ -13,8 +13,8 @@
 #include <sdk/net/tls1/extension/tls_extension.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_builder.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
@@ -28,7 +28,7 @@ constexpr char constexpr_fragment_offset[] = "fragment offset";
 constexpr char constexpr_fragment_len[] = "fragment len";
 
 tls_handshake::tls_handshake(tls_hs_type_t type, tls_session* session)
-    : _session(session), _type(type), _len(0), _is_dtls(false), _dtls_seq(0), _fragment_offset(0), _fragment_len(0), _hdrsize(0), _extension_len(0) {
+    : _session(session), _type(type), _bodysize(0), _is_dtls(false), _dtls_seq(0), _fragment_offset(0), _fragment_len(0), _size(0), _extension_len(0) {
     if (session) {
         session->addref();
     }
@@ -96,7 +96,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
         // application data(EE + finished)
         //    do not interpret finished as extension
         if (tls_hs_encrypted_extensions == get_type()) {
-            ret = do_read_body(dir, stream, offsetof_body() + get_length(), pos, debugstream);
+            ret = do_read_body(dir, stream, offsetof_body() + get_body_size(), pos, debugstream);
         } else {
             ret = do_read_body(dir, stream, size, pos, debugstream);
         }
@@ -108,13 +108,50 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             __leave2;
         }
 
-        pos = offsetof_header() + sizeof(tls_handshake_t) + get_length();
+        pos = offsetof_header() + sizeof(tls_handshake_t) + get_body_size();
     }
     __finally2 {
         // do nothing
     }
     return ret;
 }
+
+return_t tls_handshake::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        binary_t body;
+        ret = do_write_body(dir, body, debugstream);
+
+        do_write_header(dir, bin, body, debugstream);
+
+        const byte_t* stream = &bin[0];
+        size_t size = bin.size();
+
+        ret = do_preprocess(dir, stream, size, debugstream);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = do_postprocess(dir, stream, size, debugstream);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_handshake::do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) { return errorcode_t::success; }
+
+return_t tls_handshake::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) { return errorcode_t::success; }
 
 return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
@@ -137,7 +174,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
         uint16 dtls_seq = 0;
         uint32 fragment_offset = 0;
         uint32 fragment_len = 0;
-        size_t hdrsize = 0;
+        size_t size_header_body = 0;
 
         {
             auto& protection = session->get_tls_protection();
@@ -182,20 +219,20 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                     fragment_len = pl.t_value_of<uint32>(constexpr_fragment_len);
                 }
             }
-            hdrsize = sizeof(tls_handshake_t) + length + sizeof_dtls_recons;  // see sizeof_dtls_recons
+            size_header_body = sizeof(tls_handshake_t) + length + sizeof_dtls_recons;  // see sizeof_dtls_recons
         }
 
         {
             _range.begin = hspos;
             _range.end = pos;
-            _len = length;
+            _bodysize = length;
             _is_dtls = cond_dtls;
             if (cond_dtls) {
                 _dtls_seq = dtls_seq;
                 _fragment_offset = fragment_offset;
                 _fragment_len = fragment_len;
             }
-            _hdrsize = hdrsize;
+            _size = size_header_body;
         }
 
         dump_header(stream, size, debugstream);
@@ -206,32 +243,8 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
     return ret;
 }
 
-return_t tls_handshake::do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) { return errorcode_t::success; }
-
 return_t tls_handshake::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return errorcode_t::success;
-}
-
-return_t tls_handshake::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) { return errorcode_t::success; }
-
-return_t tls_handshake::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        binary_t body;
-        ret = do_write_body(dir, body, debugstream);
-
-        do_write_header(dir, bin, body, debugstream);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
 }
 
 return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body, stream_t* debugstream) {
@@ -258,7 +271,15 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
     ;
 
     pl.set_group(constexpr_group_dtls, is_kindof_dtls(record_version));
+    {
+        _range.begin = bin.size();
+        _bodysize = body.size();
+    }
     pl.write(bin);
+    {
+        _range.end = bin.size();
+        _size = bin.size() + body.size();
+    }
     binary_append(bin, body);
 
     return ret;
@@ -293,12 +314,11 @@ return_t tls_handshake::dump_header(const byte_t* stream, size_t size, stream_t*
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto hstype = get_type();
-        auto length = get_length();
+        auto length = get_body_size();
         auto cond_dtls = _is_dtls;
         uint16 dtls_seq = _dtls_seq;
         uint32 fragment_offset = _fragment_offset;
         uint32 fragment_len = _fragment_len;
-        size_t hdrsize = _hdrsize;
 
         debugstream->printf(" > handshake type 0x%02x(%i) (%s)\n", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
         debugstream->printf(" > length 0x%06x(%i)\n", length, length);
@@ -326,7 +346,7 @@ tls_hs_type_t tls_handshake::get_type() { return _type; }
 
 tls_session* tls_handshake::get_session() { return _session; }
 
-size_t tls_handshake::get_header_size() { return _hdrsize; }
+size_t tls_handshake::get_size() { return _size; }
 
 const range_t& tls_handshake::get_header_range() { return _range; }
 
@@ -334,7 +354,7 @@ size_t tls_handshake::offsetof_header() { return _range.begin; }
 
 size_t tls_handshake::offsetof_body() { return _range.end; }
 
-uint32 tls_handshake::get_length() { return _len; }
+uint32 tls_handshake::get_body_size() { return _bodysize; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -86,6 +86,7 @@
 /* TLS */
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 #include <sdk/net/tls1/types.hpp>
 

@@ -59,6 +59,21 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
     return read(session, dir, stream, size, pos, debugstream);
 }
 
+return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto lambda = [&](tls_handshake* handshake) -> void { handshake->write(dir, bin, debugstream); };
+        for_each(lambda);
+    }
+    __finally2 {}
+    return ret;
+}
+
 return_t tls_handshakes::add(tls_handshake* handshake, bool upref) {
     return_t ret = errorcode_t::success;
     if (handshake) {

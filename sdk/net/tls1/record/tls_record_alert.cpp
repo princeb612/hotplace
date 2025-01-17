@@ -9,8 +9,8 @@
  */
 
 #include <sdk/net/tls1/record/tls_record_alert.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
@@ -24,7 +24,7 @@ tls_record_alert::tls_record_alert(tls_session* session) : tls_record(tls_conten
 return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        uint16 len = get_length();
+        uint16 len = get_body_size();
 
         {
             auto session = get_session();

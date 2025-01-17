@@ -64,6 +64,12 @@ return_t tls_extensions::read(tls_hs_type_t hstype, tls_session* session, tls_di
     return read(hstype, session, dir, stream, size, pos, debugstream);
 }
 
+return_t tls_extensions::write(binary_t& bin, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    for_each([&](tls_extension* extension) -> void { extension->write(bin, debugstream); });
+    return ret;
+}
+
 return_t tls_extensions::add(tls_extension* extension, bool upref) {
     return_t ret = errorcode_t::success;
     if (extension) {

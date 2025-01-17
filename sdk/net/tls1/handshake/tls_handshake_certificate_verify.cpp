@@ -23,6 +23,25 @@ namespace net {
 
 tls_handshake_certificate_verify::tls_handshake_certificate_verify(tls_session* session) : tls_handshake(tls_hs_certificate_verify, session) {}
 
+return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        auto hspos = offsetof_header();
+        auto& protection = session->get_tls_protection();
+
+        protection.calc_transcript_hash(session, stream + hspos, get_size());
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t asn1_der_ecdsa_signature(uint16 scheme, const binary_t& signature, binary_t& r, binary_t& s) {
     return_t ret = errorcode_t::success;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -239,26 +258,6 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
                 debugstream->autoindent(0);
             }
         }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        auto hspos = offsetof_header();
-        auto hdrsize = get_header_size();
-        auto& protection = session->get_tls_protection();
-
-        protection.calc_transcript_hash(session, stream + hspos, hdrsize);
     }
     __finally2 {
         // do nothing

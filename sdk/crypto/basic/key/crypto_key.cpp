@@ -26,6 +26,10 @@ crypto_key::crypto_key(const crypto_key& object) {
     for (auto& pair : _key_map) {
         crypto_key_object& keyobj = pair.second;
         EVP_PKEY_up_ref((EVP_PKEY*)keyobj.get_pkey());
+        auto x509 = keyobj.get_x509();
+        if (x509) {
+            X509_up_ref((X509*)x509);
+        }
     }
 }
 crypto_key::crypto_key(crypto_key&& object) {
@@ -94,8 +98,13 @@ void crypto_key::clear() {
     critical_section_guard guard(_lock);
     for (auto& pair : _key_map) {
         crypto_key_object& keyobj = pair.second;
-        if (keyobj.get_pkey()) {
-            EVP_PKEY_free((EVP_PKEY*)keyobj.get_pkey());
+        auto pkey = keyobj.get_pkey();
+        if (pkey) {
+            EVP_PKEY_free((EVP_PKEY*)pkey);
+        }
+        auto x509 = keyobj.get_x509();
+        if (x509) {
+            X509_free((X509*)x509);
         }
     }
     _key_map.clear();

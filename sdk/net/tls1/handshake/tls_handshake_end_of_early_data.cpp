@@ -11,8 +11,8 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_end_of_early_data.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
@@ -29,7 +29,6 @@ return_t tls_handshake_end_of_early_data::do_postprocess(tls_direction_t dir, co
             __leave2;
         }
         auto hspos = offsetof_header();
-        auto hdrsize = get_header_size();
         auto& protection = session->get_tls_protection();
 
         {
@@ -38,7 +37,7 @@ return_t tls_handshake_end_of_early_data::do_postprocess(tls_direction_t dir, co
             session->reset_recordno(from_server);
             session->get_session_info(dir).set_status(get_type());
 
-            protection.calc_transcript_hash(session, stream + hspos, hdrsize);
+            protection.calc_transcript_hash(session, stream + hspos, get_size());
         }
     }
     __finally2 {

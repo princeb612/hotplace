@@ -35,17 +35,17 @@ class tls_handshake {
 
     tls_hs_type_t get_type();
     tls_session* get_session();
-    size_t get_header_size();
+    size_t get_size();
     const range_t& get_header_range();
     size_t offsetof_header();
     size_t offsetof_body();
-    uint32 get_length();
+    uint32 get_body_size();
 
    protected:
-    virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
-    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
+    virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
     virtual return_t do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body, stream_t* debugstream = nullptr);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
     virtual return_t dump_header(const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
@@ -58,12 +58,12 @@ class tls_handshake {
    private:
     tls_hs_type_t _type;
     tls_session* _session;
-    uint32 _len;
+    uint32 _bodysize;
     bool _is_dtls;
     uint16 _dtls_seq;
     uint32 _fragment_offset;
     uint32 _fragment_len;
-    size_t _hdrsize;
+    size_t _size;
 
     t_shared_reference<tls_handshake> _shared;
 };

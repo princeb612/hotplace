@@ -44,7 +44,7 @@ class tls_extension {
     const range_t& get_header_range();
     size_t offsetof_header();
     size_t offsetof_body();
-    uint16 get_length();
+    uint16 get_body_size();
     size_t get_extsize();
     size_t endpos_extension();
 
@@ -62,7 +62,7 @@ class tls_extension {
     tls_session* _session;
     uint16 _type;
     range_t _header_range;  // range(header)
-    uint16 _payload_len;    // size(payload)
+    uint16 _bodysize;       // size(payload)
     size_t _size;           // size(header) + size(payload)
 };
 

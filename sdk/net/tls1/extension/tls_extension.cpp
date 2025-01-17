@@ -26,14 +26,14 @@ constexpr char constexpr_extension[] = "extension";
 constexpr char constexpr_ext_len[] = "extension len";
 constexpr char constexpr_extension_type[] = "extension type";
 
-tls_extension::tls_extension(tls_session* session) : _session(session), _type(0), _payload_len(0), _size(0) {
+tls_extension::tls_extension(tls_session* session) : _session(session), _type(0), _bodysize(0), _size(0) {
     if (session) {
         session->addref();
     }
     _shared.make_share(this);
 }
 
-tls_extension::tls_extension(const tls_extension& rhs) : _session(rhs._session), _type(rhs._type), _payload_len(rhs._payload_len) {
+tls_extension::tls_extension(const tls_extension& rhs) : _session(rhs._session), _type(rhs._type), _bodysize(rhs._bodysize) {
     auto session = get_session();
     if (session) {
         _session->addref();
@@ -41,7 +41,7 @@ tls_extension::tls_extension(const tls_extension& rhs) : _session(rhs._session),
     _shared.make_share(this);
 }
 
-tls_extension::tls_extension(uint16 type, tls_session* session) : _session(session), _type(type), _payload_len(0) {
+tls_extension::tls_extension(uint16 type, tls_session* session) : _session(session), _type(type), _bodysize(0) {
     if (session) {
         _session->addref();
     }
@@ -113,7 +113,7 @@ return_t tls_extension::read(const byte_t* stream, size_t size, size_t& pos, str
 
             size_t tpos = pos;  // responding to unhandled extentions
             ret = do_read_body(stream, size, tpos, debugstream);
-            pos += get_length();  // responding to unhandled extentions
+            pos += get_body_size();  // responding to unhandled extentions
         }
         __finally2 {}
 
@@ -163,7 +163,7 @@ return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t
             _header_range.begin = extpos;
             _header_range.end = pos;
             _type = extension_type;
-            _payload_len = ext_len;
+            _bodysize = ext_len;
             _size = 4 + ext_len;  // pos - extpos + ext_len
         }
 
@@ -207,13 +207,13 @@ return_t tls_extension::do_write_header(binary_t& bin, const binary_t& body, str
     {
         _header_range.begin = bin.size();
         _header_range.end = 4 + bin.size();
-        _payload_len = body.size();
-        _size = 4 + _payload_len;
+        _bodysize = body.size();
+        _size = 4 + _bodysize;
     }
     {
         // header
         payload pl;
-        pl << new payload_member(uint16(get_type()), true, constexpr_extension_type) << new payload_member(uint16(_payload_len), true, constexpr_ext_len);
+        pl << new payload_member(uint16(get_type()), true, constexpr_extension_type) << new payload_member(uint16(_bodysize), true, constexpr_ext_len);
         pl.write(bin);
     }
     {
@@ -237,11 +237,11 @@ size_t tls_extension::offsetof_header() { return _header_range.begin; }
 
 size_t tls_extension::offsetof_body() { return _header_range.end; }
 
-uint16 tls_extension::get_length() { return _payload_len; }
+uint16 tls_extension::get_body_size() { return _bodysize; }
 
 size_t tls_extension::get_extsize() { return _size; }
 
-size_t tls_extension::endpos_extension() { return _header_range.end + _payload_len; }
+size_t tls_extension::endpos_extension() { return _header_range.end + _bodysize; }
 
 void tls_extension::addref() { _shared.addref(); }
 

@@ -29,7 +29,7 @@ return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* str
     return_t ret = errorcode_t::success;
     __try2 {
         auto tpos = offsetof_header();
-        auto ext_len = get_length();
+        auto ext_len = get_body_size();
 
         // RFC 9001 8.2.  QUIC Transport Parameters Extension
         // RFC 9000 18.  Transport Parameter Encoding

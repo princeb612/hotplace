@@ -21,8 +21,8 @@
 #include <sdk/crypto/crypto/crypto_hmac.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
 #include <sdk/crypto/crypto/transcript_hash.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 // debug
 #include <sdk/base/basic/dump_memory.hpp>
@@ -32,7 +32,7 @@ namespace hotplace {
 namespace net {
 
 tls_protection::tls_protection(uint8 mode)
-    : _mode(mode), _flow(tls_1_rtt), _ciphersuite(0), _record_version(tls_12), _version(tls_12), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
+    : _mode(mode), _flow(tls_1_rtt), _ciphersuite(0), _record_version(tls_12), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
 
 tls_protection::~tls_protection() {
     if (_transcript_hash) {
@@ -779,6 +779,49 @@ void tls_protection::clear_item(tls_secret_t type) {
     }
 }
 
+size_t tls_protection::get_header_size() {
+    size_t ret_value = 0;
+    auto record_version = get_record_version();
+    size_t content_header_size = 0;
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    if (tlsadvisor->is_kindof_dtls(record_version)) {
+        content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
+    } else {
+        content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
+    }
+    ret_value = content_header_size;
+    return ret_value;
+}
+
+uint8 tls_protection::get_tag_size() {
+    uint8 ret_value = 0;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+    if (hint) {
+        auto hmac_alg = hint->mac;
+        auto hint_digest = advisor->hintof_digest(hmac_alg);
+
+        auto cipher = hint->cipher;
+        auto mode = hint->mode;
+        auto dlen = sizeof_digest(hint_digest);
+
+        switch (mode) {
+            case gcm:
+            case ccm:
+                ret_value = 16;
+                break;
+            case ccm8:
+                ret_value = 8;
+                break;
+            default:
+                ret_value = dlen;
+                break;
+        }
+    }
+    return ret_value;
+}
+
 return_t tls_protection::build_iv(tls_session* session, tls_secret_t type, binary_t& iv, uint64 recordno) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -803,106 +846,16 @@ return_t tls_protection::build_iv(tls_session* session, tls_secret_t type, binar
     return ret;
 }
 
-return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& ciphertext,
-                                       binary_t& tag, stream_t* debugstream) {
-    return_t ret = errorcode_t::not_supported;
-    return ret;
-}
-
-return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& ciphertext,
-                                       const binary_t& aad, binary_t& tag, stream_t* debugstream) {
-    return_t ret = errorcode_t::not_supported;
-    return ret;
-}
-
-return_t tls_protection::encrypt_tls1(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& ciphertext,
-                                      stream_t* debugstream) {
-    return_t ret = errorcode_t::not_supported;
-    return ret;
-}
-
-return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                                       binary_t& tag, stream_t* debugstream) {
+return_t tls_protection::get_tls13_key(tls_session* session, tls_direction_t dir, tls_secret_t& secret_key, tls_secret_t& secret_iv) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == session || nullptr == stream) {
+        if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        auto& protection = session->get_tls_protection();
-        auto record_version = protection.get_record_version();
-        size_t content_header_size = 0;
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        if (tlsadvisor->is_kindof_dtls(record_version)) {
-            content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
-        } else {
-            content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
-        }
-        size_t aadlen = content_header_size;
-
-        binary_t aad;
-        binary_append(aad, stream + pos, aadlen);
-
-        ret = decrypt_tls13(session, dir, stream, size, pos, plaintext, aad, tag, debugstream);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                                       const binary_t& aad, binary_t& tag, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == session || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        tag.clear();
-
-        auto cipher = crypt_alg_unknown;
-        auto mode = crypt_mode_unknown;
-        uint8 tagsize = 0;
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        {
-            const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
-            if (nullptr == hint) {
-                ret = errorcode_t::not_supported;
-                __leave2;
-            }
-            cipher = hint->cipher;
-            mode = hint->mode;
-            switch (mode) {
-                case gcm:
-                case ccm:
-                    tagsize = 16;
-                    break;
-                case ccm8:
-                    tagsize = 8;
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        auto& protection = session->get_tls_protection();
-        auto record_version = protection.get_record_version();
-
-        // ... aad(aadlen) encdata tag(tagsize)
-        //     \_ pos
-        size_t aadlen = aad.size();
-        binary_append(tag, stream + pos + aadlen + size - tagsize, tagsize);
-
-        crypt_context_t* handle = nullptr;
-        openssl_crypt crypt;
-
-        tls_secret_t secret_key;
-        tls_secret_t secret_iv;
-        uint64 record_no = 0;
         auto hsstatus = session->get_session_info(dir).get_status();
-        record_no = session->get_recordno(dir, true);
+
         if (from_client == dir) {
             auto flow = get_flow();
             if (tls_1_rtt == flow || tls_hello_retry_request == flow) {
@@ -946,6 +899,174 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
                 secret_iv = tls_secret_handshake_server_iv;
             }
         }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_protection::get_tls1_key(tls_session* session, tls_direction_t dir, tls_secret_t& secret_key, tls_secret_t& secret_mac_key) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (from_client == dir) {
+            secret_key = tls_secret_client_key;
+            secret_mac_key = tls_secret_client_mac_key;
+        } else {
+            secret_key = tls_secret_server_key;
+            secret_mac_key = tls_secret_server_mac_key;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad,
+                                       binary_t& tag, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto record_version = get_record_version();
+        size_t content_header_size = 0;
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+        auto cipher = crypt_alg_unknown;
+        auto mode = crypt_mode_unknown;
+        uint8 tagsize = 0;
+
+        {
+            const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+            if (nullptr == hint) {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+            cipher = hint->cipher;
+            mode = hint->mode;
+        }
+
+        crypt_context_t* handle = nullptr;
+        openssl_crypt crypt;
+
+        tls_secret_t secret_key;
+        tls_secret_t secret_iv;
+        get_tls13_key(session, dir, secret_key, secret_iv);
+
+        uint64 record_no = 0;
+        record_no = session->get_recordno(dir, true);
+
+        auto const& key = get_item(secret_key);
+        auto const& iv = get_item(secret_iv);
+        binary_t nonce = iv;
+        build_iv(session, secret_iv, nonce, record_no);
+        ret = crypt.encrypt(cipher, mode, key, nonce, plaintext, ciphertext, aad, tag);
+
+        if (debugstream) {
+            debugstream->autoindent(3);
+            debugstream->printf(" > key[%08x] %s\n", secret_key, base16_encode(key).c_str());
+            debugstream->printf(" > iv [%08x] %s\n", secret_iv, base16_encode(iv).c_str());
+            debugstream->printf(" > record no %i\n", record_no);
+            debugstream->printf(" > nonce %s\n", base16_encode(nonce).c_str());
+            debugstream->printf(" > aad %s\n", base16_encode(aad).c_str());
+            debugstream->printf(" > tag %s\n", base16_encode(tag).c_str());
+            debugstream->printf(" > ciphertext\n");
+            dump_memory(ciphertext, debugstream, 16, 3, 0x0, dump_notrunc);
+            debugstream->autoindent(0);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_protection::encrypt_tls1(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, binary_t& maced,
+                                      stream_t* debugstream) {
+    return_t ret = errorcode_t::not_supported;
+    return ret;
+}
+
+return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
+                                       binary_t& tag, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        size_t content_header_size = 0;
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        size_t aadlen = get_header_size();
+
+        binary_t aad;
+        binary_append(aad, stream + pos, aadlen);
+
+        ret = decrypt_tls13(session, dir, stream, size, pos, plaintext, aad, tag, debugstream);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
+                                       const binary_t& aad, binary_t& tag, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        tag.clear();
+
+        auto cipher = crypt_alg_unknown;
+        auto mode = crypt_mode_unknown;
+        uint8 tagsize = get_tag_size();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        {
+            const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+            if (nullptr == hint) {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+            cipher = hint->cipher;
+            mode = hint->mode;
+            // switch (mode) {
+            //     case gcm:
+            //     case ccm:
+            //         tagsize = 16;
+            //         break;
+            //     case ccm8:
+            //         tagsize = 8;
+            //         break;
+            //     default:
+            //         break;
+            // }
+        }
+
+        auto& protection = session->get_tls_protection();
+        auto record_version = protection.get_record_version();
+
+        // ... aad(aadlen) encdata tag(tagsize)
+        //     \_ pos
+        size_t aadlen = aad.size();
+        binary_append(tag, stream + pos + aadlen + size - tagsize, tagsize);
+
+        crypt_context_t* handle = nullptr;
+        openssl_crypt crypt;
+
+        tls_secret_t secret_key;
+        tls_secret_t secret_iv;
+        get_tls13_key(session, dir, secret_key, secret_iv);
+
+        uint64 record_no = 0;
+        record_no = session->get_recordno(dir, true);
 
         auto const& key = get_item(secret_key);
         auto const& iv = get_item(secret_iv);
@@ -983,13 +1104,7 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir,
 
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto ciphersuite = get_cipher_suite();
-        const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(ciphersuite);
-        if (nullptr == hint_tls_alg) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-        const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(ciphersuite);
+        const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
         if (nullptr == hint) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -1001,30 +1116,18 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir,
         }
         auto ivsize = sizeof_iv(hint_cipher);
 
-        auto& protection = session->get_tls_protection();
-        auto record_version = protection.get_record_version();
-        size_t content_header_size = 0;
-        if (tlsadvisor->is_kindof_dtls(record_version)) {
-            content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
-        } else {
-            content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
-        }
+        auto record_version = get_record_version();
+        size_t content_header_size = get_header_size();
 
         crypt_context_t* handle = nullptr;
         openssl_crypt crypt;
 
-        tls_secret_t secret_mac_key;
         tls_secret_t secret_key;
+        tls_secret_t secret_mac_key;
+        get_tls1_key(session, dir, secret_key, secret_mac_key);
+
         uint64 record_no = 0;
-        auto hsstatus = session->get_session_info(dir).get_status();
         record_no = session->get_recordno(dir, true);
-        if (from_client == dir) {
-            secret_mac_key = tls_secret_client_mac_key;
-            secret_key = tls_secret_client_key;
-        } else {
-            secret_mac_key = tls_secret_server_mac_key;
-            secret_key = tls_secret_server_key;
-        }
 
         const binary_t& key = get_item(secret_key);
         binary_t iv;
@@ -1047,7 +1150,7 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir,
         binary_t maced;
         const binary_t& mackey = get_item(secret_mac_key);
         {
-            auto hmac_alg = hint_tls_alg->mac;  // do not promote insecure algorithm (ex. don't call algof_mac)
+            auto hmac_alg = hint->mac;  // do not promote insecure algorithm (ex. don't call algof_mac)
             auto hint_digest = advisor->hintof_digest(hmac_alg);
             auto dlen = sizeof_digest(hint_digest);
 
@@ -1062,7 +1165,7 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir,
             binary_append(verifydata, &plaintext[datalen], dlen);  // verifydata
 
             crypto_hmac_builder builder;
-            auto hmac = builder.set(hint_tls_alg->mac).set(mackey).build();
+            auto hmac = builder.set(hint->mac).set(mackey).build();
             if (hmac) {
                 hmac->update(content).finalize(maced);
                 hmac->release();

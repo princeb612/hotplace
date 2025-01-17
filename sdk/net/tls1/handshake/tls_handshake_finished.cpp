@@ -15,14 +15,43 @@
 #include <sdk/crypto/crypto/transcript_hash.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_finished.hpp>
-#include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
+#include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
 tls_handshake_finished::tls_handshake_finished(tls_session* session) : tls_handshake(tls_hs_finished, session) {}
+
+return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+        auto hspos = offsetof_header();
+        auto& protection = session->get_tls_protection();
+
+        {
+            protection.calc_transcript_hash(session, stream + hspos, get_size());
+
+            // from_server : application, exporter related
+            // from_client : resumption related
+            protection.calc(session, tls_hs_finished, dir);
+
+            session->get_session_info(dir).set_status(get_type());
+
+            session->reset_recordno(dir);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
 
 return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
     return_t ret = errorcode_t::success;
@@ -152,36 +181,6 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                     debugstream->autoindent(0);
                 }
             }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-        auto hspos = offsetof_header();
-        auto hdrsize = get_header_size();
-        auto& protection = session->get_tls_protection();
-
-        {
-            protection.calc_transcript_hash(session, stream + hspos, hdrsize);
-
-            // from_server : application, exporter related
-            // from_client : resumption related
-            protection.calc(session, tls_hs_finished, dir);
-
-            session->get_session_info(dir).set_status(get_type());
-
-            session->reset_recordno(dir);
         }
     }
     __finally2 {
