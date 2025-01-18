@@ -139,6 +139,7 @@ int main(int argc, char** argv) {
     constexpr char constexpr_helpmsg_rfc[] = R"(encode base16 from rfc style expression ex. "[1,2,3,4,5]" or "01:02:03:04:05" or "01 02 03 04 05")";
 
     (*_cmdline) << t_cmdarg_t<OPTION>("-b64u", "decode base64url", [](OPTION& o, char* param) -> void { o.set(decode_b64u, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-b64", "decode base64", [](OPTION& o, char* param) -> void { o.set(decode_b64, param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-b16", "decode base16", [](OPTION& o, char* param) -> void { o.set(decode_b16, param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-t", "plaintext", [](OPTION& o, char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
@@ -161,6 +162,18 @@ int main(int argc, char** argv) {
         builder.set_timeformat("[Y-M-D h:m:s.f]");
     }
     _logger.make_share(builder.build());
+
+    if (option.debug) {
+        auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void {
+            std::string ct;
+            std::string ev;
+            auto advisor = trace_advisor::get_instance();
+            advisor->get_names(category, event, ct, ev);
+            _logger->write("[%s][%s]\n%.*s", ct.c_str(), ev.c_str(), (unsigned)s->size(), s->data());
+        };
+        set_trace_debug(lambda_tracedebug);
+        set_trace_option(trace_bt | trace_except | trace_debug);
+    }
 
     _test_case.begin("b16 encoding");
     test_base16();

@@ -13,11 +13,12 @@ using namespace hotplace::net;
 
 typedef struct _OPTION {
     bool verbose;
+    bool debug;
     int log;
     int time;
     bool dump_keys;
 
-    _OPTION() : verbose(false), log(0), time(0), dump_keys(false) {
+    _OPTION() : verbose(false), debug(false), log(0), time(0), dump_keys(false) {
         // do nothing
     }
 } OPTION;

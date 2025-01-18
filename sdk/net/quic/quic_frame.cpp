@@ -9,6 +9,8 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
 #include <sdk/net/tls1/tls.hpp>
@@ -18,10 +20,10 @@ namespace net {
 
 // understanding ...
 
-return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir) {
+return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == s || nullptr == stream || 0 == size) {
+        if (nullptr == stream || 0 == size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -66,6 +68,8 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
         constexpr char constexpr_stream_id[] = "stream id";
         constexpr char constexpr_error_code[] = "error code";
 
+        basic_stream dbs;
+
         switch (frame_type) {
             // RFC 9001 19.1.  PADDING Frames
             case quic_frame_padding:
@@ -73,7 +77,9 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                 //   Type (i) = 0x00,
                 // }
                 // Figure 23: PADDING Frame Format
-                s->printf("  > frame %s @%zi\n", constexpr_frame_padding, begin);
+                if (istraceable(category_quic)) {
+                    dbs.printf("  > frame %s @%zi\n", constexpr_frame_padding, begin);
+                }
                 break;
             // RFC 9001 19.2.  PING Frames
             case quic_frame_ping:
@@ -81,7 +87,9 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                 //     Type (i) = 0x01,
                 // }
                 // Figure 24: PING Frame Format
-                s->printf("  > frame %s @%zi\n", constexpr_frame_ping, begin);
+                if (istraceable(category_quic)) {
+                    dbs.printf("  > frame %s @%zi\n", constexpr_frame_ping, begin);
+                }
                 break;
             // RFC 9001 19.3.  ACK Frames
             case quic_frame_ack:
@@ -119,11 +127,13 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                 uint64 ack_range_count = pl.select(constexpr_ack_range_count)->get_payload_encoded()->value();
                 uint64 first_ack_range = pl.select(constexpr_first_ack_range)->get_payload_encoded()->value();
 
-                s->printf("  > frame %s @%zi\n", constexpr_frame_ack, begin);
-                s->printf("   > %s %I64i\n", constexpr_largest_ack, largest_ack);
-                s->printf("   > %s %I64i\n", constexpr_ack_delay, ack_delay);
-                s->printf("   > %s %I64i\n", constexpr_ack_range_count, ack_range_count);
-                s->printf("   > %s %I64i\n", constexpr_first_ack_range, first_ack_range);
+                if (istraceable(category_quic)) {
+                    dbs.printf("  > frame %s @%zi\n", constexpr_frame_ack, begin);
+                    dbs.printf("   > %s %I64i\n", constexpr_largest_ack, largest_ack);
+                    dbs.printf("   > %s %I64i\n", constexpr_ack_delay, ack_delay);
+                    dbs.printf("   > %s %I64i\n", constexpr_ack_range_count, ack_range_count);
+                    dbs.printf("   > %s %I64i\n", constexpr_first_ack_range, first_ack_range);
+                }
 
                 constexpr char constexpr_ack_ranges[] = "ack ranges";
                 constexpr char constexpr_gap[] = "gap";
@@ -144,9 +154,11 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                     uint64 gap = ack_ranges.select(constexpr_gap)->get_payload_encoded()->value();
                     uint64 range_length = ack_ranges.select(constexpr_range_length)->get_payload_encoded()->value();
 
-                    s->printf("   > %s\n", constexpr_ack_ranges);
-                    s->printf("    > %s %I64i\n", constexpr_gap, gap);
-                    s->printf("    > %s %I64i\n", constexpr_range_length, range_length);
+                    if (istraceable(category_quic)) {
+                        dbs.printf("   > %s\n", constexpr_ack_ranges);
+                        dbs.printf("    > %s %I64i\n", constexpr_gap, gap);
+                        dbs.printf("    > %s %I64i\n", constexpr_range_length, range_length);
+                    }
                 }
 
                 // RFC 9001 19.3.2.  ECN Counts
@@ -167,10 +179,12 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                     uint64 ect1_count = ecn_counts.select(constexpr_ect1_count)->get_payload_encoded()->value();
                     uint64 ectce_count = ecn_counts.select(constexpr_ectce_count)->get_payload_encoded()->value();
 
-                    s->printf("   > %s\n", constexpr_ecn_counts);
-                    s->printf("    > %s %I64i\n", constexpr_ect0_count, ect0_count);
-                    s->printf("    > %s %I64i\n", constexpr_ect1_count, ect1_count);
-                    s->printf("    > %s %I64i\n", constexpr_ectce_count, ectce_count);
+                    if (istraceable(category_quic)) {
+                        dbs.printf("   > %s\n", constexpr_ecn_counts);
+                        dbs.printf("    > %s %I64i\n", constexpr_ect0_count, ect0_count);
+                        dbs.printf("    > %s %I64i\n", constexpr_ect1_count, ect1_count);
+                        dbs.printf("    > %s %I64i\n", constexpr_ectce_count, ectce_count);
+                    }
                 }
             } break;
             // 19.4.  RESET_STREAM Frames
@@ -194,10 +208,12 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                 uint64 error_code = pl.select(constexpr_error_code)->get_payload_encoded()->value();
                 uint64 final_size = pl.select(constexpr_final_size)->get_payload_encoded()->value();
 
-                s->printf("  > frame %s @%zi\n", constexpr_frame_reset_stream, begin);
-                s->printf("   > %s %I64i\n", constexpr_stream_id, stream_id);
-                s->printf("   > %s %I64i\n", constexpr_error_code, error_code);
-                s->printf("   > %s %I64i\n", constexpr_final_size, final_size);
+                if (istraceable(category_quic)) {
+                    dbs.printf("  > frame %s @%zi\n", constexpr_frame_reset_stream, begin);
+                    dbs.printf("   > %s %I64i\n", constexpr_stream_id, stream_id);
+                    dbs.printf("   > %s %I64i\n", constexpr_error_code, error_code);
+                    dbs.printf("   > %s %I64i\n", constexpr_final_size, final_size);
+                }
             } break;
             // 19.5.  STOP_SENDING Frames
             case quic_frame_stop_sending: {
@@ -215,9 +231,11 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                 uint64 stream_id = pl.select(constexpr_stream_id)->get_payload_encoded()->value();
                 uint64 error_code = pl.select(constexpr_error_code)->get_payload_encoded()->value();
 
-                s->printf("  > frame %s @%zi\n", constexpr_frame_stop_sending, begin);
-                s->printf("   > %s %I64i\n", constexpr_stream_id, stream_id);
-                s->printf("   > %s %I64i\n", constexpr_error_code, error_code);
+                if (istraceable(category_quic)) {
+                    dbs.printf("  > frame %s @%zi\n", constexpr_frame_stop_sending, begin);
+                    dbs.printf("   > %s %I64i\n", constexpr_stream_id, stream_id);
+                    dbs.printf("   > %s %I64i\n", constexpr_error_code, error_code);
+                }
             } break;
             // 19.6.  CRYPTO Frames
             case quic_frame_crypto: {
@@ -243,11 +261,13 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                 binary_t crypto_data;
                 pl.select(constexpr_crypto_data)->get_variant().to_binary(crypto_data);
 
-                s->printf("  > frame %s @%zi\n", constexpr_frame_crypto, begin);
-                s->printf("   > %s %I64i\n", constexpr_offset, offset);
-                s->printf("   > %s %I64i\n", constexpr_length, length);
-                s->printf("   > %s (%zi)\n", constexpr_crypto_data, crypto_data.size());
-                dump_memory(crypto_data, s, 16, 5, 0x0, dump_notrunc);
+                if (istraceable(category_quic)) {
+                    dbs.printf("  > frame %s @%zi\n", constexpr_frame_crypto, begin);
+                    dbs.printf("   > %s %I64i\n", constexpr_offset, offset);
+                    dbs.printf("   > %s %I64i\n", constexpr_length, length);
+                    dbs.printf("   > %s (%zi)\n", constexpr_crypto_data, crypto_data.size());
+                    dump_memory(crypto_data, &dbs, 16, 5, 0x0, dump_notrunc);
+                }
 
                 size_t hpos = 0;
                 tls_dump_handshake(session, &crypto_data[0], crypto_data.size(), hpos, dir);
@@ -269,9 +289,11 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                 binary_t token;
                 pl.select(constexpr_token)->get_variant().to_binary(token);
 
-                s->printf("  > frame %s @%zi\n", constexpr_frame_new_token, begin);
-                s->printf("   > %s (%zi)\n", constexpr_token, token.size());
-                dump_memory(token, s, 16, 5, 0x0, dump_notrunc);
+                if (istraceable(category_quic)) {
+                    dbs.printf("  > frame %s @%zi\n", constexpr_frame_new_token, begin);
+                    dbs.printf("   > %s (%zi)\n", constexpr_token, token.size());
+                    dump_memory(token, &dbs, 16, 5, 0x0, dump_notrunc);
+                }
             } break;
             // 19.8.  STREAM Frames
             case quic_frame_stream:      // 0x8
@@ -332,6 +354,9 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                 ret = errorcode_t::unknown;
                 break;
         }
+        if (istraceable(category_quic)) {
+            trace_debug_event(category_quic, quic_event_read, &dbs);
+        }
     }
     __finally2 {
         // do nothing
@@ -339,8 +364,8 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
     return ret;
 }
 
-return_t quic_dump_frame(stream_t* s, tls_session* session, const binary_t frame, size_t& pos, tls_direction_t dir) {
-    return quic_dump_frame(s, session, &frame[0], frame.size(), pos);
+return_t quic_dump_frame(tls_session* session, const binary_t frame, size_t& pos, tls_direction_t dir) {
+    return quic_dump_frame(session, &frame[0], frame.size(), pos);
 }
 
 }  // namespace net

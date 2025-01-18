@@ -21,6 +21,7 @@ enum {
 };
 typedef struct _OPTION {
     int verbose;
+    int debug;
     int log;
     int time;
 
@@ -28,7 +29,7 @@ typedef struct _OPTION {
     std::string content;
     std::string filename;
 
-    _OPTION() : verbose(0), log(0), time(0), mode(0) {}
+    _OPTION() : verbose(0), debug(0), log(0), time(0), mode(0) {}
     void set(int m, char* param) {
         mode = m;
         if (param) {

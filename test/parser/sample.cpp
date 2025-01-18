@@ -14,20 +14,21 @@
 
 test_case _test_case;
 t_shared_instance<logger> _logger;
-t_shared_instance<t_cmdline_t<OPTION> > cmdline;
+t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
-    cmdline.make_share(new t_cmdline_t<OPTION>);
+    _cmdline.make_share(new t_cmdline_t<OPTION>);
 
-    *cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
-             << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-             << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
+    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
 
-    cmdline->parse(argc, argv);
-    const OPTION& option = cmdline->value();
+    _cmdline->parse(argc, argv);
+    const OPTION& option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose);
@@ -38,6 +39,18 @@ int main(int argc, char** argv) {
         builder.set_timeformat("[Y-M-D h:m:s.f]");
     }
     _logger.make_share(builder.build());
+
+    if (option.debug) {
+        auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void {
+            std::string ct;
+            std::string ev;
+            auto advisor = trace_advisor::get_instance();
+            advisor->get_names(category, event, ct, ev);
+            _logger->write("[%s][%s]\n%.*s", ct.c_str(), ev.c_str(), (unsigned)s->size(), s->data());
+        };
+        set_trace_debug(lambda_tracedebug);
+        set_trace_option(trace_bt | trace_except | trace_debug);
+    }
 
     test_dump_testdata();
     test_parser();
@@ -50,6 +63,6 @@ int main(int argc, char** argv) {
     _logger->flush();
 
     _test_case.report(5);
-    cmdline->help();
+    _cmdline->help();
     return _test_case.result();
 }

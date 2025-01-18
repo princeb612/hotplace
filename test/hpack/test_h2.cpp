@@ -16,7 +16,7 @@
 
 void test_h2_header_frame_fragment() {
     _test_case.begin("HTTP/2 Header Compression");
-    const OPTION& option = cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     // [test vector] chrome generated header
 

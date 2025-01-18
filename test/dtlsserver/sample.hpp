@@ -14,20 +14,18 @@ using namespace hotplace::net;
 
 typedef struct _OPTION {
     int verbose;
+    int debug;
     int log;
     int time;
     uint16 port;
 
-    _OPTION() : verbose(0), log(0), time(0), port(9000) {
-        // do nothing
-    }
+    _OPTION() : verbose(0), debug(0), log(0), time(0), port(9000) {}
 } OPTION;
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
-void debug_handler(trace_category_t category, uint32 event, stream_t* s);
 void run_server();
 
 #endif

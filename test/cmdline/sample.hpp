@@ -13,6 +13,7 @@ using namespace hotplace::net;
 
 typedef struct _OPTION {
     int verbose;
+    int debug;
     int log;
     int time;
 
@@ -20,7 +21,7 @@ typedef struct _OPTION {
     std::string outfile;
     bool keygen;
 
-    _OPTION() : verbose(0), log(0), time(0), keygen(false){};
+    _OPTION() : verbose(0), debug(0), log(0), time(0), keygen(false){};
 } OPTION;
 
 extern test_case _test_case;

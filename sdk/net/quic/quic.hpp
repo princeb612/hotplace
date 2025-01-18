@@ -545,14 +545,13 @@ class quic_packet_1rtt : public quic_packet {
 class tls_session;
 /**
  * @brief   read
- * @param   stream_t* s [out]
  * @param   tls_session* session [in]
  * @param   const byte_t** stream [in]
  * @param   size_t size [in]
  * @param   size_t& pos [inout]
  */
-return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
-return_t quic_dump_frame(stream_t* s, tls_session* session, const binary_t frame, size_t& pos, tls_direction_t dir = from_server);
+return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
+return_t quic_dump_frame(tls_session* session, const binary_t frame, size_t& pos, tls_direction_t dir = from_server);
 
 /**
  * @brief   an integer value using the variable-length encoding

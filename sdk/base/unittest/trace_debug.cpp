@@ -54,4 +54,6 @@ bool istraceable() {
     return ret;
 }
 
+bool istraceable(trace_category_t category) { return (istraceable() && (false == trace_debug_filtered(category))); }
+
 }  // namespace hotplace

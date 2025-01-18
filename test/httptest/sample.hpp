@@ -17,10 +17,11 @@ typedef struct _OPTION {
     int mode;
     int connect;
     int verbose;
+    int debug;
     int log;
     int time;
 
-    _OPTION() : url("https://localhost:9000/"), mode(0), connect(0), verbose(0), log(0), time(0) {}
+    _OPTION() : url("https://localhost:9000/"), mode(0), connect(0), verbose(0), debug(0), log(0), time(0) {}
 } OPTION;
 
 extern test_case _test_case;

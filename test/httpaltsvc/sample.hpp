@@ -18,10 +18,11 @@ typedef struct _OPTION {
     int port_h3;
     int packetsize;
     int verbose;
+    int debug;
     int log;
     int time;
 
-    _OPTION() : port_h1(9000), port_h2(9001), port_h3(9002), packetsize(1 << 16), verbose(0), log(0), time(0) {}
+    _OPTION() : port_h1(9000), port_h2(9001), port_h3(9002), packetsize(1 << 16), verbose(0), debug(0), log(0), time(0) {}
 } OPTION;
 
 extern test_case _test_case;

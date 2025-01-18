@@ -239,7 +239,7 @@ void test_rfc_9001_initial(testvector_initial_packet* item, tls_session* session
         bs.clear();
 
         pos = 0;
-        while (errorcode_t::success == quic_dump_frame(&bs, session, &bin_frame[0], bin_frame.size(), pos)) {
+        while (errorcode_t::success == quic_dump_frame(session, &bin_frame[0], bin_frame.size(), pos)) {
         };
         _logger->writeln(bs);
 

@@ -12,6 +12,7 @@ using namespace hotplace::crypto;
 
 typedef struct _OPTION {
     bool verbose;
+    bool debug;
     int log;
     int time;
     bool dump_keys;
@@ -20,7 +21,8 @@ typedef struct _OPTION {
     bool skip_validate;
     bool skip_gen;
 
-    _OPTION() : verbose(false), log(0), time(0), dump_keys(false), dump_diagnostic(false), skip_cbor_basic(false), skip_validate(false), skip_gen(false) {
+    _OPTION()
+        : verbose(false), log(0), debug(0), time(0), dump_keys(false), dump_diagnostic(false), skip_cbor_basic(false), skip_validate(false), skip_gen(false) {
         // do nothing
     }
 } OPTION;

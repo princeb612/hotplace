@@ -24,6 +24,7 @@ t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
+    int debug;
     int log;
     int time;
 
@@ -34,7 +35,7 @@ typedef struct _OPTION {
     uint16 count;
     std::string message;
 
-    _OPTION() : verbose(0), log(0), time(0), bufsize(1500), address("127.0.0.1"), port(9000), prot(0), count(1), message("hello") {
+    _OPTION() : verbose(0), debug(0), log(0), time(0), bufsize(1500), address("127.0.0.1"), port(9000), prot(0), count(1), message("hello") {
         // do nothing
     }
 } OPTION;
@@ -255,17 +256,18 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
-              << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-              << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
-              << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
-              << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
-              << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
-              << t_cmdarg_t<OPTION>("-P", "protocol 1|2|3|4 (1 tcp, 2 udp, 3 tls, 4 dtls)", [](OPTION& o, char* param) -> void { o.prot = toprot(param); })
-                     .optional()
-                     .preced()
-              << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
-              << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced();
+    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
+                << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
+                << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
+                << t_cmdarg_t<OPTION>("-P", "protocol 1|2|3|4 (1 tcp, 2 udp, 3 tls, 4 dtls)", [](OPTION& o, char* param) -> void { o.prot = toprot(param); })
+                       .optional()
+                       .preced()
+                << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
+                << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -279,6 +281,18 @@ int main(int argc, char** argv) {
         builder.set_timeformat("[Y-M-D h:m:s.f]");
     }
     _logger.make_share(builder.build());
+
+    if (option.debug) {
+        auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void {
+            std::string ct;
+            std::string ev;
+            auto advisor = trace_advisor::get_instance();
+            advisor->get_names(category, event, ct, ev);
+            _logger->write("[%s][%s]\n%.*s", ct.c_str(), ev.c_str(), (unsigned)s->size(), s->data());
+        };
+        set_trace_debug(lambda_tracedebug);
+        set_trace_option(trace_bt | trace_except | trace_debug);
+    }
 
 #if defined _WIN32 || defined _WIN64
     winsock_startup();

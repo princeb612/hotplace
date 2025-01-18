@@ -20,10 +20,11 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = true; }).optional()
-              << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-              << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
-              << t_cmdarg_t<OPTION>("-k", "dump keys", [](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
+    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = true; }).optional()
+                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-k", "dump keys", [](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -38,12 +39,20 @@ int main(int argc, char** argv) {
     }
     _logger.make_share(builder.build());
 
+    if (option.debug) {
+        auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void {
+            std::string ct;
+            std::string ev;
+            auto advisor = trace_advisor::get_instance();
+            advisor->get_names(category, event, ct, ev);
+            _logger->write("[%s][%s]\n%.*s", ct.c_str(), ev.c_str(), (unsigned)s->size(), s->data());
+        };
+        set_trace_debug(lambda_tracedebug);
+        set_trace_option(trace_bt | trace_except | trace_debug);
+    }
+
     _logger->consoleln("option.verbose %i", option.verbose ? 1 : 0);
     _logger->consoleln("option.dump_keys %i", option.dump_keys ? 1 : 0);
-
-    if (option.verbose) {
-        set_trace_option(trace_option_t::trace_bt | trace_option_t::trace_except);
-    }
 
     __try2 {
         openssl_startup();

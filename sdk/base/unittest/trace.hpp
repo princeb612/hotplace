@@ -29,6 +29,7 @@ enum trace_category_t {
     category_header_compression = 68,  // see category_header_compression_event_t
     category_http2_serverpush = 69,    // see category_http2_push_event_t
     category_tls1 = 70,
+    category_quic = 71,
 };
 
 enum category_crypto_event_t {
@@ -67,7 +68,13 @@ enum category_tls_event_t {
     tls_event_write = 2,
 };
 
+enum category_quic_event_t {
+    quic_event_read = 1,
+    quic_event_write = 2,
+};
+
 /**
+ * @brief trace/debug
  * @sample
  *          void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
  *              std::string ct;
@@ -78,7 +85,7 @@ enum category_tls_event_t {
  *              bs.printf("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned int)s->size(), s->data());
  *              _logger->writeln(bs);
  *          };
-
+ *
  *          void myfunction() {
  *              // do something
  *              basic_stream bs;
@@ -95,7 +102,16 @@ void trace_debug_event(trace_category_t category, uint32 event, const char* fmt,
 void trace_debug_filter(trace_category_t category, bool filter);
 bool trace_debug_filtered(trace_category_t category);
 bool istraceable();
+bool istraceable(trace_category_t category);
 
+/**
+ * @sample
+ *          std::string ct;
+ *          std::string ev;
+ *          basic_stream bs;
+ *          auto advisor = trace_advisor::get_instance();
+ *          advisor->get_names(category, event, ct, ev);
+ */
 class trace_advisor {
    public:
     static trace_advisor* get_instance();

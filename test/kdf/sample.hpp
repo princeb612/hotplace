@@ -13,11 +13,12 @@ using namespace hotplace::net;
 
 typedef struct _OPTION {
     int verbose;
+    int debug;
     int log;
     int time;
     bool test_slow_kdf;
 
-    _OPTION() : verbose(0), log(0), time(0), test_slow_kdf(false) {}
+    _OPTION() : verbose(0), debug(0), log(0), time(0), test_slow_kdf(false) {}
 } OPTION;
 
 extern test_case _test_case;

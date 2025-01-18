@@ -124,6 +124,7 @@ fi
 # build
 mkdir -p ${builddir}
 cd ${builddir}
+# export MAKEFLAGS=-j 2
 cmake -G 'Unix Makefiles' ..
 if [ $do_makefile = 1 ]; then
     exit

@@ -27,11 +27,12 @@ t_shared_instance<logger> _logger;
 
 typedef struct _OPTION {
     int verbose;
+    int debug;
     int log;
     int time;
     std::string infile;
 
-    _OPTION() : verbose(0), log(0), time(0) {
+    _OPTION() : verbose(0), debug(0), log(0), time(0) {
         // do nothing
     }
 } OPTION;
@@ -72,10 +73,11 @@ int main(int argc, char** argv) {
 
     __try2 {
         _cmdline.make_share(new t_cmdline_t<OPTION>);
-        *_cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
-                  << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                  << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
-                  << t_cmdarg_t<OPTION>("-i", "file", [](OPTION& o, char* param) -> void { o.infile = param; }).preced().optional();
+        (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+                    << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+                    << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+                    << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+                    << t_cmdarg_t<OPTION>("-i", "file", [](OPTION& o, char* param) -> void { o.infile = param; }).preced().optional();
         ret = _cmdline->parse(argc, argv);
         if (errorcode_t::success != ret) {
             _cmdline->help();
@@ -95,6 +97,18 @@ int main(int argc, char** argv) {
 
         if (option.infile.empty()) {
             __leave2;
+        }
+
+        if (option.debug) {
+            auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void {
+                std::string ct;
+                std::string ev;
+                auto advisor = trace_advisor::get_instance();
+                advisor->get_names(category, event, ct, ev);
+                _logger->write("[%s][%s]\n%.*s", ct.c_str(), ev.c_str(), (unsigned)s->size(), s->data());
+            };
+            set_trace_debug(lambda_tracedebug);
+            set_trace_option(trace_bt | trace_except | trace_debug);
         }
 
         // 1 linux style file path name

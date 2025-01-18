@@ -32,7 +32,7 @@ void debug_hpack_decoder(trace_category_t, uint32 event) {
 };
 
 void test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, const char* text) {
-    const OPTION& option = cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     binary_t bin;
     basic_stream bs;
@@ -59,7 +59,7 @@ void test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, const 
 
 void test_rfc7541_c_1() {
     _test_case.begin("RFC 7541 HPACK C.1. Integer Representation Examples");
-    const OPTION& option = cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     test_rfc7541_c_1_routine(5, 10, "0a", "RFC 7541 C.1.1. Example 1: Encoding 10 Using a 5-Bit Prefix");
     test_rfc7541_c_1_routine(5, 1337, "1f9a0a", "RFC 7541 C.1.2. Example 2: Encoding 1337 Using a 5-Bit Prefix");
@@ -68,7 +68,7 @@ void test_rfc7541_c_1() {
 
 void test_rfc7541_c_2() {
     _test_case.begin("RFC 7541 HPACK C.2. Header Field Representation Examples");
-    const OPTION& option = cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     binary_t bin;
     basic_stream bs;
@@ -177,7 +177,7 @@ void test_rfc7541_c_2() {
 }
 
 void decode(const binary_t& bin, hpack_dynamic_table* session, hpack_dynamic_table* session2) {
-    const OPTION& option = cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     hpack_stream hp;
     std::string name;
@@ -211,7 +211,7 @@ void decode(const binary_t& bin, hpack_dynamic_table* session, hpack_dynamic_tab
 // C.3.  Request Examples without Huffman Coding
 void test_rfc7541_c_3() {
     _test_case.begin("RFC 7541 HPACK C.3. Request Examples without Huffman Coding");
-    const OPTION& option = cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     hpack_stream hp;
     hpack_dynamic_table session_encoder;  // dynamic table
@@ -312,7 +312,7 @@ void test_rfc7541_c_3() {
 // C.4.  Request Examples with Huffman Coding
 void test_rfc7541_c_4() {
     _test_case.begin("RFC 7541 HPACK C.4. Request Examples with Huffman Coding");
-    const OPTION& option = cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     hpack_stream hp;
     hpack_dynamic_table session_encoder;  // dynamic table
@@ -394,7 +394,7 @@ void test_rfc7541_c_4() {
 // C.5.  Response Examples without Huffman Coding
 void test_rfc7541_c_5() {
     _test_case.begin("RFC 7541 HPACK C.5. Response Examples without Huffman Coding");
-    const OPTION& option = cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     hpack_stream hp;
     hpack_dynamic_table session_encoder;  // dynamic table
@@ -495,7 +495,7 @@ void test_rfc7541_c_5() {
 // C.6.  Response Examples with Huffman Coding
 void test_rfc7541_c_6() {
     _test_case.begin("RFC 7541 HPACK C.6. Response Examples with Huffman Coding");
-    const OPTION& option = cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     hpack_stream hp;
     hpack_dynamic_table session_encoder;  // dynamic table

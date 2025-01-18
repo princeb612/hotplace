@@ -13,10 +13,11 @@ using namespace hotplace::net;
 
 typedef struct _OPTION {
     int verbose;
+    int debug;
     int mode;
     std::string content;
 
-    _OPTION() : verbose(0), mode(0) {
+    _OPTION() : verbose(0), debug(0), mode(0) {
         // do nothing
     }
     void set(int m, const char* param) {

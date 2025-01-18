@@ -16,7 +16,7 @@
 
 void test_huffman_codes_routine(const char* sample, const char* expect) {
     if (sample && expect) {
-        const OPTION& option = cmdline->value();
+        const OPTION& option = _cmdline->value();
 
         return_t ret = errorcode_t::success;
         basic_stream bs;

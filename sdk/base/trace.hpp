@@ -16,9 +16,9 @@
 namespace hotplace {
 
 enum trace_option_t {
-    trace_bt = 1,
-    trace_except = 2,
-    trace_debug = 3,
+    trace_bt = 1,      // backtrace
+    trace_except = 2,  // exception
+    trace_debug = 3,   // trace/debug
 };
 
 /**
@@ -28,8 +28,14 @@ enum trace_option_t {
 uint32 set_trace_option(uint32 option);
 uint32 get_trace_option();
 
+/**
+ * @brief backtrace
+ */
 return_t trace_backtrace(return_t errorcode);
 
+/**
+ * @brief exception
+ */
 void set_trace_exception();
 void reset_trace_exception();
 

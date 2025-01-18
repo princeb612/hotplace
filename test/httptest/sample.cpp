@@ -33,14 +33,15 @@ int main(int argc, char **argv) {
      *      run first : httpauth -v
      *      and then  : httptest -c
      */
-    *_cmdline << t_cmdarg_t<OPTION>("-c", "connect", [](OPTION &o, char *param) -> void { o.connect = 1; }).optional()
-              << t_cmdarg_t<OPTION>("-p", "read stream using http_protocol", [](OPTION &o, char *param) -> void { o.mode = 1; }).optional()
-              << t_cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/) feat. httpauth", [](OPTION &o, char *param) -> void { o.url = param; })
-                     .preced()
-                     .optional()
-              << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
-              << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION &o, char *param) -> void { o.log = 1; }).optional()
-              << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional();
+    (*_cmdline) << t_cmdarg_t<OPTION>("-c", "connect", [](OPTION &o, char *param) -> void { o.connect = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-p", "read stream using http_protocol", [](OPTION &o, char *param) -> void { o.mode = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/) feat. httpauth", [](OPTION &o, char *param) -> void { o.url = param; })
+                       .preced()
+                       .optional()
+                << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION &o, char *param) -> void { o.debug = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION &o, char *param) -> void { o.log = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional();
 
     _cmdline->parse(argc, argv);
     const OPTION &option = _cmdline->value();
@@ -49,6 +50,18 @@ int main(int argc, char **argv) {
     builder.set(logger_t::logger_stdout, option.verbose).set(logger_t::logger_flush_time, 0).set(logger_t::logger_flush_size, 0);
     _logger.make_share(builder.build());
     _logger->setcolor(bold, cyan);
+
+    if (option.debug) {
+        auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t *s) -> void {
+            std::string ct;
+            std::string ev;
+            auto advisor = trace_advisor::get_instance();
+            advisor->get_names(category, event, ct, ev);
+            _logger->write("[%s][%s]\n%.*s", ct.c_str(), ev.c_str(), (unsigned)s->size(), s->data());
+        };
+        set_trace_debug(lambda_tracedebug);
+        set_trace_option(trace_bt | trace_except | trace_debug);
+    }
 
     // uri
     test_uri();
