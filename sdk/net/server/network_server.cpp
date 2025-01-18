@@ -74,8 +74,6 @@ struct _network_multiplexer_context_t {
 
     ACCEPT_CONTROL_CALLBACK_ROUTINE accept_control_handler;
 
-    traceable tr;
-
     _network_multiplexer_context_t()
         : signature(0),
           mplexer_handle(nullptr),
@@ -1014,10 +1012,6 @@ return_t network_server::session_accepted(network_multiplexer_context_t* handle,
             __leave2;
         }
 
-        if (handle->tr.istraceable()) {
-            session_object->settrace(&handle->tr);
-        }
-
         /* associate with multiplex object (iocp, epoll) */
         mplexer.bind(handle->mplexer_handle, event_socket, session_object);
 #if defined _WIN32 || defined _WIN64
@@ -1074,21 +1068,6 @@ return_t network_server::session_closed(network_multiplexer_context_t* handle, h
         // do nothing
     }
 
-    return ret;
-}
-
-return_t network_server::trace(network_multiplexer_context_t* handle, std::function<void(trace_category_t, uint32, stream_t*)> f) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        handle->tr.settrace(f);
-    }
-    __finally2 {
-        // do nothing
-    }
     return ret;
 }
 

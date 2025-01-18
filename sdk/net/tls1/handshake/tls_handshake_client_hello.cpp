@@ -9,7 +9,9 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/string/string.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension.hpp>
@@ -40,7 +42,7 @@ constexpr char constexpr_cookie[] = "cookie";
 
 tls_handshake_client_hello::tls_handshake_client_hello(tls_session* session) : tls_handshake(tls_hs_client_hello, session), _version(tls_12) {}
 
-return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -81,7 +83,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir, const by
     return ret;
 }
 
-return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -118,7 +120,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
     return ret;
 }
 
-return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -220,9 +222,38 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                 protection.set_item(tls_context_client_hello_random, random);
             }
 
-            do_dump_body(stream, size, debugstream);
+            if (istraceable()) {
+                basic_stream dbs;
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                uint16 i = 0;
 
-            ret = get_extensions().read(tls_hs_client_hello, session, dir, stream, size, pos, debugstream);
+                dbs.autoindent(1);
+                dbs.printf(" > %s 0x%04x (%s)\n", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
+                dbs.printf(" > %s\n", constexpr_random);
+                if (random.size()) {
+                    dbs.printf("   %s\n", base16_encode(random).c_str());
+                }
+                dbs.printf(" > %s %02x(%zi)\n", constexpr_session_id, session_id.size(), session_id.size());
+                if (session_id.size()) {
+                    dbs.printf("   %s\n", base16_encode(session_id).c_str());
+                }
+                dbs.printf(" > %s %04x(%i ent.)\n", constexpr_cipher_suite_len, cipher_suite_len << 1, cipher_suite_len);
+                i = 0;
+                for (auto cs : cipher_suites) {
+                    dbs.printf("   [%i] 0x%04x %s\n", i++, cs, tlsadvisor->cipher_suite_string(cs).c_str());
+                }
+                dbs.printf(" > %s %i\n", constexpr_compression_method_len, compression_method_len);
+                i = 0;
+                for (auto compr : compression_methods) {
+                    dbs.printf("   [%i] 0x%02x %s\n", i++, compr, tlsadvisor->compression_method_string(compr).c_str());
+                }
+                dbs.printf(" > %s 0x%04x(%i)\n", constexpr_extension_len, extension_len, extension_len);
+                dbs.autoindent(0);
+
+                trace_debug_event(category_tls1, tls_event_read, &dbs);
+            }
+
+            ret = get_extensions().read(tls_hs_client_hello, session, dir, stream, size, pos);
         }
     }
     __finally2 {
@@ -231,7 +262,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
     return ret;
 }
 
-return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -241,7 +272,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
         }
 
         binary_t extensions;
-        get_extensions().write(extensions, debugstream);
+        get_extensions().write(extensions);
 
         {
             auto record_version = session->get_tls_protection().get_record_version();
@@ -272,55 +303,6 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
         }
 
         binary_append(bin, extensions);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_handshake_client_hello::do_dump_body(const byte_t* stream, size_t size, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == debugstream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        auto version = get_version();
-        auto& random = get_random();
-        auto& session_id = get_session_id();
-        auto const& cipher_suites = get_cipher_suites();
-        auto const& compression_methods = get_compression_methods();
-        uint16 cipher_suite_len = cipher_suites.size();
-        uint8 compression_method_len = compression_methods.size();
-        auto extension_len = _extension_len;
-
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        uint16 i = 0;
-
-        debugstream->autoindent(1);
-        debugstream->printf(" > %s 0x%04x (%s)\n", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
-        debugstream->printf(" > %s\n", constexpr_random);
-        if (random.size()) {
-            debugstream->printf("   %s\n", base16_encode(random).c_str());
-        }
-        debugstream->printf(" > %s %02x(%zi)\n", constexpr_session_id, session_id.size(), session_id.size());
-        if (session_id.size()) {
-            debugstream->printf("   %s\n", base16_encode(session_id).c_str());
-        }
-        debugstream->printf(" > %s %04x(%i ent.)\n", constexpr_cipher_suite_len, cipher_suite_len << 1, cipher_suite_len);
-        i = 0;
-        for (auto cs : cipher_suites) {
-            debugstream->printf("   [%i] 0x%04x %s\n", i++, cs, tlsadvisor->cipher_suite_string(cs).c_str());
-        }
-        debugstream->printf(" > %s %i\n", constexpr_compression_method_len, compression_method_len);
-        i = 0;
-        for (auto compr : compression_methods) {
-            debugstream->printf("   [%i] 0x%02x %s\n", i++, compr, tlsadvisor->compression_method_string(compr).c_str());
-        }
-        debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_extension_len, extension_len, extension_len);
-        debugstream->autoindent(0);
     }
     __finally2 {
         // do nothing

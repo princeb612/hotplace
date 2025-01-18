@@ -19,9 +19,9 @@ class tls_handshakes {
     tls_handshakes();
     ~tls_handshakes();
 
-    return_t read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    return_t read(tls_session* session, tls_direction_t dir, const binary_t& bin, stream_t* debugstream = nullptr);
-    return_t write(tls_session* session, tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+    return_t read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    return_t read(tls_session* session, tls_direction_t dir, const binary_t& bin);
+    return_t write(tls_session* session, tls_direction_t dir, binary_t& bin);
 
     return_t add(tls_handshake* handshake, bool upref = false);
     tls_handshakes& operator<<(tls_handshake* handshake);

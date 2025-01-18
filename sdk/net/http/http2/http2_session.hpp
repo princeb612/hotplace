@@ -15,15 +15,14 @@
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
-#include <sdk/base/unittest/traceable.hpp>  // traceable
-#include <sdk/net/http/http2/hpack.hpp>     // hpack_dynamic_table
-#include <sdk/net/http/http_request.hpp>    // http_request
+#include <sdk/net/http/http2/hpack.hpp>   // hpack_dynamic_table
+#include <sdk/net/http/http_request.hpp>  // http_request
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {
 
-class http2_session : public traceable {
+class http2_session {
    public:
     http2_session();
 

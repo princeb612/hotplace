@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension_signature_algorithms.hpp>
 #include <sdk/net/tls1/tls.hpp>
@@ -22,7 +24,7 @@ constexpr char constexpr_algorithm[] = "algorithm";
 
 tls_extension_signature_algorithms::tls_extension_signature_algorithms(tls_session* session) : tls_extension(tls1_ext_signature_algorithms, session) {}
 
-return_t tls_extension_signature_algorithms::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_signature_algorithms::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 8446 4.2.3.  Signature Algorithms
@@ -45,14 +47,17 @@ return_t tls_extension_signature_algorithms::do_read_body(const byte_t* stream, 
             }
         }
 
-        if (debugstream) {
+        if (istraceable()) {
+            basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            debugstream->printf(" > %s %i\n", constexpr_algorithms, count);
+            dbs.printf(" > %s %i\n", constexpr_algorithms, count);
             int i = 0;
             for (auto alg : _algorithms) {
-                debugstream->printf("   [%i] 0x%04x %s\n", i++, alg, tlsadvisor->signature_scheme_name(alg).c_str());
+                dbs.printf("   [%i] 0x%04x %s\n", i++, alg, tlsadvisor->signature_scheme_name(alg).c_str());
             }
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
     }
     __finally2 {
@@ -61,7 +66,7 @@ return_t tls_extension_signature_algorithms::do_read_body(const byte_t* stream, 
     return ret;
 }
 
-return_t tls_extension_signature_algorithms::do_write_body(binary_t& bin, stream_t* debugstream) {
+return_t tls_extension_signature_algorithms::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
     uint16 cbsize_algorithms = 0;
     binary_t bin_algorithms;

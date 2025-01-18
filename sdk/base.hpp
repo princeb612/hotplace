@@ -20,6 +20,7 @@
 #include <sdk/base/stream.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/template.hpp>
+#include <sdk/base/trace.hpp>
 #include <sdk/base/types.hpp>
 
 /* basic */
@@ -86,7 +87,6 @@
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/base/system/signalwait_threads.hpp>
 #include <sdk/base/system/thread.hpp>
-#include <sdk/base/system/trace.hpp>
 #include <sdk/base/system/types.hpp>
 #if defined _WIN32 || defined _WIN64
 #include <sdk/base/system/windows/sdk.hpp>
@@ -96,6 +96,6 @@
 /* unittest */
 #include <sdk/base/unittest/logger.hpp>
 #include <sdk/base/unittest/testcase.hpp>
-#include <sdk/base/unittest/traceable.hpp>
+#include <sdk/base/unittest/trace.hpp>
 
 #endif

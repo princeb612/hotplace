@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
@@ -176,7 +177,7 @@ return_t tls_extension_client_key_share::add(uint16 group) { return tls_extensio
 
 return_t tls_extension_client_key_share::add(const std::string& group) { return tls_extension_key_share::add(group, from_client); }
 
-return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 8446 4.2.8.  Key Share
@@ -209,10 +210,9 @@ return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size
             add_pubkey(group, pubkey, keydesc("CH"));
         }
 
-        if (debugstream) {
-            // crypto_advisor* advisor = crypto_advisor::get_instance();
+        if (istraceable()) {
+            basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            debugstream->printf(" > %s %i(0x%04x)\n", constexpr_len, len, len);
 
             auto session = get_session();
             auto& protection = session->get_tls_protection();
@@ -232,11 +232,14 @@ return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size
             }
             uint16 pubkeylen = pubkey.size();
 
-            debugstream->printf("  > %s\n", constexpr_key_share_entry);
-            debugstream->printf("   > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_name(group).c_str());
-            debugstream->printf("   > %s %04x(%i)\n", constexpr_pubkey_len, pubkeylen, pubkeylen);
-            dump_memory(pubkey, debugstream, 16, 5, 0x0, dump_notrunc);
-            debugstream->printf("     %s\n", base16_encode(pubkey).c_str());
+            dbs.printf(" > %s %i(0x%04x)\n", constexpr_len, len, len);
+            dbs.printf("  > %s\n", constexpr_key_share_entry);
+            dbs.printf("   > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_name(group).c_str());
+            dbs.printf("   > %s %04x(%i)\n", constexpr_pubkey_len, pubkeylen, pubkeylen);
+            dump_memory(pubkey, &dbs, 16, 5, 0x0, dump_notrunc);
+            dbs.printf("     %s\n", base16_encode(pubkey).c_str());
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
     }
     __finally2 {
@@ -245,7 +248,7 @@ return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size
     return ret;
 }
 
-return_t tls_extension_client_key_share::do_write_body(binary_t& bin, stream_t* debugstream) {
+return_t tls_extension_client_key_share::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -303,7 +306,7 @@ return_t tls_extension_server_key_share::add(uint16 group) { return tls_extensio
 
 return_t tls_extension_server_key_share::add(const std::string& group) { return tls_extension_key_share::add(group, from_server); }
 
-return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 group = 0;
@@ -329,15 +332,18 @@ return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size
             add_pubkey(group, pubkey, keydesc("SH"));
         }
 
-        if (debugstream) {
+        if (istraceable()) {
+            basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            debugstream->printf(" > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_name(group).c_str());
+            dbs.printf(" > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_name(group).c_str());
             if (pubkeylen) {
-                debugstream->printf(" > %s %i\n", constexpr_pubkey_len, pubkeylen);
-                dump_memory(pubkey, debugstream, 16, 3, 0x0, dump_notrunc);
-                debugstream->printf("   %s\n", base16_encode(pubkey).c_str());
+                dbs.printf(" > %s %i\n", constexpr_pubkey_len, pubkeylen);
+                dump_memory(pubkey, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.printf("   %s\n", base16_encode(pubkey).c_str());
             }
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
 
         {
@@ -351,7 +357,7 @@ return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size
     return ret;
 }
 
-return_t tls_extension_server_key_share::do_write_body(binary_t& bin, stream_t* debugstream) {
+return_t tls_extension_server_key_share::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         crypto_advisor* advisor = crypto_advisor::get_instance();

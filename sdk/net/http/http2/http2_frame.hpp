@@ -15,8 +15,7 @@
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/types.hpp>
-#include <sdk/base/unittest/traceable.hpp>  // traceable
-#include <sdk/net/http/http2/hpack.hpp>     // hpack_stream
+#include <sdk/net/http/http2/hpack.hpp>  // hpack_stream
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {
@@ -115,7 +114,7 @@ typedef struct _http2_setting_t {
 
 #pragma pack(pop)
 
-class http2_frame : public traceable {
+class http2_frame {
    public:
     http2_frame();
     http2_frame(h2_frame_t type);

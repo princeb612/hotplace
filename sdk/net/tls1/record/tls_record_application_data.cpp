@@ -10,6 +10,7 @@
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/record/tls_record_alert.hpp>
@@ -34,7 +35,7 @@ tls_record_application_data::tls_record_application_data(tls_session* session) :
 
 tls_handshakes& tls_record_application_data::get_handshakes() { return _handshakes; }
 
-return_t tls_record_application_data::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body, stream_t* debugstream) {
+return_t tls_record_application_data::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -64,23 +65,23 @@ return_t tls_record_application_data::do_write_header(tls_direction_t dir, binar
         binary_t tag;
         auto tlsversion = protection.get_tls_version();
         if (is_basedon_tls13(tlsversion)) {
-            ret = protection.encrypt_tls13(session, dir, body, ciphertext, aad, tag, debugstream);
+            ret = protection.encrypt_tls13(session, dir, body, ciphertext, aad, tag);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
 
             binary_append(ciphertext, tag);
-            tls_record::do_write_header(dir, bin, ciphertext, debugstream);
+            tls_record::do_write_header(dir, bin, ciphertext);
 
         } else {
-            // ret = protection.decrypt_tls1(session, dir, stream, pos + len, recpos, plaintext, debugstream);
+            // ret = protection.decrypt_tls1(session, dir, stream, pos + len, recpos, plaintext);
         }
     }
     __finally2 {}
     return ret;
 }
 
-return_t tls_record_application_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_record_application_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 len = get_body_size();
@@ -92,12 +93,11 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
 
         tls_protection& protection = session->get_tls_protection();
         binary_t plaintext;
-        binary_t tag;
         auto tlsversion = protection.get_tls_version();
         if (is_basedon_tls13(tlsversion)) {
-            ret = protection.decrypt_tls13(session, dir, stream, len, recpos, plaintext, tag, debugstream);
+            ret = protection.decrypt_tls13(session, dir, stream, len, recpos, plaintext);
         } else {
-            ret = protection.decrypt_tls1(session, dir, stream, pos + len, recpos, plaintext, debugstream);
+            ret = protection.decrypt_tls1(session, dir, stream, pos + len, recpos, plaintext);
         }
         if (errorcode_t::success == ret) {
             auto plainsize = plaintext.size();
@@ -107,15 +107,18 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                 if (is_basedon_tls13(tlsversion)) {
                     if (tls_content_type_alert == last_byte) {
                         tls_record_alert alert(session);
-                        alert.read_plaintext(dir, &plaintext[0], plainsize - 1, tpos, debugstream);
+                        alert.read_plaintext(dir, &plaintext[0], plainsize - 1, tpos);
                     } else if (tls_content_type_handshake == last_byte) {
-                        ret = get_handshakes().read(session, dir, &plaintext[0], plainsize - 1, tpos, debugstream);
+                        ret = get_handshakes().read(session, dir, &plaintext[0], plainsize - 1, tpos);
                     } else if (tls_content_type_application_data == last_byte) {
-                        if (debugstream) {
-                            debugstream->autoindent(3);
-                            debugstream->printf("> %s\n", constexpr_application_data);
-                            dump_memory(&plaintext[0], plainsize - 1, debugstream, 16, 3, 0x0, dump_notrunc);
-                            debugstream->autoindent(0);
+                        if (istraceable()) {
+                            basic_stream dbs;
+                            dbs.autoindent(3);
+                            dbs.printf("> %s\n", constexpr_application_data);
+                            dump_memory(&plaintext[0], plainsize - 1, &dbs, 16, 3, 0x0, dump_notrunc);
+                            dbs.autoindent(0);
+
+                            trace_debug_event(category_tls1, tls_event_read, &dbs);
                         }
                     }
                 } else {
@@ -125,11 +128,14 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                     auto dlen = hint_mac->digest_size;
                     size_t extra = last_byte + dlen + 1;
                     if (plaintext.size() > extra) {
-                        if (debugstream) {
-                            debugstream->autoindent(3);
-                            debugstream->printf(" > %s\n", constexpr_application_data);  // data
-                            dump_memory(&plaintext[0], plaintext.size() - extra, debugstream, 16, 3, 0x0, dump_notrunc);
-                            debugstream->autoindent(0);
+                        if (istraceable()) {
+                            basic_stream dbs;
+                            dbs.autoindent(3);
+                            dbs.printf(" > %s\n", constexpr_application_data);  // data
+                            dump_memory(&plaintext[0], plaintext.size() - extra, &dbs, 16, 3, 0x0, dump_notrunc);
+                            dbs.autoindent(0);
+
+                            trace_debug_event(category_tls1, tls_event_read, &dbs);
                         }
                     }
                 }
@@ -142,9 +148,9 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
     return ret;
 }
 
-return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
-    get_handshakes().write(get_session(), dir, bin, debugstream);
+    get_handshakes().write(get_session(), dir, bin);
     binary_append(bin, uint8(tls_content_type_handshake));
     return ret;
 }

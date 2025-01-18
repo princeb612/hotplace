@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension_compress_certificate.hpp>
 #include <sdk/net/tls1/tls.hpp>
@@ -22,7 +24,7 @@ constexpr char constexpr_algorithm[] = "algorithm";
 
 tls_extension_compress_certificate::tls_extension_compress_certificate(tls_session* session) : tls_extension(tls1_ext_compress_certificate, session) {}
 
-return_t tls_extension_compress_certificate::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_compress_certificate::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint8 algorithms_len = 0;
@@ -42,14 +44,17 @@ return_t tls_extension_compress_certificate::do_read_body(const byte_t* stream, 
             }
         }
 
-        if (debugstream) {
+        if (istraceable()) {
+            basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            debugstream->printf(" > %s %i (%i)\n", constexpr_algorithm_len, algorithms_len << 1, algorithms_len);
+            dbs.printf(" > %s %i (%i)\n", constexpr_algorithm_len, algorithms_len << 1, algorithms_len);
             int i = 0;
             for (auto alg : _algorithms) {
-                debugstream->printf("   [%i] 0x%04x %s\n", i++, alg, tlsadvisor->compression_alg_name(alg).c_str());
+                dbs.printf("   [%i] 0x%04x %s\n", i++, alg, tlsadvisor->compression_alg_name(alg).c_str());
             }
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
     }
     __finally2 {
@@ -58,7 +63,7 @@ return_t tls_extension_compress_certificate::do_read_body(const byte_t* stream, 
     return ret;
 }
 
-return_t tls_extension_compress_certificate::do_write_body(binary_t& bin, stream_t* debugstream) {
+return_t tls_extension_compress_certificate::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
     uint8 cbsize_algorithms = 0;
     binary_t bin_algorithms;

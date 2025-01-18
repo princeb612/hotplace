@@ -19,18 +19,16 @@ t_shared_instance<hpack_encoder> encoder;
 unsigned int count_evict_encoder = 0;
 unsigned int count_evict_decoder = 0;
 
-void debug_hpack_encoder(trace_category_t, uint32 event, stream_t* s) {
+void debug_hpack_encoder(trace_category_t, uint32 event) {
     if (header_compression_event_evict == event) {
         count_evict_encoder++;
     }
-    _logger->writeln(s);
 };
 
-void debug_hpack_decoder(trace_category_t, uint32 event, stream_t* s) {
+void debug_hpack_decoder(trace_category_t, uint32 event) {
     if (header_compression_event_evict == event) {
         count_evict_decoder++;
     }
-    _logger->writeln(s);
 };
 
 void test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, const char* text) {
@@ -407,8 +405,8 @@ void test_rfc7541_c_5() {
     // The HTTP/2 setting parameter SETTINGS_HEADER_TABLE_SIZE is set to the value of 256 octets
     session_encoder.set_capacity(256);
     session_decoder.set_capacity(256);
-    session_encoder.settrace(debug_hpack_encoder);
-    session_decoder.settrace(debug_hpack_decoder);
+    session_encoder.set_debug_hook(debug_hpack_encoder);
+    session_decoder.set_debug_hook(debug_hpack_decoder);
 
     // C.5.1.  First Response
     hp.set_session(&session_encoder)
@@ -508,8 +506,8 @@ void test_rfc7541_c_6() {
     // The HTTP/2 setting parameter SETTINGS_HEADER_TABLE_SIZE is set to the value of 256 octets
     session_encoder.set_capacity(256);
     session_decoder.set_capacity(256);
-    session_encoder.settrace(debug_hpack_encoder);
-    session_decoder.settrace(debug_hpack_decoder);
+    session_encoder.set_debug_hook(debug_hpack_encoder);
+    session_decoder.set_debug_hook(debug_hpack_decoder);
 
     // C.6.1.  First Response
     hp.set_session(&session_encoder)

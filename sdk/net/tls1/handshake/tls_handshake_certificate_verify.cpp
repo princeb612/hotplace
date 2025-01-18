@@ -9,6 +9,8 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
 #include <sdk/crypto/crypto/transcript_hash.hpp>
@@ -23,7 +25,7 @@ namespace net {
 
 tls_handshake_certificate_verify::tls_handshake_certificate_verify(tls_session* session) : tls_handshake(tls_hs_certificate_verify, session) {}
 
-return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -113,7 +115,7 @@ return_t asn1_der_ecdsa_signature(uint16 scheme, const binary_t& signature, bina
     return ret;
 }
 
-return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -239,23 +241,26 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
                 ret = errorcode_t::success;
             }
 
-            if (debugstream) {
-                debugstream->autoindent(1);
-                debugstream->printf(" > %s 0x%04x %s\n", constexpr_signature_alg, scheme, tlsadvisor->signature_scheme_name(scheme).c_str());
-                debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
-                debugstream->printf(" > transcript-hash\n");
-                dump_memory(transcripthash, debugstream, 16, 3, 0x00, dump_notrunc);
-                debugstream->printf(" > tosign\n");
-                dump_memory(tosign, debugstream, 16, 3, 0x00, dump_notrunc);
-                debugstream->printf(" > %s \e[1;33m%s\e[0m\n", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
-                dump_memory(signature, debugstream, 16, 3, 0x00, dump_notrunc);
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.autoindent(1);
+                dbs.printf(" > %s 0x%04x %s\n", constexpr_signature_alg, scheme, tlsadvisor->signature_scheme_name(scheme).c_str());
+                dbs.printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
+                dbs.printf(" > transcript-hash\n");
+                dump_memory(transcripthash, &dbs, 16, 3, 0x00, dump_notrunc);
+                dbs.printf(" > tosign\n");
+                dump_memory(tosign, &dbs, 16, 3, 0x00, dump_notrunc);
+                dbs.printf(" > %s \e[1;33m%s\e[0m\n", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
+                dump_memory(signature, &dbs, 16, 3, 0x00, dump_notrunc);
                 if (ecdsa_sig.size()) {
-                    debugstream->printf(" > ecdsa r\n");
-                    dump_memory(ecdsa_sig_r, debugstream, 16, 3, 0x00, dump_notrunc);
-                    debugstream->printf(" > ecdsa s\n");
-                    dump_memory(ecdsa_sig_s, debugstream, 16, 3, 0x00, dump_notrunc);
+                    dbs.printf(" > ecdsa r\n");
+                    dump_memory(ecdsa_sig_r, &dbs, 16, 3, 0x00, dump_notrunc);
+                    dbs.printf(" > ecdsa s\n");
+                    dump_memory(ecdsa_sig_s, &dbs, 16, 3, 0x00, dump_notrunc);
                 }
-                debugstream->autoindent(0);
+                dbs.autoindent(0);
+
+                trace_debug_event(category_tls1, tls_event_read, &dbs);
             }
         }
     }
@@ -265,7 +270,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
     return ret;
 }
 
-return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
+return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-http_server_builder::http_server_builder() : traceable(), _handler(nullptr), _user_context(nullptr) {
+http_server_builder::http_server_builder() : _handler(nullptr), _user_context(nullptr) {
     get_server_conf()
         .set(netserver_config_t::serverconf_enable_ipv4, 0)
         .set(netserver_config_t::serverconf_enable_ipv6, 0)
@@ -32,70 +32,70 @@ http_server_builder::http_server_builder() : traceable(), _handler(nullptr), _us
 
 http_server_builder::~http_server_builder() {}
 
-http_server_builder& http_server_builder::enable_http(bool enable) {
+http_server_builder &http_server_builder::enable_http(bool enable) {
     get_server_conf().set(netserver_config_t::serverconf_enable_http, enable ? 1 : 0);
     return *this;
 }
 
-http_server_builder& http_server_builder::set_port_http(uint16 port) {
+http_server_builder &http_server_builder::set_port_http(uint16 port) {
     get_server_conf().set(netserver_config_t::serverconf_port_http, port);
     return *this;
 }
 
-http_server_builder& http_server_builder::enable_https(bool enable) {
+http_server_builder &http_server_builder::enable_https(bool enable) {
     get_server_conf().set(netserver_config_t::serverconf_enable_https, enable ? 1 : 0);
     return *this;
 }
 
-http_server_builder& http_server_builder::set_port_https(uint16 port) {
+http_server_builder &http_server_builder::set_port_https(uint16 port) {
     get_server_conf().set(netserver_config_t::serverconf_port_https, port);
     return *this;
 }
 
-http_server_builder& http_server_builder::set_tls_certificate(const std::string& server_cert, const std::string& server_key) {
+http_server_builder &http_server_builder::set_tls_certificate(const std::string &server_cert, const std::string &server_key) {
     _server_cert = server_cert;
     _server_key = server_key;
     return *this;
 }
 
-http_server_builder& http_server_builder::set_tls_cipher_list(const std::string& cipher_list) {
+http_server_builder &http_server_builder::set_tls_cipher_list(const std::string &cipher_list) {
     _tls_cipher_list = cipher_list;
     return *this;
 }
 
-http_server_builder& http_server_builder::set_tls_verify_peer(uint16 value) {
+http_server_builder &http_server_builder::set_tls_verify_peer(uint16 value) {
     get_server_conf().set(netserver_config_t::serverconf_verify_peer, value);
     return *this;
 }
 
-http_server_builder& http_server_builder::enable_ipv4(bool enable) {
+http_server_builder &http_server_builder::enable_ipv4(bool enable) {
     get_server_conf().set(netserver_config_t::serverconf_enable_ipv4, enable ? 1 : 0);
     return *this;
 }
 
-http_server_builder& http_server_builder::enable_ipv6(bool enable) {
+http_server_builder &http_server_builder::enable_ipv6(bool enable) {
     get_server_conf().set(netserver_config_t::serverconf_enable_ipv6, enable ? 1 : 0);
     return *this;
 }
 
-http_server_builder& http_server_builder::enable_h2(bool enable) {
+http_server_builder &http_server_builder::enable_h2(bool enable) {
     get_server_conf().set(netserver_config_t::serverconf_enable_h2, enable ? 1 : 0);
     return *this;
 }
 
-http_server_builder& http_server_builder::enable_h3(bool enable) {
+http_server_builder &http_server_builder::enable_h3(bool enable) {
     get_server_conf().set(netserver_config_t::serverconf_enable_h3, enable ? 1 : 0);
     return *this;
 }
 
-http_server_builder& http_server_builder::set_handler(http_server_handler_t handler, void* user_context) {
+http_server_builder &http_server_builder::set_handler(http_server_handler_t handler, void *user_context) {
     _handler = handler;
     _user_context = user_context;
     return *this;
 }
 
-http_server* http_server_builder::build() {
-    http_server* server = nullptr;
+http_server *http_server_builder::build() {
+    http_server *server = nullptr;
     return_t ret = errorcode_t::success;
     __try2 {
         __try_new_catch(server, new http_server, ret, __leave2);
@@ -160,8 +160,6 @@ http_server* http_server_builder::build() {
                 }
             }
         }
-
-        server->settrace(_df);
     }
     __finally2 {
         // do nothing
@@ -169,7 +167,7 @@ http_server* http_server_builder::build() {
     return server;
 }
 
-server_conf& http_server_builder::get_server_conf() { return _config; }
+server_conf &http_server_builder::get_server_conf() { return _config; }
 
 }  // namespace net
 }  // namespace hotplace

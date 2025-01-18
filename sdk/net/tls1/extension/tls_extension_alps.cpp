@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension_alps.hpp>
 #include <sdk/net/tls1/tls.hpp>
@@ -24,7 +25,7 @@ constexpr char constexpr_alpn[] = "alpn";
 
 tls_extension_alps::tls_extension_alps(tls_session* session) : tls_extension(tls1_ext_application_layer_protocol_settings, session), _alps_len(0) {}
 
-return_t tls_extension_alps::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_alps::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 alps_len = 0;
@@ -40,9 +41,12 @@ return_t tls_extension_alps::do_read_body(const byte_t* stream, size_t size, siz
             pl.get_binary(constexpr_alpn, alpn);
         }
 
-        if (debugstream) {
-            debugstream->printf(" > %s %i\n", constexpr_alps_len, alps_len);
-            dump_memory(alpn, debugstream, 16, 3, 0x0, dump_notrunc);
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf(" > %s %i\n", constexpr_alps_len, alps_len);
+            dump_memory(alpn, &dbs, 16, 3, 0x0, dump_notrunc);
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
 
         {
@@ -56,7 +60,7 @@ return_t tls_extension_alps::do_read_body(const byte_t* stream, size_t size, siz
     return ret;
 }
 
-return_t tls_extension_alps::do_write_body(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension_alps::do_write_body(binary_t& bin) { return errorcode_t::not_supported; }
 
 const binary_t& tls_extension_alps::get_alpn() { return _alpn; }
 

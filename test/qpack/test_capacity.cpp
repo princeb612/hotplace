@@ -28,7 +28,7 @@ void test_zero_capacity() {
     //    SETTINGS_QPACK_MAX_TABLE_CAPACITY (0x01):  The default value is zero.
 
     // debug
-    session.settrace(debug_qpack_encoder);
+    session.set_debug_hook(debug_qpack_encoder);
 
     flags = qpack_intermediary | qpack_name_reference;
     enc.insert(&session, bin, ":authority", "www.example.com", flags);
@@ -66,7 +66,7 @@ void test_tiny_capacity() {
     session.set_capacity(32);
 
     // debug
-    session.settrace(debug_qpack_encoder);
+    session.set_debug_hook(debug_qpack_encoder);
 
     flags = qpack_intermediary | qpack_name_reference;
     enc.insert(&session, bin, ":authority", "www.example.com", flags);
@@ -96,7 +96,7 @@ void test_small_capacity() {
     session.set_capacity(80);
 
     // debug
-    session.settrace(debug_qpack_encoder);
+    session.set_debug_hook(debug_qpack_encoder);
 
     auto test = [&](const std::string& name, const std::string& value, unsigned int evict_expect, const char* expect = nullptr) -> void {
         enc.insert(&session, bin, name, value, flags);

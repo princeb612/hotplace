@@ -9,6 +9,8 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake.hpp>
@@ -42,7 +44,7 @@ tls_handshake::~tls_handshake() {
     }
 }
 
-tls_handshake* tls_handshake::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+tls_handshake* tls_handshake::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     tls_handshake* obj = nullptr;
     return_t ret = errorcode_t::success;
     __try2 {
@@ -60,7 +62,7 @@ tls_handshake* tls_handshake::read(tls_session* session, tls_direction_t dir, co
         tls_handshake_builder builder;
         auto handshake = builder.set(hs).set(session).build();
         if (handshake) {
-            ret = handshake->read(dir, stream, size, pos, debugstream);
+            ret = handshake->read(dir, stream, size, pos);
             if (errorcode_t::success == ret) {
                 obj = handshake;
             } else {
@@ -72,7 +74,7 @@ tls_handshake* tls_handshake::read(tls_session* session, tls_direction_t dir, co
     return obj;
 }
 
-return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -81,12 +83,12 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             __leave2;
         }
 
-        ret = do_read_header(dir, stream, size, pos, debugstream);
+        ret = do_read_header(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        ret = do_preprocess(dir, stream, size, debugstream);
+        ret = do_preprocess(dir, stream, size);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -96,14 +98,14 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
         // application data(EE + finished)
         //    do not interpret finished as extension
         if (tls_hs_encrypted_extensions == get_type()) {
-            ret = do_read_body(dir, stream, offsetof_body() + get_body_size(), pos, debugstream);
+            ret = do_read_body(dir, stream, offsetof_body() + get_body_size(), pos);
         } else {
-            ret = do_read_body(dir, stream, size, pos, debugstream);
+            ret = do_read_body(dir, stream, size, pos);
         }
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = do_postprocess(dir, stream, size, debugstream);
+        ret = do_postprocess(dir, stream, size);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -116,7 +118,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
     return ret;
 }
 
-return_t tls_handshake::write(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -126,19 +128,19 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin, stream_t* debu
         }
 
         binary_t body;
-        ret = do_write_body(dir, body, debugstream);
+        ret = do_write_body(dir, body);
 
-        do_write_header(dir, bin, body, debugstream);
+        do_write_header(dir, bin, body);
 
         const byte_t* stream = &bin[0];
         size_t size = bin.size();
 
-        ret = do_preprocess(dir, stream, size, debugstream);
+        ret = do_preprocess(dir, stream, size);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        ret = do_postprocess(dir, stream, size, debugstream);
+        ret = do_postprocess(dir, stream, size);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -149,11 +151,11 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin, stream_t* debu
     return ret;
 }
 
-return_t tls_handshake::do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) { return errorcode_t::success; }
+return_t tls_handshake::do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size) { return errorcode_t::success; }
 
-return_t tls_handshake::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) { return errorcode_t::success; }
+return_t tls_handshake::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) { return errorcode_t::success; }
 
-return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -235,7 +237,19 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             _size = size_header_body;
         }
 
-        dump_header(stream, size, debugstream);
+        if (istraceable()) {
+            basic_stream dbs;
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            dbs.printf(" > handshake type 0x%02x(%i) (%s)\n", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+            dbs.printf(" > length 0x%06x(%i)\n", length, length);
+            if (cond_dtls) {
+                dbs.printf(" > %s 0x%04x\n", constexpr_handshake_message_seq, dtls_seq);
+                dbs.printf(" > %s 0x%06x(%i)\n", constexpr_fragment_offset, fragment_offset, fragment_offset);
+                dbs.printf(" > %s 0x%06x(%i)\n", constexpr_fragment_len, fragment_len, fragment_len);
+            }
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
+        }
     }
     __finally2 {
         // do nothing
@@ -243,11 +257,9 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
     return ret;
 }
 
-return_t tls_handshake::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
-    return errorcode_t::success;
-}
+return_t tls_handshake::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::success; }
 
-return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body, stream_t* debugstream) {
+return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
 
     // RFC 8446 4.1.2.  Client Hello
@@ -285,56 +297,7 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
     return ret;
 }
 
-return_t tls_handshake::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
-
-return_t tls_handshake::dump(const byte_t* stream, size_t size, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == debugstream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        dump_header(stream, size, debugstream);
-        do_dump_body(stream, size, debugstream);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_handshake::dump_header(const byte_t* stream, size_t size, stream_t* debugstream) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == debugstream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto hstype = get_type();
-        auto length = get_body_size();
-        auto cond_dtls = _is_dtls;
-        uint16 dtls_seq = _dtls_seq;
-        uint32 fragment_offset = _fragment_offset;
-        uint32 fragment_len = _fragment_len;
-
-        debugstream->printf(" > handshake type 0x%02x(%i) (%s)\n", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
-        debugstream->printf(" > length 0x%06x(%i)\n", length, length);
-        if (cond_dtls) {
-            debugstream->printf(" > %s 0x%04x\n", constexpr_handshake_message_seq, dtls_seq);
-            debugstream->printf(" > %s 0x%06x(%i)\n", constexpr_fragment_offset, fragment_offset, fragment_offset);
-            debugstream->printf(" > %s 0x%06x(%i)\n", constexpr_fragment_len, fragment_len, fragment_len);
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tls_handshake::do_dump_body(const byte_t* stream, size_t size, stream_t* debugstream) { return errorcode_t::success; }
+return_t tls_handshake::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
 
 void tls_handshake::addref() { _shared.addref(); }
 

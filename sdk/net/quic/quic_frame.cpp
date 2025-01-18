@@ -250,7 +250,7 @@ return_t quic_dump_frame(stream_t* s, tls_session* session, const byte_t* stream
                 dump_memory(crypto_data, s, 16, 5, 0x0, dump_notrunc);
 
                 size_t hpos = 0;
-                tls_dump_handshake(session, &crypto_data[0], crypto_data.size(), hpos, s, dir);
+                tls_dump_handshake(session, &crypto_data[0], crypto_data.size(), hpos, dir);
             } break;
             // 19.7.  NEW_TOKEN Frames
             case quic_frame_new_token: {

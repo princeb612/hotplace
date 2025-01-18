@@ -19,6 +19,7 @@
 #include <sdk/base/stream.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/template.hpp>
+#include <sdk/base/trace.hpp>
 #include <sdk/base/types.hpp>
 
 #endif

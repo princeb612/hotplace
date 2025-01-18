@@ -9,6 +9,8 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_new_session_ticket.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
@@ -20,7 +22,7 @@ namespace net {
 
 tls_handshake_new_session_ticket::tls_handshake_new_session_ticket(tls_session* session) : tls_handshake(tls_hs_new_session_ticket, session) {}
 
-return_t tls_handshake_new_session_ticket::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+return_t tls_handshake_new_session_ticket::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -39,7 +41,7 @@ return_t tls_handshake_new_session_ticket::do_postprocess(tls_direction_t dir, c
     return ret;
 }
 
-return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -98,15 +100,18 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
                 pl.get_binary(constexpr_ticket_extensions, ticket_extensions);
             }
 
-            if (debugstream) {
-                debugstream->autoindent(1);
-                debugstream->printf(" > %s 0x%08x (%i secs)\n", constexpr_ticket_lifetime, ticket_lifetime, ticket_lifetime);
-                debugstream->printf(" > %s 0x%08x\n", constexpr_ticket_age_add, ticket_age_add);
-                debugstream->printf(" > %s %s\n", constexpr_ticket_nonce, base16_encode(ticket_nonce).c_str());
-                debugstream->printf(" > %s\n", constexpr_session_ticket);
-                dump_memory(session_ticket, debugstream, 16, 3, 0x0, dump_notrunc);
-                debugstream->printf(" > %s %s\n", constexpr_ticket_extensions, base16_encode(ticket_extensions).c_str());
-                debugstream->autoindent(0);
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.autoindent(1);
+                dbs.printf(" > %s 0x%08x (%i secs)\n", constexpr_ticket_lifetime, ticket_lifetime, ticket_lifetime);
+                dbs.printf(" > %s 0x%08x\n", constexpr_ticket_age_add, ticket_age_add);
+                dbs.printf(" > %s %s\n", constexpr_ticket_nonce, base16_encode(ticket_nonce).c_str());
+                dbs.printf(" > %s\n", constexpr_session_ticket);
+                dump_memory(session_ticket, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.printf(" > %s %s\n", constexpr_ticket_extensions, base16_encode(ticket_extensions).c_str());
+                dbs.autoindent(0);
+
+                trace_debug_event(category_tls1, tls_event_read, &dbs);
             }
         }
     }
@@ -116,7 +121,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
     return ret;
 }
 
-return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
+return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

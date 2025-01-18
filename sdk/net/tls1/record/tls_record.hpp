@@ -20,8 +20,8 @@ class tls_record {
    public:
     ~tls_record();
 
-    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t write(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write(tls_direction_t dir, binary_t& bin);
 
     tls_session* get_session();  // session
 
@@ -38,13 +38,11 @@ class tls_record {
    protected:
     tls_record(uint8 type, tls_session* session);
 
-    virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream = nullptr);
-    // virtual return_t do_encrypt(tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, stream_t* debugstream = nullptr);
-    // virtual return_t do_decrypt(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, binary_t& plaintext, stream_t* debugstream = nullptr);
-    virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body, stream_t* debugstream = nullptr);
-    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream = nullptr);
+    virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);
+    virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
     const range_t& get_header_range();
     uint16 get_body_size();

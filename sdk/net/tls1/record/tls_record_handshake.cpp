@@ -21,7 +21,7 @@ tls_record_handshake::tls_record_handshake(tls_session* session) : tls_record(tl
 
 tls_handshakes& tls_record_handshake::get_handshakes() { return _handshakes; }
 
-return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 len = get_body_size();
@@ -66,20 +66,20 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
                 binary_t tag;
                 auto tlsversion = protection.get_tls_version();
                 if (is_basedon_tls13(tlsversion)) {
-                    ret = protection.decrypt_tls13(session, dir, stream, len, recpos, plaintext, tag, debugstream);
+                    ret = protection.decrypt_tls13(session, dir, stream, len, recpos, plaintext, tag);
                 } else {
-                    ret = protection.decrypt_tls1(session, dir, stream, size, recpos, plaintext, debugstream);
+                    ret = protection.decrypt_tls1(session, dir, stream, size, recpos, plaintext);
                 }
                 if (errorcode_t::success == ret) {
                     tpos = 0;
-                    // ret = tls_dump_handshake(session, &plaintext[0], plaintext.size(), tpos, debugstream, dir);
-                    auto handshake = tls_handshake::read(session, dir, &plaintext[0], plaintext.size(), tpos, debugstream);
+                    // ret = tls_dump_handshake(session, &plaintext[0], plaintext.size(), tpos, dir);
+                    auto handshake = tls_handshake::read(session, dir, &plaintext[0], plaintext.size(), tpos);
                     get_handshakes().add(handshake);
                 }
             } else {
                 tpos = pos;
-                // ret = tls_dump_handshake(session, stream, pos + len, tpos, debugstream, dir);
-                auto handshake = tls_handshake::read(session, dir, stream, pos + len, tpos, debugstream);
+                // ret = tls_dump_handshake(session, stream, pos + len, tpos, dir);
+                auto handshake = tls_handshake::read(session, dir, stream, pos + len, tpos);
                 get_handshakes().add(handshake);
             }
         }
@@ -90,11 +90,11 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
     return ret;
 }
 
-return_t tls_record_handshake::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+return_t tls_record_handshake::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        auto lambda = [&](tls_handshake* item) -> void { item->write(dir, bin, debugstream); };
+        auto lambda = [&](tls_handshake* item) -> void { item->write(dir, bin); };
         get_handshakes().for_each(lambda);
     }
     __finally2 {

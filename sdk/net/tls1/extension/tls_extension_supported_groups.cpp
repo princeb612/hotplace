@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension_supported_groups.hpp>
 #include <sdk/net/tls1/tls.hpp>
@@ -22,7 +24,7 @@ constexpr char constexpr_curve[] = "curve";
 
 tls_extension_supported_groups::tls_extension_supported_groups(tls_session* session) : tls_extension(tls1_ext_supported_groups, session) {}
 
-return_t tls_extension_supported_groups::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_supported_groups::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         binary_t supported_groups;
@@ -48,14 +50,17 @@ return_t tls_extension_supported_groups::do_read_body(const byte_t* stream, size
             }
         }
 
-        if (debugstream) {
+        if (istraceable()) {
+            basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            debugstream->printf(" > %s %i\n", constexpr_curves, curves);
+            dbs.printf(" > %s %i\n", constexpr_curves, curves);
             int i = 0;
             for (auto curve : _supported_groups) {
-                debugstream->printf("   [%i] 0x%04x(%i) %s\n", i++, curve, curve, tlsadvisor->supported_group_name(curve).c_str());
+                dbs.printf("   [%i] 0x%04x(%i) %s\n", i++, curve, curve, tlsadvisor->supported_group_name(curve).c_str());
             }
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
     }
     __finally2 {
@@ -64,7 +69,7 @@ return_t tls_extension_supported_groups::do_read_body(const byte_t* stream, size
     return ret;
 }
 
-return_t tls_extension_supported_groups::do_write_body(binary_t& bin, stream_t* debugstream) {
+return_t tls_extension_supported_groups::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
     uint16 cbsize_supported_groups = 0;
     binary_t bin_supported_groups;

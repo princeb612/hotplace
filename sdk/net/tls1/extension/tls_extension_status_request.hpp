@@ -31,8 +31,8 @@ class tls_extension_status_request : public tls_extension {
     const binary_t& get_request_ext_info();
 
    protected:
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t do_write_body(binary_t& bin, stream_t* debugstream = nullptr);
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(binary_t& bin);
 
    private:
     uint8 _cert_status_type;

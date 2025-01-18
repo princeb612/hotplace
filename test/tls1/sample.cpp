@@ -33,15 +33,7 @@ typedef struct _OPTION {
 } OPTION;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
-void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
-    std::string ct;
-    std::string ev;
-    basic_stream bs;
-    auto advisor = trace_advisor::get_instance();
-    advisor->get_names(category, event, ct, ev);
-    bs.printf("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned int)s->size(), s->data());
-    _logger->writeln(bs);
-}
+void debug_handler(trace_category_t category, uint32 event, stream_t* s) { _logger->write(s); }
 
 return_t dump_record(const char* text, tls_session* session, const binary_t& bin, tls_direction_t dir, bool expect) {
     return_t ret = errorcode_t::success;
@@ -51,11 +43,8 @@ return_t dump_record(const char* text, tls_session* session, const binary_t& bin
             __leave2;
         }
 
-        basic_stream bs;
         tls_records records;
-        ret = records.read(session, dir, bin, &bs);
-
-        _logger->writeln(bs);
+        ret = records.read(session, dir, bin);
 
         if ((false == expect) && (success != ret)) {
             ret = expect_failure;
@@ -77,11 +66,8 @@ return_t dump_handshake(const char* text, tls_session* session, const binary_t& 
             __leave2;
         }
 
-        basic_stream bs;
         tls_handshakes handshakes;
-        ret = handshakes.read(session, dir, bin, &bs);
-
-        _logger->writeln(bs);
+        ret = handshakes.read(session, dir, bin);
 
         _test_case.test(ret, __FUNCTION__, "%s : %s", (from_client == dir) ? "C -> S" : "C <- S", text);
     }

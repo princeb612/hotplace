@@ -12,6 +12,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension.hpp>
 #include <sdk/net/tls1/extension/tls_extension_builder.hpp>
@@ -55,8 +56,7 @@ tls_extension::~tls_extension() {
     }
 }
 
-tls_extension* tls_extension::read(tls_hs_type_t hstype, tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos,
-                                   stream_t* debugstream) {
+tls_extension* tls_extension::read(tls_hs_type_t hstype, tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     tls_extension* obj = nullptr;
     return_t ret = errorcode_t::success;
     __try2 {
@@ -78,7 +78,7 @@ tls_extension* tls_extension::read(tls_hs_type_t hstype, tls_session* session, t
             tls_extension_builder builder;
             auto extension = builder.set(session).set(hstype).set(extension_type).build();
             if (extension) {
-                ret = extension->read(stream, size, pos, debugstream);
+                ret = extension->read(stream, size, pos);
                 if (errorcode_t::success == ret) {
                     obj = extension;
                 } else {
@@ -93,41 +93,27 @@ tls_extension* tls_extension::read(tls_hs_type_t hstype, tls_session* session, t
     return obj;
 }
 
-return_t tls_extension::read(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension::read(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        if (debugstream) {
-            debugstream->autoindent(3);
+        ret = do_read_header(stream, size, pos);
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
 
-        __try2 {
-            ret = do_read_header(stream, size, pos, debugstream);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-
-            size_t tpos = pos;  // responding to unhandled extentions
-            ret = do_read_body(stream, size, tpos, debugstream);
-            pos += get_body_size();  // responding to unhandled extentions
-        }
-        __finally2 {}
-
-        if (debugstream) {
-            debugstream->autoindent(0);
-        }
+        size_t tpos = pos;  // responding to unhandled extentions
+        ret = do_read_body(stream, size, tpos);
+        pos += get_body_size();  // responding to unhandled extentions
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
-return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -167,14 +153,17 @@ return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t
             _size = 4 + ext_len;  // pos - extpos + ext_len
         }
 
-        if (debugstream) {
+        if (istraceable()) {
+            basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            debugstream->printf("> %s - %04x %s\n", constexpr_extension, extension_type, tlsadvisor->tls_extension_string(extension_type).c_str());
+            dbs.printf("> %s - %04x %s\n", constexpr_extension, extension_type, tlsadvisor->tls_extension_string(extension_type).c_str());
             if (stream) {
-                dump_memory(stream + offsetof_header(), get_extsize(), debugstream, 16, 3, 0x0, dump_notrunc);
+                dump_memory(stream + offsetof_header(), get_extsize(), &dbs, 16, 3, 0x0, dump_notrunc);
             }
-            debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_ext_len, ext_len, ext_len);
+            dbs.printf(" > %s 0x%04x(%i)\n", constexpr_ext_len, ext_len, ext_len);
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
     }
     __finally2 {
@@ -183,9 +172,9 @@ return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t
     return ret;
 }
 
-return_t tls_extension::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension::do_read_body(const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::not_supported; }
 
-return_t tls_extension::write(binary_t& bin, stream_t* debugstream) {
+return_t tls_extension::write(binary_t& bin) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -194,7 +183,7 @@ return_t tls_extension::write(binary_t& bin, stream_t* debugstream) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = do_write_header(bin, body, debugstream);
+        ret = do_write_header(bin, body);
     }
     __finally2 {
         // do nothing
@@ -202,7 +191,7 @@ return_t tls_extension::write(binary_t& bin, stream_t* debugstream) {
     return ret;
 }
 
-return_t tls_extension::do_write_header(binary_t& bin, const binary_t& body, stream_t* debugstream) {
+return_t tls_extension::do_write_header(binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
     {
         _header_range.begin = bin.size();
@@ -223,7 +212,7 @@ return_t tls_extension::do_write_header(binary_t& bin, const binary_t& body, str
     return ret;
 }
 
-return_t tls_extension::do_write_body(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension::do_write_body(binary_t& bin) { return errorcode_t::not_supported; }
 
 tls_session* tls_extension::get_session() { return _session; }
 

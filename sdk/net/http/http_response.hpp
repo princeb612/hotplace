@@ -13,14 +13,13 @@
 #define __HOTPLACE_SDK_NET_HTTP_RESPONSE__
 
 #include <sdk/base/stream/basic_stream.hpp>  // basic_stream
-#include <sdk/base/unittest/traceable.hpp>   // traceable
 #include <sdk/net/http/http_header.hpp>      // http_header
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {
 
-class http_response : public traceable {
+class http_response {
    public:
     http_response();
     http_response(http_request* request);

@@ -38,18 +38,16 @@ void test_dump(binary_t& bin, const char* text, ...) {
     }
 }
 
-void debug_qpack_encoder(trace_category_t, uint32 event, stream_t* s) {
+void debug_qpack_encoder(trace_category_t, uint32 event) {
     if (header_compression_event_evict == event) {
         count_evict_encoder++;
     }
-    _logger->writeln(s);
 };
 
-void debug_qpack_decoder(trace_category_t, uint32 event, stream_t* s) {
+void debug_qpack_decoder(trace_category_t, uint32 event) {
     if (header_compression_event_evict == event) {
         count_evict_decoder++;
     }
-    _logger->writeln(s);
 };
 
 void test_rfc9204_b() {
@@ -66,8 +64,8 @@ void test_rfc9204_b() {
     std::string name;
     std::string value;
 
-    session_encoder.settrace(debug_qpack_encoder);
-    session_decoder.settrace(debug_qpack_decoder);
+    session_encoder.set_debug_hook(debug_qpack_encoder);
+    session_decoder.set_debug_hook(debug_qpack_decoder);
     count_evict_encoder = 0;
 
     // B.1.  Literal Field Line with Name Reference

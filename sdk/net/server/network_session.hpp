@@ -91,7 +91,7 @@ class network_session_data : public skey_value {
 /**
  * @brief session
  */
-class network_session : public traceable {
+class network_session {
     friend class network_server;
 
    public:

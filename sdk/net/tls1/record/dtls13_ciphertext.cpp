@@ -12,6 +12,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/crypto/cipher_encrypt.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/record/dtls13_ciphertext.hpp>
@@ -43,7 +44,7 @@ dtls13_ciphertext::dtls13_ciphertext(uint8 type, tls_session* session) : tls_rec
 
 tls_handshakes& dtls13_ciphertext::get_handshakes() { return _handshakes; }
 
-return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         size_t recpos = pos;
@@ -106,16 +107,19 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
             offset_encdata = pl.offset_of(constexpr_encdata);
         }
 
-        if (debugstream) {
-            debugstream->printf("> %s %02x (C:%i S:%i L:%i E:%x)\n", constexpr_unified_header, uhdr, (uhdr & 0x10) ? 1 : 0, (uhdr & 0x08) ? 1 : 0,
-                                (uhdr & 0x04) ? 1 : 0, (uhdr & 0x03));
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf("> %s %02x (C:%i S:%i L:%i E:%x)\n", constexpr_unified_header, uhdr, (uhdr & 0x10) ? 1 : 0, (uhdr & 0x08) ? 1 : 0, (uhdr & 0x04) ? 1 : 0,
+                       (uhdr & 0x03));
             if (connection_id.size()) {
-                debugstream->printf("> %s %s\n", constexpr_connection_id, base16_encode(connection_id).c_str());
+                dbs.printf("> %s %s\n", constexpr_connection_id, base16_encode(connection_id).c_str());
             }
-            debugstream->printf("> %s %04x\n", constexpr_sequence, sequence);
-            debugstream->printf("> %s %04x\n", constexpr_len, len);
-            debugstream->printf("> %s\n", constexpr_encdata);
-            dump_memory(encdata, debugstream, 16, 3, 0x0, dump_notrunc);
+            dbs.printf("> %s %04x\n", constexpr_sequence, sequence);
+            dbs.printf("> %s %04x\n", constexpr_len, len);
+            dbs.printf("> %s\n", constexpr_encdata);
+            dump_memory(encdata, &dbs, 16, 3, 0x0, dump_notrunc);
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
 
         {
@@ -136,7 +140,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
     return ret;
 }
 
-return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto recpos = offsetof_header();
@@ -191,27 +195,31 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
                 }
             }
 
-            if (debugstream) {
-                debugstream->printf("> record number key %s\n", base16_encode(protection.get_item(sn_key)).c_str());
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.printf("> record number key %s\n", base16_encode(protection.get_item(sn_key)).c_str());
 
                 // s->printf("> %s %04x\n", constexpr_recno, recno);
-                debugstream->printf("> %s %04x (%04x XOR %s)\n", constexpr_recno, recno, sequence,
-                                    base16_encode(ciphertext).substr(0, sequence_len << 1).c_str());
-                dump_memory(ciphertext, debugstream, 16, 3, 0x0, dump_notrunc);
+                dbs.printf("> %s %04x (%04x XOR %s)\n", constexpr_recno, recno, sequence, base16_encode(ciphertext).substr(0, sequence_len << 1).c_str());
+                dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
+
+                trace_debug_event(category_tls1, tls_event_read, &dbs);
             }
 
             binary_t plaintext;
-            binary_t tag;
             {
                 // decryption
-                ret = protection.decrypt_tls13(session, dir, stream, size - aad.size(), recpos, plaintext, aad, tag, debugstream);
+                ret = protection.decrypt_tls13(session, dir, stream, size - aad.size(), recpos, plaintext, aad);
             }
 
-            if (debugstream) {
-                debugstream->printf("> aad\n");
-                dump_memory(aad, debugstream, 16, 3, 0x0, dump_notrunc);
-                debugstream->printf("> plaintext\n");
-                dump_memory(plaintext, debugstream, 16, 3, 0x0, dump_notrunc);
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.printf("> aad\n");
+                dump_memory(aad, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.printf("> plaintext\n");
+                dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
+
+                trace_debug_event(category_tls1, tls_event_read, &dbs);
             }
 
             // record
@@ -222,22 +230,24 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
                 switch (hstype) {
                     case tls_content_type_alert: {
                         tls_record_alert alert(session);
-                        ret = alert.read_plaintext(dir, &plaintext[0], plaintext.size() - 1, tpos, debugstream);
+                        ret = alert.read_plaintext(dir, &plaintext[0], plaintext.size() - 1, tpos);
                     } break;
                     case tls_content_type_handshake: {
-                        // ret = tls_dump_handshake(session, &plaintext[0], plaintext.size() - 1, tpos, debugstream, dir);
-                        auto handshake = tls_handshake::read(session, dir, &plaintext[0], plaintext.size() - 1, tpos, debugstream);
+                        auto handshake = tls_handshake::read(session, dir, &plaintext[0], plaintext.size() - 1, tpos);
                         get_handshakes().add(handshake);
                     } break;
                     case tls_content_type_application_data: {
-                        if (debugstream) {
-                            debugstream->printf("> application data\n");
-                            dump_memory(&plaintext[0], plaintext.size() - 1, debugstream, 16, 3, 0x0, dump_notrunc);
+                        if (istraceable()) {
+                            basic_stream dbs;
+                            dbs.printf("> application data\n");
+                            dump_memory(&plaintext[0], plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
+
+                            trace_debug_event(category_tls1, tls_event_read, &dbs);
                         }
                     } break;
                     case tls_content_type_ack: {
                         tls_record_ack ack(session);
-                        ret = ack.do_read_body(dir, &plaintext[0], plaintext.size() - 1, tpos, debugstream);
+                        ret = ack.do_read_body(dir, &plaintext[0], plaintext.size() - 1, tpos);
                     } break;
                 }
             }
@@ -249,7 +259,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
     return ret;
 }
 
-return_t dtls13_ciphertext::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t dtls13_ciphertext::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

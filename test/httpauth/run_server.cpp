@@ -50,11 +50,6 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
                 bool use_tls = session->get_server_socket()->support_tls();
 
                 http_response response(request);
-                basic_stream bs;
-
-                if (option.verbose) {
-                    response.settrace(debug_handler);
-                }
 
                 if (use_tls) {
                     // using http_router

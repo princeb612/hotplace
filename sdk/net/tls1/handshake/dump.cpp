@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_dump_handshake(tls_session *session, const byte_t *stream, size_t size, size_t &pos, stream_t *debugstream, tls_direction_t dir) {
+return_t tls_dump_handshake(tls_session *session, const byte_t *stream, size_t size, size_t &pos, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -36,7 +36,7 @@ return_t tls_dump_handshake(tls_session *session, const byte_t *stream, size_t s
             tls_handshake_builder builder;
             auto handshake = builder.set(hs).set(session).build();
             if (handshake) {
-                ret = handshake->read(dir, stream, size, pos, debugstream);
+                ret = handshake->read(dir, stream, size, pos);
                 handshake->release();
             }
         }

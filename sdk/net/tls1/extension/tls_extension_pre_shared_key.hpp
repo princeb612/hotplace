@@ -30,8 +30,8 @@ class tls_extension_client_psk : public tls_extension_psk {
     tls_extension_client_psk(tls_session* session);
 
    protected:
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t do_write_body(binary_t& bin, stream_t* debugstream = nullptr);
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(binary_t& bin);
 
    private:
     uint16 _psk_identities_len;
@@ -47,8 +47,8 @@ class tls_extension_server_psk : public tls_extension_psk {
     tls_extension_server_psk(tls_session* session);
 
    protected:
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    virtual return_t do_write_body(binary_t& bin, stream_t* debugstream = nullptr);
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(binary_t& bin);
 
    private:
     uint16 _selected_identity;

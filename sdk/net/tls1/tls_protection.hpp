@@ -99,10 +99,8 @@ class tls_protection {
     return_t get_tls13_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& iv);
     return_t get_tls1_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& mackey);
 
-    return_t encrypt_tls13(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag,
-                           stream_t* debugstream = nullptr);
-    return_t encrypt_tls1(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, binary_t& maced,
-                          stream_t* debugstream = nullptr);
+    return_t encrypt_tls13(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag);
+    return_t encrypt_tls1(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, binary_t& maced);
 
     /**
      * @brief   TLS 1.3 decrypt
@@ -115,15 +113,13 @@ class tls_protection {
      *          encrypt(&server_session, record, protected_record);
      *          decrypt(&client_session, protected_record, record);
      */
-    return_t decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& tag,
-                           stream_t* debugstream = nullptr);
+    return_t decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
 
-    return_t decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
-                           binary_t& tag, stream_t* debugstream = nullptr);
+    return_t decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad);
     /**
      * @brief   TLS 1 decrypt
      */
-    return_t decrypt_tls1(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, stream_t* debugstream);
+    return_t decrypt_tls1(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
     /**
      * @brief   verify
      * @sample

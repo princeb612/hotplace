@@ -20,7 +20,7 @@ namespace net {
 
 tls_handshake_end_of_early_data::tls_handshake_end_of_early_data(tls_session* session) : tls_handshake(tls_hs_end_of_early_data, session) {}
 
-return_t tls_handshake_end_of_early_data::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+return_t tls_handshake_end_of_early_data::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -46,7 +46,7 @@ return_t tls_handshake_end_of_early_data::do_postprocess(tls_direction_t dir, co
     return ret;
 }
 
-return_t tls_handshake_end_of_early_data::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
+return_t tls_handshake_end_of_early_data::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

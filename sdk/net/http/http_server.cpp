@@ -18,15 +18,7 @@ namespace hotplace {
 namespace net {
 
 http_server::http_server()
-    : traceable(),
-      _tlscert(nullptr),
-      _dtlscert(nullptr),
-      _tls(nullptr),
-      _dtls(nullptr),
-      _tls_server_socket(nullptr),
-      _dtls_server_socket(nullptr),
-      _user_context(nullptr) {
-    addchain(&get_http_router());
+    : _tlscert(nullptr), _dtlscert(nullptr), _tls(nullptr), _dtls(nullptr), _tls_server_socket(nullptr), _dtls_server_socket(nullptr), _user_context(nullptr) {
     get_http_router().set_owner(this);
     get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
 }
@@ -232,7 +224,7 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
             default:
                 break;
         }
-        traceevent(category_http_server, http_server_event_consume, &bs);
+        trace_debug_event(category_http_server, http_server_event_consume, &bs);
     }
 #endif
 
@@ -242,9 +234,6 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
     } else if (get_server_conf().get(netserver_config_t::serverconf_enable_h2)) {
         network_session* session = (network_session*)data_array[3];
         if (session) {
-            if (get_server_conf().get(netserver_config_t::serverconf_trace_h2)) {
-                session->get_http2_session().settrace(this);
-            }
             session->get_http2_session().consume(type, data_count, data_array, this, &h2request);
         }
         dispatch_data[4] = h2request;
@@ -263,16 +252,6 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
     }
 
     return ret;
-}
-
-void http_server::settrace(std::function<void(trace_category_t, uint32, stream_t*)> f) {
-    traceable::settrace(f);
-
-    if (get_server_conf().get(netserver_config_t::serverconf_trace_ns)) {
-        for (auto item : _http_handles) {
-            network_server::trace(item, f);
-        }
-    }
 }
 
 network_server& http_server::get_network_server() { return _server; }

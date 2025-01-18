@@ -8,13 +8,14 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/http/http2/http_header_compression.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {
 
-http_dynamic_table::http_dynamic_table() : traceable(), _type(header_compression_hpack), _inserted(0), _dropped(0), _capacity(0), _tablesize(0) {}
+http_dynamic_table::http_dynamic_table() : _type(header_compression_hpack), _inserted(0), _dropped(0), _capacity(0), _tablesize(0) {}
 
 void http_dynamic_table::for_each(std::function<void(const std::string&, const std::string&)> v) {
     if (v) {
@@ -147,7 +148,7 @@ return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& nam
         if (errorcode_t::success == ret) {
             basic_stream bs;
             bs << "index [" << index << "] " << name << "=" << value;
-            traceevent(category_header_compression, header_compression_event_select, &bs);
+            trace_debug_event(category_header_compression, header_compression_event_select, &bs);
         }
     }
     __finally2 {
@@ -193,10 +194,14 @@ return_t http_dynamic_table::commit() {
             _dynamic_map.insert({name, {value, _inserted}});
             _dynamic_reversemap.insert({_inserted, {name, entrysize}});
 
+            if (_hook) {
+                _hook(category_header_compression, header_compression_event_insert);
+            }
+
             if (istraceable()) {
                 basic_stream bs;
                 bs.printf("insert entry[%zi] %s=%s", _inserted, name.c_str(), value.c_str());
-                traceevent(category_header_compression, header_compression_event_insert, &bs);
+                trace_debug_event(category_header_compression, header_compression_event_insert, &bs);
             }
 
             _inserted++;
@@ -235,10 +240,14 @@ return_t http_dynamic_table::evict() {
                 auto const& val = v.first;
                 auto const& ent = v.second;
                 if (ent == t) {
+                    if (_hook) {
+                        _hook(category_header_compression, header_compression_event_evict);
+                    }
+
                     if (istraceable()) {
                         basic_stream bs;
                         bs.printf("evict entry[%zi] %s=%s", entry, name.c_str(), val.c_str());
-                        traceevent(category_header_compression, header_compression_event_evict, &bs);
+                        trace_debug_event(category_header_compression, header_compression_event_evict, &bs);
                     }
                     _dynamic_map.erase(iter);
                     break;
@@ -285,6 +294,8 @@ size_t http_dynamic_table::get_entries() { return _inserted - _dropped; }
 return_t http_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) { return errorcode_t::success; }
 
 uint8 http_dynamic_table::type() { return _type; }
+
+void http_dynamic_table::set_debug_hook(std::function<void(trace_category_t, uint32 event)> fn) { _hook = fn; }
 
 }  // namespace net
 }  // namespace hotplace

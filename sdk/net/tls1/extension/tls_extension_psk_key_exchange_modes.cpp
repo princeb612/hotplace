@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension_psk_key_exchange_modes.hpp>
 #include <sdk/net/tls1/tls.hpp>
@@ -23,7 +25,7 @@ constexpr char constexpr_mode[] = "mode";
 tls_extension_psk_key_exchange_modes::tls_extension_psk_key_exchange_modes(tls_session* session)
     : tls_extension(tls1_ext_psk_key_exchange_modes, session), _modes(0) {}
 
-return_t tls_extension_psk_key_exchange_modes::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_psk_key_exchange_modes::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes
@@ -49,14 +51,16 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(const byte_t* stream
             }
         }
 
-        if (debugstream) {
+        if (istraceable()) {
+            basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            debugstream->printf(" > %s\n", constexpr_modes);
+            dbs.printf(" > %s\n", constexpr_modes);
             int i = 0;
             for (auto m : _modes) {
-                debugstream->printf("   [%i] %i %s\n", i++, m, tlsadvisor->psk_key_exchange_mode_name(m).c_str());
+                dbs.printf("   [%i] %i %s\n", i++, m, tlsadvisor->psk_key_exchange_mode_name(m).c_str());
             }
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
 
         {}
@@ -67,7 +71,7 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(const byte_t* stream
     return ret;
 }
 
-return_t tls_extension_psk_key_exchange_modes::do_write_body(binary_t& bin, stream_t* debugstream) {
+return_t tls_extension_psk_key_exchange_modes::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
     uint8 cbsize_modes = 0;
     binary_t bin_modes;

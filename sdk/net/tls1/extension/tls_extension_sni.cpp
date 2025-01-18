@@ -11,6 +11,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension_sni.hpp>
 #include <sdk/net/tls1/tls.hpp>
@@ -27,7 +29,7 @@ constexpr char constexpr_hostname[] = "hostname";
 
 tls_extension_sni::tls_extension_sni(tls_session* session) : tls_extension(tls1_ext_server_name, session), _nametype(0) {}
 
-return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 6066 3.  Server Name Indication
@@ -63,11 +65,14 @@ return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size
             pl.get_binary(constexpr_hostname, hostname);
         }
 
-        if (debugstream) {
+        if (istraceable()) {
+            basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            debugstream->printf(" > %s %i (%s)\n", constexpr_name_type, type, tlsadvisor->sni_nametype_string(type).c_str());  // 00 host_name
-            debugstream->printf(" > %s %s\n", constexpr_hostname, bin2str(hostname).c_str());
+            dbs.printf(" > %s %i (%s)\n", constexpr_name_type, type, tlsadvisor->sni_nametype_string(type).c_str());  // 00 host_name
+            dbs.printf(" > %s %s\n", constexpr_hostname, bin2str(hostname).c_str());
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
 
         {
@@ -81,7 +86,7 @@ return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size
     return ret;
 }
 
-return_t tls_extension_sni::do_write_body(binary_t& bin, stream_t* debugstream) {
+return_t tls_extension_sni::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
 
     {

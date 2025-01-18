@@ -13,7 +13,6 @@
 #define __HOTPLACE_SDK_NET_HTTP_ROUTER__
 
 #include <map>
-#include <sdk/base/unittest/traceable.hpp>          // traceable
 #include <sdk/net/http/auth/oauth2.hpp>             // oauth2_provider
 #include <sdk/net/http/html_documents.hpp>          // html_documents
 #include <sdk/net/http/http2/http2_serverpush.hpp>  // http2_serverpush
@@ -27,7 +26,7 @@ namespace net {
 typedef void (*http_request_handler_t)(network_session*, http_request*, http_response*, http_router*);
 typedef std::function<void(network_session*, http_request*, http_response*, http_router*)> http_request_function_t;
 
-class http_router : public traceable {
+class http_router {
     friend class http_server;  // set_owner
    public:
     http_router();

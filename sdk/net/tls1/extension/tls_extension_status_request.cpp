@@ -9,6 +9,8 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension_status_request.hpp>
 #include <sdk/net/tls1/tls.hpp>
@@ -26,7 +28,7 @@ constexpr char constexpr_request_ext_info[] = "request extension information";
 
 tls_extension_status_request::tls_extension_status_request(tls_session* session) : tls_extension(tls1_ext_status_request, session) {}
 
-return_t tls_extension_status_request::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_status_request::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint8 cert_status_type = 0;
@@ -50,14 +52,17 @@ return_t tls_extension_status_request::do_read_body(const byte_t* stream, size_t
             pl.get_binary(constexpr_request_ext_info, request_ext_info);
         }
 
-        if (debugstream) {
+        if (istraceable()) {
+            basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            debugstream->printf(" > %s %i %s\n", constexpr_cert_status_type, cert_status_type, tlsadvisor->cert_status_type_string(cert_status_type).c_str());
-            debugstream->printf(" > %s %i\n", constexpr_responderid_info_len, responderid_info_len);
-            dump_memory(responderid_info, debugstream, 16, 3, 0x0, dump_notrunc);
-            debugstream->printf(" > %s %i\n", constexpr_request_ext_info_len, request_ext_info_len);
-            dump_memory(request_ext_info, debugstream, 16, 3, 0x0, dump_notrunc);
+            dbs.printf(" > %s %i %s\n", constexpr_cert_status_type, cert_status_type, tlsadvisor->cert_status_type_string(cert_status_type).c_str());
+            dbs.printf(" > %s %i\n", constexpr_responderid_info_len, responderid_info_len);
+            dump_memory(responderid_info, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.printf(" > %s %i\n", constexpr_request_ext_info_len, request_ext_info_len);
+            dump_memory(request_ext_info, &dbs, 16, 3, 0x0, dump_notrunc);
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
 
         {
@@ -72,7 +77,7 @@ return_t tls_extension_status_request::do_read_body(const byte_t* stream, size_t
     return ret;
 }
 
-return_t tls_extension_status_request::do_write_body(binary_t& bin, stream_t* debugstream) { return not_supported; }
+return_t tls_extension_status_request::do_write_body(binary_t& bin) { return not_supported; }
 
 uint8 tls_extension_status_request::get_cert_status_type() { return _cert_status_type; }
 

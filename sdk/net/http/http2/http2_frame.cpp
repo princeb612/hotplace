@@ -46,13 +46,13 @@ CONSTEXPR char constexpr_frame_origin_len[] = "origin-len";
 CONSTEXPR char constexpr_frame_origin[] = "origin";
 CONSTEXPR char constexpr_frame_alt_svc_field_value[] = "alt-svc-field-value";
 
-http2_frame::http2_frame() : traceable(), _payload_size(0), _type(0), _flags(0), _stream_id(0), _hpack_session(nullptr) {}
+http2_frame::http2_frame() : _payload_size(0), _type(0), _flags(0), _stream_id(0), _hpack_session(nullptr) {}
 
-http2_frame::http2_frame(h2_frame_t type) : traceable(), _payload_size(0), _type(type), _flags(0), _stream_id(0), _hpack_session(nullptr) {}
+http2_frame::http2_frame(h2_frame_t type) : _payload_size(0), _type(type), _flags(0), _stream_id(0), _hpack_session(nullptr) {}
 
-http2_frame::http2_frame(const http2_frame_header_t& header) : traceable() { read(&header, sizeof(http2_frame_header_t)); }
+http2_frame::http2_frame(const http2_frame_header_t& header) { read(&header, sizeof(http2_frame_header_t)); }
 
-http2_frame::http2_frame(const http2_frame& rhs) : traceable() {
+http2_frame::http2_frame(const http2_frame& rhs) {
     _payload_size = rhs._payload_size;
     _type = rhs._type;
     _flags = rhs._flags;

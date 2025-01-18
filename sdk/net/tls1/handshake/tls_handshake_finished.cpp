@@ -9,6 +9,8 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/crypto/crypto_hmac.hpp>
@@ -24,7 +26,7 @@ namespace net {
 
 tls_handshake_finished::tls_handshake_finished(tls_session* session) : tls_handshake(tls_hs_finished, session) {}
 
-return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -53,7 +55,7 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
     return ret;
 }
 
-return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -169,16 +171,19 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                     ret = errorcode_t::error_verify;
                 }
 
-                if (debugstream) {
-                    debugstream->autoindent(1);
-                    debugstream->printf("> %s", constexpr_verify_data);
-                    debugstream->printf(" \e[1;33m%s\e[0m", (errorcode_t::success == ret) ? "true" : "false");
-                    debugstream->printf("\n");
-                    dump_memory(verify_data, debugstream, 16, 3, 0x00, dump_notrunc);
-                    debugstream->printf("  > secret (internal) 0x%08x\n", typeof_secret);
-                    debugstream->printf("  > verify data %s \n", base16_encode(verify_data).c_str());
-                    debugstream->printf("  > maced       %s\n", base16_encode(maced).c_str());
-                    debugstream->autoindent(0);
+                if (istraceable()) {
+                    basic_stream dbs;
+                    dbs.autoindent(1);
+                    dbs.printf("> %s", constexpr_verify_data);
+                    dbs.printf(" \e[1;33m%s\e[0m", (errorcode_t::success == ret) ? "true" : "false");
+                    dbs.printf("\n");
+                    dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
+                    dbs.printf("  > secret (internal) 0x%08x\n", typeof_secret);
+                    dbs.printf("  > verify data %s \n", base16_encode(verify_data).c_str());
+                    dbs.printf("  > maced       %s\n", base16_encode(maced).c_str());
+                    dbs.autoindent(0);
+
+                    trace_debug_event(category_tls1, tls_event_read, &dbs);
                 }
             }
         }
@@ -189,7 +194,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
     return ret;
 }
 
-return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
+return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

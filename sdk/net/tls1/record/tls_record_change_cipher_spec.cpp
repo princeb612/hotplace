@@ -18,7 +18,7 @@ namespace net {
 
 tls_record_change_cipher_spec::tls_record_change_cipher_spec(tls_session* session) : tls_record(tls_content_type_change_cipher_spec, session) {}
 
-return_t tls_record_change_cipher_spec::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+return_t tls_record_change_cipher_spec::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     auto session = get_session();
     if (session) {
@@ -28,7 +28,7 @@ return_t tls_record_change_cipher_spec::do_postprocess(tls_direction_t dir, cons
     return ret;
 }
 
-return_t tls_record_change_cipher_spec::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_record_change_cipher_spec::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 5246 7.1.  Change Cipher Spec Protocol
@@ -43,7 +43,7 @@ return_t tls_record_change_cipher_spec::do_read_body(tls_direction_t dir, const 
     return ret;
 }
 
-return_t tls_record_change_cipher_spec::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+return_t tls_record_change_cipher_spec::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     binary_append(bin, uint8(1));
     return ret;

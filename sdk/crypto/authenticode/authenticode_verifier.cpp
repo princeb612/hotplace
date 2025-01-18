@@ -12,7 +12,6 @@
 #include <map>
 #include <sdk/base/string/string.hpp>
 #include <sdk/base/system/thread.hpp>
-#include <sdk/base/system/trace.hpp>
 #include <sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
 #include <sdk/crypto/authenticode/authenticode_verifier.hpp>
 #include <sdk/crypto/authenticode/sdk.hpp>

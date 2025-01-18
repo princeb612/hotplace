@@ -13,7 +13,6 @@
 #define __HOTPLACE_SDK_NET_HTTP_HTTP2_SERVERPUSH__
 
 #include <map>
-#include <sdk/base/unittest/traceable.hpp>  // traceable
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {
@@ -64,7 +63,7 @@ namespace net {
  *                  }
  *              }
  */
-class http2_serverpush : public traceable {
+class http2_serverpush {
    public:
     http2_serverpush();
 

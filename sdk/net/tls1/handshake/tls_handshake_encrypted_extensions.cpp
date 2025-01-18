@@ -21,7 +21,7 @@ namespace net {
 
 tls_handshake_encrypted_extensions::tls_handshake_encrypted_extensions(tls_session* session) : tls_handshake(tls_hs_encrypted_extensions, session) {}
 
-return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -40,7 +40,7 @@ return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir,
     return ret;
 }
 
-return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -73,7 +73,7 @@ return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, c
                 // DTLS 1.3 ciphertext
                 // uint16 len = ntoh16(*(uint16*)(stream + pos));
                 pos += 2;  // len
-                ret = get_extensions().read(tls_hs_encrypted_extensions, session, dir, stream, size, pos, debugstream);
+                ret = get_extensions().read(tls_hs_encrypted_extensions, session, dir, stream, size, pos);
             }
         }
     }
@@ -83,10 +83,10 @@ return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, c
     return ret;
 }
 
-return_t tls_handshake_encrypted_extensions::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+return_t tls_handshake_encrypted_extensions::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     binary_t extensions;
-    ret = get_extensions().write(extensions, debugstream);
+    ret = get_extensions().write(extensions);
     binary_append(bin, uint16(extensions.size()), hton16);
     binary_append(bin, extensions);
     return ret;

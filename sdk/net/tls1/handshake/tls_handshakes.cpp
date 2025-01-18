@@ -18,7 +18,7 @@ tls_handshakes::tls_handshakes() {}
 
 tls_handshakes::~tls_handshakes() { clear(); }
 
-return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -37,7 +37,7 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
             tls_handshake_builder builder;
             auto handshake = builder.set(hs).set(session).build();
             if (handshake) {
-                ret = handshake->read(dir, stream, size, pos, debugstream);
+                ret = handshake->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {
                     add(handshake);
                 } else {
@@ -52,14 +52,14 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
     return ret;
 }
 
-return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const binary_t& bin, stream_t* debugstream) {
+return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const binary_t& bin) {
     const byte_t* stream = &bin[0];
     size_t size = bin.size();
     size_t pos = 0;
-    return read(session, dir, stream, size, pos, debugstream);
+    return read(session, dir, stream, size, pos);
 }
 
-return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -67,7 +67,7 @@ return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary
             __leave2;
         }
 
-        auto lambda = [&](tls_handshake* handshake) -> void { handshake->write(dir, bin, debugstream); };
+        auto lambda = [&](tls_handshake* handshake) -> void { handshake->write(dir, bin); };
         for_each(lambda);
     }
     __finally2 {}

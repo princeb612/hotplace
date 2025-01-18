@@ -12,7 +12,6 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 
-#include <sdk/base/unittest/traceable.hpp>        // traceable
 #include <sdk/net/basic/ipaddr_acl.hpp>           // ipaddr_acl
 #include <sdk/net/basic/tcp_server_socket.hpp>    // tcp_server_socket
 #include <sdk/net/http/http2/http2_protocol.hpp>  // http2_protocol
@@ -37,7 +36,7 @@ typedef TYPE_CALLBACK_HANDLEREXV http_server_handler_t;
  * @brief   http server
  * @sa      http_server_builder
  */
-class http_server : public traceable {
+class http_server {
     friend class http_server_builder;
 
    public:
@@ -54,7 +53,6 @@ class http_server : public traceable {
     http_router& get_http_router();
     ipaddr_acl& get_ipaddr_acl();
     tlscert* get_tlscert();
-    virtual void settrace(std::function<void(trace_category_t, uint32, stream_t*)> f);
 
    protected:
     http_server();

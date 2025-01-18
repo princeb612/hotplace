@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/basic/server_socket.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/server/network_server.hpp>
@@ -17,11 +18,10 @@
 namespace hotplace {
 namespace net {
 
-network_session::network_session(server_socket* serversocket) : traceable() {
+network_session::network_session(server_socket* serversocket) {
     _shared.make_share(this);
     serversocket->addref();
     _session.svr_socket = serversocket;
-    addchain(&get_http2_session());
 }
 
 network_session::~network_session() {
@@ -264,7 +264,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
                         basic_stream bs;
                         bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                        traceevent(category_net_session, net_session_event_produce, &bs);
+                        trace_debug_event(category_net_session, net_session_event_produce, &bs);
                     }
 
                 } else {
@@ -294,7 +294,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
                 basic_stream bs;
                 bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                traceevent(category_net_session, net_session_event_produce, &bs);
+                trace_debug_event(category_net_session, net_session_event_produce, &bs);
             }
         }
     }
@@ -354,7 +354,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                         basic_stream bs;
                         bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                        traceevent(category_net_session, net_session_event_produce, &bs);
+                        trace_debug_event(category_net_session, net_session_event_produce, &bs);
                     }
                 }
 
@@ -387,7 +387,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                 basic_stream bs;
                 bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                traceevent(category_net_session, net_session_event_produce, &bs);
+                trace_debug_event(category_net_session, net_session_event_produce, &bs);
             }
         }
     }

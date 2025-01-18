@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
@@ -23,7 +24,7 @@ namespace net {
 
 tls_handshake_server_key_exchange::tls_handshake_server_key_exchange(tls_session* session) : tls_handshake(tls_hs_server_key_exchange, session) {}
 
-return_t tls_handshake_server_key_exchange::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+return_t tls_handshake_server_key_exchange::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -42,7 +43,7 @@ return_t tls_handshake_server_key_exchange::do_postprocess(tls_direction_t dir, 
     return ret;
 }
 
-return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -135,16 +136,19 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 }
             }
 
-            if (debugstream) {
-                debugstream->autoindent(1);
-                debugstream->printf(" > %s %i (%s)\n", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
-                debugstream->printf(" > %s 0x%04x %s\n", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
-                debugstream->printf(" > %s %i\n", constexpr_pubkey_len, pubkey_len);
-                dump_memory(pubkey, debugstream, 16, 3, 0x0, dump_notrunc);
-                debugstream->printf(" > %s 0x%04x %s\n", constexpr_signature, signature, tlsadvisor->signature_scheme_name(signature).c_str());
-                debugstream->printf(" > %s %i\n", constexpr_sig_len, sig_len);
-                dump_memory(sig, debugstream, 16, 3, 0x0, dump_notrunc);
-                debugstream->autoindent(0);
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.autoindent(1);
+                dbs.printf(" > %s %i (%s)\n", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
+                dbs.printf(" > %s 0x%04x %s\n", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
+                dbs.printf(" > %s %i\n", constexpr_pubkey_len, pubkey_len);
+                dump_memory(pubkey, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.printf(" > %s 0x%04x %s\n", constexpr_signature, signature, tlsadvisor->signature_scheme_name(signature).c_str());
+                dbs.printf(" > %s %i\n", constexpr_sig_len, sig_len);
+                dump_memory(sig, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.autoindent(0);
+
+                trace_debug_event(category_tls1, tls_event_read, &dbs);
             }
         }
     }
@@ -154,7 +158,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
     return ret;
 }
 
-return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::success; }
+return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

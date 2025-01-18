@@ -9,7 +9,6 @@
  */
 
 #include <sdk/base/basic/binary.hpp>
-#include <sdk/base/system/trace.hpp>
 #include <sdk/crypto/basic/openssl_ecdh.hpp>
 #if defined __linux__
 #include <arpa/inet.h>

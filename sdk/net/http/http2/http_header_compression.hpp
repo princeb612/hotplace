@@ -11,9 +11,10 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HEADER_COMPRESSION__
 #define __HOTPLACE_SDK_NET_HTTP_HEADER_COMPRESSION__
 
+#include <functional>
 #include <queue>
 #include <sdk/base/basic/huffman_coding.hpp>  // huffman_coding
-#include <sdk/base/unittest/traceable.hpp>    // traceable
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {
@@ -302,7 +303,7 @@ class http_static_table {
  * @brief   dynamic table
  * @sa      hpack_dynamic_table, qpack_dynamic_table
  */
-class http_dynamic_table : public traceable {
+class http_dynamic_table {
    public:
     http_dynamic_table();
 
@@ -378,6 +379,8 @@ class http_dynamic_table : public traceable {
      */
     uint8 type();
 
+    void set_debug_hook(std::function<void(trace_category_t, uint32 event)> fn);
+
    protected:
     typedef std::pair<std::string, size_t> table_entry_t;
     typedef std::multimap<std::string, table_entry_t> dynamic_map_t;  // table_entry_t(value, entry)
@@ -398,6 +401,8 @@ class http_dynamic_table : public traceable {
     size_t _tablesize;
     size_t _inserted;
     size_t _dropped;
+
+    std::function<void(trace_category_t, uint32 event)> _hook;
 };
 
 /*

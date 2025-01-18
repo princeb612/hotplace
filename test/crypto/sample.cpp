@@ -30,6 +30,17 @@ int main(int argc, char** argv) {
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose);
+    if (option.verbose) {
+        auto lambda = [&](trace_category_t category, uint32 event, stream_t* s) -> void {
+            std::string ct;
+            std::string ev;
+            auto advisor = trace_advisor::get_instance();
+            advisor->get_names(category, event, ct, ev);
+            _logger->writeln("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned)s->size(), s->data());
+        };
+        set_trace_debug(lambda);
+        set_trace_option(trace_bt | trace_except | trace_debug);
+    }
     if (option.log) {
         builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log");
     }
@@ -40,15 +51,6 @@ int main(int argc, char** argv) {
 
     __try2 {
         openssl_startup();
-
-        auto lambda = [&](trace_category_t category, uint32 event, stream_t* s) -> void {
-            std::string ct;
-            std::string ev;
-            auto advisor = trace_advisor::get_instance();
-            advisor->get_names(category, event, ct, ev);
-            _logger->writeln("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned)s->size(), s->data());
-        };
-        crypto_advisor::trace(lambda);
 
         test_features();
 

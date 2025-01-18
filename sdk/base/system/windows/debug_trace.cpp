@@ -10,7 +10,6 @@
 
 #include <iostream>
 #include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/system/trace.hpp>
 #include <sdk/base/system/windows/debug_trace.hpp>
 
 namespace hotplace {

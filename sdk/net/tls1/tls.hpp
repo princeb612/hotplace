@@ -73,9 +73,9 @@ namespace net {
  * @param   size_t& pos [inout]
  * @remarks
  */
-return_t tls_dump_record(tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* s, tls_direction_t dir = from_server);
-return_t tls_dump_handshake(tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* s, tls_direction_t dir = from_server);
-return_t tls_dump_extension(tls_hs_type_t hstype, tls_session* session, const byte_t* stream, size_t size, size_t& pos, stream_t* s);
+return_t tls_dump_record(tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
+return_t tls_dump_handshake(tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
+return_t tls_dump_extension(tls_hs_type_t hstype, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 
 bool is_basedon_tls13(uint16 ver);
 bool is_kindof_tls(uint16 ver);

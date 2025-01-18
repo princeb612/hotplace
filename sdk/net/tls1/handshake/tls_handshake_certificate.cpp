@@ -9,6 +9,8 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake_certificate.hpp>
@@ -60,7 +62,7 @@ return_t tls_handshake_certificate::set(tls_direction_t dir, const char* certfil
     return ret;
 }
 
-return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size, stream_t* debugstream) {
+return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -80,7 +82,7 @@ return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, const by
     return ret;
 }
 
-return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -147,17 +149,6 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
                 cert_extensions_len = pl.t_value_of<uint16>(constexpr_certificate_extensions_len);
             }
 
-            if (debugstream) {
-                debugstream->autoindent(1);
-                debugstream->printf(" > %s %i\n", constexpr_request_context_len, request_context_len);
-                debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_certificates_len, certificates_len, certificates_len);
-                debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_certificate_len, certificate_len, certificate_len);
-                dump_memory(cert, debugstream, 16, 3, 0x00, dump_notrunc);
-                debugstream->printf(" > %s 0x%04x(%i)\n", constexpr_certificate_extensions, cert_extensions_len, cert_extensions_len);
-                dump_memory(cert_extensions, debugstream, 16, 3, 0x00, dump_notrunc);
-                debugstream->autoindent(0);
-            }
-
             auto& servercert = session->get_tls_protection().get_keyexchange();
             keydesc desc(use_sig);
             if (from_server == dir) {
@@ -166,10 +157,20 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
                 desc.set_kid("CC");
             }
             ret = keychain.load_der(&servercert, &cert[0], cert.size(), desc);
-            if (errorcode_t::success == ret) {
-                if (debugstream) {
-                    dump_key(servercert.find(desc.get_kid_cstr()), debugstream, 15, 4, dump_notrunc);
-                }
+
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.autoindent(1);
+                dbs.printf(" > %s %i\n", constexpr_request_context_len, request_context_len);
+                dbs.printf(" > %s 0x%04x(%i)\n", constexpr_certificates_len, certificates_len, certificates_len);
+                dbs.printf(" > %s 0x%04x(%i)\n", constexpr_certificate_len, certificate_len, certificate_len);
+                dump_memory(cert, &dbs, 16, 3, 0x00, dump_notrunc);
+                dbs.printf(" > %s 0x%04x(%i)\n", constexpr_certificate_extensions, cert_extensions_len, cert_extensions_len);
+                dump_memory(cert_extensions, &dbs, 16, 3, 0x00, dump_notrunc);
+                dump_key(servercert.find(desc.get_kid_cstr()), &dbs, 15, 4, dump_notrunc);
+                dbs.autoindent(0);
+
+                trace_debug_event(category_tls1, tls_event_read, &dbs);
             }
         }
     }
@@ -179,7 +180,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
     return ret;
 }
 
-return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) {
+return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -207,11 +208,14 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
         crypto_keychain keychain;
         keychain.write_der(x509, certificate);
 
-        if (debugstream) {
-            debugstream->autoindent(1);
-            debugstream->printf("> certificate\n");
-            dump_memory(certificate, debugstream, 16, 3, 0x0, dump_notrunc);
-            debugstream->autoindent(0);
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.autoindent(1);
+            dbs.printf("> certificate\n");
+            dump_memory(certificate, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.autoindent(0);
+
+            trace_debug_event(category_tls1, tls_event_write, &dbs);
         }
 
         binary_t cert_extensions;

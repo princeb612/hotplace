@@ -19,8 +19,8 @@ class tls_records {
     tls_records();
     ~tls_records();
 
-    return_t read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream = nullptr);
-    return_t read(tls_session* session, tls_direction_t dir, const binary_t& bin, stream_t* debugstream = nullptr);
+    return_t read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    return_t read(tls_session* session, tls_direction_t dir, const binary_t& bin);
     return_t add(tls_record* record, bool upref = false);
     tls_records& operator<<(tls_record* record);
     void for_each(std::function<void(tls_record*)> func);

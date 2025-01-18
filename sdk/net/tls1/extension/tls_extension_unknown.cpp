@@ -19,16 +19,12 @@ namespace net {
 
 tls_extension_unknown::tls_extension_unknown(uint16 type, tls_session* session) : tls_extension(type, session) {}
 
-return_t tls_extension_unknown::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_unknown::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
-    if (debugstream) {
-        //
-        // s->printf(" > not supported yet\n");
-    }
     return ret;
 }
 
-return_t tls_extension_unknown::do_write_body(binary_t& bin, stream_t* debugstream) { return not_supported; }
+return_t tls_extension_unknown::do_write_body(binary_t& bin) { return not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

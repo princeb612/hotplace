@@ -31,8 +31,8 @@ extern unsigned int count_evict_decoder;
 
 void test_expect(binary_t& bin, const char* expect, const char* text, ...);
 void test_dump(binary_t& bin, const char* text, ...);
-void debug_qpack_encoder(trace_category_t, uint32 event, stream_t* s);
-void debug_qpack_decoder(trace_category_t, uint32 event, stream_t* s);
+void debug_qpack_encoder(trace_category_t, uint32 event);
+void debug_qpack_decoder(trace_category_t, uint32 event);
 
 void test_rfc9204_b();
 void test_zero_capacity();

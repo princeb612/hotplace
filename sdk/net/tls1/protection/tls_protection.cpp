@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/binary.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
@@ -924,7 +925,7 @@ return_t tls_protection::get_tls1_key(tls_session* session, tls_direction_t dir,
 }
 
 return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad,
-                                       binary_t& tag, stream_t* debugstream) {
+                                       binary_t& tag) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -966,17 +967,19 @@ return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir
         build_iv(session, secret_iv, nonce, record_no);
         ret = crypt.encrypt(cipher, mode, key, nonce, plaintext, ciphertext, aad, tag);
 
-        if (debugstream) {
-            debugstream->autoindent(3);
-            debugstream->printf(" > key[%08x] %s\n", secret_key, base16_encode(key).c_str());
-            debugstream->printf(" > iv [%08x] %s\n", secret_iv, base16_encode(iv).c_str());
-            debugstream->printf(" > record no %i\n", record_no);
-            debugstream->printf(" > nonce %s\n", base16_encode(nonce).c_str());
-            debugstream->printf(" > aad %s\n", base16_encode(aad).c_str());
-            debugstream->printf(" > tag %s\n", base16_encode(tag).c_str());
-            debugstream->printf(" > ciphertext\n");
-            dump_memory(ciphertext, debugstream, 16, 3, 0x0, dump_notrunc);
-            debugstream->autoindent(0);
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.autoindent(3);
+            dbs.printf(" > key[%08x] %s\n", secret_key, base16_encode(key).c_str());
+            dbs.printf(" > iv [%08x] %s\n", secret_iv, base16_encode(iv).c_str());
+            dbs.printf(" > record no %i\n", record_no);
+            dbs.printf(" > nonce %s\n", base16_encode(nonce).c_str());
+            dbs.printf(" > aad %s\n", base16_encode(aad).c_str());
+            dbs.printf(" > tag %s\n", base16_encode(tag).c_str());
+            dbs.printf(" > ciphertext\n");
+            dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.autoindent(0);
+            trace_debug_event(category_tls1, tls_event_write, &dbs);
         }
     }
     __finally2 {
@@ -985,14 +988,12 @@ return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir
     return ret;
 }
 
-return_t tls_protection::encrypt_tls1(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, binary_t& maced,
-                                      stream_t* debugstream) {
+return_t tls_protection::encrypt_tls1(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, binary_t& maced) {
     return_t ret = errorcode_t::not_supported;
     return ret;
 }
 
-return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                                       binary_t& tag, stream_t* debugstream) {
+return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -1007,7 +1008,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
         binary_t aad;
         binary_append(aad, stream + pos, aadlen);
 
-        ret = decrypt_tls13(session, dir, stream, size, pos, plaintext, aad, tag, debugstream);
+        ret = decrypt_tls13(session, dir, stream, size, pos, plaintext, aad);
     }
     __finally2 {
         // do nothing
@@ -1016,14 +1017,13 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
 }
 
 return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                                       const binary_t& aad, binary_t& tag, stream_t* debugstream) {
+                                       const binary_t& aad) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        tag.clear();
 
         auto cipher = crypt_alg_unknown;
         auto mode = crypt_mode_unknown;
@@ -1052,6 +1052,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
 
         auto& protection = session->get_tls_protection();
         auto record_version = protection.get_record_version();
+        binary_t tag;
 
         // ... aad(aadlen) encdata tag(tagsize)
         //     \_ pos
@@ -1074,17 +1075,20 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
         build_iv(session, secret_iv, nonce, record_no);
         ret = crypt.decrypt(cipher, mode, key, nonce, stream + pos + aadlen, size - tagsize, plaintext, aad, tag);
 
-        if (debugstream) {
-            debugstream->autoindent(3);
-            debugstream->printf(" > key[%08x] %s\n", secret_key, base16_encode(key).c_str());
-            debugstream->printf(" > iv [%08x] %s\n", secret_iv, base16_encode(iv).c_str());
-            debugstream->printf(" > record no %i\n", record_no);
-            debugstream->printf(" > nonce %s\n", base16_encode(nonce).c_str());
-            debugstream->printf(" > aad %s\n", base16_encode(aad).c_str());
-            debugstream->printf(" > tag %s\n", base16_encode(tag).c_str());
-            debugstream->printf(" > plaintext\n");
-            dump_memory(plaintext, debugstream, 16, 3, 0x0, dump_notrunc);
-            debugstream->autoindent(0);
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.autoindent(3);
+            dbs.printf(" > key[%08x] %s\n", secret_key, base16_encode(key).c_str());
+            dbs.printf(" > iv [%08x] %s\n", secret_iv, base16_encode(iv).c_str());
+            dbs.printf(" > record no %i\n", record_no);
+            dbs.printf(" > nonce %s\n", base16_encode(nonce).c_str());
+            dbs.printf(" > aad %s\n", base16_encode(aad).c_str());
+            dbs.printf(" > tag %s\n", base16_encode(tag).c_str());
+            dbs.printf(" > plaintext\n");
+            dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.autoindent(0);
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
     }
     __finally2 {
@@ -1093,8 +1097,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
     return ret;
 }
 
-return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                                      stream_t* debugstream) {
+return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -1175,18 +1178,21 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir,
             }
         }
 
-        if (debugstream) {
-            debugstream->autoindent(3);
-            debugstream->printf(" > key %s\n", base16_encode(key).c_str());
-            debugstream->printf(" > iv %s\n", base16_encode(iv).c_str());
-            debugstream->printf(" > record no %i\n", record_no);
-            debugstream->printf(" > ciphertext\n");
-            dump_memory(stream + bpos, size - bpos, debugstream, 16, 3, 0x0, dump_notrunc);
-            debugstream->printf(" > plaintext\n");
-            dump_memory(plaintext, debugstream, 16, 3, 0x0, dump_notrunc);
-            debugstream->printf(" > content\n");
-            dump_memory(content, debugstream, 16, 3, 0x0, dump_notrunc);
-            debugstream->autoindent(0);
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.autoindent(3);
+            dbs.printf(" > key %s\n", base16_encode(key).c_str());
+            dbs.printf(" > iv %s\n", base16_encode(iv).c_str());
+            dbs.printf(" > record no %i\n", record_no);
+            dbs.printf(" > ciphertext\n");
+            dump_memory(stream + bpos, size - bpos, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.printf(" > plaintext\n");
+            dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.printf(" > content\n");
+            dump_memory(content, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.autoindent(0);
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
     }
     __finally2 {

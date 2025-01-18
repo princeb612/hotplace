@@ -35,7 +35,7 @@ namespace net {
  *                 .set(netserver_config_t::serverconf_concurrent_consume, 4);
  *          http_server* server = builder.build();
  */
-class http_server_builder : public traceable {
+class http_server_builder {
    public:
     http_server_builder();
     ~http_server_builder();

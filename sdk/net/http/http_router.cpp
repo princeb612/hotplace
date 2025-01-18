@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace net {
 
-http_router::http_router() : traceable(), _http_server(nullptr) { addchain(&get_http2_serverpush()); }
+http_router::http_router() : _http_server(nullptr) {}
 
 http_router::~http_router() { clear(); }
 

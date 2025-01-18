@@ -49,9 +49,6 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
         case mux_read:
             if (request) {
                 http_response response(request);
-                if (option.verbose) {
-                    response.settrace(debug_handler);
-                }
                 _http_server->get_http_router().route(session, request, &response);
                 response.respond(session);
             }
@@ -103,10 +100,6 @@ return_t simple_http2_server(void*) {
             .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
             .set(netserver_config_t::serverconf_concurrent_network, 4)
             .set(netserver_config_t::serverconf_concurrent_consume, 4);
-        if (option.verbose) {
-            builder.settrace(debug_handler);
-            builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
-        }
         _http_server.make_share(builder.build());
 
         _http_server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);

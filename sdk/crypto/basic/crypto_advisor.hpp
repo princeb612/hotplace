@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <functional>
 #include <map>
-#include <sdk/base/unittest/traceable.hpp>
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/crypto/basic/types.hpp>
 
 namespace hotplace {
@@ -35,12 +35,8 @@ enum advisor_feature_t {
 
 /**
  * @brief   advisor
- * @sample
- *          auto lambda = [&](trace_category_t, uint32, stream_t* s) -> void { do_somgthing(); };
- *          crypto_advisor::trace(lambda);
- *          auto advisor = crypto_advisor::get_instance();
  */
-class crypto_advisor : public traceable {
+class crypto_advisor {
    public:
     static crypto_advisor* get_instance();
 
@@ -572,8 +568,6 @@ class crypto_advisor : public traceable {
      *          advisor->get_cookie_secret(0, 16, secret); // read generated secret, secret_size ignored
      */
     void get_cookie_secret(uint8 key, size_t secret_size, binary_t& secret);
-
-    static void trace(std::function<void(trace_category_t category, uint32 event, stream_t* s)> f);
 
    protected:
     return_t load();

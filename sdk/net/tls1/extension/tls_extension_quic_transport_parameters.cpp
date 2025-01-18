@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
 #include <sdk/net/tls1/extension/tls_extension_quic_transport_parameters.hpp>
@@ -25,7 +26,7 @@ constexpr char constexpr_param[] = "param";
 tls_extension_quic_transport_parameters::tls_extension_quic_transport_parameters(tls_session* session)
     : tls_extension(tls1_ext_quic_transport_parameters, session) {}
 
-return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto tpos = offsetof_header();
@@ -46,7 +47,8 @@ return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* str
             _params.insert({param_id, std::move(param)});
         }
 
-        if (debugstream) {
+        if (istraceable()) {
+            basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             for (auto item : _keys) {
                 auto iter = _params.find(item);
@@ -57,17 +59,19 @@ return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* str
                 switch (param_id) {
                     case quic_param_initial_source_connection_id:
                     case quic_param_retry_source_connection_id:
-                        debugstream->printf(" > %I64i (%s)\n", param_id, tlsadvisor->quic_param_string(param_id).c_str());
-                        dump_memory(param, debugstream, 16, 5, 0x0, dump_notrunc);
+                        dbs.printf(" > %I64i (%s)\n", param_id, tlsadvisor->quic_param_string(param_id).c_str());
+                        dump_memory(param, &dbs, 16, 5, 0x0, dump_notrunc);
                         break;
                     default: {
                         size_t epos = 0;
                         uint64 value = 0;
                         quic_read_vle_int(&param[0], param.size(), epos, value);
-                        debugstream->printf(" > %I64i (%s) %I64i\n", param_id, tlsadvisor->quic_param_string(param_id).c_str(), value);
+                        dbs.printf(" > %I64i (%s) %I64i\n", param_id, tlsadvisor->quic_param_string(param_id).c_str(), value);
                     } break;
                 }
             }
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
     }
     __finally2 {
@@ -76,7 +80,7 @@ return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* str
     return ret;
 }
 
-return_t tls_extension_quic_transport_parameters::do_write_body(binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_extension_quic_transport_parameters::do_write_body(binary_t& bin) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

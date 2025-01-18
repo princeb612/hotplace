@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
@@ -47,7 +48,7 @@ return_t crypto_advisor::build() {
 
     uint32 i = 0;
     unsigned long osslver = OpenSSL_version_num();
-    traceevent(category_crypto, crypto_event_info_openssl, "version %x", osslver);
+    trace_debug_event(category_crypto, crypto_event_info_openssl, "version %x", osslver);
 
     auto set_feature = [&](const std::string& key, uint32 feature) -> void {
         auto pib = _features.insert({key, feature});
@@ -87,7 +88,7 @@ return_t crypto_advisor::build() {
 #endif
         if (nullptr == evp_cipher) {
             // __trace(errorcode_t::debug, "%s", nameof_alg(item));
-            traceevent(category_crypto, crypto_event_openssl_nosupport, "%s", nameof_alg(item));
+            trace_debug_event(category_crypto, crypto_event_openssl_nosupport, "%s", nameof_alg(item));
         }
 
         _cipher_fetch_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(typeof_alg(item), typeof_mode(item)), item));
@@ -124,7 +125,7 @@ return_t crypto_advisor::build() {
 #endif
         if (nullptr == evp_md) {
             // __trace(errorcode_t::debug, "%s", nameof_alg(item));
-            traceevent(category_crypto, crypto_event_openssl_nosupport, "%s", nameof_alg(item));
+            trace_debug_event(category_crypto, crypto_event_openssl_nosupport, "%s", nameof_alg(item));
         }
         _md_fetch_map.insert(std::make_pair(typeof_alg(item), item));
         _md_byname_map.insert(std::make_pair(nameof_alg(item), item));
@@ -1179,8 +1180,6 @@ void crypto_advisor::get_cookie_secret(uint8 key, size_t secret_size, binary_t& 
         secret = iter->second;
     }
 }
-
-void crypto_advisor::trace(std::function<void(trace_category_t category, uint32 event, stream_t* s)> f) { _instance.settrace(f); }
 
 }  // namespace crypto
 }  // namespace hotplace

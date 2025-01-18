@@ -64,14 +64,6 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
 
             if (request) {
                 http_response response(request);
-                basic_stream bs;
-                if (option.verbose) {
-                    auto lambda = [&](trace_category_t, uint32, stream_t *s) -> void {
-                        _logger->colorln("response %i", session_socket->event_socket);
-                        _logger->writeln(s);
-                    };
-                    response.settrace(lambda);
-                }
 
                 /**
                  * Upgrade : commonly used in upgrading HTTP/1.1 connections to WebSocket or HTTP/2.
@@ -125,11 +117,6 @@ void start_server(t_shared_instance<http_server> &server, const std::string vers
         .set(netserver_config_t::serverconf_concurrent_tls_accept, 1)
         .set(netserver_config_t::serverconf_concurrent_network, 2)
         .set(netserver_config_t::serverconf_concurrent_consume, 2);
-    if (option.verbose) {
-        auto lambda = [](trace_category_t, uint32, stream_t *s) -> void { printf("%.*s", (unsigned int)s->size(), s->data()); };
-        builder.settrace(lambda);
-        builder.get_server_conf().set(netserver_config_t::serverconf_trace_ns, 1).set(netserver_config_t::serverconf_trace_h2, 1);
-    }
     server.make_share(builder.build());
 
     // content-type, default document

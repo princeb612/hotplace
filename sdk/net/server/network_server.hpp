@@ -12,7 +12,6 @@
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSERVER__
 
 #include <sdk/base/basic/keyvalue.hpp>
-#include <sdk/base/unittest/traceable.hpp>
 #include <sdk/io/system/multiplexer.hpp>
 #include <sdk/net/basic/types.hpp>
 #include <sdk/net/server/types.hpp>
@@ -42,10 +41,6 @@ enum netserver_config_t {
 
     serverconf_tcp_bufsize = 15,
     serverconf_udp_bufsize = 16,
-
-    serverconf_trace_ns = 1000,
-    serverconf_trace_h1 = 1001,
-    serverconf_trace_h2 = 1002,
 };
 
 class server_conf : public t_key_value<netserver_config_t, uint16> {
@@ -285,8 +280,6 @@ class network_server {
      *  5) close epoll multiplexer
      */
     return_t close(network_multiplexer_context_t* handle);
-
-    static return_t trace(network_multiplexer_context_t* handle, std::function<void(trace_category_t, uint32, stream_t*)> f);
 
    protected:
     /**

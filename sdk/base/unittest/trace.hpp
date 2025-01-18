@@ -6,26 +6,18 @@
  *
  * Revision History
  * Date         Name                Description
+ *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_SYSTEM_TRACE__
-#define __HOTPLACE_SDK_BASE_SYSTEM_TRACE__
+#ifndef __HOTPLACE_SDK_BASE_UNITTEST_TRACEABLE__
+#define __HOTPLACE_SDK_BASE_UNITTEST_TRACEABLE__
 
 #include <functional>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/stream.hpp>
-#include <sdk/base/syntax.hpp>
+#include <list>
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/types.hpp>
 
 namespace hotplace {
-
-enum trace_option_t {
-    trace_bt = 1,
-    trace_except = 2,
-    trace_debug = 3,
-};
 
 enum trace_category_t {
     category_debug_internal = 0,
@@ -75,18 +67,18 @@ enum category_tls_event_t {
     tls_event_write = 2,
 };
 
-uint32 set_trace_option(uint32 option);
-uint32 get_trace_option();
-
-return_t trace_backtrace(return_t errorcode);
-
-void set_trace_exception();
-void reset_trace_exception();
-
 /**
  * @sample
- *          // prepare
- *          set_trace_debug(handler);
+ *          void debug_handler(trace_category_t category, uint32 event, stream_t* s) {
+ *              std::string ct;
+ *              std::string ev;
+ *              basic_stream bs;
+ *              auto advisor = trace_advisor::get_instance();
+ *              advisor->get_names(category, event, ct, ev);
+ *              bs.printf("[%s][%s]%.*s", ct.c_str(), ev.c_str(), (unsigned int)s->size(), s->data());
+ *              _logger->writeln(bs);
+ *          };
+
  *          void myfunction() {
  *              // do something
  *              basic_stream bs;
@@ -94,11 +86,15 @@ void reset_trace_exception();
  *              trace_debug_event(category_debug_internal, 0, &bs);
  *          }
  *
- *          // and then activate ...
  *          set_trace_option(trace_debug);
+ *          set_trace_debug(handler);
  */
 void set_trace_debug(std::function<void(trace_category_t category, uint32 event, stream_t* s)> f);
 void trace_debug_event(trace_category_t category, uint32 event, stream_t* s);
+void trace_debug_event(trace_category_t category, uint32 event, const char* fmt, ...);
+void trace_debug_filter(trace_category_t category, bool filter);
+bool trace_debug_filtered(trace_category_t category);
+bool istraceable();
 
 class trace_advisor {
    public:

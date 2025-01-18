@@ -12,7 +12,6 @@
  */
 
 #include <sdk/base/basic/base16.hpp>
-#include <sdk/base/system/trace.hpp>
 #include <sdk/io/cbor/cbor_array.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/cbor/cbor_map.hpp>

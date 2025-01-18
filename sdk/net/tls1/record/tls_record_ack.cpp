@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/record/tls_record_ack.hpp>
 #include <sdk/net/tls1/tls.hpp>
@@ -23,7 +24,7 @@ constexpr char constexpr_ack[] = "record ack";
 
 tls_record_ack::tls_record_ack(tls_session* session) : tls_record(tls_content_type_ack, session) {}
 
-return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 len = get_body_size();
@@ -46,14 +47,13 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
                 pl.select(constexpr_ack)->get_variant().to_binary(ack);
             }
 
-            if (debugstream) {
-                debugstream->printf("> %s %04x(%i)\n", constexpr_ack_len, ack_len, ack_len);
-                dump_memory(ack, debugstream, 16, 3, 0x0, dump_notrunc);
-            }
-        }
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.printf("> %s %04x(%i)\n", constexpr_ack_len, ack_len, ack_len);
+                dump_memory(ack, &dbs, 16, 3, 0x0, dump_notrunc);
 
-        if (debugstream) {
-            //
+                trace_debug_event(category_tls1, tls_event_read, &dbs);
+            }
         }
 
         pos += len;
@@ -64,7 +64,7 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
     return ret;
 }
 
-return_t tls_record_ack::do_write_body(tls_direction_t dir, binary_t& bin, stream_t* debugstream) { return errorcode_t::not_supported; }
+return_t tls_record_ack::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

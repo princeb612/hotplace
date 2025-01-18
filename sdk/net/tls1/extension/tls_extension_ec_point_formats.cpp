@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/extension/tls_extension_ec_point_formats.hpp>
 #include <sdk/net/tls1/tls.hpp>
@@ -22,7 +24,7 @@ constexpr char constexpr_formats[] = "formats";
 
 tls_extension_ec_point_formats::tls_extension_ec_point_formats(tls_session* session) : tls_extension(tls1_ext_ec_point_formats, session) {}
 
-return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size_t size, size_t& pos, stream_t* debugstream) {
+return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 8422 5.1.2.  Supported Point Formats Extension
@@ -54,14 +56,17 @@ return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size
             }
         }
 
-        if (debugstream) {
+        if (istraceable()) {
+            basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            debugstream->printf(" > %s %i\n", constexpr_formats, len);
+            dbs.printf(" > %s %i\n", constexpr_formats, len);
             uint8 i = 0;
             for (auto fmt : _ec_point_formats) {
-                debugstream->printf("   [%i] 0x%02x(%i) %s\n", i++, fmt, fmt, tlsadvisor->ec_point_format_name(fmt).c_str());
+                dbs.printf("   [%i] 0x%02x(%i) %s\n", i++, fmt, fmt, tlsadvisor->ec_point_format_name(fmt).c_str());
             }
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
     }
     __finally2 {
@@ -70,7 +75,7 @@ return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size
     return ret;
 }
 
-return_t tls_extension_ec_point_formats::do_write_body(binary_t& bin, stream_t* debugstream) {
+return_t tls_extension_ec_point_formats::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint8 cbsize_formats = 0;

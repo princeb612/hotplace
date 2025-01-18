@@ -12,6 +12,7 @@
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
@@ -24,9 +25,9 @@
 namespace hotplace {
 namespace net {
 
-http_response::http_response() : traceable(), _request(nullptr), _statuscode(0), _hpsess(nullptr), _version(1), _stream_id(0) { _shared.make_share(this); }
+http_response::http_response() : _request(nullptr), _statuscode(0), _hpsess(nullptr), _version(1), _stream_id(0) { _shared.make_share(this); }
 
-http_response::http_response(http_request* request) : traceable(), _request(request), _statuscode(0), _hpsess(nullptr), _version(1), _stream_id(0) {
+http_response::http_response(http_request* request) : _request(request), _statuscode(0), _hpsess(nullptr), _version(1), _stream_id(0) {
     _shared.make_share(this);
     if (request) {
         request->addref();
@@ -38,7 +39,7 @@ http_response::http_response(http_request* request) : traceable(), _request(requ
     }
 }
 
-http_response::http_response(const http_response& object) : traceable() {
+http_response::http_response(const http_response& object) {
     _shared.make_share(this);
     _request = object._request;
     if (_request) {
@@ -310,7 +311,7 @@ http_response& http_response::get_response(basic_stream& bs) {
             basic_stream dbs;
             dump_memory(bs.data(), bs.size(), &dbs, 16, 2, 0, dump_notrunc);
 
-            traceevent(category_http_response, http_response_event_getresponse, &dbs);
+            trace_debug_event(category_http_response, http_response_event_getresponse, &dbs);
         }
     }
     return *this;
@@ -398,7 +399,7 @@ http_response& http_response::get_response_h2(binary_t& bin) {
                 frame->dump(&dbs);
                 dbs.printf("\n");
 
-                traceevent(category_http_response, http_response_event_getresponse, &dbs);
+                trace_debug_event(category_http_response, http_response_event_getresponse, &dbs);
             }
         };
 

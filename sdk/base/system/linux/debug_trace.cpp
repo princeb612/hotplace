@@ -15,7 +15,6 @@
 #include <iostream>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/linux/debug_trace.hpp>
-#include <sdk/base/system/trace.hpp>
 
 namespace hotplace {
 
