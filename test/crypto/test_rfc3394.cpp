@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
+void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
     return_t ret = errorcode_t::success;
     const OPTION& option = _cmdline->value();
 
@@ -90,6 +90,6 @@ void test_keywrap_rfc3394() {
     _test_case.begin("keywrap");
 
     for (int i = 0; i < sizeof_test_vector_rfc3394; i++) {
-        test_keywrap_rfc3394_testvector(test_vector_rfc3394 + i);
+        do_test_keywrap_rfc3394_testvector(test_vector_rfc3394 + i);
     }
 }

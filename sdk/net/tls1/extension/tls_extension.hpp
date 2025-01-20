@@ -51,6 +51,8 @@ class tls_extension {
     void release();
 
    protected:
+    virtual return_t do_preprocess();
+    virtual return_t do_postprocess();
     virtual return_t do_read_header(const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_header(binary_t& bin, const binary_t& body);

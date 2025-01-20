@@ -94,7 +94,7 @@ void test_base16_oddsize() {
     _test_case.assert(66 == bin_test.size(), __FUNCTION__, "odd size");
 }
 
-void dump_base16_rfc(const char* text, const char* input) {
+void do_dump_base16_rfc(const char* text, const char* input) {
     basic_stream bs;
 
     std::string encoded = base16_encode_rfc(input);
@@ -112,7 +112,7 @@ void test_base16_rfc() {
         "80 81 82 83 84 85 86 87 88 89 8a 8b 8c 8d 8e 8f"
         "90 91 92 93 94 95 96 97 98 99 9a 9b 9c 9d 9e 9f";
 
-    dump_base16_rfc("case1", expr1);
-    dump_base16_rfc("case2", expr2);
-    dump_base16_rfc("case3", expr3);
+    do_dump_base16_rfc("case1", expr1);
+    do_dump_base16_rfc("case2", expr2);
+    do_dump_base16_rfc("case3", expr3);
 }

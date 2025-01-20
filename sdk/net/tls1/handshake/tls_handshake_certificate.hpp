@@ -18,7 +18,7 @@ class tls_handshake_certificate : public tls_handshake {
    public:
     tls_handshake_certificate(tls_session* session);
 
-    return_t set(tls_direction_t dir, const char* certfile);
+    return_t set(tls_direction_t dir, const char* certfile, const char* keyfile);
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);

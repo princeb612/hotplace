@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS1_SESSION__
 #define __HOTPLACE_SDK_NET_TLS1_SESSION__
 
+#include <queue>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
@@ -55,8 +56,13 @@ class tls_session {
     void addref();
     void release();
 
+    void schedule(tls_handshake* handshake);
+    void carryout_schedule(tls_direction_t dir);
+
    private:
+    critical_section _lock;
     std::map<tls_direction_t, session_info> _direction;
+    std::queue<tls_handshake*> _que;
     tls_protection _tls_protection;
     t_shared_reference<tls_session> _shared;
 };

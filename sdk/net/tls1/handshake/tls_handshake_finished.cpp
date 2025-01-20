@@ -24,7 +24,15 @@
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_verify_data[] = "verify data";
+
 tls_handshake_finished::tls_handshake_finished(tls_session* session) : tls_handshake(tls_hs_finished, session) {}
+
+void tls_handshake_finished::carryout_schedule(tls_direction_t dir) {
+    auto session = get_session();
+    session->get_session_info(dir).set_status(get_type());
+    session->reset_recordno(dir);
+}
 
 return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
@@ -44,9 +52,7 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
             // from_client : resumption related
             protection.calc(session, tls_hs_finished, dir);
 
-            session->get_session_info(dir).set_status(get_type());
-
-            session->reset_recordno(dir);
+            session->schedule(this);  // carryout_schedule
         }
     }
     __finally2 {
@@ -58,24 +64,23 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
 return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        {
-            // RFC 8446 2.  Protocol Overview
-            // Finished:  A MAC (Message Authentication Code) over the entire
-            //    handshake.  This message provides key confirmation, binds the
-            //    endpoint's identity to the exchanged keys, and in PSK mode also
-            //    authenticates the handshake.  [Section 4.4.4]
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
 
-            auto& protection = session->get_tls_protection();
+        // RFC 8446 2.  Protocol Overview
+        // Finished:  A MAC (Message Authentication Code) over the entire
+        //    handshake.  This message provides key confirmation, binds the
+        //    endpoint's identity to the exchanged keys, and in PSK mode also
+        //    authenticates the handshake.  [Section 4.4.4]
+
+        uint16 dlen = 0;
+        hash_algorithm_t hmacalg;
+        {
             crypto_advisor* advisor = crypto_advisor::get_instance();
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
@@ -83,108 +88,43 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 ret = errorcode_t::success;
                 __leave2;
             }
-            auto dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
+            dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
+            hmacalg = algof_mac(hint_tls_alg);
+        }
 
-            constexpr char constexpr_verify_data[] = "verify data";
+        binary_t verify_data;
 
-            binary_t verify_data;
+        {
+            payload pl;
+            pl << new payload_member(binary_t(), constexpr_verify_data);
+            pl.select(constexpr_verify_data)->reserve(dlen);
+            pl.read(stream, size, pos);
 
-            {
-                payload pl;
-                pl << new payload_member(binary_t(), constexpr_verify_data);
-                pl.select(constexpr_verify_data)->reserve(dlen);
-                pl.read(stream, size, pos);
+            pl.get_binary(constexpr_verify_data, verify_data);
+        }
 
-                pl.get_binary(constexpr_verify_data, verify_data);
+        {
+            tls_secret_t typeof_secret;
+            binary_t maced;
+            protection.calc_finished(dir, hmacalg, dlen, typeof_secret, maced);
+
+            if (verify_data != maced) {
+                ret = errorcode_t::error_verify;
             }
 
-            {
-                // https://tls13.xargs.org/#server-handshake-finished/annotated
-                binary_t fin_hash;
-                auto hash = protection.get_transcript_hash();
-                if (hash) {
-                    hash->digest(fin_hash);
-                    hash->release();
-                }
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.autoindent(1);
+                dbs.printf("> %s", constexpr_verify_data);
+                dbs.printf(" \e[1;33m%s\e[0m", (errorcode_t::success == ret) ? "true" : "false");
+                dbs.printf("\n");
+                dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
+                dbs.printf("  > secret (internal) 0x%08x\n", typeof_secret);
+                dbs.printf("  > verify data %s \n", base16_encode(verify_data).c_str());
+                dbs.printf("  > maced       %s\n", base16_encode(maced).c_str());
+                dbs.autoindent(0);
 
-                // calculate finished "tls13 finished"
-                // fin_key : expanded
-                // finished == maced
-                tls_secret_t typeof_secret;
-                binary_t fin_key;
-                binary_t maced;
-                auto tlsversion = protection.get_tls_version();
-                if (is_basedon_tls13(tlsversion)) {
-                    if (from_server == dir) {
-                        typeof_secret = tls_secret_s_hs_traffic;
-                    } else {
-                        typeof_secret = tls_secret_c_hs_traffic;
-                    }
-                    const binary_t& ht_secret = protection.get_item(typeof_secret);
-                    hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(protection.get_cipher_suite());
-                    openssl_kdf kdf;
-                    binary_t context;
-                    if (session->get_tls_protection().is_kindof_dtls()) {
-                        kdf.hkdf_expand_dtls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
-                    } else {
-                        kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
-                    }
-                    crypto_hmac_builder builder;
-                    crypto_hmac* hmac = builder.set(hashalg).set(fin_key).build();
-                    if (hmac) {
-                        hmac->mac(fin_hash, maced);
-                        hmac->release();
-                    }
-                } else {
-                    binary_t seed;
-                    if (from_client == dir) {
-                        binary_append(seed, "client finished");
-                    } else {
-                        binary_append(seed, "server finished");
-                    }
-                    binary_append(seed, fin_hash);
-
-                    typeof_secret = tls_secret_master;
-                    const binary_t& fin_key = protection.get_item(typeof_secret);
-                    auto hmac_alg = algof_mac(hint_tls_alg);
-
-                    crypto_hmac_builder builder;
-                    auto hmac = builder.set(hmac_alg).set(fin_key).build();
-                    size_t size_maced = 12;
-                    if (hmac) {
-                        binary_t temp = seed;
-                        binary_t atemp;
-                        binary_t ptemp;
-                        while (maced.size() < size_maced) {
-                            hmac->mac(temp, atemp);
-                            hmac->update(atemp).update(seed).finalize(ptemp);
-                            binary_append(maced, ptemp);
-                            temp = atemp;
-                        }
-                        hmac->release();
-                        maced.resize(size_maced);
-                    }
-                }
-
-                verify_data.resize(maced.size());
-                if (verify_data != maced) {
-                    ret = errorcode_t::error_verify;
-                }
-
-                if (istraceable()) {
-                    basic_stream dbs;
-                    dbs.autoindent(1);
-                    dbs.printf("> %s", constexpr_verify_data);
-                    dbs.printf(" \e[1;33m%s\e[0m", (errorcode_t::success == ret) ? "true" : "false");
-                    dbs.printf("\n");
-                    dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
-                    dbs.printf("  > secret (internal) 0x%08x\n", typeof_secret);
-                    dbs.printf("  > verify data %s \n", base16_encode(verify_data).c_str());
-                    dbs.printf("  > maced       %s\n", base16_encode(maced).c_str());
-                    dbs.autoindent(0);
-
-                    trace_debug_event(category_tls1, tls_event_read, &dbs);
-                }
+                trace_debug_event(category_tls1, tls_event_read, &dbs);
             }
         }
     }
@@ -194,7 +134,49 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
     return ret;
 }
 
-return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
+return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
+        uint16 dlen = 0;
+        hash_algorithm_t hmacalg;
+        {
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
+            if (nullptr == hint_tls_alg) {
+                ret = errorcode_t::success;
+                __leave2;
+            }
+            dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
+            hmacalg = algof_mac(hint_tls_alg);
+        }
+
+        tls_secret_t typeof_secret;
+        binary_t verify_data;
+        { protection.calc_finished(dir, hmacalg, dlen, typeof_secret, verify_data); }
+
+        {
+            payload pl;
+            pl << new payload_member(verify_data, constexpr_verify_data);
+            pl.write(bin);
+        }
+
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf("> %s\n", constexpr_verify_data);
+            dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
+            dbs.printf("  > secret (internal) 0x%08x\n", typeof_secret);
+            dbs.printf("  > verify data %s \n", base16_encode(verify_data).c_str());
+
+            trace_debug_event(category_tls1, tls_event_write, &dbs);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

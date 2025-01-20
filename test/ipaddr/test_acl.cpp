@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-static bool determine(ipaddr_acl* acl, const char* ip, bool expect) {
+static bool do_determine(ipaddr_acl* acl, const char* ip, bool expect) {
     return_t ret = errorcode_t::success;
     bool check = false;
 
@@ -40,31 +40,31 @@ void test1() {
     acl.setmode(ipaddr_acl_t::whitelist);
     _logger->writeln("white list mode");
 
-    determine(&acl, "127.0.0.1", true);
-    determine(&acl, "10.20.15.24", false);
-    determine(&acl, "10.20.13.2", false);
-    determine(&acl, "10.20.1.224", false);
-    determine(&acl, "10.20.1.125", false);
+    do_determine(&acl, "127.0.0.1", true);
+    do_determine(&acl, "10.20.15.24", false);
+    do_determine(&acl, "10.20.13.2", false);
+    do_determine(&acl, "10.20.1.224", false);
+    do_determine(&acl, "10.20.1.125", false);
 #ifdef SUPPORT_IPV6
-    determine(&acl, "::1", true);
-    determine(&acl, "0:0:0:0:0:0:0:1", true);
-    determine(&acl, "3ffe:ffff:0:f101::ffff", true);
-    determine(&acl, "3ffe:ffff:0:f101:1234::ffff", true);
-    determine(&acl, "3ffe:ffff:0:f102::ffff", false);
-    determine(&acl, "::1", true);
+    do_determine(&acl, "::1", true);
+    do_determine(&acl, "0:0:0:0:0:0:0:1", true);
+    do_determine(&acl, "3ffe:ffff:0:f101::ffff", true);
+    do_determine(&acl, "3ffe:ffff:0:f101:1234::ffff", true);
+    do_determine(&acl, "3ffe:ffff:0:f102::ffff", false);
+    do_determine(&acl, "::1", true);
 #endif
 
     acl.setmode(ipaddr_acl_t::blacklist);
     _logger->writeln("black list mode");
 
-    determine(&acl, "127.0.0.1", true);
-    determine(&acl, "10.20.15.24", true);
-    determine(&acl, "10.20.13.2", false);
-    determine(&acl, "10.20.1.224", false);
-    determine(&acl, "10.20.1.125", false);
+    do_determine(&acl, "127.0.0.1", true);
+    do_determine(&acl, "10.20.15.24", true);
+    do_determine(&acl, "10.20.13.2", false);
+    do_determine(&acl, "10.20.1.224", false);
+    do_determine(&acl, "10.20.1.125", false);
 #ifdef SUPPORT_IPV6
-    determine(&acl, "0:0:0:0:0:0:0:1", true);
-    determine(&acl, "::1", true);
+    do_determine(&acl, "0:0:0:0:0:0:0:1", true);
+    do_determine(&acl, "::1", true);
 #endif
 }
 

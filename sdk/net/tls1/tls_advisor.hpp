@@ -101,6 +101,8 @@ hash_algorithm_t algof_mac(const tls_cipher_suite_t* info);
 
 struct tls_sig_scheme_t {
     uint16 code;
+    uint8 pri;
+    crypto_kty_t kty;
     crypt_sig_type_t sigtype;  // crypt_sig_rsassa_pkcs15, crypt_sig_ecdsa, crypt_sig_rsassa_pss, crypt_sig_eddsa
     uint32 nid;
     crypt_sig_t sig;  // sig_rs256, ..., sig_es256, ..., sig_ps256, ..., sig_eddsa, sig_sha1, sig_sha256, ...

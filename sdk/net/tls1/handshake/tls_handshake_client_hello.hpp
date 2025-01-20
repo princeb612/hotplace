@@ -29,7 +29,7 @@ class tls_handshake_client_hello : public tls_handshake {
     return_t add_ciphersuite(uint16 suite);
 
    protected:
-    virtual return_t do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size);
+    virtual return_t do_preprocess(tls_direction_t dir);
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
@@ -40,21 +40,6 @@ class tls_handshake_client_hello : public tls_handshake {
     binary _session_id;
     std::vector<uint16> _cipher_suites;
     std::vector<uint8> _compression_methods;
-};
-
-class tls_handshake_client_hello_selector {
-   public:
-    tls_handshake_client_hello_selector(const tls_records* records);
-
-    const tls_records* get_records();
-    return_t select();
-    uint16 get_version();
-    uint16 get_cipher_suite();
-
-   protected:
-    const tls_records* _records;
-    uint16 _version;
-    uint16 _cipher_suite;
 };
 
 }  // namespace net

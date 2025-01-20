@@ -26,9 +26,29 @@ tls_extension_supported_versions::tls_extension_supported_versions(tls_session* 
 
 tls_extension_client_supported_versions::tls_extension_client_supported_versions(tls_session* session) : tls_extension_supported_versions(session) {}
 
+return_t tls_extension_client_supported_versions::do_postprocess() {
+    return_t ret = errorcode_t::success;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto& protection_context = protection.get_protection_context();
+    protection_context.clear_supported_versions();
+    for (auto ver : _versions) {
+        protection_context.add_supported_version(ver);
+    }
+    return ret;
+}
+
 return_t tls_extension_client_supported_versions::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        auto& protection = session->get_tls_protection();
+
         uint16 count = 0;
         binary_t versions;
         {
@@ -67,19 +87,30 @@ return_t tls_extension_client_supported_versions::do_read_body(const byte_t* str
 
 return_t tls_extension_client_supported_versions::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
-    uint8 cbsize_versions = 0;
-    binary_t bin_versions;
-    {
-        for (auto ver : _versions) {
-            binary_append(bin_versions, ver, hton16);
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
         }
-        cbsize_versions = bin_versions.size();
+
+        auto& protection = session->get_tls_protection();
+
+        uint8 cbsize_versions = 0;
+        binary_t bin_versions;
+        {
+            for (auto ver : _versions) {
+                binary_append(bin_versions, ver, hton16);
+            }
+            cbsize_versions = bin_versions.size();
+        }
+        {
+            payload pl;
+            pl << new payload_member(cbsize_versions, constexpr_versions) << new payload_member(bin_versions, constexpr_version);
+            pl.write(bin);
+        }
     }
-    {
-        payload pl;
-        pl << new payload_member(cbsize_versions, constexpr_versions) << new payload_member(bin_versions, constexpr_version);
-        pl.write(bin);
-    }
+    __finally2 {}
     return ret;
 }
 

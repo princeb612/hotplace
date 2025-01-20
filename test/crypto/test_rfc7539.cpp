@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {
+void do_test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {
     return_t ret = errorcode_t::success;
     const OPTION& option = _cmdline->value();
 
@@ -70,6 +70,6 @@ void test_chacha20_rfc7539() {
     // RFC 8439 2.8.  AEAD Construction
 
     for (size_t i = 0; i < sizeof_test_vector_rfc7539; i++) {
-        test_chacha20_rfc7539_testvector(test_vector_rfc7539 + i);
+        do_test_chacha20_rfc7539_testvector(test_vector_rfc7539 + i);
     }
 }

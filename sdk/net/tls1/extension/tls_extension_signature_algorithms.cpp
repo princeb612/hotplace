@@ -24,9 +24,24 @@ constexpr char constexpr_algorithm[] = "algorithm";
 
 tls_extension_signature_algorithms::tls_extension_signature_algorithms(tls_session* session) : tls_extension(tls1_ext_signature_algorithms, session) {}
 
+return_t tls_extension_signature_algorithms::do_postprocess() {
+    return_t ret = errorcode_t::success;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto& protection_context = protection.get_protection_context();
+    protection_context.clear_signature_algorithms();
+    for (auto alg : _algorithms) {
+        protection_context.add_signature_algorithm(alg);
+    }
+    return ret;
+}
+
 return_t tls_extension_signature_algorithms::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
         // RFC 8446 4.2.3.  Signature Algorithms
 
         binary_t algorithms;
@@ -68,19 +83,25 @@ return_t tls_extension_signature_algorithms::do_read_body(const byte_t* stream, 
 
 return_t tls_extension_signature_algorithms::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
-    uint16 cbsize_algorithms = 0;
-    binary_t bin_algorithms;
-    {
-        for (auto alg : _algorithms) {
-            binary_append(bin_algorithms, alg, hton16);
+    __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
+        uint16 cbsize_algorithms = 0;
+        binary_t bin_algorithms;
+        {
+            for (auto alg : _algorithms) {
+                binary_append(bin_algorithms, alg, hton16);
+            }
+            cbsize_algorithms = bin_algorithms.size();
         }
-        cbsize_algorithms = bin_algorithms.size();
+        {
+            payload pl;
+            pl << new payload_member(cbsize_algorithms, true, constexpr_algorithms) << new payload_member(bin_algorithms, constexpr_algorithm);
+            pl.write(bin);
+        }
     }
-    {
-        payload pl;
-        pl << new payload_member(cbsize_algorithms, true, constexpr_algorithms) << new payload_member(bin_algorithms, constexpr_algorithm);
-        pl.write(bin);
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -15,7 +15,7 @@
 tls_session client_session;
 tls_session server_session;
 
-void test_construct_client_hello(tls_session* session, binary_t& bin) {
+void do_test_construct_client_hello(tls_direction_t dir, tls_session* session, binary_t& bin) {
     tls_handshake_client_hello handshake(session);
 
     {
@@ -78,15 +78,15 @@ void test_construct_client_hello(tls_session* session, binary_t& bin) {
             .add("ecdsa_secp521r1_sha512")
             .add("ed25519")
             .add("ed448")
+            .add("rsa_pkcs1_sha256")
+            .add("rsa_pkcs1_sha384")
+            .add("rsa_pkcs1_sha512")
             .add("rsa_pss_pss_sha256")
             .add("rsa_pss_pss_sha384")
             .add("rsa_pss_pss_sha512")
             .add("rsa_pss_rsae_sha256")
             .add("rsa_pss_rsae_sha384")
-            .add("rsa_pss_rsae_sha512")
-            .add("rsa_pkcs1_sha256")
-            .add("rsa_pkcs1_sha384")
-            .add("rsa_pkcs1_sha512");
+            .add("rsa_pss_rsae_sha512");
         handshake.get_extensions().add(signature_algorithms);
     }
     {
@@ -107,7 +107,7 @@ void test_construct_client_hello(tls_session* session, binary_t& bin) {
     {
         tls_record_handshake record(session);
         record.get_handshakes().add(&handshake, true);
-        record.write(from_client, bin);
+        record.write(dir, bin);
 
         _test_case.assert(bin.size(), __FUNCTION__, "{*client->server} construct client hello message");
     }
@@ -120,20 +120,22 @@ void test_construct_client_hello(tls_session* session, binary_t& bin) {
     }
 }
 
-void test_send_client_hello(tls_session* session, tls_records& records, const binary_t& bin) {
+void do_test_send_client_hello(tls_direction_t dir, tls_session* session, tls_records& records, const binary_t& bin) {
     return_t ret = errorcode_t::success;
 
-    ret = records.read(session, from_client, bin);
+    ret = records.read(session, dir, bin);
 
     _test_case.test(ret, __FUNCTION__, "{client->server*} send client hello");
 }
 
-void test_construct_server_hello(tls_session* session, const tls_records& records_client_hello, binary_t& bin) {
-    tls_handshake_client_hello_selector selector(&records_client_hello);
-    selector.select();  // TODO ...
-
-    auto server_version = selector.get_version();
-    auto server_cs = selector.get_cipher_suite();
+void do_test_construct_server_hello(tls_direction_t dir, tls_session* session, tls_session* client_session, binary_t& bin) {
+    uint16 server_version = tls_13;
+    uint16 server_cs = 0x1301;
+    auto& client_handshake_context = client_session->get_tls_protection().get_protection_context();
+    auto& server_handshake_context = session->get_tls_protection().get_protection_context();
+    server_handshake_context.select_from(client_handshake_context);
+    server_cs = server_handshake_context.get0_cipher_suite();
+    server_version = server_handshake_context.get0_supported_version();
 
     tls_handshake_server_hello handshake(session);
 
@@ -162,7 +164,7 @@ void test_construct_server_hello(tls_session* session, const tls_records& record
     {
         tls_record_handshake record(session);
         record.get_handshakes().add(&handshake, true);
-        record.write(from_client, bin);
+        record.write(dir, bin);
 
         _test_case.assert(bin.size(), __FUNCTION__, "{*server->client} construct server hello message");
     }
@@ -175,15 +177,15 @@ void test_construct_server_hello(tls_session* session, const tls_records& record
     }
 }
 
-void test_send_server_hello(tls_session* session, tls_records& records, const binary_t& bin) {
+void do_test_send_server_hello(tls_direction_t dir, tls_session* session, tls_records& records, const binary_t& bin) {
     return_t ret = errorcode_t::success;
 
-    ret = records.read(session, from_server, bin);
+    ret = records.read(session, dir, bin);
 
     _test_case.test(ret, __FUNCTION__, "{server->client*} send server hello");
 }
 
-void cross_check_keycalc(tls_secret_t secret, const char* secret_name) {
+void do_cross_check_keycalc(tls_secret_t secret, const char* secret_name) {
     auto& client_protection = client_session.get_tls_protection();
     auto& server_protection = server_session.get_tls_protection();
 
@@ -199,22 +201,22 @@ void cross_check_keycalc(tls_secret_t secret, const char* secret_name) {
     _test_case.assert(client_secret == server_secret, __FUNCTION__, "cross-check secret %s", secret_name);
 }
 
-void test_keycalc() {
-    cross_check_keycalc(tls_context_empty_hash, "tls_context_empty_hash");
-    cross_check_keycalc(tls_context_shared_secret, "tls_context_shared_secret");
-    cross_check_keycalc(tls_context_transcript_hash, "tls_context_transcript_hash");
-    cross_check_keycalc(tls_secret_early_secret, "tls_secret_early_secret");
-    cross_check_keycalc(tls_secret_handshake_derived, "tls_secret_handshake_derived");
-    cross_check_keycalc(tls_secret_handshake, "tls_secret_handshake");
-    cross_check_keycalc(tls_secret_c_hs_traffic, "tls_secret_c_hs_traffic");
-    cross_check_keycalc(tls_secret_s_hs_traffic, "tls_secret_s_hs_traffic");
-    cross_check_keycalc(tls_secret_handshake_client_key, "tls_secret_handshake_client_key");
-    cross_check_keycalc(tls_secret_handshake_client_iv, "tls_secret_handshake_client_iv");
-    cross_check_keycalc(tls_secret_handshake_server_key, "tls_secret_handshake_server_key");
-    cross_check_keycalc(tls_secret_handshake_server_iv, "tls_secret_handshake_server_iv");
+void do_test_keycalc() {
+    do_cross_check_keycalc(tls_context_empty_hash, "tls_context_empty_hash");
+    do_cross_check_keycalc(tls_context_shared_secret, "tls_context_shared_secret");
+    do_cross_check_keycalc(tls_context_transcript_hash, "tls_context_transcript_hash");
+    do_cross_check_keycalc(tls_secret_early_secret, "tls_secret_early_secret");
+    do_cross_check_keycalc(tls_secret_handshake_derived, "tls_secret_handshake_derived");
+    do_cross_check_keycalc(tls_secret_handshake, "tls_secret_handshake");
+    do_cross_check_keycalc(tls_secret_c_hs_traffic, "tls_secret_c_hs_traffic");
+    do_cross_check_keycalc(tls_secret_s_hs_traffic, "tls_secret_s_hs_traffic");
+    do_cross_check_keycalc(tls_secret_handshake_client_key, "tls_secret_handshake_client_key");
+    do_cross_check_keycalc(tls_secret_handshake_client_iv, "tls_secret_handshake_client_iv");
+    do_cross_check_keycalc(tls_secret_handshake_server_key, "tls_secret_handshake_server_key");
+    do_cross_check_keycalc(tls_secret_handshake_server_iv, "tls_secret_handshake_server_iv");
 }
 
-void test_construct_server_change_cipher_spec(tls_session* session, binary_t& bin) {
+void do_test_construct_server_change_cipher_spec(tls_direction_t dir, tls_session* session, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -223,12 +225,12 @@ void test_construct_server_change_cipher_spec(tls_session* session, binary_t& bi
         }
 
         tls_record_change_cipher_spec record(session);
-        ret = record.write(from_server, bin);
+        ret = record.write(dir, bin);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "{*server->client} construct change_cipher_spec"); }
 }
 
-void test_send_server_change_cipher_spec(tls_session* session, const binary_t& bin) {
+void do_test_send_server_change_cipher_spec(tls_direction_t dir, tls_session* session, const binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -236,12 +238,12 @@ void test_send_server_change_cipher_spec(tls_session* session, const binary_t& b
             __leave2;
         }
         tls_records records;
-        ret = records.read(session, from_server, bin);
+        ret = records.read(session, dir, bin);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "{server->client*} send change_cipher_spec"); }
 }
 
-void test_construct_encrypted_extensions(tls_session* session, binary_t& bin) {
+void do_test_construct_encrypted_extensions(tls_direction_t dir, tls_session* session, binary_t& bin) {
     return_t ret = errorcode_t::success;
     tls_handshake_encrypted_extensions handshake(session);
     __try2 {
@@ -252,15 +254,12 @@ void test_construct_encrypted_extensions(tls_session* session, binary_t& bin) {
 
         tls_record_application_data record(session);
         record.get_handshakes().add(&handshake, true);
-        ret = record.write(from_server, bin);
+        ret = record.write(dir, bin);
     }
-    __finally2 {
-        // _logger->hdump("> construct", bin, 16, 3);
-        _test_case.test(ret, __FUNCTION__, "{*server->client} construct encrypted extensions");
-    }
+    __finally2 { _test_case.test(ret, __FUNCTION__, "{*server->client} construct encrypted extensions"); }
 }
 
-void test_send_encrypted_extensions(tls_session* session, const binary_t& bin) {
+void do_test_send_encrypted_extensions(tls_direction_t dir, tls_session* session, const binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -268,12 +267,12 @@ void test_send_encrypted_extensions(tls_session* session, const binary_t& bin) {
             __leave2;
         }
         tls_records records;
-        ret = records.read(session, from_server, bin);
+        ret = records.read(session, dir, bin);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "{server->client*} send encrypted extensions"); }
 }
 
-void test_construct_certificate(tls_session* session, const char* certfile, binary_t& bin) {
+void do_test_construct_certificate(tls_direction_t dir, tls_session* session, const char* certfile, const char* keyfile, binary_t& bin) {
     return_t ret = errorcode_t::success;
     tls_handshake_certificate handshake(session);
     __try2 {
@@ -282,19 +281,16 @@ void test_construct_certificate(tls_session* session, const char* certfile, bina
             __leave2;
         }
 
-        handshake.set(from_server, certfile);  // SC (server certificate)
+        handshake.set(dir, certfile, keyfile);  // SC (server certificate)
 
         tls_record_application_data record(session);
         record.get_handshakes().add(&handshake, true);
-        record.write(from_server, bin);
+        record.write(dir, bin);
     }
-    __finally2 {
-        // _logger->hdump("> construct", bin, 16, 3);
-        _test_case.test(ret, __FUNCTION__, "{*server->client} construct certificate");
-    }
+    __finally2 { _test_case.test(ret, __FUNCTION__, "{*server->client} construct certificate"); }
 }
 
-void test_send_certificate(tls_session* session, const binary_t& bin) {
+void do_test_send_certificate(tls_direction_t dir, tls_session* session, const binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -302,12 +298,12 @@ void test_send_certificate(tls_session* session, const binary_t& bin) {
             __leave2;
         }
         tls_records records;
-        ret = records.read(session, from_server, bin);
+        ret = records.read(session, dir, bin);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "{server->client*} send cerficate"); }
 }
 
-void test_construct_certificate_verify(tls_session* session, binary_t& bin) {
+void do_test_construct_certificate_verify(tls_direction_t dir, tls_session* session, binary_t& bin) {
     return_t ret = errorcode_t::success;
     tls_handshake_certificate_verify handshake(session);
     __try2 {
@@ -316,19 +312,14 @@ void test_construct_certificate_verify(tls_session* session, binary_t& bin) {
             __leave2;
         }
 
-        //
-
         tls_record_application_data record(session);
         record.get_handshakes().add(&handshake, true);
-        record.write(from_server, bin);
+        record.write(dir, bin);
     }
-    __finally2 {
-        // _logger->hdump("> construct", bin, 16, 3);
-        _test_case.test(ret, __FUNCTION__, "{*server->client} construct certificate verify");
-    }
+    __finally2 { _test_case.test(ret, __FUNCTION__, "{*server->client} construct certificate verify"); }
 }
 
-void test_send_certificate_verify(tls_session* session, const binary_t& bin) {
+void do_test_send_certificate_verify(tls_direction_t dir, tls_session* session, const binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -336,9 +327,67 @@ void test_send_certificate_verify(tls_session* session, const binary_t& bin) {
             __leave2;
         }
         tls_records records;
-        ret = records.read(session, from_server, bin);
+        ret = records.read(session, dir, bin);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "{server->client*} send cerficate verify"); }
+}
+
+void do_test_construct_server_finished(tls_direction_t dir, tls_session* session, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    tls_handshake_finished handshake(session);
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tls_record_application_data record(session);
+        record.get_handshakes().add(&handshake, true);
+        record.write(dir, bin);
+    }
+    __finally2 { _test_case.test(ret, __FUNCTION__, "{*server->client} construct server finished"); }
+}
+
+void do_test_send_server_finished(tls_direction_t dir, tls_session* session, const binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        tls_records records;
+        ret = records.read(session, dir, bin);
+    }
+    __finally2 { _test_case.test(ret, __FUNCTION__, "{server->client*} send server finished"); }
+}
+
+void do_test_construct_client_finished(tls_direction_t dir, tls_session* session, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    tls_handshake_finished handshake(session);
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tls_record_application_data record(session);
+        record.get_handshakes().add(&handshake, true);
+        record.write(dir, bin);
+    }
+    __finally2 { _test_case.test(ret, __FUNCTION__, "{*client->server} construct client finished"); }
+}
+
+void do_test_send_client_finished(tls_direction_t dir, tls_session* session, const binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        tls_records records;
+        ret = records.read(session, dir, bin);
+    }
+    __finally2 { _test_case.test(ret, __FUNCTION__, "{client->server*} send client finished"); }
 }
 
 void test_construct() {
@@ -354,34 +403,44 @@ void test_construct() {
     // C -> S CH
     tls_records records_client_hello;
     binary_t bin_client_hello;
-    test_construct_client_hello(&client_session, bin_client_hello);
-    test_send_client_hello(&server_session, records_client_hello, bin_client_hello);
+    do_test_construct_client_hello(from_client, &client_session, bin_client_hello);
+    do_test_send_client_hello(from_client, &server_session, records_client_hello, bin_client_hello);
 
     // S -> C SH
     tls_records records_server_hello;
     binary_t bin_server_hello;
-    test_construct_server_hello(&server_session, records_client_hello, bin_server_hello);
-    test_send_server_hello(&client_session, records_server_hello, bin_server_hello);
+    do_test_construct_server_hello(from_server, &server_session, &client_session, bin_server_hello);
+    do_test_send_server_hello(from_server, &client_session, records_server_hello, bin_server_hello);
 
-    test_keycalc();
+    do_test_keycalc();
 
     // S -> C CCS
     binary_t bin_server_change_cipher_spec;
-    test_construct_server_change_cipher_spec(&server_session, bin_server_change_cipher_spec);
-    test_send_server_change_cipher_spec(&client_session, bin_server_change_cipher_spec);
+    do_test_construct_server_change_cipher_spec(from_server, &server_session, bin_server_change_cipher_spec);
+    do_test_send_server_change_cipher_spec(from_server, &client_session, bin_server_change_cipher_spec);
 
     // S -> C EE
     binary_t bin_encrypted_extensions;
-    test_construct_encrypted_extensions(&server_session, bin_encrypted_extensions);
-    test_send_encrypted_extensions(&client_session, bin_encrypted_extensions);
+    do_test_construct_encrypted_extensions(from_server, &server_session, bin_encrypted_extensions);
+    do_test_send_encrypted_extensions(from_server, &client_session, bin_encrypted_extensions);
 
     // S -> C SC
     binary_t bin_certificate;
-    test_construct_certificate(&server_session, "server.crt", bin_certificate);
-    test_send_certificate(&client_session, bin_certificate);
+    do_test_construct_certificate(from_server, &server_session, "server.crt", "server.key", bin_certificate);
+    do_test_send_certificate(from_server, &client_session, bin_certificate);
 
     // S -> C SCV
     binary_t bin_certificate_verify;
-    test_construct_certificate_verify(&server_session, bin_certificate_verify);
-    test_send_certificate_verify(&client_session, bin_certificate_verify);
+    do_test_construct_certificate_verify(from_server, &server_session, bin_certificate_verify);
+    do_test_send_certificate_verify(from_server, &client_session, bin_certificate_verify);
+
+    // S -> C SF
+    binary_t bin_server_finished;
+    do_test_construct_server_finished(from_server, &server_session, bin_server_finished);
+    do_test_send_server_finished(from_server, &client_session, bin_server_finished);
+
+    // C -> S CF
+    binary_t bin_client_finished;
+    do_test_construct_client_finished(from_client, &client_session, bin_client_finished);
+    do_test_send_client_finished(from_client, &server_session, bin_client_finished);
 }

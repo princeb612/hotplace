@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void print_datetime(datetime* d) {
+void do_print_datetime(datetime* d) {
     datetime_t t;
     long nsec = 0;
 
@@ -18,21 +18,21 @@ void print_datetime(datetime* d) {
     _logger->writeln("time %04d-%02d-%02d %02d:%02d:%02d.%ld", t.year, t.month, t.day, t.hour, t.minute, t.second, nsec);
 }
 
-void apply_timespan(datetime* dt, timespan_t ts) {
+void do_apply_timespan(datetime* dt, timespan_t ts) {
     return_t ret = errorcode_t::success;
 
     _logger->writeln("class datetime");
-    print_datetime(dt);
+    do_print_datetime(dt);
 
     _logger->writeln("class datetime += timespan (%dd, %ds, %dms)", ts.days, ts.seconds, ts.milliseconds);
     datetime dt1(*dt);
     dt1 += ts;
-    print_datetime(&dt1);
+    do_print_datetime(&dt1);
 
     _logger->writeln("class datetime -= timespan (%dd, %ds, %dms)", ts.days, ts.seconds, ts.milliseconds);
     datetime dt2(dt1);
     dt2 -= ts;
-    print_datetime(&dt2);
+    do_print_datetime(&dt2);
 
     if (*dt == dt2) {
     } else {
@@ -52,29 +52,29 @@ void test_time() {
 
     _test_case.begin("class datetime");
     datetime dt1;
-    apply_timespan(&dt1, ts);
+    do_apply_timespan(&dt1, ts);
 
     _test_case.begin("struct timespec");
     struct timespec spec;
     dt1.gettimespec(&spec);
     datetime dt2(spec);
-    apply_timespan(&dt2, ts);
+    do_apply_timespan(&dt2, ts);
 
     _test_case.begin("struct datetime");
     datetime_t t;
     dt1.getlocaltime(&t, &nsec);
     datetime dt3(t, &nsec);
-    apply_timespan(&dt3, ts);
+    do_apply_timespan(&dt3, ts);
 
     _test_case.begin("struct systemtime");
     systemtime_t systemtime;
     dt1.getsystemtime(1, &systemtime);
     datetime dt4(dt1);
-    apply_timespan(&dt4, ts);
+    do_apply_timespan(&dt4, ts);
 
     time_t timestamp = time(nullptr);
     datetime dt5(timestamp);
-    print_datetime(&dt5);
+    do_print_datetime(&dt5);
 }
 
 void test_timespec() {

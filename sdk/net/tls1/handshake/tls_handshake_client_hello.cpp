@@ -42,7 +42,7 @@ constexpr char constexpr_cookie[] = "cookie";
 
 tls_handshake_client_hello::tls_handshake_client_hello(tls_session* session) : tls_handshake(tls_hs_client_hello, session), _version(tls_12) {}
 
-return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
+return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -91,11 +91,13 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
             ret = errorcode_t::invalid_context;
             __leave2;
         }
-        auto hspos = offsetof_header();
-        auto size_header_body = get_size();
         auto& protection = session->get_tls_protection();
 
+        // keycalc
         {
+            auto hspos = offsetof_header();
+            auto size_header_body = get_size();
+
             switch (protection.get_flow()) {
                 case tls_1_rtt: {
                     // 1-RTT
@@ -112,6 +114,13 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
             }
 
             session->get_session_info(dir).set_status(get_type());
+        }
+        // protection_context
+        auto& protection_context = protection.get_protection_context();
+        {
+            for (auto cs : _cipher_suites) {
+                protection_context.add_cipher_suite(cs);
+            }
         }
     }
     __finally2 {
@@ -133,6 +142,8 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             __leave2;
         }
 
+        auto& protection = session->get_tls_protection();
+
         {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
@@ -152,7 +163,6 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
              *  } ClientHello;
              */
 
-            auto& protection = session->get_tls_protection();
             uint16 record_version = protection.get_record_version();
             uint16 version = 0;
             binary_t random;
@@ -271,20 +281,18 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
             __leave2;
         }
 
+        auto& protection = session->get_tls_protection();
+
         binary_t extensions;
         get_extensions().write(extensions);
 
         {
-            auto record_version = session->get_tls_protection().get_record_version();
-
+            auto record_version = protection.get_record_version();
             binary_t cipher_suites;
-            for (auto item : _cipher_suites) {
-                binary_append(cipher_suites, item, hton16);
+            for (auto cs : _cipher_suites) {
+                binary_append(cipher_suites, cs, hton16);
             }
             binary_t compression_methods;
-            // for (auto item : _compression_methods) {
-            //     binary_append(compression_methods, item);
-            // }
             compression_methods.resize(1);
 
             payload pl;
@@ -350,83 +358,6 @@ return_t tls_handshake_client_hello::add_ciphersuite(uint16 ciphersuite) {
     _cipher_suites.push_back(ciphersuite);
     return ret;
 }
-
-tls_handshake_client_hello_selector::tls_handshake_client_hello_selector(const tls_records* records) : _records(records), _version(0), _cipher_suite(0) {}
-
-const tls_records* tls_handshake_client_hello_selector::get_records() { return _records; }
-
-return_t tls_handshake_client_hello_selector::select() {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto records = get_records();
-        if (nullptr == records) {
-            ret = errorcode_t::not_ready;
-            __leave2;
-        }
-
-        auto record = records->getat(0);
-        if (nullptr == record) {
-            ret = errorcode_t::bad_data;
-            __leave2;
-        }
-
-        tls_record_handshake* record_handshake = (tls_record_handshake*)record;
-        tls_handshake* handshake_client_hello = record_handshake->get_handshakes().get(tls_hs_client_hello);
-        if (handshake_client_hello) {
-            tls_handshake_client_hello* ch = (tls_handshake_client_hello*)handshake_client_hello;
-
-            uint16 version = ch->get_version();
-
-            tls_extension* extension_supp_ver = ch->get_extensions().get(tls1_ext_supported_versions);
-            if (extension_supp_ver) {
-                tls_extension_client_supported_versions* supp_ver = (tls_extension_client_supported_versions*)extension_supp_ver;
-                for (auto item : supp_ver->get_versions()) {
-                    if (tls_13 == item) {
-                        _version = tls_13;
-                        _cipher_suite = 0x1301;  // TLS_AES_128_GCM_SHA256
-                        break;
-                    } else if (dtls_13 == item) {
-                        _version = dtls_13;
-                        _cipher_suite = 0x1301;  // TLS_AES_128_GCM_SHA256
-                        break;
-                    } else {
-                        _version = tls_12;
-                        _cipher_suite = 0x002f;  // TLS_RSA_WITH_AES_128_CBC_SHA
-                    }
-                }
-            }
-
-            // TODO
-
-            // RFC 5246 TLS 1.2
-            //  9.  Mandatory Cipher Suites
-            //  TLS_RSA_WITH_AES_128_CBC_SHA (mandatory)
-            // RFC 8446 TLS 1.3
-            //  9.1.  Mandatory-to-Implement Cipher Suites
-            //  TLS_AES_128_GCM_SHA256 (MUST)
-            //  TLS_AES_256_GCM_SHA384 (SHOULD)
-            //  TLS_CHACHA20_POLY1305_SHA256 (SHOULD)
-
-#if 0
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            for (auto cs : ch->get_cipher_suites()) {
-                auto hint = tlsadvisor->hintof_cipher_suite(cs);
-                if (hint) {
-                    // if (hint->secure && hint->mandatory)
-                }
-            }
-#endif
-        } else {
-            ret = errorcode_t::bad_data;
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
-uint16 tls_handshake_client_hello_selector::get_version() { return _version; }
-
-uint16 tls_handshake_client_hello_selector::get_cipher_suite() { return _cipher_suite; }
 
 }  // namespace net
 }  // namespace hotplace

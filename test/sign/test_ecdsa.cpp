@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const binary_t& input, const binary_t& signature) {
+void do_test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const binary_t& input, const binary_t& signature) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -74,7 +74,7 @@ void test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const binary_
     }
 }
 
-void test_ecdsa_testvector(const test_vector_nist_cavp_ecdsa_t* vector, size_t sizeof_vector, int base16) {
+void do_test_ecdsa_testvector(const test_vector_nist_cavp_ecdsa_t* vector, size_t sizeof_vector, int base16) {
     for (int i = 0; i < sizeof_vector; i++) {
         crypto_key key;
         crypto_keychain keychain;
@@ -92,20 +92,20 @@ void test_ecdsa_testvector(const test_vector_nist_cavp_ecdsa_t* vector, size_t s
         } else {
             message = str2bin(vector[i].msg);
         }
-        test_ecdsa(&key, vector[i].nid, vector[i].alg, message, signature);
+        do_test_ecdsa(&key, vector[i].nid, vector[i].alg, message, signature);
     }
 }
 
 void test_nist_cavp_ecdsa() {
     _test_case.begin("NIST CAVP ECDSA FIPS186-4");
-    test_ecdsa_testvector(test_vector_nist_cavp_ecdsa_fips186_4_signgen, sizeof_test_vector_nist_cavp_ecdsa_fips186_4_signgen, 1);
+    do_test_ecdsa_testvector(test_vector_nist_cavp_ecdsa_fips186_4_signgen, sizeof_test_vector_nist_cavp_ecdsa_fips186_4_signgen, 1);
     _test_case.begin("NIST CAVP ECDSA FIPS186-4 TruncatedSHAs");
-    test_ecdsa_testvector(test_vector_nist_cavp_ecdsa_fips186_4_truncated_shas, sizeof_test_vector_nist_cavp_ecdsa_fips186_4_truncated_shas, 1);
+    do_test_ecdsa_testvector(test_vector_nist_cavp_ecdsa_fips186_4_truncated_shas, sizeof_test_vector_nist_cavp_ecdsa_fips186_4_truncated_shas, 1);
     _test_case.begin("NIST CAVP ECDSA FIPS186-2");
-    test_ecdsa_testvector(test_vector_nist_cavp_ecdsa_fips186_2_signgen, sizeof_test_vector_nist_cavp_ecdsa_fips186_2_signgen, 1);
+    do_test_ecdsa_testvector(test_vector_nist_cavp_ecdsa_fips186_2_signgen, sizeof_test_vector_nist_cavp_ecdsa_fips186_2_signgen, 1);
 }
 
 void test_rfc6979_ecdsa() {
     _test_case.begin("RFC6979 ECDSA");
-    test_ecdsa_testvector(test_vector_rfc6979, sizeof_test_vector_rfc6979, 0);
+    do_test_ecdsa_testvector(test_vector_rfc6979, sizeof_test_vector_rfc6979, 0);
 }

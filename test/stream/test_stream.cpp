@@ -68,7 +68,7 @@ void test_consolecolor() {
     _test_case.assert(true, __FUNCTION__, "console color.3");
 }
 
-void test_dumpmxx_routine(const byte_t* dump_address, size_t dump_size, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0,
+void do_test_dump_routine(const byte_t* dump_address, size_t dump_size, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0,
                           size_t rebase = 0x0) {
     return_t ret = errorcode_t::success;
     _logger->dump(dump_address, dump_size, hex_part, indent);
@@ -81,10 +81,10 @@ void test_dumpmemory() {
     ansi_string bs;
     const char* text = "still a man hears what he wants to hear and disregards the rest";  // the boxer - Simon & Garfunkel
 
-    test_dumpmxx_routine((byte_t*)text, strlen(text), &bs);
-    test_dumpmxx_routine((byte_t*)text, strlen(text), &bs, 32);
-    test_dumpmxx_routine((byte_t*)text, strlen(text), &bs, 16, 4);
-    test_dumpmxx_routine((byte_t*)text, strlen(text), &bs, 16, 4, 0x1000);
+    do_test_dump_routine((byte_t*)text, strlen(text), &bs);
+    do_test_dump_routine((byte_t*)text, strlen(text), &bs, 32);
+    do_test_dump_routine((byte_t*)text, strlen(text), &bs, 16, 4);
+    do_test_dump_routine((byte_t*)text, strlen(text), &bs, 16, 4, 0x1000);
 
     std::string str(text);
     ret = dump_memory(str, &bs);
@@ -186,7 +186,7 @@ void test_i128() {
     }
 }
 
-void test_sprintf_routine(valist& va, const char* fmt, const char* expect) {
+void do_test_sprintf_routine(valist& va, const char* fmt, const char* expect) {
     basic_stream bs;
 
     sprintf(&bs, fmt, va);
@@ -206,12 +206,13 @@ void test_sprintf() {
     _logger->writeln("{1} 3.141592 {2} phi {3} 123");
 
     _test_case.reset_time();
-    test_sprintf_routine(va, "value={1} value={2} value={3}", "value=3.141592 value=phi value=123");
-    test_sprintf_routine(va, "value={2} value={3} value={1}", "value=phi value=123 value=3.141592");
-    test_sprintf_routine(va, "value={3} value={2} value={1}", "value=123 value=phi value=3.141592");
-    test_sprintf_routine(va, "value={2} value={1} value={3}", "value=phi value=3.141592 value=123");
-    test_sprintf_routine(va, "value={2} value={1} value={3} value={2}", "value=phi value=3.141592 value=123 value=phi");
-    test_sprintf_routine(va, "value={3} value={2} value={2} value={1} value={4} value={5}", "value=123 value=phi value=phi value=3.141592 value={4} value={5}");
+    do_test_sprintf_routine(va, "value={1} value={2} value={3}", "value=3.141592 value=phi value=123");
+    do_test_sprintf_routine(va, "value={2} value={3} value={1}", "value=phi value=123 value=3.141592");
+    do_test_sprintf_routine(va, "value={3} value={2} value={1}", "value=123 value=phi value=3.141592");
+    do_test_sprintf_routine(va, "value={2} value={1} value={3}", "value=phi value=3.141592 value=123");
+    do_test_sprintf_routine(va, "value={2} value={1} value={3} value={2}", "value=phi value=3.141592 value=123 value=phi");
+    do_test_sprintf_routine(va, "value={3} value={2} value={2} value={1} value={4} value={5}",
+                            "value=123 value=phi value=phi value=3.141592 value={4} value={5}");
 
     basic_stream bs;
     bs.printf("value %08x ", 0x304);

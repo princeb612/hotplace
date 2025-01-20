@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_base64_routine(const char* source, size_t source_size, int encoding) {
+void do_test_base64_routine(const char* source, size_t source_size, int encoding) {
     return_t ret = errorcode_t::success;
     basic_stream bs;
     std::string encoded_b64;
@@ -37,6 +37,6 @@ void test_base64() {
     constexpr char lyrics[] = "still a man hears what he wants to hear and disregards the rest";
     size_t len = strlen(lyrics);
 
-    test_base64_routine(lyrics, len, base64_encoding_t::base64_encoding);
-    test_base64_routine(lyrics, len, base64_encoding_t::base64url_encoding);
+    do_test_base64_routine(lyrics, len, base64_encoding_t::base64_encoding);
+    do_test_base64_routine(lyrics, len, base64_encoding_t::base64url_encoding);
 }

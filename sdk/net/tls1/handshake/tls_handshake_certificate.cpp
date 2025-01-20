@@ -33,10 +33,10 @@ constexpr char constexpr_record_type[] = "record type";
 
 tls_handshake_certificate::tls_handshake_certificate(tls_session* session) : tls_handshake(tls_hs_certificate, session) {}
 
-return_t tls_handshake_certificate::set(tls_direction_t dir, const char* certfile) {
+return_t tls_handshake_certificate::set(tls_direction_t dir, const char* certfile, const char* keyfile) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == certfile) {
+        if (nullptr == certfile || nullptr == keyfile) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -50,13 +50,20 @@ return_t tls_handshake_certificate::set(tls_direction_t dir, const char* certfil
         auto& keyexchange = protection.get_keyexchange();
 
         crypto_keychain keychain;
-        keydesc desc;
+        keydesc desc_crt;
+        keydesc desc_key;
         if (from_server == dir) {
-            desc.set_kid("SC");
+            desc_crt.set_kid("SC");
+            desc_key.set_kid("SCP");
         } else {
-            desc.set_kid("CC");
+            desc_crt.set_kid("CC");
+            desc_key.set_kid("CCP");
         }
-        keychain.load_file(&keyexchange, key_certfile, certfile, desc);
+        ret = keychain.load_file(&keyexchange, key_certfile, certfile, desc_crt);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = keychain.load_file(&keyexchange, key_pemfile, keyfile, desc_key);
     }
     __finally2 {}
     return ret;

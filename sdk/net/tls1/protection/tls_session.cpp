@@ -11,6 +11,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/net/tls1/handshake/tls_handshake.hpp>
 #include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
@@ -51,6 +52,24 @@ uint64 tls_session::session_info::get_recordno(bool inc) { return inc ? record_n
 void tls_session::session_info::inc_recordno() { ++record_no; }
 
 void tls_session::session_info::reset_recordno() { record_no = 0; }
+
+void tls_session::schedule(tls_handshake* handshake) {
+    if (handshake) {
+        critical_section_guard guard(_lock);
+        handshake->addref();
+        _que.push(handshake);
+    }
+}
+
+void tls_session::carryout_schedule(tls_direction_t dir) {
+    critical_section_guard guard(_lock);
+    while (false == _que.empty()) {
+        auto handshake = _que.front();
+        handshake->carryout_schedule(dir);
+        handshake->release();
+        _que.pop();
+    }
+}
 
 }  // namespace net
 }  // namespace hotplace

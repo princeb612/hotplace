@@ -25,7 +25,7 @@
 // https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
 // 2.1.  Encryption
 // Appendix A.  CBC Encryption and Decryption
-return_t test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
+return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const OPTION& option = _cmdline->value();
@@ -153,7 +153,7 @@ return_t test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_
     return ret;
 }
 
-void test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
+void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
     return_t ret = errorcode_t::success;
     const OPTION& option = _cmdline->value();
     openssl_crypt aead;
@@ -182,7 +182,7 @@ void test_aead_aes_cbc_hmac_sha2() {
 
     for (int i = 0; i < sizeof_test_vector_aead_aes_cbc_hmac_sha2; i++) {
         const test_vector_aead_aes_cbc_hmac_sha2_t* vector = test_vector_aead_aes_cbc_hmac_sha2 + i;
-        test_aead_aes_cbc_hmac_sha2_testvector1(vector);
-        test_aead_aes_cbc_hmac_sha2_testvector2(vector);
+        do_test_aead_aes_cbc_hmac_sha2_testvector1(vector);
+        do_test_aead_aes_cbc_hmac_sha2_testvector2(vector);
     }
 }

@@ -252,7 +252,7 @@ void test_x690_encoding_value() {
     }
 }
 
-void dump_asn1(asn1* object, const char* expect, const char* text) {
+void do_dump_asn1(asn1* object, const char* expect, const char* text) {
     if (object && expect && text) {
         basic_stream bs;
         binary_t bin;
@@ -313,11 +313,14 @@ void test_x690_encoding_typevalue() {
 
         // X.690 11.7 generalized time
         TESTVECTOR_ENTRY4(new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 5, 21, 0, 0, 0)),
-                          "18 0F 31 39 39 32 30 35 32 31 30 30 30 30 30 30 5A", "X.690 11.7 #1"),  // 19920521000000Z
+                          "18 0F 31 39 39 32 30 35 32 31 30 30 30 30 30 30 5A",
+                          "X.690 11.7 #1"),  // 19920521000000Z
         TESTVECTOR_ENTRY4(new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 6, 22, 12, 34, 21)),
-                          "18 0F 31 39 39 32 30 36 32 32 31 32 33 34 32 31 5A", "X.690 11.7 #2"),  // 19920622123421Z
+                          "18 0F 31 39 39 32 30 36 32 32 31 32 33 34 32 31 5A",
+                          "X.690 11.7 #2"),  // 19920622123421Z
         TESTVECTOR_ENTRY4(new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 7, 22, 13, 21, 00, 3)),
-                          "18 11 31 39 39 32 30 37 32 32 31 33 32 31 30 30 2E 33 5A", "X.690 11.7 #3"),  // 19920722132100.3Z
+                          "18 11 31 39 39 32 30 37 32 32 31 33 32 31 30 30 2E 33 5A",
+                          "X.690 11.7 #3"),  // 19920722132100.3Z
 
         // X.690 8.14 encoding of a tagged value
         // case 1. Type1 ::= VisibleString
@@ -367,7 +370,7 @@ void test_x690_encoding_typevalue() {
         asn1* object = new asn1;
         *object << item.obj;
         object->set_value_byindex(0, std::move(item.var));
-        dump_asn1(object, item.expect, item.text);
+        do_dump_asn1(object, item.expect, item.text);
         object->release();
     }
 }

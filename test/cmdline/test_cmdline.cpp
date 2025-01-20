@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_cmdline(bool expect, int argc, char** argv) {
+void do_test_cmdline(bool expect, int argc, char** argv) {
     return_t ret = errorcode_t::success;
 
     t_cmdline_t<OPTION> cmdline;
@@ -63,33 +63,33 @@ void test1() {
     argc = 2;
     argv[0] = (char*)"-in";
     argv[1] = (char*)"test.in";
-    test_cmdline(false, argc, argv);  // wo -out
+    do_test_cmdline(false, argc, argv);  // wo -out
 
     argc = 3;
     argv[0] = (char*)"-keygen";
     argv[1] = (char*)"-in";
     argv[2] = (char*)"test.in";
-    test_cmdline(false, argc, argv);  // wo -out
+    do_test_cmdline(false, argc, argv);  // wo -out
 
     argc = 3;
     argv[0] = (char*)"-keygen";
     argv[1] = (char*)"test.in";
     argv[2] = (char*)"-in";
-    test_cmdline(false, argc, argv);  // wo -in and -out
+    do_test_cmdline(false, argc, argv);  // wo -in and -out
 
     argc = 4;
     argv[0] = (char*)"-keygen";
     argv[1] = (char*)"test.in";
     argv[2] = (char*)"-in";
     argv[3] = (char*)"test.out";
-    test_cmdline(false, argc, argv);  // wo -out
+    do_test_cmdline(false, argc, argv);  // wo -out
 
     argc = 4;
     argv[0] = (char*)"-in-";
     argv[1] = (char*)"test.in";
     argv[2] = (char*)"-out";
     argv[3] = (char*)"test.out";
-    test_cmdline(false, argc, argv);  // wo -in
+    do_test_cmdline(false, argc, argv);  // wo -in
 
     // wo -in (expect value not token)
     argc = 5;
@@ -98,7 +98,7 @@ void test1() {
     argv[2] = (char*)"test.in";
     argv[3] = (char*)"-out";
     argv[4] = (char*)"test.out";
-    test_cmdline(false, argc, argv);
+    do_test_cmdline(false, argc, argv);
 
     _test_case.begin("case - valid parameter");
 
@@ -107,7 +107,7 @@ void test1() {
     argv[1] = (char*)"test.in";
     argv[2] = (char*)"-out";
     argv[3] = (char*)"test.out";
-    test_cmdline(true, argc, argv);  // -token.preced value
+    do_test_cmdline(true, argc, argv);  // -token.preced value
 
     argc = 5;
     argv[0] = (char*)"-keygen";
@@ -115,5 +115,5 @@ void test1() {
     argv[2] = (char*)"test.in";
     argv[3] = (char*)"-out";
     argv[4] = (char*)"test.out";
-    test_cmdline(true, argc, argv);  // -token.preced value -token.optional
+    do_test_cmdline(true, argc, argv);  // -token.preced value -token.optional
 }

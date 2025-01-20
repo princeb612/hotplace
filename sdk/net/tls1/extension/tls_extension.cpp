@@ -100,6 +100,18 @@ return_t tls_extension::read(const byte_t* stream, size_t size, size_t& pos) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        ret = do_preprocess();
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
         ret = do_read_header(stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -108,10 +120,46 @@ return_t tls_extension::read(const byte_t* stream, size_t size, size_t& pos) {
         size_t tpos = pos;  // responding to unhandled extentions
         ret = do_read_body(stream, size, tpos);
         pos += get_body_size();  // responding to unhandled extentions
+
+        ret = do_postprocess();
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
     }
     __finally2 {}
     return ret;
 }
+
+return_t tls_extension::write(binary_t& bin) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        binary_t body;
+        ret = do_write_body(body);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_write_header(bin, body);
+
+        ret = do_preprocess();
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = do_postprocess();
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t tls_extension::do_preprocess() { return errorcode_t::success; }
+
+return_t tls_extension::do_postprocess() { return errorcode_t::success; }
 
 return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -173,23 +221,6 @@ return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t
 }
 
 return_t tls_extension::do_read_body(const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::not_supported; }
-
-return_t tls_extension::write(binary_t& bin) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        binary_t body;
-        ret = do_write_body(body);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        ret = do_write_header(bin, body);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
 
 return_t tls_extension::do_write_header(binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;

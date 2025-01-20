@@ -14,7 +14,7 @@
 
 #include "sample.hpp"
 
-void test_huffman_codes_routine(const char* sample, const char* expect) {
+void do_test_huffman_codes_routine(const char* sample, const char* expect) {
     if (sample && expect) {
         const OPTION& option = _cmdline->value();
 
@@ -79,6 +79,6 @@ void test_huffman_codes() {
     };
     for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
         huffman_coding_testvector* item = vector + i;
-        test_huffman_codes_routine(item->sample, item->expect);
+        do_test_huffman_codes_routine(item->sample, item->expect);
     }
 }

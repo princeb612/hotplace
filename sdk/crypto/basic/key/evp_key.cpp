@@ -67,8 +67,10 @@ crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
                 break;
             case EVP_PKEY_RSA:
             case EVP_PKEY_RSA2:
-            case EVP_PKEY_RSA_PSS:
                 kty = crypto_kty_t::kty_rsa;
+                break;
+            case EVP_PKEY_RSA_PSS:
+                kty = crypto_kty_t::kty_rsapss;
                 break;
             case EVP_PKEY_EC:
                 kty = crypto_kty_t::kty_ec;

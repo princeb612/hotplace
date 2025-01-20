@@ -22,6 +22,7 @@
 #include <sdk/crypto/crypto/crypto_hmac.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
 #include <sdk/crypto/crypto/transcript_hash.hpp>
+#include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
 #include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
@@ -63,12 +64,12 @@ uint16 tls_protection::get_tls_version() { return _version; }
 
 void tls_protection::set_tls_version(uint16 version) { _version = version; }
 
-transcript_hash* tls_protection::get_transcript_hash() {
+transcript_hash *tls_protection::get_transcript_hash() {
     critical_section_guard guard(_lock);
     if (nullptr == _transcript_hash) {
         if (get_cipher_suite()) {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+            tls_advisor *tlsadvisor = tls_advisor::get_instance();
+            const tls_cipher_suite_t *hint_tls_alg = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
             auto hashalg = algof_mac(hint_tls_alg);
             transcript_hash_builder builder;
             _transcript_hash = builder.set(hashalg).build();
@@ -80,7 +81,7 @@ transcript_hash* tls_protection::get_transcript_hash() {
     return _transcript_hash;
 }
 
-return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size) {
+return_t tls_protection::calc_transcript_hash(tls_session *session, const byte_t *stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || (size && (nullptr == stream))) {
@@ -89,7 +90,8 @@ return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t
         }
 
         // The hash does not include DTLS-only bytes in the records.
-        // --> The hash does not include handshake reconstruction data bytes in the records.
+        // --> The hash does not include handshake reconstruction data bytes in the
+        // records.
 
         auto hash = get_transcript_hash();
         if (hash) {
@@ -119,7 +121,7 @@ return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t
     return ret;
 }
 
-return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest) {
+return_t tls_protection::calc_transcript_hash(tls_session *session, const byte_t *stream, size_t size, binary_t &digest) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || (size && (nullptr == stream))) {
@@ -130,7 +132,8 @@ return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t
         calc_transcript_hash(session, stream, size);
 
         // The hash does not include DTLS-only bytes in the records.
-        // --> The hash does not include handshake reconstruction data bytes in the records.
+        // --> The hash does not include handshake reconstruction data bytes in the
+        // records.
 
         auto hash = get_transcript_hash();
         if (hash) {
@@ -144,7 +147,7 @@ return_t tls_protection::calc_transcript_hash(tls_session* session, const byte_t
     return ret;
 };
 
-return_t tls_protection::reset_transcript_hash(tls_session* session) {
+return_t tls_protection::reset_transcript_hash(tls_session *session) {
     return_t ret = errorcode_t::success;
     auto hash = get_transcript_hash();
     if (hash) {
@@ -154,7 +157,7 @@ return_t tls_protection::reset_transcript_hash(tls_session* session) {
     return ret;
 }
 
-return_t tls_protection::calc_context_hash(tls_session* session, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& digest) {
+return_t tls_protection::calc_context_hash(tls_session *session, hash_algorithm_t alg, const byte_t *stream, size_t size, binary_t &digest) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || (size && (nullptr == stream))) {
@@ -163,7 +166,8 @@ return_t tls_protection::calc_context_hash(tls_session* session, hash_algorithm_
         }
 
         // The hash does not include DTLS-only bytes in the records.
-        // --> The hash does not include handshake reconstruction data bytes in the records.
+        // --> The hash does not include handshake reconstruction data bytes in the
+        // records.
 
         transcript_hash_builder builder;
         auto hash = builder.set(alg).build();
@@ -196,13 +200,13 @@ return_t tls_protection::calc_context_hash(tls_session* session, hash_algorithm_
     return ret;
 }
 
-crypto_key& tls_protection::get_keyexchange() { return _keyexchange; }
+crypto_key &tls_protection::get_keyexchange() { return _keyexchange; }
 
 void tls_protection::use_pre_master_secret(bool use) { _use_pre_master_secret = use; }
 
 bool tls_protection::use_pre_master_secret() { return _use_pre_master_secret; }
 
-return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_direction_t dir) {
+return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     // RFC 8446 7.1.  Key Schedule
     __try2 {
@@ -213,21 +217,21 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
 
         uint16 cipher_suite = get_cipher_suite();
 
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        crypto_advisor *advisor = crypto_advisor::get_instance();
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
-        const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(cipher_suite);
+        const tls_cipher_suite_t *hint_tls_alg = tlsadvisor->hintof_cipher_suite(cipher_suite);
         if (nullptr == hint_tls_alg) {
             ret = errorcode_t::not_supported;
             __leave2;
         }
 
-        const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(hint_tls_alg->cipher);
+        const hint_blockcipher_t *hint_cipher = advisor->hintof_blockcipher(hint_tls_alg->cipher);
         if (nullptr == hint_cipher) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
+        const hint_digest_t *hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
         if (nullptr == hint_mac) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -250,8 +254,8 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
         }
         empty_ikm.resize(dlen);
 
-        auto lambda_expand_label = [&](tls_secret_t sec, binary_t& okm, const char* hashalg, uint16 dlen, const binary_t& secret, const char* label,
-                                       const binary_t& context) -> void {
+        auto lambda_expand_label = [&](tls_secret_t sec, binary_t &okm, const char *hashalg, uint16 dlen, const binary_t &secret, const char *label,
+                                       const binary_t &context) -> void {
             okm.clear();
             if (session->get_tls_protection().is_kindof_dtls()) {
                 kdf.hkdf_expand_dtls13_label(okm, hashalg, dlen, secret, str2bin(label), context);
@@ -260,7 +264,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
             }
             _kv[sec] = okm;
         };
-        auto lambda_extract = [&](tls_secret_t sec, binary_t& prk, const char* hashalg, const binary_t& salt, const binary_t& ikm) -> void {
+        auto lambda_extract = [&](tls_secret_t sec, binary_t &prk, const char *hashalg, const binary_t &salt, const binary_t &ikm) -> void {
             kdf.hmac_kdf_extract(prk, hashalg, salt, ikm);
             _kv[sec] = prk;
         };
@@ -285,9 +289,10 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
              *             |                      | "res binder"
              *             |                      | "imp binder", "")
              *             |                     = binder_key
-             *             |     ; RFC 9258 Importing External Pre-Shared Keys (PSKs) for TLS 1.3
-             *             |       5.2.  Binder Key Derivation
-             *             |       Imported PSKs use the string "imp binder" rather than "ext binder" or "res binder" when deriving binder_key.
+             *             |     ; RFC 9258 Importing External Pre-Shared Keys (PSKs)
+             * for TLS 1.3 |       5.2.  Binder Key Derivation |       Imported PSKs
+             * use the string "imp binder" rather than "ext binder" or "res binder"
+             * when deriving binder_key.
              *             |
              *             +-----> Derive-Secret(., "c e traffic", ClientHello)
              *             |                     = client_early_traffic_secret
@@ -305,7 +310,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
 
             if (tls_0_rtt == get_flow()) {
                 // 0-RTT
-                const binary_t& secret_resumption_early = get_item(tls_secret_resumption_early);  // client finished
+                const binary_t &secret_resumption_early = get_item(tls_secret_resumption_early);  // client finished
 
                 // {client}  derive secret "tls13 c e traffic"
                 binary_t secret_c_e_traffic;
@@ -352,8 +357,8 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                 //  psk_dhe_ke  ... key_share
                 binary_t shared_secret;
                 {
-                    const EVP_PKEY* pkey_priv = nullptr;
-                    const EVP_PKEY* pkey_pub = nullptr;
+                    const EVP_PKEY *pkey_priv = nullptr;
+                    const EVP_PKEY *pkey_pub = nullptr;
                     pkey_priv = get_keyexchange().find("server");
                     if (pkey_priv) {
                         // in server ... priv("server") + pub("CH")
@@ -400,7 +405,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                         lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, early_secret, "derived", empty_hash);
                     } break;
                     case tls_0_rtt: {
-                        const binary_t& secret_resumption_early = get_item(tls_secret_resumption_early);
+                        const binary_t &secret_resumption_early = get_item(tls_secret_resumption_early);
                         lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, secret_resumption_early, "derived",
                                             empty_hash);
                     } break;
@@ -453,10 +458,10 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
             }
         } else if (tls_hs_end_of_early_data == type) {
             binary_t okm;
-            const binary_t& secret_c_hs_traffic = get_item(tls_secret_c_hs_traffic);
+            const binary_t &secret_c_hs_traffic = get_item(tls_secret_c_hs_traffic);
             lambda_expand_label(tls_secret_handshake_client_key, okm, hashalg, keysize, secret_c_hs_traffic, "key", empty);
             lambda_expand_label(tls_secret_handshake_client_iv, okm, hashalg, 12, secret_c_hs_traffic, "iv", empty);
-            const binary_t& secret_s_hs_traffic = get_item(tls_secret_s_hs_traffic);
+            const binary_t &secret_s_hs_traffic = get_item(tls_secret_s_hs_traffic);
             lambda_expand_label(tls_secret_handshake_server_key, okm, hashalg, keysize, secret_s_hs_traffic, "key", empty);
             lambda_expand_label(tls_secret_handshake_server_iv, okm, hashalg, 12, secret_s_hs_traffic, "iv", empty);
         } else if ((tls_hs_finished == type) && (from_server == dir)) {
@@ -491,7 +496,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                 secret_application_server = get_item(tls_secret_s_ap_traffic);
                 secret_exporter_master = get_item(tls_secret_exp_master);
             } else {
-                const binary_t& secret_application = get_item(tls_secret_application);
+                const binary_t &secret_application = get_item(tls_secret_application);
                 lambda_expand_label(tls_secret_c_ap_traffic, secret_application_client, hashalg, dlen, secret_application, "c ap traffic", context_hash);
                 lambda_expand_label(tls_secret_s_ap_traffic, secret_application_server, hashalg, dlen, secret_application, "s ap traffic", context_hash);
                 lambda_expand_label(tls_secret_exp_master, secret_exporter_master, hashalg, dlen, secret_application, "exp master", context_hash);
@@ -527,7 +532,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
              */
 
             binary_t secret_resumption_master;
-            const binary_t& secret_application = get_item(tls_secret_application);
+            const binary_t &secret_application = get_item(tls_secret_application);
             lambda_expand_label(tls_secret_res_master, secret_resumption_master, hashalg, dlen, secret_application, "res master", context_hash);
 
             binary_t secret_resumption;
@@ -541,7 +546,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
 
             binary_t okm;
             if (tls_mode_dtls & get_mode()) {
-                auto const& secret_application_client = get_item(tls_secret_c_ap_traffic);
+                auto const &secret_application_client = get_item(tls_secret_c_ap_traffic);
                 lambda_expand_label(tls_secret_application_client_sn_key, okm, hashalg, keysize, secret_application_client, "sn", empty);
             }
 
@@ -557,17 +562,19 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
 
             binary_t pre_master_secret;
             binary_t master_secret;
-            const binary_t& client_hello_random = get_item(tls_context_client_hello_random);
-            const binary_t& server_hello_random = get_item(tls_context_server_hello_random);
+            const binary_t &client_hello_random = get_item(tls_context_client_hello_random);
+            const binary_t &server_hello_random = get_item(tls_context_server_hello_random);
 
             {
-#if 1
-                const EVP_PKEY* pkey_priv = get_keyexchange().find("server");
-                const EVP_PKEY* pkey_pub = get_keyexchange().find("CKE");
-#else
-                const EVP_PKEY* pkey_priv = get_keyexchange().find("client");
-                const EVP_PKEY* pkey_pub = get_keyexchange().find("SKE");
-#endif
+                const EVP_PKEY *pkey_priv = nullptr;
+                const EVP_PKEY *pkey_pub = nullptr;
+                if (from_server == dir) {
+                    pkey_priv = get_keyexchange().find("server");
+                    pkey_pub = get_keyexchange().find("CKE");
+                } else {
+                    pkey_priv = get_keyexchange().find("client");
+                    pkey_pub = get_keyexchange().find("SKE");
+                }
                 if (nullptr == pkey_priv || nullptr == pkey_pub) {
                     ret = errorcode_t::not_found;
                     __leave2;
@@ -599,7 +606,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                  *   PRF(secret, label, seed) = P_<hash>(secret, label + seed)
                  */
                 binary_t seed;
-                hash_context_t* hmac_handle = nullptr;
+                hash_context_t *hmac_handle = nullptr;
                 size_t size_master_secret = 48;
 
                 binary_append(seed, str2bin("master secret"));
@@ -715,7 +722,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
     return ret;
 }
 
-return_t tls_protection::calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder) {
+return_t tls_protection::calc_psk(tls_session *session, const binary_t &binder_hash, const binary_t &psk_binder) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -731,8 +738,8 @@ return_t tls_protection::calc_psk(tls_session* session, const binary_t& binder_h
         openssl_kdf kdf;
         // PRK
         binary_t context_resumption_binder_key;
-        const binary_t& secret_resumption_early = get_item(tls_secret_resumption_early);
-        const binary_t& context_empty_hash = get_item(tls_context_empty_hash);
+        const binary_t &secret_resumption_early = get_item(tls_secret_resumption_early);
+        const binary_t &context_empty_hash = get_item(tls_context_empty_hash);
         kdf.hkdf_expand_tls13_label(context_resumption_binder_key, sha2_256, 32, secret_resumption_early, "res binder", context_empty_hash);
         set_item(tls_context_resumption_binder_key, context_resumption_binder_key);
 
@@ -759,13 +766,13 @@ return_t tls_protection::calc_psk(tls_session* session, const binary_t& binder_h
     return ret;
 }
 
-void tls_protection::get_item(tls_secret_t type, binary_t& item) { item = _kv[type]; }
+void tls_protection::get_item(tls_secret_t type, binary_t &item) { item = _kv[type]; }
 
-const binary_t& tls_protection::get_item(tls_secret_t type) { return _kv[type]; }
+const binary_t &tls_protection::get_item(tls_secret_t type) { return _kv[type]; }
 
-void tls_protection::set_item(tls_secret_t type, const binary_t& item) { _kv[type] = item; }
+void tls_protection::set_item(tls_secret_t type, const binary_t &item) { _kv[type] = item; }
 
-void tls_protection::set_item(tls_secret_t type, const byte_t* stream, size_t size) {
+void tls_protection::set_item(tls_secret_t type, const byte_t *stream, size_t size) {
     if (stream) {
         binary_t bin;
         bin.insert(bin.end(), stream, stream + size);
@@ -784,7 +791,7 @@ size_t tls_protection::get_header_size() {
     size_t ret_value = 0;
     auto record_version = get_record_version();
     size_t content_header_size = 0;
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    tls_advisor *tlsadvisor = tls_advisor::get_instance();
     if (tlsadvisor->is_kindof_dtls(record_version)) {
         content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
     } else {
@@ -796,9 +803,9 @@ size_t tls_protection::get_header_size() {
 
 uint8 tls_protection::get_tag_size() {
     uint8 ret_value = 0;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+    crypto_advisor *advisor = crypto_advisor::get_instance();
+    tls_advisor *tlsadvisor = tls_advisor::get_instance();
+    const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
     if (hint) {
         auto hmac_alg = hint->mac;
         auto hint_digest = advisor->hintof_digest(hmac_alg);
@@ -823,7 +830,7 @@ uint8 tls_protection::get_tag_size() {
     return ret_value;
 }
 
-return_t tls_protection::build_iv(tls_session* session, tls_secret_t type, binary_t& iv, uint64 recordno) {
+return_t tls_protection::build_iv(tls_session *session, tls_secret_t type, binary_t &iv, uint64 recordno) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -847,7 +854,7 @@ return_t tls_protection::build_iv(tls_session* session, tls_secret_t type, binar
     return ret;
 }
 
-return_t tls_protection::get_tls13_key(tls_session* session, tls_direction_t dir, tls_secret_t& secret_key, tls_secret_t& secret_iv) {
+return_t tls_protection::get_tls13_key(tls_session *session, tls_direction_t dir, tls_secret_t &secret_key, tls_secret_t &secret_iv) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -907,7 +914,7 @@ return_t tls_protection::get_tls13_key(tls_session* session, tls_direction_t dir
     return ret;
 }
 
-return_t tls_protection::get_tls1_key(tls_session* session, tls_direction_t dir, tls_secret_t& secret_key, tls_secret_t& secret_mac_key) {
+return_t tls_protection::get_tls1_key(tls_session *session, tls_direction_t dir, tls_secret_t &secret_key, tls_secret_t &secret_mac_key) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (from_client == dir) {
@@ -924,8 +931,8 @@ return_t tls_protection::get_tls1_key(tls_session* session, tls_direction_t dir,
     return ret;
 }
 
-return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad,
-                                       binary_t& tag) {
+return_t tls_protection::encrypt_tls13(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &aad,
+                                       binary_t &tag) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -935,14 +942,14 @@ return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir
 
         auto record_version = get_record_version();
         size_t content_header_size = 0;
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
         auto cipher = crypt_alg_unknown;
         auto mode = crypt_mode_unknown;
         uint8 tagsize = 0;
 
         {
-            const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+            const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
             if (nullptr == hint) {
                 ret = errorcode_t::not_supported;
                 __leave2;
@@ -951,7 +958,7 @@ return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir
             mode = hint->mode;
         }
 
-        crypt_context_t* handle = nullptr;
+        crypt_context_t *handle = nullptr;
         openssl_crypt crypt;
 
         tls_secret_t secret_key;
@@ -961,8 +968,8 @@ return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir
         uint64 record_no = 0;
         record_no = session->get_recordno(dir, true);
 
-        auto const& key = get_item(secret_key);
-        auto const& iv = get_item(secret_iv);
+        auto const &key = get_item(secret_key);
+        auto const &iv = get_item(secret_iv);
         binary_t nonce = iv;
         build_iv(session, secret_iv, nonce, record_no);
         ret = crypt.encrypt(cipher, mode, key, nonce, plaintext, ciphertext, aad, tag);
@@ -988,12 +995,12 @@ return_t tls_protection::encrypt_tls13(tls_session* session, tls_direction_t dir
     return ret;
 }
 
-return_t tls_protection::encrypt_tls1(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, binary_t& maced) {
+return_t tls_protection::encrypt_tls1(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, binary_t &maced) {
     return_t ret = errorcode_t::not_supported;
     return ret;
 }
 
-return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext) {
+return_t tls_protection::decrypt_tls13(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -1002,7 +1009,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
         }
 
         size_t content_header_size = 0;
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
         size_t aadlen = get_header_size();
 
         binary_t aad;
@@ -1016,8 +1023,8 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
     return ret;
 }
 
-return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                                       const binary_t& aad) {
+return_t tls_protection::decrypt_tls13(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext,
+                                       const binary_t &aad) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -1028,9 +1035,9 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
         auto cipher = crypt_alg_unknown;
         auto mode = crypt_mode_unknown;
         uint8 tagsize = get_tag_size();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
         {
-            const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+            const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
             if (nullptr == hint) {
                 ret = errorcode_t::not_supported;
                 __leave2;
@@ -1050,8 +1057,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
             // }
         }
 
-        auto& protection = session->get_tls_protection();
-        auto record_version = protection.get_record_version();
+        auto record_version = get_record_version();
         binary_t tag;
 
         // ... aad(aadlen) encdata tag(tagsize)
@@ -1059,7 +1065,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
         size_t aadlen = aad.size();
         binary_append(tag, stream + pos + aadlen + size - tagsize, tagsize);
 
-        crypt_context_t* handle = nullptr;
+        crypt_context_t *handle = nullptr;
         openssl_crypt crypt;
 
         tls_secret_t secret_key;
@@ -1069,8 +1075,8 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
         uint64 record_no = 0;
         record_no = session->get_recordno(dir, true);
 
-        auto const& key = get_item(secret_key);
-        auto const& iv = get_item(secret_iv);
+        auto const &key = get_item(secret_key);
+        auto const &iv = get_item(secret_iv);
         binary_t nonce = iv;
         build_iv(session, secret_iv, nonce, record_no);
         ret = crypt.decrypt(cipher, mode, key, nonce, stream + pos + aadlen, size - tagsize, plaintext, aad, tag);
@@ -1097,7 +1103,7 @@ return_t tls_protection::decrypt_tls13(tls_session* session, tls_direction_t dir
     return ret;
 }
 
-return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext) {
+return_t tls_protection::decrypt_tls1(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -1105,9 +1111,9 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir,
             __leave2;
         }
 
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+        crypto_advisor *advisor = crypto_advisor::get_instance();
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
         if (nullptr == hint) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -1122,7 +1128,7 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir,
         auto record_version = get_record_version();
         size_t content_header_size = get_header_size();
 
-        crypt_context_t* handle = nullptr;
+        crypt_context_t *handle = nullptr;
         openssl_crypt crypt;
 
         tls_secret_t secret_key;
@@ -1132,7 +1138,7 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir,
         uint64 record_no = 0;
         record_no = session->get_recordno(dir, true);
 
-        const binary_t& key = get_item(secret_key);
+        const binary_t &key = get_item(secret_key);
         binary_t iv;
         binary_append(iv, stream + content_header_size, ivsize);
         size_t bpos = content_header_size + ivsize;
@@ -1151,9 +1157,10 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir,
         binary_t content;
         binary_t verifydata;
         binary_t maced;
-        const binary_t& mackey = get_item(secret_mac_key);
+        const binary_t &mackey = get_item(secret_mac_key);
         {
-            auto hmac_alg = hint->mac;  // do not promote insecure algorithm (ex. don't call algof_mac)
+            auto hmac_alg = hint->mac;  // do not promote insecure algorithm (ex. don't
+                                        // call algof_mac)
             auto hint_digest = advisor->hintof_digest(hmac_alg);
             auto dlen = sizeof_digest(hint_digest);
 
@@ -1201,58 +1208,183 @@ return_t tls_protection::decrypt_tls1(tls_session* session, tls_direction_t dir,
     return ret;
 }
 
-crypto_sign* tls_protection::get_crypto_sign(uint16 scheme) {
-    crypto_sign* sign = nullptr;
+return_t tls_protection::get_ecdsa_signature(uint16 scheme, const binary_t &asn1der, binary_t &signature) {
+    return_t ret = errorcode_t::success;
+
     __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        signature.clear();
+
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
         auto hint = tlsadvisor->hintof_signature_scheme(scheme);
         if (nullptr == hint) {
+            ret = errorcode_t::success;
             __leave2;
         }
-        auto sigtype = hint->sigtype;
-        auto sig = hint->sig;
-
-        crypto_sign_builder builder;
-        if (crypt_sig_eddsa == sigtype) {
-            /* ed25519 */
-            /* ed448 */
-            sign = builder.tls_sign_scheme(scheme).build();
-        } else {
-            switch (sig) {
-                case sig_sha256: {
-                    /* rsa_pkcs1_sha256 */
-                    /* ecdsa_secp256r1_sha256 */
-                    /* rsa_pss_rsae_sha256 */
-                    /* rsa_pss_pss_sha256 */
-                    sign = builder.tls_sign_scheme(scheme).set_digest(sha2_256).build();
-                } break;
-                case sig_sha384: {
-                    /* rsa_pkcs1_sha384 */
-                    /* ecdsa_secp384r1_sha384 */
-                    /* rsa_pss_rsae_sha384 */
-                    /* rsa_pss_pss_sha384 */
-                    sign = builder.tls_sign_scheme(scheme).set_digest(sha2_384).build();
-                } break;
-                case sig_sha512: {
-                    /* rsa_pkcs1_sha512 */
-                    /* ecdsa_secp521r1_sha512 */
-                    /* rsa_pss_rsae_sha512 */
-                    /* rsa_pss_pss_sha512 */
-                    sign = builder.tls_sign_scheme(scheme).set_digest(sha2_512).build();
-                } break;
-                case sig_sha1: {
-                    /* rsa_pkcs1_sha1 */
-                    /* ecdsa_sha1 */
-                    sign = builder.tls_sign_scheme(scheme).set_digest(sha1).build();
-                } break;
-            }
+        if (crypt_sig_ecdsa != hint->sigtype) {
+            ret = different_type;
+            __leave2;
         }
+
+        auto sig = hint->sig;
+        uint32 unitsize = 0;
+
+        switch (sig) {
+            case sig_sha256:
+                unitsize = 32;
+                break;
+            case sig_sha384:
+                unitsize = 48;
+                break;
+            case sig_sha512:
+                unitsize = 66;
+                break;
+        }
+        if (0 == unitsize) {
+            ret = errorcode_t::success;
+            __leave2;
+        }
+
+        // ASN.1 DER
+        constexpr char constexpr_sequence[] = "sequence";
+        constexpr char constexpr_len[] = "len";
+        constexpr char constexpr_rlen[] = "rlen";
+        constexpr char constexpr_r[] = "r";
+        constexpr char constexpr_slen[] = "slen";
+        constexpr char constexpr_s[] = "s";
+        payload pl;
+        pl << new payload_member(uint8(0), constexpr_sequence) << new payload_member(uint8(0), constexpr_len)
+           << new payload_member(uint8(0))                                                                 // 2 asn1_tag_integer
+           << new payload_member(uint8(0), constexpr_rlen) << new payload_member(binary_t(), constexpr_r)  //
+           << new payload_member(uint8(0))                                                                 // 2 asn1_tag_integer
+           << new payload_member(uint8(0), constexpr_slen) << new payload_member(binary_t(), constexpr_s);
+
+        pl.set_reference_value(constexpr_r, constexpr_rlen);
+        pl.set_reference_value(constexpr_s, constexpr_slen);
+
+        size_t spos = 0;
+        pl.read(&asn1der[0], asn1der.size(), spos);
+
+        binary_t r;
+        binary_t s;
+
+        pl.get_binary(constexpr_r, r);
+        pl.get_binary(constexpr_s, s);
+
+        if (r.size() > unitsize) {
+            auto d = r.size() - unitsize;
+            r.erase(r.begin(), r.begin() + d);
+        }
+        if (s.size() > unitsize) {
+            auto d = s.size() - unitsize;
+            s.erase(s.begin(), s.begin() + d);
+        }
+
+        binary_append(signature, r);
+        binary_append(signature, s);
     }
     __finally2 {
         // do nothing
     }
-    return sign;
+    return ret;
 }
+
+return_t tls_protection::construct_certificate_verify_message(tls_direction_t dir, basic_stream &message) {
+    return_t ret = errorcode_t::success;
+
+    binary_t transcripthash;
+    auto hash = get_transcript_hash();  // hash(client_hello .. certificate)
+    if (hash) {
+        hash->digest(transcripthash);
+        hash->release();
+    }
+
+    constexpr char constexpr_context_server[] = "TLS 1.3, server CertificateVerify";
+    constexpr char constexpr_context_client[] = "TLS 1.3, client CertificateVerify";
+    message.fill(64, 0x20);  // octet 32 (0x20) repeated 64 times
+    if (from_server == dir) {
+        message << constexpr_context_server;  // context string
+    } else {
+        message << constexpr_context_client;
+    }
+    message.fill(1, 0x00);  // single 0 byte
+    message.write(&transcripthash[0],
+                  transcripthash.size());  // content to be signed
+
+    return ret;
+}
+
+return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t &typeof_secret, binary_t &maced) {
+    return_t ret = errorcode_t::success;
+
+    tls_advisor *tlsadvisor = tls_advisor::get_instance();
+
+    // https://tls13.xargs.org/#server-handshake-finished/annotated
+    binary_t fin_hash;
+    auto hash = get_transcript_hash();
+    if (hash) {
+        hash->digest(fin_hash);
+        hash->release();
+    }
+
+    // calculate finished "tls13 finished"
+    // fin_key : expanded
+    // finished == maced
+    binary_t fin_key;
+    auto tlsversion = get_tls_version();
+    if (is_basedon_tls13(tlsversion)) {
+        if (from_server == dir) {
+            typeof_secret = tls_secret_s_hs_traffic;
+        } else {
+            typeof_secret = tls_secret_c_hs_traffic;
+        }
+        const binary_t &ht_secret = get_item(typeof_secret);
+        hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(get_cipher_suite());
+        openssl_kdf kdf;
+        binary_t context;
+        if (is_kindof_dtls()) {
+            kdf.hkdf_expand_dtls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
+        } else {
+            kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
+        }
+        crypto_hmac_builder builder;
+        crypto_hmac *hmac = builder.set(hashalg).set(fin_key).build();
+        if (hmac) {
+            hmac->mac(fin_hash, maced);
+            hmac->release();
+        }
+    } else {
+        binary_t seed;
+        if (from_client == dir) {
+            binary_append(seed, "client finished");
+        } else {
+            binary_append(seed, "server finished");
+        }
+        binary_append(seed, fin_hash);
+
+        typeof_secret = tls_secret_master;
+        const binary_t &fin_key = get_item(typeof_secret);
+
+        crypto_hmac_builder builder;
+        auto hmac = builder.set(alg).set(fin_key).build();
+        size_t size_maced = 12;
+        if (hmac) {
+            binary_t temp = seed;
+            binary_t atemp;
+            binary_t ptemp;
+            while (maced.size() < size_maced) {
+                hmac->mac(temp, atemp);
+                hmac->update(atemp).update(seed).finalize(ptemp);
+                binary_append(maced, ptemp);
+                temp = atemp;
+            }
+            hmac->release();
+            maced.resize(size_maced);
+        }
+    }
+    return ret;
+}
+
+protection_context &tls_protection::get_protection_context() { return _handshake_context; }
 
 }  // namespace net
 }  // namespace hotplace

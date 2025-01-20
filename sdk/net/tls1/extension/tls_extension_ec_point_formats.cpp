@@ -24,9 +24,23 @@ constexpr char constexpr_formats[] = "formats";
 
 tls_extension_ec_point_formats::tls_extension_ec_point_formats(tls_session* session) : tls_extension(tls1_ext_ec_point_formats, session) {}
 
+return_t tls_extension_ec_point_formats::do_postprocess() {
+    return_t ret = errorcode_t::success;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto& protection_context = protection.get_protection_context();
+    for (auto epf : _ec_point_formats) {
+        protection_context.add_ec_point_format(epf);
+    }
+    return ret;
+}
+
 return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
         // RFC 8422 5.1.2.  Supported Point Formats Extension
         // enum {
         //     uncompressed (0),
@@ -51,8 +65,8 @@ return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size
         }
 
         {
-            for (auto fmt : formats) {
-                add(fmt);
+            for (auto epf : formats) {
+                add(epf);
             }
         }
 
@@ -78,11 +92,14 @@ return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size
 return_t tls_extension_ec_point_formats::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
         uint8 cbsize_formats = 0;
         binary_t bin_formats;
         {
-            for (auto item : _ec_point_formats) {
-                binary_append(bin_formats, item);
+            for (auto epf : _ec_point_formats) {
+                binary_append(bin_formats, epf);
             }
             cbsize_formats = bin_formats.size();
         }

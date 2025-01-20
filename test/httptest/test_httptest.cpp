@@ -343,8 +343,8 @@ void test_basic_authentication() {
  * calcuration routine
  * cf. see digest_access_authentication_provider::auth_digest_access (slightly different)
  */
-return_t calc_digest_digest_access(http_authentication_provider *provider, network_session *session, http_request *request, skey_value &kv,
-                                   std::string &digest_response) {
+return_t do_calc_digest_digest_access(http_authentication_provider *provider, network_session *session, http_request *request, skey_value &kv,
+                                      std::string &digest_response) {
     return_t ret = errorcode_t::success;
     const OPTION &option = _cmdline->value();
     __try2 {
@@ -493,7 +493,7 @@ void test_digest_access_authentication(const char *alg, unsigned long *ossl_minv
             request.open("GET /auth/digest HTTP/1.1");  // set a method and an uri
             kv.set("uri", request.get_http_uri().get_uri());
 
-            calc_digest_digest_access(&provider, &session, &request, kv, response_calc);  // calcurate a response
+            do_calc_digest_digest_access(&provider, &session, &request, kv, response_calc);  // calcurate a response
 
             basic_stream digest_stream;
             valist va;
@@ -531,8 +531,8 @@ void test_digest_access_authentication(const char *alg, unsigned long *ossl_minv
     }
 }
 
-void test_rfc_example_routine(const std::string &text, digest_access_authentication_provider *provider, http_request &request, const std::string &username,
-                              const std::string &password, const std::string &expect) {
+void do_test_rfc_example_routine(const std::string &text, digest_access_authentication_provider *provider, http_request &request, const std::string &username,
+                                 const std::string &password, const std::string &expect) {
     std::string response;
     std::string challenge;
     skey_value kv;
@@ -554,7 +554,7 @@ void test_rfc_example_routine(const std::string &text, digest_access_authenticat
     kv.set("username", username);  // userhash
     kv.set("password", password);
     // computation
-    calc_digest_digest_access(provider, nullptr, &request, kv, response);
+    do_calc_digest_digest_access(provider, nullptr, &request, kv, response);
     // compare expect and response
     _test_case.assert((expect == response) && (expect == kv.get("response")), __FUNCTION__, "%s", text.c_str());
 }
@@ -574,7 +574,7 @@ void test_rfc_digest_example() {
         request.get_http_header().clear().add("Authorization", value);
         request.compose(http_method_t::HTTP_GET, "/dir/index.html", "");
 
-        test_rfc_example_routine("RFC 2617 3.5 Example", &provider, request, "Mufasa", "Circle Of Life", "6629fae49393a05397450978507c4ef1");
+        do_test_rfc_example_routine("RFC 2617 3.5 Example", &provider, request, "Mufasa", "Circle Of Life", "6629fae49393a05397450978507c4ef1");
     }
 
     // RFC 7616 3.9.1.  Example with SHA-256 and MD5 "Circle of Life"
@@ -587,7 +587,7 @@ void test_rfc_digest_example() {
         request.get_http_header().clear().add("Authorization", value);
         request.compose(http_method_t::HTTP_GET, "/dir/index.html", "");
 
-        test_rfc_example_routine("RFC 7616 3.9.1. Examples with MD5", &provider, request, "Mufasa", "Circle of Life", "8ca523f5e9506fed4657c9700eebdbec");
+        do_test_rfc_example_routine("RFC 7616 3.9.1. Examples with MD5", &provider, request, "Mufasa", "Circle of Life", "8ca523f5e9506fed4657c9700eebdbec");
     }
     // part of SHA-256
     {
@@ -598,8 +598,8 @@ void test_rfc_digest_example() {
         request.get_http_header().clear().add("Authorization", value);
         request.compose(http_method_t::HTTP_GET, "/dir/index.html", "");
 
-        test_rfc_example_routine("RFC 7616 3.9.1. Examples with SHA-256", &provider, request, "Mufasa", "Circle of Life",
-                                 "753927fa0e85d155564e2e272a28d1802ca10daf4496794697cf8db5856cb6c1");
+        do_test_rfc_example_routine("RFC 7616 3.9.1. Examples with SHA-256", &provider, request, "Mufasa", "Circle of Life",
+                                    "753927fa0e85d155564e2e272a28d1802ca10daf4496794697cf8db5856cb6c1");
     }
 
     // 1) enroll user/pass into digest credentials per realm
@@ -652,7 +652,7 @@ void test_rfc_digest_example() {
         request.get_http_header().clear().add("Authorization", value);
         request.compose(http_method_t::HTTP_GET, "/doe.json", "");
 
-        test_rfc_example_routine("RFC 7616 3.9.2. Example with SHA-512-256 and Userhash", &provider, request, username, "Secret, or not?",
+        do_test_rfc_example_routine("RFC 7616 3.9.2. Example with SHA-512-256 and Userhash", &provider, request, username, "Secret, or not?",
                                  "ae66e67d6b427bd3f120414a82e4acff38e8ecd9101d6c861229025f607a79dd");
     }
 #endif
@@ -666,7 +666,7 @@ void test_rfc_digest_example() {
         request.get_http_header().clear().add("Authorization", value);
         request.compose(http_method_t::HTTP_GET, "/auth/userhash", "");
 
-        test_rfc_example_routine(
+        do_test_rfc_example_routine(
             "realm=testrealm@host.com, algorithm=SHA-256, qop=auth, userhash=true "
             "(chrome generated)",
             &provider, request, "user", "password", "4eec813c6cb8e3e4eb40a6b21a547fcb15b9158c5595d05c82612673980730ef");
@@ -681,7 +681,7 @@ void test_rfc_digest_example() {
         request.get_http_header().clear().add("Authorization", value);
         request.compose(http_method_t::HTTP_GET, "/dir/index.html", "");
 
-        test_rfc_example_routine(
+        do_test_rfc_example_routine(
             "realm=happiness, algorithm=SHA-256-sess, qop=auth, userhash=true "
             "(chrome generated)",
             &provider, request, "user", "password", "3defcdd8bda2d9304af3145c93687c1929e8ad6361b564d738ad2ed5eaaedf6d");

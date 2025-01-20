@@ -66,7 +66,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             uint16 curve = 0;
             uint8 pubkey_len = 0;
             binary_t pubkey;
-            uint16 signature = 0;
+            uint16 sigalg = 0;
             uint16 sig_len = 0;
             binary_t sig;
 
@@ -93,7 +93,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 curve = pl.t_value_of<uint16>(constexpr_curve);
                 pubkey_len = pl.t_value_of<uint8>(constexpr_pubkey_len);
                 pl.get_binary(constexpr_pubkey, pubkey);
-                signature = pl.t_value_of<uint16>(constexpr_signature);
+                sigalg = pl.t_value_of<uint16>(constexpr_signature);
                 sig_len = pl.t_value_of<uint16>(constexpr_sig_len);
                 pl.get_binary(constexpr_sig, sig);
             }
@@ -125,7 +125,8 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 binary_append(message, pubkey_len);
                 binary_append(message, pubkey);
 
-                auto sign = session->get_tls_protection().get_crypto_sign(signature);
+                crypto_sign_builder builder;
+                auto sign = builder.set_tls_sign_scheme(sigalg).build();
                 if (sign) {
                     crypto_key& key = session->get_tls_protection().get_keyexchange();
                     auto pkey = key.any();
@@ -143,7 +144,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 dbs.printf(" > %s 0x%04x %s\n", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
                 dbs.printf(" > %s %i\n", constexpr_pubkey_len, pubkey_len);
                 dump_memory(pubkey, &dbs, 16, 3, 0x0, dump_notrunc);
-                dbs.printf(" > %s 0x%04x %s\n", constexpr_signature, signature, tlsadvisor->signature_scheme_name(signature).c_str());
+                dbs.printf(" > %s 0x%04x %s\n", constexpr_signature, sigalg, tlsadvisor->signature_scheme_name(sigalg).c_str());
                 dbs.printf(" > %s %i\n", constexpr_sig_len, sig_len);
                 dump_memory(sig, &dbs, 16, 3, 0x0, dump_notrunc);
                 dbs.autoindent(0);

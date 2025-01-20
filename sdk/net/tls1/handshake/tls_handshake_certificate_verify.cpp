@@ -23,16 +23,16 @@
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_signature_alg[] = "signature algorithm";
+constexpr char constexpr_len[] = "len";
+constexpr char constexpr_signature[] = "signature";
+
 tls_handshake_certificate_verify::tls_handshake_certificate_verify(tls_session* session) : tls_handshake(tls_hs_certificate_verify, session) {}
 
 return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
 
@@ -44,90 +44,115 @@ return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, c
     return ret;
 }
 
-return_t asn1_der_ecdsa_signature(uint16 scheme, const binary_t& signature, binary_t& r, binary_t& s) {
+return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey, tls_direction_t dir, uint16& scheme, binary_t& signature) {
     return_t ret = errorcode_t::success;
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
     __try2 {
-        auto hint = tlsadvisor->hintof_signature_scheme(scheme);
-        if (nullptr == hint) {
-            ret = errorcode_t::success;
+        if (nullptr == pkey) {
+            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (crypt_sig_ecdsa != hint->sigtype) {
-            ret = errorcode_t::bad_request;
-            __leave2;
-        }
-        auto sig = hint->sig;
-        uint32 unitsize = 0;
+        auto session = get_session();
+        tls_protection& protection = session->get_tls_protection();
+        auto& protection_context = protection.get_protection_context();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        switch (sig) {
-            case sig_sha256:
-                unitsize = 32;
-                break;
-            case sig_sha384:
-                unitsize = 48;
-                break;
-            case sig_sha512:
-                unitsize = 66;
-                break;
-        }
-        if (0 == unitsize) {
-            ret = errorcode_t::success;
-            __leave2;
-        }
+        auto kty = typeof_crypto_key(pkey);
+        scheme = protection_context.select_signature_algorithm(kty);
 
-        // ASN.1 DER
-        constexpr char constexpr_sequence[] = "sequence";
-        constexpr char constexpr_len[] = "len";
-        constexpr char constexpr_rlen[] = "rlen";
-        constexpr char constexpr_r[] = "r";
-        constexpr char constexpr_slen[] = "slen";
-        constexpr char constexpr_s[] = "s";
-        payload pl;
-        pl << new payload_member(uint8(0), constexpr_sequence) << new payload_member(uint8(0), constexpr_len)
-           << new payload_member(uint8(0))                                                                 // 2 asn1_tag_integer
-           << new payload_member(uint8(0), constexpr_rlen) << new payload_member(binary_t(), constexpr_r)  //
-           << new payload_member(uint8(0))                                                                 // 2 asn1_tag_integer
-           << new payload_member(uint8(0), constexpr_slen) << new payload_member(binary_t(), constexpr_s);
+        crypto_sign_builder builder;
+        auto sign = builder.set_tls_sign_scheme(scheme).build();
+        if (sign) {
+            basic_stream tosign;
+            protection.construct_certificate_verify_message(dir, tosign);
 
-        pl.set_reference_value(constexpr_r, constexpr_rlen);
-        pl.set_reference_value(constexpr_s, constexpr_slen);
+            ret = sign->sign(pkey, tosign.data(), tosign.size(), signature);
 
-        size_t spos = 0;
-        pl.read(&signature[0], signature.size(), spos);
-
-        pl.get_binary(constexpr_r, r);
-        pl.get_binary(constexpr_s, s);
-
-        if (r.size() > unitsize) {
-            auto d = r.size() - unitsize;
-            r.erase(r.begin(), r.begin() + d);
-        }
-        if (s.size() > unitsize) {
-            auto d = s.size() - unitsize;
-            s.erase(s.begin(), s.begin() + d);
+            sign->release();
+        } else {
+            ret = errorcode_t::not_supported;
         }
     }
-    __finally2 {
-        // do nothing
+    __finally2 {}
+
+    return ret;
+}
+
+return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pkey, tls_direction_t dir, uint16 scheme, binary_t& signature) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == pkey) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        auto session = get_session();
+        tls_protection& protection = session->get_tls_protection();
+
+        /**
+         * RSASSA-PSS     | RSA     |
+         * ECDSA          | ECDSA   | ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
+         * EdDSA          | Ed25519 | 64 bytes
+         * EdDSA          | Ed448   | 114 bytes
+         * RSA-PCKS1 v1.5 | RSA     |
+         *
+         * ECDSA signature
+         * hash     | R  | S  | R||S
+         * sha2-256 | 32 | 32 | 64
+         * sha2-384 | 48 | 48 | 96
+         * sha2-512 | 66 | 66 | 132
+         */
+        auto kty = typeof_crypto_key(pkey);
+        // binary_t ecdsa_sig_r, ecdsa_sig_s;
+        switch (kty) {
+            case kty_rsa:
+            case kty_okp: {
+            } break;
+            case kty_ec: {
+                binary_t ecdsa_sig;
+                protection.get_ecdsa_signature(scheme, signature, ecdsa_sig);
+                signature = std::move(ecdsa_sig);
+            } break;
+        }
+
+        crypto_sign_builder builder;
+        auto sign = builder.set_tls_sign_scheme(scheme).build();
+        if (sign) {
+            /**
+             * RFC 8446 4.4.  Authentication Messages
+             *
+             *  CertificateVerify:  A signature over the value
+             *     Transcript-Hash(Handshake Context, Certificate).
+             *
+             * RFC 8446 4.4.3.  Certificate Verify
+             *
+             * https://tls13.xargs.org/#server-certificate-verify/annotated
+             */
+
+            basic_stream tosign;
+            protection.construct_certificate_verify_message(dir, tosign);
+
+            ret = sign->verify(pkey, tosign.data(), tosign.size(), signature);
+
+            sign->release();
+        } else {
+            ret = errorcode_t::not_supported;
+        }
     }
+    __finally2 {}
     return ret;
 }
 
 return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
+        auto session = get_session();
+        tls_protection& protection = session->get_tls_protection();
         {
             // RFC 8446 2.  Protocol Overview
             // CertificateVerify:  A signature over the entire handshake using the
@@ -138,10 +163,6 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
             // RFC 4346 7.4.8. Certificate verify
 
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
-            constexpr char constexpr_signature_alg[] = "signature algorithm";
-            constexpr char constexpr_len[] = "len";
-            constexpr char constexpr_signature[] = "signature";
 
             uint16 scheme = 0;
             uint16 len = 0;
@@ -158,106 +179,28 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
                 pl.get_binary(constexpr_signature, signature);
             }
 
-            tls_protection& protection = session->get_tls_protection();
-
             // $ openssl x509 -pubkey -noout -in server.crt > server.pub
             // public key from server certificate or handshake 0x11 certificate
-            crypto_key& key = protection.get_keyexchange();
             const char* kid = nullptr;
             if (from_server == dir) {
                 kid = "SC";  // Server Certificate
             } else {
                 kid = "CC";  // Client Certificate (Client Authentication, optional)
             }
+            crypto_key& key = protection.get_keyexchange();
             auto pkey = key.find(kid);
 
-            /**
-             * RSASSA-PSS     | RSA     |
-             * ECDSA          | ECDSA   | ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
-             * EdDSA          | Ed25519 | 64 bytes
-             * EdDSA          | Ed448   | 114 bytes
-             * RSA-PCKS1 v1.5 | RSA     |
-             *
-             * ECDSA signature
-             * hash     | R  | S  | R||S
-             * sha2-256 | 32 | 32 | 64
-             * sha2-384 | 48 | 48 | 96
-             * sha2-512 | 66 | 66 | 132
-             */
-            auto kty = typeof_crypto_key(pkey);
-            binary_t ecdsa_sig;
-            binary_t ecdsa_sig_r, ecdsa_sig_s;
-            switch (kty) {
-                case kty_rsa:
-                case kty_okp: {
-                } break;
-                case kty_ec: {
-                    asn1_der_ecdsa_signature(scheme, signature, ecdsa_sig_r, ecdsa_sig_s);
-                    binary_append(ecdsa_sig, ecdsa_sig_r);
-                    binary_append(ecdsa_sig, ecdsa_sig_s);
-                } break;
-            }
-
-            basic_stream tosign;
-            binary_t transcripthash;
-            auto sign = protection.get_crypto_sign(scheme);
-            if (sign) {
-                /**
-                 * RFC 8446 4.4.  Authentication Messages
-                 *
-                 *  CertificateVerify:  A signature over the value
-                 *     Transcript-Hash(Handshake Context, Certificate).
-                 *
-                 * RFC 8446 4.4.3.  Certificate Verify
-                 *
-                 * https://tls13.xargs.org/#server-certificate-verify/annotated
-                 */
-
-                auto hash = protection.get_transcript_hash();  // hash(client_hello .. certificate)
-                if (hash) {
-                    hash->digest(transcripthash);
-                    hash->release();
-                }
-
-                constexpr char constexpr_context_server[] = "TLS 1.3, server CertificateVerify";
-                constexpr char constexpr_context_client[] = "TLS 1.3, client CertificateVerify";
-                tosign.fill(64, 0x20);  // octet 32 (0x20) repeated 64 times
-                if (from_server == dir) {
-                    tosign << constexpr_context_server;  // context string
-                } else {
-                    tosign << constexpr_context_client;
-                }
-                tosign.fill(1, 0x00);                                     // single 0 byte
-                tosign.write(&transcripthash[0], transcripthash.size());  // content to be signed
-
-                if (ecdsa_sig.empty()) {
-                    ret = sign->verify(pkey, tosign.data(), tosign.size(), signature);
-                } else {
-                    ret = sign->verify(pkey, tosign.data(), tosign.size(), ecdsa_sig);
-                }
-
-                sign->release();
-            } else {
-                ret = errorcode_t::success;
-            }
+            ret = verify_certverify(pkey, dir, scheme, signature);
 
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(1);
                 dbs.printf(" > %s 0x%04x %s\n", constexpr_signature_alg, scheme, tlsadvisor->signature_scheme_name(scheme).c_str());
                 dbs.printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
-                dbs.printf(" > transcript-hash\n");
-                dump_memory(transcripthash, &dbs, 16, 3, 0x00, dump_notrunc);
-                dbs.printf(" > tosign\n");
-                dump_memory(tosign, &dbs, 16, 3, 0x00, dump_notrunc);
+                // dbs.printf(" > tosign\n");
+                // dump_memory(tosign, &dbs, 16, 3, 0x00, dump_notrunc);
                 dbs.printf(" > %s \e[1;33m%s\e[0m\n", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
                 dump_memory(signature, &dbs, 16, 3, 0x00, dump_notrunc);
-                if (ecdsa_sig.size()) {
-                    dbs.printf(" > ecdsa r\n");
-                    dump_memory(ecdsa_sig_r, &dbs, 16, 3, 0x00, dump_notrunc);
-                    dbs.printf(" > ecdsa s\n");
-                    dump_memory(ecdsa_sig_s, &dbs, 16, 3, 0x00, dump_notrunc);
-                }
                 dbs.autoindent(0);
 
                 trace_debug_event(category_tls1, tls_event_read, &dbs);
@@ -270,7 +213,34 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
     return ret;
 }
 
-return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
+return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        tls_protection& protection = session->get_tls_protection();
+        auto& protection_context = protection.get_protection_context();
+
+        const char* kid = nullptr;
+        if (from_server == dir) {
+            kid = "SCP";  // Server Certificate
+        } else {
+            kid = "CCP";  // Client Certificate (Client Authentication, optional)
+        }
+        crypto_key& key = protection.get_keyexchange();
+        auto pkey = key.find(kid);
+
+        uint16 scheme = 0;
+        binary_t signature;
+        ret = sign_certverify(pkey, dir, scheme, signature);
+
+        payload pl;
+        pl << new payload_member(uint16(scheme), true, constexpr_signature_alg) << new payload_member(uint16(signature.size()), true, constexpr_len)
+           << new payload_member(signature, constexpr_signature);
+        pl.write(bin);
+    }
+    __finally2 {}
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

@@ -31,7 +31,7 @@ void debug_hpack_decoder(trace_category_t, uint32 event) {
     }
 };
 
-void test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, const char* text) {
+void do_test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, const char* text) {
     const OPTION& option = _cmdline->value();
 
     binary_t bin;
@@ -61,9 +61,9 @@ void test_rfc7541_c_1() {
     _test_case.begin("RFC 7541 HPACK C.1. Integer Representation Examples");
     const OPTION& option = _cmdline->value();
 
-    test_rfc7541_c_1_routine(5, 10, "0a", "RFC 7541 C.1.1. Example 1: Encoding 10 Using a 5-Bit Prefix");
-    test_rfc7541_c_1_routine(5, 1337, "1f9a0a", "RFC 7541 C.1.2. Example 2: Encoding 1337 Using a 5-Bit Prefix");
-    test_rfc7541_c_1_routine(8, 42, "2a", "RFC 7541 C.1.3. Example 3: Encoding 42 Starting at an Octet Boundary");
+    do_test_rfc7541_c_1_routine(5, 10, "0a", "RFC 7541 C.1.1. Example 1: Encoding 10 Using a 5-Bit Prefix");
+    do_test_rfc7541_c_1_routine(5, 1337, "1f9a0a", "RFC 7541 C.1.2. Example 2: Encoding 1337 Using a 5-Bit Prefix");
+    do_test_rfc7541_c_1_routine(8, 42, "2a", "RFC 7541 C.1.3. Example 3: Encoding 42 Starting at an Octet Boundary");
 }
 
 void test_rfc7541_c_2() {
@@ -176,7 +176,7 @@ void test_rfc7541_c_2() {
     }
 }
 
-void decode(const binary_t& bin, hpack_dynamic_table* session, hpack_dynamic_table* session2) {
+void do_decode(const binary_t& bin, hpack_dynamic_table* session, hpack_dynamic_table* session2) {
     const OPTION& option = _cmdline->value();
 
     hpack_stream hp;
@@ -245,7 +245,7 @@ void test_rfc7541_c_3() {
     // [  1] (s =  57) :authority: www.example.com
     //       Table size:  57
 
-    decode(hp.get_binary(), &session_decoder, &session_encoder);
+    do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text1);
     _test_case.assert(57 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
@@ -273,7 +273,7 @@ void test_rfc7541_c_3() {
     // [  2] (s =  57) :authority: www.example.com
     //       Table size: 110
 
-    decode(hp.get_binary(), &session_decoder, &session_encoder);
+    do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text2);
     _test_case.assert(110 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
@@ -303,7 +303,7 @@ void test_rfc7541_c_3() {
     // [  3] (s =  57) :authority: www.example.com
     //       Table size: 164
 
-    decode(hp.get_binary(), &session_decoder, &session_encoder);
+    do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text3);
     _test_case.assert(164 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text3);
@@ -337,7 +337,7 @@ void test_rfc7541_c_4() {
         "ff                                      ";
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect1), __FUNCTION__, "%s #encode", text1);
 
-    decode(hp.get_binary(), &session_decoder, &session_encoder);
+    do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text1);
     _test_case.assert(57 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
@@ -360,7 +360,7 @@ void test_rfc7541_c_4() {
     const char* expect2 = "8286 84be 5886 a8eb 1064 9cbf";
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "%s #encode", text2);
 
-    decode(hp.get_binary(), &session_decoder, &session_encoder);
+    do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text2);
     _test_case.assert(110 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
@@ -385,7 +385,7 @@ void test_rfc7541_c_4() {
         "a849 e95b b8e8 b4bf                     ";
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect3), __FUNCTION__, "%s #encode", text3);
 
-    decode(hp.get_binary(), &session_decoder, &session_encoder);
+    do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text3);
     _test_case.assert(164 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text3);
@@ -429,7 +429,7 @@ void test_rfc7541_c_5() {
         "6c65 2e63 6f6d                          ";
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect1), __FUNCTION__, "%s #encode", text1);
 
-    decode(hp.get_binary(), &session_decoder, &session_encoder);
+    do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text1);
     _test_case.assert(222 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
@@ -452,7 +452,7 @@ void test_rfc7541_c_5() {
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "%s #encode", text2);
     _test_case.assert(1 == count_evict_encoder, __FUNCTION__, "%s #check eviction %u", text2, count_evict_encoder);
 
-    decode(hp.get_binary(), &session_decoder, &session_encoder);
+    do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text2);
     _test_case.assert(222 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
@@ -485,7 +485,7 @@ void test_rfc7541_c_5() {
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect3), __FUNCTION__, "%s #encode", text3);
     _test_case.assert(5 == count_evict_encoder, __FUNCTION__, "%s #check eviction %u", text3, count_evict_encoder);
 
-    decode(hp.get_binary(), &session_decoder, &session_encoder);
+    do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text3);
     _test_case.assert(215 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text3);
@@ -530,7 +530,7 @@ void test_rfc7541_c_6() {
         "e9ae 82ae 43d3                          ";
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect1), __FUNCTION__, "%s #encode", text1);
 
-    decode(hp.get_binary(), &session_decoder, &session_encoder);
+    do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text1);
     _test_case.assert(222 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
@@ -553,7 +553,7 @@ void test_rfc7541_c_6() {
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect2), __FUNCTION__, "%s #encode", text2);
     _test_case.assert(6 == count_evict_encoder, __FUNCTION__, "%s #check eviction %u", text2, count_evict_encoder);
 
-    decode(hp.get_binary(), &session_decoder, &session_encoder);
+    do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text2);
     _test_case.assert(222 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
@@ -584,7 +584,7 @@ void test_rfc7541_c_6() {
     _test_case.assert(hp.get_binary() == base16_decode_rfc(expect3), __FUNCTION__, "%s #encode", text3);
     _test_case.assert(10 == count_evict_encoder, __FUNCTION__, "%s #check eviction %u", text3, count_evict_encoder);
 
-    decode(hp.get_binary(), &session_decoder, &session_encoder);
+    do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text3);
     _test_case.assert(215 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text3);

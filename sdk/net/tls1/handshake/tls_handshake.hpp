@@ -18,6 +18,8 @@ namespace hotplace {
 namespace net {
 
 class tls_handshake {
+    friend class tls_handshakes;
+
    public:
     tls_handshake(tls_hs_type_t type, tls_session *session);
     ~tls_handshake();
@@ -26,6 +28,7 @@ class tls_handshake {
 
     virtual return_t read(tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);
     virtual return_t write(tls_direction_t dir, binary_t &bin);
+    virtual void carryout_schedule(tls_direction_t dir);
 
     void addref();
     void release();
@@ -41,7 +44,7 @@ class tls_handshake {
     uint32 get_body_size();
 
    protected:
-    virtual return_t do_preprocess(tls_direction_t dir, const byte_t *stream, size_t size);
+    virtual return_t do_preprocess(tls_direction_t dir);
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t *stream, size_t size);
     virtual return_t do_read_header(tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);

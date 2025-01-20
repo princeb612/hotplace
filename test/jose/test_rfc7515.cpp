@@ -627,7 +627,7 @@ void test_rfc7515_bykeygen() {
     _test_case.test(ret, __FUNCTION__, "HS256,RS256,ES256,PS256");
 }
 
-void key_match(crypto_key* key, jwa_t alg, crypto_use_t use) {
+void do_key_match(crypto_key* key, jwa_t alg, crypto_use_t use) {
     const EVP_PKEY* pkey = nullptr;
     // size_t key_length = 0;
     binary_t pub1;
@@ -655,7 +655,7 @@ void key_match(crypto_key* key, jwa_t alg, crypto_use_t use) {
     _logger->writeln(bs);
 }
 
-void key_match(crypto_key* key, jws_t sig, crypto_use_t use) {
+void do_key_match(crypto_key* key, jws_t sig, crypto_use_t use) {
     const EVP_PKEY* pkey = nullptr;
     // size_t key_length = 0;
     binary_t pub1;
@@ -711,7 +711,7 @@ void key_match_test() {
                         jwa_t::jwa_pbes2_hs384_a192kw,
                         jwa_t::jwa_pbes2_hs512_a256kw};
         for (unsigned int i = 0; i < RTL_NUMBER_OF(algs); i++) {
-            key_match(&key, algs[i], crypto_use_t::use_enc);
+            do_key_match(&key, algs[i], crypto_use_t::use_enc);
         }
     }
     __finally2 {}
@@ -726,7 +726,7 @@ void key_match_test() {
             jws_t::jws_es256, jws_t::jws_es384, jws_t::jws_es512, jws_t::jws_ps256, jws_t::jws_ps384, jws_t::jws_ps512,
         };
         for (unsigned int i = 0; i < RTL_NUMBER_OF(algs); i++) {
-            key_match(&key, algs[i], crypto_use_t::use_sig);
+            do_key_match(&key, algs[i], crypto_use_t::use_sig);
         }
     }
     __finally2 {}

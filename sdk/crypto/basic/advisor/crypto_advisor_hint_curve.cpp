@@ -15,6 +15,21 @@
 namespace hotplace {
 namespace crypto {
 
+/**
+ * Prime Field Curve (Fp)
+ *   y^2 = x^3 + ax + b mod p
+ *   P-256, P-384, P-521
+ * Binary Field Curve (F2m)
+ *   y^2 + xy = x^3 + ax^2 + b
+ *   B-163, B-233, B-283
+ * Edwards Curve
+ *   x^2 + y^2 = 1 + (d x^2 y^2)
+ *   Ed25519, Ed448
+ * Montgomery Curve
+ *   curve25519
+ * Koblitz Curve
+ *   K-163, K-233
+ */
 const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp112r1
     // https://neuromancer.sk/std/wtls/wap-wsg-idm-ecid-wtls6

@@ -74,7 +74,7 @@ return_t tls_record_application_data::do_write_header(tls_direction_t dir, binar
             tls_record::do_write_header(dir, bin, ciphertext);
 
         } else {
-            // ret = protection.decrypt_tls1(session, dir, stream, pos + len, recpos, plaintext);
+            // ret = protection.encrypt_tls1
         }
     }
     __finally2 {}

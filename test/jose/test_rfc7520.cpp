@@ -11,7 +11,7 @@
 
 #include "sample.hpp"
 
-return_t test_rfc7520_signature(crypto_key* key, const char* filename, const char* testcase_name) {
+return_t do_test_rfc7520_signature(crypto_key* key, const char* filename, const char* testcase_name) {
     json_web_key jwk;
     json_web_signature jws;
     std::string sample;
@@ -35,7 +35,7 @@ return_t test_rfc7520_signature(crypto_key* key, const char* filename, const cha
     return ret;
 }
 
-return_t test_rfc7520_jwe(crypto_key* key, const char* filename, const char* testcase_name) {
+return_t do_test_rfc7520_jwe(crypto_key* key, const char* filename, const char* testcase_name) {
     _logger->writeln("%s", testcase_name);
 
     json_object_signing_encryption jose;
@@ -77,48 +77,48 @@ void test_rfc7520() {
     key.for_each(dump_crypto_key, nullptr);
 
     // 4.1 "RS256"
-    test_rfc7520_signature(&key, "rfc7520_figure13.jws", "RFC 7520 4.1.  RSA v1.5 Signature (figure 13)");
-    test_rfc7520_signature(&key, "rfc7520_figure14.jws", "RFC 7520 4.1.  RSA v1.5 Signature (figure 14)");
-    test_rfc7520_signature(&key, "rfc7520_figure15.jws", "RFC 7520 4.1.  RSA v1.5 Signature (figure 15)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure13.jws", "RFC 7520 4.1.  RSA v1.5 Signature (figure 13)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure14.jws", "RFC 7520 4.1.  RSA v1.5 Signature (figure 14)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure15.jws", "RFC 7520 4.1.  RSA v1.5 Signature (figure 15)");
 
     // 4.2 "PS256"
-    test_rfc7520_signature(&key, "rfc7520_figure20.jws", "RFC 7520 4.2.  RSA-PSS Signature (figure 20)");
-    test_rfc7520_signature(&key, "rfc7520_figure21.jws", "RFC 7520 4.2.  RSA-PSS Signature (figure 21)");
-    test_rfc7520_signature(&key, "rfc7520_figure22.jws", "RFC 7520 4.2.  RSA-PSS Signature (figure 22)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure20.jws", "RFC 7520 4.2.  RSA-PSS Signature (figure 20)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure21.jws", "RFC 7520 4.2.  RSA-PSS Signature (figure 21)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure22.jws", "RFC 7520 4.2.  RSA-PSS Signature (figure 22)");
 
     // 4.3 "ES256"
-    test_rfc7520_signature(&key, "rfc7520_figure27.jws", "RFC 7520 4.3.  ECDSA Signature (figure 27)");
-    test_rfc7520_signature(&key, "rfc7520_figure28.jws", "RFC 7520 4.3.  ECDSA Signature (figure 28)");
-    test_rfc7520_signature(&key, "rfc7520_figure29.jws", "RFC 7520 4.3.  ECDSA Signature (figure 29)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure27.jws", "RFC 7520 4.3.  ECDSA Signature (figure 27)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure28.jws", "RFC 7520 4.3.  ECDSA Signature (figure 28)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure29.jws", "RFC 7520 4.3.  ECDSA Signature (figure 29)");
 
     // 4.4 "HS256"
-    test_rfc7520_signature(&key, "rfc7520_figure34.jws", "RFC 7520 4.4.  HMAC-SHA2 Integrity Protection (figure 34)");
-    test_rfc7520_signature(&key, "rfc7520_figure35.jws", "RFC 7520 4.4.  HMAC-SHA2 Integrity Protection (figure 35)");
-    test_rfc7520_signature(&key, "rfc7520_figure36.jws", "RFC 7520 4.4.  HMAC-SHA2 Integrity Protection (figure 36)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure34.jws", "RFC 7520 4.4.  HMAC-SHA2 Integrity Protection (figure 34)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure35.jws", "RFC 7520 4.4.  HMAC-SHA2 Integrity Protection (figure 35)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure36.jws", "RFC 7520 4.4.  HMAC-SHA2 Integrity Protection (figure 36)");
 
     // 4.5.  Signature with Detached Content
     // 4.6.  Protecting Specific Header Fields
-    test_rfc7520_signature(&key, "rfc7520_figure49.jws", "RFC 7520 4.6.  Protecting Specific Header Fields (figure 49)");
-    test_rfc7520_signature(&key, "rfc7520_figure50.jws", "RFC 7520 4.6.  Protecting Specific Header Fields (figure 50)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure49.jws", "RFC 7520 4.6.  Protecting Specific Header Fields (figure 49)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure50.jws", "RFC 7520 4.6.  Protecting Specific Header Fields (figure 50)");
 
     // 4.7.  Protecting Content Only
-    test_rfc7520_signature(&key, "rfc7520_figure54.jws", "RFC 7520 4.7.  Protecting Content Only (figure 54)");
-    test_rfc7520_signature(&key, "rfc7520_figure55.jws", "RFC 7520 4.7.  Protecting Content Only (figure 55)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure54.jws", "RFC 7520 4.7.  Protecting Content Only (figure 54)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure55.jws", "RFC 7520 4.7.  Protecting Content Only (figure 55)");
 
     // 4.8.  Multiple Signatures
-    test_rfc7520_signature(&key, "rfc7520_figure61.jws", "RFC 7520 4.8.  Multiple Signatures #1 (figure 61)");
-    test_rfc7520_signature(&key, "rfc7520_figure65.jws", "RFC 7520 4.8.  Multiple Signatures #2 (figure 65)");
-    test_rfc7520_signature(&key, "rfc7520_figure70.jws", "RFC 7520 4.8.  Multiple Signatures #3 (figure 70)");
-    test_rfc7520_signature(&key, "rfc7520_figure71.jws", "RFC 7520 4.8.  Multiple Signatures (figure 71)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure61.jws", "RFC 7520 4.8.  Multiple Signatures #1 (figure 61)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure65.jws", "RFC 7520 4.8.  Multiple Signatures #2 (figure 65)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure70.jws", "RFC 7520 4.8.  Multiple Signatures #3 (figure 70)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure71.jws", "RFC 7520 4.8.  Multiple Signatures (figure 71)");
 
     // 5.1 "RSA1_5" "A128CBC-HS256"
-    test_rfc7520_jwe(&key, "rfc7520_figure81.jwe", "RFC 7520 5.1.  Key Encryption Using RSA v1.5 and AES-HMAC-SHA2 (figure 81)");
-    test_rfc7520_jwe(&key, "rfc7520_figure82.jwe", "RFC 7520 5.1.  Key Encryption Using RSA v1.5 and AES-HMAC-SHA2 (figure 82)");
-    test_rfc7520_jwe(&key, "rfc7520_figure83.jwe", "RFC 7520 5.1.  Key Encryption Using RSA v1.5 and AES-HMAC-SHA2 (figure 83)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure81.jwe", "RFC 7520 5.1.  Key Encryption Using RSA v1.5 and AES-HMAC-SHA2 (figure 81)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure82.jwe", "RFC 7520 5.1.  Key Encryption Using RSA v1.5 and AES-HMAC-SHA2 (figure 82)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure83.jwe", "RFC 7520 5.1.  Key Encryption Using RSA v1.5 and AES-HMAC-SHA2 (figure 83)");
     // 5.2 "RSA-OAEP" "A256GCM"
-    test_rfc7520_jwe(&key, "rfc7520_figure92.jwe", "RFC 7520 5.2.  Key Encryption Using RSA-OAEP with AES-GCM (figure 92)");
-    test_rfc7520_jwe(&key, "rfc7520_figure93.jwe", "RFC 7520 5.2.  Key Encryption Using RSA-OAEP with AES-GCM (figure 93)");
-    test_rfc7520_jwe(&key, "rfc7520_figure94.jwe", "RFC 7520 5.2.  Key Encryption Using RSA-OAEP with AES-GCM (figure 94)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure92.jwe", "RFC 7520 5.2.  Key Encryption Using RSA-OAEP with AES-GCM (figure 92)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure93.jwe", "RFC 7520 5.2.  Key Encryption Using RSA-OAEP with AES-GCM (figure 93)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure94.jwe", "RFC 7520 5.2.  Key Encryption Using RSA-OAEP with AES-GCM (figure 94)");
     // 5.3 "PBES2-HS512+A256KW" "A128CBC-HS256"
     crypto_key crypto_key2;
     crypto_keychain keygen;
@@ -129,47 +129,50 @@ void test_rfc7520() {
         "peter_long\xe2\x80\x93"
         "credit_tun";
     keygen.add_oct(&crypto_key2, jwa_t::jwa_pbes2_hs512_a256kw, str2bin(figure96), keydesc(crypto_use_t::use_enc));
-    test_rfc7520_jwe(&crypto_key2, "rfc7520_figure105.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 105)");
-    test_rfc7520_jwe(&crypto_key2, "rfc7520_figure106.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 106)");
-    test_rfc7520_jwe(&crypto_key2, "rfc7520_figure107.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 107)");
+    do_test_rfc7520_jwe(&crypto_key2, "rfc7520_figure105.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 105)");
+    do_test_rfc7520_jwe(&crypto_key2, "rfc7520_figure106.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 106)");
+    do_test_rfc7520_jwe(&crypto_key2, "rfc7520_figure107.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 107)");
     // 5.4 "ECDH-ES+A128KW" "A256GCM"
-    test_rfc7520_jwe(&key, "rfc7520_figure117.jwe", "RFC 7520 5.4.  Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM  (figure 117)");
-    test_rfc7520_jwe(&key, "rfc7520_figure118.jwe", "RFC 7520 5.4.  Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM  (figure 118)");
-    test_rfc7520_jwe(&key, "rfc7520_figure119.jwe", "RFC 7520 5.4.  Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM  (figure 119)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure117.jwe",
+                        "RFC 7520 5.4.  Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM  (figure 117)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure118.jwe",
+                        "RFC 7520 5.4.  Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM  (figure 118)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure119.jwe",
+                        "RFC 7520 5.4.  Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM  (figure 119)");
     // 5.5 "ECDH-ES" "A128CBC-HS256"
-    test_rfc7520_jwe(&key, "rfc7520_figure128.jwe", "RFC 7520 5.5.  Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2 (figure 128)");
-    test_rfc7520_jwe(&key, "rfc7520_figure129.jwe", "RFC 7520 5.5.  Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2 (figure 129)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure128.jwe", "RFC 7520 5.5.  Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2 (figure 128)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure129.jwe", "RFC 7520 5.5.  Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2 (figure 129)");
     // 5.6 "dir" "A256GCM"
-    test_rfc7520_jwe(&key, "rfc7520_figure136.jwe", "RFC 7520 5.6.  Direct Encryption Using AES-GCM (figure 136)");
-    test_rfc7520_jwe(&key, "rfc7520_figure137.jwe", "RFC 7520 5.6.  Direct Encryption Using AES-GCM (figure 137)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure136.jwe", "RFC 7520 5.6.  Direct Encryption Using AES-GCM (figure 136)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure137.jwe", "RFC 7520 5.6.  Direct Encryption Using AES-GCM (figure 137)");
     // 5.7 "A256GCMKW" "A128CBC-HS256"
-    test_rfc7520_jwe(&key, "rfc7520_figure148.jwe", "RFC 7520 5.7.  Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2 (figure 148)");
-    test_rfc7520_jwe(&key, "rfc7520_figure149.jwe", "RFC 7520 5.7.  Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2 (figure 149)");
-    test_rfc7520_jwe(&key, "rfc7520_figure150.jwe", "RFC 7520 5.7.  Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2 (figure 150)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure148.jwe", "RFC 7520 5.7.  Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2 (figure 148)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure149.jwe", "RFC 7520 5.7.  Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2 (figure 149)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure150.jwe", "RFC 7520 5.7.  Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2 (figure 150)");
     // 5.8 "A128KW" "A256GCM"
-    test_rfc7520_jwe(&key, "rfc7520_figure159.jwe", "RFC 7520 5.8.  Key Wrap Using AES-KeyWrap with AES-GCM (figure 159)");
-    test_rfc7520_jwe(&key, "rfc7520_figure160.jwe", "RFC 7520 5.8.  Key Wrap Using AES-KeyWrap with AES-GCM (figure 160)");
-    test_rfc7520_jwe(&key, "rfc7520_figure161.jwe", "RFC 7520 5.8.  Key Wrap Using AES-KeyWrap with AES-GCM (figure 161)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure159.jwe", "RFC 7520 5.8.  Key Wrap Using AES-KeyWrap with AES-GCM (figure 159)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure160.jwe", "RFC 7520 5.8.  Key Wrap Using AES-KeyWrap with AES-GCM (figure 160)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure161.jwe", "RFC 7520 5.8.  Key Wrap Using AES-KeyWrap with AES-GCM (figure 161)");
 
     // 5.9 Compressed Content
-    test_rfc7520_jwe(&key, "rfc7520_figure170.jwe", "RFC 7520 5.9.  Compressed Content (figure 170)");
-    test_rfc7520_jwe(&key, "rfc7520_figure171.jwe", "RFC 7520 5.9.  Compressed Content (figure 171)");
-    test_rfc7520_jwe(&key, "rfc7520_figure172.jwe", "RFC 7520 5.9.  Compressed Content (figure 172)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure170.jwe", "RFC 7520 5.9.  Compressed Content (figure 170)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure171.jwe", "RFC 7520 5.9.  Compressed Content (figure 171)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure172.jwe", "RFC 7520 5.9.  Compressed Content (figure 172)");
 
     // 5.10.  Including Additional Authenticated Data
-    test_rfc7520_jwe(&key, "rfc7520_figure182.jwe", "RFC 7520 5.10.  Including Additional Authenticated Data (figure 182)");
-    test_rfc7520_jwe(&key, "rfc7520_figure183.jwe", "RFC 7520 5.10.  Including Additional Authenticated Data (figure 183)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure182.jwe", "RFC 7520 5.10.  Including Additional Authenticated Data (figure 182)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure183.jwe", "RFC 7520 5.10.  Including Additional Authenticated Data (figure 183)");
 
     // 5.11.  Protecting Specific Header Fields
-    test_rfc7520_jwe(&key, "rfc7520_figure192.jwe", "RFC 7520 5.11.  Protecting Specific Header Fields (figure 192)");
-    test_rfc7520_jwe(&key, "rfc7520_figure193.jwe", "RFC 7520 5.11.  Protecting Specific Header Fields (figure 193)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure192.jwe", "RFC 7520 5.11.  Protecting Specific Header Fields (figure 192)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure193.jwe", "RFC 7520 5.11.  Protecting Specific Header Fields (figure 193)");
 
     // 5.12.  Protecting Content Only
-    test_rfc7520_jwe(&key, "rfc7520_figure200.jwe", "RFC 7520 5.12.  Protecting Content Only (figure 200)");
-    test_rfc7520_jwe(&key, "rfc7520_figure201.jwe", "RFC 7520 5.12.  Protecting Content Only (figure 201)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure200.jwe", "RFC 7520 5.12.  Protecting Content Only (figure 200)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure201.jwe", "RFC 7520 5.12.  Protecting Content Only (figure 201)");
 
     // 5.13.  Encrypting to Multiple Recipients
-    test_rfc7520_jwe(&key, "rfc7520_figure221.jwe", "RFC 7520 5.13.  General JWE JSON Serialization (figure 221)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure221.jwe", "RFC 7520 5.13.  General JWE JSON Serialization (figure 221)");
 }
 
 void test_rfc7520_6_nesting_sig_and_enc() {
@@ -181,10 +184,10 @@ void test_rfc7520_6_nesting_sig_and_enc() {
     key.for_each(dump_crypto_key, nullptr);
 
     // 6.  Nesting Signatures and Encryption
-    test_rfc7520_signature(&key, "rfc7520_figure228.jws", "RFC 7520 6.  Nesting Signatures and Encryption (figure 228)");
-    test_rfc7520_jwe(&key, "rfc7520_figure236.jwe", "RFC 7520 6.  Nesting Signatures and Encryption (figure 236)");
-    test_rfc7520_jwe(&key, "rfc7520_figure237.jwe", "RFC 7520 6.  Nesting Signatures and Encryption (figure 237)");
-    test_rfc7520_jwe(&key, "rfc7520_figure238.jwe", "RFC 7520 6.  Nesting Signatures and Encryption (figure 238)");
+    do_test_rfc7520_signature(&key, "rfc7520_figure228.jws", "RFC 7520 6.  Nesting Signatures and Encryption (figure 228)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure236.jwe", "RFC 7520 6.  Nesting Signatures and Encryption (figure 236)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure237.jwe", "RFC 7520 6.  Nesting Signatures and Encryption (figure 237)");
+    do_test_rfc7520_jwe(&key, "rfc7520_figure238.jwe", "RFC 7520 6.  Nesting Signatures and Encryption (figure 238)");
 }
 
 void test_jwe_flattened() {

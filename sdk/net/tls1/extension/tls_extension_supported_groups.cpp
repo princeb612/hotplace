@@ -24,9 +24,25 @@ constexpr char constexpr_curve[] = "curve";
 
 tls_extension_supported_groups::tls_extension_supported_groups(tls_session* session) : tls_extension(tls1_ext_supported_groups, session) {}
 
+return_t tls_extension_supported_groups::do_postprocess() {
+    return_t ret = errorcode_t::success;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto& protection_context = protection.get_protection_context();
+
+    protection_context.clear_supported_groups();
+    for (auto curve : _supported_groups) {
+        protection_context.add_supported_group(curve);
+    }
+    return ret;
+}
+
 return_t tls_extension_supported_groups::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
         binary_t supported_groups;
         uint16 curves = 0;
 
@@ -71,19 +87,25 @@ return_t tls_extension_supported_groups::do_read_body(const byte_t* stream, size
 
 return_t tls_extension_supported_groups::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
-    uint16 cbsize_supported_groups = 0;
-    binary_t bin_supported_groups;
-    {
-        for (auto item : _supported_groups) {
-            binary_append(bin_supported_groups, item, hton16);
+    __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
+        uint16 cbsize_supported_groups = 0;
+        binary_t bin_supported_groups;
+        {
+            for (auto curve : _supported_groups) {
+                binary_append(bin_supported_groups, curve, hton16);
+            }
+            cbsize_supported_groups = bin_supported_groups.size();
         }
-        cbsize_supported_groups = bin_supported_groups.size();
+        {
+            payload pl;
+            pl << new payload_member(uint16(cbsize_supported_groups), true, constexpr_curves) << new payload_member(bin_supported_groups, constexpr_curve);
+            pl.write(bin);
+        }
     }
-    {
-        payload pl;
-        pl << new payload_member(uint16(cbsize_supported_groups), true, constexpr_curves) << new payload_member(bin_supported_groups, constexpr_curve);
-        pl.write(bin);
-    }
+    __finally2 {}
     return ret;
 }
 

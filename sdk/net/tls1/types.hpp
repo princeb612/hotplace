@@ -341,6 +341,8 @@ struct tls_alert_t {
  *          ivsize              12
  */
 enum tls_secret_t : uint16 {
+    tls_secret_unknown = 0,
+
     // HKDF_Extract(hashalg, salt, empty_ikm)
     tls_secret_early_secret = (TLS_SECRET | TLS_SECRET_EARLY),
     // RFC 2246 6.3. Key calculation

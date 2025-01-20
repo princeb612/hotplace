@@ -12,7 +12,7 @@
 
 #include "sample.hpp"
 
-static void validate_resource_cipher_suite() {
+static void do_validate_resource_cipher_suite() {
     // validate const tls_cipher_suite_t tls_cipher_suites[] = ...
 
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -192,5 +192,5 @@ static void validate_resource_cipher_suite() {
 void test_validate() {
     _test_case.begin("validate resources");
 
-    validate_resource_cipher_suite();
+    do_validate_resource_cipher_suite();
 }

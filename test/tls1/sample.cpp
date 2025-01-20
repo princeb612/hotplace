@@ -22,16 +22,20 @@
 test_case _test_case;
 t_shared_instance<logger> _logger;
 
-typedef struct _OPTION {
+struct OPTION {
     int verbose;
     int debug;
     int log;
     int time;
 
-    _OPTION() : verbose(0), debug(0), log(0), time(0) {
+    OPTION() : verbose(0), debug(0), log(0), time(0) {
         // do nothing
     }
-} OPTION;
+    void enable_debug() {
+        verbose = 1;
+        debug = 1;
+    }
+};
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 return_t dump_record(const char* text, tls_session* session, const binary_t& bin, tls_direction_t dir, bool expect) {

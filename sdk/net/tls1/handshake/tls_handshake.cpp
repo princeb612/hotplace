@@ -88,7 +88,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             __leave2;
         }
 
-        ret = do_preprocess(dir, stream, size);
+        ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -111,6 +111,8 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
         }
 
         pos = offsetof_header() + sizeof(tls_handshake_t) + get_body_size();
+
+        session->carryout_schedule(dir);
     }
     __finally2 {
         // do nothing
@@ -135,7 +137,7 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
         const byte_t* stream = &bin[0];
         size_t size = bin.size();
 
-        ret = do_preprocess(dir, stream, size);
+        ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -151,7 +153,9 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
     return ret;
 }
 
-return_t tls_handshake::do_preprocess(tls_direction_t dir, const byte_t* stream, size_t size) { return errorcode_t::success; }
+void tls_handshake::carryout_schedule(tls_direction_t dir) {}
+
+return_t tls_handshake::do_preprocess(tls_direction_t dir) { return errorcode_t::success; }
 
 return_t tls_handshake::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) { return errorcode_t::success; }
 

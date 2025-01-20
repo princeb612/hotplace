@@ -11,7 +11,7 @@
 
 #include "sample.hpp"
 
-void encode_test(variant& vt, binary_t& bin, std::string expect) {
+void do_encode_test(variant& vt, binary_t& bin, std::string expect) {
     return_t ret = errorcode_t::success;
     const OPTION& option = _cmdline->value();
 
@@ -42,7 +42,7 @@ void encode_test(variant& vt, binary_t& bin, std::string expect) {
     _test_case.test(ret, __FUNCTION__, "encoded %s expect %s", hex.c_str(), expect.c_str());
 }
 
-void cbor_test(cbor_object* root, const char* expected) {
+void do_cbor_test(cbor_object* root, const char* expected) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -78,204 +78,204 @@ void cbor_test(cbor_object* root, const char* expected) {
     }
 }
 
-void test_cbor_int(int8 value, const char* expect) {
+void do_test_cbor_int(int8 value, const char* expect) {
     binary_t bin;
     variant vt;
 
     vt.set_int8(value);
-    encode_test(vt, bin, expect);
+    do_encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_int(int16 value, const char* expect) {
+void do_test_cbor_int(int16 value, const char* expect) {
     binary_t bin;
     variant vt;
 
     vt.set_int16(value);
-    encode_test(vt, bin, expect);
+    do_encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_int(int32 value, const char* expect) {
+void do_test_cbor_int(int32 value, const char* expect) {
     binary_t bin;
     variant vt;
 
     vt.set_int32(value);
-    encode_test(vt, bin, expect);
+    do_encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_int(int64 value, const char* expect) {
+void do_test_cbor_int(int64 value, const char* expect) {
     binary_t bin;
     variant vt;
 
     vt.set_int64(value);
-    encode_test(vt, bin, expect);
+    do_encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_int(int128 value, const char* expect) {
+void do_test_cbor_int(int128 value, const char* expect) {
     binary_t bin;
     variant vt;
 
     vt.set_int128(value);
-    encode_test(vt, bin, expect);
+    do_encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_fp16(uint16 value, const char* expect) {
+void do_test_cbor_fp16(uint16 value, const char* expect) {
     binary_t bin;
     variant vt;
 
     vt.set_fp16(value);
-    encode_test(vt, bin, expect);
+    do_encode_test(vt, bin, expect);
 
     fp16_t fp16;
     fp16.storage = value;
 
     cbor_data* cbor = new cbor_data(fp16);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_float(float value, const char* expect) {
+void do_test_cbor_float(float value, const char* expect) {
     binary_t bin;
     variant vt;
 
     vt.set_float(value);
-    encode_test(vt, bin, expect);
+    do_encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_double(double value, const char* expect) {
+void do_test_cbor_double(double value, const char* expect) {
     binary_t bin;
     variant vt;
 
     vt.set_double(value);
-    encode_test(vt, bin, expect);
+    do_encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_bool(bool value, const char* expect) {
+void do_test_cbor_bool(bool value, const char* expect) {
     binary_t bin;
     variant vt;
 
     vt.set_bool(value);
-    encode_test(vt, bin, expect);
+    do_encode_test(vt, bin, expect);
 }
 
-void test_cbor_simple(uint8 value, const char* expect) {
+void do_test_cbor_simple(uint8 value, const char* expect) {
     cbor_simple* cbor = new cbor_simple(value);
 
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_tstr(const char* value, const char* expect) {
+void do_test_cbor_tstr(const char* value, const char* expect) {
     binary_t bin;
     variant vt;
 
     vt.set_str(value);
-    encode_test(vt, bin, expect);
+    do_encode_test(vt, bin, expect);
 }
 
-void test_cbor_bstr(const binary_t& value, const char* expect) {
+void do_test_cbor_bstr(const binary_t& value, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_tstr_tag(const char* value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_tstr_tag(const char* value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_bstr_tag(const binary_t& value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_bstr_tag(const binary_t& value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_int_tag(int8 value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_int_tag(int8 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_int_tag(int16 value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_int_tag(int16 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_int_tag(int32 value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_int_tag(int32 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_int_tag(int64 value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_int_tag(int64 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_int_tag(int128 value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_int_tag(int128 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_float_tag(float value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_float_tag(float value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-void test_cbor_double_tag(double value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_double_tag(double value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
-    cbor_test(cbor, expect);
+    do_cbor_test(cbor, expect);
     cbor->release();
 }
 
@@ -285,92 +285,92 @@ void test_rfc7049_table4_1() {
     binary_t bin;
     variant_t vt;
 
-    test_cbor_int(0, "00");
-    test_cbor_int(1, "01");
-    test_cbor_int(10, "0a");
-    test_cbor_int(23, "17");
-    test_cbor_int(24, "1818");
-    test_cbor_int(25, "1819");
-    test_cbor_int(100, "1864");
-    test_cbor_int(1000, "1903e8");
-    test_cbor_int(1000000, "1a000f4240");
+    do_test_cbor_int(0, "00");
+    do_test_cbor_int(1, "01");
+    do_test_cbor_int(10, "0a");
+    do_test_cbor_int(23, "17");
+    do_test_cbor_int(24, "1818");
+    do_test_cbor_int(25, "1819");
+    do_test_cbor_int(100, "1864");
+    do_test_cbor_int(1000, "1903e8");
+    do_test_cbor_int(1000000, "1a000f4240");
 
 #if defined __SIZEOF_INT128__
-    test_cbor_int(1000000000000, "1b000000e8d4a51000");
-    test_cbor_int(atoi128("18446744073709551615"), "1bffffffffffffffff");
-    test_cbor_int(atoi128("18446744073709551616"), "c249010000000000000000");
+    do_test_cbor_int(1000000000000, "1b000000e8d4a51000");
+    do_test_cbor_int(atoi128("18446744073709551615"), "1bffffffffffffffff");
+    do_test_cbor_int(atoi128("18446744073709551616"), "c249010000000000000000");
 
-    test_cbor_int(atoi128("-18446744073709551616"), "3bffffffffffffffff");
-    test_cbor_int(atoi128("-18446744073709551617"), "c349010000000000000000");
+    do_test_cbor_int(atoi128("-18446744073709551616"), "3bffffffffffffffff");
+    do_test_cbor_int(atoi128("-18446744073709551617"), "c349010000000000000000");
 #endif
 
-    test_cbor_int(-1, "20");
-    test_cbor_int(-10, "29");
-    test_cbor_int(-100, "3863");
-    test_cbor_int(-1000, "3903e7");
+    do_test_cbor_int(-1, "20");
+    do_test_cbor_int(-10, "29");
+    do_test_cbor_int(-100, "3863");
+    do_test_cbor_int(-1000, "3903e7");
 
-    test_cbor_float(0.0, "f90000");      // fa00000000
-    test_cbor_double(0.0, "f90000");     // fb0000000000000000
-    test_cbor_float(-0.0, "f98000");     // fa80000000
-    test_cbor_double(-0.0, "f98000");    // fb8000000000000000
-    test_cbor_float(1.0, "f93c00");      // fa3f800000
-    test_cbor_double(1.0, "f93c00");     // fb3ff0000000000000
-    test_cbor_float(1.1, "fa3f8ccccd");  // dont convert
-    test_cbor_double(1.1, "fb3ff199999999999a");
-    test_cbor_float(1.5, "f93e00");            // fa3fc00000
-    test_cbor_double(1.5, "f93e00");           // fb3ff8000000000000
-    test_cbor_float(65504.0, "f97bff");        // fa477fe000
-    test_cbor_double(65504.0, "f97bff");       // fb40effc0000000000
-    test_cbor_float(100000.0, "fa47c35000");   // dont convert
-    test_cbor_double(100000.0, "fa47c35000");  // fb40f86a0000000000
+    do_test_cbor_float(0.0, "f90000");      // fa00000000
+    do_test_cbor_double(0.0, "f90000");     // fb0000000000000000
+    do_test_cbor_float(-0.0, "f98000");     // fa80000000
+    do_test_cbor_double(-0.0, "f98000");    // fb8000000000000000
+    do_test_cbor_float(1.0, "f93c00");      // fa3f800000
+    do_test_cbor_double(1.0, "f93c00");     // fb3ff0000000000000
+    do_test_cbor_float(1.1, "fa3f8ccccd");  // dont convert
+    do_test_cbor_double(1.1, "fb3ff199999999999a");
+    do_test_cbor_float(1.5, "f93e00");            // fa3fc00000
+    do_test_cbor_double(1.5, "f93e00");           // fb3ff8000000000000
+    do_test_cbor_float(65504.0, "f97bff");        // fa477fe000
+    do_test_cbor_double(65504.0, "f97bff");       // fb40effc0000000000
+    do_test_cbor_float(100000.0, "fa47c35000");   // dont convert
+    do_test_cbor_double(100000.0, "fa47c35000");  // fb40f86a0000000000
 
-    test_cbor_float(3.4028234663852886e+38, "fa7f7fffff");  // dont convert
-    test_cbor_double(1.0e+300, "fb7e37e43c8800759c");       // dont convert
+    do_test_cbor_float(3.4028234663852886e+38, "fa7f7fffff");  // dont convert
+    do_test_cbor_double(1.0e+300, "fb7e37e43c8800759c");       // dont convert
 
-    test_cbor_float(5.960464477539063e-8, "f90001");  // fa33800000
-    test_cbor_float(0.00006103515625, "f90400");      // fa38800000
-    test_cbor_float(-4.0, "f9c400");                  // fac0800000
-    test_cbor_float(-4.1, "fac0833333");              // dont convert
-    test_cbor_double(-4.1, "fbc010666666666666");     // dont convert
+    do_test_cbor_float(5.960464477539063e-8, "f90001");  // fa33800000
+    do_test_cbor_float(0.00006103515625, "f90400");      // fa38800000
+    do_test_cbor_float(-4.0, "f9c400");                  // fac0800000
+    do_test_cbor_float(-4.1, "fac0833333");              // dont convert
+    do_test_cbor_double(-4.1, "fbc010666666666666");     // dont convert
 
-    test_cbor_fp16(0x7c00, "f97c00");
-    test_cbor_fp16(0x7e00, "f97e00");
-    test_cbor_fp16(0xfc00, "f9fc00");
+    do_test_cbor_fp16(0x7c00, "f97c00");
+    do_test_cbor_fp16(0x7e00, "f97e00");
+    do_test_cbor_fp16(0xfc00, "f9fc00");
 
-    test_cbor_float(fp32_from_binary32(0x7f800000), "fa7f800000");  // positive infinity
-    test_cbor_float(fp32_from_binary32(0x7fc00000), "fa7fc00000");  // NaN
-    test_cbor_float(fp32_from_binary32(0xff800000), "faff800000");  // negative infinity
+    do_test_cbor_float(fp32_from_binary32(0x7f800000), "fa7f800000");  // positive infinity
+    do_test_cbor_float(fp32_from_binary32(0x7fc00000), "fa7fc00000");  // NaN
+    do_test_cbor_float(fp32_from_binary32(0xff800000), "faff800000");  // negative infinity
 
-    test_cbor_double(fp64_from_binary64(0x7ff0000000000000), "fb7ff0000000000000");  // positive infinity
-    test_cbor_double(fp64_from_binary64(0x7ff8000000000000), "fb7ff8000000000000");  // NaN
-    test_cbor_double(fp64_from_binary64(0xfff0000000000000), "fbfff0000000000000");  // negative infinity
+    do_test_cbor_double(fp64_from_binary64(0x7ff0000000000000), "fb7ff0000000000000");  // positive infinity
+    do_test_cbor_double(fp64_from_binary64(0x7ff8000000000000), "fb7ff8000000000000");  // NaN
+    do_test_cbor_double(fp64_from_binary64(0xfff0000000000000), "fbfff0000000000000");  // negative infinity
 
-    test_cbor_bool(false, "f4");
-    test_cbor_simple(cbor_simple_t::cbor_simple_false, "f4");
-    test_cbor_bool(true, "f5");
-    test_cbor_simple(cbor_simple_t::cbor_simple_true, "f5");
-    test_cbor_simple(cbor_simple_t::cbor_simple_null, "f6");
-    test_cbor_simple(cbor_simple_t::cbor_simple_undef, "f7");
-    test_cbor_simple(16, "f0");
-    test_cbor_simple(24, "f818");
-    test_cbor_simple(255, "f8ff");
+    do_test_cbor_bool(false, "f4");
+    do_test_cbor_simple(cbor_simple_t::cbor_simple_false, "f4");
+    do_test_cbor_bool(true, "f5");
+    do_test_cbor_simple(cbor_simple_t::cbor_simple_true, "f5");
+    do_test_cbor_simple(cbor_simple_t::cbor_simple_null, "f6");
+    do_test_cbor_simple(cbor_simple_t::cbor_simple_undef, "f7");
+    do_test_cbor_simple(16, "f0");
+    do_test_cbor_simple(24, "f818");
+    do_test_cbor_simple(255, "f8ff");
 
-    test_cbor_tstr_tag("2013-03-21T20:04:00Z", cbor_tag_t::cbor_tag_std_datetime, "c074323031332d30332d32315432303a30343a30305a");
-    test_cbor_int_tag(1363896240, cbor_tag_t::cbor_tag_epoch_datetime, "c11a514b67b0");
-    test_cbor_double_tag(1363896240.5, cbor_tag_t::cbor_tag_epoch_datetime, "c1fb41d452d9ec200000");
-    test_cbor_bstr_tag(base16_decode("01020304"), cbor_tag_t::cbor_tag_base16, "d74401020304");
-    test_cbor_bstr_tag(base16_decode("6449455446"), cbor_tag_t::cbor_tag_encoded, "d818456449455446");
-    test_cbor_tstr_tag("http://www.example.com", cbor_tag_t::cbor_tag_uri, "d82076687474703a2f2f7777772e6578616d706c652e636f6d");
+    do_test_cbor_tstr_tag("2013-03-21T20:04:00Z", cbor_tag_t::cbor_tag_std_datetime, "c074323031332d30332d32315432303a30343a30305a");
+    do_test_cbor_int_tag(1363896240, cbor_tag_t::cbor_tag_epoch_datetime, "c11a514b67b0");
+    do_test_cbor_double_tag(1363896240.5, cbor_tag_t::cbor_tag_epoch_datetime, "c1fb41d452d9ec200000");
+    do_test_cbor_bstr_tag(base16_decode("01020304"), cbor_tag_t::cbor_tag_base16, "d74401020304");
+    do_test_cbor_bstr_tag(base16_decode("6449455446"), cbor_tag_t::cbor_tag_encoded, "d818456449455446");
+    do_test_cbor_tstr_tag("http://www.example.com", cbor_tag_t::cbor_tag_uri, "d82076687474703a2f2f7777772e6578616d706c652e636f6d");
 
-    test_cbor_bstr(base16_decode(""), "40");
-    test_cbor_bstr(base16_decode("01020304"), "4401020304");
+    do_test_cbor_bstr(base16_decode(""), "40");
+    do_test_cbor_bstr(base16_decode("01020304"), "4401020304");
 
-    test_cbor_tstr("", "60");
-    test_cbor_tstr("a", "6161");
-    test_cbor_tstr("IETF", "6449455446");
-    test_cbor_tstr(R"("\)", "62225c");
-    test_cbor_tstr("\u00fc", "62c3bc");
-    test_cbor_tstr("\u6c34", "63e6b0b4");
+    do_test_cbor_tstr("", "60");
+    do_test_cbor_tstr("a", "6161");
+    do_test_cbor_tstr("IETF", "6449455446");
+    do_test_cbor_tstr(R"("\)", "62225c");
+    do_test_cbor_tstr("\u00fc", "62c3bc");
+    do_test_cbor_tstr("\u6c34", "63e6b0b4");
 }
 
 void test_rfc7049_table4_2() {
@@ -379,14 +379,14 @@ void test_rfc7049_table4_2() {
     {
         // []
         cbor_array* root = new cbor_array();
-        cbor_test(root, "80");
+        do_cbor_test(root, "80");
         root->release();
     }
     {
         // [1,2,3]
         cbor_array* root = new cbor_array();
         *root << new cbor_data(1) << new cbor_data(2) << new cbor_data(3);
-        cbor_test(root, "83010203");
+        do_cbor_test(root, "83010203");
         root->release();
     }
     {
@@ -397,7 +397,7 @@ void test_rfc7049_table4_2() {
         cbor_array* sample2 = new cbor_array();
         *sample2 << new cbor_data(4) << new cbor_data(5);
         *root << new cbor_data(1) << sample1 << sample2;
-        cbor_test(root, "8301820203820405");
+        do_cbor_test(root, "8301820203820405");
         root->release();
     }
     {
@@ -406,20 +406,20 @@ void test_rfc7049_table4_2() {
         for (int i = 1; i <= 25; i++) {
             *root << new cbor_data(i);
         }
-        cbor_test(root, "98190102030405060708090a0b0c0d0e0f101112131415161718181819");
+        do_cbor_test(root, "98190102030405060708090a0b0c0d0e0f101112131415161718181819");
         root->release();
     }
     {
         // {}
         cbor_map* root = new cbor_map();
-        cbor_test(root, "a0");
+        do_cbor_test(root, "a0");
         root->release();
     }
     {
         // {1:2,3:4}
         cbor_map* root = new cbor_map();
         *root << new cbor_pair(1, new cbor_data(2)) << new cbor_pair(3, new cbor_data(4));
-        cbor_test(root, "a201020304");
+        do_cbor_test(root, "a201020304");
         root->release();
     }
     {
@@ -428,7 +428,7 @@ void test_rfc7049_table4_2() {
         cbor_array* sample1 = new cbor_array();
         *sample1 << new cbor_data(2) << new cbor_data(3);
         *root << new cbor_pair("a", new cbor_data(1)) << new cbor_pair("b", sample1);
-        cbor_test(root, "a26161016162820203");
+        do_cbor_test(root, "a26161016162820203");
         root->release();
     }
     {
@@ -437,7 +437,7 @@ void test_rfc7049_table4_2() {
         cbor_map* sample1 = new cbor_map();
         *sample1 << new cbor_pair("b", new cbor_data("c"));
         *root << new cbor_data("a") << sample1;
-        cbor_test(root, "826161a161626163");
+        do_cbor_test(root, "826161a161626163");
         root->release();
     }
     {
@@ -445,7 +445,7 @@ void test_rfc7049_table4_2() {
         cbor_map* root = new cbor_map();
         *root << new cbor_pair("a", new cbor_data("A")) << new cbor_pair("b", new cbor_data("B")) << new cbor_pair("c", new cbor_data("C"))
               << new cbor_pair("d", new cbor_data("D")) << new cbor_pair("e", new cbor_data("E"));
-        cbor_test(root, "a56161614161626142616361436164614461656145");
+        do_cbor_test(root, "a56161614161626142616361436164614461656145");
         root->release();
     }
     {
@@ -453,7 +453,7 @@ void test_rfc7049_table4_2() {
         // 0x5f42010243030405ff
         cbor_bstrings* root = new cbor_bstrings();
         *root << base16_decode("0102") << base16_decode("030405");
-        cbor_test(root, "5f42010243030405ff");
+        do_cbor_test(root, "5f42010243030405ff");
         root->release();
     }
     {
@@ -462,13 +462,13 @@ void test_rfc7049_table4_2() {
         cbor_tstrings* root = new cbor_tstrings();
         *root << "strea"
               << "ming";
-        cbor_test(root, "7f657374726561646d696e67ff");
+        do_cbor_test(root, "7f657374726561646d696e67ff");
         root->release();
     }
     {
         // [_ ]
         cbor_array* root = new cbor_array(cbor_flag_t::cbor_indef);
-        cbor_test(root, "9fff");
+        do_cbor_test(root, "9fff");
         root->release();
     }
     {
@@ -479,7 +479,7 @@ void test_rfc7049_table4_2() {
         *sample1 << new cbor_data(2) << new cbor_data(3);
         *sample2 << new cbor_data(4) << new cbor_data(5);
         *root << new cbor_data(1) << sample1 << sample2;
-        cbor_test(root, "9f018202039f0405ffff");
+        do_cbor_test(root, "9f018202039f0405ffff");
         root->release();
     }
     {
@@ -490,7 +490,7 @@ void test_rfc7049_table4_2() {
         *sample1 << new cbor_data(2) << new cbor_data(3);
         *sample2 << new cbor_data(4) << new cbor_data(5);
         *root << new cbor_data(1) << sample1 << sample2;
-        cbor_test(root, "9f01820203820405ff");
+        do_cbor_test(root, "9f01820203820405ff");
         root->release();
     }
     {
@@ -501,7 +501,7 @@ void test_rfc7049_table4_2() {
         *sample1 << new cbor_data(2) << new cbor_data(3);
         *sample2 << new cbor_data(4) << new cbor_data(5);
         *root << new cbor_data(1) << sample1 << sample2;
-        cbor_test(root, "83018202039f0405ff");
+        do_cbor_test(root, "83018202039f0405ff");
         root->release();
     }
     {
@@ -512,7 +512,7 @@ void test_rfc7049_table4_2() {
         *sample1 << new cbor_data(2) << new cbor_data(3);
         *sample2 << new cbor_data(4) << new cbor_data(5);
         *root << new cbor_data(1) << sample1 << sample2;
-        cbor_test(root, "83019f0203ff820405");
+        do_cbor_test(root, "83019f0203ff820405");
         root->release();
     }
     {
@@ -521,7 +521,7 @@ void test_rfc7049_table4_2() {
         for (int i = 1; i <= 25; i++) {
             *root << new cbor_data(i);
         }
-        cbor_test(root, "9f0102030405060708090a0b0c0d0e0f101112131415161718181819ff");
+        do_cbor_test(root, "9f0102030405060708090a0b0c0d0e0f101112131415161718181819ff");
         root->release();
     }
     {
@@ -530,7 +530,7 @@ void test_rfc7049_table4_2() {
         cbor_array* sample1 = new cbor_array(cbor_flag_t::cbor_indef);
         *sample1 << new cbor_data(2) << new cbor_data(3);
         *root << new cbor_pair("a", new cbor_data(1)) << new cbor_pair("b", sample1);
-        cbor_test(root, "bf61610161629f0203ffff");
+        do_cbor_test(root, "bf61610161629f0203ffff");
         root->release();
     }
     {
@@ -539,14 +539,14 @@ void test_rfc7049_table4_2() {
         cbor_map* sample1 = new cbor_map(cbor_flag_t::cbor_indef);
         *sample1 << new cbor_pair("b", new cbor_data("c"));
         *root << new cbor_data("a") << sample1;
-        cbor_test(root, "826161bf61626163ff");
+        do_cbor_test(root, "826161bf61626163ff");
         root->release();
     }
     {
         // {_ "Fun":true,"Amt":-2}
         cbor_map* root = new cbor_map(cbor_flag_t::cbor_indef);
         *root << new cbor_pair("Fun", new cbor_data(true)) << new cbor_pair("Amt", new cbor_data(-2));
-        cbor_test(root, "bf6346756ef563416d7421ff");
+        do_cbor_test(root, "bf6346756ef563416d7421ff");
         root->release();
     }
 }

@@ -11,7 +11,7 @@
 
 #include "sample.hpp"
 
-return_t test_jose_file(crypto_key* key, const char* file, bool& result) {
+return_t do_test_jose_file(crypto_key* key, const char* file, bool& result) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -255,7 +255,7 @@ void test_rfc7516_A1() {
     dump("RFC 7516 A.1. flattened JSON serialization", json_flat);
     dump("RFC 7516 A.1. JSON serialization", json_serial);
 
-    ret = test_jose_file(&key, "rfc7516_A1.jws", result);
+    ret = do_test_jose_file(&key, "rfc7516_A1.jws", result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.1. JWE using RSAES-OAEP and AES GCM (file)");
 }
 
@@ -356,7 +356,7 @@ void test_rfc7516_A2() {
     dump("RFC 7516 A.2. flattened JSON serialization", json_flat);
     dump("RFC 7516 A.2. JSON serialization", json_serial);
 
-    ret = test_jose_file(&key, "rfc7516_A2.jws", result);
+    ret = do_test_jose_file(&key, "rfc7516_A2.jws", result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.2. JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256 (file)");
 }
 
@@ -397,7 +397,7 @@ void test_rfc7516_A3() {
     dump("RFC 7516 A.3. flattened JSON serialization", json_flat);
     dump("RFC 7516 A.3. JSON serialization", json_serial);
 
-    ret = test_jose_file(&key, "rfc7516_A3.jws", result);
+    ret = do_test_jose_file(&key, "rfc7516_A3.jws", result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.3. JWE using AES Key Wrap and AES_128_CBC_HMAC_SHA_256 (file)");
 }
 
@@ -432,7 +432,7 @@ void test_rfc7516_A4() {
 
     dump("RFC 7516 A.4", json_serial);
 
-    ret = test_jose_file(&key, "rfc7516_A4.jws", result);
+    ret = do_test_jose_file(&key, "rfc7516_A4.jws", result);
     _test_case.test(ret, __FUNCTION__, "RFC 7516 A.4. JWE Using General JWE JSON Serialization (file)");
 }
 

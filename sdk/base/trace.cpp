@@ -8,7 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/types.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 
 namespace hotplace {
 

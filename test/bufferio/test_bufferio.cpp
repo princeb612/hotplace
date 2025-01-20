@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void dump(bufferio_context_t* handle) {
+void do_dump(bufferio_context_t* handle) {
     test_case_notimecheck notimecheck(_test_case);
 
     bufferio bio;
@@ -20,7 +20,7 @@ void dump(bufferio_context_t* handle) {
     _logger->dump(data, size_data, 16, 2);
 }
 
-void test_vprintf(bufferio_context_t* handle, const char* fmt, ...) {
+void do_test_vprintf(bufferio_context_t* handle, const char* fmt, ...) {
     return_t ret = errorcode_t::success;
     bufferio io;
     va_list ap;
@@ -45,22 +45,22 @@ void test_bufferio() {
 
     ret = bio.printf(handle, "%s %d %1.1f", "sample", 1, 1.1);
     _test_case.test(ret, __FUNCTION__, "printf");
-    dump(handle);
+    do_dump(handle);
 
-    test_vprintf(handle, "%s %f %i", "phi", 3.141592, 123);
-    dump(handle);
+    do_test_vprintf(handle, "%s %f %i", "phi", 3.141592, 123);
+    do_dump(handle);
 
     ret = bio.replace(handle, "sample", "example", 0, 0);
     _test_case.test(ret, __FUNCTION__, "replace");
-    dump(handle);
+    do_dump(handle);
 
     ret = bio.cut(handle, 0, 8);
     _test_case.test(ret, __FUNCTION__, "cut");
-    dump(handle);
+    do_dump(handle);
 
     ret = bio.insert(handle, 0, "sample ", 7);
     _test_case.test(ret, __FUNCTION__, "insert");
-    dump(handle);
+    do_dump(handle);
 
     size_t size = 0;
     ret = bio.size(handle, &size);
@@ -70,26 +70,26 @@ void test_bufferio() {
     uint32 length = size - begin;
     ret = bio.cut(handle, begin, length);
     _test_case.test(ret, __FUNCTION__, "cut from %i len %i", begin, length);
-    dump(handle);
+    do_dump(handle);
 
     ret = bio.write(handle, "test", 4);
     _test_case.test(ret, __FUNCTION__, "write");
-    dump(handle);
+    do_dump(handle);
 
     ret = bio.clear(handle);
     _test_case.test(ret, __FUNCTION__, "clear");
-    dump(handle);
+    do_dump(handle);
 
     // 0123456789a
     // hello world
 
     ret = bio.printf(handle, "hello world");
     _test_case.test(ret, __FUNCTION__, "printf");
-    dump(handle);
+    do_dump(handle);
 
     bio.size(handle, &len);
     _test_case.assert((11 == len), __FUNCTION__, "size");
-    dump(handle);
+    do_dump(handle);
 
     pos = bio.find_first_of(handle, "world");
     _test_case.assert((6 == pos), __FUNCTION__, "find_first_of -> %i", pos);
@@ -111,7 +111,7 @@ void test_bufferio() {
 
     bio.size(handle, &len);
     _test_case.assert((10 == len), __FUNCTION__, "size");
-    dump(handle);
+    do_dump(handle);
 
     std::string sample("helloworld");
 
@@ -128,11 +128,11 @@ void test_bufferio() {
 
     ret = bio.printf(handle, "sample sample sample");
     _test_case.test(ret, __FUNCTION__, "printf");
-    dump(handle);
+    do_dump(handle);
 
     ret = bio.replace(handle, "sample", "example");
     _test_case.test(ret, __FUNCTION__, "replace");
-    dump(handle);
+    do_dump(handle);
 
     std::string sample2("example example example");
 
@@ -141,7 +141,7 @@ void test_bufferio() {
 
     ret = bio.replace(handle, "example", "sample", 1, bufferio_flag_t::run_once);
     _test_case.test(ret, __FUNCTION__, "replace");
-    dump(handle);
+    do_dump(handle);
 
     std::string sample3("example sample example");
 

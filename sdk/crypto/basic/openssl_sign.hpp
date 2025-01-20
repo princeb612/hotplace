@@ -100,7 +100,9 @@ class openssl_sign {
      * @desc    PS256, PS384, PS512
      */
     return_t sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature);
+    return_t sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature, int saltlen);
     return_t sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature);
+    return_t sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature, int saltlen);
     /*
      * @brief   sign
      * @param   const EVP_PKEY* pkey [in]
@@ -160,7 +162,9 @@ class openssl_sign {
      * @desc    PS256, PS384, PS512
      */
     return_t verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature);
+    return_t verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature, int saltlen);
     return_t verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature);
+    return_t verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature, int saltlen);
     /*
      * @brief   verify
      * @param   const EVP_PKEY* pkey [in]

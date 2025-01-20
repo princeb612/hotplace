@@ -30,7 +30,7 @@ namespace crypto {
  *          }
  *
  *          // rsa_pss_rsae_sha256
- *          auto sign = builder.set_scheme(sign_scheme_rsa_pss).set_digest(sha2_256).build();
+ *          auto sign = builder.set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha2_256).build();
  *          if (sign) {
  *              ret = sign->verify(pkey, input, signature);
  *              sign->release();
@@ -61,16 +61,17 @@ class crypto_sign_builder {
 
     /**
      * @sample
-     *          auto sign = builder.set_scheme(sign_scheme_rsa_pss).set_digest(sha2_256).build();
+     *          auto sign = builder.set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha2_256).build();
      */
     crypto_sign_builder& set_scheme(crypt_sig_type_t scheme);
     crypto_sign_builder& set_digest(hash_algorithm_t hashalg);
+
     /**
      * @sample
      *          // 0x0804 rsa_pss_rsae_sha256
      *          auto sign = builder.tls_sign_scheme(0x0804).build();
      */
-    crypto_sign_builder& tls_sign_scheme(uint16 scheme);
+    crypto_sign_builder& set_tls_sign_scheme(uint16 scheme);
 
    protected:
     crypt_sig_type_t _scheme;
@@ -86,8 +87,11 @@ class crypto_sign {
     virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature) = 0;
     virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature) = 0;
 
+    void set_saltlen(int saltlen);  // RSA PSS (-1)
+
     crypt_sig_type_t get_scheme();
     hash_algorithm_t get_digest();
+    int get_saltlen();
 
     void addref();
     void release();
@@ -100,6 +104,7 @@ class crypto_sign {
     t_shared_reference<crypto_sign> _shared;
     crypt_sig_type_t _scheme;
     hash_algorithm_t _hashalg;
+    int _saltlen;
 };
 
 class crypto_sign_rsa_pkcs1 : public crypto_sign {
@@ -141,6 +146,9 @@ class crypto_sign_eddsa : public crypto_sign {
     virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature);
     virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature);
 };
+
+// not implemented
+// class crypto_sign_rsa_x931 : public crypto_sign {};
 
 }  // namespace crypto
 }  // namespace hotplace

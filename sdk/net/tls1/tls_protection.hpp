@@ -19,9 +19,50 @@
 #include <sdk/crypto/crypto/types.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/types.hpp>
+#include <set>
 
 namespace hotplace {
 namespace net {
+
+class protection_context {
+   public:
+    protection_context();
+    protection_context(const protection_context& rhs);
+    protection_context(protection_context&& rhs);
+
+    void add_cipher_suite(uint16 cs);
+    void add_signature_algorithm(uint16 sa);
+    void add_supported_group(uint16 sg);
+    void add_supported_version(uint16 sv);
+    void add_ec_point_format(uint8 epf);
+
+    void clear_cipher_suites();
+    void clear_signature_algorithms();
+    void clear_supported_groups();
+    void clear_supported_versions();
+    void clear_ec_point_formats();
+
+    void for_each_cipher_suites(std::function<void(uint16, bool*)> fn);
+    void for_each_signature_algorithms(std::function<void(uint16, bool*)> fn);
+    void for_each_supported_groups(std::function<void(uint16, bool*)> fn);
+    void for_each_supported_versions(std::function<void(uint16, bool*)> fn);
+    void for_each_ec_point_formats(std::function<void(uint8, bool*)> fn);
+
+    return_t select_from(const protection_context& rhs);
+
+    uint16 get0_cipher_suite();
+    uint16 get0_supported_version();
+    uint16 select_signature_algorithm(crypto_kty_t kty);
+
+    void clear();
+
+   protected:
+    std::list<uint16> _cipher_suites;         // tls_handshake_client_hello
+    std::list<uint16> _signature_algorithms;  // tls_extension_signature_algorithms
+    std::list<uint16> _supported_groups;      // tls_extension_supported_groups
+    std::list<uint16> _supported_versions;    // tls_extension_client_supported_versions
+    std::list<uint8> _ec_point_formats;       // tls_extension_ec_point_formats
+};
 
 class tls_protection {
    public:
@@ -120,16 +161,13 @@ class tls_protection {
      * @brief   TLS 1 decrypt
      */
     return_t decrypt_tls1(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
-    /**
-     * @brief   verify
-     * @sample
-     *          auto sign = get_crypto_sign(scheme);
-     *          if (sign) {
-     *              ret = sign->verify(pkey, stream, sign, signature);
-     *              sign->release();
-     *          }
-     */
-    crypto_sign* get_crypto_sign(uint16 scheme);
+
+    return_t construct_certificate_verify_message(tls_direction_t dir, basic_stream& message);
+    return_t get_ecdsa_signature(uint16 scheme, const binary_t& asn1der, binary_t& signature);
+
+    return_t calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t& secret, binary_t& maced);
+
+    protection_context& get_protection_context();
 
    private:
     uint8 _mode;  // see tls_mode_t
@@ -139,9 +177,12 @@ class tls_protection {
     uint16 _version;
     transcript_hash* _transcript_hash;
     critical_section _lock;
-    crypto_key _keyexchange;  // psk_ke, psk_dhe_ke
+    crypto_key _keyexchange;
     std::map<tls_secret_t, binary_t> _kv;
-    bool _use_pre_master_secret;
+    bool _use_pre_master_secret;  //
+
+    uint8 _key_exchange_mode;  // psk_ke, psk_dhe_ke
+    protection_context _handshake_context;
 };
 
 }  // namespace net

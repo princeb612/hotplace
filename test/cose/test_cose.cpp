@@ -11,7 +11,7 @@
 
 #include "sample.hpp"
 
-void dump_diagnostic(const binary_t& input) {
+void do_dump_diagnostic(const binary_t& input) {
     const OPTION& option = _cmdline->value();
     if (option.dump_diagnostic) {
         basic_stream diagnostic;
@@ -27,7 +27,7 @@ void dump_diagnostic(const binary_t& input) {
     }
 }
 
-void test_sign(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, const char* text) {
+void do_test_sign(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, const char* text) {
     _test_case.begin("sign");
 
     return_t ret = errorcode_t::success;
@@ -46,7 +46,7 @@ void test_sign(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& inp
     }
     cose.close(handle);
 
-    dump_diagnostic(cbor);
+    do_dump_diagnostic(cbor);
     _test_case.test(ret, __FUNCTION__, "sign %s", text);
 
     cose.open(&handle);
@@ -58,7 +58,7 @@ void test_sign(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& inp
     _test_case.test(ret, __FUNCTION__, "verifysign %s", text);
 }
 
-void test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, const char* text) {
+void do_test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, const char* text) {
     _test_case.begin("encrypt");
 
     return_t ret = errorcode_t::success;
@@ -77,7 +77,7 @@ void test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& 
     }
     cose.close(handle);
 
-    dump_diagnostic(cbor);
+    do_dump_diagnostic(cbor);
     _test_case.test(ret, __FUNCTION__, "encrypt %s", text);
 
     cose.open(&handle);
@@ -89,7 +89,7 @@ void test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& 
     _test_case.test(ret, __FUNCTION__, "decrypt %s", text);
 }
 
-void test_mac(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, const char* text) {
+void do_test_mac(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, const char* text) {
     _test_case.begin("mac");
 
     return_t ret = errorcode_t::success;
@@ -108,7 +108,7 @@ void test_mac(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& inpu
     }
     cose.close(handle);
 
-    dump_diagnostic(cbor);
+    do_dump_diagnostic(cbor);
     _test_case.test(ret, __FUNCTION__, "mac %s", text);
 
     cose.open(&handle);
@@ -163,7 +163,7 @@ void test_selfgen(crypto_key* key) {
         cose_alg_t alg = sign_algs[i];
         algs.push_back(alg);
         std::string text = format("%i(%s)", alg, advisor->nameof_cose_algorithm(alg));
-        test_sign(key, algs, input, text.c_str());
+        do_test_sign(key, algs, input, text.c_str());
     }
 
     for (i = 0; i < RTL_NUMBER_OF(enc_algs); i++) {
@@ -176,7 +176,7 @@ void test_selfgen(crypto_key* key) {
             algs.push_back(keyalg);
 
             std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));
-            test_encrypt(key, algs, input, text.c_str());
+            do_test_encrypt(key, algs, input, text.c_str());
         }
     }
 
@@ -190,12 +190,12 @@ void test_selfgen(crypto_key* key) {
             algs.push_back(keyalg);
 
             std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));
-            test_mac(key, algs, input, text.c_str());
+            do_test_mac(key, algs, input, text.c_str());
         }
     }
 }
 
-void test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const binary_t& input, const char* text) {
+void do_test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const binary_t& input, const char* text) {
     return_t ret = errorcode_t::success;
     cbor_object_signing_encryption cose;
     binary_t cbor;
@@ -221,11 +221,11 @@ void test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const
 
     cose.close(handle);
 
-    dump_diagnostic(cbor);
+    do_dump_diagnostic(cbor);
     _test_case.test(ret, __FUNCTION__, "cose %s", text);
 }
 
-void test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const binary_t& input, const char* text) {
+void do_test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const binary_t& input, const char* text) {
     return_t ret = errorcode_t::success;
     cbor_object_signing_encryption cose;
     binary_t cbor;
@@ -247,11 +247,11 @@ void test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const bi
 
     cose.close(handle);
 
-    dump_diagnostic(cbor);
+    do_dump_diagnostic(cbor);
     _test_case.test(ret, __FUNCTION__, "cose %s", text);
 }
 
-void test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const binary_t& input, const char* text) {
+void do_test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const binary_t& input, const char* text) {
     return_t ret = errorcode_t::success;
     cbor_object_signing_encryption cose;
     binary_t cbor;
@@ -277,7 +277,7 @@ void test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const bin
 
     cose.close(handle);
 
-    dump_diagnostic(cbor);
+    do_dump_diagnostic(cbor);
     _test_case.test(ret, __FUNCTION__, "cose %s", text);
 }
 
@@ -297,14 +297,14 @@ void test_cose(crypto_key* key) {
         for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
             cose_alg_t keyalg = key_algs[j];
             std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));
-            test_cose_encrypt(key, alg, keyalg, input, text.c_str());
+            do_test_cose_encrypt(key, alg, keyalg, input, text.c_str());
         }
     }
     for (i = 0; i < RTL_NUMBER_OF(sign_algs); i++) {
         cose_alg_t alg = sign_algs[i];
 
         std::string text = format("%i(%s)", alg, advisor->nameof_cose_algorithm(alg));
-        test_cose_sign(key, alg, cose_alg_t::cose_unknown, input, text.c_str());
+        do_test_cose_sign(key, alg, cose_alg_t::cose_unknown, input, text.c_str());
     }
     for (i = 0; i < RTL_NUMBER_OF(mac_algs); i++) {
         cose_alg_t alg = mac_algs[i];
@@ -312,7 +312,7 @@ void test_cose(crypto_key* key) {
         for (j = 0; j < RTL_NUMBER_OF(key_algs); j++) {
             cose_alg_t keyalg = key_algs[j];
             std::string text = format("%i(%s) %i(%s)", alg, advisor->nameof_cose_algorithm(alg), keyalg, advisor->nameof_cose_algorithm(keyalg));
-            test_cose_mac(key, alg, keyalg, input, text.c_str());
+            do_test_cose_mac(key, alg, keyalg, input, text.c_str());
         }
     }
 }

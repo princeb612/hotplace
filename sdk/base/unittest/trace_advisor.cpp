@@ -83,6 +83,13 @@ void trace_advisor::load() {
                 e.event_map.insert({tls_event_write, "write"});
                 _resource_map.insert({category_tls1, e});
             }
+            {
+                events e;
+                e.cname = "QUIC";
+                e.event_map.insert({quic_event_read, "read"});
+                e.event_map.insert({quic_event_write, "write"});
+                _resource_map.insert({category_quic, e});
+            }
         }
     }
 }

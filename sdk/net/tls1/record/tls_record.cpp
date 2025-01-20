@@ -59,7 +59,7 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
         ret = do_read_body(dir, stream, size, tpos);
         pos += get_body_size();  // responding to unhandled records
 
-        do_postprocess(dir, stream, size);
+        do_postprocess(dir);
     }
     __finally2 {
         // do nothing
@@ -77,12 +77,18 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
         }
 
         ret = do_write_header(dir, bin, body);
+
+        do_postprocess(dir);
     }
     __finally2 {}
     return ret;
 }
 
-return_t tls_record::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) { return errorcode_t::success; }
+return_t tls_record::do_postprocess(tls_direction_t dir) {
+    auto session = get_session();
+    session->carryout_schedule(dir);
+    return errorcode_t::success;
+}
 
 return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

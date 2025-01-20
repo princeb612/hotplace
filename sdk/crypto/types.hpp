@@ -245,14 +245,16 @@ enum nid_t : uint32 {
 
 enum crypt_sig_type_t : uint8 {
     crypt_sig_unknown = 255,
-    crypt_sig_dgst = 0,
-    crypt_sig_hmac = 1,
-    crypt_sig_rsassa_pkcs15 = 2,
-    crypt_sig_ecdsa = 3,
-    crypt_sig_rsassa_pss = 4,
-    crypt_sig_eddsa = 5,
-    crypt_sig_dsa = 6,
+    crypt_sig_dgst = 0,           //
+    crypt_sig_hmac = 1,           // HMAC (kty_oct)
+    crypt_sig_rsassa_pkcs15 = 2,  // PKCS#1 Ver1.5 (kty_rsa)
+    crypt_sig_ecdsa = 3,          // Elliptic Curve Digital Signature Algorithm (ECDSA)
+    crypt_sig_rsassa_pss = 4,     // PKCS#1 RSASSA-PSS (kty_rsa, kty_rsapss)
+    crypt_sig_eddsa = 5,          // Edwards-Curve Digital Signature Algorithms (EdDSAs)
+    crypt_sig_dsa = 6,            // DSA
+    crypt_sig_rsassa_x931 = 7,    // FIPS186-3, X9.31
 };
+
 enum crypt_sig_t : uint16 {
     sig_unknown = 0,
 
@@ -337,10 +339,11 @@ enum crypto_kty_t : uint16 {
     kty_unknown = 0,
     kty_hmac = 1,        // NID_hmac
     kty_oct = kty_hmac,  // NID_hmac (synomym)
-    kty_rsa = 2,         // NID_rsaEncryption, NID_rsa, NID_rsassaPss
+    kty_rsa = 2,         // NID_rsaEncryption, NID_rsa
     kty_ec = 3,          // NID_X9_62_prime256v1, NID_secp384r1, NID_secp521r1
     kty_okp = 4,         // NID_X25519, NID_X448, NID_ED25519, NID_ED448
     kty_dh = 5,          // NID_dhKeyAgreement
+    kty_rsapss = 6,      // NID_rsassaPss
     kty_bad = 0xffff,
 };
 

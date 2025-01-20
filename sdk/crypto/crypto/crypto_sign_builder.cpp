@@ -31,7 +31,9 @@ crypto_sign* crypto_sign_builder::build() {
             obj = new crypto_sign_eddsa(get_digest());
         } break;
     }
-    obj->set_scheme(get_scheme());
+    if (obj) {
+        obj->set_scheme(get_scheme());
+    }
     return obj;
 }
 
@@ -42,7 +44,7 @@ crypto_sign_builder& crypto_sign_builder::set_scheme(crypt_sig_type_t scheme) {
     return *this;
 }
 
-crypto_sign_builder& crypto_sign_builder::tls_sign_scheme(uint16 scheme) {
+crypto_sign_builder& crypto_sign_builder::set_tls_sign_scheme(uint16 scheme) {
     switch (scheme) {
         case 0x0401: /* rsa_pkcs1_sha256 */ {
             set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha2_256);
@@ -78,10 +80,13 @@ crypto_sign_builder& crypto_sign_builder::tls_sign_scheme(uint16 scheme) {
             set_scheme(crypt_sig_eddsa);
         } break;
         case 0x0809: /* rsa_pss_pss_sha256 */ {
+            set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_256);
         } break;
         case 0x080a: /* rsa_pss_pss_sha384 */ {
+            set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_384);
         } break;
         case 0x080b: /* rsa_pss_pss_sha512 */ {
+            set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_512);
         } break;
         case 0x0201: /* rsa_pkcs1_sha1 */ {
             set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha1);

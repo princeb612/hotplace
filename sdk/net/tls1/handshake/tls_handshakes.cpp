@@ -10,6 +10,7 @@
 
 #include <sdk/net/tls1/handshake/tls_handshake_builder.hpp>
 #include <sdk/net/tls1/handshake/tls_handshakes.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
@@ -53,10 +54,20 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
 }
 
 return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const binary_t& bin) {
-    const byte_t* stream = &bin[0];
-    size_t size = bin.size();
-    size_t pos = 0;
-    return read(session, dir, stream, size, pos);
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        const byte_t* stream = &bin[0];
+        size_t size = bin.size();
+        size_t pos = 0;
+        auto ret = read(session, dir, stream, size, pos);
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary_t& bin) {

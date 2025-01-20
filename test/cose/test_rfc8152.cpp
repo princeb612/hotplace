@@ -15,7 +15,7 @@ crypto_key rfc8152_privkeys;
 crypto_key rfc8152_pubkeys;
 crypto_key rfc8152_privkeys_c4;
 
-return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, cbor_object* root, const char* expect_file, const char* text) {
+return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, cbor_object* root, const char* expect_file, const char* text) {
     return_t ret = errorcode_t::success;
     return_t test = errorcode_t::success;
     const OPTION& option = _cmdline->value();
@@ -181,7 +181,7 @@ return_t test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, c
     return ret;
 }
 
-void test_cbor_file(const char* expect_file, const char* text) {
+void do_test_cbor_file(const char* expect_file, const char* text) {
     _test_case.begin("parse and generate diagnostic from RFC examples");
     const OPTION& option = _cmdline->value();
 
@@ -261,7 +261,7 @@ void test_rfc8152_b() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_b.cbor", "RFC 8152 B.  Two Layers of Recipient Information");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_b.cbor", "RFC 8152 B.  Two Layers of Recipient Information");
     cose.close(cose_handle);
 
     root->release();
@@ -285,7 +285,7 @@ void test_rfc8152_c_1_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_1_1.cbor", "RFC 8152 C.1.1.  Single Signature");
+    do_test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_1_1.cbor", "RFC 8152 C.1.1.  Single Signature");
     cose.close(cose_handle);
 
     root->release();
@@ -317,7 +317,7 @@ void test_rfc8152_c_1_2() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_1_2.cbor", "RFC 8152 C.1.2.  Multiple Signers");
+    do_test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_1_2.cbor", "RFC 8152 C.1.2.  Multiple Signers");
     cose.close(cose_handle);
 
     root->release();
@@ -345,7 +345,7 @@ void test_rfc8152_c_1_3() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_1_3.cbor", "RFC 8152 C.1.3.  Counter Signature");
+    do_test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_1_3.cbor", "RFC 8152 C.1.3.  Counter Signature");
     cose.close(cose_handle);
 
     root->release();
@@ -371,7 +371,7 @@ void test_rfc8152_c_1_4() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_1_4.cbor", "RFC 8152 C.1.4.  Signature with Criticality");
+    do_test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_1_4.cbor", "RFC 8152 C.1.4.  Signature with Criticality");
     cose.close(cose_handle);
 
     root->release();
@@ -394,7 +394,7 @@ void test_rfc8152_c_2_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
+    do_test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
     cose.close(cose_handle);
 
     root->release();
@@ -422,7 +422,7 @@ void test_rfc8152_c_3_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
     cose.close(cose_handle);
 
     root->release();
@@ -452,7 +452,7 @@ void test_rfc8152_c_3_2() {
     cose.set(cose_handle, cose_param_t::cose_unsent_apv_id, str2bin("lighting-server"));
     cose.set(cose_handle, cose_param_t::cose_unsent_pub_other, str2bin("Encryption Example 02"));
 
-    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
     cose.close(cose_handle);
 
     root->release();
@@ -485,7 +485,7 @@ void test_rfc8152_c_3_3() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_3.cbor", "RFC 8152 C.3.3.  Counter Signature on Encrypted Content");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_3.cbor", "RFC 8152 C.3.3.  Counter Signature on Encrypted Content");
     cose.close(cose_handle);
 
     root->release();
@@ -516,7 +516,7 @@ void test_rfc8152_c_3_4() {
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
     cose.set(cose_handle, cose_param_t::cose_external, base16_decode("0011bbcc22dd44ee55ff660077"));
-    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data");
     cose.close(cose_handle);
 
     root->release();
@@ -537,7 +537,7 @@ void test_rfc8152_c_4_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_privkeys_c4, root, "rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys_c4, root, "rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
     cose.close(cose_handle);
 
     root->release();
@@ -559,7 +559,7 @@ void test_rfc8152_c_4_2() {
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
     cose.set(cose_handle, cose_param_t::cose_unsent_iv, base16_decode("89F52F65A1C5809300000061A7"));
-    test_cose_example(cose_handle, &rfc8152_privkeys_c4, root, "rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys_c4, root, "rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
     cose.close(cose_handle);
 
     root->release();
@@ -583,7 +583,7 @@ void test_rfc8152_c_5_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_5_1.cbor", "RFC 8152 C.5.1.  Shared Secret Direct MAC");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_5_1.cbor", "RFC 8152 C.5.1.  Shared Secret Direct MAC");
     cose.close(cose_handle);
 
     root->release();
@@ -612,7 +612,7 @@ void test_rfc8152_c_5_2() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_5_2.cbor", "RFC 8152 C.5.2.  ECDH Direct MAC");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_5_2.cbor", "RFC 8152 C.5.2.  ECDH Direct MAC");
     cose.close(cose_handle);
 
     root->release();
@@ -637,7 +637,7 @@ void test_rfc8152_c_5_3() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_5_3.cbor", "RFC 8152 C.5.3.  Wrapped MAC");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_5_3.cbor", "RFC 8152 C.5.3.  Wrapped MAC");
     cose.close(cose_handle);
 
     root->release();
@@ -672,7 +672,7 @@ void test_rfc8152_c_5_4() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_5_4.cbor", "RFC 8152 C.5.4.  Multi-Recipient MACed Message");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_5_4.cbor", "RFC 8152 C.5.4.  Multi-Recipient MACed Message");
     cose.close(cose_handle);
 
     root->release();
@@ -693,7 +693,7 @@ void test_rfc8152_c_6_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
     cose.close(cose_handle);
 
     root->release();
@@ -758,7 +758,7 @@ void test_rfc8152_c_7_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
+    do_test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
     cose.close(cose_handle);
 
     root->release();
@@ -855,13 +855,13 @@ void test_rfc8152_c_7_2() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
     cose.close(cose_handle);
 
     root->release();
 }
 
-void test_cbor_key(const char* file, const char* text) {
+void do_test_cbor_key(const char* file, const char* text) {
     _test_case.begin("CBOR encoded keys - order not guaranteed");
     return_t ret = errorcode_t::success;
     const OPTION& option = _cmdline->value();
@@ -915,35 +915,35 @@ void test_cbor_key(const char* file, const char* text) {
 }
 
 void test_rfc8152_read_cbor() {
-    test_cbor_file("rfc8152_b.cbor", "RFC 8152 Appendix B.  Two Layers of Recipient Information");
-    test_cbor_file("rfc8152_c_1_1.cbor", "RFC 8152 C.1.1.  Single Signature");
-    test_cbor_file("rfc8152_c_1_2.cbor", "RFC 8152 C.1.2.  Multiple Signers");
-    test_cbor_file("rfc8152_c_1_3.cbor", "RFC 8152 C.1.3.  Counter Signature");
-    test_cbor_file("rfc8152_c_1_4.cbor", "RFC 8152 C.1.4.  Signature with Criticality");
-    test_cbor_file("rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
-    test_cbor_file("rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
-    test_cbor_file("rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
-    test_cbor_file("rfc8152_c_3_3.cbor", "RFC 8152 C.3.3.  Counter Signature on Encrypted Content");
-    test_cbor_file("rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data");
-    test_cbor_file("rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
-    test_cbor_file("rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
-    test_cbor_file("rfc8152_c_5_1.cbor", "RFC 8152 C.5.1.  Shared Secret Direct MAC");
-    test_cbor_file("rfc8152_c_5_2.cbor", "RFC 8152 C.5.2.  ECDH Direct MAC");
-    test_cbor_file("rfc8152_c_5_3.cbor", "RFC 8152 C.5.3.  Wrapped MAC");
-    test_cbor_file("rfc8152_c_5_4.cbor", "RFC 8152 C.5.4.  Multi-Recipient MACed Message");
-    test_cbor_file("rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
-    test_cbor_file("rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
-    test_cbor_file("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
-    test_cbor_file("rfc8778_a_1.cbor", "RFC 8778 A.1.  Example COSE Full Message Signature");
-    test_cbor_file("rfc8778_a_2.cbor", "RFC 8778 A.2.  Example COSE_Sign1 Message");
-    test_cbor_file("rfc9338_a_1_1.cbor", "RFC 9338 A.1.1.  Countersignature");
-    test_cbor_file("rfc9338_a_2_1.cbor", "RFC 9338 A.2.1.  Countersignature");
-    test_cbor_file("rfc9338_a_3_1.cbor", "RFC 9338 A.3.1.  Countersignature on Encrypted Content");
-    test_cbor_file("rfc9338_a_4_1.cbor", "RFC 9338 A.4.1.  Countersignature on Encrypted Content");
-    test_cbor_file("rfc9338_a_5_1.cbor", "RFC 9338 A.5.1.  Countersignature on MAC Content");
-    test_cbor_file("rfc9338_a_6_1.cbor", "RFC 9338 A.6.1.  Countersignature on MAC0 Content");  // typo ? not 159 bytes, but 139 bytes
-    test_cbor_key("rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
-    test_cbor_key("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
+    do_test_cbor_file("rfc8152_b.cbor", "RFC 8152 Appendix B.  Two Layers of Recipient Information");
+    do_test_cbor_file("rfc8152_c_1_1.cbor", "RFC 8152 C.1.1.  Single Signature");
+    do_test_cbor_file("rfc8152_c_1_2.cbor", "RFC 8152 C.1.2.  Multiple Signers");
+    do_test_cbor_file("rfc8152_c_1_3.cbor", "RFC 8152 C.1.3.  Counter Signature");
+    do_test_cbor_file("rfc8152_c_1_4.cbor", "RFC 8152 C.1.4.  Signature with Criticality");
+    do_test_cbor_file("rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
+    do_test_cbor_file("rfc8152_c_3_1.cbor", "RFC 8152 C.3.1.  Direct ECDH");
+    do_test_cbor_file("rfc8152_c_3_2.cbor", "RFC 8152 C.3.2.  Direct Plus Key Derivation");
+    do_test_cbor_file("rfc8152_c_3_3.cbor", "RFC 8152 C.3.3.  Counter Signature on Encrypted Content");
+    do_test_cbor_file("rfc8152_c_3_4.cbor", "RFC 8152 C.3.4.  Encrypted Content with External Data");
+    do_test_cbor_file("rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
+    do_test_cbor_file("rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
+    do_test_cbor_file("rfc8152_c_5_1.cbor", "RFC 8152 C.5.1.  Shared Secret Direct MAC");
+    do_test_cbor_file("rfc8152_c_5_2.cbor", "RFC 8152 C.5.2.  ECDH Direct MAC");
+    do_test_cbor_file("rfc8152_c_5_3.cbor", "RFC 8152 C.5.3.  Wrapped MAC");
+    do_test_cbor_file("rfc8152_c_5_4.cbor", "RFC 8152 C.5.4.  Multi-Recipient MACed Message");
+    do_test_cbor_file("rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
+    do_test_cbor_file("rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
+    do_test_cbor_file("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
+    do_test_cbor_file("rfc8778_a_1.cbor", "RFC 8778 A.1.  Example COSE Full Message Signature");
+    do_test_cbor_file("rfc8778_a_2.cbor", "RFC 8778 A.2.  Example COSE_Sign1 Message");
+    do_test_cbor_file("rfc9338_a_1_1.cbor", "RFC 9338 A.1.1.  Countersignature");
+    do_test_cbor_file("rfc9338_a_2_1.cbor", "RFC 9338 A.2.1.  Countersignature");
+    do_test_cbor_file("rfc9338_a_3_1.cbor", "RFC 9338 A.3.1.  Countersignature on Encrypted Content");
+    do_test_cbor_file("rfc9338_a_4_1.cbor", "RFC 9338 A.4.1.  Countersignature on Encrypted Content");
+    do_test_cbor_file("rfc9338_a_5_1.cbor", "RFC 9338 A.5.1.  Countersignature on MAC Content");
+    do_test_cbor_file("rfc9338_a_6_1.cbor", "RFC 9338 A.6.1.  Countersignature on MAC0 Content");  // typo ? not 159 bytes, but 139 bytes
+    do_test_cbor_key("rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
+    do_test_cbor_key("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
 }
 
 void test_jose_from_cwk() {
