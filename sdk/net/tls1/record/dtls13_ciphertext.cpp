@@ -209,7 +209,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
             binary_t plaintext;
             {
                 // decryption
-                ret = protection.decrypt_tls13(session, dir, stream, size - aad.size(), recpos, plaintext, aad);
+                ret = protection.decrypt(session, dir, stream, size - aad.size(), recpos, plaintext, aad);
             }
 
             if (istraceable()) {

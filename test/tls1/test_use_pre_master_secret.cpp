@@ -12,7 +12,7 @@
 
 #include "sample.hpp"
 
-void test_capture() {
+void test_use_pre_master_secret() {
     _test_case.begin("https://github.com/syncsynchalt/illustrated-tls13/captures/");
 
     /**

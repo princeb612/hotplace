@@ -177,7 +177,7 @@ void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_h
     _test_case.assert(base16_decode(vector->p) == p, __FUNCTION__, "decrypt %s", vector->text);
 }
 
-void test_aead_aes_cbc_hmac_sha2() {
+void test_cbc_hmac_rfc7516() {
     _test_case.begin("Authenticated Encryption with AES-CBC and HMAC-SHA");
 
     for (int i = 0; i < sizeof_test_vector_aead_aes_cbc_hmac_sha2; i++) {

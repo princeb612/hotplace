@@ -140,9 +140,20 @@ class tls_protection {
     return_t get_tls13_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& iv);
     return_t get_tls1_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& mackey);
 
-    return_t encrypt_tls13(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag);
-    return_t encrypt_tls1(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, binary_t& maced);
+    return_t encrypt_aead(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag);
+    return_t encrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, binary_t& maced);
 
+    return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
+    return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& aad);
+
+    return_t construct_certificate_verify_message(tls_direction_t dir, basic_stream& message);
+    return_t get_ecdsa_signature(uint16 scheme, const binary_t& asn1der, binary_t& signature);
+
+    return_t calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t& secret, binary_t& maced);
+
+    protection_context& get_protection_context();
+
+   protected:
     /**
      * @brief   TLS 1.3 decrypt
      * @remarks
@@ -154,19 +165,12 @@ class tls_protection {
      *          encrypt(&server_session, record, protected_record);
      *          decrypt(&client_session, protected_record, record);
      */
-    return_t decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
-    return_t decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad);
+    return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
+    return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad);
     /**
      * @brief   TLS 1 decrypt
      */
-    return_t decrypt_tls1(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
-
-    return_t construct_certificate_verify_message(tls_direction_t dir, basic_stream& message);
-    return_t get_ecdsa_signature(uint16 scheme, const binary_t& asn1der, binary_t& signature);
-
-    return_t calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t& secret, binary_t& maced);
-
-    protection_context& get_protection_context();
+    return_t decrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
 
    private:
     uint8 _mode;  // see tls_mode_t

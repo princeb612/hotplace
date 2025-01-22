@@ -47,12 +47,20 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
 
         tls_protection& protection = session->get_tls_protection();
         binary_t plaintext;
+
+        // tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        auto cs = protection.get_cipher_suite();
+        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
+        auto declen = (cbc == hint->mode) ? pos + len : len;
+        ret = protection.decrypt(session, dir, stream, declen, recpos, plaintext);
+#if 0 // by cipher mode
         auto tlsversion = protection.get_tls_version();
         if (is_basedon_tls13(tlsversion)) {
-            ret = protection.decrypt_tls13(session, dir, stream, len, recpos, plaintext);
+            ret = protection.decrypt_aead(session, dir, stream, len, recpos, plaintext);
         } else {
-            ret = protection.decrypt_tls1(session, dir, stream, pos + len, recpos, plaintext);
+            ret = protection.decrypt_cbc_hmac(session, dir, stream, pos + len, recpos, plaintext);
         }
+#endif
         if (errorcode_t::success == ret) {
             auto plainsize = plaintext.size();
             if (plainsize) {
@@ -138,7 +146,7 @@ return_t tls_record_application_data::do_write_header(tls_direction_t dir, binar
         binary_t ciphertext;
         binary_t tag;
         if (is_basedon_tls13(tlsversion)) {
-            ret = protection.encrypt_tls13(session, dir, body, ciphertext, aad, tag);
+            ret = protection.encrypt_aead(session, dir, body, ciphertext, aad, tag);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -148,7 +156,7 @@ return_t tls_record_application_data::do_write_header(tls_direction_t dir, binar
 
         } else {
             binary_t maced;
-            ret = protection.encrypt_tls1(session, dir, body, ciphertext, maced);
+            ret = protection.encrypt_cbc_hmac(session, dir, body, ciphertext, maced);
             tls_record::do_write_header(dir, bin, ciphertext);
         }
     }

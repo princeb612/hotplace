@@ -100,7 +100,10 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-cs", "cipher suite (-cs TLS_AES_256_GCM_SHA384)", [](OPTION& o, char* param) -> void { o.set_cipher_suite(param); })
                        .optional()
-                       .preced();
+                       .preced()
+                << t_cmdarg_t<OPTION>("-tls13", "TLS1.3", [](OPTION& o, char* param) -> void { o.version = tls_13; }).optional()
+                // << t_cmdarg_t<OPTION>("-tls12", "TLS1.2", [](OPTION& o, char* param) -> void { o.version = tls_12; }).optional()
+                ;
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -137,7 +140,7 @@ int main(int argc, char** argv) {
     // https://tls12.xargs.org/
     test_tls12_xargs_org();
     // https://github.com/syncsynchalt/illustrated-tls13/captures/
-    test_capture();
+    test_use_pre_master_secret();
     // https://dtls.xargs.org/
     test_dtls_xargs_org();
 

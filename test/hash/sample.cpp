@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     __try2 {
         openssl_startup();
 
-        test_hash_algorithms();
+        test_openssl_hash();
 
         test_hmacsha_rfc4231();
 

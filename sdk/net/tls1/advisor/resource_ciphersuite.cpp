@@ -222,7 +222,7 @@ const tls_cipher_suite_t tls_cipher_suites[] = {
     {0xc010, tls_10, 0, 0, /* RFC 8422 */ "TLS_ECDHE_RSA_WITH_NULL_SHA", "ECDHE-RSA-NULL-SHA", ENDOF_DATA},
     {0xc011, tls_10, 0, 0, /* RFC 8422 */ "TLS_ECDHE_RSA_WITH_RC4_128_SHA", "ECDHE-RSA-RC4-SHA", ENDOF_DATA},
     {0xc012, tls_10, 0, 0, /* RFC 8422 */ "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA", "ECDHE-RSA-DES-CBC3-SHA", ENDOF_DATA},
-    {0xc013, tls_10, 0, 0, /* RFC 8422 */ "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA", "ECDHE-RSA-AES128-SHA", keyexchange_ecdhe, auth_rsa, aes128, cbc, sha1},
+    {0xc013, tls_10, 0, 1, /* RFC 8422 */ "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA", "ECDHE-RSA-AES128-SHA", keyexchange_ecdhe, auth_rsa, aes128, cbc, sha1},
     {0xc014, tls_10, 0, 0, /* RFC 8422 */ "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA", "ECDHE-RSA-AES256-SHA", keyexchange_ecdhe, auth_rsa, aes256, cbc, sha1},
     {0xc015, tls_10, 0, 0, /* RFC 8422 */ "TLS_ECDH_anon_WITH_NULL_SHA", "AECDH-NULL-SHA", ENDOF_DATA},
     {0xc016, tls_10, 0, 0, /* RFC 8422 */ "TLS_ECDH_anon_WITH_RC4_128_SHA", "AECDH-RC4-SHA", ENDOF_DATA},

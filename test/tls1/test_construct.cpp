@@ -15,9 +15,11 @@
 tls_session client_session;
 tls_session server_session;
 
-void do_test_construct_client_hello(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+return_t do_test_construct_client_hello(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+    return_t ret = errorcode_t::success;
     tls_handshake_client_hello handshake(session);
 
+    const OPTION& option = _cmdline->value();
     {
         openssl_prng prng;
         binary_t random;
@@ -28,21 +30,30 @@ void do_test_construct_client_hello(tls_direction_t dir, tls_session* session, b
         handshake.get_random() = random;
         handshake.get_session_id() = session_id;
 
-        const OPTION& option = _cmdline->value();
         if (option.cipher_suite.empty()) {
             const char* cipher_list =
+                "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256:TLS_ECDHE_ECDSA_"
+                "WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:"
+                "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_"
+                "ARIA_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM:TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_"
+                "AES_256_CCM_8:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256";
+#if 0
+                ECDHE-ECDSA-AES256-GCM-SHA384:
+                ECDHE-RSA-AES256-GCM-SHA384:
+                ECDHE-ECDSA-CHACHA20-POLY1305:
+                ECDHE-RSA-CHACHA20-POLY1305:
+                ECDHE-ECDSA-AES128-GCM-SHA256:
+                ECDHE-RSA-AES128-GCM-SHA256:
+                ECDHE-ECDSA-AES256-SHA384:
+                ECDHE-RSA-AES256-SHA384:
+                ECDHE-ECDSA-AES128-SHA256:
+                ECDHE-RSA-AES128-SHA256:
+                ECDHE-ECDSA-AES256-SHA:
+                ECDHE-RSA-AES256-SHA:
+                ECDHE-ECDSA-AES128-SHA:
+                ECDHE-RSA-AES128-SHA
+#endif
 
-                // HTTP/2, TLS 1.3
-                "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256"
-                // concatenate
-                ":"
-                // HTTP/3, DTLS 1.2
-                // current openssl support DTLS 1.2
-                "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:"
-                "DHE-"
-                "RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-"
-                "AES256-SHA384:DHE-RSA-AES256-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-"
-                "AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA";
             handshake.add_ciphersuites(cipher_list);
         } else {
             handshake.add_ciphersuites(option.cipher_suite.c_str());
@@ -96,7 +107,11 @@ void do_test_construct_client_hello(tls_direction_t dir, tls_session* session, b
     }
     {
         auto supported_versions = new tls_extension_client_supported_versions(session);
-        (*supported_versions).add(tls_13).add(tls_12);
+        if (tls_13 == option.version) {
+            (*supported_versions).add(tls_13);
+        } else {
+            (*supported_versions).add(tls_12);
+        }
         handshake.get_extensions().add(supported_versions);
     }
     {
@@ -123,9 +138,11 @@ void do_test_construct_client_hello(tls_direction_t dir, tls_session* session, b
         _logger->write(bs);
         _test_case.assert(pkey, __FUNCTION__, "{client} key share (client generated)");
     }
+    return ret;
 }
 
-void do_test_construct_server_hello(tls_direction_t dir, tls_session* session, tls_session* client_session, binary_t& bin, const char* message) {
+return_t do_test_construct_server_hello(tls_direction_t dir, tls_session* session, tls_session* client_session, binary_t& bin, const char* message) {
+    return_t ret = errorcode_t::success;
     uint16 server_version = tls_12;
     uint16 server_cs = 0x1301;
     auto& client_handshake_context = client_session->get_tls_protection().get_protection_context();
@@ -134,50 +151,60 @@ void do_test_construct_server_hello(tls_direction_t dir, tls_session* session, t
     server_cs = server_handshake_context.get0_cipher_suite();
     server_version = server_handshake_context.get0_supported_version();
 
-    {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto csname = tlsadvisor->cipher_suite_string(server_cs);
-        _test_case.assert(csname.size(), __FUNCTION__, "%s", csname.c_str());
-    }
+    __try2 {
+        if (0x0000 == server_cs) {
+            ret = errorcode_t::unknown;
+            _test_case.test(ret, __FUNCTION__, "no cipher suite");
+            __leave2;
+        }
 
-    tls_handshake_server_hello handshake(session);
+        {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto csname = tlsadvisor->cipher_suite_string(server_cs);
+            _test_case.assert(csname.size(), __FUNCTION__, "%s", csname.c_str());
+        }
 
-    {
-        openssl_prng prng;
-        binary_t random;
-        binary_t session_id;
-        prng.random(random, 32);
-        prng.random(session_id, 32);
+        tls_handshake_server_hello handshake(session);
 
-        handshake.get_random() = random;
-        handshake.get_session_id() = session_id;
-        handshake.set_cipher_suite(server_cs);
-    }
-    {
-        auto supported_versions = new tls_extension_server_supported_versions(session);
-        (*supported_versions).set(server_version);
-        handshake.get_extensions().add(supported_versions);
-    }
-    {
-        auto key_share = new tls_extension_server_key_share(session);
-        (*key_share).add("x25519");
-        handshake.get_extensions().add(key_share);
-    }
+        {
+            openssl_prng prng;
+            binary_t random;
+            binary_t session_id;
+            prng.random(random, 32);
+            prng.random(session_id, 32);
 
-    {
-        tls_record_handshake record(session);
-        record.get_handshakes().add(&handshake, true);
-        record.write(dir, bin);
+            handshake.get_random() = random;
+            handshake.get_session_id() = session_id;
+            handshake.set_cipher_suite(server_cs);
+        }
+        {
+            auto supported_versions = new tls_extension_server_supported_versions(session);
+            (*supported_versions).set(server_version);
+            handshake.get_extensions().add(supported_versions);
+        }
+        {
+            auto key_share = new tls_extension_server_key_share(session);
+            (*key_share).add("x25519");
+            handshake.get_extensions().add(key_share);
+        }
 
-        _test_case.assert(bin.size(), __FUNCTION__, "%s", message);
+        {
+            tls_record_handshake record(session);
+            record.get_handshakes().add(&handshake, true);
+            record.write(dir, bin);
+
+            _test_case.assert(bin.size(), __FUNCTION__, "%s", message);
+        }
+        {
+            basic_stream bs;
+            auto pkey = session->get_tls_protection().get_keyexchange().find("server");
+            dump_key(pkey, &bs);
+            _logger->write(bs);
+            _test_case.assert(pkey, __FUNCTION__, "{server} key share (server generated)");
+        }
     }
-    {
-        basic_stream bs;
-        auto pkey = session->get_tls_protection().get_keyexchange().find("server");
-        dump_key(pkey, &bs);
-        _logger->write(bs);
-        _test_case.assert(pkey, __FUNCTION__, "{server} key share (server generated)");
-    }
+    __finally2 {}
+    return ret;
 }
 
 void do_cross_check_keycalc(tls_secret_t secret, const char* secret_name) {
@@ -211,7 +238,7 @@ void do_test_keycalc() {
     do_cross_check_keycalc(tls_secret_handshake_server_iv, "tls_secret_handshake_server_iv");
 }
 
-void do_test_construct_server_change_cipher_spec(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+return_t do_test_construct_server_change_cipher_spec(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -223,9 +250,10 @@ void do_test_construct_server_change_cipher_spec(tls_direction_t dir, tls_sessio
         ret = record.write(dir, bin);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    return ret;
 }
 
-void do_test_construct_encrypted_extensions(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+return_t do_test_construct_encrypted_extensions(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     tls_handshake_encrypted_extensions handshake(session);
     __try2 {
@@ -239,9 +267,11 @@ void do_test_construct_encrypted_extensions(tls_direction_t dir, tls_session* se
         ret = record.write(dir, bin);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    return ret;
 }
 
-void do_test_construct_certificate(tls_direction_t dir, tls_session* session, const char* certfile, const char* keyfile, binary_t& bin, const char* message) {
+return_t do_test_construct_certificate(tls_direction_t dir, tls_session* session, const char* certfile, const char* keyfile, binary_t& bin,
+                                       const char* message) {
     return_t ret = errorcode_t::success;
     tls_handshake_certificate handshake(session);
     __try2 {
@@ -257,9 +287,10 @@ void do_test_construct_certificate(tls_direction_t dir, tls_session* session, co
         record.write(dir, bin);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    return ret;
 }
 
-void do_test_construct_certificate_verify(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+return_t do_test_construct_certificate_verify(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     tls_handshake_certificate_verify handshake(session);
     __try2 {
@@ -273,9 +304,10 @@ void do_test_construct_certificate_verify(tls_direction_t dir, tls_session* sess
         record.write(dir, bin);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    return ret;
 }
 
-void do_test_construct_server_finished(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+return_t do_test_construct_server_finished(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     tls_handshake_finished handshake(session);
     __try2 {
@@ -289,9 +321,10 @@ void do_test_construct_server_finished(tls_direction_t dir, tls_session* session
         record.write(dir, bin);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    return ret;
 }
 
-void do_test_construct_client_finished(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+return_t do_test_construct_client_finished(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     tls_handshake_finished handshake(session);
     __try2 {
@@ -305,9 +338,10 @@ void do_test_construct_client_finished(tls_direction_t dir, tls_session* session
         record.write(dir, bin);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    return ret;
 }
 
-void do_test_send_record(tls_direction_t dir, tls_session* session, const binary_t& bin, const char* message) {
+return_t do_test_send_record(tls_direction_t dir, tls_session* session, const binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == message) {
@@ -319,6 +353,7 @@ void do_test_send_record(tls_direction_t dir, tls_session* session, const binary
         ret = records.read(session, dir, bin);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    return ret;
 }
 
 void test_construct() {
@@ -331,45 +366,57 @@ void test_construct() {
     // construct : write + server_session
     // send : read + client_session
 
-    // C -> S CH
-    binary_t bin_client_hello;
-    do_test_construct_client_hello(from_client, &client_session, bin_client_hello, "{*client->server} construct client hello message");
-    do_test_send_record(from_client, &server_session, bin_client_hello, "{client->server*} send client hello");
+    return_t ret = errorcode_t::success;
+    __try2 {
+        // C -> S CH
+        binary_t bin_client_hello;
+        ret = do_test_construct_client_hello(from_client, &client_session, bin_client_hello, "{*client->server} construct client hello message");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        do_test_send_record(from_client, &server_session, bin_client_hello, "{client->server*} send client hello");
 
-    // S -> C SH
-    binary_t bin_server_hello;
-    do_test_construct_server_hello(from_server, &server_session, &client_session, bin_server_hello, "{*server->client} construct server hello message");
-    do_test_send_record(from_server, &client_session, bin_server_hello, "{server->client*} send server hello");
+        // S -> C SH
+        binary_t bin_server_hello;
+        ret =
+            do_test_construct_server_hello(from_server, &server_session, &client_session, bin_server_hello, "{*server->client} construct server hello message");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        do_test_send_record(from_server, &client_session, bin_server_hello, "{server->client*} send server hello");
 
-    do_test_keycalc();
+        do_test_keycalc();
 
-    // S -> C CCS
-    binary_t bin_server_change_cipher_spec;
-    do_test_construct_server_change_cipher_spec(from_server, &server_session, bin_server_change_cipher_spec, "{*server->client} construct change_cipher_spec");
-    do_test_send_record(from_server, &client_session, bin_server_change_cipher_spec, "{server->client*} send change_cipher_spec");
+        // S -> C CCS
+        binary_t bin_server_change_cipher_spec;
+        do_test_construct_server_change_cipher_spec(from_server, &server_session, bin_server_change_cipher_spec,
+                                                    "{*server->client} construct change_cipher_spec");
+        do_test_send_record(from_server, &client_session, bin_server_change_cipher_spec, "{server->client*} send change_cipher_spec");
 
-    // S -> C EE
-    binary_t bin_encrypted_extensions;
-    do_test_construct_encrypted_extensions(from_server, &server_session, bin_encrypted_extensions, "{*server->client} construct encrypted extensions");
-    do_test_send_record(from_server, &client_session, bin_encrypted_extensions, "{server->client*} send encrypted extensions");
+        // S -> C EE
+        binary_t bin_encrypted_extensions;
+        do_test_construct_encrypted_extensions(from_server, &server_session, bin_encrypted_extensions, "{*server->client} construct encrypted extensions");
+        do_test_send_record(from_server, &client_session, bin_encrypted_extensions, "{server->client*} send encrypted extensions");
 
-    // S -> C SC
-    binary_t bin_certificate;
-    do_test_construct_certificate(from_server, &server_session, "server.crt", "server.key", bin_certificate, "{*server->client} construct certificate");
-    do_test_send_record(from_server, &client_session, bin_certificate, "{server->client*} send cerficate");
+        // S -> C SC
+        binary_t bin_certificate;
+        do_test_construct_certificate(from_server, &server_session, "server.crt", "server.key", bin_certificate, "{*server->client} construct certificate");
+        do_test_send_record(from_server, &client_session, bin_certificate, "{server->client*} send cerficate");
 
-    // S -> C SCV
-    binary_t bin_certificate_verify;
-    do_test_construct_certificate_verify(from_server, &server_session, bin_certificate_verify, "{*server->client} construct certificate verify");
-    do_test_send_record(from_server, &client_session, bin_certificate_verify, "{server->client*} send cerficate verify");
+        // S -> C SCV
+        binary_t bin_certificate_verify;
+        do_test_construct_certificate_verify(from_server, &server_session, bin_certificate_verify, "{*server->client} construct certificate verify");
+        do_test_send_record(from_server, &client_session, bin_certificate_verify, "{server->client*} send cerficate verify");
 
-    // S -> C SF
-    binary_t bin_server_finished;
-    do_test_construct_server_finished(from_server, &server_session, bin_server_finished, "{*server->client} construct server finished");
-    do_test_send_record(from_server, &client_session, bin_server_finished, "{server->client*} send server finished");
+        // S -> C SF
+        binary_t bin_server_finished;
+        do_test_construct_server_finished(from_server, &server_session, bin_server_finished, "{*server->client} construct server finished");
+        do_test_send_record(from_server, &client_session, bin_server_finished, "{server->client*} send server finished");
 
-    // C -> S CF
-    binary_t bin_client_finished;
-    do_test_construct_client_finished(from_client, &client_session, bin_client_finished, "{*client->server} construct client finished");
-    do_test_send_record(from_client, &server_session, bin_client_finished, "{client->server*} send client finished");
+        // C -> S CF
+        binary_t bin_client_finished;
+        do_test_construct_client_finished(from_client, &client_session, bin_client_finished, "{*client->server} construct client finished");
+        do_test_send_record(from_client, &server_session, bin_client_finished, "{client->server*} send client finished");
+    }
+    __finally2 {}
 }

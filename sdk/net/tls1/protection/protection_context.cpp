@@ -119,10 +119,29 @@ return_t protection_context::select_from(const protection_context& rhs) {
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
+        tls_version_t selected_version = tls_10;
+        {
+            auto& versions = rhs._supported_versions;
+            for (auto ver : versions) {
+                if (tls_13 == ver) {
+                    selected_version = tls_13;
+                    break;
+                } else if (tls_12 == ver) {
+                    selected_version = tls_12;
+                }
+            }
+            if (tls_10 == selected_version) {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+            add_supported_version(selected_version);
+        }
         {
             for (auto cs : rhs._cipher_suites) {
                 auto hint = tlsadvisor->hintof_cipher_suite(cs);
-                if (hint && hint->secure) {
+                // if (hint && hint->secure && (hint->version <= selected_version)) {
+                // RFC 5246 mandatory TLS_RSA_WITH_AES_128_CBC_SHA
+                if (hint && hint->support && (hint->version <= selected_version)) {
                     add_cipher_suite(cs);
                     break;
                 }
@@ -136,29 +155,6 @@ return_t protection_context::select_from(const protection_context& rhs) {
             // copy
             _signature_algorithms = rhs._signature_algorithms;
             _supported_groups = rhs._supported_groups;
-        }
-        {
-            auto& versions = rhs._supported_versions;
-            bool test13 = false;
-            bool test12 = false;
-            for (auto ver : versions) {
-                switch (ver) {
-                    case tls_13: {
-                        test13 = true;
-                    } break;
-                    case tls_12: {
-                        test12 = true;
-                    } break;
-                }
-            }
-            if (test13) {
-                add_supported_version(tls_13);
-            } else if (test12) {
-                add_supported_version(tls_12);
-            } else {
-                ret = errorcode_t::bad_data;
-                __leave2;
-            }
         }
     }
     __finally2 {}

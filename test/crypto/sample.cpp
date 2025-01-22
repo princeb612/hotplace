@@ -58,19 +58,20 @@ int main(int argc, char** argv) {
 
         validate_openssl_crypt();  // validate wrapper class openssl_crypt
 
-        test_crypt_algorithms(10, 4096);  // performance (for large stream encryption performance, just check error occurrence)
-        test_crypt_algorithms(0, 0);      // speed
+        test_openssl_crypt(10, 4096);  // performance (for large stream encryption performance, just check error occurrence)
+        test_openssl_crypt(0, 0);      // speed
 
         test_keywrap_rfc3394();
 
         test_chacha20_rfc7539();
+        test_chacha20_rfc7539_crypto_aead();
 
-        test_aead_aes_cbc_hmac_sha2();
+        test_cbc_hmac_rfc7516();
 
         test_cipher_encrypt();
         test_crypto_encrypt();
         test_crypto_aead();
-        test_aead_cbc();
+        test_cbc_hmac_tls();
     }
     __finally2 { openssl_cleanup(); }
 

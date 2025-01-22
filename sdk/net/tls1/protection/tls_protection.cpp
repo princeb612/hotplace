@@ -948,8 +948,8 @@ return_t tls_protection::get_tls1_key(tls_session *session, tls_direction_t dir,
     return ret;
 }
 
-return_t tls_protection::encrypt_tls13(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &aad,
-                                       binary_t &tag) {
+return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &aad,
+                                      binary_t &tag) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -1015,7 +1015,7 @@ return_t tls_protection::encrypt_tls13(tls_session *session, tls_direction_t dir
     return ret;
 }
 
-return_t tls_protection::encrypt_tls1(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, binary_t &maced) {
+return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, binary_t &maced) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -1122,7 +1122,67 @@ return_t tls_protection::encrypt_tls1(tls_session *session, tls_direction_t dir,
     return ret;
 }
 
-return_t tls_protection::decrypt_tls13(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext) {
+return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        auto mode = hint->mode;
+        switch (mode) {
+            case gcm:
+            case ccm:
+            case ccm8:
+            case mode_poly1305: {
+                ret = decrypt_aead(session, dir, stream, size, pos, plaintext);
+            } break;
+            case cbc: {
+                ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
+            } break;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& aad) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        auto mode = hint->mode;
+        switch (mode) {
+            case gcm:
+            case ccm:
+            case ccm8:
+            case mode_poly1305: {
+                ret = decrypt_aead(session, dir, stream, size, pos, plaintext, aad);
+            } break;
+            case cbc: {
+                ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
+            } break;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -1137,7 +1197,7 @@ return_t tls_protection::decrypt_tls13(tls_session *session, tls_direction_t dir
         binary_t aad;
         binary_append(aad, stream + pos, aadlen);
 
-        ret = decrypt_tls13(session, dir, stream, size, pos, plaintext, aad);
+        ret = decrypt_aead(session, dir, stream, size, pos, plaintext, aad);
     }
     __finally2 {
         // do nothing
@@ -1145,8 +1205,8 @@ return_t tls_protection::decrypt_tls13(tls_session *session, tls_direction_t dir
     return ret;
 }
 
-return_t tls_protection::decrypt_tls13(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext,
-                                       const binary_t &aad) {
+return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext,
+                                      const binary_t &aad) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -1228,7 +1288,7 @@ return_t tls_protection::decrypt_tls13(tls_session *session, tls_direction_t dir
     return ret;
 }
 
-return_t tls_protection::decrypt_tls1(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext) {
+return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -1269,7 +1329,7 @@ return_t tls_protection::decrypt_tls1(tls_session *session, tls_direction_t dir,
         size_t bpos = content_header_size + ivsize;
 
         auto enc_alg = hint->cipher;
-        auto hmac_alg = hint->mac; // do not promote insecure algorithm
+        auto hmac_alg = hint->mac;  // do not promote insecure algorithm
         const binary_t &mackey = get_item(secret_mac_key);
         binary_t verifydata;
         binary_t aad;
@@ -1408,72 +1468,78 @@ return_t tls_protection::construct_certificate_verify_message(tls_direction_t di
 
 return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t &typeof_secret, binary_t &maced) {
     return_t ret = errorcode_t::success;
-
-    tls_advisor *tlsadvisor = tls_advisor::get_instance();
-
-    // https://tls13.xargs.org/#server-handshake-finished/annotated
-    binary_t fin_hash;
-    auto hash = get_transcript_hash();
-    if (hash) {
-        hash->digest(fin_hash);
-        hash->release();
-    }
-
-    // calculate finished "tls13 finished"
-    // fin_key : expanded
-    // finished == maced
-    binary_t fin_key;
-    auto tlsversion = get_tls_version();
-    if (is_basedon_tls13(tlsversion)) {
-        if (from_server == dir) {
-            typeof_secret = tls_secret_s_hs_traffic;
-        } else {
-            typeof_secret = tls_secret_c_hs_traffic;
+    __try2 {
+        if (hash_alg_unknown == alg) {
+            ret = errorcode_t::unknown;
+            __leave2;
         }
-        const binary_t &ht_secret = get_item(typeof_secret);
-        hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(get_cipher_suite());
-        openssl_kdf kdf;
-        binary_t context;
-        if (is_kindof_dtls()) {
-            kdf.hkdf_expand_dtls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
-        } else {
-            kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
-        }
-        crypto_hmac_builder builder;
-        crypto_hmac *hmac = builder.set(hashalg).set(fin_key).build();
-        if (hmac) {
-            hmac->mac(fin_hash, maced);
-            hmac->release();
-        }
-    } else {
-        binary_t seed;
-        if (from_client == dir) {
-            binary_append(seed, "client finished");
-        } else {
-            binary_append(seed, "server finished");
-        }
-        binary_append(seed, fin_hash);
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
-        typeof_secret = tls_secret_master;
-        const binary_t &fin_key = get_item(typeof_secret);
+        // https://tls13.xargs.org/#server-handshake-finished/annotated
+        binary_t fin_hash;
+        auto hash = get_transcript_hash();
+        if (hash) {
+            hash->digest(fin_hash);
+            hash->release();
+        }
 
-        crypto_hmac_builder builder;
-        auto hmac = builder.set(alg).set(fin_key).build();
-        size_t size_maced = 12;
-        if (hmac) {
-            binary_t temp = seed;
-            binary_t atemp;
-            binary_t ptemp;
-            while (maced.size() < size_maced) {
-                hmac->mac(temp, atemp);
-                hmac->update(atemp).update(seed).finalize(ptemp);
-                binary_append(maced, ptemp);
-                temp = atemp;
+        // calculate finished "tls13 finished"
+        // fin_key : expanded
+        // finished == maced
+        binary_t fin_key;
+        auto tlsversion = get_tls_version();
+        if (is_basedon_tls13(tlsversion)) {
+            if (from_server == dir) {
+                typeof_secret = tls_secret_s_hs_traffic;
+            } else {
+                typeof_secret = tls_secret_c_hs_traffic;
             }
-            hmac->release();
-            maced.resize(size_maced);
+            const binary_t &ht_secret = get_item(typeof_secret);
+            hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(get_cipher_suite());
+            openssl_kdf kdf;
+            binary_t context;
+            if (is_kindof_dtls()) {
+                kdf.hkdf_expand_dtls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
+            } else {
+                kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
+            }
+            crypto_hmac_builder builder;
+            crypto_hmac *hmac = builder.set(hashalg).set(fin_key).build();
+            if (hmac) {
+                hmac->mac(fin_hash, maced);
+                hmac->release();
+            }
+        } else {
+            binary_t seed;
+            if (from_client == dir) {
+                binary_append(seed, "client finished");
+            } else {
+                binary_append(seed, "server finished");
+            }
+            binary_append(seed, fin_hash);
+
+            typeof_secret = tls_secret_master;
+            const binary_t &fin_key = get_item(typeof_secret);
+
+            crypto_hmac_builder builder;
+            auto hmac = builder.set(alg).set(fin_key).build();
+            size_t size_maced = 12;
+            if (hmac) {
+                binary_t temp = seed;
+                binary_t atemp;
+                binary_t ptemp;
+                while (maced.size() < size_maced) {
+                    hmac->mac(temp, atemp);
+                    hmac->update(atemp).update(seed).finalize(ptemp);
+                    binary_append(maced, ptemp);
+                    temp = atemp;
+                }
+                hmac->release();
+                maced.resize(size_maced);
+            }
         }
     }
+    __finally2 {}
     return ret;
 }
 

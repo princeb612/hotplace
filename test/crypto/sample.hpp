@@ -26,14 +26,15 @@ extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 void test_features();
 
 void validate_openssl_crypt();
-void test_crypt_algorithms(uint32 cooltime, uint32 unitsize);
+void test_openssl_crypt(uint32 cooltime, uint32 unitsize);
 void test_keywrap_rfc3394();
 void test_chacha20_rfc7539();
-void test_aead_aes_cbc_hmac_sha2();
+void test_chacha20_rfc7539_crypto_aead();
+void test_cbc_hmac_rfc7516();
 void test_cipher_encrypt();
 void test_crypto_encrypt();
 void test_crypto_aead();
-void test_aead_cbc();
+void test_cbc_hmac_tls();
 
 typedef struct _test_vector_nist_cavp_blockcipher_t {
     const char* desc;

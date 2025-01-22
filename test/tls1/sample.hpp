@@ -17,8 +17,9 @@ struct OPTION {
     int log;
     int time;
     std::string cipher_suite;
+    uint16 version;
 
-    OPTION() : verbose(0), debug(0), log(0), time(0) {
+    OPTION() : verbose(0), debug(0), log(0), time(0), version(tls_13) {
         // do nothing
     }
     void enable_debug() {
@@ -51,7 +52,7 @@ void test_rfc8448_5();
 void test_rfc8448_6();
 void test_rfc8448_7();
 
-void test_capture();
+void test_use_pre_master_secret();
 
 void test_construct();
 void test_validate();

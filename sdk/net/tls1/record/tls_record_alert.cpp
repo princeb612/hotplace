@@ -38,14 +38,22 @@ return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* strea
             auto session_info = session->get_session_info(dir);
             if (session_info.doprotect()) {
                 tls_protection& protection = session->get_tls_protection();
+                auto tlsversion = protection.get_tls_version();
+                auto cs = protection.get_cipher_suite();
                 binary_t plaintext;
                 binary_t tag;
-                auto tlsversion = protection.get_tls_version();
+
+                tls_advisor *tlsadvisor = tls_advisor::get_instance();
+                const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
+                auto declen = (cbc == hint->mode) ? size : len;
+                ret = protection.decrypt(session, dir, stream, declen, recpos, plaintext, tag);
+#if 0  // by cipher mode
                 if (is_basedon_tls13(tlsversion)) {
-                    ret = protection.decrypt_tls13(session, dir, stream, len, recpos, plaintext, tag);
+                    ret = protection.decrypt_aead(session, dir, stream, len, recpos, plaintext, tag);
                 } else {
-                    ret = protection.decrypt_tls1(session, dir, stream, size, recpos, plaintext);
+                    ret = protection.decrypt_cbc_hmac(session, dir, stream, size, recpos, plaintext);
                 }
+#endif
                 if (errorcode_t::success == ret) {
                     tpos = 0;
                     ret = read_plaintext(dir, &plaintext[0], plaintext.size(), tpos);

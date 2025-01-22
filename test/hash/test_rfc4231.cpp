@@ -108,9 +108,9 @@ void test_hmacsha_rfc4231() {
             _logger->hdump("data", bin_data);
         }
 
-        test_hash_routine(&openssl_hash, hash_algorithm_t::sha2_224, bin_key, bin_data, bin_expect_sha224, item.text);
-        test_hash_routine(&openssl_hash, hash_algorithm_t::sha2_256, bin_key, bin_data, bin_expect_sha256, item.text);
-        test_hash_routine(&openssl_hash, hash_algorithm_t::sha2_384, bin_key, bin_data, bin_expect_sha384, item.text);
-        test_hash_routine(&openssl_hash, hash_algorithm_t::sha2_512, bin_key, bin_data, bin_expect_sha512, item.text);
+        test_hash_routine(hash_algorithm_t::sha2_224, bin_key, bin_data, bin_expect_sha224, item.text);
+        test_hash_routine(hash_algorithm_t::sha2_256, bin_key, bin_data, bin_expect_sha256, item.text);
+        test_hash_routine(hash_algorithm_t::sha2_384, bin_key, bin_data, bin_expect_sha384, item.text);
+        test_hash_routine(hash_algorithm_t::sha2_512, bin_key, bin_data, bin_expect_sha512, item.text);
     }
 }

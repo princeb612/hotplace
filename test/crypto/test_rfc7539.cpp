@@ -73,3 +73,43 @@ void test_chacha20_rfc7539() {
         do_test_chacha20_rfc7539_testvector(test_vector_rfc7539 + i);
     }
 }
+
+void test_chacha20_rfc7539_crypto_aead() {
+    _test_case.begin("RFC 7539/8439");
+    // RFC 7539 testvector
+    for (auto i = 0; i < sizeof_test_vector_rfc7539; i++) {
+        auto item = test_vector_rfc7539 + i;
+        if (0 == strcmp("chacha20-poly1305", item->alg)) {
+            return_t ret = errorcode_t::success;
+            binary_t key = base16_decode_rfc(item->key);
+            binary_t iv = base16_decode_rfc(item->iv);
+            binary_t aad = base16_decode_rfc(item->aad);
+            binary_t tag = base16_decode_rfc(item->tag);
+            binary_t expect = base16_decode_rfc(item->expect);
+            binary_t nonce;
+            binary_t ciphertext;
+            binary_t plaintext;
+            auto counter = item->counter;
+            auto msg = item->msg;
+
+            openssl_chacha20_iv(nonce, counter, iv);
+            crypto_aead_builder builder;
+            auto aead = builder.set_scheme(aead_scheme_chacha20_poly1305).build();
+            if (aead) {
+                binary_t t;
+
+                ret = aead->encrypt(key, nonce, (byte_t*)msg, strlen(msg), ciphertext, aad, t);
+                _logger->hdump("> ciphertext", ciphertext, 16, 3);
+                _test_case.assert(tag == t, __FUNCTION__, "#tag");
+                _test_case.assert(expect == ciphertext, __FUNCTION__, "#expect");
+                _test_case.test(ret, __FUNCTION__, "#encrypt");
+
+                ret = aead->decrypt(key, nonce, ciphertext, plaintext, aad, t);
+                _logger->hdump("> plaintext", plaintext, 16, 3);
+                _test_case.test(ret, __FUNCTION__, "#decrypt");
+
+                aead->release();
+            }
+        }
+    }
+}
