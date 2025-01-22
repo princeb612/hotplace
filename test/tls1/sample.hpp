@@ -11,8 +11,27 @@ using namespace hotplace::crypto;
 using namespace hotplace::io;
 using namespace hotplace::net;
 
+struct OPTION {
+    int verbose;
+    int debug;
+    int log;
+    int time;
+    std::string cipher_suite;
+
+    OPTION() : verbose(0), debug(0), log(0), time(0) {
+        // do nothing
+    }
+    void enable_debug() {
+        verbose = 1;
+        debug = 1;
+    }
+    void set_cipher_suite(const char* cs) { cipher_suite = cs; }
+};
+
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
+extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
+
 extern tls_session rfc8448_session;
 extern tls_session rfc8448_session2;
 

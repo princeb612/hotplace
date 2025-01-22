@@ -249,12 +249,12 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                 }
                 dbs.printf(" > %s %04x(%i ent.)\n", constexpr_cipher_suite_len, cipher_suite_len << 1, cipher_suite_len);
                 i = 0;
-                for (auto cs : cipher_suites) {
+                for (auto cs : _cipher_suites) {
                     dbs.printf("   [%i] 0x%04x %s\n", i++, cs, tlsadvisor->cipher_suite_string(cs).c_str());
                 }
                 dbs.printf(" > %s %i\n", constexpr_compression_method_len, compression_method_len);
                 i = 0;
-                for (auto compr : compression_methods) {
+                for (auto compr : _compression_methods) {
                     dbs.printf("   [%i] 0x%02x %s\n", i++, compr, tlsadvisor->compression_method_string(compr).c_str());
                 }
                 dbs.printf(" > %s 0x%04x(%i)\n", constexpr_extension_len, extension_len, extension_len);

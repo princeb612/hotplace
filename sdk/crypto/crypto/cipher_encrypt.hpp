@@ -100,7 +100,7 @@ class cipher_encrypt_aes256ofb : public cipher_encrypt {
 
 class cipher_encrypt_chacha20 : public cipher_encrypt {
    public:
-    cipher_encrypt_chacha20() : cipher_encrypt(chacha20, crypt_cipher) {}
+    cipher_encrypt_chacha20() : cipher_encrypt(chacha20, mode_cipher) {}
 };
 
 }  // namespace crypto

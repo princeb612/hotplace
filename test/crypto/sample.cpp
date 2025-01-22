@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
         test_cipher_encrypt();
         test_crypto_encrypt();
         test_crypto_aead();
+        test_aead_cbc();
     }
     __finally2 { openssl_cleanup(); }
 

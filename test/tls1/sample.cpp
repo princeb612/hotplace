@@ -21,21 +21,6 @@
 
 test_case _test_case;
 t_shared_instance<logger> _logger;
-
-struct OPTION {
-    int verbose;
-    int debug;
-    int log;
-    int time;
-
-    OPTION() : verbose(0), debug(0), log(0), time(0) {
-        // do nothing
-    }
-    void enable_debug() {
-        verbose = 1;
-        debug = 1;
-    }
-};
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 return_t dump_record(const char* text, tls_session* session, const binary_t& bin, tls_direction_t dir, bool expect) {
@@ -112,7 +97,10 @@ int main(int argc, char** argv) {
     (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-cs", "cipher suite (-cs TLS_AES_256_GCM_SHA384)", [](OPTION& o, char* param) -> void { o.set_cipher_suite(param); })
+                       .optional()
+                       .preced();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

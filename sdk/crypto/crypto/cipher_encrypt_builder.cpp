@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace crypto {
 
-cipher_encrypt_builder::cipher_encrypt_builder() : _alg(crypt_alg_unknown), _mode(crypt_mode_unknown) {}
+cipher_encrypt_builder::cipher_encrypt_builder() : _alg(crypt_alg_unknown), _mode(mode_unknown) {}
 
 cipher_encrypt* cipher_encrypt_builder::build() {
     cipher_encrypt* obj = nullptr;

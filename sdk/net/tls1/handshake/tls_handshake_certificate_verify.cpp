@@ -220,12 +220,13 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
         tls_protection& protection = session->get_tls_protection();
         auto& protection_context = protection.get_protection_context();
 
-        const char* kid = nullptr;
+        const char* kid = nullptr;  // Private Key
         if (from_server == dir) {
-            kid = "SCP";  // Server Certificate
+            kid = "SPK";
         } else {
-            kid = "CCP";  // Client Certificate (Client Authentication, optional)
+            kid = "CPK";
         }
+
         crypto_key& key = protection.get_keyexchange();
         auto pkey = key.find(kid);
 

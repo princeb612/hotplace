@@ -50,14 +50,20 @@ tls_record::~tls_record() {
 return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
         ret = do_read_header(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        size_t tpos = pos;  // responding to unhandled records
-        ret = do_read_body(dir, stream, size, tpos);
-        pos += get_body_size();  // responding to unhandled records
+        size_t tpos = pos;                            // responding to unhandled records
+        ret = do_read_body(dir, stream, size, tpos);  // decryption
+        pos += get_body_size();                       // responding to unhandled records
 
         do_postprocess(dir);
     }
@@ -70,15 +76,21 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
 return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
         binary_t body;
         ret = do_write_body(dir, body);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        ret = do_write_header(dir, bin, body);
+        ret = do_write_header(dir, bin, body);  // encryption
 
-        do_postprocess(dir);
+        do_postprocess(dir);  // change secret, recno
     }
     __finally2 {}
     return ret;
@@ -86,6 +98,13 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
 
 return_t tls_record::do_postprocess(tls_direction_t dir) {
     auto session = get_session();
+    /*
+     * write process
+     * - [record header] + [handshake + ... + finished handshake]
+     * - encrypt handshake(s) using hs secret, recno (do_write_body)
+     * - [record header] + [encrypted record body]
+     * - using ap secret, reset recno (do_postprocess)
+     */
     session->carryout_schedule(dir);
     return errorcode_t::success;
 }
@@ -93,11 +112,6 @@ return_t tls_record::do_postprocess(tls_direction_t dir) {
 return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -108,6 +122,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto session = get_session();
 
         size_t recpos = pos;
 
@@ -202,14 +217,11 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
 
-        {
-            auto& protection = session->get_tls_protection();
-            protection.set_record_version(_legacy_version);
-        }
-        {
-            if (cond_dtls) {
-                _dtls_record_seq = std::move(dtls_record_seq);
-            }
+        auto& protection = session->get_tls_protection();
+        protection.set_record_version(_legacy_version);
+
+        if (cond_dtls) {
+            _dtls_record_seq = std::move(dtls_record_seq);
         }
     }
     __finally2 {
@@ -222,7 +234,7 @@ return_t tls_record::do_read_body(tls_direction_t dir, const byte_t* stream, siz
 
 return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
-    {
+    __try2 {
         {
             _range.begin = bin.size();
             _bodysize = body.size();
@@ -232,25 +244,23 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
             _legacy_version = protection.get_record_version();
         }
 
-        payload pl;
-        pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
-           << new payload_member(uint16(get_legacy_version()), true, constexpr_legacy_version)                      // tls, dtls
-           << new payload_member(uint16(get_key_epoch()), true, constexpr_key_epoch, constexpr_group_dtls)          // dtls
-           << new payload_member(binary_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
-           << new payload_member(uint16(body.size()), true, constexpr_len);                                         // tls, dtls
-
-        pl.set_group(constexpr_group_dtls, is_kindof_dtls(_legacy_version));
-        pl.write(bin);
-
         {
-            //
-            _range.end = bin.size();
+            payload pl;
+            pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
+               << new payload_member(uint16(get_legacy_version()), true, constexpr_legacy_version)                      // tls, dtls
+               << new payload_member(uint16(get_key_epoch()), true, constexpr_key_epoch, constexpr_group_dtls)          // dtls
+               << new payload_member(binary_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
+               << new payload_member(uint16(body.size()), true, constexpr_len);                                         // tls, dtls
+
+            pl.set_group(constexpr_group_dtls, is_kindof_dtls(_legacy_version));
+            pl.write(bin);
         }
-        {
-            //
-            binary_append(bin, body);
-        }
+
+        _range.end = bin.size();
+
+        binary_append(bin, body);
     }
+    __finally2 {}
     return ret;
 }
 

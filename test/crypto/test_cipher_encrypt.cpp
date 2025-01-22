@@ -46,5 +46,5 @@ void test_cipher_encrypt() {
     lambda_test(aes256, cbc, key, iv, (byte_t*)sample, len);
     lambda_test(aes256, cfb, key, iv, (byte_t*)sample, len);
     lambda_test(aes256, ofb, key, iv, (byte_t*)sample, len);
-    lambda_test(chacha20, crypt_cipher, key, iv, (byte_t*)sample, len);
+    lambda_test(chacha20, mode_cipher, key, iv, (byte_t*)sample, len);
 }

@@ -160,16 +160,16 @@ void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_h
 
     binary_t q;
     binary_t t;
-    ret = aead.aes_cbc_hmac_sha2_encrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a),
-                                         base16_decode(vector->p), q, t);
+    ret = aead.cbc_hmac_rfc7516_encrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a),
+                                        base16_decode(vector->p), q, t);
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         dump(q);
     }
     _test_case.assert(base16_decode(vector->q) == q, __FUNCTION__, "encrypt %s", vector->text);
     binary_t p;
-    ret = aead.aes_cbc_hmac_sha2_decrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a), q, p,
-                                         t);
+    ret =
+        aead.cbc_hmac_rfc7516_decrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a), q, p, t);
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         dump(p);

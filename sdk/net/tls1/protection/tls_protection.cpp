@@ -69,10 +69,24 @@ transcript_hash *tls_protection::get_transcript_hash() {
     if (nullptr == _transcript_hash) {
         if (get_cipher_suite()) {
             tls_advisor *tlsadvisor = tls_advisor::get_instance();
-            const tls_cipher_suite_t *hint_tls_alg = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+            auto cipher_suite = get_cipher_suite();
+            const tls_cipher_suite_t *hint_tls_alg = tlsadvisor->hintof_cipher_suite(cipher_suite);
             auto hashalg = algof_mac(hint_tls_alg);
             transcript_hash_builder builder;
             _transcript_hash = builder.set(hashalg).build();
+
+            if (istraceable()) {
+                constexpr char constexpr_transcript_hash[] = "starting transcript_hash";
+                constexpr char constexpr_cipher_suite[] = "cipher suite";
+                crypto_advisor *advisor = crypto_advisor::get_instance();
+                tls_advisor *tlsadvisor = tls_advisor::get_instance();
+                auto mdname = advisor->nameof_md(hashalg);
+                basic_stream dbs;
+                dbs.printf("# %s\n", constexpr_transcript_hash);
+                dbs.printf(" > %s 0x%04x %s\n", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
+                dbs.printf(" > %s\n", mdname);
+                trace_debug_event(category_debug_internal, 0, &dbs);
+            }
         }
     }
     if (_transcript_hash) {
@@ -816,8 +830,11 @@ uint8 tls_protection::get_tag_size() {
 
         switch (mode) {
             case gcm:
-            case ccm:
+            case mode_poly1305:
                 ret_value = 16;
+                break;
+            case ccm:
+                ret_value = 14;
                 break;
             case ccm8:
                 ret_value = 8;
@@ -945,7 +962,7 @@ return_t tls_protection::encrypt_tls13(tls_session *session, tls_direction_t dir
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
         auto cipher = crypt_alg_unknown;
-        auto mode = crypt_mode_unknown;
+        auto mode = mode_unknown;
         uint8 tagsize = 0;
 
         {
@@ -977,12 +994,15 @@ return_t tls_protection::encrypt_tls13(tls_session *session, tls_direction_t dir
         if (istraceable()) {
             basic_stream dbs;
             dbs.autoindent(3);
+            dbs.printf(" > encrypt\n");
             dbs.printf(" > key[%08x] %s\n", secret_key, base16_encode(key).c_str());
             dbs.printf(" > iv [%08x] %s\n", secret_iv, base16_encode(iv).c_str());
             dbs.printf(" > record no %i\n", record_no);
             dbs.printf(" > nonce %s\n", base16_encode(nonce).c_str());
             dbs.printf(" > aad %s\n", base16_encode(aad).c_str());
             dbs.printf(" > tag %s\n", base16_encode(tag).c_str());
+            dbs.printf(" > plaintext\n");
+            dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.printf(" > ciphertext\n");
             dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.autoindent(0);
@@ -996,7 +1016,109 @@ return_t tls_protection::encrypt_tls13(tls_session *session, tls_direction_t dir
 }
 
 return_t tls_protection::encrypt_tls1(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, binary_t &maced) {
-    return_t ret = errorcode_t::not_supported;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        const byte_t *stream = &plaintext[0];
+
+        crypto_advisor *advisor = crypto_advisor::get_instance();
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        auto hint_cipher = advisor->hintof_blockcipher(hint->cipher);
+        if (nullptr == hint_cipher) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        auto ivsize = sizeof_iv(hint_cipher);
+
+        auto record_version = get_record_version();
+        size_t content_header_size = get_header_size();
+
+        crypt_context_t *handle = nullptr;
+        openssl_crypt crypt;
+
+        tls_secret_t secret_key;
+        tls_secret_t secret_mac_key;
+        get_tls1_key(session, dir, secret_key, secret_mac_key);
+
+        uint64 record_no = 0;
+        record_no = session->get_recordno(dir, true);
+
+        const binary_t &key = get_item(secret_key);
+        binary_t iv;
+        binary_append(iv, stream + content_header_size, ivsize);
+        size_t bpos = content_header_size + ivsize;
+
+        ret = crypt.open(&handle, hint->cipher, hint->mode, key, iv);
+        if (errorcode_t::success == ret) {
+            crypt.set(handle, crypt_ctrl_padding, 0);
+            ret = crypt.encrypt(handle, &plaintext[0], plaintext.size(), ciphertext);
+            crypt.close(handle);
+        }
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // MAC
+        binary_t content;
+        binary_t verifydata;
+        binary_t maced;
+        const binary_t &mackey = get_item(secret_mac_key);
+        {
+            auto hmac_alg = hint->mac;  // do not promote insecure algorithm (ex. don'tcall algof_mac)
+            auto hint_digest = advisor->hintof_digest(hmac_alg);
+            auto dlen = sizeof_digest(hint_digest);
+
+            uint8 pad = *plaintext.rbegin();
+            size_t plaintextsize = plaintext.size() - pad - 1;
+
+            size_t datalen = plaintextsize - dlen;
+            binary_append(content, uint64(record_no), hton64);     // sequence
+            binary_append(content, stream, 3);                     // rechdr (content_type, version)
+            binary_append(content, uint16(datalen), hton16);       // datalen
+            binary_append(content, &plaintext[0], datalen);        // data
+            binary_append(verifydata, &plaintext[datalen], dlen);  // verifydata
+
+            crypto_hmac_builder builder;
+            auto hmac = builder.set(hint->mac).set(mackey).build();
+            if (hmac) {
+                hmac->update(content).finalize(maced);
+                hmac->release();
+            }
+            // if (maced != verifydata) {
+            //     ret = errorcode_t::mismatch;
+            // }
+        }
+
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.autoindent(3);
+            dbs.printf(" > key %s\n", base16_encode(key).c_str());
+            dbs.printf(" > iv %s\n", base16_encode(iv).c_str());
+            dbs.printf(" > mackey %s\n", base16_encode(mackey).c_str());
+            dbs.printf(" > record no %i\n", record_no);
+            dbs.printf(" > ciphertext\n");
+            dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.printf(" > plaintext\n");
+            dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.printf(" > content\n");
+            dump_memory(content, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.autoindent(0);
+
+            trace_debug_event(category_tls1, tls_event_write, &dbs);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
@@ -1033,7 +1155,7 @@ return_t tls_protection::decrypt_tls13(tls_session *session, tls_direction_t dir
         }
 
         auto cipher = crypt_alg_unknown;
-        auto mode = crypt_mode_unknown;
+        auto mode = mode_unknown;
         uint8 tagsize = get_tag_size();
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
         {
@@ -1084,12 +1206,15 @@ return_t tls_protection::decrypt_tls13(tls_session *session, tls_direction_t dir
         if (istraceable()) {
             basic_stream dbs;
             dbs.autoindent(3);
+            dbs.printf(" > decrypt\n");
             dbs.printf(" > key[%08x] %s\n", secret_key, base16_encode(key).c_str());
             dbs.printf(" > iv [%08x] %s\n", secret_iv, base16_encode(iv).c_str());
             dbs.printf(" > record no %i\n", record_no);
             dbs.printf(" > nonce %s\n", base16_encode(nonce).c_str());
             dbs.printf(" > aad %s\n", base16_encode(aad).c_str());
             dbs.printf(" > tag %s\n", base16_encode(tag).c_str());
+            dbs.printf(" > ciphertext\n");
+            dump_memory(stream + pos + aadlen, size - tagsize, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.printf(" > plaintext\n");
             dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.autoindent(0);
@@ -1143,60 +1268,28 @@ return_t tls_protection::decrypt_tls1(tls_session *session, tls_direction_t dir,
         binary_append(iv, stream + content_header_size, ivsize);
         size_t bpos = content_header_size + ivsize;
 
-        ret = crypt.open(&handle, hint->cipher, hint->mode, key, iv);
-        if (errorcode_t::success == ret) {
-            crypt.set(handle, crypt_ctrl_padding, 0);
-            ret = crypt.decrypt(handle, stream + bpos, size - bpos, plaintext);
-            crypt.close(handle);
-        }
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        // MAC
-        binary_t content;
-        binary_t verifydata;
-        binary_t maced;
+        auto enc_alg = hint->cipher;
+        auto hmac_alg = hint->mac; // do not promote insecure algorithm
         const binary_t &mackey = get_item(secret_mac_key);
-        {
-            auto hmac_alg = hint->mac;  // do not promote insecure algorithm (ex. don't
-                                        // call algof_mac)
-            auto hint_digest = advisor->hintof_digest(hmac_alg);
-            auto dlen = sizeof_digest(hint_digest);
+        binary_t verifydata;
+        binary_t aad;
+        binary_append(aad, uint64(record_no), hton64);  // sequence
+        binary_append(aad, stream, 3);                  // rechdr (content_type, version)
+        size_t plainsize = 0;
 
-            uint8 pad = *plaintext.rbegin();
-            size_t plaintextsize = plaintext.size() - pad - 1;
-
-            size_t datalen = plaintextsize - dlen;
-            binary_append(content, uint64(record_no), hton64);     // sequence
-            binary_append(content, stream, 3);                     // rechdr (content_type, version)
-            binary_append(content, uint16(datalen), hton16);       // datalen
-            binary_append(content, &plaintext[0], datalen);        // data
-            binary_append(verifydata, &plaintext[datalen], dlen);  // verifydata
-
-            crypto_hmac_builder builder;
-            auto hmac = builder.set(hint->mac).set(mackey).build();
-            if (hmac) {
-                hmac->update(content).finalize(maced);
-                hmac->release();
-            }
-            if (maced != verifydata) {
-                ret = errorcode_t::mismatch;
-            }
-        }
+        ret = crypt.cbc_hmac_tls_decrypt(enc_alg, hmac_alg, key, mackey, iv, aad, stream + bpos, size - bpos, plaintext, plainsize);
 
         if (istraceable()) {
             basic_stream dbs;
             dbs.autoindent(3);
             dbs.printf(" > key %s\n", base16_encode(key).c_str());
             dbs.printf(" > iv %s\n", base16_encode(iv).c_str());
+            dbs.printf(" > mackey %s\n", base16_encode(mackey).c_str());
             dbs.printf(" > record no %i\n", record_no);
             dbs.printf(" > ciphertext\n");
             dump_memory(stream + bpos, size - bpos, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.printf(" > plaintext\n");
             dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.printf(" > content\n");
-            dump_memory(content, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.autoindent(0);
 
             trace_debug_event(category_tls1, tls_event_read, &dbs);

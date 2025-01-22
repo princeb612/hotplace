@@ -129,7 +129,7 @@ enum crypt_algorithm_t {
  *    SM4         : CBC, CFB,             OFB, ECB, CTR
  */
 enum crypt_mode_t {
-    crypt_mode_unknown = 0,
+    mode_unknown = 0,
     ecb = 1,
     cbc = 2,
     cfb = 3,
@@ -142,8 +142,10 @@ enum crypt_mode_t {
     ccm = 10,
     ccm8 = 13,
 
-    crypt_cipher = 11,
-    crypt_aead = 12,
+    mode_cipher = 11,
+    mode_chacha20 = mode_cipher,
+    mode_aead = 12,
+    mode_poly1305 = mode_aead,
 };
 
 enum hash_algorithm_t {

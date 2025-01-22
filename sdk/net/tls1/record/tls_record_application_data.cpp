@@ -35,52 +35,6 @@ tls_record_application_data::tls_record_application_data(tls_session* session) :
 
 tls_handshakes& tls_record_application_data::get_handshakes() { return _handshakes; }
 
-return_t tls_record_application_data::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        binary_t aad;
-        auto& protection = session->get_tls_protection();
-        auto legacy_version = protection.get_record_version();
-        auto tagsize = protection.get_tag_size();
-
-        {
-            payload pl;
-            pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
-               << new payload_member(uint16(legacy_version), true, constexpr_legacy_version)                            // tls, dtls
-               << new payload_member(uint16(get_key_epoch()), true, constexpr_key_epoch, constexpr_group_dtls)          // dtls
-               << new payload_member(binary_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
-               << new payload_member(uint16(body.size() + tagsize), true, constexpr_len);                               // tls, dtls
-
-            pl.set_group(constexpr_group_dtls, is_kindof_dtls(_legacy_version));
-            pl.write(aad);
-        }
-
-        binary_t ciphertext;
-        binary_t tag;
-        auto tlsversion = protection.get_tls_version();
-        if (is_basedon_tls13(tlsversion)) {
-            ret = protection.encrypt_tls13(session, dir, body, ciphertext, aad, tag);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-
-            binary_append(ciphertext, tag);
-            tls_record::do_write_header(dir, bin, ciphertext);
-
-        } else {
-            // ret = protection.encrypt_tls1
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
 return_t tls_record_application_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -145,6 +99,60 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
     __finally2 {
         // do nothing
     }
+    return ret;
+}
+
+return_t tls_record_application_data::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        binary_t aad;
+        auto& protection = session->get_tls_protection();
+        auto legacy_version = protection.get_record_version();
+        auto tagsize = protection.get_tag_size();
+        auto tlsversion = protection.get_tls_version();
+        uint16 len = 0;
+        if (is_basedon_tls13(tlsversion)) {
+            len = body.size() + tagsize;
+        } else {
+            len = body.size();
+        }
+
+        {
+            payload pl;
+            pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
+               << new payload_member(uint16(legacy_version), true, constexpr_legacy_version)                            // tls, dtls
+               << new payload_member(uint16(get_key_epoch()), true, constexpr_key_epoch, constexpr_group_dtls)          // dtls
+               << new payload_member(binary_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
+               << new payload_member(uint16(len), true, constexpr_len);                                                 // tls, dtls
+
+            pl.set_group(constexpr_group_dtls, is_kindof_dtls(_legacy_version));
+            pl.write(aad);
+        }
+
+        binary_t ciphertext;
+        binary_t tag;
+        if (is_basedon_tls13(tlsversion)) {
+            ret = protection.encrypt_tls13(session, dir, body, ciphertext, aad, tag);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+
+            binary_append(ciphertext, tag);
+            tls_record::do_write_header(dir, bin, ciphertext);
+
+        } else {
+            binary_t maced;
+            ret = protection.encrypt_tls1(session, dir, body, ciphertext, maced);
+            tls_record::do_write_header(dir, bin, ciphertext);
+        }
+    }
+    __finally2 {}
     return ret;
 }
 

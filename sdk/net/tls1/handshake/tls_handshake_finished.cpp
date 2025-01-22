@@ -88,7 +88,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 ret = errorcode_t::success;
                 __leave2;
             }
-            dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
+            dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));  // sha2_256 if sha1
             hmacalg = algof_mac(hint_tls_alg);
         }
 
@@ -108,6 +108,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             binary_t maced;
             protection.calc_finished(dir, hmacalg, dlen, typeof_secret, maced);
 
+            verify_data.resize(maced.size());
             if (verify_data != maced) {
                 ret = errorcode_t::error_verify;
             }

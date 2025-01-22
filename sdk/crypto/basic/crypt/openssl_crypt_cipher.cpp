@@ -50,7 +50,7 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
         : signature(0),
           crypto_type(crypt_poweredby_t::openssl),
           algorithm(crypt_algorithm_t::crypt_alg_unknown),
-          mode(crypt_mode_t::crypt_mode_unknown),
+          mode(crypt_mode_t::mode_unknown),
           encrypt_context(nullptr),
           decrypt_context(nullptr),
           key(nullptr),
@@ -259,7 +259,7 @@ return_t openssl_crypt::set(crypt_context_t *handle, crypt_ctrl_t id, uint16 par
     return ret;
 }
 
-return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *data_plain, size_t size_plain, unsigned char *out_encrypted,
+return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *plaintext, size_t plainsize, unsigned char *out_encrypted,
                                  size_t *size_encrypted, const binary_t *aad, binary_t *tag) {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t *context = static_cast<openssl_crypt_context_t *>(handle);
@@ -269,8 +269,8 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (nullptr == data_plain) {
-            if (size_plain) {
+        if (nullptr == plaintext) {
+            if (plainsize) {
                 ret = errorcode_t::invalid_parameter;
                 __leave2;
             }
@@ -280,7 +280,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
             __leave2;
         }
 
-        size_t size_expect = size_plain + EVP_MAX_BLOCK_LENGTH;
+        size_t size_expect = plainsize + EVP_MAX_BLOCK_LENGTH;
         if (*size_encrypted < size_expect) {
             ret = errorcode_t::insufficient_buffer;
             __leave2;
@@ -301,7 +301,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
             case crypt_mode_t::gcm:
             case crypt_mode_t::ccm:
             case crypt_mode_t::ccm8:
-            case crypt_mode_t::crypt_aead:
+            case crypt_mode_t::mode_poly1305:
                 is_aead = true;
                 break;
             default:
@@ -327,7 +327,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
              *      For OCB AES, the default tag length is 16 (i.e. 128 bits).
              */
 
-            if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::crypt_aead == context->mode)) {
+            if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::mode_poly1305 == context->mode)) {
                 /*
                  * 16bytes (128bits)
                  * RFC 7516
@@ -360,7 +360,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
                 binary_t &key = context->datamap[crypt_item_t::item_cek];
                 EVP_CipherInit_ex(context->encrypt_context, nullptr, nullptr, &key[0], &iv[0], 1);
 
-                ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, nullptr, size_plain);
+                ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, nullptr, plainsize);
                 if (1 > ret_cipher) {
                     ret = errorcode_t::internal_error;
                     __leave2_trace_openssl(ret);
@@ -401,10 +401,10 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
             uint32 unitsize = ossl_get_unitsize();
             size_t size_progress = 0;
             size_t size_process = 0;
-            for (size_t i = 0; i < size_plain; i += blocksize) {
-                int remain = size_plain - i;
+            for (size_t i = 0; i < plainsize; i += blocksize) {
+                int remain = plainsize - i;
                 int size = (remain < blocksize) ? remain : blocksize;
-                EVP_CipherUpdate(context->encrypt_context, out_encrypted + size_progress, &size_update, data_plain + i, size);
+                EVP_CipherUpdate(context->encrypt_context, out_encrypted + size_progress, &size_update, plaintext + i, size);
                 size_progress += size_update;
                 size_process += size_update;
                 if (size_process > unitsize) {
@@ -416,7 +416,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
         } else {
             // performance
 
-            ret_cipher = EVP_CipherUpdate(context->encrypt_context, out_encrypted, &size_update, data_plain, size_plain);
+            ret_cipher = EVP_CipherUpdate(context->encrypt_context, out_encrypted, &size_update, plaintext, plainsize);
             if (1 > ret_cipher) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace_openssl(ret);
@@ -429,7 +429,7 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *d
             __leave2_trace_openssl(ret);
         }
 
-        if ((crypt_mode_t::gcm == context->mode) || (crypt_mode_t::ccm == context->mode) || (crypt_mode_t::crypt_aead == context->mode)) {
+        if (is_aead) {
             tag->resize(tag_size);
             ret_cipher = EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_GET_TAG, tag->size(), &(*tag)[0]);
             if (1 > ret_cipher) {
@@ -492,7 +492,7 @@ return_t openssl_crypt::decrypt2(crypt_context_t *handle, const unsigned char *d
             case crypt_mode_t::gcm:
             case crypt_mode_t::ccm:
             case crypt_mode_t::ccm8:
-            case crypt_mode_t::crypt_aead:
+            case crypt_mode_t::mode_poly1305:
                 is_aead = true;
                 break;
             default:
@@ -518,7 +518,7 @@ return_t openssl_crypt::decrypt2(crypt_context_t *handle, const unsigned char *d
                 EVP_CipherInit_ex(context->decrypt_context, nullptr, nullptr, &key[0], &iv[0], 0);
 
                 ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, nullptr, size_encrypted);
-            } else if (crypt_mode_t::gcm == context->mode || crypt_mode_t::crypt_aead == context->mode) {
+            } else if (crypt_mode_t::gcm == context->mode || crypt_mode_t::mode_poly1305 == context->mode) {
                 ret_cipher = EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag->size(), (void *)&(*tag)[0]);
                 if (1 != ret_cipher) {
                     ret = errorcode_t::internal_error;

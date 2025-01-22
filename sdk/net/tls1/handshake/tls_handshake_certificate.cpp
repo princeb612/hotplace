@@ -50,14 +50,14 @@ return_t tls_handshake_certificate::set(tls_direction_t dir, const char* certfil
         auto& keyexchange = protection.get_keyexchange();
 
         crypto_keychain keychain;
-        keydesc desc_crt;
-        keydesc desc_key;
+        keydesc desc_crt;  // Certificate
+        keydesc desc_key;  // Private Key
         if (from_server == dir) {
             desc_crt.set_kid("SC");
-            desc_key.set_kid("SCP");
+            desc_key.set_kid("SPK");
         } else {
             desc_crt.set_kid("CC");
-            desc_key.set_kid("CCP");
+            desc_key.set_kid("CPK");
         }
         ret = keychain.load_file(&keyexchange, key_certfile, certfile, desc_crt);
         if (errorcode_t::success != ret) {

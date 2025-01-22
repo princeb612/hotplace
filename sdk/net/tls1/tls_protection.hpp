@@ -155,7 +155,6 @@ class tls_protection {
      *          decrypt(&client_session, protected_record, record);
      */
     return_t decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
-
     return_t decrypt_tls13(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad);
     /**
      * @brief   TLS 1 decrypt

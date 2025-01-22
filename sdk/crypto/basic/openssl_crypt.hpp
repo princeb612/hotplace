@@ -29,8 +29,8 @@ typedef struct _encrypt_option_t {
 /**
  * @brief openssl_crypt
  * @example
- *          constexpr byte_t data_plain[] = "still a man hears what he wants to hear and disregards the rest";
- *          size_t size_plain = RTL_NUMBER_OF (data_plain);
+ *          constexpr byte_t plaintext[] = "still a man hears what he wants to hear and disregards the rest";
+ *          size_t plainsize = RTL_NUMBER_OF (plaintext);
  *
  *          openssl_crypt crypt;
  *          crypt_context_t* handle = nullptr;
@@ -50,7 +50,7 @@ typedef struct _encrypt_option_t {
  *          // block cipher
  *          {
  *              crypt.open (&handle, crypt_algorithm_t::aes256, crypt_mode_t::cbc, &key[0], key.size (), &iv[0], iv.size ());
- *              crypt.encrypt (handle, data_plain, size_plain, data_encrypted);
+ *              crypt.encrypt (handle, plaintext, plainsize, data_encrypted);
  *              crypt.decrypt (handle, &data_encrypted[0], data_encrypted.size (), data_decrypted);
  *              crypt.close (handle);
  *          }
@@ -62,7 +62,7 @@ typedef struct _encrypt_option_t {
  *              openssl_prng rand;
  *              rand.random (aad, 32);
  *              crypt.open (&handle, crypt_algorithm_t::aes256, crypt_mode_t::gcm, &key[0], key.size (), &iv[0], iv.size ());
- *              crypt.encrypt2 (handle, data_plain, size_plain, data_encrypted, &aad, &tag);
+ *              crypt.encrypt2 (handle, plaintext, plainsize, data_encrypted, &aad, &tag);
  *              crypt.decrypt2 (handle, &data_encrypted[0], data_encrypted.size (), data_decrypted, &aad, &tag);
  *              crypt.close (handle);
  *          }
@@ -224,28 +224,27 @@ class openssl_crypt : public crypt_t {
     /**
      * @brief symmetric encrypt
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_plain [in]
-     * @param size_t size_plain [in]
+     * @param const unsigned char* plaintext [in]
+     * @param size_t plainsize [in]
      * @param unsigned char** data_encrypted [out]
      * @param size_t* size_encrypted [out]
      * @return error code (see error.hpp)
      * @example
-     *        crypt.encrypt(handle, data_plain, size_plain, &data_encrypted, &size_encrypted);
+     *        crypt.encrypt(handle, plaintext, plainsize, &data_encrypted, &size_encrypted);
      *        crypt.free_data(data_encrypted);
      */
-    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char** data_encrypted,
-                             size_t* size_encrypted);
+    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, unsigned char** data_encrypted, size_t* size_encrypted);
     /**
      * @brief symmetric encrypt
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_plain [in]
-     * @param size_t size_plain [in]
+     * @param const unsigned char* plaintext [in]
+     * @param size_t plainsize [in]
      * @param binary_t& out_encrypted [out]
      * @return error code (see error.hpp)
      * @example
-     *        crypt.encrypt(handle, data_plain, size_plain, data_encrypted);
+     *        crypt.encrypt(handle, plaintext, plainsize, data_encrypted);
      */
-    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted);
+    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, binary_t& out_encrypted);
     /**
      * @brief encrypt
      * @param crypt_context_t* handle [in]
@@ -257,15 +256,15 @@ class openssl_crypt : public crypt_t {
     /**
      * @brief encrypt (GCM/CCM)
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_plain [in]
-     * @param size_t size_plain [in]
+     * @param const unsigned char* plaintext [in]
+     * @param size_t plainsize [in]
      * @param binary_t& out_encrypte [out]
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [outopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted,
-                              const binary_t* aad = nullptr, binary_t* tag = nullptr);
+    virtual return_t encrypt2(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, binary_t& out_encrypted, const binary_t* aad = nullptr,
+                              binary_t* tag = nullptr);
     /**
      * @brief encrypt (GCM/CCM)
      * @param crypt_context_t* handle [in]
@@ -279,30 +278,29 @@ class openssl_crypt : public crypt_t {
     /**
      * @brief encrypt
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_plain [in]
-     * @param size_t size_plain [in]
+     * @param const unsigned char* plaintext [in]
+     * @param size_t plainsize [in]
      * @param unsigned char* out_encrypted [out] allocated buffer
      * @param size_t* size* size_encrypted [inout] should be at least size_encrypted + EVP_MAX_BLOCK_LENGTH
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [inopt]
      * @return error code (see error.hpp)
      */
-    return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char* out_encrypted, size_t* size_encrypted,
+    return_t encrypt2(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, unsigned char* out_encrypted, size_t* size_encrypted,
                       const binary_t* aad = nullptr, binary_t* tag = nullptr);
     /**
      * @brief symmetric decrypt
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* data_encrypted [in]
      * @param size_t size_encrypted [in]
-     * @param unsigned char** data_plain [out]
-     * @param size_t* size_plain [out]
+     * @param unsigned char** plaintext [out]
+     * @param size_t* plainsize [out]
      * @return error code (see error.hpp)
      * @example
      *        crypt.decrypt(handle, data_encrypted, size_encrypted, &data_decrypted, &size_decrypted);
      *        crypt.free_data(data_decrypted);
      */
-    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, unsigned char** data_plain,
-                             size_t* size_plain);
+    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, unsigned char** plaintext, size_t* plainsize);
     /**
      * @brief symmetric decrypt
      * @param crypt_context_t* handle [in]
@@ -446,15 +444,14 @@ class openssl_crypt : public crypt_t {
     virtual return_t query(crypt_context_t* handle, size_t cmd, size_t& value);
 
     /**
-     * @brief aes_cbc_hmac_sha2_encrypt
+     * @brief Authenticated Encryption with AES-CBC and HMAC-SHA (JOSE)
+     *          tag = HMAC(aad || iv || ciphertext || uint64(aad_len))
+     *
      *        https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
      *        2.4 AEAD_AES_128_CBC_HMAC_SHA_256 AES-128 SHA-256 K 32 MAC_KEY_LEN 16 ENC_KEY_LEN 16 T_LEN=16
      *        2.5 AEAD_AES_192_CBC_HMAC_SHA_384 AES-192 SHA-384 K 48 MAC_KEY_LEN 24 ENC_KEY_LEN 24 T_LEN=24
      *        2.6 AEAD_AES_256_CBC_HMAC_SHA_384 AES-256 SHA-384 K 56 MAC_KEY_LEN 32 ENC_KEY_LEN 24 T_LEN=24
      *        2.7 AEAD_AES_256_CBC_HMAC_SHA_512 AES-256 SHA-512 K 64 MAC_KEY_LEN 32 ENC_KEY_LEN 32 T_LEN=32
-     */
-    /**
-     * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA
      * @param   const char* enc_alg [in] "aes-128-cbc"
      * @param   const char* mac_alg [in] "sha256"
      * @param   const binary_t& k [in] MAC_KEY || ENC_KEY
@@ -472,22 +469,22 @@ class openssl_crypt : public crypt_t {
      *
      * @sa      RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
      */
-    return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, const binary_t& k, const binary_t& iv, const binary_t& a, const binary_t& p,
-                                       binary_t& q, binary_t& t);
-    return_t aes_cbc_hmac_sha2_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& k, const binary_t& iv,
-                                       const binary_t& a, const binary_t& p, binary_t& q, binary_t& t);
+    return_t cbc_hmac_rfc7516_encrypt(const char* enc_alg, const char* mac_alg, const binary_t& k, const binary_t& iv, const binary_t& a, const binary_t& p,
+                                      binary_t& q, binary_t& t);
+    return_t cbc_hmac_rfc7516_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& k, const binary_t& iv,
+                                      const binary_t& a, const binary_t& p, binary_t& q, binary_t& t);
 
     /**
-     * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA
+     * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA (JOSE)
      * @return  error code (see error.hpp)
-     * @desc    each ENC_KEY, MAC_KEY
+     * @desc    ENC_KEY, MAC_KEY
      */
-    return_t aes_cbc_hmac_sha2_encrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
-                                       const binary_t& a, const binary_t& p, binary_t& q, binary_t& t);
-    return_t aes_cbc_hmac_sha2_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k,
-                                       const binary_t& iv, const binary_t& a, const binary_t& p, binary_t& q, binary_t& t);
+    return_t cbc_hmac_rfc7516_encrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                      const binary_t& a, const binary_t& p, binary_t& q, binary_t& t);
+    return_t cbc_hmac_rfc7516_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k,
+                                      const binary_t& iv, const binary_t& a, const binary_t& p, binary_t& q, binary_t& t);
     /**
-     * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA
+     * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA (JOSE)
      * @param   const char* enc_alg [in] "aes-128-cbc"
      * @param   const char* mac_alg [in] "sha256"
      * @param   const binary_t& k [in] MAC_KEY || ENC_KEY
@@ -503,19 +500,61 @@ class openssl_crypt : public crypt_t {
      *          ENC_KEY = final ENC_KEY_LEN bytes of K
      * @sa      RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
      */
-    return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& k, const binary_t& iv, const binary_t& a, const binary_t& q,
-                                       binary_t& p, const binary_t& t);
-    return_t aes_cbc_hmac_sha2_decrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& k, const binary_t& iv,
-                                       const binary_t& a, const binary_t& q, binary_t& p, const binary_t& t);
+    return_t cbc_hmac_rfc7516_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& k, const binary_t& iv, const binary_t& a, const binary_t& q,
+                                      binary_t& p, const binary_t& t);
+    return_t cbc_hmac_rfc7516_decrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& k, const binary_t& iv,
+                                      const binary_t& a, const binary_t& q, binary_t& p, const binary_t& t);
     /**
-     * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA
+     * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA (JOSE)
      * @return  error code (see error.hpp)
-     * @desc    each ENC_KEY, MAC_KEY
+     * @desc    ENC_KEY, MAC_KEY
      */
-    return_t aes_cbc_hmac_sha2_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
-                                       const binary_t& a, const binary_t& q, binary_t& p, const binary_t& t);
-    return_t aes_cbc_hmac_sha2_decrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k,
-                                       const binary_t& iv, const binary_t& a, const binary_t& q, binary_t& p, const binary_t& t);
+    return_t cbc_hmac_rfc7516_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                      const binary_t& a, const binary_t& q, binary_t& p, const binary_t& t);
+    return_t cbc_hmac_rfc7516_decrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k,
+                                      const binary_t& iv, const binary_t& a, const binary_t& q, binary_t& p, const binary_t& t);
+
+    /**
+     * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA (TLS)
+     *            tag = HMAC(uint64(sequence) || uint8(content_type) || hton16(tls_version) || hton16(plaintext.size) || plaintext)
+     *            ciphertext = ENCRYPT(plaintext || tag || pad1)
+     *            plaintag = DECRYPT(ciphertext) || tag
+     *            plainsize = DECRYPT(ciphertext).size - tag.size - 1
+     *            plaintext = binary_t(plaintag.begin(), plaintag.begin() + plainsize)
+     *
+     *            scv = hton64(sequence) || uint8(content_type) || hton16(tls_version)
+     *
+     *          while decryption
+     *            plaintag = decrypt(ciphertext) // including tag
+     *            tag = HMAC(scv || hton16(plaintext.size) || plaintext)
+     *
+     *          plaintext
+     *            // sample #1
+     *            {
+     *              binary_t plaintag;
+     *              size_t ptsize = 0;
+     *              cbc_hmac_tls_decrypt(aes128, sha1, key, mackey, iv, aad, ciphertext, plaintag, ptsize);
+     *              binary_t pt(plaintag.begin(), plaintag.begin() + ptsize);
+     *            }
+     *            // sample #2
+     *            {
+     *              binary_t plaintext;
+     *              binary_t tag;
+     *              cbc_hmac_tls_decrypt(aes128, sha1, key, mackey, iv, aad, ciphertext, plaintext, tag);
+     *            }
+     */
+    return_t cbc_hmac_tls_encrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& scv, const binary_t& plaintext, binary_t& ciphertext);
+    return_t cbc_hmac_tls_encrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& scv, const byte_t* plaintext, size_t size, binary_t& ciphertext);
+    return_t cbc_hmac_tls_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& scv, const binary_t& ciphertext, binary_t& plaintag, size_t& ptsize);
+    return_t cbc_hmac_tls_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& scv, const byte_t* ciphertext, size_t size, binary_t& plaintag, size_t& ptsize);
+    return_t cbc_hmac_tls_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& scv, const binary_t& ciphertext, binary_t& plaintext, binary_t& tag);
+    return_t cbc_hmac_tls_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& scv, const byte_t* ciphertext, size_t size, binary_t& plaintext, binary_t& tag);
 };
 
 /**
@@ -534,8 +573,8 @@ class openssl_crypt : public crypt_t {
  *          https://www.openssl.org/docs/man3.0/man3/EVP_chacha20.html
  *          openssl iv 128bites (16bytes) = counter 64bits(LE) + iv 64bits - 96 or 64
  * @example
- *          constexpr byte_t data_plain[] = "still a man hears what he wants to hear and disregards the rest";
- *          size_t size_plain = RTL_NUMBER_OF (data_plain);
+ *          constexpr byte_t plaintext[] = "still a man hears what he wants to hear and disregards the rest";
+ *          size_t plainsize = RTL_NUMBER_OF (plaintext);
  *
  *          openssl_crypt crypt;
  *          crypt_context_t* handle = nullptr;
@@ -556,8 +595,8 @@ class openssl_crypt : public crypt_t {
  *
  *          // stream cipher
  *          {
- *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::crypt_cipher, key, iv);
- *              crypt.encrypt (handle, data_plain, size_plain, data_encrypted);
+ *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::mode_cipher, key, iv);
+ *              crypt.encrypt (handle, plaintext, plainsize, data_encrypted);
  *              crypt.decrypt (handle, data_encrypted, data_decrypted);
  *              crypt.close (handle);
  *          }
@@ -568,8 +607,8 @@ class openssl_crypt : public crypt_t {
  *              binary_t tag;
  *              openssl_prng rand;
  *              rand.random (aad, 32);
- *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::crypt_aead, key, iv);
- *              crypt.encrypt2 (handle, data_plain, size_plain, data_encrypted, &aad, &tag);
+ *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::mode_poly1305, key, iv);
+ *              crypt.encrypt2 (handle, plaintext, plainsize, data_encrypted, &aad, &tag);
  *              crypt.decrypt2 (handle, data_encrypted, data_decrypted, &aad, &tag);
  *              crypt.close (handle);
  *          }

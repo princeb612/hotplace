@@ -404,7 +404,7 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
             if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
                 // RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
                 openssl_crypt aead;
-                ret = aead.aes_cbc_hmac_sha2_encrypt(enc_crypt_alg, enc_crypt_mode, enc_hash_alg, cek, iv, aad, input, ciphertext, tag);
+                ret = aead.cbc_hmac_rfc7516_encrypt(enc_crypt_alg, enc_crypt_mode, enc_hash_alg, cek, iv, aad, input, ciphertext, tag);
             } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
                 ret = crypt.encrypt(enc_crypt_alg, enc_crypt_mode, cek, iv, input, ciphertext, aad, tag);
             }
@@ -613,7 +613,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
             if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
                 // RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
                 openssl_crypt aead;
-                ret = aead.aes_cbc_hmac_sha2_decrypt(enc_crypt_alg, enc_crypt_mode, enc_hash_alg, cek, iv, aad, ciphertext, output, tag);
+                ret = aead.cbc_hmac_rfc7516_decrypt(enc_crypt_alg, enc_crypt_mode, enc_hash_alg, cek, iv, aad, ciphertext, output, tag);
             } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
                 ret = crypt.decrypt(enc_crypt_alg, enc_crypt_mode, cek, iv, ciphertext, output, aad, tag);
             }

@@ -24,6 +24,7 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypt_algorithm_t::aes128, crypt_mode_t::gcm, "aes-128-gcm"},
     {crypt_algorithm_t::aes128, crypt_mode_t::ofb, "aes-128-ofb"},
     {crypt_algorithm_t::aes128, crypt_mode_t::wrap, "aes-128-wrap"},
+    {crypt_algorithm_t::aes128, crypt_mode_t::ccm8, "aes-128-ccm"},
 
     {crypt_algorithm_t::aes192, crypt_mode_t::cbc, "aes-192-cbc"},
     {crypt_algorithm_t::aes192, crypt_mode_t::ccm, "aes-192-ccm"},
@@ -35,6 +36,7 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypt_algorithm_t::aes192, crypt_mode_t::gcm, "aes-192-gcm"},
     {crypt_algorithm_t::aes192, crypt_mode_t::ofb, "aes-192-ofb"},
     {crypt_algorithm_t::aes192, crypt_mode_t::wrap, "aes-192-wrap"},
+    {crypt_algorithm_t::aes192, crypt_mode_t::ccm8, "aes-192-ccm"},
 
     {crypt_algorithm_t::aes256, crypt_mode_t::cbc, "aes-256-cbc"},
     {crypt_algorithm_t::aes256, crypt_mode_t::ccm, "aes-256-ccm"},
@@ -46,6 +48,7 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypt_algorithm_t::aes256, crypt_mode_t::gcm, "aes-256-gcm"},
     {crypt_algorithm_t::aes256, crypt_mode_t::ofb, "aes-256-ofb"},
     {crypt_algorithm_t::aes256, crypt_mode_t::wrap, "aes-256-wrap"},
+    {crypt_algorithm_t::aes256, crypt_mode_t::ccm8, "aes-256-ccm"},
 
     {crypt_algorithm_t::aria128, crypt_mode_t::cbc, "aria-128-cbc"},
     {crypt_algorithm_t::aria128, crypt_mode_t::ccm, "aria-128-ccm"},
@@ -56,6 +59,7 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypt_algorithm_t::aria128, crypt_mode_t::ecb, "aria-128-ecb"},
     {crypt_algorithm_t::aria128, crypt_mode_t::gcm, "aria-128-gcm"},
     {crypt_algorithm_t::aria128, crypt_mode_t::ofb, "aria-128-ofb"},
+    {crypt_algorithm_t::aria128, crypt_mode_t::ccm8, "aria-128-ccm"},
 
     {crypt_algorithm_t::aria192, crypt_mode_t::cbc, "aria-192-cbc"},
     {crypt_algorithm_t::aria192, crypt_mode_t::ccm, "aria-192-ccm"},
@@ -66,6 +70,7 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypt_algorithm_t::aria192, crypt_mode_t::ecb, "aria-192-ecb"},
     {crypt_algorithm_t::aria192, crypt_mode_t::gcm, "aria-192-gcm"},
     {crypt_algorithm_t::aria192, crypt_mode_t::ofb, "aria-192-ofb"},
+    {crypt_algorithm_t::aria192, crypt_mode_t::ccm8, "aria-192-ccm"},
 
     {crypt_algorithm_t::aria256, crypt_mode_t::cbc, "aria-256-cbc"},
     {crypt_algorithm_t::aria256, crypt_mode_t::ccm, "aria-256-ccm"},
@@ -76,6 +81,7 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypt_algorithm_t::aria256, crypt_mode_t::ecb, "aria-256-ecb"},
     {crypt_algorithm_t::aria256, crypt_mode_t::gcm, "aria-256-gcm"},
     {crypt_algorithm_t::aria256, crypt_mode_t::ofb, "aria-256-ofb"},
+    {crypt_algorithm_t::aria256, crypt_mode_t::ccm8, "aria-256-ccm"},
 
     {crypt_algorithm_t::blowfish, crypt_mode_t::cbc, "bf-cbc"},
     {crypt_algorithm_t::blowfish, crypt_mode_t::cfb, "bf-cfb"},
@@ -144,9 +150,9 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypt_algorithm_t::seed, crypt_mode_t::ecb, "seed-ecb"},
     {crypt_algorithm_t::seed, crypt_mode_t::ofb, "seed-ofb"},
 
-    {crypt_algorithm_t::rc4, crypt_mode_t::crypt_cipher, "rc4"},
-    {crypt_algorithm_t::chacha20, crypt_mode_t::crypt_cipher, "chacha20"},
-    {crypt_algorithm_t::chacha20, crypt_mode_t::crypt_aead, "chacha20-poly1305"},
+    {crypt_algorithm_t::rc4, crypt_mode_t::mode_cipher, "rc4"},
+    {crypt_algorithm_t::chacha20, crypt_mode_t::mode_cipher, "chacha20"},
+    {crypt_algorithm_t::chacha20, crypt_mode_t::mode_poly1305, "chacha20-poly1305"},
 };
 
 const size_t sizeof_evp_cipher_methods = RTL_NUMBER_OF(evp_cipher_methods);
@@ -160,7 +166,7 @@ crypt_algorithm_t typeof_alg(const hint_cipher_t* hint) {
 }
 
 crypt_mode_t typeof_mode(const hint_cipher_t* hint) {
-    crypt_mode_t ret_value = crypt_mode_t::crypt_mode_unknown;
+    crypt_mode_t ret_value = crypt_mode_t::mode_unknown;
     if (hint) {
         ret_value = hint->mode;
     }
