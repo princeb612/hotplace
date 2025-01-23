@@ -113,6 +113,7 @@ class crypto_advisor {
     const hint_digest_t* hintof_digest(const char* name);
     hash_algorithm_t get_algorithm(crypt_sig_t sig);
     hash_algorithm_t get_algorithm(jws_t sig);
+
     /**
      * @brief find md string
      * @param hash_algorithm_t algorithm [in] hash_algorithm_t
@@ -568,6 +569,9 @@ class crypto_advisor {
      *          advisor->get_cookie_secret(0, 16, secret); // read generated secret, secret_size ignored
      */
     void get_cookie_secret(uint8 key, size_t secret_size, binary_t& secret);
+
+    uint16 sizeof_ecdsa(hash_algorithm_t alg);
+    uint16 sizeof_ecdsa(crypt_sig_t sig);
 
    protected:
     return_t load();

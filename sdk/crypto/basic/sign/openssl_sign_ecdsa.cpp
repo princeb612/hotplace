@@ -30,6 +30,8 @@ return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, co
     ECDSA_SIG* ecdsa_sig = nullptr;
 
     __try2 {
+        signature.clear();
+
         if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;

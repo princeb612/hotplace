@@ -34,6 +34,7 @@ void test_rfc6979_ecdsa();
 void test_crypto_sign();
 void test_nist_cavp_rsa();
 void test_x509_sign();
+void check_ecdsa_size();
 
 struct test_vector_nist_cavp_rsa_key_t {
     const char* kid;

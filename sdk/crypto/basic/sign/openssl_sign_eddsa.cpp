@@ -27,6 +27,8 @@ return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, co
     int ret_test = 0;
 
     __try2 {
+        signature.clear();
+
         if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;

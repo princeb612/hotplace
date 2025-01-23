@@ -22,6 +22,7 @@
 #include <sdk/crypto/crypto/crypto_hmac.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
 #include <sdk/crypto/crypto/transcript_hash.hpp>
+#include <sdk/io/asn.1/types.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
 #include <sdk/net/tls1/tls_protection.hpp>
@@ -948,6 +949,45 @@ return_t tls_protection::get_tls1_key(tls_session *session, tls_direction_t dir,
     return ret;
 }
 
+return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &aad,
+                                 binary_t &tag) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto record_version = get_record_version();
+        size_t content_header_size = 0;
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+
+        auto mode = mode_unknown;
+
+        {
+            const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+            if (nullptr == hint) {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+            mode = hint->mode;
+        }
+        switch (mode) {
+            case gcm:
+            case ccm:
+            case ccm8:
+            case mode_poly1305: {
+                ret = encrypt_aead(session, dir, plaintext, ciphertext, aad, tag);
+            } break;
+            case cbc: {
+                ret = encrypt_cbc_hmac(session, dir, plaintext, ciphertext, tag);
+            } break;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
 return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &aad,
                                       binary_t &tag) {
     return_t ret = errorcode_t::success;
@@ -1152,7 +1192,7 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
     return ret;
 }
 
-return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& aad) {
+return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext, binary_t &aad) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -1363,10 +1403,10 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
 return_t tls_protection::get_ecdsa_signature(uint16 scheme, const binary_t &asn1der, binary_t &signature) {
     return_t ret = errorcode_t::success;
-
     __try2 {
         signature.clear();
 
+        crypto_advisor *advisor = crypto_advisor::get_instance();
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
         auto hint = tlsadvisor->hintof_signature_scheme(scheme);
         if (nullptr == hint) {
@@ -1381,17 +1421,11 @@ return_t tls_protection::get_ecdsa_signature(uint16 scheme, const binary_t &asn1
         auto sig = hint->sig;
         uint32 unitsize = 0;
 
-        switch (sig) {
-            case sig_sha256:
-                unitsize = 32;
-                break;
-            case sig_sha384:
-                unitsize = 48;
-                break;
-            case sig_sha512:
-                unitsize = 66;
-                break;
-        }
+        // B-163, B-233, B-283, B-409, B-571
+        // K-163, K-233, B-283, K-409, K-571
+        // P-192, P-224, P-256, K-384, K-521
+        // secp160r1, secp256k1
+        unitsize = advisor->sizeof_ecdsa(sig) >> 1;
         if (0 == unitsize) {
             ret = errorcode_t::success;
             __leave2;
@@ -1441,6 +1475,53 @@ return_t tls_protection::get_ecdsa_signature(uint16 scheme, const binary_t &asn1
     return ret;
 }
 
+return_t tls_protection::reform_ecdsa_signature(uint16 scheme, const binary_t &signature, binary_t &asn1der) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        asn1der.clear();
+
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        auto hint = tlsadvisor->hintof_signature_scheme(scheme);
+        if (nullptr == hint) {
+            ret = errorcode_t::success;
+            __leave2;
+        }
+        if (crypt_sig_ecdsa != hint->sigtype) {
+            ret = different_type;
+            __leave2;
+        }
+
+        size_t siglen = signature.size();
+        size_t halflen = siglen << 1;
+        const binary_t &r = binary_t(signature.begin(), signature.begin() + halflen - 1);
+        const binary_t &s = binary_t(signature.begin() + halflen, signature.end());
+
+        // ASN.1 DER
+        // ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
+        constexpr char constexpr_sequence[] = "sequence";
+        constexpr char constexpr_len[] = "len";
+        constexpr char constexpr_rlen[] = "rlen";
+        constexpr char constexpr_r[] = "r";
+        constexpr char constexpr_slen[] = "slen";
+        constexpr char constexpr_s[] = "s";
+        payload pl;
+        pl << new payload_member(uint8(30), constexpr_sequence)     // 30 asn1_tag_bmpstring
+           << new payload_member(uint8(siglen + 4), constexpr_len)  //
+           << new payload_member(uint8(asn1_tag_integer))           // 2 asn1_tag_integer
+           << new payload_member(uint8(halflen), constexpr_rlen)    //
+           << new payload_member(r, constexpr_r)                    //
+           << new payload_member(uint8(asn1_tag_integer))           // 2 asn1_tag_integer
+           << new payload_member(uint8(halflen), constexpr_slen)    //
+           << new payload_member(s, constexpr_s);
+
+        pl.write(asn1der);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t tls_protection::construct_certificate_verify_message(tls_direction_t dir, basic_stream &message) {
     return_t ret = errorcode_t::success;
 
@@ -1459,9 +1540,8 @@ return_t tls_protection::construct_certificate_verify_message(tls_direction_t di
     } else {
         message << constexpr_context_client;
     }
-    message.fill(1, 0x00);  // single 0 byte
-    message.write(&transcripthash[0],
-                  transcripthash.size());  // content to be signed
+    message.fill(1, 0x00);                                     // single 0 byte
+    message.write(&transcripthash[0], transcripthash.size());  // content to be signed
 
     return ret;
 }

@@ -167,10 +167,16 @@ flowchart LR
     - [x] Client Authentication
     - [x] compatibility mode
   - [x] verify
-    - [x] psk binder
+    - [x] pre shared key (psk binder)
     - [x] certificate verify
     - [x] finished
   - [ ] construct
+    - [ ] TLS version
+      - [x] TLS1.3
+      - [ ] TLS1.2
+    - [x] encryption
+      - [x] encryption by cipher mode (not by TLS version)
+
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)
   - [x] integration - network_server

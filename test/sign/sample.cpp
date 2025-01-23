@@ -64,6 +64,7 @@ int main(int argc, char** argv) {
         test_crypto_sign();
         test_nist_cavp_rsa();
         test_x509_sign();
+        check_ecdsa_size();
     }
     __finally2 { openssl_cleanup(); }
 

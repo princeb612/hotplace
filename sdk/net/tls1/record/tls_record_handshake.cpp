@@ -63,31 +63,19 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
                  */
                 tls_protection& protection = session->get_tls_protection();
                 binary_t plaintext;
-                binary_t tag;
 
-                tls_advisor *tlsadvisor = tls_advisor::get_instance();
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 auto cs = protection.get_cipher_suite();
-                const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
+                const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
                 auto declen = (cbc == hint->mode) ? size : len;
-                ret = protection.decrypt(session, dir, stream, declen, recpos, plaintext, tag);
-
-#if 0  // by cicpher mode
-                auto tlsversion = protection.get_tls_version();
-                if (is_basedon_tls13(tlsversion)) {
-                    ret = protection.decrypt_aead(session, dir, stream, len, recpos, plaintext, tag);
-                } else {
-                    ret = protection.decrypt_cbc_hmac(session, dir, stream, size, recpos, plaintext);
-                }
-#endif
+                ret = protection.decrypt(session, dir, stream, declen, recpos, plaintext);
                 if (errorcode_t::success == ret) {
                     tpos = 0;
-                    // ret = tls_dump_handshake(session, &plaintext[0], plaintext.size(), tpos, dir);
                     auto handshake = tls_handshake::read(session, dir, &plaintext[0], plaintext.size(), tpos);
                     get_handshakes().add(handshake);
                 }
             } else {
                 tpos = pos;
-                // ret = tls_dump_handshake(session, stream, pos + len, tpos, dir);
                 auto handshake = tls_handshake::read(session, dir, stream, pos + len, tpos);
                 get_handshakes().add(handshake);
             }

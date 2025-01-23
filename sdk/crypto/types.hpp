@@ -280,6 +280,7 @@ enum crypt_sig_t : uint16 {
     sig_eddsa = 15,
 
     sig_sha1 = 16,
+    sig_sha224 = 23,
     sig_sha256 = 17,
     sig_sha384 = 18,
     sig_sha512 = 19,
@@ -907,6 +908,12 @@ typedef struct _hint_cose_algorithm_t {
     } enc;
 } hint_cose_algorithm_t;
 
+#define ECDSA_SUPPORT_SHA1 0x0001
+#define ECDSA_SUPPORT_SHA2_224 0x0002
+#define ECDSA_SUPPORT_SHA2_256 0x0004
+#define ECDSA_SUPPORT_SHA2_384 0x0008
+#define ECDSA_SUPPORT_SHA2_512 0x0010
+
 /**
  * @brief  curve information
  *              nid         openssl nid             NID_X9_62_prime256v1
@@ -944,8 +951,10 @@ typedef struct _hint_curves_t {
     cose_ec_curve_t cose_crv;
     crypto_kty_t kty;
     crypto_use_t use;
-    uint16 group;      // TLS
-    uint8 keysize;     // key size (preserve leading zero)
+    uint16 group;   // TLS
+    uint16 flags;   // ECDSA_SUPPORT_xxx
+    uint8 keysize;  // key size (preserve leading zero)
+    uint8 reserved;
     const char* oid;   // OID
     const char* name;  // NIST (CURVE P-256, P-384, P-521, ...)
     const char* aka1;  // X9.62, X9.63 (ansip384r1, ansip521r1, ...)
@@ -958,6 +967,7 @@ crypto_kty_t ktyof(const hint_curve_t* hint);
 uint16 groupof(const hint_curve_t* hint);
 uint8 keysizeof(const hint_curve_t* hint);
 const char* oidof(const hint_curve_t* hint);
+bool support(const hint_curve_t* hint, hash_algorithm_t alg);
 
 typedef struct _hint_signature_t {
     crypt_sig_t sig_type;

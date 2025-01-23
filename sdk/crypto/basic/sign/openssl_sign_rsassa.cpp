@@ -47,7 +47,7 @@ return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t al
     int ret_openssl = 0;
 
     __try2 {
-        signature.resize(0);
+        signature.clear();
 
         if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;

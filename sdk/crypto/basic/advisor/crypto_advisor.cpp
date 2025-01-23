@@ -1181,5 +1181,51 @@ void crypto_advisor::get_cookie_secret(uint8 key, size_t secret_size, binary_t& 
     }
 }
 
+uint16 crypto_advisor::sizeof_ecdsa(hash_algorithm_t alg) {
+    uint16 ret_value = 0;
+    switch (alg) {
+        case sha1:
+            ret_value = 20 << 1;
+            break;
+        case sha2_224:
+            ret_value = 28 << 1;
+            break;
+        case sha2_256:
+            ret_value = 32 << 1;
+            break;
+        case sha2_384:
+            ret_value = 48 << 1;
+            break;
+        case sha2_512:
+            ret_value = 66 << 1;
+            break;
+    }
+
+    return ret_value;
+}
+
+uint16 crypto_advisor::sizeof_ecdsa(crypt_sig_t sig) {
+    uint16 ret_value = 0;
+    switch (sig) {
+        case sig_sha1:
+            ret_value = 20 << 1;
+            break;
+        case sig_sha224:
+            ret_value = 28 << 1;
+            break;
+        case sig_sha256:
+            ret_value = 32 << 1;
+            break;
+        case sig_sha384:
+            ret_value = 48 << 1;
+            break;
+        case sig_sha512:
+            ret_value = 66 << 1;
+            break;
+    }
+
+    return ret_value;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

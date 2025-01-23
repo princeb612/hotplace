@@ -109,3 +109,106 @@ void test_rfc6979_ecdsa() {
     _test_case.begin("RFC6979 ECDSA");
     do_test_ecdsa_testvector(test_vector_rfc6979, sizeof_test_vector_rfc6979, 0);
 }
+
+void check_ecdsa_size() {
+    _test_case.begin("ECDSA signature size");
+    crypto_key key;
+    crypto_keychain keychain;
+
+#define ADD_KEY(x) keychain.add_ec(&key, x, keydesc(#x))
+    ADD_KEY(NID_secp112r1);
+    ADD_KEY(NID_secp112r2);
+    ADD_KEY(NID_secp128r1);
+    ADD_KEY(NID_secp128r2);
+    ADD_KEY(NID_secp160k1);
+    ADD_KEY(NID_secp160r1);
+    ADD_KEY(NID_secp160r2);
+    ADD_KEY(NID_secp192k1);
+    ADD_KEY(NID_X9_62_prime192v1);
+    ADD_KEY(NID_secp224k1);
+    ADD_KEY(NID_secp224r1);
+    ADD_KEY(NID_secp256k1);
+    ADD_KEY(NID_X9_62_prime256v1);
+    ADD_KEY(NID_secp384r1);
+    ADD_KEY(NID_secp521r1);
+    ADD_KEY(NID_secp521r1);
+    ADD_KEY(NID_secp521r1);
+    ADD_KEY(NID_sect113r2);
+    ADD_KEY(NID_sect131r1);
+    ADD_KEY(NID_sect131r2);
+    ADD_KEY(NID_sect163k1);
+    ADD_KEY(NID_sect163r1);
+    ADD_KEY(NID_sect163r2);
+    ADD_KEY(NID_sect193r1);
+    ADD_KEY(NID_sect193r2);
+    ADD_KEY(NID_sect233k1);
+    ADD_KEY(NID_sect233r1);
+    ADD_KEY(NID_sect239k1);
+    ADD_KEY(NID_sect283k1);
+    ADD_KEY(NID_sect283r1);
+    ADD_KEY(NID_sect409k1);
+    ADD_KEY(NID_sect409r1);
+    ADD_KEY(NID_sect571k1);
+    ADD_KEY(NID_sect571r1);
+    ADD_KEY(NID_brainpoolP160r1);
+    ADD_KEY(NID_brainpoolP160t1);
+    ADD_KEY(NID_brainpoolP192r1);
+    ADD_KEY(NID_brainpoolP192t1);
+    ADD_KEY(NID_brainpoolP224r1);
+    ADD_KEY(NID_brainpoolP224t1);
+    ADD_KEY(NID_brainpoolP256r1);
+    ADD_KEY(NID_brainpoolP256t1);
+    ADD_KEY(NID_brainpoolP320r1);
+    ADD_KEY(NID_brainpoolP320t1);
+    ADD_KEY(NID_brainpoolP384r1);
+    ADD_KEY(NID_brainpoolP384t1);
+    ADD_KEY(NID_brainpoolP512r1);
+    ADD_KEY(NID_brainpoolP512t1);
+
+    hash_algorithm_t algs[] = {sha1, sha2_224, sha2_256, sha2_384, sha2_512, sha3_224, sha3_256, sha3_384, sha3_512};
+    const char* source = "We don't playing because we grow old; we grow old because we stop playing.";
+    size_t len = strlen(source);
+
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    crypto_sign_builder builder;
+    binary_t sig;
+    binary_t zero;
+
+    auto lambda = [&](crypto_key_object* keyobj, void*) -> void {
+        for (auto alg : algs) {
+            auto pkey = keyobj->get_pkey();
+
+            uint32 nid = 0;
+            nidof_evp_pkey(pkey, nid);
+            auto hint = advisor->hintof_curve_nid(nid);
+            bool test = support(hint, alg);
+            if (false == test) {
+                continue;
+            }
+
+            crypto_sign* sign = builder.set_scheme(crypt_sig_ecdsa).set_digest(alg).build();
+            if (sign) {
+                ret = sign->sign(pkey, (byte_t*)source, len, sig);
+                const char* algname = advisor->nameof_md(alg);
+                auto kid = keyobj->get_desc().get_kid_cstr();
+                const std::string& desc = format("%-20s %-7s", kid, algname);
+
+                _logger->hdump(desc, sig);
+
+                if (success == ret) {
+                    zero.resize(sig.size());
+                    if (sig == zero) {
+                        ret = errorcode_t::expect_failure;
+                    }
+                } else {
+                    ret = expect_failure;
+                }
+
+                _test_case.test(ret, __FUNCTION__, "%s %-3zi", desc.c_str(), sig.size());
+                sign->release();
+            }
+        }
+    };
+    key.for_each(lambda, nullptr);
+}

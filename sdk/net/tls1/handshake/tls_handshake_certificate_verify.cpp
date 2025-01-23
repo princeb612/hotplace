@@ -68,6 +68,18 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
 
             ret = sign->sign(pkey, tosign.data(), tosign.size(), signature);
 
+            auto kty = typeof_crypto_key(pkey);
+            switch (kty) {
+                case kty_rsa:
+                case kty_okp: {
+                } break;
+                case kty_ec: {
+                    // reform R || S to ASN.1 DER
+                    binary_t ecdsa_sig = std::move(signature);
+                    protection.reform_ecdsa_signature(scheme, ecdsa_sig, signature);
+                } break;
+            }
+
             sign->release();
         } else {
             ret = errorcode_t::not_supported;
@@ -103,7 +115,6 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
          * sha2-512 | 66 | 66 | 132
          */
         auto kty = typeof_crypto_key(pkey);
-        // binary_t ecdsa_sig_r, ecdsa_sig_s;
         switch (kty) {
             case kty_rsa:
             case kty_okp: {
