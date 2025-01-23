@@ -281,12 +281,12 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect113r1
     // https://neuromancer.sk/std/wtls/wap-wsg-idm-ecid-wtls4
     {
-        NID_secp521r1,
+        NID_sect113r1,
         cose_ec_curve_t::cose_ec_unknown,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         0x0000,
-        ECDSA_SUPPORT_SHA2_512,
+        ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         15,
         0,
         "1.3.132.0.4",
