@@ -78,13 +78,13 @@ static void set_info_callback_routine(const SSL* ssl, int where, int ret) {
         bs.printf("TLS %08X %08x ", SSL_version(ssl), where);
         switch (va.size()) {
             case 1:
-                bs.vprintf("{1}", va);
+                bs.vprintf("{1}\n", va);
                 break;
             case 3:
-                bs.vprintf("{1}:{2}:{3}", va);
+                bs.vprintf("{1}:{2}:{3}\n", va);
                 break;
             case 4:
-                bs.vprintf("{1}:{2}:{3}:{4}", va);
+                bs.vprintf("{1}:{2}:{3}:{4}\n", va);
                 break;
             default:
                 break;

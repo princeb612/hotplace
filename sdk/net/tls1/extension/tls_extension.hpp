@@ -30,7 +30,7 @@ class tls_extension {
     tls_extension(tls_session* session);
     tls_extension(const tls_extension& rhs);
     tls_extension(uint16 type, tls_session* session);
-    ~tls_extension();
+    virtual ~tls_extension();
 
     static tls_extension* read(tls_hs_type_t hstype, tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
 

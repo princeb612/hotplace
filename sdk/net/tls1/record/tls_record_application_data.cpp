@@ -33,6 +33,8 @@ constexpr char constexpr_dtls_record_seq[] = "dtls record sequence number";
 
 tls_record_application_data::tls_record_application_data(tls_session* session) : tls_record(tls_content_type_application_data, session) {}
 
+tls_record_application_data::~tls_record_application_data() { get_handshakes().clear(); }
+
 tls_handshakes& tls_record_application_data::get_handshakes() { return _handshakes; }
 
 return_t tls_record_application_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {

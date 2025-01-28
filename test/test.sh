@@ -12,7 +12,7 @@ valgrind --help > /dev/null 2>&1 || test_valgrind=$?
 if [ $# -eq 0 ]; then
     array=(base bufferio cmdline datetime encode ieee754 graph nostd pattern thread unittest) # base
     array+=(cbor mlfq payload stream string asn1 parser) # io
-    array+=(random crypto kdf hash sign jose cose authenticode) # crypto
+    array+=(authenticode crypto cose hash jose kdf key random sign) # crypto
     array+=(ipaddr httptest quic tls13) # net
     if [ $OSTYPE = "msys" ]; then
         array+=(windows)

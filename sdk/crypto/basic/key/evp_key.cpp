@@ -110,6 +110,8 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
                 result = true;
                 break;
             case EVP_PKEY_RSA:
+            case EVP_PKEY_RSA2:
+            case EVP_PKEY_RSA_PSS:
                 if (nullptr != RSA_get0_d(EVP_PKEY_get0_RSA((EVP_PKEY*)key))) {
                     result = true;
                 }

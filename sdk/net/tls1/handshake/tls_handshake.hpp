@@ -22,7 +22,7 @@ class tls_handshake {
 
    public:
     tls_handshake(tls_hs_type_t type, tls_session *session);
-    ~tls_handshake();
+    virtual ~tls_handshake();
 
     static tls_handshake *read(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);
 

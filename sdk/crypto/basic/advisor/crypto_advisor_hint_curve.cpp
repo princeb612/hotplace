@@ -350,7 +350,7 @@ const hint_curve_t hint_curves[] = {
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         0x0001,
-        ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
+        ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         21,
         0,
         "1.3.132.0.1",

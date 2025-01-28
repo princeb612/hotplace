@@ -87,11 +87,16 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
                 crypto_kty_t kty = typeof_crypto_key(pkey_ske);
                 nidof_evp_pkey(pkey_ske, nid);
                 if (nid) {
+                    keydesc desc("CKE");
                     if (kty_ec == kty || kty_okp == kty) {
-                        ret = keychain.add_ec(&keyexchange, nid, pubkey, binary_t(), binary_t(), keydesc("CKE"));
+                        ret = keychain.add_ec(&keyexchange, nid, pubkey, binary_t(), binary_t(), desc);
+                    } else if (kty_dh == kty) {
+                        ret = keychain.add_dh(&keyexchange, nid, pubkey, binary_t(), desc);
+                    } else {
+                        ret = errorcode_t::not_supported;
                     }
                 } else {
-                    ret = errorcode_t::success;
+                    ret = errorcode_t::not_supported;
                 }
             }
 

@@ -89,7 +89,7 @@ enum category_quic_event_t {
  *          void myfunction() {
  *              // do something
  *              basic_stream bs;
- *              bs = "blah blah";
+ *              bs = "blah blah\n";
  *              trace_debug_event(category_debug_internal, 0, &bs);
  *          }
  *

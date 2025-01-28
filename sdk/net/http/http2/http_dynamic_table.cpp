@@ -147,7 +147,7 @@ return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& nam
 
         if (errorcode_t::success == ret) {
             basic_stream bs;
-            bs << "index [" << index << "] " << name << "=" << value;
+            bs << "index [" << index << "] " << name << "=" << value << "\n";
             trace_debug_event(category_header_compression, header_compression_event_select, &bs);
         }
     }
@@ -200,7 +200,7 @@ return_t http_dynamic_table::commit() {
 
             if (istraceable()) {
                 basic_stream bs;
-                bs.printf("insert entry[%zi] %s=%s", _inserted, name.c_str(), value.c_str());
+                bs.printf("insert entry[%zi] %s=%s\n", _inserted, name.c_str(), value.c_str());
                 trace_debug_event(category_header_compression, header_compression_event_insert, &bs);
             }
 
@@ -246,7 +246,7 @@ return_t http_dynamic_table::evict() {
 
                     if (istraceable()) {
                         basic_stream bs;
-                        bs.printf("evict entry[%zi] %s=%s", entry, name.c_str(), val.c_str());
+                        bs.printf("evict entry[%zi] %s=%s\n", entry, name.c_str(), val.c_str());
                         trace_debug_event(category_header_compression, header_compression_event_evict, &bs);
                     }
                     _dynamic_map.erase(iter);

@@ -370,6 +370,12 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
             case EVP_PKEY_RSA:
                 stream->printf("RSA");
                 break;
+            case EVP_PKEY_RSA2:
+                stream->printf("RSA2");
+                break;
+            case EVP_PKEY_RSA_PSS:
+                stream->printf("RSA_PSS");
+                break;
             case EVP_PKEY_EC:
                 stream->printf("EC");
                 break;
@@ -422,6 +428,8 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                 pkey_param_printf(crypt_item_t::item_hmac_k, priv, stream, hex_part, indent);
                 break;
             case EVP_PKEY_RSA:
+            case EVP_PKEY_RSA2:
+            case EVP_PKEY_RSA_PSS:
                 pkey_param_printf(crypt_item_t::item_rsa_n, pub1, stream, hex_part, indent);
                 pkey_param_printf(crypt_item_t::item_rsa_e, pub2, stream, hex_part, indent);
 

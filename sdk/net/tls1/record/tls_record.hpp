@@ -18,7 +18,7 @@ namespace net {
 
 class tls_record {
    public:
-    ~tls_record();
+    virtual ~tls_record();
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& bin);

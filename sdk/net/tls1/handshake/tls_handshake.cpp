@@ -38,6 +38,8 @@ tls_handshake::tls_handshake(tls_hs_type_t type, tls_session* session)
 }
 
 tls_handshake::~tls_handshake() {
+    get_extensions().clear();
+
     auto session = get_session();
     if (session) {
         session->release();

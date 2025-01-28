@@ -244,7 +244,8 @@ return_t crypto_key::get_key(const EVP_PKEY* pkey, int flag, crypto_kty_t& type,
                     priv = iter->second;
                 }
             } break;
-            case crypto_kty_t::kty_rsa: {
+            case crypto_kty_t::kty_rsa:
+            case crypto_kty_t::kty_rsapss: {
                 iter = datamap.find(crypt_item_t::item_rsa_n);
                 if (datamap.end() != iter) {
                     pub1 = iter->second;

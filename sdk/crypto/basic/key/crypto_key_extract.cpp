@@ -34,6 +34,7 @@ return_t crypto_key::extract(const EVP_PKEY* pkey, int flag, crypto_kty_t& type,
                 ret = extract_oct(pkey, flag, type, datamap, preserve);
                 break;
             case crypto_kty_t::kty_rsa:
+            case crypto_kty_t::kty_rsapss:
                 ret = extract_rsa(pkey, flag, type, datamap, preserve);
                 break;
             case crypto_kty_t::kty_ec:
@@ -100,7 +101,7 @@ return_t crypto_key::extract_rsa(const EVP_PKEY* pkey, int flag, crypto_kty_t& t
 
         type = typeof_crypto_key(pkey);
 
-        if (crypto_kty_t::kty_rsa != type) {
+        if ((crypto_kty_t::kty_rsa != type) && (crypto_kty_t::kty_rsapss != type)) {
             ret = errorcode_t::different_type;
             __leave2;
         }

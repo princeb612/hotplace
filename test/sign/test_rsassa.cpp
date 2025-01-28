@@ -89,3 +89,45 @@ void test_nist_cavp_rsa() {
     // do not test FIPS186-3 and X9.31
     dotest_nist_cavp_rsa_signpss(&key_rsa, test_vector_nist_cavp_rsa_fips186_4_signgenpss_186_3, sizeof_test_vector_nist_cavp_rsa_fips186_4_signgenpss_186_3);
 }
+
+void test_rsassa() {
+    _test_case.begin("RSA key, RSAPSS key");
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    const char* message = "We don't playing because we grow old; we grow old because we stop playing.";
+    size_t msglen = strlen(message);
+
+    auto lambda_test = [&](uint32 nid) -> void {
+        crypto_key key;
+        crypto_keychain keychain;
+
+        keychain.add_rsa(&key, nid, 2048, keydesc("key"));
+        auto pkey = key.find("key");
+
+        basic_stream bs;
+        dump_key(pkey, &bs);
+        _logger->write(bs);
+
+        auto kty = typeof_crypto_key(pkey);
+        auto ktyname = advisor->nameof_kty(kty);
+        uint32 pkey_nid = 0;
+        nidof_evp_pkey(pkey, pkey_nid);
+        _test_case.assert(pkey_nid == nid, __FUNCTION__, "check kty %s", ktyname);
+
+        binary_t sig;
+        crypto_sign_builder builder;
+        auto s = builder.set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_256).build();
+        if (s) {
+            s->sign(pkey, (byte_t*)message, msglen, sig);
+            ret = s->verify(pkey, (byte_t*)message, msglen, sig);
+            _logger->dump(sig);
+            _test_case.test(ret, __FUNCTION__, "verify kty %s", ktyname);
+
+            s->release();
+        }
+    };
+
+    lambda_test(NID_rsaEncryption);
+    lambda_test(NID_rsassaPss);
+}

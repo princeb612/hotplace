@@ -25,6 +25,10 @@ const hint_kty_name_t hint_kty_names[] = {
         "RSA",
     },
     {
+        crypto_kty_t::kty_rsapss,
+        "RSAPSS",
+    },
+    {
         crypto_kty_t::kty_ec,
         "EC",
     },

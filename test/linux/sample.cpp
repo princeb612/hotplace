@@ -3,17 +3,6 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *  MINGW COM
- *      ATL-related issues (heavily MSVC-dependent)
- *          INetFwPolicy2 (Windows Firewall implementation)
- *          IWbemClassObject (WMI implementation)
- *      hard to apply CComVariant
- *          failed ... Community/VC/Tools/MSVC/14.37.32822/atlmfc/include
- *          not tested ... https://github.com/reactos/reactos/tree/master/sdk/lib/atl
- *
- *  MINGW backtrace
- *      GetSymFromAddr, SymGetLineFromAddr
- *      libbfd link error
  *
  * Revision History
  * Date         Name                Description

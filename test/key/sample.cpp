@@ -57,6 +57,7 @@ int main(int argc, char** argv) {
         test_crypto_key();
         test_eckey_compressed();
         test_ffdhe();
+        test_ffdhe_dh();
         test_der();
     }
     __finally2 { openssl_cleanup(); }
