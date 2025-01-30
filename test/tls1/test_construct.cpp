@@ -12,6 +12,28 @@
 
 #include "sample.hpp"
 
+void direction_string(tls_direction_t dir, int send, std::string& s) {
+    s += "{";
+    if (from_client == dir) {
+        if (0 == send) {
+            s += "*";
+        }
+        s += "client->server";
+        if (send) {
+            s += "*";
+        }
+    } else {
+        if (send) {
+            s += "*";
+        }
+        s += "client<-server";
+        if (0 == send) {
+            s += "*";
+        }
+    }
+    s += "}";
+}
+
 return_t do_test_construct_client_hello(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     tls_handshake_client_hello handshake(session);
@@ -126,7 +148,9 @@ return_t do_test_construct_client_hello(tls_direction_t dir, tls_session* sessio
         record.get_handshakes().add(&handshake, true);
         record.write(dir, bin);
 
-        _test_case.assert(bin.size(), __FUNCTION__, "%s", message);
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.assert(bin.size(), __FUNCTION__, "%s %s", dirstr.c_str(), message);
     }
     {
         basic_stream bs;
@@ -190,7 +214,9 @@ return_t do_test_construct_server_hello(tls_direction_t dir, tls_session* sessio
             record.get_handshakes().add(&handshake, true);
             record.write(dir, bin);
 
-            _test_case.assert(bin.size(), __FUNCTION__, "%s", message);
+            std::string dirstr;
+            direction_string(dir, 0, dirstr);
+            _test_case.assert(bin.size(), __FUNCTION__, "%s %s", dirstr.c_str(), message);
         }
         {
             basic_stream bs;
@@ -246,7 +272,11 @@ return_t do_test_construct_server_change_cipher_spec(tls_direction_t dir, tls_se
         tls_record_change_cipher_spec record(session);
         ret = record.write(dir, bin);
     }
-    __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
     return ret;
 }
 
@@ -263,7 +293,11 @@ return_t do_test_construct_encrypted_extensions(tls_direction_t dir, tls_session
         record.get_handshakes().add(&handshake, true);
         ret = record.write(dir, bin);
     }
-    __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
     return ret;
 }
 
@@ -283,7 +317,11 @@ return_t do_test_construct_certificate(tls_direction_t dir, tls_session* session
         record.get_handshakes().add(&handshake, true);
         record.write(dir, bin);
     }
-    __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
     return ret;
 }
 
@@ -300,7 +338,11 @@ return_t do_test_construct_certificate_verify(tls_direction_t dir, tls_session* 
         record.get_handshakes().add(&handshake, true);
         record.write(dir, bin);
     }
-    __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
     return ret;
 }
 
@@ -317,7 +359,11 @@ return_t do_test_construct_server_finished(tls_direction_t dir, tls_session* ses
         record.get_handshakes().add(&handshake, true);
         record.write(dir, bin);
     }
-    __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
     return ret;
 }
 
@@ -347,7 +393,30 @@ return_t do_test_construct_client_finished(tls_direction_t dir, tls_session* ses
         record.get_handshakes().add(&handshake, true);
         record.write(dir, bin);
     }
-    __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
+    return ret;
+}
+
+return_t do_test_construct_client_change_cipher_spec(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tls_record_change_cipher_spec record(session);
+        ret = record.write(dir, bin);
+    }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
     return ret;
 }
 
@@ -355,6 +424,66 @@ void do_test_keycalc_client_finished(tls_session* clisession, tls_session* svrse
     do_cross_check_keycalc(clisession, svrsession, tls_context_transcript_hash, "tls_context_transcript_hash");
     do_cross_check_keycalc(clisession, svrsession, tls_secret_res_master, "tls_secret_res_master");
     do_cross_check_keycalc(clisession, svrsession, tls_secret_resumption, "tls_secret_resumption");
+}
+
+return_t do_test_construct_client_ping(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tls_record_application_data record(session);
+        record.get_records().add(new tls_record_application_data(session, "ping"));
+        record.write(dir, bin);
+    }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
+    return ret;
+}
+
+return_t do_test_construct_server_pong(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tls_record_application_data record(session);
+        record.get_records().add(new tls_record_application_data(session, "pong"));
+        record.write(dir, bin);
+    }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
+    return ret;
+}
+
+return_t do_test_construct_close_notify(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tls_record_application_data record(session);
+        record.get_records().add(new tls_record_alert(session, 1, 0));
+        record.write(dir, bin);
+    }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
+    return ret;
 }
 
 return_t do_test_send_record(tls_direction_t dir, tls_session* session, const binary_t& bin, const char* message) {
@@ -368,7 +497,11 @@ return_t do_test_send_record(tls_direction_t dir, tls_session* session, const bi
         tls_records records;
         ret = records.read(session, dir, bin);
     }
-    __finally2 { _test_case.test(ret, __FUNCTION__, "%s", message); }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 1, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
     return ret;
 }
 
@@ -389,57 +522,80 @@ void test_construct() {
 
         // C -> S CH
         binary_t bin_client_hello;
-        ret = do_test_construct_client_hello(from_client, &client_session, bin_client_hello, "{*client->server} construct client hello message");
+        ret = do_test_construct_client_hello(from_client, &client_session, bin_client_hello, "construct client hello message");
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        do_test_send_record(from_client, &server_session, bin_client_hello, "{client->server*} send client hello");
+        do_test_send_record(from_client, &server_session, bin_client_hello, "send client hello");
 
         // S -> C SH
         binary_t bin_server_hello;
-        ret =
-            do_test_construct_server_hello(from_server, &server_session, &client_session, bin_server_hello, "{*server->client} construct server hello message");
+        ret = do_test_construct_server_hello(from_server, &server_session, &client_session, bin_server_hello, "construct server hello message");
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        do_test_send_record(from_server, &client_session, bin_server_hello, "{server->client*} send server hello");
+        do_test_send_record(from_server, &client_session, bin_server_hello, "send server hello");
 
         do_test_keycalc_server_hello(&client_session, &server_session);
 
         // S -> C CCS
         binary_t bin_server_change_cipher_spec;
-        do_test_construct_server_change_cipher_spec(from_server, &server_session, bin_server_change_cipher_spec,
-                                                    "{*server->client} construct change_cipher_spec");
-        do_test_send_record(from_server, &client_session, bin_server_change_cipher_spec, "{server->client*} send change_cipher_spec");
+        do_test_construct_server_change_cipher_spec(from_server, &server_session, bin_server_change_cipher_spec, "construct change_cipher_spec");
+        do_test_send_record(from_server, &client_session, bin_server_change_cipher_spec, "send change_cipher_spec");
 
         // S -> C EE
         binary_t bin_encrypted_extensions;
-        do_test_construct_encrypted_extensions(from_server, &server_session, bin_encrypted_extensions, "{*server->client} construct encrypted extensions");
-        do_test_send_record(from_server, &client_session, bin_encrypted_extensions, "{server->client*} send encrypted extensions");
+        do_test_construct_encrypted_extensions(from_server, &server_session, bin_encrypted_extensions, "construct encrypted extensions");
+        do_test_send_record(from_server, &client_session, bin_encrypted_extensions, "send encrypted extensions");
 
         // S -> C SC
         binary_t bin_certificate;
-        do_test_construct_certificate(from_server, &server_session, "server.crt", "server.key", bin_certificate, "{*server->client} construct certificate");
-        do_test_send_record(from_server, &client_session, bin_certificate, "{server->client*} send cerficate");
+        do_test_construct_certificate(from_server, &server_session, "server.crt", "server.key", bin_certificate, "construct certificate");
+        do_test_send_record(from_server, &client_session, bin_certificate, "send cerficate");
 
         // S -> C SCV
         binary_t bin_certificate_verify;
-        do_test_construct_certificate_verify(from_server, &server_session, bin_certificate_verify, "{*server->client} construct certificate verify");
-        do_test_send_record(from_server, &client_session, bin_certificate_verify, "{server->client*} send cerficate verify");
+        do_test_construct_certificate_verify(from_server, &server_session, bin_certificate_verify, "construct certificate verify");
+        do_test_send_record(from_server, &client_session, bin_certificate_verify, "send cerficate verify");
 
         // S -> C SF
         binary_t bin_server_finished;
-        do_test_construct_server_finished(from_server, &server_session, bin_server_finished, "{*server->client} construct server finished");
-        do_test_send_record(from_server, &client_session, bin_server_finished, "{server->client*} send server finished");
+        do_test_construct_server_finished(from_server, &server_session, bin_server_finished, "construct server finished");
+        do_test_send_record(from_server, &client_session, bin_server_finished, "send server finished");
 
         do_test_keycalc_server_finished(&client_session, &server_session);
 
+        // C -> S CCS
+        binary_t bin_client_change_cipher_spec;
+        do_test_construct_client_change_cipher_spec(from_client, &client_session, bin_client_change_cipher_spec, "construct change_cipher_spec");
+        do_test_send_record(from_client, &server_session, bin_client_change_cipher_spec, "send change_cipher_spec");
+
         // C -> S CF
         binary_t bin_client_finished;
-        do_test_construct_client_finished(from_client, &client_session, bin_client_finished, "{*client->server} construct client finished");
-        do_test_send_record(from_client, &server_session, bin_client_finished, "{client->server*} send client finished");
+        do_test_construct_client_finished(from_client, &client_session, bin_client_finished, "construct client finished");
+        do_test_send_record(from_client, &server_session, bin_client_finished, "send client finished");
 
         do_test_keycalc_client_finished(&client_session, &server_session);
+
+        // C->S ping
+        binary_t bin_client_ping;
+        do_test_construct_client_ping(from_client, &client_session, bin_client_ping, "construct client ping");
+        do_test_send_record(from_client, &server_session, bin_client_ping, "send client ping");
+
+        // C<-S pong
+        binary_t bin_server_pong;
+        do_test_construct_server_pong(from_server, &server_session, bin_server_pong, "construct server pong");
+        do_test_send_record(from_server, &client_session, bin_server_pong, "send server pong");
+
+        // C->S close notify
+        binary_t bin_client_close_notify;
+        do_test_construct_close_notify(from_client, &client_session, bin_client_close_notify, "construct client close notify");
+        do_test_send_record(from_client, &server_session, bin_client_close_notify, "send client close notify");
+
+        // S->C close notify
+        binary_t bin_server_close_notify;
+        do_test_construct_close_notify(from_server, &server_session, bin_server_close_notify, "construct server close notify");
+        do_test_send_record(from_server, &client_session, bin_server_close_notify, "send server close notify");
     }
     __finally2 {}
 }

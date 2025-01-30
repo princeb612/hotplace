@@ -17,6 +17,7 @@ namespace net {
 class tls_record_alert : public tls_record {
    public:
     tls_record_alert(tls_session* session);
+    tls_record_alert(tls_session* session, uint8 level, uint8 desc);
 
     virtual return_t read_plaintext(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
 

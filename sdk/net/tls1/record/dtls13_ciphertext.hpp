@@ -20,7 +20,6 @@ namespace net {
 class dtls13_ciphertext : public tls_record {
    public:
     dtls13_ciphertext(uint8 type, tls_session* session);
-    virtual ~dtls13_ciphertext();
 
     tls_handshakes& get_handshakes();
 

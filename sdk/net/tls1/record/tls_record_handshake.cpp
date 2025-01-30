@@ -19,8 +19,6 @@ namespace net {
 
 tls_record_handshake::tls_record_handshake(tls_session* session) : tls_record(tls_content_type_handshake, session) {}
 
-tls_record_handshake::~tls_record_handshake() { get_handshakes().clear(); }
-
 tls_handshakes& tls_record_handshake::get_handshakes() { return _handshakes; }
 
 return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {

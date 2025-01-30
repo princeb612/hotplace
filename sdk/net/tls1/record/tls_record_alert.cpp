@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/binary.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/tls1/record/tls_record_alert.hpp>
@@ -22,6 +23,8 @@ constexpr char constexpr_level[] = "alert level";
 constexpr char constexpr_desc[] = "alert desc ";
 
 tls_record_alert::tls_record_alert(tls_session* session) : tls_record(tls_content_type_alert, session), _level(0), _desc(0) {}
+
+tls_record_alert::tls_record_alert(tls_session* session, uint8 level, uint8 desc) : tls_record(tls_content_type_alert, session), _level(level), _desc(desc) {}
 
 return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -91,6 +94,8 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
 
             dbs.printf(" > %s %i %s\n", constexpr_level, level, advisor->alert_level_string(level).c_str());
             dbs.printf(" > %s %i %s\n", constexpr_desc, desc, advisor->alert_desc_string(desc).c_str());
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
     }
     __finally2 {
@@ -99,7 +104,12 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
     return ret;
 }
 
-return_t tls_record_alert::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
+return_t tls_record_alert::do_write_body(tls_direction_t dir, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    binary_append(bin, _level);
+    binary_append(bin, _desc);
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

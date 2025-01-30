@@ -24,7 +24,7 @@ namespace hotplace {
 class semaphore : public semaphore_t {
    public:
     semaphore();
-    ~semaphore();
+    virtual ~semaphore();
 
     /**
      * @brief signal

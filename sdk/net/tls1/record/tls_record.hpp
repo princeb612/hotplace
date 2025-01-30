@@ -17,6 +17,8 @@ namespace hotplace {
 namespace net {
 
 class tls_record {
+    friend class tls_record_application_data;
+
    public:
     virtual ~tls_record();
 

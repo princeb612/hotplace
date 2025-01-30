@@ -32,7 +32,7 @@ class thread : public thread_t {
     /**
      * @brief destructor
      */
-    ~thread();
+    virtual ~thread();
 
     virtual return_t start();
     virtual return_t join();

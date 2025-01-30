@@ -18,7 +18,6 @@ namespace net {
 class tls_record_handshake : public tls_record {
    public:
     tls_record_handshake(tls_session* session);
-    virtual ~tls_record_handshake();
 
     tls_handshakes& get_handshakes();
 

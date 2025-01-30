@@ -33,9 +33,22 @@ constexpr char constexpr_dtls_record_seq[] = "dtls record sequence number";
 
 tls_record_application_data::tls_record_application_data(tls_session* session) : tls_record(tls_content_type_application_data, session) {}
 
-tls_record_application_data::~tls_record_application_data() { get_handshakes().clear(); }
+tls_record_application_data::tls_record_application_data(tls_session* session, const std::string& data)
+    : tls_record(tls_content_type_application_data, session) {
+    binary_append(_bin, data);
+}
+
+tls_record_application_data::tls_record_application_data(tls_session* session, const binary_t& data) : tls_record(tls_content_type_application_data, session) {
+    _bin = data;
+}
 
 tls_handshakes& tls_record_application_data::get_handshakes() { return _handshakes; }
+
+tls_records& tls_record_application_data::get_records() { return _records; }
+
+void tls_record_application_data::set_binary(const binary_t bin) { _bin = bin; }
+
+const binary_t& tls_record_application_data::get_binary() { return _bin; }
 
 return_t tls_record_application_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -67,33 +80,10 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                     } else if (tls_content_type_handshake == last_byte) {
                         ret = get_handshakes().read(session, dir, &plaintext[0], plainsize - 1, tpos);
                     } else if (tls_content_type_application_data == last_byte) {
-                        if (istraceable()) {
-                            basic_stream dbs;
-                            dbs.autoindent(3);
-                            dbs.printf("> %s\n", constexpr_application_data);
-                            dump_memory(&plaintext[0], plainsize - 1, &dbs, 16, 3, 0x0, dump_notrunc);
-                            dbs.autoindent(0);
-
-                            trace_debug_event(category_tls1, tls_event_read, &dbs);
-                        }
+                        ret = get_application_data(plaintext, false);
                     }
                 } else {
-                    crypto_advisor* advisor = crypto_advisor::get_instance();
-                    const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
-                    const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
-                    auto dlen = hint_mac->digest_size;
-                    size_t extra = last_byte + dlen + 1;
-                    if (plaintext.size() > extra) {
-                        if (istraceable()) {
-                            basic_stream dbs;
-                            dbs.autoindent(3);
-                            dbs.printf(" > %s\n", constexpr_application_data);  // data
-                            dump_memory(&plaintext[0], plaintext.size() - extra, &dbs, 16, 3, 0x0, dump_notrunc);
-                            dbs.autoindent(0);
-
-                            trace_debug_event(category_tls1, tls_event_read, &dbs);
-                        }
-                    }
+                    ret = get_application_data(plaintext, true);
                 }
             }
         }
@@ -153,8 +143,53 @@ return_t tls_record_application_data::do_write_header(tls_direction_t dir, binar
 
 return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
-    get_handshakes().write(get_session(), dir, bin);
-    binary_append(bin, uint8(tls_content_type_handshake));
+    auto& handshakes = get_handshakes();
+    auto& records = get_records();
+    if (handshakes.size()) {
+        handshakes.write(get_session(), dir, bin);
+        binary_append(bin, uint8(tls_content_type_handshake));
+    } else if (records.size()) {
+        auto lambda = [&](tls_record* record) -> void {
+            record->do_write_body(dir, bin);
+            binary_append(bin, uint8(record->get_type()));
+        };
+        records.for_each(lambda);
+    } else if (get_binary().size()) {
+        binary_append(bin, _bin);
+        _bin.clear();
+    }
+    return ret;
+}
+
+return_t tls_record_application_data::get_application_data(binary_t& message, bool untag) {
+    return_t ret = errorcode_t::success;
+    auto& protection = get_session()->get_tls_protection();
+    auto lambda = [&](const binary_t& msg, uint8 trail) -> void {
+        if (msg.size() > trail) {
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.autoindent(3);
+                dbs.printf(" > %s\n", constexpr_application_data);  // data
+                dump_memory(&msg[0], msg.size() - trail, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.autoindent(0);
+
+                trace_debug_event(category_tls1, tls_event_read, &dbs);
+            }
+        }
+    };
+
+    if (untag) {
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
+        const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
+        auto dlen = hint_mac->digest_size;
+        uint8 last_byte = *message.rbegin();
+        size_t extra = last_byte + dlen + 1;
+        lambda(message, extra);
+    } else {
+        lambda(message, 1);
+    }
     return ret;
 }
 
