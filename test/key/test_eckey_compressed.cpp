@@ -44,9 +44,9 @@ void test_eckey_compressed() {
     const char* uncompressed_key_p256 =
         "04a6da7392ec591e17abfd535964b99894d13befb221b3def2ebe3830eac8f0151812677c4d6d2237e85cf01d6910cfb83954e76ba7352830534159897e8065780";
     {
-        keychain.add_ec_b16(&key, "P-256",
-                            uncompressed_key_p256,  // 04 + x + y
-                            "ab5473467e19346ceb0a0414e41da21d4d2445bc3025afe97c4e8dc8d513da39", keydesc("P-256 uncompressed"));
+        keychain.add_ec_uncompressed_b16(&key, "P-256",
+                                         uncompressed_key_p256,  // 04 + x + y
+                                         "ab5473467e19346ceb0a0414e41da21d4d2445bc3025afe97c4e8dc8d513da39", keydesc("P-256 uncompressed"));
         keychain.add_ec_b16(&key, ec_p256, "98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280", true, nullptr, keydesc("P-256 compressed"));
         keychain.add_ec_b16(
             &key, ec_p521, "72992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad",

@@ -18,7 +18,7 @@
 #include "sample.hpp"
 
 void test_rfc8448_6() {
-    _test_case.begin("RFC 8448 6.  Client Authentication (TODO certificate_verify)");
+    _test_case.begin("RFC 8448 6.  Client Authentication");
 
     // The client uses a certificate with an RSA key
     // the server uses an Elliptic Curve Digital Signature Algorithm (ECDSA) certificate with a P-256 key

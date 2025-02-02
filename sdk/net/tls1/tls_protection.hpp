@@ -18,6 +18,7 @@
 #include <sdk/crypto/basic/types.hpp>
 #include <sdk/crypto/crypto/types.hpp>
 #include <sdk/net/tls1/tls.hpp>
+#include <sdk/net/tls1/tls_advisor.hpp>
 #include <sdk/net/tls1/types.hpp>
 #include <set>
 
@@ -50,6 +51,9 @@ class protection_context {
 
     return_t select_from(const protection_context& rhs);
 
+    const tls_cipher_suite_t* get_cipher_suite_hint();
+    void set_cipher_suite_hint(const tls_cipher_suite_t* hint);
+
     uint16 get0_cipher_suite();
     uint16 get0_supported_version();
     uint16 select_signature_algorithm(crypto_kty_t kty);
@@ -62,6 +66,7 @@ class protection_context {
     std::list<uint16> _supported_groups;      // tls_extension_supported_groups
     std::list<uint16> _supported_versions;    // tls_extension_client_supported_versions
     std::list<uint8> _ec_point_formats;       // tls_extension_ec_point_formats
+    const tls_cipher_suite_t* _cipher_suite_hint;
 };
 
 class tls_protection {
@@ -140,7 +145,16 @@ class tls_protection {
     return_t get_tls13_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& iv);
     return_t get_tls1_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& mackey);
 
-    return_t encrypt(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag);
+    /**
+     * @brief encrypt
+     * @param tls_session* session [in]
+     * @param tls_direction_t dir [in]
+     * @param const binary_t& plaintext [in]
+     * @param binary_t& ciphertext [out]
+     * @param const binary_t& additional [in] content header + IV in CBC, AAD in CCM/CCM_8/GCM
+     * @param binary_t& tag [out]
+     */
+    return_t encrypt(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& additional, binary_t& tag);
 
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& aad);
@@ -155,7 +169,7 @@ class tls_protection {
 
    protected:
     return_t encrypt_aead(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag);
-    return_t encrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, binary_t& maced);
+    return_t encrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& iv, binary_t& maced);
     /**
      * @brief   TLS 1.3 decrypt
      * @remarks

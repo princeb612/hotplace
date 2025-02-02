@@ -120,7 +120,7 @@ void test_tls12_xargs_org() {
     // https://tls12.xargs.org/#server-key-exchange-generation
     binary_t shared_secret;
     {
-        const char* kid = "server";
+        const char* kid = "SKE";
         const char* x = "9fd7ad6dcff4298dd3f96d5b1b2af910a0535b1488d7f8fabb349a982880b615";
         const char* y = "";
         const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";
@@ -169,7 +169,7 @@ void test_tls12_xargs_org() {
     }
     // https://tls12.xargs.org/#client-key-exchange-generation
     {
-        const char* kid = "client";
+        const char* kid = "CKE";
         const char* x = "358072d6365880d1aeea329adf9121383851ed21a28e3b75e965d0d2cd166254";
         const char* y = "";
         const char* d = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";

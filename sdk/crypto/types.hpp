@@ -914,6 +914,14 @@ typedef struct _hint_cose_algorithm_t {
 #define ECDSA_SUPPORT_SHA2_384 0x0008
 #define ECDSA_SUPPORT_SHA2_512 0x0010
 
+enum curve_category_t : uint8 {
+    prime_field_weierstrass_curve = (1 << 0),   // general curve
+    binary_field_weierstrass_curve = (1 << 1),  // embeded device
+    koblitz_curve = (1 << 2),                   // IoT, smart card
+    montgomery_curve = (1 << 3),                // key exchange
+    edwards_curve = (1 << 4),                   // digital signature
+};
+
 /**
  * @brief  curve information
  *              nid         openssl nid             NID_X9_62_prime256v1
@@ -951,10 +959,10 @@ typedef struct _hint_curves_t {
     cose_ec_curve_t cose_crv;
     crypto_kty_t kty;
     crypto_use_t use;
-    uint16 group;   // TLS
-    uint16 flags;   // ECDSA_SUPPORT_xxx
-    uint8 keysize;  // key size (preserve leading zero)
-    uint8 reserved;
+    uint16 tlsgroup;   // TLS
+    uint16 flags;      // ECDSA_SUPPORT_xxx
+    uint8 keysize;     // key size (preserve leading zero)
+    uint8 category;    // see curve_category_t
     const char* oid;   // OID
     const char* name;  // NIST (CURVE P-256, P-384, P-521, ...)
     const char* aka1;  // X9.62, X9.63 (ansip384r1, ansip521r1, ...)
@@ -964,7 +972,7 @@ typedef struct _hint_curves_t {
 uint32 nidof(const hint_curve_t* hint);
 cose_ec_curve_t coseof(const hint_curve_t* hint);
 crypto_kty_t ktyof(const hint_curve_t* hint);
-uint16 groupof(const hint_curve_t* hint);
+uint16 tlsgroupof(const hint_curve_t* hint);
 uint8 keysizeof(const hint_curve_t* hint);
 const char* oidof(const hint_curve_t* hint);
 bool support(const hint_curve_t* hint, hash_algorithm_t alg);

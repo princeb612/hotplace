@@ -79,7 +79,7 @@ void test_rfc8448_5() {
             "77 c4 d6 d2 23 7e 85 cf 01 d6 91 0c fb 83 95 4e 76 ba 73 52 83"
             "05 34 15 98 97 e8 06 57 80";
         crypto_key& key = protection.get_keyexchange();
-        ret = keychain.add_ec_b16rfc(&key, ec_p256, pub, priv, keydesc(constexpr_server));
+        ret = keychain.add_ec_uncompressed_b16rfc(&key, ec_p256, pub, priv, keydesc(constexpr_server));
 
         _logger->writeln(constexpr_server);
         dump_key(key.find(constexpr_server), &bs);
@@ -151,7 +151,7 @@ void test_rfc8448_5() {
             "e6 77 6f 5b 04 ac 07 d8 35 40 ea b3 e3 d9 c5 47 bc 65 28 c4 31"
             "7d 29 46 86 09 3a 6c ad 7d";
         crypto_key& key = protection.get_keyexchange();
-        ret = keychain.add_ec_b16rfc(&key, ec_p256, pub, priv, keydesc(constexpr_server));
+        ret = keychain.add_ec_uncompressed_b16rfc(&key, ec_p256, pub, priv, keydesc(constexpr_server));
 
         _logger->writeln(constexpr_server);
         dump_key(key.find(constexpr_server), &bs);

@@ -310,6 +310,8 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
             pl.write(bin);
         }
 
+        { protection.set_item(tls_context_client_hello_random, _random); }
+
         binary_append(bin, extensions);
     }
     __finally2 {
@@ -357,6 +359,11 @@ return_t tls_handshake_client_hello::add_ciphersuite(uint16 ciphersuite) {
     return_t ret = errorcode_t::success;
     _cipher_suites.push_back(ciphersuite);
     return ret;
+}
+
+tls_handshake_client_hello& tls_handshake_client_hello::operator<<(const std::string& ciphersuites) {
+    add_ciphersuites(ciphersuites.c_str());
+    return *this;
 }
 
 }  // namespace net

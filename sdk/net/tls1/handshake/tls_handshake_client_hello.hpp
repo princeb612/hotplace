@@ -28,6 +28,8 @@ class tls_handshake_client_hello : public tls_handshake {
     return_t add_ciphersuites(const char* ciphersuites);
     return_t add_ciphersuite(uint16 suite);
 
+    tls_handshake_client_hello& operator<<(const std::string& ciphersuites);
+
    protected:
     virtual return_t do_preprocess(tls_direction_t dir);
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);

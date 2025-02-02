@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-protection_context::protection_context() {}
+protection_context::protection_context() : _cipher_suite_hint(nullptr) {}
 
 protection_context::protection_context(const protection_context& rhs) {
     _cipher_suites = rhs._cipher_suites;
@@ -23,6 +23,7 @@ protection_context::protection_context(const protection_context& rhs) {
     _supported_groups = rhs._supported_groups;
     _supported_versions = rhs._supported_versions;
     _ec_point_formats = rhs._ec_point_formats;
+    _cipher_suite_hint = rhs._cipher_suite_hint;
 }
 
 protection_context::protection_context(protection_context&& rhs) {
@@ -32,6 +33,7 @@ protection_context::protection_context(protection_context&& rhs) {
     _supported_groups = std::move(rhs._supported_groups);
     _supported_versions = std::move(rhs._supported_versions);
     _ec_point_formats = std::move(rhs._ec_point_formats);
+    _cipher_suite_hint = rhs._cipher_suite_hint;
 }
 
 void protection_context::add_cipher_suite(uint16 cs) { _cipher_suites.push_back(cs); }
@@ -143,6 +145,7 @@ return_t protection_context::select_from(const protection_context& rhs) {
                 // RFC 5246 mandatory TLS_RSA_WITH_AES_128_CBC_SHA
                 if (hint && hint->support && (hint->version <= selected_version)) {
                     add_cipher_suite(cs);
+                    set_cipher_suite_hint(hint);
                     break;
                 }
             }
@@ -160,6 +163,10 @@ return_t protection_context::select_from(const protection_context& rhs) {
     __finally2 {}
     return ret;
 }
+
+const tls_cipher_suite_t* protection_context::get_cipher_suite_hint() { return _cipher_suite_hint; }
+
+void protection_context::set_cipher_suite_hint(const tls_cipher_suite_t* hint) { _cipher_suite_hint = hint; }
 
 uint16 protection_context::get0_cipher_suite() {
     uint16 ret_value = 0;

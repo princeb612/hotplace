@@ -82,6 +82,13 @@ return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, const by
         auto& protection = session->get_tls_protection();
 
         protection.calc_transcript_hash(session, stream + hspos, get_size());
+
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf("> transcript_hash Certificate\n");
+            dump_memory(stream + hspos, get_size(), &dbs, 16, 3, 0x0, dump_notrunc);
+            trace_debug_event(category_tls1, tls_event_write, &dbs);
+        }
     }
     __finally2 {
         // do nothing

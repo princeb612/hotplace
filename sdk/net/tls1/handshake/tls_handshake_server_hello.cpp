@@ -251,6 +251,8 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             pl.write(bin);
         }
 
+        { session->get_tls_protection().set_item(tls_context_server_hello_random, _random); }
+
         binary_append(bin, extensions);
     }
     __finally2 {

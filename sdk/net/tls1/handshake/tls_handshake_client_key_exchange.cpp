@@ -22,6 +22,9 @@
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_pubkey_len[] = "public key len";
+constexpr char constexpr_pubkey[] = "public key";
+
 tls_handshake_client_key_exchange::tls_handshake_client_key_exchange(tls_session* session) : tls_handshake(tls_hs_client_key_exchange, session) {}
 
 return_t tls_handshake_client_key_exchange::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
@@ -40,6 +43,13 @@ return_t tls_handshake_client_key_exchange::do_postprocess(tls_direction_t dir, 
             protection.calc(session, tls_hs_client_key_exchange, dir);
 
             protection.calc_transcript_hash(session, stream + hspos, get_size());
+        }
+
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf("> transcript_hash CKE\n");
+            dump_memory(stream + hspos, get_size(), &dbs, 16, 3, 0x0, dump_notrunc);
+            trace_debug_event(category_tls1, tls_event_write, &dbs);
         }
     }
     __finally2 {
@@ -62,9 +72,6 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
         }
 
         {
-            constexpr char constexpr_pubkey_len[] = "public key len";
-            constexpr char constexpr_pubkey[] = "public key";
-
             uint8 pubkey_len = 0;
             binary_t pubkey;
             {
@@ -118,7 +125,69 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
     return ret;
 }
 
-return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
+return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+        auto& keyexchange = protection.get_keyexchange();
+        auto pkey_ske = keyexchange.find("SKE");
+        {
+            // kty, nid from server_key_exchange
+            crypto_keychain keychain;
+            uint32 nid = 0;
+            crypto_kty_t kty = typeof_crypto_key(pkey_ske);
+            nidof_evp_pkey(pkey_ske, nid);
+            if (nid) {
+                keydesc desc("CKE");
+                if (kty_rsa == kty) {
+                    ret = keychain.add_rsa(&keyexchange, nid, 2048, desc);
+                } else if (kty_ec == kty || kty_okp == kty) {
+                    ret = keychain.add_ec(&keyexchange, nid, desc);
+                } else if (kty_dh == kty) {
+                    ret = keychain.add_dh(&keyexchange, nid, desc);
+                } else {
+                    ret = errorcode_t::not_supported;
+                    __leave2;
+                }
+            } else {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+        }
+
+        binary_t pubkey;
+        auto pkey_cke = keyexchange.find("CKE");
+        if (pkey_cke) {
+            crypto_kty_t kty = typeof_crypto_key(pkey_cke);
+            if (kty_ec == kty) {
+                binary_t temp;
+                keyexchange.ec_uncompressed_key(pkey_cke, pubkey, temp);
+            } else if (kty_okp == kty) {
+                binary_t temp;
+                keyexchange.get_public_key(pkey_cke, pubkey, temp);
+            }
+        }
+
+        {
+            payload pl;
+            pl << new payload_member(uint8(pubkey.size()), constexpr_pubkey_len) << new payload_member(pubkey, constexpr_pubkey);
+            pl.write(bin);
+        }
+
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf("> SKE\n");
+            dump_key(pkey_ske, &dbs, 16, 3, dump_notrunc);
+            dbs.printf("> CKE\n");
+            dump_key(pkey_cke, &dbs, 16, 3, dump_notrunc);
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

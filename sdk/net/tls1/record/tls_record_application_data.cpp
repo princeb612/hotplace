@@ -12,6 +12,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/record/tls_record_alert.hpp>
 #include <sdk/net/tls1/record/tls_record_application_data.hpp>
@@ -73,17 +74,17 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
             if (plainsize) {
                 auto tlsversion = protection.get_tls_version();
                 uint8 last_byte = *plaintext.rbegin();
-                if (is_basedon_tls13(tlsversion)) {
-                    if (tls_content_type_alert == last_byte) {
-                        tls_record_alert alert(session);
-                        alert.read_plaintext(dir, &plaintext[0], plainsize - 1, tpos);
-                    } else if (tls_content_type_handshake == last_byte) {
-                        ret = get_handshakes().read(session, dir, &plaintext[0], plainsize - 1, tpos);
-                    } else if (tls_content_type_application_data == last_byte) {
+                if (tls_content_type_alert == last_byte) {
+                    tls_record_alert alert(session);
+                    alert.read_plaintext(dir, &plaintext[0], plainsize - 1, tpos);
+                } else if (tls_content_type_handshake == last_byte) {
+                    ret = get_handshakes().read(session, dir, &plaintext[0], plainsize - 1, tpos);
+                } else if (tls_content_type_application_data == last_byte) {
+                    if (cbc == hint->mode) {
+                        ret = get_application_data(plaintext, true);
+                    } else {
                         ret = get_application_data(plaintext, false);
                     }
-                } else {
-                    ret = get_application_data(plaintext, true);
                 }
             }
         }
@@ -103,17 +104,29 @@ return_t tls_record_application_data::do_write_header(tls_direction_t dir, binar
             __leave2;
         }
 
-        binary_t aad;
+        binary_t additional;
+        binary_t ciphertext;
+        binary_t tag;
+
         auto& protection = session->get_tls_protection();
         auto legacy_version = protection.get_record_version();
         auto tagsize = protection.get_tag_size();
         auto tlsversion = protection.get_tls_version();
-        uint16 len = 0;
-        if (is_basedon_tls13(tlsversion)) {
-            len = body.size() + tagsize;
-        } else {
-            len = body.size();
+        auto cs = protection.get_cipher_suite();
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
         }
+        auto hint_cipher = advisor->hintof_blockcipher(hint->cipher);
+        if (nullptr == hint_cipher) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        auto ivsize = sizeof_iv(hint_cipher);
+        uint16 len = (cbc == hint->mode) ? body.size() + tagsize + ivsize : body.size() + tagsize;
 
         {
             payload pl;
@@ -124,17 +137,35 @@ return_t tls_record_application_data::do_write_header(tls_direction_t dir, binar
                << new payload_member(uint16(len), true, constexpr_len);                                                 // tls, dtls
 
             pl.set_group(constexpr_group_dtls, is_kindof_dtls(_legacy_version));
-            pl.write(aad);
+            pl.write(additional);
         }
 
-        binary_t ciphertext;
-        binary_t tag;
-        ret = protection.encrypt(session, dir, body, ciphertext, aad, tag);
-        if (errorcode_t::success != ret) {
-            __leave2;
+        if (cbc == hint->mode) {
+            // additional = content header + iv
+            binary_t iv;
+            openssl_prng prng;
+            prng.random(iv, ivsize);
+            binary_append(additional, iv);
+
+            binary_t encbody;
+            ret = protection.encrypt(session, dir, body, encbody, additional, tag);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+
+            binary_append(ciphertext, iv);
+            binary_append(ciphertext, encbody);
+        } else {
+            // additional = content header as AAD
+            ret = protection.encrypt(session, dir, body, ciphertext, additional, tag);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+
+            binary_append(ciphertext, tag);
         }
 
-        binary_append(ciphertext, tag);
+        // content header + ciphertext
         tls_record::do_write_header(dir, bin, ciphertext);
     }
     __finally2 {}

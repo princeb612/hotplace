@@ -102,8 +102,7 @@ int main(int argc, char** argv) {
                        .optional()
                        .preced()
                 << t_cmdarg_t<OPTION>("-tls13", "TLS1.3", [](OPTION& o, char* param) -> void { o.version = tls_13; }).optional()
-        // << t_cmdarg_t<OPTION>("-tls12", "TLS1.2", [](OPTION& o, char* param) -> void { o.version = tls_12; }).optional()
-        ;
+                << t_cmdarg_t<OPTION>("-tls12", "TLS1.2", [](OPTION& o, char* param) -> void { o.version = tls_12; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

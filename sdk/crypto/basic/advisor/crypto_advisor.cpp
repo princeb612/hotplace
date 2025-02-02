@@ -195,8 +195,8 @@ return_t crypto_advisor::build() {
             set_feature(item->name, advisor_feature_curve);
             _curve_name_map.insert({item->name, item});
         }
-        if (item->group) {
-            _tls_group_map.insert({item->group, item});
+        if (item->tlsgroup) {
+            _tls_group_map.insert({item->tlsgroup, item});
         }
         if (item->aka1) {
             _curve_name_map.insert({item->aka1, item});

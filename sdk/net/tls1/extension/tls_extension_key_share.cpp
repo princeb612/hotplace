@@ -129,13 +129,13 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
         crypto_keychain keychain;
         switch (group) {
             case 0x0017: /* secp256r1 */ {
-                ret = keychain.add_ec(&keyshare, NID_X9_62_prime256v1, pubkey, binary_t(), desc);
+                ret = keychain.add_ec_uncompressed(&keyshare, NID_X9_62_prime256v1, pubkey, binary_t(), desc);
             } break;
             case 0x0018: /* secp384r1 */ {
-                ret = keychain.add_ec(&keyshare, NID_secp384r1, pubkey, binary_t(), desc);
+                ret = keychain.add_ec_uncompressed(&keyshare, NID_secp384r1, pubkey, binary_t(), desc);
             } break;
             case 0x0019: /* secp521r1 */ {
-                ret = keychain.add_ec(&keyshare, NID_secp521r1, pubkey, binary_t(), desc);
+                ret = keychain.add_ec_uncompressed(&keyshare, NID_secp521r1, pubkey, binary_t(), desc);
             } break;
             case 0x001d: /* x25519 */ {
                 ret = keychain.add_okp(&keyshare, NID_X25519, pubkey, binary_t(), desc);
@@ -144,19 +144,19 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
                 ret = keychain.add_okp(&keyshare, NID_X448, pubkey, binary_t(), desc);
             } break;
             case 0x0100: /* ffdhe2048 */ {
-                ret = errorcode_t::not_supported;
+                ret = keychain.add_dh(&keyshare, NID_ffdhe2048, pubkey, binary_t(), desc);
             } break;
             case 0x0101: /* ffdhe3072 */ {
-                ret = errorcode_t::not_supported;
+                ret = keychain.add_dh(&keyshare, NID_ffdhe3072, pubkey, binary_t(), desc);
             } break;
             case 0x0102: /* ffdhe4096 */ {
-                ret = errorcode_t::not_supported;
+                ret = keychain.add_dh(&keyshare, NID_ffdhe4096, pubkey, binary_t(), desc);
             } break;
             case 0x0103: /* ffdhe6144 */ {
-                ret = errorcode_t::not_supported;
+                ret = keychain.add_dh(&keyshare, NID_ffdhe6144, pubkey, binary_t(), desc);
             } break;
             case 0x0104: /* ffdhe8192 */ {
-                ret = errorcode_t::not_supported;
+                ret = keychain.add_dh(&keyshare, NID_ffdhe8192, pubkey, binary_t(), desc);
             } break;
             default: {
                 ret = errorcode_t::not_supported;
@@ -280,7 +280,7 @@ return_t tls_extension_client_key_share::do_write_body(binary_t& bin) {
             case kty_okp: {
                 auto hint = advisor->hintof_curve_nid(nid);
                 if (hint) {
-                    group = groupof(hint);
+                    group = tlsgroupof(hint);
                 }
             } break;
         }
@@ -389,7 +389,7 @@ return_t tls_extension_server_key_share::do_write_body(binary_t& bin) {
             case kty_okp: {
                 auto hint = advisor->hintof_curve_nid(nid);
                 if (hint) {
-                    group = groupof(hint);
+                    group = tlsgroupof(hint);
                 }
             } break;
         }
