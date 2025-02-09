@@ -97,12 +97,7 @@ int main(int argc, char** argv) {
     (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-cs", "cipher suite (-cs TLS_AES_256_GCM_SHA384)", [](OPTION& o, char* param) -> void { o.set_cipher_suite(param); })
-                       .optional()
-                       .preced()
-                << t_cmdarg_t<OPTION>("-tls13", "TLS1.3", [](OPTION& o, char* param) -> void { o.version = tls_13; }).optional()
-                << t_cmdarg_t<OPTION>("-tls12", "TLS1.2", [](OPTION& o, char* param) -> void { o.version = tls_12; }).optional();
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

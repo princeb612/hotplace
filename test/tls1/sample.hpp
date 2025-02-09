@@ -16,17 +16,14 @@ struct OPTION {
     int debug;
     int log;
     int time;
-    std::string cipher_suite;
-    uint16 version;
 
-    OPTION() : verbose(0), debug(0), log(0), time(0), version(tls_13) {
+    OPTION() : verbose(0), debug(0), log(0), time(0) {
         // do nothing
     }
     void enable_debug() {
         verbose = 1;
         debug = 1;
     }
-    void set_cipher_suite(const char* cs) { cipher_suite = cs; }
 };
 
 extern test_case _test_case;

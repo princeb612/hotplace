@@ -43,15 +43,9 @@ return_t tls_handshake_server_key_exchange::do_postprocess(tls_direction_t dir, 
         }
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
+        auto hssize = get_size();
 
-        protection.calc_transcript_hash(session, stream + hspos, get_size());
-
-        if (istraceable()) {
-            basic_stream dbs;
-            dbs.printf("> transcript_hash SKE\n");
-            dump_memory(stream + hspos, get_size(), &dbs, 16, 3, 0x0, dump_notrunc);
-            trace_debug_event(category_tls1, tls_event_write, &dbs);
-        }
+        protection.calc_transcript_hash(session, stream + hspos, hssize);
     }
     __finally2 {
         // do nothing
@@ -90,10 +84,13 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             // RFC 5246 7.4.3.  Server Key Exchange Message
             {
                 payload pl;
-                pl << new payload_member(uint8(0), constexpr_curve_info) << new payload_member(uint16(0), true, constexpr_curve)
-                   << new payload_member(uint8(0), constexpr_pubkey_len) << new payload_member(binary_t(), constexpr_pubkey)
-                   << new payload_member(uint16(0), true, constexpr_signature) << new payload_member(uint16(0), true, constexpr_sig_len)
-                   << new payload_member(binary_t(), constexpr_sig);
+                pl << new payload_member(uint8(0), constexpr_curve_info)        //
+                   << new payload_member(uint16(0), true, constexpr_curve)      //
+                   << new payload_member(uint8(0), constexpr_pubkey_len)        //
+                   << new payload_member(binary_t(), constexpr_pubkey)          //
+                   << new payload_member(uint16(0), true, constexpr_signature)  //
+                   << new payload_member(uint16(0), true, constexpr_sig_len)    //
+                   << new payload_member(binary_t(), constexpr_sig);            //
                 pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
                 pl.set_reference_value(constexpr_sig, constexpr_sig_len);
                 pl.read(stream, size, pos);
@@ -151,12 +148,14 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
 
             if (istraceable()) {
                 basic_stream dbs;
-                dbs.autoindent(1);
-                dbs.printf(" > %s %i (%s)\n", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
-                dbs.printf(" > %s 0x%04x %s\n", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
+                dbs.autoindent(2);
+                dbs.printf("> %s %i (%s)\n", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
+                dbs.printf("> %s 0x%04x %s\n", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
+                dbs.printf("> %s\n", constexpr_pubkey);
                 dbs.printf(" > %s %i\n", constexpr_pubkey_len, pubkey_len);
-                dump_memory(pubkey, &dbs, 16, 3, 0x0, dump_notrunc);
-                dbs.printf(" > %s 0x%04x %s\n", constexpr_signature, sigalg, tlsadvisor->signature_scheme_name(sigalg).c_str());
+                dump_memory(pubkey, &dbs, 16, 4, 0x0, dump_notrunc);
+                dbs.printf("> %s\n", constexpr_signature);
+                dbs.printf(" > 0x%04x %s\n", sigalg, tlsadvisor->signature_scheme_name(sigalg).c_str());
                 dbs.printf(" > %s %i\n", constexpr_sig_len, sig_len);
                 dump_memory(sig, &dbs, 16, 3, 0x0, dump_notrunc);
                 dbs.autoindent(0);
@@ -261,21 +260,30 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
 
     {
         payload pl;
-        pl << new payload_member(uint8(curve_info), constexpr_curve_info) << new payload_member(uint16(curve), true, constexpr_curve)
-           << new payload_member(uint8(pubkey.size()), constexpr_pubkey_len) << new payload_member(pubkey, constexpr_pubkey)
-           << new payload_member(uint16(sig.size() + 2), true, constexpr_signature) << new payload_member(uint16(sig.size()), true, constexpr_sig_len)
+        pl << new payload_member(uint8(curve_info), constexpr_curve_info)      //
+           << new payload_member(uint16(curve), true, constexpr_curve)         //
+           << new payload_member(uint8(pubkey.size()), constexpr_pubkey_len)   //
+           << new payload_member(pubkey, constexpr_pubkey)                     //
+           << new payload_member(uint16(sigalg), true, constexpr_signature)    //
+           << new payload_member(uint16(sig.size()), true, constexpr_sig_len)  //
            << new payload_member(sig, constexpr_sig);
         pl.write(bin);
     }
 
     if (istraceable()) {
         basic_stream dbs;
-        dbs.printf("> curve %04x\n", curve);
-        dbs.printf("> pubkey\n");
-        dump_memory(pubkey, &dbs, 16, 3, 0, dump_notrunc);
-        dbs.printf("> signature algorithm %04x\n", sigalg);
-        dbs.printf("> signature\n");
+        dbs.autoindent(2);
+        dbs.printf("> %s %i (%s)\n", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
+        dbs.printf("> %s 0x%04x %s\n", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
+        dbs.printf("> %s\n", constexpr_pubkey);
+        dbs.printf(" > %s %zi\n", constexpr_pubkey_len, pubkey.size());
+        dump_memory(pubkey, &dbs, 16, 4, 0, dump_notrunc);
+        dbs.printf("> %s\n", constexpr_signature);
+        dbs.printf(" > 0x%04x %s\n", sigalg, tlsadvisor->signature_scheme_name(sigalg).c_str());
+        dbs.printf(" > %s %zi\n", constexpr_sig_len, sig.size());
         dump_memory(sig, &dbs, 16, 3, 0, dump_notrunc);
+        dbs.autoindent(0);
+
         trace_debug_event(category_tls1, tls_event_write, &dbs);
     }
 

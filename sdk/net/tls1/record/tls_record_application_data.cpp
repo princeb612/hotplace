@@ -214,7 +214,7 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
         const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
-        auto dlen = hint_mac->digest_size;
+        auto dlen = 0;  // hint_mac->digest_size;
         uint8 last_byte = *message.rbegin();
         size_t extra = last_byte + dlen + 1;
         lambda(message, extra);

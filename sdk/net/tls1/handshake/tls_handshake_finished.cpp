@@ -24,6 +24,12 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * TLS 1.2 PRF(master_secret, label, hash(handshake_message))
+ *         master_secret after keyexchange
+ * TLS 1.3 HMAC(finished_key, hash(handshake context))
+ */
+
 constexpr char constexpr_verify_data[] = "verify data";
 
 tls_handshake_finished::tls_handshake_finished(tls_session* session) : tls_handshake(tls_hs_finished, session) {}
@@ -78,17 +84,22 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
         //    endpoint's identity to the exchanged keys, and in PSK mode also
         //    authenticates the handshake.  [Section 4.4.4]
 
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        auto tlsversion = protection.get_tls_version();
         uint16 dlen = 0;
         hash_algorithm_t hmacalg;
         {
-            crypto_advisor* advisor = crypto_advisor::get_instance();
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
             if (nullptr == hint_tls_alg) {
                 ret = errorcode_t::success;
                 __leave2;
             }
-            dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));  // sha2_256 if sha1
+            if (is_basedon_tls13(tlsversion)) {
+                dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
+            } else {
+                dlen = 12;
+            }
             hmacalg = algof_mac(hint_tls_alg);
         }
 
@@ -121,6 +132,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 dbs.printf("\n");
                 dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
                 dbs.printf("  > secret (internal) 0x%08x\n", typeof_secret);
+                dbs.printf("  > algorithm %s size %i\n", advisor->nameof_md(hmacalg), dlen);
                 dbs.printf("  > verify data %s \n", base16_encode(verify_data).c_str());
                 dbs.printf("  > maced       %s\n", base16_encode(maced).c_str());
                 dbs.autoindent(0);
@@ -141,17 +153,22 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
         auto session = get_session();
         auto& protection = session->get_tls_protection();
 
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        auto tlsversion = protection.get_tls_version();
         uint16 dlen = 0;
         hash_algorithm_t hmacalg;
         {
-            crypto_advisor* advisor = crypto_advisor::get_instance();
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
             if (nullptr == hint_tls_alg) {
                 ret = errorcode_t::success;
                 __leave2;
             }
-            dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
+            if (is_basedon_tls13(tlsversion)) {
+                dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
+            } else {
+                dlen = 12;
+            }
             hmacalg = algof_mac(hint_tls_alg);
         }
 
@@ -170,6 +187,7 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
             dbs.printf("> %s\n", constexpr_verify_data);
             dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
             dbs.printf("  > secret (internal) 0x%08x\n", typeof_secret);
+            dbs.printf("  > algorithm %s size %i\n", advisor->nameof_md(hmacalg), dlen);
             dbs.printf("  > verify data %s \n", base16_encode(verify_data).c_str());
 
             trace_debug_event(category_tls1, tls_event_write, &dbs);

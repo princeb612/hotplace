@@ -105,11 +105,11 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             ret = do_read_body(dir, stream, size, pos);
         }
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
         ret = do_postprocess(dir, stream, size);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         pos = offsetof_header() + sizeof(tls_handshake_t) + get_body_size();
@@ -141,12 +141,12 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
 
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         ret = do_postprocess(dir, stream, size);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
     }
     __finally2 {
