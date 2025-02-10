@@ -29,6 +29,9 @@ class tls_record {
 
     tls_content_type_t get_type();  // content type
     uint16 get_legacy_version();    // legacy version
+    void set_legacy_version(uint16 version);
+    uint16 get_tls_version();
+    void set_tls_version(uint16 version);
 
     bool is_dtls();
     uint16 get_key_epoch();                 // DTLS key epoch

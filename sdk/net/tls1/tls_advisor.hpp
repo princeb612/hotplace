@@ -160,7 +160,7 @@ class tls_advisor {
     std::string compression_method_string(uint8 code);
     std::string sni_nametype_string(uint16 code);
 
-    bool is_basedon_tls13(uint16 ver);
+    bool is_kindof_tls13(uint16 ver);
     bool is_kindof_tls(uint16 ver);
     bool is_kindof_dtls(uint16 ver);
 

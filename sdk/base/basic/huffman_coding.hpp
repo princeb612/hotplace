@@ -74,8 +74,8 @@ class huffman_coding {
         const char *code;
     };
 
-    typedef t_btree<hc_t> measure_tree_t;
-    typedef t_btree<hc_t, hc_comparator> btree_t;
+    typedef t_btree<hc_t> measure_tree_t;          // counting
+    typedef t_btree<hc_t, hc_comparator> btree_t;  // by weight(frequency)
     typedef std::map<hc_t, typename btree_t::node_t *, hc_comparator> map_t;
     typedef std::pair<typename map_t::iterator, bool> map_pib_t;
     typedef std::map<uint8, std::string> codetable_t;
@@ -116,9 +116,11 @@ class huffman_coding {
     /**
      * @brief   export hufman codes
      * @sample
+     *          auto lambda_exports = [](uint8 sym, const char* code) -> void {
+     *              printf("sym %c (0x%02x) %s (%zi)\n", isprint(sym) ? sym : '?', sym, code, strlen(code));
+     *          };
      *          huffman_coding huff;
-     *          huff.imports(_h2hcodes).exports(
-     *              [](uint8 sym, const char* code) -> void { printf("sym %c (0x%02x) %s (%zi)\n", isprint(sym) ? sym : '?', sym, code, strlen(code)); });
+     *          huff.imports(_h2hcodes).exports(lambda_exports);
      */
     huffman_coding &exports(std::function<void(uint8, const char *)> v);
 

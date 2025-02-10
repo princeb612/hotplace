@@ -92,6 +92,7 @@ class tls_protection {
     void set_record_version(uint16 version);
     bool is_kindof_tls();
     bool is_kindof_dtls();
+    bool is_kindof_tls13();
     uint16 get_tls_version();
     void set_tls_version(uint16 version);
     /**
@@ -143,7 +144,7 @@ class tls_protection {
     return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv, uint64 recordno);
 
     return_t get_tls13_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& iv);
-    return_t get_tls1_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& mackey);
+    return_t get_tls12_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& mackey);
 
     /**
      * @brief encrypt

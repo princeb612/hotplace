@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose);
     if (option.log) {
-        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log");
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log").attach(&_test_case);
     }
     if (option.time) {
         builder.set_timeformat("[Y-M-D h:m:s.f]");

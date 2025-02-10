@@ -230,3 +230,86 @@ Auth | {CertificateVerify*}
 
                      Figure 4: DTLS 1.3 Header Examples
 ````
+
+#### summarize the complex calculation process
+
+|                     |         |                           |
+| --                  | --      | --                        |
+| client_key_exchange | TLS 1.2 | pre-master secret         |
+| key_share           | TLS 1.3 | ECDHE                     |
+| pre_shared_key      | TLS 1.3 | session-resumption, 0-RTT |
+
+```
+case client_hello
+  case extension.key_share
+    generate keypair
+    send keypair.pubkey
+  end
+end
+
+case server_hello
+  case extension.key_share
+    generate keypair
+    send keypair.pubkey
+    shared_secret = Diffie-Hellman(keypair.privkey, keypair.pubkey)
+  end
+  early_secret = Extract(hashalg, salt, empty_ikm)
+  case 1-RTT, HRR:
+    secret_handshake_derived = Expand-Label(hashalg, dlen, early_secret, "derived", empty_hash)
+    secret_handshake = Extract(hashalg, secret_handshake_derived, shared_secret);
+  case 0-RTT:
+    secret_handshake_derived = Expand-Label(hashalg, dlen, secret_resumption_early, "derived", empty_hash)
+    secret_handshake = Extract(hashalg, secret_handshake_derived, shared_secret);
+  end
+  secret_c_hs_traffic = Expand-Label(hashalg, dlen, secret, handshake, "c hs traffic", context_hash)
+  secret_s_hs_traffic = Expand-Label(hashalg, dlen, secret, handshake, "s hs traffic", context_hash)
+end
+
+case certificate
+  send certificate
+end
+
+case server_key_exchange
+  case server:
+    // signature algorithm (same kty of certificate)
+    sign(certificate-privkey, client_hello_random + server_hello_random + curve_info + public_key)
+  case client:
+    verify(certificate, client_hello_random + server_hello_random + curve_info + public_key)
+end
+
+// client_key_exchange and then change_cipher_spec, encrypt and decrypt application_data
+case client_key_exchange
+  case client:
+    generate keypair
+    send keypair.pubkey
+  case server:
+    pre_master_secret = Diffie-Hellman(keypair.privkey, keypair.pubkey);
+    // RFC 2246 5. HMAC and the pseudorandom function
+    // RFC 2246 8.1. Computing the master secret
+    master_secret = PRF(pre_master_secret, "master secret",
+                        ClientHello.random + ServerHello.random)
+                        [0..47];
+    // RFC 2246 5. HMAC and the pseudorandom function
+    // RFC 5246 5.  HMAC and the Pseudorandom Function
+    P_hash(secret, seed) = HMAC_hash(secret, A(1) + seed) +
+                           HMAC_hash(secret, A(2) + seed) +
+                           HMAC_hash(secret, A(3) + seed) + ...
+    A() is defined as:
+        A(0) = seed
+        A(i) = HMAC_hash(secret, A(i-1))
+    PRF(secret, label, seed) = P_<hash>(secret, label + seed)
+    // RFC 2246 5. HMAC and the pseudorandom function
+    // RFC 2246 6.3. Key calculation
+    key_block = PRF(SecurityParameters.master_secret,
+                       "key expansion",
+                       SecurityParameters.server_random +
+                       SecurityParameters.client_random);
+    client_write_MAC_secret[SecurityParameters.hash_size]
+    server_write_MAC_secret[SecurityParameters.hash_size]
+    client_write_key[SecurityParameters.key_material_length]
+    server_write_key[SecurityParameters.key_material_length]
+    client_write_IV[SecurityParameters.IV_size]
+    server_write_IV[SecurityParameters.IV_size]
+  end
+end
+```

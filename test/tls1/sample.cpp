@@ -85,6 +85,28 @@ void test_transcript_hash(tls_session* session, const binary_t& expect) {
     }
 }
 
+void direction_string(tls_direction_t dir, int send, std::string& s) {
+    s += "{";
+    if (from_client == dir) {
+        if (0 == send) {
+            s += "*";
+        }
+        s += "client->server";
+        if (send) {
+            s += "*";
+        }
+    } else {
+        if (send) {
+            s += "*";
+        }
+        s += "client<-server";
+        if (0 == send) {
+            s += "*";
+        }
+    }
+    s += "}";
+}
+
 tls_session rfc8448_session;
 tls_session rfc8448_session2;
 
@@ -105,7 +127,7 @@ int main(int argc, char** argv) {
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose);
     if (option.log) {
-        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log");
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log").attach(&_test_case);
     }
     if (option.time) {
         builder.set_timeformat("[Y-M-D h:m:s.f]");
@@ -146,7 +168,8 @@ int main(int argc, char** argv) {
     test_rfc8448_6();
     test_rfc8448_7();
 
-    test_construct();
+    test_construct_tls();
+    test_construct_dtls();
 
     openssl_cleanup();
 

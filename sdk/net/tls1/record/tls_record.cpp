@@ -32,8 +32,7 @@ constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_key_epoch[] = "key epoch";
 constexpr char constexpr_dtls_record_seq[] = "dtls record sequence number";
 
-tls_record::tls_record(uint8 type, tls_session* session)
-    : _content_type(type), _legacy_version(0), _cond_dtls(false), _key_epoch(0), _bodysize(0), _session(session) {
+tls_record::tls_record(uint8 type, tls_session* session) : _content_type(type), _cond_dtls(false), _key_epoch(0), _bodysize(0), _session(session) {
     if (session) {
         session->addref();
     }
@@ -180,7 +179,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
 
             auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
                 auto ver = pl->t_value_of<uint16>(item);
-                pl->set_group(constexpr_group_dtls, (ver >= dtls_13));
+                pl->set_group(constexpr_group_dtls, is_kindof_dtls(ver));
             };
             pl.set_condition(constexpr_legacy_version, lambda_check_dtls);
             pl.select(constexpr_dtls_record_seq)->reserve(6);
@@ -203,7 +202,6 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
 
         {
             _content_type = content_type;
-            _legacy_version = legacy_version;
             _bodysize = len;
             _cond_dtls = cond_dtls;
             if (cond_dtls) {
@@ -231,8 +229,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
 
-        auto& protection = session->get_tls_protection();
-        protection.set_record_version(_legacy_version);
+        set_legacy_version(legacy_version);
 
         if (cond_dtls) {
             _dtls_record_seq = std::move(dtls_record_seq);
@@ -249,13 +246,17 @@ return_t tls_record::do_read_body(tls_direction_t dir, const byte_t* stream, siz
 return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
     __try2 {
+        uint16 legacy_version = get_legacy_version();
+
         {
             _range.begin = bin.size();
             _bodysize = body.size();
+        }
 
-            auto session = get_session();
-            auto& protection = session->get_tls_protection();
-            _legacy_version = protection.get_record_version();
+        {
+            if (_dtls_record_seq.empty()) {
+                _dtls_record_seq.resize(6);
+            }
         }
 
         {
@@ -266,7 +267,7 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
                << new payload_member(binary_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                << new payload_member(uint16(body.size()), true, constexpr_len);                                         // tls, dtls
 
-            pl.set_group(constexpr_group_dtls, is_kindof_dtls(_legacy_version));
+            pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
             pl.write(bin);
         }
 
@@ -284,7 +285,33 @@ tls_session* tls_record::get_session() { return _session; }
 
 tls_content_type_t tls_record::get_type() { return (tls_content_type_t)_content_type; }
 
-uint16 tls_record::get_legacy_version() { return _legacy_version; }
+uint16 tls_record::get_legacy_version() {
+    uint16 version = 0;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    version = protection.get_record_version();
+    return version;
+}
+
+void tls_record::set_legacy_version(uint16 version) {
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    protection.set_record_version(version);
+}
+
+uint16 tls_record::get_tls_version() {
+    uint16 version = 0;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    version = protection.get_tls_version();
+    return version;
+}
+
+void tls_record::set_tls_version(uint16 version) {
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    protection.set_tls_version(version);
+}
 
 bool tls_record::is_dtls() { return _cond_dtls; }
 

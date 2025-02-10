@@ -95,7 +95,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 ret = errorcode_t::success;
                 __leave2;
             }
-            if (is_basedon_tls13(tlsversion)) {
+            if (is_kindof_tls13(tlsversion)) {
                 dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
             } else {
                 dlen = 12;
@@ -164,7 +164,7 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
                 ret = errorcode_t::success;
                 __leave2;
             }
-            if (is_basedon_tls13(tlsversion)) {
+            if (is_kindof_tls13(tlsversion)) {
                 dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
             } else {
                 dlen = 12;

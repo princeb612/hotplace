@@ -63,6 +63,7 @@ enum loglevel_t {
     loglevel_notice = 12,  // notice
 };
 
+class test_case;
 class logger;
 class logger_builder {
    public:
@@ -70,12 +71,14 @@ class logger_builder {
     logger_builder& set(logger_t key, uint16 value);
     logger_builder& set_timeformat(const std::string& fmt);
     logger_builder& set_logfile(const std::string& filename);
+    logger_builder& attach(test_case* testcase);
 
     logger* build();
 
    private:
     t_key_value<logger_t, uint16> _keyvalue;
     skey_value _skeyvalue;
+    test_case* _testcase;
 };
 
 /**
@@ -113,6 +116,8 @@ class logger {
 
     loglevel_t _log_level;
     loglevel_t _implicit_level;
+
+    test_case* _test_case;
 
    public:
     ~logger();
@@ -208,6 +213,8 @@ class logger {
     logger& colorln(const std::string& msg);
     logger& colorln(const basic_stream& msg);
     logger& colorln(stream_t* s);
+
+    logger& attach(test_case* testcase);
 
    private:
     logger();

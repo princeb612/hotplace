@@ -26,6 +26,11 @@ struct OPTION {
     }
 };
 
+struct TLS_OPTION {
+    uint16 version;
+    std::string cipher_suite;
+};
+
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
@@ -37,6 +42,7 @@ return_t dump_record(const char* text, tls_session* session, const binary_t& bin
 return_t dump_handshake(const char* text, tls_session* session, const binary_t& bin, tls_direction_t dir = from_server);
 void test_keycalc(tls_session* session, tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect);
 void test_transcript_hash(tls_session* session, const binary_t& expect);
+void direction_string(tls_direction_t dir, int send, std::string& s);
 
 void test_tls13_xargs_org();
 void test_tls12_xargs_org();
@@ -51,7 +57,8 @@ void test_rfc8448_7();
 
 void test_use_pre_master_secret();
 
-void test_construct();
+void test_construct_tls();
+void test_construct_dtls();
 void test_validate();
 
 #endif

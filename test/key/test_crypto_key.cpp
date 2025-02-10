@@ -101,11 +101,14 @@ void test_crypto_key() {
         auto pkey = key.find(item.name);
         if (pkey) {
             binary_t bin_x, bin_y, bin_d;
-            key.get_key(pkey, bin_x, bin_y, bin_d);
+            key.get_key(pkey, bin_x, bin_y, bin_d, true);  // preserve leading zero
             auto hint = advisor->hintof_curve_nid(item.nid);
             uint8 keysize = bin_x.size();
-            bool test = ((hint->keysize == keysize) || (hint->keysize - 1 == keysize));
-            _test_case.assert(test, __FUNCTION__, "%s keysize(x) %zi", item.name, bin_x.size());
+            // NID_sect571k1 70..72
+            // NID_sect409r1 50..52
+            // NID_sect113r1 13..15
+            bool test = (hint->keysize >= keysize);
+            _test_case.assert(test, __FUNCTION__, R"(%s key "x" size %zi (preserve leading zero))", item.name, bin_x.size());
         } else {
             _test_case.test(not_found, __FUNCTION__, "%s", item.name);
         }

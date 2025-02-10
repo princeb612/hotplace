@@ -148,108 +148,106 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
         auto sequence_len = _sequence_len;
         auto offset_encdata = _offset_encdata;
 
+        uint16 recno = 0;
+        uint16 rec_enc = 0;
+        binary_t ciphertext;
+        tls_secret_t sn_key;
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+        auto hsstatus = session->get_session_info(dir).get_status();
         {
-            uint16 recno = 0;
-            uint16 rec_enc = 0;
-            binary_t ciphertext;
-            tls_secret_t sn_key;
-            auto session = get_session();
-            auto& protection = session->get_tls_protection();
-            auto hsstatus = session->get_session_info(dir).get_status();
-            {
-                cipher_encrypt_builder builder;
-                auto cipher = builder.set(aes128, ecb).build();
-                size_t blocksize = 16;  // minimal block
-                if (cipher) {
-                    if (from_server == dir) {
-                        if (tls_hs_finished == hsstatus) {
-                            sn_key = tls_secret_application_server_sn_key;
-                        } else {
-                            sn_key = tls_secret_handshake_server_sn_key;
-                        }
+            cipher_encrypt_builder builder;
+            auto cipher = builder.set(aes128, ecb).build();
+            size_t blocksize = 16;  // minimal block
+            if (cipher) {
+                if (from_server == dir) {
+                    if (tls_hs_finished == hsstatus) {
+                        sn_key = tls_secret_application_server_sn_key;
                     } else {
-                        if (tls_hs_finished == hsstatus) {
-                            sn_key = tls_secret_application_client_sn_key;
-                        } else {
-                            sn_key = tls_secret_handshake_client_sn_key;
-                        }
+                        sn_key = tls_secret_handshake_server_sn_key;
                     }
-                    cipher->encrypt(protection.get_item(sn_key), binary_t(), stream + offset_encdata, blocksize, ciphertext);
-                    cipher->release();
-                }
-
-                // recno
-                if (2 == sequence_len) {
-                    rec_enc = t_binary_to_integer<uint16>(ciphertext);
                 } else {
-                    rec_enc = t_binary_to_integer<uint8>(ciphertext);
+                    if (tls_hs_finished == hsstatus) {
+                        sn_key = tls_secret_application_client_sn_key;
+                    } else {
+                        sn_key = tls_secret_handshake_client_sn_key;
+                    }
                 }
-                recno = sequence ^ rec_enc;
+                cipher->encrypt(protection.get_item(sn_key), binary_t(), stream + offset_encdata, blocksize, ciphertext);
+                cipher->release();
             }
 
-            binary_t aad;
-            {
-                binary_append(aad, stream + recpos, offset_encdata);
-                for (auto i = 0; i < sequence_len; i++) {
-                    aad[1 + i] ^= ciphertext[i];
-                }
+            // recno
+            if (2 == sequence_len) {
+                rec_enc = t_binary_to_integer<uint16>(ciphertext);
+            } else {
+                rec_enc = t_binary_to_integer<uint8>(ciphertext);
             }
+            recno = sequence ^ rec_enc;
+        }
 
-            if (istraceable()) {
-                basic_stream dbs;
-                dbs.printf("> record number key %s\n", base16_encode(protection.get_item(sn_key)).c_str());
-
-                // s->printf("> %s %04x\n", constexpr_recno, recno);
-                dbs.printf("> %s %04x (%04x XOR %s)\n", constexpr_recno, recno, sequence, base16_encode(ciphertext).substr(0, sequence_len << 1).c_str());
-                dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
-
-                trace_debug_event(category_tls1, tls_event_read, &dbs);
+        binary_t aad;
+        {
+            binary_append(aad, stream + recpos, offset_encdata);
+            for (auto i = 0; i < sequence_len; i++) {
+                aad[1 + i] ^= ciphertext[i];
             }
+        }
 
-            binary_t plaintext;
-            {
-                // decryption
-                ret = protection.decrypt(session, dir, stream, size - aad.size(), recpos, plaintext, aad);
-            }
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf("> record number key %s\n", base16_encode(protection.get_item(sn_key)).c_str());
 
-            if (istraceable()) {
-                basic_stream dbs;
-                dbs.printf("> aad\n");
-                dump_memory(aad, &dbs, 16, 3, 0x0, dump_notrunc);
-                dbs.printf("> plaintext\n");
-                dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
+            // s->printf("> %s %04x\n", constexpr_recno, recno);
+            dbs.printf("> %s %04x (%04x XOR %s)\n", constexpr_recno, recno, sequence, base16_encode(ciphertext).substr(0, sequence_len << 1).c_str());
+            dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
 
-                trace_debug_event(category_tls1, tls_event_read, &dbs);
-            }
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
+        }
 
-            // record
-            if (errorcode_t::success == ret) {
-                uint8 hstype = *plaintext.rbegin();
-                size_t tpos = 0;
+        binary_t plaintext;
+        {
+            // decryption
+            ret = protection.decrypt(session, dir, stream, size - aad.size(), recpos, plaintext, aad);
+        }
 
-                switch (hstype) {
-                    case tls_content_type_alert: {
-                        tls_record_alert alert(session);
-                        ret = alert.read_plaintext(dir, &plaintext[0], plaintext.size() - 1, tpos);
-                    } break;
-                    case tls_content_type_handshake: {
-                        auto handshake = tls_handshake::read(session, dir, &plaintext[0], plaintext.size() - 1, tpos);
-                        get_handshakes().add(handshake);
-                    } break;
-                    case tls_content_type_application_data: {
-                        if (istraceable()) {
-                            basic_stream dbs;
-                            dbs.printf("> application data\n");
-                            dump_memory(&plaintext[0], plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf("> aad\n");
+            dump_memory(aad, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.printf("> plaintext\n");
+            dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
 
-                            trace_debug_event(category_tls1, tls_event_read, &dbs);
-                        }
-                    } break;
-                    case tls_content_type_ack: {
-                        tls_record_ack ack(session);
-                        ret = ack.do_read_body(dir, &plaintext[0], plaintext.size() - 1, tpos);
-                    } break;
-                }
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
+        }
+
+        // record
+        if (errorcode_t::success == ret) {
+            uint8 hstype = *plaintext.rbegin();
+            size_t tpos = 0;
+
+            switch (hstype) {
+                case tls_content_type_alert: {
+                    tls_record_alert alert(session);
+                    ret = alert.read_plaintext(dir, &plaintext[0], plaintext.size() - 1, tpos);
+                } break;
+                case tls_content_type_handshake: {
+                    auto handshake = tls_handshake::read(session, dir, &plaintext[0], plaintext.size() - 1, tpos);
+                    get_handshakes().add(handshake);
+                } break;
+                case tls_content_type_application_data: {
+                    if (istraceable()) {
+                        basic_stream dbs;
+                        dbs.printf("> application data\n");
+                        dump_memory(&plaintext[0], plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
+
+                        trace_debug_event(category_tls1, tls_event_read, &dbs);
+                    }
+                } break;
+                case tls_content_type_ack: {
+                    tls_record_ack ack(session);
+                    ret = ack.do_read_body(dir, &plaintext[0], plaintext.size() - 1, tpos);
+                } break;
             }
         }
     }
@@ -259,7 +257,15 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
     return ret;
 }
 
-return_t dtls13_ciphertext::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
+return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
+
+return_t dtls13_ciphertext::do_write_body(tls_direction_t dir, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

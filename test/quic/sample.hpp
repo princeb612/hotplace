@@ -14,15 +14,21 @@ using namespace hotplace::net;
 typedef struct _OPTION {
     int verbose;
     int debug;
+    int log;
+    int time;
     int mode;
     std::string content;
 
-    _OPTION() : verbose(0), debug(0), mode(0) {
+    _OPTION() : verbose(0), debug(0), log(0), time(0), mode(0) {
         // do nothing
     }
     void set(int m, const char* param) {
         mode = m;
         content = param;
+    }
+    void enable_debug() {
+        verbose = 1;
+        debug = 1;
     }
 } OPTION;
 

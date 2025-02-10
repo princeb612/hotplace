@@ -238,7 +238,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     }
 
     {
-        // hash(client_hello_random + server_hello_random + curve_info + public_key)
+        // sign(client_hello_random + server_hello_random + curve_info + public_key)
         binary_t message;
         binary_append(message, protection.get_item(tls_context_client_hello_random));
         binary_append(message, protection.get_item(tls_context_server_hello_random));

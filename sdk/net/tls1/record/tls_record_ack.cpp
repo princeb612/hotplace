@@ -29,31 +29,29 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
     __try2 {
         uint16 len = get_body_size();
 
+        // RFC 9147 7.  ACK Message
+        // struct {
+        //     RecordNumber record_numbers<0..2^16-1>;
+        // } ACK;
+
+        uint16 ack_len = 0;
+        binary_t ack;
         {
-            // RFC 9147 7.  ACK Message
-            // struct {
-            //     RecordNumber record_numbers<0..2^16-1>;
-            // } ACK;
+            payload pl;
+            pl << new payload_member(uint16(0), true, constexpr_ack_len) << new payload_member(binary_t(), constexpr_ack);
+            pl.set_reference_value(constexpr_ack, constexpr_ack_len);
+            pl.read(stream, size, pos);
 
-            uint16 ack_len = 0;
-            binary_t ack;
-            {
-                payload pl;
-                pl << new payload_member(uint16(0), true, constexpr_ack_len) << new payload_member(binary_t(), constexpr_ack);
-                pl.set_reference_value(constexpr_ack, constexpr_ack_len);
-                pl.read(stream, size, pos);
+            ack_len = pl.t_value_of<uint16>(constexpr_ack_len);
+            pl.select(constexpr_ack)->get_variant().to_binary(ack);
+        }
 
-                ack_len = pl.t_value_of<uint16>(constexpr_ack_len);
-                pl.select(constexpr_ack)->get_variant().to_binary(ack);
-            }
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf("> %s %04x(%i)\n", constexpr_ack_len, ack_len, ack_len);
+            dump_memory(ack, &dbs, 16, 3, 0x0, dump_notrunc);
 
-            if (istraceable()) {
-                basic_stream dbs;
-                dbs.printf("> %s %04x(%i)\n", constexpr_ack_len, ack_len, ack_len);
-                dump_memory(ack, &dbs, 16, 3, 0x0, dump_notrunc);
-
-                trace_debug_event(category_tls1, tls_event_read, &dbs);
-            }
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
 
         pos += len;
@@ -64,7 +62,10 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
     return ret;
 }
 
-return_t tls_record_ack::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
+return_t tls_record_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

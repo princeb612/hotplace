@@ -13,7 +13,7 @@
 
 namespace hotplace {
 
-logger_builder::logger_builder() {
+logger_builder::logger_builder() : _testcase(nullptr) {
     _keyvalue.set(logger_t::logger_stdout, 1)
         .set(logger_t::logger_file, 0)
         .set(logger_t::logger_interval, 100)
@@ -37,6 +37,11 @@ logger_builder& logger_builder::set_logfile(const std::string& filename) {
     return *this;
 }
 
+logger_builder& logger_builder::attach(test_case* testcase) {
+    _testcase = testcase;
+    return *this;
+}
+
 logger* logger_builder::build() {
     logger* p = nullptr;
     __try_new_catch_only(p, new logger);
@@ -44,6 +49,9 @@ logger* logger_builder::build() {
         p->_keyvalue = _keyvalue;
         p->_skeyvalue = _skeyvalue;
         p->start_consumer();
+        if (_testcase) {
+            p->attach(_testcase);
+        }
     }
     return p;
 }

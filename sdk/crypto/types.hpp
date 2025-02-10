@@ -127,6 +127,14 @@ enum crypt_algorithm_t {
  *    RC5         : CBC, CFB,             OFB, ECB
  *    SEED        : CBC, CFB,             OFB, ECB
  *    SM4         : CBC, CFB,             OFB, ECB, CTR
+ *
+ *  crypt_mode_t::ccm8
+ *      openssl provide "aes-128-ccm", ... (not provice "aes-128-ccm8", ...)
+ *      see EVP_CTRL_AEAD_SET_TAG
+ *  sample
+ *      auto cipher = EVP_CIPHER_fetch(nullptr, "aes-128-ccm", nullptr);
+ *      EVP_CIPHER_CTX_init(context);
+ *      EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_TAG, 8, nullptr);
  */
 enum crypt_mode_t {
     mode_unknown = 0,
@@ -955,13 +963,13 @@ enum curve_category_t : uint8 {
  *              Complex multiplication
  */
 typedef struct _hint_curves_t {
-    uint32 nid;
+    uint32 nid;  // openssl NID
     cose_ec_curve_t cose_crv;
-    crypto_kty_t kty;
-    crypto_use_t use;
-    uint16 tlsgroup;   // TLS
+    crypto_kty_t kty;  // kty_ec, kty_okp
+    crypto_use_t use;  // use_any, use_enc, use_sig
+    uint16 tlsgroup;   // TLS group
     uint16 flags;      // ECDSA_SUPPORT_xxx
-    uint8 keysize;     // key size (preserve leading zero)
+    uint8 keysize;     // key size (preserve leading zero), (keysize-2 .. keysize)
     uint8 category;    // see curve_category_t
     const char* oid;   // OID
     const char* name;  // NIST (CURVE P-256, P-384, P-521, ...)
@@ -978,14 +986,14 @@ const char* oidof(const hint_curve_t* hint);
 bool support(const hint_curve_t* hint, hash_algorithm_t alg);
 
 typedef struct _hint_signature_t {
-    crypt_sig_t sig_type;
-    jws_t jws_type;
-    jws_group_t group;
-    crypto_kty_t kty;
-    const char* jws_name;
-    hash_algorithm_t alg;
-    uint32 count;
-    uint32 nid[5];
+    crypt_sig_t sig_type;  // ex. sig_eddsa
+    jws_t jws_type;        // ex. jws_eddsa
+    jws_group_t group;     // ex. jws_group_eddsa
+    crypto_kty_t kty;      // ex. kty_okp
+    const char* jws_name;  // ex. "EdDSA"
+    hash_algorithm_t alg;  // ex. hash_alg_unknown
+    uint32 count;          // ex. 2
+    uint32 nid[2];         // ex. NID_ED25519, NID_ED448
 } hint_signature_t;
 
 crypt_sig_t typeof_sig(const hint_signature_t* hint);

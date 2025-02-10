@@ -461,11 +461,16 @@ class openssl_crypt : public crypt_t {
      * @param   binary_t& q [out] ciphertext
      * @param   binary_t& t [out] AE tag
      * @return  error code (see error.hpp)
-     * @desc
+     * @remarks
      *
      *          K = MAC_KEY || ENC_KEY
      *          MAC_KEY = initial MAC_KEY_LEN bytes of K
      *          ENC_KEY = final ENC_KEY_LEN bytes of K
+     *
+     *          JOSE
+     *              "A128CBC-HS256"
+     *              "A192CBC-HS384"
+     *              "A256CBC-HS512"
      *
      * @sa      RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
      */
@@ -498,6 +503,12 @@ class openssl_crypt : public crypt_t {
      *          K = MAC_KEY || ENC_KEY
      *          MAC_KEY = initial MAC_KEY_LEN bytes of K
      *          ENC_KEY = final ENC_KEY_LEN bytes of K
+     *
+     *          JOSE
+     *              "A128CBC-HS256"
+     *              "A192CBC-HS384"
+     *              "A256CBC-HS512"
+     *
      * @sa      RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
      */
     return_t cbc_hmac_rfc7516_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& k, const binary_t& iv, const binary_t& a, const binary_t& q,
@@ -531,6 +542,8 @@ class openssl_crypt : public crypt_t {
      *          plaintext
      *            // sample #1
      *            {
+     *              // plaintag = plaintext || tag
+     *              //                    \- ptsize
      *              binary_t plaintag;
      *              size_t ptsize = 0;
      *              cbc_hmac_tls_decrypt(aes128, sha1, key, mackey, iv, aad, ciphertext, plaintag, ptsize);
@@ -538,6 +551,7 @@ class openssl_crypt : public crypt_t {
      *            }
      *            // sample #2
      *            {
+     *              // plaintext, tag separated
      *              binary_t plaintext;
      *              binary_t tag;
      *              cbc_hmac_tls_decrypt(aes128, sha1, key, mackey, iv, aad, ciphertext, plaintext, tag);

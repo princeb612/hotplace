@@ -479,7 +479,7 @@ std::string tls_advisor::sni_nametype_string(uint16 code) {
     return value;
 }
 
-bool tls_advisor::is_basedon_tls13(uint16 ver) { return (tls_13 == ver) || (dtls_13 == ver); }
+bool tls_advisor::is_kindof_tls13(uint16 ver) { return (tls_13 == ver) || (dtls_13 == ver); }
 
 bool tls_advisor::is_kindof_tls(uint16 ver) {
     bool ret = false;
@@ -509,7 +509,7 @@ bool tls_advisor::is_kindof_dtls(uint16 ver) {
     return ret;
 }
 
-bool is_basedon_tls13(uint16 ver) { return tls_advisor::get_instance()->is_basedon_tls13(ver); }
+bool is_kindof_tls13(uint16 ver) { return tls_advisor::get_instance()->is_kindof_tls13(ver); }
 
 bool is_kindof_tls(uint16 ver) { return tls_advisor::get_instance()->is_kindof_tls(ver); }
 

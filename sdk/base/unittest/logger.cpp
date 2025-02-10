@@ -23,6 +23,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/base/unittest/logger.hpp>
+#include <sdk/base/unittest/testcase.hpp>
 
 namespace hotplace {
 
@@ -33,7 +34,8 @@ logger::logger()
       _fgcolor(white),
       _bgcolor(black),
       _log_level(loglevel_t::loglevel_trace),
-      _implicit_level(loglevel_t::loglevel_trace) {}
+      _implicit_level(loglevel_t::loglevel_trace),
+      _test_case(nullptr) {}
 
 logger::~logger() { clear(); }
 
@@ -781,5 +783,12 @@ logger& logger::do_color_write_stream(stream_t* s, bool lf) {
 bool logger::test_loglevel(loglevel_t level) { return level >= _log_level; }
 
 bool logger::test_loglevel() { return _implicit_level >= _log_level; }
+
+logger& logger::attach(test_case* testcase) {
+    if (testcase) {
+        testcase->attach(this);
+    }
+    return *this;
+}
 
 }  // namespace hotplace

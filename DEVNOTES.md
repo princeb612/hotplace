@@ -170,12 +170,13 @@ flowchart LR
     - [x] pre shared key (psk binder)
     - [x] certificate verify
     - [x] finished
-  - [ ] construct
-    - [ ] TLS version
+  - [x] TLS construct
+    - [x] TLS version
       - [x] TLS1.3
-      - [ ] TLS1.2
+      - [x] TLS1.2
     - [x] encryption
       - [x] encryption by cipher mode (not by TLS version)
+  - [ ] DTLS construct
 
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)

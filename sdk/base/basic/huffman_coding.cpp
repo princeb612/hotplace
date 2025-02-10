@@ -51,7 +51,7 @@ huffman_coding &huffman_coding::learn() {
      */
 
     auto lambda = [&](hc_t const &t) -> void { _btree.insert(t); };
-    _measure.for_each(lambda);
+    _measure.for_each(lambda);  // insert into _btree select * from _measure
 
     while (_btree.size() > 1) {
         hc_t k;
