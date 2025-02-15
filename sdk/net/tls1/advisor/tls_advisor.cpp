@@ -467,6 +467,25 @@ std::string tls_advisor::compression_method_string(uint8 code) {
     std::string value;
     if (0 == code) {
         value = "null";
+    } else if (1 == code) {
+        value = "deflate";  // TLS 1.3 deprecated
+        /**
+         * RFC 3749 2.1.  DEFLATE Compression
+         * RFC 5246 6.2.2.  Record Compression and Decompression
+         *
+         * RFC 8446 4.1.2.  Client Hello
+         *   legacy_compression_methods
+         *     ...
+         *     For every TLS 1.3 ClientHello, this vector MUST contain exactly one byte, set to zero, which corresponds to
+         *     the "null" compression method in prior versions of TLS.
+         *     ...
+         *     If a TLS 1.3 ClientHello is received with any other value in this field, the server MUST abort the handshake with an "illegal_parameter" alert.
+         *     ...
+         *
+         * cf. CRIME attack (Compression Ratio Info-leak Made Easy)
+         *     client-side attack
+         *     server refuse 0x01 (deflate)
+         */
     }
     return value;
 }
@@ -505,6 +524,16 @@ bool tls_advisor::is_kindof_dtls(uint16 ver) {
             break;
         default:
             break;
+    }
+    return ret;
+}
+
+bool tls_advisor::is_kindof(uint16 lhs, uint16 rhs) {
+    bool ret = false;
+    if ((tls_13 == lhs) || (dtls_13 == lhs)) {
+        ret = (tls_13 == rhs) || (dtls_13 == rhs);
+    } else if ((tls_12 == lhs) || (dtls_12 == lhs)) {
+        ret = (tls_12 == rhs) || (dtls_12 == rhs);
     }
     return ret;
 }

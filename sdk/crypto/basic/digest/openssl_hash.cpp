@@ -325,6 +325,12 @@ return_t openssl_hash::update(hash_context_t* handle, const byte_t* source_data,
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        if (nullptr == source_data) {
+            if (source_size) {
+                ret = errorcode_t::invalid_parameter;
+            }
+            __leave2;
+        }
 
         if (OPENSSL_HASH_CONTEXT_SIGNATURE != context->_signature) {
             ret = errorcode_t::invalid_context;

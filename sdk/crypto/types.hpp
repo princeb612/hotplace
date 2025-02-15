@@ -29,16 +29,20 @@ enum crypt_poweredby_t {
 
 enum keyexchange_t {
     keyexchange_null = 0,
-    keyexchange_rsa = 1,     // Rivest Shamir Adleman algorithm (RSA)
-    keyexchange_dh = 2,      // Diffie-Hellman (DH)
-    keyexchange_dhe = 3,     // Diffie-Hellman Ephemeral (DHE)
-    keyexchange_krb5 = 4,    // Kerberos 5 (KRB5)
-    keyexchange_psk = 5,     // Pre-Shared Key (PSK)
-    keyexchange_ecdh = 6,    // Elliptic Curve Diffie-Hellman (ECDH)
-    keyexchange_ecdhe = 7,   // Elliptic Curve Diffie-Hellman Ephemeral (ECDHE)
-    keyexchange_srp = 8,     // Secure Remote Password (SRP)
-    keyexchange_eccpwd = 9,  // ECCPWD
-    keyexchange_gost = 10,   // Russian cryptographic standard algorithms
+    keyexchange_rsa = 1,           // Rivest Shamir Adleman algorithm (RSA)
+    keyexchange_dh = 2,            // Diffie-Hellman (DH)
+    keyexchange_dhe = 3,           // Diffie-Hellman Ephemeral (DHE)
+    keyexchange_krb5 = 4,          // Kerberos 5 (KRB5)
+    keyexchange_psk = 5,           // Pre-Shared Key (PSK)
+    keyexchange_ecdh = 6,          // Elliptic Curve Diffie-Hellman (ECDH)
+    keyexchange_ecdhe = 7,         // Elliptic Curve Diffie-Hellman Ephemeral (ECDHE)
+    keyexchange_srp = 8,           // Secure Remote Password (SRP)
+    keyexchange_eccpwd = 9,        // ECCPWD
+    keyexchange_gost = 10,         // Russian cryptographic standard algorithms
+    keyexchange_rsa_export = 11,   // TLS 1.0
+    keyexchange_dss_export = 12,   // TLS 1.0
+    keyexchange_anon_export = 13,  // TLS 1.0
+    keyexchange_krb5_export = 14,  // TLS 1.0
 };
 
 enum auth_t {
@@ -251,6 +255,7 @@ enum nid_t : uint32 {
     nid_ffdhe4096 = 1128,  // NID_ffdhe4096
     nid_ffdhe6144 = 1129,  // NID_ffdhe6144
     nid_ffdhe8192 = 1130,  // NID_ffdhe8192
+    nid_dsa = 116,         // NID_dsa
 };
 
 enum crypt_sig_type_t : uint8 {
@@ -310,9 +315,12 @@ enum crypt_item_t : uint16 {
     item_apv = 8,           // APV - agreement partyVinfo
     item_p2s = 9,           // P2S - PBES2 salt
 
+    item_asn1der = 63,
+    item_rsa_pub = item_asn1der,
     item_rsa_n = 64,
     item_rsa_e = 65,
     item_rsa_d = 66,
+    item_rsa_priv = item_rsa_d,
     item_rsa_p = 67,
     item_rsa_q = 68,
     item_rsa_dp = 69,
@@ -326,10 +334,33 @@ enum crypt_item_t : uint16 {
 
     item_hmac_k = 76,
 
-    item_ec_pub = 77,
+    item_ec_pub_uncompressed = 77,
+    item_ec_pub = item_ec_pub_uncompressed,
 
     item_dh_pub = 78,
     item_dh_priv = 79,
+
+    /**
+     * DSA
+     *   public key
+     *     p (prime)
+     *     q (subprime)
+     *     g (generator)
+     *     y (public key)
+     *   private key
+     *     x (private key)
+     *   signature
+     *     k (nonce)
+     *     r (signature 1)
+     *     s (signature 2)
+     */
+    item_dsa_pub = item_asn1der,
+    item_dsa_priv = 80,
+    item_dsa_p = 81,
+    item_dsa_q = 82,
+    item_dsa_g = 83,
+    item_dsa_y = 84,
+    item_dsa_x = item_dsa_priv,
 
     /* string */
     item_header = 128,  // p - header (protected_header.decoded)
@@ -341,9 +372,24 @@ enum crypt_item_t : uint16 {
     item_p2c = 257,  // PBES2 count (int32)
 };
 
+/**
+ * @brief get key
+ * @sa crypto_key::get_key
+ * @remarks
+ * if there are both public_key | asn1public_key in the flag, asn1public_key has higher priority.
+ * | key type   | public_key               | asn1public_key | private_key  |
+ * | kty_oct    | N/A                      | N/A            | item_hmac_k  |
+ * | kty_okp    | item_ec_x                | item_asn1der   | item_ec_d    |
+ * | kty_ec     | item_ec_pub_uncompressed | item_asn1der   | item_ec_d    |
+ * | kty_rsa    | N/A                      | item_asn1der   | item_rsa_d   |
+ * | kty_rsapss | N/A                      | item_asn1der   | item_rsa_d   |
+ * | kty_dh     | item_dh_pub              | item_asn1der   | item_dh_priv |
+ * | kty_dsa    | N/A                      | item_asn1der   | item_dsa_x   |
+ */
 enum crypt_access_t {
-    public_key = (1 << 0),
-    private_key = (1 << 1),
+    public_key = (1 << 0),      // simple and common representation
+    private_key = (1 << 1),     //
+    asn1public_key = (1 << 2),  // ASN.1 DER representation
 };
 
 enum crypto_kty_t : uint16 {
@@ -355,6 +401,7 @@ enum crypto_kty_t : uint16 {
     kty_okp = 4,         // NID_X25519, NID_X448, NID_ED25519, NID_ED448
     kty_dh = 5,          // NID_dhKeyAgreement
     kty_rsapss = 6,      // NID_rsassaPss
+    kty_dsa = 7,         // NID_dsa
     kty_bad = 0xffff,
 };
 

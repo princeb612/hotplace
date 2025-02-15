@@ -75,6 +75,9 @@ return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t sig, const byte_t*
             case EVP_PKEY_ED448:
                 ret = sign_eddsa(pkey, hash_alg, stream, size, signature);
                 break;
+            case EVP_PKEY_DSA:
+                ret = sign_dsa(pkey, hash_alg, stream, size, signature);
+                break;
             default:
                 ret = errorcode_t::not_supported;
                 break;
@@ -135,6 +138,9 @@ return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t sig, const byte_
             case EVP_PKEY_ED25519:
             case EVP_PKEY_ED448:
                 ret = verify_eddsa(pkey, hash_alg, stream, size, signature);
+                break;
+            case EVP_PKEY_DSA:
+                ret = verify_dsa(pkey, hash_alg, stream, size, signature);
                 break;
             default:
                 ret = errorcode_t::not_supported;

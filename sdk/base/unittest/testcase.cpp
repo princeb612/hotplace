@@ -564,6 +564,9 @@ void test_case::report(uint32 top_count) {
     //  fail |0xef010036|assert_failed                   |function9           |0.000000049|case 2 desc 3 - intentional fail
     // --------------------------------------------------------------------------------
     report_failed(stream);
+
+    report_cases(stream);
+
     // sort by time (top 5)
     // --------------------------------------------------------------------------------
     // result|errorcode |test function       |time       |message
@@ -673,6 +676,51 @@ void test_case::report_unittest(basic_stream& stream) {
     console_colored_stream << _concolor.turnoff();
 }
 
+void test_case::report_cases(basic_stream& stream) {
+    t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
+    console_color_t fgcolor = console_color_t::white;
+
+    //
+    // compose
+    //
+
+    constexpr char constexpr_brief[] = "brief";
+    constexpr char constexpr_case[] = "case";
+
+    critical_section_guard guard(_lock);
+
+    console_colored_stream << _concolor.turnon().set_style(console_style_t::bold);
+
+    stream << constexpr_brief << "\n";
+    stream << constexpr_pass << " " << constexpr_fail << " " << constexpr_skip << " " << constexpr_low << constexpr_case << "\n";
+
+    for (const auto& testcase : _test_list) {
+        unittest_map_t::iterator map_iter = _test_map.find(testcase);
+        test_status_t status = map_iter->second;
+
+        console_colored_stream << _concolor.turnon();
+        if (status._test_stat._count_fail) {
+            console_colored_stream << _concolor.set_fgcolor(console_color_t::red);
+        } else if (status._test_stat._count_not_supported) {
+            console_colored_stream << _concolor.set_fgcolor(console_color_t::cyan);
+        } else if (status._test_stat._count_low_security) {
+            console_colored_stream << _concolor.set_fgcolor(console_color_t::yellow);
+        } else {
+            console_colored_stream << _concolor.set_fgcolor(console_color_t::white);
+        }
+
+        stream.printf("%4i %4i %4i %3i %s\n", status._test_stat._count_success, status._test_stat._count_fail, status._test_stat._count_not_supported,
+                      status._test_stat._count_low_security, testcase.c_str());
+
+        console_colored_stream << _concolor.set_fgcolor(console_color_t::white);
+    }
+
+    stream.fill(80, '-');
+    stream << "\n";
+
+    console_colored_stream << _concolor.turnoff();
+}
+
 void test_case::report_failed(basic_stream& stream) {
     t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
 
@@ -708,8 +756,8 @@ void test_case::report_failed(basic_stream& stream) {
         }
         stream << " failed\n";
 
-        stream.fill(80, '-');
-        stream << "\n";
+        // stream.fill(80, '-');
+        // stream << "\n";
 
         dump_list_into_stream(array, stream, testcase_dump_t::testcase_dump_error);
 

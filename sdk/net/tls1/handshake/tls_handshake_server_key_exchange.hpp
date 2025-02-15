@@ -14,6 +14,9 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * RFC 5246 7.4.3.  Server Key Exchange Message
+ */
 class tls_handshake_server_key_exchange : public tls_handshake {
    public:
     tls_handshake_server_key_exchange(tls_session* session);

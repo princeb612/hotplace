@@ -116,6 +116,9 @@ return_t simple_http_server(void *) {
             .enable_ipv4(true)
             .enable_ipv6(true)
             .set_handler(consume_routine);
+        if (option.content_encoding) {
+            builder.allow_content_encoding("deflate, gzip");
+        }
         builder.get_server_conf()
             .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
             .set(netserver_config_t::serverconf_concurrent_network, 4)

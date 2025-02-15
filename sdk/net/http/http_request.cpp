@@ -15,14 +15,16 @@
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_resource.hpp>
+#include <sdk/net/http/http_server.hpp>
 
 namespace hotplace {
 namespace net {
 
-http_request::http_request() : _hpsess(nullptr), _version(1), _stream_id(0) { _shared.make_share(this); }
+http_request::http_request() : _router(nullptr), _hpsess(nullptr), _version(1), _stream_id(0) { _shared.make_share(this); }
 
 http_request::http_request(const http_request& object) {
     _shared.make_share(this);
+    _router = object._router;
     _hpsess = object._hpsess;
     _version = object._version;
     _stream_id = object._stream_id;
@@ -203,6 +205,8 @@ return_t http_request::close() {
     _uri.close();
     return ret;
 }
+
+void http_request::set_http_router(http_router* router) { _router = router; }
 
 http_header& http_request::get_http_header() { return _header; }
 

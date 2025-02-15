@@ -55,6 +55,14 @@ class http_server_builder {
     http_server_builder& enable_h2(bool enable);
     http_server_builder& enable_h3(bool enable);
 
+    /**
+     * @brief   content-encoding
+     * @remarks turn off deflate, gzip to avoid BREACH attack
+     * @sample
+     *          builder.allow_content_encoding("deflate, gzip");
+     */
+    http_server_builder& allow_content_encoding(const std::string& encoding);
+
     http_server_builder& set_handler(http_server_handler_t handler, void* user_context = nullptr);
 
     http_server* build();
@@ -65,6 +73,7 @@ class http_server_builder {
     std::string _server_cert;
     std::string _server_key;
     std::string _tls_cipher_list;
+    std::string _content_encoding;
 
     server_conf _config;
 

@@ -14,6 +14,9 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * RFC 5246 7.4.8.  Certificate Verify
+ */
 class tls_handshake_certificate_verify : public tls_handshake {
    public:
     tls_handshake_certificate_verify(tls_session* session);

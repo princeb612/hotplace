@@ -15,11 +15,26 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * RFC 5246 7.4.1.3.  Server Hello
+ * struct {
+ *     ProtocolVersion server_version;
+ *     Random random;
+ *     SessionID session_id;
+ *     CipherSuite cipher_suite;
+ *     CompressionMethod compression_method;
+ *     select (extensions_present) {
+ *         case false:
+ *             struct {};
+ *         case true:
+ *             Extension extensions<0..2^16-1>;
+ *     };
+ * } ServerHello;
+ */
 class tls_handshake_server_hello : public tls_handshake {
    public:
     tls_handshake_server_hello(tls_session* session);
 
-    uint16 get_version();
     binary& get_random();
     binary& get_session_id();
     uint16 get_cipher_suite();
@@ -31,8 +46,7 @@ class tls_handshake_server_hello : public tls_handshake {
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
-    uint16 _version;
-    binary _random;
+    binary _random;  // 32 bytes
     binary _session_id;
     uint8 _compression_method;
 };

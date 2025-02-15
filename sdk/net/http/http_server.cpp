@@ -258,6 +258,8 @@ network_server& http_server::get_network_server() { return _server; }
 
 server_conf& http_server::get_server_conf() { return _conf; }
 
+skey_value& http_server::get_http_conf() { return _httpconf; }
+
 http_protocol& http_server::get_http_protocol() { return _protocol; }
 
 http2_protocol& http_server::get_http2_protocol() { return _protocol2; }

@@ -40,7 +40,7 @@ constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_cookie_len[] = "cookie len";
 constexpr char constexpr_cookie[] = "cookie";
 
-tls_handshake_client_hello::tls_handshake_client_hello(tls_session* session) : tls_handshake(tls_hs_client_hello, session), _version(tls_12) {}
+tls_handshake_client_hello::tls_handshake_client_hello(tls_session* session) : tls_handshake(tls_hs_client_hello, session) {}
 
 return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
@@ -163,7 +163,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
              *  } ClientHello;
              */
 
-            uint16 record_version = protection.get_record_version();
+            uint16 legacy_version = protection.get_lagacy_version();
             uint16 version = 0;
             binary_t random;
             binary_t session_id;
@@ -176,15 +176,19 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
 
             {
                 payload pl;
-                pl << new payload_member(uint16(0), true, constexpr_version) << new payload_member(binary_t(), constexpr_random)
-                   << new payload_member(uint8(0), constexpr_session_id_len) << new payload_member(binary_t(), constexpr_session_id)
+                pl << new payload_member(uint16(0), true, constexpr_version)                    // TLS 1.2
+                   << new payload_member(binary_t(), constexpr_random)                          // 32 bytes
+                   << new payload_member(uint8(0), constexpr_session_id_len)                    //
+                   << new payload_member(binary_t(), constexpr_session_id)                      //
                    << new payload_member(uint8(0), constexpr_cookie_len, constexpr_group_dtls)  // dtls
                    << new payload_member(binary_t(), constexpr_cookie, constexpr_group_dtls)    // dtls
-                   << new payload_member(uint16(0), true, constexpr_cipher_suite_len) << new payload_member(binary_t(), constexpr_cipher_suite)
-                   << new payload_member(uint8(0), constexpr_compression_method_len) << new payload_member(binary_t(), constexpr_compression_method)
-                   << new payload_member(uint16(0), true, constexpr_extension_len);
+                   << new payload_member(uint16(0), true, constexpr_cipher_suite_len)           //
+                   << new payload_member(binary_t(), constexpr_cipher_suite)                    //
+                   << new payload_member(uint8(0), constexpr_compression_method_len)            //
+                   << new payload_member(binary_t(), constexpr_compression_method)              //
+                   << new payload_member(uint16(0), true, constexpr_extension_len);             //
 
-                pl.set_group(constexpr_group_dtls, is_kindof_dtls(record_version));
+                pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
 
                 pl.select(constexpr_random)->reserve(32);
                 pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
@@ -247,7 +251,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                 if (session_id.size()) {
                     dbs.printf("   %s\n", base16_encode(session_id).c_str());
                 }
-                dbs.printf(" > %s %04x(%i ent.)\n", constexpr_cipher_suite_len, cipher_suite_len << 1, cipher_suite_len);
+                dbs.printf(" > %s %04x(%i ent.)\n", constexpr_cipher_suite_len, cipher_suite_len, cipher_suite_len >> 1);
                 i = 0;
                 for (auto cs : _cipher_suites) {
                     dbs.printf("   [%i] 0x%04x %s\n", i++, cs, tlsadvisor->cipher_suite_string(cs).c_str());
@@ -287,26 +291,28 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
         get_extensions().write(extensions);
 
         {
-            auto record_version = protection.get_record_version();
+            auto legacy_version = protection.get_lagacy_version();
             binary_t cipher_suites;
-            for (auto cs : _cipher_suites) {
+            for (uint16 cs : _cipher_suites) {
                 binary_append(cipher_suites, cs, hton16);
             }
             binary_t compression_methods;
             compression_methods.resize(1);
 
             payload pl;
-            pl << new payload_member(uint16(_version), true, constexpr_version) << new payload_member(_random, constexpr_random)
-               << new payload_member(uint8(_session_id.size()), constexpr_session_id_len) << new payload_member(_session_id, constexpr_session_id)
-               << new payload_member(uint8(0), constexpr_cookie_len, constexpr_group_dtls)  // dtls
-               << new payload_member(binary_t(), constexpr_cookie, constexpr_group_dtls)    // dtls
-               << new payload_member(uint16(cipher_suites.size()), true, constexpr_cipher_suite_len)
-               << new payload_member(cipher_suites, constexpr_cipher_suite)
-               << new payload_member(uint8(compression_methods.size()), constexpr_compression_method_len)
-               << new payload_member(compression_methods, constexpr_compression_method)
-               << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);
+            pl << new payload_member(uint16(legacy_version), true, constexpr_version)                      //
+               << new payload_member(_random, constexpr_random)                                            //
+               << new payload_member(uint8(_session_id.size()), constexpr_session_id_len)                  //
+               << new payload_member(_session_id, constexpr_session_id)                                    //
+               << new payload_member(uint8(0), constexpr_cookie_len, constexpr_group_dtls)                 // dtls
+               << new payload_member(binary_t(), constexpr_cookie, constexpr_group_dtls)                   // dtls
+               << new payload_member(uint16(cipher_suites.size()), true, constexpr_cipher_suite_len)       //
+               << new payload_member(cipher_suites, constexpr_cipher_suite)                                //
+               << new payload_member(uint8(compression_methods.size()), constexpr_compression_method_len)  //
+               << new payload_member(compression_methods, constexpr_compression_method)                    //
+               << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);            //
 
-            pl.set_group(constexpr_group_dtls, is_kindof_dtls(record_version));
+            pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
             pl.write(bin);
         }
 
@@ -319,8 +325,6 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
     }
     return ret;
 }
-
-uint16 tls_handshake_client_hello::get_version() { return _version; }
 
 binary& tls_handshake_client_hello::get_random() { return _random; }
 

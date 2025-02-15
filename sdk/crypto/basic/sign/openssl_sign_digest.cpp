@@ -74,14 +74,6 @@ return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, c
     return ret;
 }
 
-return_t openssl_sign::sign_hmac(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature) {
-    return sign_digest(pkey, alg, &input[0], input.size(), signature);
-}
-
-return_t openssl_sign::sign_hmac(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature) {
-    return sign_digest(pkey, alg, stream, size, signature);
-}
-
 return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature) {
     return verify_digest(pkey, alg, &input[0], input.size(), signature);
 }
@@ -138,30 +130,6 @@ return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg,
         if (nullptr != md_context) {
             EVP_MD_CTX_destroy(md_context);
         }
-    }
-    return ret;
-}
-
-return_t openssl_sign::verify_hmac(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature) {
-    return verify_hmac(pkey, alg, &input[0], input.size(), signature);
-}
-
-return_t openssl_sign::verify_hmac(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == pkey || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        binary_t result;
-        ret = sign_digest(pkey, alg, stream, size, result);
-        if (result != signature) {
-            ret = errorcode_t::error_verify;
-        }
-    }
-    __finally2 {
-        // do nothing
     }
     return ret;
 }

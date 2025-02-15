@@ -14,6 +14,7 @@
 
 static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
     tls_record_handshake record(session);
     tls_handshake_client_hello* handshake = nullptr;
@@ -25,13 +26,18 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
         {
             openssl_prng prng;
 
+            binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
+            time_t gmt_unix_time = time(nullptr);
+            binary_append(random, gmt_unix_time, hton64);
+            random.resize(sizeof(uint32));
+            binary_t temp;
+            prng.random(temp, 28);
+            binary_append(random, temp);
+            handshake->get_random() = random;
+
             binary_t session_id;
             prng.random(session_id, 32);
             handshake->get_session_id() = session_id;
-
-            binary_t random;
-            prng.random(random, 32);
-            handshake->get_random() = random;
         }
 
         // cipher suites
@@ -99,7 +105,7 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
         }
         {
             auto supported_versions = new tls_extension_client_supported_versions(session);
-            if (tls_13 == option.version) {
+            if (tlsadvisor->is_kindof(tls_13, option.version)) {
                 (*supported_versions).add(tls_13);
             } else {
                 (*supported_versions).add(tls_12);
@@ -169,15 +175,20 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
         {
             openssl_prng prng;
 
+            // server_key_exchange, client_key_exchange
+            binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
+            time_t gmt_unix_time = time(nullptr);
+            binary_append(random, gmt_unix_time, hton64);
+            random.resize(sizeof(uint32));
+            binary_t temp;
+            prng.random(temp, 28);
+            binary_append(random, temp);
+            handshake->get_random() = random;
+
             binary_t session_id;
             prng.random(session_id, 32);
             handshake->get_session_id() = session_id;
             handshake->set_cipher_suite(server_cs);
-
-            // server_key_exchange, client_key_exchange
-            binary_t random;
-            prng.random(random, 32);
-            handshake->get_random() = random;
         }
 
         {
@@ -537,7 +548,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
 
         // C -> S CH
         binary_t bin_client_hello;
-        ret = do_test_construct_client_hello(option, from_client, &client_session, bin_client_hello, "construct client hello message");
+        ret = do_test_construct_client_hello(option, from_client, &client_session, bin_client_hello, "construct client hello");
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -545,7 +556,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
 
         // S -> C SH
         binary_t bin_server_hello;
-        ret = do_test_construct_server_hello(option, from_server, &server_session, &client_session, bin_server_hello, "construct server hello message");
+        ret = do_test_construct_server_hello(option, from_server, &server_session, &client_session, bin_server_hello, "construct server hello");
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -772,6 +783,8 @@ void test_construct_tls() {
                                {tls_13, "TLS_CHACHA20_POLY1305_SHA256"},
                                {tls_13, "TLS_AES_128_CCM_SHA256"},
                                {tls_13, "TLS_AES_128_CCM_8_SHA256"},
+                               {tls_12, "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"},
+                               {tls_12, "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384"},
                                {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"},
                                {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"},
                                {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256"},
@@ -783,8 +796,15 @@ void test_construct_tls() {
                                {tls_12, "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"},
                                {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256"},
                                {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"},
+                               {tls_12, "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"},
+                               {tls_12, "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"},
                                {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256"},
-                               {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384"}};
+                               {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384"},
+                               {tls_12, "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256"},
+                               {tls_12, "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384"},
+                               {tls_12, "TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256"},
+                               {tls_12, "TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384"},
+                               {tls_12, "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"}};
 
     for (auto item : testvector) {
         test_construct_tls_routine(item);

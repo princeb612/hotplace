@@ -59,6 +59,7 @@ int main(int argc, char** argv) {
         test_ffdhe();
         test_ffdhe_dh();
         test_der();
+        test_dsa();
     }
     __finally2 { openssl_cleanup(); }
 

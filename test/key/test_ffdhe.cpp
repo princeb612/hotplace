@@ -37,7 +37,7 @@ void test_ffdhe() {
         bs.printf(R"(> kid "%s")", item->get_desc().get_kid_cstr());
         bs.printf("\n");
         dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
-        _logger->writeln(bs);
+        _logger->write(bs);
     };
     key.for_each(dump_crypto_key, nullptr);
 

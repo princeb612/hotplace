@@ -121,15 +121,15 @@ return_t protection_context::select_from(const protection_context& rhs) {
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        tls_version_t selected_version = tls_10;
+        uint16 selected_version = tls_10;
         {
             auto& versions = rhs._supported_versions;
             for (auto ver : versions) {
-                if (tls_13 == ver) {
-                    selected_version = tls_13;
+                if (tlsadvisor->is_kindof(tls_13, ver)) {
+                    selected_version = ver;
                     break;
-                } else if (tls_12 == ver) {
-                    selected_version = tls_12;
+                } else if (tlsadvisor->is_kindof(tls_12, ver)) {
+                    selected_version = ver;
                 }
             }
             if (tls_10 == selected_version) {
@@ -141,9 +141,8 @@ return_t protection_context::select_from(const protection_context& rhs) {
         {
             for (auto cs : rhs._cipher_suites) {
                 auto hint = tlsadvisor->hintof_cipher_suite(cs);
-                // if (hint && hint->secure && (hint->version <= selected_version)) {
                 // RFC 5246 mandatory TLS_RSA_WITH_AES_128_CBC_SHA
-                if (hint && hint->support && (hint->version == selected_version)) {
+                if (hint && hint->support && tlsadvisor->is_kindof(hint->version, selected_version)) {
                     add_cipher_suite(cs);
                     set_cipher_suite_hint(hint);
                     break;

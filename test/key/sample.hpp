@@ -28,5 +28,6 @@ void test_eckey_compressed();
 void test_ffdhe();
 void test_ffdhe_dh();
 void test_der();
+void test_dsa();
 
 #endif

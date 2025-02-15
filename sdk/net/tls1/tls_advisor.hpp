@@ -163,6 +163,11 @@ class tls_advisor {
     bool is_kindof_tls13(uint16 ver);
     bool is_kindof_tls(uint16 ver);
     bool is_kindof_dtls(uint16 ver);
+    /**
+     * tlsadvisor->is_kindof(tls_12, dtls_12);
+     * tlsadvisor->is_kindof(tls_13, dtls_13);
+     */
+    bool is_kindof(uint16 lhs, uint16 rhs);
 
    protected:
     tls_advisor();

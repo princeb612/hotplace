@@ -84,6 +84,9 @@ crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
             case EVP_PKEY_DH:
                 kty = crypto_kty_t::kty_dh;
                 break;
+            case EVP_PKEY_DSA:
+                kty = crypto_kty_t::kty_dsa;
+                break;
             default:
                 break;
         }
@@ -145,6 +148,19 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
                     result = true;
                 }
             } break;
+            case EVP_PKEY_DSA: {
+                auto dsa = EVP_PKEY_get0_DSA((EVP_PKEY*)pkey);
+                const BIGNUM* bn_pub = nullptr;
+                const BIGNUM* bn_priv = nullptr;
+                DSA_get0_key(dsa, &bn_pub, &bn_priv);
+                if (bn_priv) {
+                    binary_t bin_priv;
+                    bn2bin(bn_priv, bin_priv);
+                    if (bin_priv.size()) {
+                        result = true;
+                    }
+                }
+            } break;
             default:
                 ret = errorcode_t::not_supported;
                 break;
@@ -169,6 +185,40 @@ bool is_kindof(const EVP_PKEY* pkey, crypto_kty_t type) {
 
     test = (kty == type);
     return test;
+}
+
+return_t bn2bin(const BIGNUM* bn, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == bn) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        bin.resize(BN_num_bytes(bn));
+        BN_bn2bin(bn, &bin[0]);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t bin2bn(const binary_t& bin, BIGNUM** bn) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == bn) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (bin.size()) {
+            *bn = BN_bin2bn(&bin[0], bin.size(), nullptr);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
 }  // namespace crypto

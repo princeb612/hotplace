@@ -18,7 +18,7 @@ namespace hotplace {
 namespace net {
 
 /**
- * @brief   signature_algorithms (0x000d)
+ * RFC 5246 7.4.1.4.1.  Signature Algorithms
  */
 class tls_extension_signature_algorithms : public tls_extension {
    public:

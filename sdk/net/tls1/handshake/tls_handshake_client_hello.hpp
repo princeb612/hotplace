@@ -15,11 +15,26 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * RFC 5246 7.4.1.2.  Client Hello
+ * struct {
+ *     ProtocolVersion client_version;
+ *     Random random;
+ *     SessionID session_id;
+ *     CipherSuite cipher_suites<2..2^16-2>;
+ *     CompressionMethod compression_methods<1..2^8-1>;
+ *     select (extensions_present) {
+ *         case false:
+ *             struct {};
+ *         case true:
+ *             Extension extensions<0..2^16-1>;
+ *     };
+ * } ClientHello;
+ */
 class tls_handshake_client_hello : public tls_handshake {
    public:
     tls_handshake_client_hello(tls_session* session);
 
-    uint16 get_version();
     binary& get_random();
     binary& get_session_id();
     const std::vector<uint16>& get_cipher_suites();
@@ -37,8 +52,7 @@ class tls_handshake_client_hello : public tls_handshake {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
-    uint16 _version;
-    binary _random;
+    binary _random;  // 32 bytes
     binary _session_id;
     std::vector<uint16> _cipher_suites;
     std::vector<uint8> _compression_methods;

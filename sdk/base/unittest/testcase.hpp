@@ -185,6 +185,7 @@ class test_case {
 
    protected:
     void report_unittest(basic_stream& stream);
+    void report_cases(basic_stream& stream);
     void report_failed(basic_stream& stream);
     void report_testtime(basic_stream& stream, uint32 top_count = -1);
 

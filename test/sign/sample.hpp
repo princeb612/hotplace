@@ -36,6 +36,7 @@ void test_nist_cavp_rsa();
 void test_x509_sign();
 void check_ecdsa_size();
 void test_rsassa();
+void test_dsa();
 
 struct test_vector_nist_cavp_rsa_key_t {
     const char* kid;
@@ -80,5 +81,27 @@ extern const size_t sizeof_test_vector_nist_cavp_ecdsa_fips186_2_signgen;
 // RFC6979 ECDSA
 extern const test_vector_nist_cavp_ecdsa_t test_vector_rfc6979[];
 extern const size_t sizeof_test_vector_rfc6979;
+
+struct test_vector_nist_cavp_dsa_param_t {
+    const char* param;
+    const char* p;
+    const char* q;
+    const char* g;
+};
+extern const test_vector_nist_cavp_dsa_param_t test_vector_nist_cavp_dsa_param[];
+extern size_t sizeof_test_vector_nist_cavp_dsa_param;
+
+struct test_vector_nist_cavp_dsa_t {
+    const char* param;
+    hash_algorithm_t hashalg;
+    const char* msg;
+    const char* x;
+    const char* y;
+    const char* k;
+    const char* r;
+    const char* s;
+};
+extern const test_vector_nist_cavp_dsa_t test_vector_nist_cavp_dsa_fips186_3_signgen[];
+extern const size_t sizeof_test_vector_nist_cavp_dsa_fips186_3_signgen;
 
 #endif

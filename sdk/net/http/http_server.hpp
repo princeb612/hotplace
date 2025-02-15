@@ -47,6 +47,7 @@ class http_server {
 
     network_server& get_network_server();
     server_conf& get_server_conf();
+    skey_value& get_http_conf();
 
     http_protocol& get_http_protocol();
     http2_protocol& get_http2_protocol();
@@ -106,6 +107,7 @@ class http_server {
    private:
     network_server _server;
     server_conf _conf;
+    skey_value _httpconf;  // t_stringkey_value<std::string>
 
     // TCP
     tcp_server_socket _server_socket;

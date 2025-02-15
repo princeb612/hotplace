@@ -13,6 +13,7 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/crypto/cipher_encrypt.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls1/record/dtls13_ciphertext.hpp>
@@ -60,10 +61,10 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
         {
             payload pl;
             pl << new payload_member(uint8(0), constexpr_unified_header)                          //
-               << new payload_member(binary_t(), constexpr_connection_id, constexpr_group_c)      // cid
-               << new payload_member(uint16(0), true, constexpr_sequence16, constexpr_group_s16)  // seq 16
-               << new payload_member(uint8(0), constexpr_sequence8, constexpr_group_s8)           // seq 8
-               << new payload_member(uint16(0), true, constexpr_len, constexpr_group_l)           // l
+               << new payload_member(binary_t(), constexpr_connection_id, constexpr_group_c)      // cid    C:1
+               << new payload_member(uint16(0), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
+               << new payload_member(uint8(0), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
+               << new payload_member(uint16(0), true, constexpr_len, constexpr_group_l)           // len    L:1
                << new payload_member(binary_t(), constexpr_encdata);
 
             /**
@@ -109,14 +110,14 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
 
         if (istraceable()) {
             basic_stream dbs;
-            dbs.printf("> %s %02x (C:%i S:%i L:%i E:%x)\n", constexpr_unified_header, uhdr, (uhdr & 0x10) ? 1 : 0, (uhdr & 0x08) ? 1 : 0, (uhdr & 0x04) ? 1 : 0,
-                       (uhdr & 0x03));
+            dbs.printf("> %s\n", constexpr_unified_header);
+            dbs.printf(" > 0x%02x (C:%i S:%i L:%i E:%x)\n", uhdr, (uhdr & 0x10) ? 1 : 0, (uhdr & 0x08) ? 1 : 0, (uhdr & 0x04) ? 1 : 0, (uhdr & 0x03));
             if (connection_id.size()) {
-                dbs.printf("> %s %s\n", constexpr_connection_id, base16_encode(connection_id).c_str());
+                dbs.printf(" > %s %s\n", constexpr_connection_id, base16_encode(connection_id).c_str());
             }
-            dbs.printf("> %s %04x\n", constexpr_sequence, sequence);
-            dbs.printf("> %s %04x\n", constexpr_len, len);
-            dbs.printf("> %s\n", constexpr_encdata);
+            dbs.printf(" > %s %04x\n", constexpr_sequence, sequence);
+            dbs.printf(" > %s %04x\n", constexpr_len, len);
+            dbs.printf(" > %s\n", constexpr_encdata);
             dump_memory(encdata, &dbs, 16, 3, 0x0, dump_notrunc);
 
             trace_debug_event(category_tls1, tls_event_read, &dbs);
@@ -150,71 +151,52 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
         uint16 recno = 0;
         uint16 rec_enc = 0;
-        binary_t ciphertext;
-        tls_secret_t sn_key;
+        binary_t ecb_block;
         auto session = get_session();
         auto& protection = session->get_tls_protection();
-        auto hsstatus = session->get_session_info(dir).get_status();
-        {
-            cipher_encrypt_builder builder;
-            auto cipher = builder.set(aes128, ecb).build();
-            size_t blocksize = 16;  // minimal block
-            if (cipher) {
-                if (from_server == dir) {
-                    if (tls_hs_finished == hsstatus) {
-                        sn_key = tls_secret_application_server_sn_key;
-                    } else {
-                        sn_key = tls_secret_handshake_server_sn_key;
-                    }
-                } else {
-                    if (tls_hs_finished == hsstatus) {
-                        sn_key = tls_secret_application_client_sn_key;
-                    } else {
-                        sn_key = tls_secret_handshake_client_sn_key;
-                    }
-                }
-                cipher->encrypt(protection.get_item(sn_key), binary_t(), stream + offset_encdata, blocksize, ciphertext);
-                cipher->release();
-            }
 
-            // recno
-            if (2 == sequence_len) {
-                rec_enc = t_binary_to_integer<uint16>(ciphertext);
-            } else {
-                rec_enc = t_binary_to_integer<uint8>(ciphertext);
-            }
-            recno = sequence ^ rec_enc;
+        ret = aes128_ecb_encrypt_1block(dir, stream + offset_encdata, size - offset_encdata, ecb_block);
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
 
-        binary_t aad;
+        // recno
+        if (2 == sequence_len) {
+            rec_enc = t_binary_to_integer<uint16>(ecb_block);
+        } else {
+            rec_enc = t_binary_to_integer<uint8>(ecb_block);
+        }
+        recno = sequence ^ rec_enc;
+
+        binary_t additional;
         {
-            binary_append(aad, stream + recpos, offset_encdata);
+            binary_append(additional, stream + recpos, offset_encdata);
             for (auto i = 0; i < sequence_len; i++) {
-                aad[1 + i] ^= ciphertext[i];
+                additional[1 + i] ^= ecb_block[i];
             }
-        }
-
-        if (istraceable()) {
-            basic_stream dbs;
-            dbs.printf("> record number key %s\n", base16_encode(protection.get_item(sn_key)).c_str());
-
-            // s->printf("> %s %04x\n", constexpr_recno, recno);
-            dbs.printf("> %s %04x (%04x XOR %s)\n", constexpr_recno, recno, sequence, base16_encode(ciphertext).substr(0, sequence_len << 1).c_str());
-            dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
-
-            trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
 
         binary_t plaintext;
         {
             // decryption
-            ret = protection.decrypt(session, dir, stream, size - aad.size(), recpos, plaintext, aad);
+            ret = protection.decrypt(session, dir, stream, size - additional.size(), recpos, plaintext, additional);
         }
 
         if (istraceable()) {
             basic_stream dbs;
-            dbs.printf("> aad\n");
-            dump_memory(aad, &dbs, 16, 3, 0x0, dump_notrunc);
+
+            dbs.printf("rec_enc %04x\n", rec_enc);
+            if (2 == sequence_len) {
+                dbs.printf("> %s %04x (%04x XOR %s)\n", constexpr_recno, recno, sequence, base16_encode(ecb_block).substr(0, sequence_len << 1).c_str());
+            } else if (1 == sequence_len) {
+                dbs.printf("> %s %02x (%02x XOR %s)\n", constexpr_recno, recno, sequence, base16_encode(ecb_block).substr(0, sequence_len << 1).c_str());
+            }
+
+            dbs.printf("> ecb_block\n");
+            dump_memory(ecb_block, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.printf("> additional\n");
+            dump_memory(additional, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.printf("> %s %04x\n", constexpr_recno, recno);
             dbs.printf("> plaintext\n");
             dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
 
@@ -259,11 +241,140 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
 return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        size_t recpos = bin.size();
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+        /**
+         * 0 1 2 3 4 5 6 7
+         * +-+-+-+-+-+-+-+-+
+         * |0|0|1|C|S|L|E E|
+         * +-+-+-+-+-+-+-+-+
+         */
+        binary_t ciphertext;
+        binary_t header;
+        binary_t tag;
+        uint8 uhdr = 0x20;
+        uint8 c = (_cid.empty()) ? 0x00 : 0x01;
+        uint8 s = (1 == byte_capacity(_sequence)) ? 0x00 : 0x08;
+        uint8 l = (body.empty()) ? 0x00 : 0x04;
+        uint8 e = 0x03;
+        uhdr |= (c | s | l | e);
+        uint8 sequence_len = s ? 2 : 1;
+
+        binary_t cid;
+
+        {
+            payload pl;
+            pl << new payload_member(uhdr, constexpr_unified_header)                                      //
+               << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                    // cid    C:1
+               << new payload_member(uint16(_sequence), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
+               << new payload_member(uint8(_sequence), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
+               << new payload_member(uint16(body.size()), true, constexpr_len, constexpr_group_l);        // len    L:1
+            pl.set_group(constexpr_group_c, (0x10 & uhdr));
+            pl.set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
+            pl.set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
+            pl.set_group(constexpr_group_l, (0x04 & uhdr));
+            pl.write(header);
+        }
+
+        {
+            _content_type = uhdr;
+            _bodysize = body.size();
+            _range.begin = recpos;
+            _range.end = header.size();
+            _sequence_len = sequence_len;
+            _offset_encdata = header.size();
+        }
+
+        {
+            ret = protection.encrypt(session, dir, body, ciphertext, header, tag);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+        }
+        {
+            binary_append(bin, header);
+            binary_append(bin, ciphertext);
+            binary_append(bin, tag);
+        }
+
+        binary_t ecb_block;
+        ret = aes128_ecb_encrypt_1block(dir, &ciphertext[0], ciphertext.size(), ecb_block);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        for (auto i = 0; i < sequence_len; i++) {
+            bin[1 + i] ^= ecb_block[i];
+        }
+
+        if (istraceable()) {
+            basic_stream dbs;
+
+            dbs.printf("> header\n");
+            dump_memory(header, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.printf("> header masked (sequence)\n");
+            dump_memory(&bin[0], header.size(), &dbs, 16, 3, 0x0, dump_notrunc);
+
+            trace_debug_event(category_tls1, tls_event_read, &dbs);
+        }
+    }
+    __finally2 {}
     return ret;
 }
 
 return_t dtls13_ciphertext::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
+    get_handshakes().write(get_session(), dir, bin);
+    binary_append(bin, get_type());
+    return ret;
+}
+
+return_t dtls13_ciphertext::aes128_ecb_encrypt_1block(tls_direction_t dir, const byte_t* stream, size_t size, binary_t& ciphertext) {
+    return_t ret = errorcode_t::success;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_blockcipher(aes128);
+    uint16 blocksize = sizeof_block(hint);
+
+    uint16 recno = 0;
+    uint16 rec_enc = 0;
+    tls_secret_t sn_key;
+    auto hsstatus = session->get_session_info(dir).get_status();
+    {
+        cipher_encrypt_builder builder;
+        auto cipher = builder.set(aes128, ecb).build();
+        if (cipher) {
+            if (from_server == dir) {
+                if (tls_hs_finished == hsstatus) {
+                    sn_key = tls_secret_application_server_sn_key;
+                } else {
+                    sn_key = tls_secret_handshake_server_sn_key;
+                }
+            } else {
+                if (tls_hs_finished == hsstatus) {
+                    sn_key = tls_secret_application_client_sn_key;
+                } else {
+                    sn_key = tls_secret_handshake_client_sn_key;
+                }
+            }
+            ret = cipher->encrypt(protection.get_item(sn_key), binary_t(), stream, blocksize, ciphertext);
+            cipher->release();
+        }
+    }
+    if (istraceable()) {
+        basic_stream dbs;
+
+        dbs.printf("> record number mask\n");
+        dbs.printf(" > key %s\n", base16_encode(protection.get_item(sn_key)).c_str());
+        dbs.printf(" > block\n");
+        dump_memory(stream, blocksize, &dbs, 16, 3, 0, dump_notrunc);
+        dbs.printf(" > ECB\n");
+        dump_memory(ciphertext, &dbs, 16, 3, 0, dump_notrunc);
+        trace_debug_event(category_tls1, tls_event_read, &dbs);
+    }
     return ret;
 }
 

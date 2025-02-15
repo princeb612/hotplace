@@ -14,6 +14,10 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * RFC 5246 7.4.2.  Server Certificate
+ * RFC 5246 7.4.6.  Client Certificate
+ */
 class tls_handshake_certificate : public tls_handshake {
    public:
     tls_handshake_certificate(tls_session* session);

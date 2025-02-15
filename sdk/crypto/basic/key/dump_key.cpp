@@ -37,8 +37,12 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
     constexpr char constexpr_ec_pub[] = "public (04:x:y)";
     constexpr char constexpr_ec_d[] = "d (private)";
 
-    constexpr char constexpr_dh_pub[] = "public";
-    constexpr char constexpr_dh_priv[] = "private";
+    constexpr char constexpr_dsa_p[] = "p";
+    constexpr char constexpr_dsa_q[] = "q";
+    constexpr char constexpr_dsa_g[] = "g";
+
+    constexpr char constexpr_pub[] = "public";
+    constexpr char constexpr_priv[] = "private";
 
     std::map<crypt_item_t, const char*> table;
     t_maphint<crypt_item_t, const char*> hint(table);
@@ -57,8 +61,13 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
     table[crypt_item_t::item_ec_y] = constexpr_ec_y;
     table[crypt_item_t::item_ec_pub] = constexpr_ec_pub;
     table[crypt_item_t::item_ec_d] = constexpr_ec_d;
-    table[crypt_item_t::item_dh_pub] = constexpr_dh_pub;
-    table[crypt_item_t::item_dh_priv] = constexpr_dh_priv;
+    table[crypt_item_t::item_dh_pub] = constexpr_pub;
+    table[crypt_item_t::item_dh_priv] = constexpr_priv;
+    table[crypt_item_t::item_dsa_pub] = constexpr_pub;
+    table[crypt_item_t::item_dsa_priv] = constexpr_priv;
+    table[crypt_item_t::item_dsa_p] = constexpr_dsa_p;
+    table[crypt_item_t::item_dsa_q] = constexpr_dsa_q;
+    table[crypt_item_t::item_dsa_g] = constexpr_dsa_g;
 
     __try2 {
         if (nullptr == stream) {
@@ -80,9 +89,17 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
         binary_t param = key;
         switch (type) {
             case crypt_item_t::item_rsa_n:
+            case crypt_item_t::item_rsa_d:
             case crypt_item_t::item_rsa_p:
             case crypt_item_t::item_rsa_q:
+            case crypt_item_t::item_rsa_dp:
             case crypt_item_t::item_rsa_dq:
+            case crypt_item_t::item_ec_x:
+            case crypt_item_t::item_ec_y:
+            case crypt_item_t::item_ec_d:
+            case crypt_item_t::item_dsa_p:
+            case crypt_item_t::item_dsa_q:
+            case crypt_item_t::item_dsa_g:
                 param.insert(param.begin(), 0);
                 break;
             default:
@@ -394,6 +411,9 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
             case EVP_PKEY_DH:
                 stream->printf("DH");
                 break;
+            case EVP_PKEY_DSA:
+                stream->printf("DSA");
+                break;
             default:
                 ret = errorcode_t::not_supported;
                 break;
@@ -449,16 +469,11 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                         binary_t bin_dp;
                         binary_t bin_dq;
                         binary_t bin_qi;
-                        bin_p.resize(BN_num_bytes(bn_p));
-                        bin_q.resize(BN_num_bytes(bn_q));
-                        bin_dp.resize(BN_num_bytes(bn_dp));
-                        bin_dq.resize(BN_num_bytes(bn_dq));
-                        bin_qi.resize(BN_num_bytes(bn_qi));
-                        BN_bn2bin(bn_p, &bin_p[0]);
-                        BN_bn2bin(bn_q, &bin_q[0]);
-                        BN_bn2bin(bn_dp, &bin_dp[0]);
-                        BN_bn2bin(bn_dq, &bin_dq[0]);
-                        BN_bn2bin(bn_qi, &bin_qi[0]);
+                        bn2bin(bn_p, bin_p);
+                        bn2bin(bn_q, bin_q);
+                        bn2bin(bn_dp, bin_dp);
+                        bn2bin(bn_dq, bin_dq);
+                        bn2bin(bn_qi, bin_qi);
 
                         pkey_param_printf(crypt_item_t::item_rsa_p, bin_p, stream, hex_part, indent);
                         pkey_param_printf(crypt_item_t::item_rsa_q, bin_q, stream, hex_part, indent);
@@ -533,15 +548,42 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
 
                 binary_t bin_pub;
                 binary_t bin_priv;
-                bin_pub.resize(BN_num_bytes(bn_pub));
-                BN_bn2bin(bn_pub, &bin_pub[0]);
+                bn2bin(bn_pub, bin_pub);
                 pkey_param_printf(crypt_item_t::item_dh_pub, bin_pub, stream, hex_part, indent);
 
                 if (bn_priv) {
-                    bin_priv.resize(BN_num_bytes(bn_priv));
-                    BN_bn2bin(bn_priv, &bin_priv[0]);
+                    bn2bin(bn_priv, bin_priv);
                     pkey_param_printf(crypt_item_t::item_dh_priv, bin_priv, stream, hex_part, indent);
                 }
+            } break;
+            case EVP_PKEY_DSA: {
+                auto dsa = EVP_PKEY_get0_DSA((EVP_PKEY*)pkey);
+                const BIGNUM* bn_p = nullptr;
+                const BIGNUM* bn_q = nullptr;
+                const BIGNUM* bn_g = nullptr;
+                const BIGNUM* bn_pub = nullptr;
+                const BIGNUM* bn_priv = nullptr;
+                DSA_get0_pqg(dsa, &bn_p, &bn_q, &bn_g);
+                DSA_get0_key(dsa, &bn_pub, &bn_priv);
+
+                binary_t bin_pub;
+                binary_t bin_priv;
+                binary_t bin_p;
+                binary_t bin_q;
+                binary_t bin_g;
+
+                bn2bin(bn_pub, bin_pub);
+                bn2bin(bn_priv, bin_priv);
+                bn2bin(bn_p, bin_p);
+                bn2bin(bn_q, bin_q);
+                bn2bin(bn_g, bin_g);
+                pkey_param_printf(crypt_item_t::item_dsa_pub, bin_pub, stream, hex_part, indent);
+                if (bin_priv.size()) {
+                    pkey_param_printf(crypt_item_t::item_dsa_priv, bin_priv, stream, hex_part, indent);
+                }
+                pkey_param_printf(crypt_item_t::item_dsa_p, bin_p, stream, hex_part, indent);
+                pkey_param_printf(crypt_item_t::item_dsa_q, bin_q, stream, hex_part, indent);
+                pkey_param_printf(crypt_item_t::item_dsa_g, bin_g, stream, hex_part, indent);
             } break;
             default:
                 break;

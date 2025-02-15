@@ -13,6 +13,7 @@
 #define __HOTPLACE_SDK_NET_HTTP_REQUEST__
 
 #include <sdk/net/http/http_header.hpp>  // http_header
+#include <sdk/net/http/http_router.hpp>  // http_router
 #include <sdk/net/http/http_uri.hpp>     // http_uri
 #include <sdk/net/http/types.hpp>
 
@@ -24,6 +25,8 @@ enum http_request_flag_t {
 };
 
 class http_request {
+    friend class http_router;
+
    public:
     http_request();
     http_request(const http_request& object);
@@ -44,6 +47,8 @@ class http_request {
      * @return  error code (see error.hpp)
      */
     return_t close();
+
+    http_router* get_http_router();
 
     /**
      * @brief   return the http_header object
@@ -114,6 +119,8 @@ class http_request {
      */
     return_t open_uri(const std::string& uri, uint32 flags = 0);
 
+    void set_http_router(http_router* router);
+
     t_shared_reference<http_request> _shared;
 
    private:
@@ -123,6 +130,7 @@ class http_request {
     http_header _header;
     http_uri _uri;
 
+    http_router* _router;
     hpack_dynamic_table* _hpsess;
     uint8 _version;
     uint32 _stream_id;

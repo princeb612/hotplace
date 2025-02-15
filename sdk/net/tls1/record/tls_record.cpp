@@ -289,14 +289,14 @@ uint16 tls_record::get_legacy_version() {
     uint16 version = 0;
     auto session = get_session();
     auto& protection = session->get_tls_protection();
-    version = protection.get_record_version();
+    version = protection.get_lagacy_version();
     return version;
 }
 
 void tls_record::set_legacy_version(uint16 version) {
     auto session = get_session();
     auto& protection = session->get_tls_protection();
-    protection.set_record_version(version);
+    protection.set_legacy_version(version);
 }
 
 uint16 tls_record::get_tls_version() {

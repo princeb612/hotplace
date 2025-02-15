@@ -4,7 +4,8 @@
   * [study] QUIC (RFC 9001)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 701
+* Revision 702
+  * [tested] DSA
 
 * Revision 679
   * [tested] RFC 8448 6.  Client Authentication

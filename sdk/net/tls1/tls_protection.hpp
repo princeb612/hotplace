@@ -88,8 +88,8 @@ class tls_protection {
      */
     uint16 get_cipher_suite();
     void set_cipher_suite(uint16 ciphersuite);
-    uint16 get_record_version();
-    void set_record_version(uint16 version);
+    uint16 get_lagacy_version();
+    void set_legacy_version(uint16 version);
     bool is_kindof_tls();
     bool is_kindof_dtls();
     bool is_kindof_tls13();
@@ -154,6 +154,9 @@ class tls_protection {
      * @param binary_t& ciphertext [out]
      * @param const binary_t& additional [in] content header + IV in CBC, AAD in CCM/CCM_8/GCM
      * @param binary_t& tag [out]
+     * @remarks
+     *          RFC 5246 6.2.3.2.  CBC Block Cipher
+     *          RFC 5246 6.2.3.3.  AEAD Ciphers
      */
     return_t encrypt(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& additional, binary_t& tag);
 
@@ -193,7 +196,7 @@ class tls_protection {
     uint8 _mode;  // see tls_mode_t
     tls_message_flow_t _flow;
     uint16 _ciphersuite;
-    uint16 _record_version;
+    uint16 _lagacy_version;
     uint16 _version;
     transcript_hash* _transcript_hash;
     critical_section _lock;

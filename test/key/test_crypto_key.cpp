@@ -88,11 +88,18 @@ void test_crypto_key() {
     }
 
     auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+        auto pkey = item->get_pkey();
+
         bs.printf(R"(> kid "%s")", item->get_desc().get_kid_cstr());
         bs.printf("\n");
-        dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
-        _logger->writeln(bs);
+        dump_key(pkey, &bs, 16, 3, dump_notrunc);
+        _logger->write(bs);
         bs.clear();
+
+        binary_t bin_pub;
+        binary_t bin_priv;
+        key.get_key(pkey, bin_pub, bin_priv, true);
+        _logger->hdump("public key", bin_pub, 16, 3);
     };
     key.for_each(dump_crypto_key, nullptr);
 
@@ -107,7 +114,7 @@ void test_crypto_key() {
             // NID_sect571k1 70..72
             // NID_sect409r1 50..52
             // NID_sect113r1 13..15
-            bool test = (hint->keysize >= keysize);
+            bool test = (hint->keysize == keysize);
             _test_case.assert(test, __FUNCTION__, R"(%s key "x" size %zi (preserve leading zero))", item.name, bin_x.size());
         } else {
             _test_case.test(not_found, __FUNCTION__, "%s", item.name);

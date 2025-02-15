@@ -28,7 +28,9 @@ int main(int argc, char **argv) {
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     (*_cmdline) << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION &o, char *param) -> void { o.port = atoi(param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [](OPTION &o, char *param) -> void { o.port_tls = atoi(param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-e", "allow Content-Encoding", [](OPTION &o, char *param) -> void { o.content_encoding = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION &o, char *param) -> void { o.debug = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-l", "log", [](OPTION &o, char *param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional();
 

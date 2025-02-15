@@ -147,6 +147,16 @@ class crypto_sign_eddsa : public crypto_sign {
     virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature);
 };
 
+class crypto_sign_dsa : public crypto_sign {
+   public:
+    crypto_sign_dsa(hash_algorithm_t hashalg = hash_alg_unknown);
+
+    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature);
+    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature);
+    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature);
+    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature);
+};
+
 // not implemented
 // class crypto_sign_rsa_x931 : public crypto_sign {};
 

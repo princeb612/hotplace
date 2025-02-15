@@ -86,6 +86,18 @@ const char* nameof_key_type(crypto_kty_t type);
  * @param crypto_kty_t type [in]
  */
 bool is_kindof(const EVP_PKEY* pkey, crypto_kty_t type);
+/**
+ * @brief bn2bin
+ * @param const BIGNUM* bn [in]
+ * @param binary_t& bin [out]
+ */
+return_t bn2bin(const BIGNUM* bn, binary_t& bin);
+/**
+ * @brief bin2bn
+ * @param const binary_t& bin [in]
+ * @param BIGNUM** bn [out]
+ */
+return_t bin2bn(const binary_t& bin, BIGNUM** bn);
 
 }  // namespace crypto
 }  // namespace hotplace

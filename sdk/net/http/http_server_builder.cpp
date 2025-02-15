@@ -88,6 +88,11 @@ http_server_builder &http_server_builder::enable_h3(bool enable) {
     return *this;
 }
 
+http_server_builder &http_server_builder::allow_content_encoding(const std::string &encoding) {
+    _content_encoding = encoding;
+    return *this;
+}
+
 http_server_builder &http_server_builder::set_handler(http_server_handler_t handler, void *user_context) {
     _handler = handler;
     _user_context = user_context;
@@ -158,6 +163,10 @@ http_server *http_server_builder::build() {
                 if (server->get_tlscert()) {
                     server->get_tlscert()->enable_alpn_h2(true);
                 }
+            }
+
+            if (false == _content_encoding.empty()) {
+                server->get_http_conf().set("Content-Encoding", _content_encoding);
             }
         }
     }

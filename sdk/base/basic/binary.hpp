@@ -375,12 +375,16 @@ T t_binary_to_integer(const byte_t* bstr, size_t size, return_t& errorcode) {
         size_t tsize = sizeof(T);
         if (tsize <= size) {
             value = *(T*)bstr;
-            value = convert_endian(value);  // host endian
+            if (tsize > 1) {
+                value = convert_endian(value);  // host endian
+            }
         } else {
             binary_t bin;
             binary_load(bin, tsize, bstr, size);
             value = *(T*)&bin[0];
-            value = convert_endian(value);  // host endian
+            if (tsize > 1) {
+                value = convert_endian(value);  // host endian
+            }
         }
     } else {
         errorcode = errorcode_t::invalid_parameter;

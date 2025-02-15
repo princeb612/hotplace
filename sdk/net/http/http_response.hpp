@@ -14,12 +14,15 @@
 
 #include <sdk/base/stream/basic_stream.hpp>  // basic_stream
 #include <sdk/net/http/http_header.hpp>      // http_header
+#include <sdk/net/http/http_router.hpp>      // http_router
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {
 
 class http_response {
+    friend class http_router;
+
    public:
     http_response();
     http_response(http_request* request);
@@ -59,6 +62,9 @@ class http_response {
      *          session->send((const char*)bs.data(), bs.size());
      */
     return_t respond(network_session* session);
+
+    http_router* get_http_router();
+
     /**
      * @brief   Content-Type
      */
@@ -101,9 +107,12 @@ class http_response {
     void release();
 
    protected:
+    void set_http_router(http_router* router);
+
     t_shared_reference<http_response> _shared;
 
    private:
+    http_router* _router;
     http_request* _request;
     http_header _header;
     std::string _content_type;

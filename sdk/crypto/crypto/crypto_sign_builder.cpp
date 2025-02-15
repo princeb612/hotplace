@@ -30,6 +30,9 @@ crypto_sign* crypto_sign_builder::build() {
         case crypt_sig_eddsa: {
             obj = new crypto_sign_eddsa(get_digest());
         } break;
+        case crypt_sig_dsa: {
+            obj = new crypto_sign_dsa(get_digest());
+        } break;
     }
     if (obj) {
         obj->set_scheme(get_scheme());

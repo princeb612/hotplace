@@ -259,6 +259,7 @@ enum errorcode_t {
     /* 0xef01003e 4009820222 */ different_type,
     /* 0xef01003f 4009820223 */ narrow_type,
     /* 0xef010040 4009820224 */ no_more,
+    /* 0xef010041 4009820225 */ exceed,
 
     /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,

@@ -17,6 +17,7 @@
 #include <sdk/crypto/basic/openssl_ecdh.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
+#include <sdk/crypto/basic/openssl_sign.hpp>
 #include <sdk/crypto/crypto/crypto_aead.hpp>
 #include <sdk/crypto/crypto/crypto_hash.hpp>
 #include <sdk/crypto/crypto/crypto_hmac.hpp>
@@ -35,7 +36,7 @@ namespace hotplace {
 namespace net {
 
 tls_protection::tls_protection(uint8 mode)
-    : _mode(mode), _flow(tls_1_rtt), _ciphersuite(0), _record_version(tls_12), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
+    : _mode(mode), _flow(tls_1_rtt), _ciphersuite(0), _lagacy_version(tls_12), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
 
 tls_protection::~tls_protection() {
     if (_transcript_hash) {
@@ -60,13 +61,13 @@ void tls_protection::set_cipher_suite(uint16 ciphersuite) {
     get_protection_context().set_cipher_suite_hint(hint);
 }
 
-uint16 tls_protection::get_record_version() { return _record_version; }
+uint16 tls_protection::get_lagacy_version() { return _lagacy_version; }
 
-void tls_protection::set_record_version(uint16 version) { _record_version = version; }
+void tls_protection::set_legacy_version(uint16 version) { _lagacy_version = version; }
 
-bool tls_protection::is_kindof_tls() { return (false == tls_advisor::get_instance()->is_kindof_dtls(_record_version)); }
+bool tls_protection::is_kindof_tls() { return (false == tls_advisor::get_instance()->is_kindof_dtls(_lagacy_version)); }
 
-bool tls_protection::is_kindof_dtls() { return tls_advisor::get_instance()->is_kindof_dtls(_record_version); }
+bool tls_protection::is_kindof_dtls() { return tls_advisor::get_instance()->is_kindof_dtls(_lagacy_version); }
 
 bool tls_protection::is_kindof_tls13() { return tls_advisor::get_instance()->is_kindof_tls13(_version); }
 
@@ -108,8 +109,11 @@ transcript_hash *tls_protection::get_transcript_hash() {
 return_t tls_protection::calc_transcript_hash(tls_session *session, const byte_t *stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == session || (size && (nullptr == stream))) {
+        if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (nullptr == stream) {
             __leave2;
         }
 
@@ -568,6 +572,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
         } else if (tls_hs_client_key_exchange == type) {
             /**
+             * RFC 2246 8.1. Computing the master secret
              * RFC 5246 8.1.  Computing the Master Secret
              * master_secret = PRF(pre_master_secret, "master secret",
              *                     ClientHello.random + ServerHello.random)
@@ -652,7 +657,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     temp = atemp;
                 }
 
-                master_secret.resize(48);
+                master_secret.resize(48);  // 48 bytes
 
                 set_item(tls_secret_master, master_secret);
 
@@ -668,6 +673,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                  * key expansion
                  * RFC 2246 5. HMAC and the pseudorandom function
                  * RFC 2246 6.3. Key calculation
+                 * RFC 5246 6.3.  Key Calculation
                  * key_block = PRF(SecurityParameters.master_secret,
                  *                    "key expansion",
                  *                    SecurityParameters.server_random +
@@ -818,7 +824,7 @@ void tls_protection::clear_item(tls_secret_t type) {
 
 size_t tls_protection::get_header_size() {
     size_t ret_value = 0;
-    auto record_version = get_record_version();
+    auto record_version = get_lagacy_version();
     size_t content_header_size = 0;
     tls_advisor *tlsadvisor = tls_advisor::get_instance();
     if (is_kindof_dtls()) {
@@ -963,6 +969,10 @@ return_t tls_protection::get_tls12_key(tls_session *session, tls_direction_t dir
     return ret;
 }
 
+// RFC 2246 6.2.3 Record payload protection
+// length of TLSCiphertext.fragment may not exceed 2^14 + 2048
+#define TLS_CIPHERTEXT_MAXSIZE ((2 << 14) + 2048)
+
 return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &additional,
                                  binary_t &tag) {
     return_t ret = errorcode_t::success;
@@ -972,7 +982,7 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
             __leave2;
         }
 
-        auto record_version = get_record_version();
+        auto record_version = get_lagacy_version();
         size_t content_header_size = 0;
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
@@ -997,6 +1007,13 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
                 ret = encrypt_cbc_hmac(session, dir, plaintext, ciphertext, additional, tag);
             } break;
         }
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        if (ciphertext.size() > TLS_CIPHERTEXT_MAXSIZE) {
+            ret = errorcode_t::exceed;
+            __leave2;
+        }
     }
     __finally2 {}
     return ret;
@@ -1011,7 +1028,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
             __leave2;
         }
 
-        auto record_version = get_record_version();
+        auto record_version = get_lagacy_version();
         size_t content_header_size = 0;
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
@@ -1147,6 +1164,11 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        if (size > TLS_CIPHERTEXT_MAXSIZE) {
+            ret = errorcode_t::exceed;
+            __leave2;
+        }
+
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
         const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
         if (nullptr == hint) {
@@ -1257,7 +1279,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
             // }
         }
 
-        auto record_version = get_record_version();
+        auto record_version = get_lagacy_version();
         binary_t tag;
 
         // ... aad(aadlen) encdata tag(tagsize)
@@ -1413,43 +1435,7 @@ return_t tls_protection::get_ecdsa_signature(uint16 scheme, const binary_t &asn1
             __leave2;
         }
 
-        // ASN.1 DER
-        constexpr char constexpr_sequence[] = "sequence";
-        constexpr char constexpr_len[] = "len";
-        constexpr char constexpr_rlen[] = "rlen";
-        constexpr char constexpr_r[] = "r";
-        constexpr char constexpr_slen[] = "slen";
-        constexpr char constexpr_s[] = "s";
-        payload pl;
-        pl << new payload_member(uint8(0), constexpr_sequence) << new payload_member(uint8(0), constexpr_len)
-           << new payload_member(uint8(0))                                                                 // 2 asn1_tag_integer
-           << new payload_member(uint8(0), constexpr_rlen) << new payload_member(binary_t(), constexpr_r)  //
-           << new payload_member(uint8(0))                                                                 // 2 asn1_tag_integer
-           << new payload_member(uint8(0), constexpr_slen) << new payload_member(binary_t(), constexpr_s);
-
-        pl.set_reference_value(constexpr_r, constexpr_rlen);
-        pl.set_reference_value(constexpr_s, constexpr_slen);
-
-        size_t spos = 0;
-        pl.read(&asn1der[0], asn1der.size(), spos);
-
-        binary_t r;
-        binary_t s;
-
-        pl.get_binary(constexpr_r, r);
-        pl.get_binary(constexpr_s, s);
-
-        if (r.size() > unitsize) {
-            auto d = r.size() - unitsize;
-            r.erase(r.begin(), r.begin() + d);
-        }
-        if (s.size() > unitsize) {
-            auto d = s.size() - unitsize;
-            s.erase(s.begin(), s.begin() + d);
-        }
-
-        binary_append(signature, r);
-        binary_append(signature, s);
+        ret = der2sig(asn1der, unitsize, signature);
     }
     __finally2 {
         // do nothing
@@ -1473,31 +1459,7 @@ return_t tls_protection::reform_ecdsa_signature(uint16 scheme, const binary_t &s
             __leave2;
         }
 
-        size_t siglen = signature.size();
-        size_t halflen = siglen << 1;
-        const binary_t &r = binary_t(signature.begin(), signature.begin() + halflen - 1);
-        const binary_t &s = binary_t(signature.begin() + halflen, signature.end());
-
-        // ASN.1 DER
-        // ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
-        constexpr char constexpr_sequence[] = "sequence";
-        constexpr char constexpr_len[] = "len";
-        constexpr char constexpr_rlen[] = "rlen";
-        constexpr char constexpr_r[] = "r";
-        constexpr char constexpr_slen[] = "slen";
-        constexpr char constexpr_s[] = "s";
-        payload pl;
-        pl << new payload_member(uint8(30),
-                                 constexpr_sequence)                // 30 asn1_tag_bmpstring
-           << new payload_member(uint8(siglen + 4), constexpr_len)  //
-           << new payload_member(uint8(asn1_tag_integer))           // 2 asn1_tag_integer
-           << new payload_member(uint8(halflen), constexpr_rlen)    //
-           << new payload_member(r, constexpr_r)                    //
-           << new payload_member(uint8(asn1_tag_integer))           // 2 asn1_tag_integer
-           << new payload_member(uint8(halflen), constexpr_slen)    //
-           << new payload_member(s, constexpr_s);
-
-        pl.write(asn1der);
+        ret = sig2der(signature, asn1der);
     }
     __finally2 {
         // do nothing

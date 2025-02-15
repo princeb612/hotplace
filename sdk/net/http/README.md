@@ -22,3 +22,14 @@
 
 ## HTTP/3.0
   - QUIC (UDP-based)
+
+## comments
+
+| compression      |                       | compression                        |               |
+| --               | --                    | --                                 | --            |
+| deflate          | TLS-level compression | LZ77 + Huffman coding              | CRIME attack  |
+| gzip             | content-encoding      | LZ77 + Huffman coding              | BREACH attack |
+| deflate          | content-encoding      | LZ77 + Huffman coding              | BREACH attack |
+| br               | content-encoding      | LZ77 + Huffman + Context Modeling  | BREACH attack |
+| zstd             | content-encoding      | LZ77 + Finite State Entropy        |               |
+| identity         | content-encoding      | N/A                                |               |

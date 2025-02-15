@@ -235,6 +235,21 @@ class crypto_keychain {
     return_t add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc);
     return_t add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc);
 
+    /**
+     * @brief DSA
+     */
+    return_t add_dsa(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+    return_t add_dsa(crypto_key* cryptokey, uint32 nid, const binary_t& pub, const binary_t& priv, const binary_t& p, const binary_t& q, const binary_t& g,
+                     const keydesc& desc);
+    return_t add_dsa_b64(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const char* p, const char* q, const char* g,
+                         const keydesc& desc);
+    return_t add_dsa_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const char* p, const char* q, const char* g,
+                          const keydesc& desc);
+    return_t add_dsa_b16(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const char* p, const char* q, const char* g,
+                         const keydesc& desc);
+    return_t add_dsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const char* p, const char* q, const char* g,
+                            const keydesc& desc);
+
    protected:
 };
 

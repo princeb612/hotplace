@@ -14,6 +14,21 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * RFC 5246 7.4.7.  Client Key Exchange Message
+ * struct {
+ *     select (KeyExchangeAlgorithm) {
+ *         case rsa:
+ *             EncryptedPreMasterSecret;
+ *         case dhe_dss:
+ *         case dhe_rsa:
+ *         case dh_dss:
+ *         case dh_rsa:
+ *         case dh_anon:
+ *             ClientDiffieHellmanPublic;
+ *     } exchange_keys;
+ * } ClientKeyExchange;
+ */
 class tls_handshake_client_key_exchange : public tls_handshake {
    public:
     tls_handshake_client_key_exchange(tls_session* session);

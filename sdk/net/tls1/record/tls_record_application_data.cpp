@@ -109,7 +109,7 @@ return_t tls_record_application_data::do_write_header(tls_direction_t dir, binar
         binary_t tag;
 
         auto& protection = session->get_tls_protection();
-        auto legacy_version = protection.get_record_version();
+        auto legacy_version = protection.get_lagacy_version();
         auto tagsize = protection.get_tag_size();
         auto tlsversion = protection.get_tls_version();
         auto cs = protection.get_cipher_suite();

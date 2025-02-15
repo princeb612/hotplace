@@ -38,14 +38,17 @@ const tls_cipher_suite_t tls_cipher_suites[] = {
     //  weak
     //   _3DES, _CBC, _PSK, _RSA (KE), _SHA[_$]
 
-    // RFC 5246 TLS 1.2
-    //  9.  Mandatory Cipher Suites
-    //  TLS_RSA_WITH_AES_128_CBC_SHA (mandatory)
-    // RFC 8446 TLS 1.3
-    //  9.1.  Mandatory-to-Implement Cipher Suites
-    //  TLS_AES_128_GCM_SHA256 (MUST)
-    //  TLS_AES_256_GCM_SHA384 (SHOULD)
-    //  TLS_CHACHA20_POLY1305_SHA256 (SHOULD)
+    // RFC 5246 9.  Mandatory Cipher Suites
+    //   TLS_RSA_WITH_AES_128_CBC_SHA (mandatory)
+    // RFC 8446 9.1.  Mandatory-to-Implement Cipher Suites
+    //   TLS_AES_128_GCM_SHA256 (MUST)
+    //   TLS_AES_256_GCM_SHA384 (SHOULD)
+    //   TLS_CHACHA20_POLY1305_SHA256 (SHOULD)
+    // RFC 8996 Deprecating TLS 1.0 and TLS 1.1
+    // RFC 9662 Updates to the Cipher Suites in Secure Syslog
+    //   ... updates the mandatory-to-implement cipher suites to allow for a migration from TLS_RSA_WITH_AES_128_CBC_SHA
+    //   to TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 without deprecating the former.
+    //   Implementations should prefer to use TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256.
 
     {0x0000, tls_10, 0, 0, /* RFC 5246 */ "TLS_NULL_WITH_NULL_NULL", ENDOF_DATA},
     {0x0001, tls_10, 0, 0, /* RFC 5246 */ "TLS_RSA_WITH_NULL_MD5", "NULL-MD5", keyexchange_rsa, auth_rsa, crypt_alg_unknown, mode_unknown, md5},
@@ -92,7 +95,8 @@ const tls_cipher_suite_t tls_cipher_suites[] = {
     {0x002c, tls_10, 0, 0, /* RFC 4785 */ "TLS_PSK_WITH_NULL_SHA", "PSK-NULL-SHA", ENDOF_DATA},
     {0x002d, tls_10, 0, 0, /* RFC 4785 */ "TLS_DHE_PSK_WITH_NULL_SHA", "DHE-PSK-NULL-SHA", ENDOF_DATA},
     {0x002e, tls_10, 0, 0, /* RFC 4785 */ "TLS_RSA_PSK_WITH_NULL_SHA", "RSA-PSK-NULL-SHA", ENDOF_DATA},
-    {0x002f, tls_10, 0, 0, /* RFC 5246 */ "TLS_RSA_WITH_AES_128_CBC_SHA", "AES128-SHA", keyexchange_rsa, auth_rsa, aes128, cbc, sha1},  // RFC 5246 mandatory
+    {0x002f, tls_12, 0, 0, /* RFC 5246 */ "TLS_RSA_WITH_AES_128_CBC_SHA", "AES128-SHA", keyexchange_rsa, auth_rsa, aes128, cbc,
+     sha1},  // RFC 5246 mandatory but insecure
     {0x0030, tls_10, 0, 0, /* RFC 5246 */ "TLS_DH_DSS_WITH_AES_128_CBC_SHA", "DH-DSS-AES128-SHA", keyexchange_dh, auth_dss, aes128, cbc, sha1},
     {0x0031, tls_10, 0, 0, /* RFC 5246 */ "TLS_DH_RSA_WITH_AES_128_CBC_SHA", "DH-RSA-AES128-SHA", keyexchange_dh, auth_rsa, aes128, cbc, sha1},
     {0x0032, tls_10, 0, 0, /* RFC 5246 */ "TLS_DHE_DSS_WITH_AES_128_CBC_SHA", "DHE-DSS-AES128-SHA", keyexchange_dhe, auth_dss, aes128, cbc, sha1},
@@ -244,8 +248,10 @@ const tls_cipher_suite_t tls_cipher_suites[] = {
      sha2_384},
     {0xc025, tls_12, 0, 0, /* RFC 5289 */ "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256", ENDOF_DATA},
     {0xc026, tls_12, 0, 0, /* RFC 5289 */ "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384", ENDOF_DATA},
-    {0xc027, tls_12, 0, 0, /* RFC 5289 */ "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256", "ECDHE-RSA-AES128-SHA256", ENDOF_DATA},
-    {0xc028, tls_12, 0, 0, /* RFC 5289 */ "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384", "ECDHE-RSA-AES256-SHA384", ENDOF_DATA},
+    {0xc027, tls_12, 0, 1, /* RFC 5289 */ "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256", "ECDHE-RSA-AES128-SHA256", keyexchange_ecdhe, auth_rsa, aes128, cbc,
+     sha2_256},
+    {0xc028, tls_12, 0, 1, /* RFC 5289 */ "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384", "ECDHE-RSA-AES256-SHA384", keyexchange_ecdhe, auth_rsa, aes256, cbc,
+     sha2_384},
     {0xc029, tls_12, 0, 0, /* RFC 5289 */ "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256", ENDOF_DATA},
     {0xc02a, tls_12, 0, 0, /* RFC 5289 */ "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384", ENDOF_DATA},
     {0xc02b, tls_12, 1, 1, /* RFC 5289 */ "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", "ECDHE-ECDSA-AES128-GCM-SHA256", keyexchange_ecdhe, auth_ecdsa, aes128,
@@ -254,9 +260,9 @@ const tls_cipher_suite_t tls_cipher_suites[] = {
      gcm, sha2_384},
     {0xc02d, tls_12, 0, 0, /* RFC 5289 */ "TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256", ENDOF_DATA},
     {0xc02e, tls_12, 0, 0, /* RFC 5289 */ "TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384", ENDOF_DATA},
-    {0xc02f, tls_12, 1, 0, /* RFC 5289 */ "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "ECDHE-RSA-AES128-GCM-SHA256", keyexchange_ecdhe, auth_rsa, aes128, gcm,
+    {0xc02f, tls_12, 1, 1, /* RFC 5289 */ "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "ECDHE-RSA-AES128-GCM-SHA256", keyexchange_ecdhe, auth_rsa, aes128, gcm,
      sha2_256},
-    {0xc030, tls_12, 1, 0, /* RFC 5289 */ "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "ECDHE-RSA-AES256-GCM-SHA384", keyexchange_ecdhe, auth_rsa, aes256, gcm,
+    {0xc030, tls_12, 1, 1, /* RFC 5289 */ "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "ECDHE-RSA-AES256-GCM-SHA384", keyexchange_ecdhe, auth_rsa, aes256, gcm,
      sha2_384},
     {0xc031, tls_12, 0, 0, /* RFC 5289 */ "TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256", ENDOF_DATA},
     {0xc032, tls_12, 0, 0, /* RFC 5289 */ "TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384", ENDOF_DATA},
@@ -327,13 +333,15 @@ const tls_cipher_suite_t tls_cipher_suites[] = {
     {0xc06f, tls_12, 0, 0, /* RFC 6209 */ "TLS_RSA_PSK_WITH_ARIA_256_GCM_SHA384", "RSA-PSK-ARIA256-GCM-SHA384", ENDOF_DATA},
     {0xc070, tls_10, 0, 0, /* RFC 6209 */ "TLS_ECDHE_PSK_WITH_ARIA_128_CBC_SHA256", ENDOF_DATA},
     {0xc071, tls_10, 0, 0, /* RFC 6209 */ "TLS_ECDHE_PSK_WITH_ARIA_256_CBC_SHA384", ENDOF_DATA},
-    {0xc072, tls_12, 0, 0, /* RFC 6367 */ "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256", "ECDHE-ECDSA-CAMELLIA128-SHA256", ENDOF_DATA},
-    {0xc073, tls_12, 0, 0, /* RFC 6367 */ "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384", "ECDHE-ECDSA-CAMELLIA256-SHA384", ENDOF_DATA},
+    {0xc072, tls_12, 0, 1, /* RFC 6367 */ "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256", "ECDHE-ECDSA-CAMELLIA128-SHA256", keyexchange_ecdhe, auth_ecdsa,
+     camellia128, cbc, sha2_256},
+    {0xc073, tls_12, 0, 1, /* RFC 6367 */ "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384", "ECDHE-ECDSA-CAMELLIA256-SHA384", keyexchange_ecdhe, auth_ecdsa,
+     camellia256, cbc, sha2_384},
     {0xc074, tls_12, 0, 0, /* RFC 6367 */ "TLS_ECDH_ECDSA_WITH_CAMELLIA_128_CBC_SHA256", nullptr, keyexchange_ecdh, auth_ecdsa, camellia128, cbc, sha2_256},
     {0xc075, tls_12, 0, 0, /* RFC 6367 */ "TLS_ECDH_ECDSA_WITH_CAMELLIA_256_CBC_SHA384", nullptr, keyexchange_ecdh, auth_ecdsa, camellia256, cbc, sha2_384},
-    {0xc076, tls_12, 0, 0,
+    {0xc076, tls_12, 0, 1,
      /* RFC 6367 */ "TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256", "ECDHE-RSA-CAMELLIA128-SHA256", keyexchange_ecdhe, auth_rsa, camellia128, cbc, sha2_256},
-    {0xc077, tls_12, 0, 0,
+    {0xc077, tls_12, 0, 1,
      /* RFC 6367 */ "TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384", "ECDHE-RSA-CAMELLIA256-SHA384", keyexchange_ecdhe, auth_rsa, camellia256, cbc, sha2_384},
     {0xc078, tls_12, 0, 0, /* RFC 6367 */ "TLS_ECDH_RSA_WITH_CAMELLIA_128_CBC_SHA256", nullptr, keyexchange_ecdh, auth_rsa, camellia128, cbc, sha2_256},
     {0xc079, tls_12, 0, 0, /* RFC 6367 */ "TLS_ECDH_RSA_WITH_CAMELLIA_256_CBC_SHA384", nullptr, keyexchange_ecdh, auth_rsa, camellia256, cbc, sha2_384},
@@ -414,7 +422,7 @@ const tls_cipher_suite_t tls_cipher_suites[] = {
     {0xc104, tls_12, 0, 0, /* RFC 9367 */ "TLS_GOSTR341112_256_WITH_MAGMA_MGM_L", ENDOF_DATA},
     {0xc105, tls_12, 0, 0, /* RFC 9367 */ "TLS_GOSTR341112_256_WITH_KUZNYECHIK_MGM_S", ENDOF_DATA},
     {0xc106, tls_12, 0, 0, /* RFC 9367 */ "TLS_GOSTR341112_256_WITH_MAGMA_MGM_S", ENDOF_DATA},
-    {0xcca8, tls_12, 1, 0, /* RFC 7905 */ "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256", "ECDHE-RSA-CHACHA20-POLY1305", keyexchange_ecdhe, auth_rsa, chacha20,
+    {0xcca8, tls_12, 1, 1, /* RFC 7905 */ "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256", "ECDHE-RSA-CHACHA20-POLY1305", keyexchange_ecdhe, auth_rsa, chacha20,
      mode_poly1305, sha2_256},
     {0xcca9, tls_12, 1, 1, /* RFC 7905 */ "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256", "ECDHE-ECDSA-CHACHA20-POLY1305", keyexchange_ecdhe, auth_ecdsa,
      chacha20, mode_poly1305, sha2_256},

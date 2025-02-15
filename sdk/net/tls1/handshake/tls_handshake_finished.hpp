@@ -14,6 +14,9 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * RFC 5246 7.4.9.  Finished
+ */
 class tls_handshake_finished : public tls_handshake {
    public:
     tls_handshake_finished(tls_session* session);

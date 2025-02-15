@@ -40,6 +40,10 @@ const hint_kty_name_t hint_kty_names[] = {
         crypto_kty_t::kty_dh,
         "DH",
     },
+    {
+        crypto_kty_t::kty_dsa,
+        "DSA",
+    },
 };
 
 const size_t sizeof_hint_kty_names = RTL_NUMBER_OF(hint_kty_names);

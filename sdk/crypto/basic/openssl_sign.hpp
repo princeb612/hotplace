@@ -175,7 +175,160 @@ class openssl_sign {
      */
     return_t verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature);
     return_t verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature);
+
+    /**
+     * @brief sign
+     * @param const EVP_PKEY* pkey
+     * @param hash_algorithm_t hashalg
+     * @param const binary_t& input
+     * @param binary_t& r
+     * @param binary_t& s
+     */
+    return_t sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& r, binary_t& s);
+    /**
+     * @brief sign
+     * @param const EVP_PKEY* pkey
+     * @param hash_algorithm_t hashalg
+     * @param const byte_t* stream
+     * @param size_t size
+     * @param binary_t& r
+     * @param binary_t& s
+     */
+    return_t sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& r, binary_t& s);
+    /**
+     * @brief sign
+     * @param const EVP_PKEY* pkey
+     * @param hash_algorithm_t hashalg
+     * @param const binary_t& input
+     * @param const binary_t& r
+     * @param const binary_t& s
+     */
+    return_t verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& r, const binary_t& s);
+    /**
+     * @brief sign
+     * @param const EVP_PKEY* pkey
+     * @param hash_algorithm_t hashalg
+     * @param const byte_t* stream
+     * @param size_t size
+     * @param const binary_t& r
+     * @param const binary_t& s
+     */
+    return_t verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& r, const binary_t& s);
+
+    /**
+     * @brief sign (R || S)
+     * @param const EVP_PKEY* pkey
+     * @param hash_algorithm_t hashalg
+     * @param const binary_t& input
+     * @param binary_t& signature
+     */
+    return_t sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature);
+    /**
+     * @brief sign (R || S)
+     * @param const EVP_PKEY* pkey
+     * @param hash_algorithm_t hashalg
+     * @param const byte_t* stream
+     * @param size_t size
+     * @param binary_t& signature
+     */
+    return_t sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature);
+    /**
+     * @brief sign (R || S)
+     * @param const EVP_PKEY* pkey
+     * @param hash_algorithm_t hashalg
+     * @param const binary_t& input
+     * @param const binary_t& signature
+     */
+    return_t verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature);
+    /**
+     * @brief sign (R || S)
+     * @param const EVP_PKEY* pkey
+     * @param hash_algorithm_t hashalg
+     * @param const byte_t* stream
+     * @param size_t size
+     * @param const binary_t& signature
+     */
+    return_t verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature);
+
+    /**
+     * @brief sign (ASN.1)
+     * @param const EVP_PKEY* pkey
+     * @param hash_algorithm_t hashalg
+     * @param const binary_t& input
+     * @param binary_t& signature
+     */
+    return_t sign_dsa_asn1(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature);
+    /**
+     * @brief sign (ASN.1)
+     * @param const EVP_PKEY* pkey
+     * @param hash_algorithm_t hashalg
+     * @param const byte_t* stream
+     * @param size_t size
+     * @param binary_t& signature
+     */
+    return_t sign_dsa_asn1(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature);
+    /**
+     * @brief sign (ASN.1)
+     * @param const EVP_PKEY* pkey
+     * @param hash_algorithm_t hashalg
+     * @param const binary_t& input
+     * @param const binary_t& signature
+     */
+    return_t verify_dsa_asn1(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature);
+    /**
+     * @brief sign (ASN.1)
+     * @param const EVP_PKEY* pkey
+     * @param hash_algorithm_t hashalg
+     * @param const byte_t* stream
+     * @param size_t size
+     * @param const binary_t& signature
+     */
+    return_t verify_dsa_asn1(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature);
 };
+
+/**
+ * @brief ASN.1 DER
+ * @param const binary_t& r
+ * @param const binary_t& s
+ * @param binary_t& asn1der
+ */
+return_t rs2der(const binary_t& r, const binary_t& s, binary_t& asn1der);
+/**
+ * @brief ASN.1 DER
+ * @param const binary_t& asn1der
+ * @param uint16 unitsize
+ * @param binary_t& r
+ * @param binary_t& s
+ */
+return_t der2rs(const binary_t& asn1der, uint16 unitsize, binary_t& r, binary_t& s);
+/**
+ * @brief R || S
+ * @param const binary_t& sig
+ * @param binary_t& r
+ * @param binary_t& s
+ */
+return_t sig2rs(const binary_t& sig, binary_t& r, binary_t& s);
+/**
+ * @brief R || S
+ * @param const binary_t& r
+ * @param const binary_t& s
+ * @param uint16 unitsize
+ * @param binary_t& signature
+ */
+return_t rs2sig(const binary_t& r, const binary_t& s, uint16 unitsize, binary_t& signature);
+/**
+ * @brief R || S
+ * @param const binary_t& asn1der
+ * @param uint16 unitsize
+ * @param binary_t& signature
+ */
+return_t der2sig(const binary_t& asn1der, uint16 unitsize, binary_t& signature);
+/**
+ * @brief R || S to ASN.1 DER
+ * @param const binary_t& signature
+ * @param binary_t& asn1der
+ */
+return_t sig2der(const binary_t& signature, binary_t& asn1der);
 
 }  // namespace crypto
 }  // namespace hotplace

@@ -239,6 +239,7 @@ const error_description error_descriptions[] = {
     errordef(narrow_type, "narrow type"),
     errordef(narrow_type, "narrow type"),
     errordef(no_more, "no more data"),
+    errordef(exceed, "exceed the designed size"),
 
     errordef(not_supported, "not supported"),
     errordef(low_security, "low security"),

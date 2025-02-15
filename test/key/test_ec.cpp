@@ -23,7 +23,7 @@ void test_eckey_compressed() {
         bs.printf(R"(> kid "%s")", item->get_desc().get_kid_cstr());
         bs.printf("\n");
         dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
-        _logger->writeln(bs);
+        _logger->write(bs);
         bs.clear();
     };
 
@@ -71,6 +71,11 @@ void test_eckey_compressed() {
         _test_case.assert(bin_y == base16_decode(y), __FUNCTION__, "uncompressed key y");
         _test_case.assert(bin_d == base16_decode(d), __FUNCTION__, "d");
         _test_case.assert(bin_uncompressed == base16_decode(uncompressed_key_p256), __FUNCTION__, "uncompressed");
+
+        binary_t bin_pub, bin_priv;
+        key.get_key(uncompressed_key, bin_pub, bin_priv);
+        _test_case.assert(bin_uncompressed == bin_pub, __FUNCTION__, "uncompressed");
+
     } else {
         _test_case.test(errorcode_t::not_found, __FUNCTION__, "uncompressed key");
     }

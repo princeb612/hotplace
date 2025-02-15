@@ -44,9 +44,9 @@ class crypto_hash {
  * @sample
  *          auto hash = builder.set(sha2_256).build();
  *          if (hash) {
- *              hash->update(message1, digest1); // digest1 = sha2_256(message1)
- *              hash->update(message2, digest2); // digest2 = sha2_256(message2)
- *              hash->update(message3, digest3); // digest3 = sha2_256(message3)
+ *              hash->digest(message1, digest1); // digest1 = sha2_256(message1)
+ *              hash->digest(message2, digest2); // digest2 = sha2_256(message2)
+ *              hash->digest(message3, digest3); // digest3 = sha2_256(message3)
  *              hash->release();
  *          }
  */
