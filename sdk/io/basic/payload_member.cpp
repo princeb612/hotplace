@@ -14,14 +14,13 @@
 namespace hotplace {
 namespace io {
 
-payload_member::payload_member(uint8 value, const char* name, const char* group)
-    : _change_endian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+payload_member::payload_member(uint8 value, const char* name, const char* group) : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint8(value);
 }
 
 payload_member::payload_member(uint8 value, uint16 repeat, const char* name, const char* group)
-    : _change_endian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(repeat) {
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(repeat) {
     set_name(name).set_group(group);
     binary_t bin;
     uint16 temp = repeat;
@@ -31,14 +30,13 @@ payload_member::payload_member(uint8 value, uint16 repeat, const char* name, con
     get_variant().set_binary_new(bin);
 }
 
-payload_member::payload_member(uint16 value, bool change_endian, const char* name, const char* group)
-    : _change_endian(change_endian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+payload_member::payload_member(uint16 value, bool bigendian, const char* name, const char* group)
+    : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint16(value);
 }
 
-payload_member::payload_member(uint24_t value, const char* name, const char* group)
-    : _change_endian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+payload_member::payload_member(uint24_t value, const char* name, const char* group) : _bigendian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     uint32 ui32 = 0;
     b24_i32((byte_t*)&value, 3, ui32);
@@ -46,51 +44,51 @@ payload_member::payload_member(uint24_t value, const char* name, const char* gro
 }
 
 payload_member::payload_member(uint32_24_t value, const char* name, const char* group)
-    : _change_endian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint24(value.get());
 }
 
-payload_member::payload_member(uint32 value, bool change_endian, const char* name, const char* group)
-    : _change_endian(change_endian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+payload_member::payload_member(uint32 value, bool bigendian, const char* name, const char* group)
+    : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint32(value);
 }
 
-payload_member::payload_member(uint64 value, bool change_endian, const char* name, const char* group)
-    : _change_endian(change_endian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+payload_member::payload_member(uint64 value, bool bigendian, const char* name, const char* group)
+    : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint64(value);
 }
 
 #if defined __SIZEOF_INT128__
-payload_member::payload_member(uint128 value, bool change_endian, const char* name, const char* group)
-    : _change_endian(change_endian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+payload_member::payload_member(uint128 value, bool bigendian, const char* name, const char* group)
+    : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint128(value);
 }
 #endif
 
 payload_member::payload_member(const binary_t& value, const char* name, const char* group)
-    : _change_endian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_binary_new(value);
 }
 
 payload_member::payload_member(const std::string& value, const char* name, const char* group)
-    : _change_endian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_str_new(value);
 }
 
 payload_member::payload_member(const stream_t* value, const char* name, const char* group)
-    : _change_endian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_bstr_new(value);
 }
 
 payload_member::payload_member(payload_encoded* value, const char* name, const char* group)
-    : _change_endian(false), _ref(nullptr), _refmulti(1), _vl(value), _reserve(0) {
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(value), _reserve(0) {
     set_name(name).set_group(group);
 }
 
@@ -100,7 +98,7 @@ payload_member::~payload_member() {
     }
 }
 
-bool payload_member::get_change_endian() { return _change_endian; }
+bool payload_member::get_change_endian() { return _bigendian; }
 
 std::string payload_member::get_name() const { return _name; }
 
@@ -109,7 +107,7 @@ std::string payload_member::get_group() const { return _group; }
 bool payload_member::encoded() const { return nullptr != _vl; }
 
 payload_member& payload_member::set_change_endian(bool enable) {
-    _change_endian = enable;
+    _bigendian = enable;
     return *this;
 }
 

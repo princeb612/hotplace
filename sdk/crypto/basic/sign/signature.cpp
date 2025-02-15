@@ -33,7 +33,7 @@ return_t rs2der(const binary_t& r, const binary_t& s, binary_t& asn1der) {
     // ASN.1 DER
     // ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
     payload pl;
-    pl << new payload_member(uint8(30)) << new payload_member(uint8(r.size() + s.size() + 4)) << new payload_member(uint8(asn1_tag_integer))
+    pl << new payload_member(uint8(0x30)) << new payload_member(uint8(r.size() + s.size() + 4)) << new payload_member(uint8(asn1_tag_integer))
        << new payload_member(uint8(r.size())) << new payload_member(r) << new payload_member(uint8(asn1_tag_integer)) << new payload_member(uint8(s.size()))
        << new payload_member(s);
     pl.write(asn1der);
@@ -85,8 +85,8 @@ return_t sig2rs(const binary_t& sig, binary_t& r, binary_t& s) {
             __leave2;
         }
 
-        size_t halfsize = size << 1;
-        r = binary_t(sig.begin(), sig.begin() + halfsize - 1);
+        size_t halfsize = size >> 1;
+        r = binary_t(sig.begin(), sig.begin() + halfsize);
         s = binary_t(sig.begin() + halfsize, sig.end());
     }
     __finally2 {}

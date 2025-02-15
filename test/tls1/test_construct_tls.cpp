@@ -224,22 +224,6 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
     return ret;
 }
 
-static void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tls_secret_t secret, const char* secret_name) {
-    auto& client_protection = clisession->get_tls_protection();
-    auto& server_protection = svrsession->get_tls_protection();
-
-    binary_t client_secret;
-    binary_t server_secret;
-
-    client_protection.get_item(secret, client_secret);
-    server_protection.get_item(secret, server_secret);
-
-    _logger->writeln("client secret %s (internal 0x%04x) (%p) %s", secret_name, secret, svrsession, base16_encode(client_secret).c_str());
-    _logger->writeln("server secret %s (internal 0x%04x) (%p) %s", secret_name, secret, clisession, base16_encode(server_secret).c_str());
-
-    _test_case.assert((false == client_secret.empty()) && (client_secret == server_secret), __FUNCTION__, "cross-check secret %s", secret_name);
-}
-
 static return_t do_test_construct_server_change_cipher_spec(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -601,28 +585,26 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             _test_case.assert(svr_tlsversion == cli_tlsversion, __FUNCTION__, "TLS version %04x", svr_tlsversion);
         }
 
-        if (keyexchange_null != keyexchange) {
-            const char* certfile = nullptr;
-            const char* keyfile = nullptr;
-            switch (hint->auth) {
-                // ECDHE_RSA
-                case auth_rsa: {
-                    certfile = "rsa.crt";
-                    keyfile = "rsa.key";
-                } break;
-                // ECDHE_ECDSA
-                case auth_ecdsa: {
-                    certfile = "ecdsa.crt";
-                    keyfile = "ecdsa.key";
-                } break;
-                default:
-                    ret = errorcode_t::not_supported;
-                    break;
-            }
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
+        const char* certfile = nullptr;
+        const char* keyfile = nullptr;
+        switch (hint->auth) {
+            // ECDHE_RSA
+            case auth_rsa: {
+                certfile = "rsa.crt";
+                keyfile = "rsa.key";
+            } break;
+            // ECDHE_ECDSA
+            case auth_ecdsa: {
+                certfile = "ecdsa.crt";
+                keyfile = "ecdsa.key";
+            } break;
+            default: {
+                certfile = "ecdsa.crt";
+                keyfile = "ecdsa.key";
+            } break;
+        }
 
+        if (keyexchange_null != keyexchange) {
             // S -> C SC
             binary_t bin_certificate;
             do_test_construct_certificate(from_server, &server_session, tls_content_type_handshake, certfile, keyfile, bin_certificate,
@@ -702,7 +684,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
 
         // S -> C SC
         binary_t bin_certificate;
-        do_test_construct_certificate(from_server, &server_session, tls_content_type_application_data, "server.crt", "server.key", bin_certificate,
+        do_test_construct_certificate(from_server, &server_session, tls_content_type_application_data, certfile, keyfile, bin_certificate,
                                       "construct certificate");
         do_test_send_record(from_server, &client_session, bin_certificate, "send cerficate");
 

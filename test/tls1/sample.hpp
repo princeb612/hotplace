@@ -43,6 +43,7 @@ return_t dump_handshake(const char* text, tls_session* session, const binary_t& 
 void test_keycalc(tls_session* session, tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect);
 void test_transcript_hash(tls_session* session, const binary_t& expect);
 void direction_string(tls_direction_t dir, int send, std::string& s);
+void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tls_secret_t secret, const char* secret_name);
 
 void test_tls13_xargs_org();
 void test_tls12_xargs_org();

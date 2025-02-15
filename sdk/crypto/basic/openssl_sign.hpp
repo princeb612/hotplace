@@ -69,8 +69,8 @@ class openssl_sign {
      * @param   const binary_t& signature [in]
      * @desc    HS256, HS384, HS512
      */
-    return_t sign_hmac(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature);
-    return_t sign_hmac(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature);
+    return_t sign_hash(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature);
+    return_t sign_hash(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature);
     /*
      * @brief   sign
      * @param   const EVP_PKEY* pkey [in]
@@ -131,8 +131,8 @@ class openssl_sign {
      * @param   const binary_t& signature [in]
      * @desc    HS256, HS384, HS512
      */
-    return_t verify_hmac(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature);
-    return_t verify_hmac(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature);
+    return_t verify_hash(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature);
+    return_t verify_hash(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature);
     /*
      * @brief   verify
      * @param   const EVP_PKEY* pkey [in]

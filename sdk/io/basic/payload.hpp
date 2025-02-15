@@ -89,13 +89,13 @@ class payload_member {
    public:
     payload_member(uint8 value, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint8 value, uint16 repeat, const char* name = nullptr, const char* group = nullptr);
-    payload_member(uint16 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
+    payload_member(uint16 value, bool bigendian, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint24_t value, const char* name = nullptr, const char* group = nullptr);
     payload_member(uint32_24_t value, const char* name = nullptr, const char* group = nullptr);
-    payload_member(uint32 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
-    payload_member(uint64 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
+    payload_member(uint32 value, bool bigendian, const char* name = nullptr, const char* group = nullptr);
+    payload_member(uint64 value, bool bigendian, const char* name = nullptr, const char* group = nullptr);
 #if defined __SIZEOF_INT128__
-    payload_member(uint128 value, bool change_endian, const char* name = nullptr, const char* group = nullptr);
+    payload_member(uint128 value, bool bigendian, const char* name = nullptr, const char* group = nullptr);
 #endif
     payload_member(const binary_t& value, const char* name = nullptr, const char* group = nullptr);
     payload_member(const std::string& value, const char* name = nullptr, const char* group = nullptr);
@@ -132,7 +132,7 @@ class payload_member {
    private:
     std::string _name;
     std::string _group;
-    bool _change_endian;
+    bool _bigendian;
     variant _vt;
 
     payload_member* _ref;

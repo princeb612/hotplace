@@ -243,7 +243,7 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t&
             // RFC 7520 4.4.  HMAC-SHA2 Integrity Protection
             {
                 jws_group_t::jws_group_hmac,
-                &openssl_sign::sign_hmac,
+                &openssl_sign::sign_hash,
             },
             // RFC 7515 A.2.  Example JWS Using RSASSA-PKCS1-v1_5 SHA-256
             // RFC 7520 4.1.  RSA v1.5 Signature
@@ -340,7 +340,7 @@ return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t s
             // RFC 7520 4.4.  HMAC-SHA2 Integrity Protection
             {
                 jws_group_t::jws_group_hmac,
-                &openssl_sign::verify_hmac,
+                &openssl_sign::verify_hash,
             },
             // RFC 7515 A.2.  Example JWS Using RSASSA-PKCS1-v1_5 SHA-256
             // RFC 7520 4.1.  RSA v1.5 Signature
