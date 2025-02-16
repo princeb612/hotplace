@@ -578,11 +578,11 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
 
 void test_construct_dtls() {
     TLS_OPTION testvector[] = {
-        {dtls_13, "TLS_AES_128_GCM_SHA256"},
-        // {dtls_13, "TLS_AES_256_GCM_SHA384"},
-        // {dtls_13, "TLS_CHACHA20_POLY1305_SHA256"},
-        // {dtls_13, "TLS_AES_128_CCM_SHA256"},
-        // {dtls_13, "TLS_AES_128_CCM_8_SHA256"},
+        {dtls_13, "TLS_AES_128_GCM_SHA256"},        //
+        {dtls_13, "TLS_AES_256_GCM_SHA384"},        //
+        {dtls_13, "TLS_CHACHA20_POLY1305_SHA256"},  //
+        {dtls_13, "TLS_AES_128_CCM_SHA256"},        //
+        {dtls_13, "TLS_AES_128_CCM_8_SHA256"},      // TODO ... (source < 8) and CCM8 < 16 (AES blocksize)
     };
 
     for (auto item : testvector) {

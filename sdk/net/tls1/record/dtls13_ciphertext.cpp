@@ -422,7 +422,9 @@ return_t dtls13_ciphertext::aes128_ecb_encrypt_1block(tls_direction_t dir, const
                     sn_key = tls_secret_handshake_client_sn_key;
                 }
             }
-            ret = cipher->encrypt(protection.get_item(sn_key), binary_t(), stream, blocksize, ciphertext);
+            // TODO
+            // (source < 8) and CCM8 < 16 (AES blocksize)
+            ret = cipher->encrypt(protection.get_item(sn_key), binary_t(), stream, (size > blocksize) ? blocksize : size, ciphertext);
             cipher->release();
         }
     }

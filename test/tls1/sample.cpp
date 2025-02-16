@@ -134,6 +134,7 @@ int main(int argc, char** argv) {
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-L", "trace level 0|1|2", [](OPTION& o, char* param) -> void { o.trace_level = atoi(param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
     _cmdline->parse(argc, argv);
@@ -161,6 +162,9 @@ int main(int argc, char** argv) {
         };
         set_trace_debug(lambda_tracedebug);
         set_trace_option(trace_bt | trace_except | trace_debug);
+    }
+    if (option.trace_level) {
+        set_trace_level(option.trace_level);
     }
 
     openssl_startup();

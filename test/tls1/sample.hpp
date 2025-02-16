@@ -14,10 +14,11 @@ using namespace hotplace::net;
 struct OPTION {
     int verbose;
     int debug;
+    int trace_level;
     int log;
     int time;
 
-    OPTION() : verbose(0), debug(0), log(0), time(0) {
+    OPTION() : verbose(0), debug(0), trace_level(0), log(0), time(0) {
         // do nothing
     }
     void enable_debug() {
