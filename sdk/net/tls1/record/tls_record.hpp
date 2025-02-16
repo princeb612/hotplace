@@ -18,6 +18,7 @@ namespace net {
 
 class tls_record {
     friend class tls_record_application_data;
+    friend class dtls13_ciphertext;
 
    public:
     virtual ~tls_record();

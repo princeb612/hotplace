@@ -13,6 +13,7 @@
 #include <sdk/base/system/types.hpp>
 #include <sdk/net/tls1/handshake/tls_handshakes.hpp>
 #include <sdk/net/tls1/record/tls_record.hpp>
+#include <sdk/net/tls1/record/tls_records.hpp>
 
 namespace hotplace {
 namespace net {
@@ -22,6 +23,7 @@ class dtls13_ciphertext : public tls_record {
     dtls13_ciphertext(uint8 type, tls_session* session);
 
     tls_handshakes& get_handshakes();
+    tls_records& get_records();
 
    protected:
     virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -36,6 +38,7 @@ class dtls13_ciphertext : public tls_record {
     uint8 _sequence_len;
     size_t _offset_encdata;
     tls_handshakes _handshakes;
+    tls_records _records;
 };
 
 }  // namespace net

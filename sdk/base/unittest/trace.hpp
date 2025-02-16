@@ -103,6 +103,13 @@ void trace_debug_filter(trace_category_t category, bool filter);
 bool trace_debug_filtered(trace_category_t category);
 bool istraceable();
 bool istraceable(trace_category_t category);
+/**
+ * @remarks the higher level, the more informations
+ * @sample
+ *          if (check_trace_level(0) && istraceable()) { do_something(); }
+ */
+bool check_trace_level(int8 level);
+void set_trace_level(int8 level);
 
 /**
  * @sample

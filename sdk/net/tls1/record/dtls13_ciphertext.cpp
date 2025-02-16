@@ -45,6 +45,8 @@ dtls13_ciphertext::dtls13_ciphertext(uint8 type, tls_session* session) : tls_rec
 
 tls_handshakes& dtls13_ciphertext::get_handshakes() { return _handshakes; }
 
+tls_records& dtls13_ciphertext::get_records() { return _records; }
+
 return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -115,10 +117,13 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
             if (connection_id.size()) {
                 dbs.printf(" > %s %s\n", constexpr_connection_id, base16_encode(connection_id).c_str());
             }
-            dbs.printf(" > %s %04x\n", constexpr_sequence, sequence);
-            dbs.printf(" > %s %04x\n", constexpr_len, len);
-            dbs.printf(" > %s\n", constexpr_encdata);
-            dump_memory(encdata, &dbs, 16, 3, 0x0, dump_notrunc);
+
+            if (check_trace_level(2)) {
+                dbs.printf(" > %s %04x\n", constexpr_sequence, sequence);
+                dbs.printf(" > %s %04x\n", constexpr_len, len);
+                dbs.printf(" > %s\n", constexpr_encdata);
+                dump_memory(encdata, &dbs, 16, 3, 0x0, dump_notrunc);
+            }
 
             trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
@@ -144,6 +149,11 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
 return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+        auto sess_recno = session->get_recordno(dir, false);
+
         auto recpos = offsetof_header();
         auto sequence = _sequence;
         auto sequence_len = _sequence_len;
@@ -152,8 +162,6 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
         uint16 recno = 0;
         uint16 rec_enc = 0;
         binary_t ecb_block;
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
 
         ret = aes128_ecb_encrypt_1block(dir, stream + offset_encdata, size - offset_encdata, ecb_block);
         if (errorcode_t::success != ret) {
@@ -167,6 +175,11 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
             rec_enc = t_binary_to_integer<uint8>(ecb_block);
         }
         recno = sequence ^ rec_enc;
+
+        if (recno != sess_recno) {
+            ret = errorcode_t::mismatch;
+            __leave2;
+        }
 
         binary_t additional;
         {
@@ -182,10 +195,10 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
             ret = protection.decrypt(session, dir, stream, size - additional.size(), recpos, plaintext, additional);
         }
 
-        if (istraceable()) {
+        if (check_trace_level(2) && istraceable()) {
             basic_stream dbs;
 
-            dbs.printf("rec_enc %04x\n", rec_enc);
+            dbs.printf("> rec_enc %04x\n", rec_enc);
             if (2 == sequence_len) {
                 dbs.printf("> %s %04x (%04x XOR %s)\n", constexpr_recno, recno, sequence, base16_encode(ecb_block).substr(0, sequence_len << 1).c_str());
             } else if (1 == sequence_len) {
@@ -205,10 +218,24 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
         // record
         if (errorcode_t::success == ret) {
-            uint8 hstype = *plaintext.rbegin();
+            uint8 type = *plaintext.rbegin();
             size_t tpos = 0;
 
-            switch (hstype) {
+            if (istraceable()) {
+                basic_stream dbs;
+
+                dbs.printf("> content type 0x%02x(%i) %s\n", type, type, tlsadvisor->content_type_string(type).c_str());
+
+                switch (type) {
+                    case tls_content_type_application_data: {
+                        dump_memory(&plaintext[0], plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
+                    } break;
+                }
+
+                trace_debug_event(category_tls1, tls_event_read, &dbs);
+            }
+
+            switch (type) {
                 case tls_content_type_alert: {
                     tls_record_alert alert(session);
                     ret = alert.read_plaintext(dir, &plaintext[0], plaintext.size() - 1, tpos);
@@ -218,13 +245,6 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
                     get_handshakes().add(handshake);
                 } break;
                 case tls_content_type_application_data: {
-                    if (istraceable()) {
-                        basic_stream dbs;
-                        dbs.printf("> application data\n");
-                        dump_memory(&plaintext[0], plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
-
-                        trace_debug_event(category_tls1, tls_event_read, &dbs);
-                    }
                 } break;
                 case tls_content_type_ack: {
                     tls_record_ack ack(session);
@@ -242,9 +262,16 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
     __try2 {
-        size_t recpos = bin.size();
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        auto sess_recno = session->get_recordno(dir, false);
+        uint8 cap = byte_capacity(sess_recno);
+        if (cap > 2) {
+            ret = errorcode_t::exceed;
+            __leave2;
+        }
+
+        size_t recpos = bin.size();
         /**
          * 0 1 2 3 4 5 6 7
          * +-+-+-+-+-+-+-+-+
@@ -256,21 +283,22 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
         binary_t tag;
         uint8 uhdr = 0x20;
         uint8 c = (_cid.empty()) ? 0x00 : 0x01;
-        uint8 s = (1 == byte_capacity(_sequence)) ? 0x00 : 0x08;
+        uint8 s = (1 == cap) ? 0x00 : 0x08;
         uint8 l = (body.empty()) ? 0x00 : 0x04;
         uint8 e = 0x03;
         uhdr |= (c | s | l | e);
         uint8 sequence_len = s ? 2 : 1;
+        uint8 tagsize = protection.get_tag_size();
 
         binary_t cid;
 
         {
             payload pl;
-            pl << new payload_member(uhdr, constexpr_unified_header)                                      //
-               << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                    // cid    C:1
-               << new payload_member(uint16(_sequence), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
-               << new payload_member(uint8(_sequence), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
-               << new payload_member(uint16(body.size()), true, constexpr_len, constexpr_group_l);        // len    L:1
+            pl << new payload_member(uhdr, constexpr_unified_header)                                          //
+               << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                        // cid    C:1
+               << new payload_member(uint16(sess_recno), true, constexpr_sequence16, constexpr_group_s16)     // seq 16 S:1
+               << new payload_member(uint8(sess_recno), constexpr_sequence8, constexpr_group_s8)              // seq 8  S:0
+               << new payload_member(uint16(body.size() + tagsize), true, constexpr_len, constexpr_group_l);  // len    L:1
             pl.set_group(constexpr_group_c, (0x10 & uhdr));
             pl.set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
             pl.set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
@@ -283,6 +311,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
             _bodysize = body.size();
             _range.begin = recpos;
             _range.end = header.size();
+            _sequence = sess_recno;
             _sequence_len = sequence_len;
             _offset_encdata = header.size();
         }
@@ -293,22 +322,45 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
                 __leave2;
             }
         }
+
+        binary_t block;
         {
-            binary_append(bin, header);
-            binary_append(bin, ciphertext);
-            binary_append(bin, tag);
+            binary_append(block, ciphertext);
+            binary_append(block, tag);
         }
 
+        uint16 recno = 0;
+        uint16 rec_enc = 0;
         binary_t ecb_block;
-        ret = aes128_ecb_encrypt_1block(dir, &ciphertext[0], ciphertext.size(), ecb_block);
+        ret = aes128_ecb_encrypt_1block(dir, &block[0], block.size(), ecb_block);
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        for (auto i = 0; i < sequence_len; i++) {
-            bin[1 + i] ^= ecb_block[i];
+
+        if (2 == sequence_len) {
+            rec_enc = t_binary_to_integer<uint16>(ecb_block);
+        } else {
+            rec_enc = t_binary_to_integer<uint8>(ecb_block);
+        }
+        recno = sess_recno ^ rec_enc;
+
+        {
+            payload pl;
+            pl << new payload_member(uhdr, constexpr_unified_header)                                  //
+               << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                // cid    C:1
+               << new payload_member(uint16(recno), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
+               << new payload_member(uint8(recno), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
+               << new payload_member(uint16(block.size()), true, constexpr_len, constexpr_group_l);   // len    L:1
+            pl.set_group(constexpr_group_c, (0x10 & uhdr));
+            pl.set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
+            pl.set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
+            pl.set_group(constexpr_group_l, (0x04 & uhdr));
+            pl.write(bin);
+
+            binary_append(bin, block);
         }
 
-        if (istraceable()) {
+        if (check_trace_level(2) && istraceable()) {
             basic_stream dbs;
 
             dbs.printf("> header\n");
@@ -325,8 +377,18 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
 
 return_t dtls13_ciphertext::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
-    get_handshakes().write(get_session(), dir, bin);
-    binary_append(bin, get_type());
+    auto& handshakes = get_handshakes();
+    auto& records = get_records();
+    if (handshakes.size()) {
+        handshakes.write(get_session(), dir, bin);
+        binary_append(bin, uint8(get_type()));
+    } else if (records.size()) {
+        auto lambda = [&](tls_record* record) -> void {
+            record->do_write_body(dir, bin);
+            binary_append(bin, uint8(record->get_type()));
+        };
+        records.for_each(lambda);
+    }
     return ret;
 }
 
@@ -364,7 +426,7 @@ return_t dtls13_ciphertext::aes128_ecb_encrypt_1block(tls_direction_t dir, const
             cipher->release();
         }
     }
-    if (istraceable()) {
+    if (check_trace_level(2) && istraceable()) {
         basic_stream dbs;
 
         dbs.printf("> record number mask\n");

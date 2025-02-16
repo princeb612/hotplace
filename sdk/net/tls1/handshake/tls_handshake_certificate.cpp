@@ -219,7 +219,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
         if (istraceable()) {
             basic_stream dbs;
             dbs.autoindent(1);
-            dbs.printf("> certificate\n");
+            dbs.printf("> %s\n", constexpr_certificate);
             dump_memory(certificate, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.autoindent(0);
 

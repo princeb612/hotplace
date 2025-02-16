@@ -28,7 +28,8 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    (*_cmdline) << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
+    (*_cmdline) << t_cmdarg_t<OPTION>("-r", "run server", [](OPTION& o, char* param) -> void { o.run = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-e", "allow Content-Encoding", [](OPTION& o, char* param) -> void { o.content_encoding = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
@@ -63,18 +64,20 @@ int main(int argc, char** argv) {
         set_trace_option(trace_bt | trace_except | trace_debug);
     }
 
+    if (option.run) {
 #if defined _WIN32 || defined _WIN64
-    winsock_startup();
+        winsock_startup();
 #endif
-    openssl_startup();
+        openssl_startup();
 
-    run_server();
+        run_server();
 
-    openssl_cleanup();
+        openssl_cleanup();
 
 #if defined _WIN32 || defined _WIN64
-    winsock_cleanup();
+        winsock_cleanup();
 #endif
+    }
 
     _logger->flush();
 

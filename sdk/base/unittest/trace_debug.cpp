@@ -56,4 +56,10 @@ bool istraceable() {
 
 bool istraceable(trace_category_t category) { return (istraceable() && (false == trace_debug_filtered(category))); }
 
+static int8 _trace_level = 0;
+
+bool check_trace_level(int8 level) { return level <= _trace_level; }
+
+void set_trace_level(int8 level) { _trace_level = level; }
+
 }  // namespace hotplace

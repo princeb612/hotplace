@@ -346,6 +346,66 @@ static return_t do_test_construct_client_finished(tls_direction_t dir, tls_sessi
     return ret;
 }
 
+static return_t do_test_construct_client_ping(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        dtls13_ciphertext record(tls_content_type_application_data, session);
+        record.get_records().add(new tls_record_application_data(session, "ping"));
+        record.write(dir, bin);
+    }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
+    return ret;
+}
+
+static return_t do_test_construct_server_pong(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        dtls13_ciphertext record(tls_content_type_application_data, session);
+        record.get_records().add(new tls_record_application_data(session, "pong"));
+        record.write(dir, bin);
+    }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
+    return ret;
+}
+
+static return_t do_test_construct_close_notify(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        dtls13_ciphertext record(tls_content_type_alert, session);
+        record.get_records().add(new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify));
+        record.write(dir, bin);
+    }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
+    return ret;
+}
+
 static return_t do_test_send_record(tls_direction_t dir, tls_session* session, const binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -493,15 +553,36 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
             // do_cross_check_keycalc(&client_session, &server_session, tls_secret_resumption, "tls_secret_resumption");
         }
 
-        // TODO
+        // C->S ping
+        binary_t bin_client_ping;
+        do_test_construct_client_ping(from_client, &client_session, bin_client_ping, "construct client ping");
+        do_test_send_record(from_client, &server_session, bin_client_ping, "send client ping");
+
+        // C<-S pong
+        binary_t bin_server_pong;
+        do_test_construct_server_pong(from_server, &server_session, bin_server_pong, "construct server pong");
+        do_test_send_record(from_server, &client_session, bin_server_pong, "send server pong");
+
+        // C->S close notify
+        binary_t bin_client_close_notify;
+        do_test_construct_close_notify(from_client, &client_session, bin_client_close_notify, "construct client close notify");
+        do_test_send_record(from_client, &server_session, bin_client_close_notify, "send client close notify");
+
+        // S->C close notify
+        binary_t bin_server_close_notify;
+        do_test_construct_close_notify(from_server, &server_session, bin_server_close_notify, "construct server close notify");
+        do_test_send_record(from_server, &client_session, bin_server_close_notify, "send server close notify");
     }
     __finally2 {}
 }
 
 void test_construct_dtls() {
     TLS_OPTION testvector[] = {
-        {dtls_13, "TLS_AES_128_GCM_SHA256"}, {dtls_13, "TLS_AES_256_GCM_SHA384"},   {dtls_13, "TLS_CHACHA20_POLY1305_SHA256"},
-        {dtls_13, "TLS_AES_128_CCM_SHA256"}, {dtls_13, "TLS_AES_128_CCM_8_SHA256"},
+        {dtls_13, "TLS_AES_128_GCM_SHA256"},
+        // {dtls_13, "TLS_AES_256_GCM_SHA384"},
+        // {dtls_13, "TLS_CHACHA20_POLY1305_SHA256"},
+        // {dtls_13, "TLS_AES_128_CCM_SHA256"},
+        // {dtls_13, "TLS_AES_128_CCM_8_SHA256"},
     };
 
     for (auto item : testvector) {

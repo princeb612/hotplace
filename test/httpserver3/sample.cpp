@@ -63,18 +63,22 @@ int main(int argc, char** argv) {
         set_trace_option(trace_bt | trace_except | trace_debug);
     }
 
+    if (0 && option.run) {
 #if defined _WIN32 || defined _WIN64
-    winsock_startup();
+        winsock_startup();
 #endif
-    openssl_startup();
+        openssl_startup();
 
-    run_server();
+        run_server();
 
-    openssl_cleanup();
+        openssl_cleanup();
 
 #if defined _WIN32 || defined _WIN64
-    winsock_cleanup();
+        winsock_cleanup();
 #endif
+    }
+
+    _logger->writeln("studying DTLS/QUIC ...");
 
     _logger->flush();
 

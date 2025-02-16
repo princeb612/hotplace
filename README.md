@@ -33,6 +33,15 @@
 
 ## implemented
 
+* TLS
+  * RFC 2246 The TLS Protocol Version 1.0
+  * RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
+  * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+  * RFC 8448 Example Handshake Traces for TLS 1.3
+  * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
+    * sdk/net/tls1/
+    * test/tls1/
+
 * CBOR
   * RFC 7049 Concise Binary Object Representation (CBOR)
   * RFC 8949 Concise Binary Object Representation (CBOR)
@@ -150,22 +159,21 @@
     * test/sign/
 
   * RFC 4347 Datagram Transport Layer Security
+  * RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
   * RFC 6347 Datagram Transport Layer Security Version 1.2
-  * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
   * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
-  * RFC 8448 Example Handshake Traces for TLS 1.3
   * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
     * sdk/net/tls/
     * test/tlsserver/
     * test/dtlsserver/
-    * sdk/net/tls1/
-    * test/tls1/
 
 * Compression
   * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
   * RFC 1952 GZIP file format specification version 4.3
     * Accept-Encoding, Content-Encoding
+    * test/httpserver1/
+    * test/httpserver2/
 
 * JOSE
   * RFC 7638 3.1.  Example JWK Thumbprint Computation
@@ -189,15 +197,12 @@
   * RFC 9114 HTTP/3
   * RFC 9368 Compatible Version Negotiation for QUIC
 * TLS
-  * RFC 2246 The TLS Protocol Version 1.0
-  * RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
   * RFC 6066 Transport Layer Security (TLS) Extensions: Extension Definitions
   * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
   * RFC 7520 Using Raw Public Keys in Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)
   * RFC 7685 A Transport Layer Security (TLS) ClientHello Padding Extension
   * RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
   * RFC 8422 Elliptic Curve Cryptography (ECC) Cipher Suites for Transport Layer Security (TLS) Versions 1.2 and Earlier
-  * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
 * ASN.1
   * ITU-T X.680-X.699
     * [X.680-X.693 : Information Technology - Abstract Syntax Notation One (ASN.1) & ASN.1 encoding rules](https://www.itu.int/rec/T-REC-X.680-X.693-202102-I/en)
