@@ -20,11 +20,11 @@
 namespace hotplace {
 namespace crypto {
 
-return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const binary_t &input, binary_t &output, crypt_enc_t mode) {
-    return encrypt(pkey, &input[0], input.size(), output, mode);
+return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const binary_t &plaintext, binary_t &ciphertext, crypt_enc_t mode) {
+    return encrypt(pkey, &plaintext[0], plaintext.size(), ciphertext, mode);
 }
 
-return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size_t size, binary_t &output, crypt_enc_t mode) {
+return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size_t size, binary_t &ciphertext, crypt_enc_t mode) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX *pkey_context = nullptr;
     crypto_advisor *advisor = crypto_advisor::get_instance();
@@ -32,7 +32,7 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
     __try2 {
         int ret_openssl = 1;
 
-        output.resize(0);
+        ciphertext.resize(0);
 
         if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
@@ -105,8 +105,8 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
             __leave2_trace_openssl(ret);
         }
 
-        output.resize(bufsize);
-        ret_openssl = EVP_PKEY_encrypt(pkey_context, &output[0], &bufsize, stream, size);
+        ciphertext.resize(bufsize);
+        ret_openssl = EVP_PKEY_encrypt(pkey_context, &ciphertext[0], &bufsize, stream, size);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
@@ -120,11 +120,11 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
     return ret;
 }
 
-return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const binary_t &input, binary_t &output, crypt_enc_t mode) {
-    return decrypt(pkey, &input[0], input.size(), output, mode);
+return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const binary_t &ciphertext, binary_t &plaintext, crypt_enc_t mode) {
+    return decrypt(pkey, &ciphertext[0], ciphertext.size(), plaintext, mode);
 }
 
-return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size_t size, binary_t &output, crypt_enc_t mode) {
+return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size_t size, binary_t &plaintext, crypt_enc_t mode) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX *pkey_context = nullptr;
     crypto_advisor *advisor = crypto_advisor::get_instance();
@@ -132,7 +132,7 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size
     __try2 {
         int ret_openssl = 1;
 
-        output.resize(0);
+        plaintext.resize(0);
 
         if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
@@ -204,13 +204,13 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size
             __leave2_trace_openssl(ret);
         }
 
-        output.resize(bufsize);
-        ret_openssl = EVP_PKEY_decrypt(pkey_context, &output[0], &bufsize, stream, size);
+        plaintext.resize(bufsize);
+        ret_openssl = EVP_PKEY_decrypt(pkey_context, &plaintext[0], &bufsize, stream, size);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
-        output.resize(bufsize);
+        plaintext.resize(bufsize);
     }
     __finally2 {
         if (nullptr != pkey_context) {

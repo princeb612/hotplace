@@ -2,7 +2,7 @@
 /**
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
- * @desc
+ * @desc https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  *
  * Revision History
  * Date         Name                Description

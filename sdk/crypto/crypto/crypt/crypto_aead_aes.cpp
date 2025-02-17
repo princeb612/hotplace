@@ -52,7 +52,7 @@ return_t crypto_aead_aes::encrypt(const binary_t& key, const binary_t& iv, const
                                   binary_t& tag) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == stream) {
+        if ((nullptr == stream) && size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -85,7 +85,7 @@ return_t crypto_aead_aes::decrypt(const binary_t& key, const binary_t& iv, const
                                   const binary_t& tag) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == stream) {
+        if ((nullptr == stream) && size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }

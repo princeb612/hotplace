@@ -255,6 +255,7 @@ enum nid_t : uint32 {
     nid_ffdhe4096 = 1128,  // NID_ffdhe4096
     nid_ffdhe6144 = 1129,  // NID_ffdhe6144
     nid_ffdhe8192 = 1130,  // NID_ffdhe8192
+    nid_dh = 28,           // NID_dhKeyAgreement (EVP_PKEY_DH)
     nid_dsa = 116,         // NID_dsa
 };
 

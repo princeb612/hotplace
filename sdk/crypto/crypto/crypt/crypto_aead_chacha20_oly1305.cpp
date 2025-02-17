@@ -24,7 +24,7 @@ return_t crypto_aead_chacha20_poly1305::encrypt(const binary_t& key, const binar
                                                 const binary_t& aad, binary_t& tag) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == stream) {
+        if ((nullptr == stream) && size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -46,7 +46,7 @@ return_t crypto_aead_chacha20_poly1305::decrypt(const binary_t& key, const binar
                                                 const binary_t& aad, const binary_t& tag) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == stream) {
+        if ((nullptr == stream) && size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }

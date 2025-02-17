@@ -177,6 +177,9 @@ flowchart LR
     - [x] encryption
       - [x] encryption by cipher mode (not by TLS version)
   - [ ] DTLS construct
+    - [x] TLS version
+      - [x] TLS1.3
+      - [ ] TLS1.2
 
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)

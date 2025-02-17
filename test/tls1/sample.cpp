@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-L", "trace level 0|1|2", [](OPTION& o, char* param) -> void { o.trace_level = atoi(param); }).optional().preced()
+                << t_cmdarg_t<OPTION>("-D", "trace level 0|1|2", [](OPTION& o, char* param) -> void { o.trace_level = atoi(param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
     _cmdline->parse(argc, argv);
@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
     }
     _logger.make_share(builder.build());
 
-    if (option.debug) {
+    if (option.debug || option.trace_level) {
         auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void {
             // std::string ct;
             // std::string ev;

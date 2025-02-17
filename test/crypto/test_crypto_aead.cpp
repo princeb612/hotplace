@@ -59,4 +59,18 @@ void test_crypto_aead() {
 
     openssl_chacha20_iv(nonce, 1, iv);
     lambda("chacha20-poly1305", aead_scheme_chacha20_poly1305, key, nonce, (byte_t*)sample, size, aad);
+
+    lambda("aes128-gcm", aead_scheme_aes128_gcm, key, iv, nullptr, 0, aad);
+    lambda("aes192-gcm", aead_scheme_aes192_gcm, key, iv, nullptr, 0, aad);
+    lambda("aes256-gcm", aead_scheme_aes256_gcm, key, iv, nullptr, 0, aad);
+
+    lambda("aes128-ccm", aead_scheme_aes128_ccm, key, iv, nullptr, 0, aad);
+    lambda("aes192-ccm", aead_scheme_aes192_ccm, key, iv, nullptr, 0, aad);
+    lambda("aes256-ccm", aead_scheme_aes256_ccm, key, iv, nullptr, 0, aad);
+
+    lambda("aes128-ccm8", aead_scheme_aes128_ccm8, key, iv, nullptr, 0, aad);
+    lambda("aes192-ccm8", aead_scheme_aes192_ccm8, key, iv, nullptr, 0, aad);
+    lambda("aes256-ccm8", aead_scheme_aes256_ccm8, key, iv, nullptr, 0, aad);
+
+    lambda("chacha20-poly1305", aead_scheme_chacha20_poly1305, key, nonce, nullptr, 0, aad);
 }

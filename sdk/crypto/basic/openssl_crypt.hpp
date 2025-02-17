@@ -29,13 +29,13 @@ typedef struct _encrypt_option_t {
 /**
  * @brief openssl_crypt
  * @example
- *          constexpr byte_t plaintext[] = "still a man hears what he wants to hear and disregards the rest";
- *          size_t plainsize = RTL_NUMBER_OF (plaintext);
+ *          constexpr byte_t text[] = "still a man hears what he wants to hear and disregards the rest";
+ *          size_t plainsize = RTL_NUMBER_OF (text);
  *
  *          openssl_crypt crypt;
  *          crypt_context_t* handle = nullptr;
- *          binary_t data_encrypted;
- *          binary_t data_decrypted;
+ *          binary_t ciphertext;
+ *          binary_t plaintext;
  *
  *          // key
  *          binary_t key;
@@ -50,8 +50,8 @@ typedef struct _encrypt_option_t {
  *          // block cipher
  *          {
  *              crypt.open (&handle, crypt_algorithm_t::aes256, crypt_mode_t::cbc, &key[0], key.size (), &iv[0], iv.size ());
- *              crypt.encrypt (handle, plaintext, plainsize, data_encrypted);
- *              crypt.decrypt (handle, &data_encrypted[0], data_encrypted.size (), data_decrypted);
+ *              crypt.encrypt (handle, text, plainsize, ciphertext);
+ *              crypt.decrypt (handle, &ciphertext[0], ciphertext.size (), plaintext);
  *              crypt.close (handle);
  *          }
  *
@@ -62,8 +62,8 @@ typedef struct _encrypt_option_t {
  *              openssl_prng rand;
  *              rand.random (aad, 32);
  *              crypt.open (&handle, crypt_algorithm_t::aes256, crypt_mode_t::gcm, &key[0], key.size (), &iv[0], iv.size ());
- *              crypt.encrypt2 (handle, plaintext, plainsize, data_encrypted, &aad, &tag);
- *              crypt.decrypt2 (handle, &data_encrypted[0], data_encrypted.size (), data_decrypted, &aad, &tag);
+ *              crypt.encrypt2 (handle, text, plainsize, ciphertext, &aad, &tag);
+ *              crypt.decrypt2 (handle, &ciphertext[0], ciphertext.size (), plaintext, &aad, &tag);
  *              crypt.close (handle);
  *          }
  */
@@ -226,137 +226,137 @@ class openssl_crypt : public crypt_t {
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* plaintext [in]
      * @param size_t plainsize [in]
-     * @param unsigned char** data_encrypted [out]
-     * @param size_t* size_encrypted [out]
+     * @param unsigned char** ciphertext [out]
+     * @param size_t* ciphersize [out]
      * @return error code (see error.hpp)
      * @example
-     *        crypt.encrypt(handle, plaintext, plainsize, &data_encrypted, &size_encrypted);
-     *        crypt.free_data(data_encrypted);
+     *        crypt.encrypt(handle, plaintext, plainsize, &ciphertext, &ciphersize);
+     *        crypt.free_data(ciphertext);
      */
-    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, unsigned char** data_encrypted, size_t* size_encrypted);
+    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, unsigned char** ciphertext, size_t* ciphersize);
     /**
      * @brief symmetric encrypt
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* plaintext [in]
      * @param size_t plainsize [in]
-     * @param binary_t& out_encrypted [out]
+     * @param binary_t& ciphertext [out]
      * @return error code (see error.hpp)
      * @example
-     *        crypt.encrypt(handle, plaintext, plainsize, data_encrypted);
+     *        crypt.encrypt(handle, plaintext, plainsize, ciphertext);
      */
-    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, binary_t& out_encrypted);
+    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, binary_t& ciphertext);
     /**
      * @brief encrypt
      * @param crypt_context_t* handle [in]
-     * @param const binary_t& input [in]
-     * @param binary_t& out [out]
+     * @param const binary_t& plaintext [in]
+     * @param binary_t& ciphertext [out]
      * @return error code (see error.hpp)
      */
-    virtual return_t encrypt(crypt_context_t* handle, const binary_t& input, binary_t& out);
+    virtual return_t encrypt(crypt_context_t* handle, const binary_t& plaintext, binary_t& ciphertext);
     /**
      * @brief encrypt (GCM/CCM)
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* plaintext [in]
      * @param size_t plainsize [in]
-     * @param binary_t& out_encrypte [out]
+     * @param binary_t& ciphertext [out]
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [outopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t encrypt2(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, binary_t& out_encrypted, const binary_t* aad = nullptr,
+    virtual return_t encrypt2(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, binary_t& ciphertext, const binary_t* aad = nullptr,
                               binary_t* tag = nullptr);
     /**
      * @brief encrypt (GCM/CCM)
      * @param crypt_context_t* handle [in]
-     * @param const binary_t& plain [in]
-     * @param binary_t& out_encrypte [out]
+     * @param const binary_t& plaintext [in]
+     * @param binary_t& ciphertext [out]
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [outopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t encrypt2(crypt_context_t* handle, const binary_t& plain, binary_t& out_encrypted, const binary_t* aad = nullptr, binary_t* tag = nullptr);
+    virtual return_t encrypt2(crypt_context_t* handle, const binary_t& plaintext, binary_t& ciphertext, const binary_t* aad = nullptr, binary_t* tag = nullptr);
     /**
      * @brief encrypt
      * @param crypt_context_t* handle [in]
      * @param const unsigned char* plaintext [in]
      * @param size_t plainsize [in]
-     * @param unsigned char* out_encrypted [out] allocated buffer
-     * @param size_t* size* size_encrypted [inout] should be at least size_encrypted + EVP_MAX_BLOCK_LENGTH
+     * @param unsigned char* ciphertext [out] allocated buffer
+     * @param size_t* size* ciphersize [inout] should be at least cipersize + EVP_MAX_BLOCK_LENGTH
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [inopt]
      * @return error code (see error.hpp)
      */
-    return_t encrypt2(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, unsigned char* out_encrypted, size_t* size_encrypted,
+    return_t encrypt2(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, unsigned char* ciphertext, size_t* ciphersize,
                       const binary_t* aad = nullptr, binary_t* tag = nullptr);
     /**
      * @brief symmetric decrypt
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_encrypted [in]
-     * @param size_t size_encrypted [in]
+     * @param const unsigned char* ciphertext [in]
+     * @param size_t ciphersize [in]
      * @param unsigned char** plaintext [out]
      * @param size_t* plainsize [out]
      * @return error code (see error.hpp)
      * @example
-     *        crypt.decrypt(handle, data_encrypted, size_encrypted, &data_decrypted, &size_decrypted);
-     *        crypt.free_data(data_decrypted);
+     *        crypt.decrypt(handle, ciphertext, ciphersize, &plaintext, &plainsize);
+     *        crypt.free_data(plaintext);
      */
-    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, unsigned char** plaintext, size_t* plainsize);
+    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* ciphertext, size_t ciphersize, unsigned char** plaintext, size_t* plainsize);
     /**
      * @brief symmetric decrypt
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_encrypted [in]
-     * @param size_t size_encrypted [in]
-     * @param binary_t& out_decrypted [out]
+     * @param const unsigned char* ciphertext [in]
+     * @param size_t ciphersize [in]
+     * @param binary_t& plaintext [out]
      * @return error code (see error.hpp)
      * @example
-     *        crypt.decrypt(handle, data_encrypted, size_encrypted, data_decrypted);
+     *        crypt.decrypt(handle, ciphertext, ciphersize, plaintext);
      */
-    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted);
+    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* ciphertext, size_t ciphersize, binary_t& plaintext);
     /**
      * @brief decrypt
      * @param crypt_context_t* handle [in]
-     * @param const binary_t& input [in]
-     * @param binary_t& out [out]
+     * @param const binary_t& ciphertext [in]
+     * @param binary_t& plaintext [out]
      * @return error code (see error.hpp)
      * @return error code (see error.hpp)
      */
-    virtual return_t decrypt(crypt_context_t* handle, const binary_t& input, binary_t& out);
+    virtual return_t decrypt(crypt_context_t* handle, const binary_t& ciphertext, binary_t& plaintext);
 
     /**
      * @brief decrypt (GCM/CCOM)
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_encrypted [in]
-     * @param size_t size_encrypted [in]
-     * @param binary_t& out_decrypted [out]
+     * @param const unsigned char* ciphertext [in]
+     * @param size_t ciphersize [in]
+     * @param binary_t& plaintext [out]
      * @param binary_t* aad [inpot]
      * @param binary_t* tag [inopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
-                              const binary_t* aad = nullptr, const binary_t* tag = nullptr);
+    virtual return_t decrypt2(crypt_context_t* handle, const unsigned char* ciphertext, size_t ciphersize, binary_t& plaintext, const binary_t* aad = nullptr,
+                              const binary_t* tag = nullptr);
     /**
      * @brief decrypt (GCM/CCOM)
      * @param crypt_context_t* handle [in]
-     * @param const binary_t& data_encrypted [in]
-     * @param binary_t& out_decrypted [out]
+     * @param const binary_t& ciphertext [in]
+     * @param binary_t& plaintext [out]
      * @param binary_t* aad [inpot]
      * @param binary_t* tag [inopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t decrypt2(crypt_context_t* handle, const binary_t& data_encrypted, binary_t& out_decrypted, const binary_t* aad = nullptr,
+    virtual return_t decrypt2(crypt_context_t* handle, const binary_t& ciphertext, binary_t& plaintext, const binary_t* aad = nullptr,
                               const binary_t* tag = nullptr);
     /**
      * @brief decrypt
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_encrypted [in]
-     * @param size_t size_encrypted [in]
-     * @param byte_t* out_decrypted [out] allocated buffer
-     * @param size_t* size_decrypted [inout] should be at least size_encrypted + EVP_MAX_BLOCK_LENGTH
+     * @param const unsigned char* ciphertext [in]
+     * @param size_t ciphersize [in]
+     * @param byte_t* plaintext [out] allocated buffer
+     * @param size_t* plainsize [inout] should be at least ciphersize + EVP_MAX_BLOCK_LENGTH
      * @param binary_t* aad [inopt]
      * @param binary_t* tag [inopt]
      * @return error code (see error.hpp)
      */
-    return_t decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, byte_t* out_decrypted, size_t* size_decrypted,
+    return_t decrypt2(crypt_context_t* handle, const unsigned char* ciphertext, size_t ciphersize, byte_t* plaintext, size_t* plainsize,
                       const binary_t* aad = nullptr, const binary_t* tag = nullptr);
     /**
      * @brief free memory
@@ -401,24 +401,24 @@ class openssl_crypt : public crypt_t {
                      encrypt_option_t* options = nullptr);
     return_t encrypt(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad,
                      binary_t& tag, encrypt_option_t* options = nullptr);
-    return_t encrypt(const char* alg, const binary_t& key, const binary_t& iv, const unsigned char* plaintext, size_t size_plaintext, binary_t& ciphertext,
+    return_t encrypt(const char* alg, const binary_t& key, const binary_t& iv, const unsigned char* plaintext, size_t plainsize, binary_t& ciphertext,
                      const binary_t& aad, binary_t& tag, encrypt_option_t* options = nullptr);
     return_t encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const binary_t& plaintext, binary_t& ciphertext,
                      const binary_t& aad, binary_t& tag, encrypt_option_t* options = nullptr);
-    return_t encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const unsigned char* plaintext,
-                     size_t size_plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag, encrypt_option_t* options = nullptr);
+    return_t encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const unsigned char* plaintext, size_t plainsize,
+                     binary_t& ciphertext, const binary_t& aad, binary_t& tag, encrypt_option_t* options = nullptr);
     return_t decrypt(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext,
                      encrypt_option_t* options = nullptr);
     return_t decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext,
                      encrypt_option_t* options = nullptr);
     return_t decrypt(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext, const binary_t& aad,
                      const binary_t& tag, encrypt_option_t* options = nullptr);
-    return_t decrypt(const char* alg, const binary_t& key, const binary_t& iv, const unsigned char* ciphertext, size_t size_ciphertext, binary_t& plaintext,
+    return_t decrypt(const char* alg, const binary_t& key, const binary_t& iv, const unsigned char* ciphertext, size_t ciphersize, binary_t& plaintext,
                      const binary_t& aad, const binary_t& tag, encrypt_option_t* options = nullptr);
     return_t decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext,
                      const binary_t& aad, const binary_t& tag, encrypt_option_t* options = nullptr);
     return_t decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key, const binary_t& iv, const unsigned char* ciphertext,
-                     size_t size_ciphertext, binary_t& plaintext, const binary_t& aad, const binary_t& tag, encrypt_option_t* options = nullptr);
+                     size_t ciphersize, binary_t& plaintext, const binary_t& aad, const binary_t& tag, encrypt_option_t* options = nullptr);
 
     /**
      * @brief deprecated - expect block operation size
@@ -592,8 +592,8 @@ class openssl_crypt : public crypt_t {
  *
  *          openssl_crypt crypt;
  *          crypt_context_t* handle = nullptr;
- *          binary_t data_encrypted;
- *          binary_t data_decrypted;
+ *          binary_t ciphertext;
+ *          binary_t plaintext;
  *
  *          // key
  *          binary_t key;
@@ -610,8 +610,8 @@ class openssl_crypt : public crypt_t {
  *          // stream cipher
  *          {
  *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::mode_cipher, key, iv);
- *              crypt.encrypt (handle, plaintext, plainsize, data_encrypted);
- *              crypt.decrypt (handle, data_encrypted, data_decrypted);
+ *              crypt.encrypt (handle, plaintext, plainsize, ciphertext);
+ *              crypt.decrypt (handle, ciphertext, plaintext);
  *              crypt.close (handle);
  *          }
  *
@@ -622,8 +622,8 @@ class openssl_crypt : public crypt_t {
  *              openssl_prng rand;
  *              rand.random (aad, 32);
  *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::mode_poly1305, key, iv);
- *              crypt.encrypt2 (handle, plaintext, plainsize, data_encrypted, &aad, &tag);
- *              crypt.decrypt2 (handle, data_encrypted, data_decrypted, &aad, &tag);
+ *              crypt.encrypt2 (handle, plaintext, plainsize, ciphertext, &aad, &tag);
+ *              crypt.decrypt2 (handle, ciphertext, plaintext, &aad, &tag);
  *              crypt.close (handle);
  *          }
  */

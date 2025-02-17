@@ -996,13 +996,22 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
             }
             mode = hint->mode;
         }
+        /**
+         * RFC 7366
+         * If a server receives an encrypt-then-MAC request extension from a client
+         * and then selects a stream or Authenticated Encryption with Associated
+         * Data (AEAD) ciphersuite, it MUST NOT send an encrypt-then-MAC
+         * response extension back to the client.
+         */
         switch (mode) {
+            // AEAD
             case gcm:
             case ccm:
             case ccm8:
             case mode_poly1305: {
                 ret = encrypt_aead(session, dir, plaintext, ciphertext, additional, tag);
             } break;
+            // encrypt-then-MAC
             case cbc: {
                 ret = encrypt_cbc_hmac(session, dir, plaintext, ciphertext, additional, tag);
             } break;
@@ -1125,6 +1134,16 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         auto hmac_alg = hint->mac;  // do not promote insecure algorithm
         const binary_t &mackey = get_item(secret_mac_key);
 
+        /**
+         * RFC 7366 3.  Applying Encrypt-then-MAC
+         *   -- for TLS 1.1 and greater with an explicit IV
+         *   MAC(MAC_write_key, seq_num +
+         *       TLSCipherText.type +
+         *       TLSCipherText.version +
+         *       TLSCipherText.length +
+         *       IV +
+         *       ENC(content + padding + padding_length));
+         */
         binary_t verifydata;
         binary_t aad;
         binary_append(aad, uint64(record_no), hton64);  // sequence
@@ -1175,14 +1194,23 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
             ret = errorcode_t::not_supported;
             __leave2;
         }
+        /**
+         * RFC 7366
+         * If a server receives an encrypt-then-MAC request extension from a client
+         * and then selects a stream or Authenticated Encryption with Associated
+         * Data (AEAD) ciphersuite, it MUST NOT send an encrypt-then-MAC
+         * response extension back to the client.
+         */
         auto mode = hint->mode;
         switch (mode) {
+            // AEAD
             case gcm:
             case ccm:
             case ccm8:
             case mode_poly1305: {
                 ret = decrypt_aead(session, dir, stream, size, pos, plaintext);
             } break;
+            // encrypt-then-MAC
             case cbc: {
                 ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
             } break;
@@ -1266,17 +1294,6 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
             }
             cipher = hint->cipher;
             mode = hint->mode;
-            // switch (mode) {
-            //     case gcm:
-            //     case ccm:
-            //         tagsize = 16;
-            //         break;
-            //     case ccm8:
-            //         tagsize = 8;
-            //         break;
-            //     default:
-            //         break;
-            // }
         }
 
         auto record_version = get_lagacy_version();
@@ -1375,7 +1392,6 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         binary_append(aad, uint64(record_no), hton64);  // sequence
         binary_append(aad, stream, 3);                  // rechdr (content_type, version)
         size_t plainsize = 0;
-        // uint8 tagsize = get_tag_size();
 
         // plaintext || tag
         //          \- plainsize
@@ -1485,9 +1501,8 @@ return_t tls_protection::construct_certificate_verify_message(tls_direction_t di
     } else {
         message << constexpr_context_client;
     }
-    message.fill(1, 0x00);  // single 0 byte
-    message.write(&transcripthash[0],
-                  transcripthash.size());  // content to be signed
+    message.fill(1, 0x00);                                     // single 0 byte
+    message.write(&transcripthash[0], transcripthash.size());  // content to be signed
 
     return ret;
 }
