@@ -28,7 +28,7 @@ void test_rfc8448_3() {
     // {client}  create an ephemeral x25519 key pair:
     // # ECDH(server_epk.priv, client_epk.pub) --> shared_secret
     {
-        constexpr char constexpr_client[] = "client";
+        constexpr char constexpr_client[] = KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE;
         const char* x =
             "99 38 1d e5 60 e4 bd 43 d2 3d 8e 43 5a 7d"
             "ba fe b3 c0 6e 51 c1 3c ae 4d 54 13 69 1e 52 9a af 2c";
@@ -76,7 +76,7 @@ void test_rfc8448_3() {
     // {server}  create an ephemeral x25519 key pair:
     // # ECDH(server_epk.priv, client_epk.pub) --> shared_secret
     {
-        constexpr char constexpr_server[] = "server";
+        constexpr char constexpr_server[] = KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE;
         const char* x = "c9828876112095fe66762bdbf7c672e156d6cc253b833df1dd69b1b04e751f0f";
         const char* y = "";
         const char* d = "b1580eeadf6dd589b8ef4f2d5652578cc810e9980191ec8d058308cea216a21e";

@@ -61,11 +61,11 @@ void tls_session::schedule(tls_handshake* handshake) {
     }
 }
 
-void tls_session::carryout_schedule(tls_direction_t dir) {
+void tls_session::run_scheduled(tls_direction_t dir) {
     critical_section_guard guard(_lock);
     while (false == _que.empty()) {
         auto handshake = _que.front();
-        handshake->carryout_schedule(dir);
+        handshake->run_scheduled(dir);
         handshake->release();
         _que.pop();
     }

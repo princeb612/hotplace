@@ -415,6 +415,13 @@ void test_rfc_9001_a2() {
     test.pn_length = 4;  // 00000002
     test.length = 1182;  // pnl 4 + frame 1162 + tag 16 -> length 1182
 
+    {
+        // to avoid internal error related to key calcurations
+        crypto_keychain keychain;
+        auto& keyexchange = rfc9001_session.get_tls_protection().get_keyexchange();
+        keychain.add_ec(&keyexchange, NID_X25519, keydesc(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE));
+    }
+
     test_rfc_9001_initial(&test, &rfc9001_session);
 }
 
@@ -474,6 +481,13 @@ void test_rfc_9001_a3() {
     test.pn = 1;
     test.pn_length = 2;  // 0001
     test.length = 117;
+
+    {
+        // to avoid internal error related to key calcurations
+        crypto_keychain keychain;
+        auto& keyexchange = rfc9001_session.get_tls_protection().get_keyexchange();
+        keychain.add_ec(&keyexchange, NID_X25519, keydesc(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE));
+    }
 
     test_rfc_9001_initial(&test, &rfc9001_session);
 }

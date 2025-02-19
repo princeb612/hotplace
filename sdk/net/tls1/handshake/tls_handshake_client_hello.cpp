@@ -69,8 +69,8 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 } break;
                 case tls_hello_retry_request: {
                     auto& keyexchange = protection.get_keyexchange();
-                    keyexchange.erase("CH");  // client_hello key_share
-                    keyexchange.erase("SH");  // server_hello key_share
+                    keyexchange.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);  // client_hello key_share
+                    keyexchange.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello key_share
                 } break;
                 default: {
                 } break;

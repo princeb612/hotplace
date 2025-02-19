@@ -390,14 +390,14 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     {
                         const EVP_PKEY *pkey_priv = nullptr;
                         const EVP_PKEY *pkey_pub = nullptr;
-                        pkey_priv = get_keyexchange().find("server");
+                        pkey_priv = get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
                         if (pkey_priv) {
-                            // in server ... priv("server") + pub("CH")
-                            pkey_pub = get_keyexchange().find("CH");  // client_hello
+                            // in server ... priv(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC)
+                            pkey_pub = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);  // client_hello
                         } else {
-                            // in client ... priv("client") + pub("SH")
-                            pkey_priv = get_keyexchange().find("client");
-                            pkey_pub = get_keyexchange().find("SH");  // server_hello
+                            // in client ... priv(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC)
+                            pkey_priv = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
+                            pkey_pub = get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello
                         }
 
                         if (nullptr == pkey_priv || nullptr == pkey_pub) {
@@ -589,8 +589,8 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             {
                 const EVP_PKEY *pkey_priv = nullptr;
                 const EVP_PKEY *pkey_pub = nullptr;
-                auto pkey_ske = get_keyexchange().find("SKE");
-                auto pkey_cke = get_keyexchange().find("CKE");
+                auto pkey_ske = get_keyexchange().find(KID_TLS_SERVER_KEY_EXCHANGE);
+                auto pkey_cke = get_keyexchange().find(KID_TLS_CLIENT_KEY_EXCHANGE);
                 bool test = false;
                 is_private_key(pkey_ske, test);
                 if (test) {
@@ -1588,6 +1588,27 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
 }
 
 protection_context &tls_protection::get_protection_context() { return _handshake_context; }
+
+return_t tls_protection::handshake_hello(tls_session *client_session, tls_session *server_session, uint16 &ciphersuite, uint16 &tlsversion) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        ciphersuite = 0;
+        tlsversion = 0;
+
+        if (nullptr == client_session || nullptr == server_session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto &client_handshake_context = client_session->get_tls_protection().get_protection_context();
+        auto &server_handshake_context = server_session->get_tls_protection().get_protection_context();
+        server_handshake_context.select_from(client_handshake_context);
+        ciphersuite = server_handshake_context.get0_cipher_suite();
+        tlsversion = server_handshake_context.get0_supported_version();
+    }
+    __finally2 {}
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

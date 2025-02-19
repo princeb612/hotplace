@@ -28,7 +28,7 @@ class tls_handshake {
 
     virtual return_t read(tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);
     virtual return_t write(tls_direction_t dir, binary_t &bin);
-    virtual void carryout_schedule(tls_direction_t dir);
+    virtual void run_scheduled(tls_direction_t dir);
 
     void addref();
     void release();

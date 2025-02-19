@@ -62,7 +62,7 @@ void test_tls13_xargs_org() {
      * https://tls13.xargs.org/#client-key-exchange-generation
      */
     {
-        constexpr char constexpr_client[] = "client";
+        constexpr char constexpr_client[] = KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE;
         crypto_key& keyexchange = session.get_tls_protection().get_keyexchange();
         // Client Key Exchange Generation
         const char* x = "358072d6365880d1aeea329adf9121383851ed21a28e3b75e965d0d2cd166254";
@@ -112,7 +112,7 @@ void test_tls13_xargs_org() {
      */
     binary_t shared_secret;
     {
-        constexpr char constexpr_server[] = "server";
+        constexpr char constexpr_server[] = KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE;
         const char* x = "9fd7ad6dcff4298dd3f96d5b1b2af910a0535b1488d7f8fabb349a982880b615";
         const char* y = "";
         const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";

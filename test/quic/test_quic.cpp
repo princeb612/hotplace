@@ -66,7 +66,7 @@ void test_quic_xargs_org() {
         const char* y = "";
         const char* d = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
         crypto_key& key = protection.get_keyexchange();
-        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc("client"));
+        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE));
         basic_stream bs;
         dump_key(key.find("client key"), &bs);
         _logger->writeln(bs);
@@ -184,7 +184,7 @@ void test_quic_xargs_org() {
 
         crypto_key& key = protection.get_keyexchange();
 
-        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc("server"));
+        keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE));
 
         basic_stream bs;
         dump_key(key.find("server key"), &bs);
@@ -304,7 +304,7 @@ void test_quic_xargs_org() {
      * https://quic.xargs.org/#server-handshake-packet-2
      */
     {
-        // study
+        //
     }  // UDP Datagram 4 - Acks
     /**
      * https://quic.xargs.org/#client-initial-packet-2

@@ -200,69 +200,69 @@ const tls_sig_scheme_t tls_sig_schemes[] = {
 };
 define_tls_sizeof_variable(sig_scheme);
 
-define_tls_variable(supported_group_code) = {
+const tls_group_t tls_groups[] = {
     // RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
     // ffdhe2048~ffdhe8192
 
     // sa. const hint_curve_t hint_curves[]
 
-    {0x0001, "sect163k1"},  // K-163, ansit163k1
-    {0x0002, "sect163r1"},  // ansit163r1
-    {0x0003, "sect163r2"},  // B-163, ansit163r2
-    {0x0004, "sect193r1"},  // ansit193r1
-    {0x0005, "sect193r2"},  // sect193r2
-    {0x0006, "sect233k1"},  // K-233, ansit233k1
-    {0x0007, "sect233r1"},  // B-233, ansit233r1
-    {0x0008, "sect239k1"},  // ansit239k1
-    {0x0009, "sect283k1"},  // K-283, ansit283k1
-    {0x000a, "sect283r1"},  // B-283, ansit283r1
-    {0x000b, "sect409k1"},  // K-409, ansit409k1
-    {0x000c, "sect409r1"},  // B-409, ansit409r1
-    {0x000d, "sect571k1"},  // K-571, ansit571k1
-    {0x000e, "sect571r1"},  // B-571, ansit571r1
-    {0x000f, "secp160k1"},  // ansip160k1
-    {0x0010, "secp160r1"},  // ansip160r1
-    {0x0011, "secp160r2"},  // ansip160r2
-    {0x0012, "secp192k1"},  // ansip192k1
-    {0x0013, "secp192r1"},  // P-192, prime192v1
-    {0x0014, "secp224k1"},  // ansip224k1
-    {0x0015, "secp224r1"},  // ansip224r1
-    {0x0016, "secp256k1"},  // ansip256k1
-    {0x0017, "secp256r1"},  // P-256, prime256v1, RFC 8446 9.1 MUST
-    {0x0018, "secp384r1"},  // P-384, ansip384r1
-    {0x0019, "secp521r1"},  // P-521, ansip521r1
-    {0x001a, "brainpoolP256r1"},
-    {0x001b, "brainpoolP384r1"},
-    {0x001c, "brainpoolP512r1"},
-    {0x001d, "x25519"},  // RFC 8446 8446 9.1 MUST
-    {0x001e, "x448"},
-    {0x001f, "brainpoolP256r1tls13"},
-    {0x0020, "brainpoolP384r1tls13"},
-    {0x0021, "brainpoolP512r1tls13"},
-    {0x0022, "GC256A"},
-    {0x0023, "GC256B"},
-    {0x0024, "GC256C"},
-    {0x0025, "GC256D"},
-    {0x0026, "GC512A"},
-    {0x0027, "GC512B"},
-    {0x0028, "GC512C"},
-    {0x0029, "curveSM2"},
-    {0x0100, "ffdhe2048"},
-    {0x0101, "ffdhe3072"},
-    {0x0102, "ffdhe4096"},
-    {0x0103, "ffdhe6144"},
-    {0x0104, "ffdhe8192"},
-    {0x0200, "MLKEM512"},
-    {0x0201, "MLKEM768"},
-    {0x0202, "MLKEM1024"},
-    {0x11eb, "SecP256r1MLKEM768"},
-    {0x11ec, "X25519MLKEM768"},
-    {0x6399, "X25519Kyber768Draft00 (OBSOLETE)"},
-    {0x639a, "SecP256r1Kyber768Draft00 (OBSOLETE)"},
-    {0xff01, "arbitrary_explicit_prime_curves"},
-    {0xff02, "arbitrary_explicit_char2_curves"},
+    {0x0001, 1, 0, kty_ec, NID_sect163k1, "sect163k1"},         // K-163, ansit163k1
+    {0x0002, 1, 0, kty_ec, NID_sect163r1, "sect163r1"},         // ansit163r1
+    {0x0003, 1, 0, kty_ec, NID_sect163r2, "sect163r2"},         // B-163, ansit163r2
+    {0x0004, 1, 0, kty_ec, NID_sect193r1, "sect193r1"},         // ansit193r1
+    {0x0005, 1, 0, kty_ec, NID_sect193r2, "sect193r2"},         // sect193r2
+    {0x0006, 1, 0, kty_ec, NID_sect233k1, "sect233k1"},         // K-233, ansit233k1
+    {0x0007, 1, 0, kty_ec, NID_sect233r1, "sect233r1"},         // B-233, ansit233r1
+    {0x0008, 1, 0, kty_ec, NID_sect239k1, "sect239k1"},         // ansit239k1
+    {0x0009, 1, 0, kty_ec, NID_sect283k1, "sect283k1"},         // K-283, ansit283k1
+    {0x000a, 1, 0, kty_ec, NID_sect283r1, "sect283r1"},         // B-283, ansit283r1
+    {0x000b, 1, 0, kty_ec, NID_sect409k1, "sect409k1"},         // K-409, ansit409k1
+    {0x000c, 1, 0, kty_ec, NID_sect409r1, "sect409r1"},         // B-409, ansit409r1
+    {0x000d, 1, 0, kty_ec, NID_sect571k1, "sect571k1"},         // K-571, ansit571k1
+    {0x000e, 1, 0, kty_ec, NID_sect571r1, "sect571r1"},         // B-571, ansit571r1
+    {0x000f, 1, 0, kty_ec, NID_secp160k1, "secp160k1"},         // ansip160k1
+    {0x0010, 1, 0, kty_ec, NID_secp160r1, "secp160r1"},         // ansip160r1
+    {0x0011, 1, 0, kty_ec, NID_secp160r2, "secp160r2"},         // ansip160r2
+    {0x0012, 1, 0, kty_ec, NID_secp192k1, "secp192k1"},         // ansip192k1
+    {0x0013, 1, 0, kty_ec, NID_X9_62_prime192v1, "secp192r1"},  // P-192, prime192v1
+    {0x0014, 1, 0, kty_ec, NID_secp224k1, "secp224k1"},         // ansip224k1
+    {0x0015, 1, 0, kty_ec, NID_secp224r1, "secp224r1"},         // ansip224r1
+    {0x0016, 1, 0, kty_ec, NID_secp256k1, "secp256k1"},         // ansip256k1
+    {0x0017, 1, 0, kty_ec, NID_X9_62_prime256v1, "secp256r1"},  // P-256, prime256v1, RFC 8446 9.1 MUST
+    {0x0018, 1, 0, kty_ec, NID_secp384r1, "secp384r1"},         // P-384, ansip384r1
+    {0x0019, 1, 0, kty_ec, NID_secp521r1, "secp521r1"},         // P-521, ansip521r1
+    {0x001a, 1, 0, kty_ec, NID_brainpoolP256r1, "brainpoolP256r1"},
+    {0x001b, 1, 0, kty_ec, NID_brainpoolP384r1, "brainpoolP384r1"},
+    {0x001c, 1, 0, kty_ec, NID_brainpoolP512r1, "brainpoolP512r1"},
+    {0x001d, 1, 0, kty_okp, NID_X25519, "x25519"},  // RFC 8446 8446 9.1 MUST
+    {0x001e, 1, 0, kty_okp, NID_X448, "x448"},
+    {0x001f, 0, 0, kty_unknown, 0, "brainpoolP256r1tls13"},
+    {0x0020, 0, 0, kty_unknown, 0, "brainpoolP384r1tls13"},
+    {0x0021, 0, 0, kty_unknown, 0, "brainpoolP512r1tls13"},
+    {0x0022, 0, 0, kty_unknown, 0, "GC256A"},
+    {0x0023, 0, 0, kty_unknown, 0, "GC256B"},
+    {0x0024, 0, 0, kty_unknown, 0, "GC256C"},
+    {0x0025, 0, 0, kty_unknown, 0, "GC256D"},
+    {0x0026, 0, 0, kty_unknown, 0, "GC512A"},
+    {0x0027, 0, 0, kty_unknown, 0, "GC512B"},
+    {0x0028, 0, 0, kty_unknown, 0, "GC512C"},
+    {0x0029, 0, 0, kty_unknown, 0, "curveSM2"},
+    {0x0100, 1, 0, kty_dh, NID_ffdhe2048, "ffdhe2048"},
+    {0x0101, 1, 0, kty_dh, NID_ffdhe3072, "ffdhe3072"},
+    {0x0102, 1, 0, kty_dh, NID_ffdhe4096, "ffdhe4096"},
+    {0x0103, 1, 0, kty_dh, NID_ffdhe6144, "ffdhe6144"},
+    {0x0104, 1, 0, kty_dh, NID_ffdhe8192, "ffdhe8192"},
+    {0x0200, 0, 0, kty_unknown, 0, "MLKEM512"},
+    {0x0201, 0, 0, kty_unknown, 0, "MLKEM768"},
+    {0x0202, 0, 0, kty_unknown, 0, "MLKEM1024"},
+    {0x11eb, 0, 0, kty_unknown, 0, "SecP256r1MLKEM768"},
+    {0x11ec, 0, 0, kty_unknown, 0, "X25519MLKEM768"},
+    {0x6399, 0, 0, kty_unknown, 0, "X25519Kyber768Draft00 (OBSOLETE)"},
+    {0x639a, 0, 0, kty_unknown, 0, "SecP256r1Kyber768Draft00 (OBSOLETE)"},
+    {0xff01, 0, 0, kty_unknown, 0, "arbitrary_explicit_prime_curves"},
+    {0xff02, 0, 0, kty_unknown, 0, "arbitrary_explicit_char2_curves"},
 };
-define_tls_sizeof_variable(supported_group_code);
+const size_t sizeof_tls_groups = RTL_NUMBER_OF(tls_groups);
 
 }  // namespace net
 }  // namespace hotplace

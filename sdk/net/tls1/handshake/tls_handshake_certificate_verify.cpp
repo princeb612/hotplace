@@ -194,9 +194,9 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
             // public key from server certificate or handshake 0x11 certificate
             const char* kid = nullptr;
             if (from_server == dir) {
-                kid = "SC";  // Server Certificate
+                kid = KID_TLS_SERVER_CERTIFICATE_PUBLIC;  // Server Certificate
             } else {
-                kid = "CC";  // Client Certificate (Client Authentication, optional)
+                kid = KID_TLS_CLIENT_CERTIFICATE_PUBLIC;  // Client Certificate (Client Authentication, optional)
             }
             crypto_key& key = protection.get_keyexchange();
             auto pkey = key.find(kid);
@@ -233,9 +233,9 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
 
         const char* kid = nullptr;  // Private Key
         if (from_server == dir) {
-            kid = "SPK";
+            kid = KID_TLS_SERVER_CERTIFICATE_PRIVATE;
         } else {
-            kid = "CPK";
+            kid = KID_TLS_CLIENT_CERTIFICATE_PRIVATE;
         }
 
         crypto_key& key = protection.get_keyexchange();

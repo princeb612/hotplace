@@ -53,11 +53,11 @@ return_t tls_handshake_certificate::set(tls_direction_t dir, const char* certfil
         keydesc desc_crt;  // Certificate
         keydesc desc_key;  // Private Key
         if (from_server == dir) {
-            desc_crt.set_kid("SC");
-            desc_key.set_kid("SPK");
+            desc_crt.set_kid(KID_TLS_SERVER_CERTIFICATE_PUBLIC);
+            desc_key.set_kid(KID_TLS_SERVER_CERTIFICATE_PRIVATE);
         } else {
-            desc_crt.set_kid("CC");
-            desc_key.set_kid("CPK");
+            desc_crt.set_kid(KID_TLS_CLIENT_CERTIFICATE_PUBLIC);
+            desc_key.set_kid(KID_TLS_CLIENT_CERTIFICATE_PRIVATE);
         }
         ret = keychain.load_file(&keyexchange, key_certfile, certfile, desc_crt);
         if (errorcode_t::success != ret) {
@@ -160,9 +160,9 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             auto& servercert = session->get_tls_protection().get_keyexchange();
             keydesc desc(use_sig);
             if (from_server == dir) {
-                desc.set_kid("SC");
+                desc.set_kid(KID_TLS_SERVER_CERTIFICATE_PUBLIC);
             } else {
-                desc.set_kid("CC");
+                desc.set_kid(KID_TLS_CLIENT_CERTIFICATE_PUBLIC);
             }
             ret = keychain.load_der(&servercert, &cert[0], cert.size(), desc);
 
@@ -202,9 +202,9 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
 
         const char* kid = nullptr;
         if (from_server == dir) {
-            kid = "SC";
+            kid = KID_TLS_SERVER_CERTIFICATE_PUBLIC;
         } else {
-            kid = "CC";
+            kid = KID_TLS_CLIENT_CERTIFICATE_PUBLIC;
         }
         auto x509 = keyexchange.find_x509(kid);
         if (nullptr == x509) {

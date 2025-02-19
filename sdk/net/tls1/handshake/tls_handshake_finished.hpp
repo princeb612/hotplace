@@ -21,7 +21,7 @@ class tls_handshake_finished : public tls_handshake {
    public:
     tls_handshake_finished(tls_session* session);
 
-    virtual void carryout_schedule(tls_direction_t dir);
+    virtual void run_scheduled(tls_direction_t dir);
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);

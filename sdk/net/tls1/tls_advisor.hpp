@@ -63,7 +63,6 @@ declare_tls_resource(hash_alg_code, uint8);
 declare_tls_resource(kdf_id_code, uint16);
 declare_tls_resource(psk_keyexchange_code, uint8);
 declare_tls_resource(sig_alg_code, uint8);
-declare_tls_resource(supported_group_code, uint16);
 
 // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
 declare_tls_resource(compression_alg_code, uint16);
@@ -98,6 +97,17 @@ struct tls_cipher_suite_t {
 extern const tls_cipher_suite_t tls_cipher_suites[];
 extern const size_t sizeof_tls_cipher_suites;
 hash_algorithm_t algof_mac(const tls_cipher_suite_t* info);
+
+struct tls_group_t {
+    uint16 code;
+    uint8 support;
+    uint8 reserved;
+    crypto_kty_t kty;
+    uint16 nid;
+    const char* name;
+};
+extern const tls_group_t tls_groups[];
+extern const size_t sizeof_tls_groups;
 
 struct tls_sig_scheme_t {
     uint16 code;
@@ -198,8 +208,8 @@ class tls_advisor {
     std::map<std::string, const tls_psk_keyexchange_code_t*> _psk_keyexchange_names;
     std::map<uint16, const tls_sig_scheme_t*> _sig_scheme_codes;
     std::map<std::string, const tls_sig_scheme_t*> _sig_scheme_names;
-    std::map<uint16, const tls_supported_group_code_t*> _supported_group_codes;
-    std::map<std::string, const tls_supported_group_code_t*> _supported_group_names;
+    std::map<uint16, const tls_group_t*> _supported_group_codes;
+    std::map<std::string, const tls_group_t*> _supported_group_names;
 
     // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
     std::map<uint16, const tls_compression_alg_code_t*> _compression_alg_codes;

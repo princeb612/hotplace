@@ -33,7 +33,7 @@ void test_rfc8448_4() {
 
     // {client}  create an ephemeral x25519 key pair:
     {
-        constexpr char constexpr_client[] = "client";
+        constexpr char constexpr_client[] = KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE;
         const char* d =
             "bf f9 11 88 28 38 46 dd 6a 21 34 ef 71"
             "80 ca 2b 0b 14 fb 10 dc e7 07 b5 09 8c 0d dd c8 13 b2 df";
@@ -124,7 +124,7 @@ void test_rfc8448_4() {
     }
     {
         // {server}  create an ephemeral x25519 key pair
-        constexpr char constexpr_server[] = "server";
+        constexpr char constexpr_server[] = KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE;
         const char* d =
             "de 5b 44 76 e7 b4 90 b2 65 2d 33 8a cb"
             "f2 94 80 66 f2 55 f9 44 0e 23 b9 8f c6 98 35 29 8d c1 07";

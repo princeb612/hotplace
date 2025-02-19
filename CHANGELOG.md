@@ -4,7 +4,7 @@
   * [study] QUIC (RFC 9001)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 706
+* Revision 707
 
 * Revision 702
   * [tested] DSA
@@ -33,7 +33,7 @@
 
 * Revision 660
   * [tested] https://tls13.xargs.org/
-  
+
 * Revision 658
   * [tested] TLS 1.3 certificate_verify, finished
 

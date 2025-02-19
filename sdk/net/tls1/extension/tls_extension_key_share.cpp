@@ -46,11 +46,11 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
         std::string privkid;
         std::string pubkid;
         if (from_client == dir) {
-            privkid = "client";
-            pubkid = "CH";
+            privkid = KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE;
+            pubkid = KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC;
         } else {
-            privkid = "server";
-            pubkid = "SH";
+            privkid = KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE;
+            pubkid = KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC;
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -207,7 +207,7 @@ return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size
             binary_t pubkey;
             pl.get_binary(constexpr_pubkey, pubkey);
 
-            add_pubkey(group, pubkey, keydesc("CH"));
+            add_pubkey(group, pubkey, keydesc(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC));
         }
 
         if (istraceable()) {
@@ -217,7 +217,7 @@ return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size
             auto session = get_session();
             auto& protection = session->get_tls_protection();
             auto& keyexchange = protection.get_keyexchange();
-            auto pkey = keyexchange.find("CH");
+            auto pkey = keyexchange.find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
 
             binary_t pubkey;
             uint32 nid = 0;
@@ -298,7 +298,7 @@ return_t tls_extension_client_key_share::do_write_body(binary_t& bin) {
     return ret;
 }
 
-std::string tls_extension_client_key_share::get_kid() { return "CH"; }
+std::string tls_extension_client_key_share::get_kid() { return KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC; }
 
 tls_extension_server_key_share::tls_extension_server_key_share(tls_session* session) : tls_extension_key_share(session) {}
 
@@ -329,7 +329,7 @@ return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size
             pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
             pl.get_binary(constexpr_pubkey, pubkey);
 
-            add_pubkey(group, pubkey, keydesc("SH"));
+            add_pubkey(group, pubkey, keydesc(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC));
         }
 
         if (istraceable()) {
@@ -407,7 +407,7 @@ return_t tls_extension_server_key_share::do_write_body(binary_t& bin) {
     return ret;
 }
 
-std::string tls_extension_server_key_share::get_kid() { return "SH"; }
+std::string tls_extension_server_key_share::get_kid() { return KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC; }
 
 }  // namespace net
 }  // namespace hotplace

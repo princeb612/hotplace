@@ -92,24 +92,30 @@ flowchart LR
   DA --> DA2;
   DA -.-> DA3;
 
-  DB1[TLS];
-  DB2[DTLS];
+  DB1[TLS(openssl)];
+  DB2[DTLS(openssl)];
   DB3[QUIC];
+  DB4[TLS(study)];
+  DB4[DTLS(study)];
   DB --> DB1;
   DB --> DB2;
   DB -.-> DB3;
+  DB -.-> DB4;
+  DB -.-> DB5;
   DA1 --> DC;
   DA2 --> DC;
   DA3 -.-> DC;
   DB1 --> DC;
   DB2 --> DC;
   DB3 -.-> DC;
+  DB4 -.-> DC;
+  DB5 -.-> DC;
 
   DC[network server];
   DC1[HTTP/1.1];
   DC2[HPACK];
   DC3[HTTP/2];
-  DC4[QPACK];
+  DC4[QPACK(study)];
   DC5[HTTP/3];
 
   DC --> DC1;
@@ -174,12 +180,12 @@ flowchart LR
     - [x] TLS version
       - [x] TLS1.3
       - [x] TLS1.2
-    - [x] encryption
-      - [x] encryption by cipher mode (not by TLS version)
   - [ ] DTLS construct
     - [x] TLS version
       - [x] TLS1.3
       - [ ] TLS1.2
+  - [ ] TLS over TCP
+  - [ ] DTLS over UDP
 
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)

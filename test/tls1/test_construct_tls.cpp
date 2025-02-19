@@ -124,7 +124,7 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
         }
         {
             basic_stream bs;
-            auto pkey = session->get_tls_protection().get_keyexchange().find("client");
+            auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
             dump_key(pkey, &bs);
             _logger->write(bs);
             _test_case.assert(pkey, __FUNCTION__, "{client} key share (client generated)");
@@ -147,13 +147,11 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
                                                const char* message) {
     return_t ret = errorcode_t::success;
 
-    uint16 server_version = option.version;
+    auto& protection = session->get_tls_protection();
+
     uint16 server_cs = 0;
-    auto& client_handshake_context = client_session->get_tls_protection().get_protection_context();
-    auto& server_handshake_context = session->get_tls_protection().get_protection_context();
-    server_handshake_context.select_from(client_handshake_context);
-    server_cs = server_handshake_context.get0_cipher_suite();
-    server_version = server_handshake_context.get0_supported_version();
+    uint16 server_version = 0;
+    protection.handshake_hello(client_session, session, server_cs, server_version);
 
     tls_handshake_server_hello* handshake = nullptr;
 
@@ -204,7 +202,7 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
 
         {
             basic_stream bs;
-            auto pkey = session->get_tls_protection().get_keyexchange().find("server");
+            auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
             dump_key(pkey, &bs);
             _logger->write(bs);
             _test_case.assert(pkey, __FUNCTION__, "{server} key share (server generated)");

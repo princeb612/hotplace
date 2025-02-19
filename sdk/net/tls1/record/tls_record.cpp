@@ -118,7 +118,7 @@ return_t tls_record::do_postprocess(tls_direction_t dir) {
      * - [record header] + [encrypted record body]
      * - using ap secret, reset recno (do_postprocess)
      */
-    session->carryout_schedule(dir);
+    session->run_scheduled(dir);
     return errorcode_t::success;
 }
 

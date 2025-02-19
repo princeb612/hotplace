@@ -34,7 +34,7 @@ constexpr char constexpr_verify_data[] = "verify data";
 
 tls_handshake_finished::tls_handshake_finished(tls_session* session) : tls_handshake(tls_hs_finished, session) {}
 
-void tls_handshake_finished::carryout_schedule(tls_direction_t dir) {
+void tls_handshake_finished::run_scheduled(tls_direction_t dir) {
     auto session = get_session();
     session->get_session_info(dir).set_status(get_type());
     session->reset_recordno(dir);
@@ -58,7 +58,7 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
             // from_client : resumption related
             protection.calc(session, tls_hs_finished, dir);
 
-            session->schedule(this);  // carryout_schedule
+            session->schedule(this);  // run_scheduled
         }
     }
     __finally2 {

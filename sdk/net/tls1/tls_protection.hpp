@@ -25,6 +25,17 @@
 namespace hotplace {
 namespace net {
 
+#define KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE "CH.priv"
+#define KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE "SH.priv"
+#define KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC "CH.pub"
+#define KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC "SH.pub"
+#define KID_TLS_CLIENT_KEY_EXCHANGE "CKE"
+#define KID_TLS_SERVER_KEY_EXCHANGE "SKE"
+#define KID_TLS_CLIENT_CERTIFICATE_PUBLIC "CC.pub"
+#define KID_TLS_SERVER_CERTIFICATE_PUBLIC "SC.pub"
+#define KID_TLS_CLIENT_CERTIFICATE_PRIVATE "CC.priv"
+#define KID_TLS_SERVER_CERTIFICATE_PRIVATE "SC.priv"
+
 class protection_context {
    public:
     protection_context();
@@ -112,14 +123,6 @@ class tls_protection {
     return_t calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest);
     return_t reset_transcript_hash(tls_session* session);
     return_t calc_context_hash(tls_session* session, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& digest);
-    /**
-     *      "CH"  : client_hello key_share
-     *      "SH"  : server_hello key_share
-     *      "CKE" : client key exchange
-     *      "SKE" : server key exchange
-     *      "CC"  : client certificate
-     *      "SC"  : server certifcate
-     */
     crypto_key& get_keyexchange();
 
     void use_pre_master_secret(bool use);
@@ -170,6 +173,8 @@ class tls_protection {
     return_t calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t& secret, binary_t& maced);
 
     protection_context& get_protection_context();
+
+    static return_t handshake_hello(tls_session* client_session, tls_session* server_session, uint16& ciphersuite, uint16& tlsversion);
 
    protected:
     return_t encrypt_aead(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag);

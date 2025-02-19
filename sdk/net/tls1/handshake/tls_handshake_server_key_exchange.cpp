@@ -104,7 +104,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 pl.get_binary(constexpr_sig, sig);
             }
 
-            auto pkey = keyexchange.find("SC");
+            auto pkey = keyexchange.find(KID_TLS_SERVER_CERTIFICATE_PUBLIC);
             if (nullptr == pkey) {
                 ret = errorcode_t::invalid_context;
                 __leave2;
@@ -120,7 +120,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                     auto hint = advisor->hintof_tls_group(curve);
                     uint32 nid = nidof(hint);
                     if (nid) {
-                        ret = keychain.add_ec(&keyexchange, nid, pubkey, binary_t(), binary_t(), keydesc("SKE"));
+                        ret = keychain.add_ec(&keyexchange, nid, pubkey, binary_t(), binary_t(), keydesc(KID_TLS_SERVER_KEY_EXCHANGE));
                     } else {
                         ret = errorcode_t::not_supported;
                     }
@@ -182,7 +182,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     uint16 curve = 0;
     binary_t pubkey;
     binary_t sig;
-    keydesc desc("SKE");
+    keydesc desc(KID_TLS_SERVER_KEY_EXCHANGE);
     crypto_keychain keychain;
 
     {
@@ -195,7 +195,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
                 bool stop = false;
                 if (kty_ec == kty) {
                     keychain.add_ec(&keyexchange, nid, desc);
-                    auto pkey = keyexchange.find("SKE");
+                    auto pkey = keyexchange.find(KID_TLS_SERVER_KEY_EXCHANGE);
                     if (pkey) {
                         binary_t temp;
                         keyexchange.ec_uncompressed_key(pkey, pubkey, temp);
@@ -204,7 +204,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
                     }
                 } else if (kty_okp == kty) {
                     keychain.add_ec(&keyexchange, nid, desc);
-                    auto pkey = keyexchange.find("SKE");
+                    auto pkey = keyexchange.find(KID_TLS_SERVER_KEY_EXCHANGE);
                     if (pkey) {
                         binary_t temp;
                         keyexchange.get_public_key(pkey, pubkey, temp);
@@ -218,7 +218,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
         protection_context.for_each_supported_groups(lambda);
     }
 
-    auto pkey_cert = keyexchange.find("SPK");
+    auto pkey_cert = keyexchange.find(KID_TLS_SERVER_CERTIFICATE_PRIVATE);
     auto kty_cert = typeof_crypto_key(pkey_cert);
 
     uint16 sigalg = 0;

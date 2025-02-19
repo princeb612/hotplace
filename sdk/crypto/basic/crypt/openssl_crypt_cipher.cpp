@@ -259,8 +259,8 @@ return_t openssl_crypt::set(crypt_context_t *handle, crypt_ctrl_t id, uint16 par
     return ret;
 }
 
-return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *plaintext, size_t plainsize, unsigned char *ciphertext, size_t *ciphersize,
-                                 const binary_t *aad, binary_t *tag) {
+return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned char *plaintext, size_t plainsize, unsigned char *ciphertext,
+                                         size_t *ciphersize, const binary_t *aad, binary_t *tag) {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t *context = static_cast<openssl_crypt_context_t *>(handle);
 
@@ -465,8 +465,8 @@ return_t openssl_crypt::encrypt2(crypt_context_t *handle, const unsigned char *p
     return ret;
 }
 
-return_t openssl_crypt::decrypt2(crypt_context_t *handle, const unsigned char *ciphertext, size_t ciphersize, unsigned char *plaintext, size_t *plainsize,
-                                 const binary_t *aad, const binary_t *tag) {
+return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned char *ciphertext, size_t ciphersize, unsigned char *plaintext,
+                                         size_t *plainsize, const binary_t *aad, const binary_t *tag) {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t *context = static_cast<openssl_crypt_context_t *>(handle);
 

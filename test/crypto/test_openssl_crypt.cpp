@@ -87,9 +87,9 @@ void do_test_crypt_routine(crypt_algorithm_t algorithm, crypt_mode_t mode, unsig
                     }
                 }
 
-                ret = crypt.encrypt2(crypt_handle, data, size, encrypted, &aad, &tag);
+                ret = crypt.encrypt(crypt_handle, data, size, encrypted, aad, tag);
                 if (errorcode_t::success == ret) {
-                    ret = crypt.decrypt2(crypt_handle, &encrypted[0], encrypted.size(), decrypted, &aad, &tag);
+                    ret = crypt.decrypt(crypt_handle, &encrypted[0], encrypted.size(), decrypted, aad, tag);
                     if (errorcode_t::success == ret) {
                         if (option.verbose) {
                             test_case_notimecheck notimecheck(_test_case);

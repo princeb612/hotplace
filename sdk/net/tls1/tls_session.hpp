@@ -57,7 +57,7 @@ class tls_session {
     void release();
 
     void schedule(tls_handshake* handshake);
-    void carryout_schedule(tls_direction_t dir);
+    void run_scheduled(tls_direction_t dir);
 
    private:
     critical_section _lock;

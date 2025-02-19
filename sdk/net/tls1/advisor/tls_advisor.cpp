@@ -109,10 +109,10 @@ void tls_advisor::load_tls_parameters() {
         _sig_scheme_codes.insert({item->code, item});
         _sig_scheme_names.insert({item->name, item});
     }
-    for (auto i = 0; i < sizeof_tls_supported_group_codes; i++) {
-        auto item = tls_supported_group_codes + i;
+    for (auto i = 0; i < sizeof_tls_groups; i++) {
+        auto item = tls_groups + i;
         _supported_group_codes.insert({item->code, item});
-        _supported_group_names.insert({item->desc, item});
+        _supported_group_names.insert({item->name, item});
     }
 }
 
@@ -371,7 +371,7 @@ std::string tls_advisor::supported_group_name(uint16 code) {
     auto iter = _supported_group_codes.find(code);
     if (_supported_group_codes.end() != iter) {
         auto item = iter->second;
-        value = item->desc;
+        value = item->name;
     }
     return value;
 }

@@ -45,4 +45,4 @@
     - opaque random_bytes[28];
   - 1970.01.01 00:00:00 UTC~2038.01.19 03:14:07 UTC (signed int time_t)
     - cat(hton64(time(nullptr)), sizeof(uint32)) || PRNG_random(28 bytes)
-    - 00000000xxxxxxxx || random
+    - 00000000 || random

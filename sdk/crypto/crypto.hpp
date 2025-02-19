@@ -77,92 +77,111 @@ class crypt_t {
     /**
      * @brief encrypt
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_plain [in]
-     * @param size_t size_plain [in]
-     * @param unsigned char** data_encrypted [out] call free_data to free
-     * @param size_t* size_encrypted [out]
+     * @param const unsigned char* plaintext [in]
+     * @param size_t plainsize [in]
+     * @param unsigned char** ciphertext [out] call free_data to free
+     * @param size_t* ciphersize [out]
      * @return error code (see error.hpp)
      * @example
-     *        crypt.encrypt(handle, data_plain, size_plain, &data_encrypted, &size_encrypted);
-     *        crypt.free_data(data_encrypted);
+     *        crypt.encrypt(handle, plaintext, plainsize, &ciphertext, &ciphersize);
+     *        crypt.free_data(ciphertext);
      */
-    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, unsigned char** data_encrypted,
-                             size_t* size_encrypted) = 0;
+    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, unsigned char** ciphertext, size_t* ciphersize) = 0;
     /**
      * @brief encrypt
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_plain [in]
-     * @param size_t size_plain [in]
-     * @param binary_t& out [out]
+     * @param const unsigned char* plaintext [in]
+     * @param size_t plainsize [in]
+     * @param binary_t& ciphertext [out]
      * @return error code (see error.hpp)
      * @example
      */
-    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out) = 0;
+    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, binary_t& ciphertext) = 0;
     /**
      * @brief encrypt
      * @param crypt_context_t* handle [in]
-     * @param const binary_t& input [in]
-     * @param binary_t& out [out]
+     * @param const binary_t& plaintext [in]
+     * @param binary_t& ciphertext [out]
      * @return error code (see error.hpp)
      * @example
      */
-    virtual return_t encrypt(crypt_context_t* handle, const binary_t& input, binary_t& out) = 0;
+    virtual return_t encrypt(crypt_context_t* handle, const binary_t& plaintext, binary_t& ciphertext) = 0;
 
     /**
      * @brief encrypt (GCM)
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_plain
-     * @param size_t size_plain [in]
-     * @param binary_t& out_encrypte [out]
-     * @param binary_t* aad [inopt]
-     * @param binary_t* tag [outopt]
+     * @param const unsigned char* plaintext
+     * @param size_t plainsize [in]
+     * @param binary_t& ciphertext [out]
+     * @param const binary_t& aad [in]
+     * @param binary_t& tag [out]
      */
-    virtual return_t encrypt2(crypt_context_t* handle, const unsigned char* data_plain, size_t size_plain, binary_t& out_encrypted,
-                              const binary_t* aad = nullptr, binary_t* tag = nullptr) = 0;
+    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, binary_t& ciphertext, const binary_t& aad,
+                             binary_t& tag) = 0;
+    /**
+     * @brief encrypt (GCM/CCM)
+     * @param crypt_context_t* handle [in]
+     * @param const binary_t& plaintext [in]
+     * @param binary_t& ciphertext [out]
+     * @param const binary_t& aad [in]
+     * @param binary_t& tag [out]
+     * @return error code (see error.hpp)
+     */
+    virtual return_t encrypt(crypt_context_t* handle, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag) = 0;
 
     /**
      * @brief decrypt
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_encrypted [in]
-     * @param size_t size_encrypted [in]
-     * @param unsigned char** data_plain [out]
-     * @param size_t* size_plain [out]
+     * @param const unsigned char* ciphertext [in]
+     * @param size_t ciphersize [in]
+     * @param unsigned char** plaintext [out]
+     * @param size_t* plainsize [out]
      * @return error code (see error.hpp)
      * @example
-     *        crypt.decrypt(handle, data_encrypted, size_encrypted, &data_decrypted, &size_decrypted);
+     *        crypt.decrypt(handle, ciphertext, ciphersize, &data_decrypted, &size_decrypted);
      *        crypt.free_data(data_decrypted);
      */
-    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, unsigned char** data_plain,
-                             size_t* size_plain) = 0;
+    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* ciphertext, size_t ciphersize, unsigned char** plaintext, size_t* plainsize) = 0;
     /**
      * @brief decrypt
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_encrypted [in]
-     * @param size_t size_encrypted [in]
-     * @param binary_t& out [out]
+     * @param const unsigned char* ciphertext [in]
+     * @param size_t ciphersize [in]
+     * @param binary_t& plaintext [out]
      * @return error code (see error.hpp)
      */
-    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out) = 0;
+    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* ciphertext, size_t ciphersize, binary_t& plaintext) = 0;
     /**
      * @brief decrypt
      * @param crypt_context_t* handle [in]
-     * @param const binary_t& input [in]
-     * @param binary_t& out [out]
+     * @param const binary_t& ciphertext [in]
+     * @param binary_t& plaintext [out]
      * @return error code (see error.hpp)
      */
-    virtual return_t decrypt(crypt_context_t* handle, const binary_t& input, binary_t& out) = 0;
+    virtual return_t decrypt(crypt_context_t* handle, const binary_t& ciphertext, binary_t& plaintext) = 0;
 
     /**
-     * @brief decrypt (GCM)
+     * @brief decrypt (GCM/CCOM)
      * @param crypt_context_t* handle [in]
-     * @param const unsigned char* data_encrypted [in]
-     * @param size_t size_encrypted [in]
-     * @param binary_t& out_decrypted [out]
-     * @param binary_t* aad [inopt]
-     * @param binary_t* tag [inopt]
+     * @param const unsigned char* ciphertext [in]
+     * @param size_t ciphersize [in]
+     * @param binary_t& plaintext [out]
+     * @param const binary_t& aad [in]
+     * @param const binary_t& tag [in]
+     * @return error code (see error.hpp)
      */
-    virtual return_t decrypt2(crypt_context_t* handle, const unsigned char* data_encrypted, size_t size_encrypted, binary_t& out_decrypted,
-                              const binary_t* aad = nullptr, const binary_t* tag = nullptr) = 0;
+    virtual return_t decrypt(crypt_context_t* handle, const unsigned char* ciphertext, size_t ciphersize, binary_t& plaintext, const binary_t& aad,
+                             const binary_t& tag) = 0;
+    /**
+     * @brief decrypt (GCM/CCOM)
+     * @param crypt_context_t* handle [in]
+     * @param const binary_t& ciphertext [in]
+     * @param binary_t& plaintext [out]
+     * @param const binary_t& aad [in]
+     * @param const binary_t& tag [in]
+     * @return error code (see error.hpp)
+     */
+    virtual return_t decrypt(crypt_context_t* handle, const binary_t& ciphertext, binary_t& plaintext, const binary_t& aad, const binary_t& tag) = 0;
 
     /**
      * @brief free

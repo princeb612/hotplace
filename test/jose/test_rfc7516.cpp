@@ -178,7 +178,7 @@ void test_rfc7516_A1_test() {
     tag_data.insert(tag_data.end(), tag, tag + RTL_NUMBER_OF(tag));
     crypt.open(&crypt_handle, crypt_algorithm_t::aes256, crypt_mode_t::gcm, cek, RTL_NUMBER_OF(cek), iv, RTL_NUMBER_OF(iv));
     // tag from plain, aad
-    crypt.encrypt2(crypt_handle, (byte_t*)input.c_str(), input.size(), data, &aad_data, &tag_gen);
+    crypt.encrypt(crypt_handle, (byte_t*)input.c_str(), input.size(), data, aad_data, tag_gen);
     dump2("data", data);
     dump2("tag", tag_gen);
     if ((tag_gen.size() == RTL_NUMBER_OF(tag)) && (0 == memcmp(&tag_gen[0], tag, RTL_NUMBER_OF(tag)))) {
@@ -197,7 +197,7 @@ void test_rfc7516_A1_test() {
                     "RFC 7516 Appendix A - A.1.  Example JWE using RSAES-OAEP and AES GCM (A.1.6, ciphertext)");
 
     // plain from ciphertext, aad, tag
-    crypt.decrypt2(crypt_handle, ciphertext, RTL_NUMBER_OF(ciphertext), plain, &aad_data, &tag_data);
+    crypt.decrypt(crypt_handle, ciphertext, RTL_NUMBER_OF(ciphertext), plain, aad_data, tag_data);
     dump2("plain", plain);
 
     dump_b64url("ciphertext_encoded", data);

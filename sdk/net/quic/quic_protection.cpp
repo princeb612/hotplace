@@ -306,7 +306,7 @@ return_t quic_protection::retry_integrity_tag(const quic_packet_retry& retry_pac
         openssl_crypt crypt;
         crypt_context_t* handle = nullptr;
         crypt.open(&handle, "aes-128-gcm", bin_key, bin_nonce);
-        ret = crypt.encrypt2(handle, bin_plaintext, bin_encrypted, &bin_retry_pseudo_packet, &tag);
+        ret = crypt.encrypt(handle, bin_plaintext, bin_encrypted, bin_retry_pseudo_packet, tag);
         crypt.close(handle);
     }
     __finally2 {

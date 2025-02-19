@@ -83,11 +83,11 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
                 auto& keyexchange = protection.get_keyexchange();
                 crypto_keychain keychain;
                 uint32 nid = 0;
-                auto pkey_ske = keyexchange.find("SKE");
+                auto pkey_ske = keyexchange.find(KID_TLS_SERVER_KEY_EXCHANGE);
                 crypto_kty_t kty = typeof_crypto_key(pkey_ske);
                 nidof_evp_pkey(pkey_ske, nid);
                 if (nid) {
-                    keydesc desc("CKE");
+                    keydesc desc(KID_TLS_CLIENT_KEY_EXCHANGE);
                     if (kty_ec == kty || kty_okp == kty) {
                         ret = keychain.add_ec(&keyexchange, nid, pubkey, binary_t(), binary_t(), desc);
                     } else if (kty_dh == kty) {
@@ -125,7 +125,7 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto& keyexchange = protection.get_keyexchange();
-        auto pkey_ske = keyexchange.find("SKE");
+        auto pkey_ske = keyexchange.find(KID_TLS_SERVER_KEY_EXCHANGE);
         {
             // kty, nid from server_key_exchange
             crypto_keychain keychain;
@@ -133,7 +133,7 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
             crypto_kty_t kty = typeof_crypto_key(pkey_ske);
             nidof_evp_pkey(pkey_ske, nid);
             if (nid) {
-                keydesc desc("CKE");
+                keydesc desc(KID_TLS_CLIENT_KEY_EXCHANGE);
                 if (kty_rsa == kty) {
                     ret = keychain.add_rsa(&keyexchange, nid, 2048, desc);
                 } else if (kty_ec == kty || kty_okp == kty) {
@@ -151,7 +151,7 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
         }
 
         binary_t pubkey;
-        auto pkey_cke = keyexchange.find("CKE");
+        auto pkey_cke = keyexchange.find(KID_TLS_CLIENT_KEY_EXCHANGE);
         if (pkey_cke) {
             crypto_kty_t kty = typeof_crypto_key(pkey_cke);
             if (kty_ec == kty) {

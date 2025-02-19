@@ -232,7 +232,18 @@ enum ec_curve_t : uint32 {
     ec_x448 = 1035,      // X448, NID_X448
     ec_ed25519 = 1087,   // Ed25519, NID_Ed25519
     ec_ed448 = 1088,     // Ed448, NID_Ed448
-    ec_p256k = 714,      // NID_secp256k1,
+    ec_p256k = 714,      // NID_secp256k1
+
+    ec_secp160k1 = 708,  // NID_secp160k1
+    ec_secp160r2 = 710,  // NID_secp160r2
+    ec_secp192k1 = 711,  // NID_secp192k1
+    ec_secp224k1 = 712,  // NID_secp224k1
+    ec_secp224r1 = 713,  // NID_secp224r1
+    ec_secp256k1 = 714,  // NID_secp256k1
+    ec_sect163r1 = 722,  // NID_sect163r1
+    ec_sect193r1 = 724,  // NID_sect193r1
+    ec_sect193r2 = 725,  // NID_sect193r2
+    ec_sect239k1 = 728,  // NID_sect239k1
 
     ec_brainpoolP256r1 = 927,  // brainpoolP256r1, NID_brainpoolP256r1
     ec_brainpoolP256t1 = 928,  // brainpoolP256t1, NID_brainpoolP256t1
@@ -1019,7 +1030,7 @@ typedef struct _hint_curves_t {
     uint16 flags;      // ECDSA_SUPPORT_xxx
     uint8 keysize;     // key size (preserve leading zero), (keysize-2 .. keysize)
     uint8 category;    // see curve_category_t
-    const char* oid;   // OID
+    const char* oid;   // OID, https://neuromancer.sk/
     const char* name;  // NIST (CURVE P-256, P-384, P-521, ...)
     const char* aka1;  // X9.62, X9.63 (ansip384r1, ansip521r1, ...)
     const char* aka2;  // Standards for Efficient Cryptography (SEC) (secp256r1, secp384r1, secp521r1, ...)
