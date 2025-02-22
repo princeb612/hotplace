@@ -30,6 +30,8 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
             __leave2;
         }
 
+        auto& protection = session->get_tls_protection();
+
         ret = quic_packet::read(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -70,8 +72,17 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
 
         if (dir) {
             binary_t bin_mask;
-            hpmask(dir, &_payload[0], 16, bin_mask);
-            hpencode(bin_mask, _ht, bin_pn);  // update ht
+            ret = protection.protection_mask(session, dir, &_payload[0], _payload.size(), bin_mask, 5);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+
+            if (quic_packet_field_hf & ht) {
+                _ht ^= bin_mask[0] & 0x0f;
+            } else {
+                _ht ^= bin_mask[0] & 0x1f;
+            }
+            memxor(&bin_pn[0], &bin_mask[1], 4);
 
             // Packet Number Length = 2
             // PN1 PN2 PN3 PN4 | PL1 PL2 ...
@@ -92,7 +103,7 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
             _pn = t_binary_to_integer<uint32>(bin_pn);
 
             // unprotected header
-            write(from_unknown, bin_unprotected_header);
+            write(from_any, bin_unprotected_header);
 
             // AEAD
             binary_t bin_decrypted;
@@ -131,18 +142,18 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& packet) {
     return_t ret = errorcode_t::success;
     __try2 {
         binary_t header;
-        binary_t encrypted;
+        binary_t ciphertext;
         binary_t tag;
 
         packet.clear();
 
-        ret = write(dir, header, encrypted, tag);
+        ret = write(dir, header, ciphertext, tag);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         binary_append(packet, header);
-        binary_append(packet, encrypted);
+        binary_append(packet, ciphertext);
         binary_append(packet, tag);
     }
     __finally2 {
@@ -151,7 +162,7 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& packet) {
     return ret;
 }
 
-return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binary_t& encrypted, binary_t& tag) {
+return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -160,15 +171,13 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
             __leave2;
         }
 
+        auto& protection = session->get_tls_protection();
+
         binary_t bin_unprotected_header;
         binary_t bin_protected_header;
         uint8 pn_length = 0;
         uint64 len = 0;
         binary_t bin_pn;
-
-        constexpr char constexpr_token[] = "token";
-        constexpr char constexpr_len[] = "len";
-        constexpr char constexpr_pn[] = "pn";
 
         // unprotected header
         {
@@ -186,8 +195,7 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
 
             // unprotected header
             payload pl;
-            pl << new payload_member(new quic_encoded(get_token()), constexpr_token) << new payload_member(new quic_encoded(len), constexpr_len)
-               << new payload_member(bin_pn, constexpr_pn);
+            pl << new payload_member(new quic_encoded(get_token())) << new payload_member(new quic_encoded(len)) << new payload_member(bin_pn);
             pl.write(bin_unprotected_header);
         }
 
@@ -200,37 +208,48 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
          *  assumed to be 4 bytes long (its maximum possible encoded length).
          */
         if (dir && (get_payload().size() >= 0x10)) {
-            binary_t bin_encrypted;
+            binary_t bin_ciphertext;
             binary_t bin_tag;
+            binary_t bin_mask;
 
             // AEAD
-            session->get_tls_protection().encrypt(session, dir, get_payload(), bin_encrypted, bin_unprotected_header, bin_tag);
+            protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag);
 
             // Header Protection
             {
                 uint8 ht = _ht;
                 auto adj = 4 - pn_length;
-                binary_append(bin_pn, &bin_encrypted[0], adj);
+                binary_append(bin_pn, &bin_ciphertext[0], adj);
 
                 // calcurate mask
-                binary_t bin_mask;
-                hpmask(dir, &bin_encrypted[adj], 0x10, bin_mask);
-                hpencode(bin_mask, ht, bin_pn);  // do not update ht
+                ret = protection.protection_mask(session, dir, &bin_ciphertext[adj], bin_ciphertext.size(), bin_mask, 5);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
+
+                if (quic_packet_field_hf & ht) {
+                    ht ^= bin_mask[0] & 0x0f;
+                } else {
+                    ht ^= bin_mask[0] & 0x1f;
+                }
+                memxor(&bin_pn[0], &bin_mask[1], 4);
+
                 // encode packet length
                 bin_protected_header[0] = ht;
                 bin_pn.resize(pn_length);
 
                 // encode packet number
                 payload pl;
-                pl << new payload_member(new quic_encoded(get_token()), constexpr_token) << new payload_member(new quic_encoded(len), constexpr_len)
-                   << new payload_member(bin_pn, constexpr_pn);
+                pl << new payload_member(new quic_encoded(get_token()))  //
+                   << new payload_member(new quic_encoded(len))          //
+                   << new payload_member(bin_pn);
 
                 // protected header
                 pl.write(bin_protected_header);
             }
 
             header = std::move(bin_protected_header);
-            encrypted = std::move(bin_encrypted);
+            ciphertext = std::move(bin_ciphertext);
             tag = std::move(bin_tag);
 
             dump();

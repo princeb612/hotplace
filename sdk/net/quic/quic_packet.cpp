@@ -324,11 +324,5 @@ const binary_t& quic_packet::get_payload() { return _payload; }
 
 tls_session* quic_packet::get_session() { return _session; }
 
-return_t quic_packet::hpmask(tls_direction_t dir, const byte_t* sample, size_t size_sample, binary_t& mask) { return success; }
-
-return_t quic_packet::hpencode(const binary_t& mask, byte_t& ht, binary_t& bin_pn) { return success; }
-
-return_t quic_packet::retry_integrity_tag(const quic_packet_retry& retry_packet, binary_t& tag) { return success; }
-
 }  // namespace net
 }  // namespace hotplace

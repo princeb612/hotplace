@@ -57,6 +57,7 @@ class tls_session {
         uint64 get_recordno(bool inc = false);
         void inc_recordno();
         void reset_recordno();
+        void set_recordno(uint64 recordno);  // for test vector
 
        private:
         tls_hs_type_t hstype;
@@ -67,6 +68,11 @@ class tls_session {
     session_info& get_session_info(tls_direction_t dir);
     uint64 get_recordno(tls_direction_t dir, bool inc = false);
     void reset_recordno(tls_direction_t dir);
+
+    /*
+     * set test vector
+     */
+    void set_recordno(tls_direction_t dir, uint64 recno);
 
     void addref();
     void release();

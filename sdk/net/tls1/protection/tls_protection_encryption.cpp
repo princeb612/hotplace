@@ -85,7 +85,8 @@ uint8 tls_protection::get_tag_size() {
     uint8 ret_value = 0;
     crypto_advisor *advisor = crypto_advisor::get_instance();
     tls_advisor *tlsadvisor = tls_advisor::get_instance();
-    const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+    auto cs = get_cipher_suite();
+    const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
     if (hint) {
         auto hmac_alg = hint->mac;
         auto hint_digest = advisor->hintof_digest(hmac_alg);
@@ -236,16 +237,14 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
         size_t content_header_size = 0;
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
+        auto cipher = crypt_alg_unknown;
         auto mode = mode_unknown;
 
-        {
-            const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
-            if (nullptr == hint) {
-                ret = errorcode_t::not_supported;
-                __leave2;
-            }
-            mode = hint->mode;
+        ret = get_cipher_info(session, cipher, mode);
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
+
         /**
          * RFC 7366
          * If a server receives an encrypt-then-MAC request extension from a client

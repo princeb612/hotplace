@@ -39,6 +39,8 @@ void tls_session::reset_recordno(tls_direction_t dir) {
     }
 }
 
+void tls_session::set_recordno(tls_direction_t dir, uint64 recno) { get_session_info(dir).set_recordno(recno); }
+
 void tls_session::addref() { _shared.addref(); }
 
 void tls_session::release() { _shared.delref(); }
@@ -58,6 +60,8 @@ uint64 tls_session::session_info::get_recordno(bool inc) { return inc ? record_n
 void tls_session::session_info::inc_recordno() { ++record_no; }
 
 void tls_session::session_info::reset_recordno() { record_no = 0; }
+
+void tls_session::session_info::set_recordno(uint64 recordno) { record_no = recordno; }
 
 void tls_session::schedule(tls_handshake* handshake) {
     if (handshake) {

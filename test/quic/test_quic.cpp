@@ -47,7 +47,7 @@
 
 #include "sample.hpp"
 
-tls_session server_session(session_quic);
+static tls_session server_session(session_quic);
 
 void test_quic_xargs_org() {
     _test_case.begin("https://quic.xargs.org/");
@@ -80,15 +80,23 @@ void test_quic_xargs_org() {
     const char* scid = "63 5f 63 69 64";
     binary_t bin_dcid = base16_decode_rfc(dcid);
     binary_t bin_scid = base16_decode_rfc(scid);
-    server_session.get_tls_protection().set_item(tls_context_quic_dcid, bin_dcid);
-    // quic_header_protection quicpp(bin_dcid);
+
+    protection.set_item(tls_context_quic_dcid, bin_dcid);
+    protection.calc(&server_session, tls_hs_client_hello, from_client);
+
     {
-        // _test_case.assert(quicpp.get_item(quic_client_key) == base16_decode_rfc("b14b918124fda5c8d79847602fa3520b"), __FUNCTION__, "server initial key");
-        // _test_case.assert(quicpp.get_item(quic_client_iv) == base16_decode_rfc("ddbc15dea80925a55686a7df"), __FUNCTION__, "server initial iv");
-        // _test_case.assert(quicpp.get_item(quic_client_hp) == base16_decode_rfc("6df4e9d737cdf714711d7c617ee82981"), __FUNCTION__, "server initial hp");
-        // _test_case.assert(quicpp.get_item(quic_server_key) == base16_decode_rfc("d77fc4056fcfa32bd1302469ee6ebf90"), __FUNCTION__, "server initial key");
-        // _test_case.assert(quicpp.get_item(quic_server_iv) == base16_decode_rfc("fcb748e37ff79860faa07477"), __FUNCTION__, "server initial iv");
-        // _test_case.assert(quicpp.get_item(quic_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__, "server initial hp");
+        _test_case.assert(protection.get_item(tls_context_quic_initial_client_key) == base16_decode_rfc("b14b918124fda5c8d79847602fa3520b"), __FUNCTION__,
+                          "server initial key");
+        _test_case.assert(protection.get_item(tls_context_quic_initial_client_iv) == base16_decode_rfc("ddbc15dea80925a55686a7df"), __FUNCTION__,
+                          "server initial iv");
+        _test_case.assert(protection.get_item(tls_context_quic_initial_client_hp) == base16_decode_rfc("6df4e9d737cdf714711d7c617ee82981"), __FUNCTION__,
+                          "server initial hp");
+        _test_case.assert(protection.get_item(tls_context_quic_initial_server_key) == base16_decode_rfc("d77fc4056fcfa32bd1302469ee6ebf90"), __FUNCTION__,
+                          "server initial key");
+        _test_case.assert(protection.get_item(tls_context_quic_initial_server_iv) == base16_decode_rfc("fcb748e37ff79860faa07477"), __FUNCTION__,
+                          "server initial iv");
+        _test_case.assert(protection.get_item(tls_context_quic_initial_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__,
+                          "server initial hp");
     } /**
        * UDP Datagram 1 - Client hello
        * https://quic.xargs.org/#client-initial-packet
@@ -104,7 +112,6 @@ void test_quic_xargs_org() {
         binary_t bin_packet = base16_decode_rfc(packet);
         quic_packet_initial initial(&server_session);
         size_t pos = 0;
-        // initial.attach(&quicpp);
         ret = initial.read(from_client, &bin_packet[0], bin_packet.size(), pos);
         _test_case.test(ret, __FUNCTION__, "client_hello");
     }

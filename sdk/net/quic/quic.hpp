@@ -203,7 +203,7 @@ class quic_packet {
     /**
      * @brief   write
      * @param   tls_direction_t dir [in]
-     * @param   binary_t& packet [out]
+     * @param   binary_t& packet [out] header || ciphertext || tag
      */
     virtual return_t write(tls_direction_t dir, binary_t& packet);
 
@@ -237,28 +237,6 @@ class quic_packet {
     const binary_t& get_payload();
 
     tls_session* get_session();
-
-    /**
-     * @brief   header protection mask
-     * @param   tls_direction_t dir [in]
-     * @param   const byte_t* sample [in]
-     * @param   size_t size_sample [in]
-     * @param   binary_t& mask [out]
-     */
-    return_t hpmask(tls_direction_t dir, const byte_t* sample, size_t size_sample, binary_t& mask);
-    /**
-     * @brief   header protection
-     * @param   const binary_t& mask [in]
-     * @param   byte_t& ht [inout]
-     * @param   binary_t& bin_pn [out]
-     */
-    return_t hpencode(const binary_t& mask, byte_t& ht, binary_t& bin_pn);
-    /**
-     * @brief   retry packet
-     * @param   const quic_packet_retry& retry_packet [in]
-     * @param   binary_t& tag [out]
-     */
-    return_t retry_integrity_tag(const quic_packet_retry& retry_packet, binary_t& tag);
 
    protected:
     /**
@@ -304,8 +282,20 @@ class quic_packet_initial : public quic_packet {
     quic_packet_initial(const quic_packet_initial& rhs);
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    /**
+     * @brief   write
+     * @param   tls_direction_t dir [in]
+     * @param   binary_t& packet [out] header || ciphertext || tag
+     */
     virtual return_t write(tls_direction_t dir, binary_t& packet);
-    virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& encrypted, binary_t& tag);
+    /**
+     * @brief   write
+     * @param   tls_direction_t dir
+     * @param   binary_t& header [out]
+     * @param   binary_t& ciphertext [out]
+     * @param   binary_t& tag [out]
+     */
+    virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
 
     quic_packet_initial& set_token(const binary_t& token);
     const binary_t& get_token();
@@ -381,6 +371,13 @@ class quic_packet_retry : public quic_packet {
 
    protected:
     virtual void dump();
+
+    /**
+     * @brief   retry packet
+     * @param   const quic_packet_retry& retry_packet [in]
+     * @param   binary_t& tag [out]
+     */
+    return_t retry_integrity_tag(const quic_packet_retry& retry_packet, binary_t& tag);
 
    private:
     /**

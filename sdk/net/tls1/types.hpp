@@ -516,7 +516,7 @@ enum tls_secret_t : uint16 {
 };
 
 enum tls_direction_t {
-    from_unknown = 0,
+    from_any = 0,
     from_client = 1,  // client -> server
     from_server = 2,  // server -> client
 };

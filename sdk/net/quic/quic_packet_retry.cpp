@@ -37,8 +37,10 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
@@ -126,6 +128,51 @@ quic_packet_retry& quic_packet_retry::set_integrity_tag(const binary_t& tag) {
 const binary_t& quic_packet_retry::get_retry_token() { return _retry_token; }
 
 const binary_t& quic_packet_retry::get_integrity_tag() { return _retry_integrity_tag; }
+
+return_t quic_packet_retry::retry_integrity_tag(const quic_packet_retry& retry_packet, binary_t& tag) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        auto& protection = session->get_tls_protection();
+
+        // RFC 9001 5.8.  Retry Packet Integrity
+        // RFC 9001 Figure 8: Retry Pseudo-Packet
+        const char* key = "0xbe0c690b9f66575a1d766b54e368c84e";
+        const char* nonce = "0x461599d35d632bf2239825bb";
+
+        quic_packet_retry retry(retry_packet);
+
+        binary_t bin_retry_pseudo_packet;
+        binary_t bin_key = base16_decode_rfc(key);
+        binary_t bin_nonce = base16_decode_rfc(nonce);
+        binary_t bin_plaintext;
+        binary_t bin_encrypted;
+        const binary_t& bin_dcid = protection.get_item(tls_context_quic_dcid);
+
+        // ODCID Length (8)
+        binary_append(bin_retry_pseudo_packet, (uint8)bin_dcid.size());
+        // Original Destination Connection ID (0..160)
+        binary_append(bin_retry_pseudo_packet, bin_dcid);
+
+        // Header Form (1) ~ Retry Token (..)
+        retry.write(from_any, bin_retry_pseudo_packet);
+
+        // Retry Integrity Tag
+        openssl_crypt crypt;
+        crypt_context_t* handle = nullptr;
+        crypt.open(&handle, "aes-128-gcm", bin_key, bin_nonce);
+        ret = crypt.encrypt(handle, bin_plaintext, bin_encrypted, bin_retry_pseudo_packet, tag);
+        crypt.close(handle);
+    }
+    __finally2 {}
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace
