@@ -9,29 +9,38 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-quic_packet::quic_packet() : _type(0), _ht(0), _version(1), _keys(nullptr), _pn(0) {}
+quic_packet::quic_packet(tls_session* session) : _type(0), _session(session), _ht(0), _version(1), _pn(0) {
+    if (session) {
+        session->addref();
+    }
+}
 
-quic_packet::quic_packet(quic_packet_t type) : _type(type), _ht(0), _version(1), _keys(nullptr), _pn(0) {
+quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _session(session), _ht(0), _version(1), _pn(0) {
     bool is_longheader = true;
     set_type(type, _ht, is_longheader);
+    if (session) {
+        session->addref();
+    }
 }
 
 quic_packet::quic_packet(const quic_packet& rhs)
-    : _type(rhs._type), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _keys(rhs._keys), _pn(rhs._pn) {
-    if (_keys) {
-        _keys->addref();
+    : _session(rhs._session), _type(rhs._type), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _pn(rhs._pn) {
+    if (_session) {
+        _session->addref();
     }
 }
 
 quic_packet::~quic_packet() {
-    if (_keys) {
-        _keys->release();
+    if (_session) {
+        _session->release();
     }
 }
 
@@ -130,19 +139,7 @@ const binary_t& quic_packet::get_dcid() { return _dcid; }
 
 const binary_t& quic_packet::get_scid() { return _scid; }
 
-void quic_packet::attach(quic_protection* keys) {
-    if (keys) {
-        keys->addref();
-        if (_keys) {
-            _keys->release();
-        }
-        _keys = keys;
-    }
-}
-
-quic_protection* quic_packet::get_protection() { return _keys; }
-
-return_t quic_packet::read(const byte_t* stream, size_t size, size_t& pos, uint32 mode) {
+return_t quic_packet::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -159,9 +156,12 @@ return_t quic_packet::read(const byte_t* stream, size_t size, size_t& pos, uint3
         get_type(hdr, _type, is_longheader);
 
         payload pl;
-        pl << new payload_member(uint8(0), "hdr") << new payload_member(uint32(0), true, "version") << new payload_member(uint8(0), "dcid_len", "longheader")
-           << new payload_member(binary_t(), "dcid") << new payload_member(uint8(0), "scid_len", "longheader")
-           << new payload_member(binary_t(), "scid", "longheader");
+        pl << new payload_member(uint8(0), "hdr")                     //
+           << new payload_member(uint32(0), true, "version")          //
+           << new payload_member(uint8(0), "dcid_len", "longheader")  //
+           << new payload_member(binary_t(), "dcid")                  //
+           << new payload_member(uint8(0), "scid_len", "longheader")  //
+           << new payload_member(binary_t(), "scid", "longheader");   //
         if (is_longheader) {
             pl.set_reference_value("dcid", "dcid_len");
             pl.set_reference_value("scid", "scid_len");
@@ -181,9 +181,9 @@ return_t quic_packet::read(const byte_t* stream, size_t size, size_t& pos, uint3
     return ret;
 }
 
-return_t quic_packet::read(const binary_t& bin, size_t& pos, uint32 mode) { return read(&bin[0], bin.size(), pos, mode); }
+return_t quic_packet::read(tls_direction_t dir, const binary_t& bin, size_t& pos) { return read(dir, &bin[0], bin.size(), pos); }
 
-return_t quic_packet::write(binary_t& packet, uint32 mode) {
+return_t quic_packet::write(tls_direction_t dir, binary_t& packet) {
     return_t ret = errorcode_t::success;
     uint8 hdr = 0;
     bool is_longheader = true;
@@ -209,17 +209,22 @@ return_t quic_packet::write(binary_t& packet, uint32 mode) {
     }
 
     payload pl;
-    pl << new payload_member(hdr, "hdr") << new payload_member(_version, true, "version") << new payload_member((uint8)_dcid.size(), "dcidl", "longheader")
-       << new payload_member(_dcid, "dcid") << new payload_member((uint8)_scid.size(), "scidl", "longheader")
-       << new payload_member(_scid, "scid", "longheader");
+    pl << new payload_member(hdr, "hdr")                                  //
+       << new payload_member(_version, true, "version")                   //
+       << new payload_member((uint8)_dcid.size(), "dcidl", "longheader")  //
+       << new payload_member(_dcid, "dcid")                               //
+       << new payload_member((uint8)_scid.size(), "scidl", "longheader")  //
+       << new payload_member(_scid, "scid", "longheader");                //
     pl.set_group("longheader", is_longheader);
     pl.write(packet);
 
     return ret;
 }
 
-void quic_packet::dump(stream_t* s) {
-    if (s) {
+void quic_packet::dump() {
+    if (istraceable()) {
+        basic_stream dbs;
+
         std::map<uint8, std::string> packet_name;
         packet_name.insert({quic_packet_type_version_negotiation, "version negotiation"});
         packet_name.insert({quic_packet_type_initial, "initial"});
@@ -228,10 +233,10 @@ void quic_packet::dump(stream_t* s) {
         packet_name.insert({quic_packet_type_retry, "retry"});
         packet_name.insert({quic_packet_type_1_rtt, "1-RTT"});
 
-        s->printf("- quic packet %s\n", packet_name[_type].c_str());
-        s->printf(" > version %08x\n", get_version());
-        s->printf(" > destination connection id\n");
-        dump_memory(_dcid, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+        dbs.printf("- quic packet %s\n", packet_name[_type].c_str());
+        dbs.printf(" > version %08x\n", get_version());
+        dbs.printf(" > destination connection id %s\n", base16_encode(_dcid).c_str());
+        // dump_memory(_dcid, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
         switch (get_type()) {
             // long header
             case quic_packet_type_version_negotiation:
@@ -239,8 +244,8 @@ void quic_packet::dump(stream_t* s) {
             case quic_packet_type_0_rtt:
             case quic_packet_type_handshake:
             case quic_packet_type_retry:
-                s->printf(" > source connection id\n");
-                dump_memory(_scid, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+                dbs.printf(" > source connection id %s\n", base16_encode(_scid).c_str());
+                // dump_memory(_scid, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
                 break;
             // short header
             case quic_packet_type_1_rtt:
@@ -251,9 +256,10 @@ void quic_packet::dump(stream_t* s) {
             case quic_packet_type_0_rtt:
             case quic_packet_type_handshake:
             case quic_packet_type_1_rtt:
-                s->printf(" > packet length %i\n", get_pn_length());
+                dbs.printf(" > packet length %i\n", get_pn_length());
                 break;
         }
+        trace_debug_event(category_quic, quic_event_dump, &dbs);
     }
 }
 
@@ -315,6 +321,14 @@ quic_packet& quic_packet::set_payload(const byte_t* stream, size_t size) {
 }
 
 const binary_t& quic_packet::get_payload() { return _payload; }
+
+tls_session* quic_packet::get_session() { return _session; }
+
+return_t quic_packet::hpmask(tls_direction_t dir, const byte_t* sample, size_t size_sample, binary_t& mask) { return success; }
+
+return_t quic_packet::hpencode(const binary_t& mask, byte_t& ht, binary_t& bin_pn) { return success; }
+
+return_t quic_packet::retry_integrity_tag(const quic_packet_retry& retry_packet, binary_t& tag) { return success; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -92,11 +92,11 @@ flowchart LR
   DA --> DA2;
   DA -.-> DA3;
 
-  DB1[TLS(openssl)];
-  DB2[DTLS(openssl)];
-  DB3[QUIC];
-  DB4[TLS(study)];
-  DB4[DTLS(study)];
+  DB1[TLS.openssl];
+  DB2[DTLS.openssl];
+  DB3[QUIC.implement];
+  DB4[TLS.implement];
+  DB5[DTLS.implement];
   DB --> DB1;
   DB --> DB2;
   DB -.-> DB3;
@@ -115,7 +115,7 @@ flowchart LR
   DC1[HTTP/1.1];
   DC2[HPACK];
   DC3[HTTP/2];
-  DC4[QPACK(study)];
+  DC4[QPACK];
   DC5[HTTP/3];
 
   DC --> DC1;
@@ -238,3 +238,58 @@ sub-tasks
 - [ ] shutdown DTLS peer connection
 - [ ] br(Brotli), zstd(Zstandard) HTTP encoding
 - [ ] HTTP/2 Authentication Scheme
+
+### summary
+
+#### 2025
+```mermaid
+journey
+  title 2025
+  section 2025.01
+    TLS:3:github
+  section 2025.02
+    TLS:3:github
+    Zelda TOTK 100%/100%:5:game
+```
+
+#### 2024
+```mermaid
+journey
+  title 2024
+  section 2024.01
+    HTTP/1.1, authentication:3:github
+  section 2024.02
+    hospital:0:refresh
+  section 2024.03
+    HTTP/1.1, oauth2:3:github
+  section 2024.04
+    HPACK, HTTP/2:3:github
+  section 2024.05
+    HTTP/2:3:github
+  section 2024.06
+    ASN.1, graph:3:github
+  section 2024.07
+    pattern-matching:3:github
+  section 2024.08
+    pattern-matching:3:github
+  section 2024.09
+    review:3:github
+  section 2024.10
+    QPACK:3:github
+  section 2024.11
+    QUIC:3:github
+  section 2024.12
+    TLS:3:github
+```
+
+#### 2023
+```mermaid
+journey
+  title 2023
+  section 2023.07~08
+    Zelda BOW, TOTK:5:game
+  section 2023.09
+    CBOR:3:github
+  section 2023.10~12
+    COSE:3:github
+```

@@ -33,7 +33,7 @@ return_t tls_handshake_unknown::do_postprocess(tls_direction_t dir, const byte_t
 
         {
             //
-            protection.calc_transcript_hash(session, stream + hspos, get_size());
+            protection.update_transcript_hash(session, stream + hspos, get_size());
         }
     }
     __finally2 {

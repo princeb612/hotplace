@@ -133,125 +133,12 @@ enum h3_errorcodes_t {
 };
 
 /**
- */
-
-/**
- * RFC 9000 Figure 22: Preferred Address Format
- */
-// struct preferred_address {
-//     uint32 ipv4addr;
-//     uint16 ipv4port;
-//     uint128 ipv6addr;
-//     uint16 ipv6port;
-//     binary_t cid;
-//     uint128 stateless_reset_token;
-// };
-
-enum quic_initial_keys_t : uint16 {
-    quic_original_dcid = 0,
-    quic_initial_secret = 1,  // initial secret
-    quic_client_secret = 2,   // client initial secret
-    quic_server_secret = 3,   // server initial secret
-    quic_client_key = 4,      // client initial key
-    quic_server_key = 5,      // server initial key
-    quic_client_iv = 6,       // client initial iv
-    quic_server_iv = 7,       // server initial iv
-    quic_client_hp = 8,       // client header protection key
-    quic_server_hp = 9,       // server header protection key
-};
-
-/**
- * @brief   RFC 9001 5.  Packet Protection
- */
-class quic_protection {
-   public:
-    /**
-     * @brief   constructor
-     * @param   const binary_t& salt [in] DCID
-     * @param   uint32 mode [inopt] see tls_mode_t
-     */
-    quic_protection(const binary_t& salt, uint32 mode = -1);
-    quic_protection(const binary_t& salt, const binary_t& context, uint32 mode = -1);
-
-    /**
-     * @brief   get item
-     * @param   quic_initial_keys_t mode [in]
-     */
-    const binary_t& get_item(quic_initial_keys_t mode);
-    /**
-     * @brief   get item
-     * @param   quic_initial_keys_t mode [in]
-     * @param   binary_t& item [out]
-     */
-    void get_item(quic_initial_keys_t mode, binary_t& item);
-
-    /**
-     * @brief   header protection mask
-     * @param   uint32 mode [in]
-     * @param   const byte_t* sample [in]
-     * @param   size_t size_sample [in]
-     * @param   binary_t& mask [out]
-     */
-    return_t hpmask(uint32 mode, const byte_t* sample, size_t size_sample, binary_t& mask);
-    /**
-     * @brief   header protection
-     * @param   uint32 mode [in]
-     * @param   const binary_t& mask [in]
-     * @param   byte_t& ht [inout]
-     * @param   binary_t& bin_pn [out]
-     */
-    return_t hpencode(uint32 mode, const binary_t& mask, byte_t& ht, binary_t& bin_pn);
-    /**
-     * @brief   encrypt payload
-     * @param   uint32 mode [in]
-     * @param   uint64 pn [in]
-     * @param   const binary_t& payload [in]
-     * @param   binary_t& encrypted [out]
-     * @param   const binary_t& aad [in]
-     * @param   binary_t& tag [out]
-     */
-    return_t encrypt(uint32 mode, uint64 pn, const binary_t& payload, binary_t& encrypted, const binary_t& aad, binary_t& tag);
-    /**
-     * @brief   decrypt payload
-     * @param   uint32 mode [in]
-     * @param   uint64 pn [in]
-     * @param   const binary_t& payload [in]
-     * @param   binary_t& decrypted [out]
-     * @param   const binary_t& aad [in]
-     * @param   const binary_t& tag [in]
-     */
-    return_t decrypt(uint32 mode, uint64 pn, const binary_t& payload, binary_t& decrypted, const binary_t& aad, const binary_t& tag);
-    /**
-     * @brief   retry packet
-     * @param   const quic_packet_retry& retry_packet [in]
-     * @param   binary_t& tag [out]
-     */
-    return_t retry_integrity_tag(const quic_packet_retry& retry_packet, binary_t& tag);
-
-    void addref();
-    void release();
-
-   protected:
-    t_shared_reference<quic_protection> _shared;
-    std::map<uint16, binary_t> _kv;
-    SSL* _ssl;
-
-    /**
-     * @brief   initial keys calc
-     * @param   const binary_t& salt [in]
-     * @param   const binary_t& context [in]
-     * @param   uint32 mode [in]
-     */
-    return_t calc(const binary_t& salt, const binary_t& context, uint32 mode);
-};
-
-/**
  * RFC 9000 17.  Packet Formats
  */
 class quic_packet {
    public:
-    quic_packet();
-    quic_packet(quic_packet_t type);
+    quic_packet(tls_session* session);
+    quic_packet(quic_packet_t type, tls_session* session);
     quic_packet(const quic_packet& rhs);
     ~quic_packet();
 
@@ -302,78 +189,23 @@ class quic_packet {
      */
     const binary_t& get_scid();
 
-    void attach(quic_protection* keys);
-    quic_protection* get_protection();
-
     /**
      * @brief   read
+     * @param   tls_direction_t dir [in]
      * @param   const byte_t* stream [in]
      * @param   size_t size [in]
      * @param   size_t& pos [inout]
-     * @param   uint32 mode [inopt]
      * @remarks
-     *          // sketch
-     *
-     *          payload pl;
-     *          // set layout
-     *          // pl << ... << new payload_member(binary_t(), "payload");
-     *          pl.read(stream, size, pos);
-     *          payload = pl.select("payload")->get_variant().to_binary(payload);
-     *
-     *          // unprotect header
-     *          pl.write(unprotected_header);
-     *          // decrypt payload
-     *          binary_append(aad, &payload[0], 0x10);
-     *          binary_append(tag, &payload[size - 0x10], 0x10);
-     *          binary_load(bin_pn, 8, pn, hton64);
-     *          for (int i = 0; i < 8; i++) {
-     *              iv[i + 12 - 8] ^= bin_pn[i];
-     *          }
-     *          crypt.open(&handle, "aes-128-gcm", client_key, client_iv);
-     *          crypt.decrypt2(handle, &payload[0], payload.size() - 0x10, payload_decrypted, &aad, &tag);
-     *          crypt.close(handle);
-     *
-     *          set_payload(payload_decrypted);  // replace
      */
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint32 mode = 0);
-    virtual return_t read(const binary_t& bin, size_t& pos, uint32 mode = 0);
+    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t read(tls_direction_t dir, const binary_t& bin, size_t& pos);
 
     /**
      * @brief   write
+     * @param   tls_direction_t dir [in]
      * @param   binary_t& packet [out]
-     * @param   uint32 mode [inopt]  RFC 9001 5.4.  Header Protection
-     *                               see tls_mode_t
-     * @remarks
-     *          // sketch
-     *
-     *          // unprotected_header
-     *          packet.write(unprotected_header);
-     *
-     *          // encrypt
-     *          binary_load(bin_pn, 8, pn, hton64);
-     *          for (int i = 0; i < 8; i++) {
-     *              client_iv[i + 12 - 8] ^= bin_pn[i];
-     *          }
-     *          crypt.open(&handle, "aes-128-gcm", client_key, client_iv);
-     *          crypt.encrypt2(handle, frame, encrypted_frame, &unprotected_header, &tag);
-     *          crypt.close(handle);
-     *
-     *          // protected header
-     *          packet.set_payload(encrypted_frame); // sample
-     *          packet.write(unprotected_header, tls_mode_client);
-     *
-     *          // unprotected_header + encrypted_frame frame + tag
-     *          binary_append(bin_packet, protected_header);
-     *          binary_append(bin_packet, encrypted_frame);
-     *          binary_append(bin_packet, tag);
      */
-    virtual return_t write(binary_t& packet, uint32 mode = 0);
-
-    /**
-     * @brief   dump
-     * @param   stream_t* s [in]
-     */
-    virtual void dump(stream_t* s);
+    virtual return_t write(tls_direction_t dir, binary_t& packet);
 
     /*
      * @brief   set packet number
@@ -404,7 +236,38 @@ class quic_packet {
     quic_packet& set_payload(const byte_t* stream, size_t size);
     const binary_t& get_payload();
 
+    tls_session* get_session();
+
+    /**
+     * @brief   header protection mask
+     * @param   tls_direction_t dir [in]
+     * @param   const byte_t* sample [in]
+     * @param   size_t size_sample [in]
+     * @param   binary_t& mask [out]
+     */
+    return_t hpmask(tls_direction_t dir, const byte_t* sample, size_t size_sample, binary_t& mask);
+    /**
+     * @brief   header protection
+     * @param   const binary_t& mask [in]
+     * @param   byte_t& ht [inout]
+     * @param   binary_t& bin_pn [out]
+     */
+    return_t hpencode(const binary_t& mask, byte_t& ht, binary_t& bin_pn);
+    /**
+     * @brief   retry packet
+     * @param   const quic_packet_retry& retry_packet [in]
+     * @param   binary_t& tag [out]
+     */
+    return_t retry_integrity_tag(const quic_packet_retry& retry_packet, binary_t& tag);
+
    protected:
+    /**
+     * @brief   dump
+     */
+    void dump();
+
+    tls_session* _session;
+
     uint8 _type;
     uint8 _ht;        // header type, public flag
     uint32 _version;  // version
@@ -413,8 +276,6 @@ class quic_packet {
 
     uint32 _pn;
     binary_t _payload;
-
-    quic_protection* _keys;
 };
 
 /**
@@ -422,7 +283,7 @@ class quic_packet {
  */
 class quic_packet_version_negotiation : public quic_packet {
    public:
-    quic_packet_version_negotiation();
+    quic_packet_version_negotiation(tls_session* session);
     quic_packet_version_negotiation(const quic_packet_version_negotiation& rhs);
 
    protected:
@@ -439,19 +300,20 @@ class quic_packet_version_negotiation : public quic_packet {
  */
 class quic_packet_initial : public quic_packet {
    public:
-    quic_packet_initial();
+    quic_packet_initial(tls_session* session);
     quic_packet_initial(const quic_packet_initial& rhs);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint32 mode = 0);
-    virtual return_t write(binary_t& packet, uint32 mode = 0);
-    virtual return_t write(binary_t& header, binary_t& encrypted, binary_t& tag, uint32 mode = 0);
-    virtual void dump(stream_t* s);
+    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write(tls_direction_t dir, binary_t& packet);
+    virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& encrypted, binary_t& tag);
 
     quic_packet_initial& set_token(const binary_t& token);
     const binary_t& get_token();
     uint64 get_length();
 
    protected:
+    virtual void dump();
+
    private:
     /**
      * Figure 15: Initial Packet
@@ -470,7 +332,7 @@ class quic_packet_initial : public quic_packet {
  */
 class quic_packet_0rtt : public quic_packet {
    public:
-    quic_packet_0rtt();
+    quic_packet_0rtt(tls_session* session);
     quic_packet_0rtt(const quic_packet_0rtt& rhs);
 
    protected:
@@ -490,7 +352,7 @@ class quic_packet_0rtt : public quic_packet {
  */
 class quic_packet_handshake : public quic_packet {
    public:
-    quic_packet_handshake();
+    quic_packet_handshake(tls_session* session);
     quic_packet_handshake(const quic_packet_handshake& rhs);
 
    protected:
@@ -505,12 +367,11 @@ class quic_packet_handshake : public quic_packet {
 
 class quic_packet_retry : public quic_packet {
    public:
-    quic_packet_retry();
+    quic_packet_retry(tls_session* session);
     quic_packet_retry(const quic_packet_retry& rhs);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos, uint32 mode = 0);
-    virtual return_t write(binary_t& packet, uint32 mode = 0);
-    virtual void dump(stream_t* s);
+    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write(tls_direction_t dir, binary_t& packet);
 
     quic_packet_retry& set_retry_token(const binary_t& token);
     quic_packet_retry& set_integrity_tag(const binary_t& tag);
@@ -519,6 +380,8 @@ class quic_packet_retry : public quic_packet {
     const binary_t& get_integrity_tag();
 
    protected:
+    virtual void dump();
+
    private:
     /**
      * Figure 18: Retry Packet

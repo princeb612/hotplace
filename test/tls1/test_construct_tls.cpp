@@ -61,7 +61,7 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
         {
             auto sni = new tls_extension_sni(session);
             auto& hostname = sni->get_hostname();
-            // hostname = "server";
+            hostname = "test.server.com";
             handshake->get_extensions().add(sni);
         }
         {
@@ -83,6 +83,22 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
                 .add("ffdhe6144")
                 .add("ffdhe8192");
             handshake->get_extensions().add(supported_groups);
+        }
+        {
+            auto extension = new tls_extension_unknown(tls1_ext_next_protocol_negotiation, session);
+            handshake->get_extensions().add(extension);
+        }
+        {
+            auto extension = new tls_extension_unknown(tls1_ext_encrypt_then_mac, session);
+            handshake->get_extensions().add(extension);
+        }
+        {
+            auto extension = new tls_extension_unknown(tls1_ext_extended_master_secret, session);
+            handshake->get_extensions().add(extension);
+        }
+        {
+            auto extension = new tls_extension_unknown(tls1_ext_post_handshake_auth, session);
+            handshake->get_extensions().add(extension);
         }
         {
             auto signature_algorithms = new tls_extension_signature_algorithms(session);
@@ -117,12 +133,11 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
             (*psk_key_exchange_modes).add("psk_dhe_ke");
             handshake->get_extensions().add(psk_key_exchange_modes);
         }
-        {
+        if (tls_13 == option.version) {
             auto key_share = new tls_extension_client_key_share(session);
             (*key_share).add("x25519");
             handshake->get_extensions().add(key_share);
-        }
-        {
+
             basic_stream bs;
             auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
             dump_key(pkey, &bs);
@@ -194,13 +209,11 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
             (*supported_versions).set(server_version);
             handshake->get_extensions().add(supported_versions);
         }
-        {
+        if (tls_13 == option.version) {
             auto key_share = new tls_extension_server_key_share(session);
             (*key_share).add("x25519");
             handshake->get_extensions().add(key_share);
-        }
 
-        {
             basic_stream bs;
             auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
             dump_key(pkey, &bs);
@@ -250,7 +263,18 @@ static return_t do_test_construct_encrypted_extensions(tls_direction_t dir, tls_
         }
 
         tls_record_application_data record(session);
-        record.get_handshakes().add(new tls_handshake_encrypted_extensions(session));
+        auto handshake = new tls_handshake_encrypted_extensions(session);
+        {
+            auto extension = new tls_extension_alpn(session);
+            binary_t protocols;
+            binary_append(protocols, uint8(2));
+            binary_append(protocols, "h2");
+            binary_append(protocols, uint8(8));
+            binary_append(protocols, "http/1.1");
+            extension->set_protocols(protocols);
+            handshake->get_extensions().add(extension);
+        }
+        record.get_handshakes().add(handshake);
         ret = record.write(dir, bin);
     }
     __finally2 {
@@ -513,7 +537,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     auto ver = tlsadvisor->tls_version_string(option.version);
     auto hint = tlsadvisor->hintof_cipher_suite(option.cipher_suite);
-    _test_case.begin("construct TLS %s %s", ver.c_str(), hint->name_iana);
+    _test_case.begin("construct %s %s", ver.c_str(), hint->name_iana);
 
     // C -> S {client}
     // construct : write + client_session

@@ -31,18 +31,3 @@
 | 0xc076 | TLS 1.2 | TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256    | tested |
 | 0xc077 | TLS 1.2 | TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384    | tested |
 | 0xcca8 | TLS 1.2 | TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256   | tested |
-
-### study
-
-#### why gmt_unix_time still 4 bytes
-
-- time_t
-  - 1970.01.01 00:00:00 UTC~
-  - sizeof(time_t) = 8
-- TLS client_hello::random begins 00000000
-  - RFC 5246 7.4.1.2.  Client Hello
-    - uint32 gmt_unix_time;
-    - opaque random_bytes[28];
-  - 1970.01.01 00:00:00 UTC~2038.01.19 03:14:07 UTC (signed int time_t)
-    - cat(hton64(time(nullptr)), sizeof(uint32)) || PRNG_random(28 bytes)
-    - 00000000 || random

@@ -205,11 +205,11 @@ return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.printf("> %s - %04x %s\n", constexpr_extension, extension_type, tlsadvisor->tls_extension_string(extension_type).c_str());
+            dbs.printf("  > %s - %04x %s\n", constexpr_extension, extension_type, tlsadvisor->tls_extension_string(extension_type).c_str());
             if (stream) {
-                dump_memory(stream + offsetof_header(), get_extsize(), &dbs, 16, 3, 0x0, dump_notrunc);
+                dump_memory(stream + offsetof_header(), get_extsize(), &dbs, 16, 4, 0x0, dump_notrunc);
             }
-            dbs.printf(" > %s 0x%04x(%i)\n", constexpr_ext_len, ext_len, ext_len);
+            dbs.printf("   > %s 0x%04x(%i)\n", constexpr_ext_len, ext_len, ext_len);
 
             trace_debug_event(category_tls1, tls_event_read, &dbs);
         }

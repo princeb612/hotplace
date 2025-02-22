@@ -99,6 +99,7 @@ define_tls_variable(extension_type_code) = {
     {0x003c, "sequence_number_encryption_algorithms"},
     {0x003d, "rrc"},
     {0x003e, "tls_flags"},
+    {0x3374, "next_protocol_negotiation"},
     {0x4469, "application settings"},
     {0xfd00, "ech_outer_extensions"},
     {0xfe0d, "encrypted_client_hello"},

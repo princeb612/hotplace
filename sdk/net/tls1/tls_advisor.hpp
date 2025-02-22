@@ -76,6 +76,15 @@ declare_tls_resource(quic_trans_param_code, uint64);
 // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
 declare_tls_resource(aead_alg_code, uint16);
 
+struct tls_version_hint_t {
+    uint16 code;
+    uint8 support;
+    uint8 reserved;
+    const char* name;
+};
+extern const tls_version_hint_t tls_version_hint[];
+extern const size_t sizeof_tls_version_hint;
+
 /**
  * @brief   cipher suites
  * @remarks
@@ -126,6 +135,7 @@ class tls_advisor {
     static tls_advisor* get_instance();
     ~tls_advisor();
 
+    const tls_version_hint_t* hintof_tls_version(uint16 code);
     const tls_cipher_suite_t* hintof_cipher_suite(uint16 code);
     const tls_cipher_suite_t* hintof_cipher_suite(const std::string& name);
     const hint_blockcipher_t* hintof_blockcipher(uint16 code);
@@ -223,7 +233,7 @@ class tls_advisor {
     // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
     std::map<uint16, const tls_aead_alg_code_t*> _aead_alg_codes;
 
-    std::map<uint16, std::string> _tls_version;
+    std::map<uint16, const tls_version_hint_t*> _tls_version;
     std::map<uint8, std::string> _cert_status_types;
 
     bool _load;

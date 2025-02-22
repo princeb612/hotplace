@@ -32,7 +32,7 @@ return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir,
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
 
-        { protection.calc_transcript_hash(session, stream + hspos, get_size()); }
+        { protection.update_transcript_hash(session, stream + hspos, get_size()); }
     }
     __finally2 {
         // do nothing
@@ -68,10 +68,13 @@ return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, c
             // RFC 8446 4.3.1.  Encrypted Extensions
 
             auto& protection = session->get_tls_protection();
-            // if (protection.is_kindof_dtls() /* || (tls_0_rtt == protection.get_flow()) */) {
-            if (protection.is_kindof_dtls() || (tls_0_rtt == protection.get_flow())) {
+            if (protection.is_kindof_tls()) {
+                uint16 len = ntoh16(*(uint16*)(stream + pos));
+                pos += 2;
+                ret = get_extensions().read(tls_hs_encrypted_extensions, session, dir, stream, pos + sizeof(uint16) + len, pos);
+            } else if (protection.is_kindof_dtls() || (tls_0_rtt == protection.get_flow())) {
                 // DTLS 1.3 ciphertext
-                // uint16 len = ntoh16(*(uint16*)(stream + pos));
+                //
                 pos += 2;  // len
                 ret = get_extensions().read(tls_hs_encrypted_extensions, session, dir, stream, size, pos);
             }

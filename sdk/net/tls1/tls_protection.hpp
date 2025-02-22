@@ -84,12 +84,14 @@ class tls_protection {
    public:
     /**
      * @brief    TLS protection
-     * @param    uint8 mode [inopt] see tls_mode_t
      */
-    tls_protection(uint8 mode = -1);
+    tls_protection();
     ~tls_protection();
 
-    uint8 get_mode();
+    ///////////////////////////////////////////////////////////////////////////
+    // basic
+    ///////////////////////////////////////////////////////////////////////////
+
     tls_message_flow_t get_flow();
     void set_flow(tls_message_flow_t flow);
 
@@ -106,6 +108,25 @@ class tls_protection {
     bool is_kindof_tls13();
     uint16 get_tls_version();
     void set_tls_version(uint16 version);
+    protection_context& get_protection_context();
+
+    crypto_key& get_keyexchange();
+
+    void use_pre_master_secret(bool use);
+    bool use_pre_master_secret();
+
+    void get_item(tls_secret_t type, binary_t& item);
+    const binary_t& get_item(tls_secret_t type);
+    void set_item(tls_secret_t type, const binary_t& item);
+    void set_item(tls_secret_t type, const byte_t* stream, size_t size);
+    void clear_item(tls_secret_t type);
+
+    size_t get_header_size();
+    static return_t handshake_hello(tls_session* client_session, tls_session* server_session, uint16& ciphersuite, uint16& tlsversion);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // hash
+    ///////////////////////////////////////////////////////////////////////////
     /**
      * @brief   transcript hash
      * @sample
@@ -117,38 +138,25 @@ class tls_protection {
      */
     transcript_hash* get_transcript_hash();
     /**
-     * hash(handshake)
+     * transcript hash
      */
-    return_t calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size);
+    return_t update_transcript_hash(tls_session* session, const byte_t* stream, size_t size);
     return_t calc_transcript_hash(tls_session* session, const byte_t* stream, size_t size, binary_t& digest);
     return_t reset_transcript_hash(tls_session* session);
-    return_t calc_context_hash(tls_session* session, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& digest);
-    crypto_key& get_keyexchange();
-
-    void use_pre_master_secret(bool use);
-    bool use_pre_master_secret();
     /**
-     * @brief   calc
-     * @param   tls_session* session [in]
-     * @param   tls_hs_type_t type [in]
+     * calc partial context hash
      */
-    return_t calc(tls_session* session, tls_hs_type_t type, tls_direction_t dir);
-    return_t calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder);
+    return_t calc_context_hash(tls_session* session, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& digest);
 
-    void get_item(tls_secret_t type, binary_t& item);
-    const binary_t& get_item(tls_secret_t type);
-    void set_item(tls_secret_t type, const binary_t& item);
-    void set_item(tls_secret_t type, const byte_t* stream, size_t size);
-    void clear_item(tls_secret_t type);
-
-    size_t get_header_size();
+    ///////////////////////////////////////////////////////////////////////////
+    // encryption
+    ///////////////////////////////////////////////////////////////////////////
+    return_t get_cipher_info(tls_session* session, crypt_algorithm_t& alg, crypt_mode_t& mode);
+    return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv, uint64 recordno);
     uint8 get_tag_size();
 
-    return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv, uint64 recordno);
-
-    return_t get_tls13_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& iv);
-    return_t get_tls12_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& mackey);
-
+    return_t get_aead_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& iv);
+    return_t get_cbc_hmac_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& mackey);
     /**
      * @brief encrypt
      * @param tls_session* session [in]
@@ -163,18 +171,29 @@ class tls_protection {
      */
     return_t encrypt(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& additional, binary_t& tag);
 
+    // stream include a tag
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& aad);
+    // stream do not include a tag
+    return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
+                     const binary_t& tag);
 
-    return_t construct_certificate_verify_message(tls_direction_t dir, basic_stream& message);
-    return_t get_ecdsa_signature(uint16 scheme, const binary_t& asn1der, binary_t& signature);
-    return_t reform_ecdsa_signature(uint16 scheme, const binary_t& signature, binary_t& asn1der);
-
+    ///////////////////////////////////////////////////////////////////////////
+    // calc
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @brief   calc
+     * @param   tls_session* session [in]
+     * @param   tls_hs_type_t type [in]
+     */
+    return_t calc(tls_session* session, tls_hs_type_t type, tls_direction_t dir);
+    return_t calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder);
     return_t calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t& secret, binary_t& maced);
 
-    protection_context& get_protection_context();
-
-    static return_t handshake_hello(tls_session* client_session, tls_session* server_session, uint16& ciphersuite, uint16& tlsversion);
+    ///////////////////////////////////////////////////////////////////////////
+    // mask for DTLS/QUIC header protection (aes-128-ecb)
+    ///////////////////////////////////////////////////////////////////////////
+    return_t protection_mask(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, binary_t& mask, size_t masklen);
 
    protected:
     return_t encrypt_aead(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag);
@@ -189,16 +208,22 @@ class tls_protection {
      *
      *          encrypt(&server_session, record, protected_record);
      *          decrypt(&client_session, protected_record, record);
+     *
+     *          stream include a tag
      */
     return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
-    return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad);
+    /**
+     * @brief   decrypt
+     * @remarks stream do not include a tag
+     */
+    return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
+                          const binary_t& tag);
     /**
      * @brief   TLS 1 decrypt
      */
     return_t decrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
 
    private:
-    uint8 _mode;  // see tls_mode_t
     tls_message_flow_t _flow;
     uint16 _ciphersuite;
     uint16 _lagacy_version;

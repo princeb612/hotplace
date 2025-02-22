@@ -445,7 +445,7 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     auto ver = tlsadvisor->tls_version_string(option.version);
     auto hint = tlsadvisor->hintof_cipher_suite(option.cipher_suite);
-    _test_case.begin("construct DTLS %s %s", ver.c_str(), hint->name_iana);
+    _test_case.begin("construct %s %s", ver.c_str(), hint->name_iana);
 
     return_t ret = errorcode_t::success;
 

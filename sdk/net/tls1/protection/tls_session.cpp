@@ -18,9 +18,15 @@
 namespace hotplace {
 namespace net {
 
-tls_session::tls_session() { _shared.make_share(this); }
+tls_session::tls_session() : _type(session_tls) { _shared.make_share(this); }
+
+tls_session::tls_session(session_type_t type) : _type(type) { _shared.make_share(this); }
 
 tls_protection& tls_session::get_tls_protection() { return _tls_protection; }
+
+void tls_session::set_type(session_type_t type) { _type = type; }
+
+session_type_t tls_session::get_type() { return _type; }
 
 tls_session::session_info& tls_session::get_session_info(tls_direction_t dir) { return _direction[dir]; }
 

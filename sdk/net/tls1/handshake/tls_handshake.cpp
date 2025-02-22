@@ -104,7 +104,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
         } else {
             ret = do_read_body(dir, stream, size, pos);
         }
-        if (errorcode_t::success != ret) {
+        if ((errorcode_t::success != ret) && (errorcode_t::no_more != ret)) {
             __leave2_trace(ret);
         }
         ret = do_postprocess(dir, stream, size);
@@ -245,15 +245,16 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
 
         if (istraceable()) {
             basic_stream dbs;
+            dbs.autoindent(1);
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            dbs.printf(" > handshake type 0x%02x(%i) (%s)\n", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+            dbs.printf("> handshake type 0x%02x(%i) (%s)\n", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
             dbs.printf(" > length 0x%06x(%i)\n", length, length);
             if (cond_dtls) {
                 dbs.printf(" > %s 0x%04x\n", constexpr_handshake_message_seq, dtls_seq);
                 dbs.printf(" > %s 0x%06x(%i)\n", constexpr_fragment_offset, fragment_offset, fragment_offset);
                 dbs.printf(" > %s 0x%06x(%i)\n", constexpr_fragment_len, fragment_len, fragment_len);
             }
-
+            dbs.autoindent(0);
             trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
     }

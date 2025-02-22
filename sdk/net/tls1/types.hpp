@@ -197,6 +197,7 @@ enum tls1_ext_type_t : uint16 {
     tls1_ext_external_session_id = 0x0038,                     // RFC 8844
     tls1_ext_quic_transport_parameters = 0x0039,               // RFC 9001, see quic_param_t
     tls1_ext_ticket_request = 0x003a,                          // RFC 9149 TLS Ticket Requests
+    tls1_ext_next_protocol_negotiation = 0x3374,
     tls1_ext_application_layer_protocol_settings = 0x4469,
     tls1_ext_alps = 0x4469,
     tls1_ext_encrypted_client_hello = 0xfe0d,
@@ -501,19 +502,23 @@ enum tls_secret_t : uint16 {
     tls_context_resumption_finished_key = (TLS_SECRET_USERCONTEXT | 0x0e),  // CH 0-RTT
     tls_context_resumption_finished = (TLS_SECRET_USERCONTEXT | 0x0f),      // CH 0-RTT
     tls_context_resumption_binder_hash = (TLS_SECRET_USERCONTEXT | 0x10),   // CH 0-RTT
-};
 
-enum tls_mode_t : uint8 {
-    tls_mode_client = (1 << 0),
-    tls_mode_server = (1 << 1),
-    tls_mode_tls = (1 << 2),
-    tls_mode_dtls = (1 << 3),
-    tls_mode_quic = (1 << 4),
+    tls_context_quic_dcid = (TLS_SECRET_USERCONTEXT | 0x11),
+    tls_context_quic_initial_secret = (TLS_SECRET_USERCONTEXT | 0x12),
+    tls_context_quic_initial_client_secret = (TLS_SECRET_USERCONTEXT | 0x13),
+    tls_context_quic_initial_server_secret = (TLS_SECRET_USERCONTEXT | 0x14),
+    tls_context_quic_initial_client_key = (TLS_SECRET_USERCONTEXT | 0x15),
+    tls_context_quic_initial_server_key = (TLS_SECRET_USERCONTEXT | 0x16),
+    tls_context_quic_initial_client_iv = (TLS_SECRET_USERCONTEXT | 0x17),
+    tls_context_quic_initial_server_iv = (TLS_SECRET_USERCONTEXT | 0x18),
+    tls_context_quic_initial_client_hp = (TLS_SECRET_USERCONTEXT | 0x19),
+    tls_context_quic_initial_server_hp = (TLS_SECRET_USERCONTEXT | 0x1a),
 };
 
 enum tls_direction_t {
-    from_client = 0,  // client -> server
-    from_server = 1,  // server -> client
+    from_unknown = 0,
+    from_client = 1,  // client -> server
+    from_server = 2,  // server -> client
 };
 
 enum tls_message_flow_t {

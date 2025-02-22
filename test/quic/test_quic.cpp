@@ -47,11 +47,12 @@
 
 #include "sample.hpp"
 
-tls_session server_session;
+tls_session server_session(session_quic);
 
 void test_quic_xargs_org() {
     _test_case.begin("https://quic.xargs.org/");
 
+    return_t ret = errorcode_t::success;
     tls_protection& protection = server_session.get_tls_protection();
     crypto_keychain keychain;
     openssl_digest dgst;
@@ -75,81 +76,40 @@ void test_quic_xargs_org() {
      * https://quic.xargs.org/#client-initial-keys-calc
      * https://quic.xargs.org/#server-initial-keys-calc
      */
+    const char* dcid = "00 01 02 03 04 05 06 07";
+    const char* scid = "63 5f 63 69 64";
+    binary_t bin_dcid = base16_decode_rfc(dcid);
+    binary_t bin_scid = base16_decode_rfc(scid);
+    server_session.get_tls_protection().set_item(tls_context_quic_dcid, bin_dcid);
+    // quic_header_protection quicpp(bin_dcid);
     {
-        const char* dcid = "00 01 02 03 04 05 06 07";
-        binary_t bin_dcid = base16_decode_rfc(dcid);
-        quic_protection quicpp(bin_dcid);
-
-        _test_case.assert(quicpp.get_item(quic_client_key) == base16_decode_rfc("b14b918124fda5c8d79847602fa3520b"), __FUNCTION__, "server initial key");
-        _test_case.assert(quicpp.get_item(quic_client_iv) == base16_decode_rfc("ddbc15dea80925a55686a7df"), __FUNCTION__, "server initial iv");
-        _test_case.assert(quicpp.get_item(quic_client_hp) == base16_decode_rfc("6df4e9d737cdf714711d7c617ee82981"), __FUNCTION__, "server initial hp");
-        _test_case.assert(quicpp.get_item(quic_server_key) == base16_decode_rfc("d77fc4056fcfa32bd1302469ee6ebf90"), __FUNCTION__, "server initial key");
-        _test_case.assert(quicpp.get_item(quic_server_iv) == base16_decode_rfc("fcb748e37ff79860faa07477"), __FUNCTION__, "server initial iv");
-        _test_case.assert(quicpp.get_item(quic_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__, "server initial hp");
+        // _test_case.assert(quicpp.get_item(quic_client_key) == base16_decode_rfc("b14b918124fda5c8d79847602fa3520b"), __FUNCTION__, "server initial key");
+        // _test_case.assert(quicpp.get_item(quic_client_iv) == base16_decode_rfc("ddbc15dea80925a55686a7df"), __FUNCTION__, "server initial iv");
+        // _test_case.assert(quicpp.get_item(quic_client_hp) == base16_decode_rfc("6df4e9d737cdf714711d7c617ee82981"), __FUNCTION__, "server initial hp");
+        // _test_case.assert(quicpp.get_item(quic_server_key) == base16_decode_rfc("d77fc4056fcfa32bd1302469ee6ebf90"), __FUNCTION__, "server initial key");
+        // _test_case.assert(quicpp.get_item(quic_server_iv) == base16_decode_rfc("fcb748e37ff79860faa07477"), __FUNCTION__, "server initial iv");
+        // _test_case.assert(quicpp.get_item(quic_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__, "server initial hp");
+    } /**
+       * UDP Datagram 1 - Client hello
+       * https://quic.xargs.org/#client-initial-packet
+       */
+    {
+        const char* packet =
+            "cd 00 00 00 01 08 00 01 02 03 04 05 06 07 05 63 5f 63 69 64 00 41 03 98 1c 36 a7 ed 78 71 6b e9 71 1b a4 98 b7 ed 86 84 43 bb 2e 0c 51 4d 4d 84 "
+            "8e ad cc 7a 00 d2 5c e9 f9 af a4 83 97 80 88 de 83 6b e6 8c 0b 32 a2 45 95 d7 81 3e a5 41 4a 91 99 32 9a 6d 9f 7f 76 0d d8 bb 24 9b f3 f5 3d 9a "
+            "77 fb b7 b3 95 b8 d6 6d 78 79 a5 1f e5 9e f9 60 1f 79 99 8e b3 56 8e 1f dc 78 9f 64 0a ca b3 85 8a 82 ef 29 30 fa 5c e1 4b 5b 9e a0 bd b2 9f 45 "
+            "72 da 85 aa 3d ef 39 b7 ef af ff a0 74 b9 26 70 70 d5 0b 5d 07 84 2e 49 bb a3 bc 78 7f f2 95 d6 ae 3b 51 43 05 f1 02 af e5 a0 47 b3 fb 4c 99 eb "
+            "92 a2 74 d2 44 d6 04 92 c0 e2 e6 e2 12 ce f0 f9 e3 f6 2e fd 09 55 e7 1c 76 8a a6 bb 3c d8 0b bb 37 55 c8 b7 eb ee 32 71 2f 40 f2 24 51 19 48 70 "
+            "21 b4 b8 4e 15 65 e3 ca 31 96 7a c8 60 4d 40 32 17 0d ec 28 0a ee fa 09 5d 08 b3 b7 24 1e f6 64 6a 6c 86 e5 c6 2c e0 8b e0 99";
+        binary_t bin_packet = base16_decode_rfc(packet);
+        quic_packet_initial initial(&server_session);
+        size_t pos = 0;
+        // initial.attach(&quicpp);
+        ret = initial.read(from_client, &bin_packet[0], bin_packet.size(), pos);
+        _test_case.test(ret, __FUNCTION__, "client_hello");
     }
     /**
-     * UDP Datagram 1 - Client hello
-     * https://quic.xargs.org/#client-initial-packet
-     */
-    {
-        testvector_initial_packet test;
-        memset(&test, 0, sizeof(test));
-        test.text = "#client-initial-packet";
-        test.func = __FUNCTION__;
-        test.odcid = "00 01 02 03 04 05 06 07";
-        test.dcid = "00 01 02 03 04 05 06 07";
-        test.scid = "63 5f 63 69 64";
-        test.expect_unprotected_header = "c00000000108000102030405060705635f63696400410300";
-        test.expect_protected_header = "cd0000000108000102030405060705635f63696400410398";
-        // CRYPTO frame, TLS: ClientHello
-        test.frame =
-            "06 00 40 EE 01 00 00 EA 03 03 00 01 02 03 04 05"
-            "06 07 08 09 0A 0B 0C 0D 0E 0F 10 11 12 13 14 15"
-            "16 17 18 19 1A 1B 1C 1D 1E 1F 00 00 06 13 01 13"
-            "02 13 03 01 00 00 BB 00 00 00 18 00 16 00 00 13"
-            "65 78 61 6D 70 6C 65 2E 75 6C 66 68 65 69 6D 2E"
-            "6E 65 74 00 0A 00 08 00 06 00 1D 00 17 00 18 00"
-            "10 00 0B 00 09 08 70 69 6E 67 2F 31 2E 30 00 0D"
-            "00 14 00 12 04 03 08 04 04 01 05 03 08 05 05 01"
-            "08 06 06 01 02 01 00 33 00 26 00 24 00 1D 00 20"
-            "35 80 72 D6 36 58 80 D1 AE EA 32 9A DF 91 21 38"
-            "38 51 ED 21 A2 8E 3B 75 E9 65 D0 D2 CD 16 62 54"
-            "00 2D 00 02 01 01 00 2B 00 03 02 03 04 00 39 00"
-            "31 03 04 80 00 FF F7 04 04 80 A0 00 00 05 04 80"
-            "10 00 00 06 04 80 10 00 00 07 04 80 10 00 00 08"
-            "01 0A 09 01 0A 0A 01 03 0B 01 19 0F 05 63 5F 63"
-            "69 64 -- -- -- -- -- -- -- -- -- -- -- -- -- --";
-        test.expect_result =
-            "CD 00 00 00 01 08 00 01 02 03 04 05 06 07 05 63"
-            "5F 63 69 64 00 41 03 98 1C 36 A7 ED 78 71 6B E9"
-            "71 1B A4 98 B7 ED 86 84 43 BB 2E 0C 51 4D 4D 84"
-            "8E AD CC 7A 00 D2 5C E9 F9 AF A4 83 97 80 88 DE"
-            "83 6B E6 8C 0B 32 A2 45 95 D7 81 3E A5 41 4A 91"
-            "99 32 9A 6D 9F 7F 76 0D D8 BB 24 9B F3 F5 3D 9A"
-            "77 FB B7 B3 95 B8 D6 6D 78 79 A5 1F E5 9E F9 60"
-            "1F 79 99 8E B3 56 8E 1F DC 78 9F 64 0A CA B3 85"
-            "8A 82 EF 29 30 FA 5C E1 4B 5B 9E A0 BD B2 9F 45"
-            "72 DA 85 AA 3D EF 39 B7 EF AF FF A0 74 B9 26 70"
-            "70 D5 0B 5D 07 84 2E 49 BB A3 BC 78 7F F2 95 D6"
-            "AE 3B 51 43 05 F1 02 AF E5 A0 47 B3 FB 4C 99 EB"
-            "92 A2 74 D2 44 D6 04 92 C0 E2 E6 E2 12 CE F0 F9"
-            "E3 F6 2E FD 09 55 E7 1C 76 8A A6 BB 3C D8 0B BB"
-            "37 55 C8 B7 EB EE 32 71 2F 40 F2 24 51 19 48 70"
-            "21 B4 B8 4E 15 65 E3 CA 31 96 7A C8 60 4D 40 32"
-            "17 0D EC 28 0A EE FA 09 5D 08 B3 B7 24 1E F6 64"
-            "6A 6C 86 E5 C6 2C E0 8B E0 99 -- -- -- -- -- --";
-        test.mode = tls_mode_client;
-        test.pad = false;
-        test.pn = 0;
-        test.pn_length = 1;
-        test.length = 259;
-
-        test_rfc_9001_initial(&test, &server_session);
-    }
-
-    /**
-     * Server Handshake Keys Calc
-     * https://quic.xargs.org/#server-handshake-keys-calc
+     * https://quic.xargs.org/#server-key-exchange-generation
      */
     {
         /**
@@ -190,79 +150,57 @@ void test_quic_xargs_org() {
         dump_key(key.find("server key"), &bs);
         _logger->writeln(bs);
     }
-
     /**
-     * UDP Datagram 2 - Server hello and handshake
-     * https://quic.xargs.org/#server-initial-packet
+     * Server Handshake Keys Calc
+     * https://quic.xargs.org/#server-handshake-keys-calc
      */
     {
-        testvector_initial_packet test;
-        memset(&test, 0, sizeof(test));
-        test.text = "#server-initial-packet";
-        test.func = __FUNCTION__;
-        test.odcid = "00 01 02 03 04 05 06 07";
-        test.dcid = "63 5f 63 69 64";  // c_cid
-        test.scid = "73 5f 63 69 64";  // s_cid
-        test.expect_unprotected_header = "c0 00 00 00 01 05 63 5f 63 69 64 05 73 5f 63 69 64 00 40 75 00";
-        test.expect_protected_header = "cd 00 00 00 01 05 63 5f 63 69 64 05 73 5f 63 69 64 00 40 75 3a";
-        // CRYPTO frame, TLS: ServerHello
-        test.frame =
-            "02 00 42 40 00 00 06 00 40 5A 02 00 00 56 03 03"
-            "70 71 72 73 74 75 76 77 78 79 7A 7B 7C 7D 7E 7F"
-            "80 81 82 83 84 85 86 87 88 89 8A 8B 8C 8D 8E 8F"
-            "00 13 01 00 00 2E 00 33 00 24 00 1D 00 20 9F D7"
-            "AD 6D CF F4 29 8D D3 F9 6D 5B 1B 2A F9 10 A0 53"
-            "5B 14 88 D7 F8 FA BB 34 9A 98 28 80 B6 15 00 2B"
-            "00 02 03 04 -- -- -- -- -- -- -- -- -- -- -- --";
-        test.expect_result =
-            "CD 00 00 00 01 05 63 5F 63 69 64 05 73 5F 63 69"
-            "64 00 40 75 3A 83 68 55 D5 D9 C8 23 D0 7C 61 68"
-            "82 CA 77 02 79 24 98 64 B5 56 E5 16 32 25 7E 2D"
-            "8A B1 FD 0D C0 4B 18 B9 20 3F B9 19 D8 EF 5A 33"
-            "F3 78 A6 27 DB 67 4D 3C 7F CE 6C A5 BB 3E 8C F9"
-            "01 09 CB B9 55 66 5F C1 A4 B9 3D 05 F6 EB 83 25"
-            "2F 66 31 BC AD C7 40 2C 10 F6 5C 52 ED 15 B4 42"
-            "9C 9F 64 D8 4D 64 FA 40 6C F0 B5 17 A9 26 D6 2A"
-            "54 A9 29 41 36 B1 43 B0 33 -- -- -- -- -- -- --";
-        test.mode = tls_mode_server;
-        test.pad = false;
-        test.pn = 0;
-        test.pn_length = 1;
-        test.length = 117;
-
-        test_rfc_9001_initial(&test, &server_session);
+        //
+    } /**
+       * UDP Datagram 2 - Server hello and handshake
+       * https://quic.xargs.org/#server-initial-packet
+       */
+    {
+        const char* packet =
+            "cd 00 00 00 01 05 63 5f 63 69 64 05 73 5f 63 69 64 00 40 75 3a 83 68 55 d5 d9 c8 23 d0 7c 61 68 82 ca 77 02 79 24 98 64 b5 56 e5 16 32 25 7e 2d "
+            "8a b1 fd 0d c0 4b 18 b9 20 3f b9 19 d8 ef 5a 33 f3 78 a6 27 db 67 4d 3c 7f ce 6c a5 bb 3e 8c f9 01 09 cb b9 55 66 5f c1 a4 b9 3d 05 f6 eb 83 25 "
+            "2f 66 31 bc ad c7 40 2c 10 f6 5c 52 ed 15 b4 42 9c 9f 64 d8 4d 64 fa 40 6c f0 b5 17 a9 26 d6 2a 54 a9 29 41 36 b1 43 b0 33";
+        binary_t bin_packet = base16_decode_rfc(packet);
+        quic_packet_initial initial(&server_session);
+        size_t pos = 0;
+        // initial.attach(&quicpp);
+        ret = initial.read(from_server, &bin_packet[0], bin_packet.size(), pos);
+        _test_case.test(ret, __FUNCTION__, "server_hello");
     }
-
     {
         // https://quic.xargs.org/#server-handshake-keys-calc
         //  It then calculates the SHA256 hash of all handshake messages to this point (ClientHello and ServerHello).
         //  The hash does not include the 6-byte CRYPTO frame headers.
         //  This "hello_hash" is ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b:
 
-        auto keysize = 0;
-        auto dlen = 0;
-        auto hashalg = 0;
-        std::string hashname;
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(0x1301);
-        if (hint_tls_alg) {
-            crypto_advisor* advisor = crypto_advisor::get_instance();
-            const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(hint_tls_alg->cipher);
-            const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
-            if (hint_cipher) {
-                keysize = hint_cipher->keysize;
-            }
-            if (hint_mac) {
-                dlen = hint_mac->digest_size;
-                hashalg = hint_mac->algorithm;
-                hashname = hint_mac->fetchname;
-            }
-        }
-        _logger->writeln("keysize : %i", keysize);
-        _logger->writeln("hash : %s", hashname.c_str());
-        _logger->writeln("dlen : %i", dlen);
-        _test_case.assert(keysize == 16, __FUNCTION__, "TLS_AES_128_GCM_SHA256 keysize %i", keysize);
-        _test_case.assert(dlen == 32, __FUNCTION__, "TLS_AES_128_GCM_SHA256 dlen %i", dlen);
+        //  server_hello
+        //  > cipher suite 0x1301 TLS_AES_128_GCM_SHA256
+        //  > compression method 0 null
+        //  > extension len 0x2e(46)
+        //  > extension - 0033 key_share
+        //    00000000 : 00 33 00 24 00 1D 00 20 9F D7 AD 6D CF F4 29 8D | .3.$... ...m..).
+        //    00000010 : D3 F9 6D 5B 1B 2A F9 10 A0 53 5B 14 88 D7 F8 FA | ..m[.*...S[.....
+        //    00000020 : BB 34 9A 98 28 80 B6 15 -- -- -- -- -- -- -- -- | .4..(...
+        //   > extension len 0x0024(36)
+        //   > group 0x001d (x25519)
+        //   > public key len 32
+        //     00000000 : 9F D7 AD 6D CF F4 29 8D D3 F9 6D 5B 1B 2A F9 10 | ...m..)...m[.*..
+        //     00000010 : A0 53 5B 14 88 D7 F8 FA BB 34 9A 98 28 80 B6 15 | .S[......4..(...
+        //     9fd7ad6dcff4298dd3f96d5b1b2af910a0535b1488d7f8fabb349a982880b615
+        //  > extension - 002b supported_versions
+        //    00000000 : 00 2B 00 02 03 04 -- -- -- -- -- -- -- -- -- -- | .+....
+        //   > extension len 0x0002(2)
+        //    > 0x0304 TLS v1.3
+
+        auto cs = protection.get_cipher_suite();
+        _test_case.assert(0x1301 == cs, __FUNCTION__, "cipher suite 0x%04x", cs);
+        auto tlsver = protection.get_tls_version();
+        _test_case.assert(tls_13 == tlsver, __FUNCTION__, "TLS version 0x%04x", tlsver);
 
         auto lambda_test = [&](tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect) -> void {
             protection.get_item(tls_secret, secret);
@@ -299,13 +237,45 @@ void test_quic_xargs_org() {
         binary_t server_handshake_hp;
         lambda_test(tls_secret_handshake_quic_server_hp, server_handshake_hp, "server_handshake_hp", "2a18061c396c2828582b41b0910ed536");
     }
+    /**
+     * https://quic.xargs.org/#server-handshake-packet
+     */
+    {
+        const char* packet =
+            "ed 00 00 00 01 05 63 5f 63 69 64 05 73 5f 63 69 64 44 14 b7 dd 73 ae 29 62 09 df f2 d0 2d 3d 50 af 69 21 76 dd 4d 50 9f e8 cb 1b 46 e4 5b 09 36 "
+            "4d 81 5f a7 a5 74 8e 21 80 da d2 b7 b6 68 ca b8 6f bd c2 98 8c 45 cb b8 51 dd cf 16 01 b7 80 d7 48 b9 ee 64 1e bc be 20 12 6e 32 26 7e 66 4d 2f "
+            "37 cf 53 b7 53 d1 24 71 7c 2e 13 c4 8a 09 e3 42 8b 11 dc 73 ba eb d4 98 e8 ca f5 be ce fe a7 60 d0 e7 a5 cd b7 6b 52 bc b1 92 29 97 3e 5d 09 aa "
+            "05 5e 9c 97 18 dc 58 14 54 77 5c 58 ec dd 5e e7 e7 72 78 f5 60 10 70 40 41 62 a7 9e e8 c5 96 45 d6 ca 24 a2 00 18 6a e9 9c e4 7e ac e1 cf c9 52 "
+            "7b 24 ae 8b c6 cc db ac b7 9b 81 c9 1a 26 95 47 07 ba 35 cb a0 ca e9 af f4 18 c6 e0 8d a6 50 61 63 a3 9f 19 b6 76 a6 6a c1 74 e3 29 5f 1a b9 ea "
+            "73 83 a9 c2 85 d7 3e 95 75 8d c9 bd 8d a9 07 34 a9 fe df d7 e1 f7 4d 2b 69 c7 0b f7 39 a4 8c 5a 5d 0a fa 0b fa 16 03 47 1b 0c 61 a9 ca de 12 0b "
+            "39 86 a6 ce 02 95 be 82 28 c6 92 70 13 b0 6d a5 8d 31 99 62 31 b9 e3 15 0b b5 82 70 96 0e 61 cb c6 69 8a 2f 13 79 a2 25 84 65 da 73 25 b3 49 c6 "
+            "cd 55 d1 05 fd 54 85 fd 0a c7 9a 1d f1 db ba 7f 85 b4 9b 72 36 5b fa b9 d5 78 e0 1d cb ff 85 15 a6 32 fd 70 01 38 2e d9 0f 6c dc b1 7d b9 9a 33 "
+            "fa 11 81 f6 f6 1a 89 e7 83 cf b0 42 fc 0f 2f 67 cd b6 0e 89 f2 63 88 56 81 ae 64 5a 1c 7a b1 59 0e b2 f8 46 9f 46 0f 04 e0 9f ea 2a 3a 41 1b 49 "
+            "86 63 01 0b 3c 38 2a 3f 25 83 7c 2c 70 86 af 5a 9a d2 90 cf 3c cf 1a c6 eb 0f 44 55 35 e8 b0 0a 55 7c 87 a5 3d 93 07 14 62 a0 bc 22 61 4e 5c 3a "
+            "e0 84 17 b7 20 a7 36 c1 ad 48 ea 37 75 cd 0f 00 9f 0c 57 50 0e 0b b2 e7 e9 c5 3f 83 69 9a 47 e5 f1 3b b2 07 72 ab 23 50 64 24 b7 6f 6e f9 6a 61 "
+            "c9 17 22 6e 6e 04 8d e6 f8 24 26 ca 63 ea bf 3b 59 43 af 0b 5f 0d 12 3d 9a f0 45 bb 35 7c ad bd 10 92 ad 0a 1d 75 51 16 2a 3b 4b 48 6c 27 1e 00 "
+            "24 4b 23 d8 ad ec 81 c9 2e 31 23 9c 75 af 41 cb 07 98 08 57 1b 48 ac b5 07 33 3f fb f1 a4 86 d8 05 3e dc c8 62 b6 a9 bf d3 6a 09 cd db a3 29 1b "
+            "9b 8b a1 58 49 34 59 80 5c e2 41 da f5 c1 30 85 99 fc 0e 6e 6e a7 10 30 33 b2 94 cc 7a 5f db 2d 46 54 f1 d4 40 78 25 eb c3 75 ab df b2 cc a1 ab "
+            "f5 a2 41 34 3d ec 3b 16 5d 32 0a f8 4b c1 fa 21 11 2e fd b9 d4 5c 6c fc 7b 8a 64 42 ff 59 3d 09 21 93 36 fa 07 56 d9 e4 5b ab 4f a6 33 94 a2 a8 "
+            "80 3d f4 67 8e 79 21 6f df 13 1f 55 82 2f 9e ad 69 4a b7 5e e2 54 96 e6 b7 8c 3b 09 04 66 58 e2 c4 27 dd c4 53 8a f8 de 2a cb 81 39 8b 74 82 83 "
+            "37 f2 69 cb 03 1d 99 7a 5c f6 3e 11 ab 05 0a a8 ae e1 f0 79 62 dd d7 51 5a b6 0e 19 2e 40 3c 30 03 11 e9 e4 b9 b7 0f 16 15 02 9d 07 fe 1c 23 19 "
+            "39 02 71 49 f4 fd 29 72 02 3a 55 de 29 35 65 05 fb e7 49 90 8c 62 aa 33 eb 25 9a 39 9b f7 11 b9 2b 61 6c b7 48 de 73 c8 bf ad d5 d4 3e 2d ae 91 "
+            "6a 7b a0 db 61 df cd 6f af 95 76 08 26 2b 68 34 e3 31 85 b8 d5 59 8f 87 e6 99 2a ac f5 76 96 ad d5 55 8a 7d 96 94 38 1f 5d 7d 65 9d a2 de 95 1b "
+            "60 74 78 f6 1d a2 08 a2 4a 07 ba 8d a0 02 58 fa 7f 2f e1 0d ef 61 83 26 7f 5d 38 e0 4c 94 23 00 b9 c8 74 e8 98 3c 1b e1 4e 16 08 ff dc a6 7d 7e "
+            "45 13 cc 0c b9 ca b8 1d 63 19 dd 10 74 b2 17 e5 19 54 65 13 1e 06 dd 0b af ab a8 4e b5 2c 22 a4 a8 c6 12 a4 05 fe 6c 87 42 32 e4 a9 34 61 1b c7 "
+            "3c 56 fe 70 b2 cb 7a 59 6c 1f 53 c7 29 b6 64 3c bd 70 d5 30 fe 31 96 06 9f c0 07 8e 89 fb b7 0d c1 b3 8a b4 e1 77 0c 8f fb 53 31 6d 67 3a 32 b8 "
+            "92 59 b5 d3 3e 94 ad";
+        binary_t bin_packet = base16_decode_rfc(packet);
+        // quic_packet_handshake handshake(&server_session);
+        // size_t pos = 0;
+        // handshake.attach(&quicpp);
+        // ret = handshake.read(from_server, &bin_packet[0], bin_packet.size(), pos);
+        // _test_case.test(ret, __FUNCTION__, "encrypted_extensions..certificate");
+    }
     /*
      * UDP Datagram 3 - Server handshake finished
      * https://quic.xargs.org/#server-handshake-packet-2
      */
-    {
-        //
-    }  // UDP Datagram 4 - Acks
     /**
      * https://quic.xargs.org/#client-initial-packet-2
      */

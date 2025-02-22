@@ -70,10 +70,10 @@ return_t tls_extension_client_supported_versions::do_read_body(const byte_t* str
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.printf(" > %s %i\n", constexpr_versions, count);
+            dbs.printf("    > %s %i\n", constexpr_versions, count);
             int i = 0;
             for (auto ver : _versions) {
-                dbs.printf("   [%i] 0x%04x %s\n", i++, ver, tlsadvisor->tls_version_string(ver).c_str());
+                dbs.printf("      [%i] 0x%04x %s\n", i++, ver, tlsadvisor->tls_version_string(ver).c_str());
             }
 
             trace_debug_event(category_tls1, tls_event_read, &dbs);
@@ -151,7 +151,7 @@ return_t tls_extension_server_supported_versions::do_read_body(const byte_t* str
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.printf(" > 0x%04x %s\n", version, tlsadvisor->tls_version_string(version).c_str());
+            dbs.printf("    > 0x%04x %s\n", version, tlsadvisor->tls_version_string(version).c_str());
 
             trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
@@ -192,8 +192,13 @@ uint16 tls_extension_server_supported_versions::get_version() {
 tls_extension_server_supported_versions& tls_extension_server_supported_versions::set(uint16 code) {
     auto session = get_session();
     if (session) {
-        auto& protection = session->get_tls_protection();
-        protection.set_tls_version(code);
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+        auto hint = tlsadvisor->hintof_tls_version(code);
+        if (hint->support) {
+            auto& protection = session->get_tls_protection();
+            protection.set_tls_version(code);
+        }
     }
     return *this;
 }

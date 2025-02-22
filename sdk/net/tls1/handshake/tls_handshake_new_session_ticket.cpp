@@ -33,7 +33,7 @@ return_t tls_handshake_new_session_ticket::do_postprocess(tls_direction_t dir, c
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
 
-        { protection.calc_transcript_hash(session, stream + hspos, get_size()); }
+        { protection.update_transcript_hash(session, stream + hspos, get_size()); }
     }
     __finally2 {
         // do nothing

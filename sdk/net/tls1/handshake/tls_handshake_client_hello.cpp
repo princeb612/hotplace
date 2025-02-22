@@ -105,11 +105,11 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 } break;
                 case tls_0_rtt: {
                     protection.reset_transcript_hash(session);
-                    protection.calc_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
+                    protection.update_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
                     ret = protection.calc(session, tls_hs_client_hello, dir);
                 } break;
                 case tls_hello_retry_request: {
-                    protection.calc_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
+                    protection.update_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
                 } break;
             }
 

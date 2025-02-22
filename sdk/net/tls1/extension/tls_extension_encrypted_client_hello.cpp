@@ -67,14 +67,14 @@ return_t tls_extension_encrypted_client_hello::do_read_body(const byte_t* stream
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.printf(" > %s %i\n", constexpr_client_hello_type, client_hello_type);
-            dbs.printf(" > %s %i %s\n", constexpr_kdf, kdf, tlsadvisor->kdf_id_string(kdf).c_str());
-            dbs.printf(" > %s %i %s\n", constexpr_aead, aead, tlsadvisor->aead_alg_string(aead).c_str());
-            dbs.printf(" > %s %i\n", constexpr_config_id, config_id);
-            dbs.printf(" > %s %i\n", constexpr_enc_len, enc_len);
-            dump_memory(enc, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.printf(" > %s %i\n", constexpr_payload_len, enc_payload_len);
-            dump_memory(enc_payload, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.printf("   > %s %i\n", constexpr_client_hello_type, client_hello_type);
+            dbs.printf("   > %s %i %s\n", constexpr_kdf, kdf, tlsadvisor->kdf_id_string(kdf).c_str());
+            dbs.printf("   > %s %i %s\n", constexpr_aead, aead, tlsadvisor->aead_alg_string(aead).c_str());
+            dbs.printf("   > %s %i\n", constexpr_config_id, config_id);
+            dbs.printf("   > %s %i\n", constexpr_enc_len, enc_len);
+            dump_memory(enc, &dbs, 16, 4, 0x0, dump_notrunc);
+            dbs.printf("   > %s %i\n", constexpr_payload_len, enc_payload_len);
+            dump_memory(enc_payload, &dbs, 16, 4, 0x0, dump_notrunc);
 
             trace_debug_event(category_tls1, tls_event_read, &dbs);
         }

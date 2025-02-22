@@ -127,12 +127,13 @@ return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t siz
 
         if (istraceable()) {
             basic_stream dbs;
-            dbs.printf(" > %s 0x%04x(%i)\n", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
-            dump_memory(psk_identity, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.printf(" > %s 0x%08x\n", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
-            dbs.printf(" > %s 0x%04x(%i)\n", constexpr_psk_binders_len, psk_binders_len, psk_binders_len);
-            dbs.printf(" > %s 0x%04x(%i)\n", constexpr_psk_binder_len, psk_binder_len, psk_binder_len);
-            dbs.printf(" > %s %s \e[1;33m%s\e[0m\n", constexpr_psk_binder, base16_encode(psk_binder).c_str(), (errorcode_t::success == ret) ? "true" : "false");
+            dbs.printf("   > %s 0x%04x(%i)\n", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
+            dump_memory(psk_identity, &dbs, 16, 4, 0x0, dump_notrunc);
+            dbs.printf("   > %s 0x%08x\n", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
+            dbs.printf("   > %s 0x%04x(%i)\n", constexpr_psk_binders_len, psk_binders_len, psk_binders_len);
+            dbs.printf("   > %s 0x%04x(%i)\n", constexpr_psk_binder_len, psk_binder_len, psk_binder_len);
+            dbs.printf("   > %s %s \e[1;33m%s\e[0m\n", constexpr_psk_binder, base16_encode(psk_binder).c_str(),
+                       (errorcode_t::success == ret) ? "true" : "false");
 
             trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
@@ -170,7 +171,7 @@ return_t tls_extension_server_psk::do_read_body(const byte_t* stream, size_t siz
 
         if (istraceable()) {
             basic_stream dbs;
-            dbs.printf(" > %s %i\n", constexpr_selected_identity, selected_identity);
+            dbs.printf("   > %s %i\n", constexpr_selected_identity, selected_identity);
 
             trace_debug_event(category_tls1, tls_event_read, &dbs);
         }

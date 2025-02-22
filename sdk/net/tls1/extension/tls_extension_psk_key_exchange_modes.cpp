@@ -55,15 +55,13 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(const byte_t* stream
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.printf(" > %s\n", constexpr_modes);
+            dbs.printf("   > %s\n", constexpr_modes);
             int i = 0;
             for (auto m : _modes) {
-                dbs.printf("   [%i] %i %s\n", i++, m, tlsadvisor->psk_key_exchange_mode_name(m).c_str());
+                dbs.printf("     [%i] %i %s\n", i++, m, tlsadvisor->psk_key_exchange_mode_name(m).c_str());
             }
             trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
-
-        {}
     }
     __finally2 {
         // do nothing

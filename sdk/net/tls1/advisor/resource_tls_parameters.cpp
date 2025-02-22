@@ -159,15 +159,19 @@ define_tls_sizeof_variable(sig_alg_code);
  * DO NOT USE if pri 0
  */
 const tls_sig_scheme_t tls_sig_schemes[] = {
-    {0x0201, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha1, "rsa_pkcs1_sha1"},                // RFC 9155
-    {0x0203, 0, kty_ec, crypt_sig_ecdsa, 0, sig_sha1, "ecdsa_sha1"},                                   // RFC 9155
-    {0x0401, 2, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha256, "rsa_pkcs1_sha256"},            // RFC 8446 9.1 MUST
+    {0x0201, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha1, "rsa_pkcs1_sha1"},  // RFC 9155
+    {0x0202, 0, kty_dh, crypt_sig_dsa, NID_dhKeyAgreement, sig_sha1, "dsa_sha1_RESERVED"},
+    {0x0203, 0, kty_ec, crypt_sig_ecdsa, 0, sig_sha1, "ecdsa_sha1"},                         // RFC 9155
+    {0x0401, 2, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha256, "rsa_pkcs1_sha256"},  // RFC 8446 9.1 MUST
+    {0x0402, 0, kty_dh, crypt_sig_dsa, NID_dhKeyAgreement, sig_sha256, "dsa_sha256_RESERVED"},
     {0x0403, 2, kty_ec, crypt_sig_ecdsa, NID_X9_62_prime256v1, sig_sha256, "ecdsa_secp256r1_sha256"},  // RFC 8446 9.1 MUST, RFC 8446 11 Recommended
     {0x0420, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha256, "rsa_pkcs1_sha256_legacy"},
     {0x0501, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha384, "rsa_pkcs1_sha384"},
+    {0x0502, 0, kty_dh, crypt_sig_dsa, NID_dhKeyAgreement, sig_sha384, "dsa_sha384_RESERVED"},
     {0x0503, 1, kty_ec, crypt_sig_ecdsa, NID_secp384r1, sig_sha384, "ecdsa_secp384r1_sha384"},  // RFC 8446 11 Recommended
     {0x0520, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha384, "rsa_pkcs1_sha384_legacy"},
     {0x0601, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha512, "rsa_pkcs1_sha512"},
+    {0x0602, 0, kty_dh, crypt_sig_dsa, NID_dhKeyAgreement, sig_sha512, "dsa_sha512_RESERVED"},
     {0x0603, 0, kty_ec, crypt_sig_ecdsa, NID_secp521r1, sig_sha512, "ecdsa_secp521r1_sha512"},
     {0x0620, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha512, "rsa_pkcs1_sha512_legacy"},
     {0x0704, 0, kty_unknown, crypt_sig_unknown, 0, sig_sha256, "eccsi_sha256"},
@@ -193,10 +197,6 @@ const tls_sig_scheme_t tls_sig_schemes[] = {
     {0x081a, 0, kty_ec, crypt_sig_ecdsa, NID_brainpoolP256r1, sig_sha256, "ecdsa_brainpoolP256r1tls13_sha256"},
     {0x081b, 0, kty_ec, crypt_sig_ecdsa, NID_brainpoolP384r1, sig_sha384, "ecdsa_brainpoolP384r1tls13_sha384"},
     {0x081c, 0, kty_ec, crypt_sig_ecdsa, NID_brainpoolP512r1, sig_sha512, "ecdsa_brainpoolP512r1tls13_sha512"},
-    {0x0202, 0, kty_dh, crypt_sig_dsa, NID_dhKeyAgreement, sig_sha1, "dsa_sha1_RESERVED"},
-    {0x0402, 0, kty_dh, crypt_sig_dsa, NID_dhKeyAgreement, sig_sha256, "dsa_sha256_RESERVED"},
-    {0x0502, 0, kty_dh, crypt_sig_dsa, NID_dhKeyAgreement, sig_sha384, "dsa_sha384_RESERVED"},
-    {0x0602, 0, kty_dh, crypt_sig_dsa, NID_dhKeyAgreement, sig_sha512, "dsa_sha512_RESERVED"},
 };
 define_tls_sizeof_variable(sig_scheme);
 

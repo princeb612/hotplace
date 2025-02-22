@@ -47,7 +47,7 @@ struct testvector_initial_packet {
     const char* expect_protected_header;
     const char* frame;
     const char* expect_result;
-    tls_mode_t mode;
+    tls_direction_t dir;
     bool pad;
     size_t resize;
     uint32 pn;
@@ -64,7 +64,7 @@ struct testvector_retry_packet {
     const char* token;
     const char* expect_result;
     const char* expect_tag;
-    tls_mode_t mode;
+    tls_direction_t dir;
 };
 
 void test_rfc_9000_a1();

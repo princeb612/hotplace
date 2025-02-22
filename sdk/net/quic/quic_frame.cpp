@@ -77,9 +77,12 @@ return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size
                 //   Type (i) = 0x00,
                 // }
                 // Figure 23: PADDING Frame Format
+#if 0
                 if (istraceable(category_quic)) {
                     dbs.printf("  > frame %s @%zi\n", constexpr_frame_padding, begin);
+                    trace_debug_event(category_quic, quic_event_dump, &dbs);
                 }
+#endif
                 break;
             // RFC 9001 19.2.  PING Frames
             case quic_frame_ping:
@@ -89,6 +92,7 @@ return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size
                 // Figure 24: PING Frame Format
                 if (istraceable(category_quic)) {
                     dbs.printf("  > frame %s @%zi\n", constexpr_frame_ping, begin);
+                    trace_debug_event(category_quic, quic_event_dump, &dbs);
                 }
                 break;
             // RFC 9001 19.3.  ACK Frames
@@ -186,6 +190,10 @@ return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size
                         dbs.printf("    > %s %I64i\n", constexpr_ectce_count, ectce_count);
                     }
                 }
+
+                if (istraceable(category_quic)) {
+                    trace_debug_event(category_quic, quic_event_dump, &dbs);
+                }
             } break;
             // 19.4.  RESET_STREAM Frames
             case quic_frame_reset_stream: {
@@ -213,6 +221,7 @@ return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size
                     dbs.printf("   > %s %I64i\n", constexpr_stream_id, stream_id);
                     dbs.printf("   > %s %I64i\n", constexpr_error_code, error_code);
                     dbs.printf("   > %s %I64i\n", constexpr_final_size, final_size);
+                    trace_debug_event(category_quic, quic_event_dump, &dbs);
                 }
             } break;
             // 19.5.  STOP_SENDING Frames
@@ -235,6 +244,7 @@ return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size
                     dbs.printf("  > frame %s @%zi\n", constexpr_frame_stop_sending, begin);
                     dbs.printf("   > %s %I64i\n", constexpr_stream_id, stream_id);
                     dbs.printf("   > %s %I64i\n", constexpr_error_code, error_code);
+                    trace_debug_event(category_quic, quic_event_dump, &dbs);
                 }
             } break;
             // 19.6.  CRYPTO Frames
@@ -267,6 +277,7 @@ return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size
                     dbs.printf("   > %s %I64i\n", constexpr_length, length);
                     dbs.printf("   > %s (%zi)\n", constexpr_crypto_data, crypto_data.size());
                     dump_memory(crypto_data, &dbs, 16, 5, 0x0, dump_notrunc);
+                    trace_debug_event(category_quic, quic_event_dump, &dbs);
                 }
 
                 size_t hpos = 0;
@@ -293,6 +304,7 @@ return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size
                     dbs.printf("  > frame %s @%zi\n", constexpr_frame_new_token, begin);
                     dbs.printf("   > %s (%zi)\n", constexpr_token, token.size());
                     dump_memory(token, &dbs, 16, 5, 0x0, dump_notrunc);
+                    trace_debug_event(category_quic, quic_event_dump, &dbs);
                 }
             } break;
             // 19.8.  STREAM Frames
@@ -353,9 +365,6 @@ return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size
             default:
                 ret = errorcode_t::unknown;
                 break;
-        }
-        if (istraceable(category_quic)) {
-            trace_debug_event(category_quic, quic_event_read, &dbs);
         }
     }
     __finally2 {

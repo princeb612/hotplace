@@ -665,7 +665,7 @@ void test_case::report_unittest(basic_stream& stream) {
         stream << " " << _total._count_low_security;
     }
     stream << "\n";
-    stream.fill(80, '=');
+    stream.fill(80, '-');
     stream << "\n";
     if (_total._count_fail) {
         constexpr char constexpr_testfail[] = "TEST FAILED";

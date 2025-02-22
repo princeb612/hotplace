@@ -9,20 +9,28 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
+#include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-quic_packet_initial::quic_packet_initial() : quic_packet(quic_packet_type_initial), _length(0) {}
+quic_packet_initial::quic_packet_initial(tls_session* session) : quic_packet(quic_packet_type_initial, session), _length(0) {}
 
 quic_packet_initial::quic_packet_initial(const quic_packet_initial& rhs) : quic_packet(rhs), _token(rhs._token), _length(rhs._length) {}
 
-return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& pos, uint32 mode) {
+return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = quic_packet::read(stream, size, pos);
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        ret = quic_packet::read(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -37,7 +45,7 @@ return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& po
         byte_t ht = stream[0];
 
         // RFC 9001 5.4.2.  Header Protection Sample
-        uint8 pn_length = mode ? 4 : get_pn_length(stream[0]);
+        uint8 pn_length = dir ? 4 : get_pn_length(stream[0]);
 
         constexpr char constexpr_token[] = "token";
         constexpr char constexpr_len[] = "len";
@@ -60,10 +68,10 @@ return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& po
         pl.select(constexpr_payload)->get_variant().to_binary(_payload);
         pl.select(constexpr_tag)->get_variant().to_binary(bin_tag);
 
-        if (mode) {
+        if (dir) {
             binary_t bin_mask;
-            get_protection()->hpmask(mode, &_payload[0], 16, bin_mask);
-            get_protection()->hpencode(mode, bin_mask, _ht, bin_pn);  // update ht
+            hpmask(dir, &_payload[0], 16, bin_mask);
+            hpencode(bin_mask, _ht, bin_pn);  // update ht
 
             // Packet Number Length = 2
             // PN1 PN2 PN3 PN4 | PL1 PL2 ...
@@ -84,15 +92,32 @@ return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& po
             _pn = t_binary_to_integer<uint32>(bin_pn);
 
             // unprotected header
-            write(bin_unprotected_header);
+            write(from_unknown, bin_unprotected_header);
 
             // AEAD
             binary_t bin_decrypted;
-            ret = get_protection()->decrypt(mode, _pn, _payload, bin_decrypted, bin_unprotected_header, bin_tag);
-            if (errorcode_t::success == ret) {
-                _payload = std::move(bin_decrypted);
-            } else {
-                _payload.clear();
+            {
+                // ret = get_protection()->decrypt(dir, _pn, _payload, bin_decrypted, bin_unprotected_header, bin_tag);
+
+                auto& protection = session->get_tls_protection();
+                protection.set_item(tls_context_quic_dcid, get_dcid());
+                protection.calc(session, tls_hs_client_hello, dir);
+
+                size_t pos = 0;
+                ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_decrypted, bin_unprotected_header, bin_tag);
+                if (errorcode_t::success == ret) {
+                    _payload = std::move(bin_decrypted);
+                } else {
+                    _payload.clear();
+                }
+            }
+
+            dump();
+
+            {
+                size_t pos = 0;
+                while (errorcode_t::success == quic_dump_frame(session, &_payload[0], _payload.size(), pos)) {
+                };
             }
         }
     }
@@ -102,7 +127,7 @@ return_t quic_packet_initial::read(const byte_t* stream, size_t size, size_t& po
     return ret;
 }
 
-return_t quic_packet_initial::write(binary_t& packet, uint32 mode) {
+return_t quic_packet_initial::write(tls_direction_t dir, binary_t& packet) {
     return_t ret = errorcode_t::success;
     __try2 {
         binary_t header;
@@ -111,7 +136,7 @@ return_t quic_packet_initial::write(binary_t& packet, uint32 mode) {
 
         packet.clear();
 
-        ret = write(header, encrypted, tag, mode);
+        ret = write(dir, header, encrypted, tag);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -126,9 +151,15 @@ return_t quic_packet_initial::write(binary_t& packet, uint32 mode) {
     return ret;
 }
 
-return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binary_t& tag, uint32 mode) {
+return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binary_t& encrypted, binary_t& tag) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
         binary_t bin_unprotected_header;
         binary_t bin_protected_header;
         uint8 pn_length = 0;
@@ -141,7 +172,7 @@ return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binar
 
         // unprotected header
         {
-            ret = quic_packet::write(bin_unprotected_header, mode);
+            ret = quic_packet::write(dir, bin_unprotected_header);
 
             // protected header
             bin_protected_header = bin_unprotected_header;
@@ -168,12 +199,12 @@ return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binar
          *  in sampling header ciphertext for header protection, the Packet Number field is
          *  assumed to be 4 bytes long (its maximum possible encoded length).
          */
-        if (mode && get_protection() && (get_payload().size() >= 0x10)) {
+        if (dir && (get_payload().size() >= 0x10)) {
             binary_t bin_encrypted;
             binary_t bin_tag;
 
             // AEAD
-            { get_protection()->encrypt(mode, _pn, get_payload(), bin_encrypted, bin_unprotected_header, bin_tag); }
+            session->get_tls_protection().encrypt(session, dir, get_payload(), bin_encrypted, bin_unprotected_header, bin_tag);
 
             // Header Protection
             {
@@ -183,8 +214,8 @@ return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binar
 
                 // calcurate mask
                 binary_t bin_mask;
-                get_protection()->hpmask(mode, &bin_encrypted[adj], 0x10, bin_mask);
-                get_protection()->hpencode(mode, bin_mask, ht, bin_pn);  // do not update ht
+                hpmask(dir, &bin_encrypted[adj], 0x10, bin_mask);
+                hpencode(bin_mask, ht, bin_pn);  // do not update ht
                 // encode packet length
                 bin_protected_header[0] = ht;
                 bin_pn.resize(pn_length);
@@ -201,6 +232,13 @@ return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binar
             header = std::move(bin_protected_header);
             encrypted = std::move(bin_encrypted);
             tag = std::move(bin_tag);
+
+            dump();
+
+            auto session = get_session();
+            size_t pos = 0;
+            while (errorcode_t::success == quic_dump_frame(session, &_payload[0], _payload.size(), pos)) {
+            };
         } else {
             header = std::move(bin_unprotected_header);
         }
@@ -211,20 +249,26 @@ return_t quic_packet_initial::write(binary_t& header, binary_t& encrypted, binar
     return ret;
 }
 
-void quic_packet_initial::dump(stream_t* s) {
-    if (s) {
-        quic_packet::dump(s);
+void quic_packet_initial::dump() {
+    if (istraceable()) {
+        quic_packet::dump();
+
+        auto session = get_session();
+        basic_stream dbs;
+
         // token
-        s->printf(" > token (len %zi)\n", _token.size());
-        dump_memory(_token, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+        dbs.printf(" > token (len %zi)\n", _token.size());
+        dump_memory(_token, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
         // length = packet number + payload
         auto len = get_length();
-        s->printf(" > length %I64i\n", len);
+        dbs.printf(" > length %I64i\n", len);
         // packet number
-        s->printf(" > packet number %08x\n", get_pn());
+        dbs.printf(" > packet number %08x\n", get_pn());
         // payload
-        s->printf(" > payload (len %zi)\n", _payload.size());
-        dump_memory(_payload, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+        dbs.printf(" > payload (len %zi)\n", _payload.size());
+        dump_memory(_payload, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+
+        trace_debug_event(category_quic, quic_event_dump, &dbs);
     }
 }
 

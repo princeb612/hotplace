@@ -43,8 +43,8 @@ return_t tls_extension_alpn::do_read_body(const byte_t* stream, size_t size, siz
 
         if (istraceable()) {
             basic_stream dbs;
-            dbs.printf(" > %s %i\n", constexpr_alpn_len, alpn_len);
-            dump_memory(protocols, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.printf("   > %s %i\n", constexpr_alpn_len, alpn_len);
+            dump_memory(protocols, &dbs, 16, 5, 0x0, dump_notrunc);
 
             trace_debug_event(category_tls1, tls_event_read, &dbs);
         }
@@ -60,9 +60,19 @@ return_t tls_extension_alpn::do_read_body(const byte_t* stream, size_t size, siz
     return ret;
 }
 
-return_t tls_extension_alpn::do_write_body(binary_t& bin) { return errorcode_t::not_supported; }
+return_t tls_extension_alpn::do_write_body(binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    {
+        payload pl;
+        pl << new payload_member(uint16(_protocols.size()), true, constexpr_alpn_len) << new payload_member(_protocols, constexpr_protocol);
+        pl.write(bin);
+    }
+    return ret;
+}
 
 const binary_t& tls_extension_alpn::get_protocols() { return _protocols; }
+
+void tls_extension_alpn::set_protocols(const binary_t& protocols) { _protocols = protocols; }
 
 }  // namespace net
 }  // namespace hotplace

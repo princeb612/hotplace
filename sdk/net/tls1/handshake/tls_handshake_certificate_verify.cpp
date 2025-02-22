@@ -11,6 +11,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
 #include <sdk/crypto/crypto/transcript_hash.hpp>
@@ -27,6 +28,8 @@ constexpr char constexpr_signature_alg[] = "signature algorithm";
 constexpr char constexpr_len[] = "len";
 constexpr char constexpr_signature[] = "signature";
 
+static return_t construct_certificate_verify_message(tls_session* session, tls_direction_t dir, basic_stream& message);
+
 tls_handshake_certificate_verify::tls_handshake_certificate_verify(tls_session* session) : tls_handshake(tls_hs_certificate_verify, session) {}
 
 return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
@@ -36,7 +39,7 @@ return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, c
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
 
-        protection.calc_transcript_hash(session, stream + hspos, get_size());
+        protection.update_transcript_hash(session, stream + hspos, get_size());
     }
     __finally2 {
         // do nothing
@@ -64,7 +67,7 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
         auto sign = builder.set_tls_sign_scheme(scheme).build();
         if (sign) {
             basic_stream tosign;
-            protection.construct_certificate_verify_message(dir, tosign);
+            construct_certificate_verify_message(session, dir, tosign);
 
             ret = sign->sign(pkey, tosign.data(), tosign.size(), signature);
 
@@ -76,7 +79,7 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
                 case kty_ec: {
                     // reform R || S to ASN.1 DER
                     binary_t ecdsa_sig = std::move(signature);
-                    protection.reform_ecdsa_signature(scheme, ecdsa_sig, signature);
+                    sig2der(ecdsa_sig, signature);
                 } break;
             }
 
@@ -120,8 +123,20 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
             case kty_okp: {
             } break;
             case kty_ec: {
+                crypto_advisor* advisor = crypto_advisor::get_instance();
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                auto hint = tlsadvisor->hintof_signature_scheme(scheme);
+                auto sig = hint->sig;
+                uint32 unitsize = 0;
+
+                // B-163, B-233, B-283, B-409, B-571
+                // K-163, K-233, B-283, K-409, K-571
+                // P-192, P-224, P-256, K-384, K-521
+                // secp160r1, secp256k1
+                unitsize = advisor->sizeof_ecdsa(sig) >> 1;
+
                 binary_t ecdsa_sig;
-                protection.get_ecdsa_signature(scheme, signature, ecdsa_sig);
+                der2sig(signature, unitsize, ecdsa_sig);
                 signature = std::move(ecdsa_sig);
             } break;
         }
@@ -141,7 +156,7 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
              */
 
             basic_stream tosign;
-            protection.construct_certificate_verify_message(dir, tosign);
+            construct_certificate_verify_message(session, dir, tosign);
 
             ret = sign->verify(pkey, tosign.data(), tosign.size(), signature);
 
@@ -249,6 +264,38 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
         pl << new payload_member(uint16(scheme), true, constexpr_signature_alg) << new payload_member(uint16(signature.size()), true, constexpr_len)
            << new payload_member(signature, constexpr_signature);
         pl.write(bin);
+    }
+    __finally2 {}
+    return ret;
+}
+
+static return_t construct_certificate_verify_message(tls_session* session, tls_direction_t dir, basic_stream& message) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto& protection = session->get_tls_protection();
+
+        binary_t transcripthash;
+        auto hash = protection.get_transcript_hash();  // hash(client_hello .. certificate)
+        if (hash) {
+            hash->digest(transcripthash);
+            hash->release();
+        }
+
+        constexpr char constexpr_context_server[] = "TLS 1.3, server CertificateVerify";
+        constexpr char constexpr_context_client[] = "TLS 1.3, client CertificateVerify";
+        message.fill(64, 0x20);  // octet 32 (0x20) repeated 64 times
+        if (from_server == dir) {
+            message << constexpr_context_server;  // context string
+        } else {
+            message << constexpr_context_client;
+        }
+        message.fill(1, 0x00);                                     // single 0 byte
+        message.write(&transcripthash[0], transcripthash.size());  // content to be signed
     }
     __finally2 {}
     return ret;

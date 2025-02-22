@@ -71,6 +71,7 @@ enum category_tls_event_t {
 enum category_quic_event_t {
     quic_event_read = 1,
     quic_event_write = 2,
+    quic_event_dump = 3,
 };
 
 /**

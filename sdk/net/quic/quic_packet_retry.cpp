@@ -36,34 +36,37 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
 
 namespace hotplace {
 namespace net {
 
-quic_packet_retry::quic_packet_retry() : quic_packet(quic_packet_type_retry) {}
+quic_packet_retry::quic_packet_retry(tls_session* session) : quic_packet(quic_packet_type_retry, session) {}
 
 quic_packet_retry::quic_packet_retry(const quic_packet_retry& rhs)
     : quic_packet(rhs), _retry_token(rhs._retry_token), _retry_integrity_tag(rhs._retry_integrity_tag) {}
 
-return_t quic_packet_retry::read(const byte_t* stream, size_t size, size_t& pos, uint32 mode) {
+return_t quic_packet_retry::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = quic_packet::read(stream, size, pos, mode);
+        ret = quic_packet::read(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        // size_t initial_offset = pos;
+        {
+            payload pl;
+            pl << new payload_member(binary_t(), "retry token") << new payload_member(binary_t(), "retry integrity tag");
+            pl.select("retry integrity tag")->reserve(128 >> 3);
+            pl.read(stream, size, pos);
 
-        payload pl;
-        pl << new payload_member(binary_t(), "retry token") << new payload_member(binary_t(), "retry integrity tag");
-        pl.select("retry integrity tag")->reserve(128 >> 3);
-        pl.read(stream, size, pos);
+            pl.select("retry token")->get_variant().to_binary(_retry_token);
+            pl.select("retry integrity tag")->get_variant().to_binary(_retry_integrity_tag);
+        }
 
-        pl.select("retry token")->get_variant().to_binary(_retry_token);
-        pl.select("retry integrity tag")->get_variant().to_binary(_retry_integrity_tag);
+        dump();
     }
     __finally2 {
         // do nothing
@@ -71,34 +74,42 @@ return_t quic_packet_retry::read(const byte_t* stream, size_t size, size_t& pos,
     return ret;
 }
 
-return_t quic_packet_retry::write(binary_t& packet, uint32 mode) {
+return_t quic_packet_retry::write(tls_direction_t dir, binary_t& packet) {
     return_t ret = errorcode_t::success;
-    ret = quic_packet::write(packet, mode);
+    ret = quic_packet::write(dir, packet);
 
     binary_t bin_integrity_tag;
 
-    if (mode && get_protection()) {
-        ret = get_protection()->retry_integrity_tag(*this, bin_integrity_tag);
+    if (dir) {
+        ret = retry_integrity_tag(*this, bin_integrity_tag);
         if (errorcode_t::success == ret) {
             _retry_integrity_tag = std::move(bin_integrity_tag);
         }
     }
 
-    payload pl;
-    pl << new payload_member(_retry_token, "retry token") << new payload_member(_retry_integrity_tag, "retry integrity tag");
-    pl.write(packet);
+    {
+        payload pl;
+        pl << new payload_member(_retry_token, "retry token") << new payload_member(_retry_integrity_tag, "retry integrity tag");
+        pl.write(packet);
+    }
+
+    dump();
 
     return ret;
 }
 
-void quic_packet_retry::dump(stream_t* s) {
-    if (s) {
-        quic_packet::dump(s);
+void quic_packet_retry::dump() {
+    if (istraceable()) {
+        quic_packet::dump();
 
-        s->printf(" > retry token\n");
-        dump_memory(_retry_token, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
-        s->printf(" > retry integrity tag\n");
-        dump_memory(_retry_integrity_tag, s, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+        basic_stream dbs;
+
+        dbs.printf(" > retry token %s\n", base16_encode(_retry_token).c_str());
+        // dump_memory(_retry_token, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+        dbs.printf(" > retry integrity tag\n", base16_encode(_retry_integrity_tag).c_str());
+        // dump_memory(_retry_integrity_tag, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+
+        trace_debug_event(category_quic, quic_event_dump, &dbs);
     }
 }
 

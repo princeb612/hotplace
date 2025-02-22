@@ -82,7 +82,7 @@ return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, const by
         auto& protection = session->get_tls_protection();
         auto hssize = get_size();
 
-        protection.calc_transcript_hash(session, stream + hspos, hssize);
+        protection.update_transcript_hash(session, stream + hspos, hssize);
     }
     __finally2 {
         // do nothing

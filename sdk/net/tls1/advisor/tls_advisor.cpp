@@ -155,14 +155,10 @@ void tls_advisor::load_tls_version() {
     //   5.1.  Record Layer
     //   9.2.  Mandatory-to-Implement Extensions
 
-    _tls_version.insert({0x0304, "TLS v1.3"});
-    _tls_version.insert({0x0303, "TLS v1.2"});  // RFC 5246 A.1.  Record Layer
-    _tls_version.insert({0xfefc, "DTLS 1.3"});
-    _tls_version.insert({0xfefd, "DTLS 1.2"});
-
-    // deprecated
-    _tls_version.insert({0x0302, "TLS v1.1"});  // RFC 4346 A.1. Record Layer
-    _tls_version.insert({0x0301, "TLS v1.0"});  // RFC 2246 A.1. Record layer
+    for (auto i = 0; i < sizeof_tls_version_hint; i++) {
+        auto item = tls_version_hint + i;
+        _tls_version.insert({item->code, item});
+    }
 }
 
 const tls_cipher_suite_t* tls_advisor::hintof_cipher_suite(uint16 code) {
@@ -454,11 +450,21 @@ std::string tls_advisor::aead_alg_string(uint16 code) {
 
 // etc
 
+const tls_version_hint_t* tls_advisor::hintof_tls_version(uint16 code) {
+    const tls_version_hint_t* hint = nullptr;
+    auto iter = _tls_version.find(code);
+    if (_tls_version.end() != iter) {
+        hint = iter->second;
+    }
+    return hint;
+}
+
 std::string tls_advisor::tls_version_string(uint16 code) {
     std::string value;
     auto iter = _tls_version.find(code);
     if (_tls_version.end() != iter) {
-        value = iter->second;
+        auto item = iter->second;
+        value = item->name;
     }
     return value;
 }

@@ -25,6 +25,7 @@ class tls_extension_alpn : public tls_extension {
     tls_extension_alpn(tls_session* session);
 
     const binary_t& get_protocols();
+    void set_protocols(const binary_t& protocols);
 
    protected:
     virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);

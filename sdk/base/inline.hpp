@@ -316,6 +316,31 @@ static inline std::wstring concat_filepath(const std::wstring& path, const std::
     return result;
 }
 
+/**
+ * @brief xor
+ * @param byte_t* target [inout] sizeof target >= len
+ * @paramconst byte_t* mask [in] sizeof mask >= len
+ */
+static inline return_t memxor(byte_t* target, const byte_t* mask, size_t len) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if ((nullptr == target) || (nullptr == mask)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        for (auto i = 0; i < len; i++) {
+            target[i] ^= mask[i];
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+static inline return_t memxor(binary_t& target, const binary_t& mask, size_t len) { return memxor(&target[0], &mask[0], len); }
+
 }  // namespace hotplace
 
 #endif

@@ -52,7 +52,7 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
         auto& protection = session->get_tls_protection();
 
         {
-            protection.calc_transcript_hash(session, stream + hspos, get_size());
+            protection.update_transcript_hash(session, stream + hspos, get_size());
 
             // from_server : application, exporter related
             // from_client : resumption related

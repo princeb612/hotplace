@@ -21,7 +21,7 @@ namespace hotplace {
 namespace net {
 
 class quic_frame;
-class quic_protection;
+class quic_header_protection;
 class quic_packet;
 class quic_packet_version_negotiation;
 class quic_packet_initial;

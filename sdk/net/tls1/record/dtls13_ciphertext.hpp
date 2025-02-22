@@ -31,8 +31,6 @@ class dtls13_ciphertext : public tls_record {
     virtual return_t do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
-    return_t aes128_ecb_encrypt_1block(tls_direction_t dir, const byte_t* stream, size_t size, binary_t& ciphertext);
-
     binary_t _cid;
     uint16 _sequence;
     uint8 _sequence_len;

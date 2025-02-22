@@ -23,7 +23,7 @@
 namespace hotplace {
 namespace net {
 
-constexpr char constexpr_content_type[] = "content type";
+constexpr char constexpr_content_type[] = "record content type";
 constexpr char constexpr_legacy_version[] = "legacy record version";
 constexpr char constexpr_len[] = "len";
 constexpr char constexpr_application_data[] = "application data";
@@ -217,14 +217,13 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             auto const& range = get_header_range();
 
             // dbs.printf("# TLS Record\n");
-            // dump_memory(stream + range.begin, range.end - range.begin + get_body_size(), &dbs, 16, 3, 0x00, dump_notrunc);
-            dbs.printf("> content type 0x%02x(%i) (%s)\n", content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
-            dbs.printf("> %s 0x%04x (%s)\n", constexpr_legacy_version, legacy_version, tlsadvisor->tls_version_string(legacy_version).c_str());
+            dbs.printf("> %s 0x%02x(%i) (%s)\n", constexpr_content_type, content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
+            dbs.printf(" > %s 0x%04x (%s)\n", constexpr_legacy_version, legacy_version, tlsadvisor->tls_version_string(legacy_version).c_str());
             if (is_dtls()) {
-                dbs.printf("> %s 0x%04x\n", constexpr_key_epoch, key_epoch);
-                dbs.printf("> %s %s\n", constexpr_dtls_record_seq, base16_encode(dtls_record_seq).c_str());
+                dbs.printf(" > %s 0x%04x\n", constexpr_key_epoch, key_epoch);
+                dbs.printf(" > %s %s\n", constexpr_dtls_record_seq, base16_encode(dtls_record_seq).c_str());
             }
-            dbs.printf("> %s 0x%04x(%i)\n", constexpr_len, len, len);
+            dbs.printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
 
             trace_debug_event(category_tls1, tls_event_read, &dbs);
         }

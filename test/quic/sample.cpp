@@ -140,6 +140,8 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
+    test_quic_xargs_org();
+
     // RFC 9000 Appendix A.  Pseudocode
 
     test_rfc_9000_a1();
@@ -156,8 +158,6 @@ int main(int argc, char** argv) {
     test_rfc_9001_a3();
     test_rfc_9001_a4();
     test_rfc_9001_a5();
-
-    test_quic_xargs_org();
 
     openssl_cleanup();
 
