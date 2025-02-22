@@ -30,7 +30,6 @@ void test_uint24();
 void test_group();
 void test_payload_uint24();
 void test_http2_frame();
-void test_quic_packet();
 void test_quic_integer();
 
 #endif

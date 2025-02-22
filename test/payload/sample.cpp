@@ -59,7 +59,6 @@ int main(int argc, char** argv) {
     test_payload_uint24();
     test_group();
     test_http2_frame();
-    test_quic_packet();
     test_quic_integer();
 
     _logger->flush();

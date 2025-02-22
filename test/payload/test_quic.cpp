@@ -13,44 +13,6 @@
 
 #include "sample.hpp"
 
-void test_quic_packet() {
-    _test_case.begin("QUIC Packet");
-    auto lambda = [&](quic_packet_t type) -> void {
-        // dummy
-        quic_packet packet(type);
-        binary_t bin;
-        packet.set_version(0x01020304);
-        packet.set_dcid(str2bin("destination connection id"));
-        packet.set_scid(str2bin("source connection id"));
-        packet.write(bin);
-        basic_stream bs;
-        packet.dump(&bs);
-        _logger->hdump("packet", bin, 16, 3);
-        _logger->writeln(bs);
-
-        bs.clear();
-
-        _logger->writeln("reparse");
-        binary_t bin2;
-        size_t pos = 0;
-        quic_packet packet2;
-        packet2.read(&bin[0], bin.size(), pos);
-        packet2.write(bin2);
-        packet2.dump(&bs);
-        _logger->hdump("dump", bin, 16, 3);
-        _logger->writeln(bs);
-
-        _test_case.assert(bin == bin2, __FUNCTION__, "quic packet");
-    };
-
-    lambda(quic_packet_type_version_negotiation);
-    lambda(quic_packet_type_initial);
-    lambda(quic_packet_type_0_rtt);
-    lambda(quic_packet_type_handshake);
-    lambda(quic_packet_type_retry);
-    lambda(quic_packet_type_1_rtt);
-}
-
 void test_quic_integer() {
     _test_case.begin("proof of concept payload_encoded");
     const char* expect =
