@@ -1,8 +1,31 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
- * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @file    {file}
+ * @author  Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *          RFC 9000 17.2.2.  Initial Packet
+ *            Initial Packet {
+ *              Header Form (1) = 1,
+ *              Fixed Bit (1) = 1,
+ *              Long Packet Type (2) = 0,
+ *              Reserved Bits (2),
+ *              Packet Number Length (2),
+ *              Version (32),
+ *              Destination Connection ID Length (8),
+ *              Destination Connection ID (0..160),
+ *              Source Connection ID Length (8),
+ *              Source Connection ID (0..160),
+ *
+ *              Token Length (i),
+ *              Token (..),
+ *              Length (i),
+ *              Packet Number (8..32),
+ *              Packet Payload (8..),
+ *            }
+ *
+ *                                Figure 15: Initial Packet
+ *
+ *          RFC 9001 5.4.2.  Header Protection Sample
  *
  * Revision History
  * Date         Name                Description
@@ -12,7 +35,11 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
+#include <sdk/net/quic/quic_encoded.hpp>
+#include <sdk/net/quic/quic_frame.hpp>
+#include <sdk/net/quic/quic_packet.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
+#include <sdk/net/tls1/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -31,6 +58,7 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
         }
 
         auto& protection = session->get_tls_protection();
+        auto tagsize = protection.get_tag_size();
 
         ret = quic_packet::read(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
@@ -60,7 +88,7 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
            << new payload_member(binary_t(), constexpr_pn) << new payload_member(binary_t(), constexpr_payload)
            << new payload_member(binary_t(), constexpr_tag);
         pl.select(constexpr_pn)->reserve(pn_length);
-        pl.select(constexpr_tag)->reserve(16);
+        pl.select(constexpr_tag)->reserve(tagsize);
         pl.read(stream, size, pos);
 
         pl.select(constexpr_token)->get_payload_encoded()->get_variant().to_binary(_token);
@@ -172,6 +200,7 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
         }
 
         auto& protection = session->get_tls_protection();
+        auto tagsize = protection.get_tag_size();
 
         binary_t bin_unprotected_header;
         binary_t bin_protected_header;
@@ -188,7 +217,7 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
 
             // packet number length + payload size + AEAD tag size
             pn_length = get_pn_length();
-            len = pn_length + get_payload().size() + 16;
+            len = pn_length + get_payload().size() + tagsize;
 
             // packet number
             binary_load(bin_pn, pn_length, _pn, hton32);
@@ -298,7 +327,12 @@ quic_packet_initial& quic_packet_initial::set_token(const binary_t& token) {
 
 const binary_t& quic_packet_initial::get_token() { return _token; }
 
-uint64 quic_packet_initial::get_length() { return get_pn_length() + _payload.size() + 16; }
+uint64 quic_packet_initial::get_length() {
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto tagsize = protection.get_tag_size();
+    return get_pn_length() + _payload.size() + tagsize;
+}
 
 }  // namespace net
 }  // namespace hotplace

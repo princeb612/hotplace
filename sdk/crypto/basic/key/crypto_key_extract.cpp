@@ -117,7 +117,15 @@ return_t crypto_key::extract_rsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
         RSA_get0_key(rsa, &n, &e, &d);
 
         if (crypt_access_t::asn1public_key & flags) {
-            // RFC 3279 Algorithms and Identifiers for the Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+            /**
+             * RFC 3279 Algorithms and Identifiers for the Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+             * 2.3.1  RSA Keys
+             * The RSA public key MUST be encoded using the ASN.1 type RSAPublicKey:
+             *
+             *    RSAPublicKey ::= SEQUENCE {
+             *       modulus            INTEGER,    -- n
+             *       publicExponent     INTEGER  }  -- e
+             */
             binary_t bin_pub;
             get_asn1public_key(pkey, bin_pub);
             datamap.insert(std::make_pair(crypt_item_t::item_asn1der, bin_pub));
@@ -367,6 +375,10 @@ return_t crypto_key::extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
 
         DH_get0_key(dh, &bn_pub, &bn_priv);
 
+        /**
+         * RFC 3279 Algorithms and Identifiers for the Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+         * 2.3.3  Diffie-Hellman Key Exchange Keys
+         */
         if (crypt_access_t::asn1public_key & flags) {
             binary_t bin_pub;
             get_asn1public_key(pkey, bin_pub);
@@ -423,6 +435,10 @@ return_t crypto_key::extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
         DSA_get0_pqg(dsa, &bn_p, &bn_q, &bn_g);
         DSA_get0_key(dsa, &bn_y, &bn_x);
 
+        /**
+         * RFC 3279 Algorithms and Identifiers for the Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+         * 2.3.2  DSA Signature Keys
+         */
         if (crypt_access_t::asn1public_key & flags) {
             binary_t bin_pub;
             get_asn1public_key(pkey, bin_pub);

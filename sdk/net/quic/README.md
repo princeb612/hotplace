@@ -1,4 +1,71 @@
-#### RC 9001
+#### RFC 9000
+
+```
+   Client                                                  Server
+
+   Initial[0]: CRYPTO[CH] ->
+
+                                    Initial[0]: CRYPTO[SH] ACK[0]
+                          Handshake[0]: CRYPTO[EE, CERT, CV, FIN]
+                                    <- 1-RTT[0]: STREAM[1, "..."]
+
+   Initial[1]: ACK[0]
+   Handshake[0]: CRYPTO[FIN], ACK[0]
+   1-RTT[0]: STREAM[0, "..."], ACK[0] ->
+
+                                             Handshake[1]: ACK[0]
+            <- 1-RTT[1]: HANDSHAKE_DONE, STREAM[3, "..."], ACK[0]
+
+                     Figure 5: Example 1-RTT Handshake
+```
+
+```
+   Client                                                  Server
+
+   Initial[0]: CRYPTO[CH]
+   0-RTT[0]: STREAM[0, "..."] ->
+
+                                    Initial[0]: CRYPTO[SH] ACK[0]
+                                     Handshake[0] CRYPTO[EE, FIN]
+                             <- 1-RTT[0]: STREAM[1, "..."] ACK[0]
+
+   Initial[1]: ACK[0]
+   Handshake[0]: CRYPTO[FIN], ACK[0]
+   1-RTT[1]: STREAM[0, "..."] ACK[0] ->
+
+                                             Handshake[1]: ACK[0]
+            <- 1-RTT[1]: HANDSHAKE_DONE, STREAM[3, "..."], ACK[1]
+
+                     Figure 6: Example 0-RTT Handshake
+```
+
+```
+   Client                                                  Server
+
+   Initial: DCID=S1, SCID=C1 ->
+                                     <- Initial: DCID=C1, SCID=S3
+                                ...
+   1-RTT: DCID=S3 ->
+                                                <- 1-RTT: DCID=C1
+
+               Figure 7: Use of Connection IDs in a Handshake
+```
+
+```
+   Client                                                  Server
+
+   Initial: DCID=S1, SCID=C1 ->
+                                       <- Retry: DCID=C1, SCID=S2
+   Initial: DCID=S2, SCID=C1 ->
+                                     <- Initial: DCID=C1, SCID=S3
+                                ...
+   1-RTT: DCID=S3 ->
+                                                <- 1-RTT: DCID=C1
+
+         Figure 8: Use of Connection IDs in a Handshake with Retry
+```
+
+#### RFC 9001
 
 ```
    +------------+                               +------------+

@@ -66,6 +66,7 @@ enum category_http2_push_event_t {
 enum category_tls_event_t {
     tls_event_read = 1,
     tls_event_write = 2,
+    tls_event_dump = 3,
 };
 
 enum category_quic_event_t {

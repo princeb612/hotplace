@@ -162,7 +162,7 @@ flowchart LR
   - [x] encoder
   - [x] static table
   - [x] dynamic table
-- TLS (understanding record, handshake, extension)
+- [ ] TLS (understanding record, handshake, extension)
   - [x] tls13.xargs.org
   - [x] tls12.xargs.org
   - [x] dtls.xargs.org
@@ -239,20 +239,18 @@ sub-tasks
 - [ ] br(Brotli), zstd(Zstandard) HTTP encoding
 - [ ] HTTP/2 Authentication Scheme
 
-### summary
+## summary
 
-#### 2025
 ```mermaid
 journey
   title 2025
   section 2025.01
     TLS:3:github
   section 2025.02
-    TLS:3:github
+    TLS, QUIC:3:github
     Zelda TOTK 100%/100%:5:game
 ```
 
-#### 2024
 ```mermaid
 journey
   title 2024
@@ -282,12 +280,11 @@ journey
     TLS:3:github
 ```
 
-#### 2023
 ```mermaid
 journey
   title 2023
   section 2023.07~08
-    Zelda BOW, TOTK:5:game
+    Zelda BOTW, TOTK:5:game
   section 2023.09
     CBOR:3:github
   section 2023.10~12

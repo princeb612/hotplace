@@ -78,6 +78,7 @@ tls_handshake* tls_handshake::read(tls_session* session, tls_direction_t dir, co
 
 return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
+    std::queue<return_t> errorstack;
     __try2 {
         auto session = get_session();
         if (nullptr == session) {
@@ -105,16 +106,22 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             ret = do_read_body(dir, stream, size, pos);
         }
         if ((errorcode_t::success != ret) && (errorcode_t::no_more != ret)) {
-            __leave2_trace(ret);
+            errorstack.push(ret);
         }
         ret = do_postprocess(dir, stream, size);
         if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
+            errorstack.push(ret);
         }
 
         pos = offsetof_header() + sizeof(tls_handshake_t) + get_body_size();
 
         session->run_scheduled(dir);
+
+        while (false == errorstack.empty()) {
+            auto code = errorstack.front();
+            errorstack.pop();
+            trace_backtrace(code);
+        }
     }
     __finally2 {
         // do nothing

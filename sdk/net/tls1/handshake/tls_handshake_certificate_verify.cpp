@@ -135,8 +135,19 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
                 // secp160r1, secp256k1
                 unitsize = advisor->sizeof_ecdsa(sig) >> 1;
 
+                /**
+                 * RFC 3279 2.2.3 ECDSA Signature Algorithm
+                 * When signing, the ECDSA algorithm generates two values.  These values
+                 * are commonly referred to as r and s.  To easily transfer these two
+                 * values as one signature, they MUST be ASN.1 encoded using the
+                 * following ASN.1 structure:
+                 *
+                 *    Ecdsa-Sig-Value  ::=  SEQUENCE  {
+                 *         r     INTEGER,
+                 *         s     INTEGER  }
+                 */
                 binary_t ecdsa_sig;
-                der2sig(signature, unitsize, ecdsa_sig);
+                der2sig(signature, unitsize, ecdsa_sig);  // ASN.1 DER to familiar R || S
                 signature = std::move(ecdsa_sig);
             } break;
         }

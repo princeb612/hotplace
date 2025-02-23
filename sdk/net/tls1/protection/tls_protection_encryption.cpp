@@ -40,10 +40,6 @@ return_t tls_protection::get_cipher_info(tls_session *session, crypt_algorithm_t
 
         auto cs = get_cipher_suite();
 
-        if ((0 == cs) && (session_quic == session_type)) {
-            cs = 0x1301;  // TLS_AES_128_GCM_SHA256
-        }
-
         const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
         if (nullptr == hint) {
             ret = errorcode_t::not_supported;
@@ -749,10 +745,18 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
                         }
                     }
                 } else if (session_quic == session_type) {
-                    if (from_server == dir) {
-                        secret_key = tls_context_quic_initial_server_hp;
+                    if (tls_hs_server_hello == hsstatus) {
+                        if (from_server == dir) {
+                            secret_key = tls_secret_handshake_quic_server_hp;
+                        } else {
+                            secret_key = tls_secret_handshake_quic_client_hp;
+                        }
                     } else {
-                        secret_key = tls_context_quic_initial_client_hp;
+                        if (from_server == dir) {
+                            secret_key = tls_context_quic_initial_server_hp;
+                        } else {
+                            secret_key = tls_context_quic_initial_client_hp;
+                        }
                     }
                 } else {
                     ret = errorcode_t::not_supported;
@@ -760,11 +764,21 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
                 }
 
                 auto const &key = get_item(secret_key);
-                ret = cipher->encrypt(key, binary_t(), stream, (size > blocksize) ? blocksize : size, mask);
+                auto samplesize = (size > blocksize) ? blocksize : size;
+                ret = cipher->encrypt(key, binary_t(), stream, samplesize, mask);
+
+                mask.resize(masklen);
+
+                if (istraceable()) {
+                    basic_stream dbs;
+                    dbs.printf("> protection\n");
+                    dbs.printf(" > key[%08x] %s\n", key, base16_encode(key).c_str());
+                    dbs.printf(" > sample %s\n", base16_encode(stream, samplesize).c_str());
+                    dbs.printf(" > mask %s\n", base16_encode(mask).c_str());
+                    trace_debug_event(category_tls1, tls_event_dump, &dbs);
+                }
             }
         }
-
-        mask.resize(masklen);
     }
     __finally2 {
         if (cipher) {

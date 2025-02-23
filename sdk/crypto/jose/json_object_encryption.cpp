@@ -74,7 +74,12 @@ return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, jwa_
     return ret;
 }
 
-return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, std::list<jwa_t> algs, const binary_t &input, std::string &output,
+return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, jwa_t alg, const std::string &input, std::string &output,
+                                         jose_serialization_t type) {
+    return encrypt(handle, enc, alg, str2bin(input), output, type);
+}
+
+return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, const std::list<jwa_t> &jwalgs, const binary_t &input, std::string &output,
                                          jose_serialization_t type) {
     return_t ret = errorcode_t::success;
     json_object_encryption::composer composer;
@@ -87,6 +92,8 @@ return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, std:
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
+        std::list<jwa_t> algs = jwalgs;
 
         for (std::list<jwa_t>::iterator it = algs.begin(); it != algs.end();) {
             if (jwa_t::jwa_dir == *it || jwa_t::jwa_ecdh_es == *it) {
@@ -131,6 +138,11 @@ return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, std:
     }
     __finally2 { json_object_signing_encryption::clear_context(handle); }
     return ret;
+}
+
+return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, const std::list<jwa_t> &algs, const std::string &input, std::string &output,
+                                         jose_serialization_t type) {
+    return encrypt(handle, enc, algs, str2bin(input), output, type);
 }
 
 return_t json_object_encryption::decrypt(jose_context_t *handle, const std::string &input, binary_t &output, bool &result) {

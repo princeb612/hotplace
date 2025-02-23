@@ -13,6 +13,8 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
+#include <sdk/net/quic/quic_encoded.hpp>
+#include <sdk/net/quic/quic_frame.hpp>
 #include <sdk/net/tls1/tls.hpp>
 
 namespace hotplace {
@@ -281,7 +283,8 @@ return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size
                 }
 
                 size_t hpos = 0;
-                tls_dump_handshake(session, &crypto_data[0], crypto_data.size(), hpos, dir);
+                while (errorcode_t::success == tls_dump_handshake(session, &crypto_data[0], crypto_data.size(), hpos, dir)) {
+                }
             } break;
             // 19.7.  NEW_TOKEN Frames
             case quic_frame_new_token: {

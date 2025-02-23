@@ -67,6 +67,9 @@
 
 /* quic */
 #include <sdk/net/quic/quic.hpp>
+#include <sdk/net/quic/quic_encoded.hpp>
+#include <sdk/net/quic/quic_frame.hpp>
+#include <sdk/net/quic/quic_packet.hpp>
 
 /* server */
 #include <sdk/net/server/network_protocol.hpp>

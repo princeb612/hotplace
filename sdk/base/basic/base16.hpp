@@ -124,6 +124,7 @@ std::string base16_encode(const binary_t& source);
  * @param   const char* source [in]
  */
 std::string base16_encode(const char* source);
+std::string base16_encode(const byte_t* source, size_t size);
 /**
  * @brief   encode
  * @param   const char* source [in]

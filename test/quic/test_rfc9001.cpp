@@ -55,10 +55,7 @@ void test_rfc_9001_section4() {
     // studying ...
 }
 
-void test_rfc_9001_a1() {
-    _test_case.begin("RFC 9001 A.1.  Keys");
-    openssl_kdf kdf;
-
+void test_rfc_9001_prepare_a1() {
     // RFC 9001 5.2.  Initial Secrets
     const char* initial_salt = "0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a";
 
@@ -69,20 +66,28 @@ void test_rfc_9001_a1() {
 
     {
         auto& protection = server_session.get_tls_protection();
+        protection.set_cipher_suite(0x1301);
         protection.set_item(tls_context_quic_dcid, bin_dcid);
         protection.calc(&server_session, tls_hs_client_hello, from_client);
     }
 
     {
         auto& protection = client_session.get_tls_protection();
+        protection.set_cipher_suite(0x1301);
         protection.set_item(tls_context_quic_dcid, bin_dcid);
         protection.calc(&server_session, tls_hs_client_hello, from_client);
     }
 
+    _logger->hdump("> DCID", bin_dcid, 16, 3);
+}
+
+void test_rfc_9001_a1() {
+    _test_case.begin("RFC 9001 A.1.  Keys");
+
+    test_rfc_9001_prepare_a1();
+
     {
         auto& protection = server_session.get_tls_protection();
-
-        _logger->hdump("> DCID", bin_dcid, 16, 3);
 
         auto lambda_test = [&](const char* func, const char* text, const binary_t& bin_expect_result, const binary_t& bin_expect) -> void {
             // _logger->hdump(format("> %s", text), bin_expect_result, 16, 3);

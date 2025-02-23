@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_QUIC__
-#define __HOTPLACE_SDK_NET_QUIC__
+#ifndef __HOTPLACE_SDK_NET_QUIC_FRAMES__
+#define __HOTPLACE_SDK_NET_QUIC_FRAMES__
 
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/types.hpp>

@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_QUIC__
-#define __HOTPLACE_SDK_NET_QUIC__
+#ifndef __HOTPLACE_SDK_NET_QUIC_FRAME__
+#define __HOTPLACE_SDK_NET_QUIC_FRAME__
 
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/types.hpp>
@@ -32,7 +32,15 @@
 namespace hotplace {
 namespace net {
 
-//
+/**
+ * @brief   read
+ * @param   tls_session* session [in]
+ * @param   const byte_t** stream [in]
+ * @param   size_t size [in]
+ * @param   size_t& pos [inout]
+ */
+return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
+return_t quic_dump_frame(tls_session* session, const binary_t frame, size_t& pos, tls_direction_t dir = from_server);
 
 }  // namespace net
 }  // namespace hotplace

@@ -54,6 +54,8 @@ void test_quic_xargs_org() {
 
     return_t ret = errorcode_t::success;
     tls_protection& protection = server_session.get_tls_protection();
+    protection.set_cipher_suite(0x1301);
+
     crypto_keychain keychain;
     openssl_digest dgst;
     openssl_kdf kdf;
@@ -273,16 +275,29 @@ void test_quic_xargs_org() {
             "3c 56 fe 70 b2 cb 7a 59 6c 1f 53 c7 29 b6 64 3c bd 70 d5 30 fe 31 96 06 9f c0 07 8e 89 fb b7 0d c1 b3 8a b4 e1 77 0c 8f fb 53 31 6d 67 3a 32 b8 "
             "92 59 b5 d3 3e 94 ad";
         binary_t bin_packet = base16_decode_rfc(packet);
-        // quic_packet_handshake handshake(&server_session);
-        // size_t pos = 0;
-        // handshake.attach(&quicpp);
-        // ret = handshake.read(from_server, &bin_packet[0], bin_packet.size(), pos);
-        // _test_case.test(ret, __FUNCTION__, "encrypted_extensions..certificate");
+        quic_packet_handshake handshake(&server_session);
+        size_t pos = 0;
+        ret = handshake.read(from_server, &bin_packet[0], bin_packet.size(), pos);
+        _test_case.test(ret, __FUNCTION__, "encrypted_extensions..certificate_verify(truncated at 1K boundary)");
     }
     /*
      * UDP Datagram 3 - Server handshake finished
      * https://quic.xargs.org/#server-handshake-packet-2
      */
+    {
+        const char* packet =
+            "e5 00 00 00 01 05 63 5f 63 69 64 05 73 5f 63 69 64 40 cf 4f 44 20 f9 19 68 1c 3f 0f 10 2a 30 f5 e6 47 a3 39 9a bf 54 bc 8e 80 45 31 34 99 6b a3 "
+            "30 99 05 62 42 f3 b8 e6 62 bb fc e4 2f 3e f2 b6 ba 87 15 91 47 48 9f 84 79 e8 49 28 4e 98 3f d9 05 32 0a 62 fc 7d 67 e9 58 77 97 09 6c a6 01 01 "
+            "d0 b2 68 5d 87 47 81 11 78 13 3a d9 17 2b 7f f8 ea 83 fd 81 a8 14 ba e2 7b 95 3a 97 d5 7e bf f4 b4 71 0d ba 8d f8 2a 6b 49 d7 d7 fa 3d 81 79 cb "
+            "db 86 83 d4 bf a8 32 64 54 01 e5 a5 6a 76 53 5f 71 c6 fb 3e 61 6c 24 1b b1 f4 3b c1 47 c2 96 f5 91 40 29 97 ed 49 aa 0c 55 e3 17 21 d0 3e 14 11 "
+            "4a f2 dc 45 8a e0 39 44 de 51 26 fe 08 d6 6a 6e f3 ba 2e d1 02 5f 98 fe a6 d6 02 49 98 18 46 87 dc 06";
+        binary_t bin_packet = base16_decode_rfc(packet);
+        quic_packet_handshake handshake(&server_session);
+        size_t pos = 0;
+        // TODO fragmented
+        // ret = handshake.read(from_server, &bin_packet[0], bin_packet.size(), pos);
+        // _test_case.test(ret, __FUNCTION__, "certificate_verify(fragmented)..server finished");
+    }
     /**
      * https://quic.xargs.org/#client-initial-packet-2
      */

@@ -76,9 +76,11 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             ret = errorcode_t::invalid_context;
             __leave2;
         }
+
         auto hspos = offsetof_header();
         auto size_header_body = get_size();
         auto& protection = session->get_tls_protection();
+        auto session_type = session->get_type();
 
         {
             // calculates the hash of all handshake messages to this point (ClientHello and ServerHello).
@@ -123,6 +125,10 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             }
 
             protection.clear_item(tls_context_client_hello);
+        }
+        if (session_quic == session_type) {
+            session->reset_recordno(from_client);
+            session->reset_recordno(from_server);
         }
     }
     __finally2 {

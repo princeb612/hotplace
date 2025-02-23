@@ -137,6 +137,14 @@ std::string base16_encode(const char* source) {
     return outpart;
 }
 
+std::string base16_encode(const byte_t* source, size_t size) {
+    std::string outpart;
+    if (source) {
+        base16_encode(source, size, outpart);
+    }
+    return outpart;
+}
+
 return_t base16_encode(const char* source, std::string& outpart) {
     return_t ret = errorcode_t::success;
     __try2 {

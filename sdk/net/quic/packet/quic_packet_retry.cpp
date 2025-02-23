@@ -40,6 +40,7 @@
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
+#include <sdk/net/quic/quic_packet.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {

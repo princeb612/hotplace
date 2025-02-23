@@ -144,7 +144,7 @@ return_t protection_context::select_from(const protection_context& rhs) {
                 // RFC 5246 mandatory TLS_RSA_WITH_AES_128_CBC_SHA
                 if (hint && hint->support && tlsadvisor->is_kindof(hint->version, selected_version)) {
                     add_cipher_suite(cs);
-                    set_cipher_suite_hint(hint);
+                    set_cipher_suite(cs);
                     break;
                 }
             }
@@ -165,7 +165,13 @@ return_t protection_context::select_from(const protection_context& rhs) {
 
 const tls_cipher_suite_t* protection_context::get_cipher_suite_hint() { return _cipher_suite_hint; }
 
-void protection_context::set_cipher_suite_hint(const tls_cipher_suite_t* hint) { _cipher_suite_hint = hint; }
+void protection_context::set_cipher_suite(uint16 cs) {
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    auto hint = tlsadvisor->hintof_cipher_suite(cs);
+
+    _cipher_suite = cs;
+    _cipher_suite_hint = hint;
+}
 
 uint16 protection_context::get0_cipher_suite() {
     uint16 ret_value = 0;

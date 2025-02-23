@@ -41,6 +41,7 @@
 #include <sdk/crypto/crypto/crypto_hmac.hpp>
 #include <sdk/crypto/crypto/crypto_sign.hpp>
 #include <sdk/crypto/crypto/transcript_hash.hpp>
+#include <sdk/crypto/crypto/types.hpp>
 
 /* authenticode */
 #include <sdk/crypto/authenticode/authenticode.hpp>

@@ -10,6 +10,7 @@
 
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
+#include <sdk/net/quic/quic_packet.hpp>
 
 namespace hotplace {
 namespace net {

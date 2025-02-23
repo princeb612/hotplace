@@ -39,11 +39,7 @@ uint16 tls_protection::get_cipher_suite() { return _ciphersuite; }
 
 void tls_protection::set_cipher_suite(uint16 ciphersuite) {
     _ciphersuite = ciphersuite;
-
-    tls_advisor *tlsadvisor = tls_advisor::get_instance();
-    const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(ciphersuite);
-
-    get_protection_context().set_cipher_suite_hint(hint);
+    get_protection_context().set_cipher_suite(ciphersuite);
 }
 
 uint16 tls_protection::get_lagacy_version() { return _lagacy_version; }

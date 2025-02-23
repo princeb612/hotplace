@@ -75,13 +75,13 @@
 #include <sdk/base/system/atomic.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/datetime.hpp>
+#include <sdk/base/system/endian.hpp>
 #include <sdk/base/system/error.hpp>
 #if defined __linux__
 #include <sdk/base/system/linux/debug_trace.hpp>
 #elif defined _WIN32 || defined _WIN64
 #include <sdk/base/system/windows/debug_trace.hpp>
 #endif
-#include <sdk/base/system/endian.hpp>
 #include <sdk/base/system/reference_counter.hpp>
 #include <sdk/base/system/semaphore.hpp>
 #include <sdk/base/system/shared_instance.hpp>

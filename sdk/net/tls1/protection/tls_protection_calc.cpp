@@ -187,7 +187,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                         kdf.hkdf_expand_tls13_label(bin_client_initial_secret, alg, 32, bin_initial_secret, str2bin("client in"), context);
                         _kv[tls_context_quic_initial_client_secret] = bin_client_initial_secret;
 
-                        kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_client_initial_secret, str2bin("quic key"), context);
+                        kdf.hkdf_expand_tls13_label(bin, alg, keysize, bin_client_initial_secret, str2bin("quic key"), context);
                         _kv[tls_context_quic_initial_client_key] = bin;
 
                         kdf.hkdf_expand_tls13_label(bin, alg, 12, bin_client_initial_secret, str2bin("quic iv"), context);
@@ -199,7 +199,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                         kdf.hkdf_expand_tls13_label(bin_server_initial_secret, alg, 32, bin_initial_secret, str2bin("server in"), context);
                         _kv[tls_context_quic_initial_server_secret] = bin_server_initial_secret;
 
-                        kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_server_initial_secret, str2bin("quic key"), context);
+                        kdf.hkdf_expand_tls13_label(bin, alg, keysize, bin_server_initial_secret, str2bin("quic key"), context);
                         _kv[tls_context_quic_initial_server_key] = bin;
 
                         kdf.hkdf_expand_tls13_label(bin, alg, 12, bin_server_initial_secret, str2bin("quic iv"), context);

@@ -21,14 +21,19 @@ class tls_extensions {
 
     return_t read(tls_hs_type_t hstype, tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);
     return_t read(tls_hs_type_t hstype, tls_session *session, tls_direction_t dir, const binary_t &bin);
+
     return_t write(binary_t &bin);
 
     return_t add(tls_extension *extension, bool upref = false);
     tls_extensions &operator<<(tls_extension *extension);
+
     void for_each(std::function<void(tls_extension *)> func);
+
     tls_extension *get(uint16 type, bool upref = false);
     tls_extension *getat(size_t index, bool upref = false);
+
     size_t size();
+
     void clear();
 
    protected:

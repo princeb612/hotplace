@@ -121,7 +121,7 @@ return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t 
     int ret_openssl = 0;
 
     __try2 {
-        if (nullptr == pkey) {
+        if (nullptr == pkey || signature.empty()) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }

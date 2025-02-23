@@ -234,11 +234,13 @@ class json_object_signing_encryption {
      */
     return_t encrypt(jose_context_t* context, jwe_t enc, jwa_t alg, const binary_t& input, std::string& output,
                      jose_serialization_t type = jose_serialization_t::jose_compact);
+    return_t encrypt(jose_context_t* context, jwe_t enc, jwa_t alg, const std::string& input, std::string& output,
+                     jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief encrypt
      * @param jose_context_t* context [in]
      * @param jwe_t enc [in]
-     * @param std::list <jwa_t> alg [in]
+     * @param const std::list <jwa_t>& alg [in]
      *  do not support jwa_t::jwa_dir, jwa_t::jwa_ecdh_es
      *  case "dir"
      *      read cek from HMAC key and then make it the only one cek
@@ -278,7 +280,9 @@ class json_object_signing_encryption {
      *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, algs, bin2str (input), encrypted, jose_serialization_t::jose_json);
      *          jose.close (handle_encrypt);
      */
-    return_t encrypt(jose_context_t* context, jwe_t enc, std::list<jwa_t> algs, const binary_t& input, std::string& output,
+    return_t encrypt(jose_context_t* context, jwe_t enc, const std::list<jwa_t>& algs, const binary_t& input, std::string& output,
+                     jose_serialization_t type = jose_serialization_t::jose_compact);
+    return_t encrypt(jose_context_t* context, jwe_t enc, const std::list<jwa_t>& algs, const std::string& input, std::string& output,
                      jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief decrypt

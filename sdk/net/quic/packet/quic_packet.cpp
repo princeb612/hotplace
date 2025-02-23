@@ -12,6 +12,8 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
+#include <sdk/net/quic/quic_encoded.hpp>
+#include <sdk/net/quic/quic_packet.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
@@ -154,6 +156,10 @@ return_t quic_packet::read(tls_direction_t dir, const byte_t* stream, size_t siz
         byte_t hdr = stream[pos];
         bool is_longheader = true;
         get_type(hdr, _type, is_longheader);
+
+        // RFC 9000
+        //   17.2.  Long Header Packets
+        //   17.3.  Short Header Packets
 
         payload pl;
         pl << new payload_member(uint8(0), "hdr")                     //

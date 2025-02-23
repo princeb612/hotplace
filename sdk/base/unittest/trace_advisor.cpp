@@ -81,6 +81,7 @@ void trace_advisor::load() {
                 e.cname = "TLS";
                 e.event_map.insert({tls_event_read, "read"});
                 e.event_map.insert({tls_event_write, "write"});
+                e.event_map.insert({tls_event_dump, "dump"});
                 _resource_map.insert({category_tls1, e});
             }
             {
@@ -88,6 +89,7 @@ void trace_advisor::load() {
                 e.cname = "QUIC";
                 e.event_map.insert({quic_event_read, "read"});
                 e.event_map.insert({quic_event_write, "write"});
+                e.event_map.insert({quic_event_dump, "dump"});
                 _resource_map.insert({category_quic, e});
             }
         }

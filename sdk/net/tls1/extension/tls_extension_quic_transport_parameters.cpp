@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/net/quic/quic.hpp>
+#include <sdk/net/quic/quic_encoded.hpp>
 #include <sdk/net/tls1/extension/tls_extension_quic_transport_parameters.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
@@ -57,10 +57,10 @@ return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* str
                 const binary_t& param = iter->second;
 
                 switch (param_id) {
+                    case quic_param_original_destination_connection_id:
                     case quic_param_initial_source_connection_id:
                     case quic_param_retry_source_connection_id:
-                        dbs.printf("   > %I64i (%s)\n", param_id, tlsadvisor->quic_param_string(param_id).c_str());
-                        dump_memory(param, &dbs, 16, 4, 0x0, dump_notrunc);
+                        dbs.printf("   > %I64i (%s) %s\n", param_id, tlsadvisor->quic_param_string(param_id).c_str(), base16_encode(param).c_str());
                         break;
                     default: {
                         size_t epos = 0;
