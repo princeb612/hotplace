@@ -117,7 +117,13 @@ class tls_protection {
     void use_pre_master_secret(bool use);
     bool use_pre_master_secret();
 
-    void get_item(tls_secret_t type, binary_t& item);
+    /**
+     * @param   tls_secret_t type [in]
+     * @param   binary_t& item [out]
+     * @param   uint8 flag [inopt] 0 get, 1 get and clear
+     */
+    void get_item(tls_secret_t type, binary_t& item, uint8 flag = 0);
+
     const binary_t& get_item(tls_secret_t type);
     void set_item(tls_secret_t type, const binary_t& item);
     void set_item(tls_secret_t type, const byte_t* stream, size_t size);

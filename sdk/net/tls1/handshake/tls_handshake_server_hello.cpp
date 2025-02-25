@@ -127,7 +127,6 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             protection.clear_item(tls_context_client_hello);
         }
         if (session_quic == session_type) {
-            session->reset_recordno(from_client);
             session->reset_recordno(from_server);
         }
     }

@@ -72,6 +72,8 @@ declare_tls_resource(extension_type_code, uint16);
 
 // https://www.iana.org/assignments/quic/quic.xhtml
 declare_tls_resource(quic_trans_param_code, uint64);
+declare_tls_resource(quic_frame_type_code, uint64);
+declare_tls_resource(quic_trans_error_code, uint64);
 
 // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
 declare_tls_resource(aead_alg_code, uint16);
@@ -170,6 +172,8 @@ class tls_advisor {
 
     // https://www.iana.org/assignments/quic/quic.xhtml
     std::string quic_param_string(uint64 code);
+    std::string quic_frame_type_string(uint64 code);
+    std::string quic_error_string(uint64 code);
 
     // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
     std::string aead_alg_string(uint16 code);
@@ -229,6 +233,8 @@ class tls_advisor {
 
     // https://www.iana.org/assignments/quic/quic.xhtml
     std::map<uint64, const tls_quic_trans_param_code_t*> _quic_trans_param_codes;
+    std::map<uint64, const tls_quic_frame_type_code_t*> _quic_frame_type_codes;
+    std::map<uint64, const tls_quic_trans_error_code_t*> _quic_trans_error_codes;
 
     // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
     std::map<uint16, const tls_aead_alg_code_t*> _aead_alg_codes;

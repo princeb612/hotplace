@@ -17,9 +17,10 @@ typedef struct _OPTION {
     int log;
     int time;
     int mode;
+    int quic;
     std::string content;
 
-    _OPTION() : verbose(0), debug(0), log(0), time(0), mode(0) {
+    _OPTION() : verbose(0), debug(0), log(0), time(0), mode(0), quic(0) {
         // do nothing
     }
     void set(int m, const char* param) {

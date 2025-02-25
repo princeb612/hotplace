@@ -14,7 +14,9 @@
 
 #include <iostream>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/system/error.hpp>
 #include <sdk/base/system/linux/debug_trace.hpp>
+#include <sdk/base/unittest/trace.hpp>
 
 namespace hotplace {
 
@@ -34,9 +36,17 @@ return_t trace_backtrace(return_t errorcode) {
     if (errorcode_t::success != errorcode) {
         uint32 option = get_trace_option();
         if (trace_option_t::trace_bt & option) {
-            basic_stream stream;
-            debug_trace(&stream);
-            std::cout << stream << std::endl;
+            basic_stream dbs;
+
+            std::string errcode;
+            std::string errmsg;
+            error_advisor* advisor = error_advisor::get_instance();
+            advisor->error_message(errorcode, errcode, errmsg);
+            dbs.printf("0x%08x:%s:%s\n", errorcode, errcode.c_str(), errmsg.c_str());
+
+            debug_trace(&dbs);
+
+            trace_debug_event(category_debug_internal, 0, &dbs);
         }
     }
     return ret;

@@ -296,6 +296,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
             for (uint16 cs : _cipher_suites) {
                 binary_append(cipher_suites, cs, hton16);
             }
+
             binary_t compression_methods;
             compression_methods.resize(1);
 

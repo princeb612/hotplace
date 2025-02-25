@@ -32,6 +32,108 @@
 namespace hotplace {
 namespace net {
 
+class quic_frame {
+    friend class quic_frame_builder;
+
+   public:
+    quic_frame(quic_frame_t type, tls_session* session);
+    virtual ~quic_frame();
+
+    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write(tls_direction_t dir, binary_t& bin);
+
+    quic_frame_t get_type();
+    tls_session* get_session();
+
+    void addref();
+    void release();
+
+   protected:
+    virtual return_t do_postprocess(tls_direction_t dir);
+    virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+
+   private:
+    void set_type(uint64 type);
+
+    quic_frame_t _type;
+    tls_session* _session;
+    t_shared_reference<quic_frame> _shared;
+};
+
+class quic_frame_padding : public quic_frame {
+   public:
+    quic_frame_padding(tls_session* session);
+    virtual ~quic_frame_padding();
+
+   protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+};
+
+class quic_frame_ping : public quic_frame {
+   public:
+    quic_frame_ping(tls_session* session);
+    virtual ~quic_frame_ping();
+
+   protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+};
+
+class quic_frame_ack : public quic_frame {
+   public:
+    quic_frame_ack(tls_session* session);
+    virtual ~quic_frame_ack();
+
+   protected:
+    virtual return_t do_postprocess(tls_direction_t dir);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+};
+
+class quic_frame_reset_stream : public quic_frame {
+   public:
+    quic_frame_reset_stream(tls_session* session);
+    virtual ~quic_frame_reset_stream();
+
+   protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+};
+
+class quic_frame_stop_sending : public quic_frame {
+   public:
+    quic_frame_stop_sending(tls_session* session);
+    virtual ~quic_frame_stop_sending();
+
+   protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+};
+
+class quic_frame_crypto : public quic_frame {
+   public:
+    quic_frame_crypto(tls_session* session);
+    virtual ~quic_frame_crypto();
+
+   protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+};
+
+class quic_frame_new_token : public quic_frame {
+   public:
+    quic_frame_new_token(tls_session* session);
+    virtual ~quic_frame_new_token();
+
+   protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+};
+
 /**
  * @brief   read
  * @param   tls_session* session [in]

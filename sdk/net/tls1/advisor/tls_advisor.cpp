@@ -138,6 +138,14 @@ void tls_advisor::load_tls_quic() {
         auto item = tls_quic_trans_param_codes + i;
         _quic_trans_param_codes.insert({item->code, item});
     }
+    for (auto i = 0; i < sizeof_tls_quic_frame_type_codes; i++) {
+        auto item = tls_quic_frame_type_codes + i;
+        _quic_frame_type_codes.insert({item->code, item});
+    }
+    for (auto i = 0; i < sizeof_tls_quic_trans_error_codes; i++) {
+        auto item = tls_quic_trans_error_codes + i;
+        _quic_trans_error_codes.insert({item->code, item});
+    }
 }
 
 void tls_advisor::load_tls_aead_parameters() {
@@ -436,6 +444,26 @@ std::string tls_advisor::quic_param_string(uint64 code) {
     return value;
 }
 
+std::string tls_advisor::quic_frame_type_string(uint64 code) {
+    std::string value;
+    auto iter = _quic_frame_type_codes.find(code);
+    if (_quic_frame_type_codes.end() != iter) {
+        auto item = iter->second;
+        value = item->desc;
+    }
+    return value;
+}
+
+std::string tls_advisor::quic_error_string(uint64 code) {
+    std::string value;
+    auto iter = _quic_trans_error_codes.find(code);
+    if (_quic_trans_error_codes.end() != iter) {
+        auto item = iter->second;
+        value = item->desc;
+    }
+    return value;
+}
+
 // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
 
 std::string tls_advisor::aead_alg_string(uint16 code) {
@@ -506,33 +534,9 @@ std::string tls_advisor::sni_nametype_string(uint16 code) {
 
 bool tls_advisor::is_kindof_tls13(uint16 ver) { return (tls_13 == ver) || (dtls_13 == ver); }
 
-bool tls_advisor::is_kindof_tls(uint16 ver) {
-    bool ret = false;
-    switch (ver) {
-        case tls_10:
-        case tls_11:
-        case tls_12:
-        case tls_13:
-            ret = true;
-            break;
-        default:
-            break;
-    }
-    return ret;
-}
+bool tls_advisor::is_kindof_tls(uint16 ver) { return (tls_13 == ver) || (tls_12 == ver) || (tls_11 == ver) || (tls_10 == ver); }
 
-bool tls_advisor::is_kindof_dtls(uint16 ver) {
-    bool ret = false;
-    switch (ver) {
-        case dtls_12:
-        case dtls_13:
-            ret = true;
-            break;
-        default:
-            break;
-    }
-    return ret;
-}
+bool tls_advisor::is_kindof_dtls(uint16 ver) { return (dtls_13 == ver) || (dtls_12 == ver); }
 
 bool tls_advisor::is_kindof(uint16 lhs, uint16 rhs) {
     bool ret = false;

@@ -513,6 +513,7 @@ enum tls_secret_t : uint16 {
     tls_context_quic_initial_server_iv = (TLS_SECRET_USERCONTEXT | 0x18),
     tls_context_quic_initial_client_hp = (TLS_SECRET_USERCONTEXT | 0x19),
     tls_context_quic_initial_server_hp = (TLS_SECRET_USERCONTEXT | 0x1a),
+    tls_context_fragment = (TLS_SECRET_USERCONTEXT | 0x1b),  // DTLS, QUIC
 };
 
 enum tls_direction_t {

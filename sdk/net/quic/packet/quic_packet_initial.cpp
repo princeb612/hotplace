@@ -37,6 +37,7 @@
 #include <sdk/net/quic/quic.hpp>
 #include <sdk/net/quic/quic_encoded.hpp>
 #include <sdk/net/quic/quic_frame.hpp>
+#include <sdk/net/quic/quic_frames.hpp>
 #include <sdk/net/quic/quic_packet.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 #include <sdk/net/tls1/types.hpp>
@@ -44,9 +45,10 @@
 namespace hotplace {
 namespace net {
 
-quic_packet_initial::quic_packet_initial(tls_session* session) : quic_packet(quic_packet_type_initial, session), _length(0) {}
+quic_packet_initial::quic_packet_initial(tls_session* session) : quic_packet(quic_packet_type_initial, session), _length(0), _sizeof_length(0) {}
 
-quic_packet_initial::quic_packet_initial(const quic_packet_initial& rhs) : quic_packet(rhs), _token(rhs._token), _length(rhs._length) {}
+quic_packet_initial::quic_packet_initial(const quic_packet_initial& rhs)
+    : quic_packet(rhs), _token(rhs._token), _length(rhs._length), _sizeof_length(rhs._sizeof_length) {}
 
 return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -68,84 +70,83 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
         binary_t bin_unprotected_header;
         binary_t bin_protected_header;
         binary_t bin_pn;
-        binary_t decrypted;
+        binary_t plaintext;
         binary_t bin_tag;
 
         size_t offset_initial = pos;
+        size_t offset_pnpayload = 0;
         byte_t ht = stream[0];
 
-        // RFC 9001 5.4.2.  Header Protection Sample
-        uint8 pn_length = dir ? 4 : get_pn_length(stream[0]);
+        {
+            constexpr char constexpr_token[] = "token";
+            constexpr char constexpr_len[] = "len";
+            constexpr char constexpr_payload[] = "pn + payload";
+            constexpr char constexpr_tag[] = "tag";
 
-        constexpr char constexpr_token[] = "token";
-        constexpr char constexpr_len[] = "len";
-        constexpr char constexpr_pn[] = "pn";
-        constexpr char constexpr_payload[] = "payload";
-        constexpr char constexpr_tag[] = "tag";
+            payload pl;
+            pl << new payload_member(new quic_encoded(binary_t()), constexpr_token)  // Token Length (i), Token (..)
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_len)     // Length (i)
+               << new payload_member(binary_t(), constexpr_payload)                  // Packet Number (8..32), Packet Payload (8..)
+               << new payload_member(binary_t(), constexpr_tag);
+            pl.select(constexpr_tag)->reserve(tagsize);
+            pl.read(stream, size, pos);
 
-        payload pl;
-        pl << new payload_member(new quic_encoded(binary_t()), constexpr_token) << new payload_member(new quic_encoded(uint64(0)), constexpr_len)
-           << new payload_member(binary_t(), constexpr_pn) << new payload_member(binary_t(), constexpr_payload)
-           << new payload_member(binary_t(), constexpr_tag);
-        pl.select(constexpr_pn)->reserve(pn_length);
-        pl.select(constexpr_tag)->reserve(tagsize);
-        pl.read(stream, size, pos);
+            pl.select(constexpr_token)->get_payload_encoded()->get_variant().to_binary(_token);
+            _length = pl.select(constexpr_len)->get_payload_encoded()->value();
+            pl.select(constexpr_payload)->get_variant().to_binary(_payload);
+            pl.select(constexpr_tag)->get_variant().to_binary(bin_tag);
 
-        pl.select(constexpr_token)->get_payload_encoded()->get_variant().to_binary(_token);
-        _length = pl.select(constexpr_len)->get_payload_encoded()->value();
-        pl.select(constexpr_pn)->get_variant().to_binary(bin_pn);  // 8..32
-        _pn = t_binary_to_integer<uint32>(bin_pn);
-        pl.select(constexpr_payload)->get_variant().to_binary(_payload);
-        pl.select(constexpr_tag)->get_variant().to_binary(bin_tag);
+            offset_pnpayload = pl.offset_of(constexpr_payload);
+            _sizeof_length = pl.select(constexpr_len)->get_space();  // support longer size
+        }
 
-        if (dir) {
+        if (from_any != dir) {
+            // protection mask
             binary_t bin_mask;
-            ret = protection.protection_mask(session, dir, &_payload[0], _payload.size(), bin_mask, 5);
+            ret = protection.protection_mask(session, dir, stream + (offset_initial + offset_pnpayload + 4), 16, bin_mask, 5);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
 
+            // unprotect ht
             if (quic_packet_field_hf & ht) {
                 _ht ^= bin_mask[0] & 0x0f;
             } else {
                 _ht ^= bin_mask[0] & 0x1f;
             }
-            memxor(&bin_pn[0], &bin_mask[1], 4);
-
-            // Packet Number Length = 2
-            // PN1 PN2 PN3 PN4 | PL1 PL2 ...
-            // PN1 PN2 | PL1 PL2 PL3 PL4 ...
-
-            // Packet Number Length = 1
-            // PN1 PN2 PN3 PN4 | PL1 PL2 ...
-            // PN1 | PL1 PL2 PL3 PL4 PL5 ...
-
+            // unprotect pn
             auto pn_length = get_pn_length(_ht);
-            auto adj = 4 - pn_length;
-            if (adj) {
-                const byte_t* begin = stream + offset_initial + pl.offset_of(constexpr_pn) + pn_length;
-                _payload.insert(_payload.begin(), begin, begin + adj);
+            {
+                // RFC 9001 5.4.2.  Header Protection Sample
+                // Packet Number Length = 2
+                //   ... | PN1 PN2 | PL1 PL2 PL3 PL4 ...
+                //                 \- pnpad
+                // Packet Number Length = 1
+                //   ... | PN1 | PL1 PL2 PL3 PL4 PL5 ...
+                //              \ pnpad
+                // stream
+                //   ... | PN1 PN2 PN3 PN4 | PL1 PL2 ...
+                binary_append(bin_pn, &_payload[0], 4);
+                memxor(&bin_pn[0], &bin_mask[1], 4);
                 bin_pn.resize(pn_length);
+                _pn = t_binary_to_integer<uint32>(bin_pn);
+                _payload.erase(_payload.begin(), _payload.begin() + pn_length);
             }
 
-            _pn = t_binary_to_integer<uint32>(bin_pn);
-
-            // unprotected header
+            // aad
             write(from_any, bin_unprotected_header);
 
-            // AEAD
-            binary_t bin_decrypted;
+            // decrypt
+            binary_t bin_plaintext;
             {
-                // ret = get_protection()->decrypt(dir, _pn, _payload, bin_decrypted, bin_unprotected_header, bin_tag);
-
                 auto& protection = session->get_tls_protection();
                 protection.set_item(tls_context_quic_dcid, get_dcid());
-                protection.calc(session, tls_hs_client_hello, dir);
+                protection.calc(session, tls_hs_client_hello, dir);  // calc initial keys
 
                 size_t pos = 0;
-                ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_decrypted, bin_unprotected_header, bin_tag);
+                ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_plaintext, bin_unprotected_header, bin_tag);
                 if (errorcode_t::success == ret) {
-                    _payload = std::move(bin_decrypted);
+                    _payload = std::move(bin_plaintext);
                 } else {
                     _payload.clear();
                 }
@@ -155,8 +156,8 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
 
             {
                 size_t pos = 0;
-                while (errorcode_t::success == quic_dump_frame(session, &_payload[0], _payload.size(), pos)) {
-                };
+                quic_frames frames;
+                frames.read(session, dir, &_payload[0], _payload.size(), pos);
             }
         }
     }
@@ -207,6 +208,7 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
         uint8 pn_length = 0;
         uint64 len = 0;
         binary_t bin_pn;
+        uint8 prefix_len = _sizeof_length >> 1;
 
         // unprotected header
         {
@@ -224,7 +226,9 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
 
             // unprotected header
             payload pl;
-            pl << new payload_member(new quic_encoded(get_token())) << new payload_member(new quic_encoded(len)) << new payload_member(bin_pn);
+            pl << new payload_member(new quic_encoded(get_token()))      // Token Length (i), Token (..)
+               << new payload_member(new quic_encoded(len, prefix_len))  // Length (i)
+               << new payload_member(bin_pn);                            // Packet Number (8..32)
             pl.write(bin_unprotected_header);
         }
 
@@ -236,22 +240,22 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
          *  in sampling header ciphertext for header protection, the Packet Number field is
          *  assumed to be 4 bytes long (its maximum possible encoded length).
          */
-        if (dir && (get_payload().size() >= 0x10)) {
-            binary_t bin_ciphertext;
+        if ((from_any != dir) && (get_payload().size() >= 0x10)) {
+            binary_t bin_plaintext;
             binary_t bin_tag;
             binary_t bin_mask;
 
             // AEAD
-            protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag);
+            protection.encrypt(session, dir, get_payload(), bin_plaintext, bin_unprotected_header, bin_tag);
 
             // Header Protection
             {
                 uint8 ht = _ht;
                 auto adj = 4 - pn_length;
-                binary_append(bin_pn, &bin_ciphertext[0], adj);
+                binary_append(bin_pn, &bin_plaintext[0], adj);
 
                 // calcurate mask
-                ret = protection.protection_mask(session, dir, &bin_ciphertext[adj], bin_ciphertext.size(), bin_mask, 5);
+                ret = protection.protection_mask(session, dir, &bin_plaintext[adj], bin_plaintext.size(), bin_mask, 5);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }
@@ -269,8 +273,8 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
 
                 // encode packet number
                 payload pl;
-                pl << new payload_member(new quic_encoded(get_token()))  //
-                   << new payload_member(new quic_encoded(len))          //
+                pl << new payload_member(new quic_encoded(get_token()))      //
+                   << new payload_member(new quic_encoded(len, prefix_len))  //
                    << new payload_member(bin_pn);
 
                 // protected header
@@ -278,15 +282,14 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
             }
 
             header = std::move(bin_protected_header);
-            ciphertext = std::move(bin_ciphertext);
+            ciphertext = std::move(bin_plaintext);
             tag = std::move(bin_tag);
 
             dump();
 
-            auto session = get_session();
             size_t pos = 0;
-            while (errorcode_t::success == quic_dump_frame(session, &_payload[0], _payload.size(), pos)) {
-            };
+            quic_frames frames;
+            frames.read(session, dir, &_payload[0], _payload.size(), pos);
         } else {
             header = std::move(bin_unprotected_header);
         }

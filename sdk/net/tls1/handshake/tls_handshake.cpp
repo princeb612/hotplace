@@ -86,6 +86,11 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             __leave2;
         }
 
+        // auto& protection = session->get_tls_protection();
+        // auto session_type = session->get_type();
+
+        size_t bpos = pos;
+
         ret = do_read_header(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -182,6 +187,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
         }
 
         size_t hspos = pos;
+        auto& protection = session->get_tls_protection();
 
         tls_hs_type_t hstype;
         uint32 length = 0;
@@ -192,7 +198,6 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
         size_t size_header_body = 0;
 
         {
-            auto& protection = session->get_tls_protection();
             uint16 legacy_version = protection.get_lagacy_version();
             size_t sizeof_dtls_recons = 0;
             if (is_kindof_dtls(legacy_version)) {
@@ -250,12 +255,30 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             _size = size_header_body;
         }
 
+        if (hspos + length > size) {
+            ret = errorcode_t::trunc_detected;
+            protection.set_item(tls_context_fragment, stream + hspos, size - hspos);
+        }
+
+        /**
+         *   if (trunc_detected) {
+         *      store trunc part
+         *   }
+         *   if (offset) // DTLS, quic_frame_crypto
+         *   {
+         *      handle (stored truc part || stream)
+         *   }
+         */
+
         if (istraceable()) {
             basic_stream dbs;
             dbs.autoindent(1);
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             dbs.printf("> handshake type 0x%02x(%i) (%s)\n", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
             dbs.printf(" > length 0x%06x(%i)\n", length, length);
+            if (errorcode_t::trunc_detected == ret) {
+                dbs.printf(" > fragment\n");
+            }
             if (cond_dtls) {
                 dbs.printf(" > %s 0x%04x\n", constexpr_handshake_message_seq, dtls_seq);
                 dbs.printf(" > %s 0x%06x(%i)\n", constexpr_fragment_offset, fragment_offset, fragment_offset);

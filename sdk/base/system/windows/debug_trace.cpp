@@ -10,7 +10,9 @@
 
 #include <iostream>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/system/error.hpp>
 #include <sdk/base/system/windows/debug_trace.hpp>
+#include <sdk/base/unittest/trace.hpp>
 
 namespace hotplace {
 
@@ -31,18 +33,23 @@ return_t trace_backtrace(return_t errorcode) {
         uint32 option = get_trace_option();
         if (trace_option_t::trace_bt & option) {
             debug_trace_context_t* handle = nullptr;
-            basic_stream stream;
+            basic_stream dbs;
+
+            std::string errcode;
+            std::string errmsg;
+            error_advisor* advisor = error_advisor::get_instance();
+            advisor->error_message(errorcode, errcode, errmsg);
+            dbs.printf("0x%08x:%s:%s\n", errorcode, errcode.c_str(), errmsg.c_str());
 
             // PDB
             CONTEXT rtlcontext;
             debug_trace dbg;
             dbg.open(&handle);
             dbg.capture(&rtlcontext);
-            ret = dbg.trace(handle, &rtlcontext, &stream);
+            ret = dbg.trace(handle, &rtlcontext, &dbs);
             dbg.close(handle);
 
-            std::cout << stream << std::endl;
-            fflush(stdout);
+            trace_debug_event(category_debug_internal, 0, &dbs);
         }
     }
     return ret;
@@ -378,7 +385,7 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
         constexpr char constexpr_fileline[] = "+0x%x";
         constexpr char constexpr_line[] = " [%s @ %lu]";
 
-        stream->printf("%s\n", constexpr_debug);
+        // stream->printf("%s\n", constexpr_debug);
 
         memset(symbol, 0, (sizeof(IMAGEHLP_SYMBOL)) + (1 << 10));
         symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
@@ -425,12 +432,12 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
                 }
             }
 
+            stream->printf("\n");
+
             if (0 == frame.AddrReturn.Offset) {
                 SetLastError(0);
                 break;
             }
-
-            stream->printf("\n");
         }
     }
     __finally2 {

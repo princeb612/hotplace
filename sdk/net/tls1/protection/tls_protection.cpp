@@ -62,7 +62,17 @@ void tls_protection::use_pre_master_secret(bool use) { _use_pre_master_secret = 
 
 bool tls_protection::use_pre_master_secret() { return _use_pre_master_secret; }
 
-void tls_protection::get_item(tls_secret_t type, binary_t &item) { item = _kv[type]; }
+void tls_protection::get_item(tls_secret_t type, binary_t &item, uint8 flag) {
+    if (0 == flag) {
+        item = _kv[type];
+    } else if (1 == flag) {
+        auto iter = _kv.find(type);
+        if (_kv.end() != iter) {
+            auto &value = iter->second;
+            item = std::move(value);
+        }
+    }
+}
 
 const binary_t &tls_protection::get_item(tls_secret_t type) { return _kv[type]; }
 

@@ -240,6 +240,7 @@ const error_description error_descriptions[] = {
     errordef(narrow_type, "narrow type"),
     errordef(no_more, "no more data"),
     errordef(exceed, "exceed the designed size"),
+    errordef(trunc_detected, "truncation detected"),
 
     errordef(not_supported, "not supported"),
     errordef(low_security, "low security"),
@@ -309,6 +310,20 @@ bool error_advisor::error_message(return_t error, std::string& message) {
     const error_description* item = nullptr;
     find(error, &item);
     if (item) {
+        message = item->error_message;
+        ret = true;
+    }
+    return ret;
+}
+
+bool error_advisor::error_message(return_t error, std::string& code, std::string& message) {
+    bool ret = false;
+    message.clear();
+
+    const error_description* item = nullptr;
+    find(error, &item);
+    if (item) {
+        code = item->error_code;
         message = item->error_message;
         ret = true;
     }

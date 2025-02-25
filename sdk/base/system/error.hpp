@@ -28,6 +28,7 @@ class error_advisor {
 
     bool error_code(return_t error, std::string& code);
     bool error_message(return_t error, std::string& message);
+    bool error_message(return_t error, std::string& code, std::string& message);
 
    protected:
     error_advisor();

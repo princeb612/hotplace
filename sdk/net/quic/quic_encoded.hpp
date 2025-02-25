@@ -58,6 +58,13 @@ return_t quic_read_vle_int(const byte_t* stream, size_t size, size_t& pos, uint6
  *              Figure 45: Sample Variable-Length Integer Decoding Algorithm
  */
 return_t quic_write_vle_int(uint64 value, binary_t& bin);
+/**
+ * @brief   enforce prefix (1..3)
+ * @remarks
+ *          quic_write_vle_int(23, bin);    // 0x17
+ *          quic_write_vle_int(23, 2, bin); // 0x0417
+ */
+return_t quic_write_vle_int(uint64 value, uint8 prefix, binary_t& bin);
 
 return_t quic_length_vle_int(uint64 value, uint8& length);
 uint8 quic_length_vle_int(uint64 value);
@@ -121,6 +128,7 @@ class quic_encoded : public payload_encoded {
      * @brief   integers in the range 0 to 2^62-1
      */
     quic_encoded(uint64 data);
+    quic_encoded(uint64 data, uint8 prefix);
     /**
      * @brief   integer + data
      */
@@ -132,7 +140,7 @@ class quic_encoded : public payload_encoded {
     quic_encoded& set(const std::string& data);
     quic_encoded& set(const binary_t& data);
 
-    virtual size_t lsize();
+    virtual size_t lsize();  // length size
     virtual size_t value();
     virtual const byte_t* data();
     virtual void write(binary_t& target);
@@ -145,7 +153,8 @@ class quic_encoded : public payload_encoded {
 
    protected:
     bool _datalink;
-    uint64 _len;
+    uint64 _value;
+    uint8 _sizeof_value;
     variant _data;
 };
 

@@ -50,27 +50,27 @@ enum quic_packet_t {
 /*
  * RFC 9000 12.4.  Frames and Frame Types
  */
-enum quic_frame_t {
-    quic_frame_padding = 0,                  // RFC 9000 19.1  IH01
-    quic_frame_ping = 1,                     // RFC 9000 19.2  IH01
-    quic_frame_ack = 2,                      // RFC 9000 19.3  IH_1 0x02-0x03
-    quic_frame_reset_stream = 4,             // RFC 9000 19.4  __01
-    quic_frame_stop_sending = 5,             // RFC 9000 19.5  __01
-    quic_frame_crypto = 6,                   // RFC 9000 19.6  IH_1
-    quic_frame_new_token = 7,                // RFC 9000 19.7  ___1
-    quic_frame_stream = 8,                   // RFC 9000 19.8  __01 0x08-0x0f
-    quic_frame_max_data = 0x10,              // RFC 9000 19.9  __01
-    quic_frame_max_stream_data = 0x11,       // RFC 9000 19.10 __01
-    quic_frame_max_streams = 0x12,           // RFC 9000 19.11 __01 0x12-0x13
-    quic_frame_data_blocked = 0x14,          // RFC 9000 19.12 __01
-    quic_frame_stream_data_blocked = 0x15,   // RFC 9000 19.13 __01
-    quic_frame_stream_blocked = 0x16,        // RFC 9000 19.14 __01 0x16-0x17
-    quic_frame_new_connection_id = 0x18,     // RFC 9000 19.15 __01
-    quic_frame_retire_connection_id = 0x19,  // RFC 9000 19.16 __01
-    quic_frame_path_challenge = 0x1a,        // RFC 9000 19.17 __01
-    quic_frame_path_response = 0x1b,         // RFC 9000 19.18 ___1
-    quic_frame_connection_close = 0x1c,      // RFC 9000 19.19 ih01 0x1c-0x1d
-    quic_frame_handshake_done = 0x1e,        // RFC 9000 19.20 ___1
+enum quic_frame_t : uint64 {
+    quic_frame_type_padding = 0,                  // RFC 9000 19.1  IH01
+    quic_frame_type_ping = 1,                     // RFC 9000 19.2  IH01
+    quic_frame_type_ack = 2,                      // RFC 9000 19.3  IH_1 0x02-0x03
+    quic_frame_type_reset_stream = 4,             // RFC 9000 19.4  __01
+    quic_frame_type_stop_sending = 5,             // RFC 9000 19.5  __01
+    quic_frame_type_crypto = 6,                   // RFC 9000 19.6  IH_1
+    quic_frame_type_new_token = 7,                // RFC 9000 19.7  ___1
+    quic_frame_type_stream = 8,                   // RFC 9000 19.8  __01 0x08-0x0f
+    quic_frame_type_max_data = 0x10,              // RFC 9000 19.9  __01
+    quic_frame_type_max_stream_data = 0x11,       // RFC 9000 19.10 __01
+    quic_frame_type_max_streams = 0x12,           // RFC 9000 19.11 __01 0x12-0x13
+    quic_frame_type_data_blocked = 0x14,          // RFC 9000 19.12 __01
+    quic_frame_type_stream_data_blocked = 0x15,   // RFC 9000 19.13 __01
+    quic_frame_type_stream_blocked = 0x16,        // RFC 9000 19.14 __01 0x16-0x17
+    quic_frame_type_new_connection_id = 0x18,     // RFC 9000 19.15 __01
+    quic_frame_type_retire_connection_id = 0x19,  // RFC 9000 19.16 __01
+    quic_frame_type_path_challenge = 0x1a,        // RFC 9000 19.17 __01
+    quic_frame_type_path_response = 0x1b,         // RFC 9000 19.18 ___1
+    quic_frame_type_connection_close = 0x1c,      // RFC 9000 19.19 ih01 0x1c-0x1d
+    quic_frame_type_handshake_done = 0x1e,        // RFC 9000 19.20 ___1
 };
 
 /**
@@ -121,6 +121,27 @@ enum h3_errorcodes_t {
 };
 
 class quic_frame;
+class quic_frame_ack;
+class quic_frame_builder;
+class quic_frame_connection_close;
+class quic_frame_crypto;
+class quic_frame_data_blocked;
+class quic_frame_handshake_done;
+class quic_frame_max_data;
+class quic_frame_max_stream_data;
+class quic_frame_new_token;
+class quic_frame_new_connection_id;
+class quic_frame_padding;
+class quic_frame_path_challenge;
+class quic_frame_path_response;
+class quic_frame_ping;
+class quic_frame_reset_stream;
+class quic_frame_retire_connection_id;
+class quic_frame_stream;
+class quic_frame_stream_blocked;
+class quic_frame_stream_data_blocked;
+class quic_frame_stop_sending;
+class quic_frames;
 class quic_packet;
 class quic_packet_version_negotiation;
 class quic_packet_initial;

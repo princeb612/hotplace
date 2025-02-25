@@ -72,6 +72,11 @@ void test_rfc_9000_a1() {
     lambda_read("0xc000000040000000", 0x40000000);          // MSB 11, length 8, 1073741824
     lambda_read("0xffffffffffffffff", 0x3fffffffffffffff);  // MSB 11, length 8, 4611686018427387903
 
+    lambda_read("0x17", 0x17);                // 23 prefix 0
+    lambda_read("0x4017", 0x17);              // 23 prefix 1
+    lambda_read("0x80000017", 0x17);          // 23 prefix 2
+    lambda_read("0xc000000000000017", 0x17);  // 23 prefix 3
+
     auto lambda_write = [&](uint64 value, const char* expect) -> void {
         binary_t bin_value;
         binary_t bin_expect;
@@ -93,6 +98,20 @@ void test_rfc_9000_a1() {
     lambda_write(0x3fffffff, "0xbfffffff");                  // MSB 10, length 4, 1073741823
     lambda_write(0x40000000, "0xc000000040000000");          // MSB 11, length 8, 1073741824
     lambda_write(0x3fffffffffffffff, "0xffffffffffffffff");  // MSB 11, length 8, 4611686018427387903
+
+    auto lambda_write2 = [&](uint64 value, uint8 prefix, const char* expect) -> void {
+        binary_t bin_value;
+        binary_t bin_expect;
+        bin_expect = base16_decode_rfc(expect);
+        quic_write_vle_int(value, prefix, bin_value);
+        _logger->writeln("> encode/write %I64i -> %s", value, base16_encode(bin_value).c_str());
+        _test_case.assert(bin_value == bin_expect, __FUNCTION__, R"(RFC 9000 A.1. %I64i -> "%s")", value, expect);
+    };
+
+    lambda_write2(0x17, 0, "0x17");                // 23 prefix 0
+    lambda_write2(0x17, 1, "0x4017");              // 23 prefix 1
+    lambda_write2(0x17, 2, "0x80000017");          // 23 prefix 2
+    lambda_write2(0x17, 3, "0xc000000000000017");  // 23 prefix 3
 }
 
 void test_rfc_9000_a2() {

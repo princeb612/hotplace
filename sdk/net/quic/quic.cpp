@@ -77,6 +77,42 @@ return_t quic_write_vle_int(uint64 value, binary_t& bin) {
     return ret;
 }
 
+return_t quic_write_vle_int(uint64 value, uint8 prefix, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    byte_t vleprefix = 0;
+    __try2 {
+        if (value > 0x3fffffffffffffff) {
+            // Packet numbers are integers in the range 0 to 2^62-1 (Section 12.3).
+            ret = errorcode_t::bad_data;
+            __leave2;
+        } else if (value > 0x3fffffff) {
+            vleprefix = 3;
+        } else if (value > 0x3fff) {
+            vleprefix = 2;
+        } else if (value > 0x3f) {
+            vleprefix = 1;
+        }
+
+        if (prefix > 3) {
+            prefix = 3;
+        } else if (vleprefix > prefix) {
+            prefix = vleprefix;
+        }
+
+        byte_t v = prefix << 6;
+        byte_t length = 1 << prefix;
+        auto i = hton64(value);
+        byte_t* begin = (byte_t*)&i + sizeof(uint64) - length;
+
+        begin[0] |= v;
+        bin.insert(bin.end(), begin, begin + length);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t quic_length_vle_int(uint64 value, uint8& length) {
     return_t ret = errorcode_t::success;
     __try2 {

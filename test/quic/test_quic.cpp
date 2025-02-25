@@ -239,8 +239,8 @@ void test_quic_xargs_org() {
         lambda_test(tls_secret_handshake_quic_client_iv, client_handshake_iv, "client_handshake_iv", "11e70a5d1361795d2bb04465");
         binary_t client_handshake_hp;
         lambda_test(tls_secret_handshake_quic_client_hp, client_handshake_hp, "client_handshake_hp", "84b3c21cacaf9f54c885e9a506459079");
-        binary_t protection;
-        lambda_test(tls_secret_handshake_quic_server_key, protection, "protection", "17abbf0a788f96c6986964660414e7ec");
+        binary_t server_handshake_key;
+        lambda_test(tls_secret_handshake_quic_server_key, server_handshake_key, "server_handshake_key", "17abbf0a788f96c6986964660414e7ec");
         binary_t server_handshake_iv;
         lambda_test(tls_secret_handshake_quic_server_iv, server_handshake_iv, "server_handshake_iv", "09597a2ea3b04c00487e71f3");
         binary_t server_handshake_hp;
@@ -294,38 +294,77 @@ void test_quic_xargs_org() {
         binary_t bin_packet = base16_decode_rfc(packet);
         quic_packet_handshake handshake(&server_session);
         size_t pos = 0;
-        // TODO fragmented
-        // ret = handshake.read(from_server, &bin_packet[0], bin_packet.size(), pos);
-        // _test_case.test(ret, __FUNCTION__, "certificate_verify(fragmented)..server finished");
+        ret = handshake.read(from_server, &bin_packet[0], bin_packet.size(), pos);
+        _test_case.test(ret, __FUNCTION__, "certificate_verify(fragmented)..server finished");
     }
     /**
+     * UDP Datagram 4 - Acks
      * https://quic.xargs.org/#client-initial-packet-2
      */
     {
-        // study
-    }  // UDP Datagram 5 - Client handshake finished, "ping"
+        // variable length integer
+        // | encoding | 1byte | 2byte  |
+        // | 23       | 0x17  | 0x4017 |
+        // unprotected header, AAD
+        const char* packet = "cf 00 00 00 01 05 73 5f 63 69 64 05 63 5f 63 69 64 00 40 17 56 6e 1f 98 ed 1f 7b 05 55 cd b7 83 fb df 5b 52 72 4b 7d 29 f0 af e3";
+        binary_t bin_packet = base16_decode_rfc(packet);
+        quic_packet_initial initial(&server_session);
+        size_t pos = 0;
+        ret = initial.read(from_client, &bin_packet[0], bin_packet.size(), pos);
+        _test_case.test(ret, __FUNCTION__, "ack");
+    }
     /**
+     * https://quic.xargs.org/#client-handshake-packet
+     */
+    {
+        const char* packet = "ee 00 00 00 01 05 73 5f 63 69 64 05 63 5f 63 69 64 40 16 8c b1 95 1f c6 cc 12 51 2d 7e da 14 1e c0 57 b8 04 d3 0f eb 51 5b";
+        //
+    }
+    /**
+     * UDP Datagram 5 - Client handshake finished, "ping"
      * https://quic.xargs.org/#client-handshake-packet-2
      */
     {
-        // study
-    }  // UDP Datagram 6 - "pong"
-    /**
-     * https://quic.xargs.org/#server-handshake-packet-3
-     */
-    {
-        // study
-    }  // UDP Datagram 7 - Acks
+        const char* packet =
+            "e0 00 00 00 01 05 73 5f 63 69 64 05 63 5f 63 69 64 40 3f b2 5e 1e 45 9d a7 e6 1d aa 07 73 2a a1 0b 5f bd 11 a0 0a 62 0b f5 e1 27 e3 7b 81 bb 10 "
+            "f1 1c 31 2e 7f 9c 04 a4 3c d5 30 f3 d9 81 d5 02 3a bd 5e 98 f2 2d c6 f2 59 79 91 9b ad 30 2f 44 8c 0a";
+    }
     /**
      * https://quic.xargs.org/#client-application-packet-2
      */
     {
-        // study
-    }  // UDP Datagram 8 - Close connection
+        const char* packet = "4e 73 5f 63 69 64 1e cc 91 70 e6 6e 8e e9 50 ba 8b 8e d1 0c ba 39 a0 6a b7 b0 67 0a 50 ef 68 e6";
+        //
+    }
     /**
+     * UDP Datagram 6 - "pong"
+     * https://quic.xargs.org/#server-handshake-packet-3
+     */
+    {
+        const char* packet = "e5 00 00 00 01 05 63 5f 63 69 64 05 73 5f 63 69 64 40 16 a4 87 5b 25 16 9e 6f 1b 81 7e 46 23 e1 ac be 1d b3 89 9b 00 ec fb";
+        //
+    }
+    /**
+     * https://quic.xargs.org/#server-application-packet
+     */
+    {
+        const char* packet = "49 63 5f 63 69 64 cd 9a 64 12 40 57 c8 83 e9 4d 9c 29 6b aa 8c a0 ea 6e 3a 21 fa af 99 af 2f e1 03 21 69 20 57 d2";
+        //
+    }
+    /**
+     * UDP Datagram 7 - Acks
+     * https://quic.xargs.org/#client-application-packet-2
+     */
+    {
+        const char* packet = "5a 73 5f 63 69 64 c8 67 e0 b4 90 58 8b 44 b1 0d 7c d3 2b 03 e3 45 02 80 2f 25 a1 93";
+        //
+    }
+    /**
+     * UDP Datagram 8 - Close connection
      * https://quic.xargs.org/#server-application-packet-2
      */
     {
-        // study
+        const char* packet =
+            "54 63 5f 63 69 64 95 18 c4 a5 ff eb 17 b6 7e c2 7f 97 e5 0d 27 1d c7 02 d9 2c ef b0 68 8b e9 fd 7b 30 2d 9e b4 7c df 1f c4 cd 9a ac";
     }
 }

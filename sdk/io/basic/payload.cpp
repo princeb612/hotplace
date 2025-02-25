@@ -60,47 +60,11 @@ payload& payload::set_reference_value(const std::string& name, const std::string
     return *this;
 }
 
-return_t payload::write(binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    for (auto item : _members) {
-        bool condition = get_group_condition(item->get_group());
-        if (condition) {
-            item->write(bin);
-        }
-    }
-    return ret;
-}
-
 payload& payload::set_condition(const std::string& name, std::function<void(payload*, payload_member*)> hook) {
     cond_t cond;
     cond.hook = hook;
     _cond_map.insert({name, cond});
     return *this;
-}
-
-return_t payload::write(binary_t& bin, const std::set<std::string>& groups) {
-    return_t ret = errorcode_t::success;
-    bool condition = false;
-    for (auto item : _members) {
-        condition = false;
-        auto const& group = item->get_group();
-        if (group.empty()) {
-            condition = true;
-        } else {
-            if (false == get_group_condition(group)) {
-                continue;
-            }
-
-            auto iter = groups.find(group);
-            if (groups.end() != iter) {
-                condition = true;
-            }
-        }
-        if (condition) {
-            item->write(bin);
-        }
-    }
-    return ret;
 }
 
 return_t payload::read(const binary_t& bin) {
@@ -238,6 +202,42 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
         }
     }
 
+    return ret;
+}
+
+return_t payload::write(binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    for (auto item : _members) {
+        bool condition = get_group_condition(item->get_group());
+        if (condition) {
+            item->write(bin);
+        }
+    }
+    return ret;
+}
+
+return_t payload::write(binary_t& bin, const std::set<std::string>& groups) {
+    return_t ret = errorcode_t::success;
+    bool condition = false;
+    for (auto item : _members) {
+        condition = false;
+        auto const& group = item->get_group();
+        if (group.empty()) {
+            condition = true;
+        } else {
+            if (false == get_group_condition(group)) {
+                continue;
+            }
+
+            auto iter = groups.find(group);
+            if (groups.end() != iter) {
+                condition = true;
+            }
+        }
+        if (condition) {
+            item->write(bin);
+        }
+    }
     return ret;
 }
 

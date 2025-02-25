@@ -299,6 +299,7 @@ void quic_packet::set_pn(uint32 pn, uint8 len) {
 uint8 quic_packet::get_pn_length() { return get_pn_length(_ht); }
 
 uint8 quic_packet::get_pn_length(uint8 ht) {
+    // RFC 9001 5.4.1.  Header Protection Application
     uint8 len = 0;
     switch (get_type()) {
         case quic_packet_type_initial:

@@ -117,7 +117,8 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-n", "encode number", [](OPTION& o, char* param) -> void { o.set(mode_encnum, param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-e", "encode base16", [](OPTION& o, char* param) -> void { o.set(mode_encode, param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-b", "decode base16", [](OPTION& o, char* param) -> void { o.set(mode_decode, param); }).optional().preced();
+                << t_cmdarg_t<OPTION>("-b", "decode base16", [](OPTION& o, char* param) -> void { o.set(mode_decode, param); }).optional().preced()
+                << t_cmdarg_t<OPTION>("-q", "quic.xargs.org only", [](OPTION& o, char* param) -> void { o.quic = 1; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -142,22 +143,24 @@ int main(int argc, char** argv) {
 
     test_quic_xargs_org();
 
-    // RFC 9000 Appendix A.  Pseudocode
+    if (0 == option.quic) {
+        // RFC 9000 Appendix A.  Pseudocode
 
-    test_rfc_9000_a1();
-    test_rfc_9000_a2();
-    test_rfc_9000_a3();
+        test_rfc_9000_a1();
+        test_rfc_9000_a2();
+        test_rfc_9000_a3();
 
-    test_rfc_9001_section4();
+        test_rfc_9001_section4();
 
-    // RFC 9001 5.  Packet Protection
-    // RFC 9001 Appendix A.  Sample Packet Protection
+        // RFC 9001 5.  Packet Protection
+        // RFC 9001 Appendix A.  Sample Packet Protection
 
-    test_rfc_9001_a1();
-    test_rfc_9001_a2();
-    test_rfc_9001_a3();
-    test_rfc_9001_a4();
-    test_rfc_9001_a5();
+        test_rfc_9001_a1();
+        test_rfc_9001_a2();
+        test_rfc_9001_a3();
+        test_rfc_9001_a4();
+        test_rfc_9001_a5();
+    }
 
     openssl_cleanup();
 

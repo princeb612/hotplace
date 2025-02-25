@@ -215,6 +215,7 @@ class quic_packet_initial : public quic_packet {
      */
     binary_t _token;
     uint64 _length;
+    uint8 _sizeof_length;
 };
 
 /**
@@ -262,6 +263,7 @@ class quic_packet_handshake : public quic_packet {
      *  Packet Payload (8..),
      */
     uint64 _length;
+    uint8 _sizeof_length;
 };
 
 class quic_packet_retry : public quic_packet {
