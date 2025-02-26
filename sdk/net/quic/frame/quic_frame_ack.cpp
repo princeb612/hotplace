@@ -28,9 +28,12 @@ quic_frame_ack::~quic_frame_ack() {}
 
 return_t quic_frame_ack::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
+
     auto session = get_session();
-    auto hsstatus = session->get_session_info(dir).get_status();
-    // RFC 9000 13.2.6.  ACK Frames and Packet Protection
+
+    // if initial
+    //     session->reset_recordno(dir);
+
     return ret;
 }
 
@@ -108,7 +111,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
         }
 
         // RFC 9001 19.3.2.  ECN Counts
-        if (3 == type) {
+        if ((quic_frame_type_ack + 1) == type) {
             // ECN Counts {
             //   ECT0 Count (i),
             //   ECT1 Count (i),

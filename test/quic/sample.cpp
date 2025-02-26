@@ -139,6 +139,8 @@ int main(int argc, char** argv) {
         set_trace_option(trace_bt | trace_except | trace_debug);
     }
 
+    _logger->setcolor(bold, magenta);
+
     openssl_startup();
 
     test_quic_xargs_org();

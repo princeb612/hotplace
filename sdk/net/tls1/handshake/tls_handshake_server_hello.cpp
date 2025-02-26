@@ -92,7 +92,9 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
 
             protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);  // server_hello
             ret = protection.calc(session, tls_hs_server_hello, dir);
-            session->get_session_info(dir).set_status(get_type());
+            auto& session_info = session->get_session_info(dir);
+            session_info.set_status(get_type());
+            session->get_session_info(from_client).set_status(get_type());
             if (errorcode_t::success != ret) {
                 protection.set_flow(tls_hello_retry_request);
 

@@ -91,6 +91,8 @@ return_t quic_frame::write(tls_direction_t dir, binary_t& bin) {
     return ret;
 }
 
+return_t quic_frame::do_preprocess(tls_direction_t dir) { return errorcode_t::success; }
+
 return_t quic_frame::do_postprocess(tls_direction_t dir) { return errorcode_t::success; }
 
 return_t quic_frame::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::success; }

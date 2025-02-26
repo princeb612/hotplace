@@ -60,7 +60,7 @@ void test_rfc_9001_prepare_a1() {
     const char* initial_salt = "0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a";
 
     // Destination Connection ID of 0x8394c8f03e515708
-    // tls_context_quic_initial_secret = HKDF-Extract(initial_salt, cid)
+    // tls_secret_initial_quic = HKDF-Extract(initial_salt, cid)
     const char* dcid = "0x8394c8f03e515708";
     binary_t bin_dcid = base16_decode_rfc(dcid);
 
@@ -98,31 +98,31 @@ void test_rfc_9001_a1() {
         binary_t bin_expect;
 
         bin_expect = base16_decode("7db5df06e7a69e432496adedb00851923595221596ae2ae9fb8115c1e9ed0a44");
-        lambda_test(__FUNCTION__, "tls_context_quic_initial_secret", protection.get_item(tls_context_quic_initial_secret), bin_expect);
+        lambda_test(__FUNCTION__, "tls_secret_initial_quic", protection.get_item(tls_secret_initial_quic), bin_expect);
 
         bin_expect = base16_decode("c00cf151ca5be075ed0ebfb5c80323c42d6b7db67881289af4008f1f6c357aea");
-        lambda_test(__FUNCTION__, "client_initial_secret", protection.get_item(tls_context_quic_initial_client_secret), bin_expect);
+        lambda_test(__FUNCTION__, "client_initial_secret", protection.get_item(tls_secret_initial_quic_client), bin_expect);
 
         bin_expect = base16_decode("1f369613dd76d5467730efcbe3b1a22d");
-        lambda_test(__FUNCTION__, "client key", protection.get_item(tls_context_quic_initial_client_key), bin_expect);
+        lambda_test(__FUNCTION__, "client key", protection.get_item(tls_secret_initial_quic_client_key), bin_expect);
 
         bin_expect = base16_decode("fa044b2f42a3fd3b46fb255c");
-        lambda_test(__FUNCTION__, "client iv", protection.get_item(tls_context_quic_initial_client_iv), bin_expect);
+        lambda_test(__FUNCTION__, "client iv", protection.get_item(tls_secret_initial_quic_client_iv), bin_expect);
 
         bin_expect = base16_decode("9f50449e04a0e810283a1e9933adedd2");
-        lambda_test(__FUNCTION__, "client hp", protection.get_item(tls_context_quic_initial_client_hp), bin_expect);
+        lambda_test(__FUNCTION__, "client hp", protection.get_item(tls_secret_initial_quic_client_hp), bin_expect);
 
         bin_expect = base16_decode("3c199828fd139efd216c155ad844cc81fb82fa8d7446fa7d78be803acdda951b");
-        lambda_test(__FUNCTION__, "server_initial_secret", protection.get_item(tls_context_quic_initial_server_secret), bin_expect);
+        lambda_test(__FUNCTION__, "server_initial_secret", protection.get_item(tls_secret_initial_quic_server), bin_expect);
 
         bin_expect = base16_decode("cf3a5331653c364c88f0f379b6067e37");
-        lambda_test(__FUNCTION__, "server key", protection.get_item(tls_context_quic_initial_server_key), bin_expect);
+        lambda_test(__FUNCTION__, "server key", protection.get_item(tls_secret_initial_quic_server_key), bin_expect);
 
         bin_expect = base16_decode("0ac1493ca1905853b0bba03e");
-        lambda_test(__FUNCTION__, "server iv", protection.get_item(tls_context_quic_initial_server_iv), bin_expect);
+        lambda_test(__FUNCTION__, "server iv", protection.get_item(tls_secret_initial_quic_server_iv), bin_expect);
 
         bin_expect = base16_decode("c206b8d9b9f0f37644430b490eeaa314");
-        lambda_test(__FUNCTION__, "server hp", protection.get_item(tls_context_quic_initial_server_hp), bin_expect);
+        lambda_test(__FUNCTION__, "server hp", protection.get_item(tls_secret_initial_quic_server_hp), bin_expect);
     }
 }
 
@@ -180,15 +180,15 @@ void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_sessio
     auto lambda_dump = [&](const char* text, const binary_t& bin) -> void { _logger->writeln("> %-21s : %s", text, base16_encode(bin).c_str()); };
 
     {
-        lambda_dump("initial secret", protection.get_item(tls_context_quic_initial_secret));
-        lambda_dump("client initial secret", protection.get_item(tls_context_quic_initial_client_secret));
-        lambda_dump("client key", protection.get_item(tls_context_quic_initial_client_key));
-        lambda_dump("client iv", protection.get_item(tls_context_quic_initial_client_iv));
-        lambda_dump("client hp", protection.get_item(tls_context_quic_initial_client_hp));
-        lambda_dump("server initial secret", protection.get_item(tls_context_quic_initial_server_secret));
-        lambda_dump("server key", protection.get_item(tls_context_quic_initial_server_key));
-        lambda_dump("server iv", protection.get_item(tls_context_quic_initial_server_iv));
-        lambda_dump("server hp", protection.get_item(tls_context_quic_initial_server_hp));
+        lambda_dump("initial secret", protection.get_item(tls_secret_initial_quic));
+        lambda_dump("client initial secret", protection.get_item(tls_secret_initial_quic_client));
+        lambda_dump("client key", protection.get_item(tls_secret_initial_quic_client_key));
+        lambda_dump("client iv", protection.get_item(tls_secret_initial_quic_client_iv));
+        lambda_dump("client hp", protection.get_item(tls_secret_initial_quic_client_hp));
+        lambda_dump("server initial secret", protection.get_item(tls_secret_initial_quic_server));
+        lambda_dump("server key", protection.get_item(tls_secret_initial_quic_server_key));
+        lambda_dump("server iv", protection.get_item(tls_secret_initial_quic_server_iv));
+        lambda_dump("server hp", protection.get_item(tls_secret_initial_quic_server_hp));
     }
 
     // write

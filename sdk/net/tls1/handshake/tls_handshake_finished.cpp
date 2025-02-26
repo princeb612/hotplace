@@ -36,7 +36,8 @@ tls_handshake_finished::tls_handshake_finished(tls_session* session) : tls_hands
 
 void tls_handshake_finished::run_scheduled(tls_direction_t dir) {
     auto session = get_session();
-    session->get_session_info(dir).set_status(get_type());
+    auto& session_info = session->get_session_info(dir);
+    session_info.set_status(get_type());
     session->reset_recordno(dir);
 }
 

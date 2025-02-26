@@ -284,10 +284,11 @@ struct tls_alert_t {
  *    assign
  */
 #define TLS_SECRET 0x0000
-#define TLS_SECRET_HANDSHAKE 0x0100
-#define TLS_SECRET_APPLICATION 0x0200
-#define TLS_SECRET_EXPORTER 0x0300
-#define TLS_SECRET_RESUMPTION 0x0400
+#define TLS_SECRET_INITIAL 0x0100
+#define TLS_SECRET_HANDSHAKE 0x0200
+#define TLS_SECRET_APPLICATION 0x0300
+#define TLS_SECRET_EXPORTER 0x0400
+#define TLS_SECRET_RESUMPTION 0x0500
 #define TLS_SECRET_USERCONTEXT 0xf000
 #define TLS_SECRET_EARLY 0x0080
 
@@ -334,6 +335,7 @@ struct tls_alert_t {
 #define TLS_SECRET_SERVER_QUIC_KEY 0x0014
 #define TLS_SECRET_SERVER_QUIC_IV 0x0015
 #define TLS_SECRET_SERVER_QUIC_HP 0x0016
+#define TLS_SECRET_SERVER_QUIC_KU 0x0017
 
 /**
  * @brief   secret
@@ -371,13 +373,23 @@ enum tls_secret_t : uint16 {
     // server_write_key[SecurityParameters.key_material_length]
     // client_write_IV[SecurityParameters.IV_size]
     // server_write_IV[SecurityParameters.IV_size]
-    tls_secret_master = (TLS_SECRET | TLS_SECRET_MASTER),
-    tls_secret_client_mac_key = (TLS_SECRET | TLS_SECRET_CLIENT_MAC_KEY),
-    tls_secret_server_mac_key = (TLS_SECRET | TLS_SECRET_SERVER_MAC_KEY),
-    tls_secret_client_key = (TLS_SECRET | TLS_SECRET_CLIENT_KEY),
-    tls_secret_client_iv = (TLS_SECRET | TLS_SECRET_CLIENT_IV),
-    tls_secret_server_key = (TLS_SECRET | TLS_SECRET_SERVER_KEY),
-    tls_secret_server_iv = (TLS_SECRET | TLS_SECRET_SERVER_IV),
+    tls_secret_master = (TLS_SECRET_INITIAL | TLS_SECRET_MASTER),
+    tls_secret_client_mac_key = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_MAC_KEY),
+    tls_secret_server_mac_key = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_MAC_KEY),
+    tls_secret_client_key = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_KEY),
+    tls_secret_client_iv = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_IV),
+    tls_secret_server_key = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_KEY),
+    tls_secret_server_iv = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_IV),
+
+    tls_secret_initial_quic = (TLS_SECRET_INITIAL | TLS_SECRET_MASTER),
+    tls_secret_initial_quic_client = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT),
+    tls_secret_initial_quic_server = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER),
+    tls_secret_initial_quic_client_key = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_QUIC_KEY),
+    tls_secret_initial_quic_server_key = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_QUIC_KEY),
+    tls_secret_initial_quic_client_iv = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_QUIC_IV),
+    tls_secret_initial_quic_server_iv = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_QUIC_IV),
+    tls_secret_initial_quic_client_hp = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_QUIC_HP),
+    tls_secret_initial_quic_server_hp = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_QUIC_HP),
 
     // HKDF_Expand(hashalg, dlen, value(tls_secret_early_secret), tls_label("derived"), empty_hash)
     tls_secret_handshake_derived = (TLS_SECRET_HANDSHAKE | TLS_SECRET_DERIVED),
@@ -504,15 +516,6 @@ enum tls_secret_t : uint16 {
     tls_context_resumption_binder_hash = (TLS_SECRET_USERCONTEXT | 0x10),   // CH 0-RTT
 
     tls_context_quic_dcid = (TLS_SECRET_USERCONTEXT | 0x11),
-    tls_context_quic_initial_secret = (TLS_SECRET_USERCONTEXT | 0x12),
-    tls_context_quic_initial_client_secret = (TLS_SECRET_USERCONTEXT | 0x13),
-    tls_context_quic_initial_server_secret = (TLS_SECRET_USERCONTEXT | 0x14),
-    tls_context_quic_initial_client_key = (TLS_SECRET_USERCONTEXT | 0x15),
-    tls_context_quic_initial_server_key = (TLS_SECRET_USERCONTEXT | 0x16),
-    tls_context_quic_initial_client_iv = (TLS_SECRET_USERCONTEXT | 0x17),
-    tls_context_quic_initial_server_iv = (TLS_SECRET_USERCONTEXT | 0x18),
-    tls_context_quic_initial_client_hp = (TLS_SECRET_USERCONTEXT | 0x19),
-    tls_context_quic_initial_server_hp = (TLS_SECRET_USERCONTEXT | 0x1a),
     tls_context_fragment = (TLS_SECRET_USERCONTEXT | 0x1b),  // DTLS, QUIC
 };
 
@@ -526,6 +529,13 @@ enum tls_message_flow_t {
     tls_1_rtt = 0,
     tls_0_rtt = 1,
     tls_hello_retry_request = 2,
+};
+
+enum protection_level_t {
+    protection_default = 0,
+    protection_initial = 1,
+    protection_handshake = 2,
+    protection_application = 3,
 };
 
 class tls_protection;

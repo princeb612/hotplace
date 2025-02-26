@@ -21,7 +21,7 @@ quic_encoded::quic_encoded(const quic_encoded& rhs)
 quic_encoded::quic_encoded(quic_encoded&& rhs)
     : payload_encoded(), _datalink(rhs._datalink), _value(rhs._value), _sizeof_value(rhs._sizeof_value), _data(rhs._data) {}
 
-quic_encoded::quic_encoded(uint64 data) : payload_encoded(), _datalink(false), _value(data) { quic_length_vle_int(data, _sizeof_value); }
+quic_encoded::quic_encoded(uint64 data) : payload_encoded(), _datalink(false), _value(data), _sizeof_value(0) {}
 
 quic_encoded::quic_encoded(uint64 data, uint8 prefix) : payload_encoded(), _datalink(false), _value(data), _sizeof_value(0) {
     if (prefix < 5) {
@@ -110,9 +110,10 @@ return_t quic_encoded::read(const byte_t* stream, size_t size, size_t& pos) {
         if (_datalink) {
             _data.clear().set_bstr_new(stream + pos - old, _value);
             pos += _value;
+            quic_length_vle_int(pos - old, _sizeof_value);
+        } else {
+            _sizeof_value = pos - old;
         }
-
-        _sizeof_value = pos - old;
     }
     __finally2 {
         // do nothing

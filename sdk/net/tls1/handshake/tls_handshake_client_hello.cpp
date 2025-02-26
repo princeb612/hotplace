@@ -51,6 +51,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
             __leave2;
         }
         auto& protection = session->get_tls_protection();
+        auto session_type = session->get_type();
 
         {
             auto hsstatus = session->get_session_info(dir).get_status();

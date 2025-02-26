@@ -49,6 +49,7 @@ class quic_frame {
     void release();
 
    protected:
+    virtual return_t do_preprocess(tls_direction_t dir);
     virtual return_t do_postprocess(tls_direction_t dir);
     virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -83,6 +84,7 @@ class quic_frame_ping : public quic_frame {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 };
 
+// RFC 9000 13.2.6.  ACK Frames and Packet Protection
 class quic_frame_ack : public quic_frame {
    public:
     quic_frame_ack(tls_session* session);

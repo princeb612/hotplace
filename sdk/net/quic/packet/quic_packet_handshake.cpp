@@ -73,7 +73,7 @@ return_t quic_packet_handshake::read(tls_direction_t dir, const byte_t* stream, 
         binary_t bin_unprotected_header;
         binary_t bin_protected_header;
         binary_t bin_pn;
-        binary_t plaintext;
+        binary_t bin_plaintext;
         binary_t bin_tag;
 
         size_t offset_initial = pos;
@@ -102,7 +102,7 @@ return_t quic_packet_handshake::read(tls_direction_t dir, const byte_t* stream, 
 
         if (from_any != dir) {
             binary_t bin_mask;
-            ret = protection.protection_mask(session, dir, stream + (offset_initial + offset_pnpayload + 4), 16, bin_mask, 5);
+            ret = protection.protection_mask(session, dir, stream + (offset_initial + offset_pnpayload + 4), 16, bin_mask, 5, protection_handshake);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -142,7 +142,8 @@ return_t quic_packet_handshake::read(tls_direction_t dir, const byte_t* stream, 
                 protection.set_item(tls_context_quic_dcid, get_dcid());
 
                 size_t pos = 0;
-                ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_plaintext, bin_unprotected_header, bin_tag);
+                ret =
+                    protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_plaintext, bin_unprotected_header, bin_tag, protection_handshake);
                 if (errorcode_t::success == ret) {
                     _payload = std::move(bin_plaintext);
                 } else {
@@ -243,7 +244,7 @@ return_t quic_packet_handshake::write(tls_direction_t dir, binary_t& header, bin
             binary_t bin_mask;
 
             // AEAD
-            protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag);
+            protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_handshake);
 
             // Header Protection
             {
@@ -252,7 +253,7 @@ return_t quic_packet_handshake::write(tls_direction_t dir, binary_t& header, bin
                 binary_append(bin_pn, &bin_ciphertext[0], adj);
 
                 // calcurate mask
-                ret = protection.protection_mask(session, dir, &bin_ciphertext[adj], bin_ciphertext.size(), bin_mask, 5);
+                ret = protection.protection_mask(session, dir, &bin_ciphertext[adj], bin_ciphertext.size(), bin_mask, 5, protection_handshake);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }
@@ -281,12 +282,14 @@ return_t quic_packet_handshake::write(tls_direction_t dir, binary_t& header, bin
             ciphertext = std::move(bin_ciphertext);
             tag = std::move(bin_tag);
 
-            dump();
+            if (istraceable()) {
+                dump();
 
-            auto session = get_session();
-            size_t pos = 0;
-            quic_frames frames;
-            frames.read(session, dir, &_payload[0], _payload.size(), pos);
+                auto session = get_session();
+                size_t pos = 0;
+                quic_frames frames;
+                frames.read(session, dir, &_payload[0], _payload.size(), pos);
+            }
         } else {
             header = std::move(bin_unprotected_header);
         }

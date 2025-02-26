@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_keychain::add_ec2(crypto_key* cryptokey, uint32 nid, const binary_t& x, bool ysign, const binary_t& d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_compressed(crypto_key* cryptokey, uint32 nid, const binary_t& x, bool ysign, const binary_t& d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     EC_KEY* ec = nullptr;
@@ -125,7 +125,7 @@ return_t crypto_keychain::add_ec2(crypto_key* cryptokey, uint32 nid, const binar
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_compressed_b64(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == x) {
@@ -145,7 +145,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const ch
         os2b(x, bin_x);
         os2b(d, bin_d);
 
-        ret = add_ec2(cryptokey, nid, bin_x, ysign, bin_d, desc);
+        ret = add_ec_compressed(cryptokey, nid, bin_x, ysign, bin_d, desc);
     }
     __finally2 {
         // do nothing
@@ -153,7 +153,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const ch
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_compressed_b64u(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == x) {
@@ -173,7 +173,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const c
         os2b(x, bin_x);
         os2b(d, bin_d);
 
-        ret = add_ec2(cryptokey, nid, bin_x, ysign, bin_d, desc);
+        ret = add_ec_compressed(cryptokey, nid, bin_x, ysign, bin_d, desc);
     }
     __finally2 {
         // do nothing
@@ -181,7 +181,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const c
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_compressed_b16(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == x) {
@@ -201,7 +201,7 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const ch
         os2b(x, bin_x);
         os2b(d, bin_d);
 
-        ret = add_ec2(cryptokey, nid, bin_x, ysign, bin_d, desc);
+        ret = add_ec_compressed(cryptokey, nid, bin_x, ysign, bin_d, desc);
     }
     __finally2 {
         // do nothing
@@ -209,7 +209,7 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const ch
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_compressed_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == x) {
@@ -229,7 +229,7 @@ return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const
         os2b(x, bin_x);
         os2b(d, bin_d);
 
-        ret = add_ec2(cryptokey, nid, bin_x, ysign, bin_d, desc);
+        ret = add_ec_compressed(cryptokey, nid, bin_x, ysign, bin_d, desc);
     }
     __finally2 {
         // do nothing
@@ -237,7 +237,7 @@ return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_compressed_b64(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
@@ -252,7 +252,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, const char* curve, c
             __leave2;
         }
 
-        ret = add_ec_b64(cryptokey, nid, x, ysign, d, desc);
+        ret = add_ec_compressed_b64(cryptokey, nid, x, ysign, d, desc);
     }
     __finally2 {
         // do nothing
@@ -260,7 +260,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, const char* curve, c
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_compressed_b64u(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
@@ -275,7 +275,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, const char* curve, 
             __leave2;
         }
 
-        ret = add_ec_b64u(cryptokey, nid, x, ysign, d, desc);
+        ret = add_ec_compressed_b64u(cryptokey, nid, x, ysign, d, desc);
     }
     __finally2 {
         // do nothing
@@ -283,7 +283,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, const char* curve, 
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_compressed_b16(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
@@ -298,7 +298,7 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, const char* curve, c
             __leave2;
         }
 
-        ret = add_ec_b16(cryptokey, nid, x, ysign, d, desc);
+        ret = add_ec_compressed_b16(cryptokey, nid, x, ysign, d, desc);
     }
     __finally2 {
         // do nothing
@@ -306,7 +306,7 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, const char* curve, c
     return ret;
 }
 
-return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_ec_compressed_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
@@ -321,7 +321,7 @@ return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, const char* curve
             __leave2;
         }
 
-        ret = add_ec_b16rfc(cryptokey, nid, x, ysign, d, desc);
+        ret = add_ec_compressed_b16rfc(cryptokey, nid, x, ysign, d, desc);
     }
     __finally2 {
         // do nothing

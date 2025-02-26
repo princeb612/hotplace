@@ -160,7 +160,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 }
             } else if (session_quic == session_type) {
                 const binary_t &salt = get_item(tls_context_quic_dcid);
-                if ((false == salt.empty()) && get_item(tls_context_quic_initial_secret).empty()) {
+                if ((false == salt.empty()) && get_item(tls_secret_initial_quic).empty()) {
                     binary_t bin_initial_salt = base16_decode("0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a");
 
                     openssl_kdf kdf;
@@ -181,32 +181,32 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                      */
 
                     ret = kdf.hmac_kdf_extract(bin_initial_secret, alg, bin_initial_salt, salt);
-                    _kv[tls_context_quic_initial_secret] = bin_initial_secret;
+                    _kv[tls_secret_initial_quic] = bin_initial_secret;
 
                     if (session_quic == session->get_type()) {
                         kdf.hkdf_expand_tls13_label(bin_client_initial_secret, alg, 32, bin_initial_secret, str2bin("client in"), context);
-                        _kv[tls_context_quic_initial_client_secret] = bin_client_initial_secret;
+                        _kv[tls_secret_initial_quic_client] = bin_client_initial_secret;
 
                         kdf.hkdf_expand_tls13_label(bin, alg, keysize, bin_client_initial_secret, str2bin("quic key"), context);
-                        _kv[tls_context_quic_initial_client_key] = bin;
+                        _kv[tls_secret_initial_quic_client_key] = bin;
 
                         kdf.hkdf_expand_tls13_label(bin, alg, 12, bin_client_initial_secret, str2bin("quic iv"), context);
-                        _kv[tls_context_quic_initial_client_iv] = bin;
+                        _kv[tls_secret_initial_quic_client_iv] = bin;
 
                         kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_client_initial_secret, str2bin("quic hp"), context);
-                        _kv[tls_context_quic_initial_client_hp] = bin;
+                        _kv[tls_secret_initial_quic_client_hp] = bin;
 
                         kdf.hkdf_expand_tls13_label(bin_server_initial_secret, alg, 32, bin_initial_secret, str2bin("server in"), context);
-                        _kv[tls_context_quic_initial_server_secret] = bin_server_initial_secret;
+                        _kv[tls_secret_initial_quic_server] = bin_server_initial_secret;
 
                         kdf.hkdf_expand_tls13_label(bin, alg, keysize, bin_server_initial_secret, str2bin("quic key"), context);
-                        _kv[tls_context_quic_initial_server_key] = bin;
+                        _kv[tls_secret_initial_quic_server_key] = bin;
 
                         kdf.hkdf_expand_tls13_label(bin, alg, 12, bin_server_initial_secret, str2bin("quic iv"), context);
-                        _kv[tls_context_quic_initial_server_iv] = bin;
+                        _kv[tls_secret_initial_quic_server_iv] = bin;
 
                         kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_server_initial_secret, str2bin("quic hp"), context);
-                        _kv[tls_context_quic_initial_server_hp] = bin;
+                        _kv[tls_secret_initial_quic_server_hp] = bin;
                     }
                 }
             }

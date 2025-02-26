@@ -7,9 +7,13 @@
   * ![openssl](https://img.shields.io/badge/openssl-1.1.1/3.0/3.1/3.2/3.3/3.4-green)
   * ![jansson](https://img.shields.io/badge/jansson-2.14-green)
   * ![zlib](https://img.shields.io/badge/zlb-1.3.1-green)
-* language/platform
-  * ![c++11](https://img.shields.io/badge/c++11-green) ![gcc](https://img.shields.io/badge/gcc-green) ![cmake](https://img.shields.io/badge/cmake-green)
-  * ![mingw64](https://img.shields.io/badge/mingw64-green) ![ubuntu](https://img.shields.io/badge/ubuntu-green) ![RHEL](https://img.shields.io/badge/RHEL-green)
+* language
+  * ![gcc](https://img.shields.io/badge/gcc-c++11-green)
+  * ![cmake](https://img.shields.io/badge/cmake->=2.6-green)
+* platform
+  * ![mingw64](https://img.shields.io/badge/mingw64-green)
+  * ![ubuntu](https://img.shields.io/badge/ubuntu-green)
+  * ![RHEL](https://img.shields.io/badge/RHEL-green)
 * status
   * JOSE ![implemented](https://img.shields.io/badge/implemented-green)
   * CBOR ![implemented](https://img.shields.io/badge/implemented-green)
@@ -17,6 +21,7 @@
   * HTTP/1.1 ![implemented](https://img.shields.io/badge/implemented-green)
   * HTTP/2 ![implemented](https://img.shields.io/badge/implemented-green)
   * TLS/DTLS ![studying](https://img.shields.io/badge/studying-magenta)
+  * QUIC ![studying](https://img.shields.io/badge/studying-magenta)
   * HTTP/3 ![studying](https://img.shields.io/badge/studying-magenta)
   * ASN.1 ![studying](https://img.shields.io/badge/studying-magenta)
 * link
