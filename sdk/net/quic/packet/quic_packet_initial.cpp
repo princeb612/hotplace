@@ -62,17 +62,16 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
         auto& protection = session->get_tls_protection();
         auto tagsize = protection.get_tag_size();
 
-        ret = quic_packet::read(dir, stream, size, pos);
+        ret = read_common_header(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         binary_t bin_unprotected_header;
         binary_t bin_protected_header;
-        binary_t bin_pn;
         binary_t bin_tag;
 
-        size_t offset_initial = pos;
+        size_t ppos = pos;
         size_t offset_pnpayload = 0;
         byte_t ht = stream[0];
 
@@ -87,53 +86,26 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
                << new payload_member(new quic_encoded(uint64(0)), constexpr_len)     // Length (i)
                << new payload_member(binary_t(), constexpr_payload)                  // Packet Number (8..32), Packet Payload (8..)
                << new payload_member(binary_t(), constexpr_tag);
-            pl.select(constexpr_tag)->reserve(tagsize);
+            pl.reserve(constexpr_tag, tagsize);
             pl.read(stream, size, pos);
 
-            pl.select(constexpr_token)->get_payload_encoded()->get_variant().to_binary(_token);
-            _length = pl.select(constexpr_len)->get_payload_encoded()->value();
-            pl.select(constexpr_payload)->get_variant().to_binary(_payload);
-            pl.select(constexpr_tag)->get_variant().to_binary(bin_tag);
+            pl.get_binary(constexpr_token, _token);
+            _length = pl.t_value_of<uint64>(constexpr_len);
+            pl.get_binary(constexpr_payload, _payload);
+            pl.get_binary(constexpr_tag, bin_tag);
 
             offset_pnpayload = pl.offset_of(constexpr_payload);
-            _sizeof_length = pl.select(constexpr_len)->get_space();  // support longer size
+            _sizeof_length = pl.get_space(constexpr_len);  // support longer size
         }
 
         if (from_any != dir) {
-            // protection mask
-            binary_t bin_mask;
-            ret = protection.protection_mask(session, dir, stream + (offset_initial + offset_pnpayload + 4), 16, bin_mask, 5, protection_initial);
+            ret = header_unprotect(dir, stream + (ppos + offset_pnpayload + 4), 16, protection_initial, _ht, _pn, _payload);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
 
-            // unprotect ht
-            if (quic_packet_field_hf & ht) {
-                _ht ^= bin_mask[0] & 0x0f;
-            } else {
-                _ht ^= bin_mask[0] & 0x1f;
-            }
-            // unprotect pn
-            auto pn_length = get_pn_length(_ht);
-            {
-                // RFC 9001 5.4.2.  Header Protection Sample
-                // Packet Number Length = 2
-                //   ... | PN1 PN2 | PL1 PL2 PL3 PL4 ...
-                //                 \- pnpad
-                // Packet Number Length = 1
-                //   ... | PN1 | PL1 PL2 PL3 PL4 PL5 ...
-                //              \ pnpad
-                // stream
-                //   ... | PN1 PN2 PN3 PN4 | PL1 PL2 ...
-                binary_append(bin_pn, &_payload[0], 4);
-                memxor(&bin_pn[0], &bin_mask[1], 4);
-                bin_pn.resize(pn_length);
-                _pn = t_binary_to_integer<uint32>(bin_pn);
-                _payload.erase(_payload.begin(), _payload.begin() + pn_length);
-            }
-
             // aad
-            write(from_any, bin_unprotected_header);
+            write_header(bin_unprotected_header);
 
             // decrypt
             binary_t bin_plaintext;
@@ -173,30 +145,6 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
     return ret;
 }
 
-return_t quic_packet_initial::write(tls_direction_t dir, binary_t& packet) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        binary_t header;
-        binary_t ciphertext;
-        binary_t tag;
-
-        packet.clear();
-
-        ret = write(dir, header, ciphertext, tag);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        binary_append(packet, header);
-        binary_append(packet, ciphertext);
-        binary_append(packet, tag);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
 return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -218,7 +166,7 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
 
         // unprotected header
         {
-            ret = quic_packet::write(dir, bin_unprotected_header);
+            ret = write_common_header(bin_unprotected_header);
 
             // protected header
             bin_protected_header = bin_unprotected_header;
@@ -252,30 +200,18 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
             binary_t bin_mask;
 
             // AEAD
-            protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_initial);
+            ret = protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_initial);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             // Header Protection
             {
                 uint8 ht = _ht;
-                auto adj = 4 - pn_length;
-                binary_append(bin_pn, &bin_ciphertext[0], adj);
-
-                // calcurate mask
-                ret = protection.protection_mask(session, dir, &bin_ciphertext[adj], bin_ciphertext.size(), bin_mask, 5, protection_initial);
+                ret = header_protect(dir, bin_ciphertext, protection_initial, ht, pn_length, bin_pn, bin_protected_header);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }
-
-                if (quic_packet_field_hf & ht) {
-                    ht ^= bin_mask[0] & 0x0f;
-                } else {
-                    ht ^= bin_mask[0] & 0x1f;
-                }
-                memxor(&bin_pn[0], &bin_mask[1], 4);
-
-                // encode packet length
-                bin_protected_header[0] = ht;
-                bin_pn.resize(pn_length);
 
                 // encode packet number
                 payload pl;

@@ -43,7 +43,7 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             pl.read(stream, size, pos);
 
             ack_len = pl.t_value_of<uint16>(constexpr_ack_len);
-            pl.select(constexpr_ack)->get_variant().to_binary(ack);
+            pl.get_binary(constexpr_ack, ack);
         }
 
         if (istraceable()) {

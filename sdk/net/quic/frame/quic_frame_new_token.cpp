@@ -23,8 +23,6 @@ namespace net {
 
 quic_frame_new_token::quic_frame_new_token(tls_session* session) : quic_frame(quic_frame_type_new_token, session) {}
 
-quic_frame_new_token::~quic_frame_new_token() {}
-
 return_t quic_frame_new_token::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -43,7 +41,7 @@ return_t quic_frame_new_token::do_read_body(tls_direction_t dir, const byte_t* s
         pl.read(stream, size, pos);
 
         binary_t token;
-        pl.select(constexpr_token)->get_variant().to_binary(token);
+        pl.get_binary(constexpr_token, token);
 
         if (istraceable(category_quic)) {
             basic_stream dbs;

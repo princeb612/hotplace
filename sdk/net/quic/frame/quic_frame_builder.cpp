@@ -105,9 +105,11 @@ quic_frame* quic_frame_builder::build() {
             break;
         case quic_frame_type_connection_close:
             // Figure 43: CONNECTION_CLOSE Frame Format
+            __try_new_catch_only(frame, new quic_frame_connection_close(session));
             break;
         case quic_frame_type_handshake_done:
             // Figure 44: HANDSHAKE_DONE Frame Format
+            __try_new_catch_only(frame, new quic_frame_handshake_done(session));
             break;
         default: {
         } break;

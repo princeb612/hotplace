@@ -109,7 +109,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
         {
             payload pl;
             pl << new payload_member(binary_t(), constexpr_verify_data);
-            pl.select(constexpr_verify_data)->reserve(dlen);
+            pl.reserve(constexpr_verify_data, dlen);
             pl.read(stream, size, pos);
 
             pl.get_binary(constexpr_verify_data, verify_data);

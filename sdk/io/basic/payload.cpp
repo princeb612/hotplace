@@ -310,8 +310,33 @@ size_t payload::numberof_members() { return _members.size(); }
 void payload::get_binary(const std::string& name, binary_t& bin, uint32 flags) {
     auto item = select(name);
     if (item) {
-        item->get_variant().to_binary(bin, flags);
+        if (item->encoded()) {
+            auto encoded = item->get_payload_encoded();
+            encoded->get_variant().to_binary(bin, flags);
+        } else {
+            item->get_variant().to_binary(bin, flags);
+        }
     }
+}
+
+return_t payload::reserve(const std::string& name, uint16 size) {
+    return_t ret = errorcode_t::success;
+    auto item = select(name);
+    if (item) {
+        item->reserve(size);
+    } else {
+        ret = errorcode_t::not_found;
+    }
+    return ret;
+}
+
+size_t payload::get_space(const std::string& name) {
+    size_t value = 0;
+    auto item = select(name);
+    if (item) {
+        value = item->get_space();
+    }
+    return value;
 }
 
 }  // namespace io

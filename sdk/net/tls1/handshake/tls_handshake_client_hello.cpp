@@ -191,7 +191,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
 
                 pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
 
-                pl.select(constexpr_random)->reserve(32);
+                pl.reserve(constexpr_random, 32);
                 pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
                 pl.set_reference_value(constexpr_cipher_suite, constexpr_cipher_suite_len);
                 pl.set_reference_value(constexpr_compression_method, constexpr_compression_method_len);

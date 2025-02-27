@@ -531,7 +531,18 @@ enum tls_message_flow_t {
     tls_hello_retry_request = 2,
 };
 
-enum protection_level_t {
+/**
+ * @brief record number (TLS, DTLS), packet number (QUIC)
+ * @remarks
+ *          TLS, DTLS
+ *          RFC 9000 12.3.  Packet Numbers
+ *          | space                  |                         | level                  |
+ *          | protection_default     | TLS, DTLS               | protection_default     |
+ *          | initial space          | initial packets         | protection_initial     |
+ *          | handshake space        | handshake packets       | protection_handshake   |
+ *          | application data space | 0-RTT and 1-RTT packets | protection_application |
+ */
+enum protection_level_t : uint8 {
     protection_default = 0,
     protection_initial = 1,
     protection_handshake = 2,

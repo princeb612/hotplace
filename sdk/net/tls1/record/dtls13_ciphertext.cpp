@@ -91,7 +91,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
 
             uhdr = pl.t_value_of<uint8>(constexpr_unified_header);
             if (pl.get_group_condition(constexpr_group_c)) {
-                pl.select(constexpr_connection_id)->get_variant().to_binary(connection_id);
+                pl.get_binary(constexpr_connection_id, connection_id);
             }
             if (pl.get_group_condition(constexpr_group_s16)) {
                 sequence = pl.t_value_of<uint16>(constexpr_sequence16);
@@ -106,7 +106,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
             if (pl.get_group_condition(constexpr_group_l)) {
                 len = pl.t_value_of<uint16>(constexpr_len);
             }
-            pl.select(constexpr_encdata)->get_variant().to_binary(encdata);
+            pl.get_binary(constexpr_encdata, encdata);
             offset_encdata = pl.offset_of(constexpr_encdata);
         }
 

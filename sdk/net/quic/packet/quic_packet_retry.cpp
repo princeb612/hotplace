@@ -46,6 +46,9 @@
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_retry_token[] = "retry token";
+constexpr char constexpr_retry_integrity_tag[] = "retry integrity tag";
+
 quic_packet_retry::quic_packet_retry(tls_session* session) : quic_packet(quic_packet_type_retry, session) {}
 
 quic_packet_retry::quic_packet_retry(const quic_packet_retry& rhs)
@@ -54,19 +57,19 @@ quic_packet_retry::quic_packet_retry(const quic_packet_retry& rhs)
 return_t quic_packet_retry::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = quic_packet::read(dir, stream, size, pos);
+        ret = read_common_header(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         {
             payload pl;
-            pl << new payload_member(binary_t(), "retry token") << new payload_member(binary_t(), "retry integrity tag");
-            pl.select("retry integrity tag")->reserve(128 >> 3);
+            pl << new payload_member(binary_t(), constexpr_retry_token) << new payload_member(binary_t(), constexpr_retry_integrity_tag);
+            pl.reserve(constexpr_retry_integrity_tag, 128 >> 3);
             pl.read(stream, size, pos);
 
-            pl.select("retry token")->get_variant().to_binary(_retry_token);
-            pl.select("retry integrity tag")->get_variant().to_binary(_retry_integrity_tag);
+            pl.get_binary(constexpr_retry_token, _retry_token);
+            pl.get_binary(constexpr_retry_integrity_tag, _retry_integrity_tag);
         }
 
         dump();
@@ -79,11 +82,12 @@ return_t quic_packet_retry::read(tls_direction_t dir, const byte_t* stream, size
 
 return_t quic_packet_retry::write(tls_direction_t dir, binary_t& packet) {
     return_t ret = errorcode_t::success;
-    ret = quic_packet::write(dir, packet);
+
+    ret = write_common_header(packet);
 
     binary_t bin_integrity_tag;
 
-    if (dir) {
+    if (from_any != dir) {
         ret = retry_integrity_tag(*this, bin_integrity_tag);
         if (errorcode_t::success == ret) {
             _retry_integrity_tag = std::move(bin_integrity_tag);
@@ -92,7 +96,7 @@ return_t quic_packet_retry::write(tls_direction_t dir, binary_t& packet) {
 
     {
         payload pl;
-        pl << new payload_member(_retry_token, "retry token") << new payload_member(_retry_integrity_tag, "retry integrity tag");
+        pl << new payload_member(_retry_token) << new payload_member(_retry_integrity_tag);
         pl.write(packet);
     }
 
@@ -108,9 +112,7 @@ void quic_packet_retry::dump() {
         basic_stream dbs;
 
         dbs.printf(" > retry token %s\n", base16_encode(_retry_token).c_str());
-        // dump_memory(_retry_token, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
         dbs.printf(" > retry integrity tag\n", base16_encode(_retry_integrity_tag).c_str());
-        // dump_memory(_retry_integrity_tag, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
 
         trace_debug_event(category_quic, quic_event_dump, &dbs);
     }
@@ -153,7 +155,7 @@ return_t quic_packet_retry::retry_integrity_tag(const quic_packet_retry& retry_p
         binary_t bin_key = base16_decode_rfc(key);
         binary_t bin_nonce = base16_decode_rfc(nonce);
         binary_t bin_plaintext;
-        binary_t bin_encrypted;
+        binary_t bin_ciphertext;
         const binary_t& bin_dcid = protection.get_item(tls_context_quic_dcid);
 
         // ODCID Length (8)
@@ -168,7 +170,7 @@ return_t quic_packet_retry::retry_integrity_tag(const quic_packet_retry& retry_p
         openssl_crypt crypt;
         crypt_context_t* handle = nullptr;
         crypt.open(&handle, "aes-128-gcm", bin_key, bin_nonce);
-        ret = crypt.encrypt(handle, bin_plaintext, bin_encrypted, bin_retry_pseudo_packet, tag);
+        ret = crypt.encrypt(handle, bin_plaintext, bin_ciphertext, bin_retry_pseudo_packet, tag);
         crypt.close(handle);
     }
     __finally2 {}

@@ -1,5 +1,5 @@
 
-## block cipher tested
+## cipher tested
 
 | alg       | CBC | CFB | CFB1 | CFB8 | CTR | ECB | GCM | OFB | KEYWRAP |
 | --        | --  | --  | --   | --   | --  | --  | --  | --  | --      |
@@ -14,11 +14,6 @@
 | RC5       |  O  |  O  |      |      |     |  O  |     |  O  |         |
 | SEED      |  O  |  O  |      |      |     |  O  |     |  O  |         |
 | SM4       |  O  |  O  |      |      |     |  O  |     |  O  |         |
-
-## stream cipher tested
-
-  * chacha20
-    * chacha20,chacha20-poly1305
 
 ## digest tested
 

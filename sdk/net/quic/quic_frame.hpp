@@ -67,7 +67,6 @@ class quic_frame {
 class quic_frame_padding : public quic_frame {
    public:
     quic_frame_padding(tls_session* session);
-    virtual ~quic_frame_padding();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -77,7 +76,6 @@ class quic_frame_padding : public quic_frame {
 class quic_frame_ping : public quic_frame {
    public:
     quic_frame_ping(tls_session* session);
-    virtual ~quic_frame_ping();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -88,7 +86,6 @@ class quic_frame_ping : public quic_frame {
 class quic_frame_ack : public quic_frame {
    public:
     quic_frame_ack(tls_session* session);
-    virtual ~quic_frame_ack();
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir);
@@ -99,7 +96,6 @@ class quic_frame_ack : public quic_frame {
 class quic_frame_reset_stream : public quic_frame {
    public:
     quic_frame_reset_stream(tls_session* session);
-    virtual ~quic_frame_reset_stream();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -109,7 +105,6 @@ class quic_frame_reset_stream : public quic_frame {
 class quic_frame_stop_sending : public quic_frame {
    public:
     quic_frame_stop_sending(tls_session* session);
-    virtual ~quic_frame_stop_sending();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -119,7 +114,6 @@ class quic_frame_stop_sending : public quic_frame {
 class quic_frame_crypto : public quic_frame {
    public:
     quic_frame_crypto(tls_session* session);
-    virtual ~quic_frame_crypto();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -129,11 +123,28 @@ class quic_frame_crypto : public quic_frame {
 class quic_frame_new_token : public quic_frame {
    public:
     quic_frame_new_token(tls_session* session);
-    virtual ~quic_frame_new_token();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+};
+
+// RFC 9000 19.19.  CONNECTION_CLOSE Frames
+class quic_frame_connection_close : public quic_frame {
+   public:
+    quic_frame_connection_close(tls_session* session);
+
+   protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+};
+
+// RFC 9000 19.20.  HANDSHAKE_DONE Frames
+class quic_frame_handshake_done : public quic_frame {
+   public:
+    quic_frame_handshake_done(tls_session* session);
+
+   protected:
 };
 
 /**

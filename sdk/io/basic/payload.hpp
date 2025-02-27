@@ -361,7 +361,12 @@ class payload {
         T i = 0;
         auto item = select(name);
         if (item) {
-            i = t_to_int<T>(item->get_variant());
+            if (item->encoded()) {
+                auto encoded = item->get_payload_encoded();
+                i = encoded->value();
+            } else {
+                i = t_to_int<T>(item->get_variant());
+            }
         }
         return i;
     }
@@ -369,11 +374,18 @@ class payload {
     T t_value_of(payload_member* item) {
         T i = 0;
         if (item) {
-            i = t_to_int<T>(item->get_variant());
+            if (item->encoded()) {
+                auto encoded = item->get_payload_encoded();
+                i = encoded->value();
+            } else {
+                i = t_to_int<T>(item->get_variant());
+            }
         }
         return i;
     }
     void get_binary(const std::string& name, binary_t& bin, uint32 flags = 0);
+    return_t reserve(const std::string& name, uint16 size);
+    size_t get_space(const std::string& name);
 
    private:
     /**

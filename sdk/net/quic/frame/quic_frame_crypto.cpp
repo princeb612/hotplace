@@ -24,8 +24,6 @@ namespace net {
 
 quic_frame_crypto::quic_frame_crypto(tls_session* session) : quic_frame(quic_frame_type_crypto, session) {}
 
-quic_frame_crypto::~quic_frame_crypto() {}
-
 return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -62,10 +60,10 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
         pl.set_reference_value(constexpr_crypto_data, constexpr_length);
         pl.read(stream, size, pos);
 
-        uint64 offset = pl.select(constexpr_offset)->get_payload_encoded()->value();
-        uint64 length = pl.select(constexpr_length)->get_payload_encoded()->value();
+        uint64 offset = pl.t_value_of<uint64>(constexpr_offset);
+        uint64 length = pl.t_value_of<uint64>(constexpr_length);
         binary_t crypto_data;
-        pl.select(constexpr_crypto_data)->get_variant().to_binary(crypto_data);
+        pl.get_binary(constexpr_crypto_data, crypto_data);
 
         if (istraceable(category_quic)) {
             basic_stream dbs;

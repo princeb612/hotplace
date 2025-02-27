@@ -200,11 +200,11 @@ void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_sessio
         initial.set_pn(pn, pn_length);
 
         // unprotected header
-        initial.write(from_any, bin_unprotected_header);
+        initial.write_header(bin_unprotected_header);
 
         {
             // [test vector] set record no
-            session->set_recordno(dir, pn);
+            session->set_recordno(dir, pn, protection_initial);
 
             // packet protection -> protected header, payload, tag
             initial.write(dir, bin_protected_header, bin_payload, bin_tag);
@@ -282,7 +282,7 @@ void test_rfc_9001_send_initial(testvector_initial_packet* item, tls_session* se
     // read
     {
         // [test vector] set record no
-        session->set_recordno(dir, pn);
+        session->set_recordno(dir, pn, protection_initial);
 
         quic_packet_initial initial(session);
 

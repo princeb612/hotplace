@@ -192,5 +192,34 @@ return_t decode_packet_number(uint64 largest_pn, uint64 truncated_pn, uint8 pn_n
     return ret;
 }
 
+void quic_packet_get_type(uint8 hdr, uint8& type, bool& is_longheader) {
+    if (quic_packet_field_hf & hdr) {  // Header Form
+        is_longheader = true;
+        if (quic_packet_field_fb & hdr) {               // Fixed Bit
+            switch (quic_packet_field_mask_lh & hdr) {  // Long Packet Type
+                case quic_packet_field_initial:
+                    type = quic_packet_type_initial;
+                    break;
+                case quic_packet_field_0_rtt:
+                    type = quic_packet_type_0_rtt;
+                    break;
+                case quic_packet_field_handshake:
+                    type = quic_packet_type_handshake;
+                    break;
+                case quic_packet_field_retry:
+                    type = quic_packet_type_retry;
+                    break;
+            }
+        } else {
+            type = quic_packet_type_version_negotiation;
+        }
+    } else {
+        is_longheader = false;
+        if (quic_packet_field_fb & hdr) {
+            type = quic_packet_type_1_rtt;
+        }
+    }
+}
+
 }  // namespace net
 }  // namespace hotplace

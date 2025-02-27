@@ -40,7 +40,7 @@ class quic_packet {
     quic_packet(tls_session* session);
     quic_packet(quic_packet_t type, tls_session* session);
     quic_packet(const quic_packet& rhs);
-    ~quic_packet();
+    virtual ~quic_packet();
 
     /**
      * @brief   type
@@ -106,6 +106,19 @@ class quic_packet {
      * @param   binary_t& packet [out] header || ciphertext || tag
      */
     virtual return_t write(tls_direction_t dir, binary_t& packet);
+    /**
+     * @brief   write
+     * @param   tls_direction_t dir
+     * @param   binary_t& header [out]
+     * @param   binary_t& ciphertext [out]
+     * @param   binary_t& tag [out]
+     */
+    virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
+
+    virtual return_t write_header(binary_t& packet);
+
+    return_t read_common_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    return_t write_common_header(binary_t& packet);
 
     /*
      * @brief   set packet number
@@ -138,11 +151,40 @@ class quic_packet {
 
     tls_session* get_session();
 
+    void addref();
+    void release();
+
    protected:
     /**
      * @brief   dump
      */
     void dump();
+
+    /**
+     * @brief   protect
+     * @param   tls_direction_t dir [in]
+     * @param   const binary_t& bin_ciphertext [in]
+     * @param   protection_level_t level [in]
+     * @param   uint8 hdr [in]
+     * @param   uint8 pn_length [in]
+     * @param   binary_t& bin_pn [inout]
+     * @param   binary_t& bin_protected_header [inout]
+     */
+    return_t header_protect(tls_direction_t dir, const binary_t& bin_ciphertext, protection_level_t level, uint8 hdr, uint8 pn_length, binary_t& bin_pn,
+                            binary_t& bin_protected_header);
+    /**
+     * @brief   unprotect
+     * @param   tls_direction_t dir [in]
+     * @param   const byte_t* stream [in] packet number ...
+     * @param   size_t size [in]
+     * @param   protection_level_t level [in]
+     * @param   uint8& hdr [inout]
+     * @param   uint32& pn [out]
+     * @param   binary_t& bin_payload [inout]
+     */
+    return_t header_unprotect(tls_direction_t dir, const byte_t* stream, size_t size, protection_level_t level, uint8& hdr, uint32& pn, binary_t& bin_payload);
+
+    t_shared_reference<quic_packet> _shared;
 
     tls_session* _session;
 
@@ -182,19 +224,6 @@ class quic_packet_initial : public quic_packet {
     quic_packet_initial(const quic_packet_initial& rhs);
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
-    /**
-     * @brief   write
-     * @param   tls_direction_t dir [in]
-     * @param   binary_t& packet [out] header || ciphertext || tag
-     */
-    virtual return_t write(tls_direction_t dir, binary_t& packet);
-    /**
-     * @brief   write
-     * @param   tls_direction_t dir
-     * @param   binary_t& header [out]
-     * @param   binary_t& ciphertext [out]
-     * @param   binary_t& tag [out]
-     */
     virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
 
     quic_packet_initial& set_token(const binary_t& token);
@@ -226,6 +255,9 @@ class quic_packet_0rtt : public quic_packet {
     quic_packet_0rtt(tls_session* session);
     quic_packet_0rtt(const quic_packet_0rtt& rhs);
 
+    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
+
    protected:
    private:
     /**
@@ -247,7 +279,6 @@ class quic_packet_handshake : public quic_packet {
     quic_packet_handshake(const quic_packet_handshake& rhs);
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(tls_direction_t dir, binary_t& packet);
     virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
 
     uint64 get_length();
@@ -266,6 +297,9 @@ class quic_packet_handshake : public quic_packet {
     uint8 _sizeof_length;
 };
 
+/**
+ * @brief   RFC 9000 17.2.5.  Retry Packet
+ */
 class quic_packet_retry : public quic_packet {
    public:
     quic_packet_retry(tls_session* session);
@@ -300,18 +334,24 @@ class quic_packet_retry : public quic_packet {
     binary_t _retry_integrity_tag;
 };
 
+/**
+ * @brief   RFC 9000 17.3.1.  1-RTT Packet
+ * @remarks
+ *          Figure 19: 1-RTT Packet
+ *           Packet Number (8..32),
+ *           Packet Payload (8..),
+ */
 class quic_packet_1rtt : public quic_packet {
-   protected:
-    quic_packet_1rtt();
+   public:
+    quic_packet_1rtt(tls_session* session);
     quic_packet_1rtt(const quic_packet_1rtt& rhs);
 
-   private:
-    /**
-     * Figure 19: 1-RTT Packet
-     *  Packet Number (8..32),
-     *  Packet Payload (8..),
-     */
+    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
 };
+
+return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir, const binary_t& packet);
 
 }  // namespace net
 }  // namespace hotplace

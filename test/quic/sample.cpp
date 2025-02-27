@@ -105,6 +105,18 @@ void whatsthis() {
     _logger->consoleln(bs);
 }
 
+std::string direction_string(tls_direction_t dir) {
+    std::string s;
+    s += "{";
+    if (from_client == dir) {
+        s += "client->server";
+    } else {
+        s += "client<-server";
+    }
+    s += "}";
+    return s;
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -143,8 +155,6 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
-    test_quic_xargs_org();
-
     if (0 == option.quic) {
         // RFC 9000 Appendix A.  Pseudocode
 
@@ -163,6 +173,8 @@ int main(int argc, char** argv) {
         test_rfc_9001_a4();
         test_rfc_9001_a5();
     }
+
+    test_quic_xargs_org();
 
     openssl_cleanup();
 

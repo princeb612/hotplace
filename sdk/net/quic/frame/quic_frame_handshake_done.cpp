@@ -3,12 +3,10 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *      RFC 9001 19.2.  PING Frames
- *      PING Frame {
- *          Type (i) = 0x01,
+ *      RFC 9000 19.20.  HANDSHAKE_DONE Frames
+ *      HANDSHAKE_DONE Frame {
+ *        Type (i) = 0x1e,
  *      }
- *      Figure 24: PING Frame Format
- *
  * Revision History
  * Date         Name                Description
  */
@@ -26,19 +24,7 @@
 namespace hotplace {
 namespace net {
 
-quic_frame_ping::quic_frame_ping(tls_session* session) : quic_frame(quic_frame_type_ping, session) {}
-
-return_t quic_frame_ping::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {}
-    __finally2 {}
-    return ret;
-}
-
-return_t quic_frame_ping::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
+quic_frame_handshake_done::quic_frame_handshake_done(tls_session* session) : quic_frame(quic_frame_type_ping, session) {}
 
 }  // namespace net
 }  // namespace hotplace

@@ -45,10 +45,6 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        if (type != get_type()) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
 
         if (istraceable(category_quic)) {
             basic_stream dbs;

@@ -146,6 +146,10 @@ void tls_advisor::load_tls_quic() {
         auto item = tls_quic_trans_error_codes + i;
         _quic_trans_error_codes.insert({item->code, item});
     }
+    for (auto i = 0; i < sizeof_tls_quic_packet_type_codes; i++) {
+        auto item = tls_quic_packet_type_codes + i;
+        _quic_packet_type_codes.insert({item->code, item});
+    }
 }
 
 void tls_advisor::load_tls_aead_parameters() {
@@ -528,6 +532,16 @@ std::string tls_advisor::sni_nametype_string(uint16 code) {
     std::string value;
     if (0 == code) {
         value = "hostname";
+    }
+    return value;
+}
+
+std::string tls_advisor::quic_packet_type_string(uint8 code) {
+    std::string value;
+    auto iter = _quic_packet_type_codes.find(code);
+    if (_quic_packet_type_codes.end() != iter) {
+        auto item = iter->second;
+        value = item->desc;
     }
     return value;
 }

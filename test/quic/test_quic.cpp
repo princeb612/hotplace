@@ -56,10 +56,18 @@ void test_quic_xargs_org() {
     tls_protection& protection = server_session.get_tls_protection();
     protection.set_cipher_suite(0x1301);
 
-    auto lambda_test = [&](tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect) -> void {
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+    auto lambda_test_secret = [&](tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect) -> void {
         protection.get_item(tls_secret, secret);
         _logger->writeln("> %s : %s", text, base16_encode(secret).c_str());
         _test_case.assert(secret == base16_decode(expect), __FUNCTION__, text);
+    };
+
+    auto lambda_read_packet = [&](tls_session* session, tls_direction_t dir, const binary_t& bin_packet, const char* func, const char* desc) -> void {
+        uint8 type = 0;
+        ret = quic_read_packet(type, session, dir, bin_packet);
+        _test_case.test(ret, func, "%s %s %s", direction_string(from_client).c_str(), tlsadvisor->quic_packet_type_string(type).c_str(), desc);
     };
 
     crypto_keychain keychain;
@@ -136,10 +144,7 @@ void test_quic_xargs_org() {
             "17 0d ec 28 0a ee fa 09 5d 08 b3 b7 24 1e f6 64"
             "6a 6c 86 e5 c6 2c e0 8b e0 99 -- -- -- -- -- --";
         binary_t bin_packet = base16_decode_rfc(packet);
-        quic_packet_initial initial(&server_session);
-        size_t pos = 0;
-        ret = initial.read(from_client, &bin_packet[0], bin_packet.size(), pos);
-        _test_case.test(ret, __FUNCTION__, "client_hello");
+        lambda_read_packet(&server_session, from_client, bin_packet, __FUNCTION__, "client_hello");
     }
 
     /**
@@ -203,11 +208,7 @@ void test_quic_xargs_org() {
             "9c 9f 64 d8 4d 64 fa 40 6c f0 b5 17 a9 26 d6 2a"
             "54 a9 29 41 36 b1 43 b0 33 -- -- -- -- -- -- --";
         binary_t bin_packet = base16_decode_rfc(packet);
-        quic_packet_initial initial(&server_session);
-        size_t pos = 0;
-        // initial.attach(&quicpp);
-        ret = initial.read(from_server, &bin_packet[0], bin_packet.size(), pos);
-        _test_case.test(ret, __FUNCTION__, "server_hello");
+        lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "server_hello");
     }
 
     {
@@ -243,20 +244,20 @@ void test_quic_xargs_org() {
         _test_case.assert(tls_13 == tlsver, __FUNCTION__, "TLS version 0x%04x", tlsver);
 
         binary_t bin;
-        lambda_test(tls_context_shared_secret, bin, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
-        lambda_test(tls_context_transcript_hash, bin, "hello_hash", "ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b");
-        lambda_test(tls_secret_early_secret, bin, "early_secret", "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
-        lambda_test(tls_context_empty_hash, bin, "empty_hash", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
-        lambda_test(tls_secret_handshake_derived, bin, "derived_secret", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
-        lambda_test(tls_secret_handshake, bin, "handshake_secret", "fb9fc80689b3a5d02c33243bf69a1b1b20705588a794304a6e7120155edf149a");
-        lambda_test(tls_secret_c_hs_traffic, bin, "client_secret", "b8902ab5f9fe52fdec3aea54e9293e4b8eabf955fcd88536bf44b8b584f14982");
-        lambda_test(tls_secret_s_hs_traffic, bin, "server_secret", "88ad8d3b0986a71965a28d108b0f40ffffe629284a6028c80ddc5dc083b3f5d1");
-        lambda_test(tls_secret_handshake_quic_client_key, bin, "client_handshake_key", "30a7e816f6a1e1b3434cf39cf4b415e7");
-        lambda_test(tls_secret_handshake_quic_client_iv, bin, "client_handshake_iv", "11e70a5d1361795d2bb04465");
-        lambda_test(tls_secret_handshake_quic_client_hp, bin, "client_handshake_hp", "84b3c21cacaf9f54c885e9a506459079");
-        lambda_test(tls_secret_handshake_quic_server_key, bin, "server_handshake_key", "17abbf0a788f96c6986964660414e7ec");
-        lambda_test(tls_secret_handshake_quic_server_iv, bin, "server_handshake_iv", "09597a2ea3b04c00487e71f3");
-        lambda_test(tls_secret_handshake_quic_server_hp, bin, "server_handshake_hp", "2a18061c396c2828582b41b0910ed536");
+        lambda_test_secret(tls_context_shared_secret, bin, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
+        lambda_test_secret(tls_context_transcript_hash, bin, "hello_hash", "ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b");
+        lambda_test_secret(tls_secret_early_secret, bin, "early_secret", "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
+        lambda_test_secret(tls_context_empty_hash, bin, "empty_hash", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        lambda_test_secret(tls_secret_handshake_derived, bin, "derived_secret", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
+        lambda_test_secret(tls_secret_handshake, bin, "handshake_secret", "fb9fc80689b3a5d02c33243bf69a1b1b20705588a794304a6e7120155edf149a");
+        lambda_test_secret(tls_secret_c_hs_traffic, bin, "client_secret", "b8902ab5f9fe52fdec3aea54e9293e4b8eabf955fcd88536bf44b8b584f14982");
+        lambda_test_secret(tls_secret_s_hs_traffic, bin, "server_secret", "88ad8d3b0986a71965a28d108b0f40ffffe629284a6028c80ddc5dc083b3f5d1");
+        lambda_test_secret(tls_secret_handshake_quic_client_key, bin, "client_handshake_key", "30a7e816f6a1e1b3434cf39cf4b415e7");
+        lambda_test_secret(tls_secret_handshake_quic_client_iv, bin, "client_handshake_iv", "11e70a5d1361795d2bb04465");
+        lambda_test_secret(tls_secret_handshake_quic_client_hp, bin, "client_handshake_hp", "84b3c21cacaf9f54c885e9a506459079");
+        lambda_test_secret(tls_secret_handshake_quic_server_key, bin, "server_handshake_key", "17abbf0a788f96c6986964660414e7ec");
+        lambda_test_secret(tls_secret_handshake_quic_server_iv, bin, "server_handshake_iv", "09597a2ea3b04c00487e71f3");
+        lambda_test_secret(tls_secret_handshake_quic_server_hp, bin, "server_handshake_hp", "2a18061c396c2828582b41b0910ed536");
     }
 
     /**
@@ -334,10 +335,7 @@ void test_quic_xargs_org() {
             "c1 b3 8a b4 e1 77 0c 8f fb 53 31 6d 67 3a 32 b8"
             "92 59 b5 d3 3e 94 ad -- -- -- -- -- -- -- -- --";
         binary_t bin_packet = base16_decode_rfc(packet);
-        quic_packet_handshake handshake(&server_session);
-        size_t pos = 0;
-        ret = handshake.read(from_server, &bin_packet[0], bin_packet.size(), pos);
-        _test_case.test(ret, __FUNCTION__, "encrypted_extensions..certificate_verify(truncated at 1K boundary)");
+        lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "encrypted_extensions..certificate_verify(truncated at 1K boundary)");
     }
 
     /*
@@ -364,10 +362,7 @@ void test_quic_xargs_org() {
             "f3 ba 2e d1 02 5f 98 fe a6 d6 02 49 98 18 46 87"
             "dc 06 -- -- -- -- -- -- -- -- -- -- -- -- -- --";
         binary_t bin_packet = base16_decode_rfc(packet);
-        quic_packet_handshake handshake(&server_session);
-        size_t pos = 0;
-        ret = handshake.read(from_server, &bin_packet[0], bin_packet.size(), pos);
-        _test_case.test(ret, __FUNCTION__, "certificate_verify(fragmented)..server finished");
+        lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "certificate_verify(fragmented)..server finished");
     }
 
     /**
@@ -390,10 +385,7 @@ void test_quic_xargs_org() {
             "64 00 40 17 56 6e 1f 98 ed 1f 7b 05 55 cd b7 83"
             "fb df 5b 52 72 4b 7d 29 f0 af e3 -- -- -- -- --";
         binary_t bin_packet = base16_decode_rfc(packet);
-        quic_packet_initial initial(&server_session);
-        size_t pos = 0;
-        ret = initial.read(from_client, &bin_packet[0], bin_packet.size(), pos);
-        _test_case.test(ret, __FUNCTION__, "ack");
+        lambda_read_packet(&server_session, from_client, bin_packet, __FUNCTION__, "ack");
     }
     {
         // calc handshake secrets (case client_finished)
@@ -409,20 +401,17 @@ void test_quic_xargs_org() {
             "64 40 16 8C B1 95 1F C6 CC 12 51 2D 7E DA 14 1E"
             "C0 57 B8 04 D3 0F EB 51 5B -- -- -- -- -- -- --";
         binary_t bin_packet = base16_decode_rfc(packet);
-        quic_packet_handshake handshake(&server_session);
-        size_t pos = 0;
-        ret = handshake.read(from_client, &bin_packet[0], bin_packet.size(), pos);
-        _test_case.test(ret, __FUNCTION__, "ack");
+        lambda_read_packet(&server_session, from_client, bin_packet, __FUNCTION__, "ack");
     }
 
     {
         binary_t bin;
-        lambda_test(tls_secret_application_quic_server_key, bin, "tls_secret_application_quic_server_key", "fd8c7da9de1b2da4d2ef9fd5188922d0");
-        lambda_test(tls_secret_application_quic_server_iv, bin, "tls_secret_application_quic_server_iv", "02f6180e4f4aa456d7e8a602");
-        lambda_test(tls_secret_application_quic_server_hp, bin, "tls_secret_application_quic_server_hp", "b7f6f021453e52b58940e4bba72a35d4");
-        lambda_test(tls_secret_application_quic_client_key, bin, "tls_secret_application_quic_client_key", "e010a295f0c2864f186b2a7e8fdc9ed7");
-        lambda_test(tls_secret_application_quic_client_iv, bin, "tls_secret_application_quic_client_iv", "eb3fbc384a3199dcf6b4c808");
-        lambda_test(tls_secret_application_quic_client_hp, bin, "tls_secret_application_quic_client_hp", "8a6a38bc5cc40cb482a254dac68c9d2f");
+        lambda_test_secret(tls_secret_application_quic_server_key, bin, "tls_secret_application_quic_server_key", "fd8c7da9de1b2da4d2ef9fd5188922d0");
+        lambda_test_secret(tls_secret_application_quic_server_iv, bin, "tls_secret_application_quic_server_iv", "02f6180e4f4aa456d7e8a602");
+        lambda_test_secret(tls_secret_application_quic_server_hp, bin, "tls_secret_application_quic_server_hp", "b7f6f021453e52b58940e4bba72a35d4");
+        lambda_test_secret(tls_secret_application_quic_client_key, bin, "tls_secret_application_quic_client_key", "e010a295f0c2864f186b2a7e8fdc9ed7");
+        lambda_test_secret(tls_secret_application_quic_client_iv, bin, "tls_secret_application_quic_client_iv", "eb3fbc384a3199dcf6b4c808");
+        lambda_test_secret(tls_secret_application_quic_client_hp, bin, "tls_secret_application_quic_client_hp", "8a6a38bc5cc40cb482a254dac68c9d2f");
     }
 
     /**
@@ -439,10 +428,7 @@ void test_quic_xargs_org() {
             "3A BD 5E 98 F2 2D C6 F2 59 79 91 9B AD 30 2F 44"
             "8C 0A -- -- -- -- -- -- -- -- -- -- -- -- -- --";
         binary_t bin_packet = base16_decode_rfc(packet);
-        quic_packet_handshake handshake(&server_session);
-        size_t pos = 0;
-        ret = handshake.read(from_client, &bin_packet[0], bin_packet.size(), pos);
-        _test_case.test(ret, __FUNCTION__, "finished");
+        lambda_read_packet(&server_session, from_client, bin_packet, __FUNCTION__, "finished");
     }
     /**
      * https://quic.xargs.org/#client-application-packet-2
@@ -452,6 +438,8 @@ void test_quic_xargs_org() {
         const char* packet =
             "4E 73 5F 63 69 64 1E CC 91 70 E6 6E 8E E9 50 BA"
             "8B 8E D1 0C BA 39 A0 6A B7 B0 67 0A 50 EF 68 E6";
+        binary_t bin_packet = base16_decode_rfc(packet);
+        lambda_read_packet(&server_session, from_client, bin_packet, __FUNCTION__, "ping");
     }
     /**
      * UDP Datagram 6 - "pong"
@@ -463,6 +451,8 @@ void test_quic_xargs_org() {
             "E5 00 00 00 01 05 63 5F 63 69 64 05 73 5F 63 69"
             "64 40 16 A4 87 5B 25 16 9E 6F 1B 81 7E 46 23 E1"
             "AC BE 1D B3 89 9B 00 EC FB -- -- -- -- -- -- --";
+        binary_t bin_packet = base16_decode_rfc(packet);
+        lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "ack");
     }
     /**
      * https://quic.xargs.org/#server-application-packet
@@ -473,6 +463,8 @@ void test_quic_xargs_org() {
             "49 63 5F 63 69 64 CD 9A 64 12 40 57 C8 83 E9 4D"
             "9C 29 6B AA 8C A0 EA 6E 3A 21 FA AF 99 AF 2F E1"
             "03 21 69 20 57 D2 -- -- -- -- -- -- -- -- -- --";
+        binary_t bin_packet = base16_decode_rfc(packet);
+        lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "pong");
     }
     /**
      * UDP Datagram 7 - Acks
@@ -483,6 +475,8 @@ void test_quic_xargs_org() {
         const char* packet =
             "5A 73 5F 63 69 64 C8 67 E0 B4 90 58 8B 44 B1 0D"
             "7C D3 2B 03 E3 45 02 80 2F 25 A1 93 -- -- -- --";
+        binary_t bin_packet = base16_decode_rfc(packet);
+        lambda_read_packet(&server_session, from_client, bin_packet, __FUNCTION__, "ack");
     }
     /**
      * UDP Datagram 8 - Close connection
@@ -494,5 +488,7 @@ void test_quic_xargs_org() {
             "54 63 5F 63 69 64 95 18 C4 A5 FF EB 17 B6 7E C2"
             "7F 97 E5 0D 27 1D C7 02 D9 2C EF B0 68 8B E9 FD"
             "7B 30 2D 9E B4 7C DF 1F C4 CD 9A AC -- -- -- --";
+        binary_t bin_packet = base16_decode_rfc(packet);
+        lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "connection_close");
     }
 }

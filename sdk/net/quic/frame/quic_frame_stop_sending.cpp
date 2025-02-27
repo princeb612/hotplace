@@ -26,8 +26,6 @@ constexpr char constexpr_error_code[] = "error code";
 
 quic_frame_stop_sending::quic_frame_stop_sending(tls_session* session) : quic_frame(quic_frame_type_stop_sending, session) {}
 
-quic_frame_stop_sending::~quic_frame_stop_sending() {}
-
 return_t quic_frame_stop_sending::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -43,8 +41,8 @@ return_t quic_frame_stop_sending::do_read_body(tls_direction_t dir, const byte_t
         pl << new payload_member(new quic_encoded(uint64(0)), constexpr_stream_id) << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code);
         pl.read(stream, size, pos);
 
-        uint64 stream_id = pl.select(constexpr_stream_id)->get_payload_encoded()->value();
-        uint64 error_code = pl.select(constexpr_error_code)->get_payload_encoded()->value();
+        uint64 stream_id = pl.t_value_of<uint64>(constexpr_stream_id);
+        uint64 error_code = pl.t_value_of<uint64>(constexpr_error_code);
 
         if (istraceable(category_quic)) {
             basic_stream dbs;

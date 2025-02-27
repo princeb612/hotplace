@@ -1,14 +1,20 @@
 ### understanding TLS
 
-* TLS
+* TLS references
   * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
   * RFC 8446 Example Handshake Traces for TLS 1.3
   * https://tls13.xargs.org/
   * https://tls12.xargs.org/
   * https://dtls.xargs.org/
   * https://quic.xargs.org/
-  * wireshark.exe
   * https://ciphersuite.info/cs/
+
+* understanding TLS - DTLS - QUIC step by step
+  1. https://tls13.xargs.org/
+  2. https://tls12.xargs.org/
+  3. https://dtls.xargs.org/
+  4. RFC 9001
+  5. https://quic.xargs.org/
 
 #### RFC 8446 Figure 1: Message Flow for Full TLS Handshake
 ````

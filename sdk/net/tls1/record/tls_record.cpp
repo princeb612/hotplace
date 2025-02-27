@@ -182,7 +182,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
                 pl->set_group(constexpr_group_dtls, is_kindof_dtls(ver));
             };
             pl.set_condition(constexpr_legacy_version, lambda_check_dtls);
-            pl.select(constexpr_dtls_record_seq)->reserve(6);
+            pl.reserve(constexpr_dtls_record_seq, 6);
             pl.read(stream, size, pos);
 
             content_type = pl.t_value_of<uint8>(constexpr_content_type);
@@ -191,7 +191,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             cond_dtls = pl.get_group_condition(constexpr_group_dtls);
             if (cond_dtls) {
                 key_epoch = pl.t_value_of<uint16>(constexpr_key_epoch);
-                pl.select(constexpr_dtls_record_seq)->get_variant().to_binary(dtls_record_seq);
+                pl.get_binary(constexpr_dtls_record_seq, dtls_record_seq);
             }
         }
 

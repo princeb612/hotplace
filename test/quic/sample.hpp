@@ -68,6 +68,8 @@ struct testvector_retry_packet {
     tls_direction_t dir;
 };
 
+std::string direction_string(tls_direction_t dir);
+
 void test_rfc_9000_a1();
 void test_rfc_9000_a2();
 void test_rfc_9000_a3();

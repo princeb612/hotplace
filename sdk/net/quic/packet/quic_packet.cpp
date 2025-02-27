@@ -14,15 +14,19 @@
 #include <sdk/net/quic/quic.hpp>
 #include <sdk/net/quic/quic_encoded.hpp>
 #include <sdk/net/quic/quic_packet.hpp>
+#include <sdk/net/quic/quic_packet_builder.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_longheader[] = "longheader";
+
 quic_packet::quic_packet(tls_session* session) : _type(0), _session(session), _ht(0), _version(1), _pn(0) {
     if (session) {
         session->addref();
     }
+    _shared.make_share(this);
 }
 
 quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _session(session), _ht(0), _version(1), _pn(0) {
@@ -31,6 +35,7 @@ quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type)
     if (session) {
         session->addref();
     }
+    _shared.make_share(this);
 }
 
 quic_packet::quic_packet(const quic_packet& rhs)
@@ -38,6 +43,7 @@ quic_packet::quic_packet(const quic_packet& rhs)
     if (_session) {
         _session->addref();
     }
+    _shared.make_share(this);
 }
 
 quic_packet::~quic_packet() {
@@ -48,34 +54,7 @@ quic_packet::~quic_packet() {
 
 uint8 quic_packet::get_type() { return _type; }
 
-void quic_packet::get_type(uint8 hdr, uint8& type, bool& is_longheader) {
-    if (quic_packet_field_hf & hdr) {  // Header Form
-        is_longheader = true;
-        if (quic_packet_field_fb & hdr) {               // Fixed Bit
-            switch (quic_packet_field_mask_lh & hdr) {  // Long Packet Type
-                case quic_packet_field_initial:
-                    type = quic_packet_type_initial;
-                    break;
-                case quic_packet_field_0_rtt:
-                    type = quic_packet_type_0_rtt;
-                    break;
-                case quic_packet_field_handshake:
-                    type = quic_packet_type_handshake;
-                    break;
-                case quic_packet_field_retry:
-                    type = quic_packet_type_retry;
-                    break;
-            }
-        } else {
-            type = quic_packet_type_version_negotiation;
-        }
-    } else {
-        is_longheader = false;
-        if (quic_packet_field_fb & hdr) {
-            type = quic_packet_type_1_rtt;
-        }
-    }
-}
+void quic_packet::get_type(uint8 hdr, uint8& type, bool& is_longheader) { quic_packet_get_type(hdr, type, is_longheader); }
 
 void quic_packet::set_type(uint8 type, uint8& hdr, bool& is_longheader) {
     hdr = 0;
@@ -141,7 +120,39 @@ const binary_t& quic_packet::get_dcid() { return _dcid; }
 
 const binary_t& quic_packet::get_scid() { return _scid; }
 
-return_t quic_packet::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
+return_t quic_packet::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::success; }
+
+return_t quic_packet::read(tls_direction_t dir, const binary_t& bin, size_t& pos) { return read(dir, &bin[0], bin.size(), pos); }
+
+return_t quic_packet::write(tls_direction_t dir, binary_t& packet) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        binary_t header;
+        binary_t ciphertext;
+        binary_t tag;
+
+        packet.clear();
+
+        ret = write(dir, header, ciphertext, tag);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        binary_append(packet, header);
+        binary_append(packet, ciphertext);
+        binary_append(packet, tag);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t quic_packet::write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) { return errorcode_t::success; }
+
+return_t quic_packet::write_header(binary_t& header) { return write(from_any, header); }
+
+return_t quic_packet::read_common_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -153,6 +164,9 @@ return_t quic_packet::read(tls_direction_t dir, const byte_t* stream, size_t siz
             __leave2;
         }
 
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
         byte_t hdr = stream[pos];
         bool is_longheader = true;
         get_type(hdr, _type, is_longheader);
@@ -162,24 +176,28 @@ return_t quic_packet::read(tls_direction_t dir, const byte_t* stream, size_t siz
         //   17.3.  Short Header Packets
 
         payload pl;
-        pl << new payload_member(uint8(0), "hdr")                     //
-           << new payload_member(uint32(0), true, "version")          //
-           << new payload_member(uint8(0), "dcid_len", "longheader")  //
-           << new payload_member(binary_t(), "dcid")                  //
-           << new payload_member(uint8(0), "scid_len", "longheader")  //
-           << new payload_member(binary_t(), "scid", "longheader");   //
+        pl << new payload_member(uint8(0), "hdr")                                   //
+           << new payload_member(uint32(0), true, "version", constexpr_longheader)  //
+           << new payload_member(uint8(0), "dcid_len", constexpr_longheader)        //
+           << new payload_member(binary_t(), "dcid")                                //
+           << new payload_member(uint8(0), "scid_len", constexpr_longheader)        //
+           << new payload_member(binary_t(), "scid", constexpr_longheader);         //
         if (is_longheader) {
             pl.set_reference_value("dcid", "dcid_len");
             pl.set_reference_value("scid", "scid_len");
+        } else {
+            const binary_t& context_dcid = protection.get_item(tls_context_quic_dcid);
+            auto size_dcid = context_dcid.size();
+            pl.reserve("dcid", size_dcid);
         }
-        pl.set_group("longheader", is_longheader);  // true
+        pl.set_group(constexpr_longheader, is_longheader);  // true
 
         pl.read(stream, size, pos);
 
         _ht = hdr;
         _version = pl.t_value_of<uint32>("version");
-        pl.select("dcid")->get_variant().to_binary(_dcid);
-        pl.select("scid")->get_variant().to_binary(_scid);
+        pl.get_binary("dcid", _dcid);
+        pl.get_binary("scid", _scid);
     }
     __finally2 {
         // do nothing
@@ -187,10 +205,9 @@ return_t quic_packet::read(tls_direction_t dir, const byte_t* stream, size_t siz
     return ret;
 }
 
-return_t quic_packet::read(tls_direction_t dir, const binary_t& bin, size_t& pos) { return read(dir, &bin[0], bin.size(), pos); }
-
-return_t quic_packet::write(tls_direction_t dir, binary_t& packet) {
+return_t quic_packet::write_common_header(binary_t& header) {
     return_t ret = errorcode_t::success;
+
     uint8 hdr = 0;
     bool is_longheader = true;
 
@@ -215,14 +232,14 @@ return_t quic_packet::write(tls_direction_t dir, binary_t& packet) {
     }
 
     payload pl;
-    pl << new payload_member(hdr, "hdr")                                  //
-       << new payload_member(_version, true, "version")                   //
-       << new payload_member((uint8)_dcid.size(), "dcidl", "longheader")  //
-       << new payload_member(_dcid, "dcid")                               //
-       << new payload_member((uint8)_scid.size(), "scidl", "longheader")  //
-       << new payload_member(_scid, "scid", "longheader");                //
-    pl.set_group("longheader", is_longheader);
-    pl.write(packet);
+    pl << new payload_member(hdr, "hdr")                                          //
+       << new payload_member(_version, true, "version", constexpr_longheader)     //
+       << new payload_member((uint8)_dcid.size(), "dcidl", constexpr_longheader)  //
+       << new payload_member(_dcid, "dcid")                                       //
+       << new payload_member((uint8)_scid.size(), "scidl", constexpr_longheader)  //
+       << new payload_member(_scid, "scid", constexpr_longheader);                //
+    pl.set_group(constexpr_longheader, is_longheader);
+    pl.write(header);
 
     return ret;
 }
@@ -330,6 +347,126 @@ quic_packet& quic_packet::set_payload(const byte_t* stream, size_t size) {
 const binary_t& quic_packet::get_payload() { return _payload; }
 
 tls_session* quic_packet::get_session() { return _session; }
+
+return_t quic_packet::header_protect(tls_direction_t dir, const binary_t& bin_ciphertext, protection_level_t level, uint8 hdr, uint8 pn_length,
+                                     binary_t& bin_pn, binary_t& bin_protected_header) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
+        if ((pn_length > 4) || bin_protected_header.empty()) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto adj = 4 - pn_length;
+        binary_append(bin_pn, &bin_ciphertext[0], adj);
+
+        // calcurate mask
+        binary_t bin_mask;
+        ret = protection.protection_mask(session, dir, &bin_ciphertext[adj], bin_ciphertext.size(), bin_mask, 5, level);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        if (quic_packet_field_hf & hdr) {
+            hdr ^= bin_mask[0] & 0x0f;
+        } else {
+            hdr ^= bin_mask[0] & 0x1f;
+        }
+        memxor(&bin_pn[0], &bin_mask[1], 4);
+
+        // encode packet length
+        bin_protected_header[0] = hdr;
+        bin_pn.resize(pn_length);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream, size_t size, protection_level_t level, uint8& hdr, uint32& pn,
+                                       binary_t& bin_payload) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
+        // protection mask
+        binary_t bin_mask;
+        ret = protection.protection_mask(session, dir, stream, size, bin_mask, 5, level);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // unprotect ht
+        if (quic_packet_field_hf & hdr) {
+            hdr ^= (bin_mask[0] & 0x0f);
+        } else {
+            hdr ^= (bin_mask[0] & 0x1f);
+        }
+        // unprotect pn
+        auto pn_length = get_pn_length(hdr);
+
+        // RFC 9001 5.4.2.  Header Protection Sample
+        // Packet Number Length = 2
+        //   ... | PN1 PN2 | PL1 PL2 PL3 PL4 ...
+        //                 \- pnpad
+        // Packet Number Length = 1
+        //   ... | PN1 | PL1 PL2 PL3 PL4 PL5 ...
+        //              \ pnpad
+        // stream
+        //   ... | PN1 PN2 PN3 PN4 | PL1 PL2 ...
+        binary_t bin_pn;
+        binary_append(bin_pn, &_payload[0], 4);
+        memxor(&bin_pn[0], &bin_mask[1], 4);
+        bin_pn.resize(pn_length);
+        pn = t_binary_to_integer<uint32>(bin_pn);
+        bin_payload.erase(bin_payload.begin(), bin_payload.begin() + pn_length);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+void quic_packet::addref() { _shared.addref(); }
+
+void quic_packet::release() { _shared.delref(); }
+
+return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        type = 0;
+
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto msb = stream[0];
+
+        quic_packet_builder builder;
+        auto packet = builder.set_msb(msb).set_session(session).build();
+        if (packet) {
+            ret = packet->read(dir, stream, size, pos);
+            type = packet->get_type();
+            packet->release();
+        } else {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir, const binary_t& packet) {
+    size_t pos = 0;
+    return quic_read_packet(type, session, dir, &packet[0], packet.size(), pos);
+}
 
 }  // namespace net
 }  // namespace hotplace

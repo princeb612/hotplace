@@ -54,25 +54,26 @@ class tls_session {
         tls_hs_type_t get_status();
         void change_cipher_spec();
         bool doprotect();
-        uint64 get_recordno(bool inc = false);
-        void inc_recordno();
-        void reset_recordno();
-        void set_recordno(uint64 recordno);  // for test vector
+        uint64 get_recordno(bool inc = false, protection_level_t level = protection_default);
+        void inc_recordno(protection_level_t level = protection_default);
+        void reset_recordno(protection_level_t level = protection_default);
+        void set_recordno(uint64 recordno, protection_level_t level = protection_default);  // for test vector
 
        private:
         tls_hs_type_t hstype;
         bool apply_cipher_spec;
-        uint64 record_no;
+        // RFC 9000 12.3.  Packet Numbers
+        std::map<protection_level_t, uint64> recordno_spaces;
     };
 
     session_info& get_session_info(tls_direction_t dir);
-    uint64 get_recordno(tls_direction_t dir, bool inc = false);
-    void reset_recordno(tls_direction_t dir);
+    uint64 get_recordno(tls_direction_t dir, bool inc = false, protection_level_t level = protection_default);
+    void reset_recordno(tls_direction_t dir, protection_level_t level = protection_default);
 
     /*
      * set test vector
      */
-    void set_recordno(tls_direction_t dir, uint64 recno);
+    void set_recordno(tls_direction_t dir, uint64 recno, protection_level_t level = protection_default);
 
     void addref();
     void release();
@@ -82,10 +83,11 @@ class tls_session {
 
    private:
     critical_section _lock;
+    t_shared_reference<tls_session> _shared;
+
     std::map<tls_direction_t, session_info> _direction;
     std::queue<tls_handshake*> _que;
     tls_protection _tls_protection;
-    t_shared_reference<tls_session> _shared;
     session_type_t _type;
 };
 

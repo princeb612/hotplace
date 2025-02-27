@@ -170,57 +170,45 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
         } else if (session_quic == session_type) {
             // QUIC
             if (from_client == dir) {
-                if (protection_default == level) {
-                    if (tls_hs_finished == hsstatus) {
-                        level = protection_application;
-                    } else if (tls_hs_server_hello == hsstatus) {
-                        level = protection_handshake;
-                    } else {
-                        level = protection_initial;
-                    }
-                }
-                if (protection_application == level) {
-                    secret_key = tls_secret_application_quic_client_key;
-                    secret_iv = tls_secret_application_quic_client_iv;
+                if (protection_initial == level) {
+                    secret_key = tls_secret_initial_quic_client_key;
+                    secret_iv = tls_secret_initial_quic_client_iv;
                 } else if (protection_handshake == level) {
                     secret_key = tls_secret_handshake_quic_client_key;
                     secret_iv = tls_secret_handshake_quic_client_iv;
+                } else if (protection_application == level) {
+                    secret_key = tls_secret_application_quic_client_key;
+                    secret_iv = tls_secret_application_quic_client_iv;
                 } else {
-                    secret_key = tls_secret_initial_quic_client_key;
-                    secret_iv = tls_secret_initial_quic_client_iv;
+                    ret = errorcode_t::invalid_parameter;
+                    __leave2;
                 }
             } else {
-                if (protection_default == level) {
-                    if (tls_hs_finished == hsstatus) {
-                        level = protection_application;
-                    } else if (tls_hs_server_hello == hsstatus) {
-                        level = protection_handshake;
-                    } else {
-                        level = protection_initial;
-                    }
-                }
-                if (protection_application == level) {
-                    secret_key = tls_secret_application_quic_server_key;
-                    secret_iv = tls_secret_application_quic_server_iv;
+                if (protection_initial == level) {
+                    secret_key = tls_secret_initial_quic_server_key;
+                    secret_iv = tls_secret_initial_quic_server_iv;
                 } else if (protection_handshake == level) {
                     secret_key = tls_secret_handshake_quic_server_key;
                     secret_iv = tls_secret_handshake_quic_server_iv;
+                } else if (protection_application == level) {
+                    secret_key = tls_secret_application_quic_server_key;
+                    secret_iv = tls_secret_application_quic_server_iv;
                 } else {
-                    secret_key = tls_secret_initial_quic_server_key;
-                    secret_iv = tls_secret_initial_quic_server_iv;
+                    ret = errorcode_t::invalid_parameter;
+                    __leave2;
                 }
             }
         }
 
-        if (istraceable()) {
-            tls_advisor *tlsadvisor = tls_advisor::get_instance();
-            basic_stream dbs;
-            dbs.printf("> encryption key information\n");
-            dbs.printf(" > type %i\n", level);
-            dbs.printf(" > status %s\n", tlsadvisor->handshake_type_string(hsstatus).c_str());
-            dbs.printf(" > level %i\n", level);
-            trace_debug_event(category_tls1, tls_event_dump, &dbs);
-        }
+        // if (istraceable()) {
+        //     tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        //     basic_stream dbs;
+        //     dbs.printf("> encryption key information\n");
+        //     dbs.printf(" > type %i\n", level);
+        //     dbs.printf(" > status %s\n", tlsadvisor->handshake_type_string(hsstatus).c_str());
+        //     dbs.printf(" > level %i\n", level);
+        //     trace_debug_event(category_tls1, tls_event_dump, &dbs);
+        // }
     }
     __finally2 {
         // do nothing
@@ -331,7 +319,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         get_aead_key(session, dir, secret_key, secret_iv, level);
 
         uint64 record_no = 0;
-        record_no = session->get_recordno(dir, true);
+        record_no = session->get_recordno(dir, true, level);
 
         auto const &key = get_item(secret_key);
         auto const &iv = get_item(secret_iv);
@@ -624,7 +612,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         get_aead_key(session, dir, secret_key, secret_iv, level);
 
         uint64 record_no = 0;
-        record_no = session->get_recordno(dir, true);
+        record_no = session->get_recordno(dir, true, level);
 
         auto const &key = get_item(secret_key);
         auto const &iv = get_item(secret_iv);

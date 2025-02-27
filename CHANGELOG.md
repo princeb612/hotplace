@@ -4,7 +4,8 @@
   * [study] QUIC (RFC 9001)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 713
+* Revision 714
+  * [tested] https://quic.xargs.org/
 
 * Revision 702
   * [tested] DSA

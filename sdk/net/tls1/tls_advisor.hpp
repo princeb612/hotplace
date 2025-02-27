@@ -132,6 +132,8 @@ struct tls_sig_scheme_t {
 extern const tls_sig_scheme_t tls_sig_schemes[];
 extern const size_t sizeof_tls_sig_schemes;
 
+declare_tls_resource(quic_packet_type_code, uint8);
+
 class tls_advisor {
    public:
     static tls_advisor* get_instance();
@@ -183,6 +185,7 @@ class tls_advisor {
     std::string tls_version_string(uint16 code);
     std::string compression_method_string(uint8 code);
     std::string sni_nametype_string(uint16 code);
+    std::string quic_packet_type_string(uint8 code);
 
     bool is_kindof_tls13(uint16 ver);
     bool is_kindof_tls(uint16 ver);
@@ -239,8 +242,10 @@ class tls_advisor {
     // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
     std::map<uint16, const tls_aead_alg_code_t*> _aead_alg_codes;
 
+    //
     std::map<uint16, const tls_version_hint_t*> _tls_version;
     std::map<uint8, std::string> _cert_status_types;
+    std::map<uint8, const tls_quic_packet_type_code_t*> _quic_packet_type_codes;
 
     bool _load;
 };

@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/net/quic/quic.hpp>
 #include <sdk/net/quic/quic_encoded.hpp>
 
 namespace hotplace {

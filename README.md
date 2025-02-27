@@ -16,12 +16,10 @@
   * ![RHEL](https://img.shields.io/badge/RHEL-green)
 * status
   * JOSE ![implemented](https://img.shields.io/badge/implemented-green)
-  * CBOR ![implemented](https://img.shields.io/badge/implemented-green)
-  * COSE ![implemented](https://img.shields.io/badge/implemented-green)
+  * CBOR,COSE ![implemented](https://img.shields.io/badge/implemented-green)
   * HTTP/1.1 ![implemented](https://img.shields.io/badge/implemented-green)
   * HTTP/2 ![implemented](https://img.shields.io/badge/implemented-green)
-  * TLS/DTLS ![studying](https://img.shields.io/badge/studying-magenta)
-  * QUIC ![studying](https://img.shields.io/badge/studying-magenta)
+  * TLS,DTLS,QUIC ![studying](https://img.shields.io/badge/studying-magenta)
   * HTTP/3 ![studying](https://img.shields.io/badge/studying-magenta)
   * ASN.1 ![studying](https://img.shields.io/badge/studying-magenta)
 * link

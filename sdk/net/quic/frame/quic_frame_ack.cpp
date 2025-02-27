@@ -24,8 +24,6 @@ namespace net {
 
 quic_frame_ack::quic_frame_ack(tls_session* session) : quic_frame(quic_frame_type_ack, session) {}
 
-quic_frame_ack::~quic_frame_ack() {}
-
 return_t quic_frame_ack::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
 
@@ -70,10 +68,10 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
            << new payload_member(new quic_encoded(uint64(0)), constexpr_first_ack_range);
         pl.read(stream, size, pos);
 
-        uint64 largest_ack = pl.select(constexpr_largest_ack)->get_payload_encoded()->value();
-        uint64 ack_delay = pl.select(constexpr_ack_delay)->get_payload_encoded()->value();
-        uint64 ack_range_count = pl.select(constexpr_ack_range_count)->get_payload_encoded()->value();
-        uint64 first_ack_range = pl.select(constexpr_first_ack_range)->get_payload_encoded()->value();
+        uint64 largest_ack = pl.t_value_of<uint64>(constexpr_largest_ack);
+        uint64 ack_delay = pl.t_value_of<uint64>(constexpr_ack_delay);
+        uint64 ack_range_count = pl.t_value_of<uint64>(constexpr_ack_range_count);
+        uint64 first_ack_range = pl.t_value_of<uint64>(constexpr_first_ack_range);
 
         basic_stream dbs;
 
@@ -100,8 +98,8 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
                        << new payload_member(new quic_encoded(uint64(0)), constexpr_range_length);
             ack_ranges.read(stream, size, pos);
 
-            uint64 gap = ack_ranges.select(constexpr_gap)->get_payload_encoded()->value();
-            uint64 range_length = ack_ranges.select(constexpr_range_length)->get_payload_encoded()->value();
+            uint64 gap = ack_ranges.t_value_of<uint64>(constexpr_gap);
+            uint64 range_length = ack_ranges.t_value_of<uint64>(constexpr_range_length);
 
             if (istraceable(category_quic)) {
                 dbs.printf("   > %s\n", constexpr_ack_ranges);
@@ -124,9 +122,9 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
                        << new payload_member(new quic_encoded(uint64(0)), constexpr_ectce_count);
             ecn_counts.read(stream, size, pos);
 
-            uint64 ect0_count = ecn_counts.select(constexpr_ect0_count)->get_payload_encoded()->value();
-            uint64 ect1_count = ecn_counts.select(constexpr_ect1_count)->get_payload_encoded()->value();
-            uint64 ectce_count = ecn_counts.select(constexpr_ectce_count)->get_payload_encoded()->value();
+            uint64 ect0_count = ecn_counts.t_value_of<uint64>(constexpr_ect0_count);
+            uint64 ect1_count = ecn_counts.t_value_of<uint64>(constexpr_ect1_count);
+            uint64 ectce_count = ecn_counts.t_value_of<uint64>(constexpr_ectce_count);
 
             if (istraceable(category_quic)) {
                 dbs.printf("   > %s\n", constexpr_ecn_counts);

@@ -11,6 +11,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake.hpp>
 #include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
@@ -30,22 +32,29 @@ session_type_t tls_session::get_type() { return _type; }
 
 tls_session::session_info& tls_session::get_session_info(tls_direction_t dir) { return _direction[dir]; }
 
-uint64 tls_session::get_recordno(tls_direction_t dir, bool inc) { return get_session_info(dir).get_recordno(inc); }
+uint64 tls_session::get_recordno(tls_direction_t dir, bool inc, protection_level_t level) { return get_session_info(dir).get_recordno(inc, level); }
 
-void tls_session::reset_recordno(tls_direction_t dir) {
+void tls_session::reset_recordno(tls_direction_t dir, protection_level_t level) {
     auto ver = get_tls_protection().get_tls_version();
     if ((tls_13 == ver) || (dtls_13 == ver)) {
-        get_session_info(dir).reset_recordno();
+        get_session_info(dir).reset_recordno(level);
+    }
+    if (istraceable()) {
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf("\e[33mreset record no dir %i level %i\e[0m\n", dir, level);
+            trace_debug_event(category_tls1, tls_event_dump, &dbs);
+        }
     }
 }
 
-void tls_session::set_recordno(tls_direction_t dir, uint64 recno) { get_session_info(dir).set_recordno(recno); }
+void tls_session::set_recordno(tls_direction_t dir, uint64 recno, protection_level_t level) { get_session_info(dir).set_recordno(recno, level); }
 
 void tls_session::addref() { _shared.addref(); }
 
 void tls_session::release() { _shared.delref(); }
 
-tls_session::session_info::session_info() : hstype(tls_hs_client_hello), apply_cipher_spec(false), record_no(0) {}
+tls_session::session_info::session_info() : hstype(tls_hs_client_hello), apply_cipher_spec(false) {}
 
 void tls_session::session_info::set_status(tls_hs_type_t type) { hstype = type; }
 
@@ -55,13 +64,16 @@ void tls_session::session_info::change_cipher_spec() { apply_cipher_spec = true;
 
 bool tls_session::session_info::doprotect() { return apply_cipher_spec; }
 
-uint64 tls_session::session_info::get_recordno(bool inc) { return inc ? record_no++ : record_no; }
+uint64 tls_session::session_info::get_recordno(bool inc, protection_level_t level) {
+    auto& recordno = recordno_spaces[level];
+    return inc ? recordno++ : recordno;
+}
 
-void tls_session::session_info::inc_recordno() { ++record_no; }
+void tls_session::session_info::inc_recordno(protection_level_t level) { ++recordno_spaces[level]; }
 
-void tls_session::session_info::reset_recordno() { record_no = 0; }
+void tls_session::session_info::reset_recordno(protection_level_t level) { recordno_spaces[level] = 0; }
 
-void tls_session::session_info::set_recordno(uint64 recordno) { record_no = recordno; }
+void tls_session::session_info::set_recordno(uint64 recordno, protection_level_t level) { recordno_spaces[level] = recordno; }
 
 void tls_session::schedule(tls_handshake* handshake) {
     if (handshake) {

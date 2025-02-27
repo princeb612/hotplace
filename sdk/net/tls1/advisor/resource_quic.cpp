@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/net/quic/types.hpp>
 #include <sdk/net/tls1/tls.hpp>
 #include <sdk/net/tls1/tls_advisor.hpp>
 
@@ -119,6 +120,16 @@ define_tls_variable(quic_trans_error_code) = {
     {0x4143414213370002, "BDP_TOKEN_ERROR"},
 };
 define_tls_sizeof_variable(quic_trans_error_code);
+
+define_tls_variable(quic_packet_type_code) = {
+    {quic_packet_type_initial, "initial"},
+    {quic_packet_type_0_rtt, "0-RTT"},
+    {quic_packet_type_handshake, "handshake"},
+    {quic_packet_type_retry, "retry"},
+    {quic_packet_type_version_negotiation, "version negotiation"},
+    {quic_packet_type_1_rtt, "1-RTT"},
+};
+define_tls_sizeof_variable(quic_packet_type_code);
 
 }  // namespace net
 }  // namespace hotplace

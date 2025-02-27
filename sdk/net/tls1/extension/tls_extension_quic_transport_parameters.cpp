@@ -11,6 +11,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/quic/quic.hpp>
 #include <sdk/net/quic/quic_encoded.hpp>
 #include <sdk/net/tls1/extension/tls_extension_quic_transport_parameters.hpp>
 #include <sdk/net/tls1/tls.hpp>
@@ -40,8 +41,8 @@ return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* str
             pl.read(stream, endpos_extension(), pos);
 
             binary_t param;
-            uint64 param_id = pl.select(constexpr_param_id)->get_payload_encoded()->value();
-            pl.select(constexpr_param)->get_payload_encoded()->get_variant().to_binary(param);
+            uint64 param_id = pl.t_value_of<uint64>(constexpr_param_id);
+            pl.get_binary(constexpr_param, param);
 
             _keys.push_back(param_id);
             _params.insert({param_id, std::move(param)});

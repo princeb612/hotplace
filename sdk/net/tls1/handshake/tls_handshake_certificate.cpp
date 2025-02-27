@@ -145,7 +145,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
                 pl.set_reference_value(constexpr_request_context, constexpr_request_context_len);
                 auto tls_version = session->get_tls_protection().get_tls_version();
                 pl.set_group(constexpr_group_tls13, is_kindof_tls13(tls_version));  // tls1_ext_supported_versions 0x002b server_hello
-                pl.select(constexpr_certificate_extensions)->reserve(certificates_len - certificate_len - sizeof(uint24_t));
+                pl.reserve(constexpr_certificate_extensions, certificates_len - certificate_len - sizeof(uint24_t));
                 pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
                 pl.read(stream, size, pos);
 
