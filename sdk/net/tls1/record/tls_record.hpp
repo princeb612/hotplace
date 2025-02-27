@@ -56,7 +56,6 @@ class tls_record {
     size_t offsetof_body();
 
     uint8 _content_type;
-    uint16 _legacy_version;
     bool _cond_dtls;
     uint16 _key_epoch;
     binary_t _dtls_record_seq;

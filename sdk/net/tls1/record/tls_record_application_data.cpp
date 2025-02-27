@@ -136,7 +136,7 @@ return_t tls_record_application_data::do_write_header(tls_direction_t dir, binar
                << new payload_member(binary_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                << new payload_member(uint16(len), true, constexpr_len);                                                 // tls, dtls
 
-            pl.set_group(constexpr_group_dtls, is_kindof_dtls(_legacy_version));
+            pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
             pl.write(additional);
         }
 

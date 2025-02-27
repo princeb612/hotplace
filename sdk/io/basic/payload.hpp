@@ -171,6 +171,7 @@ class payload_member {
 class payload_encoded {
    public:
     payload_encoded() { _shared.make_share(this); }
+    virtual ~payload_encoded() {}
 
     virtual size_t lsize() = 0;
     virtual size_t value() = 0;

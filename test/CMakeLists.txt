@@ -54,8 +54,8 @@ add_subdirectory (dtlsserver)
 add_subdirectory (netclient)
 add_subdirectory (qpack)
 add_subdirectory (httpaltsvc)
-add_subdirectory (quic)
 add_subdirectory (tls1)
+add_subdirectory (quic)
 # add_subdirectory (httpserver3)
 
 # odbc

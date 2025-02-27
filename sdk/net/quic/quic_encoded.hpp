@@ -87,6 +87,8 @@ class quic_encoded : public payload_encoded {
     quic_encoded& set(const std::string& data);
     quic_encoded& set(const binary_t& data);
 
+    virtual ~quic_encoded();
+
     virtual size_t lsize();  // length size
     virtual size_t value();
     virtual const byte_t* data();
