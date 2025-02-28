@@ -72,39 +72,39 @@ class cbor_web_key : public crypto_keychain {
      * @param crypto_key* cryptokey [in]
      * @param keyflag_t mode [in] see keyflag_t
      * @param stream_t* stream [in]
-     * @param int flag [in] key_public, key_private
+     * @param int flags [in] public_key | private_key
      * @return error code (see error.hpp)
      */
-    virtual return_t write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag = 0);
+    virtual return_t write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flags = public_key);
     /**
      * @brief   write
      * @param   crypto_key* crypto_key [in]
      * @param   stream_t* stream [in]
-     * @param   int flag [inopt] 0 public only, 1 also private
+     * @param   int flags [inopt] public_key | private_key
      * @return  error code (see error.hpp)
      */
-    return_t write(crypto_key* cryptokey, stream_t* stream, int flag = 0);
+    return_t write(crypto_key* cryptokey, stream_t* stream, int flags = public_key);
     /**
      * @brief   write
      * @param   crypto_key* crypto_key [in]
      * @param   std::string& buf [out] base16 null-terminated
-     * @param   int flag [inopt] 0 public only, 1 also private
+     * @param   int flags [inopt] public_key | private_key
      * @return  error code (see error.hpp)
      */
-    return_t write(crypto_key* crypto_key, std::string& buf, int flag = 0);
+    return_t write(crypto_key* crypto_key, std::string& buf, int flags = public_key);
     /**
      * @brief   write
      * @param   crypto_key* crypto_key [in]
      * @param   binary_t& cbor [out]
-     * @param   int flag [inopt] 0 public only, 1 also private
+     * @param   int flags [inopt] public_key | private_key
      * @return  error code (see error.hpp)
      */
-    return_t write(crypto_key* crypto_key, binary_t& cbor, int flag = 0);
+    return_t write(crypto_key* crypto_key, binary_t& cbor, int flags = public_key);
     /**
      * @brief   key member function to write
      * @param   crypto_key* crypto_key [in]
      * @param   cbor_object** root [out] call release to free
-     * @param   int flag [inopt]
+     * @param   int flags [inopt] public_key | private_key
      * @return  error code (see error.hpp)
      * @example
      *          crypto_key key;
@@ -118,14 +118,14 @@ class cbor_web_key : public crypto_keychain {
      *          publisher.publish (root, &diagnostic); // same diagnose
      *          root->release ();
      */
-    return_t write(crypto_key* crypto_key, cbor_object** root, int flag = 0);
+    return_t write(crypto_key* crypto_key, cbor_object** root, int flags = public_key);
     /**
      * @brief   diagnostic
      * @param   crypto_key* crypto_key [in]
      * @param   stream_t* stream [out]
-     * @param   int flag [inopt]
+     * @param   int flags [inopt] public_key | private_key
      */
-    return_t diagnose(crypto_key* crypto_key, stream_t* stream, int flag = 0);
+    return_t diagnose(crypto_key* crypto_key, stream_t* stream, int flags = public_key);
 
    protected:
     return_t do_load(crypto_key* crypto_key, cbor_object* object, int flag);

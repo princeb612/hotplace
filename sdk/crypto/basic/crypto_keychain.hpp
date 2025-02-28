@@ -22,9 +22,6 @@ enum keyflag_t {
     key_pemfile = 1,   // PEM
     key_certfile = 2,  // Certificate (public key)
     key_derfile = 3,   // DER
-
-    key_public = 0,
-    key_private = 1,
 };
 
 /**
@@ -109,7 +106,7 @@ class crypto_keychain {
      * @param crypto_key* cryptokey [in]
      * @param keyflag_t mode [in] see keyflag_t
      * @param stream_t* stream [in]
-     * @param int flag [in] key_public, key_private
+     * @param int flag [in] public_key | private_key
      * @return error code (see error.hpp)
      */
     virtual return_t write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag = 0);

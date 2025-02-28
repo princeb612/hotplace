@@ -667,6 +667,16 @@ const hint_curve_t* crypto_advisor::hintof_curve_name(const char* name) {
     return item;
 }
 
+const hint_curve_t* crypto_advisor::hintof_curve_eckey(const EVP_PKEY* pkey) {
+    const hint_curve_t* item = nullptr;
+    if (pkey) {
+        uint32 nid = 0;
+        nidof_evp_pkey(pkey, nid);
+        item = hintof_curve_nid(nid);
+    }
+    return item;
+}
+
 const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm(const char* alg) {
     const hint_jose_encryption_t* item = nullptr;
 
@@ -895,6 +905,12 @@ return_t crypto_advisor::nameof_ec_curve(const EVP_PKEY* pkey, std::string& name
         if (errorcode_t::success == ret) {
             if (item->name) {
                 name = item->name;
+            } else if (item->aka1) {
+                name = item->aka1;
+            } else if (item->aka2) {
+                name = item->aka2;
+            } else if (item->aka3) {
+                name = item->aka3;
             }
         }
     }

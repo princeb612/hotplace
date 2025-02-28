@@ -122,13 +122,13 @@ void test_crypto_key() {
     }
 
     json_web_key jwk;
-    ret = jwk.write(&key, &bs);
+    ret = jwk.write(&key, &bs, public_key | private_key);
     _logger->writeln(bs);
     bs.clear();
     _test_case.test(ret, __FUNCTION__, "JWK");
 
     cbor_web_key cwk;
-    ret = cwk.diagnose(&key, &bs);
+    ret = cwk.diagnose(&key, &bs, public_key | private_key);
     _logger->writeln(bs);
     bs.clear();
     _test_case.test(ret, __FUNCTION__, "CWK");

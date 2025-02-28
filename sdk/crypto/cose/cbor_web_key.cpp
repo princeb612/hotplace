@@ -299,11 +299,20 @@ void cwk_writer(crypto_key_object* key, void* param) {
         binary_t pub2;
         binary_t priv;
 
+        auto pkey = key->get_pkey();
+        auto hint = advisor->hintof_curve_eckey(pkey);
+
+        if (hint && (CURVE_SUPPORT_COSE)) {
+            // do nothing
+        } else {
+            __leave2;
+        }
+
         // RFC 8152
         // 13.1.1.  Double Coordinate Curves
         // 13.2.  Octet Key Pair
         // Leading zero octets MUST be preserved.
-        ret = crypto_key::get_key(key->get_pkey(), 1, kty, pub1, pub2, priv, true);
+        ret = crypto_key::get_key(pkey, 1, kty, pub1, pub2, priv, true);
         if (errorcode_t::success != ret) {
             __leave2;
         }

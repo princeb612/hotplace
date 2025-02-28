@@ -980,6 +980,8 @@ typedef struct _hint_cose_algorithm_t {
 #define ECDSA_SUPPORT_SHA2_256 0x0004
 #define ECDSA_SUPPORT_SHA2_384 0x0008
 #define ECDSA_SUPPORT_SHA2_512 0x0010
+#define CURVE_SUPPORT_JOSE 0x1000
+#define CURVE_SUPPORT_COSE 0x2000
 
 enum curve_category_t : uint8 {
     prime_field_weierstrass_curve = (1 << 0),   // general curve

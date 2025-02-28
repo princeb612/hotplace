@@ -181,8 +181,10 @@ typedef struct _json_mapper_t {
     json_mapper_items_t items;
 } json_mapper_t;
 
-static void jwk_serialize_item(int flag, json_mapper_item_t item, json_t* json_item) {
+static void jwk_serialize_item(int flag, json_mapper_item_t& item, json_t* json_item) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    auto pkey = item.key.get_pkey();
 
     /* kty */
     json_object_set_new(json_item, "kty", json_string(nameof_key_type(item.type)));
@@ -207,7 +209,7 @@ static void jwk_serialize_item(int flag, json_mapper_item_t item, json_t* json_i
     std::string curve_name;
 
     if (kindof_ecc(item.type)) {
-        advisor->nameof_ec_curve(item.key.get_pkey(), curve_name);
+        advisor->nameof_ec_curve(pkey, curve_name);
     }
 
     /* param */
@@ -216,20 +218,20 @@ static void jwk_serialize_item(int flag, json_mapper_item_t item, json_t* json_i
     } else if (crypto_kty_t::kty_rsa == item.type) {
         json_object_set_new(json_item, "n", json_string(base64_encode(item.pub1, base64_encoding_t::base64url_encoding).c_str()));
         json_object_set_new(json_item, "e", json_string(base64_encode(item.pub2, base64_encoding_t::base64url_encoding).c_str()));
-        if (flag) {
+        if (false == item.priv.empty()) {
             json_object_set_new(json_item, "d", json_string(base64_encode(item.priv, base64_encoding_t::base64url_encoding).c_str()));
         }
     } else if (crypto_kty_t::kty_ec == item.type) {
         json_object_set_new(json_item, "crv", json_string(curve_name.c_str()));
         json_object_set_new(json_item, "x", json_string(base64_encode(item.pub1, base64_encoding_t::base64url_encoding).c_str()));
         json_object_set_new(json_item, "y", json_string(base64_encode(item.pub2, base64_encoding_t::base64url_encoding).c_str()));
-        if (flag) {
+        if (false == item.priv.empty()) {
             json_object_set_new(json_item, "d", json_string(base64_encode(item.priv, base64_encoding_t::base64url_encoding).c_str()));
         }
     } else if (crypto_kty_t::kty_okp == item.type) {
         json_object_set_new(json_item, "crv", json_string(curve_name.c_str()));
         json_object_set_new(json_item, "x", json_string(base64_encode(item.pub1, base64_encoding_t::base64url_encoding).c_str()));
-        if (flag) {
+        if (false == item.priv.empty()) {
             json_object_set_new(json_item, "d", json_string(base64_encode(item.priv, base64_encoding_t::base64url_encoding).c_str()));
         }
     }
@@ -257,9 +259,18 @@ return_t jwk_serialize_t(json_mapper_t mapper, void (*callback)(char* data, TYPE
                 json_mapper_item_t& item = mapper.items.front();
                 jwk_serialize_item(mapper.flag, item, json_root);
             } else {
+                auto advisor = crypto_advisor::get_instance();
                 json_t* json_keys = json_array();
                 if (json_keys) {
-                    for (const auto& item : mapper.items) {
+                    for (auto& item : mapper.items) {
+                        auto pkey = item.key.get_pkey();
+                        auto hint = advisor->hintof_curve_eckey(pkey);
+                        if (hint && (CURVE_SUPPORT_JOSE & hint->flags)) {
+                            // do nothing
+                        } else {
+                            continue;
+                        }
+
                         json_t* json_key = json_object();
 
                         if (json_key) {

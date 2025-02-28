@@ -248,6 +248,11 @@ class crypto_advisor {
      * @sa hintof_curve_nid
      */
     const hint_curve_t* hintof_curve(const char* curve);
+    /*
+     * @brief   hint
+     * @return  return nullptr if pkey is not EC_KEY
+     */
+    const hint_curve_t* hintof_curve_eckey(const EVP_PKEY* pkey);
 
     /**
      * @brief JWA
