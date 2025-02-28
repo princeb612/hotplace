@@ -367,7 +367,7 @@ return_t crypto_key::extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
         binary_t bin_pub;
         binary_t bin_priv;
 
-        dh = EVP_PKEY_get0_DH(pkey);
+        dh = EVP_PKEY_get0_DH((EVP_PKEY*)pkey);
         if (nullptr == dh) {
             ret = errorcode_t::internal_error;
             __leave2;

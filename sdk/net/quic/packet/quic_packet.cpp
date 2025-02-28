@@ -20,29 +20,29 @@
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_hdr[] = "hdr";
 constexpr char constexpr_longheader[] = "longheader";
+constexpr char constexpr_version[] = "version";
+constexpr char constexpr_dcid[] = "dcid";
+constexpr char constexpr_scid[] = "scid";
+constexpr char constexpr_dcid_len[] = "dcid len";
+constexpr char constexpr_scid_len[] = "scid len";
 
-quic_packet::quic_packet(tls_session* session) : _type(0), _session(session), _ht(0), _version(1), _pn(0) {
-    if (session) {
-        session->addref();
-    }
+quic_packet::quic_packet(tls_session* session) : _type(0), _session(nullptr), _ht(0), _version(1), _pn(0) {
+    set_session(session);
     _shared.make_share(this);
 }
 
-quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _session(session), _ht(0), _version(1), _pn(0) {
+quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _session(nullptr), _ht(0), _version(1), _pn(0) {
     bool is_longheader = true;
+    set_session(session);
     set_type(type, _ht, is_longheader);
-    if (session) {
-        session->addref();
-    }
     _shared.make_share(this);
 }
 
 quic_packet::quic_packet(const quic_packet& rhs)
-    : _session(rhs._session), _type(rhs._type), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _pn(rhs._pn) {
-    if (_session) {
-        _session->addref();
-    }
+    : _type(rhs._type), _session(nullptr), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _pn(rhs._pn) {
+    set_session(rhs._session);
     _shared.make_share(this);
 }
 
@@ -54,39 +54,57 @@ quic_packet::~quic_packet() {
 
 uint8 quic_packet::get_type() { return _type; }
 
-void quic_packet::get_type(uint8 hdr, uint8& type, bool& is_longheader) { quic_packet_get_type(hdr, type, is_longheader); }
+void quic_packet::get_type(uint8 hdr, uint8& type, bool& is_longheader) { quic_packet_get_type(_version, hdr, type, is_longheader); }
 
 void quic_packet::set_type(uint8 type, uint8& hdr, bool& is_longheader) {
+    auto session = get_session();
+    auto session_type = session->get_type();
+
     hdr = 0;
+    uint8 pf_initial = 0;
+    uint8 pf_0rtt = 0;
+    uint8 pf_handshake = 0;
+    uint8 pf_retry = 0;
+    if (session_quic == session_type) {
+        pf_initial = quic_packet_field_initial;
+        pf_0rtt = quic_packet_field_0_rtt;
+        pf_handshake = quic_packet_field_handshake;
+        pf_retry = quic_packet_field_retry;
+    } else if (session_quic2 == session_type) {
+        pf_initial = quic2_packet_field_initial;
+        pf_0rtt = quic2_packet_field_0_rtt;
+        pf_handshake = quic2_packet_field_handshake;
+        pf_retry = quic2_packet_field_retry;
+    }
     switch (type) {
         case quic_packet_type_version_negotiation:
             is_longheader = true;
-            // 17.2.1.  Version Negotiation Packet
+            // RFC 9000 17.2.1.  Version Negotiation Packet
             hdr |= (quic_packet_field_hf);
             break;
         case quic_packet_type_initial:
             is_longheader = true;
-            // 17.2.2.  Initial Packet
-            hdr |= (quic_packet_field_hf | quic_packet_field_fb | quic_packet_field_initial);
+            // RFC 9000 17.2.2.  Initial Packet
+            hdr |= (quic_packet_field_hf | quic_packet_field_fb | pf_initial);
             break;
         case quic_packet_type_0_rtt:
             is_longheader = true;
-            // 17.2.3.  0-RTT
-            hdr |= (quic_packet_field_hf | quic_packet_field_fb | quic_packet_field_0_rtt);
+            // RFC 9000 17.2.3.  0-RTT
+            hdr |= (quic_packet_field_hf | quic_packet_field_fb | pf_0rtt);
             break;
         case quic_packet_type_handshake:
             is_longheader = true;
-            // 17.2.4.  Handshake Packet
-            hdr |= (quic_packet_field_hf | quic_packet_field_fb | quic_packet_field_handshake);
+            // RFC 9000 17.2.4.  Handshake Packet
+            hdr |= (quic_packet_field_hf | quic_packet_field_fb | pf_handshake);
             break;
         case quic_packet_type_retry:
             is_longheader = true;
-            // 17.2.5.  Retry Packet
-            hdr |= (quic_packet_field_hf | quic_packet_field_fb | quic_packet_field_retry);
+            // RFC 9000 17.2.5.  Retry Packet
+            hdr |= (quic_packet_field_hf | quic_packet_field_fb | pf_retry);
             break;
         case quic_packet_type_1_rtt:
             is_longheader = false;
-            // 17.3.1.  1-RTT Packet
+            // RFC 9000 17.3.1.  1-RTT Packet
             hdr |= (quic_packet_field_fb);
             break;
     }
@@ -95,7 +113,7 @@ void quic_packet::set_type(uint8 type, uint8& hdr, bool& is_longheader) {
 quic_packet& quic_packet::set_version(uint32 version) {
     switch (get_type()) {
         case quic_packet_type_version_negotiation:
-            // 17.2.1.  Version Negotiation Packet
+            // RFC 9000 17.2.1.  Version Negotiation Packet
             break;
         default:
             _version = version;
@@ -176,28 +194,28 @@ return_t quic_packet::read_common_header(tls_direction_t dir, const byte_t* stre
         //   17.3.  Short Header Packets
 
         payload pl;
-        pl << new payload_member(uint8(0), "hdr")                                   //
-           << new payload_member(uint32(0), true, "version", constexpr_longheader)  //
-           << new payload_member(uint8(0), "dcid_len", constexpr_longheader)        //
-           << new payload_member(binary_t(), "dcid")                                //
-           << new payload_member(uint8(0), "scid_len", constexpr_longheader)        //
-           << new payload_member(binary_t(), "scid", constexpr_longheader);         //
+        pl << new payload_member(uint8(0), constexpr_hdr)                                   //
+           << new payload_member(uint32(0), true, constexpr_version, constexpr_longheader)  //
+           << new payload_member(uint8(0), constexpr_dcid_len, constexpr_longheader)        //
+           << new payload_member(binary_t(), constexpr_dcid)                                //
+           << new payload_member(uint8(0), constexpr_scid_len, constexpr_longheader)        //
+           << new payload_member(binary_t(), constexpr_scid, constexpr_longheader);         //
         if (is_longheader) {
-            pl.set_reference_value("dcid", "dcid_len");
-            pl.set_reference_value("scid", "scid_len");
+            pl.set_reference_value(constexpr_dcid, constexpr_dcid_len);
+            pl.set_reference_value(constexpr_scid, constexpr_scid_len);
         } else {
             const binary_t& context_dcid = protection.get_item(tls_context_quic_dcid);
             auto size_dcid = context_dcid.size();
-            pl.reserve("dcid", size_dcid);
+            pl.reserve(constexpr_dcid, size_dcid);
         }
         pl.set_group(constexpr_longheader, is_longheader);  // true
 
         pl.read(stream, size, pos);
 
         _ht = hdr;
-        _version = pl.t_value_of<uint32>("version");
-        pl.get_binary("dcid", _dcid);
-        pl.get_binary("scid", _scid);
+        _version = pl.t_value_of<uint32>(constexpr_version);
+        pl.get_binary(constexpr_dcid, _dcid);
+        pl.get_binary(constexpr_scid, _scid);
     }
     __finally2 {
         // do nothing
@@ -232,12 +250,12 @@ return_t quic_packet::write_common_header(binary_t& header) {
     }
 
     payload pl;
-    pl << new payload_member(hdr, "hdr")                                          //
-       << new payload_member(_version, true, "version", constexpr_longheader)     //
-       << new payload_member((uint8)_dcid.size(), "dcidl", constexpr_longheader)  //
-       << new payload_member(_dcid, "dcid")                                       //
-       << new payload_member((uint8)_scid.size(), "scidl", constexpr_longheader)  //
-       << new payload_member(_scid, "scid", constexpr_longheader);                //
+    pl << new payload_member(hdr, constexpr_hdr)                                             //
+       << new payload_member(_version, true, constexpr_version, constexpr_longheader)        //
+       << new payload_member((uint8)_dcid.size(), constexpr_dcid_len, constexpr_longheader)  //
+       << new payload_member(_dcid, constexpr_dcid)                                          //
+       << new payload_member((uint8)_scid.size(), constexpr_scid_len, constexpr_longheader)  //
+       << new payload_member(_scid, constexpr_scid, constexpr_longheader);                   //
     pl.set_group(constexpr_longheader, is_longheader);
     pl.write(header);
 
@@ -248,15 +266,9 @@ void quic_packet::dump() {
     if (istraceable()) {
         basic_stream dbs;
 
-        std::map<uint8, std::string> packet_name;
-        packet_name.insert({quic_packet_type_version_negotiation, "version negotiation"});
-        packet_name.insert({quic_packet_type_initial, "initial"});
-        packet_name.insert({quic_packet_type_0_rtt, "0-RTT"});
-        packet_name.insert({quic_packet_type_handshake, "handshake"});
-        packet_name.insert({quic_packet_type_retry, "retry"});
-        packet_name.insert({quic_packet_type_1_rtt, "1-RTT"});
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        dbs.printf("- quic packet %s\n", packet_name[_type].c_str());
+        dbs.printf("- quic packet %s\n", tlsadvisor->quic_packet_type_string(get_type()).c_str());
         dbs.printf(" > version %08x\n", get_version());
         dbs.printf(" > destination connection id %s\n", base16_encode(_dcid).c_str());
         // dump_memory(_dcid, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
@@ -347,6 +359,21 @@ quic_packet& quic_packet::set_payload(const byte_t* stream, size_t size) {
 const binary_t& quic_packet::get_payload() { return _payload; }
 
 tls_session* quic_packet::get_session() { return _session; }
+
+void quic_packet::set_session(tls_session* session) {
+    if (session) {
+        session->addref();
+
+        _session = session;
+
+        uint32 session_type = session->get_type();
+        if (session_quic == session_type) {
+            _version = quic_1;
+        } else {
+            _version = quic_2;
+        }
+    }
+}
 
 return_t quic_packet::header_protect(tls_direction_t dir, const binary_t& bin_ciphertext, protection_level_t level, uint8 hdr, uint8 pn_length,
                                      binary_t& bin_pn, binary_t& bin_protected_header) {

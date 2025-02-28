@@ -4,41 +4,6 @@
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  * @remarks
- *          RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
- *            QUIC integrates the TLS handshake [TLS13], although using a customized framing for protecting packets.
- *
- *          RFC 2246 The TLS Protocol Version 1.0
- *           7.4. Handshake protocol
- *           7.4.1. Hello messages
- *           7.4.1.1. Hello request
- *           7.4.1.2. Client hello
- *
- *          RFC 4346 The Transport Layer Security (TLS) Protocol Version 1.1
- *           7.4. Handshake Protocol
- *           7.4.1. Hello Messages
- *           7.4.1.2. Client Hello
- *
- *          RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
- *           7.4.  Handshake Protocol
- *           7.4.1.  Hello Messages
- *           7.4.1.2.  Client Hello
- *
- *           4.1.2.  Client Hello
- *             Structure of this message:
- *
- *                uint16 ProtocolVersion;
- *                opaque Random[32];
- *
- *                uint8 CipherSuite[2];    // Cryptographic suite selector
- *
- *                struct {
- *                    ProtocolVersion legacy_version = 0x0303;    // TLS v1.2
- *                    Random random;
- *                    opaque legacy_session_id<0..32>;
- *                    CipherSuite cipher_suites<2..2^16-2>;
- *                    opaque legacy_compression_methods<1..2^8-1>;
- *                    Extension extensions<8..2^16-1>;
- *                } ClientHello;
  *
  * Revision History
  * Date         Name                Description
@@ -375,11 +340,11 @@ void test_quic_xargs_org() {
         // 1. variable length integer
         //   | prefix |     23 |
         //   |      1 |   0x17 |
-        //   |     *2 | 0x4017 |
+        //   |    * 2 | 0x4017 |
         // 2. unprotected header, AAD (keep prefix)
         //   | prefix | AAD                                        | unprotect |
         //   |      1 | c00000000105735f63696405635f63696400  1701 | false     |
-        //   |     *2 | c00000000105735f63696405635f63696400401701 | true      |
+        //   |    * 2 | c00000000105735f63696405635f63696400401701 | true      |
         const char* packet =
             "cf 00 00 00 01 05 73 5f 63 69 64 05 63 5f 63 69"
             "64 00 40 17 56 6e 1f 98 ed 1f 7b 05 55 cd b7 83"

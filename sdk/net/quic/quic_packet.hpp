@@ -150,6 +150,7 @@ class quic_packet {
     const binary_t& get_payload();
 
     tls_session* get_session();
+    void set_session(tls_session* session);
 
     void addref();
     void release();

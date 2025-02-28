@@ -11,8 +11,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/tls1/handshake/tls_handshake.hpp>
 #include <sdk/net/tls1/tls_protection.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
@@ -38,13 +36,6 @@ void tls_session::reset_recordno(tls_direction_t dir, protection_level_t level) 
     auto ver = get_tls_protection().get_tls_version();
     if ((tls_13 == ver) || (dtls_13 == ver)) {
         get_session_info(dir).reset_recordno(level);
-    }
-    if (istraceable()) {
-        if (istraceable()) {
-            basic_stream dbs;
-            dbs.printf("\e[33mreset record no dir %i level %i\e[0m\n", dir, level);
-            trace_debug_event(category_tls1, tls_event_dump, &dbs);
-        }
     }
 }
 
@@ -91,6 +82,27 @@ void tls_session::run_scheduled(tls_direction_t dir) {
         handshake->release();
         _que.pop();
     }
+}
+
+void tls_session::push_alert(uint8 level, uint8 desc) {
+    critical_section_guard guard(_lock);
+    _alerts.push(alert(level, desc));
+}
+
+size_t tls_session::numberof_alerts() { return _alerts.size(); }
+
+return_t tls_session::pop_alert(uint8& level, uint8& desc) {
+    return_t ret = errorcode_t::success;
+    critical_section_guard guard(_lock);
+    if (_alerts.empty()) {
+        ret = errorcode_t::not_found;
+    } else {
+        auto& item = _alerts.front();
+        level = item.level;
+        desc = item.desc;
+        _alerts.pop();
+    }
+    return ret;
 }
 
 }  // namespace net

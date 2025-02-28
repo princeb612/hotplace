@@ -41,6 +41,7 @@
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/quic/quic.hpp>
 #include <sdk/net/quic/quic_packet.hpp>
+#include <sdk/net/quic/types.hpp>
 #include <sdk/net/tls1/tls_session.hpp>
 
 namespace hotplace {
@@ -143,11 +144,20 @@ return_t quic_packet_retry::retry_integrity_tag(const quic_packet_retry& retry_p
         }
 
         auto& protection = session->get_tls_protection();
+        auto session_type = session->get_type();
 
         // RFC 9001 5.8.  Retry Packet Integrity
         // RFC 9001 Figure 8: Retry Pseudo-Packet
-        const char* key = "0xbe0c690b9f66575a1d766b54e368c84e";
-        const char* nonce = "0x461599d35d632bf2239825bb";
+        // RFC 9369 3.3.3.  Retry Integrity Tag
+        const char* key = nullptr;
+        const char* nonce = nullptr;
+        if (session_quic == session_type) {
+            key = "0xbe0c690b9f66575a1d766b54e368c84e";
+            nonce = "0x461599d35d632bf2239825bb";
+        } else {
+            key = "0x8fb4b01b56ac48e260fbcbcead7ccc92";
+            nonce = "0xd86969bc2d7c6d9990efb04a";
+        }
 
         quic_packet_retry retry(retry_packet);
 

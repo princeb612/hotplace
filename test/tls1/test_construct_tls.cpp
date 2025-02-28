@@ -135,7 +135,8 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
         }
         if (tls_13 == option.version) {
             auto key_share = new tls_extension_client_key_share(session);
-            (*key_share).add("x25519");
+            key_share->clear();
+            key_share->add("x25519");
             handshake->get_extensions().add(key_share);
 
             basic_stream bs;
@@ -211,14 +212,15 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
         }
         if (tls_13 == option.version) {
             auto key_share = new tls_extension_server_key_share(session);
-            (*key_share).add("x25519");
+            key_share->clear();
+            key_share->add_keyshare();
             handshake->get_extensions().add(key_share);
 
             basic_stream bs;
-            auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
-            dump_key(pkey, &bs);
+            auto svr_keyshare = protection.get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
+            dump_key(svr_keyshare, &bs);
             _logger->write(bs);
-            _test_case.assert(pkey, __FUNCTION__, "{server} key share (server generated)");
+            _test_case.assert(svr_keyshare, __FUNCTION__, "{server} key share (server generated)");
         }
     }
     __finally2 {

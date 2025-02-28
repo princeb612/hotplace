@@ -36,15 +36,20 @@
 
 ## implemented
 
-* TLS
+* TLS,QUIC
   * RFC 2246 The TLS Protocol Version 1.0
+  * RFC 4346 The Transport Layer Security (TLS) Protocol Version 1.1
+    * deprecated
   * RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
   * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
   * RFC 8448 Example Handshake Traces for TLS 1.3
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
     * sdk/net/tls1/
     * test/tls1/
-
+  * RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
+  * RFC 9001 Using TLS to Secure QUIC
+  * RFC 9369 QUIC Version 2
+    * test/quic/
 * CBOR
   * RFC 7049 Concise Binary Object Representation (CBOR)
   * RFC 8949 Concise Binary Object Representation (CBOR)
@@ -99,6 +104,7 @@
     * test/httpserver2/
 * HTTP/3
   * RFC 9204 QPACK: Field Compression for HTTP/3
+    * test/qpack/
 * BASE16, BASE64, BASE64URL
   * RFC 4648 The Base16, Base32, and Base64 Data Encodings
     * sdk/base/basic/
@@ -199,8 +205,9 @@
   * RFC 9002 QUIC Loss Detection and Congestion Control
   * RFC 9114 HTTP/3
   * RFC 9368 Compatible Version Negotiation for QUIC
-* TLS
+* TLS,DTLS
   * RFC 6066 Transport Layer Security (TLS) Extensions: Extension Definitions
+  * RFC 6347 Datagram Transport Layer Security Version 1.2
   * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
   * RFC 7520 Using Raw Public Keys in Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)
   * RFC 7685 A Transport Layer Security (TLS) ClientHello Padding Extension

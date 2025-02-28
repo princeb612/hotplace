@@ -122,7 +122,8 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
         }
         {
             auto key_share = new tls_extension_client_key_share(session);
-            (*key_share).add("x25519");
+            key_share->clear();
+            key_share->add("x25519");
             handshake->get_extensions().add(key_share);
         }
         {
@@ -200,7 +201,8 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
         }
         {
             auto key_share = new tls_extension_server_key_share(session);
-            (*key_share).add("x25519");
+            key_share->clear();
+            key_share->add_keyshare();  // the same group as one of the client's shares
             handshake->get_extensions().add(key_share);
         }
 

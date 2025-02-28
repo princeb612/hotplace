@@ -20,40 +20,51 @@
 namespace hotplace {
 namespace net {
 
+enum quic_version_t : uint32 {
+    quic_1 = 0x00000001,  // RFC 9000
+    quic_2 = 0x6b3343cf,  // RFC 9369
+};
+
 /**
  * RFC 9000 17.  Packet Formats
  * 17.2.  Long Header Packets
  * 17.3.  Short Header Packets
  */
 enum quic_packet_field_t : uint8 {
-    quic_packet_field_hf = 0x80,         // RFC 9000 Figure 13, Header Form
-    quic_packet_field_fb = 0x40,         // RFC 9000 Figure 13, Fixed Bit
-    quic_packet_field_mask_lh = 0x30,    // RFC 9000 Figure 13, Long Packet Type
-    quic_packet_field_initial = 0x00,    // RFC 9000 Table 5, 17.2.2, Initial Packet
-    quic_packet_field_0_rtt = 0x10,      // RFC 9000 Table 5, 17.2.3, 0-RTT
-    quic_packet_field_handshake = 0x20,  // RFC 9000 Table 5, 17.2.4, Handshake Packet
-    quic_packet_field_retry = 0x30,      // RFC 9000 Table 5, 17.2.5, Retry Packet
-    quic_packet_field_sb = 0x20,         // RFC 9000 Figure 19: 1-RTT Packet, 17.4.  Latency Spin Bit
-    quic_packet_field_kp = 0x04,         // RFC 9000 Figure 19: 1-RTT Packet, Key Phase
-    quic_packet_field_mask_pnl = 0x03,   // RFC 9000 Figure 19: 1-RTT Packet, Packet Number Length
+    quic_packet_field_hf = 0x80,          // RFC 9000 Figure 13, Header Form
+    quic_packet_field_fb = 0x40,          // RFC 9000 Figure 13, Fixed Bit
+    quic_packet_field_mask_lh = 0x30,     // RFC 9000 Figure 13, Long Packet Type
+    quic_packet_field_initial = 0x00,     // RFC 9000 Table 5, 17.2.2, Initial Packet
+    quic_packet_field_0_rtt = 0x10,       // RFC 9000 Table 5, 17.2.3, 0-RTT
+    quic_packet_field_handshake = 0x20,   // RFC 9000 Table 5, 17.2.4, Handshake Packet
+    quic_packet_field_retry = 0x30,       // RFC 9000 Table 5, 17.2.5, Retry Packet
+    quic_packet_field_sb = 0x20,          // RFC 9000 Figure 19: 1-RTT Packet, 17.4.  Latency Spin Bit
+    quic_packet_field_kp = 0x04,          // RFC 9000 Figure 19: 1-RTT Packet, Key Phase
+    quic_packet_field_mask_pnl = 0x03,    // RFC 9000 Figure 19: 1-RTT Packet, Packet Number Length
+    quic2_packet_field_initial = 0x10,    // RFC 9369 3.2.  Long Header Packet Types
+    quic2_packet_field_0_rtt = 0x20,      // RFC 9369 3.2.  Long Header Packet Types
+    quic2_packet_field_handshake = 0x30,  // RFC 9369 3.2.  Long Header Packet Types
+    quic2_packet_field_retry = 0x00,      // RFC 9369 3.2.  Long Header Packet Types
+
 };
 
 /**
- * QUIC packet type
- * RFC 9000 17.2.1.  Version Negotiation Packet
- * RFC 9000 17.2.2.  Initial Packet
- * RFC 9000 17.2.3.  0-RTT
- * RFC 9000 17.2.4.  Handshake Packet
- * RFC 9000 17.2.5.  Retry Packet
- * RFC 9000 17.3.1.  1-RTT Packet
+ * RFC 9000 17. Packet Formats
+ *          17.2.1.  Version Negotiation Packet
+ *          17.2.2.  Initial Packet
+ *          17.2.3.  0-RTT
+ *          17.2.4.  Handshake Packet
+ *          17.2.5.  Retry Packet
+ *          17.3.1.  1-RTT Packet
+ * RFC 9369 3.2.  Long Header Packet Types
  */
 enum quic_packet_t : uint8 {
-    quic_packet_type_initial = 0b11000000,              // quic_packet_field_hf | quic_packet_field_fb | quic_packet_field_initial,
-    quic_packet_type_0_rtt = 0b11010000,                // quic_packet_field_hf | quic_packet_field_fb | quic_packet_field_0_rtt,
-    quic_packet_type_handshake = 0b11100000,            // quic_packet_field_hf | quic_packet_field_fb | quic_packet_field_handshake,
-    quic_packet_type_retry = 0b11110000,                // quic_packet_field_hf | quic_packet_field_fb | quic_packet_field_retry,
-    quic_packet_type_version_negotiation = 0b10000000,  // quic_packet_field_hf
-    quic_packet_type_1_rtt = 0b01000000,                // quic_packet_field_fb
+    quic_packet_type_initial = 0,
+    quic_packet_type_0_rtt = 1,
+    quic_packet_type_handshake = 2,
+    quic_packet_type_retry = 3,
+    quic_packet_type_version_negotiation = 4,
+    quic_packet_type_1_rtt = 5,
 };
 
 /*

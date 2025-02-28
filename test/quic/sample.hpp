@@ -70,16 +70,29 @@ struct testvector_retry_packet {
 
 std::string direction_string(tls_direction_t dir);
 
+// QUIC Version 1
 void test_rfc_9000_a1();
 void test_rfc_9000_a2();
 void test_rfc_9000_a3();
-void test_rfc_9001_initial(testvector_initial_packet* item, tls_session* session);
+
+void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_session* session);
+void test_rfc_9001_send_initial(testvector_initial_packet* item, tls_session* session);
+void test_rfc_9001_retry(testvector_retry_packet* item, tls_session* session);
+
 void test_rfc_9001_section4();
 void test_rfc_9001_a1();
 void test_rfc_9001_a2();
 void test_rfc_9001_a3();
 void test_rfc_9001_a4();
 void test_rfc_9001_a5();
+
 void test_quic_xargs_org();
+
+// QUIC Version 2
+void test_rfc_9369_a1();
+void test_rfc_9369_a2();
+void test_rfc_9369_a3();
+void test_rfc_9369_a4();
+void test_rfc_9369_a5();
 
 #endif

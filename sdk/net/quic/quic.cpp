@@ -192,23 +192,35 @@ return_t decode_packet_number(uint64 largest_pn, uint64 truncated_pn, uint8 pn_n
     return ret;
 }
 
-void quic_packet_get_type(uint8 hdr, uint8& type, bool& is_longheader) {
+void quic_packet_get_type(uint32 version, uint8 hdr, uint8& type, bool& is_longheader) {
     if (quic_packet_field_hf & hdr) {  // Header Form
         is_longheader = true;
-        if (quic_packet_field_fb & hdr) {               // Fixed Bit
-            switch (quic_packet_field_mask_lh & hdr) {  // Long Packet Type
-                case quic_packet_field_initial:
-                    type = quic_packet_type_initial;
-                    break;
-                case quic_packet_field_0_rtt:
-                    type = quic_packet_type_0_rtt;
-                    break;
-                case quic_packet_field_handshake:
-                    type = quic_packet_type_handshake;
-                    break;
-                case quic_packet_field_retry:
-                    type = quic_packet_type_retry;
-                    break;
+        uint8 pf_initial = 0;
+        uint8 pf_0rtt = 0;
+        uint8 pf_handshake = 0;
+        uint8 pf_retry = 0;
+        if (quic_1 == version) {
+            pf_initial = quic_packet_field_initial;
+            pf_0rtt = quic_packet_field_0_rtt;
+            pf_handshake = quic_packet_field_handshake;
+            pf_retry = quic_packet_field_retry;
+        } else {
+            pf_initial = quic2_packet_field_initial;
+            pf_0rtt = quic2_packet_field_0_rtt;
+            pf_handshake = quic2_packet_field_handshake;
+            pf_retry = quic2_packet_field_retry;
+        }
+
+        if (quic_packet_field_fb & hdr) {                    // Fixed Bit
+            uint8 mask = (quic_packet_field_mask_lh & hdr);  // Long Packet Type
+            if (pf_initial == mask) {
+                type = quic_packet_type_initial;
+            } else if (pf_0rtt == mask) {
+                type = quic_packet_type_0_rtt;
+            } else if (pf_handshake == mask) {
+                type = quic_packet_type_handshake;
+            } else if (pf_retry == mask) {
+                type = quic_packet_type_retry;
             }
         } else {
             type = quic_packet_type_version_negotiation;

@@ -87,11 +87,12 @@ return_t decode_packet_number(uint64 largest_pn, uint64 truncated_pn, uint8 pn_n
 
 /**
  * @brief   QUIC packet MSB
+ * @param   uint32 version [in] see quic_version_t
  * @param   uint8 hdr [in]
  * @param   uint8& type [out] see quic_packet_t
  * @param   bool& is_longheader [out]
  */
-void quic_packet_get_type(uint8 hdr, uint8& type, bool& is_longheader);
+void quic_packet_get_type(uint32 version, uint8 hdr, uint8& type, bool& is_longheader);
 
 }  // namespace net
 }  // namespace hotplace

@@ -30,6 +30,13 @@
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_quic_key[] = "quic key";
+constexpr char constexpr_quic_iv[] = "quic iv";
+constexpr char constexpr_quic_hp[] = "quic hp";
+constexpr char constexpr_quic2_key[] = "quicv2 key";
+constexpr char constexpr_quic2_iv[] = "quicv2 iv";
+constexpr char constexpr_quic2_hp[] = "quicv2 hp";
+
 return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     // RFC 8446 7.1.  Key Schedule
@@ -45,9 +52,23 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
         crypto_advisor *advisor = crypto_advisor::get_instance();
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
-        if (session_quic == session_type) {
+        const char *label_quic_key = nullptr;
+        const char *label_quic_iv = nullptr;
+        const char *label_quic_hp = nullptr;
+
+        if ((session_quic == session_type) || (session_quic2 == session_type)) {
             if (0 == cipher_suite) {
                 cipher_suite = 0x1301;  // TLS_AES_128_GCM_SHA256
+            }
+
+            if (session_quic == session_type) {
+                label_quic_key = constexpr_quic_key;
+                label_quic_iv = constexpr_quic_iv;
+                label_quic_hp = constexpr_quic_hp;
+            } else {
+                label_quic_key = constexpr_quic2_key;
+                label_quic_iv = constexpr_quic2_iv;
+                label_quic_hp = constexpr_quic2_hp;
             }
         }
 
@@ -158,10 +179,17 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                         lambda_expand_label(tls_secret_c_e_traffic_iv, secret_c_e_traffic_iv, hashalg, 12, secret_c_e_traffic, "iv", empty);
                     }
                 }
-            } else if (session_quic == session_type) {
+            } else if ((session_quic == session_type) || (session_quic2 == session_type)) {
                 const binary_t &salt = get_item(tls_context_quic_dcid);
                 if ((false == salt.empty()) && get_item(tls_secret_initial_quic).empty()) {
-                    binary_t bin_initial_salt = base16_decode("0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a");
+                    binary_t bin_initial_salt;
+                    if (session_quic == session_type) {
+                        // RFC 9001 5.2.  Initial Secrets
+                        bin_initial_salt = base16_decode("0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a");
+                    } else {
+                        // RFC 9369 3.3.1.  Initial Salt
+                        bin_initial_salt = base16_decode("0x0dede3def700a6db819381be6e269dcbf9bd2ed9");
+                    }
 
                     openssl_kdf kdf;
                     binary_t bin;
@@ -183,31 +211,29 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     ret = kdf.hmac_kdf_extract(bin_initial_secret, alg, bin_initial_salt, salt);
                     _kv[tls_secret_initial_quic] = bin_initial_secret;
 
-                    if (session_quic == session->get_type()) {
-                        kdf.hkdf_expand_tls13_label(bin_client_initial_secret, alg, 32, bin_initial_secret, str2bin("client in"), context);
-                        _kv[tls_secret_initial_quic_client] = bin_client_initial_secret;
+                    kdf.hkdf_expand_tls13_label(bin_client_initial_secret, alg, 32, bin_initial_secret, "client in", context);
+                    _kv[tls_secret_initial_quic_client] = bin_client_initial_secret;
 
-                        kdf.hkdf_expand_tls13_label(bin, alg, keysize, bin_client_initial_secret, str2bin("quic key"), context);
-                        _kv[tls_secret_initial_quic_client_key] = bin;
+                    kdf.hkdf_expand_tls13_label(bin, alg, keysize, bin_client_initial_secret, label_quic_key, context);
+                    _kv[tls_secret_initial_quic_client_key] = bin;
 
-                        kdf.hkdf_expand_tls13_label(bin, alg, 12, bin_client_initial_secret, str2bin("quic iv"), context);
-                        _kv[tls_secret_initial_quic_client_iv] = bin;
+                    kdf.hkdf_expand_tls13_label(bin, alg, 12, bin_client_initial_secret, label_quic_iv, context);
+                    _kv[tls_secret_initial_quic_client_iv] = bin;
 
-                        kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_client_initial_secret, str2bin("quic hp"), context);
-                        _kv[tls_secret_initial_quic_client_hp] = bin;
+                    kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_client_initial_secret, label_quic_hp, context);
+                    _kv[tls_secret_initial_quic_client_hp] = bin;
 
-                        kdf.hkdf_expand_tls13_label(bin_server_initial_secret, alg, 32, bin_initial_secret, str2bin("server in"), context);
-                        _kv[tls_secret_initial_quic_server] = bin_server_initial_secret;
+                    kdf.hkdf_expand_tls13_label(bin_server_initial_secret, alg, 32, bin_initial_secret, str2bin("server in"), context);
+                    _kv[tls_secret_initial_quic_server] = bin_server_initial_secret;
 
-                        kdf.hkdf_expand_tls13_label(bin, alg, keysize, bin_server_initial_secret, str2bin("quic key"), context);
-                        _kv[tls_secret_initial_quic_server_key] = bin;
+                    kdf.hkdf_expand_tls13_label(bin, alg, keysize, bin_server_initial_secret, label_quic_key, context);
+                    _kv[tls_secret_initial_quic_server_key] = bin;
 
-                        kdf.hkdf_expand_tls13_label(bin, alg, 12, bin_server_initial_secret, str2bin("quic iv"), context);
-                        _kv[tls_secret_initial_quic_server_iv] = bin;
+                    kdf.hkdf_expand_tls13_label(bin, alg, 12, bin_server_initial_secret, label_quic_iv, context);
+                    _kv[tls_secret_initial_quic_server_iv] = bin;
 
-                        kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_server_initial_secret, str2bin("quic hp"), context);
-                        _kv[tls_secret_initial_quic_server_hp] = bin;
-                    }
+                    kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_server_initial_secret, label_quic_hp, context);
+                    _kv[tls_secret_initial_quic_server_hp] = bin;
                 }
             }
         } else if (tls_hs_server_hello == type) {
@@ -323,13 +349,13 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     lambda_expand_label(tls_secret_handshake_client_sn_key, okm, hashalg, keysize, secret_handshake_client, "sn", empty);
                     lambda_expand_label(tls_secret_handshake_server_sn_key, okm, hashalg, keysize, secret_handshake_server, "sn", empty);
                 }
-                if (session_quic == session->get_type()) {
-                    lambda_expand_label(tls_secret_handshake_quic_client_key, okm, hashalg, keysize, secret_handshake_client, "quic key", empty);
-                    lambda_expand_label(tls_secret_handshake_quic_client_iv, okm, hashalg, 12, secret_handshake_client, "quic iv", empty);
-                    lambda_expand_label(tls_secret_handshake_quic_client_hp, okm, hashalg, keysize, secret_handshake_client, "quic hp", empty);
-                    lambda_expand_label(tls_secret_handshake_quic_server_key, okm, hashalg, keysize, secret_handshake_server, "quic key", empty);
-                    lambda_expand_label(tls_secret_handshake_quic_server_iv, okm, hashalg, 12, secret_handshake_server, "quic iv", empty);
-                    lambda_expand_label(tls_secret_handshake_quic_server_hp, okm, hashalg, keysize, secret_handshake_server, "quic hp", empty);
+                if ((session_quic == session_type) || (session_quic2 == session_type)) {
+                    lambda_expand_label(tls_secret_handshake_quic_client_key, okm, hashalg, keysize, secret_handshake_client, label_quic_key, empty);
+                    lambda_expand_label(tls_secret_handshake_quic_client_iv, okm, hashalg, 12, secret_handshake_client, label_quic_iv, empty);
+                    lambda_expand_label(tls_secret_handshake_quic_client_hp, okm, hashalg, keysize, secret_handshake_client, label_quic_hp, empty);
+                    lambda_expand_label(tls_secret_handshake_quic_server_key, okm, hashalg, keysize, secret_handshake_server, label_quic_key, empty);
+                    lambda_expand_label(tls_secret_handshake_quic_server_iv, okm, hashalg, 12, secret_handshake_server, label_quic_iv, empty);
+                    lambda_expand_label(tls_secret_handshake_quic_server_hp, okm, hashalg, keysize, secret_handshake_server, label_quic_hp, empty);
                 }
             }
         } else if (tls_hs_end_of_early_data == type) {
@@ -389,14 +415,13 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             if (is_kindof_dtls()) {
                 lambda_expand_label(tls_secret_application_server_sn_key, okm, hashalg, keysize, secret_application_server, "sn", empty);
             }
-
-            if (session_quic == session->get_type()) {
-                lambda_expand_label(tls_secret_application_quic_client_key, okm, hashalg, keysize, secret_application_client, "quic key", empty);
-                lambda_expand_label(tls_secret_application_quic_client_iv, okm, hashalg, 12, secret_application_client, "quic iv", empty);
-                lambda_expand_label(tls_secret_application_quic_client_hp, okm, hashalg, keysize, secret_application_client, "quic hp", empty);
-                lambda_expand_label(tls_secret_application_quic_server_key, okm, hashalg, keysize, secret_application_server, "quic key", empty);
-                lambda_expand_label(tls_secret_application_quic_server_iv, okm, hashalg, 12, secret_application_server, "quic iv", empty);
-                lambda_expand_label(tls_secret_application_quic_server_hp, okm, hashalg, keysize, secret_application_server, "quic hp", empty);
+            if ((session_quic == session_type) || (session_quic2 == session_type)) {
+                lambda_expand_label(tls_secret_application_quic_client_key, okm, hashalg, keysize, secret_application_client, label_quic_key, empty);
+                lambda_expand_label(tls_secret_application_quic_client_iv, okm, hashalg, 12, secret_application_client, label_quic_iv, empty);
+                lambda_expand_label(tls_secret_application_quic_client_hp, okm, hashalg, keysize, secret_application_client, label_quic_hp, empty);
+                lambda_expand_label(tls_secret_application_quic_server_key, okm, hashalg, keysize, secret_application_server, label_quic_key, empty);
+                lambda_expand_label(tls_secret_application_quic_server_iv, okm, hashalg, 12, secret_application_server, label_quic_iv, empty);
+                lambda_expand_label(tls_secret_application_quic_server_hp, okm, hashalg, keysize, secret_application_server, label_quic_hp, empty);
             }
         } else if ((tls_hs_finished == type) && (from_client == dir)) {
             /**

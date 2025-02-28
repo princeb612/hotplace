@@ -204,6 +204,7 @@ class tls_protection {
     ///////////////////////////////////////////////////////////////////////////
     // mask for DTLS/QUIC header protection (aes-128-ecb)
     ///////////////////////////////////////////////////////////////////////////
+    return_t get_protection_mask_key(tls_session* session, tls_direction_t dir, protection_level_t level, tls_secret_t& secret);
     return_t protection_mask(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, binary_t& mask, size_t masklen,
                              protection_level_t level = protection_default);
 
@@ -238,18 +239,18 @@ class tls_protection {
     return_t decrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
 
    private:
-    tls_message_flow_t _flow;
-    uint16 _ciphersuite;
-    uint16 _lagacy_version;
-    uint16 _version;
-    transcript_hash* _transcript_hash;
-    critical_section _lock;
-    crypto_key _keyexchange;
-    std::map<tls_secret_t, binary_t> _kv;
-    bool _use_pre_master_secret;  //
+    tls_message_flow_t _flow;              // TLS flow
+    uint16 _ciphersuite;                   // cipher suite negotiated
+    uint16 _lagacy_version;                // legacy version
+    uint16 _version;                       // negotiated version
+    transcript_hash* _transcript_hash;     // transcript hash
+    critical_section _lock;                // lock
+    crypto_key _keyexchange;               // key
+    std::map<tls_secret_t, binary_t> _kv;  // secrets
+    bool _use_pre_master_secret;           // test
 
-    uint8 _key_exchange_mode;  // psk_ke, psk_dhe_ke
-    protection_context _handshake_context;
+    uint8 _key_exchange_mode;               // psk_ke, psk_dhe_ke
+    protection_context _handshake_context;  // context
 };
 
 }  // namespace net

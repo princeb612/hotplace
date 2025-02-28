@@ -55,15 +55,15 @@ union tls_content_t {
 };
 #pragma pack(pop)
 
-enum tls_version_t {
-    tls_unknown = 0,
-    tls_draft = 1,
-    tls_13 = 0x0304,
-    tls_12 = 0x0303,
-    tls_11 = 0x0302,
-    tls_10 = 0x0301,
-    dtls_13 = 0xfefc,
-    dtls_12 = 0xfefd,
+enum tls_version_t : uint16 {
+    tls_unknown = 0,   // internal
+    tls_draft = 1,     // internal
+    tls_13 = 0x0304,   // RFC 8446
+    tls_12 = 0x0303,   // RFC 5246
+    tls_11 = 0x0302,   // RFC 4346
+    tls_10 = 0x0301,   // RFC 2246
+    dtls_13 = 0xfefc,  // RFC 6347
+    dtls_12 = 0xfefd,  // RFC 9147
 };
 
 /*
@@ -537,7 +537,7 @@ enum tls_message_flow_t {
  *          TLS, DTLS
  *          RFC 9000 12.3.  Packet Numbers
  *          | space                  |                         | level                  |
- *          | protection_default     | TLS, DTLS               | protection_default     |
+ *          | N/A                    | TLS, DTLS               | protection_default     |
  *          | initial space          | initial packets         | protection_initial     |
  *          | handshake space        | handshake packets       | protection_handshake   |
  *          | application data space | 0-RTT and 1-RTT packets | protection_application |

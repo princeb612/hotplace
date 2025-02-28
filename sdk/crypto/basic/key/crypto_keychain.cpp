@@ -294,7 +294,7 @@ return_t crypto_keychain::t_write_der(const X509* x509, TYPE& buffer, std::funct
             __leave2;
         }
 
-        i2d_X509_bio(out, x509);
+        i2d_X509_bio(out, (X509*)x509);
 
         binary_t buf;
         buf.resize(64);

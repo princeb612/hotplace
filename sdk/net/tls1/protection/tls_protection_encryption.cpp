@@ -121,94 +121,85 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
         auto session_type = session->get_type();
         auto hsstatus = session->get_session_info(dir).get_status();
 
-        if (session_tls == session_type) {
-            // TLS, DTLS
-
-            if (from_client == dir) {
-                auto flow = get_flow();
-                if (tls_1_rtt == flow || tls_hello_retry_request == flow) {
-                    if (tls_hs_finished == hsstatus) {
-                        secret_key = tls_secret_application_client_key;
-                        secret_iv = tls_secret_application_client_iv;
-                    } else {
-                        secret_key = tls_secret_handshake_client_key;
-                        secret_iv = tls_secret_handshake_client_iv;
-                    }
-                } else {
-                    // 1-RTT
-                    // 0-RTT
-                    // client_hello         c e traffic
-                    // end_of_early_data    c hs traffic
-                    // finished             c ap traffic
-                    switch (hsstatus) {
-                        case tls_hs_end_of_early_data: {
-                            secret_key = tls_secret_handshake_client_key;
-                            secret_iv = tls_secret_handshake_client_iv;
-                        } break;
-                        case tls_hs_finished: {
+        switch (session_type) {
+            case session_tls: {
+                if (from_client == dir) {
+                    // TLS, DTLS
+                    auto flow = get_flow();
+                    if (tls_1_rtt == flow || tls_hello_retry_request == flow) {
+                        if (tls_hs_finished == hsstatus) {
                             secret_key = tls_secret_application_client_key;
                             secret_iv = tls_secret_application_client_iv;
-                        } break;
-                        case tls_hs_client_hello:
-                        default: {
-                            // use early traffic
-                            secret_key = tls_secret_c_e_traffic_key;
-                            secret_iv = tls_secret_c_e_traffic_iv;
-                        } break;
+                        } else {
+                            secret_key = tls_secret_handshake_client_key;
+                            secret_iv = tls_secret_handshake_client_iv;
+                        }
+                    } else {
+                        // 1-RTT
+                        // 0-RTT
+                        // client_hello         c e traffic
+                        // end_of_early_data    c hs traffic
+                        // finished             c ap traffic
+                        switch (hsstatus) {
+                            case tls_hs_end_of_early_data: {
+                                secret_key = tls_secret_handshake_client_key;
+                                secret_iv = tls_secret_handshake_client_iv;
+                            } break;
+                            case tls_hs_finished: {
+                                secret_key = tls_secret_application_client_key;
+                                secret_iv = tls_secret_application_client_iv;
+                            } break;
+                            case tls_hs_client_hello:
+                            default: {
+                                // use early traffic
+                                secret_key = tls_secret_c_e_traffic_key;
+                                secret_iv = tls_secret_c_e_traffic_iv;
+                            } break;
+                        }
+                    }
+                } else {
+                    // from_server
+                    if (tls_hs_finished == hsstatus) {
+                        secret_key = tls_secret_application_server_key;
+                        secret_iv = tls_secret_application_server_iv;
+                    } else {
+                        secret_key = tls_secret_handshake_server_key;
+                        secret_iv = tls_secret_handshake_server_iv;
                     }
                 }
-            } else {
-                // from_server
-                if (tls_hs_finished == hsstatus) {
-                    secret_key = tls_secret_application_server_key;
-                    secret_iv = tls_secret_application_server_iv;
+            } break;
+            case session_quic:
+            case session_quic2: {
+                // QUIC
+                if (from_client == dir) {
+                    if (protection_initial == level) {
+                        secret_key = tls_secret_initial_quic_client_key;
+                        secret_iv = tls_secret_initial_quic_client_iv;
+                    } else if (protection_handshake == level) {
+                        secret_key = tls_secret_handshake_quic_client_key;
+                        secret_iv = tls_secret_handshake_quic_client_iv;
+                    } else if (protection_application == level) {
+                        secret_key = tls_secret_application_quic_client_key;
+                        secret_iv = tls_secret_application_quic_client_iv;
+                    } else {
+                        ret = errorcode_t::invalid_parameter;
+                    }
                 } else {
-                    secret_key = tls_secret_handshake_server_key;
-                    secret_iv = tls_secret_handshake_server_iv;
+                    if (protection_initial == level) {
+                        secret_key = tls_secret_initial_quic_server_key;
+                        secret_iv = tls_secret_initial_quic_server_iv;
+                    } else if (protection_handshake == level) {
+                        secret_key = tls_secret_handshake_quic_server_key;
+                        secret_iv = tls_secret_handshake_quic_server_iv;
+                    } else if (protection_application == level) {
+                        secret_key = tls_secret_application_quic_server_key;
+                        secret_iv = tls_secret_application_quic_server_iv;
+                    } else {
+                        ret = errorcode_t::invalid_parameter;
+                    }
                 }
-            }
-        } else if (session_quic == session_type) {
-            // QUIC
-            if (from_client == dir) {
-                if (protection_initial == level) {
-                    secret_key = tls_secret_initial_quic_client_key;
-                    secret_iv = tls_secret_initial_quic_client_iv;
-                } else if (protection_handshake == level) {
-                    secret_key = tls_secret_handshake_quic_client_key;
-                    secret_iv = tls_secret_handshake_quic_client_iv;
-                } else if (protection_application == level) {
-                    secret_key = tls_secret_application_quic_client_key;
-                    secret_iv = tls_secret_application_quic_client_iv;
-                } else {
-                    ret = errorcode_t::invalid_parameter;
-                    __leave2;
-                }
-            } else {
-                if (protection_initial == level) {
-                    secret_key = tls_secret_initial_quic_server_key;
-                    secret_iv = tls_secret_initial_quic_server_iv;
-                } else if (protection_handshake == level) {
-                    secret_key = tls_secret_handshake_quic_server_key;
-                    secret_iv = tls_secret_handshake_quic_server_iv;
-                } else if (protection_application == level) {
-                    secret_key = tls_secret_application_quic_server_key;
-                    secret_iv = tls_secret_application_quic_server_iv;
-                } else {
-                    ret = errorcode_t::invalid_parameter;
-                    __leave2;
-                }
-            }
+            } break;
         }
-
-        // if (istraceable()) {
-        //     tls_advisor *tlsadvisor = tls_advisor::get_instance();
-        //     basic_stream dbs;
-        //     dbs.printf("> encryption key information\n");
-        //     dbs.printf(" > type %i\n", level);
-        //     dbs.printf(" > status %s\n", tlsadvisor->handshake_type_string(hsstatus).c_str());
-        //     dbs.printf(" > level %i\n", level);
-        //     trace_debug_event(category_tls1, tls_event_dump, &dbs);
-        // }
     }
     __finally2 {
         // do nothing
@@ -486,34 +477,38 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
             __leave2;
         }
         auto session_type = session->get_type();
-        if (session_tls == session_type) {
-            tls_advisor *tlsadvisor = tls_advisor::get_instance();
-            const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
-            if (nullptr == hint) {
-                ret = errorcode_t::not_supported;
-                __leave2;
-            }
-            auto mode = hint->mode;
-            switch (mode) {
-                case gcm:
-                case ccm:
-                case ccm8:
-                case mode_poly1305: {
-                    auto aadlen = aad.size();
-                    auto tagsize = get_tag_size();
-                    binary_t tag;
+        switch (session_type) {
+            case session_tls: {
+                tls_advisor *tlsadvisor = tls_advisor::get_instance();
+                const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+                if (nullptr == hint) {
+                    ret = errorcode_t::not_supported;
+                    __leave2;
+                }
+                auto mode = hint->mode;
+                switch (mode) {
+                    case gcm:
+                    case ccm:
+                    case ccm8:
+                    case mode_poly1305: {
+                        auto aadlen = aad.size();
+                        auto tagsize = get_tag_size();
+                        binary_t tag;
 
-                    // ... aad(aadlen) encdata tag(tagsize)
-                    //     \_ pos
-                    binary_append(tag, stream + pos + aadlen + size - tagsize, tagsize);
-                    ret = decrypt_aead(session, dir, stream, size - tagsize, pos + aadlen, plaintext, aad, tag, level);
-                } break;
-                case cbc: {
-                    ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
-                } break;
-            }
-        } else if (session_quic == session_type) {
-            ret = errorcode_t::not_supported;
+                        // ... aad(aadlen) encdata tag(tagsize)
+                        //     \_ pos
+                        binary_append(tag, stream + pos + aadlen + size - tagsize, tagsize);
+                        ret = decrypt_aead(session, dir, stream, size - tagsize, pos + aadlen, plaintext, aad, tag, level);
+                    } break;
+                    case cbc: {
+                        ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
+                    } break;
+                }
+            } break;
+            case session_quic:
+            case session_quic2: {
+                ret = errorcode_t::not_supported;
+            } break;
         }
     }
     __finally2 {}
@@ -721,36 +716,14 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
     return ret;
 }
 
-return_t tls_protection::protection_mask(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, binary_t &mask, size_t masklen,
-                                         protection_level_t level) {
+return_t tls_protection::get_protection_mask_key(tls_session *session, tls_direction_t dir, protection_level_t level, tls_secret_t &secret_key) {
     return_t ret = errorcode_t::success;
-    cipher_encrypt *cipher = nullptr;
-
     __try2 {
-        if (nullptr == session || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
         auto session_type = session->get_type();
-        auto &protection = session->get_tls_protection();
-
-        crypto_advisor *advisor = crypto_advisor::get_instance();
-        auto hint = advisor->hintof_blockcipher(aes128);
-        uint16 blocksize = sizeof_block(hint);
-        if (masklen > blocksize) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        uint16 recno = 0;
-        uint16 rec_enc = 0;
-        tls_secret_t secret_key;
         auto hsstatus = session->get_session_info(dir).get_status();
-        {
-            cipher_encrypt_builder builder;
-            cipher = builder.set(aes128, ecb).build();
-            if (cipher) {
+
+        switch (session_type) {
+            case session_tls: {
                 if (is_kindof_dtls()) {
                     if (from_server == dir) {
                         if (tls_hs_finished == hsstatus) {
@@ -765,34 +738,74 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
                             secret_key = tls_secret_handshake_client_sn_key;
                         }
                     }
-                } else if (session_quic == session_type) {
-                    if (protection_initial == level) {
-                        if (from_server == dir) {
-                            secret_key = tls_secret_initial_quic_server_hp;
-                        } else {
-                            secret_key = tls_secret_initial_quic_client_hp;
-                        }
-                    } else if (protection_handshake == level) {
-                        if (from_server == dir) {
-                            secret_key = tls_secret_handshake_quic_server_hp;
-                        } else {
-                            secret_key = tls_secret_handshake_quic_client_hp;
-                        }
-                    } else if (protection_application == level) {
-                        if (from_server == dir) {
-                            secret_key = tls_secret_application_quic_server_hp;
-                        } else {
-                            secret_key = tls_secret_application_quic_client_hp;
-                        }
+                }
+            } break;
+            case session_quic:
+            case session_quic2: {
+                if (protection_initial == level) {
+                    if (from_server == dir) {
+                        secret_key = tls_secret_initial_quic_server_hp;
                     } else {
-                        ret = errorcode_t::not_supported;
-                        __leave2;
+                        secret_key = tls_secret_initial_quic_client_hp;
+                    }
+                } else if (protection_handshake == level) {
+                    if (from_server == dir) {
+                        secret_key = tls_secret_handshake_quic_server_hp;
+                    } else {
+                        secret_key = tls_secret_handshake_quic_client_hp;
+                    }
+                } else if (protection_application == level) {
+                    if (from_server == dir) {
+                        secret_key = tls_secret_application_quic_server_hp;
+                    } else {
+                        secret_key = tls_secret_application_quic_client_hp;
                     }
                 } else {
                     ret = errorcode_t::not_supported;
-                    __leave2;
                 }
+            } break;
+            default: {
+                ret = errorcode_t::not_supported;
+            } break;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
 
+return_t tls_protection::protection_mask(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, binary_t &mask, size_t masklen,
+                                         protection_level_t level) {
+    return_t ret = errorcode_t::success;
+    cipher_encrypt *cipher = nullptr;
+
+    __try2 {
+        if (nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto &protection = session->get_tls_protection();
+
+        crypto_advisor *advisor = crypto_advisor::get_instance();
+        auto hint = advisor->hintof_blockcipher(aes128);
+        uint16 blocksize = sizeof_block(hint);
+        if (masklen > blocksize) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // aes-128-ebc-encrypt
+
+        uint16 recno = 0;
+        uint16 rec_enc = 0;
+        tls_secret_t secret_key;
+
+        {
+            get_protection_mask_key(session, dir, level, secret_key);
+
+            cipher_encrypt_builder builder;
+            cipher = builder.set(aes128, ecb).build();
+            if (cipher) {
                 auto const &key = get_item(secret_key);
                 auto samplesize = (size > blocksize) ? blocksize : size;
                 ret = cipher->encrypt(key, binary_t(), stream, samplesize, mask);

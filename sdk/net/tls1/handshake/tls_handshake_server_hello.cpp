@@ -96,6 +96,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             session_info.set_status(get_type());
             session->get_session_info(from_client).set_status(get_type());
             if (errorcode_t::success != ret) {
+                // HRR if not_found, different_type
                 protection.set_flow(tls_hello_retry_request);
 
                 /**
@@ -128,7 +129,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
 
             protection.clear_item(tls_context_client_hello);
         }
-        if (session_quic == session_type) {
+        if ((session_quic == session_type) || (session_quic2 == session_type)) {
             session->reset_recordno(from_server);
         }
     }

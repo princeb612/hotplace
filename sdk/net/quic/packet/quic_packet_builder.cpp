@@ -32,9 +32,11 @@ quic_packet* quic_packet_builder::build() {
     quic_packet* packet = nullptr;
 
     tls_session* session = get_session();
+    auto session_type = session->get_type();
     uint8 type = 0;
     bool is_longheader = false;
-    quic_packet_get_type(get_msb(), type, is_longheader);
+    uint32 version = (session_quic == session_type) ? quic_1 : quic_2;
+    quic_packet_get_type(version, get_msb(), type, is_longheader);
     switch (type) {
         case quic_packet_type_version_negotiation: {
             __try_new_catch_only(packet, new quic_packet_version_negotiation(session));

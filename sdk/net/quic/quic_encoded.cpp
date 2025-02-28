@@ -50,9 +50,7 @@ quic_encoded::quic_encoded(const binary_t& data) : payload_encoded(), _datalink(
     quic_length_vle_int(_value, _sizeof_value);
 }
 
-quic_encoded::~quic_encoded() {
-    _data.clear();
-}
+quic_encoded::~quic_encoded() { _data.clear(); }
 
 quic_encoded& quic_encoded::set(const char* data) {
     if (data) {

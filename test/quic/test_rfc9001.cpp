@@ -4,41 +4,6 @@
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  * @remarks
- *          RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
- *            QUIC integrates the TLS handshake [TLS13], although using a customized framing for protecting packets.
- *
- *          RFC 2246 The TLS Protocol Version 1.0
- *           7.4. Handshake protocol
- *           7.4.1. Hello messages
- *           7.4.1.1. Hello request
- *           7.4.1.2. Client hello
- *
- *          RFC 4346 The Transport Layer Security (TLS) Protocol Version 1.1
- *           7.4. Handshake Protocol
- *           7.4.1. Hello Messages
- *           7.4.1.2. Client Hello
- *
- *          RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
- *           7.4.  Handshake Protocol
- *           7.4.1.  Hello Messages
- *           7.4.1.2.  Client Hello
- *
- *           4.1.2.  Client Hello
- *             Structure of this message:
- *
- *                uint16 ProtocolVersion;
- *                opaque Random[32];
- *
- *                uint8 CipherSuite[2];    // Cryptographic suite selector
- *
- *                struct {
- *                    ProtocolVersion legacy_version = 0x0303;    // TLS v1.2
- *                    Random random;
- *                    opaque legacy_session_id<0..32>;
- *                    CipherSuite cipher_suites<2..2^16-2>;
- *                    opaque legacy_compression_methods<1..2^8-1>;
- *                    Extension extensions<8..2^16-1>;
- *                } ClientHello;
  *
  * Revision History
  * Date         Name                Description
@@ -56,11 +21,7 @@ void test_rfc_9001_section4() {
 }
 
 void test_rfc_9001_prepare_a1() {
-    // RFC 9001 5.2.  Initial Secrets
-    const char* initial_salt = "0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a";
-
     // Destination Connection ID of 0x8394c8f03e515708
-    // tls_secret_initial_quic = HKDF-Extract(initial_salt, cid)
     const char* dcid = "0x8394c8f03e515708";
     binary_t bin_dcid = base16_decode_rfc(dcid);
 
@@ -123,230 +84,6 @@ void test_rfc_9001_a1() {
 
         bin_expect = base16_decode("c206b8d9b9f0f37644430b490eeaa314");
         lambda_test(__FUNCTION__, "server hp", protection.get_item(tls_secret_initial_quic_server_hp), bin_expect);
-    }
-}
-
-void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_session* session) {
-    // use RFC 9001 test vector
-    //   do not construct TLS handshakes and extensions
-
-    binary_t bin_dcid;
-    binary_t bin_scid;
-    binary_t bin_token;
-    binary_t bin_unprotected_header;
-    binary_t bin_protected_header;
-    binary_t bin_frame;
-    binary_t bin_payload;
-    binary_t bin_tag;
-    binary_t bin_expect_unprotected_header;
-    binary_t bin_expect_protected_header;
-    binary_t bin_expect_result;
-
-    const char* text = item->text;
-    const char* func = item->func;
-    tls_direction_t dir = item->dir;
-    uint32 pn = item->pn;
-    uint8 pn_length = item->pn_length;
-    size_t length = item->length;
-
-    size_t pos = 0;
-    openssl_crypt crypt;
-    crypt_context_t* handle = nullptr;
-
-    // DCID, expectation data, result, ...
-    {
-        // bin_odcid = base16_decode_rfc(item->odcid);
-        if (item->dcid) {
-            bin_dcid = base16_decode_rfc(item->dcid);
-        }
-        if (item->scid) {
-            bin_scid = base16_decode_rfc(item->scid);
-        }
-        if (item->token) {
-            bin_token = base16_decode_rfc(item->token);
-        }
-        bin_frame = base16_decode_rfc(item->frame);
-        if (item->pad) {
-            bin_frame.resize(item->resize);
-        }
-
-        bin_expect_unprotected_header = base16_decode_rfc(item->expect_unprotected_header);
-        bin_expect_protected_header = base16_decode_rfc(item->expect_protected_header);
-        bin_expect_result = base16_decode_rfc(item->expect_result);
-    }
-
-    auto& protection = session->get_tls_protection();
-
-    auto lambda_dump = [&](const char* text, const binary_t& bin) -> void { _logger->writeln("> %-21s : %s", text, base16_encode(bin).c_str()); };
-
-    {
-        lambda_dump("initial secret", protection.get_item(tls_secret_initial_quic));
-        lambda_dump("client initial secret", protection.get_item(tls_secret_initial_quic_client));
-        lambda_dump("client key", protection.get_item(tls_secret_initial_quic_client_key));
-        lambda_dump("client iv", protection.get_item(tls_secret_initial_quic_client_iv));
-        lambda_dump("client hp", protection.get_item(tls_secret_initial_quic_client_hp));
-        lambda_dump("server initial secret", protection.get_item(tls_secret_initial_quic_server));
-        lambda_dump("server key", protection.get_item(tls_secret_initial_quic_server_key));
-        lambda_dump("server iv", protection.get_item(tls_secret_initial_quic_server_iv));
-        lambda_dump("server hp", protection.get_item(tls_secret_initial_quic_server_hp));
-    }
-
-    // write
-    {
-        quic_packet_initial initial(session);
-
-        initial.set_dcid(bin_dcid).set_scid(bin_scid).set_payload(bin_frame);
-        initial.set_token(bin_token);
-        initial.set_pn(pn, pn_length);
-
-        // unprotected header
-        initial.write_header(bin_unprotected_header);
-
-        {
-            // [test vector] set record no
-            session->set_recordno(dir, pn, protection_initial);
-
-            // packet protection -> protected header, payload, tag
-            initial.write(dir, bin_protected_header, bin_payload, bin_tag);
-
-            // TLS forward secrecy applied...
-            // do not call initial.write(dir, packet); after previous write member
-        }
-
-        {
-            _test_case.assert(bin_payload.size(), func, "write");
-
-            binary_t temp;
-            binary_append(temp, bin_protected_header);
-            binary_append(temp, bin_payload);
-            binary_append(temp, bin_tag);
-            _logger->hdump("> protected_header", bin_protected_header, 16, 3);
-            _logger->hdump("> payload", bin_payload, 16, 3);
-            _logger->hdump("> tag", bin_tag, 16, 3);
-            _logger->hdump("> result", temp, 16, 3);
-            _logger->hdump("> result (expected)", bin_expect_result, 16, 3);
-            _test_case.assert(bin_frame == initial.get_payload(), func, "%s #payload", text);
-            _test_case.assert(bin_expect_result == temp, func, "%s #result", text);
-
-            _logger->hdump("> unprotected header (AAD)", bin_unprotected_header, 16, 3);
-            _logger->writeln("   %s", base16_encode(bin_unprotected_header).c_str());
-            _logger->hdump("> expected unprotected header (AAD)", bin_expect_unprotected_header, 16, 3);
-            _logger->writeln("   %s", base16_encode(bin_expect_unprotected_header).c_str());
-            _logger->hdump("> protected header", bin_protected_header, 16, 3);
-            _logger->writeln("   %s", base16_encode(bin_protected_header).c_str());
-            _logger->hdump("> expected protected header", bin_expect_protected_header, 16, 3);
-            _logger->writeln("   %s", base16_encode(bin_expect_protected_header).c_str());
-
-            _test_case.assert(quic_packet_type_initial == initial.get_type(), func, "%s #initial packet", text);
-            _test_case.assert(bin_dcid == initial.get_dcid(), func, "%s #DCID", text);
-            _test_case.assert(bin_scid == initial.get_scid(), func, "%s #SCID", text);
-            _test_case.assert(length == initial.get_length(), func, "%s #length %zi", text, length);
-            _test_case.assert(pn == initial.get_pn(), func, "%s #packet number %i", text, pn);
-            _test_case.assert(pn_length == initial.get_pn_length(), func, "%s #packet number length %i", text, pn_length);
-            _test_case.assert(bin_expect_unprotected_header == bin_unprotected_header, func, "%s #unprotected header", text);
-            _test_case.assert(bin_expect_protected_header == bin_protected_header, func, "%s #protected header", text);
-        }
-    }
-}
-
-void test_rfc_9001_send_initial(testvector_initial_packet* item, tls_session* session) {
-    return_t ret = errorcode_t::success;
-    binary_t bin_dcid;
-    binary_t bin_scid;
-    binary_t bin_expect_result;
-
-    const char* text = item->text;
-    const char* func = item->func;
-    tls_direction_t dir = item->dir;
-    uint32 pn = item->pn;
-    uint8 pn_length = item->pn_length;
-    size_t length = item->length;
-
-    size_t pos = 0;
-    openssl_crypt crypt;
-    crypt_context_t* handle = nullptr;
-
-    // DCID, expectation data, result, ...
-    {
-        // bin_odcid = base16_decode_rfc(item->odcid);
-        if (item->dcid) {
-            bin_dcid = base16_decode_rfc(item->dcid);
-        }
-        if (item->scid) {
-            bin_scid = base16_decode_rfc(item->scid);
-        }
-
-        bin_expect_result = base16_decode_rfc(item->expect_result);
-    }
-
-    // read
-    {
-        // [test vector] set record no
-        session->set_recordno(dir, pn, protection_initial);
-
-        quic_packet_initial initial(session);
-
-        pos = 0;
-        ret = initial.read(dir, &bin_expect_result[0], bin_expect_result.size(), pos);
-
-        _test_case.test(ret, func, "%s #read", text);
-        _test_case.assert(quic_packet_type_initial == initial.get_type(), func, "%s #initial packet", text);
-        _test_case.assert(bin_dcid == initial.get_dcid(), func, "%s #DCID", text);
-        _test_case.assert(bin_scid == initial.get_scid(), func, "%s #SCID", text);
-        _test_case.assert(pn == initial.get_pn(), func, "%s #packet number %i", text, initial.get_pn());
-        _test_case.assert(pn_length == initial.get_pn_length(), func, "%s #packet number length %i", text, initial.get_pn_length());
-        _test_case.assert(length == initial.get_length(), func, "%s #length %zi %I64u", text, length, initial.get_length());
-    }
-}
-
-void test_rfc_9001_retry(testvector_retry_packet* item) {
-    // binary_t bin_odcid;
-    binary_t bin_dcid;
-    binary_t bin_scid;
-    binary_t bin_token;
-    binary_t bin_result;
-    binary_t bin_expect_header;
-    binary_t bin_expect_result;
-    binary_t bin_expect_tag;
-
-    const char* text = item->text;
-    const char* func = item->func;
-    tls_direction_t dir = item->dir;
-
-    {
-        // bin_odcid = base16_decode_rfc(item->odcid);
-        if (item->dcid) {
-            bin_dcid = base16_decode_rfc(item->dcid);
-        }
-        if (item->scid) {
-            bin_scid = base16_decode_rfc(item->scid);
-        }
-        if (item->token) {
-            bin_token = base16_decode_rfc(item->token);
-        }
-        bin_expect_result = base16_decode_rfc(item->expect_result);
-        bin_expect_tag = base16_decode_rfc(item->expect_tag);
-    }
-
-    // write
-    {
-        quic_packet_retry retry(&server_session);
-        retry.set_dcid(bin_dcid).set_scid(bin_scid);
-        retry.set_retry_token(bin_token);
-        retry.write(dir, bin_result);
-        _test_case.assert(bin_result == bin_expect_result, func, "RFC 9001 A.4.  Retry #write");
-    }
-
-    // read
-    {
-        size_t pos = 0;
-        quic_packet_retry retry(&server_session);
-        retry.read(dir, &bin_result[0], bin_result.size(), pos);
-
-        _test_case.assert(bin_dcid == retry.get_dcid(), func, "RFC 9001 A.4.  Retry #dcid");
-        _test_case.assert(bin_scid == retry.get_scid(), func, "RFC 9001 A.4.  Retry #scid");
-        _test_case.assert(bin_token == retry.get_retry_token(), func, "RFC 9001 A.4.  Retry #retry token");
-        _test_case.assert(bin_expect_tag == retry.get_integrity_tag(), func, "RFC 9001 A.4.  Retry #retry integrity tag");
     }
 }
 
@@ -550,7 +287,7 @@ void test_rfc_9001_a4() {
     test.expect_tag = "04a265ba2eff4d829058fb3f0f2496ba";
     test.dir = from_server;
 
-    test_rfc_9001_retry(&test);
+    test_rfc_9001_retry(&test, &server_session);
 }
 
 void test_rfc_9001_a5() {

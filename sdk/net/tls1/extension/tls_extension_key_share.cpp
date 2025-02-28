@@ -97,14 +97,14 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
             } break;
         }
 
-        auto pkey = keyshare.find(privkid.c_str());
-
-        keyshare.erase(pubkid);
+        auto pkey = keyshare.find(desc.get_kid_cstr());
         keyshare.add((EVP_PKEY*)pkey, pubkid.c_str(), true);
     }
     __finally2 {}
     return ret;
 }
+
+void tls_extension_key_share::clear() {}
 
 return_t tls_extension_key_share::add(const std::string& group, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
@@ -177,6 +177,15 @@ return_t tls_extension_client_key_share::add(uint16 group) { return tls_extensio
 
 return_t tls_extension_client_key_share::add(const std::string& group) { return tls_extension_key_share::add(group, from_client); }
 
+void tls_extension_client_key_share::clear() {
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto& keyshare = protection.get_keyexchange();
+
+    keyshare.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
+    keyshare.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
+}
+
 return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -203,11 +212,10 @@ return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size
 
             len = pl.t_value_of<uint16>(constexpr_len);
             group = pl.t_value_of<uint16>(constexpr_group);
-            // uint16 pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
             binary_t pubkey;
             pl.get_binary(constexpr_pubkey, pubkey);
 
-            add_pubkey(group, pubkey, keydesc(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC));
+            add_pubkey(group, pubkey, keydesc(get_kid()));
         }
 
         if (istraceable()) {
@@ -217,7 +225,7 @@ return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size
             auto session = get_session();
             auto& protection = session->get_tls_protection();
             auto& keyexchange = protection.get_keyexchange();
-            auto pkey = keyexchange.find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
+            auto pkey = keyexchange.find(get_kid().c_str());
 
             binary_t pubkey;
             uint32 nid = 0;
@@ -306,6 +314,15 @@ return_t tls_extension_server_key_share::add(uint16 group) { return tls_extensio
 
 return_t tls_extension_server_key_share::add(const std::string& group) { return tls_extension_key_share::add(group, from_server); }
 
+void tls_extension_server_key_share::clear() {
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto& keyshare = protection.get_keyexchange();
+
+    keyshare.erase(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
+    keyshare.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);
+}
+
 return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -329,7 +346,7 @@ return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size
             pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
             pl.get_binary(constexpr_pubkey, pubkey);
 
-            add_pubkey(group, pubkey, keydesc(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC));
+            add_pubkey(group, pubkey, keydesc(get_kid()));
         }
 
         if (istraceable()) {
@@ -370,37 +387,65 @@ return_t tls_extension_server_key_share::do_write_body(binary_t& bin) {
             __leave2;
         }
 
+        // RFC 8446 2.1.  Incorrect DHE Share
+        bool is_correct_dhe_share = true;
+        {
+            auto cli_keyshare = protection.get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
+
+            uint32 cli_nid_keyshare = 0;
+            uint32 svr_nid_keyshare = 0;
+            nidof_evp_pkey(cli_keyshare, cli_nid_keyshare);
+            nidof_evp_pkey(pkey, svr_nid_keyshare);
+
+            if (cli_nid_keyshare && svr_nid_keyshare && (svr_nid_keyshare == cli_nid_keyshare)) {
+                //
+            } else {
+                is_correct_dhe_share = false;
+            }
+        }
+
         binary_t pubkey;
-        auto kty = typeof_crypto_key(pkey);
-        if (kty_ec == kty) {
-            binary_t privkey;
-            keyexchange.ec_uncompressed_key(pkey, pubkey, privkey);
-        } else if (kty_okp == kty) {
-            binary_t temp;
-            binary_t privkey;
-            keyexchange.get_key(pkey, pubkey, temp, privkey, true);
-        }
+        uint16 pubkeylen = 0;
         uint16 group = 0;
-        uint16 pubkeylen = pubkey.size();
-        uint32 nid = 0;
-        nidof_evp_pkey(pkey, nid);
-        switch (kty) {
-            case kty_ec:
-            case kty_okp: {
-                auto hint = advisor->hintof_curve_nid(nid);
-                if (hint) {
-                    group = tlsgroupof(hint);
-                }
-            } break;
-        }
-        if (0 == group) {
-            ret = errorcode_t::not_supported;
-            __leave2;
+        {
+            auto kty = typeof_crypto_key(pkey);
+            if (kty_ec == kty) {
+                binary_t privkey;
+                keyexchange.ec_uncompressed_key(pkey, pubkey, privkey);
+            } else if (kty_okp == kty) {
+                binary_t temp;
+                binary_t privkey;
+                keyexchange.get_key(pkey, pubkey, temp, privkey, true);
+            }
+            pubkeylen = pubkey.size();
+
+            uint32 nid = 0;
+            nidof_evp_pkey(pkey, nid);
+            switch (kty) {
+                case kty_ec:
+                case kty_okp: {
+                    auto hint = advisor->hintof_curve_nid(nid);
+                    if (hint) {
+                        group = tlsgroupof(hint);
+                    }
+                } break;
+            }
+            if (0 == group) {
+                group = 0x001d;  // x25519, RFC 8446 8446 9.1 MUST
+                is_correct_dhe_share = false;
+            }
         }
 
         payload pl;
-        pl << new payload_member(uint16(group), true, constexpr_group) << new payload_member(uint16(pubkeylen), true, constexpr_pubkey_len)
+        pl << new payload_member(uint16(group), true, constexpr_group)           //
+           << new payload_member(uint16(pubkeylen), true, constexpr_pubkey_len)  //
            << new payload_member(pubkey, constexpr_pubkey);
+        auto lambda_hook = [&](payload* pl, payload_member* member) -> void {
+            // if is_correct_dhe_share is false, do HelloRetryRequest
+            pl->set_group(constexpr_pubkey_len, is_correct_dhe_share);
+            pl->set_group(constexpr_pubkey, is_correct_dhe_share);
+        };
+        pl.set_condition(constexpr_group, lambda_hook);
         pl.write(bin);
     }
     __finally2 {}
@@ -408,6 +453,36 @@ return_t tls_extension_server_key_share::do_write_body(binary_t& bin) {
 }
 
 std::string tls_extension_server_key_share::get_kid() { return KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC; }
+
+return_t tls_extension_server_key_share::add_keyshare() {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        auto advisor = crypto_advisor::get_instance();
+        auto& protection = session->get_tls_protection();
+        auto cli_keyshare = protection.get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
+        if (nullptr == cli_keyshare) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        uint32 nid = 0;
+        nidof_evp_pkey(cli_keyshare, nid);
+
+        auto hint = advisor->hintof_curve_nid(nid);
+        if (hint) {
+            auto group = tlsgroupof(hint);
+            if (group) {
+                add(group);
+            }
+        } else {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

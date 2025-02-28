@@ -186,8 +186,14 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
         };
         records.for_each(lambda);
     } else if (get_binary().size()) {
-        binary_append(bin, _bin);
-        _bin.clear();
+        // RFC 8446 2.  Protocol Overview
+        // Application Data MUST NOT be sent prior to sending the Finished message
+        auto session = get_session();
+        auto hsstatus = session->get_session_info(dir).get_status();
+        if (tls_hs_finished == hsstatus) {
+            binary_append(bin, _bin);
+            _bin.clear();
+        }
     }
     return ret;
 }

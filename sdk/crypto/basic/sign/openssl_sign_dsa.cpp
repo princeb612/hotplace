@@ -31,7 +31,7 @@ return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, 
             __leave2;
         }
 
-        auto dsa = EVP_PKEY_get0_DSA(pkey);
+        auto dsa = EVP_PKEY_get0_DSA((EVP_PKEY*)pkey);
         binary_t digest;
         {
             crypto_hash_builder builder;
@@ -75,7 +75,7 @@ return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg
             __leave2;
         }
 
-        auto dsa = EVP_PKEY_get0_DSA(pkey);
+        auto dsa = EVP_PKEY_get0_DSA((EVP_PKEY*)pkey);
         binary_t digest;
         {
             crypto_hash_builder builder;

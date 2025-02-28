@@ -1,8 +1,11 @@
 # history
 
 * understanding ...
-  * [study] QUIC (RFC 9001)
+  * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
+
+* Revision 716
+  * [tested] RFC 9369 QUIC Version 2
 
 * Revision 715
   * [tested] valgrind

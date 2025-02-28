@@ -24,8 +24,9 @@ namespace hotplace {
 namespace net {
 
 enum session_type_t {
-    session_tls = 1,   // TLS/DTLS session
-    session_quic = 2,  // QUIC session
+    session_tls = 1,    // TLS/DTLS session
+    session_quic = 2,   // QUIC
+    session_quic2 = 3,  // QUIC Version 2
 };
 
 class tls_session {
@@ -81,6 +82,29 @@ class tls_session {
     void schedule(tls_handshake* handshake);
     void run_scheduled(tls_direction_t dir);
 
+    /**
+     * If no common cryptographic parameters can be negotiated,
+     * the server MUST abort the handshake with an appropriate alert.
+     *
+     * produce
+     *      ret = protection.decrypt(session, dir, stream, declen, recpos, plaintext);
+     *      if (errorcode_t::success != ret) {
+     *         session->push_alert(warn, decrypt_error);
+     *         // ...
+     *      }
+     * consume
+     *      if (numberof_alerts()) {
+     *          session->pop_alert(level, desc);
+     *          tls_record_application_data record(session);
+     *          record.get_records().add(new tls_record_alert(session, level, desc));
+     *          record.write(dir, bin);
+     *          // tcpsession->send(&bin[0], bin.size());
+     *      }
+     */
+    void push_alert(uint8 level, uint8 desc);
+    size_t numberof_alerts();
+    return_t pop_alert(uint8& level, uint8& desc);
+
    private:
     critical_section _lock;
     t_shared_reference<tls_session> _shared;
@@ -89,6 +113,13 @@ class tls_session {
     std::queue<tls_handshake*> _que;
     tls_protection _tls_protection;
     session_type_t _type;
+
+    struct alert {
+        uint8 level;
+        uint8 desc;
+        alert(uint8 l, uint8 d) : level(l), desc(d) {}
+    };
+    std::queue<alert> _alerts;
 };
 
 }  // namespace net
