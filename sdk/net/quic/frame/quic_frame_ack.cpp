@@ -75,7 +75,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
         basic_stream dbs;
 
-        if (istraceable(category_quic)) {
+        if (istraceable(category_net)) {
             dbs.printf("   > %s %I64i\n", constexpr_largest_ack, largest_ack);
             dbs.printf("   > %s %I64i\n", constexpr_ack_delay, ack_delay);
             dbs.printf("   > %s %I64i\n", constexpr_ack_range_count, ack_range_count);
@@ -101,7 +101,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             uint64 gap = ack_ranges.t_value_of<uint64>(constexpr_gap);
             uint64 range_length = ack_ranges.t_value_of<uint64>(constexpr_range_length);
 
-            if (istraceable(category_quic)) {
+            if (istraceable(category_net)) {
                 dbs.printf("   > %s\n", constexpr_ack_ranges);
                 dbs.printf("    > %s %I64i\n", constexpr_gap, gap);
                 dbs.printf("    > %s %I64i\n", constexpr_range_length, range_length);
@@ -126,7 +126,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             uint64 ect1_count = ecn_counts.t_value_of<uint64>(constexpr_ect1_count);
             uint64 ectce_count = ecn_counts.t_value_of<uint64>(constexpr_ectce_count);
 
-            if (istraceable(category_quic)) {
+            if (istraceable(category_net)) {
                 dbs.printf("   > %s\n", constexpr_ecn_counts);
                 dbs.printf("    > %s %I64i\n", constexpr_ect0_count, ect0_count);
                 dbs.printf("    > %s %I64i\n", constexpr_ect1_count, ect1_count);
@@ -134,8 +134,8 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             }
         }
 
-        if (istraceable(category_quic)) {
-            trace_debug_event(category_quic, quic_event_dump, &dbs);
+        if (istraceable(category_net)) {
+            trace_debug_event(category_net, net_event_quic_dump, &dbs);
         }
     }
     __finally2 {}

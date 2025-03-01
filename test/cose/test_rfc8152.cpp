@@ -144,10 +144,6 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
         binary_t decrypted;
         bool result = false;
 
-        if (option.verbose) {
-            cose.set(cose_handle, cose_flag_t::cose_flag_allow_debug);
-        }
-
         if (root->tagged()) {
             switch (root->tag_value()) {
                 case cbor_tag_t::cose_tag_sign:

@@ -204,7 +204,7 @@ const hint_curve_t hint_curves[] = {
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         0x0016,
-        ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
+        ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512 | CURVE_SUPPORT_COSE,
         32,
         prime_field_weierstrass_curve,
         "1.3.132.0.10",

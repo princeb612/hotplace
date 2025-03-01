@@ -16,63 +16,49 @@
 #include <list>
 #include <sdk/base/basic/types.hpp>
 #include <sdk/base/system/critical_section.hpp>
+#include <sdk/base/trace.hpp>
 
 namespace hotplace {
 
 enum trace_category_t {
     category_debug_internal = 0,
-    category_crypto = 63,              // see category_crypto_event_t
-    category_net_session = 64,         // see category_net_session_event_t
-    category_http_server = 65,         // see category_http_server_event_t
-    category_http_request = 66,        // see category_http_request_event_t
-    category_http_response = 67,       // see category_http_response_event_t
-    category_header_compression = 68,  // see category_header_compression_event_t
-    category_http2_serverpush = 69,    // see category_http2_push_event_t
-    category_tls1 = 70,
-    category_quic = 71,
+    category_base = 63,    // see category_base_t
+    category_io = 64,      // see category_io_t
+    category_crypto = 65,  // see category_crypto_event_t
+    category_net = 66,     // see category_net_t
+};
+
+enum category_base_t {
+    //
+};
+
+enum category_io_t {
+    //
 };
 
 enum category_crypto_event_t {
-    crypto_event_info_openssl = 1,       // OpenSSL_version_num
+    crypto_event_openssl_info = 1,       // OpenSSL_version_num
     crypto_event_openssl_nosupport = 2,  // ex. EVP_CIPHER_fetch(EVP_get_cipherbyname), EVP_MD_fetch(EVP_get_digestbyname)
-    crypto_event_state_ossl_tls = 3,     // SSL_ST_CONNECT/SSL_ST_ACCEPT/SSL_CB_READ/SSL_CB_WRITE/SSL_CB_HANDSHAKE_START/SSL_CB_HANDSHAKE_DONE/...
+    crypto_event_openssl_tls_state = 3,  // SSL_ST_CONNECT/SSL_ST_ACCEPT/SSL_CB_READ/SSL_CB_WRITE/SSL_CB_HANDSHAKE_START/SSL_CB_HANDSHAKE_DONE/...
+    crypto_event_jose = 4,
+    crypto_event_cose = 5,
 };
 
-enum category_net_session_event_t {
-    net_session_event_produce = 1,        // network_session::produce
-    net_session_event_http2_consume = 2,  // http2_session::consume
-};
-
-enum category_http_server_event_t {
-    http_server_event_consume = 1,  // http_server_consume
-};
-
-enum category_http_request_event_t {};
-
-enum category_http_response_event_t {
-    http_response_event_getresponse = 1,  // http_response::get_response
-};
-
-enum category_header_compression_event_t {
-    header_compression_event_insert = 1,  // insertion
-    header_compression_event_evict = 2,   // eviction
-    header_compression_event_select = 3,  // select
-};
-
-enum category_http2_push_event_t {
-    http2_push_event_push_promise = 1,  // http2_serverpush::push_promise
-};
-
-enum category_tls_event_t {
-    tls_event_read = 1,
-    tls_event_write = 2,
-    tls_event_dump = 3,
-};
-
-enum category_quic_event_t {
-    quic_event_read = 1,
-    quic_event_write = 2,
-    quic_event_dump = 3,
+enum category_net_t {
+    net_event_netsession_produce = 1,         // network_session::produce
+    net_event_netsession_consume_http2 = 2,   // http2_session::consume
+    net_event_httpserver_consume = 3,         // http_server_consume
+    net_event_httpresponse = 4,               // http_response::get_response
+    net_event_header_compression_insert = 5,  // insertion
+    net_event_header_compression_evict = 6,   // eviction
+    net_event_header_compression_select = 7,  // select
+    net_event_http2_push_promise = 8,         // http2_serverpush::push_promise
+    net_event_tls_read = 9,
+    net_event_tls_write = 10,
+    net_event_tls_dump = 11,
+    net_event_quic_read = 12,
+    net_event_quic_write = 13,
+    net_event_quic_dump = 14,
 };
 
 /**

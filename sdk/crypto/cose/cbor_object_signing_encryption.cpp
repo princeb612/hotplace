@@ -11,6 +11,7 @@
  */
 
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
@@ -196,10 +197,7 @@ return_t cbor_object_signing_encryption::process(cose_context_t* handle, crypto_
         // RFC 8152 4.5.  Computing Counter Signatures
         cose_countersigns* countersigns1 = body.get_countersigns0();
         if (countersigns1) {
-            if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
-                handle->debug_flags |= cose_flag_t::cose_debug_counter_sig;
-            }
-
+            handle->debug_flags |= cose_flag_t::cose_debug_counter_sig;
             size_t size_countersigns1 = countersigns1->size();
             for (size_t index1 = 0; index1 < size_countersigns1; index1++) {
                 cose_recipient* layer1 = (*countersigns1)[index1];
@@ -859,8 +857,10 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
             if (0 == dgst_klen) {
                 dgst_klen = alg_hint->dgst.dlen;
             }
-            if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
-                printf("process_keydistribution alg %i (%s)\n", alg, hint->name);
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.printf("process_keydistribution alg %i (%s)\n", alg, hint->name);
+                trace_debug_event(category_crypto, crypto_event_cose, &dbs);
             }
 
             cose_group_t group = alg_hint->group;
@@ -870,7 +870,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
 
             // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
 
-            if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
+            if (istraceable()) {
                 constexpr char constexpr_debug_alg[] = "alg %i(group %i) ";
                 handle->debug_stream.printf(constexpr_debug_alg, alg, group);
             }
@@ -974,7 +974,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
 
             layer->setparam(cose_param_t::cose_param_cek, cek);
 
-            if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
+            if (istraceable()) {
                 layer->get_composer()
                     ->get_unsent()
                     .data()
@@ -984,10 +984,11 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
                     .add(cose_param_t::cose_param_salt, salt)
                     .add(cose_param_t::cose_param_secret, secret);
 
-                // std::function<void (const char* text, binary_t& bin)> dump;
-                auto dump = [](const char* text, binary_t& bin) -> void {
+                auto dump = [&](const char* text, binary_t& bin) -> void {
                     if (bin.size()) {
-                        printf("  %-10s %s\n", text ? text : "", base16_encode(bin).c_str());
+                        basic_stream dbs;
+                        dbs.printf("  %-10s %s\n", text ? text : "", base16_encode(bin).c_str());
+                        trace_debug_event(category_crypto, crypto_event_cose, &dbs);
                     }
                 };
 

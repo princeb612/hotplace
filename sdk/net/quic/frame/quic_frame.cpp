@@ -46,10 +46,10 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
             __leave2;
         }
 
-        if (istraceable(category_quic)) {
+        if (istraceable(category_net)) {
             basic_stream dbs;
             dbs.printf("  > frame %s @%zi\n", tlsadvisor->quic_frame_type_string(type).c_str(), begin);
-            trace_debug_event(category_quic, quic_event_dump, &dbs);
+            trace_debug_event(category_net, net_event_quic_dump, &dbs);
         }
 
         ret = do_read_header(dir, stream, size, pos);

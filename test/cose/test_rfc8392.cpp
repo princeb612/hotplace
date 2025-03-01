@@ -63,9 +63,6 @@ void test_cwt_rfc8392() {
     binary_t output;
 
     cose.open(&handle);
-    if (option.verbose) {
-        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
-    }
     ret = cose.verify(handle, &key, base16_decode(cwt_signed), result);
     _test_case.test(ret, __FUNCTION__, "RFC 8392 A.3.  Example Signed CWT");
     ret = cose.verify(handle, &key, base16_decode(cwt_maced), result);

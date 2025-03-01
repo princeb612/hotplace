@@ -39,7 +39,7 @@ return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* strea
             // RFC 8446 6.  Alert Protocol
             // RFC 5246 7.2.  Alert Protocol
             auto session_info = session->get_session_info(dir);
-            if (session_info.doprotect()) {
+            if (session_info.apply_protection()) {
                 tls_protection& protection = session->get_tls_protection();
                 auto tlsversion = protection.get_tls_version();
                 auto cs = protection.get_cipher_suite();
@@ -95,7 +95,7 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
             dbs.printf(" > %s %i %s\n", constexpr_level, level, advisor->alert_level_string(level).c_str());
             dbs.printf(" > %s %i %s\n", constexpr_desc, desc, advisor->alert_desc_string(desc).c_str());
 
-            trace_debug_event(category_tls1, tls_event_read, &dbs);
+            trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
     }
     __finally2 {

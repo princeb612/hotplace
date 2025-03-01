@@ -54,7 +54,6 @@ class cbor_object_signing_encryption {
      * @return  error code (see error.hpp)
      * @example
      *      cose.set (handle, cose_flag_t::cose_flag_auto_keygen);
-     *      cose.set (handle, cose_flag_t::cose_flag_allow_debug | cose_flag_t::cose_flag_auto_keygen);
      */
     return_t set(cose_context_t* handle, uint32 flags, uint32 debug_flags = 0);
     return_t get(cose_context_t* handle, uint32& flags, uint32& debug_flags);

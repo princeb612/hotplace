@@ -15,11 +15,11 @@
   * ![ubuntu](https://img.shields.io/badge/ubuntu-green)
   * ![RHEL](https://img.shields.io/badge/RHEL-green)
 * status
-  * JOSE ![implemented](https://img.shields.io/badge/implemented-green)
-  * CBOR,COSE ![implemented](https://img.shields.io/badge/implemented-green)
-  * HTTP/1.1 ![implemented](https://img.shields.io/badge/implemented-green)
-  * HTTP/2 ![implemented](https://img.shields.io/badge/implemented-green)
-  * TLS,DTLS,QUIC ![studying](https://img.shields.io/badge/studying-magenta)
+  * JOSE ![implemented](https://img.shields.io/badge/implemented+SDK-green)
+  * CBOR,COSE ![implemented](https://img.shields.io/badge/implemented+SDK-green)
+  * HTTP/1.1 ![implemented](https://img.shields.io/badge/implemented+SDK-green)
+  * HTTP/2 ![implemented](https://img.shields.io/badge/implemented+SDK-green)
+  * TLS,DTLS,QUIC ![studying](https://img.shields.io/badge/implemented-green)
   * HTTP/3 ![studying](https://img.shields.io/badge/studying-magenta)
   * ASN.1 ![studying](https://img.shields.io/badge/studying-magenta)
 * link
@@ -36,7 +36,7 @@
 
 ## implemented
 
-* TLS,QUIC
+* TLS,DTLS,QUIC
   * RFC 2246 The TLS Protocol Version 1.0
   * RFC 4346 The Transport Layer Security (TLS) Protocol Version 1.1
     * deprecated

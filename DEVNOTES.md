@@ -1,9 +1,55 @@
 
 ## Notes
 
+- [Release](#release)
 - [Plan](#plan)
 - [Memo](#memo)
 - [TODO](#todo)
+
+### Release
+
+TLS
+- RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
+- RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+- RFC 8448 Example Handshake Traces for TLS 1.3
+  - TLS over TCP not yet
+
+DTLS
+- RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
+  - DTLS over UDP not yet
+
+QUIC
+- RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
+- RFC 9001 Using TLS to Secure QUIC
+- RFC 9369 QUIC Version 2
+
+HTTP/1.1, HTTP/2
+- RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
+- RFC 7616 HTTP Digest Access Authentication
+- RFC 6749 The OAuth 2.0 Authorization Framework
+- RFC 7541 HPACK: Header Compression for HTTP/2
+- RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
+  - basic request/response
+  - not support authentication schemes yet
+
+JOSE
+- RFC 7515 JSON Web Signature (JWS)
+- RFC 7516 JSON Web Encryption (JWE)
+- RFC 7517 JSON Web Key (JWK)
+- RFC 7518 JSON Web Algorithms (JWA)
+- RFC 7520 Examples of Protecting Content Using JSON Object Signing and Encryption (JOSE)
+- RFC 8037 CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures in JSON Object Signing and Encryption (JOSE)
+
+COSE
+- RFC 7049 Concise Binary Object Representation (CBOR)
+- RFC 8152 CBOR Object Signing and Encryption (COSE)
+- RFC 8230 Using RSA Algorithms with CBOR Object Signing and Encryption (COSE) Messages
+- RFC 8392 CBOR Web Token (CWT)
+- RFC 8812 CBOR Object Signing and Encryption (COSE) and JSON Object Signing and Encryption (JOSE) Registrations for Web Authentication (WebAuthn) Algorithms
+- RFC 8949 Concise Binary Object Representation (CBOR)
+- RFC 9052 CBOR Object Signing and Encryption (COSE): Structures and Process
+- RFC 9053 CBOR Object Signing and Encryption (COSE): Initial Algorithms
+- RFC 9338 CBOR Object Signing and Encryption (COSE): Countersignatures
 
 ### Plan
 

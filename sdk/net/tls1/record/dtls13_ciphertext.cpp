@@ -125,7 +125,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
                 dump_memory(encdata, &dbs, 16, 3, 0x0, dump_notrunc);
             }
 
-            trace_debug_event(category_tls1, tls_event_read, &dbs);
+            trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
 
         {
@@ -213,7 +213,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
             dbs.printf("> plaintext\n");
             dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
 
-            trace_debug_event(category_tls1, tls_event_read, &dbs);
+            trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
 
         // record
@@ -232,7 +232,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
                     } break;
                 }
 
-                trace_debug_event(category_tls1, tls_event_read, &dbs);
+                trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
 
             switch (type) {
@@ -368,7 +368,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
             dbs.printf("> header masked (sequence)\n");
             dump_memory(&bin[0], header.size(), &dbs, 16, 3, 0x0, dump_notrunc);
 
-            trace_debug_event(category_tls1, tls_event_read, &dbs);
+            trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
     }
     __finally2 {}

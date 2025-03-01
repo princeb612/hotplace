@@ -220,7 +220,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 dbs.printf(" > %s 0x%02x(%i)\n", constexpr_extension_len, extension_len, extension_len);
                 dbs.autoindent(0);
 
-                trace_debug_event(category_tls1, tls_event_read, &dbs);
+                trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
 
             ret = get_extensions().read(tls_hs_server_hello, session, dir, stream, size, pos);

@@ -44,11 +44,11 @@ return_t quic_frame_stop_sending::do_read_body(tls_direction_t dir, const byte_t
         uint64 stream_id = pl.t_value_of<uint64>(constexpr_stream_id);
         uint64 error_code = pl.t_value_of<uint64>(constexpr_error_code);
 
-        if (istraceable(category_quic)) {
+        if (istraceable(category_net)) {
             basic_stream dbs;
             dbs.printf("   > %s %I64i\n", constexpr_stream_id, stream_id);
             dbs.printf("   > %s %I64i\n", constexpr_error_code, error_code);
-            trace_debug_event(category_quic, quic_event_dump, &dbs);
+            trace_debug_event(category_net, net_event_quic_dump, &dbs);
         }
     }
     __finally2 {}

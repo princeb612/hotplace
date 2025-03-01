@@ -85,11 +85,11 @@ struct keydesc {
         return *this;
     }
 
-    const char* get_kid_cstr() { return kid.c_str(); }
-    const std::string& get_kid_str() { return kid; }
-    const char* get_alg_cstr() { return alg.c_str(); }
-    const std::string& get_alg_str() { return alg; }
-    uint32 get_use() { return use; }
+    const char* get_kid_cstr() const { return kid.c_str(); }
+    const std::string& get_kid_str() const { return kid; }
+    const char* get_alg_cstr() const { return alg.c_str(); }
+    const std::string& get_alg_str() const { return alg; }
+    uint32 get_use() const { return use; }
 };
 
 class crypto_key_object {
@@ -97,7 +97,6 @@ class crypto_key_object {
     crypto_key_object() : _pkey(nullptr), _x509(nullptr) {
         // do nothing
     }
-
     crypto_key_object(const EVP_PKEY* key, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) : _pkey(key), _x509(nullptr) {
         _desc.set_kid(kid).set_alg(alg).set_use(use);
     }
@@ -120,9 +119,9 @@ class crypto_key_object {
         return *this;
     }
 
-    keydesc& get_desc() { return _desc; }
-    const EVP_PKEY* get_pkey() { return _pkey; }
-    const X509* get_x509() { return _x509; }
+    const keydesc& get_desc() const { return _desc; }
+    const EVP_PKEY* get_pkey() const { return _pkey; }
+    const X509* get_x509() const { return _x509; }
 
    private:
     const EVP_PKEY* _pkey;

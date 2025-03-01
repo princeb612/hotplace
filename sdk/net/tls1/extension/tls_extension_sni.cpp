@@ -72,7 +72,7 @@ return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size
             dbs.printf("   > %s %i (%s)\n", constexpr_name_type, type, tlsadvisor->sni_nametype_string(type).c_str());  // 00 host_name
             dbs.printf("   > %s %s\n", constexpr_hostname, bin2str(hostname).c_str());
 
-            trace_debug_event(category_tls1, tls_event_read, &dbs);
+            trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
 
         {

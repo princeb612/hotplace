@@ -205,8 +205,6 @@ void test_github_example() {
     }
 
         if (option.verbose) {
-            cose.set(handle, cose_flag_t::cose_flag_allow_debug);
-
             dumps("AAD", vector->enc.aad_hex);
             dumps("CEK", vector->enc.cek_hex);
             dumps("external", vector->shared.external);

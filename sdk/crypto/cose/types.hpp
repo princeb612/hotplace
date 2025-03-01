@@ -65,7 +65,7 @@ enum cose_param_t {
 };
 
 enum cose_flag_t {
-    cose_flag_allow_debug = (1 << 1),
+    cose_flag_allow_debug = 0,  // deprecated, use trace.hpp
     cose_flag_auto_keygen = (1 << 2),
 
     // debug

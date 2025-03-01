@@ -48,7 +48,7 @@ return_t crypto_advisor::build() {
 
     uint32 i = 0;
     unsigned long osslver = OpenSSL_version_num();
-    trace_debug_event(category_crypto, crypto_event_info_openssl, "version %x\n", osslver);
+    trace_debug_event(category_crypto, crypto_event_openssl_info, "version %x\n", osslver);
 
     auto set_feature = [&](const std::string& key, uint32 feature) -> void {
         auto pib = _features.insert({key, feature});

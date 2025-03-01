@@ -22,7 +22,7 @@ return_t tls_record_change_cipher_spec::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     auto session = get_session();
     if (session) {
-        session->get_session_info(dir).change_cipher_spec();
+        session->get_session_info(dir).begin_protection();
         session->reset_recordno(dir);
     }
     return ret;

@@ -285,7 +285,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                 dbs.printf(" > %s 0x%06x(%i)\n", constexpr_fragment_len, fragment_len, fragment_len);
             }
             dbs.autoindent(0);
-            trace_debug_event(category_tls1, tls_event_read, &dbs);
+            trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
     }
     __finally2 {

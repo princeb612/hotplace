@@ -80,7 +80,7 @@ return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size
                 dbs.printf("     [%i] 0x%02x(%i) %s\n", i++, fmt, fmt, tlsadvisor->ec_point_format_name(fmt).c_str());
             }
 
-            trace_debug_event(category_tls1, tls_event_read, &dbs);
+            trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
     }
     __finally2 {

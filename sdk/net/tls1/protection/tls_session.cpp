@@ -45,26 +45,26 @@ void tls_session::addref() { _shared.addref(); }
 
 void tls_session::release() { _shared.delref(); }
 
-tls_session::session_info::session_info() : hstype(tls_hs_client_hello), apply_cipher_spec(false) {}
+tls_session::session_info::session_info() : _hstype(tls_hs_client_hello), _protection(false) {}
 
-void tls_session::session_info::set_status(tls_hs_type_t type) { hstype = type; }
+void tls_session::session_info::set_status(tls_hs_type_t type) { _hstype = type; }
 
-tls_hs_type_t tls_session::session_info::get_status() { return hstype; }
+tls_hs_type_t tls_session::session_info::get_status() { return _hstype; }
 
-void tls_session::session_info::change_cipher_spec() { apply_cipher_spec = true; }
+void tls_session::session_info::begin_protection() { _protection = true; }
 
-bool tls_session::session_info::doprotect() { return apply_cipher_spec; }
+bool tls_session::session_info::apply_protection() { return _protection; }
 
 uint64 tls_session::session_info::get_recordno(bool inc, protection_level_t level) {
-    auto& recordno = recordno_spaces[level];
+    auto& recordno = _recordno_spaces[level];
     return inc ? recordno++ : recordno;
 }
 
-void tls_session::session_info::inc_recordno(protection_level_t level) { ++recordno_spaces[level]; }
+void tls_session::session_info::inc_recordno(protection_level_t level) { ++_recordno_spaces[level]; }
 
-void tls_session::session_info::reset_recordno(protection_level_t level) { recordno_spaces[level] = 0; }
+void tls_session::session_info::reset_recordno(protection_level_t level) { _recordno_spaces[level] = 0; }
 
-void tls_session::session_info::set_recordno(uint64 recordno, protection_level_t level) { recordno_spaces[level] = recordno; }
+void tls_session::session_info::set_recordno(uint64 recordno, protection_level_t level) { _recordno_spaces[level] = recordno; }
 
 void tls_session::schedule(tls_handshake* handshake) {
     if (handshake) {

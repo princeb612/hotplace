@@ -11,6 +11,7 @@
  */
 
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
@@ -178,8 +179,10 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
             __leave2;
         }
 
-        if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
-            printf("dosign alg %i (%s)\n", alg, hint->name);
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf("dosign alg %i (%s)\n", alg, hint->name);
+            trace_debug_event(category_crypto, crypto_event_cose, &dbs);
         }
 
         // RFC 8152 8.1.  ECDSA
@@ -229,11 +232,12 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
                 break;
         }
 
-        if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
-            // std::function<void (const char* text, binary_t& bin)> dump;
-            auto dump = [](const char* text, binary_t& bin) -> void {
+        if (istraceable()) {
+            auto dump = [&](const char* text, binary_t& bin) -> void {
                 if (bin.size()) {
-                    printf("  %-10s %s\n", text ? text : "", base16_encode(bin).c_str());
+                    basic_stream dbs;
+                    dbs.printf("  %-10s %s\n", text ? text : "", base16_encode(bin).c_str());
+                    trace_debug_event(category_crypto, crypto_event_cose, &dbs);
                 }
             };
 

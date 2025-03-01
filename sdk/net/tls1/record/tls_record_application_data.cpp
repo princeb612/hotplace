@@ -210,7 +210,7 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
                 dump_memory(&msg[0], msg.size() - trail, &dbs, 16, 3, 0x0, dump_notrunc);
                 dbs.autoindent(0);
 
-                trace_debug_event(category_tls1, tls_event_read, &dbs);
+                trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
         }
     };

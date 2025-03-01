@@ -178,7 +178,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
                 dump_key(servercert.find(desc.get_kid_cstr()), &dbs, 15, 4, dump_notrunc);
                 dbs.autoindent(0);
 
-                trace_debug_event(category_tls1, tls_event_read, &dbs);
+                trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
         }
     }
@@ -223,7 +223,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
             dump_memory(certificate, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.autoindent(0);
 
-            trace_debug_event(category_tls1, tls_event_write, &dbs);
+            trace_debug_event(category_net, net_event_tls_write, &dbs);
         }
 
         binary_t cert_extensions;

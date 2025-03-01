@@ -59,7 +59,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
                 default:
                     break;
             }
-            trace_debug_event(category_net_session, net_session_event_http2_consume, &bs);
+            trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
         }
 
         network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
@@ -111,7 +111,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.read(hdr, frame_size);
             if (istraceable()) {
                 frame.dump(&bs);
-                trace_debug_event(category_net_session, net_session_event_http2_consume, &bs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
             }
 
             req->add_content(frame.get_data());
@@ -126,7 +126,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.set_hpack_session(&get_hpack_session());
             if (istraceable()) {
                 frame.dump(&bs);
-                trace_debug_event(category_net_session, net_session_event_http2_consume, &bs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
             }
 
             auto lambda = [&](const std::string& name, const std::string& value) -> void {
@@ -141,14 +141,14 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.read(hdr, frame_size);
             if (istraceable()) {
                 frame.dump(&bs);
-                trace_debug_event(category_net_session, net_session_event_http2_consume, &bs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
             }
         } else if (h2_frame_t::h2_frame_rst_stream == hdr->type) {
             http2_frame_rst_stream frame;
             frame.read(hdr, frame_size);
             if (istraceable()) {
                 frame.dump(&bs);
-                trace_debug_event(category_net_session, net_session_event_http2_consume, &bs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
             }
             reset = true;
         } else if (h2_frame_t::h2_frame_settings == hdr->type) {
@@ -156,7 +156,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.read(hdr, frame_size);
             if (istraceable()) {
                 frame.dump(&bs);
-                trace_debug_event(category_net_session, net_session_event_http2_consume, &bs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
             }
 
             // RFC 7541 6.5.2.  Defined SETTINGS Parameters
@@ -200,7 +200,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.set_hpack_session(&get_hpack_session());
             if (istraceable()) {
                 frame.dump(&bs);
-                trace_debug_event(category_net_session, net_session_event_http2_consume, &bs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
             }
 
             auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
@@ -211,7 +211,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.read(hdr, frame_size);
             if (istraceable()) {
                 frame.dump(&bs);
-                trace_debug_event(category_net_session, net_session_event_http2_consume, &bs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
             }
             frame.set_flags(h2_flag_ack);
             frame.write(bin_resp);
@@ -221,14 +221,14 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.read(hdr, frame_size);
             if (istraceable()) {
                 frame.dump(&bs);
-                trace_debug_event(category_net_session, net_session_event_http2_consume, &bs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
             }
         } else if (h2_frame_t::h2_frame_window_update == hdr->type) {
             http2_frame_window_update frame;
             frame.read(hdr, frame_size);
             if (istraceable()) {
                 frame.dump(&bs);
-                trace_debug_event(category_net_session, net_session_event_http2_consume, &bs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
             }
         } else if (h2_frame_t::h2_frame_continuation == hdr->type) {
             http2_frame_continuation frame;
@@ -236,7 +236,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.set_hpack_session(&get_hpack_session());
             if (istraceable()) {
                 frame.dump(&bs);
-                trace_debug_event(category_net_session, net_session_event_http2_consume, &bs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
             }
 
             auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };

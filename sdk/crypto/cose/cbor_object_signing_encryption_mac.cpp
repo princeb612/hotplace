@@ -11,6 +11,7 @@
  */
 
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
@@ -184,8 +185,10 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
             __leave2;
         }
 
-        if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
-            printf("domac alg %i (%s)\n", alg, hint->name);
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf("domac alg %i (%s)\n", alg, hint->name);
+            trace_debug_event(category_crypto, crypto_event_cose, &dbs);
         }
 
         if (iv.size() && partial_iv.size()) {
@@ -204,9 +207,7 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
             //     iv[i] ^= aligned_partial_iv[i];
             // }
 
-            if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
-                handle->debug_flags |= cose_flag_t::cose_debug_partial_iv;
-            }
+            handle->debug_flags |= cose_flag_t::cose_debug_partial_iv;
         }
 
         compose_mac_context(handle, layer, tomac);

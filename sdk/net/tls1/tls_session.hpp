@@ -53,18 +53,20 @@ class tls_session {
 
         void set_status(tls_hs_type_t type);
         tls_hs_type_t get_status();
-        void change_cipher_spec();
-        bool doprotect();
+
         uint64 get_recordno(bool inc = false, protection_level_t level = protection_default);
         void inc_recordno(protection_level_t level = protection_default);
         void reset_recordno(protection_level_t level = protection_default);
         void set_recordno(uint64 recordno, protection_level_t level = protection_default);  // for test vector
 
+        void begin_protection();
+        bool apply_protection();
+
        private:
-        tls_hs_type_t hstype;
-        bool apply_cipher_spec;
+        tls_hs_type_t _hstype;
+        bool _protection;
         // RFC 9000 12.3.  Packet Numbers
-        std::map<protection_level_t, uint64> recordno_spaces;
+        std::map<protection_level_t, uint64> _recordno_spaces;
     };
 
     session_info& get_session_info(tls_direction_t dir);

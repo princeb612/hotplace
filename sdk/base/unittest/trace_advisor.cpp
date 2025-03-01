@@ -32,65 +32,32 @@ void trace_advisor::load() {
             }
             {
                 events e;
-                e.cname = "openssl";
-                e.event_map.insert({crypto_event_info_openssl, "info"});
+                e.cname = "crypto";
+                e.event_map.insert({crypto_event_openssl_info, "openssl info"});
                 e.event_map.insert({crypto_event_openssl_nosupport, "no support"});
-                e.event_map.insert({crypto_event_state_ossl_tls, "state"});
+                e.event_map.insert({crypto_event_openssl_tls_state, "state"});
+                e.event_map.insert({crypto_event_jose, "JOSE"});
+                e.event_map.insert({crypto_event_cose, "COSE"});
                 _resource_map.insert({category_crypto, e});
             }
             {
                 events e;
-                e.cname = "network_session";
-                e.event_map.insert({net_session_event_produce, "produce"});
-                e.event_map.insert({net_session_event_http2_consume, "consume"});
-                _resource_map.insert({category_net_session, e});
-            }
-            {
-                events e;
-                e.cname = "http_server";
-                e.event_map.insert({http_server_event_consume, "consume"});
-                _resource_map.insert({category_http_server, e});
-            }
-            {
-                events e;
-                e.cname = "http_request";
-                _resource_map.insert({category_http_request, e});
-            }
-            {
-                events e;
-                e.cname = "http_response";
-                e.event_map.insert({http_response_event_getresponse, "response"});
-                _resource_map.insert({category_http_response, e});
-            }
-            {
-                events e;
-                e.cname = "header compression";
-                e.event_map.insert({header_compression_event_insert, "insert"});
-                e.event_map.insert({header_compression_event_evict, "evict"});
-                e.event_map.insert({header_compression_event_select, "select"});
-                _resource_map.insert({category_header_compression, e});
-            }
-            {
-                events e;
-                e.cname = "serverpush";
-                e.event_map.insert({http2_push_event_push_promise, "push promise"});
-                _resource_map.insert({category_header_compression, e});
-            }
-            {
-                events e;
-                e.cname = "TLS";
-                e.event_map.insert({tls_event_read, "read"});
-                e.event_map.insert({tls_event_write, "write"});
-                e.event_map.insert({tls_event_dump, "dump"});
-                _resource_map.insert({category_tls1, e});
-            }
-            {
-                events e;
-                e.cname = "QUIC";
-                e.event_map.insert({quic_event_read, "read"});
-                e.event_map.insert({quic_event_write, "write"});
-                e.event_map.insert({quic_event_dump, "dump"});
-                _resource_map.insert({category_quic, e});
+                e.cname = "network";
+                e.event_map.insert({net_event_netsession_produce, "produce network session"});
+                e.event_map.insert({net_event_netsession_consume_http2, "consume network session"});
+                e.event_map.insert({net_event_httpserver_consume, "consume http_server"});
+                e.event_map.insert({net_event_httpresponse, "http_response"});
+                e.event_map.insert({net_event_header_compression_insert, "header compression insert"});
+                e.event_map.insert({net_event_header_compression_evict, "header compression evict"});
+                e.event_map.insert({net_event_header_compression_select, "header compression select"});
+                e.event_map.insert({net_event_http2_push_promise, "push promise"});
+                e.event_map.insert({net_event_tls_read, "TLS read"});
+                e.event_map.insert({net_event_tls_write, "TLS write"});
+                e.event_map.insert({net_event_tls_dump, "TLS dump"});
+                e.event_map.insert({net_event_quic_read, "QUIC read"});
+                e.event_map.insert({net_event_quic_write, "QUIC write"});
+                e.event_map.insert({net_event_quic_dump, "QUIC dump"});
+                _resource_map.insert({category_net, e});
             }
         }
     }

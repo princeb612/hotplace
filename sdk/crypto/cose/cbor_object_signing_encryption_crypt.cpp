@@ -11,6 +11,7 @@
  */
 
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
@@ -212,8 +213,10 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
             __leave2;
         }
 
-        if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
-            printf("docrypt alg %i (%s)\n", alg, hint->name);
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.printf("docrypt alg %i (%s)\n", alg, hint->name);
+            trace_debug_event(category_crypto, crypto_event_cose, &dbs);
         }
 
         if (iv.size() && partial_iv.size()) {
@@ -229,9 +232,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
             // for (size_t i = 0; i < ivsize; i++) {
             //     iv[i] ^= aligned_partial_iv[i];
             // }
-            if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
-                handle->debug_flags |= cose_flag_t::cose_debug_partial_iv;
-            }
+            handle->debug_flags |= cose_flag_t::cose_debug_partial_iv;
         }
 
         compose_enc_context(handle, layer, aad);
@@ -313,11 +314,13 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
             ret = errorcode_t::bad_request;
         }
 
-        if (cose_flag_t::cose_flag_allow_debug & handle->flags) {
+        if (istraceable()) {
             // std::function<void (const char* text, binary_t& bin)> dump;
-            auto dump = [](const char* text, binary_t& bin) -> void {
+            auto dump = [&](const char* text, binary_t& bin) -> void {
                 if (bin.size()) {
-                    printf("  %-10s %s\n", text ? text : "", base16_encode(bin).c_str());
+                    basic_stream dbs;
+                    dbs.printf("  %-10s %s\n", text ? text : "", base16_encode(bin).c_str());
+                    trace_debug_event(category_crypto, crypto_event_cose, &dbs);
                 }
             };
 

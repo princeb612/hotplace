@@ -43,11 +43,11 @@ return_t quic_frame_new_token::do_read_body(tls_direction_t dir, const byte_t* s
         binary_t token;
         pl.get_binary(constexpr_token, token);
 
-        if (istraceable(category_quic)) {
+        if (istraceable(category_net)) {
             basic_stream dbs;
             dbs.printf("   > %s (%zi)\n", constexpr_token, token.size());
             dump_memory(token, &dbs, 16, 5, 0x0, dump_notrunc);
-            trace_debug_event(category_quic, quic_event_dump, &dbs);
+            trace_debug_event(category_net, net_event_quic_dump, &dbs);
         }
     }
     __finally2 {}

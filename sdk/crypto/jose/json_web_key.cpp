@@ -181,7 +181,7 @@ typedef struct _json_mapper_t {
     json_mapper_items_t items;
 } json_mapper_t;
 
-static void jwk_serialize_item(int flag, json_mapper_item_t& item, json_t* json_item) {
+static void jwk_serialize_item(int flag, const json_mapper_item_t& item, json_t* json_item) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     auto pkey = item.key.get_pkey();
@@ -262,7 +262,7 @@ return_t jwk_serialize_t(json_mapper_t mapper, void (*callback)(char* data, TYPE
                 auto advisor = crypto_advisor::get_instance();
                 json_t* json_keys = json_array();
                 if (json_keys) {
-                    for (auto& item : mapper.items) {
+                    for (const auto& item : mapper.items) {
                         auto pkey = item.key.get_pkey();
                         auto hint = advisor->hintof_curve_eckey(pkey);
                         if (hint && (CURVE_SUPPORT_JOSE & hint->flags)) {

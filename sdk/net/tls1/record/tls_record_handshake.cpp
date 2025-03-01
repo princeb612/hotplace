@@ -33,7 +33,7 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
             auto session_info = session->get_session_info(dir);
-            if (session_info.doprotect()) {
+            if (session_info.apply_protection()) {
                 /**
                  * RFC 2246 6.2.3. Record payload protection
                  *     struct {

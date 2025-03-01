@@ -72,7 +72,7 @@ return_t tls_extension_signature_algorithms::do_read_body(const byte_t* stream, 
                 dbs.printf("     [%i] 0x%04x %s\n", i++, alg, tlsadvisor->signature_scheme_name(alg).c_str());
             }
 
-            trace_debug_event(category_tls1, tls_event_read, &dbs);
+            trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
     }
     __finally2 {

@@ -37,9 +37,6 @@ void do_test_sign(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& 
     binary_t cbor;
     binary_t dummy;
     cose.open(&handle);
-    if (option.verbose) {
-        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
-    }
     ret = cose.sign(handle, key, algs, input, cbor);
     if (option.verbose) {
         _logger->writeln("%s", base16_encode(cbor).c_str());
@@ -50,9 +47,6 @@ void do_test_sign(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& 
     _test_case.test(ret, __FUNCTION__, "sign %s", text);
 
     cose.open(&handle);
-    if (option.verbose) {
-        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
-    }
     ret = cose.process(handle, key, cbor, dummy);
     cose.close(handle);
     _test_case.test(ret, __FUNCTION__, "verifysign %s", text);
@@ -68,9 +62,6 @@ void do_test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, const binary_
     binary_t cbor;
     binary_t dummy;
     cose.open(&handle);
-    if (option.verbose) {
-        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
-    }
     ret = cose.encrypt(handle, key, algs, input, cbor);
     if (option.verbose) {
         _logger->writeln("%s", base16_encode(cbor).c_str());
@@ -81,9 +72,6 @@ void do_test_encrypt(crypto_key* key, std::list<cose_alg_t>& algs, const binary_
     _test_case.test(ret, __FUNCTION__, "encrypt %s", text);
 
     cose.open(&handle);
-    if (option.verbose) {
-        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
-    }
     ret = cose.process(handle, key, cbor, dummy);
     cose.close(handle);
     _test_case.test(ret, __FUNCTION__, "decrypt %s", text);
@@ -99,9 +87,6 @@ void do_test_mac(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& i
     binary_t cbor;
     binary_t dummy;
     cose.open(&handle);
-    if (option.verbose) {
-        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
-    }
     ret = cose.mac(handle, key, algs, input, cbor);
     if (option.verbose) {
         _logger->writeln("%s", base16_encode(cbor).c_str());
@@ -112,9 +97,6 @@ void do_test_mac(crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& i
     _test_case.test(ret, __FUNCTION__, "mac %s", text);
 
     cose.open(&handle);
-    if (option.verbose) {
-        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
-    }
     ret = cose.process(handle, key, cbor, dummy);
     cose.close(handle);
     _test_case.test(ret, __FUNCTION__, "verifymac %s", text);
@@ -204,9 +186,6 @@ void do_test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, co
     const OPTION& option = _cmdline->value();
 
     cose.open(&handle);
-    if (option.verbose) {
-        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
-    }
 
     // sketch
     cose_layer& body = handle->composer->get_layer();
@@ -234,9 +213,6 @@ void do_test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const
     const OPTION& option = _cmdline->value();
 
     cose.open(&handle);
-    if (option.verbose) {
-        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
-    }
 
     // sketch
     cose_layer& body = handle->composer->get_layer();
@@ -260,9 +236,6 @@ void do_test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const 
     const OPTION& option = _cmdline->value();
 
     cose.open(&handle);
-    if (option.verbose) {
-        cose.set(handle, cose_flag_t::cose_flag_allow_debug);
-    }
 
     // sketch
     cose_layer& body = handle->composer->get_layer();

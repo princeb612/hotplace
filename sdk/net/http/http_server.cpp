@@ -224,7 +224,7 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
             default:
                 break;
         }
-        trace_debug_event(category_http_server, http_server_event_consume, &bs);
+        trace_debug_event(category_net, net_event_httpserver_consume, &bs);
     }
 #endif
 

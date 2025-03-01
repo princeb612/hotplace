@@ -54,7 +54,7 @@ return_t tls_extension_compress_certificate::do_read_body(const byte_t* stream, 
                 dbs.printf("     [%i] 0x%04x %s\n", i++, alg, tlsadvisor->compression_alg_name(alg).c_str());
             }
 
-            trace_debug_event(category_tls1, tls_event_read, &dbs);
+            trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
     }
     __finally2 {

@@ -190,7 +190,7 @@ return_t http2_serverpush::do_push_promise(const std::string &promise, uint32 st
             if (istraceable()) {
                 basic_stream bs;
                 frame.dump(&bs);
-                trace_debug_event(category_http2_serverpush, http2_push_event_push_promise, &bs);
+                trace_debug_event(category_net, net_event_http2_push_promise, &bs);
             }
         }
     }

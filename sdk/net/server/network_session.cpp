@@ -264,7 +264,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
                         basic_stream bs;
                         bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                        trace_debug_event(category_net_session, net_session_event_produce, &bs);
+                        trace_debug_event(category_net, net_event_netsession_produce, &bs);
                     }
 
                 } else {
@@ -294,7 +294,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
                 basic_stream bs;
                 bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                trace_debug_event(category_net_session, net_session_event_produce, &bs);
+                trace_debug_event(category_net, net_event_netsession_produce, &bs);
             }
         }
     }
@@ -354,7 +354,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                         basic_stream bs;
                         bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                        trace_debug_event(category_net_session, net_session_event_produce, &bs);
+                        trace_debug_event(category_net, net_event_netsession_produce, &bs);
                     }
                 }
 
@@ -387,7 +387,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                 basic_stream bs;
                 bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                trace_debug_event(category_net_session, net_session_event_produce, &bs);
+                trace_debug_event(category_net, net_event_netsession_produce, &bs);
             }
         }
     }

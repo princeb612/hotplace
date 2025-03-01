@@ -138,7 +138,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 dbs.printf("  > maced       %s\n", base16_encode(maced).c_str());
                 dbs.autoindent(0);
 
-                trace_debug_event(category_tls1, tls_event_read, &dbs);
+                trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
         }
     }
@@ -191,7 +191,7 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
             dbs.printf("  > algorithm %s size %i\n", advisor->nameof_md(hmacalg), dlen);
             dbs.printf("  > verify data %s \n", base16_encode(verify_data).c_str());
 
-            trace_debug_event(category_tls1, tls_event_write, &dbs);
+            trace_debug_event(category_net, net_event_tls_write, &dbs);
         }
     }
     __finally2 {}

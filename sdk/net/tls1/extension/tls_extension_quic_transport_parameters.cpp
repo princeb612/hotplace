@@ -72,7 +72,7 @@ return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* str
                 }
             }
 
-            trace_debug_event(category_tls1, tls_event_read, &dbs);
+            trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
     }
     __finally2 {
