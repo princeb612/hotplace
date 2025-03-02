@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto/crypto/crypto_encrypt.hpp>
+#include <sdk/crypto/basic/crypto_encrypt.hpp>
 
 namespace hotplace {
 namespace crypto {

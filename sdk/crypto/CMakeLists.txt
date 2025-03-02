@@ -7,7 +7,6 @@
 file (GLOB FILEGROUP_SDK_HEADER_CRYPTO
     ${PROJECT_SOURCE_DIR}/sdk/crypto/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/*.hpp
-    ${PROJECT_SOURCE_DIR}/sdk/crypto/crypto/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/authenticode/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/cose/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/jose/*.hpp
@@ -26,11 +25,6 @@ file (GLOB FILEGROUP_SDK_SOURCE_CRYPTO
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/prng/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/sdk/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/sign/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/crypto/crypto/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/crypto/crypto/crypt/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/crypto/crypto/digest/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/crypto/crypto/mac/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/crypto/crypto/sign/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/authenticode/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/cose/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/jose/*.cpp

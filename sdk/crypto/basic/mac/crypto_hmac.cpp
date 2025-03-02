@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto/crypto/crypto_hmac.hpp>
+#include <sdk/crypto/basic/crypto_hmac.hpp>
 
 namespace hotplace {
 namespace crypto {

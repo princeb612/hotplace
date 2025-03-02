@@ -8,21 +8,21 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto/crypto/crypto_hash.hpp>
+#include <sdk/crypto/basic/crypto_encrypt.hpp>
 
 namespace hotplace {
 namespace crypto {
 
-crypto_hash_builder::crypto_hash_builder() : _alg(hash_alg_unknown) {}
+crypto_encrypt_builder::crypto_encrypt_builder() : _enc(crypt_enc_undefined) {}
 
-crypto_hash* crypto_hash_builder::build() {
-    crypto_hash* obj = nullptr;
-    __try_new_catch_only(obj, new crypto_hash(_alg));
+crypto_encrypt* crypto_encrypt_builder::build() {
+    crypto_encrypt* obj = nullptr;
+    __try_new_catch_only(obj, new crypto_encrypt(_enc));
     return obj;
 }
 
-crypto_hash_builder& crypto_hash_builder::set(hash_algorithm_t alg) {
-    _alg = alg;
+crypto_encrypt_builder& crypto_encrypt_builder::set(crypt_enc_t enc) {
+    _enc = enc;
     return *this;
 }
 

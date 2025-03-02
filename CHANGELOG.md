@@ -4,7 +4,7 @@
   * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 719
+* Revision 720
 
 * Revision 716
   * [tested] RFC 9369 QUIC Version 2

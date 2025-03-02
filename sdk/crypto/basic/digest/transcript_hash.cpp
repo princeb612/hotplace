@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto/crypto/transcript_hash.hpp>
+#include <sdk/crypto/basic/transcript_hash.hpp>
 
 namespace hotplace {
 namespace crypto {

@@ -14,7 +14,7 @@
 
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/crypto/basic/openssl_sign.hpp>
-#include <sdk/crypto/crypto/types.hpp>
+#include <sdk/crypto/basic/types.hpp>
 
 namespace hotplace {
 namespace crypto {
