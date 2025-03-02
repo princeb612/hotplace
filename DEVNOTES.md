@@ -313,9 +313,9 @@ journey
   section 2024.06
     ASN.1, graph:3:github
   section 2024.07
-    pattern-matching:3:github
+    pattern search:3:github
   section 2024.08
-    pattern-matching:3:github
+    pattern search:3:github
   section 2024.09
     review:3:github
   section 2024.10

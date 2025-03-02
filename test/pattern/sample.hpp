@@ -36,6 +36,7 @@ void test_aho_corasick();
 void test_trie();
 void test_trie_autocompletion();
 void test_trie_lookup();
+void test_trie_scan();
 void test_suffixtree();
 void test_suffixtree2();
 void test_ukkonen();

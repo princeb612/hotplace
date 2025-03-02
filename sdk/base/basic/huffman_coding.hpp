@@ -16,7 +16,11 @@
 #include <functional>
 #include <map>
 #include <sdk/base/basic/types.hpp>
+#include <sdk/base/nostd/range.hpp>
 #include <sdk/base/nostd/tree.hpp>
+#include <sdk/base/pattern/trie.hpp>
+
+#define SWITCH_HUFFMANCODING_TRIE 1
 
 namespace hotplace {
 
@@ -176,7 +180,12 @@ class huffman_coding {
     btree_t _btree;
     map_t _m;
     codetable_t _codetable;
+#if SWITCH_HUFFMANCODING_TRIE == 0
     reverse_codetable_t _reverse_codetable;
+#else
+    t_trie<char> _trie;
+    t_range<size_t> _range;
+#endif
 };
 
 }  // namespace hotplace

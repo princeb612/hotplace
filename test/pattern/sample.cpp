@@ -50,6 +50,7 @@ int main(int argc, char** argv) {
     test_trie();
     test_trie_autocompletion();
     test_trie_lookup();
+    test_trie_scan();
     test_suffixtree();
     test_suffixtree2();
     test_ukkonen();

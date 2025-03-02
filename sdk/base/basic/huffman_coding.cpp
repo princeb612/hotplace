@@ -20,7 +20,9 @@ huffman_coding::~huffman_coding() {
     _btree.clear();
     _m.clear();
     _codetable.clear();
+#if SWITCH_HUFFMANCODING_TRIE == 0
     _reverse_codetable.clear();
+#endif
 }
 
 void huffman_coding::reset() { _measure.clear(); }
@@ -43,7 +45,12 @@ huffman_coding &huffman_coding::learn() {
     _btree.clear();
     _m.clear();
     _codetable.clear();
+#if SWITCH_HUFFMANCODING_TRIE == 0
     _reverse_codetable.clear();
+#else
+    _trie.reset();
+    _range.reset();
+#endif
 
     /**
      * _measure .. count(weight) by symbol, see hc_t::operator
@@ -103,8 +110,16 @@ void huffman_coding::infer(hc_temp &hc, typename btree_t::node_t *t) {
         hc.code.pop_back();
 
         if (0 == t->_key.flags) {
-            _codetable.insert(std::make_pair(t->_key.symbol, hc.code));
-            _reverse_codetable.insert(std::make_pair(hc.code, t->_key.symbol));
+            const auto &sym = t->_key.symbol;
+            const auto &code = hc.code;
+            _codetable.insert(std::make_pair(sym, code));
+#if SWITCH_HUFFMANCODING_TRIE == 0
+            _reverse_codetable.insert(std::make_pair(code, sym));
+#else
+            size_t size = code.size();
+            _trie.insert(code.c_str(), size, sym);
+            _range.test(size);
+#endif
         }
 
         hc.code += "1";
@@ -153,7 +168,12 @@ void huffman_coding::build(typename btree_t::node_t *&p) {
 
 huffman_coding &huffman_coding::imports(const hc_code_t *table) {
     _codetable.clear();
+#if SWITCH_HUFFMANCODING_TRIE == 0
     _reverse_codetable.clear();
+#else
+    _trie.reset();
+    _range.reset();
+#endif
 
     for (size_t i = 0; table; i++) {
         const hc_code_t *item = table + i;
@@ -161,7 +181,15 @@ huffman_coding &huffman_coding::imports(const hc_code_t *table) {
             break;
         }
         _codetable.insert(std::make_pair(item->sym, item->code));
+#if SWITCH_HUFFMANCODING_TRIE == 0
         _reverse_codetable.insert(std::make_pair(item->code, item->sym));
+#else
+        const auto &sym = item->sym;
+        const auto &code = item->code;
+        size_t size = strlen(code);
+        _trie.insert(code, size, sym);
+        _range.test(size);
+#endif
     }
 
     return *this;
@@ -286,12 +314,18 @@ return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
+        size_t code_msize = 0;
+#if SWITCH_HUFFMANCODING_TRIE == 0
         if (_reverse_codetable.empty()) {
             ret = errorcode_t::not_ready;
             __leave2;
         }
 
-        size_t code_msize = _reverse_codetable.begin()->first.size();
+        code_msize = _reverse_codetable.begin()->first.size();
+#else
+        code_msize = _range.getmin();
+#endif
         usepad &= (code_msize >= 5);  // overwrite usepad
 
         // align to MSB
@@ -377,12 +411,17 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
             __leave2;
         }
 
+        size_t code_msize = 0;
+#if SWITCH_HUFFMANCODING_TRIE == 0
         if (_reverse_codetable.empty()) {
             ret = errorcode_t::not_ready;
             __leave2;
         }
 
-        size_t code_msize = _reverse_codetable.begin()->first.size();
+        code_msize = _reverse_codetable.begin()->first.size();
+#else
+        code_msize = _range.getmin();
+#endif
         if (code_msize <= 4) {
             // see encode
             ret = errorcode_t::insufficient;
@@ -399,6 +438,8 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
             }
 
             while (que.size() >= code_msize) {
+#if SWITCH_HUFFMANCODING_TRIE == 0
+                // naive
                 int count = 0;
                 for (size_t l = code_msize; l <= que.size(); l++) {
                     token = que.substr(0, l);
@@ -414,6 +455,18 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
                 if ((que.size() - code_msize + 1) == count) {
                     break;
                 }
+#else
+                // using trie
+                size_t pos = 0;
+                int rc = 0;
+                rc = _trie.scan(que.c_str(), que.size(), pos);  // scan first occurrence
+                if (-1 == rc) {
+                    break;
+                }
+
+                stream->printf("%c", rc);
+                que.erase(0, pos);
+#endif
             }
         }
 
@@ -433,11 +486,16 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
 bool huffman_coding::decodable() {
     bool ret = false;
     __try2 {
+        size_t code_msize = 0;
+#if SWITCH_HUFFMANCODING_TRIE == 0
         if (_reverse_codetable.empty()) {
             __leave2;
         }
 
-        size_t code_msize = _reverse_codetable.begin()->first.size();
+        code_msize = _reverse_codetable.begin()->first.size();
+#else
+        code_msize = _range.getmin();
+#endif
         if (code_msize > 4) {
             ret = true;
         }

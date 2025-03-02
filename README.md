@@ -44,11 +44,12 @@
   * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
   * RFC 8448 Example Handshake Traces for TLS 1.3
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
-    * sdk/net/tls1/
+    * sdk/net/tls/tls/
     * test/tls1/
   * RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
   * RFC 9001 Using TLS to Secure QUIC
   * RFC 9369 QUIC Version 2
+    * sdk/net/tls/quic/
     * test/quic/
 * CBOR
   * RFC 7049 Concise Binary Object Representation (CBOR)
@@ -97,7 +98,7 @@
   * RFC 7838 HTTP Alternative Services
   * RFC 9113 HTTP/2
     * sdk/net/http/http2/
-    * sdk/net/tls/
+    * sdk/net/basic/tls/
     * test/payload/
     * test/hpack/
     * test/httpaltsvc/
@@ -173,7 +174,7 @@
   * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
   * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
-    * sdk/net/tls/
+    * sdk/net/basic/tls/
     * test/tlsserver/
     * test/dtlsserver/
 

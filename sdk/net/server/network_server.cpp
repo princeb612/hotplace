@@ -20,13 +20,13 @@
 
 #include <queue>
 #include <sdk/base/system/signalwait_threads.hpp>
-#include <sdk/net/basic/tcp_server_socket.hpp>
-#include <sdk/net/basic/udp_server_socket.hpp>
+#include <sdk/net/basic/socket/tcp_server_socket.hpp>
+#include <sdk/net/basic/socket/udp_server_socket.hpp>
+#include <sdk/net/basic/tls/tls.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_server.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/server/network_stream.hpp>
-#include <sdk/net/tls/tls.hpp>
 
 namespace hotplace {
 namespace net {

@@ -223,7 +223,7 @@ bool parser::lookup(const std::string& word, int& index, uint32 flags) {
             index = idx;
         }
     } else {
-        t_trie<char>::trienode* node = _dictionary.insert(word.c_str(), word.size());
+        auto node = _dictionary.insert(word.c_str(), word.size());
         index = node->index;
     }
     return ret;
@@ -232,7 +232,7 @@ bool parser::lookup(const std::string& word, int& index, uint32 flags) {
 bool parser::rlookup(int index, std::string& word) {
     bool ret = true;
     std::vector<char> arr;
-    ret = _dictionary.rfind(index, arr);
+    ret = _dictionary.lookup(index, arr);
     if (ret) {
         word.assign(&arr[0], arr.size());
     }

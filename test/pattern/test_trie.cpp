@@ -6,6 +6,9 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2025.03.02   Soo Han, Kim        rename rfind to lookup
+ *                                  autoindex start from 0
+ *                                  scan added
  */
 
 #include "sample.hpp"
@@ -105,7 +108,8 @@ void test_trie_autocompletion() {
 void test_trie_lookup() {
     _test_case.begin("t_trie");
     t_trie<char> trie;
-    trie.add("hello", 5).add("world", 5);
+    trie.add("hello", 5)   // index 0
+        .add("world", 5);  // index 1
     const char* source = "helloworld";
     size_t len = 0;
     // 0123456789
@@ -122,9 +126,9 @@ void test_trie_lookup() {
 
     int index = -1;
     index = trie.find("hello", 5);
-    _test_case.assert(1 == index, __FUNCTION__, "find #1");
+    _test_case.assert(0 == index, __FUNCTION__, "find #1");
     index = trie.find("world", 5);
-    _test_case.assert(2 == index, __FUNCTION__, "find #2");
+    _test_case.assert(1 == index, __FUNCTION__, "find #2");
     index = trie.find("word", 4);
     _test_case.assert(-1 == index, __FUNCTION__, "find #3");
 
@@ -142,10 +146,48 @@ void test_trie_lookup() {
 
     bool test = false;
     std::vector<char> res;
-    test = trie.rfind(1, res);
-    _test_case.assert(test && compare(res, "hello"), __FUNCTION__, "rfind #1");
-    test = trie.rfind(2, res);
-    _test_case.assert(test && compare(res, "world"), __FUNCTION__, "rfind #2");
-    test = trie.rfind(3, res);
-    _test_case.assert((false == test) && res.empty(), __FUNCTION__, "rfind #3");
+    test = trie.lookup(0, res);
+    _test_case.assert(test && compare(res, "hello"), __FUNCTION__, "rlookup #1");
+    test = trie.lookup(1, res);
+    _test_case.assert(test && compare(res, "world"), __FUNCTION__, "rlookup #2");
+    test = trie.lookup(2, res);
+    _test_case.assert((false == test) && res.empty(), __FUNCTION__, "rlookup #3");
+}
+
+void test_trie_scan() {
+    _test_case.begin("t_trie");
+    t_trie<char> trie;
+    for (auto i = 0;; i++) {
+        auto item = _h2hcodes + i;
+        auto sym = item->sym;
+        auto code = item->code;
+        if (nullptr == code) {
+            break;
+        }
+        trie.insert(code, strlen(code), sym);
+    }
+
+    // We don't playing because we grow old; we grow old because we stop playing. - George Bernard Shaw
+    // 1110010 00101 010100 100100 00111 101010 11111111010 01001 010100 101011 101000 00011 1111010 ...
+
+    const char* plaintext = "We don't playing because we grow old; we grow old because we stop playing. - George Bernard Shaw";
+    const char* sample =
+        "111001000101010100100100001111010101111111101001001010100101011101000000111111010001101010101001100101001000110010100100000111011010100000101010100111"
+        "100000101010100100110101100001111111000010100001111010001001001111101101010011110000010101010010011010110000111111100001010000111101000100100010100100"
+        "011001010010000011101101010000010101010011110000010101010001000010010011110101101010010101110100000011111101000110101010100110010111010100010110010100"
+        "1100010001010011110110010011000101010100101110100101101100101010000111011001001000101001101110100111000111111000111111";  // with padding (last 111111)
+    size_t len = strlen(sample);
+    int rc = 0;
+    size_t pos = 0;
+    basic_stream bs;
+    while (true) {
+        rc = trie.scan(sample, len, pos);
+        if (-1 == rc) {
+            break;
+        }
+        bs << (char)rc;
+    }
+    _logger->writeln(bs);
+    _logger->dump(bs, 16, 3);
+    _test_case.assert(bs == plaintext, __FUNCTION__, "huffman coding");
 }

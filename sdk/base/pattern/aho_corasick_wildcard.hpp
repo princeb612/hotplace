@@ -226,7 +226,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
             enqueue(_root, 0);
 
             while (false == q.empty()) {
-                const auto& pair = q.front();
+                auto pair = q.front();  // gdb problem in MINGW (const auto& pair)
                 trienode* current = pair.first;
                 const auto& i = pair.second;
                 visit.insert({current, i});

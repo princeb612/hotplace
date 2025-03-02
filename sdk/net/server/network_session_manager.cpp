@@ -9,9 +9,9 @@
  */
 
 #include <sdk/base/types.hpp>
+#include <sdk/net/basic/tls/sdk.hpp>
 #include <sdk/net/server/network_server.hpp>
 #include <sdk/net/server/network_session.hpp>
-#include <sdk/net/tls/sdk.hpp>
 
 namespace hotplace {
 namespace net {

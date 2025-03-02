@@ -18,8 +18,6 @@
 namespace hotplace {
 namespace io {
 
-#define ENDOF_DATA
-
 struct ascii_token_table {
     uint8 code;
     const char* symbol;

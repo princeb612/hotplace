@@ -4,7 +4,6 @@
 #include <stdio.h>
 
 #include <iostream>
-#include <sdk/net/http/http3/qpack.hpp>
 #include <sdk/sdk.hpp>
 
 using namespace hotplace;

@@ -8,16 +8,16 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/tcp_client_socket.hpp>
-#include <sdk/net/basic/udp_client_socket.hpp>
+#include <sdk/net/basic/socket/tcp_client_socket.hpp>
+#include <sdk/net/basic/socket/udp_client_socket.hpp>
+#include <sdk/net/basic/tls/dtls_client_socket.hpp>
+#include <sdk/net/basic/tls/tls_client_socket.hpp>
 #include <sdk/net/http/http_client.hpp>
 #include <sdk/net/http/http_protocol.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_response.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_stream.hpp>
-#include <sdk/net/tls/dtls_client_socket.hpp>
-#include <sdk/net/tls/tls_client_socket.hpp>
 
 namespace hotplace {
 namespace net {
