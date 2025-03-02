@@ -55,7 +55,7 @@ return_t basic_authentication_provider::request_auth(network_session* session, h
         }
 
         // RFC 2617 2 Basic Authentication Scheme
-        response->get_http_header().add("WWW-Authenticate", format("Basic realm=\"%s\"", _realm.c_str()));
+        response->get_http_header().add("WWW-Authenticate", format("Basic realm=\"%s\"", get_realm().c_str()));
 
         int status_code = 401;
         std::string body = format("<html><body>%i %s</body></html>", status_code, http_resource::get_instance()->load(status_code).c_str());

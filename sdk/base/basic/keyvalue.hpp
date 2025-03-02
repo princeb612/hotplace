@@ -336,6 +336,7 @@ class t_stringkey_value {
     size_t size() { return _keyvalues.size(); }
 
    protected:
+   private:
     /* key, value */
     typedef std::map<std::string, value_t> keyvalue_map_t;
     typedef std::pair<typename keyvalue_map_t::iterator, bool> keyvalue_map_pib_t;

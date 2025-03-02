@@ -28,7 +28,7 @@ return_t udp_client_socket::recvfrom(socket_t sock, tls_context_t* tls_handle, c
                                      socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = wait_socket(sock, _wto, SOCK_WAIT_READABLE);
+        ret = wait_socket(sock, get_wto(), SOCK_WAIT_READABLE);
         if (errorcode_t::success == ret) {
 #if 0
             int size_peek = ::recvfrom(sock, ptr_data, size_data, MSG_PEEK, nullptr, nullptr);

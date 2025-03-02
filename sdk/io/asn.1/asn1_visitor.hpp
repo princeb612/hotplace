@@ -40,6 +40,7 @@ class asn1_basic_encoding_visitor : public asn1_visitor {
    protected:
     binary_t* get_binary();
 
+   private:
     binary_t* _b;
 };
 
@@ -51,6 +52,7 @@ class asn1_notation_visitor : public asn1_visitor {
    protected:
     stream_t* get_stream();
 
+   private:
     stream_t* _s;
 };
 

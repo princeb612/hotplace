@@ -142,6 +142,7 @@ class t_mlfq {
     typedef typename std::map<int, mlfq_queue_t> mlfq_map_t;
     typedef typename std::pair<typename mlfq_map_t::iterator, bool> mlfq_map_pib_t;
 
+   private:
     BINDER_T _binder;
     semaphore _semaphore;
     critical_section _lock;

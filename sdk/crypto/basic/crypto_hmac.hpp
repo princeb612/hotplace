@@ -67,6 +67,7 @@ class crypto_hmac {
    protected:
     crypto_hmac(hash_algorithm_t alg, const binary_t& key);
 
+   private:
     t_shared_reference<crypto_hmac> _shared;
     hash_context_t* _handle;
     hash_algorithm_t _alg;
@@ -81,6 +82,7 @@ class crypto_hmac_builder {
     crypto_hmac* build();
 
    protected:
+   private:
     hash_algorithm_t _alg;
     binary_t _key;
 };

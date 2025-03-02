@@ -29,7 +29,7 @@ int http_authentication_provider::addref() { return _shared.addref(); }
 
 int http_authentication_provider::release() { return _shared.delref(); }
 
-std::string http_authentication_provider::get_realm() { return _realm; }
+const std::string& http_authentication_provider::get_realm() const { return _realm; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -72,7 +72,7 @@ return_t tcp_client_socket::connectto(socket_t sock, tls_context_t** tls_handle,
 return_t tcp_client_socket::read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* size_read) {
     return_t ret = errorcode_t::success;
 
-    ret = wait_socket(sock, _wto, SOCK_WAIT_READABLE);
+    ret = wait_socket(sock, get_wto(), SOCK_WAIT_READABLE);
     if (errorcode_t::success == ret) {
 #if defined __linux__
         int ret_recv = recv(sock, ptr_data, size_data, 0);

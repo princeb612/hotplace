@@ -352,6 +352,7 @@ class variant {
     variant& operator=(variant_t&& source);
 
    protected:
+   private:
     variant_t _vt;
 };
 

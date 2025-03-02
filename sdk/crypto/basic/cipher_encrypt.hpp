@@ -32,6 +32,7 @@ class cipher_encrypt {
     void release();
 
    protected:
+   private:
     t_shared_reference<cipher_encrypt> _shared;
     crypt_algorithm_t _alg;
     crypt_mode_t _mode;

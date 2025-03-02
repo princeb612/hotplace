@@ -15,7 +15,7 @@ namespace hotplace {
 namespace net {
 
 qpack_dynamic_table::qpack_dynamic_table() : http_dynamic_table() {
-    _type = header_compression_qpack;
+    set_type(header_compression_qpack);
 
     // RFC 9204 5.  Configuration
     // SETTINGS_QPACK_MAX_TABLE_CAPACITY (0x01):  The default value is zero.
@@ -42,7 +42,7 @@ return_t qpack_dynamic_table::query(int cmd, void* req, size_t reqsize, void* re
                 if (req && (sizeof(size_t) == reqsize)) {
                     respsize = sizeof(size_t);
                     size_t data = *(size_t*)req;
-                    size_t entries = _dynamic_map.size();
+                    size_t entries = dynamic_map_size();
                     if (data > entries) {
                         ret = errorcode_t::out_of_range;
                     } else {

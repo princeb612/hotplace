@@ -482,6 +482,7 @@ class t_trie {
         }
     }
 
+   private:
     trienode* _root;
     memberof_t _memberof;
     std::unordered_map<int, TP*> _tags;  // index, tag*

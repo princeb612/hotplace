@@ -205,6 +205,7 @@ class qpack_static_table : public http_static_table {
     qpack_static_table();
     virtual void load();
 
+   private:
     static qpack_static_table _instance;
 };
 

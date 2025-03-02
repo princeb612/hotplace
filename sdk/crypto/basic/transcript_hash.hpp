@@ -57,6 +57,7 @@ class transcript_hash {
     void release();
 
    protected:
+   private:
     t_shared_reference<transcript_hash> _shared;
     hash_context_t* _handle;
 };
@@ -79,6 +80,7 @@ class transcript_hash_builder {
     transcript_hash_builder& set(hash_algorithm_t alg);
 
    protected:
+   private:
     hash_algorithm_t _alg;
 };
 

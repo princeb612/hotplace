@@ -127,6 +127,7 @@ class client_socket : public basic_socket {
     uint32 get_wto() { return _wto; }
 
    protected:
+   private:
     uint32 _wto;  // msec, default 1,000 msec (1 sec)
 };
 

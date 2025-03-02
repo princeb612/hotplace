@@ -229,6 +229,7 @@ class transport_layer_security {
      */
     return_t do_accept(tls_context_t* handle);
 
+   private:
     SSL_CTX* _ctx;
     t_shared_reference<transport_layer_security> _shared;
 };

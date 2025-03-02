@@ -187,6 +187,7 @@ class payload_encoded {
     virtual void release() { _shared.delref(); }
 
    protected:
+   private:
     t_shared_reference<payload_encoded> _shared;
 };
 

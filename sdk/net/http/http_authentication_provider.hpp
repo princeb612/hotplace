@@ -64,9 +64,10 @@ class http_authentication_provider {
     /**
      * @brief   realm
      */
-    std::string get_realm();
+    const std::string& get_realm() const;
 
    protected:
+   private:
     t_shared_reference<http_authentication_provider> _shared;
     std::string _realm;
 };

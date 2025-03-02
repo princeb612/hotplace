@@ -72,6 +72,7 @@ class protection_context {
     void clear();
 
    protected:
+   private:
     std::list<uint16> _cipher_suites;         // tls_handshake_client_hello
     std::list<uint16> _signature_algorithms;  // tls_extension_signature_algorithms
     std::list<uint16> _supported_groups;      // tls_extension_supported_groups

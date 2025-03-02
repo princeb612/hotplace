@@ -31,6 +31,7 @@ class dtls13_ciphertext : public tls_record {
     virtual return_t do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
+   private:
     binary_t _cid;
     uint16 _sequence;
     uint8 _sequence_len;

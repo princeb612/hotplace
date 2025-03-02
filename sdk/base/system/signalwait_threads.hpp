@@ -36,6 +36,7 @@ class thread_info {
     signalwait_threads* get_container() { return _container; }
 
    protected:
+   private:
     thread* _thread;
     signalwait_threads* _container;
 };
@@ -117,6 +118,7 @@ class signalwait_threads {
     return_t ready_to_join(threadid_t tid);
     void join_signaled();
 
+   private:
     size_t _capacity;                                             ///<< max number of concurrent thread
     SIGNALWAITTHREADS_CALLBACK_ROUTINE _thread_callback_routine;  ///<< thread
     SIGNALWAITTHREADS_CALLBACK_ROUTINE _signal_callback_routine;  ///<< signal handler

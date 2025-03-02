@@ -112,6 +112,7 @@ class http_header {
     uint8 get_version();
 
    protected:
+   private:
     typedef std::list<std::string> http_header_list_t;
     typedef std::map<std::string, std::string> http_header_map_t;
     typedef std::pair<http_header_map_t::iterator, bool> http_header_map_pib_t;

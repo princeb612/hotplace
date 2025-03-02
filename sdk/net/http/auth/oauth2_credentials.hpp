@@ -155,6 +155,7 @@ class t_expirable {
     }
 
    protected:
+   private:
     expires_t _expires;
 };
 

@@ -118,10 +118,10 @@ class trace_advisor {
    protected:
     trace_advisor();
 
+   private:
     critical_section _lock;
     static trace_advisor _instance;
 
-   private:
     typedef std::map<uint32, std::string> event_map_t;
     struct events {
         std::string cname;

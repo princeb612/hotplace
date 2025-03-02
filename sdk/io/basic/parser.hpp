@@ -567,6 +567,7 @@ class parser {
      */
     bool lookup(const char* p, size_t size, std::string& token_name, uint32& token_type, uint32& token_tag);
 
+   private:
     struct token_attr_tag {
         uint32 attr;
         uint32 tag;

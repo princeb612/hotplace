@@ -310,7 +310,7 @@ return_t http_header_compression::selectall(http_static_table* statable, http_dy
         // skip if qpack_static flag set
         if (qpack_static & ~flags) {
             // dynamic table
-            if (header_compression_hpack == dyntable->type()) {
+            if (header_compression_hpack == dyntable->get_type()) {
                 if (index > statable->size()) {
                     ret = dyntable->select(flags, index, name, value);
                 }

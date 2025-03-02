@@ -94,6 +94,7 @@ class network_protocol {
     int release() { return _shared.delref(); }
 
    protected:
+   private:
     t_shared_reference<network_protocol> _shared;
     std::vector<size_t> _constraints;
 };
@@ -171,6 +172,7 @@ class network_protocol_group {
     int release();
 
    protected:
+   private:
     t_shared_reference<network_protocol_group> _shared;
 
     typedef std::map<std::string, network_protocol*> protocol_map_t;

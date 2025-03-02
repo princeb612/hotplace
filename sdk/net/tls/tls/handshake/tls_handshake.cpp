@@ -356,5 +356,7 @@ size_t tls_handshake::offsetof_body() { return _range.end; }
 
 uint32 tls_handshake::get_body_size() { return _bodysize; }
 
+void tls_handshake::set_extension_len(uint16 len) { _extension_len = len; }
+
 }  // namespace net
 }  // namespace hotplace

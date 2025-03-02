@@ -73,6 +73,7 @@ class tls_server_socket : public tcp_server_socket {
     virtual bool support_tls();
 
    protected:
+   private:
     transport_layer_security* _tls;
 };
 

@@ -37,6 +37,7 @@ class tls_extensions {
     void clear();
 
    protected:
+   private:
     critical_section _lock;
     std::map<uint16, tls_extension *> _dictionary;  // tls1_ext_type_t
     std::vector<tls_extension *> _extensions;       // ordered

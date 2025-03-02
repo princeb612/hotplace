@@ -34,6 +34,7 @@ class tls_records {
     void clear();
 
    protected:
+   private:
     critical_section _lock;
     std::vector<tls_record*> _records;
 };

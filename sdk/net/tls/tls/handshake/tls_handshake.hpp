@@ -51,11 +51,13 @@ class tls_handshake {
     virtual return_t do_write_header(tls_direction_t dir, binary_t &bin, const binary_t &body);
     virtual return_t do_write_body(tls_direction_t dir, binary_t &bin);
 
+    void set_extension_len(uint16 len);
+
+   private:
     range_t _range;
     uint16 _extension_len;
     tls_extensions _extensions;
 
-   private:
     tls_hs_type_t _type;
     tls_session *_session;
     uint32 _bodysize;

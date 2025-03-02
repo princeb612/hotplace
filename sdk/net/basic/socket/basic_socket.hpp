@@ -61,6 +61,7 @@ class basic_socket {
     int release() { return _shared.delref(); }
 
    protected:
+   private:
     t_shared_reference<basic_socket> _shared;
 };
 

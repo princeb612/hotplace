@@ -229,7 +229,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             {
                 _random = random;
                 _session_id = session_id;
-                _extension_len = extension_len;
+                set_extension_len(extension_len);
             }
 
             {

@@ -37,6 +37,7 @@ class tls_handshakes {
     void clear();
 
    protected:
+   private:
     critical_section _lock;
     std::map<uint8, tls_handshake*> _dictionary;  // tls_hs_type_t
     std::vector<tls_handshake*> _handshakes;      // ordered

@@ -55,6 +55,7 @@ class tls_record {
     size_t offsetof_header();
     size_t offsetof_body();
 
+   private:
     uint8 _content_type;
     bool _cond_dtls;
     uint16 _key_epoch;

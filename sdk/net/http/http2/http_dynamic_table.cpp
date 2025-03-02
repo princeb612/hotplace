@@ -104,14 +104,14 @@ return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& nam
     return_t ret = errorcode_t::not_found;
 
     __try2 {
-        if (header_compression_hpack == type()) {
+        if (header_compression_hpack == get_type()) {
             // HPACK
             auto static_entries = http_resource::get_instance()->sizeof_hpack_static_table_entries();
             if (index <= static_entries) {
                 __leave2;
             }
             index -= (static_entries + 1);
-        } else if (header_compression_qpack == type()) {
+        } else if (header_compression_qpack == get_type()) {
             if (qpack_postbase_index & flags) {
                 index = _inserted - _dropped - index - 1;
             }
@@ -293,7 +293,11 @@ size_t http_dynamic_table::get_entries() { return _inserted - _dropped; }
 
 return_t http_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) { return errorcode_t::success; }
 
-uint8 http_dynamic_table::type() { return _type; }
+uint8 http_dynamic_table::get_type() { return _type; }
+
+void http_dynamic_table::set_type(uint8 type) { _type = type; }
+
+size_t http_dynamic_table::dynamic_map_size() { return _dynamic_map.size(); }
 
 void http_dynamic_table::set_debug_hook(std::function<void(trace_category_t, uint32 event)> fn) { _hook = fn; }
 

@@ -153,6 +153,7 @@ class ansi_string : public stream_t {
     virtual void autoindent(uint8 indent);
 
    protected:
+   private:
     bufferio _bio;
     bufferio_context_t* _handle;
 };
@@ -283,6 +284,7 @@ class wide_string : public stream_t {
     virtual void autoindent(uint8 indent);
 
    protected:
+   private:
     bufferio _bio;
     bufferio_context_t* _handle;
 };

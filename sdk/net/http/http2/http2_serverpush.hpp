@@ -104,6 +104,7 @@ class http2_serverpush {
     return_t do_push(const std::string& promise, uint32 streamid, http_request* request, http_server* server, network_session* session,
                      http_response* response);
 
+   private:
     typedef std::multimap<std::string, std::string> server_push_map_t;
     critical_section _lock;
     server_push_map_t _server_push_map;

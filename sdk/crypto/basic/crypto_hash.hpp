@@ -36,6 +36,7 @@ class crypto_hash {
     void release();
 
    protected:
+   private:
     t_shared_reference<crypto_hash> _shared;
     hash_algorithm_t _alg;
 };
@@ -58,6 +59,7 @@ class crypto_hash_builder {
     crypto_hash_builder& set(hash_algorithm_t alg);
 
    protected:
+   private:
     hash_algorithm_t _alg;
 };
 

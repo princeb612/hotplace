@@ -161,6 +161,7 @@ class ipaddr_acl {
     ipaddr_t convert_sockaddr(const sockaddr_storage_t* addr, int& family);
 
    protected:
+   private:
     int _mode;
 
     typedef struct _IPADDRESS_RULE_ITEM {

@@ -243,6 +243,7 @@ class file_stream : public stream_t {
     operator handle_t();
 
    protected:
+   private:
     /**
      * @brief   do nothing
      */

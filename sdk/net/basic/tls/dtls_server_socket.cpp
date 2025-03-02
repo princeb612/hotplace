@@ -18,7 +18,6 @@ dtls_server_socket::dtls_server_socket(transport_layer_security* tls) : udp_serv
         throw errorcode_t::insufficient;
     }
     tls->addref();
-    _shared.make_share(this);
 }
 
 dtls_server_socket::~dtls_server_socket() { _tls->release(); }

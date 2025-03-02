@@ -239,6 +239,7 @@ class http_header_compression {
     return_t selectall(http_static_table* static_table, http_dynamic_table* dyntable, uint32 flags, size_t index, std::string& name, std::string& value);
 
    protected:
+   private:
     bool _safe_mask;
 };
 
@@ -290,6 +291,7 @@ class http_static_table {
 
     virtual void load();
 
+   protected:
     typedef std::pair<std::string, size_t> table_entry_t;
     typedef std::multimap<std::string, table_entry_t> static_table_t;
     typedef std::map<size_t, std::pair<std::string, std::string>> static_table_index_t;
@@ -377,11 +379,20 @@ class http_dynamic_table {
      * @brief   type
      * @return  see header_compression_type_t
      */
-    uint8 type();
+    uint8 get_type();
 
     void set_debug_hook(std::function<void(trace_category_t, uint32 event)> fn);
 
    protected:
+    void set_type(uint8 type);
+    size_t dynamic_map_size();
+
+    critical_section _lock;
+    uint32 _capacity;
+    size_t _inserted;
+    size_t _dropped;
+
+   private:
     typedef std::pair<std::string, size_t> table_entry_t;
     typedef std::multimap<std::string, table_entry_t> dynamic_map_t;  // table_entry_t(value, entry)
     typedef std::map<size_t, table_entry_t> dynamic_reversemap_t;     // table_entry_t(name, entry size)
@@ -394,13 +405,9 @@ class http_dynamic_table {
     dynamic_map_t _dynamic_map;
     dynamic_reversemap_t _dynamic_reversemap;
     commit_queue_t _commit_queue;
-    critical_section _lock;
 
     uint8 _type;  // see header_compression_type_t
-    uint32 _capacity;
     size_t _tablesize;
-    size_t _inserted;
-    size_t _dropped;
 
     std::function<void(trace_category_t, uint32 event)> _hook;
 };
@@ -421,6 +428,7 @@ class http_huffman_coding : public huffman_coding {
 
     virtual void load();
 
+   private:
     critical_section _lock;
     static http_huffman_coding _instance;
 };

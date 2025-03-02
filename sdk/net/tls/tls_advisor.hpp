@@ -205,6 +205,7 @@ class tls_advisor {
 
     void load_tls_version();
 
+   private:
     static tls_advisor _instance;
     critical_section _lock;
 

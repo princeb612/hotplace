@@ -151,6 +151,7 @@ class valist {
     void insert(const variant_t& v);
     void insert(variant_t&& v);
 
+   private:
     typedef std::vector<variant_t> args_t;
 
     valist_t _type;

@@ -85,6 +85,7 @@ class asn1_object {
 
     void clear();
 
+   private:
     std::string _name;
     asn1_type_t _type;
     asn1_tag* _tag;
@@ -95,7 +96,6 @@ class asn1_object {
 
     variant _var;
 
-   private:
     t_shared_reference<asn1_object> _ref;
 };
 
@@ -161,6 +161,7 @@ class asn1_container : public asn1_object {
     asn1_container(const std::string& name, asn1_tag* tag);
     asn1_container(const asn1_container& rhs);
 
+   private:
     std::list<asn1_object*> _list;
 };
 
@@ -385,6 +386,7 @@ class asn1_resource {
     void load_resource();
     void doload_resource();
 
+   private:
     static asn1_resource _instance;
 
     critical_section _lock;

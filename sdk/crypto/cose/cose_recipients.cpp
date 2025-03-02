@@ -109,5 +109,9 @@ cbor_array* cose_recipients::cbor() {
     return object;
 }
 
+std::list<cose_recipient*>& cose_recipients::get_recipients() { return _recipients; }
+
+const std::list<cose_recipient*>& cose_recipients::get_recipients() const { return _recipients; }
+
 }  // namespace crypto
 }  // namespace hotplace

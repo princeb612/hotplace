@@ -64,6 +64,7 @@ class network_stream_data {
     const sockaddr_storage_t* get_sockaddr();
 
    protected:
+   private:
     t_shared_reference<network_stream_data> _instance;
     byte_t* _ptr;
     size_t _size;

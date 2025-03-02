@@ -46,6 +46,7 @@ class tls_handshake_server_hello : public tls_handshake {
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
+   private:
     binary _random;  // 32 bytes
     binary _session_id;
     uint8 _compression_method;

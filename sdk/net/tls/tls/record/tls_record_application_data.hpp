@@ -42,6 +42,7 @@ class tls_record_application_data : public tls_record {
 
     return_t get_application_data(binary_t& message, bool untag);
 
+   private:
     tls_handshakes _handshakes;
     tls_records _records;
     binary_t _bin;

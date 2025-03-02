@@ -54,6 +54,7 @@ class crypto_aead_builder {
     crypto_aead_builder& set_scheme(crypto_aead_scheme_t scheme);
 
    protected:
+   private:
     crypto_aead_scheme_t _scheme;
 };
 
@@ -84,6 +85,9 @@ class crypto_aead {
 
 class crypto_aead_aes : public crypto_aead {
    public:
+    crypto_aead_aes(crypto_aead_scheme_t scheme);
+    std::string algorithm_str();
+
     virtual return_t encrypt(const binary_t& key, const binary_t& iv, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag);
     virtual return_t encrypt(const binary_t& key, const binary_t& iv, const unsigned char* stream, size_t size, binary_t& ciphertext, const binary_t& aad,
                              binary_t& tag);
@@ -91,10 +95,6 @@ class crypto_aead_aes : public crypto_aead {
                              const binary_t& tag);
     virtual return_t decrypt(const binary_t& key, const binary_t& iv, const unsigned char* stream, size_t size, binary_t& plaintext, const binary_t& aad,
                              const binary_t& tag);
-
-   public:
-    crypto_aead_aes(crypto_aead_scheme_t scheme);
-    std::string algorithm_str();
 };
 
 class crypto_aead_aes128gcm : public crypto_aead_aes {

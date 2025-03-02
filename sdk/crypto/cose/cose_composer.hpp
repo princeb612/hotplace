@@ -360,7 +360,10 @@ class cose_recipients {
     void for_each(void (*for_each_handler)(cose_recipient*, void* userdata), void* userdata);
     cose_recipients& set_upperlayer(cose_recipient* layer);
     cose_recipient* get_upperlayer();
+    std::list<cose_recipient*>& get_recipients();
+    const std::list<cose_recipient*>& get_recipients() const;
 
+   private:
     std::list<cose_recipient*> _recipients;
     cose_recipient* _upperlayer;
 };
@@ -497,14 +500,15 @@ class cose_countersigns : public cose_recipients {
         return_t ret = errorcode_t::success;
         __try2 {
             size_t size_countersigns = size();
+            const auto& recipients = get_recipients();
             if (size_countersigns > 1) {
                 __try_new_catch(object, new cbor_array, ret, __leave2);
 
-                for (cose_recipient* sign : _recipients) {
+                for (cose_recipient* sign : recipients) {
                     *object << sign->cbor();  // array in array
                 }
             } else if (size_countersigns == 1) {
-                object = _recipients.front()->cbor();  // array
+                object = recipients.front()->cbor();  // array
             }
         }
         __finally2 {

@@ -57,6 +57,7 @@ class tls_extension {
     virtual return_t do_write_header(binary_t& bin, const binary_t& body);
     virtual return_t do_write_body(binary_t& bin);
 
+   private:
     t_shared_reference<tls_extension> _shared;
 
     tls_session* _session;

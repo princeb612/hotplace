@@ -194,6 +194,7 @@ class network_session {
     return_t produce_stream(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr = nullptr);
     return_t produce_dgram(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr = nullptr);
 
+   private:
     network_session_t _session;
     network_stream _stream;
     network_stream _request;
@@ -286,6 +287,7 @@ class network_session_manager {
    protected:
     void shutdown();
 
+   private:
     typedef std::map<handle_t, network_session*> network_session_map_t;
     typedef std::pair<network_session_map_t::iterator, bool> network_session_map_pib_t;
     typedef std::map<binary_t, network_session*> dgram_session_map_t;

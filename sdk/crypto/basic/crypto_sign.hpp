@@ -74,6 +74,7 @@ class crypto_sign_builder {
     crypto_sign_builder& set_tls_sign_scheme(uint16 scheme);
 
    protected:
+   private:
     crypt_sig_type_t _scheme;
     uint16 _hashalg;
 };

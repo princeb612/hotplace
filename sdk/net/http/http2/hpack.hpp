@@ -143,6 +143,7 @@ class hpack_static_table : public http_static_table {
     hpack_static_table();
     virtual void load();
 
+   private:
     static hpack_static_table _instance;
 };
 

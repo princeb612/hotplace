@@ -186,17 +186,15 @@ class quic_packet {
      */
     quic_packet& set_version();
 
-    uint8 _ht;  // header type, public flag
-
-    uint32 _pn;
-    binary_t _payload;
-
-   private:
-    tls_session* _session;
+   protected:
     uint8 _type;
-    uint32 _version;  // version
-    binary_t _dcid;   // destination
-    binary_t _scid;   // source
+    uint8 _ht;              // header type, public flag
+    tls_session* _session;  // session
+    uint32 _version;        // version
+    uint32 _pn;             // packet number
+    binary_t _dcid;         // destination
+    binary_t _scid;         // source
+    binary_t _payload;
 };
 
 /**

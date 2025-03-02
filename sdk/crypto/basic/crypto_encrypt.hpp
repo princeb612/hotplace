@@ -34,6 +34,7 @@ class crypto_encrypt {
    protected:
     crypto_encrypt(crypt_enc_t enc);
 
+   private:
     t_shared_reference<crypto_encrypt> _shared;
     crypt_enc_t _enc;
 };
@@ -77,6 +78,7 @@ class crypto_encrypt_builder {
     crypto_encrypt_builder& set(crypt_enc_t enc);
 
    protected:
+   private:
     crypt_enc_t _enc;
 };
 

@@ -274,6 +274,7 @@ class t_aho_corasick {
 
     virtual void dodestroy() { delete _root; }
 
+   protected:
     trienode* _root;
     std::unordered_map<size_t, std::vector<BT>> _patterns;
     memberof_t _memberof;
