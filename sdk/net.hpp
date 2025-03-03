@@ -65,14 +65,6 @@
 /* http/http3 */
 #include <sdk/net/http/http3/qpack.hpp>
 
-/* quic */
-#include <sdk/net/tls/quic/frame/quic_frame.hpp>
-#include <sdk/net/tls/quic/frame/quic_frame_builder.hpp>
-#include <sdk/net/tls/quic/frame/quic_frames.hpp>
-#include <sdk/net/tls/quic/packet/quic_packet.hpp>
-#include <sdk/net/tls/quic/quic.hpp>
-#include <sdk/net/tls/quic/quic_encoded.hpp>
-
 /* server */
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_server.hpp>
@@ -142,5 +134,19 @@
 #include <sdk/net/tls/tls/extension/tls_extension_supported_versions.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_unknown.hpp>
 #include <sdk/net/tls/tls/extension/tls_extensions.hpp>
+
+/* QUIC */
+#include <sdk/net/tls/quic/quic.hpp>
+#include <sdk/net/tls/quic/quic_encoded.hpp>
+#include <sdk/net/tls/quic/types.hpp>
+
+/* QUIC packet */
+#include <sdk/net/tls/quic/packet/quic_packet.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_builder.hpp>
+
+/* QUIC frame */
+#include <sdk/net/tls/quic/frame/quic_frame.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_builder.hpp>
+#include <sdk/net/tls/quic/frame/quic_frames.hpp>
 
 #endif

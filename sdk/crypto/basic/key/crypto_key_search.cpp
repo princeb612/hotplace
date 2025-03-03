@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
+#include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
-#include <sdk/crypto/crypto_advisor.hpp>
 
 namespace hotplace {
 namespace crypto {

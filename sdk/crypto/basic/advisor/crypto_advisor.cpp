@@ -9,8 +9,8 @@
  */
 
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
-#include <sdk/crypto/crypto_advisor.hpp>
 
 namespace hotplace {
 namespace crypto {

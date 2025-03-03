@@ -14,12 +14,12 @@
 /* top-most */
 #include <sdk/base.hpp>
 #include <sdk/crypto/crypto.hpp>
-#include <sdk/crypto/crypto_advisor.hpp>
 #include <sdk/crypto/types.hpp>
 #include <sdk/io.hpp>
 
 /* basic */
 #include <sdk/crypto/basic/cipher_encrypt.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_aead.hpp>
 #include <sdk/crypto/basic/crypto_encrypt.hpp>
 #include <sdk/crypto/basic/crypto_hash.hpp>

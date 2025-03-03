@@ -635,83 +635,99 @@ class crypto_advisor {
 
     /* data structures for a binary search */
 
+    ///////////////////////////////////////////////////////////////////////////
+    // crypt
+    ///////////////////////////////////////////////////////////////////////////
     typedef std::map<uint32, const hint_blockcipher_t*> blockcipher_map_t; /* pair (alg, hint_blockcipher_t*) */
     typedef std::map<uint32, EVP_CIPHER*> cipher_map_t;                    /* pair (alg+mode, EVP_CIPHER*) */
     typedef std::map<uint32, const hint_cipher_t*> cipher_fetch_map_t;     /* pair (alg+mode, hint_cipher_t*) */
     typedef std::map<const EVP_CIPHER*, const hint_cipher_t*> evp_cipher_map_t;
-    typedef std::map<uint32, EVP_MD*> md_map_t; /* pair (alg+mode, EVP_MD*) */
-    typedef std::map<uint32, const hint_digest_t*> md_fetch_map_t;
-    typedef std::map<uint32, const hint_jose_encryption_t*> jose_encryption_map_t;
-    typedef std::map<uint32, const hint_signature_t*> signature_map_t;
-    typedef std::map<uint32, const hint_cose_algorithm_t*> cose_algorithm_map_t;
-    typedef std::multimap<uint32, const hint_signature_t*> jose_signature_bynid_map_t;
-    typedef std::map<std::string, const hint_jose_encryption_t*> jose_encryption_byname_map_t;
-    typedef std::map<std::string, const hint_signature_t*> signature_byname_map_t;
-    typedef std::map<std::string, const hint_cose_algorithm_t*> cose_algorithm_byname_map_t;
-    typedef std::map<std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
-    typedef std::map<uint32, const hint_curve_t*> jose_curve_bynid_map_t;
-    typedef std::map<cose_ec_curve_t, const hint_curve_t*> cose_curve_map_t;
-    typedef std::map<uint16, const hint_curve_t*> tls_group_map_t;
-    typedef std::map<std::string, const hint_curve_t*> curve_name_map_t;
-    typedef std::map<crypto_kty_t, cose_kty_t> kty2cose_map_t;
-    typedef std::map<cose_kty_t, crypto_kty_t> cose2kty_map_t;
-    typedef std::map<crypt_sig_t, jws_t> sig2jws_map_t;
-    typedef std::map<crypt_sig_t, cose_alg_t> sig2cose_map_t;
-    typedef std::map<cose_alg_t, crypt_sig_t> cose2sig_map_t;
-    typedef std::map<jws_t, crypt_sig_t> jws2sig_map_t;
-    typedef std::map<uint32, cose_ec_curve_t> nid2curve_map_t;
-    typedef std::map<cose_ec_curve_t, uint32> curve2nid_map_t;
-
     typedef std::map<std::string, const hint_cipher_t*> cipher_byname_map_t; /* "aes-256-cbc" to hint_cipher_t* */
-    typedef std::map<std::string, const hint_digest_t*> md_byname_map_t;     /* "sha256" to hint_digest_t* */
-
-    typedef std::map<crypto_kty_t, const hint_kty_name_t*> kty_name_t;
-
-    int _flag;
-
     blockcipher_map_t _blockcipher_map;
     cipher_map_t _cipher_map;
     cipher_fetch_map_t _cipher_fetch_map;
     evp_cipher_map_t _evp_cipher_map;
+    cipher_byname_map_t _cipher_byname_map;
+    ///////////////////////////////////////////////////////////////////////////
+    // digest
+    ///////////////////////////////////////////////////////////////////////////
+    typedef std::map<uint32, EVP_MD*> md_map_t; /* pair (alg+mode, EVP_MD*) */
+    typedef std::map<uint32, const hint_digest_t*> md_fetch_map_t;
+    typedef std::map<std::string, const hint_digest_t*> md_byname_map_t; /* "sha256" to hint_digest_t* */
     md_map_t _md_map;
     md_fetch_map_t _md_fetch_map;
-
-    jose_encryption_map_t _alg_map;
-    jose_encryption_map_t _enc_map;
-    signature_map_t _crypt_sig_map;
-    signature_map_t _jose_sig_map;
-    cose_algorithm_map_t _cose_alg_map;
-    jose_signature_bynid_map_t _sig_bynid_map;
-
-    jose_encryption_byname_map_t _alg_byname_map;
-    jose_encryption_byname_map_t _enc_byname_map;
-    signature_byname_map_t _sig_byname_map;
-    cose_algorithm_byname_map_t _cose_algorithm_byname_map;
-
-    jose_nid_bycurve_map_t _nid_bycurve_map;
-    jose_curve_bynid_map_t _curve_bynid_map;
-    cose_curve_map_t _cose_curve_map;
-    tls_group_map_t _tls_group_map;
+    md_byname_map_t _md_byname_map;
+    ///////////////////////////////////////////////////////////////////////////
+    // curve
+    ///////////////////////////////////////////////////////////////////////////
+    typedef std::map<std::string, const hint_curve_t*> curve_name_map_t;
+    typedef std::map<uint32, cose_ec_curve_t> nid2curve_map_t;
+    typedef std::map<cose_ec_curve_t, uint32> curve2nid_map_t;
     curve_name_map_t _curve_name_map;
-
-    kty2cose_map_t _kty2cose_map;
-    cose2kty_map_t _cose2kty_map;
-    sig2jws_map_t _sig2jws_map;
-    jws2sig_map_t _jws2sig_map;
-    sig2cose_map_t _sig2cose_map;
-    cose2sig_map_t _cose2sig_map;
     nid2curve_map_t _nid2curve_map;
     curve2nid_map_t _curve2nid_map;
-
-    cipher_byname_map_t _cipher_byname_map;
-    md_byname_map_t _md_byname_map;
-
+    ///////////////////////////////////////////////////////////////////////////
+    // sign
+    ///////////////////////////////////////////////////////////////////////////
+    typedef std::map<uint32, const hint_signature_t*> signature_map_t;
+    typedef std::map<std::string, const hint_signature_t*> signature_byname_map_t;
+    signature_map_t _crypt_sig_map;
+    signature_byname_map_t _sig_byname_map;
+    ///////////////////////////////////////////////////////////////////////////
+    // key
+    ///////////////////////////////////////////////////////////////////////////
+    typedef std::map<crypto_kty_t, const hint_kty_name_t*> kty_name_t;
     kty_name_t _kty_names;
-
+    ///////////////////////////////////////////////////////////////////////////
+    // JOSE
+    ///////////////////////////////////////////////////////////////////////////
+    typedef std::map<uint32, const hint_jose_encryption_t*> jose_encryption_map_t;
+    typedef std::multimap<uint32, const hint_signature_t*> jose_signature_bynid_map_t;
+    typedef std::map<std::string, const hint_jose_encryption_t*> jose_encryption_byname_map_t;
+    typedef std::map<std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
+    typedef std::map<uint32, const hint_curve_t*> jose_curve_bynid_map_t;
+    typedef std::map<crypt_sig_t, jws_t> sig2jws_map_t;
+    typedef std::map<jws_t, crypt_sig_t> jws2sig_map_t;
+    jose_encryption_map_t _alg_map;
+    jose_encryption_map_t _enc_map;
+    signature_map_t _jose_sig_map;
+    jose_signature_bynid_map_t _sig_bynid_map;
+    jose_encryption_byname_map_t _alg_byname_map;
+    jose_encryption_byname_map_t _enc_byname_map;
+    jose_nid_bycurve_map_t _nid_bycurve_map;
+    jose_curve_bynid_map_t _curve_bynid_map;
+    sig2jws_map_t _sig2jws_map;
+    jws2sig_map_t _jws2sig_map;
+    ///////////////////////////////////////////////////////////////////////////
+    // COSE
+    ///////////////////////////////////////////////////////////////////////////
+    typedef std::map<uint32, const hint_cose_algorithm_t*> cose_algorithm_map_t;
+    typedef std::map<cose_ec_curve_t, const hint_curve_t*> cose_curve_map_t;
+    typedef std::map<std::string, const hint_cose_algorithm_t*> cose_algorithm_byname_map_t;
+    typedef std::map<crypto_kty_t, cose_kty_t> kty2cose_map_t;
+    typedef std::map<cose_kty_t, crypto_kty_t> cose2kty_map_t;
+    typedef std::map<crypt_sig_t, cose_alg_t> sig2cose_map_t;
+    typedef std::map<cose_alg_t, crypt_sig_t> cose2sig_map_t;
+    cose_algorithm_map_t _cose_alg_map;
+    cose_curve_map_t _cose_curve_map;
+    cose_algorithm_byname_map_t _cose_algorithm_byname_map;
+    kty2cose_map_t _kty2cose_map;
+    cose2kty_map_t _cose2kty_map;
+    sig2cose_map_t _sig2cose_map;
+    cose2sig_map_t _cose2sig_map;
+    ///////////////////////////////////////////////////////////////////////////
+    // TLS
+    ///////////////////////////////////////////////////////////////////////////
+    typedef std::map<uint16, const hint_curve_t*> tls_group_map_t;
+    tls_group_map_t _tls_group_map;
+    ///////////////////////////////////////////////////////////////////////////
+    // etc
+    ///////////////////////////////////////////////////////////////////////////
     std::map<std::string, uint32> _features;
     std::map<std::string, uint32> _versions;
-
     std::map<uint8, binary_t> _cookie_secret;
+    ///////////////////////////////////////////////////////////////////////////
+    int _flag;
 
     critical_section _lock;
 };
@@ -721,29 +737,36 @@ typedef struct _openssl_evp_cipher_method_older_t {
     hint_cipher_t method;
 } openssl_evp_cipher_method_older_t;
 
+///////////////////////////////////////////////////////////////////////////
 extern const hint_cipher_t evp_cipher_methods[];
 extern const openssl_evp_cipher_method_older_t aes_wrap_methods[];
-extern const hint_digest_t evp_md_methods[];
 extern const hint_blockcipher_t hint_blockciphers[];
-extern const hint_curve_t hint_curves[];
-extern const hint_cose_group_t hint_cose_groups[];
-extern const hint_cose_algorithm_t hint_cose_algorithms[];
-extern const hint_jose_encryption_t hint_jose_algorithms[];
-extern const hint_jose_encryption_t hint_jose_encryptions[];
-extern const hint_kty_name_t hint_kty_names[];
-extern const hint_signature_t hint_signatures[];
-
 extern const size_t sizeof_evp_cipher_methods;
 extern const size_t sizeof_aes_wrap_methods;
-extern const size_t sizeof_evp_md_methods;
 extern const size_t sizeof_hint_blockciphers;
+///////////////////////////////////////////////////////////////////////////
+extern const hint_digest_t evp_md_methods[];
+extern const size_t sizeof_evp_md_methods;
+///////////////////////////////////////////////////////////////////////////
+extern const hint_curve_t hint_curves[];
 extern const size_t sizeof_hint_curves;
-extern const size_t sizeof_hint_cose_groups;
-extern const size_t sizeof_hint_cose_algorithms;
+///////////////////////////////////////////////////////////////////////////
+extern const hint_signature_t hint_signatures[];
+extern const size_t sizeof_hint_signatures;
+///////////////////////////////////////////////////////////////////////////
+extern const hint_kty_name_t hint_kty_names[];
+extern const size_t sizeof_hint_kty_names;
+///////////////////////////////////////////////////////////////////////////
+extern const hint_jose_encryption_t hint_jose_algorithms[];
+extern const hint_jose_encryption_t hint_jose_encryptions[];
 extern const size_t sizeof_hint_jose_algorithms;
 extern const size_t sizeof_hint_jose_encryptions;
-extern const size_t sizeof_hint_kty_names;
-extern const size_t sizeof_hint_signatures;
+///////////////////////////////////////////////////////////////////////////
+extern const hint_cose_group_t hint_cose_groups[];
+extern const hint_cose_algorithm_t hint_cose_algorithms[];
+extern const size_t sizeof_hint_cose_groups;
+extern const size_t sizeof_hint_cose_algorithms;
+///////////////////////////////////////////////////////////////////////////
 
 }  // namespace crypto
 }  // namespace hotplace

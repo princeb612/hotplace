@@ -10,6 +10,7 @@
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_aead.hpp>
 #include <sdk/crypto/basic/crypto_hash.hpp>
 #include <sdk/crypto/basic/crypto_hmac.hpp>
@@ -18,7 +19,6 @@
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/basic/transcript_hash.hpp>
-#include <sdk/crypto/crypto_advisor.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
