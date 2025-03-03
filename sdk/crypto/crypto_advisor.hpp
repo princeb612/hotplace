@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOADVISOR__
-#define __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOADVISOR__
+#ifndef __HOTPLACE_SDK_CRYPTO_CRYPTOADVISOR__
+#define __HOTPLACE_SDK_CRYPTO_CRYPTOADVISOR__
 
 #include <algorithm>
 #include <functional>
@@ -41,6 +41,10 @@ class crypto_advisor {
     static crypto_advisor* get_instance();
 
     ~crypto_advisor();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // crypt
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * @brief find blockcipher hint
@@ -99,6 +103,15 @@ class crypto_advisor {
      */
     const char* nameof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
     /**
+     * @brief   for_each
+     */
+    return_t cipher_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // digest
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
      * @brief find md method
      * @param hash_algorithm_t algorithm [in] hash_algorithm_t
      * @return EVP_MD*
@@ -111,8 +124,6 @@ class crypto_advisor {
     const EVP_MD* find_evp_md(const char* name);
     const hint_digest_t* hintof_digest(hash_algorithm_t algorithm);
     const hint_digest_t* hintof_digest(const char* name);
-    hash_algorithm_t get_algorithm(crypt_sig_t sig);
-    hash_algorithm_t get_algorithm(jws_t sig);
 
     /**
      * @brief find md string
@@ -126,8 +137,140 @@ class crypto_advisor {
      */
     const char* nameof_md(hash_algorithm_t algorithm);
 
-    return_t cipher_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
     return_t md_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // curve
+    ///////////////////////////////////////////////////////////////////////////
+    return_t curve_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
+    /**
+     * @brief hint
+     * @param uint32 nid [in] see ec_curve_t
+     *          NID_X9_62_prime256v1, NID_secp384r1, NID_secp521r1, NID_ED25519, NID_ED448, NID_X25519, NID_X448
+     * @return const hint_curve_t*
+     * @sa hintof_curve
+     */
+    const hint_curve_t* hintof_curve_nid(uint32 nid);
+
+    /**
+     * @brief hint
+     * @param const char* name [in]
+     */
+    const hint_curve_t* hintof_curve_name(const char* name);
+    /**
+     * @brief hint
+     * @param const char* curve [in]
+     *          "P-256" series, "Ed25519", "Ed448", "X25519", "X448"
+     * @return const hint_curve_t*
+     * @sa hintof_curve_nid
+     */
+    const hint_curve_t* hintof_curve(const char* curve);
+    /*
+     * @brief   hint
+     * @return  return nullptr if pkey is not EC_KEY
+     */
+    const hint_curve_t* hintof_curve_eckey(const EVP_PKEY* pkey);
+    /**
+     * @brief nid
+     * @param const char* curve [in] P-256, P-384, P521, Ed25519, Ed448, X25519, X448
+     * @param uint32& nid [out]
+     *    415 : NID_X9_62_prime256v1 (prime256v1)
+     *    715 : NID_secp384r1 (secp384r1)
+     *    716 : NID_secp521r1 (secp521r1)
+     *    1034: NID_X25519
+     *    1035: NID_X448
+     *    1087: NID_ED25519
+     *    1088: NID_ED448
+     * @return error code (see error.hpp)
+     * @remarks
+     *      if following method needed, use nidof_evp_pkey
+     *      >> return_t nidof_ec_curve (EVP_PKEY* pkey, uint32& nid);
+     */
+    return_t nidof_ec_curve(const char* curve, uint32& nid);
+
+    /**
+     * @brief kty
+     * @param const char* curve [in] P-256, P-384, P521, Ed25519, Ed448, X25519, X448
+     * @param uint32& kty [out]
+     * @return error code (see error.hpp)
+     * @remarks
+     *          --------------------------------+----------------
+     *          P-256, P-384, P521              | crypto_kty_t::kty_ec
+     *          Ed25519, Ed448, X25519, X448    | crypto_kty_t::kty_okp
+     *          --------------------------------+----------------
+     */
+    return_t ktyof_ec_curve(const char* curve, uint32& kty);
+    /**
+     * @brief kty
+     * @param const EVP_PKEY* pkey [in]
+     * @param std::string& kty [out]
+     *          oct
+     *          RSA
+     *          EC
+     *          OKP
+     * @return error code (see error.hpp)
+     */
+    return_t ktyof_ec_curve(const EVP_PKEY* pkey, std::string& kty);
+    /**
+     * @brief kty
+     * @param const EVP_PKEY* pkey [in]
+     * @param crypto_kty_t& kty [out] crypto_kty_t::kty_oct, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_okp
+     * @return error code (see error.hpp)
+     */
+    return_t ktyof_ec_curve(const EVP_PKEY* pkey, crypto_kty_t& kty);
+    /**
+     * @brief "alg" from key
+     * @param const EVP_PKEY* pkey [in]
+     * @param std::string& curve_name [out]
+     *          "P-256", "P384", "P-521", "Ed25519", "Ed448", "X25519", "X448"
+     * @return error code (see error.hpp)
+     * @example
+     *          if (kindof_ecc (pkey)) {
+     *              advisor->nameof_ec_curve (pkey, curve_name);
+     *          }
+     */
+    return_t nameof_ec_curve(const EVP_PKEY* pkey, std::string& curve_name);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // sign
+    ///////////////////////////////////////////////////////////////////////////
+    hash_algorithm_t get_algorithm(crypt_sig_t sig);
+    hash_algorithm_t get_algorithm(jws_t sig);
+
+    /**
+     * @brief hint
+     * @param crypt_sig_t sig [in]
+     *          crypt_sig_t::hs256 series, crypt_sig_t::rs256 series, crypt_sig_t::es256 series, crypt_sig_t::ps256 series, crypt_sig_t::eddsa
+     * @return const hint_signature_t*
+     */
+    const hint_signature_t* hintof_signature(crypt_sig_t sig);
+    /**
+     * @brief kind of
+     * @param const EVP_PKEY* pkey [in]
+     * @param crypt_sig_t sig [in]
+     * @return true if match, false if not
+     */
+    bool is_kindof(const EVP_PKEY* pkey, crypt_sig_t sig);
+
+    uint16 sizeof_ecdsa(hash_algorithm_t alg);
+    uint16 sizeof_ecdsa(crypt_sig_t sig);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // key
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * @brief   kty
+     * @param   crypto_kty_t kty [in]
+     * @param   std::string& name [out]
+     */
+    return_t nameof_kty(crypto_kty_t kty, std::string& name);
+    const char* nameof_kty(crypto_kty_t kty);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // JOSE
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * @brief   iteration helper methods  - algoritm encrypton signature
      * @example
@@ -146,8 +289,6 @@ class crypto_advisor {
     return_t jose_for_each_algorithm(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user);
     return_t jose_for_each_encryption(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user);
     return_t jose_for_each_signature(std::function<void(const hint_signature_t*, void*)> f, void* user);
-    return_t cose_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
-    return_t curve_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
 
     /**
      * @brief hint
@@ -171,44 +312,11 @@ class crypto_advisor {
     const hint_jose_encryption_t* hintof_jose_encryption(jwe_t enc);
     /**
      * @brief hint
-     * @param crypt_sig_t sig [in]
-     *          crypt_sig_t::hs256 series, crypt_sig_t::rs256 series, crypt_sig_t::es256 series, crypt_sig_t::ps256 series, crypt_sig_t::eddsa
-     * @return const hint_signature_t*
-     */
-    const hint_signature_t* hintof_signature(crypt_sig_t sig);
-    /**
-     * @brief hint
      * @param jws_t sig [in]
      *          jws_t::jws_hs256 series, jws_t::jws_rs256 series, jws_t::jws_es256 series, jws_t::jws_ps256 series, jws_t::jws_eddsa
      * @return const hint_signature_t*
      */
     const hint_signature_t* hintof_jose_signature(jws_t sig);
-    /**
-     * @brief hint
-     * @param cose_alg_t sig [in]
-     * @return const hint_cose_algorithm_t*
-     */
-    const hint_cose_algorithm_t* hintof_cose_algorithm(cose_alg_t alg);
-    /**
-     * @brief hint
-     * @param uint32 nid [in] see ec_curve_t
-     *          NID_X9_62_prime256v1, NID_secp384r1, NID_secp521r1, NID_ED25519, NID_ED448, NID_X25519, NID_X448
-     * @return const hint_curve_t*
-     * @sa hintof_curve
-     */
-    const hint_curve_t* hintof_curve_nid(uint32 nid);
-    const hint_curve_t* hintof_curve(cose_ec_curve_t curve);
-    /**
-     * @brief hint
-     * @param uint16 group [in] TLS supported group
-     * @return const hint_curve_t*
-     */
-    const hint_curve_t* hintof_tls_group(uint16 group);
-    /**
-     * @brief hint
-     * @param const char* name [in]
-     */
-    const hint_curve_t* hintof_curve_name(const char* name);
     /**
      * @brief hint
      * @param const char* alg [in]
@@ -234,26 +342,6 @@ class crypto_advisor {
      * @return const hint_signature_t*
      */
     const hint_signature_t* hintof_jose_signature(const char* sig);
-    /**
-     * @brief hint
-     * @param const char* alg [in]
-     * @return const hint_cose_algorithm_t*
-     */
-    const hint_cose_algorithm_t* hintof_cose_algorithm(const char* alg);
-    /**
-     * @brief hint
-     * @param const char* curve [in]
-     *          "P-256" series, "Ed25519", "Ed448", "X25519", "X448"
-     * @return const hint_curve_t*
-     * @sa hintof_curve_nid
-     */
-    const hint_curve_t* hintof_curve(const char* curve);
-    /*
-     * @brief   hint
-     * @return  return nullptr if pkey is not EC_KEY
-     */
-    const hint_curve_t* hintof_curve_eckey(const EVP_PKEY* pkey);
-
     /**
      * @brief JWA
      * @param jwa_t alg [in]
@@ -308,11 +396,6 @@ class crypto_advisor {
      *          EdDSA
      */
     const char* nameof_jose_signature(jws_t sig);
-    /**
-     * @brief COSE (name decribed in RFC)
-     */
-    const char* nameof_cose_algorithm(cose_alg_t alg);
-
     /**
      * @brief type
      * @param const char* alg [in]
@@ -376,68 +459,6 @@ class crypto_advisor {
      *          --------------------+-----------
      */
     return_t typeof_jose_signature(const char* sig, jws_t& type);
-
-    /**
-     * @brief nid
-     * @param const char* curve [in] P-256, P-384, P521, Ed25519, Ed448, X25519, X448
-     * @param uint32& nid [out]
-     *    415 : NID_X9_62_prime256v1 (prime256v1)
-     *    715 : NID_secp384r1 (secp384r1)
-     *    716 : NID_secp521r1 (secp521r1)
-     *    1034: NID_X25519
-     *    1035: NID_X448
-     *    1087: NID_ED25519
-     *    1088: NID_ED448
-     * @return error code (see error.hpp)
-     * @remarks
-     *      if following method needed, use nidof_evp_pkey
-     *      >> return_t nidof_ec_curve (EVP_PKEY* pkey, uint32& nid);
-     */
-    return_t nidof_ec_curve(const char* curve, uint32& nid);
-
-    /**
-     * @brief kty
-     * @param const char* curve [in] P-256, P-384, P521, Ed25519, Ed448, X25519, X448
-     * @param uint32& kty [out]
-     * @return error code (see error.hpp)
-     * @remarks
-     *          --------------------------------+----------------
-     *          P-256, P-384, P521              | crypto_kty_t::kty_ec
-     *          Ed25519, Ed448, X25519, X448    | crypto_kty_t::kty_okp
-     *          --------------------------------+----------------
-     */
-    return_t ktyof_ec_curve(const char* curve, uint32& kty);
-    /**
-     * @brief kty
-     * @param const EVP_PKEY* pkey [in]
-     * @param std::string& kty [out]
-     *          oct
-     *          RSA
-     *          EC
-     *          OKP
-     * @return error code (see error.hpp)
-     */
-    return_t ktyof_ec_curve(const EVP_PKEY* pkey, std::string& kty);
-    /**
-     * @brief kty
-     * @param const EVP_PKEY* pkey [in]
-     * @param crypto_kty_t& kty [out] crypto_kty_t::kty_oct, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_okp
-     * @return error code (see error.hpp)
-     */
-    return_t ktyof_ec_curve(const EVP_PKEY* pkey, crypto_kty_t& kty);
-    /**
-     * @brief "alg" from key
-     * @param const EVP_PKEY* pkey [in]
-     * @param std::string& curve_name [out]
-     *          "P-256", "P384", "P-521", "Ed25519", "Ed448", "X25519", "X448"
-     * @return error code (see error.hpp)
-     * @example
-     *          if (kindof_ecc (pkey)) {
-     *              advisor->nameof_ec_curve (pkey, curve_name);
-     *          }
-     */
-    return_t nameof_ec_curve(const EVP_PKEY* pkey, std::string& curve_name);
-
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
@@ -448,13 +469,6 @@ class crypto_advisor {
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
-     * @param crypt_sig_t sig [in]
-     * @return true if match, false if not
-     */
-    bool is_kindof(const EVP_PKEY* pkey, crypt_sig_t sig);
-    /**
-     * @brief kind of
-     * @param const EVP_PKEY* pkey [in]
      * @param jws_t sig [in]
      * @return true if match, false if not
      */
@@ -462,34 +476,68 @@ class crypto_advisor {
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
-     * @param cose_alg_t alg [in]
-     * @return true if match, false if not
-     */
-    bool is_kindof(const EVP_PKEY* pkey, cose_alg_t alg);
-    /**
-     * @brief kind of
-     * @param const EVP_PKEY* pkey [in]
-     * @param const char* alg [in] signature algorithms
+     * @param const char* alg [in] JOSE algorithm/signature
      * @return true if match, false if not
      */
     bool is_kindof(const EVP_PKEY* pkey, const char* alg);
 
+    jws_t sigof(crypt_sig_t sig);
+
+    crypt_sig_t sigof(jws_t sig);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // COSE
+    ///////////////////////////////////////////////////////////////////////////
+    return_t cose_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
+    /**
+     * @brief hint
+     * @param cose_alg_t sig [in]
+     * @return const hint_cose_algorithm_t*
+     */
+    const hint_cose_algorithm_t* hintof_cose_algorithm(cose_alg_t alg);
+    /**
+     * @brief hint
+     * @param const char* alg [in]
+     * @return const hint_cose_algorithm_t*
+     */
+    const hint_cose_algorithm_t* hintof_cose_algorithm(const char* alg);
+
+    const hint_curve_t* hintof_curve(cose_ec_curve_t curve);
+
+    /**
+     * @brief COSE (name decribed in RFC)
+     */
+    const char* nameof_cose_algorithm(cose_alg_t alg);
+    /**
+     * @brief kind of
+     * @param const EVP_PKEY* pkey [in]
+     * @param cose_alg_t alg [in]
+     * @return true if match, false if not
+     */
+    bool is_kindof(const EVP_PKEY* pkey, cose_alg_t alg);
+
     cose_kty_t ktyof(crypto_kty_t kty);
     crypto_kty_t ktyof(cose_kty_t kty);
-    jws_t sigof(crypt_sig_t sig);
+
     crypt_category_t categoryof(cose_alg_t alg);
     crypt_sig_t sigof(cose_alg_t sig);
-    crypt_sig_t sigof(jws_t sig);
+
     cose_ec_curve_t curveof(uint32 nid);
     uint32 curveof(cose_ec_curve_t curve);
 
+    ///////////////////////////////////////////////////////////////////////////
+    // TLS
+    ///////////////////////////////////////////////////////////////////////////
     /**
-     * @brief   kty
-     * @param   crypto_kty_t kty [in]
-     * @param   std::string& name [out]
+     * @brief hint
+     * @param uint16 group [in] TLS supported group
+     * @return const hint_curve_t*
      */
-    return_t nameof_kty(crypto_kty_t kty, std::string& name);
-    const char* nameof_kty(crypto_kty_t kty);
+    const hint_curve_t* hintof_tls_group(uint16 group);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // etc
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * query_feature("scrypt")
@@ -574,9 +622,6 @@ class crypto_advisor {
      *          advisor->get_cookie_secret(0, 16, secret); // read generated secret, secret_size ignored
      */
     void get_cookie_secret(uint8 key, size_t secret_size, binary_t& secret);
-
-    uint16 sizeof_ecdsa(hash_algorithm_t alg);
-    uint16 sizeof_ecdsa(crypt_sig_t sig);
 
    protected:
     return_t load();

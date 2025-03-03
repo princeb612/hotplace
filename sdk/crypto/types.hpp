@@ -23,43 +23,9 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
-enum crypt_poweredby_t {
-    openssl = 1,
-};
-
-enum keyexchange_t {
-    keyexchange_null = 0,
-    keyexchange_rsa = 1,           // Rivest Shamir Adleman algorithm (RSA)
-    keyexchange_dh = 2,            // Diffie-Hellman (DH)
-    keyexchange_dhe = 3,           // Diffie-Hellman Ephemeral (DHE)
-    keyexchange_krb5 = 4,          // Kerberos 5 (KRB5)
-    keyexchange_psk = 5,           // Pre-Shared Key (PSK)
-    keyexchange_ecdh = 6,          // Elliptic Curve Diffie-Hellman (ECDH)
-    keyexchange_ecdhe = 7,         // Elliptic Curve Diffie-Hellman Ephemeral (ECDHE)
-    keyexchange_srp = 8,           // Secure Remote Password (SRP)
-    keyexchange_eccpwd = 9,        // ECCPWD
-    keyexchange_gost = 10,         // Russian cryptographic standard algorithms
-    keyexchange_rsa_export = 11,   // TLS 1.0
-    keyexchange_dss_export = 12,   // TLS 1.0
-    keyexchange_anon_export = 13,  // TLS 1.0
-    keyexchange_krb5_export = 14,  // TLS 1.0
-};
-
-enum auth_t {
-    auth_null = 0,
-    auth_dss = 1,       // Digital Signature Standard (DSS)
-    auth_rsa = 2,       // Rivest Shamir Adleman algorithm (RSA)
-    auth_anon = 3,      // Anonymous (anon)
-    auth_krb5 = 4,      // Kerberos 5 (KRB5)
-    auth_psk = 5,       // Pre-Shared Key (PSK)
-    auth_ecdsa = 6,     // Elliptic Curve Digital Signature Algorithm (ECDSA)
-    auth_sha1 = 7,      // Secure Hash Algorithm 1 with Rivest Shamir Adleman algorithm (SHA RSA)
-    auth_sha2_256 = 8,  // SHA256
-    auth_sha2_384 = 9,  // SHA384
-    auth_eccpwd = 10,   // ECCPWD
-    auth_gost = 11,     // GOST R 34.10-2012 Digital Signature Algorithm (GOSTR341012)
-};
-
+///////////////////////////////////////////////////////////////////////////
+// crypt
+///////////////////////////////////////////////////////////////////////////
 /**
  * RFC 2144 The CAST-128 Encryption Algorithm (May 1997)
  * RFC 2612 The CAST-256 Encryption Algorithm (June 1999)
@@ -160,6 +126,24 @@ enum crypt_mode_t {
     mode_poly1305 = mode_aead,
 };
 
+enum crypt_enc_t {
+    crypt_enc_undefined = 0,
+    rsa_1_5 = 1,
+    rsa_oaep = 2,
+    rsa_oaep256 = 3,
+    rsa_oaep384 = 4,
+    rsa_oaep512 = 5,
+
+    /* Integrated Encryption Scheme (IES) - not supported yet */
+    ecies = 6,  // Elliptic Curve Integrated Encryption Scheme
+    dlies = 7,  // Discrete Logarithm Integrated Encryption Scheme
+
+    dhies = 8,  // DHIES
+};
+
+///////////////////////////////////////////////////////////////////////////
+// digest
+///////////////////////////////////////////////////////////////////////////
 enum hash_algorithm_t {
     hash_alg_unknown = 0,
 
@@ -192,21 +176,57 @@ enum hash_algorithm_t {
     sha2_512_256 = 19,
 };
 
-enum crypt_enc_t {
-    crypt_enc_undefined = 0,
-    rsa_1_5 = 1,
-    rsa_oaep = 2,
-    rsa_oaep256 = 3,
-    rsa_oaep384 = 4,
-    rsa_oaep512 = 5,
-
-    /* Integrated Encryption Scheme (IES) - not supported yet */
-    ecies = 6,  // Elliptic Curve Integrated Encryption Scheme
-    dlies = 7,  // Discrete Logarithm Integrated Encryption Scheme
-
-    dhies = 8,  // DHIES
+///////////////////////////////////////////////////////////////////////////
+// sign
+///////////////////////////////////////////////////////////////////////////
+enum crypt_sig_type_t : uint8 {
+    crypt_sig_unknown = 255,
+    crypt_sig_dgst = 0,           //
+    crypt_sig_hmac = 1,           // HMAC (kty_oct)
+    crypt_sig_rsassa_pkcs15 = 2,  // PKCS#1 Ver1.5 (kty_rsa)
+    crypt_sig_ecdsa = 3,          // Elliptic Curve Digital Signature Algorithm (ECDSA)
+    crypt_sig_rsassa_pss = 4,     // PKCS#1 RSASSA-PSS (kty_rsa, kty_rsapss)
+    crypt_sig_eddsa = 5,          // Edwards-Curve Digital Signature Algorithms (EdDSAs)
+    crypt_sig_dsa = 6,            // DSA
+    crypt_sig_rsassa_x931 = 7,    // FIPS186-3, X9.31
 };
 
+enum crypt_sig_t : uint16 {
+    sig_unknown = 0,
+
+    sig_hs256 = 1,
+    sig_hs384 = 2,
+    sig_hs512 = 3,
+
+    sig_rs256 = 4,
+    sig_rs384 = 5,
+    sig_rs512 = 6,
+    sig_rs1 = 7,
+
+    sig_es256 = 9,
+    sig_es384 = 10,
+    sig_es512 = 11,
+
+    sig_ps256 = 12,
+    sig_ps384 = 13,
+    sig_ps512 = 14,
+
+    sig_eddsa = 15,
+
+    sig_sha1 = 16,
+    sig_sha224 = 23,
+    sig_sha256 = 17,
+    sig_sha384 = 18,
+    sig_sha512 = 19,
+    sig_shake128 = 20,
+    sig_shake256 = 21,
+
+    sig_es256k = 22,
+};
+
+///////////////////////////////////////////////////////////////////////////
+// curve
+///////////////////////////////////////////////////////////////////////////
 /**
  * @brief   Elliptic Curve (use openssl nid definition for convenience)
  * @sa      crypto_key
@@ -255,64 +275,66 @@ enum ec_curve_t : uint32 {
     ec_brainpoolP512t1 = 934,  // brainpoolP512t1, NID_brainpoolP512t1
 };
 
-/* nid (use openssl nid definition for convenience) */
-enum nid_t : uint32 {
-    nid_oct = 855,         // EVP_PKEY_HMAC, NID_hmac
-    nid_rsa = 6,           // EVP_PKEY_RSA, NID_rsaEncryption
-    nid_rsa2 = 19,         // EVP_PKEY_RSA2, NID_rsa
-    nid_rsapss = 912,      // EVP_PKEY_RSA_PSS, NID_rsassaPss
-    nid_ffdhe2048 = 1126,  // NID_ffdhe2048
-    nid_ffdhe3072 = 1127,  // NID_ffdhe3072
-    nid_ffdhe4096 = 1128,  // NID_ffdhe4096
-    nid_ffdhe6144 = 1129,  // NID_ffdhe6144
-    nid_ffdhe8192 = 1130,  // NID_ffdhe8192
-    nid_dh = 28,           // NID_dhKeyAgreement (EVP_PKEY_DH)
-    nid_dsa = 116,         // NID_dsa
+///////////////////////////////////////////////////////////////////////////
+// key
+///////////////////////////////////////////////////////////////////////////
+/**
+ * @brief get key
+ * @sa crypto_key::get_key
+ * @remarks
+ * if there are both public_key | asn1public_key in the flag, asn1public_key has higher priority.
+ * | key type   | public_key               | asn1public_key | private_key  |
+ * | kty_oct    | N/A                      | N/A            | item_hmac_k  |
+ * | kty_okp    | item_ec_x                | item_asn1der   | item_ec_d    |
+ * | kty_ec     | item_ec_pub_uncompressed | item_asn1der   | item_ec_d    |
+ * | kty_rsa    | N/A                      | item_asn1der   | item_rsa_d   |
+ * | kty_rsapss | N/A                      | item_asn1der   | item_rsa_d   |
+ * | kty_dh     | item_dh_pub              | item_asn1der   | item_dh_priv |
+ * | kty_dsa    | N/A                      | item_asn1der   | item_dsa_x   |
+ */
+enum crypt_access_t {
+    public_key = (1 << 0),      // simple and common representation
+    private_key = (1 << 1),     //
+    asn1public_key = (1 << 2),  // ASN.1 DER representation
 };
 
-enum crypt_sig_type_t : uint8 {
-    crypt_sig_unknown = 255,
-    crypt_sig_dgst = 0,           //
-    crypt_sig_hmac = 1,           // HMAC (kty_oct)
-    crypt_sig_rsassa_pkcs15 = 2,  // PKCS#1 Ver1.5 (kty_rsa)
-    crypt_sig_ecdsa = 3,          // Elliptic Curve Digital Signature Algorithm (ECDSA)
-    crypt_sig_rsassa_pss = 4,     // PKCS#1 RSASSA-PSS (kty_rsa, kty_rsapss)
-    crypt_sig_eddsa = 5,          // Edwards-Curve Digital Signature Algorithms (EdDSAs)
-    crypt_sig_dsa = 6,            // DSA
-    crypt_sig_rsassa_x931 = 7,    // FIPS186-3, X9.31
+enum crypto_kty_t : uint16 {
+    kty_unknown = 0,
+    kty_hmac = 1,        // NID_hmac
+    kty_oct = kty_hmac,  // NID_hmac (synomym)
+    kty_rsa = 2,         // NID_rsaEncryption, NID_rsa
+    kty_ec = 3,          // NID_X9_62_prime256v1, NID_secp384r1, NID_secp521r1
+    kty_okp = 4,         // NID_X25519, NID_X448, NID_ED25519, NID_ED448
+    kty_dh = 5,          // NID_dhKeyAgreement
+    kty_rsapss = 6,      // NID_rsassaPss
+    kty_dsa = 7,         // NID_dsa
+    kty_bad = 0xffff,
 };
 
-enum crypt_sig_t : uint16 {
-    sig_unknown = 0,
+/**
+ * @desc    JOSE "use", COSE key operation
+ *          JOSE use - enc, sig
+ *          COSE keyop - sign, verify, ...
+ */
+enum crypto_use_t : uint16 {
+    use_unknown = 0,
 
-    sig_hs256 = 1,
-    sig_hs384 = 2,
-    sig_hs512 = 3,
+    // JOSE
+    use_enc = 1 << 0,
+    use_sig = 1 << 1,
 
-    sig_rs256 = 4,
-    sig_rs384 = 5,
-    sig_rs512 = 6,
-    sig_rs1 = 7,
-
-    sig_es256 = 9,
-    sig_es384 = 10,
-    sig_es512 = 11,
-
-    sig_ps256 = 12,
-    sig_ps384 = 13,
-    sig_ps512 = 14,
-
-    sig_eddsa = 15,
-
-    sig_sha1 = 16,
-    sig_sha224 = 23,
-    sig_sha256 = 17,
-    sig_sha384 = 18,
-    sig_sha512 = 19,
-    sig_shake128 = 20,
-    sig_shake256 = 21,
-
-    sig_es256k = 22,
+    // COSE
+    use_sign = 1 << 2,
+    use_verify = 1 << 3,
+    use_encrypt = 1 << 4,
+    use_decrypt = 1 << 5,
+    use_wrap = 1 << 6,
+    use_unwrap = 1 << 7,
+    use_derive_key = 1 << 8,
+    use_derive_bits = 1 << 9,
+    use_mac_create = 1 << 10,
+    use_mac_verify = 1 << 11,
+    use_any = (0xffff),
 };
 
 enum crypt_item_t : uint16 {
@@ -384,65 +406,48 @@ enum crypt_item_t : uint16 {
     item_p2c = 257,  // PBES2 count (int32)
 };
 
-/**
- * @brief get key
- * @sa crypto_key::get_key
- * @remarks
- * if there are both public_key | asn1public_key in the flag, asn1public_key has higher priority.
- * | key type   | public_key               | asn1public_key | private_key  |
- * | kty_oct    | N/A                      | N/A            | item_hmac_k  |
- * | kty_okp    | item_ec_x                | item_asn1der   | item_ec_d    |
- * | kty_ec     | item_ec_pub_uncompressed | item_asn1der   | item_ec_d    |
- * | kty_rsa    | N/A                      | item_asn1der   | item_rsa_d   |
- * | kty_rsapss | N/A                      | item_asn1der   | item_rsa_d   |
- * | kty_dh     | item_dh_pub              | item_asn1der   | item_dh_priv |
- * | kty_dsa    | N/A                      | item_asn1der   | item_dsa_x   |
- */
-enum crypt_access_t {
-    public_key = (1 << 0),      // simple and common representation
-    private_key = (1 << 1),     //
-    asn1public_key = (1 << 2),  // ASN.1 DER representation
+///////////////////////////////////////////////////////////////////////////
+// TLS
+///////////////////////////////////////////////////////////////////////////
+
+// TLS key exchange
+enum keyexchange_t {
+    keyexchange_null = 0,
+    keyexchange_rsa = 1,           // Rivest Shamir Adleman algorithm (RSA)
+    keyexchange_dh = 2,            // Diffie-Hellman (DH)
+    keyexchange_dhe = 3,           // Diffie-Hellman Ephemeral (DHE)
+    keyexchange_krb5 = 4,          // Kerberos 5 (KRB5)
+    keyexchange_psk = 5,           // Pre-Shared Key (PSK)
+    keyexchange_ecdh = 6,          // Elliptic Curve Diffie-Hellman (ECDH)
+    keyexchange_ecdhe = 7,         // Elliptic Curve Diffie-Hellman Ephemeral (ECDHE)
+    keyexchange_srp = 8,           // Secure Remote Password (SRP)
+    keyexchange_eccpwd = 9,        // ECCPWD
+    keyexchange_gost = 10,         // Russian cryptographic standard algorithms
+    keyexchange_rsa_export = 11,   // TLS 1.0
+    keyexchange_dss_export = 12,   // TLS 1.0
+    keyexchange_anon_export = 13,  // TLS 1.0
+    keyexchange_krb5_export = 14,  // TLS 1.0
 };
 
-enum crypto_kty_t : uint16 {
-    kty_unknown = 0,
-    kty_hmac = 1,        // NID_hmac
-    kty_oct = kty_hmac,  // NID_hmac (synomym)
-    kty_rsa = 2,         // NID_rsaEncryption, NID_rsa
-    kty_ec = 3,          // NID_X9_62_prime256v1, NID_secp384r1, NID_secp521r1
-    kty_okp = 4,         // NID_X25519, NID_X448, NID_ED25519, NID_ED448
-    kty_dh = 5,          // NID_dhKeyAgreement
-    kty_rsapss = 6,      // NID_rsassaPss
-    kty_dsa = 7,         // NID_dsa
-    kty_bad = 0xffff,
+// TLS authentication
+enum auth_t {
+    auth_null = 0,
+    auth_dss = 1,       // Digital Signature Standard (DSS)
+    auth_rsa = 2,       // Rivest Shamir Adleman algorithm (RSA)
+    auth_anon = 3,      // Anonymous (anon)
+    auth_krb5 = 4,      // Kerberos 5 (KRB5)
+    auth_psk = 5,       // Pre-Shared Key (PSK)
+    auth_ecdsa = 6,     // Elliptic Curve Digital Signature Algorithm (ECDSA)
+    auth_sha1 = 7,      // Secure Hash Algorithm 1 with Rivest Shamir Adleman algorithm (SHA RSA)
+    auth_sha2_256 = 8,  // SHA256
+    auth_sha2_384 = 9,  // SHA384
+    auth_eccpwd = 10,   // ECCPWD
+    auth_gost = 11,     // GOST R 34.10-2012 Digital Signature Algorithm (GOSTR341012)
 };
 
-/**
- * @desc    JOSE "use", COSE key operation
- *          JOSE use - enc, sig
- *          COSE keyop - sign, verify, ...
- */
-enum crypto_use_t : uint16 {
-    use_unknown = 0,
-
-    // JOSE
-    use_enc = 1 << 0,
-    use_sig = 1 << 1,
-
-    // COSE
-    use_sign = 1 << 2,
-    use_verify = 1 << 3,
-    use_encrypt = 1 << 4,
-    use_decrypt = 1 << 5,
-    use_wrap = 1 << 6,
-    use_unwrap = 1 << 7,
-    use_derive_key = 1 << 8,
-    use_derive_bits = 1 << 9,
-    use_mac_create = 1 << 10,
-    use_mac_verify = 1 << 11,
-    use_any = (0xffff),
-};
-
+///////////////////////////////////////////////////////////////////////////
+// JOSE
+///////////////////////////////////////////////////////////////////////////
 enum jwa_group_t {
     jwa_group_rsa = 1,
     jwa_group_aeskw = 2,
@@ -526,6 +531,9 @@ enum jws_t {
     jws_eddsa = 13,
 };
 
+///////////////////////////////////////////////////////////////////////////
+// COSE
+///////////////////////////////////////////////////////////////////////////
 enum cose_key_t {
     cose_key_unknown = 0,
     // RFC 8152 Table 2: Common Header Parameters
@@ -829,6 +837,9 @@ enum cose_alg_t {
     cose_rsaoaep256 = -41,  // "RSA-OAEP-256"
     cose_rsaoaep512 = -42,  // "RSA-OAEP-512"
 
+    // HSS-LMS
+    cose_hss_lms = -46,
+
     // RFC 8812 Table 2: ECDSA Algorithm Values
     cose_es256k = -47,  // "ES256K"
 
@@ -837,6 +848,14 @@ enum cose_alg_t {
     cose_rs384 = -258,  // "RS384"
     cose_rs512 = -259,  // "RS512"
     cose_rs1 = -65535,  // "RS1", deprecated RFC 8812 5.3.
+
+    // RFC 9459 CBOR Object Signing and Encryption (COSE): AES-CTR and AES-CBC
+    cose_aes128ctr = -65534,  // RFC 9459 4.2 deprecated
+    cose_aes192ctr = -65533,  // RFC 9459 4.2 deprecated
+    cose_aes256ctr = -65532,  // RFC 9459 4.2 deprecated
+    cose_aes128ccb = -65531,  // RFC 9459 5.2 deprecated
+    cose_aes192ccb = -65530,  // RFC 9459 5.2 deprecated
+    cose_aes256ccb = -65529,  // RFC 9459 5.2 deprecated
 
     // RFC 8152 Table 9: Algorithm Value for AES-GCM
     // RFC 9053 Table 5: Algorithm Values for AES-GCM
@@ -877,6 +896,29 @@ enum cose_alg_t {
     cose_iv_generation = 34,  // "IV-GENERATION"
 };
 
+enum cose_hint_flag_t {
+    cose_hint_sign = 1 << 0,
+    cose_hint_enc = 1 << 1,
+    cose_hint_mac = 1 << 2,
+    cose_hint_hash = 1 << 3,
+    cose_hint_agree = 1 << 4,
+    cose_hint_iv = 1 << 5,
+    cose_hint_salt = 1 << 6,
+    cose_hint_party = 1 << 7,
+    cose_hint_kek = 1 << 8,
+    cose_hint_epk = 1 << 9,
+    cose_hint_static_key = 1 << 10,
+    cose_hint_static_kid = 1 << 11,
+    cose_hint_kty_ec = 1 << 12,
+    cose_hint_kty_okp = 1 << 13,
+    cose_hint_kty_rsa = 1 << 14,
+    cose_hint_kty_oct = 1 << 15,
+    cose_hint_not_supported = 1 << 16,
+};
+
+///////////////////////////////////////////////////////////////////////////
+// crypt
+///////////////////////////////////////////////////////////////////////////
 typedef struct _hint_blockcipher_t {
     crypt_algorithm_t algorithm;
     uint16 keysize;    // size of key
@@ -900,6 +942,12 @@ crypt_algorithm_t typeof_alg(const hint_cipher_t* hint);
 crypt_mode_t typeof_mode(const hint_cipher_t* hint);
 const char* nameof_alg(const hint_cipher_t* hint);
 
+struct _crypt_context_t {};
+typedef struct _crypt_context_t crypt_context_t;
+
+///////////////////////////////////////////////////////////////////////////
+// digest, MAC
+///////////////////////////////////////////////////////////////////////////
 typedef struct _hint_digest_t {
     hash_algorithm_t algorithm;
     const char* fetchname;
@@ -910,71 +958,36 @@ hash_algorithm_t typeof_alg(const hint_digest_t* hint);
 const char* nameof_alg(const hint_digest_t* hint);
 uint16 sizeof_digest(const hint_digest_t* hint);
 
-typedef struct _hint_jose_encryption_t {
-    const char* alg_name;
+struct _hash_context_t {};
+typedef struct _hash_context_t hash_context_t;
 
-    int type;          // jwa_t, jwe_t
-    int group;         // jwa_group_t, jwe_group_t
-    crypto_kty_t kty;  // crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_oct
-    crypto_kty_t alt;  // for example crypto_kty_t::kty_okp, if kt is crypto_kty_t::kty_ec
-    int mode;          // crypt_enc_t::rsa_1_5, crypt_enc_t::rsa_oaep, crypt_enc_t::rsa_oaep256
+struct _otp_context_t {};
+typedef struct _otp_context_t otp_context_t;
 
-    crypt_algorithm_t crypt_alg;  // algorithm for keywrap or GCM
-    crypt_mode_t crypt_mode;      // crypt_mode_t::wrap, crypt_mode_t::gcm
-    int keysize;                  // 16, 24, 32
-    int hash_alg;
-} hint_jose_encryption_t;
-const char* nameof_alg(const hint_jose_encryption_t* hint);
+///////////////////////////////////////////////////////////////////////////
+// sign
+///////////////////////////////////////////////////////////////////////////
+typedef struct _hint_signature_t {
+    crypt_sig_t sig_type;  // ex. sig_eddsa
+    jws_t jws_type;        // ex. jws_eddsa
+    jws_group_t group;     // ex. jws_group_eddsa
+    crypto_kty_t kty;      // ex. kty_okp
+    const char* jws_name;  // ex. "EdDSA"
+    hash_algorithm_t alg;  // ex. hash_alg_unknown
+    uint32 count;          // ex. 2
+    uint32 nid[2];         // ex. NID_ED25519, NID_ED448
+} hint_signature_t;
 
-enum cose_hint_flag_t {
-    cose_hint_sign = 1 << 0,
-    cose_hint_enc = 1 << 1,
-    cose_hint_mac = 1 << 2,
-    cose_hint_hash = 1 << 3,
-    cose_hint_agree = 1 << 4,
-    cose_hint_iv = 1 << 5,
-    cose_hint_salt = 1 << 6,
-    cose_hint_party = 1 << 7,
-    cose_hint_kek = 1 << 8,
-    cose_hint_epk = 1 << 9,
-    cose_hint_static_key = 1 << 10,
-    cose_hint_static_kid = 1 << 11,
-    cose_hint_kty_ec = 1 << 12,
-    cose_hint_kty_okp = 1 << 13,
-    cose_hint_kty_rsa = 1 << 14,
-    cose_hint_kty_oct = 1 << 15,
-    cose_hint_not_supported = 1 << 16,
-};
+crypt_sig_t typeof_sig(const hint_signature_t* hint);
+jws_t typeof_jws(const hint_signature_t* hint);
+jws_group_t typeof_group(const hint_signature_t* hint);
+crypto_kty_t typeof_kty(const hint_signature_t* hint);
+const char* nameof_jws(const hint_signature_t* hint);
+hash_algorithm_t typeof_alg(const hint_signature_t* hint);
 
-typedef struct _hint_cose_group_t {
-    cose_group_t group;
-    crypt_category_t category;
-    uint32 hintflags;  // combinations of cose_hint_flag_t
-} hint_cose_group_t;
-
-typedef struct _hint_cose_algorithm_t {
-    cose_alg_t alg;
-    const char* name;
-    crypto_kty_t kty;
-    cose_group_t group;
-    const hint_cose_group_t* hint_group;
-    struct _eckey {
-        uint16 nid;
-        cose_ec_curve_t curve;
-    } eckey;
-    struct _dgst {
-        const char* algname;
-        uint16 dlen;
-        uint16 klen;
-    } dgst;
-    struct _enc {
-        const char* algname;
-        uint16 ksize;
-        uint16 tsize;
-        uint16 lsize;
-    } enc;
-} hint_cose_algorithm_t;
-
+///////////////////////////////////////////////////////////////////////////
+// curve
+///////////////////////////////////////////////////////////////////////////
 #define ECDSA_SUPPORT_SHA1 0x0001
 #define ECDSA_SUPPORT_SHA2_224 0x0002
 #define ECDSA_SUPPORT_SHA2_256 0x0004
@@ -1046,24 +1059,9 @@ uint8 keysizeof(const hint_curve_t* hint);
 const char* oidof(const hint_curve_t* hint);
 bool support(const hint_curve_t* hint, hash_algorithm_t alg);
 
-typedef struct _hint_signature_t {
-    crypt_sig_t sig_type;  // ex. sig_eddsa
-    jws_t jws_type;        // ex. jws_eddsa
-    jws_group_t group;     // ex. jws_group_eddsa
-    crypto_kty_t kty;      // ex. kty_okp
-    const char* jws_name;  // ex. "EdDSA"
-    hash_algorithm_t alg;  // ex. hash_alg_unknown
-    uint32 count;          // ex. 2
-    uint32 nid[2];         // ex. NID_ED25519, NID_ED448
-} hint_signature_t;
-
-crypt_sig_t typeof_sig(const hint_signature_t* hint);
-jws_t typeof_jws(const hint_signature_t* hint);
-jws_group_t typeof_group(const hint_signature_t* hint);
-crypto_kty_t typeof_kty(const hint_signature_t* hint);
-const char* nameof_jws(const hint_signature_t* hint);
-hash_algorithm_t typeof_alg(const hint_signature_t* hint);
-
+///////////////////////////////////////////////////////////////////////////
+// key
+///////////////////////////////////////////////////////////////////////////
 typedef struct _hint_kty_name_t {
     crypto_kty_t kty;
     const char* name;
@@ -1072,14 +1070,24 @@ typedef struct _hint_kty_name_t {
 typedef std::map<crypt_item_t, binary_t> crypt_datamap_t;
 typedef std::map<crypt_item_t, variant_t> crypt_variantmap_t;
 
-struct _crypt_context_t {};
-typedef struct _crypt_context_t crypt_context_t;
+///////////////////////////////////////////////////////////////////////////
+// JOSE
+///////////////////////////////////////////////////////////////////////////
+typedef struct _hint_jose_encryption_t {
+    const char* alg_name;
 
-struct _hash_context_t {};
-typedef struct _hash_context_t hash_context_t;
+    int type;          // jwa_t, jwe_t
+    int group;         // jwa_group_t, jwe_group_t
+    crypto_kty_t kty;  // crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_oct
+    crypto_kty_t alt;  // for example crypto_kty_t::kty_okp, if kt is crypto_kty_t::kty_ec
+    int mode;          // crypt_enc_t::rsa_1_5, crypt_enc_t::rsa_oaep, crypt_enc_t::rsa_oaep256
 
-struct _otp_context_t {};
-typedef struct _otp_context_t otp_context_t;
+    crypt_algorithm_t crypt_alg;  // algorithm for keywrap or GCM
+    crypt_mode_t crypt_mode;      // crypt_mode_t::wrap, crypt_mode_t::gcm
+    int keysize;                  // 16, 24, 32
+    int hash_alg;
+} hint_jose_encryption_t;
+const char* nameof_alg(const hint_jose_encryption_t* hint);
 
 enum jose_serialization_t {
     jose_compact = 0,
@@ -1087,6 +1095,65 @@ enum jose_serialization_t {
     jose_flatjson = 2,
 };
 #define JOSE_JSON_FORMAT jose_serialization_t::jose_flatjson
+
+///////////////////////////////////////////////////////////////////////////
+// COSE
+///////////////////////////////////////////////////////////////////////////
+typedef struct _hint_cose_group_t {
+    cose_group_t group;
+    crypt_category_t category;
+    uint32 hintflags;  // combinations of cose_hint_flag_t
+} hint_cose_group_t;
+
+typedef struct _hint_cose_algorithm_t {
+    cose_alg_t alg;
+    const char* name;
+    crypto_kty_t kty;
+    cose_group_t group;
+    const hint_cose_group_t* hint_group;
+    struct _eckey {
+        uint16 nid;
+        cose_ec_curve_t curve;
+    } eckey;
+    struct _dgst {
+        const char* algname;
+        uint16 dlen;
+        uint16 klen;
+    } dgst;
+    struct _enc {
+        const char* algname;
+        uint16 ksize;
+        uint16 tsize;
+        uint16 lsize;
+    } enc;
+} hint_cose_algorithm_t;
+
+struct cose_algorithm_param_t {
+    int32 label;
+    const char* name;
+};
+
+///////////////////////////////////////////////////////////////////////////
+// openssl
+///////////////////////////////////////////////////////////////////////////
+enum crypt_poweredby_t {
+    openssl = 1,
+};
+
+/* nid (use openssl nid definition for convenience) */
+enum nid_t : uint32 {
+    nid_oct = 855,         // EVP_PKEY_HMAC, NID_hmac
+    nid_rsa = 6,           // EVP_PKEY_RSA, NID_rsaEncryption
+    nid_rsa2 = 19,         // EVP_PKEY_RSA2, NID_rsa
+    nid_rsapss = 912,      // EVP_PKEY_RSA_PSS, NID_rsassaPss
+    nid_ffdhe2048 = 1126,  // NID_ffdhe2048
+    nid_ffdhe3072 = 1127,  // NID_ffdhe3072
+    nid_ffdhe4096 = 1128,  // NID_ffdhe4096
+    nid_ffdhe6144 = 1129,  // NID_ffdhe6144
+    nid_ffdhe8192 = 1130,  // NID_ffdhe8192
+    nid_dh = 28,           // NID_dhKeyAgreement (EVP_PKEY_DH)
+    nid_dsa = 116,         // NID_dsa
+};
 
 }  // namespace crypto
 }  // namespace hotplace

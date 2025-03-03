@@ -40,6 +40,7 @@ const tls_cipher_suite_t tls_cipher_suites[] = {
 
     // RFC 5246 9.  Mandatory Cipher Suites
     //   TLS_RSA_WITH_AES_128_CBC_SHA (mandatory)
+    //   RFC 9325 implementations SHOULD NOT support this cipher suite.
     // RFC 8446 9.1.  Mandatory-to-Implement Cipher Suites
     //   TLS_AES_128_GCM_SHA256 (MUST)
     //   TLS_AES_256_GCM_SHA384 (SHOULD)
@@ -49,6 +50,32 @@ const tls_cipher_suite_t tls_cipher_suites[] = {
     //   ... updates the mandatory-to-implement cipher suites to allow for a migration from TLS_RSA_WITH_AES_128_CBC_SHA
     //   to TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 without deprecating the former.
     //   Implementations should prefer to use TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256.
+
+    // RFC 9325
+    //   3.1
+    //     Implementations MUST NOT negotiate SSL version 2.
+    //     Implementations MUST NOT negotiate SSL version 3.
+    //     Implementations MUST NOT negotiate TLS version 1.0 [RFC2246].
+    //     Implementations MUST NOT negotiate TLS version 1.1 [RFC4346].
+    //     Implementations MUST support TLS 1.2 [RFC5246].
+    //     Implementations SHOULD support TLS 1.3 [RFC8446] and, if implemented, MUST prefer to negotiate TLS 1.3 over earlier versions of TLS.
+    //     Implementations MUST NOT negotiate DTLS version 1.0 [RFC4347].
+    //     Implementations MUST support DTLS 1.2 [RFC6347].
+    //     Implementations SHOULD support DTLS 1.3 [RFC9147] and, if implemented, MUST prefer to negotiate DTLS version 1.3 over earlier versions of DTLS.
+    //   4.1
+    //     Implementations MUST NOT negotiate the cipher suites with NULL encryption.
+    //     Implementations MUST NOT negotiate RC4 cipher suites.
+    //     Implementations MUST NOT negotiate cipher suites offering less than 112 bits of security, ...
+    //     Implementations SHOULD NOT negotiate cipher suites that use algorithms offering less than 128 bits of security.
+    //     Implementations SHOULD NOT negotiate cipher suites based on RSA key transport, a.k.a. "static RSA".
+    //     Implementations SHOULD NOT negotiate cipher suites based on non-ephemeral (static) finite-field Diffie-Hellman (DH) key agreement.
+    //     Implementations MUST support and prefer to negotiate cipher suites offering forward secrecy.
+    //   4.2
+    //     implementation and deployment of the following cipher suites is RECOMMENDED
+    //       TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+    //       TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+    //       TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+    //       TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
 
     {0x0000, tls_10, 0, 0, /* RFC 5246 */ "TLS_NULL_WITH_NULL_NULL", ENDOF_DATA},
     {0x0001, tls_10, 0, 0, /* RFC 5246 */ "TLS_RSA_WITH_NULL_MD5", "NULL-MD5", keyexchange_rsa, auth_rsa, crypt_alg_unknown, mode_unknown, md5},

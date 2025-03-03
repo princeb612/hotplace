@@ -2,14 +2,14 @@
 /**
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
- * @desc
+ * @desc https://www.iana.org/assignments/cose/cose.xhtml
  *
  * Revision History
  * Date         Name                Description
  */
 
 #include <iostream>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/crypto_advisor.hpp>
 #include <sdk/io/system/sdk.hpp>
 
 namespace hotplace {

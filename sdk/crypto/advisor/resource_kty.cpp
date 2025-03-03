@@ -9,7 +9,7 @@
  */
 
 #include <iostream>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/crypto_advisor.hpp>
 #include <sdk/io/system/sdk.hpp>
 
 namespace hotplace {

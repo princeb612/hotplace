@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/crypto_advisor.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -120,7 +120,7 @@ const hint_digest_t evp_md_methods[] = {
 
 const size_t sizeof_evp_md_methods = RTL_NUMBER_OF(evp_md_methods);
 
-hash_algorithm_t typeof_alg(const hint_digest_t* hint) {
+hash_algorithm_t typeof_alg(const hint_digest_t *hint) {
     hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
     if (hint) {
         ret_value = hint->algorithm;
@@ -128,15 +128,15 @@ hash_algorithm_t typeof_alg(const hint_digest_t* hint) {
     return ret_value;
 }
 
-const char* nameof_alg(const hint_digest_t* hint) {
-    const char* ret_value = nullptr;
+const char *nameof_alg(const hint_digest_t *hint) {
+    const char *ret_value = nullptr;
     if (hint) {
         ret_value = hint->fetchname;
     }
     return ret_value;
 }
 
-uint16 sizeof_digest(const hint_digest_t* hint) {
+uint16 sizeof_digest(const hint_digest_t *hint) {
     uint16 ret_value = 0;
     if (hint) {
         ret_value = hint->digest_size;

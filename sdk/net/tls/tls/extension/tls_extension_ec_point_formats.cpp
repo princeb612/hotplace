@@ -116,7 +116,12 @@ return_t tls_extension_ec_point_formats::do_write_body(binary_t& bin) {
 }
 
 tls_extension_ec_point_formats& tls_extension_ec_point_formats::add(uint8 code) {
-    _ec_point_formats.push_back(code);
+    // RFC 9325 4.2.1
+    // Note that [RFC8422] deprecates all but the uncompressed point format.
+    // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
+    if (0 == code) {
+        _ec_point_formats.push_back(code);
+    }
     return *this;
 }
 

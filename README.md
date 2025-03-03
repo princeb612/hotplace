@@ -209,11 +209,14 @@
 * TLS,DTLS
   * RFC 6066 Transport Layer Security (TLS) Extensions: Extension Definitions
   * RFC 6347 Datagram Transport Layer Security Version 1.2
+  * RFC 6797 HTTP Strict Transport Security (HSTS)
   * RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
   * RFC 7520 Using Raw Public Keys in Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)
   * RFC 7685 A Transport Layer Security (TLS) ClientHello Padding Extension
   * RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
   * RFC 8422 Elliptic Curve Cryptography (ECC) Cipher Suites for Transport Layer Security (TLS) Versions 1.2 and Earlier
+  * RFC 9325 Recommendations for Secure Use of Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)
+
 * ASN.1
   * ITU-T X.680-X.699
     * [X.680-X.693 : Information Technology - Abstract Syntax Notation One (ASN.1) & ASN.1 encoding rules](https://www.itu.int/rec/T-REC-X.680-X.693-202102-I/en)

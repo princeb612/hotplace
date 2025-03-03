@@ -12,7 +12,6 @@
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/string/string.hpp>  // split_begin, split_count, split_get, split_end
-#include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
@@ -20,6 +19,7 @@
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
+#include <sdk/crypto/crypto_advisor.hpp>
 #include <sdk/crypto/jose/json_object_encryption.hpp>
 #include <sdk/crypto/jose/json_object_signing.hpp>
 #include <sdk/crypto/jose/json_object_signing_encryption.hpp>

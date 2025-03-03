@@ -14,13 +14,19 @@
 /* top-most */
 #include <sdk/base.hpp>
 #include <sdk/crypto/crypto.hpp>
+#include <sdk/crypto/crypto_advisor.hpp>
 #include <sdk/crypto/types.hpp>
 #include <sdk/io.hpp>
 
 /* basic */
-#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/cipher_encrypt.hpp>
+#include <sdk/crypto/basic/crypto_aead.hpp>
+#include <sdk/crypto/basic/crypto_encrypt.hpp>
+#include <sdk/crypto/basic/crypto_hash.hpp>
+#include <sdk/crypto/basic/crypto_hmac.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
+#include <sdk/crypto/basic/crypto_sign.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/hmac_otp.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
@@ -31,15 +37,6 @@
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/crypto/basic/openssl_sign.hpp>
 #include <sdk/crypto/basic/time_otp.hpp>
-#include <sdk/crypto/basic/types.hpp>
-
-/* crypto */
-#include <sdk/crypto/basic/cipher_encrypt.hpp>
-#include <sdk/crypto/basic/crypto_aead.hpp>
-#include <sdk/crypto/basic/crypto_encrypt.hpp>
-#include <sdk/crypto/basic/crypto_hash.hpp>
-#include <sdk/crypto/basic/crypto_hmac.hpp>
-#include <sdk/crypto/basic/crypto_sign.hpp>
 #include <sdk/crypto/basic/transcript_hash.hpp>
 #include <sdk/crypto/basic/types.hpp>
 

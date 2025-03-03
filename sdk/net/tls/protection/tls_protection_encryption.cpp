@@ -11,7 +11,7 @@
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/cipher_encrypt.hpp>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/crypto_advisor.hpp>
 #include <sdk/io/asn.1/types.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>

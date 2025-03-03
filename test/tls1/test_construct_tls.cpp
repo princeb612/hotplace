@@ -65,11 +65,16 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
             handshake->get_extensions().add(sni);
         }
         {
+            // RFC 9325 4.2.1
+            // Note that [RFC8422] deprecates all but the uncompressed point format.
+            // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
             auto ec_point_formats = new tls_extension_ec_point_formats(session);
-            (*ec_point_formats).add("uncompressed").add("ansiX962_compressed_prime").add("ansiX962_compressed_char2");
+            (*ec_point_formats).add("uncompressed");
+            // .add("ansiX962_compressed_prime").add("ansiX962_compressed_char2");
             handshake->get_extensions().add(ec_point_formats);
         }
         {
+            // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
             auto supported_groups = new tls_extension_supported_groups(session);
             (*supported_groups)
                 .add("x25519")
