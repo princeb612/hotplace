@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSEXTENSION_SNI__
-#define __HOTPLACE_SDK_NET_TLS_TLSEXTENSION_SNI__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONSNI__
+#define __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONSNI__
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension.hpp>

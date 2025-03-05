@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_BUILDER__
-#define __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_BUILDER__
+#ifndef __HOTPLACE_SDK_NET_TLS_QUIC_QUICFRAMEBUILDER__
+#define __HOTPLACE_SDK_NET_TLS_QUIC_QUICFRAMEBUILDER__
 
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/types.hpp>

@@ -45,7 +45,6 @@
 #include <sdk/io/system/multiplexer.hpp>
 #include <sdk/io/system/sdk.hpp>
 #include <sdk/io/system/socket.hpp>
-#include <sdk/io/system/system_monitor.hpp>
 #include <sdk/io/system/types.hpp>
 #include <sdk/io/system/winpe.hpp>
 #if defined __linux__

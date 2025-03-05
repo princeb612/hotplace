@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_HEADER_COMPRESSION__
-#define __HOTPLACE_SDK_NET_HTTP_HEADER_COMPRESSION__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTPHEADERCOMPRESSION__
+#define __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTPHEADERCOMPRESSION__
 
 #include <functional>
 #include <queue>

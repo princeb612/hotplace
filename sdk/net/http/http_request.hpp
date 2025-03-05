@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_REQUEST__
-#define __HOTPLACE_SDK_NET_HTTP_REQUEST__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTPREQUEST__
+#define __HOTPLACE_SDK_NET_HTTP_HTTPREQUEST__
 
 #include <sdk/net/http/http_header.hpp>  // http_header
 #include <sdk/net/http/http_router.hpp>  // http_router

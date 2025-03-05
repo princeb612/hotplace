@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TYPES__
-#define __HOTPLACE_SDK_NET_TLS_TYPES__
+#ifndef __HOTPLACE_SDK_NET_BASIC_TLS_TYPES__
+#define __HOTPLACE_SDK_NET_BASIC_TLS_TYPES__
 
-#include <sdk/net/types.hpp>
+#include <sdk/net/basic/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -28,17 +28,6 @@ enum tls_io_flag_t {
     send_all = (send_ssl_write | send_bio_read | send_socket_send),  // 0011 1000
     peek_msg = (1 << 6),                                             // 0100 0000
 };
-
-struct _tls_context_t;
-typedef struct _tls_context_t tls_context_t;
-
-// net/tls
-class dtls_client_socket;
-class dtls_server_socket;
-class tls_client_socket;
-class tls_server_socket;
-class transport_layer_security;
-class tlscert;
 
 }  // namespace net
 }  // namespace hotplace

@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_CLIENT__
-#define __HOTPLACE_SDK_NET_HTTP_CLIENT__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTPCLIENT__
+#define __HOTPLACE_SDK_NET_HTTP_HTTPCLIENT__
 
 #include <sdk/io/string/string.hpp>       // url_info_t
 #include <sdk/net/http/http_request.hpp>  // http_request
@@ -50,15 +50,15 @@ class http_client {
     http_client& close();
 
    protected:
-    tcp_client_socket* try_connect();
+    client_socket* try_connect();
 
     http_client& do_request_and_response(const url_info_t& url_info, http_request& request, http_response** response);
 
    private:
-    socket_t _socket;
-    tcp_client_socket* _client_socket;
-    tls_client_socket* _tls_client_socket;
-    tls_context_t* _tls_context;
+    // socket_t _socket;
+    client_socket* _client_socket;
+    client_socket* _tls_client_socket;
+    // tls_context_t* _tls_context;
     SSL_CTX* _tlsctx;
     url_info_t _url_info;
     uint32 _wto;

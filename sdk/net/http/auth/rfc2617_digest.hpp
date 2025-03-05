@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_RFC2617_DIGEST__
-#define __HOTPLACE_SDK_NET_HTTP_RFC2617_DIGEST__
+#ifndef __HOTPLACE_SDK_NET_HTTP_AUTH_RFC2617DIGEST__
+#define __HOTPLACE_SDK_NET_HTTP_AUTH_RFC2617DIGEST__
 
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/net/types.hpp>

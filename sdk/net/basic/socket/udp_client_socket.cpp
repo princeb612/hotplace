@@ -13,25 +13,52 @@
 namespace hotplace {
 namespace net {
 
-udp_client_socket::udp_client_socket() : client_socket() {}
+udp_client_socket::udp_client_socket() : client_socket(), _fd(INVALID_SOCKET) {}
 
-return_t udp_client_socket::open(socket_t* sock, sockaddr_storage_t* addr, const char* address, uint16 port) {
+return_t udp_client_socket::open(sockaddr_storage_t* sa, const char* address, uint16 port) {
     return_t ret = errorcode_t::success;
-    __try2 { ret = create_socket(sock, addr, SOCK_DGRAM, address, port); }
-    __finally2 {
-        // do something
+    __try2 {
+        if (INVALID_SOCKET != _fd) {
+            ret = errorcode_t::already_assigned;
+            __leave2;
+        }
+
+        auto type = socket_type();
+        ret = create_socket(&_fd, sa, type, address, port);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
     }
+    __finally2 {}
     return ret;
 }
 
-return_t udp_client_socket::recvfrom(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* size_read, struct sockaddr* addr,
-                                     socklen_t* addrlen) {
+return_t udp_client_socket::close() {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = wait_socket(sock, get_wto(), SOCK_WAIT_READABLE);
+        if (INVALID_SOCKET != _fd) {
+            ret = errorcode_t::already_assigned;
+            __leave2;
+        }
+        close_socket(_fd, true, 0);
+        _fd = INVALID_SOCKET;
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t udp_client_socket::recvfrom(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (INVALID_SOCKET == _fd) {
+            ret = errorcode_t::not_open;
+            __leave2;
+        }
+
+        ret = wait_socket(_fd, get_wto(), SOCK_WAIT_READABLE);
         if (errorcode_t::success == ret) {
 #if 0
-            int size_peek = ::recvfrom(sock, ptr_data, size_data, MSG_PEEK, nullptr, nullptr);
+            int size_peek = ::recvfrom(_fd, ptr_data, size_data, MSG_PEEK, nullptr, nullptr);
             if (size_data < size_peek) {
                 ret = errorcode_t::insufficient_buffer;
                 __leave2;
@@ -39,9 +66,9 @@ return_t udp_client_socket::recvfrom(socket_t sock, tls_context_t* tls_handle, c
 #endif
 
 #if defined __linux__
-            int ret_recv = ::recvfrom(sock, ptr_data, size_data, 0, addr, addrlen);
+            int ret_recv = ::recvfrom(_fd, ptr_data, size_data, 0, addr, addrlen);
 #elif defined _WIN32 || defined _WIN64
-            int ret_recv = ::recvfrom(sock, ptr_data, (int)size_data, 0, addr, addrlen);
+            int ret_recv = ::recvfrom(_fd, ptr_data, (int)size_data, 0, addr, addrlen);
 #endif
             if (-1 == ret_recv) {
                 ret = get_lasterror(ret_recv);
@@ -49,8 +76,8 @@ return_t udp_client_socket::recvfrom(socket_t sock, tls_context_t* tls_handle, c
                 ret = errorcode_t::closed;
             }
 
-            if (nullptr != size_read) {
-                *size_read = ret_recv;
+            if (nullptr != cbread) {
+                *cbread = ret_recv;
             }
         }
     }
@@ -60,14 +87,18 @@ return_t udp_client_socket::recvfrom(socket_t sock, tls_context_t* tls_handle, c
     return ret;
 }
 
-return_t udp_client_socket::sendto(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent,
-                                   const struct sockaddr* addr, socklen_t addrlen) {
+return_t udp_client_socket::sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if (INVALID_SOCKET == _fd) {
+            ret = errorcode_t::not_open;
+            __leave2;
+        }
+
 #if defined __linux__
-        int ret_send = ::sendto(sock, ptr_data, size_data, 0, addr, addrlen);
+        int ret_send = ::sendto(_fd, ptr_data, size_data, 0, addr, addrlen);
 #elif defined _WIN32 || defined _WIN64
-        int ret_send = ::sendto(sock, ptr_data, (int)size_data, 0, addr, addrlen);
+        int ret_send = ::sendto(_fd, ptr_data, (int)size_data, 0, addr, addrlen);
 #endif
         if (-1 == ret_send) {
             ret = get_lasterror(ret_send);

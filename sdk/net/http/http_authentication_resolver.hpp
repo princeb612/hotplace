@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_AUTHENTICATION_RESOLVER__
-#define __HOTPLACE_SDK_NET_HTTP_AUTHENTICATION_RESOLVER__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTPAUTHENTICATIONRESOLVER__
+#define __HOTPLACE_SDK_NET_HTTP_HTTPAUTHENTICATIONRESOLVER__
 
 #include <map>
 #include <sdk/net/http/auth/basic_credentials.hpp>   // basic_credentials

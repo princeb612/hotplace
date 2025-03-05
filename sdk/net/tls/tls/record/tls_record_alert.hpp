@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSRECORD_ALERT__
-#define __HOTPLACE_SDK_NET_TLS_TLSRECORD_ALERT__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDALERT__
+#define __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDALERT__
 
 #include <sdk/net/tls/tls/record/tls_record.hpp>
 

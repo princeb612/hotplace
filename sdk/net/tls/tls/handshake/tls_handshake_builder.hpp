@@ -9,7 +9,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLSHANDSHAKE_BUILDER__
 #define __HOTPLACE_SDK_NET_TLS_TLSHANDSHAKE_BUILDER__
 
-#include <sdk/net/tls/types.hpp>
+#include <sdk/net/tls/tls/types.hpp>
 
 namespace hotplace {
 namespace net {

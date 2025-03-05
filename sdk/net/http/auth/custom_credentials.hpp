@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_CUSTOM_CREDENTIALS__
-#define __HOTPLACE_SDK_NET_HTTP_CUSTOM_CREDENTIALS__
+#ifndef __HOTPLACE_SDK_NET_HTTP_AUTH_CUSTOMCREDENTIALS__
+#define __HOTPLACE_SDK_NET_HTTP_AUTH_CUSTOMCREDENTIALS__
 
 #include <map>
 #include <sdk/net/http/types.hpp>

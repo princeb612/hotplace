@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE__
-#define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE__
+#ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_AUTHENTICODE__
+#define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_AUTHENTICODE__
 
 #include <sdk/crypto/authenticode/types.hpp>
 

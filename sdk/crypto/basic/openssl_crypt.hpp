@@ -12,8 +12,8 @@
  * 2009.06.18   Soo Han, Kim        implemented (codename.merlin)
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPT__
-#define __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPT__
+#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_OPENSSLCRYPT__
+#define __HOTPLACE_SDK_CRYPTO_BASIC_OPENSSLCRYPT__
 
 #include <sdk/crypto/basic/types.hpp>
 #include <sdk/crypto/crypto.hpp>

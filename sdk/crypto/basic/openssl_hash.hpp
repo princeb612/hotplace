@@ -11,8 +11,8 @@
  * 2009.12.11   Soo Han, Kim        implemented hmac (codename.merlin)
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_HASH__
-#define __HOTPLACE_SDK_CRYPTO_OPENSSL_HASH__
+#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_OPENSSLHASH__
+#define __HOTPLACE_SDK_CRYPTO_BASIC_OPENSSLHASH__
 
 #include <sdk/base/stream/basic_stream.hpp>  // basic_stream
 #include <sdk/crypto/basic/types.hpp>

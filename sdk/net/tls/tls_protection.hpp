@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS1_PROTECTION__
-#define __HOTPLACE_SDK_NET_TLS1_PROTECTION__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLSPROTECTION__
+#define __HOTPLACE_SDK_NET_TLS_TLSPROTECTION__
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>

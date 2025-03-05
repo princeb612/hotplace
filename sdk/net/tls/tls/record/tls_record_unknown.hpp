@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSRECORD_UNKNOWN__
-#define __HOTPLACE_SDK_NET_TLS_TLSRECORD_UNKNOWN__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDUNKNOWN__
+#define __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDUNKNOWN__
 
 #include <sdk/net/tls/tls/record/tls_record.hpp>
 

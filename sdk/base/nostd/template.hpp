@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_NOSTD_CONTAINER__
-#define __HOTPLACE_SDK_BASE_NOSTD_CONTAINER__
+#ifndef __HOTPLACE_SDK_BASE_NOSTD_TEMPLATE__
+#define __HOTPLACE_SDK_BASE_NOSTD_TEMPLATE__
 
 #include <algorithm>
 #include <functional>

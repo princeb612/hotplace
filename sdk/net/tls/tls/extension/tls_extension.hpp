@@ -9,14 +9,14 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSEXTENSION__
-#define __HOTPLACE_SDK_NET_TLS_TLSEXTENSION__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSION__
+#define __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSION__
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/types.hpp>
-#include <sdk/net/tls/types.hpp>
+#include <sdk/net/tls/tls/types.hpp>
 
 namespace hotplace {
 namespace net {

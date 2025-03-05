@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_BASIC_TCPSERVERSOCKET__
-#define __HOTPLACE_SDK_NET_BASIC_TCPSERVERSOCKET__
+#ifndef __HOTPLACE_SDK_NET_BASIC_SOCKET_TCPSERVERSOCKET__
+#define __HOTPLACE_SDK_NET_BASIC_SOCKET_TCPSERVERSOCKET__
 
-#include <sdk/net/basic/socket/server_socket.hpp>
+#include <sdk/net/basic/server_socket.hpp>
 
 namespace hotplace {
 namespace net {
@@ -32,6 +32,9 @@ class tcp_server_socket : public server_socket {
      * @return  error code (see error.hpp)
      */
     virtual return_t open(socket_t* sock, unsigned int family, uint16 port);
+
+    virtual return_t close(socket_t sock, tls_context_t* handle);
+
     /**
      * @brief   accept
      * @param   socket_t        sock            [IN] listen socket
@@ -44,7 +47,7 @@ class tcp_server_socket : public server_socket {
     /**
      * @brief   read
      * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  tls_handle      [IN] nullptr
+     * @param   tls_context_t*  handle      [IN] nullptr
      * @param   int             mode            [IN] ignore, it defines operation mode. see also transport_layer_security_server.
      * @param   char*           ptr_data        [OUT]
      * @param   size_t          size_data       [IN]
@@ -53,17 +56,17 @@ class tcp_server_socket : public server_socket {
      * @remarks
      *          ERROR_CONNECTION_CLOSED
      */
-    virtual return_t read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread);
+    virtual return_t read(socket_t sock, tls_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread);
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  tls_handle      [IN]
+     * @param   tls_context_t*  handle      [IN]
      * @param   const char*     ptr_data        [IN]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         cbsent          [OUT]
      * @return  error code (see error.hpp)
      */
-    virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
+    virtual return_t send(socket_t sock, tls_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent);
 
     virtual int socket_type();
 

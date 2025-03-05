@@ -46,26 +46,25 @@ void tcp_client() {
 
     return_t ret = errorcode_t::success;
     tcp_client_socket cli;
-    socket_t sock = -1;
     char buffer[option.bufsize];
     basic_stream bs;
 
     __try2 {
-        ret = cli.connect(&sock, nullptr, option.address.c_str(), option.port, 1);
+        ret = cli.connect(option.address.c_str(), option.port, 1);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         for (auto i = 0; i < option.count; i++) {
             size_t cbsent = 0;
-            auto test = cli.send(sock, nullptr, option.message.c_str(), option.message.size(), &cbsent);
+            auto test = cli.send(option.message.c_str(), option.message.size(), &cbsent);
             if (errorcode_t::success == test) {
                 size_t cbread = 0;
-                test = cli.read(sock, nullptr, buffer, option.bufsize, &cbread);
+                test = cli.read(buffer, option.bufsize, &cbread);
                 if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
                     bs.write(buffer, cbread);
                     while (errorcode_t::more_data == test) {
-                        test = cli.more(sock, nullptr, buffer, option.bufsize, &cbread);
+                        test = cli.more(buffer, option.bufsize, &cbread);
                         if (errorcode_t::more_data == test) {
                             bs.write(buffer, cbread);
                         }
@@ -77,7 +76,7 @@ void tcp_client() {
         }
     }
     __finally2 {
-        cli.close(sock, nullptr);
+        cli.close();
 
         _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);
     }
@@ -88,24 +87,23 @@ void udp_client() {
 
     return_t ret = errorcode_t::success;
     udp_client_socket cli;
-    socket_t sock = -1;
     char buffer[option.bufsize];
     basic_stream bs;
     sockaddr_storage_t addr;
     socklen_t addrlen = sizeof(addr);
 
     __try2 {
-        ret = cli.open(&sock, &addr, option.address.c_str(), option.port);
+        ret = cli.open(&addr, option.address.c_str(), option.port);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         for (auto i = 0; i < option.count; i++) {
             size_t cbsent = 0;
-            auto test = cli.sendto(sock, nullptr, option.message.c_str(), option.message.size(), &cbsent, (sockaddr*)&addr, addrlen);
+            auto test = cli.sendto(option.message.c_str(), option.message.size(), &cbsent, (sockaddr*)&addr, addrlen);
             if (errorcode_t::success == test) {
                 size_t cbread = 0;
-                test = cli.recvfrom(sock, nullptr, buffer, option.bufsize, &cbread, (sockaddr*)&addr, &addrlen);
+                test = cli.recvfrom(buffer, option.bufsize, &cbread, (sockaddr*)&addr, &addrlen);
                 if (errorcode_t::success == test) {
                     bs.write(buffer, cbread);
                     _logger->writeln("received response: %s", bs.c_str());
@@ -115,7 +113,7 @@ void udp_client() {
         }
     }
     __finally2 {
-        cli.close(sock, nullptr);
+        cli.close();
 
         _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);
     }
@@ -125,8 +123,6 @@ void tls_client() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    tls_context_t* tlshandle = nullptr;
-    socket_t sock = -1;
     SSL_CTX* sslctx = nullptr;
     tlscert_open_simple(tlscert_flag_tls, &sslctx);
     transport_layer_security tls(sslctx);
@@ -138,7 +134,7 @@ void tls_client() {
     __try2 {
         openssl_startup();
 
-        ret = cli.connect(&sock, &tlshandle, option.address.c_str(), option.port, 1);
+        ret = cli.connect(option.address.c_str(), option.port, 1);
         _test_case.test(ret, __FUNCTION__, "connect");
         if (errorcode_t::success != ret) {
             __leave2;
@@ -146,14 +142,14 @@ void tls_client() {
 
         for (auto i = 0; i < option.count; i++) {
             size_t cbsent = 0;
-            auto test = cli.send(sock, tlshandle, option.message.c_str(), option.message.size(), &cbsent);
+            auto test = cli.send(option.message.c_str(), option.message.size(), &cbsent);
             if (errorcode_t::success == test) {
                 size_t cbread = 0;
-                test = cli.read(sock, tlshandle, buffer, option.bufsize, &cbread);
+                test = cli.read(buffer, option.bufsize, &cbread);
                 if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
                     bs.write(buffer, cbread);
                     while (errorcode_t::more_data == test) {
-                        test = cli.more(sock, tlshandle, buffer, option.bufsize, &cbread);
+                        test = cli.more(buffer, option.bufsize, &cbread);
                         if (errorcode_t::more_data == test) {
                             bs.write(buffer, cbread);
                         }
@@ -165,7 +161,7 @@ void tls_client() {
         }
     }
     __finally2 {
-        cli.close(sock, tlshandle);
+        cli.close();
         SSL_CTX_free(sslctx);
         openssl_cleanup();
 
@@ -177,8 +173,6 @@ void dtls_client() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    tls_context_t* tlshandle = nullptr;
-    socket_t sock = -1;
     SSL_CTX* sslctx = nullptr;
     tlscert_open_simple(tlscert_flag_dtls, &sslctx);
     transport_layer_security tls(sslctx);
@@ -195,14 +189,7 @@ void dtls_client() {
         winsock_startup();
 #endif
 
-        ret = cli.open(&sock, &addr, option.address.c_str(), option.port);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        // SSL_connect
-        ret = cli.connectto(sock, &tlshandle, option.address.c_str(), option.port, 1);
-        _test_case.test(ret, __FUNCTION__, "connectto");
+        ret = cli.open(&addr, option.address.c_str(), option.port);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -210,10 +197,10 @@ void dtls_client() {
         // sendto/recvfrom
         size_t cbsent = 0;
         for (auto i = 0; i < option.count; i++) {
-            auto test = cli.sendto(sock, tlshandle, option.message.c_str(), option.message.size(), &cbsent, (sockaddr*)&addr, sizeof(addr));
+            auto test = cli.sendto(option.message.c_str(), option.message.size(), &cbsent, (sockaddr*)&addr, sizeof(addr));
             if (errorcode_t::success == test) {
                 size_t cbread = 0;
-                test = cli.recvfrom(sock, tlshandle, buffer, option.bufsize, &cbread, (sockaddr*)&addr, &addrlen);
+                test = cli.recvfrom(buffer, option.bufsize, &cbread, (sockaddr*)&addr, &addrlen);
                 if (errorcode_t::success == test) {
                     bs.write(buffer, cbread);
                     _logger->writeln("received response: %s", bs.c_str());
@@ -223,7 +210,7 @@ void dtls_client() {
         }
     }
     __finally2 {
-        cli.close(sock, tlshandle);
+        cli.close();
         SSL_CTX_free(sslctx);
 #if defined _WIN32 || defined _WIN64
         winsock_cleanup();
@@ -251,68 +238,69 @@ uint16 toprot(const char* source) {
 }
 
 int main(int argc, char** argv) {
+    return_t ret = errorcode_t::success;
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
-                << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-P", "protocol 1|2|3|4 (1 tcp, 2 udp, 3 tls, 4 dtls)", [](OPTION& o, char* param) -> void { o.prot = toprot(param); })
-                       .optional()
-                       .preced()
-                << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced();
-    _cmdline->parse(argc, argv);
+    (*_cmdline)
+        << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
+        << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
+        << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
+        << t_cmdarg_t<OPTION>("-P", "protocol 1|2|3|4 (1 tcp, 2 udp, 3 tls, 4 dtls)", [](OPTION& o, char* param) -> void { o.prot = toprot(param); }).preced()
+        << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
+        << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced();
+    ret = _cmdline->parse(argc, argv);
+    if (errorcode_t::success == ret) {
+        const OPTION& option = _cmdline->value();
 
-    const OPTION& option = _cmdline->value();
+        logger_builder builder;
+        builder.set(logger_t::logger_stdout, option.verbose);
+        if (option.log) {
+            builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log").attach(&_test_case);
+        }
+        if (option.time) {
+            builder.set_timeformat("[Y-M-D h:m:s.f]");
+        }
+        _logger.make_share(builder.build());
 
-    logger_builder builder;
-    builder.set(logger_t::logger_stdout, option.verbose);
-    if (option.log) {
-        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log").attach(&_test_case);
-    }
-    if (option.time) {
-        builder.set_timeformat("[Y-M-D h:m:s.f]");
-    }
-    _logger.make_share(builder.build());
-
-    if (option.debug) {
-        auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void { _logger->write(s); };
-        set_trace_debug(lambda_tracedebug);
-        set_trace_option(trace_bt | trace_except | trace_debug);
-    }
-
-#if defined _WIN32 || defined _WIN64
-    winsock_startup();
-#endif
-
-    switch (option.prot) {
-        case 2:
-            udp_client();
-            break;
-        case 3:
-            tls_client();
-            break;
-        case 4:
-            dtls_client();
-            break;
-        case 1:
-        default:
-            tcp_client();
-            break;
-    }
+        if (option.debug) {
+            auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void { _logger->write(s); };
+            set_trace_debug(lambda_tracedebug);
+            set_trace_option(trace_bt | trace_except | trace_debug);
+        }
 
 #if defined _WIN32 || defined _WIN64
-    winsock_cleanup();
+        winsock_startup();
 #endif
 
-    _logger->flush();
+        switch (option.prot) {
+            case 2:
+                udp_client();
+                break;
+            case 3:
+                tls_client();
+                break;
+            case 4:
+                dtls_client();
+                break;
+            case 1:
+            default:
+                tcp_client();
+                break;
+        }
+
+#if defined _WIN32 || defined _WIN64
+        winsock_cleanup();
+#endif
+
+        _logger->flush();
+    }
 
     _test_case.report(5);
     _cmdline->help();

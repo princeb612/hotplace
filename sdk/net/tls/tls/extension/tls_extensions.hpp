@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSEXTENSIONS__
-#define __HOTPLACE_SDK_NET_TLS_TLSEXTENSIONS__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONS__
+#define __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONS__
 
 #include <sdk/net/tls/tls/extension/tls_extension.hpp>
 

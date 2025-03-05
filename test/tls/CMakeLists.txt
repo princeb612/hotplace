@@ -4,7 +4,7 @@
 # Date         Name                Description
 #
 
-set (module tls1)
+set (module tls)
 file (GLOB SOURCE_FILES *.cpp)
 
 file (GLOB DATA_FILES *.crt *.key)

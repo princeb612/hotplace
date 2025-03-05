@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_RESOURCE__
-#define __HOTPLACE_SDK_NET_HTTP_RESOURCE__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTPRESOURCE__
+#define __HOTPLACE_SDK_NET_HTTP_HTTPRESOURCE__
 
 #include <map>
 #include <sdk/net/http/types.hpp>

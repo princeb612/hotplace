@@ -161,8 +161,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_JOSE__
-#define __HOTPLACE_SDK_CRYPTO_JOSE__
+#ifndef __HOTPLACE_SDK_CRYPTO_JOSE_JOSE__
+#define __HOTPLACE_SDK_CRYPTO_JOSE_JOSE__
 
 #include <sdk/crypto/basic/types.hpp>
 #include <sdk/crypto/jose/types.hpp>

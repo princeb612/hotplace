@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSEXTENSION_ALPN__
-#define __HOTPLACE_SDK_NET_TLS_TLSEXTENSION_ALPN__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONALPN__
+#define __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONALPN__
 
 #include <sdk/net/tls/tls/extension/tls_extension.hpp>
 

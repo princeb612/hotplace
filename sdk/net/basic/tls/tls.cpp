@@ -22,20 +22,12 @@
 #include <sdk/net/basic/tls/sdk.hpp>
 #include <sdk/net/basic/tls/tls.hpp>
 #include <sdk/net/basic/tls/tlscert.hpp>
+#include <sdk/net/basic/tls/types.hpp>
 
 namespace hotplace {
 namespace net {
 
-#define TLS_CONTEXT_SIGNATURE 0x20120119
-
-typedef struct _tls_context_t {
-    uint32 _signature;
-    uint32 _flags;  // see tls_flag_t
-    socket_t _fd;
-    SSL* _ssl;
-
-    _tls_context_t() : _signature(0), _flags(0), _fd(-1), _ssl(nullptr) {}
-} tls_context_t;
+// #define TLS_CONTEXT_SIGNATURE 0x20120119
 
 transport_layer_security::transport_layer_security(SSL_CTX* ctx) : _ctx(ctx) {
     if (nullptr == ctx) {
@@ -84,7 +76,6 @@ return_t transport_layer_security::tls_open(tls_context_t** handle, socket_t fd,
         context->_fd = fd;
         context->_ssl = ssl;
         context->_flags = flags;
-        context->_signature = TLS_CONTEXT_SIGNATURE;
 
         if (flags & tls_flag_t::tls_nbio) {
             SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
@@ -126,7 +117,6 @@ return_t transport_layer_security::dtls_open(tls_context_t** handle, socket_t fd
         context->_fd = fd;
         context->_ssl = ssl;
         context->_flags = flags;
-        context->_signature = TLS_CONTEXT_SIGNATURE;
 
         if (flags & tls_flag_t::tls_nbio) {
             SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
@@ -154,11 +144,6 @@ return_t transport_layer_security::close(tls_context_t* handle) {
             __leave2;
         }
 
-        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
         auto ssl = handle->_ssl;
 
         if (ssl) {
@@ -175,7 +160,6 @@ return_t transport_layer_security::close(tls_context_t* handle) {
             close_socket(handle->_fd, true, 0);
         }
 
-        handle->_signature = 0;
         delete handle;
     }
     __finally2 {
@@ -355,11 +339,6 @@ return_t transport_layer_security::dtls_handshake(tls_context_t* handle, sockadd
             __leave2;
         }
 
-        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
         /**
          * blocking         passed
          * non-blocking     not yet
@@ -488,11 +467,6 @@ return_t transport_layer_security::do_dtls_listen(tls_context_t* handle, sockadd
             __leave2;
         }
 
-        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
         auto fd = handle->_fd;
         auto ssl = handle->_ssl;
         int rc = 1;
@@ -551,11 +525,6 @@ return_t transport_layer_security::do_accept(tls_context_t* handle) {
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
-            ret = errorcode_t::invalid_context;
             __leave2;
         }
 
@@ -631,11 +600,6 @@ return_t transport_layer_security::set_tls_io(tls_context_t* handle, int type) {
             __leave2;
         }
 
-        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
         auto fd = handle->_fd;
         auto ssl = handle->_ssl;
         auto rbio = SSL_get_rbio(ssl);
@@ -674,11 +638,6 @@ return_t transport_layer_security::read(tls_context_t* handle, int mode, void* b
     __try2 {
         if (nullptr == handle || nullptr == buffer) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
-            ret = errorcode_t::invalid_context;
             __leave2;
         }
 
@@ -755,11 +714,6 @@ return_t transport_layer_security::recvfrom(tls_context_t* handle, int mode, voi
             __leave2;
         }
 
-        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
         if (nullptr != cbread) {
             *cbread = 0;
         }
@@ -832,11 +786,6 @@ return_t transport_layer_security::send(tls_context_t* handle, int mode, const c
             *size_sent = 0;
         }
 
-        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
         auto ssl = handle->_ssl;
         auto wbio = SSL_get_wbio(ssl);
 
@@ -887,11 +836,6 @@ return_t transport_layer_security::sendto(tls_context_t* handle, int mode, const
 
         if (size_sent) {
             *size_sent = 0;
-        }
-
-        if (TLS_CONTEXT_SIGNATURE != handle->_signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
         }
 
         auto ssl = handle->_ssl;

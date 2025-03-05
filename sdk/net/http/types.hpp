@@ -12,7 +12,6 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_TYPES__
 #define __HOTPLACE_SDK_NET_HTTP_TYPES__
 
-#include <sdk/net/basic/tls/types.hpp>
 #include <sdk/net/basic/types.hpp>
 #include <sdk/net/server/types.hpp>
 

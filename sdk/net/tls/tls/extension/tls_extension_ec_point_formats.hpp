@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSEXTENSION_EC_POINT_FORMATS__
-#define __HOTPLACE_SDK_NET_TLS_TLSEXTENSION_EC_POINT_FORMATS__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONECPOINTFORMATS__
+#define __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONECPOINTFORMATS__
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension.hpp>

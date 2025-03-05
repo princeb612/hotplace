@@ -10,8 +10,8 @@
  * 2021.01.23   Soo Han, Kim        RFC 8037 OKP (codename.unicorn)
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOKEY__
-#define __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOKEY__
+#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOKEY__
+#define __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOKEY__
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/shared_instance.hpp>

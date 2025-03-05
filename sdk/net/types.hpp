@@ -46,7 +46,7 @@ using namespace crypto;
 using namespace io;
 namespace net {
 
-// reserve
+//
 
 }  // namespace net
 }  // namespace hotplace

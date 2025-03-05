@@ -736,16 +736,13 @@ void test_get_tlsclient() {
             __leave2;
         }
 
-        socket_t sock = 0;
-
-        tls_context_t *handle = nullptr;
         SSL_CTX *sslctx = nullptr;
         tlscert_open_simple(tlscert_flag_tls, &sslctx);
         transport_layer_security tls(sslctx);
         tls_client_socket cli(&tls);
         basic_stream bs;
 
-        ret = cli.connect(&sock, &handle, url_info.host.c_str(), url_info.port, 5);
+        ret = cli.connect(url_info.host.c_str(), url_info.port, 5);
         if (errorcode_t::success == ret) {
             _logger->colorln("connected");
 
@@ -760,19 +757,19 @@ void test_get_tlsclient() {
             }
 
             size_t cbsent = 0;
-            ret = cli.send(sock, handle, body.c_str(), body.size(), &cbsent);
+            ret = cli.send(body.c_str(), body.size(), &cbsent);
             if (errorcode_t::success == ret) {
                 char buf[16];
                 size_t sizeread = 0;
 
                 if (0 == option.mode) {
-                    ret = cli.read(sock, handle, buf, sizeof(buf), &sizeread);
+                    ret = cli.read(buf, sizeof(buf), &sizeread);
 
                     if (option.verbose) {
                         _logger->dump((byte_t *)buf, sizeread);
                     }
                     while (errorcode_t::more_data == ret) {
-                        ret = cli.more(sock, handle, buf, sizeof(buf), &sizeread);
+                        ret = cli.more(buf, sizeof(buf), &sizeread);
 
                         if (option.verbose) {
                             _logger->dump((byte_t *)buf, sizeread);
@@ -785,10 +782,10 @@ void test_get_tlsclient() {
                     network_stream stream_interpreted;
                     group.add(&http);
 
-                    ret = cli.read(sock, handle, buf, sizeof(buf), &sizeread);
+                    ret = cli.read(buf, sizeof(buf), &sizeread);
                     stream_read.produce((byte_t *)buf, sizeread);
                     while (errorcode_t::more_data == ret) {
-                        ret = cli.more(sock, handle, buf, sizeof(buf), &sizeread);
+                        ret = cli.more(buf, sizeof(buf), &sizeread);
                         stream_read.produce((byte_t *)buf, sizeread);
                     }
 
@@ -805,7 +802,7 @@ void test_get_tlsclient() {
                     }
                 }
             }  // send
-            cli.close(sock, handle);
+            cli.close();
             _logger->colorln("closed");
         }  // connect
 

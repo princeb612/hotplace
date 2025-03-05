@@ -29,6 +29,7 @@ int main(int argc, char **argv) {
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     (*_cmdline)
+        << t_cmdarg_t<OPTION>("-r", "run server", [](OPTION &o, char *param) -> void { o.run = 1; }).optional()
         << t_cmdarg_t<OPTION>("-1", "http/1.1 port (default 9000)", [](OPTION &o, char *param) -> void { o.port_h1 = atoi(param); }).preced().optional()
         << t_cmdarg_t<OPTION>("-2", "http/2   port (default 9001)", [](OPTION &o, char *param) -> void { o.port_h2 = atoi(param); }).preced().optional()
         << t_cmdarg_t<OPTION>("-p", "packet size (default 65535)", [](OPTION &o, char *param) -> void { o.packetsize = atoi(param); }).preced().optional()
@@ -58,18 +59,20 @@ int main(int argc, char **argv) {
         set_trace_option(trace_bt | trace_except | trace_debug);
     }
 
+    if (option.run) {
 #if defined _WIN32 || defined _WIN64
-    winsock_startup();
+        winsock_startup();
 #endif
-    openssl_startup();
+        openssl_startup();
 
-    run_server();
+        run_server();
 
-    openssl_cleanup();
+        openssl_cleanup();
 
 #if defined _WIN32 || defined _WIN64
-    winsock_cleanup();
+        winsock_cleanup();
 #endif
+    }
 
     _logger->flush();
 

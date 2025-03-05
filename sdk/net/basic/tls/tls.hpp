@@ -8,19 +8,14 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLS__
-#define __HOTPLACE_SDK_NET_TLS_TLS__
+#ifndef __HOTPLACE_SDK_NET_BASIC_TLS_TLS__
+#define __HOTPLACE_SDK_NET_BASIC_TLS_TLS__
 
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/net/basic/tls/types.hpp>
 
 namespace hotplace {
 namespace net {
-
-enum tls_flag_t {
-    closesocket_ondestroy = (1 << 0),
-    tls_nbio = (1 << 1),
-};
 
 /**
  * @brief TLS

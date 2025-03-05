@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_CONSTEXPR_OBFUSCATE__
-#define __HOTPLACE_SDK_BASE_BASIC_CONSTEXPR_OBFUSCATE__
+#ifndef __HOTPLACE_SDK_BASE_BASIC_CONSTEXPROBFUSCATE__
+#define __HOTPLACE_SDK_BASE_BASIC_CONSTEXPROBFUSCATE__
 
 #include <sdk/base/types.hpp>
 

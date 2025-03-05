@@ -45,7 +45,7 @@
   * RFC 8448 Example Handshake Traces for TLS 1.3
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
     * sdk/net/tls/tls/
-    * test/tls1/
+    * test/tls/
   * RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
   * RFC 9001 Using TLS to Secure QUIC
   * RFC 9369 QUIC Version 2

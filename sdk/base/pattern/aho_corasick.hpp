@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_PATTERN_AHO_CORASICK__
-#define __HOTPLACE_SDK_BASE_PATTERN_AHO_CORASICK__
+#ifndef __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICK__
+#define __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICK__
 
 #include <sdk/base/basic/types.hpp>
 #include <sdk/base/pattern/pattern.hpp>

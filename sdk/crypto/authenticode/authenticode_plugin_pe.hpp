@@ -13,8 +13,8 @@
  * 2023.08.27   Soo Han, Kim        refactor (codename.hotplace)
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_PLUGIN_PE__
-#define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_PLUGIN_PE__
+#ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_AUTHENTICODEPLUGINPE__
+#define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_AUTHENTICODEPLUGINPE__
 
 #include <sdk/crypto/authenticode/authenticode_plugin.hpp>
 

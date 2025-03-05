@@ -10,8 +10,8 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_VISOTOR__
-#define __HOTPLACE_SDK_IO_ASN1_VISOTOR__
+#ifndef __HOTPLACE_SDK_IO_ASN1_ASN1VISOTOR__
+#define __HOTPLACE_SDK_IO_ASN1_ASN1VISOTOR__
 
 #include <sdk/base/basic/base16.hpp>
 #include <sdk/base/basic/ieee754.hpp>

@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSSERVERSOCKET__
-#define __HOTPLACE_SDK_NET_TLS_TLSSERVERSOCKET__
+#ifndef __HOTPLACE_SDK_NET_BASIC_TLS_TLSSERVERSOCKET__
+#define __HOTPLACE_SDK_NET_BASIC_TLS_TLSSERVERSOCKET__
 
 #include <sdk/net/basic/socket/tcp_server_socket.hpp>  // tcp_server_socket
 #include <sdk/net/basic/tls/tls.hpp>
@@ -26,7 +26,7 @@ class tls_server_socket : public tcp_server_socket {
     /**
      * @brief   close
      * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  tls_handle      [IN]
+     * @param   tls_context_t*  handle      [IN]
      * @return  error code (see error.hpp)
      * @remarks
      *          tls_svr_sock.accept(listen_socket, &cli_socket, &tls_context, &sockaddr, &sockaddrlen);
@@ -35,15 +35,15 @@ class tls_server_socket : public tcp_server_socket {
      *          // socket closed
      *          tls_svr_sock.close(cli_socket, tls_context);
      */
-    virtual return_t close(socket_t sock, tls_context_t* tls_handle);
+    virtual return_t close(socket_t sock, tls_context_t* handle);
 
     /**
      * @brief   Tls accept
      * @param   socket_t        clisock         [IN] client socket
-     * @param   tls_context_t** tls_handle      [OUT] Tls context
+     * @param   tls_context_t** handle      [OUT] Tls context
      * @return  error code (see error.hpp)
      */
-    virtual return_t tls_accept(socket_t clisock, tls_context_t** tls_handle);
+    virtual return_t tls_accept(socket_t clisock, tls_context_t** handle);
     /**
      * @brief   tls_stop_accept
      */
@@ -51,24 +51,24 @@ class tls_server_socket : public tcp_server_socket {
     /**
      * @brief   read
      * @param   socket_t        sock        [IN]
-     * @param   tls_context_t*  tls_handle  [IN]
+     * @param   tls_context_t*  handle  [IN]
      * @param   int             mode        [IN] see tls_io_flag_t
      * @param   char*           ptr_data    [IN]
      * @param   size_t          size_data   [IN]
      * @param   size_t*         cbread      [OUT]
      * @return  error code (see error.hpp)
      */
-    virtual return_t read(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread);
+    virtual return_t read(socket_t sock, tls_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread);
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  tls_handle      [IN]
+     * @param   tls_context_t*  handle      [IN]
      * @param   const char*     ptr_data        [IN]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         cbsent          [OUT]
      * @return  error code (see error.hpp)
      */
-    virtual return_t send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent);
+    virtual return_t send(socket_t sock, tls_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent);
 
     virtual bool support_tls();
 

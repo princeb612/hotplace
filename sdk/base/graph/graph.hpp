@@ -10,8 +10,8 @@
  * graph online https://graphonline.ru/en/
  */
 
-#ifndef __HOTPLACE_SDK_BASE_NOSTD_GRAPH__
-#define __HOTPLACE_SDK_BASE_NOSTD_GRAPH__
+#ifndef __HOTPLACE_SDK_BASE_GRAPH_GRAPH__
+#define __HOTPLACE_SDK_BASE_GRAPH_GRAPH__
 
 #include <algorithm>
 #include <list>

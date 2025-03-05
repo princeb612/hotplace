@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_DIGEST_CREDENTIALS__
-#define __HOTPLACE_SDK_NET_HTTP_DIGEST_CREDENTIALS__
+#ifndef __HOTPLACE_SDK_NET_HTTP_AUTH_DIGESTCREDENTIALS__
+#define __HOTPLACE_SDK_NET_HTTP_AUTH_DIGESTCREDENTIALS__
 
 #include <map>
 #include <sdk/base/basic/keyvalue.hpp>

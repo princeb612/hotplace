@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_HUFFMAN__
-#define __HOTPLACE_SDK_BASE_BASIC_HUFFMAN__
+#ifndef __HOTPLACE_SDK_BASE_BASIC_HUFFMANCODING__
+#define __HOTPLACE_SDK_BASE_BASIC_HUFFMANCODING__
 
 #include <deque>
 #include <functional>

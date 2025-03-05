@@ -9,8 +9,8 @@
  * 2023.08.15   Soo Han, Kin        added : stopwatch
  */
 
-#ifndef __HOTPLACE_SDK_IO_SYSTEM_WINDOWSPE__
-#define __HOTPLACE_SDK_IO_SYSTEM_WINDOWSPE__
+#ifndef __HOTPLACE_SDK_IO_SYSTEM_WINPE__
+#define __HOTPLACE_SDK_IO_SYSTEM_WINPE__
 
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>

@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS1X_TLSADVISOR__
-#define __HOTPLACE_SDK_NET_TLS1X_TLSADVISOR__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLSADVISOR__
+#define __HOTPLACE_SDK_NET_TLS_TLSADVISOR__
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>

@@ -10,8 +10,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_JOSE_ENCRYPTION__
-#define __HOTPLACE_SDK_CRYPTO_JOSE_ENCRYPTION__
+#ifndef __HOTPLACE_SDK_CRYPTO_JOSE_JSONOBJECTENCRYPTION__
+#define __HOTPLACE_SDK_CRYPTO_JOSE_JSONOBJECTENCRYPTION__
 
 #include <sdk/crypto/jose/types.hpp>
 

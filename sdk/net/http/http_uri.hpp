@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_URI__
-#define __HOTPLACE_SDK_NET_HTTP_URI__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTPURI__
+#define __HOTPLACE_SDK_NET_HTTP_HTTPURI__
 
 #include <map>
 #include <sdk/base/basic/keyvalue.hpp>

@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_CRYPTOADVISOR__
-#define __HOTPLACE_SDK_CRYPTO_CRYPTOADVISOR__
+#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOADVISOR__
+#define __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOADVISOR__
 
 #include <algorithm>
 #include <functional>

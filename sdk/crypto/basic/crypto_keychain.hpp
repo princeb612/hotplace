@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOKEYCHAIN__
-#define __HOTPLACE_SDK_CRYPTO_OPENSSL_CRYPTOKEYCHAIN__
+#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOKEYCHAIN__
+#define __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOKEYCHAIN__
 
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/types.hpp>

@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_BASIC_CREDENTIALS__
-#define __HOTPLACE_SDK_NET_HTTP_BASIC_CREDENTIALS__
+#ifndef __HOTPLACE_SDK_NET_HTTP_AUTH_BASICCREDENTIALS__
+#define __HOTPLACE_SDK_NET_HTTP_AUTH_BASICCREDENTIALS__
 
 #include <map>
 #include <sdk/base/charset.hpp>

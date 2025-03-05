@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_FRAME__
-#define __HOTPLACE_SDK_NET_HTTP_HTTP2_FRAME__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2FRAME__
+#define __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2FRAME__
 
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>

@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_PATTERN_MATCHING__
-#define __HOTPLACE_SDK_BASE_PATTERN_MATCHING__
+#ifndef __HOTPLACE_SDK_BASE_PATTERN_PATTERN__
+#define __HOTPLACE_SDK_BASE_PATTERN_PATTERN__
 
 #include <functional>
 #include <map>

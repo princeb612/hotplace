@@ -10,8 +10,8 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1__
-#define __HOTPLACE_SDK_IO_ASN1__
+#ifndef __HOTPLACE_SDK_IO_ASN1_ASN1__
+#define __HOTPLACE_SDK_IO_ASN1_ASN1__
 
 #include <sdk/base/basic/base16.hpp>
 #include <sdk/base/basic/ieee754.hpp>

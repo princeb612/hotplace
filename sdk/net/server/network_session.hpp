@@ -13,9 +13,9 @@
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSESSION__
 
 #include <sdk/io/basic/mlfq.hpp>
+#include <sdk/net/basic/types.hpp>
 #include <sdk/net/http/http2/http2_session.hpp>  // http2_session
 #include <sdk/net/server/network_stream.hpp>     // network_stream
-#include <sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {

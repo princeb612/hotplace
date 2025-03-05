@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSRECORD__
-#define __HOTPLACE_SDK_NET_TLS_TLSRECORD__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORD__
+#define __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORD__
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>

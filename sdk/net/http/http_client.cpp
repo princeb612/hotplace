@@ -22,7 +22,7 @@
 namespace hotplace {
 namespace net {
 
-http_client::http_client() : _socket(0), _client_socket(nullptr), _tls_context(nullptr), _tlsctx(nullptr), _wto(1000) {
+http_client::http_client() : _client_socket(nullptr), _tlsctx(nullptr), _wto(1000) {
     tlscert_open_simple(tlscert_flag_tls, &_tlsctx);
     _tls_client_socket = new tls_client_socket(new transport_layer_security(_tlsctx));
     _client_socket = new tcp_client_socket;
@@ -40,9 +40,9 @@ http_client::~http_client() {
     SSL_CTX_free(_tlsctx);
 }
 
-tcp_client_socket* http_client::try_connect() {
+client_socket* http_client::try_connect() {
     return_t ret = errorcode_t::success;
-    tcp_client_socket* client = nullptr;
+    client_socket* client = nullptr;
     __try2 {
         if ("https" == _url_info.scheme) {
             client = _tls_client_socket;
@@ -52,11 +52,9 @@ tcp_client_socket* http_client::try_connect() {
             __leave2;
         }
 
-        if (0 == _socket) {
-            ret = client->connect(&_socket, &_tls_context, _url_info.host.c_str(), _url_info.port, 5);
-            if (errorcode_t::success == ret) {
-                client->set_wto(_wto);
-            }
+        ret = client->connect(_url_info.host.c_str(), _url_info.port, 5);
+        if (errorcode_t::success == ret) {
+            client->set_wto(_wto);
         }
     }
     __finally2 {
@@ -81,7 +79,7 @@ http_client& http_client::request(http_request& request, http_response** respons
 
 http_client& http_client::do_request_and_response(const url_info_t& url_info, http_request& request, http_response** response) {
     return_t ret = errorcode_t::success;
-    tcp_client_socket* client = nullptr;
+    client_socket* client = nullptr;
     http_response* resp = nullptr;
 
     __try2 {
@@ -93,45 +91,47 @@ http_client& http_client::do_request_and_response(const url_info_t& url_info, ht
         *response = nullptr;
 
         client = try_connect();
+        if (nullptr == client) {
+            ret = errorcode_t::not_open;
+            __leave2;
+        }
 
         // connected
-        if (_socket) {
-            basic_stream request_stream;
-            request.get_request(request_stream);
+        basic_stream request_stream;
+        request.get_request(request_stream);
 
-            size_t cbsent = 0;
-            ret = client->send(_socket, _tls_context, request_stream.c_str(), request_stream.size(), &cbsent);
-            if (errorcode_t::success == ret) {
-                network_protocol_group group;
-                http_protocol http;
-                network_stream stream_read;
-                network_stream stream_interpreted;
-                group.add(&http);
+        size_t cbsent = 0;
+        ret = client->send(request_stream.c_str(), request_stream.size(), &cbsent);
+        if (errorcode_t::success == ret) {
+            network_protocol_group group;
+            http_protocol http;
+            network_stream stream_read;
+            network_stream stream_interpreted;
+            group.add(&http);
 
-                std::vector<char> buf;
-                const size_t bufsize = 1 << 7;
-                size_t sizeread = 0;
-                buf.resize(bufsize);
+            std::vector<char> buf;
+            const size_t bufsize = 1 << 7;
+            size_t sizeread = 0;
+            buf.resize(bufsize);
 
-                ret = client->read(_socket, _tls_context, &buf[0], bufsize, &sizeread);
+            ret = client->read(&buf[0], bufsize, &sizeread);
+
+            stream_read.produce((byte_t*)&buf[0], sizeread);
+            while (errorcode_t::more_data == ret) {
+                ret = client->more(&buf[0], bufsize, &sizeread);
 
                 stream_read.produce((byte_t*)&buf[0], sizeread);
-                while (errorcode_t::more_data == ret) {
-                    ret = client->more(_socket, _tls_context, &buf[0], bufsize, &sizeread);
+            }
 
-                    stream_read.produce((byte_t*)&buf[0], sizeread);
-                }
+            stream_read.write(&group, &stream_interpreted);
+            network_stream_data* data = nullptr;
+            stream_interpreted.consume(&data);
+            if (data) {
+                resp = new http_response;
+                resp->open((char*)data->content(), data->size());
+                *response = resp;
 
-                stream_read.write(&group, &stream_interpreted);
-                network_stream_data* data = nullptr;
-                stream_interpreted.consume(&data);
-                if (data) {
-                    resp = new http_response;
-                    resp->open((char*)data->content(), data->size());
-                    *response = resp;
-
-                    data->release();
-                }
+                data->release();
             }
         }
     }
@@ -143,11 +143,7 @@ http_client& http_client::do_request_and_response(const url_info_t& url_info, ht
 }
 
 http_client& http_client::close() {
-    if (_socket) {
-        _tls_client_socket->close(_socket, _tls_context);
-        _socket = 0;
-        _tls_context = nullptr;
-    }
+    _tls_client_socket->close();
     return *this;
 }
 

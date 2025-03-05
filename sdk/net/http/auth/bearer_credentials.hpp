@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_BEARER_CREDENTIALS__
-#define __HOTPLACE_SDK_NET_HTTP_BEARER_CREDENTIALS__
+#ifndef __HOTPLACE_SDK_NET_HTTP_AUTH_BEARERCREDENTIALS__
+#define __HOTPLACE_SDK_NET_HTTP_AUTH_BEARERCREDENTIALS__
 
 #include <map>
 #include <sdk/base/system/critical_section.hpp>

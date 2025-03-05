@@ -39,8 +39,8 @@
  *      root->release (); // free
  */
 
-#ifndef __HOTPLACE_SDK_IO_CBOR__
-#define __HOTPLACE_SDK_IO_CBOR__
+#ifndef __HOTPLACE_SDK_IO_CBOR_CBOR__
+#define __HOTPLACE_SDK_IO_CBOR_CBOR__
 
 #include <deque>
 #include <sdk/base/stream/printf.hpp>

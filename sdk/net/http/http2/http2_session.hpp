@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_SESSION__
-#define __HOTPLACE_SDK_NET_HTTP_HTTP2_SESSION__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2SESSION__
+#define __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2SESSION__
 
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>

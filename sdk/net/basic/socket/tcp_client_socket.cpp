@@ -13,108 +13,103 @@
 namespace hotplace {
 namespace net {
 
-tcp_client_socket::tcp_client_socket() : client_socket() {
-    // do nothing
-}
+tcp_client_socket::tcp_client_socket() : client_socket(), _fd(INVALID_SOCKET) {}
 
-return_t tcp_client_socket::open(socket_t* sock, const char* address, uint16 port) {
-    return_t ret = errorcode_t::success;
-    sockaddr_storage_t addr;
-    ret = create_socket(sock, &addr, SOCK_STREAM, address, port);
-    return ret;
-}
-
-return_t tcp_client_socket::connect(socket_t* sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        /* open and connect */
-        ret = connect_socket(sock, address, port, timeout);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t tcp_client_socket::connectto(socket_t sock, tls_context_t** tls_handle, const char* address, uint16 port, uint32 timeout) {
+return_t tcp_client_socket::connect(const char* address, uint16 port, uint32 timeout) {
     return_t ret = errorcode_t::success;
     __try2 {
-        /* connect */
-        sockaddr_storage_t addr;
-        ret = addr_to_sockaddr(&addr, address, port);
+        if (INVALID_SOCKET != _fd) {
+            ret = errorcode_t::already_assigned;
+            __leave2;
+        }
+
+        auto type = socket_type();
+        sockaddr_storage_t sa;
+        ret = create_socket(&_fd, &sa, type, address, port);
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = connect_socket_addr(sock, (sockaddr*)&addr, sizeof(addr), timeout);
+        ret = connect_socket_addr(_fd, (sockaddr*)&sa, sizeof(sa), timeout);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
-return_t tcp_client_socket::connectto(socket_t sock, tls_context_t** tls_handle, const sockaddr* addr, socklen_t addrlen, uint32 timeout) {
+return_t tcp_client_socket::close() {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == addr) {
-            ret = errorcode_t::invalid_parameter;
+        if (INVALID_SOCKET == _fd) {
             __leave2;
         }
-        ret = connect_socket_addr(sock, addr, addrlen, timeout);
+
+        ret = close_socket(_fd, true, 0);
+        _fd = INVALID_SOCKET;
     }
-    __finally2 {
-        //
-    }
+    __finally2 {}
     return ret;
 }
 
-return_t tcp_client_socket::read(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* size_read) {
-    return_t ret = errorcode_t::success;
-
-    ret = wait_socket(sock, get_wto(), SOCK_WAIT_READABLE);
-    if (errorcode_t::success == ret) {
-#if defined __linux__
-        int ret_recv = recv(sock, ptr_data, size_data, 0);
-#elif defined _WIN32 || defined _WIN64
-        int ret_recv = recv(sock, ptr_data, (int)size_data, 0);
-#endif
-        if (-1 == ret_recv) {
-            ret = get_lasterror(ret_recv);
-        } else if (0 == ret_recv) {
-            ret = errorcode_t::closed;
-        }
-
-        if (size_read) {
-            *size_read = (errorcode_t::success == ret) ? ret_recv : 0;
-        }
-        if (size_data == ret_recv) {
-            ret = errorcode_t::more_data;
-        }
-    }
-    return ret;
-}
-
-return_t tcp_client_socket::more(socket_t sock, tls_context_t* tls_handle, char* ptr_data, size_t size_data, size_t* cbread) {
-    return_t ret = errorcode_t::success;
-    ret = read(sock, tls_handle, ptr_data, size_data, cbread);
-    return ret;
-}
-
-return_t tcp_client_socket::send(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* size_sent) {
+return_t tcp_client_socket::read(char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;
 
     __try2 {
+        if (INVALID_SOCKET == _fd) {
+            ret = errorcode_t::not_open;
+            __leave2;
+        }
+
+        ret = wait_socket(_fd, get_wto(), SOCK_WAIT_READABLE);
+        if (errorcode_t::success == ret) {
+            int ret_recv = 0;
 #if defined __linux__
-        int ret_send = ::send(sock, ptr_data, size_data, 0);
+            ret_recv = recv(_fd, ptr_data, size_data, 0);
 #elif defined _WIN32 || defined _WIN64
-        int ret_send = ::send(sock, ptr_data, (int)size_data, 0);
+            ret_recv = recv(_fd, ptr_data, (int)size_data, 0);
+#endif
+            if (-1 == ret_recv) {
+                ret = get_lasterror(ret_recv);
+            } else if (0 == ret_recv) {
+                ret = errorcode_t::closed;
+            }
+
+            if (cbread) {
+                *cbread = (errorcode_t::success == ret) ? ret_recv : 0;
+            }
+            if (size_data == ret_recv) {
+                ret = errorcode_t::more_data;
+            }
+        }
+    }
+    __finally2 {}
+
+    return ret;
+}
+
+return_t tcp_client_socket::more(char* ptr_data, size_t size_data, size_t* cbread) {
+    return_t ret = errorcode_t::success;
+    ret = read(ptr_data, size_data, cbread);
+    return ret;
+}
+
+return_t tcp_client_socket::send(const char* ptr_data, size_t size_data, size_t* cbsent) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (INVALID_SOCKET == _fd) {
+            ret = errorcode_t::not_open;
+            __leave2;
+        }
+
+        int ret_send = 0;
+#if defined __linux__
+        ret_send = ::send(_fd, ptr_data, size_data, 0);
+#elif defined _WIN32 || defined _WIN64
+        ret_send = ::send(_fd, ptr_data, (int)size_data, 0);
 #endif
         if (-1 == ret_send) {
             ret = get_lasterror(ret_send);
         }
-        if (nullptr != size_sent) {
-            *size_sent = ret_send;
+        if (nullptr != cbsent) {
+            *cbsent = ret_send;
         }
     }
     __finally2 {

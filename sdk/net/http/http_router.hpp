@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_ROUTER__
-#define __HOTPLACE_SDK_NET_HTTP_ROUTER__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTPROUTER__
+#define __HOTPLACE_SDK_NET_HTTP_HTTPROUTER__
 
 #include <map>
 #include <sdk/net/http/auth/oauth2.hpp>             // oauth2_provider

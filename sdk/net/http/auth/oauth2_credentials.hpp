@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_OAUTH2_CREDENTIALS__
-#define __HOTPLACE_SDK_NET_HTTP_OAUTH2_CREDENTIALS__
+#ifndef __HOTPLACE_SDK_NET_HTTP_AUTH_OAUTH2CREDENTIALS__
+#define __HOTPLACE_SDK_NET_HTTP_AUTH_OAUTH2CREDENTIALS__
 
 #include <functional>
 #include <map>

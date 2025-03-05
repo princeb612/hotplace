@@ -13,6 +13,7 @@ using namespace hotplace::io;
 using namespace hotplace::net;
 
 typedef struct _OPTION {
+    int run;
     int port_h1;
     int port_h2;
     int port_h3;
@@ -22,7 +23,7 @@ typedef struct _OPTION {
     int log;
     int time;
 
-    _OPTION() : port_h1(9000), port_h2(9001), port_h3(9002), packetsize(1 << 16), verbose(0), debug(0), log(0), time(0) {}
+    _OPTION() : run(0), port_h1(9000), port_h2(9001), port_h3(9002), packetsize(1 << 16), verbose(0), debug(0), log(0), time(0) {}
 } OPTION;
 
 extern test_case _test_case;

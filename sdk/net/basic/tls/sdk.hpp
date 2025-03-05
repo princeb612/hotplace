@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_SDK__
-#define __HOTPLACE_SDK_NET_TLS_SDK__
+#ifndef __HOTPLACE_SDK_NET_BASIC_TLS_SDK__
+#define __HOTPLACE_SDK_NET_BASIC_TLS_SDK__
 
 #include <sdk/net/types.hpp>
 

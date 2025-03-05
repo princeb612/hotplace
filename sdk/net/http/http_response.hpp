@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_RESPONSE__
-#define __HOTPLACE_SDK_NET_HTTP_RESPONSE__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTPRESPONSE__
+#define __HOTPLACE_SDK_NET_HTTP_HTTPRESPONSE__
 
 #include <sdk/base/stream/basic_stream.hpp>  // basic_stream
 #include <sdk/net/http/http_header.hpp>      // http_header

@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_TYPES__
-#define __HOTPLACE_SDK_CRYPTO_OPENSSL_TYPES__
+#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_TYPES__
+#define __HOTPLACE_SDK_CRYPTO_BASIC_TYPES__
 
 #include <sdk/crypto/types.hpp>
 

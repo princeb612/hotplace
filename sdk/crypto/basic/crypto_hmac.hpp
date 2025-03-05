@@ -9,8 +9,8 @@
  * 2009.06.18   Soo Han, Kim        implemented (codename.merlin)
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_CRYPTO_MAC__
-#define __HOTPLACE_SDK_CRYPTO_CRYPTO_MAC__
+#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOHMAC__
+#define __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOHMAC__
 
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>

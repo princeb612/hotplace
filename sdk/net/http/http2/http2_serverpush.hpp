@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_SERVERPUSH__
-#define __HOTPLACE_SDK_NET_HTTP_HTTP2_SERVERPUSH__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2SERVERPUSH__
+#define __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2SERVERPUSH__
 
 #include <map>
 #include <sdk/net/http/types.hpp>

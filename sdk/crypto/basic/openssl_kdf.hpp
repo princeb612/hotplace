@@ -21,8 +21,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_OPENSSL_KDF__
-#define __HOTPLACE_SDK_CRYPTO_OPENSSL_KDF__
+#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_OPENSSLKDF__
+#define __HOTPLACE_SDK_CRYPTO_BASIC_OPENSSLKDF__
 
 #include <sdk/crypto/basic/types.hpp>
 

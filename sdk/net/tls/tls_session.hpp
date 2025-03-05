@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS1_SESSION__
-#define __HOTPLACE_SDK_NET_TLS1_SESSION__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLSSESSION__
+#define __HOTPLACE_SDK_NET_TLS_TLSSESSION__
 
 #include <queue>
 #include <sdk/base/system/critical_section.hpp>

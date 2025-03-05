@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_HEADER__
-#define __HOTPLACE_SDK_NET_HTTP_HEADER__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTPHEADER__
+#define __HOTPLACE_SDK_NET_HTTP_HTTPHEADER__
 
 #include <list>
 #include <map>

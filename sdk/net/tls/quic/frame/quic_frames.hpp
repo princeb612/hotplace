@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_QUIC_FRAMES__
-#define __HOTPLACE_SDK_NET_TLS_QUIC_FRAMES__
+#ifndef __HOTPLACE_SDK_NET_TLS_QUIC_QUICFRAMES__
+#define __HOTPLACE_SDK_NET_TLS_QUIC_QUICFRAMES__
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/io/basic/payload.hpp>

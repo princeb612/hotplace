@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_BASIC_UDPSERVERSOCKET__
-#define __HOTPLACE_SDK_NET_BASIC_UDPSERVERSOCKET__
+#ifndef __HOTPLACE_SDK_NET_BASIC_SOCKET_UDPSERVERSOCKET__
+#define __HOTPLACE_SDK_NET_BASIC_SOCKET_UDPSERVERSOCKET__
 
-#include <sdk/net/basic/socket/server_socket.hpp>
+#include <sdk/net/basic/server_socket.hpp>
 
 namespace hotplace {
 namespace net {
@@ -35,7 +35,7 @@ class udp_server_socket : public server_socket {
     /**
      * @brief   close
      * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  tls_handle      [IN]
+     * @param   tls_context_t*  handle      [IN]
      * @return  error code (see error.hpp)
      * @remarks
      *          tls_svr_sock.accept(listen_socket, &cli_socket, &tls_context, &sockaddr, &sockaddrlen);
@@ -44,11 +44,11 @@ class udp_server_socket : public server_socket {
      *          // socket closed
      *          tls_svr_sock.close(cli_socket, tls_context);
      */
-    virtual return_t close(socket_t sock, tls_context_t* tls_handle);
+    virtual return_t close(socket_t sock, tls_context_t* handle);
     /**
      * @brief   read
      * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  tls_handle      [IN] nullptr
+     * @param   tls_context_t*  handle      [IN] nullptr
      * @param   int             mode            [IN] ignore, it defines operation mode. see also transport_layer_security_server.
      * @param   char*           ptr_data        [OUT]
      * @param   size_t          size_data       [IN]
@@ -59,12 +59,12 @@ class udp_server_socket : public server_socket {
      * @remarks
      *          ERROR_CONNECTION_CLOSED
      */
-    virtual return_t recvfrom(socket_t sock, tls_context_t* tls_handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
+    virtual return_t recvfrom(socket_t sock, tls_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
                               socklen_t* addrlen);
     /**
      * @brief   send
      * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  tls_handle      [IN]
+     * @param   tls_context_t*  handle      [IN]
      * @param   const char*     ptr_data        [IN]
      * @param   size_t          size_data       [IN]
      * @param   size_t*         cbsent          [OUT]
@@ -72,7 +72,7 @@ class udp_server_socket : public server_socket {
      * @param   socklen_t       addrlen         [in]
      * @return  error code (see error.hpp)
      */
-    virtual return_t sendto(socket_t sock, tls_context_t* tls_handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
+    virtual return_t sendto(socket_t sock, tls_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
                             socklen_t addrlen);
 
     virtual int socket_type();

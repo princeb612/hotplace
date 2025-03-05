@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_HTML_DOCUMENTS__
-#define __HOTPLACE_SDK_NET_HTTP_HTML_DOCUMENTS__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTMLDOCUMENTS__
+#define __HOTPLACE_SDK_NET_HTTP_HTMLDOCUMENTS__
 
 #include <map>
 #include <sdk/net/http/types.hpp>

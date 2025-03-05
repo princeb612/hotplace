@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSRECORD_APPLICATION_DATA__
-#define __HOTPLACE_SDK_NET_TLS_TLSRECORD_APPLICATION_DATA__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDAPPLICATIONDATA__
+#define __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDAPPLICATIONDATA__
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshakes.hpp>

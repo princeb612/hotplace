@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_BASIC_SOCKET__
-#define __HOTPLACE_SDK_IO_BASIC_SOCKET__
+#ifndef __HOTPLACE_SDK_IO_SOCKET__
+#define __HOTPLACE_SDK_IO_SOCKET__
 
 #include <sdk/io/types.hpp>
 

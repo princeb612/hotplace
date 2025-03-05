@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_AUTHENTICATION_PROVIDER__
-#define __HOTPLACE_SDK_NET_HTTP_AUTHENTICATION_PROVIDER__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTPAUTHENTICATIONPROVIDER__
+#define __HOTPLACE_SDK_NET_HTTP_HTTPAUTHENTICATIONPROVIDER__
 
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/net/http/types.hpp>

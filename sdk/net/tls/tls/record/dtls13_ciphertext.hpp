@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSRECORD_DTLS13_CIPHERTEXT__
-#define __HOTPLACE_SDK_NET_TLS_TLSRECORD_DTLS13_CIPHERTEXT__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_RECORD_DTLS13CIPHERTEXT__
+#define __HOTPLACE_SDK_NET_TLS_TLS_RECORD_DTLS13CIPHERTEXT__
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
