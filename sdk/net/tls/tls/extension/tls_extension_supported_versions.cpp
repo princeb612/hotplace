@@ -115,7 +115,11 @@ return_t tls_extension_client_supported_versions::do_write_body(binary_t& bin) {
 }
 
 tls_extension_client_supported_versions& tls_extension_client_supported_versions::add(uint16 code) {
-    _versions.push_back(code);
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    auto hint = tlsadvisor->hintof_tls_version(code);
+    if (hint && hint->support) {
+        _versions.push_back(code);
+    }
     return *this;
 }
 

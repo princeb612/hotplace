@@ -301,6 +301,10 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
             binary_t compression_methods;
             compression_methods.resize(1);
 
+            if (32 != _random.size()) {
+                _random.get().resize(32);
+            }
+
             payload pl;
             pl << new payload_member(uint16(legacy_version), true, constexpr_version)                      //
                << new payload_member(_random, constexpr_random)                                            //
@@ -328,9 +332,13 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
     return ret;
 }
 
-binary& tls_handshake_client_hello::get_random() { return _random; }
+void tls_handshake_client_hello::set_random(const binary_t& value) { _random = value; }
 
-binary& tls_handshake_client_hello::get_session_id() { return _session_id; }
+void tls_handshake_client_hello::set_session_id(const binary_t& value) { _session_id = value; }
+
+const binary& tls_handshake_client_hello::get_random() { return _random; }
+
+const binary& tls_handshake_client_hello::get_session_id() { return _session_id; }
 
 const std::vector<uint16>& tls_handshake_client_hello::get_cipher_suites() { return _cipher_suites; }
 
@@ -346,8 +354,11 @@ return_t tls_handshake_client_hello::add_ciphersuites(const char* ciphersuites) 
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto lambda = [&](const std::string& item) -> void {
-            auto code = tlsadvisor->cipher_suite_code(item);
-            _cipher_suites.push_back(code);
+            auto hint = tlsadvisor->hintof_cipher_suite(item);
+            if (hint && hint->support) {
+                auto code = hint->code;
+                _cipher_suites.push_back(code);
+            }
         };
 
         split_context_t* context = nullptr;

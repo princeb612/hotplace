@@ -145,6 +145,8 @@ class tls_advisor {
     const hint_digest_t* hintof_digest(uint16 code);
     const tls_sig_scheme_t* hintof_signature_scheme(uint16 code);
     const tls_sig_scheme_t* hintof_signature_scheme(const std::string& name);
+    const tls_group_t* hintof_tls_group(uint16 code);
+    const tls_group_t* hintof_tls_group(const std::string& name);
     hash_algorithm_t hash_alg_of(uint16 code);
 
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml

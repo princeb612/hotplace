@@ -220,6 +220,24 @@ const tls_sig_scheme_t* tls_advisor::hintof_signature_scheme(uint16 code) {
     return hint;
 }
 
+const tls_group_t* tls_advisor::hintof_tls_group(uint16 code) {
+    const tls_group_t* hint = nullptr;
+    auto iter = _supported_group_codes.find(code);
+    if (_supported_group_codes.end() != iter) {
+        hint = iter->second;
+    }
+    return hint;
+}
+
+const tls_group_t* tls_advisor::hintof_tls_group(const std::string& name) {
+    const tls_group_t* hint = nullptr;
+    auto iter = _supported_group_names.find(name);
+    if (_supported_group_names.end() != iter) {
+        hint = iter->second;
+    }
+    return hint;
+}
+
 hash_algorithm_t tls_advisor::hash_alg_of(uint16 code) {
     hash_algorithm_t alg = hash_alg_unknown;
     const tls_cipher_suite_t* hint_tls_alg = hintof_cipher_suite(code);
@@ -227,257 +245,6 @@ hash_algorithm_t tls_advisor::hash_alg_of(uint16 code) {
         alg = hint_tls_alg->mac;
     }
     return alg;
-}
-
-// https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
-
-std::string tls_advisor::alert_level_string(uint8 code) {
-    std::string value;
-    auto iter = _alert_level_codes.find(code);
-    if (_alert_level_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-std::string tls_advisor::alert_desc_string(uint8 code) {
-    /**
-     * RFC 5246 7.2.  Alert Protocol
-     * RFC 8446 6.  Alert Protocol
-     */
-    std::string value;
-    auto iter = _alert_codes.find(code);
-    if (_alert_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-std::string tls_advisor::cipher_suite_string(uint16 code) {
-    std::string value;
-    auto iter = _cipher_suite_codes.find(code);
-    if (_cipher_suite_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->name_iana;
-    }
-    return value;
-}
-
-uint16 tls_advisor::cipher_suite_code(const std::string& ciphersuite) {
-    uint16 code = 0;
-    auto iter = _cipher_suite_names.find(ciphersuite);
-    if (_cipher_suite_names.end() != iter) {
-        auto item = iter->second;
-        code = item->code;
-    }
-    return code;
-}
-
-std::string tls_advisor::content_type_string(uint8 type) {
-    std::string value;
-    auto iter = _content_type_codes.find(type);
-    if (_content_type_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-std::string tls_advisor::ec_curve_type_string(uint8 code) {
-    std::string value;
-    auto iter = _ec_curve_type_codes.find(code);
-    if (_ec_curve_type_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-std::string tls_advisor::ec_point_format_name(uint8 code) {
-    std::string value;
-    auto iter = _ec_point_format_codes.find(code);
-    if (_ec_point_format_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-uint16 tls_advisor::ec_point_format_code(const std::string& name) {
-    uint16 value = 0;
-    auto iter = _ec_point_format_names.find(name);
-    if (_ec_point_format_names.end() != iter) {
-        auto item = iter->second;
-        value = item->code;
-    }
-    return value;
-}
-
-std::string tls_advisor::handshake_type_string(uint8 type) {
-    std::string value;
-    auto iter = _handshake_type_codes.find(type);
-    if (_handshake_type_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-std::string tls_advisor::kdf_id_string(uint16 type) {
-    std::string value;
-    auto iter = _kdf_id_codes.find(type);
-    if (_kdf_id_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-std::string tls_advisor::psk_key_exchange_mode_name(uint8 code) {
-    std::string value;
-    auto iter = _psk_keyexchange_codes.find(code);
-    if (_psk_keyexchange_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-uint8 tls_advisor::psk_key_exchange_mode_code(const std::string& name) {
-    uint8 value = 0;
-    auto iter = _psk_keyexchange_names.find(name);
-    if (_psk_keyexchange_names.end() != iter) {
-        auto item = iter->second;
-        value = item->code;
-    }
-    return value;
-}
-
-std::string tls_advisor::signature_scheme_name(uint16 code) {
-    std::string value;
-    auto iter = _sig_scheme_codes.find(code);
-    if (_sig_scheme_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->name;
-    }
-    return value;
-}
-
-uint16 tls_advisor::signature_scheme_code(const std::string& name) {
-    uint16 value;
-    auto iter = _sig_scheme_names.find(name);
-    if (_sig_scheme_names.end() != iter) {
-        auto item = iter->second;
-        value = item->code;
-    }
-    return value;
-}
-
-std::string tls_advisor::supported_group_name(uint16 code) {
-    std::string value;
-    auto iter = _supported_group_codes.find(code);
-    if (_supported_group_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->name;
-    }
-    return value;
-}
-
-uint16 tls_advisor::supported_group_code(const std::string& name) {
-    uint16 value = 0;
-    auto iter = _supported_group_names.find(name);
-    if (_supported_group_names.end() != iter) {
-        auto item = iter->second;
-        value = item->code;
-    }
-    return value;
-}
-
-// https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
-
-std::string tls_advisor::compression_alg_name(uint16 code) {
-    std::string value;
-    auto iter = _compression_alg_codes.find(code);
-    if (_compression_alg_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-uint16 tls_advisor::compression_alg_code(const std::string& name) {
-    uint16 value = 0;
-    auto iter = _compression_alg_names.find(name);
-    if (_compression_alg_names.end() != iter) {
-        auto item = iter->second;
-        value = item->code;
-    }
-    return value;
-}
-
-std::string tls_advisor::tls_extension_string(uint16 code) {
-    std::string value;
-    auto iter = _extension_type_codes.find(code);
-    if (_extension_type_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-std::string tls_advisor::cert_status_type_string(uint8 code) {
-    std::string value;
-    auto iter = _cert_status_type_codes.find(code);
-    if (_cert_status_type_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-// https://www.iana.org/assignments/quic/quic.xhtml
-
-std::string tls_advisor::quic_param_string(uint64 code) {
-    std::string value;
-    auto iter = _quic_trans_param_codes.find(code);
-    if (_quic_trans_param_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-std::string tls_advisor::quic_frame_type_string(uint64 code) {
-    std::string value;
-    auto iter = _quic_frame_type_codes.find(code);
-    if (_quic_frame_type_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-std::string tls_advisor::quic_error_string(uint64 code) {
-    std::string value;
-    auto iter = _quic_trans_error_codes.find(code);
-    if (_quic_trans_error_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
-}
-
-// https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
-
-std::string tls_advisor::aead_alg_string(uint16 code) {
-    std::string value;
-    auto iter = _aead_alg_codes.find(code);
-    if (_aead_alg_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->desc;
-    }
-    return value;
 }
 
 // etc

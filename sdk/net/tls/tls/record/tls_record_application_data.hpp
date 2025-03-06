@@ -29,6 +29,7 @@ class tls_record_application_data : public tls_record {
     tls_record_application_data(tls_session* session);
     tls_record_application_data(tls_session* session, const std::string& data);
     tls_record_application_data(tls_session* session, const binary_t& data);
+    tls_record_application_data(tls_session* session, const byte_t* data, size_t size);
 
     tls_handshakes& get_handshakes();
     tls_records& get_records();

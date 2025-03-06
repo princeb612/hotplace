@@ -295,10 +295,15 @@ http_response& http_response::get_response(basic_stream& bs) {
             get_http_header().add(constexpr_content_length, "0").get_headers(headers);
             bs << get_version_str() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
         } else {
+            std::string content_encoding_conf;
             auto router = get_http_router();
-            auto server = router->get_http_server();
-            auto& httpconf = server->get_http_conf();
-            std::string content_encoding_conf = httpconf.get(constexpr_content_encoding);
+            if (router) {
+                auto server = router->get_http_server();
+                if (server) {
+                    auto& httpconf = server->get_http_conf();
+                    content_encoding_conf = httpconf.get(constexpr_content_encoding);
+                }
+            }
 
             // RFC 2616 3.5 Content Codings
             // RFC 2616 14.11 Content-Encoding

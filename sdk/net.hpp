@@ -84,11 +84,13 @@
 #include <sdk/net/server/network_stream.hpp>
 
 /* TLS */
-#include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
-#include <sdk/net/tls/types.hpp>
+
+/* tls/tls */
+#include <sdk/net/tls/tls/tls.hpp>
+#include <sdk/net/tls/tls/types.hpp>
 
 /* TLS record */
 #include <sdk/net/tls/tls/record/dtls13_ciphertext.hpp>
@@ -151,5 +153,8 @@
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_builder.hpp>
 #include <sdk/net/tls/quic/frame/quic_frames.hpp>
+
+// TLS over TCP
+#include <sdk/net/tls/basic/tls_client_socket.hpp>
 
 #endif

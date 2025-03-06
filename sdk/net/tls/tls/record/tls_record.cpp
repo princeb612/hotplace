@@ -57,7 +57,7 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
 
         if (istraceable()) {
             basic_stream dbs;
-            dbs.printf("# record sent\n");
+            dbs.printf("# record\n");
             dump_memory(stream, size, &dbs, 16, 3, 0, dump_notrunc);
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }

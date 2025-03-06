@@ -35,8 +35,10 @@ class tls_handshake_client_hello : public tls_handshake {
    public:
     tls_handshake_client_hello(tls_session* session);
 
-    binary& get_random();
-    binary& get_session_id();
+    void set_random(const binary_t& value);
+    void set_session_id(const binary_t& value);
+    const binary& get_random();
+    const binary& get_session_id();
     const std::vector<uint16>& get_cipher_suites();
     const std::vector<uint8>& get_compression_methods();
 

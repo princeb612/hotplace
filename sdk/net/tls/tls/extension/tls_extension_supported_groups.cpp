@@ -26,13 +26,17 @@ tls_extension_supported_groups::tls_extension_supported_groups(tls_session* sess
 
 return_t tls_extension_supported_groups::do_postprocess() {
     return_t ret = errorcode_t::success;
+    auto tlsadvisor = tls_advisor::get_instance();
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     auto& protection_context = protection.get_protection_context();
 
     protection_context.clear_supported_groups();
     for (auto curve : _supported_groups) {
-        protection_context.add_supported_group(curve);
+        auto hint = tlsadvisor->hintof_tls_group(curve);
+        if (hint && hint->support) {
+            protection_context.add_supported_group(curve);
+        }
     }
     return ret;
 }
@@ -88,6 +92,7 @@ return_t tls_extension_supported_groups::do_read_body(const byte_t* stream, size
 return_t tls_extension_supported_groups::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
         auto& protection = session->get_tls_protection();
 
@@ -95,7 +100,10 @@ return_t tls_extension_supported_groups::do_write_body(binary_t& bin) {
         binary_t bin_supported_groups;
         {
             for (auto curve : _supported_groups) {
-                binary_append(bin_supported_groups, curve, hton16);
+                auto hint = tlsadvisor->hintof_tls_group(curve);
+                if (hint && hint->support) {
+                    binary_append(bin_supported_groups, curve, hton16);
+                }
             }
             cbsize_supported_groups = bin_supported_groups.size();
         }
@@ -110,7 +118,9 @@ return_t tls_extension_supported_groups::do_write_body(binary_t& bin) {
 }
 
 tls_extension_supported_groups& tls_extension_supported_groups::add(uint16 code) {
-    if (code) {
+    auto tlsadvisor = tls_advisor::get_instance();
+    auto hint = tlsadvisor->hintof_tls_group(code);
+    if (hint && hint->support) {
         _supported_groups.push_back(code);
     }
     return *this;
@@ -118,8 +128,11 @@ tls_extension_supported_groups& tls_extension_supported_groups::add(uint16 code)
 
 tls_extension_supported_groups& tls_extension_supported_groups::add(const std::string& name) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    uint16 code = tlsadvisor->supported_group_code(name);
-    return add(code);
+    auto hint = tlsadvisor->hintof_tls_group(name);
+    if (hint && hint->support) {
+        _supported_groups.push_back(hint->code);
+    }
+    return *this;
 }
 
 void tls_extension_supported_groups::clear() { _supported_groups.clear(); }

@@ -36,11 +36,7 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
             binary_t temp;
             prng.random(temp, 28);
             binary_append(random, temp);
-            handshake->get_random() = random;
-
-            // binary_t session_id;
-            // prng.random(session_id, 32);
-            // handshake->get_session_id() = session_id;
+            handshake->set_random(random);
         }
 
         // cipher suites
@@ -69,7 +65,7 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
         }
         {
             auto ec_point_formats = new tls_extension_ec_point_formats(session);
-            (*ec_point_formats).add("uncompressed").add("ansiX962_compressed_prime").add("ansiX962_compressed_char2");
+            (*ec_point_formats).add("uncompressed");
             handshake->get_extensions().add(ec_point_formats);
         }
         {
