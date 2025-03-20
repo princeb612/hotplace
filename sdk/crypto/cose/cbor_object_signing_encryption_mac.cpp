@@ -43,7 +43,7 @@ return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key*
             __leave2;
         }
 
-        handle->composer->_cbor_tag = cose_tag_mac;
+        handle->composer->_cbor_tag = cbor_tag_unknown;
         ret = process(handle, key, input, output, cose_mode_t::cose_mode_send);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -78,7 +78,7 @@ return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key*
             __leave2;
         }
 
-        handle->composer->_cbor_tag = cose_tag_encrypt;
+        handle->composer->_cbor_tag = cbor_tag_unknown;
         ret = process(handle, key, input, output, cose_mode_t::cose_mode_send);
         if (errorcode_t::success != ret) {
             __leave2;

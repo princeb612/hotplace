@@ -148,6 +148,7 @@ return_t cbor_object_signing_encryption::verify(cose_context_t* handle, crypto_k
     return_t ret = errorcode_t::success;
     binary_t dummy;
     ret = process(handle, key, input, dummy, cose_mode_t::cose_mode_recv);
+    result = (errorcode_t::success == ret);
     return ret;
 }
 

@@ -62,9 +62,7 @@ return_t cose_composer::compose(cbor_array** object, bool tagged) {
 
         __try_new_catch(root, new cbor_array, ret, __leave2);
 
-        if (cbor_tag_t::cbor_tag_unknown != _cbor_tag) {
-            cbor_tag = _cbor_tag;
-        } else {
+        {
             crypto_advisor* advisor = crypto_advisor::get_instance();
             int alg = 0;
             get_layer().finditem(cose_key_t::cose_alg, alg, cose_scope_protected | cose_scope_unprotected | cose_scope_children);
@@ -83,6 +81,7 @@ return_t cose_composer::compose(cbor_array** object, bool tagged) {
                 default:
                     break;
             }
+            _cbor_tag = cbor_tag;
         }
 
         *root << get_protected().cbor() << get_unprotected().cbor() << get_payload().cbor();

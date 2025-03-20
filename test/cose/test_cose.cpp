@@ -185,23 +185,35 @@ void do_test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, co
     cose_context_t* handle = nullptr;
     const OPTION& option = _cmdline->value();
 
-    cose.open(&handle);
+    ret = cose.open(&handle);
+    if (errorcode_t::success == ret) {
+        // sketch
+        cose_layer& body = handle->composer->get_layer();
+        body.get_protected().add(cose_key_t::cose_alg, alg);
+        if (cose_alg_t::cose_unknown != keyalg) {
+            cose_recipient& recipient = body.get_recipients().add(new cose_recipient);
+            recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
 
-    // sketch
-    cose_layer& body = handle->composer->get_layer();
-    body.get_protected().add(cose_key_t::cose_alg, alg);
-    if (cose_alg_t::cose_unknown != keyalg) {
-        cose_recipient& recipient = body.get_recipients().add(new cose_recipient);
-        recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
+            // fill others and compose
+            ret = cose.encrypt(handle, key, input, cbor);
+        }
 
-        // fill others and compose
-        ret = cose.encrypt(handle, key, input, cbor);
+        cose.close(handle);
+
+        do_dump_diagnostic(cbor);
+        _test_case.test(ret, __FUNCTION__, "cose.encrypt %s", text);
     }
 
-    cose.close(handle);
+    _logger->writeln("%s", base16_encode(cbor).c_str());
 
-    do_dump_diagnostic(cbor);
-    _test_case.test(ret, __FUNCTION__, "cose %s", text);
+    ret = cose.open(&handle);
+    if (errorcode_t::success == ret) {
+        bool res = false;
+        binary_t plaintext;
+        ret = cose.decrypt(handle, key, cbor, plaintext, res);
+        cose.close(handle);
+        _test_case.test(ret, __FUNCTION__, "cose.decrypt %s", text);
+    }
 }
 
 void do_test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const binary_t& input, const char* text) {
@@ -212,19 +224,30 @@ void do_test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const
     cose_context_t* handle = nullptr;
     const OPTION& option = _cmdline->value();
 
-    cose.open(&handle);
+    ret = cose.open(&handle);
+    if (errorcode_t::success == ret) {
+        // sketch
+        cose_layer& body = handle->composer->get_layer();
+        body.get_protected().add(cose_key_t::cose_alg, alg);
 
-    // sketch
-    cose_layer& body = handle->composer->get_layer();
-    body.get_protected().add(cose_key_t::cose_alg, alg);
+        // fill others and compose
+        ret = cose.sign(handle, key, input, cbor);
 
-    // fill others and compose
-    ret = cose.encrypt(handle, key, input, cbor);
+        cose.close(handle);
 
-    cose.close(handle);
+        do_dump_diagnostic(cbor);
+        _test_case.test(ret, __FUNCTION__, "cose.sign %s", text);
+    }
 
-    do_dump_diagnostic(cbor);
-    _test_case.test(ret, __FUNCTION__, "cose %s", text);
+    _logger->writeln("%s", base16_encode(cbor).c_str());
+
+    ret = cose.open(&handle);
+    if (errorcode_t::success == ret) {
+        binary_t dummy;
+        ret = cose.process(handle, key, cbor, dummy);
+        cose.close(handle);
+        _test_case.test(ret, __FUNCTION__, "cose.verify %s", text);
+    }
 }
 
 void do_test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const binary_t& input, const char* text) {
@@ -235,23 +258,34 @@ void do_test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const 
     cose_context_t* handle = nullptr;
     const OPTION& option = _cmdline->value();
 
-    cose.open(&handle);
+    ret = cose.open(&handle);
+    if (errorcode_t::success == ret) {
+        // sketch
+        cose_layer& body = handle->composer->get_layer();
+        body.get_protected().add(cose_key_t::cose_alg, alg);
+        if (cose_alg_t::cose_unknown != keyalg) {
+            cose_recipient& recipient = body.get_recipients().add(new cose_recipient);
+            recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
 
-    // sketch
-    cose_layer& body = handle->composer->get_layer();
-    body.get_protected().add(cose_key_t::cose_alg, alg);
-    if (cose_alg_t::cose_unknown != keyalg) {
-        cose_recipient& recipient = body.get_recipients().add(new cose_recipient);
-        recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
+            // fill others and compose
+            ret = cose.mac(handle, key, input, cbor);
+        }
 
-        // fill others and compose
-        ret = cose.encrypt(handle, key, input, cbor);
+        cose.close(handle);
+
+        do_dump_diagnostic(cbor);
+        _test_case.test(ret, __FUNCTION__, "cose.mac %s", text);
     }
 
-    cose.close(handle);
+    _logger->writeln("%s", base16_encode(cbor).c_str());
 
-    do_dump_diagnostic(cbor);
-    _test_case.test(ret, __FUNCTION__, "cose %s", text);
+    ret = cose.open(&handle);
+    if (errorcode_t::success == ret) {
+        binary_t dummy;
+        ret = cose.process(handle, key, cbor, dummy);
+        cose.close(handle);
+        _test_case.test(ret, __FUNCTION__, "cose.verify %s", text);
+    }
 }
 
 void test_cose(crypto_key* key) {
