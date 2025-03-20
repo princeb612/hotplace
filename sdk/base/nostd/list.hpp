@@ -211,9 +211,9 @@ class t_list {
  * @brief   simple util
  */
 template <typename single_linked_node_t>
-class t_single_linkable {
+class t_chain {
    public:
-    t_single_linkable() : _head(nullptr), _last(nullptr) {}
+    t_chain() : _head(nullptr), _last(nullptr) {}
 
     bool add(single_linked_node_t* item) {
         bool ret = true;

@@ -105,6 +105,7 @@ return_t generate_cookie_sockaddr(binary_t& cookie, const sockaddr* addr, sockle
         hash.init(handle);
         hash.update(handle, (byte_t*)addr, addrlen);
         hash.finalize(handle, cookie);
+        hash.close(handle);
     }
     __finally2 {
         // do nothing

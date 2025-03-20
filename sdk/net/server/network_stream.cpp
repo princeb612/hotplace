@@ -67,7 +67,7 @@ return_t network_stream::consume(network_stream_data** ptr_buffer_object) {
 
         network_stream_data* buffer_object = nullptr;
 
-        t_single_linkable<network_stream_data> single_link;
+        t_chain<network_stream_data> single_link;
 
         critical_section_guard guard(_lock);
 

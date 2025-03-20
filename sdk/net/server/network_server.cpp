@@ -96,7 +96,7 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
     return_t ret = errorcode_t::success;
 
     network_multiplexer_context_t* context = nullptr;
-    socket_context_t* socket_handle = nullptr;
+    socket_context_t* listen_handle = nullptr;
     multiplexer_context_t* mplexer_handle = nullptr;
 
     __try2 {
@@ -107,11 +107,11 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
 
         // TCP/TLS socket.stream-bind-listen
         // DTLS    socket.dgram-bind
-        ret = svr_socket->open(&socket_handle, family, port);
+        ret = svr_socket->open(&listen_handle, family, port);
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        auto sock = socket_handle->fd;
+        auto sock = listen_handle->fd;
 
         uint16 concurrent = conf ? conf->get(netserver_config_t::serverconf_concurrent_event) : 1024;
         uint16 concurrent_tls_accept = conf ? conf->get(netserver_config_t::serverconf_concurrent_tls_accept) : 1;
@@ -155,7 +155,7 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
         context->callback_param = callback_param;
 
         // context->listen_sock = sock;
-        context->listen_handle = new socket_context_t(sock, closesocket_ondestroy);
+        context->listen_handle = listen_handle;
         context->svr_socket = svr_socket;
 
         context->accept_control_handler = nullptr;
@@ -184,8 +184,8 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
             if (nullptr != mplexer_handle) {
                 mplexer.close(mplexer_handle);
             }
-            if (socket_handle && svr_socket) {
-                svr_socket->close(socket_handle);
+            if (listen_handle && svr_socket) {
+                svr_socket->close(listen_handle);
             }
             if (nullptr != context) {
                 delete context;
