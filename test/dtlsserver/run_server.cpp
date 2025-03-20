@@ -27,7 +27,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     switch (type) {
         case mux_dgram:
-            _logger->writeln("read %d msg [%.*s]", session_socket->event_socket, (unsigned)bufsize, buf);
+            _logger->writeln("read %d msg [%.*s]", session_socket->get_event_socket(), (unsigned)bufsize, buf);
             // dump_memory (buf, bufsize, &bs, 16, 4);
             // std::cout << bs << std::endl;
             session->sendto(buf, bufsize, addr);

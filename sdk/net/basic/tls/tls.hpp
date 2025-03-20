@@ -44,30 +44,30 @@ class transport_layer_security {
 
     /**
      * @brief   TLS
-     * @param   tls_context_t** handle  [out]
+     * @param   socket_context_t** handle  [out]
      * @param   socket_t        sock    [in]
      * @param   uint32          flags   [inopt] see tls_flag_t
      * @return  error code (see error.hpp)
      */
-    return_t tls_open(tls_context_t** handle, socket_t sock, uint32 flags = 0);
+    return_t tls_open(socket_context_t** handle, socket_t sock, uint32 flags = 0);
     /**
      * @brief   DTLS
-     * @param   tls_context_t** handle  [out]
-     * @param   socket_t        sock    [in]
+     * @param   socket_context_t** handle  [out]
+     * @param   socket_t        sock    [in] listen socket
      * @param   uint32          flags   [inopt] see tls_flag_t
      * @return  error code (see error.hpp)
      */
-    return_t dtls_open(tls_context_t** handle, socket_t sock, uint32 flags = 0);
+    return_t dtls_open(socket_context_t** handle, socket_t sock, uint32 flags = 0);
     /**
      * @brief   close
-     * @param   tls_context_t*  handle  [in]
+     * @param   socket_context_t*  handle  [in]
      * @return  error code (see error.hpp)
      */
-    return_t close(tls_context_t* handle);
+    return_t close(socket_context_t* handle);
 
     /**
      * @brief   connect
-     * @param   tls_context_t** handle      [out]
+     * @param   socket_context_t** handle      [out]
      * @param   int             type        [in]
      * @param   const char*     addr        [in]
      * @param   uint16          port        [in]
@@ -75,10 +75,10 @@ class transport_layer_security {
      * @return  error code (see error.hpp)
      * @remarks set closesocket_ondestroy flag
      */
-    return_t connect(tls_context_t** handle, int type, const char* addr, uint16 port, uint32 wtoseconds = NET_DEFAULT_TIMEOUT);
+    return_t connect(socket_context_t** handle, int type, const char* addr, uint16 port, uint32 wtoseconds = NET_DEFAULT_TIMEOUT);
     /**
      * @brief   connect to
-     * @param   tls_context_t** handle      [out]
+     * @param   socket_context_t** handle      [out]
      * @param   socket_t        sock        [in]
      * @param   const char*     address     [in]
      * @param   uint16          port        [in]
@@ -86,10 +86,10 @@ class transport_layer_security {
      * @return  error code (see error.hpp)
      * @remarks do not set closesocket_ondestroy flag
      */
-    return_t connectto(tls_context_t** handle, socket_t sock, const char* address, uint16 port, uint32 wtoseconds = NET_DEFAULT_TIMEOUT);
+    return_t connectto(socket_context_t** handle, socket_t sock, const char* address, uint16 port, uint32 wtoseconds = NET_DEFAULT_TIMEOUT);
     /**
      * @brief   connect to
-     * @param   tls_context_t** handle      [out]
+     * @param   socket_context_t** handle      [out]
      * @param   socket_t        sock        [in]
      * @param   const sockaddr* addr        [in]
      * @param   socklen_t       addrlen     [in]
@@ -97,10 +97,10 @@ class transport_layer_security {
      * @return  error code (see error.hpp)
      * @remarks do not set closesocket_ondestroy flag
      */
-    return_t connectto(tls_context_t** handle, socket_t sock, const sockaddr* addr, socklen_t addrlen, uint32 wtoseconds = NET_DEFAULT_TIMEOUT);
+    return_t connectto(socket_context_t** handle, socket_t sock, const sockaddr* addr, socklen_t addrlen, uint32 wtoseconds = NET_DEFAULT_TIMEOUT);
     /**
      * @brief   tls accept (handshake)
-     * @param   tls_context_t** handle      [out]
+     * @param   socket_context_t** handle      [out]
      * @param   socket_t        clisock     [in] socket
      * @return  error code (see error.hpp)
      * @remarks 연결된 소켓에 대해 handshake 를 진행한다.
@@ -111,10 +111,10 @@ class transport_layer_security {
      *          // RFC 4346 The Transport Layer Security (TLS) Protocol Version 1.1
      *          ret = ssl->tls_handshake (handle, cli_socket); // handshake
      */
-    return_t tls_handshake(tls_context_t** handle, socket_t sock);
+    return_t tls_handshake(socket_context_t** handle, socket_t sock);
     /**
      * @brief   dtls accept (handshake)
-     * @param   tls_context_t* handle [in]
+     * @param   socket_context_t* handle [in]
      * @param   sockaddr* addr [inopt]
      * @param   socklen_t addrlen [in]
      * @return  error code (see error.hpp)
@@ -136,29 +136,29 @@ class transport_layer_security {
      *			SSL_do_handshake(ssl);
      *
      */
-    return_t dtls_handshake(tls_context_t* handle, sockaddr* addr, socklen_t addrlen);
+    return_t dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen);
 
     /**
      * @brief   SSL_set_bio
-     * @param   tls_context_t*  handle  [in]
+     * @param   socket_context_t*  handle  [in]
      * @param   int             type    [in] 0 BIO_s_mem, 1 BIO_s_datagram
      * @return  error code (see error.hpp)
      */
-    return_t set_tls_io(tls_context_t* handle, int type);
+    return_t set_tls_io(socket_context_t* handle, int type);
 
     /**
      * @brief   read (network_Server_v2 specification)
-     * @param   tls_context_t*  handle      [in]
+     * @param   socket_context_t*  handle      [in]
      * @param   int             mode        [in] see tls_io_flag_t (2 recv 1 BIO_write 0 SSL_read)
      * @param   void*           buffer      [in]
      * @param   size_t          buffer_size [in]
      * @param   size_t*         size_read   [out]
      * @return  error code (see error.hpp)
      */
-    return_t read(tls_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* size_read);
+    return_t read(socket_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* size_read);
     /**
      * @brief   recvfrom
-     * @param   tls_context_t*      handle [in]
+     * @param   socket_context_t*      handle [in]
      * @param   int                 mode [in]
      * @param   void*               buffer [in]
      * @param   size_t              buffer_size [in]
@@ -167,20 +167,20 @@ class transport_layer_security {
      * @param   socklen_t*          addrlen [in]
      * @return  error code (see error.hpp)
      */
-    return_t recvfrom(tls_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* size_read, struct sockaddr* addr, socklen_t* addrlen);
+    return_t recvfrom(socket_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* size_read, struct sockaddr* addr, socklen_t* addrlen);
 
     /**
      * @brief   send
-     * @param   tls_context_t*  handle      [in]
+     * @param   socket_context_t*  handle      [in]
      * @param   const char*     data        [in]
      * @param   size_t          size_data   [in]
      * @param   size_t*         size_sent   [out]
      * @return  error code (see error.hpp)
      */
-    return_t send(tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent);
+    return_t send(socket_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent);
     /**
      * @brief   sendto
-     * @param   tls_context_t*          handle      [in]
+     * @param   socket_context_t*          handle      [in]
      * @param   int                     mode        [in]
      * @param   const char*             data        [in]
      * @param   size_t                  size_data   [in]
@@ -189,12 +189,12 @@ class transport_layer_security {
      * @param   socklen_t               addrlen     [in]
      * @return  error code (see error.hpp)
      */
-    return_t sendto(tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent, const struct sockaddr* addr, socklen_t addrlen);
+    return_t sendto(socket_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent, const struct sockaddr* addr, socklen_t addrlen);
     /**
      * @brief   socket related
-     * @param   tls_context_t*  handle  [in]
+     * @param   socket_context_t*  handle  [in]
      */
-    socket_t get_socket(tls_context_t* handle);
+    socket_t get_socket(socket_context_t* handle);
 
     int addref();
     int release();
@@ -204,25 +204,25 @@ class transport_layer_security {
    protected:
     /**
      * @brief   SSL_connect
-     * @param   tls_context_t*  handle  [in]
+     * @param   socket_context_t*  handle  [in]
      * @param   uint32          wto     [in]
      * @return  error code (see error.hpp)
      */
-    return_t do_connect(tls_context_t* handle, uint32 wto);
+    return_t do_connect(socket_context_t* handle, uint32 wto);
     /**
      * @brief   dtls_handshake
-     * @param   tls_context_t*  handle  [in]
+     * @param   socket_context_t*  handle  [in]
      * @param   sockaddr*       addr    [out]
      * @param   socklen_t       addrlen [in]
      * @return  error code (see error.hpp)
      */
-    return_t do_dtls_listen(tls_context_t* handle, sockaddr* addr, socklen_t addrlen);
+    return_t do_dtls_listen(socket_context_t* handle, sockaddr* addr, socklen_t addrlen);
     /**
      * @brief   SSL_accept
-     * @param   tls_context_t*  handle  [in]
+     * @param   socket_context_t*  handle  [in]
      * @return  error code (see error.hpp)
      */
-    return_t do_accept(tls_context_t* handle);
+    return_t do_accept(socket_context_t* handle);
 
    private:
     SSL_CTX* _ctx;

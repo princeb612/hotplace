@@ -24,52 +24,37 @@ class tls_server_socket : public tcp_server_socket {
     virtual ~tls_server_socket();
 
     /**
-     * @brief   close
-     * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  handle      [IN]
-     * @return  error code (see error.hpp)
-     * @remarks
-     *          tls_svr_sock.accept(listen_socket, &cli_socket, &tls_context, &sockaddr, &sockaddrlen);
-     *          // client connection established...
-     *          // ...
-     *          // socket closed
-     *          tls_svr_sock.close(cli_socket, tls_context);
+     * @brief   tls accept
+     * @param   socket_context_t** handle [out]
+     * @param   socket_t listen_socket [in]
      */
-    virtual return_t close(socket_t sock, tls_context_t* handle);
-
-    /**
-     * @brief   Tls accept
-     * @param   socket_t        clisock         [IN] client socket
-     * @param   tls_context_t** handle      [OUT] Tls context
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t tls_accept(socket_t clisock, tls_context_t** handle);
+    virtual return_t tls_accept(socket_context_t** handle, socket_t listen_socket);
     /**
      * @brief   tls_stop_accept
      */
     virtual return_t tls_stop_accept();
     /**
      * @brief   read
-     * @param   socket_t        sock        [IN]
-     * @param   tls_context_t*  handle  [IN]
-     * @param   int             mode        [IN] see tls_io_flag_t
-     * @param   char*           ptr_data    [IN]
-     * @param   size_t          size_data   [IN]
-     * @param   size_t*         cbread      [OUT]
-     * @return  error code (see error.hpp)
+     * @param   socket_context_t* handle [in]
+     * @param   int mode [in]
+     * @param   char* ptr_data [out]
+     * @param   size_t size_data [in]
+     * @param   size_t* cbread [out]
      */
-    virtual return_t read(socket_t sock, tls_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread);
+    virtual return_t read(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread);
     /**
      * @brief   send
-     * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  handle      [IN]
-     * @param   const char*     ptr_data        [IN]
-     * @param   size_t          size_data       [IN]
-     * @param   size_t*         cbsent          [OUT]
-     * @return  error code (see error.hpp)
+     * @param   socket_context_t* handle [in]
+     * @param   const char* ptr_data [out]
+     * @param   size_t size_data [in]
+     * @param   size_t* cbsent [out]
      */
-    virtual return_t send(socket_t sock, tls_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent);
+    virtual return_t send(socket_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent);
 
+    /**
+     * @override
+     * @return  return true
+     */
     virtual bool support_tls();
 
    protected:

@@ -31,10 +31,10 @@ return_t tls_client_socket::connect(const char* address, uint16 port, uint32 tim
         }
 
         auto type = socket_type();
-        tls_context_t* context = nullptr;
+        socket_context_t* context = nullptr;
         ret = _tls->connect(&context, type, address, port, timeout);
         if (errorcode_t::success == ret) {
-            context->_flags |= closesocket_ondestroy;
+            context->flags |= closesocket_ondestroy;
             _handle = context;
         }
     }
@@ -61,7 +61,7 @@ return_t tls_client_socket::read(char* ptr_data, size_t size_data, size_t* cbrea
          * recv 2 (SSL_read SUCCESS)
          * in case read 8 bytes and 2 bytes remains, return errorcode_t::more_data
          */
-        auto sock = _handle->_fd;
+        auto sock = _handle->fd;
         while (true) {
             return_t test = wait_socket(sock, get_wto(), SOCK_WAIT_READABLE);
             if (errorcode_t::success == test) {

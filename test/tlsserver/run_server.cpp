@@ -31,16 +31,16 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     switch (type) {
         case mux_connect:
-            _logger->writeln("connect %d", session_socket->event_socket);
+            _logger->writeln("connect %d", session_socket->get_event_socket());
             break;
         case mux_read:
-            _logger->writeln("read %d msg [%.*s]", session_socket->event_socket, (unsigned)bufsize, buf);
+            _logger->writeln("read %d msg [%.*s]", session_socket->get_event_socket(), (unsigned)bufsize, buf);
             // dump_memory (buf, bufsize, &bs, 16, 4);
             // std::cout << bs << std::endl;
             session->send((char*)buf, bufsize);
             break;
         case mux_disconnect:
-            _logger->writeln("disconnect %d", session_socket->event_socket);
+            _logger->writeln("disconnect %d", session_socket->get_event_socket());
             break;
     }
     return ret;

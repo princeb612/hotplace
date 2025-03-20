@@ -312,11 +312,5 @@ return_t tls_client_socket2::do_handshake() {
     return ret;
 }
 
-return_t tls_client_socket2::do_client_hello(binary_t& bin) {
-    return_t ret = errorcode_t::success;
-
-    return ret;
-}
-
 }  // namespace net
 }  // namespace hotplace

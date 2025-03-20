@@ -22,52 +22,46 @@ class dtls_server_socket : public udp_server_socket {
    public:
     dtls_server_socket(transport_layer_security* tls);
     virtual ~dtls_server_socket();
+
     /**
-     * @brief   close
+     * @brief   DTLS session
+     * @param   socket_context_t** handle [out]
+     * @param   socket_t listen_sock [in]
      */
-    virtual return_t close(socket_t sock, tls_context_t* handle);
+    virtual return_t dtls_open(socket_context_t** handle, socket_t listen_sock);
     /**
-     * @brief   dtls open
-     * @param   tls_context_t** handle      [OUT] tls context
-     * @param   socket_t        clisock         [IN] client socket
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t dtls_open(tls_context_t** handle, socket_t sock);
-    /**
-     * @brief   handshake
-     * @param   tls_context_t* handle [in]
-     * @param   sockaddr* addr [inopt]
+     * @brief   DTLS handshake
+     * @param   socket_context_t* handle
+     * @param   sockaddr* addr
      * @param   socklen_t addrlen [in]
      */
-    virtual return_t dtls_handshake(tls_context_t* handle, sockaddr* addr, socklen_t addrlen);
+    virtual return_t dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen);
     /**
-     * @brief   read
-     * @param   socket_t        sock        [IN]
-     * @param   tls_context_t*  handle  [IN]
-     * @param   int             mode        [IN] see tls_io_flag_t
-     * @param   char*           ptr_data    [IN]
-     * @param   size_t          size_data   [IN]
-     * @param   size_t*         cbread      [OUT]
-     * @param   struct sockaddr* addr       [out]
-     * @param   socklen_t* addrlen          [in]
-     * @return  error code (see error.hpp)
+     * @brief   recvfrom
+     * @param   socket_context_t* handle [in]
+     * @param   int mode [in]
+     * @param   char* ptr_data [out]
+     * @param   size_t size_data [in]
+     * @param   size_t* cbread [out]
+     * @param   struct sockaddr* addr [in]
+     * @param   socklen_t* addrlen [inout]
      */
-    virtual return_t recvfrom(socket_t sock, tls_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
-                              socklen_t* addrlen);
+    virtual return_t recvfrom(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);
     /**
-     * @brief   send
-     * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  handle      [IN]
-     * @param   const char*     ptr_data        [IN]
-     * @param   size_t          size_data       [IN]
-     * @param   size_t*         cbsent          [OUT]
-     * @param   const struct sockaddr* addr     [in]
-     * @param   socklen_t       addrlen         [in]
-     * @return  error code (see error.hpp)
+     * @brief   sendto
+     * @param   socket_context_t* handle [in]
+     * @param   const char* ptr_data [out]
+     * @param   size_t size_data [in]
+     * @param   size_t* cbsent [out]
+     * @param   const struct sockaddr* addr [in]
+     * @param   socklen_t addrlen [in]
      */
-    virtual return_t sendto(socket_t sock, tls_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
-                            socklen_t addrlen);
+    virtual return_t sendto(socket_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen);
 
+    /**
+     * @override
+     * @return  return true
+     */
     virtual bool support_tls();
 
    protected:

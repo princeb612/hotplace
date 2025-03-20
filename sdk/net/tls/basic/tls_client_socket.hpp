@@ -45,7 +45,6 @@ class tls_client_socket2 : public tcp_client_socket {
 
    protected:
     return_t do_handshake();
-    return_t do_client_hello(binary_t& bin);
 
    private:
     tls_session _session;

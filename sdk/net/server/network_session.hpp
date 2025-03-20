@@ -59,10 +59,12 @@ struct network_session_buffer_t {
  *      network_server netserver_cb_type_t::netserver_cb_socket
  */
 struct network_session_socket_t {
-    handle_t event_socket;
+    socket_context_t* event_handle;
     sockaddr_storage_t cli_addr;  // both ipv4 and ipv6
 
-    network_session_socket_t() : event_socket((handle_t)INVALID_SOCKET) {}
+    network_session_socket_t() : event_handle(nullptr) {}
+    socket_t get_event_socket() { return event_handle->fd; }
+    operator handle_t() { return (handle_t)get_event_socket(); }
 };
 
 struct network_session_t {
@@ -71,10 +73,9 @@ struct network_session_t {
 
     void* mplexer_handle;
     server_socket* svr_socket;
-    tls_context_t* tls_handle;
     int priority;
 
-    network_session_t() : mplexer_handle(nullptr), svr_socket(nullptr), tls_handle(nullptr), priority(0) {}
+    network_session_t() : mplexer_handle(nullptr), svr_socket(nullptr), priority(0) {}
     network_session_socket_t* socket_info() { return &netsock; }
     network_session_buffer_t& get_buffer() { return buf; }
 };
@@ -100,13 +101,17 @@ class network_session {
 
     /**
      * @brief   connect handler
-     * @param   handle_t            event_socket  [IN]
-     * @param   sockaddr_storage_t* sockaddr    [IN]
-     * @param   tls_context_t*      tls_handle  [IN]
+     * @param   handle_t event_socket [IN]
+     * @param   sockaddr_storage_t* sockaddr [IN]
+     * @param   socket_context_t* socket_handle [IN]
      * @return  error code (see error.hpp)
      * @remarks copy socket and address
      */
-    return_t connected(handle_t event_socket, sockaddr_storage_t* sockaddr, tls_context_t* tls_handle);
+    return_t connected(handle_t event_socket, sockaddr_storage_t* sockaddr, socket_context_t* socket_handle);
+    /**
+     * @brief   UDP
+     */
+    return_t udp_session_open(handle_t listen_sock);
     /**
      * @brief   dtls
      */
@@ -222,11 +227,11 @@ class network_session_manager {
      * @param   handle_t            event_socket      [IN]
      * @param   sockaddr_storage_t* sockaddr        [IN]
      * @param   server_socket*      svr_socket      [IN]
-     * @param   tls_context_t*      tls_handle      [IN]
+     * @param   socket_context_t*      socket_handle      [IN]
      * @param   network_session**   ptr_session_object  [OUT] use release to free
      * @return  error code (see error.hpp)
      */
-    return_t connected(handle_t event_socket, sockaddr_storage_t* sockaddr, server_socket* svr_socket, tls_context_t* tls_handle,
+    return_t connected(handle_t event_socket, sockaddr_storage_t* sockaddr, server_socket* svr_socket, socket_context_t* socket_handle,
                        network_session** ptr_session_object);
     /**
      * @brief   [TCP/TLS] find a network session
@@ -264,12 +269,12 @@ class network_session_manager {
     /**
      * @brief   [UDP] handle udp data without cookie secret
      */
-    return_t get_dgram_session(handle_t listen_sock, server_socket* svr_socket, tls_context_t* tls_handle, network_session** ptr_session_object);
+    return_t get_dgram_session(network_session** ptr_session_object, handle_t listen_sock, server_socket* svr_socket, socket_context_t* socket_handle);
     /**
      * @brief   [DTLS] handle dtls session
      */
-    return_t get_dgram_cookie_session(handle_t listen_sock, const sockaddr_storage_t* sockaddr, server_socket* svr_socket, tls_context_t* tls_handle,
-                                      network_session** ptr_session_object);
+    return_t get_dgram_cookie_session(network_session** ptr_session_object, handle_t listen_sock, const sockaddr_storage_t* sockaddr, server_socket* svr_socket,
+                                      socket_context_t* socket_handle);
     /**
      * @brief   [DTLS] find DTLS session
      * @remarks

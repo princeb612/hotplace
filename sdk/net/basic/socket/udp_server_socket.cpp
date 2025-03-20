@@ -15,19 +15,25 @@ namespace net {
 
 udp_server_socket::udp_server_socket() : server_socket() {}
 
-return_t udp_server_socket::open(socket_t* sock, unsigned int family, uint16 port) {
+return_t udp_server_socket::open(socket_context_t** handle, unsigned int family, uint16 port) {
     return_t ret = errorcode_t::success;
+    socket_context_t* context = nullptr;
 
     __try2 {
-        if (nullptr == sock) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = create_listener(1, &family, sock, IPPROTO_UDP, port);
+        socket_t sock = INVALID_SOCKET;
+        ret = create_listener(1, &family, &sock, IPPROTO_UDP, port);
         if (errorcode_t::success != ret) {
             __leave2;
         }
+
+        // UDP contains listen socket
+        __try_new_catch(context, new socket_context_t(sock, 0), ret, __leave2);
+        *handle = context;
     }
     __finally2 {
         // do nothing
@@ -35,22 +41,16 @@ return_t udp_server_socket::open(socket_t* sock, unsigned int family, uint16 por
     return ret;
 }
 
-return_t udp_server_socket::close(socket_t sock, tls_context_t* handle) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        // do not close socket
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t udp_server_socket::recvfrom(socket_t sock, tls_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* size_read, struct sockaddr* addr,
+return_t udp_server_socket::recvfrom(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
                                      socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto sock = handle->fd;
 #if 0
         int size_peek = recvfrom(sock, ptr_data, size_data, MSG_PEEK, nullptr, nullptr);
         if (size_data < size_peek) {
@@ -70,11 +70,8 @@ return_t udp_server_socket::recvfrom(socket_t sock, tls_context_t* handle, int m
             ret = errorcode_t::closed;
         }
 
-        if (nullptr != size_read) {
-            *size_read = ret_recv;
-        }
-        if (size_data == ret_recv) {
-            ret = errorcode_t::more_data;
+        if (nullptr != cbread) {
+            *cbread = (errorcode_t::success == ret) ? ret_recv : 0;
         }
     }
     __finally2 {
@@ -83,10 +80,17 @@ return_t udp_server_socket::recvfrom(socket_t sock, tls_context_t* handle, int m
     return ret;
 }
 
-return_t udp_server_socket::sendto(socket_t sock, tls_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
+return_t udp_server_socket::sendto(socket_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
                                    socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto sock = handle->fd;
+
 #if defined __linux__
         int ret_send = ::sendto(sock, ptr_data, size_data, 0, addr, addrlen);
 #elif defined _WIN32 || defined _WIN64

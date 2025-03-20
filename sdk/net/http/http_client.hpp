@@ -58,7 +58,6 @@ class http_client {
     // socket_t _socket;
     client_socket* _client_socket;
     client_socket* _tls_client_socket;
-    // tls_context_t* _tls_context;
     SSL_CTX* _tlsctx;
     url_info_t _url_info;
     uint32 _wto;

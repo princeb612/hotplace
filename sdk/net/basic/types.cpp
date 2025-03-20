@@ -1,0 +1,47 @@
+/* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
+/**
+ * @file {file}
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @desc
+ *
+ * Revision History
+ * Date         Name                Description
+ */
+
+#include <sdk/net/basic/types.hpp>
+
+namespace hotplace {
+namespace net {
+
+socket_context_t::socket_context_t() : fd(INVALID_SOCKET), flags(0), ssl(nullptr) {}
+
+socket_context_t::socket_context_t(socket_t s, uint32 f) : fd(s), flags(f), ssl(nullptr) {
+    if ((INVALID_SOCKET != s) && (closesocket_if_tcp & flags)) {
+        int optval = 0;
+        socklen_t optlen = sizeof(optval);
+        getsockopt(s, SOL_SOCKET, SO_TYPE, (char*)&optval, &optlen);
+
+        if (SOCK_STREAM == optval) {
+            flags |= closesocket_ondestroy;
+        }
+    }
+}
+
+socket_context_t::~socket_context_t() {
+    if (ssl) {
+        SSL_shutdown(ssl);
+        /**
+         *  int status = SSL_get_shutdown(ssl);
+         *  (SSL_SENT_SHUTDOWN & status)
+         *  no event - GetQueuedCompletionStatus
+         */
+        SSL_free(ssl);
+    }
+
+    if (closesocket_ondestroy & flags) {
+        close_socket(fd, true, 0);
+    }
+}
+
+}  // namespace net
+}  // namespace hotplace

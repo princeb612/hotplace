@@ -20,15 +20,39 @@ class client_socket : public basic_socket {
    public:
     virtual ~client_socket();
 
+    /**
+     * @brief   connect
+     */
     virtual return_t connect(const char* address, uint16 port, uint32 timeout);
+    /**
+     * @brief   open
+     */
     virtual return_t open(sockaddr_storage_t* sa, const char* address, uint16 port);
+    /**
+     * @brief   close
+     */
     virtual return_t close();
 
+    /**
+     * @brief   read
+     */
     virtual return_t read(char* ptr_data, size_t size_data, size_t* cbread);
+    /**
+     * @brief   more
+     */
     virtual return_t more(char* ptr_data, size_t size_data, size_t* cbread);
+    /**
+     * @brief   send
+     */
     virtual return_t send(const char* ptr_data, size_t size_data, size_t* cbsent);
 
+    /**
+     * @brief   recvfrom
+     */
     virtual return_t recvfrom(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);
+    /**
+     * @brief   sendto
+     */
     virtual return_t sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen);
 
     void set_wto(uint32 milliseconds);

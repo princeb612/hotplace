@@ -54,10 +54,10 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
 
     switch (type) {
         case mux_connect:
-            _logger->colorln("connect %i", session_socket->event_socket);
+            _logger->colorln("connect %i", session_socket->get_event_socket());
             break;
         case mux_read:
-            _logger->colorln("read %i", session_socket->event_socket);
+            _logger->colorln("read %i", session_socket->get_event_socket());
             if (option.verbose) {
                 _logger->writeln("%.*s", (unsigned)bufsize, buf);
             }
@@ -89,7 +89,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CAL
 
             break;
         case mux_disconnect:
-            _logger->colorln("disconnect %i", session_socket->event_socket);
+            _logger->colorln("disconnect %i", session_socket->get_event_socket());
             break;
     }
     return ret;

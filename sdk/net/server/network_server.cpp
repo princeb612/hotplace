@@ -34,7 +34,7 @@ namespace net {
 #define NETWORK_MULTIPLEXER_CONTEXT_SIGNATURE 0x20151127
 
 struct accept_context_t {
-    struct _network_multiplexer_context_t* mplexer_context;
+    network_multiplexer_context_t* mplexer_context;
     socket_t cli_socket;
     sockaddr_storage_t client_addr;
     socklen_t client_addr_len;
@@ -52,12 +52,13 @@ struct _network_multiplexer_context_t {
     TYPE_CALLBACK_HANDLEREXV callback_routine;
     void* callback_param;
 
-    socket_t listen_sock;
+    // socket_t listen_sock;
+    socket_context_t* listen_handle;
     server_socket* svr_socket;
 
     semaphore tls_accept_mutex;
     semaphore consumer_mutex;
-    signalwait_threads network_threads;
+    signalwait_threads producer_threads;
 #if defined _WIN32 || defined _WIN64
     signalwait_threads accept_threads;
 #endif
@@ -80,7 +81,8 @@ struct _network_multiplexer_context_t {
           concurrent(0),
           callback_routine(nullptr),
           callback_param(nullptr),
-          listen_sock(INVALID_SOCKET),
+          // listen_sock(INVALID_SOCKET),
+          listen_handle(nullptr),
           svr_socket(nullptr),
           accept_control_handler(nullptr) {}
 };
@@ -94,7 +96,7 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
     return_t ret = errorcode_t::success;
 
     network_multiplexer_context_t* context = nullptr;
-    socket_t sock = INVALID_SOCKET;
+    socket_context_t* socket_handle = nullptr;
     multiplexer_context_t* mplexer_handle = nullptr;
 
     __try2 {
@@ -105,19 +107,20 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
 
         // TCP/TLS socket.stream-bind-listen
         // DTLS    socket.dgram-bind
-        ret = svr_socket->open(&sock, family, port);
+        ret = svr_socket->open(&socket_handle, family, port);
         if (errorcode_t::success != ret) {
             __leave2;
         }
+        auto sock = socket_handle->fd;
 
         uint16 concurrent = conf ? conf->get(netserver_config_t::serverconf_concurrent_event) : 1024;
         uint16 concurrent_tls_accept = conf ? conf->get(netserver_config_t::serverconf_concurrent_tls_accept) : 1;
 
-        uint16 concurrent_network = conf ? conf->get(netserver_config_t::serverconf_concurrent_network) : 1;
+        uint16 concurrent_produce = conf ? conf->get(netserver_config_t::serverconf_concurrent_network) : 1;
 #if defined __linux__
         if (svr_socket->support_tls() && (SOCK_DGRAM == svr_socket->socket_type())) {
             // [epoll] DTLS handshake only support single-thread model
-            concurrent_network = 1;
+            concurrent_produce = 1;
         }
 #endif
         uint16 concurrent_consume = conf ? conf->get(netserver_config_t::serverconf_concurrent_consume) : 2;
@@ -143,7 +146,7 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
         }
 
         context->tls_accept_threads.set(concurrent_tls_accept, tls_accept_thread, tls_accept_signal, context);
-        context->network_threads.set(concurrent_network, network_thread, network_signal, context);
+        context->producer_threads.set(concurrent_produce, producer_thread, producer_signal, context);
         context->consumer_threads.set(concurrent_consume, consumer_thread, consumer_signal, context);
 
         context->mplexer_handle = mplexer_handle;
@@ -151,7 +154,8 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
         context->callback_routine = callback_routine;
         context->callback_param = callback_param;
 
-        context->listen_sock = sock;
+        // context->listen_sock = sock;
+        context->listen_handle = new socket_context_t(sock, closesocket_ondestroy);
         context->svr_socket = svr_socket;
 
         context->accept_control_handler = nullptr;
@@ -180,10 +184,8 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
             if (nullptr != mplexer_handle) {
                 mplexer.close(mplexer_handle);
             }
-            if (INVALID_SOCKET != sock) {
-                if (svr_socket) {
-                    svr_socket->close(sock, nullptr);
-                }
+            if (socket_handle && svr_socket) {
+                svr_socket->close(socket_handle);
             }
             if (nullptr != context) {
                 delete context;
@@ -346,18 +348,18 @@ return_t network_server::event_loop_run(network_multiplexer_context_t* handle, u
             __leave2;
         }
 
-        /* if a thread count of network_threads reachs max-concurrent, no more thread is created. */
+        /* if a thread count of producer_threads reachs max-concurrent, no more thread is created. */
         for (uint32 i = 0; i < concurrent_loop; i++) {
-            handle->network_threads.create();
+            handle->producer_threads.create();
         }
 
         if (SOCK_DGRAM == handle->svr_socket->socket_type()) {
             // (epoll, iocp) bind udp.socket - mplexer.bind(mplexer_handle, (handle_t)sock, session_object);
             // (windows) async read
 
-            socket_t listen_sock = handle->listen_sock;
+            socket_t listen_sock = handle->listen_handle->fd;
             network_session* dgram_session = nullptr;
-            handle->session_manager.get_dgram_session((handle_t)listen_sock, handle->svr_socket, nullptr, &dgram_session);
+            handle->session_manager.get_dgram_session(&dgram_session, (handle_t)listen_sock, handle->svr_socket, nullptr);
             if (dgram_session) {
                 mplexer.bind(handle->mplexer_handle, (handle_t)listen_sock, dgram_session);
                 dgram_session->ready_to_read();
@@ -388,7 +390,7 @@ return_t network_server::event_loop_break(network_multiplexer_context_t* handle,
         /* stop threads */
         uint32 i = 0;
         for (i = 0; i < concurrent_loop; i++) {
-            handle->network_threads.join();
+            handle->producer_threads.join();
         }
     }
     __finally2 {
@@ -462,7 +464,7 @@ return_t network_server::close(network_multiplexer_context_t* handle) {
         }
 
         server_socket* svr_socket = handle->svr_socket;
-        svr_socket->close(handle->listen_sock, nullptr);
+        svr_socket->close(handle->listen_handle);
 
         /* stop all threads */
 #if defined _WIN32 || defined _WIN64
@@ -470,7 +472,7 @@ return_t network_server::close(network_multiplexer_context_t* handle) {
 #endif
         cleanup_tls_accept(handle);
         handle->tls_accept_threads.signal_and_wait_all();
-        handle->network_threads.signal_and_wait_all();
+        handle->producer_threads.signal_and_wait_all();
         handle->consumer_threads.signal_and_wait_all();
 
         handle->protocol_group.clear();
@@ -518,7 +520,6 @@ return_t network_server::accept_thread(void* user_context) {
 return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
     // iocp tcp only
     return_t ret = errorcode_t::success;
-    network_server svr;
 
     __try2 {
         if (nullptr == handle) {
@@ -526,7 +527,7 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
             __leave2;
         }
 
-        socket_t listen_sock = (socket_t)handle->listen_sock;
+        socket_t listen_sock = handle->listen_handle->fd;
         server_socket* svr_socket = handle->svr_socket;
         if (nullptr == svr_socket) {
             __leave2;
@@ -535,7 +536,7 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
         accept_context_t accpt_ctx;
         accpt_ctx.mplexer_context = handle;
 
-        ret = svr_socket->accept(listen_sock, &accpt_ctx.cli_socket, (struct sockaddr*)&accpt_ctx.client_addr, &accpt_ctx.client_addr_len);
+        ret = svr_socket->accept(&accpt_ctx.cli_socket, listen_sock, (struct sockaddr*)&accpt_ctx.client_addr, &accpt_ctx.client_addr_len);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -554,8 +555,8 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
         /*
          * it can be accomplished by using follows...
          *
-         * svr_socket->tls_accept(cli_socket, &tls_handle);
-         * ret = svr.session_accepted(handle, tls_handle, (handle_t)cli_socket, &client_addr);
+         * svr_socket->tls_accept(cli_socket, &socket_handle);
+         * ret = session_accepted(handle, socket_handle, (handle_t)cli_socket, &client_addr);
          *
          * sometimes it takes long time by calling ssl_accept
          * so, separate thread to improve accept performance
@@ -568,9 +569,10 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
                 handle->accept_queue.push(accpt_ctx);
             }
 
-            svr.try_connected(handle, accpt_ctx.cli_socket, &accpt_ctx.client_addr);
+            try_connected(handle, accpt_ctx.cli_socket, &accpt_ctx.client_addr);
         } else {
-            ret = svr.session_accepted(handle, nullptr, (handle_t)accpt_ctx.cli_socket, &accpt_ctx.client_addr);
+            auto socket_handle = new socket_context_t(accpt_ctx.cli_socket, closesocket_ondestroy);
+            ret = session_accepted(handle, socket_handle, (handle_t)accpt_ctx.cli_socket, &accpt_ctx.client_addr);
         }
     }
     __finally2 {
@@ -682,30 +684,26 @@ return_t network_server::tls_accept_routine(network_multiplexer_context_t* handl
                 handle->accept_queue.pop();
             } else {
                 ret = errorcode_t::empty;
+                __leave2;
             }
         }
 
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+        socket_t listen_sock = (socket_t)handle->listen_handle->fd;
 
-        socket_t listen_sock = (socket_t)handle->listen_sock;
+        // int socktype = 0;
+        // typeof_socket(listen_sock, socktype);
+        // bool is_stream = (SOCK_STREAM == socktype);
+        // bool is_dgram = (SOCK_DGRAM == socktype);
 
-        int socktype = 0;
-        typeof_socket(listen_sock, socktype);
-        bool is_stream = (SOCK_STREAM == socktype);
-        bool is_dgram = (SOCK_DGRAM == socktype);
-
-        network_server svr;
         server_socket* svr_socket = handle->svr_socket;
-        tls_context_t* tls_handle = nullptr;
+        socket_context_t* socket_handle = nullptr;
 
         return_t test = errorcode_t::success;
 
-        test = svr_socket->tls_accept(accpt_ctx.cli_socket, &tls_handle);
+        test = svr_socket->tls_accept(&socket_handle, accpt_ctx.cli_socket);
         if (errorcode_t::success == test) {
-            svr.session_accepted(handle, tls_handle, (handle_t)accpt_ctx.cli_socket, &accpt_ctx.client_addr);
-            /* tls_handle is release in session_closed member. */
+            session_accepted(handle, socket_handle, (handle_t)accpt_ctx.cli_socket, &accpt_ctx.client_addr);
+            /* socket_handle is release in session_closed member. */
         } else {
             close_socket(accpt_ctx.cli_socket, true, 0);
         }
@@ -766,7 +764,7 @@ return_t network_server::cleanup_tls_accept(network_multiplexer_context_t* handl
     return ret;
 }
 
-return_t network_server::network_thread(void* user_context) {
+return_t network_server::producer_thread(void* user_context) {
     return_t ret = errorcode_t::success;
     network_multiplexer_context_t* handle = reinterpret_cast<network_multiplexer_context_t*>(user_context);
 
@@ -781,7 +779,7 @@ return_t network_server::network_thread(void* user_context) {
         }
 
         network_server svr;
-        ret = svr.mplexer.event_loop_run(handle->mplexer_handle, (handle_t)handle->listen_sock, network_routine, handle);
+        ret = svr.mplexer.event_loop_run(handle->mplexer_handle, (handle_t)handle->listen_handle->fd, producer_routine, handle);
     }
     __finally2 {
         // do nothing
@@ -790,8 +788,8 @@ return_t network_server::network_thread(void* user_context) {
     return ret;
 }
 
-return_t network_server::network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
-    // see network_thread
+return_t network_server::producer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+    // see producer_thread
     return_t ret = errorcode_t::success;
     network_multiplexer_context_t* context = static_cast<network_multiplexer_context_t*>(user_context);
     network_server svr;
@@ -821,15 +819,13 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
         }
     } else if (multiplexer_event_type_t::mux_dgram == type) {
         network_session* dgram_session = nullptr;
-        // context->session_manager.find(context->listen_sock, &dgram_session); /* reference increased, call release later */
-        context->session_manager.get_dgram_session((handle_t)context->listen_sock, context->svr_socket, nullptr, &dgram_session);
+        context->session_manager.get_dgram_session(&dgram_session, (handle_t)context->listen_handle->fd, context->svr_socket, nullptr);
         if (dgram_session) {
-            // byte_t* buffer = (byte_t*)&dgram_session->get_buffer()->bin[0];
             if (context->svr_socket->support_tls()) {
                 sockaddr_storage_t* addr = &dgram_session->socket_info()->cli_addr;
                 dgram_session->dgram_get_sockaddr(addr);
                 network_session* dtls_session = nullptr;
-                context->session_manager.get_dgram_cookie_session((handle_t)context->listen_sock, addr, context->svr_socket, nullptr, &dtls_session);
+                context->session_manager.get_dgram_cookie_session(&dtls_session, (handle_t)context->listen_handle->fd, addr, context->svr_socket, nullptr);
                 if (dtls_session) {
                     dtls_session->produce(&context->event_queue, nullptr, 0);
                     dtls_session->release();
@@ -850,19 +846,19 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
     if (multiplexer_event_type_t::mux_read == type) {
         /* consumer_routine (decrease), close_if_not_referenced (delete) */
         session_object->produce(&context->event_queue, (byte_t*)session_object->wsabuf_read()->buf, transferred);
-        /* asynchronous write */
+        /* asynchronous */
         session_object->ready_to_read();
     } else if (multiplexer_event_type_t::mux_disconnect == type) {
-        svr.session_closed(context, session_object->socket_info()->event_socket);
+        svr.session_closed(context, (handle_t)session_object->socket_info()->event_handle->fd);
     } else if (multiplexer_event_type_t::mux_dgram) {
         network_session* dgram_session = nullptr;
-        context->session_manager.get_dgram_session((handle_t)context->listen_sock, context->svr_socket, nullptr, &dgram_session);
+        context->session_manager.get_dgram_session(&dgram_session, (handle_t)context->listen_handle->fd, context->svr_socket, nullptr);
         if (dgram_session) {
             byte_t* buffer = (byte_t*)&dgram_session->get_buffer()->bin[0];
             sockaddr_storage_t* addr = &dgram_session->socket_info()->cli_addr;
             if (context->svr_socket->support_tls()) {
                 network_session* dtls_session = nullptr;
-                context->session_manager.get_dgram_cookie_session((handle_t)context->listen_sock, addr, context->svr_socket, nullptr, &dtls_session);
+                context->session_manager.get_dgram_cookie_session(&dtls_session, (handle_t)context->listen_handle->fd, addr, context->svr_socket, nullptr);
                 if (dtls_session) {
                     dtls_session->produce(&context->event_queue, buffer, transferred, addr);
                     dtls_session->release();
@@ -880,7 +876,7 @@ return_t network_server::network_routine(uint32 type, uint32 data_count, void* d
     return ret;
 }
 
-return_t network_server::network_signal(void* user_context) {
+return_t network_server::producer_signal(void* user_context) {
     return_t ret = errorcode_t::success;
     network_multiplexer_context_t* handle = reinterpret_cast<network_multiplexer_context_t*>(user_context);
 
@@ -991,7 +987,7 @@ return_t network_server::consumer_signal(void* user_context) {
     return ret;
 }
 
-return_t network_server::session_accepted(network_multiplexer_context_t* handle, tls_context_t* tls_handle, handle_t event_socket,
+return_t network_server::session_accepted(network_multiplexer_context_t* handle, socket_context_t* socket_handle, handle_t event_socket,
                                           sockaddr_storage_t* client_addr) {
     // see accept_routine, tls_accept_routine
     return_t ret = errorcode_t::success;
@@ -1007,7 +1003,7 @@ return_t network_server::session_accepted(network_multiplexer_context_t* handle,
         }
 
         network_session* session_object;
-        ret = handle->session_manager.connected(event_socket, client_addr, handle->svr_socket, tls_handle, &session_object);
+        ret = handle->session_manager.connected(event_socket, client_addr, handle->svr_socket, socket_handle, &session_object);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -1033,7 +1029,7 @@ return_t network_server::session_accepted(network_multiplexer_context_t* handle,
 }
 
 return_t network_server::session_closed(network_multiplexer_context_t* handle, handle_t event_socket) {
-    // see network_routine
+    // see producer_routine
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -1051,7 +1047,7 @@ return_t network_server::session_closed(network_multiplexer_context_t* handle, h
         ret = handle->session_manager.ready_to_close(event_socket, &session_object);
         if (errorcode_t::success == ret) {
             /* no more associated, control_delete */
-            mplexer.unbind(handle->mplexer_handle, session_object->socket_info()->event_socket, nullptr);
+            mplexer.unbind(handle->mplexer_handle, (handle_t)session_object->socket_info()->event_handle->fd, nullptr);
 
             void* dispatch_data[4] = {
                 nullptr,
@@ -1060,7 +1056,7 @@ return_t network_server::session_closed(network_multiplexer_context_t* handle, h
             handle->callback_routine(multiplexer_event_type_t::mux_disconnect, 4, dispatch_data, nullptr, handle->callback_param);
 
             /* end-of-life. if reference counter is 0, close a socket and delete an instance */
-            /* and release tls_handle here */
+            /* and release socket_handle here */
             session_object->release();
         }
     }

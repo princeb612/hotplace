@@ -54,9 +54,9 @@ int transport_layer_security::addref() { return _shared.addref(); }
 
 int transport_layer_security::release() { return _shared.delref(); }
 
-return_t transport_layer_security::tls_open(tls_context_t** handle, socket_t fd, uint32 flags) {
+return_t transport_layer_security::tls_open(socket_context_t** handle, socket_t fd, uint32 flags) {
     return_t ret = errorcode_t::success;
-    tls_context_t* context = nullptr;
+    socket_context_t* context = nullptr;
 
     __try2 {
         if (nullptr == handle || INVALID_SOCKET == fd) {
@@ -64,7 +64,7 @@ return_t transport_layer_security::tls_open(tls_context_t** handle, socket_t fd,
             __leave2;
         }
 
-        __try_new_catch(context, new tls_context_t, ret, __leave2);
+        __try_new_catch(context, new socket_context_t, ret, __leave2);
 
         auto ssl = SSL_new(_ctx);
         if (nullptr == ssl) {
@@ -73,9 +73,9 @@ return_t transport_layer_security::tls_open(tls_context_t** handle, socket_t fd,
         }
         SSL_set_fd(ssl, (int)fd);
 
-        context->_fd = fd;
-        context->_ssl = ssl;
-        context->_flags = flags;
+        context->fd = fd;
+        context->ssl = ssl;
+        context->flags = flags;
 
         if (flags & tls_flag_t::tls_nbio) {
             SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
@@ -92,9 +92,9 @@ return_t transport_layer_security::tls_open(tls_context_t** handle, socket_t fd,
     return ret;
 }
 
-return_t transport_layer_security::dtls_open(tls_context_t** handle, socket_t fd, uint32 flags) {
+return_t transport_layer_security::dtls_open(socket_context_t** handle, socket_t fd, uint32 flags) {
     return_t ret = errorcode_t::success;
-    tls_context_t* context = nullptr;
+    socket_context_t* context = nullptr;
 
     __try2 {
         if (nullptr == handle) {
@@ -107,16 +107,16 @@ return_t transport_layer_security::dtls_open(tls_context_t** handle, socket_t fd
             __leave2;
         }
 
-        __try_new_catch(context, new tls_context_t, ret, __leave2);
+        __try_new_catch(context, new socket_context_t, ret, __leave2);
 
         /* SSL_accept */
         auto ssl = SSL_new(_ctx);
         SSL_set_fd(ssl, (int)fd);
 
         /* compose the context */
-        context->_fd = fd;
-        context->_ssl = ssl;
-        context->_flags = flags;
+        context->fd = fd;
+        context->ssl = ssl;
+        context->flags = flags;
 
         if (flags & tls_flag_t::tls_nbio) {
             SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
@@ -134,30 +134,14 @@ return_t transport_layer_security::dtls_open(tls_context_t** handle, socket_t fd
     return ret;
 }
 
-return_t transport_layer_security::close(tls_context_t* handle) {
+return_t transport_layer_security::close(socket_context_t* handle) {
     return_t ret = errorcode_t::success;
-    tls_context_t* context = nullptr;
+    socket_context_t* context = nullptr;
 
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
-        }
-
-        auto ssl = handle->_ssl;
-
-        if (ssl) {
-            SSL_shutdown(ssl);
-            /**
-             *  int status = SSL_get_shutdown(ssl);
-             *  (SSL_SENT_SHUTDOWN & status)
-             *  no event - GetQueuedCompletionStatus
-             */
-            SSL_free(ssl);
-        }
-
-        if (handle->_flags & tls_flag_t::closesocket_ondestroy) {
-            close_socket(handle->_fd, true, 0);
         }
 
         delete handle;
@@ -168,13 +152,13 @@ return_t transport_layer_security::close(tls_context_t* handle) {
     return ret;
 }
 
-return_t transport_layer_security::connect(tls_context_t** handle, int type, const char* address, uint16 port, uint32 wto) {
+return_t transport_layer_security::connect(socket_context_t** handle, int type, const char* address, uint16 port, uint32 wto) {
     return_t ret = errorcode_t::success;
     socket_t fd = INVALID_SOCKET;
     BIO* sbio_read = nullptr;
     BIO* sbio_write = nullptr;
     SSL* ssl = nullptr;
-    tls_context_t* context = nullptr;
+    socket_context_t* context = nullptr;
     sockaddr_storage_t addr;
     uint32 flags = tls_flag_t::closesocket_ondestroy | tls_flag_t::tls_nbio;
 
@@ -219,7 +203,7 @@ return_t transport_layer_security::connect(tls_context_t** handle, int type, con
     return ret;
 }
 
-return_t transport_layer_security::connectto(tls_context_t** handle, socket_t fd, const char* address, uint16 port, uint32 wto) {
+return_t transport_layer_security::connectto(socket_context_t** handle, socket_t fd, const char* address, uint16 port, uint32 wto) {
     return_t ret = errorcode_t::success;
     sockaddr_storage_t addr = {
         0,
@@ -244,9 +228,9 @@ return_t transport_layer_security::connectto(tls_context_t** handle, socket_t fd
     return ret;
 }
 
-return_t transport_layer_security::connectto(tls_context_t** handle, socket_t fd, const sockaddr* addr, socklen_t addrlen, uint32 wto) {
+return_t transport_layer_security::connectto(socket_context_t** handle, socket_t fd, const sockaddr* addr, socklen_t addrlen, uint32 wto) {
     return_t ret = errorcode_t::success;
-    tls_context_t* context = nullptr;
+    socket_context_t* context = nullptr;
 
     __try2 {
         if (nullptr == handle || nullptr == addr) {
@@ -285,9 +269,9 @@ return_t transport_layer_security::connectto(tls_context_t** handle, socket_t fd
     return ret;
 }
 
-return_t transport_layer_security::tls_handshake(tls_context_t** handle, socket_t fd) {
+return_t transport_layer_security::tls_handshake(socket_context_t** handle, socket_t fd) {
     return_t ret = errorcode_t::success;
-    tls_context_t* context = nullptr;
+    socket_context_t* context = nullptr;
 
     __try2 {
         if (nullptr == handle) {
@@ -331,7 +315,7 @@ return_t transport_layer_security::tls_handshake(tls_context_t** handle, socket_
     return ret;
 }
 
-return_t transport_layer_security::dtls_handshake(tls_context_t* handle, sockaddr* addr, socklen_t addrlen) {
+return_t transport_layer_security::dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -344,7 +328,7 @@ return_t transport_layer_security::dtls_handshake(tls_context_t* handle, sockadd
          * non-blocking     not yet
          */
 
-        auto ssl = handle->_ssl;
+        auto ssl = handle->ssl;
         if (1 == SSL_is_init_finished(ssl)) {
             __leave2;
         }
@@ -376,7 +360,7 @@ return_t transport_layer_security::dtls_handshake(tls_context_t* handle, sockadd
     return ret;
 }
 
-return_t transport_layer_security::do_connect(tls_context_t* handle, uint32 wto) {
+return_t transport_layer_security::do_connect(socket_context_t* handle, uint32 wto) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -385,9 +369,9 @@ return_t transport_layer_security::do_connect(tls_context_t* handle, uint32 wto)
             __leave2;
         }
 
-        auto ssl = handle->_ssl;
-        auto fd = handle->_fd;
-        auto nbio = (handle->_flags & tls_nbio) ? 1 : 0;
+        auto ssl = handle->ssl;
+        auto fd = handle->fd;
+        auto nbio = (handle->flags & tls_nbio) ? 1 : 0;
         int rc = 1;
         int flags = 0;
 
@@ -458,7 +442,7 @@ return_t transport_layer_security::do_connect(tls_context_t* handle, uint32 wto)
     return ret;
 }
 
-return_t transport_layer_security::do_dtls_listen(tls_context_t* handle, sockaddr* addr, socklen_t addrlen) {
+return_t transport_layer_security::do_dtls_listen(socket_context_t* handle, sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     BIO_ADDR* bio_addr = nullptr;
     __try2 {
@@ -467,8 +451,8 @@ return_t transport_layer_security::do_dtls_listen(tls_context_t* handle, sockadd
             __leave2;
         }
 
-        auto fd = handle->_fd;
-        auto ssl = handle->_ssl;
+        auto fd = handle->fd;
+        auto ssl = handle->ssl;
         int rc = 1;
         int flags = 0;
 
@@ -520,7 +504,7 @@ return_t transport_layer_security::do_dtls_listen(tls_context_t* handle, sockadd
     return ret;
 }
 
-return_t transport_layer_security::do_accept(tls_context_t* handle) {
+return_t transport_layer_security::do_accept(socket_context_t* handle) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -528,9 +512,9 @@ return_t transport_layer_security::do_accept(tls_context_t* handle) {
             __leave2;
         }
 
-        auto fd = handle->_fd;
-        auto ssl = handle->_ssl;
-        auto tlsflags = handle->_flags;
+        auto fd = handle->fd;
+        auto ssl = handle->ssl;
+        auto tlsflags = handle->flags;
         int rc = 1;
         int flags = 0;
 
@@ -592,7 +576,7 @@ return_t transport_layer_security::do_accept(tls_context_t* handle) {
     return ret;
 }
 
-return_t transport_layer_security::set_tls_io(tls_context_t* handle, int type) {
+return_t transport_layer_security::set_tls_io(socket_context_t* handle, int type) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -600,8 +584,8 @@ return_t transport_layer_security::set_tls_io(tls_context_t* handle, int type) {
             __leave2;
         }
 
-        auto fd = handle->_fd;
-        auto ssl = handle->_ssl;
+        auto fd = handle->fd;
+        auto ssl = handle->ssl;
         auto rbio = SSL_get_rbio(ssl);
 
         /**
@@ -631,7 +615,7 @@ return_t transport_layer_security::set_tls_io(tls_context_t* handle, int type) {
     return ret;
 }
 
-return_t transport_layer_security::read(tls_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* cbread) {
+return_t transport_layer_security::read(socket_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* cbread) {
     return_t ret = errorcode_t::success;
     int rc = 0;
 
@@ -647,7 +631,7 @@ return_t transport_layer_security::read(tls_context_t* handle, int mode, void* b
 
         size_t size_read = buffer_size;
         if (tls_io_flag_t::read_socket_recv & mode) {
-            rc = ::recv(handle->_fd, (char*)buffer, buffer_size, 0);
+            rc = ::recv(handle->fd, (char*)buffer, buffer_size, 0);
             if (0 == rc) { /* gracefully closed */
                 ret = errorcode_t::disconnect;
                 __leave2;
@@ -663,7 +647,7 @@ return_t transport_layer_security::read(tls_context_t* handle, int mode, void* b
             }
         }
 
-        auto ssl = handle->_ssl;
+        auto ssl = handle->ssl;
         auto rbio = SSL_get_rbio(ssl);
 
         if (tls_io_flag_t::read_bio_write & mode) {
@@ -703,7 +687,7 @@ return_t transport_layer_security::read(tls_context_t* handle, int mode, void* b
     return ret;
 }
 
-return_t transport_layer_security::recvfrom(tls_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* cbread, struct sockaddr* addr,
+return_t transport_layer_security::recvfrom(socket_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* cbread, struct sockaddr* addr,
                                             socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     int rc = 0;
@@ -725,7 +709,7 @@ return_t transport_layer_security::recvfrom(tls_context_t* handle, int mode, voi
             if (tls_io_flag_t::peek_msg & mode) {
                 flag = MSG_PEEK;
             }
-            rc = ::recvfrom(handle->_fd, (char*)buffer, buffer_size, flag, addr, addrlen);
+            rc = ::recvfrom(handle->fd, (char*)buffer, buffer_size, flag, addr, addrlen);
             if (0 == rc) { /* gracefully closed */
                 ret = errorcode_t::disconnect;
                 __leave2;
@@ -741,7 +725,7 @@ return_t transport_layer_security::recvfrom(tls_context_t* handle, int mode, voi
             }
         }
 
-        auto ssl = handle->_ssl;
+        auto ssl = handle->ssl;
         auto rbio = SSL_get_rbio(ssl);
 
         if (tls_io_flag_t::read_bio_write & mode) {
@@ -773,7 +757,7 @@ return_t transport_layer_security::recvfrom(tls_context_t* handle, int mode, voi
     return ret;
 }
 
-return_t transport_layer_security::send(tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent) {
+return_t transport_layer_security::send(socket_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -786,7 +770,7 @@ return_t transport_layer_security::send(tls_context_t* handle, int mode, const c
             *size_sent = 0;
         }
 
-        auto ssl = handle->_ssl;
+        auto ssl = handle->ssl;
         auto wbio = SSL_get_wbio(ssl);
 
         if (tls_io_flag_t::send_ssl_write & mode) {
@@ -815,7 +799,7 @@ return_t transport_layer_security::send(tls_context_t* handle, int mode, const c
             }
 
             if (tls_io_flag_t::send_socket_send & mode) {
-                ::send(handle->_fd, &buf[0], ret_read, 0);
+                ::send(handle->fd, &buf[0], ret_read, 0);
             }
         }
     }
@@ -825,8 +809,8 @@ return_t transport_layer_security::send(tls_context_t* handle, int mode, const c
     return ret;
 }
 
-return_t transport_layer_security::sendto(tls_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent, const struct sockaddr* addr,
-                                          socklen_t addrlen) {
+return_t transport_layer_security::sendto(socket_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent,
+                                          const struct sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -838,7 +822,7 @@ return_t transport_layer_security::sendto(tls_context_t* handle, int mode, const
             *size_sent = 0;
         }
 
-        auto ssl = handle->_ssl;
+        auto ssl = handle->ssl;
         auto wbio = SSL_get_wbio(ssl);
 
         if (tls_io_flag_t::send_ssl_write & mode) {
@@ -867,7 +851,7 @@ return_t transport_layer_security::sendto(tls_context_t* handle, int mode, const
             }
 
             if (tls_io_flag_t::send_socket_send & mode) {
-                ::sendto(handle->_fd, &buf[0], ret_read, 0, addr, addrlen);
+                ::sendto(handle->fd, &buf[0], ret_read, 0, addr, addrlen);
             }
         }
     }
@@ -877,11 +861,11 @@ return_t transport_layer_security::sendto(tls_context_t* handle, int mode, const
     return ret;
 }
 
-socket_t transport_layer_security::get_socket(tls_context_t* handle) {
+socket_t transport_layer_security::get_socket(socket_context_t* handle) {
     socket_t fd = INVALID_SOCKET;
 
     if (nullptr != handle) {
-        fd = handle->_fd;
+        fd = handle->fd;
     }
     return fd;
 }

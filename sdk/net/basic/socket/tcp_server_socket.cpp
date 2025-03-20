@@ -13,23 +13,26 @@
 namespace hotplace {
 namespace net {
 
-tcp_server_socket::tcp_server_socket() : server_socket() {
-    // do nothing
-}
+tcp_server_socket::tcp_server_socket() : server_socket() {}
 
-return_t tcp_server_socket::open(socket_t* sock, unsigned int family, uint16 port) {
+return_t tcp_server_socket::open(socket_context_t** handle, unsigned int family, uint16 port) {
     return_t ret = errorcode_t::success;
+    socket_context_t* context = nullptr;
 
     __try2 {
-        if (nullptr == sock) {
+        if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = create_listener(1, &family, sock, IPPROTO_TCP, port);
+        socket_t sock = INVALID_SOCKET;
+        ret = create_listener(1, &family, &sock, IPPROTO_TCP, port);
         if (errorcode_t::success != ret) {
             __leave2;
         }
+
+        __try_new_catch(context, new socket_context_t(sock, closesocket_ondestroy), ret, __leave2);
+        *handle = context;
     }
     __finally2 {
         // do nothing
@@ -37,26 +40,23 @@ return_t tcp_server_socket::open(socket_t* sock, unsigned int family, uint16 por
     return ret;
 }
 
-return_t tcp_server_socket::close(socket_t sock, tls_context_t* handle) { return close_socket(sock, true, 0); }
-
-return_t tcp_server_socket::accept(socket_t sock, socket_t* clisock, struct sockaddr* addr, socklen_t* addrlen) {
+return_t tcp_server_socket::accept(socket_t* client_socket, socket_t listen_socket, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if ((nullptr == clisock) || (nullptr == addr) || (nullptr == addrlen)) {
+        if ((nullptr == client_socket) || (nullptr == addr) || (nullptr == addrlen)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        socket_t cli_socket = INVALID_SOCKET;
-
-        cli_socket = ::accept(sock, addr, addrlen);
-        if (INVALID_SOCKET == cli_socket) {
-            ret = get_lasterror(cli_socket);
+        socket_t socket = INVALID_SOCKET;
+        socket = ::accept(listen_socket, addr, addrlen);
+        if (INVALID_SOCKET == socket) {
+            ret = get_lasterror(socket);
             __leave2;
         }
 
-        *clisock = cli_socket;
+        *client_socket = socket;
     }
     __finally2 {
         // do nothing
@@ -64,10 +64,16 @@ return_t tcp_server_socket::accept(socket_t sock, socket_t* clisock, struct sock
     return ret;
 }
 
-return_t tcp_server_socket::read(socket_t sock, tls_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) {
+return_t tcp_server_socket::read(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;
 
     __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto sock = handle->fd;
 #if defined _WIN32 || defined _WIN64
         int ret_routine = ::recv(sock, ptr_data, (int)size_data, 0);
 #elif defined __linux__
@@ -88,10 +94,16 @@ return_t tcp_server_socket::read(socket_t sock, tls_context_t* handle, int mode,
     return ret;
 }
 
-return_t tcp_server_socket::send(socket_t sock, tls_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent) {
+return_t tcp_server_socket::send(socket_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent) {
     return_t ret = errorcode_t::success;
 
     __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto sock = handle->fd;
 #if defined _WIN32 || defined _WIN64
         int ret_routine = ::send(sock, ptr_data, (int)size_data, 0);
 #elif defined __linux__

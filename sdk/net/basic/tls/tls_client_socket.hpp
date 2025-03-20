@@ -36,7 +36,7 @@ class tls_client_socket : public client_socket {
    protected:
    private:
     transport_layer_security* _tls;
-    tls_context_t* _handle;
+    socket_context_t* _handle;
 };
 
 }  // namespace net

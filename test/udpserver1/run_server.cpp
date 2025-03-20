@@ -138,12 +138,13 @@ return_t udp_server(void* param) {
 #endif
     signalwait_threads network_threads;
     accept_context_t accept_context;
-    socket_t sock = INVALID_SOCKET;
+    socket_context_t* handle = nullptr;
 
-    svr.open(&sock, AF_INET, option.port);  // IPv4 only
+    svr.open(&handle, AF_INET, option.port);  // IPv4 only
+    auto sock = handle->fd;
 
     mplexer.open(&handle_ipv4, 128);
-    mplexer.bind(handle_ipv4, (handle_t)sock, &netsock_event);  // windows
+    mplexer.bind(handle_ipv4, (handle_t)handle->fd, &netsock_event);  // windows
 
     accept_context.mplex_handle = handle_ipv4;
     accept_context.udp_server_sock = sock;
@@ -171,7 +172,7 @@ return_t udp_server(void* param) {
 #endif
     }
 
-    svr.close(sock, nullptr);
+    svr.close(handle);
 
     network_threads.signal_and_wait_all();
 

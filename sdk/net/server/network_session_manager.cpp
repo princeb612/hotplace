@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/types.hpp>
+#include <sdk/net/basic/server_socket.hpp>
 #include <sdk/net/basic/tls/sdk.hpp>
 #include <sdk/net/server/network_server.hpp>
 #include <sdk/net/server/network_session.hpp>
@@ -26,7 +27,7 @@ void network_session_manager::set_server_conf(server_conf* conf) { _server_conf 
 
 server_conf* network_session_manager::get_server_conf() { return _server_conf; }
 
-return_t network_session_manager::connected(handle_t event_socket, sockaddr_storage_t* addr, server_socket* svr_socket, tls_context_t* tls_handle,
+return_t network_session_manager::connected(handle_t event_socket, sockaddr_storage_t* addr, server_socket* svr_socket, socket_context_t* socket_handle,
                                             network_session** ptr_session_object) {
     return_t ret = errorcode_t::success;
     network_session_map_pib_t pairib;
@@ -49,7 +50,7 @@ return_t network_session_manager::connected(handle_t event_socket, sockaddr_stor
                 session_object->get_buffer()->set_bufsize(tcp_bufsize);  // 0 for default buffer size
             }
             pairib.first->second = session_object;
-            session_object->connected(event_socket, addr, tls_handle);
+            session_object->connected(event_socket, addr, socket_handle);
             *ptr_session_object = session_object;
         } else {
             ret = errorcode_t::already_assigned;
@@ -134,8 +135,8 @@ void network_session_manager::shutdown() {
     _dgram_map.clear();
 }
 
-return_t network_session_manager::get_dgram_session(handle_t listen_sock, server_socket* svr_socket, tls_context_t* tls_handle,
-                                                    network_session** ptr_session_object) {
+return_t network_session_manager::get_dgram_session(network_session** ptr_session_object, handle_t listen_sock, server_socket* svr_socket,
+                                                    socket_context_t* socket_handle) {
     return_t ret = errorcode_t::success;
     network_session_map_pib_t pairib;
     network_session* session_object = nullptr;
@@ -158,6 +159,9 @@ return_t network_session_manager::get_dgram_session(handle_t listen_sock, server
             }
             pairib.first->second = session_object;
             session_object->dtls_session_open(listen_sock);
+            if (false == session_object->get_server_socket()->support_tls()) {
+                session_object->udp_session_open(listen_sock);
+            }
             *ptr_session_object = session_object;
         } else {
             session_object = pairib.first->second;
@@ -175,8 +179,8 @@ return_t network_session_manager::get_dgram_session(handle_t listen_sock, server
     return ret;
 }
 
-return_t network_session_manager::get_dgram_cookie_session(handle_t listen_sock, const sockaddr_storage_t* addr, server_socket* svr_socket,
-                                                           tls_context_t* tls_handle, network_session** ptr_session_object) {
+return_t network_session_manager::get_dgram_cookie_session(network_session** ptr_session_object, handle_t listen_sock, const sockaddr_storage_t* addr,
+                                                           server_socket* svr_socket, socket_context_t* socket_handle) {
     return_t ret = errorcode_t::success;
     dgram_session_map_pib_t pairib;
     network_session* session_object = nullptr;

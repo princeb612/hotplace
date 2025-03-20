@@ -70,7 +70,7 @@ typedef struct _network_multiplexer_context_t network_multiplexer_context_t;
  *
  *  flow
  *  1. network i/o event (based on network_multiplexer - iocp, epoll, kqueue) - MultiplexerKqueue not implemented yet
- *  2. produce (network_thread in event_loop_run, put into raw stream)
+ *  2. produce (producer_thread in event_loop_run, put into raw stream)
  *  3. consume (consumer_thread in consumer_loop_run, put raw stream into composed stream, using protocol interpreter)
  *  4. call user_defined_callback (multiplexer_event_type_t::mux_read, vector data)
  *
@@ -316,7 +316,7 @@ class network_server {
      * @brief   read packet and compose a request
      * @return  error code (see error.hpp)
      */
-    static return_t network_thread(void* user_context);
+    static return_t producer_thread(void* user_context);
     /**
      * @brief   network processor
      * @param   uint32              type                [IN] see mux_event_type
@@ -328,12 +328,12 @@ class network_server {
      * @remarks
      *          see callback parameter of multiplexer_xxx::event_loop_run
      */
-    static return_t network_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
+    static return_t producer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
     /**
-     * @brief   stop 1 network_thread
+     * @brief   stop 1 producer_thread
      * @return  error code (see error.hpp)
      */
-    static return_t network_signal(void* user_context);
+    static return_t producer_signal(void* user_context);
 
     /**
      * @brief   if a request is composed, dispatch a request into callback
@@ -354,13 +354,13 @@ class network_server {
     /**
      * @brief   accept
      * @param   network_multiplexer_context_t* handle [IN]
-     * @param   tls_context_t* tls_handle      [IN]
+     * @param   socket_context_t* socket_handle      [IN]
      * @param   handle_t cli_socket   [IN]
      * @param   sockaddr_storage_t* client_addr     [IN]
      * @return  error code (see error.hpp)
      * @remarks
      */
-    return_t session_accepted(network_multiplexer_context_t* handle, tls_context_t* tls_handle, handle_t cli_socket, sockaddr_storage_t* client_addr);
+    return_t session_accepted(network_multiplexer_context_t* handle, socket_context_t* socket_handle, handle_t cli_socket, sockaddr_storage_t* client_addr);
     /**
      * @brief   connection-close detected
      * @param   network_multiplexer_context_t* handle [IN]

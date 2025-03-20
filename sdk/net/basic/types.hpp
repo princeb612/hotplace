@@ -19,14 +19,17 @@ namespace net {
 enum tls_flag_t {
     closesocket_ondestroy = (1 << 0),
     tls_nbio = (1 << 1),
+    closesocket_if_tcp = (1 << 2),
 };
 
-struct tls_context_t {
-    uint32 _flags;  // see tls_flag_t
-    socket_t _fd;
-    SSL* _ssl;
+struct socket_context_t {
+    socket_t fd;   // socket
+    uint32 flags;  // see tls_flag_t
+    SSL* ssl;      // TLS
 
-    tls_context_t() : _flags(0), _fd(-1), _ssl(nullptr) {}
+    socket_context_t();
+    socket_context_t(socket_t s, uint32 f = closesocket_ondestroy);
+    ~socket_context_t();
 };
 
 class client_socket;

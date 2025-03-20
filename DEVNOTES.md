@@ -295,6 +295,9 @@ journey
   section 2025.02
     TLS, QUIC:3:github
     Zelda TOTK 100%/100%:5:game
+  section 2025.03
+    Zelda BOTW Master Mode:5:game
+    Monster Hunter Wilds:7:game
 ```
 
 ```mermaid

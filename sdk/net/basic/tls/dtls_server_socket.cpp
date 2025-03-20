@@ -22,29 +22,12 @@ dtls_server_socket::dtls_server_socket(transport_layer_security* tls) : udp_serv
 
 dtls_server_socket::~dtls_server_socket() { _tls->release(); }
 
-return_t dtls_server_socket::close(socket_t sock, tls_context_t* handle) {
+return_t dtls_server_socket::dtls_open(socket_context_t** handle, socket_t listen_sock) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr != handle) {
-            _tls->close(handle);
-        }
-
-        // do not close socket
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
-
-return_t dtls_server_socket::dtls_open(tls_context_t** handle, socket_t sock) {
-    return_t ret = errorcode_t::success;
-    tls_context_t* context = nullptr;
-
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
+        if (nullptr == _tls) {
+            ret = errorcode_t::invalid_context;
             __leave2;
         }
 
@@ -52,12 +35,7 @@ return_t dtls_server_socket::dtls_open(tls_context_t** handle, socket_t sock) {
 #if defined _WIN32 || defined _WIN64
         // flags = tls_nbio;
 #endif
-        ret = _tls->dtls_open(&context, sock, flags);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        *handle = context;
+        ret = _tls->dtls_open(handle, listen_sock, flags);
     }
     __finally2 {
         // do nothing
@@ -65,14 +43,16 @@ return_t dtls_server_socket::dtls_open(tls_context_t** handle, socket_t sock) {
     return ret;
 }
 
-return_t dtls_server_socket::dtls_handshake(tls_context_t* handle, sockaddr* addr, socklen_t addrlen) {
+return_t dtls_server_socket::dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        ret = _tls->dtls_handshake(handle, addr, addrlen);
-        if (errorcode_t::success != ret) {
+        if (nullptr == _tls) {
+            ret = errorcode_t::invalid_context;
             __leave2;
         }
+
+        ret = _tls->dtls_handshake(handle, addr, addrlen);
     }
     __finally2 {
         // do nothing
@@ -80,23 +60,37 @@ return_t dtls_server_socket::dtls_handshake(tls_context_t* handle, sockaddr* add
     return ret;
 }
 
-return_t dtls_server_socket::recvfrom(socket_t sock, tls_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
+return_t dtls_server_socket::recvfrom(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
                                       socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
 
-    __try2 { ret = _tls->recvfrom(handle, mode, ptr_data, size_data, cbread, addr, addrlen); }
+    __try2 {
+        if (nullptr == _tls) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        ret = _tls->recvfrom(handle, mode, ptr_data, size_data, cbread, addr, addrlen);
+    }
     __finally2 {
         // do nothing
     }
     return ret;
 }
 
-return_t dtls_server_socket::sendto(socket_t sock, tls_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
+return_t dtls_server_socket::sendto(socket_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
                                     socklen_t addrlen) {
     return_t ret = errorcode_t::success;
 
     int mode = tls_io_flag_t::send_ssl_write;
-    __try2 { ret = _tls->sendto(handle, mode, ptr_data, size_data, cbsent, addr, addrlen); }
+    __try2 {
+        if (nullptr == _tls) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        ret = _tls->sendto(handle, mode, ptr_data, size_data, cbsent, addr, addrlen);
+    }
     __finally2 {
         // do nothing
     }

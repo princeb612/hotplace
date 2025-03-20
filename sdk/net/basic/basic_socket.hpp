@@ -24,8 +24,28 @@ class basic_socket {
    public:
     virtual ~basic_socket();
 
+    /**
+     * @override
+     * @return
+     *          tcp_server_socket, udp_server_socket
+     *          tcp_client_socket, udp_client_socket
+     *            return false
+     *          tls_server_socket, dtls_server_socket
+     *          tls_server_socket, dtls_server_socket
+     *            return true
+     */
     virtual bool support_tls(); /* override */
-    virtual int socket_type();  /* override */
+    /**
+     * @override
+     * @return
+     *          tcp_server_socket, tls_server_socket
+     *          tcp_client_socket, tls_client_socket
+     *            return SOCK_STREAM
+     *          udp_server_socket, dtls_server_socket
+     *          udp_client_socket, dtls_client_socket
+     *            return SOCK_DGRAM
+     */
+    virtual int socket_type(); /* override */
 
     int addref();
     int release();

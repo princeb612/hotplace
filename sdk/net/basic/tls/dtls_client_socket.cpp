@@ -40,10 +40,10 @@ return_t dtls_client_socket::open(sockaddr_storage_t* sa, const char* address, u
         create_socket(&sock, sa, SOCK_DGRAM, address, port);
 
         // TLS handshake
-        tls_context_t* context = nullptr;
+        socket_context_t* context = nullptr;
         ret = _tls->connectto(&context, sock, address, port, 3000);
         if (errorcode_t::success == ret) {
-            context->_flags |= closesocket_ondestroy;
+            context->flags |= closesocket_ondestroy;
             _handle = context;
         }
     }
@@ -65,7 +65,7 @@ return_t dtls_client_socket::close() {
 return_t dtls_client_socket::recvfrom(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     while (true) {
-        auto fd = _handle->_fd;
+        auto fd = _handle->fd;
         ret = wait_socket(fd, get_wto(), SOCK_WAIT_READABLE);
         if (errorcode_t::success == ret) {
             int mode = tls_io_flag_t::read_ssl_read | tls_io_flag_t::read_bio_write | tls_io_flag_t::read_socket_recv;

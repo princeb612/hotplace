@@ -25,56 +25,38 @@ class udp_server_socket : public server_socket {
     udp_server_socket();
 
     /**
-     * @brief   open
-     * @param   socket_t*       sock            [OUT] listen socket
-     * @param   unsigned int    family          [IN] AF_INET, AF_INET6
-     * @param   uint16          port            [IN]
-     * @return  error code (see error.hpp)
+     * @brief   listen
+     * @param   socket_context_t** handle [out]
+     * @param   unsigned int family [in]
+     * @param   uint16 port [in]
      */
-    virtual return_t open(socket_t* sock, unsigned int family, uint16 port);
+    virtual return_t open(socket_context_t** handle, unsigned int family, uint16 port);
     /**
-     * @brief   close
-     * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  handle      [IN]
-     * @return  error code (see error.hpp)
-     * @remarks
-     *          tls_svr_sock.accept(listen_socket, &cli_socket, &tls_context, &sockaddr, &sockaddrlen);
-     *          // client connection established...
-     *          // ...
-     *          // socket closed
-     *          tls_svr_sock.close(cli_socket, tls_context);
+     * @brief   recvfrom
+     * @param   socket_context_t* handle [in]
+     * @param   int mode [in]
+     * @param   char* ptr_data [out]
+     * @param   size_t size_data [in]
+     * @param   size_t* cbread [out]
+     * @param   struct sockaddr* addr [in]
+     * @param   socklen_t* addrlen [inout]
      */
-    virtual return_t close(socket_t sock, tls_context_t* handle);
+    virtual return_t recvfrom(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);
     /**
-     * @brief   read
-     * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  handle      [IN] nullptr
-     * @param   int             mode            [IN] ignore, it defines operation mode. see also transport_layer_security_server.
-     * @param   char*           ptr_data        [OUT]
-     * @param   size_t          size_data       [IN]
-     * @param   size_t*         cbread          [OUT]
-     * @param   struct sockaddr* addr           [out]
-     * @param   socklen_t*      addrlen         [in]
-     * @return  error code (see error.hpp)
-     * @remarks
-     *          ERROR_CONNECTION_CLOSED
+     * @brief   sendto
+     * @param   socket_context_t* handle [in]
+     * @param   const char* ptr_data [out]
+     * @param   size_t size_data [in]
+     * @param   size_t* cbsent [out]
+     * @param   const struct sockaddr* addr [in]
+     * @param   socklen_t addrlen [in]
      */
-    virtual return_t recvfrom(socket_t sock, tls_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
-                              socklen_t* addrlen);
-    /**
-     * @brief   send
-     * @param   socket_t        sock            [IN]
-     * @param   tls_context_t*  handle      [IN]
-     * @param   const char*     ptr_data        [IN]
-     * @param   size_t          size_data       [IN]
-     * @param   size_t*         cbsent          [OUT]
-     * @param   const struct sockaddr* addr     [in]
-     * @param   socklen_t       addrlen         [in]
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t sendto(socket_t sock, tls_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
-                            socklen_t addrlen);
+    virtual return_t sendto(socket_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen);
 
+    /**
+     * @override
+     * @return  return SOCK_DGRAM
+     */
     virtual int socket_type();
 };
 

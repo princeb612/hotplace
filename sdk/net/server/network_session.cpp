@@ -26,38 +26,45 @@ network_session::network_session(server_socket* serversocket) {
 }
 
 network_session::~network_session() {
-    get_server_socket()->close((socket_t)_session.netsock.event_socket, _session.tls_handle);
+    get_server_socket()->close(_session.netsock.event_handle);
     get_server_socket()->release();
 }
 
-return_t network_session::connected(handle_t event_socket, sockaddr_storage_t* sockaddr, tls_context_t* tls_handle) {
+return_t network_session::connected(handle_t event_socket, sockaddr_storage_t* sockaddr, socket_context_t* socket_handle) {
     return_t ret = errorcode_t::success;
 
-    _session.netsock.event_socket = event_socket;
+    _session.netsock.event_handle = socket_handle;
     memcpy(&(_session.netsock.cli_addr), sockaddr, sizeof(sockaddr_storage_t));
-    _session.tls_handle = tls_handle;
+    return ret;
+}
+
+return_t network_session::udp_session_open(handle_t listen_sock) {
+    return_t ret = errorcode_t::success;
+    if (false == get_server_socket()->support_tls()) {
+        _session.netsock.event_handle = new socket_context_t((socket_t)listen_sock, 0);
+    }
     return ret;
 }
 
 return_t network_session::dtls_session_open(handle_t listen_sock) {
     return_t ret = errorcode_t::success;
 
-    _session.netsock.event_socket = listen_sock;
     memset(&(_session.netsock.cli_addr), 0, sizeof(sockaddr_storage_t));
 
-    if (_session.tls_handle) {
-        get_server_socket()->close(INVALID_SOCKET, _session.tls_handle);
-        _session.tls_handle = nullptr;
+    auto& event_handle = _session.netsock.event_handle;
+    if (event_handle) {
+        get_server_socket()->close(event_handle);
+        event_handle = nullptr;
     }
 
-    get_server_socket()->dtls_open(&_session.tls_handle, (socket_t)listen_sock);
+    get_server_socket()->dtls_open(&_session.netsock.event_handle, (socket_t)listen_sock);
 
     return ret;
 }
 
 return_t network_session::dtls_session_handshake() {
     return_t ret = errorcode_t::success;
-    get_server_socket()->dtls_handshake(_session.tls_handle, (sockaddr*)&(_session.netsock.cli_addr), sizeof(sockaddr_storage_t));
+    get_server_socket()->dtls_handshake(_session.netsock.event_handle, (sockaddr*)&(_session.netsock.cli_addr), sizeof(sockaddr_storage_t));
     return ret;
 }
 
@@ -71,7 +78,7 @@ return_t network_session::ready_to_read() {
         DWORD dwFlags = 0;
         DWORD dwRecvBytes = 0;
 
-        WSARecv((socket_t)_session.netsock.event_socket, &(_session.buf.wsabuf), 1, &dwRecvBytes, &dwFlags, &(_session.buf.overlapped), nullptr);
+        WSARecv((socket_t)_session.netsock.get_event_socket(), &(_session.buf.wsabuf), 1, &dwRecvBytes, &dwFlags, &(_session.buf.overlapped), nullptr);
     } else if (SOCK_DGRAM == type) {
         uint32 flags = 0;
         if (get_server_socket()->support_tls()) {
@@ -115,7 +122,7 @@ return_t network_session::ready_to_read() {
             flags = MSG_PEEK;
         }
         int addrlen = sizeof(sockaddr_storage_t);
-        WSARecvFrom((socket_t)_session.netsock.event_socket, &get_buffer()->wsabuf, 1, nullptr, &flags, (sockaddr*)&socket_info()->cli_addr, &addrlen,
+        WSARecvFrom((socket_t)_session.netsock.get_event_socket(), &get_buffer()->wsabuf, 1, nullptr, &flags, (sockaddr*)&socket_info()->cli_addr, &addrlen,
                     &get_buffer()->overlapped, nullptr);
     }
 #endif
@@ -131,7 +138,7 @@ return_t network_session::send(const char* data_ptr, size_t size_data) {
             __leave2;
         }
         size_t cbsent = 0;
-        ret = get_server_socket()->send((socket_t)_session.netsock.event_socket, _session.tls_handle, data_ptr, size_data, &cbsent);
+        ret = get_server_socket()->send(_session.netsock.event_handle, data_ptr, size_data, &cbsent);
     }
     __finally2 {
         // do nothing
@@ -150,8 +157,7 @@ return_t network_session::sendto(const char* data_ptr, size_t size_data, sockadd
             __leave2;
         }
         size_t cbsent = 0;
-        ret = get_server_socket()->sendto((socket_t)_session.netsock.event_socket, _session.tls_handle, data_ptr, size_data, &cbsent, (sockaddr*)addr,
-                                          sizeof(sockaddr_storage_t));
+        ret = get_server_socket()->sendto(_session.netsock.event_handle, data_ptr, size_data, &cbsent, (sockaddr*)addr, sizeof(sockaddr_storage_t));
     }
     __finally2 {
         // do nothing
@@ -239,7 +245,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
 
         return_t result = errorcode_t::success;
 
-        if (_session.tls_handle) { /* TLS */
+        if (_session.netsock.event_handle->ssl) { /* TLS */
             size_t cbread = 0;
             bool data_ready = false;
             int mode = 0;
@@ -248,14 +254,14 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
 #elif defined _WIN32 || defined _WIN64
             mode = tls_io_flag_t::read_iocp;
 #endif
-            ret = get_server_socket()->read((socket_t)_session.netsock.event_socket, _session.tls_handle, mode, (char*)buf_read, size_buf_read, nullptr);
+            ret = get_server_socket()->read(_session.netsock.event_handle, mode, (char*)buf_read, size_buf_read, nullptr);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
 
             while (true) {
-                result = get_server_socket()->read((socket_t)_session.netsock.event_socket, _session.tls_handle, tls_io_flag_t::read_ssl_read, (char*)buf_read,
-                                                   size_buf_read, &cbread); /*SSL_read */
+                result = get_server_socket()->read(_session.netsock.event_handle, tls_io_flag_t::read_ssl_read, (char*)buf_read, size_buf_read,
+                                                   &cbread); /*SSL_read */
                 if (errorcode_t::success == result || errorcode_t::more_data == result) {
                     getstream()->produce(buf_read, cbread);
 
@@ -263,7 +269,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
 
                     if (istraceable()) {
                         basic_stream bs;
-                        bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
+                        bs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                         trace_debug_event(category_net, net_event_netsession_produce, &bs);
                     }
@@ -279,7 +285,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
         } else { /* wo TLS */
             size_t cbread = 0;
 #if defined __linux__
-            ret = get_server_socket()->read((socket_t)_session.netsock.event_socket, _session.tls_handle, 0, (char*)buf_read, size_buf_read, &cbread);
+            ret = get_server_socket()->read(_session.netsock.event_handle, 0, (char*)buf_read, size_buf_read, &cbread);
             if (errorcode_t::success == ret) {
                 getstream()->produce(buf_read, cbread);
                 q->push(get_priority(), this);
@@ -293,7 +299,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
 
             if (istraceable() && (errorcode_t::success == ret)) {
                 basic_stream bs;
-                bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
+                bs << "[ns] read " << _session.netsock.get_event_socket() << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                 trace_debug_event(category_net, net_event_netsession_produce, &bs);
             }
@@ -344,8 +350,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 #elif defined _WIN32 || defined _WIN64
                 sa = (sockaddr*)addr;
 #endif
-                result = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, mode, (char*)buf_read, size_buf_read,
-                                                       &cbread, sa, &salen); /*SSL_read */
+                result = get_server_socket()->recvfrom(_session.netsock.event_handle, mode, (char*)buf_read, size_buf_read, &cbread, sa, &salen); /*SSL_read */
                 if (errorcode_t::success == result || errorcode_t::more_data == result) {
                     getstream()->produce(buf_read, cbread, addr);
 
@@ -353,7 +358,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 
                     if (istraceable()) {
                         basic_stream bs;
-                        bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
+                        bs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                         trace_debug_event(category_net, net_event_netsession_produce, &bs);
                     }
@@ -371,8 +376,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 #if defined __linux__
             sockaddr_storage_t sa;
             socklen_t sa_size = sizeof(sa);
-            ret = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, 0, (char*)buf_read, size_buf_read, &cbread,
-                                                (sockaddr*)&sa, &sa_size);
+            ret = get_server_socket()->recvfrom(_session.netsock.event_handle, 0, (char*)buf_read, size_buf_read, &cbread, (sockaddr*)&sa, &sa_size);
             if (errorcode_t::success == ret) {
                 getstream()->produce(buf_read, cbread, &sa);
                 q->push(get_priority(), this);
@@ -386,7 +390,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 
             if (istraceable() && (errorcode_t::success == ret)) {
                 basic_stream bs;
-                bs << "[ns] read " << (socket_t)_session.netsock.event_socket << "\n";
+                bs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                 trace_debug_event(category_net, net_event_netsession_produce, &bs);
             }
@@ -423,8 +427,8 @@ return_t network_session::dgram_get_sockaddr(sockaddr_storage_t* addr) {
         socklen_t sa_size = sizeof(sockaddr_storage_t);
         size_t cbread = _session.buf.bin.size();
         int mode = read_socket_recv | peek_msg;
-        ret = get_server_socket()->recvfrom((socket_t)_session.netsock.event_socket, _session.tls_handle, mode, &_session.buf.bin[0], _session.buf.bin.size(),
-                                            &cbread, (sockaddr*)addr, &sa_size);
+        ret = get_server_socket()->recvfrom(_session.netsock.event_handle, mode, &_session.buf.bin[0], _session.buf.bin.size(), &cbread, (sockaddr*)addr,
+                                            &sa_size);
     }
     __finally2 {
         // do nothing

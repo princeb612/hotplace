@@ -34,14 +34,15 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     switch (type) {
         case multiplexer_event_type_t::mux_connect:
-            _logger->writeln("connect %d", network_session->event_socket);
+            _logger->writeln("connect %d", network_session->get_event_socket());
             break;
-        case multiplexer_event_type_t::mux_read:
-            _logger->writeln("read %d msg [%.*s]", network_session->event_socket, (unsigned)bufsize, buf);
-            send((socket_t)network_session->event_socket, buf, bufsize, 0);
-            break;
+        case multiplexer_event_type_t::mux_read: {
+            auto sock = network_session->get_event_socket();
+            _logger->writeln("read %d msg [%.*s]", sock, (unsigned)bufsize, buf);
+            send(sock, buf, bufsize, 0);
+        } break;
         case multiplexer_event_type_t::mux_disconnect:
-            _logger->writeln("disconnect %d", network_session->event_socket);
+            _logger->writeln("disconnect %d", network_session->get_event_socket());
             break;
     }
     return ret;
