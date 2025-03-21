@@ -15,7 +15,14 @@ namespace hotplace {
 namespace net {
 
 /**
- * RFC 5246 7.4.8.  Certificate Verify
+ * @remarks
+ *          RFC 5246 7.4.8.  Certificate Verify
+ * @example
+ *          tls_record_application_data record(session);
+ *          auto handshake = new tls_handshake_certificate_verify(session);
+ *
+ *          record.get_handshakes().add(handshake);
+ *          record.write(dir, bin);
  */
 class tls_handshake_certificate_verify : public tls_handshake {
    public:

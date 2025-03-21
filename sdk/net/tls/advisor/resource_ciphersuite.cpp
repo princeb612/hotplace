@@ -36,7 +36,7 @@ const tls_cipher_suite_t tls_cipher_suites[] = {
     //  insecure
     //   _anon, _DES, _DH_, _DHE_, _ECDH_, _EXPORT, _GOST, _MD5, _NULL, _RC4, _SM3, _SM4
     //  weak
-    //   _3DES, _CBC, _PSK, _RSA (KE), _SHA[_$]
+    //   _3DES, _CBC, _PSK, _RSA (KE), _SHA$
 
     // RFC 5246 9.  Mandatory Cipher Suites
     //   TLS_RSA_WITH_AES_128_CBC_SHA (mandatory)

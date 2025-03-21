@@ -201,11 +201,12 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
             binary_t temp;
             prng.random(temp, 28);
             binary_append(random, temp);
-            handshake->get_random() = random;
+            handshake->set_random(random);
 
             binary_t session_id;
             prng.random(session_id, 32);
-            handshake->get_session_id() = session_id;
+            handshake->set_session_id(session_id);
+
             handshake->set_cipher_suite(server_cs);
         }
 

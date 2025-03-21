@@ -28,6 +28,8 @@ void tls_session::set_type(session_type_t type) { _type = type; }
 
 session_type_t tls_session::get_type() { return _type; }
 
+t_key_value<uint16, uint16>& tls_session::get_conf() { return _kv; }
+
 tls_session::session_info& tls_session::get_session_info(tls_direction_t dir) { return _direction[dir]; }
 
 uint64 tls_session::get_recordno(tls_direction_t dir, bool inc, protection_level_t level) { return get_session_info(dir).get_recordno(inc, level); }

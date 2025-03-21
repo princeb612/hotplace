@@ -243,8 +243,8 @@ void do_test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const
 
     ret = cose.open(&handle);
     if (errorcode_t::success == ret) {
-        binary_t dummy;
-        ret = cose.process(handle, key, cbor, dummy);
+        bool res = false;
+        ret = cose.verify(handle, key, cbor, res);
         cose.close(handle);
         _test_case.test(ret, __FUNCTION__, "cose.verify %s", text);
     }
@@ -281,8 +281,8 @@ void do_test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const 
 
     ret = cose.open(&handle);
     if (errorcode_t::success == ret) {
-        binary_t dummy;
-        ret = cose.process(handle, key, cbor, dummy);
+        bool res = false;
+        ret = cose.verify(handle, key, cbor, res);
         cose.close(handle);
         _test_case.test(ret, __FUNCTION__, "cose.verify %s", text);
     }

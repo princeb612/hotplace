@@ -16,29 +16,55 @@ namespace hotplace {
 namespace net {
 
 /**
- * RFC 5246 7.4.1.3.  Server Hello
- * struct {
- *     ProtocolVersion server_version;
- *     Random random;
- *     SessionID session_id;
- *     CipherSuite cipher_suite;
- *     CompressionMethod compression_method;
- *     select (extensions_present) {
- *         case false:
- *             struct {};
- *         case true:
- *             Extension extensions<0..2^16-1>;
- *     };
- * } ServerHello;
+ * @remarks
+ *          RFC 5246 7.4.1.3.  Server Hello
+ *          struct {
+ *              ProtocolVersion server_version;
+ *              Random random;
+ *              SessionID session_id;
+ *              CipherSuite cipher_suite;
+ *              CompressionMethod compression_method;
+ *              select (extensions_present) {
+ *                  case false:
+ *                      struct {};
+ *                  case true:
+ *                      Extension extensions<0..2^16-1>;
+ *              };
+ *          } ServerHello;
+ * @example
+ *          tls_record_handshake record(session);
+ *          auto handshake = new tls_handshake_server_hello(session);
+ *          openssl_prng prng;
+ *
+ *          prng.random(random, 32);
+ *          handshake->set_random(random);
+ *
+ *          prng.random(session_id, 32);
+ *          handshake->set_session_id(session_id);
+ *
+ *          handshake->set_cipher_suite("TLS_AES_128_GCM_SHA256");
+ *
+ *          auto supported_version = new tls_extension_server_supported_versions(session);
+ *          supported_version->set(tls_13);
+ *          handshake->get_extensions().add(supported_version);
+ *
+ *          auto key_share = new tls_extension_server_key_share(session);
+ *          key_share->add_keyshare();
+ *          handshake->get_extensions().add(key_share);
+ *
+ *          record.get_handshakes().add(handshake);
  */
 class tls_handshake_server_hello : public tls_handshake {
    public:
     tls_handshake_server_hello(tls_session* session);
 
-    binary& get_random();
-    binary& get_session_id();
+    void set_random(const binary_t& value);
+    void set_session_id(const binary_t& value);
+    const binary& get_random();
+    const binary& get_session_id();
     uint16 get_cipher_suite();
     return_t set_cipher_suite(uint16 cs);
+    return_t set_cipher_suite(const char* cs);
     uint8 get_compression_method();
 
    protected:

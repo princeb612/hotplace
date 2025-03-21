@@ -15,7 +15,14 @@ namespace hotplace {
 namespace net {
 
 /**
- * RFC 5246 7.4.9.  Finished
+ * @remarks
+ *          RFC 5246 7.4.9.  Finished
+ * @example
+ *          tls_record_application_data record(session);
+ *          auto handshake = new tls_handshake_finished(session);
+ *
+ *          record.get_handshakes().add(handshake);
+ *          record.write(from_server, bin);  // S -> C finished
  */
 class tls_handshake_finished : public tls_handshake {
    public:

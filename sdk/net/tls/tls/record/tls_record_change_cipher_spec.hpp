@@ -14,6 +14,12 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * @example
+ *          binary_t packet;
+ *          tls_record_change_cipher_spec record(session);
+ *          record.write(from_client, packet);  // C -> S change_cipher_spec
+ */
 class tls_record_change_cipher_spec : public tls_record {
    public:
     tls_record_change_cipher_spec(tls_session* session);

@@ -16,20 +16,57 @@ namespace hotplace {
 namespace net {
 
 /**
- * RFC 5246 7.4.1.2.  Client Hello
- * struct {
- *     ProtocolVersion client_version;
- *     Random random;
- *     SessionID session_id;
- *     CipherSuite cipher_suites<2..2^16-2>;
- *     CompressionMethod compression_methods<1..2^8-1>;
- *     select (extensions_present) {
- *         case false:
- *             struct {};
- *         case true:
- *             Extension extensions<0..2^16-1>;
- *     };
- * } ClientHello;
+ * @remarks
+ *          RFC 5246 7.4.1.2.  Client Hello
+ *          struct {
+ *              ProtocolVersion client_version;
+ *              Random random;
+ *              SessionID session_id;
+ *              CipherSuite cipher_suites<2..2^16-2>;
+ *              CompressionMethod compression_methods<1..2^8-1>;
+ *              select (extensions_present) {
+ *                  case false:
+ *                      struct {};
+ *                  case true:
+ *                      Extension extensions<0..2^16-1>;
+ *              };
+ *          } ClientHello;
+ * @example
+ *          binary_t packet;
+ *          tls_record_handshake record(session);
+ *          auto handshake = new tls_handshake_client_hello(session);
+ *          openssl_prng prng;
+ *
+ *          prng.random(random, 32);
+ *          handshake->set_random(random);
+ *
+ *          prng.random(session_id, 32);
+ *          handshake->set_session_id(session_id);
+ *
+ *          handshake->add_ciphersuites("TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256");
+ *
+ *          auto ec_point_formats = new tls_extension_ec_point_formats(session);
+ *          ec_point_formats->add("uncompressed");
+ *          handshake->get_extensions().add(ec_point_formats);
+ *
+ *          auto supported_groups = new tls_extension_supported_groups(session);
+ *          (*supported_groups).add("x25519").add("secp256r1");
+ *          handshake->get_extensions().add(supported_groups);
+ *
+ *          auto signature_algorithms = new tls_extension_signature_algorithms(session);
+ *          (*signature_algorithms).add("ecdsa_secp256r1_sha256").add("ed25519");
+ *          handshake->get_extensions().add(signature_algorithms);
+ *
+ *          auto supported_versions = new tls_extension_client_supported_versions(session);
+ *          (*supported_versions).add(tls_13);
+ *          handshake->get_extensions().add(supported_versions);
+ *
+ *          auto key_share = new tls_extension_client_key_share(session);
+ *          key_share->add("x25519");
+ *          handshake->get_extensions().add(key_share);
+ *
+ *          record.get_handshakes().add(handshake);
+ *          record.write(from_client, packet);
  */
 class tls_handshake_client_hello : public tls_handshake {
    public:

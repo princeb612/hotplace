@@ -36,9 +36,13 @@ constexpr char constexpr_cookie[] = "cookie";
 
 tls_handshake_server_hello::tls_handshake_server_hello(tls_session* session) : tls_handshake(tls_hs_server_hello, session), _compression_method(0) {}
 
-binary& tls_handshake_server_hello::get_random() { return _random; }
+void tls_handshake_server_hello::set_random(const binary_t& value) { _random = value; }
 
-binary& tls_handshake_server_hello::get_session_id() { return _session_id; }
+void tls_handshake_server_hello::set_session_id(const binary_t& value) { _session_id = value; }
+
+const binary& tls_handshake_server_hello::get_random() { return _random; }
+
+const binary& tls_handshake_server_hello::get_session_id() { return _session_id; }
 
 uint16 tls_handshake_server_hello::get_cipher_suite() {
     uint16 cs = 0;
@@ -59,8 +63,59 @@ return_t tls_handshake_server_hello::set_cipher_suite(uint16 cs) {
             __leave2;
         }
 
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto hint = tlsadvisor->hintof_cipher_suite(cs);
+        if (nullptr == hint) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (false == hint->support) {
+            auto test = session->get_conf().get(session_debug_deprecated_ciphersuite);
+            if (0 == test) {
+                ret = errorcode_t::bad_request;
+                __leave2;
+            }
+        }
+
         auto& protection = session->get_tls_protection();
         protection.set_cipher_suite(cs);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_handshake_server_hello::set_cipher_suite(const char* cs) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cs) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto hint = tlsadvisor->hintof_cipher_suite(cs);
+        if (nullptr == hint) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (false == hint->support) {
+            auto test = session->get_conf().get(session_debug_deprecated_ciphersuite);
+            if (0 == test) {
+                ret = errorcode_t::bad_request;
+                __leave2;
+            }
+        }
+
+        auto& protection = session->get_tls_protection();
+        protection.set_cipher_suite(hint->code);
     }
     __finally2 {}
     return ret;

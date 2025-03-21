@@ -13,6 +13,7 @@
 #define __HOTPLACE_SDK_NET_TLS_TLSSESSION__
 
 #include <queue>
+#include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
@@ -26,6 +27,14 @@ enum session_type_t {
     session_tls = 1,    // TLS/DTLS session
     session_quic = 2,   // QUIC
     session_quic2 = 3,  // QUIC Version 2
+};
+
+/**
+ *   tls_session session;
+ *   session.get_conf().set(key, value);
+ */
+enum session_conf_t {
+    session_debug_deprecated_ciphersuite = 1000,  // to test unsupported cipher suite
 };
 
 class tls_session {
@@ -45,6 +54,8 @@ class tls_session {
     tls_protection& get_tls_protection();
     void set_type(session_type_t type);
     session_type_t get_type();
+
+    t_key_value<uint16, uint16>& get_conf();
 
     class session_info {
        public:
@@ -121,6 +132,8 @@ class tls_session {
         alert(uint8 l, uint8 d) : level(l), desc(d) {}
     };
     std::queue<alert> _alerts;
+
+    t_key_value<uint16, uint16> _kv;
 };
 
 }  // namespace net

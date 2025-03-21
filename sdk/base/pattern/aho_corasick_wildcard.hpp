@@ -67,21 +67,21 @@ namespace hotplace {
  *             "h*h*e" as _patterns[0]
  *             "h" as _hidden[0] (pattern up to the first wildcard *)
  *
- *           1. computation
+ *          1. computation
  *
  *             a) _pattern[0] ends at 5
  *             b) _hidden[0] at [1, 4]
  *             c) container [1, 4]
  *                (1..5)[0] or (4..5)[0] ; represented as (start..end)[patternid]
  *
- *           ; figure
+ *             ; figure
  *                index    01234567
  *                input    ahishers
  *                pattern   h--he    see a) and c)
  *                hidden    h  h     see b)
  *
- *           2. result
- *           ; should be (1..5)[0] not (4..5)[0]
+ *          2. result
+ *             ; should be (1..5)[0] not (4..5)[0]
  *             d) the stating position is earlier than the index 4 ('h')
  *                d.1) pattern[0] at least 3 items occupied implicitly ("hhe")
  *                d.2) adjust = lengthof(pattern) - lengthof(wildcard_any) = lengthof("h*h*e") - lengthof("**") = 5 - 2 = 3

@@ -14,6 +14,22 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * @example
+ *          tls_record_application_data record(session);
+ *          auto handshake = new tls_handshake_encrypted_extensions(session);
+ *
+ *          auto extension = new tls_extension_alpn(session);
+ *          binary_t protocols;
+ *          binary_append(protocols, uint8(2));
+ *          binary_append(protocols, "h2");
+ *          binary_append(protocols, uint8(8));
+ *          binary_append(protocols, "http/1.1");
+ *          extension->set_protocols(protocols);
+ *
+ *          record.get_handshakes().add(handshake);
+ *          record.write(from_client, packet);  // C -> S
+ */
 class tls_handshake_encrypted_extensions : public tls_handshake {
    public:
     tls_handshake_encrypted_extensions(tls_session* session);

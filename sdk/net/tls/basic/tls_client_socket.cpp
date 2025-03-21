@@ -66,8 +66,45 @@ return_t tls_client_socket2::close() {
         record.get_records().add(new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify));
         record.write(from_client, bin);
 
-        size_t cbsent = 0;
-        ret = tcp_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
+        // tlsserver send close_notify
+        // consume close_notify and close
+        {
+            const size_t bufsize = (1 << 16);
+            char buffer[bufsize];
+
+            size_t cbsent = 0;
+            ret = tcp_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
+
+            size_t cbread = 0;
+            auto test = tcp_client_socket::read(buffer, bufsize, &cbread);
+            if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
+                binary_append(bin, buffer, cbread);
+                while (errorcode_t::more_data == test) {
+                    test = tcp_client_socket::more(buffer, bufsize, &cbread);
+                    if (errorcode_t::more_data == test) {
+                        binary_append(bin, buffer, cbread);
+                    }
+                }
+            }
+
+            size_t size = bin.size();
+            if (size) {
+                byte_t* stream = &bin[0];
+                size_t pos = 0;
+                while (pos < size) {
+                    uint8 content_type = stream[pos];
+                    tls_record_builder builder;
+                    auto record = builder.set(session).set(content_type).build();
+                    if (record) {
+                        ret = record->read(from_server, stream, size, pos);
+                        if (errorcode_t::success == ret) {
+                            //
+                        }
+                        record->release();
+                    }
+                }
+            }
+        }
 
         ret = tcp_client_socket::close();
     }
