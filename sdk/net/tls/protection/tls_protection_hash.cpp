@@ -43,9 +43,9 @@ transcript_hash *tls_protection::get_transcript_hash() {
                 tls_advisor *tlsadvisor = tls_advisor::get_instance();
                 auto mdname = advisor->nameof_md(hashalg);
                 basic_stream dbs;
-                dbs.printf("# %s\n", constexpr_transcript_hash);
-                dbs.printf(" > %s 0x%04x %s\n", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
-                dbs.printf(" > %s\n", mdname);
+                dbs.println("# %s", constexpr_transcript_hash);
+                dbs.println(" > %s 0x%04x %s", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
+                dbs.println(" > %s", mdname);
                 trace_debug_event(category_debug_internal, 0, &dbs);
             }
         }

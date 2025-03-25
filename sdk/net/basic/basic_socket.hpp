@@ -55,7 +55,6 @@ class basic_socket {
 
    private:
     t_shared_reference<basic_socket> _shared;
-    socket_t _fd;
 };
 
 }  // namespace net

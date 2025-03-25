@@ -211,7 +211,7 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(3);
-                dbs.printf(" > %s\n", constexpr_application_data);  // data
+                dbs.println(" > %s", constexpr_application_data);  // data
                 dump_memory(&msg[0], msg.size() - trail, &dbs, 16, 3, 0x0, dump_notrunc);
                 dbs.autoindent(0);
 

@@ -39,9 +39,9 @@ std::function<void(network_session *, http_request *, http_response *, http_rout
     response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
 };
 
-return_t consume_routine(uint32 type, uint32 data_count, void *data_array[], CALLBACK_CONTROL *callback_control, void *user_context) {
+return_t consumer_routine(uint32 type, uint32 data_count, void *data_array[], CALLBACK_CONTROL *callback_control, void *user_context) {
     return_t ret = errorcode_t::success;
-    network_session_socket_t *session_socket = (network_session_socket_t *)data_array[0];
+    netsocket_t *session_socket = (netsocket_t *)data_array[0];
     char *buf = (char *)data_array[1];
     size_t bufsize = (size_t)data_array[2];
     network_session *session = (network_session *)data_array[3];
@@ -107,7 +107,7 @@ void start_server(t_shared_instance<http_server> &server, const std::string vers
         .set_tls_verify_peer(0)
         .enable_ipv4(true)
         .enable_ipv6(false)
-        .set_handler(consume_routine);
+        .set_handler(consumer_routine);
     if ("HTTP/2" == version) {
         builder.set_port_https(option.port_h2).enable_h2(true);
     } else {

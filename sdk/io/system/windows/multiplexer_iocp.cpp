@@ -180,9 +180,7 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
                 // response event_loop_break
                 break;
             }
-            void* data_vector[4] = {
-                nullptr,
-            };
+            void* data_vector[4] = {nullptr};
             data_vector[0] = (void*)handle;
             data_vector[1] = (void*)(arch_t)size_transfered;
             data_vector[2] = (void*)completion_key;

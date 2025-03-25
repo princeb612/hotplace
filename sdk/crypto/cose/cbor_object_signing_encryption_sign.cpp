@@ -181,7 +181,7 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
 
         if (istraceable()) {
             basic_stream dbs;
-            dbs.printf("dosign alg %i (%s)\n", alg, hint->name);
+            dbs.println("dosign alg %i (%s)", alg, hint->name);
             trace_debug_event(category_crypto, crypto_event_cose, &dbs);
         }
 
@@ -236,7 +236,7 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
             auto dump = [&](const char* text, binary_t& bin) -> void {
                 if (bin.size()) {
                     basic_stream dbs;
-                    dbs.printf("  %-10s %s\n", text ? text : "", base16_encode(bin).c_str());
+                    dbs.println("  %-10s %s", text ? text : "", base16_encode(bin).c_str());
                     trace_debug_event(category_crypto, crypto_event_cose, &dbs);
                 }
             };

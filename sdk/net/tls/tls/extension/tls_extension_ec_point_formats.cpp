@@ -74,10 +74,10 @@ return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.printf("   > %s %i\n", constexpr_formats, len);
+            dbs.println("   > %s %i", constexpr_formats, len);
             uint8 i = 0;
             for (auto fmt : _ec_point_formats) {
-                dbs.printf("     [%i] 0x%02x(%i) %s\n", i++, fmt, fmt, tlsadvisor->ec_point_format_name(fmt).c_str());
+                dbs.println("     [%i] 0x%02x(%i) %s", i++, fmt, fmt, tlsadvisor->ec_point_format_name(fmt).c_str());
             }
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);

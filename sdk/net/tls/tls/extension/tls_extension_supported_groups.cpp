@@ -74,10 +74,10 @@ return_t tls_extension_supported_groups::do_read_body(const byte_t* stream, size
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.printf("   > %s %i\n", constexpr_curves, curves);
+            dbs.println("   > %s %i", constexpr_curves, curves);
             int i = 0;
             for (auto curve : _supported_groups) {
-                dbs.printf("     [%i] 0x%04x(%i) %s\n", i++, curve, curve, tlsadvisor->supported_group_name(curve).c_str());
+                dbs.println("     [%i] 0x%04x(%i) %s", i++, curve, curve, tlsadvisor->supported_group_name(curve).c_str());
             }
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);

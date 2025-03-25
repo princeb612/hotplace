@@ -49,7 +49,7 @@ class server_conf : public t_key_value<netserver_config_t, uint16> {
 };
 
 enum netserver_cb_type_t {
-    netserver_cb_socket = 0,        // network_session_socket_t*
+    netserver_cb_socket = 0,        // netsocket_t*
     netserver_cb_dataptr = 1,       // char*, byte_t*
     netserver_cb_datasize = 2,      // size_t
     netserver_cb_session = 3,       // network_session*
@@ -99,7 +99,7 @@ typedef struct _network_multiplexer_context_t network_multiplexer_context_t;
  *  uint16 NetworkRoutine (uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context)
  *  {
  *     uint32 ret = errorcode_t::success;
- *     network_session_socket_t* pSession = (network_session_socket_t*)data_array[netserver_cb_type_t::netserver_cb_socket]; // [0]
+ *     netsocket_t* pSession = (netsocket_t*)data_array[netserver_cb_type_t::netserver_cb_socket]; // [0]
  *     char* buf = (char*)data_array[netserver_cb_type_t::netserver_cb_dataptr]; // [1]
  *     size_t bufsize = (size_t)data_array[netserver_cb_type_t::netserver_cb_datasize]; // [2]
  *
@@ -147,7 +147,7 @@ class network_server {
      *            parameter 2
      *              RTL_NUMBER_OF(third parameter)
      *            parameter 3
-     *              data_array[0] network_session_socket_t*
+     *              data_array[0] netsocket_t*
      *                equivalant data_array[netserver_cb_type_t::netserver_cb_socket]
      *              data_array[1] transfered buffer
      *                equivalant data_array[netserver_cb_type_t::netserver_cb_dataptr]

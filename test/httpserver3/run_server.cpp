@@ -29,9 +29,9 @@ void api_response_json_handler(network_session*, http_request* request, http_res
     response->compose(200, "application/json", R"({"result":"ok"})");
 }
 
-return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
-    network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
+    netsocket_t* session_socket = (netsocket_t*)data_array[0];
     char* buf = (char*)data_array[1];
     size_t bufsize = (size_t)data_array[2];
     network_session* session = (network_session*)data_array[3];
@@ -95,7 +95,7 @@ return_t simple_http2_server(void*) {
             .enable_ipv6(false)      // disable IPv6
             .enable_h2(true)         // enable HTTP/2
             .enable_h3(true)         // enable HTTP/3
-            .set_handler(consume_routine);
+            .set_handler(consumer_routine);
         builder.get_server_conf()
             .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
             .set(netserver_config_t::serverconf_concurrent_network, 4)

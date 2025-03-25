@@ -39,7 +39,7 @@ return_t trace_backtrace(return_t errorcode) {
             std::string errmsg;
             error_advisor* advisor = error_advisor::get_instance();
             advisor->error_message(errorcode, errcode, errmsg);
-            dbs.printf("0x%08x:%s:%s\n", errorcode, errcode.c_str(), errmsg.c_str());
+            dbs.println("0x%08x:%s:%s", errorcode, errcode.c_str(), errmsg.c_str());
 
             // PDB
             CONTEXT rtlcontext;

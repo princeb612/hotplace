@@ -240,12 +240,12 @@ return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size
             }
             uint16 pubkeylen = pubkey.size();
 
-            dbs.printf("   > %s %i(0x%04x)\n", constexpr_len, len, len);
-            dbs.printf("    > %s\n", constexpr_key_share_entry);
-            dbs.printf("     > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_name(group).c_str());
-            dbs.printf("     > %s %04x(%i)\n", constexpr_pubkey_len, pubkeylen, pubkeylen);
+            dbs.println("   > %s %i(0x%04x)", constexpr_len, len, len);
+            dbs.println("    > %s", constexpr_key_share_entry);
+            dbs.println("     > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->supported_group_name(group).c_str());
+            dbs.println("     > %s %04x(%i)", constexpr_pubkey_len, pubkeylen, pubkeylen);
             dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
-            dbs.printf("       %s\n", base16_encode(pubkey).c_str());
+            dbs.println("       %s", base16_encode(pubkey).c_str());
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
@@ -353,11 +353,11 @@ return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.printf("   > %s 0x%04x (%s)\n", constexpr_group, group, tlsadvisor->supported_group_name(group).c_str());
+            dbs.println("   > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->supported_group_name(group).c_str());
             if (pubkeylen) {
-                dbs.printf("   > %s %i\n", constexpr_pubkey_len, pubkeylen);
+                dbs.println("   > %s %i", constexpr_pubkey_len, pubkeylen);
                 dump_memory(pubkey, &dbs, 16, 5, 0x0, dump_notrunc);
-                dbs.printf("     %s\n", base16_encode(pubkey).c_str());
+                dbs.println("     %s", base16_encode(pubkey).c_str());
             }
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);

@@ -76,10 +76,10 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
         basic_stream dbs;
 
         if (istraceable(category_net)) {
-            dbs.printf("   > %s %I64i\n", constexpr_largest_ack, largest_ack);
-            dbs.printf("   > %s %I64i\n", constexpr_ack_delay, ack_delay);
-            dbs.printf("   > %s %I64i\n", constexpr_ack_range_count, ack_range_count);
-            dbs.printf("   > %s %I64i\n", constexpr_first_ack_range, first_ack_range);
+            dbs.println("   > %s %I64i", constexpr_largest_ack, largest_ack);
+            dbs.println("   > %s %I64i", constexpr_ack_delay, ack_delay);
+            dbs.println("   > %s %I64i", constexpr_ack_range_count, ack_range_count);
+            dbs.println("   > %s %I64i", constexpr_first_ack_range, first_ack_range);
         }
 
         constexpr char constexpr_ack_ranges[] = "ack ranges";
@@ -102,9 +102,9 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             uint64 range_length = ack_ranges.t_value_of<uint64>(constexpr_range_length);
 
             if (istraceable(category_net)) {
-                dbs.printf("   > %s\n", constexpr_ack_ranges);
-                dbs.printf("    > %s %I64i\n", constexpr_gap, gap);
-                dbs.printf("    > %s %I64i\n", constexpr_range_length, range_length);
+                dbs.println("   > %s", constexpr_ack_ranges);
+                dbs.println("    > %s %I64i", constexpr_gap, gap);
+                dbs.println("    > %s %I64i", constexpr_range_length, range_length);
             }
         }
 
@@ -127,10 +127,10 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             uint64 ectce_count = ecn_counts.t_value_of<uint64>(constexpr_ectce_count);
 
             if (istraceable(category_net)) {
-                dbs.printf("   > %s\n", constexpr_ecn_counts);
-                dbs.printf("    > %s %I64i\n", constexpr_ect0_count, ect0_count);
-                dbs.printf("    > %s %I64i\n", constexpr_ect1_count, ect1_count);
-                dbs.printf("    > %s %I64i\n", constexpr_ectce_count, ectce_count);
+                dbs.println("   > %s", constexpr_ecn_counts);
+                dbs.println("    > %s %I64i", constexpr_ect0_count, ect0_count);
+                dbs.println("    > %s %I64i", constexpr_ect1_count, ect1_count);
+                dbs.println("    > %s %I64i", constexpr_ectce_count, ectce_count);
             }
         }
 

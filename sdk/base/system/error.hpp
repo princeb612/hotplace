@@ -12,9 +12,23 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_ERROR__
 #define __HOTPLACE_SDK_BASE_SYSTEM_ERROR__
 
+#include <queue>
 #include <sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
+
+/**
+ * @sa error_advisor::categoryof
+ */
+enum error_category_t : uint8 {
+    error_category_success = 0,         // success
+    error_category_expect_failure = 1,  // success (negative test)
+    error_category_severe = 2,          // severe error
+    error_category_not_supported = 3,   // do not support
+    error_category_low_security = 4,    // do not support (security reason)
+    error_category_trivial = 5,         // debugging purpose
+    error_category_warn = 6,            // warning
+};
 
 typedef struct _error_description {
     errorcode_t error;
@@ -29,6 +43,8 @@ class error_advisor {
     bool error_code(return_t error, std::string& code);
     bool error_message(return_t error, std::string& message);
     bool error_message(return_t error, std::string& code, std::string& message);
+
+    error_category_t categoryof(return_t code);
 
    protected:
     error_advisor();

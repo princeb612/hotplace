@@ -67,9 +67,9 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
 
         if (istraceable(category_net)) {
             basic_stream dbs;
-            dbs.printf("   > %s %I64i\n", constexpr_offset, offset);
-            dbs.printf("   > %s %I64i\n", constexpr_length, length);
-            dbs.printf("   > %s (%zi)\n", constexpr_crypto_data, crypto_data.size());
+            dbs.println("   > %s %I64i", constexpr_offset, offset);
+            dbs.println("   > %s %I64i", constexpr_length, length);
+            dbs.println("   > %s (%zi)", constexpr_crypto_data, crypto_data.size());
             dump_memory(crypto_data, &dbs, 16, 5, 0x0, dump_notrunc);
             trace_debug_event(category_net, net_event_quic_dump, &dbs);
         }

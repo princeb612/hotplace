@@ -205,7 +205,7 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
 
 #if 0
     if (istraceable()) {
-        network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
+        netsocket_t* session_socket = (netsocket_t*)data_array[0];
         basic_stream bs;
 
         switch (type) {

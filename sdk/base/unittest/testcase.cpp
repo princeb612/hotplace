@@ -121,9 +121,7 @@ void test_case::begin(const char* case_name, ...) {
 }
 
 void test_case::reset_time() {
-    struct timespec now = {
-        0,
-    };
+    struct timespec now = {0};
 
     time_monotonic(now);
 
@@ -167,9 +165,7 @@ void test_case::pause_time() {
         bool& flag = flag_pib.first->second;
         if (true == flag) {
             // push_back time difference slice necessary
-            struct timespec now = {
-                0,
-            };
+            struct timespec now = {0};
             time_monotonic(now);
 
             timestamp_per_thread_pib_t timestamp_pib;
@@ -178,9 +174,7 @@ void test_case::pause_time() {
                 // read a last timestamp and calcurate a time difference
                 struct timespec& stamp = timestamp_pib.first->second;
 
-                struct timespec diff = {
-                    0,
-                };
+                struct timespec diff = {0};
                 time_diff(diff, stamp, now);
 
                 time_slice_per_thread_pib_t slice_pib;
@@ -207,9 +201,7 @@ void test_case::resume_time() {
         bool& flag = flag_pib.first->second;
         if (false == flag) {
             // update timestamp
-            struct timespec now = {
-                0,
-            };
+            struct timespec now = {0};
             time_monotonic(now);
 
             timestamp_per_thread_pib_t timestamp_pib;
@@ -238,9 +230,7 @@ void test_case::check_time(struct timespec& ts) {
         bool& flag = flag_pib.first->second;
         if (true == flag) {
             // push_back time difference slice necessary
-            struct timespec now = {
-                0,
-            };
+            struct timespec now = {0};
             time_monotonic(now);
 
             timestamp_per_thread_pib_t timestamp_pib;
@@ -249,9 +239,7 @@ void test_case::check_time(struct timespec& ts) {
                 // read a last timestamp and calcurate a time difference
                 struct timespec& stamp = timestamp_pib.first->second;
 
-                struct timespec diff = {
-                    0,
-                };
+                struct timespec diff = {0};
                 time_diff(diff, stamp, now);
 
                 // push back into a list
@@ -320,6 +308,7 @@ void test_case::test(return_t result, const char* test_function, const char* mes
     arch_t tid = get_thread_id();
     testcase_per_thread_pib_t pib;
     std::string topic;
+    error_advisor* advisor = error_advisor::get_instance();
 
     __try2 {
         check_time(elapsed);
@@ -332,30 +321,35 @@ void test_case::test(return_t result, const char* test_function, const char* mes
         critical_section_guard guard(_lock);
 
         console_color_t color = console_color_t::yellow;
+        auto category = advisor->categoryof(result);
         switch (result) {
-            case errorcode_t::success:
+            case error_category_success:
                 _total._count_success++;
                 break;
-            case errorcode_t::not_supported:
+            case error_category_expect_failure:
+                color = console_color_t::magenta;
+                _total._count_success++;
+                break;
+            case error_category_severe:
+                color = console_color_t::red;
+                _total._count_fail++;
+                break;
+            case error_category_not_supported:
                 color = console_color_t::cyan;
                 _total._count_not_supported++;
                 break;
-            case errorcode_t::low_security:
+            case error_category_low_security:
                 color = console_color_t::yellow;
                 _total._count_low_security++;
                 break;
-            case errorcode_t::do_nothing:
+            case error_category_trivial:
+            case error_category_warn:
                 color = console_color_t::white;
                 _total._count_trivial++;
                 break;
-            case errorcode_t::expect_failure:
-                color = console_color_t::magenta;
-                // _total._count_expect_failure++;
-                _total._count_success++;
-                break;
             default:
-                color = console_color_t::red;
-                _total._count_fail++;
+                // do not reach here
+                color = console_color_t::white;
                 break;
         }
 
@@ -439,6 +433,7 @@ constexpr char constexpr_pass[] = "pass";
 constexpr char constexpr_fail[] = "fail";
 constexpr char constexpr_skip[] = "skip";
 constexpr char constexpr_low[] = "low ";
+constexpr char constexpr_warn[] = "warn";
 constexpr char constexpr_expect_failure[] = "expt";
 
 constexpr char constexpr_report[] = "report";
@@ -483,21 +478,27 @@ void test_case::dump_list_into_stream(unittest_list_t& array, basic_stream& stre
             funcname = item._test_function;
         }
 
-        switch (item._result) {
-            case errorcode_t::success:
+        auto category = advisor->categoryof(item._result);
+        switch (category) {
+            case error_category_success:
                 cprint(console_colored_stream, _concolor, console_color_t::white, fgcolor, constexpr_pass);
                 break;
-            case errorcode_t::not_supported:
-                cprint(console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_skip);
-                break;
-            case errorcode_t::low_security:
-                cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_low);
-                break;
-            case errorcode_t::expect_failure:
+            case error_category_expect_failure:
                 cprint(console_colored_stream, _concolor, console_color_t::magenta, fgcolor, constexpr_expect_failure);
                 break;
-            default:
+            case error_category_severe:
                 cprint(console_colored_stream, _concolor, console_color_t::red, fgcolor, constexpr_fail);
+                break;
+            case error_category_not_supported:
+                cprint(console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_skip);
+                break;
+            case error_category_low_security:
+                cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_low);
+                break;
+            case error_category_trivial:
+            case error_category_warn:
+            default:
+                cprint(console_colored_stream, _concolor, console_color_t::green, fgcolor, constexpr_warn);
                 break;
         }
 
@@ -724,6 +725,7 @@ void test_case::report_cases(basic_stream& stream) {
 void test_case::report_failed(basic_stream& stream) {
     t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
 
+    error_advisor* advisor = error_advisor::get_instance();
     critical_section_guard guard(_lock);
 
     unittest_list_t array;
@@ -733,16 +735,9 @@ void test_case::report_failed(basic_stream& stream) {
 
     for (const auto& pair : _test_map) {
         for (const auto& item : pair.second._test_list) {
-            switch (item._result) {
-                case errorcode_t::low_security:
-                case errorcode_t::not_supported:
-                case errorcode_t::pending:
-                case errorcode_t::expect_failure:
-                case errorcode_t::success:
-                    break;
-                default:
-                    array.push_back(item);
-                    break;
+            auto category = advisor->categoryof(item._result);
+            if (error_category_severe == category) {
+                array.push_back(item);
             }
         }
     }

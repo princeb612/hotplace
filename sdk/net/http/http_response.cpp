@@ -428,7 +428,7 @@ http_response& http_response::get_response_h2(binary_t& bin) {
             if (istraceable()) {
                 basic_stream dbs;
                 frame->dump(&dbs);
-                dbs.printf("\n");
+                dbs.println("");
 
                 trace_debug_event(category_net, net_event_httpresponse, &dbs);
             }

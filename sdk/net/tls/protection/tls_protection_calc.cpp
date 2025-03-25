@@ -294,7 +294,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                         nidof_evp_pkey(pkey_priv, nid_priv);
                         nidof_evp_pkey(pkey_pub, nid_pub);
                         if (nid_priv != nid_pub) {
-                            ret = errorcode_t::different_type;
+                            ret = errorcode_t::warn_retry;
                             __leave2;  // HRR
                         }
 
@@ -493,10 +493,10 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
             if (istraceable()) {
                 basic_stream dbs;
-                dbs.printf("> hmac alg %x\n", hmac_alg);
-                dbs.printf("> client hello random %s\n", base16_encode(client_hello_random).c_str());
-                dbs.printf("> server hello random %s\n", base16_encode(server_hello_random).c_str());
-                dbs.printf("> pre master secret %s\n", base16_encode(pre_master_secret).c_str());
+                dbs.println("> hmac alg %x", hmac_alg);
+                dbs.println("> client hello random %s", base16_encode(client_hello_random).c_str());
+                dbs.println("> server hello random %s", base16_encode(server_hello_random).c_str());
+                dbs.println("> pre master secret %s", base16_encode(pre_master_secret).c_str());
                 trace_debug_event(category_debug_internal, 0, &dbs);
             }
 

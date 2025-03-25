@@ -112,16 +112,16 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
 
         if (istraceable()) {
             basic_stream dbs;
-            dbs.printf("> %s\n", constexpr_unified_header);
-            dbs.printf(" > 0x%02x (C:%i S:%i L:%i E:%x)\n", uhdr, (uhdr & 0x10) ? 1 : 0, (uhdr & 0x08) ? 1 : 0, (uhdr & 0x04) ? 1 : 0, (uhdr & 0x03));
+            dbs.println("> %s", constexpr_unified_header);
+            dbs.println(" > 0x%02x (C:%i S:%i L:%i E:%x)", uhdr, (uhdr & 0x10) ? 1 : 0, (uhdr & 0x08) ? 1 : 0, (uhdr & 0x04) ? 1 : 0, (uhdr & 0x03));
             if (connection_id.size()) {
-                dbs.printf(" > %s %s\n", constexpr_connection_id, base16_encode(connection_id).c_str());
+                dbs.println(" > %s %s", constexpr_connection_id, base16_encode(connection_id).c_str());
             }
 
             if (check_trace_level(2)) {
-                dbs.printf(" > %s %04x\n", constexpr_sequence, sequence);
-                dbs.printf(" > %s %04x\n", constexpr_len, len);
-                dbs.printf(" > %s\n", constexpr_encdata);
+                dbs.println(" > %s %04x", constexpr_sequence, sequence);
+                dbs.println(" > %s %04x", constexpr_len, len);
+                dbs.println(" > %s", constexpr_encdata);
                 dump_memory(encdata, &dbs, 16, 3, 0x0, dump_notrunc);
             }
 
@@ -198,19 +198,19 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
         if (check_trace_level(2) && istraceable()) {
             basic_stream dbs;
 
-            dbs.printf("> rec_enc %04x\n", rec_enc);
+            dbs.println("> rec_enc %04x", rec_enc);
             if (2 == sequence_len) {
-                dbs.printf("> %s %04x (%04x XOR %s)\n", constexpr_recno, recno, sequence, base16_encode(protmask).substr(0, sequence_len << 1).c_str());
+                dbs.println("> %s %04x (%04x XOR %s)", constexpr_recno, recno, sequence, base16_encode(protmask).substr(0, sequence_len << 1).c_str());
             } else if (1 == sequence_len) {
-                dbs.printf("> %s %02x (%02x XOR %s)\n", constexpr_recno, recno, sequence, base16_encode(protmask).substr(0, sequence_len << 1).c_str());
+                dbs.println("> %s %02x (%02x XOR %s)", constexpr_recno, recno, sequence, base16_encode(protmask).substr(0, sequence_len << 1).c_str());
             }
 
-            dbs.printf("> protmask\n");
+            dbs.println("> protmask");
             dump_memory(protmask, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.printf("> additional\n");
+            dbs.println("> additional");
             dump_memory(additional, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.printf("> %s %04x\n", constexpr_recno, recno);
-            dbs.printf("> plaintext\n");
+            dbs.println("> %s %04x", constexpr_recno, recno);
+            dbs.println("> plaintext");
             dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
@@ -224,7 +224,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
             if (istraceable()) {
                 basic_stream dbs;
 
-                dbs.printf("> content type 0x%02x(%i) %s\n", type, type, tlsadvisor->content_type_string(type).c_str());
+                dbs.println("> content type 0x%02x(%i) %s", type, type, tlsadvisor->content_type_string(type).c_str());
 
                 switch (type) {
                     case tls_content_type_application_data: {
@@ -363,9 +363,9 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
         if (check_trace_level(2) && istraceable()) {
             basic_stream dbs;
 
-            dbs.printf("> header\n");
+            dbs.println("> header");
             dump_memory(header, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.printf("> header masked (sequence)\n");
+            dbs.println("> header masked (sequence)");
             dump_memory(&bin[0], header.size(), &dbs, 16, 3, 0x0, dump_notrunc);
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);

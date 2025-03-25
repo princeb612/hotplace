@@ -112,8 +112,8 @@ void quic_packet_retry::dump() {
 
         basic_stream dbs;
 
-        dbs.printf(" > retry token %s\n", base16_encode(_retry_token).c_str());
-        dbs.printf(" > retry integrity tag\n", base16_encode(_retry_integrity_tag).c_str());
+        dbs.println(" > retry token %s", base16_encode(_retry_token).c_str());
+        dbs.println(" > retry integrity tag", base16_encode(_retry_integrity_tag).c_str());
 
         trace_debug_event(category_net, net_event_quic_dump, &dbs);
     }

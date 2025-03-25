@@ -61,13 +61,13 @@ return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* str
                     case quic_param_original_destination_connection_id:
                     case quic_param_initial_source_connection_id:
                     case quic_param_retry_source_connection_id:
-                        dbs.printf("   > %I64i (%s) %s\n", param_id, tlsadvisor->quic_param_string(param_id).c_str(), base16_encode(param).c_str());
+                        dbs.println("   > %I64i (%s) %s", param_id, tlsadvisor->quic_param_string(param_id).c_str(), base16_encode(param).c_str());
                         break;
                     default: {
                         size_t epos = 0;
                         uint64 value = 0;
                         quic_read_vle_int(&param[0], param.size(), epos, value);
-                        dbs.printf("   > %I64i (%s) %I64i\n", param_id, tlsadvisor->quic_param_string(param_id).c_str(), value);
+                        dbs.println("   > %I64i (%s) %I64i", param_id, tlsadvisor->quic_param_string(param_id).c_str(), value);
                     } break;
                 }
             }

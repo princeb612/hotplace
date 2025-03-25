@@ -48,7 +48,7 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
         if (istraceable()) {
             basic_stream dbs;
-            dbs.printf("> %s %04x(%i)\n", constexpr_ack_len, ack_len, ack_len);
+            dbs.println("> %s %04x(%i)", constexpr_ack_len, ack_len, ack_len);
             dump_memory(ack, &dbs, 16, 3, 0x0, dump_notrunc);
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);

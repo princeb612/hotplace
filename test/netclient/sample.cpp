@@ -37,8 +37,6 @@ uint16 toprot(const char* source) {
         type = 3;
     } else if (("dtls" == text) || ("4" == text)) {
         type = 4;
-    } else if (("#TLS" == text) || ("5" == text)) {
-        type = 5;
     }
     return type;
 }
@@ -50,18 +48,18 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
-                << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-P", "protocol 1|2|3|4|5 (1 tcp, 2 udp, 3 tls, 4 dtls 5 #TLS)",
-                                      [](OPTION& o, char* param) -> void { o.prot = toprot(param); })
-                       .preced()
-                << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced();
+    (*_cmdline)
+        << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
+        << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
+        << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
+        << t_cmdarg_t<OPTION>("-P", "protocol 1|2|3|4 (1 tcp, 2 udp, 3 tls, 4 dtls)", [](OPTION& o, char* param) -> void { o.prot = toprot(param); }).preced()
+        << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
+        << t_cmdarg_t<OPTION>("-A", "async", [](OPTION& o, char* param) -> void { o.async = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced();
     ret = _cmdline->parse(argc, argv);
     if (errorcode_t::success == ret) {
         const OPTION& option = _cmdline->value();
@@ -91,17 +89,19 @@ int main(int argc, char** argv) {
                 udp_client();
                 break;
             case 3:
-                tls_client();
+                if (0 == option.async) {
+                    tls_client();
+                } else {
+                    async_tls_client();
+                }
                 break;
             case 4:
                 dtls_client();
                 break;
-            case 5:
-                tls_client2();
-                break;
             case 1:
-            default:
                 tcp_client();
+                break;
+            default:
                 break;
         }
 

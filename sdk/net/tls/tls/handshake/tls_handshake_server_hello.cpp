@@ -146,12 +146,12 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             }
 
             protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);  // server_hello
-            ret = protection.calc(session, tls_hs_server_hello, dir);
+            auto test = protection.calc(session, tls_hs_server_hello, dir);
             auto& session_info = session->get_session_info(dir);
             session_info.set_status(get_type());
             session->get_session_info(from_client).set_status(get_type());
-            if (errorcode_t::success != ret) {
-                // HRR if not_found, different_type
+            if (errorcode_t::warn_retry == test) {
+                // if warn_retry, do HRR
                 protection.set_flow(tls_hello_retry_request);
 
                 /**
@@ -180,6 +180,8 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                 protection.reset_transcript_hash(session);
                 protection.update_transcript_hash(session, &synthetic_handshake_message[0], synthetic_handshake_message.size());
                 protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);
+            } else {
+                ret = test;
             }
 
             protection.clear_item(tls_context_client_hello);
@@ -259,20 +261,19 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(1);
-                dbs.printf(" > %s 0x%04x (%s)\n", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
-                dbs.printf(" > %s\n", constexpr_random);
+                dbs.println(" > %s 0x%04x (%s)", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
+                dbs.println(" > %s", constexpr_random);
                 if (random.size()) {
                     // dump_memory(random, s, 16, 3, 0x0, dump_notrunc);
-                    dbs.printf("   %s\n", base16_encode(random).c_str());
+                    dbs.println("   %s", base16_encode(random).c_str());
                 }
-                dbs.printf(" > %s\n", constexpr_session_id);
+                dbs.println(" > %s", constexpr_session_id);
                 if (session_id.size()) {
-                    dbs.printf("   %s\n", base16_encode(session_id).c_str());
+                    dbs.println("   %s", base16_encode(session_id).c_str());
                 }
-                dbs.printf(" > %s 0x%04x %s\n", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
-                dbs.printf(" > %s %i %s\n", constexpr_compression_method, compression_method,
-                           tlsadvisor->compression_method_string(compression_method).c_str());
-                dbs.printf(" > %s 0x%02x(%i)\n", constexpr_extension_len, extension_len, extension_len);
+                dbs.println(" > %s 0x%04x %s", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
+                dbs.println(" > %s %i %s", constexpr_compression_method, compression_method, tlsadvisor->compression_method_string(compression_method).c_str());
+                dbs.println(" > %s 0x%02x(%i)", constexpr_extension_len, extension_len, extension_len);
                 dbs.autoindent(0);
 
                 trace_debug_event(category_net, net_event_tls_read, &dbs);

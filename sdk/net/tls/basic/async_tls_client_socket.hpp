@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *      insecure simple implementation to understand TLS
  *
  * Revision History
  * Date         Name                Description
@@ -12,7 +13,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_BASIC_TLSCLIENTSOCKET__
 #define __HOTPLACE_SDK_NET_TLS_BASIC_TLSCLIENTSOCKET__
 
-#include <sdk/net/basic/socket/tcp_client_socket.hpp>
+#include <sdk/net/basic/socket/async_client_socket.hpp>
 #include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
@@ -32,23 +33,29 @@ namespace net {
  *              }
  *          }
  */
-class tls_client_socket2 : public tcp_client_socket {
+class async_tls_client_socket : public async_client_socket {
    public:
-    tls_client_socket2(tls_version_t minver = tls_13);
+    async_tls_client_socket(tls_version_t minver = tls_13);
 
-    virtual return_t connect(const char* address, uint16 port, uint32 timeout);
-    virtual return_t close();
-
-    virtual return_t read(char* ptr_data, size_t size_data, size_t* cbread);
-    virtual return_t more(char* ptr_data, size_t size_data, size_t* cbread);
     virtual return_t send(const char* ptr_data, size_t size_data, size_t* cbsent);
 
+    virtual bool support_tls();
+    virtual int socket_type();
+
    protected:
-    return_t do_handshake();
+    virtual return_t do_handshake();
+    virtual return_t do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);
+    virtual return_t do_secure();
+    virtual return_t do_shutdown();
 
    private:
     tls_session _session;
     tls_version_t _minver;
+
+    critical_section _mlock;
+    std::queue<bufferqueue_item_t> _mq;
+    semaphore _msem;
+    basic_stream _mbs;
 };
 
 }  // namespace net

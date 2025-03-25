@@ -190,12 +190,10 @@ const error_description error_descriptions[] = {
     errordef(no_data, "no data"),
     errordef(bad_data, "bad data"),
     errordef(bad_format, "bad format"),
-    errordef(more_data, "more data"),
     errordef(empty, "empty"),
     errordef(full, "full"),
     errordef(out_of_range, "out of range"),
     errordef(mismatch, "mismatch"),
-    errordef(timeout, "timeout"),
     errordef(expired, "expired"),
     errordef(canceled, "canceled"),
     errordef(invalid_request, "invalid request"),  // RFC 6749 4.1.2.1. Error Response
@@ -204,17 +202,14 @@ const error_description error_descriptions[] = {
     errordef(max_reached, "max reached"),
     errordef(failed, "failed"),
     errordef(blocked, "blocked"),
-    errordef(pending, "pending"),
     errordef(closed, "closed"),
     errordef(disconnect, "disconnect"),
     errordef(error_cipher, "error cipher"),
     errordef(error_digest, "error digest"),
     errordef(error_verify, "error verify"),
-    errordef(busy, "busy"),
     errordef(error_query, "query"),
     errordef(error_fetch, "fetch"),
     errordef(insufficient, "insufficient"),
-    errordef(reserved, "reserved"),
     errordef(suspicious, "suspicious"),
     errordef(unknown, "unknown"),
     errordef(inaccurate, "inaccurate"),
@@ -238,16 +233,21 @@ const error_description error_descriptions[] = {
     errordef(different_type, "different type"),
     errordef(narrow_type, "narrow type"),
     errordef(narrow_type, "narrow type"),
-    errordef(no_more, "no more data"),
     errordef(exceed, "exceed the designed size"),
     errordef(trunc_detected, "truncation detected"),
 
     errordef(not_supported, "not supported"),
+    errordef(expect_failure, "expect failure (negative test)"),
     errordef(low_security, "low security"),
     errordef(debug, "debug"),
     errordef(do_nothing, "nothing to do"),
-    errordef(expect_failure, "expect failure (negative test)"),
-};
+    errordef(warn_retry, "retry"),
+    errordef(pending, "pending"),
+    errordef(timeout, "timeout"),
+    errordef(busy, "busy"),
+    errordef(no_more, "no more data"),
+    errordef(more_data, "more data"),
+};  // namespace hotplace
 
 error_advisor error_advisor::_instance;
 
@@ -328,6 +328,24 @@ bool error_advisor::error_message(return_t error, std::string& code, std::string
         ret = true;
     }
     return ret;
+}
+
+error_category_t error_advisor::categoryof(return_t code) {
+    error_category_t category = error_category_success;
+    if (success == code) {
+        category = error_category_success;
+    } else if (expect_failure == code) {
+        category = error_category_expect_failure;
+    } else if (not_supported == code) {
+        category = error_category_not_supported;
+    } else if (low_security == code) {
+        category = error_category_low_security;
+    } else if (code > success && code < WARN_CODE_BEGIN) {
+        category = error_category_severe;
+    } else if (code >= WARN_CODE_BEGIN) {
+        category = error_category_warn;
+    }
+    return category;
 }
 
 }  // namespace hotplace

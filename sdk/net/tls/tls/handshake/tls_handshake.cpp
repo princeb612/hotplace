@@ -78,7 +78,6 @@ tls_handshake* tls_handshake::read(tls_session* session, tls_direction_t dir, co
 
 return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
-    std::queue<return_t> errorstack;
     __try2 {
         auto session = get_session();
         if (nullptr == session) {
@@ -111,22 +110,16 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             ret = do_read_body(dir, stream, size, pos);
         }
         if ((errorcode_t::success != ret) && (errorcode_t::no_more != ret)) {
-            errorstack.push(ret);
+            __leave2;
         }
         ret = do_postprocess(dir, stream, size);
         if (errorcode_t::success != ret) {
-            errorstack.push(ret);
+            __leave2;
         }
 
         pos = offsetof_header() + sizeof(tls_handshake_t) + get_body_size();
 
         session->run_scheduled(dir);
-
-        while (false == errorstack.empty()) {
-            auto code = errorstack.front();
-            errorstack.pop();
-            trace_backtrace(code);
-        }
     }
     __finally2 {
         // do nothing
@@ -274,15 +267,15 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             basic_stream dbs;
             dbs.autoindent(1);
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            dbs.printf("> handshake type 0x%02x(%i) (%s)\n", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
-            dbs.printf(" > length 0x%06x(%i)\n", length, length);
+            dbs.println("> handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+            dbs.println(" > length 0x%06x(%i)", length, length);
             if (errorcode_t::trunc_detected == ret) {
-                dbs.printf(" > fragment\n");
+                dbs.println(" > fragment");
             }
             if (cond_dtls) {
-                dbs.printf(" > %s 0x%04x\n", constexpr_handshake_message_seq, dtls_seq);
-                dbs.printf(" > %s 0x%06x(%i)\n", constexpr_fragment_offset, fragment_offset, fragment_offset);
-                dbs.printf(" > %s 0x%06x(%i)\n", constexpr_fragment_len, fragment_len, fragment_len);
+                dbs.println(" > %s 0x%04x", constexpr_handshake_message_seq, dtls_seq);
+                dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_offset, fragment_offset, fragment_offset);
+                dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_len, fragment_len, fragment_len);
             }
             dbs.autoindent(0);
             trace_debug_event(category_net, net_event_tls_read, &dbs);

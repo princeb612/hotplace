@@ -16,26 +16,32 @@ void tcp_client() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    tcp_client_socket cli;
+    client_socket* cli = nullptr;
+    if (0 == option.async) {
+        cli = new tcp_client_socket;
+    } else {
+        cli = new async_tcp_client_socket;
+    }
+
     char buffer[option.bufsize];
     basic_stream bs;
 
     __try2 {
-        ret = cli.connect(option.address.c_str(), option.port, 1);
+        ret = cli->connect(option.address.c_str(), option.port, 1);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         for (auto i = 0; i < option.count; i++) {
             size_t cbsent = 0;
-            auto test = cli.send(option.message.c_str(), option.message.size(), &cbsent);
+            auto test = cli->send(option.message.c_str(), option.message.size(), &cbsent);
             if (errorcode_t::success == test) {
                 size_t cbread = 0;
-                test = cli.read(buffer, option.bufsize, &cbread);
+                test = cli->read(buffer, option.bufsize, &cbread);
                 if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
                     bs.write(buffer, cbread);
                     while (errorcode_t::more_data == test) {
-                        test = cli.more(buffer, option.bufsize, &cbread);
+                        test = cli->more(buffer, option.bufsize, &cbread);
                         if (errorcode_t::more_data == test) {
                             bs.write(buffer, cbread);
                         }
@@ -47,7 +53,8 @@ void tcp_client() {
         }
     }
     __finally2 {
-        cli.close();
+        cli->close();
+        cli->release();
 
         _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);
     }
@@ -57,24 +64,34 @@ void udp_client() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    udp_client_socket cli;
+    client_socket* cli = nullptr;
+#if 1
+    cli = new udp_client_socket;
+#else  // UDP test failed
+    if (0 == option.async) {
+        cli = new udp_client_socket;
+    } else {
+        cli = new async_udp_client_socket;
+    }
+#endif
+
     char buffer[option.bufsize];
     basic_stream bs;
     sockaddr_storage_t addr;
     socklen_t addrlen = sizeof(addr);
 
     __try2 {
-        ret = cli.open(&addr, option.address.c_str(), option.port);
+        ret = cli->open(&addr, option.address.c_str(), option.port);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         for (auto i = 0; i < option.count; i++) {
             size_t cbsent = 0;
-            auto test = cli.sendto(option.message.c_str(), option.message.size(), &cbsent, (sockaddr*)&addr, addrlen);
+            auto test = cli->sendto(option.message.c_str(), option.message.size(), &cbsent, (sockaddr*)&addr, addrlen);
             if (errorcode_t::success == test) {
                 size_t cbread = 0;
-                test = cli.recvfrom(buffer, option.bufsize, &cbread, (sockaddr*)&addr, &addrlen);
+                test = cli->recvfrom(buffer, option.bufsize, &cbread, (sockaddr*)&addr, &addrlen);
                 if (errorcode_t::success == test) {
                     bs.write(buffer, cbread);
                     _logger->writeln("received response: %s", bs.c_str());
@@ -84,7 +101,8 @@ void udp_client() {
         }
     }
     __finally2 {
-        cli.close();
+        cli->close();
+        cli->release();
 
         _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);
     }
@@ -140,6 +158,52 @@ void tls_client() {
     }
 }
 
+void async_tls_client() {
+    const OPTION& option = _cmdline->value();
+
+    return_t ret = errorcode_t::success;
+    async_tls_client_socket cli(tls_13);
+
+    char buffer[option.bufsize];
+    basic_stream bs;
+
+    __try2 {
+        openssl_startup();
+
+        ret = cli.connect(option.address.c_str(), option.port, 1);
+        _test_case.test(ret, __FUNCTION__, "connect");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        for (auto i = 0; i < option.count; i++) {
+            size_t cbsent = 0;
+            auto test = cli.send(option.message.c_str(), option.message.size(), &cbsent);
+            if (errorcode_t::success == test) {
+                size_t cbread = 0;
+                test = cli.read(buffer, option.bufsize, &cbread);
+                if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
+                    bs.write(buffer, cbread);
+                    while (errorcode_t::more_data == test) {
+                        test = cli.more(buffer, option.bufsize, &cbread);
+                        if (errorcode_t::more_data == test) {
+                            bs.write(buffer, cbread);
+                        }
+                    }
+                }
+                _logger->dump(bs);
+                bs.clear();
+            }
+        }
+    }
+    __finally2 {
+        cli.close();
+        openssl_cleanup();
+
+        _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);
+    }
+}
+
 void dtls_client() {
     const OPTION& option = _cmdline->value();
 
@@ -186,52 +250,6 @@ void dtls_client() {
 #if defined _WIN32 || defined _WIN64
         winsock_cleanup();
 #endif
-        openssl_cleanup();
-
-        _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);
-    }
-}
-
-void tls_client2() {
-    const OPTION& option = _cmdline->value();
-
-    return_t ret = errorcode_t::success;
-    tls_client_socket2 cli(tls_13);
-
-    char buffer[option.bufsize];
-    basic_stream bs;
-
-    __try2 {
-        openssl_startup();
-
-        ret = cli.connect(option.address.c_str(), option.port, 1);
-        _test_case.test(ret, __FUNCTION__, "connect");
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        for (auto i = 0; i < option.count; i++) {
-            size_t cbsent = 0;
-            auto test = cli.send(option.message.c_str(), option.message.size(), &cbsent);
-            if (errorcode_t::success == test) {
-                size_t cbread = 0;
-                test = cli.read(buffer, option.bufsize, &cbread);
-                if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
-                    bs.write(buffer, cbread);
-                    while (errorcode_t::more_data == test) {
-                        test = cli.more(buffer, option.bufsize, &cbread);
-                        if (errorcode_t::more_data == test) {
-                            bs.write(buffer, cbread);
-                        }
-                    }
-                }
-                _logger->dump(bs);
-                bs.clear();
-            }
-        }
-    }
-    __finally2 {
-        cli.close();
         openssl_cleanup();
 
         _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);

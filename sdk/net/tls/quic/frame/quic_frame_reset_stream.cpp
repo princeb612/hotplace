@@ -51,9 +51,9 @@ return_t quic_frame_reset_stream::do_read_body(tls_direction_t dir, const byte_t
 
         if (istraceable(category_net)) {
             basic_stream dbs;
-            dbs.printf("   > %s %I64i\n", constexpr_stream_id, stream_id);
-            dbs.printf("   > %s %I64i\n", constexpr_error_code, error_code);
-            dbs.printf("   > %s %I64i\n", constexpr_final_size, final_size);
+            dbs.println("   > %s %I64i", constexpr_stream_id, stream_id);
+            dbs.println("   > %s %I64i", constexpr_error_code, error_code);
+            dbs.println("   > %s %I64i", constexpr_final_size, final_size);
             trace_debug_event(category_net, net_event_quic_dump, &dbs);
         }
     }

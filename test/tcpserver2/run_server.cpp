@@ -26,9 +26,9 @@ return_t accept_handler(socket_t socket, sockaddr_storage_t* client_addr, CALLBA
     return ret;
 }
 
-return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
-    network_session_socket_t* network_session = (network_session_socket_t*)data_array[0];
+    netsocket_t* network_session = (netsocket_t*)data_array[0];
     char* buf = (char*)data_array[1];
     size_t bufsize = (size_t)data_array[2];
 
@@ -73,8 +73,8 @@ return_t echo_server(void* param) {
             .set(netserver_config_t::serverconf_concurrent_network, 2)
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
 
-        network_server.open(&handle_ipv4, AF_INET, port, &svr_sock, &conf, consume_routine, nullptr);
-        network_server.open(&handle_ipv6, AF_INET6, port, &svr_sock, &conf, consume_routine, nullptr);
+        network_server.open(&handle_ipv4, AF_INET, port, &svr_sock, &conf, consumer_routine, nullptr);
+        network_server.open(&handle_ipv6, AF_INET6, port, &svr_sock, &conf, consumer_routine, nullptr);
 
         network_server.set_accept_control_handler(handle_ipv4, accept_handler);
         network_server.set_accept_control_handler(handle_ipv6, accept_handler);

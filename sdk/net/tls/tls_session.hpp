@@ -15,6 +15,7 @@
 #include <queue>
 #include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/base/system/critical_section.hpp>
+#include <sdk/base/system/semaphore.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/types.hpp>
@@ -27,6 +28,14 @@ enum session_type_t {
     session_tls = 1,    // TLS/DTLS session
     session_quic = 2,   // QUIC
     session_quic2 = 3,  // QUIC Version 2
+};
+
+enum session_status_t : uint16 {
+    session_key_exchanged = (1 << 0),
+    session_cert_verified = (1 << 1),    // tls_handshake_certificate_verify
+    session_server_finished = (1 << 2),  // tls_handshake_finished
+    session_client_finished = (1 << 3),  // tls_handshake_finished
+    session_close_notified = (1 << 15),
 };
 
 /**
@@ -54,6 +63,10 @@ class tls_session {
     tls_protection& get_tls_protection();
     void set_type(session_type_t type);
     session_type_t get_type();
+
+    void update_session_status(session_status_t status);
+    uint16 get_session_status();
+    return_t wait_change_session_status(uint16 status, unsigned msec);
 
     t_key_value<uint16, uint16>& get_conf();
 
@@ -125,6 +138,8 @@ class tls_session {
     std::queue<tls_handshake*> _que;
     tls_protection _tls_protection;
     session_type_t _type;
+    uint16 _status;
+    semaphore _sem;  // _status related
 
     struct alert {
         uint8 level;

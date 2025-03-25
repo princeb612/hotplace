@@ -19,27 +19,12 @@ struct accept_context_t {
     socket_t udp_server_sock;
 };
 
-#if defined _WIN32 || defined _WIN64
-struct wsa_buffer_t {
-    OVERLAPPED overlapped;
-    WSABUF wsabuf;
-    char buffer[BUFSIZE];
-
-    wsa_buffer_t() { init(); }
-    void init() {
-        memset(&overlapped, 0, sizeof(overlapped));
-        wsabuf.len = sizeof(buffer);
-        wsabuf.buf = buffer;
-    }
-};
-#endif
-
 /* windows */
 struct netsocket_event_t {
     sockaddr_storage_t client_addr;  // both ipv4 and ipv6
 
 #if defined _WIN32 || defined _WIN64
-    wsa_buffer_t netio_read;
+    netbuffer_t netio_read;
 #endif
 };
 
@@ -49,7 +34,7 @@ return_t async_handler(accept_context_t* accept_context, netsocket_event_t* nets
     return_t ret = errorcode_t::success;
 #if defined _WIN32 || defined _WIN64
     uint32 flags = 0;
-    wsa_buffer_t& wsabuf_read = netsock_event->netio_read;
+    netbuffer_t& wsabuf_read = netsock_event->netio_read;
     wsabuf_read.init();
     int addrlen = sizeof(sockaddr_storage_t);
     WSARecvFrom(accept_context->udp_server_sock, &wsabuf_read.wsabuf, 1, nullptr, &flags, (sockaddr*)&netsock_event->client_addr, &addrlen,
@@ -58,7 +43,7 @@ return_t async_handler(accept_context_t* accept_context, netsocket_event_t* nets
     return ret;
 }
 
-return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     accept_context_t* accept_context = (accept_context_t*)user_context;
     return_t ret = errorcode_t::success;
 
@@ -79,7 +64,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
         netsocket_event_t* netsock_event_ptr = (netsocket_event_t*)data_array[2];
 
         uint32 flags = 0;
-        wsa_buffer_t& wsabuf_read = netsock_event_ptr->netio_read;
+        netbuffer_t& wsabuf_read = netsock_event_ptr->netio_read;
 
         _logger->writeln("[%d] %.*s", (int)bytes_transfered, (int)bytes_transfered, wsabuf_read.wsabuf.buf);
 
@@ -94,7 +79,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     return 0;
 }
 
-return_t network_thread_routine(void* user_context) {
+return_t producer_thread_routine(void* user_context) {
     accept_context_t* accept_context = (accept_context_t*)user_context;
 
 #if defined __linux__
@@ -102,12 +87,12 @@ return_t network_thread_routine(void* user_context) {
 #elif defined _WIN32 || defined _WIN64
     multiplexer_iocp mplexer;
 #endif
-    mplexer.event_loop_run(accept_context->mplex_handle, (handle_t)accept_context->udp_server_sock, consume_routine, user_context);
+    mplexer.event_loop_run(accept_context->mplex_handle, (handle_t)accept_context->udp_server_sock, consumer_routine, user_context);
 
     return 0;
 }
 
-return_t network_signal_routine(void* param) {
+return_t producer_signal_routine(void* param) {
     return_t ret = errorcode_t::success;
     accept_context_t* accept_context = (accept_context_t*)param;
 
@@ -136,7 +121,7 @@ return_t udp_server(void* param) {
 #elif defined _WIN32 || defined _WIN64
     multiplexer_iocp mplexer;
 #endif
-    signalwait_threads network_threads;
+    signalwait_threads producer_threads;
     accept_context_t accept_context;
     socket_context_t* handle = nullptr;
 
@@ -148,8 +133,8 @@ return_t udp_server(void* param) {
 
     accept_context.mplex_handle = handle_ipv4;
     accept_context.udp_server_sock = sock;
-    network_threads.set(1, network_thread_routine, network_signal_routine, &accept_context);
-    network_threads.create();
+    producer_threads.set(1, producer_thread_routine, producer_signal_routine, &accept_context);
+    producer_threads.create();
 
 #if defined _WIN32 || defined _WIN64
     // asynchronous read
@@ -174,7 +159,7 @@ return_t udp_server(void* param) {
 
     svr.close(handle);
 
-    network_threads.signal_and_wait_all();
+    producer_threads.signal_and_wait_all();
 
     mplexer.close(handle_ipv4);
 

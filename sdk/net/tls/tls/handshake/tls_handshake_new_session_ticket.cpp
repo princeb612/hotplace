@@ -103,12 +103,12 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(1);
-                dbs.printf(" > %s 0x%08x (%i secs)\n", constexpr_ticket_lifetime, ticket_lifetime, ticket_lifetime);
-                dbs.printf(" > %s 0x%08x\n", constexpr_ticket_age_add, ticket_age_add);
-                dbs.printf(" > %s %s\n", constexpr_ticket_nonce, base16_encode(ticket_nonce).c_str());
-                dbs.printf(" > %s\n", constexpr_session_ticket);
+                dbs.println(" > %s 0x%08x (%i secs)", constexpr_ticket_lifetime, ticket_lifetime, ticket_lifetime);
+                dbs.println(" > %s 0x%08x", constexpr_ticket_age_add, ticket_age_add);
+                dbs.println(" > %s %s", constexpr_ticket_nonce, base16_encode(ticket_nonce).c_str());
+                dbs.println(" > %s", constexpr_session_ticket);
                 dump_memory(session_ticket, &dbs, 16, 3, 0x0, dump_notrunc);
-                dbs.printf(" > %s %s\n", constexpr_ticket_extensions, base16_encode(ticket_extensions).c_str());
+                dbs.println(" > %s %s", constexpr_ticket_extensions, base16_encode(ticket_extensions).c_str());
                 dbs.autoindent(0);
 
                 trace_debug_event(category_net, net_event_tls_read, &dbs);

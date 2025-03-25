@@ -61,6 +61,12 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
 
             session->schedule(this);  // run_scheduled
         }
+
+        if (from_server == dir) {
+            session->update_session_status(session_server_finished);
+        } else if (from_client == dir) {
+            session->update_session_status(session_client_finished);
+        }
     }
     __finally2 {
         // do nothing
@@ -128,14 +134,12 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(1);
-                dbs.printf("> %s", constexpr_verify_data);
-                dbs.printf(" \e[1;33m%s\e[0m", (errorcode_t::success == ret) ? "true" : "false");
-                dbs.printf("\n");
+                dbs.println("> %s \e[1;33m%s\e[0m", constexpr_verify_data, (errorcode_t::success == ret) ? "true" : "false");
                 dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
-                dbs.printf("  > secret (internal) 0x%08x\n", typeof_secret);
-                dbs.printf("  > algorithm %s size %i\n", advisor->nameof_md(hmacalg), dlen);
-                dbs.printf("  > verify data %s \n", base16_encode(verify_data).c_str());
-                dbs.printf("  > maced       %s\n", base16_encode(maced).c_str());
+                dbs.println("  > secret (internal) 0x%08x", typeof_secret);
+                dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
+                dbs.println("  > verify data %s", base16_encode(verify_data).c_str());
+                dbs.println("  > maced       %s", base16_encode(maced).c_str());
                 dbs.autoindent(0);
 
                 trace_debug_event(category_net, net_event_tls_read, &dbs);
@@ -185,11 +189,11 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
 
         if (istraceable()) {
             basic_stream dbs;
-            dbs.printf("> %s\n", constexpr_verify_data);
+            dbs.println("> %s", constexpr_verify_data);
             dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
-            dbs.printf("  > secret (internal) 0x%08x\n", typeof_secret);
-            dbs.printf("  > algorithm %s size %i\n", advisor->nameof_md(hmacalg), dlen);
-            dbs.printf("  > verify data %s \n", base16_encode(verify_data).c_str());
+            dbs.println("  > secret (internal) 0x%08x", typeof_secret);
+            dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
+            dbs.println("  > verify data %s", base16_encode(verify_data).c_str());
 
             trace_debug_event(category_net, net_event_tls_write, &dbs);
         }

@@ -23,6 +23,7 @@
 #include <sdk/net/basic/server_socket.hpp>
 
 /* basic/socket */
+#include <sdk/net/basic/socket/async_client_socket.hpp>
 #include <sdk/net/basic/socket/tcp_client_socket.hpp>
 #include <sdk/net/basic/socket/tcp_server_socket.hpp>
 #include <sdk/net/basic/socket/udp_client_socket.hpp>
@@ -155,6 +156,6 @@
 #include <sdk/net/tls/quic/frame/quic_frames.hpp>
 
 // TLS over TCP
-#include <sdk/net/tls/basic/tls_client_socket.hpp>
+#include <sdk/net/tls/basic/async_tls_client_socket.hpp>
 
 #endif

@@ -24,9 +24,10 @@ typedef struct _OPTION {
     uint16 port;
     uint16 prot;
     uint16 count;
+    uint16 async;
     std::string message;
 
-    _OPTION() : verbose(0), debug(0), log(0), time(0), bufsize(1500), address("127.0.0.1"), port(9000), prot(0), count(1), message("hello") {
+    _OPTION() : verbose(0), debug(0), log(0), time(0), bufsize(1500), address("127.0.0.1"), port(9000), prot(0), count(1), async(0), message("hello") {
         // do nothing
     }
 } OPTION;
@@ -40,6 +41,7 @@ void udp_client();
 void tls_client();
 void dtls_client();
 
-void tls_client2();
+// insecure simple implementation to understand TLS
+void async_tls_client();
 
 #endif

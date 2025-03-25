@@ -18,15 +18,39 @@
 namespace hotplace {
 namespace net {
 
-tls_session::tls_session() : _type(session_tls) { _shared.make_share(this); }
+tls_session::tls_session() : _type(session_tls), _status(0) { _shared.make_share(this); }
 
-tls_session::tls_session(session_type_t type) : _type(type) { _shared.make_share(this); }
+tls_session::tls_session(session_type_t type) : _type(type), _status(0) { _shared.make_share(this); }
 
 tls_protection& tls_session::get_tls_protection() { return _tls_protection; }
 
 void tls_session::set_type(session_type_t type) { _type = type; }
 
 session_type_t tls_session::get_type() { return _type; }
+
+void tls_session::update_session_status(session_status_t status) {
+    _status |= status;
+    _sem.signal();
+}
+
+uint16 tls_session::get_session_status() { return _status; }
+
+return_t tls_session::wait_change_session_status(uint16 status, unsigned msec) {
+    return_t ret = errorcode_t::success;
+
+    while (1) {
+        ret = _sem.wait(msec);
+
+        if (_status & status) {
+            break;
+        }
+
+        if (errorcode_t::timeout == ret) {
+            break;
+        }
+    }
+    return ret;
+}
 
 t_key_value<uint16, uint16>& tls_session::get_conf() { return _kv; }
 

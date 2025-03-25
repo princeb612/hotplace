@@ -19,9 +19,9 @@
 
 #define FILENAME_RUN _T (".run")
 
-return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
-    network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
+    netsocket_t* session_socket = (netsocket_t*)data_array[0];
     network_session* session = (network_session*)data_array[3];
     byte_t* buf = (byte_t*)data_array[1];
     size_t bufsize = (size_t)data_array[2];
@@ -92,8 +92,8 @@ return_t echo_server(void*) {
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
 
         // start server
-        netserver.open(&handle_ipv4, AF_INET, port, tls_socket, &conf, consume_routine, nullptr);
-        netserver.open(&handle_ipv6, AF_INET6, port, tls_socket, &conf, consume_routine, nullptr);
+        netserver.open(&handle_ipv4, AF_INET, port, tls_socket, &conf, consumer_routine, nullptr);
+        netserver.open(&handle_ipv6, AF_INET6, port, tls_socket, &conf, consumer_routine, nullptr);
 
         netserver.consumer_loop_run(handle_ipv4, 2);
         netserver.consumer_loop_run(handle_ipv6, 2);

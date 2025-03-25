@@ -40,7 +40,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         }
 
         if (istraceable()) {
-            network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
+            netsocket_t* session_socket = (netsocket_t*)data_array[0];
             basic_stream bs;
 
             switch (type) {
@@ -62,7 +62,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
         }
 
-        network_session_socket_t* session_socket = (network_session_socket_t*)data_array[0];
+        netsocket_t* session_socket = (netsocket_t*)data_array[0];
         byte_t* buf = (byte_t*)data_array[1];
         size_t bufsize = (size_t)data_array[2];
         basic_stream bs;

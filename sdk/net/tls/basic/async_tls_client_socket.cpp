@@ -8,8 +8,11 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
-#include <sdk/net/tls/basic/tls_client_socket.hpp>
+#include <sdk/net/tls/basic/async_tls_client_socket.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_ec_point_formats.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_key_share.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
@@ -31,151 +34,36 @@
 namespace hotplace {
 namespace net {
 
-tls_client_socket2::tls_client_socket2(tls_version_t minver) : tcp_client_socket(), _minver(minver) {}
+async_tls_client_socket::async_tls_client_socket(tls_version_t minver) : async_client_socket(), _minver(minver) {}
 
-return_t tls_client_socket2::connect(const char* address, uint16 port, uint32 timeout) {
+return_t async_tls_client_socket::send(const char* ptr_data, size_t size_data, size_t* cbsent) {
     return_t ret = errorcode_t::success;
     __try2 {
-        // connect, accept
-        ret = tcp_client_socket::connect(address, port, timeout);
-        if (errorcode_t::success != ret) {
+        if (nullptr == ptr_data || nullptr == cbsent) {
+            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        // client_hello, tls_accept
-        ret = do_handshake();
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-    }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            tcp_client_socket::close();
-        }
-    }
-    return ret;
-}
 
-return_t tls_client_socket2::close() {
-    return_t ret = errorcode_t::success;
+        *cbsent = 0;
 
-    __try2 {
         auto session = &_session;
 
         binary_t bin;
         tls_record_application_data record(session);
-        record.get_records().add(new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify));
+        record.get_records().add(new tls_record_application_data(session, (byte_t*)ptr_data, size_data));
         record.write(from_client, bin);
 
-        // tlsserver send close_notify
-        // consume close_notify and close
-        {
-            const size_t bufsize = (1 << 16);
-            char buffer[bufsize];
-
-            size_t cbsent = 0;
-            ret = tcp_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
-
-            size_t cbread = 0;
-            auto test = tcp_client_socket::read(buffer, bufsize, &cbread);
-            if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
-                binary_append(bin, buffer, cbread);
-                while (errorcode_t::more_data == test) {
-                    test = tcp_client_socket::more(buffer, bufsize, &cbread);
-                    if (errorcode_t::more_data == test) {
-                        binary_append(bin, buffer, cbread);
-                    }
-                }
-            }
-
-            size_t size = bin.size();
-            if (size) {
-                byte_t* stream = &bin[0];
-                size_t pos = 0;
-                while (pos < size) {
-                    uint8 content_type = stream[pos];
-                    tls_record_builder builder;
-                    auto record = builder.set(session).set(content_type).build();
-                    if (record) {
-                        ret = record->read(from_server, stream, size, pos);
-                        if (errorcode_t::success == ret) {
-                            //
-                        }
-                        record->release();
-                    }
-                }
-            }
+        size_t sent = 0;
+        ret = async_client_socket::send((char*)&bin[0], bin.size(), &sent);
+        if (errorcode_t::success == ret) {
+            *cbsent = size_data;
         }
-
-        ret = tcp_client_socket::close();
     }
     __finally2 {}
-
     return ret;
 }
 
-return_t tls_client_socket2::read(char* ptr_data, size_t size_data, size_t* cbread) {
-    return_t ret = errorcode_t::success;
-    *cbread = 0;
-
-    auto session = &_session;
-    binary_t bin;
-    const size_t bufsize = (1 << 10);
-    char buffer[bufsize];
-    size_t sizeread = 0;
-
-    auto test = tcp_client_socket::read(buffer, bufsize, &sizeread);
-    if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
-        binary_append(bin, buffer, sizeread);
-        while (errorcode_t::more_data == test) {
-            test = tcp_client_socket::more(buffer, bufsize, &sizeread);
-            if (errorcode_t::more_data == test) {
-                binary_append(bin, buffer, sizeread);
-            }
-        }
-    }
-
-    size_t size = bin.size();
-    if (size) {
-        byte_t* stream = &bin[0];
-        size_t pos = 0;
-        while (pos < size) {
-            uint8 content_type = stream[pos];
-            tls_record_builder builder;
-            auto record = builder.set(session).set(content_type).build();
-            if (record) {
-                ret = record->read(from_server, stream, size, pos);
-                if (errorcode_t::success == ret) {
-                    if (tls_content_type_application_data == content_type) {
-                        // TODO
-                    }
-                }
-                record->release();
-            }
-        }
-    }
-    return ret;
-}
-
-return_t tls_client_socket2::more(char* ptr_data, size_t size_data, size_t* cbread) {
-    return_t ret = errorcode_t::success;
-    // TODO
-    return ret;
-}
-
-return_t tls_client_socket2::send(const char* ptr_data, size_t size_data, size_t* cbsent) {
-    return_t ret = errorcode_t::success;
-
-    auto session = &_session;
-    binary_t bin;
-    tls_record_application_data record(session);
-    record.get_records().add(new tls_record_application_data(session, (byte_t*)ptr_data, size_data));
-    record.write(from_client, bin);
-
-    ret = tcp_client_socket::send((char*)&bin[0], bin.size(), cbsent);
-    return ret;
-}
-
-return_t tls_client_socket2::do_handshake() {
+return_t async_tls_client_socket::do_handshake() {
     return_t ret = errorcode_t::success;
     const size_t bufsize = (1 << 16);
     char buffer[bufsize];
@@ -293,39 +181,26 @@ return_t tls_client_socket2::do_handshake() {
             ret = record.write(from_client, bin);
         }  // end of client hello
 
-        ret = tcp_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
+        ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
 
-        // server hello ... server finished
-        bin.clear();
+        session->wait_change_session_status(session_server_finished, 1000);  // wait server hello .. server finished
+        uint16 session_status = session->get_session_status();
 
-        size_t cbread = 0;
-        auto test = tcp_client_socket::read(buffer, bufsize, &cbread);
-        if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
-            binary_append(bin, buffer, cbread);
-            while (errorcode_t::more_data == test) {
-                test = tcp_client_socket::more(buffer, bufsize, &cbread);
-                if (errorcode_t::more_data == test) {
-                    binary_append(bin, buffer, cbread);
-                }
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("> session status");
+            if (session_cert_verified & session_status) {
+                dbs.println(" certificate verified");
             }
+            if (session_server_finished & session_status) {
+                dbs.println(" server finished");
+            }
+            trace_debug_event(category_debug_internal, 0, &dbs);
         }
 
-        size_t size = bin.size();
-        if (size) {
-            byte_t* stream = &bin[0];
-            size_t pos = 0;
-            while (pos < size) {
-                uint8 content_type = stream[pos];
-                tls_record_builder builder;
-                auto record = builder.set(session).set(content_type).build();
-                if (record) {
-                    ret = record->read(from_server, stream, size, pos);
-                    if (errorcode_t::success == ret) {
-                        //
-                    }
-                    record->release();
-                }
-            }
+        if (0 == (session_status & (session_cert_verified | session_server_finished))) {
+            ret = error_handshake;
+            __leave2;
         }
 
         bin.clear();
@@ -342,12 +217,120 @@ return_t tls_client_socket2::do_handshake() {
             record.write(from_client, bin);
         }
 
-        ret = tcp_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
+        ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
     }
     __finally2 {}
 
     return ret;
 }
+
+return_t async_tls_client_socket::do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
+    return_t ret = errorcode_t::success;
+    *cbread = 0;
+    auto type = socket_type();
+    auto test = _msem.wait(get_wto());
+    if (errorcode_t::success == test) {
+        critical_section_guard guard(_mlock);
+        if (false == _mq.empty()) {
+            auto& item = _mq.front();
+
+            if (SOCK_DGRAM == type) {
+                memcpy(addr, &item.addr, sizeof(sockaddr_storage_t));
+            }
+
+            auto datasize = item.buffer.size();
+            if (datasize >= size_data) {
+                memcpy(ptr_data, item.buffer.data(), size_data);
+                item.buffer.cut(0, size_data);
+
+                *cbread = size_data;
+
+                if (false == support_tls()) {
+                    _rsem.signal();
+                }
+            } else {
+                memcpy(ptr_data, item.buffer.data(), datasize);
+
+                *cbread = datasize;
+
+                _mq.pop();
+            }
+            if (false == _mq.empty()) {
+                ret = more_data;
+            }
+        }
+    }
+
+    return ret;
+}
+
+return_t async_tls_client_socket::do_secure() {
+    return_t ret = errorcode_t::success;
+    auto session = &_session;
+    auto type = socket_type();
+    if (SOCK_STREAM == type) {
+        {
+            critical_section_guard guard(_rlock);
+            while (false == _rq.empty()) {
+                const auto& item = _rq.front();
+                _mbs << item.buffer;
+                _rq.pop();
+            }
+        }
+        {
+            byte_t* stream = _mbs.data();
+            size_t size = _mbs.size();
+            size_t pos = 0;
+            while (pos < size) {
+                uint8 content_type = stream[pos];
+                tls_record_builder builder;
+                auto record = builder.set(session).set(content_type).build();
+                if (record) {
+                    ret = record->read(from_server, stream, size, pos);
+                    if (errorcode_t::success == ret) {
+                        if (tls_content_type_application_data == content_type) {
+                            tls_record_application_data* appdata = (tls_record_application_data*)record;
+                            const auto& bin = appdata->get_binary();
+
+                            bufferqueue_item_t item;
+                            critical_section_guard guard(_mlock);
+                            item.buffer << bin;
+                            _mq.push(item);
+
+                            _msem.signal();
+                        }
+                    }
+                    record->release();
+                }
+            }
+            _mbs.cut(0, pos);
+        }
+    }
+    return ret;
+}
+
+return_t async_tls_client_socket::do_shutdown() {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        auto session = &_session;
+
+        binary_t bin;
+        tls_record_application_data record(session);
+        record.get_records().add(new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify));
+        record.write(from_client, bin);
+
+        size_t cbsent = 0;
+        ret = send((char*)&bin[0], bin.size(), &cbsent);
+    }
+    __finally2 {}
+
+    return ret;
+}
+
+bool async_tls_client_socket::support_tls() { return true; }
+
+int async_tls_client_socket::socket_type() { return SOCK_STREAM; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -142,6 +142,28 @@ return_t basic_stream::printf(const wchar_t* buf, ...) {
     return ret;
 }
 
+return_t basic_stream::println(const char* buf, ...) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == buf) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        va_list ap;
+
+        va_start(ap, buf);
+        ret = _bio.vprintf(_handle, buf, ap);
+        va_end(ap);
+
+        _bio.printf(_handle, "\n");
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t basic_stream::vprintf(const wchar_t* buf, va_list ap) { return _bio.vprintf(_handle, buf, ap); }
 #endif
 
@@ -248,6 +270,11 @@ basic_stream& basic_stream::operator<<(const basic_stream& value) {
 
 basic_stream& basic_stream::operator<<(const std::string& value) {
     printf("%s", value.c_str());
+    return *this;
+}
+
+basic_stream& basic_stream::operator<<(const binary_t& value) {
+    write(&value[0], value.size());
     return *this;
 }
 

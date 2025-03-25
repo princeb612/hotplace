@@ -85,7 +85,7 @@ class http_server {
      * @param   uint32 type [in] multiplexer_event_type_t
      * @param   uint32 data_count [in] 5
      * @param   void* data_array[] [in]
-     *              data_array[0] network_session_socket_t*
+     *              data_array[0] netsocket_t*
      *              data_array[1] transfered buffer
      *              data_array[2] transfered size
      *              data_array[3] network_session*

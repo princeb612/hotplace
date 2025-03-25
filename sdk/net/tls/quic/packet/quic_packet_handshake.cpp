@@ -245,11 +245,11 @@ void quic_packet_handshake::dump() {
 
         // length = packet number + payload
         auto len = get_length();
-        dbs.printf(" > length %I64i\n", len);
+        dbs.println(" > length %I64i", len);
         // packet number
-        dbs.printf(" > packet number %08x\n", get_pn());
+        dbs.println(" > packet number %08x", get_pn());
         // payload
-        dbs.printf(" > payload (len %zi)\n", _payload.size());
+        dbs.println(" > payload (len %zi)", _payload.size());
         dump_memory(_payload, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
 
         trace_debug_event(category_net, net_event_quic_dump, &dbs);

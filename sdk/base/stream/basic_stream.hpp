@@ -98,6 +98,7 @@ class basic_stream : public stream_t {
     return_t vprintf(const wchar_t* buf, va_list ap);
 #endif
 
+    return_t println(const char* buf, ...);
     return_t vprintf(const char* fmt, valist ap);
 
     basic_stream& operator<<(const char* str);
@@ -116,6 +117,7 @@ class basic_stream : public stream_t {
     basic_stream& operator<<(double value);
     basic_stream& operator<<(const basic_stream& value);
     basic_stream& operator<<(const std::string& value);
+    basic_stream& operator<<(const binary_t& value);
 
     /**
      * @brief   operator =

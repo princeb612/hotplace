@@ -236,9 +236,7 @@ return_t multiplexer_epoll::event_loop_run(multiplexer_context_t* handle, handle
 
             for (int i = 0; i < ret_epoll_wait; i++) {
                 CALLBACK_CONTROL callback_control = CONTINUE_CONTROL;
-                void* data_vector[4] = {
-                    nullptr,
-                };
+                void* data_vector[4] = {nullptr};
                 data_vector[0] = handle;
                 data_vector[1] = (void*)(arch_t)context->events[i].data.fd;
 

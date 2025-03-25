@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace net {
 
-basic_socket::basic_socket() : _fd(INVALID_SOCKET) { _shared.make_share(this); }
+basic_socket::basic_socket() { _shared.make_share(this); }
 
 basic_socket::~basic_socket() {}
 

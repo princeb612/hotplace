@@ -55,13 +55,6 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
             __leave2;
         }
 
-        if (istraceable()) {
-            basic_stream dbs;
-            dbs.printf("# record\n");
-            dump_memory(stream, size, &dbs, 16, 3, 0, dump_notrunc);
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
-        }
-
         ret = do_read_header(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -100,7 +93,7 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
 
         if (istraceable()) {
             basic_stream dbs;
-            dbs.printf("# record constructed\n");
+            dbs.println("# record constructed");
             dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
             trace_debug_event(category_net, net_event_tls_write, &dbs);
         }
@@ -124,6 +117,7 @@ return_t tls_record::do_postprocess(tls_direction_t dir) {
 
 return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
+    size_t recpos = pos;
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
@@ -136,8 +130,6 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
-
-        size_t recpos = pos;
 
         uint8 content_type = 0;
         uint16 legacy_version = 0;
@@ -216,14 +208,18 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto const& range = get_header_range();
 
-            // dbs.printf("# TLS Record\n");
-            dbs.printf("> %s 0x%02x(%i) (%s)\n", constexpr_content_type, content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
-            dbs.printf(" > %s 0x%04x (%s)\n", constexpr_legacy_version, legacy_version, tlsadvisor->tls_version_string(legacy_version).c_str());
+            dbs.println("# record %s", (from_server == dir) ? "(server)" : (from_client == dir) ? "(client)" : "");
+            auto remains = size - pos;
+            auto dumpsize = pos - recpos + len;
+            dump_memory(stream + recpos, (dumpsize > remains) ? remains : dumpsize, &dbs, 16, 3, 0, dump_notrunc);
+
+            dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
+            dbs.println(" > %s 0x%04x (%s)", constexpr_legacy_version, legacy_version, tlsadvisor->tls_version_string(legacy_version).c_str());
             if (is_dtls()) {
-                dbs.printf(" > %s 0x%04x\n", constexpr_key_epoch, key_epoch);
-                dbs.printf(" > %s %s\n", constexpr_dtls_record_seq, base16_encode(dtls_record_seq).c_str());
+                dbs.println(" > %s 0x%04x", constexpr_key_epoch, key_epoch);
+                dbs.println(" > %s %s", constexpr_dtls_record_seq, base16_encode(dtls_record_seq).c_str());
             }
-            dbs.printf(" > %s 0x%04x(%i)\n", constexpr_len, len, len);
+            dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
@@ -235,7 +231,9 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         }
     }
     __finally2 {
-        // do nothing
+        if (errorcode_t::success != ret) {
+            pos = recpos;
+        }
     }
     return ret;
 }

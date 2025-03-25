@@ -167,9 +167,9 @@ return_t network_session::sendto(const char* data_ptr, size_t size_data, sockadd
 
 return_t network_session::sendto(const byte_t* data_ptr, size_t size_data, sockaddr_storage_t* addr) { return sendto((char*)data_ptr, size_data, addr); }
 
-network_session_socket_t* network_session::socket_info() { return _session.socket_info(); }
+netsocket_t* network_session::socket_info() { return _session.socket_info(); }
 
-network_session_buffer_t* network_session::get_buffer() { return &_session.buf; }
+netbuffer_t* network_session::get_buffer() { return &_session.buf; }
 
 #if defined _WIN32 || defined _WIN64
 WSABUF* network_session::wsabuf_read() { return &_session.buf.wsabuf; }

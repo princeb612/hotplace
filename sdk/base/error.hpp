@@ -23,6 +23,7 @@
 namespace hotplace {
 
 #define ERROR_CODE_BEGIN 0xef010000
+#define WARN_CODE_BEGIN 0xff010000
 
 typedef uint32 return_t;
 enum errorcode_t {
@@ -210,12 +211,12 @@ enum errorcode_t {
     /* 0xef01000e 4009820174 */ no_data,
     /* 0xef01000f 4009820175 */ bad_data,
     /* 0xef010010 4009820176 */ bad_format,
-    /* 0xef010011 4009820177 */ more_data,
+    /* 0xef010011 4009820177 */ reserved1,  //
     /* 0xef010012 4009820178 */ empty,
     /* 0xef010013 4009820179 */ full,
     /* 0xef010014 4009820180 */ out_of_range,
     /* 0xef010015 4009820181 */ mismatch,
-    /* 0xef010016 4009820182 */ timeout,
+    /* 0xef010016 4009820182 */ reserved2,  //
     /* 0xef010017 4009820183 */ expired,
     /* 0xef010018 4009820184 */ canceled,
     /* 0xef010019 4009820185 */ bad_request,
@@ -225,17 +226,17 @@ enum errorcode_t {
     /* 0xef01001c 4009820188 */ max_reached,
     /* 0xef01001d 4009820189 */ failed,
     /* 0xef01001e 4009820190 */ blocked,
-    /* 0xef01001f 4009820191 */ pending,
+    /* 0xef01001f 4009820191 */ reserved3,  //
     /* 0xef010020 4009820192 */ closed,
     /* 0xef010021 4009820193 */ disconnect,
     /* 0xef010022 4009820194 */ error_cipher,
     /* 0xef010023 4009820195 */ error_digest,
     /* 0xef010024 4009820196 */ error_verify,
-    /* 0xef010025 4009820197 */ busy,
+    /* 0xef010025 4009820197 */ reserved4,  //
     /* 0xef010026 4009820198 */ error_query,
     /* 0xef010027 4009820199 */ error_fetch,
     /* 0xef010028 4009820200 */ insufficient,
-    /* 0xef010029 4009820201 */ reserved,
+    /* 0xef010029 4009820201 */ reserved5,  //
     /* 0xef01002a 4009820202 */ suspicious,
     /* 0xef01002b 4009820203 */ unknown,
     /* 0xef01002c 4009820204 */ inaccurate,
@@ -258,7 +259,7 @@ enum errorcode_t {
     /* 0xef01003d 4009820221 */ abandoned,
     /* 0xef01003e 4009820222 */ different_type,
     /* 0xef01003f 4009820223 */ narrow_type,
-    /* 0xef010040 4009820224 */ no_more,
+    /* 0xef010040 4009820224 */ reserved6,  //
     /* 0xef010041 4009820225 */ exceed,
     /* 0xef010042 4009820226 */ trunc_detected,
 
@@ -280,11 +281,18 @@ enum errorcode_t {
     /* 0xef01008f 4009820303 */ internal_error_15,
     /* 0xef010090 4009820304 */ error_openssl_inside,
 
-    /* 0xef010100 4009820416 */ not_supported = 0xef020000,
-    /* 0xef010101 4009820417 */ low_security,
-    /* 0xef010102 4009820418 */ debug,
-    /* 0xef010103 4009820419 */ do_nothing,
-    /* 0xef010104 4009820420 */ expect_failure,
+    /* 0xff010000 4278255616 */ not_supported = WARN_CODE_BEGIN + 0,
+    /* 0xff010001 4278255617 */ expect_failure,
+    /* 0xff010002 4278255618 */ low_security,
+
+    /* 0xff010003 4278255619 */ debug,
+    /* 0xff010004 4278255620 */ do_nothing,
+    /* 0xff010005 4278255621 */ warn_retry,
+    /* 0xff010006 4278255622 */ pending,
+    /* 0xff010007 4278255623 */ timeout,
+    /* 0xff010008 4278255624 */ busy,
+    /* 0xff010009 4278255625 */ no_more,
+    /* 0xff01000a 4278255626 */ more_data
 };
 
 /*

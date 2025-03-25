@@ -243,26 +243,26 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                 uint16 i = 0;
 
                 dbs.autoindent(1);
-                dbs.printf(" > %s 0x%04x (%s)\n", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
-                dbs.printf(" > %s\n", constexpr_random);
+                dbs.println(" > %s 0x%04x (%s)", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
+                dbs.println(" > %s", constexpr_random);
                 if (random.size()) {
-                    dbs.printf("   %s\n", base16_encode(random).c_str());
+                    dbs.println("   %s", base16_encode(random).c_str());
                 }
-                dbs.printf(" > %s %02x(%zi)\n", constexpr_session_id, session_id.size(), session_id.size());
+                dbs.println(" > %s %02x(%zi)", constexpr_session_id, session_id.size(), session_id.size());
                 if (session_id.size()) {
-                    dbs.printf("   %s\n", base16_encode(session_id).c_str());
+                    dbs.println("   %s", base16_encode(session_id).c_str());
                 }
-                dbs.printf(" > %s %04x(%i ent.)\n", constexpr_cipher_suite_len, cipher_suite_len, cipher_suite_len >> 1);
+                dbs.println(" > %s %04x(%i ent.)", constexpr_cipher_suite_len, cipher_suite_len, cipher_suite_len >> 1);
                 i = 0;
                 for (auto cs : _cipher_suites) {
-                    dbs.printf("   [%i] 0x%04x %s\n", i++, cs, tlsadvisor->cipher_suite_string(cs).c_str());
+                    dbs.println("   [%i] 0x%04x %s", i++, cs, tlsadvisor->cipher_suite_string(cs).c_str());
                 }
-                dbs.printf(" > %s %i\n", constexpr_compression_method_len, compression_method_len);
+                dbs.println(" > %s %i", constexpr_compression_method_len, compression_method_len);
                 i = 0;
                 for (auto compr : _compression_methods) {
-                    dbs.printf("   [%i] 0x%02x %s\n", i++, compr, tlsadvisor->compression_method_string(compr).c_str());
+                    dbs.println("   [%i] 0x%02x %s", i++, compr, tlsadvisor->compression_method_string(compr).c_str());
                 }
-                dbs.printf(" > %s 0x%04x(%i)\n", constexpr_extension_len, extension_len, extension_len);
+                dbs.println(" > %s 0x%04x(%i)", constexpr_extension_len, extension_len, extension_len);
                 dbs.autoindent(0);
 
                 trace_debug_event(category_net, net_event_tls_read, &dbs);

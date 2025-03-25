@@ -66,10 +66,10 @@ return_t tls_extension_signature_algorithms::do_read_body(const byte_t* stream, 
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.printf("   > %s %i\n", constexpr_algorithms, count);
+            dbs.println("   > %s %i", constexpr_algorithms, count);
             int i = 0;
             for (auto alg : _algorithms) {
-                dbs.printf("     [%i] 0x%04x %s\n", i++, alg, tlsadvisor->signature_scheme_name(alg).c_str());
+                dbs.println("     [%i] 0x%04x %s", i++, alg, tlsadvisor->signature_scheme_name(alg).c_str());
             }
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);

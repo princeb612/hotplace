@@ -20,64 +20,17 @@
 namespace hotplace {
 namespace net {
 
-struct network_session_buffer_t {
-#if defined __linux__
-    char* buffer;
-    size_t buflen;
-#elif defined _WIN32 || defined _WIN64
-    /* windows overlapped */
-    // assign per socket
-    OVERLAPPED overlapped;
-    WSABUF wsabuf;
-#endif
-
-    std::vector<char> bin;
-    size_t bufsize;
-
-    network_session_buffer_t() : bufsize(1500) { init(); }
-    void init() {
-        bin.resize(bufsize);  // do nothing if capacity == size()
-#if defined __linux__
-        buffer = &bin[0];
-        buflen = bin.size();
-#elif defined _WIN32 || defined _WIN64
-        memset(&overlapped, 0, sizeof(OVERLAPPED));
-        wsabuf.len = bin.size();
-        wsabuf.buf = &bin[0];
-#endif
-    }
-    void set_bufsize(size_t size) {
-        if (size) {
-            bufsize = size;
-        }
-    }
-};
-
-/**
- * @sa
- *      network_session::socket_info
- *      network_server netserver_cb_type_t::netserver_cb_socket
- */
-struct network_session_socket_t {
-    socket_context_t* event_handle;
-    sockaddr_storage_t cli_addr;  // both ipv4 and ipv6
-
-    network_session_socket_t() : event_handle(nullptr) {}
-    socket_t get_event_socket() { return event_handle->fd; }
-    operator handle_t() { return (handle_t)get_event_socket(); }
-};
-
-struct network_session_t {
-    network_session_socket_t netsock;
-    network_session_buffer_t buf;
+struct netsession_t {
+    netsocket_t netsock;
+    netbuffer_t buf;
 
     void* mplexer_handle;
     server_socket* svr_socket;
     int priority;
 
-    network_session_t() : mplexer_handle(nullptr), svr_socket(nullptr), priority(0) {}
-    network_session_socket_t* socket_info() { return &netsock; }
-    network_session_buffer_t& get_buffer() { return buf; }
+    netsession_t() : mplexer_handle(nullptr), svr_socket(nullptr), priority(0) {}
+    netsocket_t* socket_info() { return &netsock; }
+    netbuffer_t& get_buffer() { return buf; }
 };
 
 /**
@@ -140,8 +93,8 @@ class network_session {
     /**
      * @brief return socket information
      */
-    network_session_socket_t* socket_info();
-    network_session_buffer_t* get_buffer();
+    netsocket_t* socket_info();
+    netbuffer_t* get_buffer();
 
 #if defined _WIN32 || defined _WIN64
     /**
@@ -200,7 +153,7 @@ class network_session {
     return_t produce_dgram(t_mlfq<network_session>* q, byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr = nullptr);
 
    private:
-    network_session_t _session;
+    netsession_t _session;
     network_stream _stream;
     network_stream _request;
     network_session_data _session_data;
@@ -304,9 +257,8 @@ class network_session_manager {
     server_conf* _server_conf;
 };
 
-typedef struct network_session_buffer_t net_session_buffer_t;
-typedef struct network_session_socket_t net_session_socket_t;
-typedef struct network_session_t net_session_t;
+typedef struct netsocket_t net_session_socket_t;
+typedef struct netsession_t net_session_t;
 typedef network_session_data net_session_data;
 typedef network_session net_session;
 typedef network_session_manager net_session_manager;

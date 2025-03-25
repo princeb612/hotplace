@@ -220,9 +220,9 @@ void quic_packet::dump() {
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        dbs.printf("- quic packet %s\n", tlsadvisor->quic_packet_type_string(get_type()).c_str());
-        dbs.printf(" > version %08x\n", get_version());
-        dbs.printf(" > destination connection id %s\n", base16_encode(_dcid).c_str());
+        dbs.println("- quic packet %s", tlsadvisor->quic_packet_type_string(get_type()).c_str());
+        dbs.println(" > version %08x", get_version());
+        dbs.println(" > destination connection id %s", base16_encode(_dcid).c_str());
         // dump_memory(_dcid, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
         switch (get_type()) {
             // long header
@@ -231,7 +231,7 @@ void quic_packet::dump() {
             case quic_packet_type_0_rtt:
             case quic_packet_type_handshake:
             case quic_packet_type_retry:
-                dbs.printf(" > source connection id %s\n", base16_encode(_scid).c_str());
+                dbs.println(" > source connection id %s", base16_encode(_scid).c_str());
                 // dump_memory(_scid, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
                 break;
             // short header
@@ -243,7 +243,7 @@ void quic_packet::dump() {
             case quic_packet_type_0_rtt:
             case quic_packet_type_handshake:
             case quic_packet_type_1_rtt:
-                dbs.printf(" > packet length %i\n", get_pn_length());
+                dbs.println(" > packet length %i", get_pn_length());
                 break;
         }
         trace_debug_event(category_net, net_event_quic_dump, &dbs);

@@ -169,11 +169,11 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(1);
-                dbs.printf(" > %s %i\n", constexpr_request_context_len, request_context_len);
-                dbs.printf(" > %s 0x%04x(%i)\n", constexpr_certificates_len, certificates_len, certificates_len);
-                dbs.printf(" > %s 0x%04x(%i)\n", constexpr_certificate_len, certificate_len, certificate_len);
+                dbs.println(" > %s %i", constexpr_request_context_len, request_context_len);
+                dbs.println(" > %s 0x%04x(%i)", constexpr_certificates_len, certificates_len, certificates_len);
+                dbs.println(" > %s 0x%04x(%i)", constexpr_certificate_len, certificate_len, certificate_len);
                 dump_memory(cert, &dbs, 16, 3, 0x00, dump_notrunc);
-                dbs.printf(" > %s 0x%04x(%i)\n", constexpr_certificate_extensions, cert_extensions_len, cert_extensions_len);
+                dbs.println(" > %s 0x%04x(%i)", constexpr_certificate_extensions, cert_extensions_len, cert_extensions_len);
                 dump_memory(cert_extensions, &dbs, 16, 3, 0x00, dump_notrunc);
                 dump_key(servercert.find(desc.get_kid_cstr()), &dbs, 15, 4, dump_notrunc);
                 dbs.autoindent(0);
@@ -219,7 +219,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
         if (istraceable()) {
             basic_stream dbs;
             dbs.autoindent(1);
-            dbs.printf("> %s\n", constexpr_certificate);
+            dbs.println("> %s", constexpr_certificate);
             dump_memory(certificate, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.autoindent(0);
 

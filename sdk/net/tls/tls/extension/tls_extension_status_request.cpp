@@ -56,10 +56,10 @@ return_t tls_extension_status_request::do_read_body(const byte_t* stream, size_t
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.printf("   > %s %i %s\n", constexpr_cert_status_type, cert_status_type, tlsadvisor->cert_status_type_string(cert_status_type).c_str());
-            dbs.printf("   > %s %i\n", constexpr_responderid_info_len, responderid_info_len);
+            dbs.println("   > %s %i %s", constexpr_cert_status_type, cert_status_type, tlsadvisor->cert_status_type_string(cert_status_type).c_str());
+            dbs.println("   > %s %i", constexpr_responderid_info_len, responderid_info_len);
             dump_memory(responderid_info, &dbs, 16, 4, 0x0, dump_notrunc);
-            dbs.printf("   > %s %i\n", constexpr_request_ext_info_len, request_ext_info_len);
+            dbs.println("   > %s %i", constexpr_request_ext_info_len, request_ext_info_len);
             dump_memory(request_ext_info, &dbs, 16, 4, 0x0, dump_notrunc);
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);

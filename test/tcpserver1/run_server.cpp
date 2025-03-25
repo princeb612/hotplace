@@ -20,45 +20,28 @@ typedef struct {
     socket_t tcp_server_socket;
 } accept_context_t;
 
-#if defined _WIN32 || defined _WIN64
-struct wsa_buffer_t {
-    OVERLAPPED overlapped;
-    WSABUF wsabuf;
-    char buffer[BUFSIZE];
-
-    wsa_buffer_t() { init(); }
-    void init() {
-        memset(&overlapped, 0, sizeof(overlapped));
-        wsabuf.len = sizeof(buffer);
-        wsabuf.buf = buffer;
-    }
-};
-#endif
-
 /* windows */
 struct netsocket_event_t {
     socket_t cli_socket;
     sockaddr_storage_t client_addr;  // both ipv4 and ipv6
 
 #if defined _WIN32 || defined _WIN64
-    wsa_buffer_t netio_read;
+    netbuffer_t netio_read;
 #endif
 };
 
 return_t accept_thread_routine(void* user_context);
-return_t network_thread_routine(void* user_context);
-return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
+return_t producer_thread_routine(void* user_context);
+return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
 
 return_t client_connected_handler(socket_t sockcli, netsocket_event_t** out_netsocket_context) {
     return_t ret = errorcode_t::success;
 
-    netsocket_event_t* netsocket_event = nullptr;
+    netsocket_event_t* netsocket_event = netsocket_event = new netsocket_event_t;
     sockaddr_storage_t sockaddr_client;
     int sockaddr_len = sizeof(sockaddr_client);
 
-    netsocket_event = (netsocket_event_t*)malloc(sizeof(netsocket_event_t));
     netsocket_event->cli_socket = sockcli;
-    memset(&sockaddr_client, 0, sockaddr_len);
     getpeername(sockcli, (struct sockaddr*)&sockaddr_client, (socklen_t*)&sockaddr_len);
     memcpy(&(netsocket_event->client_addr), &sockaddr_client, sockaddr_len);
 
@@ -90,7 +73,7 @@ return_t client_disconnected_handler(netsocket_event_t* netsocket_event, void* u
 #elif defined _WIN32 || defined _WIN64
     closesocket(netsocket_event->cli_socket);
 #endif
-    free(netsocket_event);
+    delete netsocket_event;
 
     _test_case.test(ret, __FUNCTION__, "disconnected");
 
@@ -103,10 +86,10 @@ return_t async_handler(netsocket_event_t* netsocket_event) {
 #if defined _WIN32 || defined _WIN64
     DWORD flags = 0;
     DWORD bytes_received = 0;
-    netsocket_event->netio_read.init();
+    netbuffer_t& netbuffer = netsocket_event->netio_read;
 
-    WSARecv(netsocket_event->cli_socket, &(netsocket_event->netio_read.wsabuf), 1, &bytes_received, &flags, &(netsocket_event->netio_read.overlapped),
-            nullptr); /* asynchronus read */
+    netbuffer.init();
+    WSARecv(netsocket_event->cli_socket, &(netbuffer.wsabuf), 1, &bytes_received, &flags, &(netbuffer.overlapped), nullptr); /* asynchronus read */
 #endif
 
     return ret;
@@ -126,19 +109,19 @@ return_t accept_thread_routine(void* user_context) {
     _test_case.test(errorcode_t::success, __FUNCTION__, "accepting");
 
     while (true) {
-        socket_t hClntSock = INVALID_SOCKET;
-        sockaddr_storage_t clntAddr;
-        socklen_t addrLen = sizeof(clntAddr);
+        socket_t clisock = INVALID_SOCKET;
+        sockaddr_storage_t addr;
+        socklen_t addrLen = sizeof(addr);
 
-        hClntSock = accept(hServSock, (struct sockaddr*)&clntAddr, &addrLen);
-        if (INVALID_SOCKET == hClntSock) {
+        clisock = accept(hServSock, (struct sockaddr*)&addr, &addrLen);
+        if (INVALID_SOCKET == clisock) {
             break;
         }
 
         netsocket_event_t* netsocket_event = nullptr;
 
-        client_connected_handler(hClntSock, &netsocket_event);
-        mplexer.bind(handle, (handle_t)hClntSock, netsocket_event);
+        client_connected_handler(clisock, &netsocket_event);
+        mplexer.bind(handle, (handle_t)clisock, netsocket_event);
 #if defined _WIN32 || defined _WIN64
         async_handler(netsocket_event);
 #endif
@@ -146,9 +129,7 @@ return_t accept_thread_routine(void* user_context) {
     return 0;
 }
 
-return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
-    //_test_case.test (errorcode_t::success, __FUNCTION__, "processing network events");
-
+return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
 #if defined __linux__
 
     multiplexer_epoll mplexer;
@@ -166,9 +147,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
         } else {
             mplexer.bind(handle, sockcli, nullptr);
 
-            char ipaddr[32] = {
-                0,
-            };
+            char ipaddr[32] = {0};
             inet_ntop(sockaddr.ss_family, &((struct sockaddr_in*)&sockaddr)->sin_addr.s_addr, ipaddr, sizeof(ipaddr));
 
             _logger->writeln("accept [%d][%s]", sockcli, ipaddr);
@@ -202,7 +181,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
 
     __try2 {
         if (mux_read == type) {
-            wsa_buffer_t& wsabuf_read = netsocket_event->netio_read;
+            netbuffer_t& wsabuf_read = netsocket_event->netio_read;
             wsabuf_read.wsabuf.len = bytes_transfered;
 
             if (0 != strnicmp("\r\n", wsabuf_read.wsabuf.buf, 2)) {
@@ -229,7 +208,7 @@ return_t consume_routine(uint32 type, uint32 data_count, void* data_array[], CAL
     return 0;
 }
 
-return_t network_thread_routine(void* user_context) {
+return_t producer_thread_routine(void* user_context) {
     accept_context_t* accept_context = (accept_context_t*)user_context;
 
 #if defined __linux__
@@ -237,12 +216,12 @@ return_t network_thread_routine(void* user_context) {
 #elif defined _WIN32 || defined _WIN64
     multiplexer_iocp mplexer;
 #endif
-    mplexer.event_loop_run(accept_context->mplex_handle, (handle_t)accept_context->tcp_server_socket, consume_routine, user_context);
+    mplexer.event_loop_run(accept_context->mplex_handle, (handle_t)accept_context->tcp_server_socket, consumer_routine, user_context);
 
     return 0;
 }
 
-return_t network_signal_routine(void* param) {
+return_t producer_signal_routine(void* param) {
     return_t ret = errorcode_t::success;
     accept_context_t* accept_context = (accept_context_t*)param;
 
@@ -307,10 +286,10 @@ return_t echo_server(void* param) {
         // acceptxxx_threads signal handler ... just call CloseListener
         acceptipv4_threads.set(1, accept_thread_routine, nullptr, &accept_context_ipv4);
         acceptipv6_threads.set(1, accept_thread_routine, nullptr, &accept_context_ipv6);
-        networkipv4_threads.set(64, network_thread_routine, network_signal_routine, &accept_context_ipv4);
-        networkipv6_threads.set(64, network_thread_routine, network_signal_routine, &accept_context_ipv6);
+        networkipv4_threads.set(64, producer_thread_routine, producer_signal_routine, &accept_context_ipv4);
+        networkipv6_threads.set(64, producer_thread_routine, producer_signal_routine, &accept_context_ipv6);
 
-        int network_thread_count = 2;
+        int producer_thread_count = 2;
 #if defined __linux__
 
         /* epoll 은 listen socket 바인딩 */
@@ -330,10 +309,10 @@ return_t echo_server(void* param) {
         SYSTEM_INFO SystemInfo;
         GetSystemInfo(&SystemInfo);
 
-        network_thread_count = SystemInfo.dwNumberOfProcessors;
+        producer_thread_count = SystemInfo.dwNumberOfProcessors;
 #endif
 
-        for (i = 0; i < network_thread_count; i++) {
+        for (i = 0; i < producer_thread_count; i++) {
             networkipv4_threads.create();
             networkipv6_threads.create();
         }

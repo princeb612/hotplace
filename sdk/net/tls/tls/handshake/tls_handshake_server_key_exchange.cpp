@@ -149,14 +149,14 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(2);
-                dbs.printf("> %s %i (%s)\n", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
-                dbs.printf("> %s 0x%04x %s\n", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
-                dbs.printf("> %s\n", constexpr_pubkey);
-                dbs.printf(" > %s %i\n", constexpr_pubkey_len, pubkey_len);
+                dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
+                dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
+                dbs.println("> %s", constexpr_pubkey);
+                dbs.println(" > %s %i", constexpr_pubkey_len, pubkey_len);
                 dump_memory(pubkey, &dbs, 16, 4, 0x0, dump_notrunc);
-                dbs.printf("> %s\n", constexpr_signature);
-                dbs.printf(" > 0x%04x %s\n", sigalg, tlsadvisor->signature_scheme_name(sigalg).c_str());
-                dbs.printf(" > %s %i\n", constexpr_sig_len, sig_len);
+                dbs.println("> %s", constexpr_signature);
+                dbs.println(" > 0x%04x %s", sigalg, tlsadvisor->signature_scheme_name(sigalg).c_str());
+                dbs.println(" > %s %i", constexpr_sig_len, sig_len);
                 dump_memory(sig, &dbs, 16, 3, 0x0, dump_notrunc);
                 dbs.autoindent(0);
 
@@ -273,14 +273,14 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     if (istraceable()) {
         basic_stream dbs;
         dbs.autoindent(2);
-        dbs.printf("> %s %i (%s)\n", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
-        dbs.printf("> %s 0x%04x %s\n", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
-        dbs.printf("> %s\n", constexpr_pubkey);
-        dbs.printf(" > %s %zi\n", constexpr_pubkey_len, pubkey.size());
+        dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
+        dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
+        dbs.println("> %s", constexpr_pubkey);
+        dbs.println(" > %s %zi", constexpr_pubkey_len, pubkey.size());
         dump_memory(pubkey, &dbs, 16, 4, 0, dump_notrunc);
-        dbs.printf("> %s\n", constexpr_signature);
-        dbs.printf(" > 0x%04x %s\n", sigalg, tlsadvisor->signature_scheme_name(sigalg).c_str());
-        dbs.printf(" > %s %zi\n", constexpr_sig_len, sig.size());
+        dbs.println("> %s", constexpr_signature);
+        dbs.println(" > 0x%04x %s", sigalg, tlsadvisor->signature_scheme_name(sigalg).c_str());
+        dbs.println(" > %s %zi", constexpr_sig_len, sig.size());
         dump_memory(sig, &dbs, 16, 3, 0, dump_notrunc);
         dbs.autoindent(0);
 
