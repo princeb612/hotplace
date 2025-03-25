@@ -283,7 +283,7 @@ return_t async_client_socket::do_consumer_routine(uint32 type, uint32 data_count
             socklen_t socklen = sizeof(sockaddr_storage_t);
             int sock = (int)(long)data_array[1];
             auto& netbuf = _mplexer_key.buffer;
-            int rc = recvfrom(sock, netbuf.buffer, netbuf.buflen, 0, (sockaddr*)&item.addr, &socklen);
+            int rc = ::recvfrom(sock, netbuf.buffer, netbuf.buflen, 0, (sockaddr*)&item.addr, &socklen);
             if (rc <= 0) {
                 __leave2;
             } else {

@@ -142,6 +142,9 @@ return_t basic_stream::printf(const wchar_t* buf, ...) {
     return ret;
 }
 
+return_t basic_stream::vprintf(const wchar_t* buf, va_list ap) { return _bio.vprintf(_handle, buf, ap); }
+#endif
+
 return_t basic_stream::println(const char* buf, ...) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -163,9 +166,6 @@ return_t basic_stream::println(const char* buf, ...) {
     }
     return ret;
 }
-
-return_t basic_stream::vprintf(const wchar_t* buf, va_list ap) { return _bio.vprintf(_handle, buf, ap); }
-#endif
 
 return_t basic_stream::vprintf(const char* fmt, valist ap) {
     return_t ret = errorcode_t::success;
