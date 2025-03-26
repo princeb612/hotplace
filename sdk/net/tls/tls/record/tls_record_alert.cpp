@@ -26,6 +26,19 @@ tls_record_alert::tls_record_alert(tls_session* session) : tls_record(tls_conten
 
 tls_record_alert::tls_record_alert(tls_session* session, uint8 level, uint8 desc) : tls_record(tls_content_type_alert, session), _level(level), _desc(desc) {}
 
+return_t tls_record_alert::do_postprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    if ((tls_alertlevel_warning == get_level()) && (tls_alertdesc_close_notify == get_desc())) {
+        auto session = get_session();
+        if (from_client == dir) {
+            session->update_session_status(session_client_close_notified);
+        } else if (from_server == dir) {
+            session->update_session_status(session_server_close_notified);
+        }
+    }
+    return ret;
+}
+
 return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -88,6 +101,7 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
             _desc = desc;
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             tls_advisor* advisor = tls_advisor::get_instance();
@@ -97,6 +111,7 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
     }
     __finally2 {
         // do nothing
@@ -106,10 +121,14 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
 
 return_t tls_record_alert::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
-    binary_append(bin, _level);
-    binary_append(bin, _desc);
+    binary_append(bin, get_level());
+    binary_append(bin, get_desc());
     return ret;
 }
+
+uint8 tls_record_alert::get_level() const { return _level; }
+
+uint8 tls_record_alert::get_desc() const { return _desc; }
 
 }  // namespace net
 }  // namespace hotplace

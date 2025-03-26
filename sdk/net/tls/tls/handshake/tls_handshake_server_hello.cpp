@@ -258,6 +258,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 extension_len = pl.t_value_of<uint16>(constexpr_extension_len);
             }
 
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(1);
@@ -278,6 +279,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
 
                 trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
+#endif
 
             ret = get_extensions().read(tls_hs_server_hello, session, dir, stream, size, pos);
 

@@ -318,6 +318,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         build_iv(session, secret_iv, nonce, record_no);
         ret = crypt.encrypt(cipher, mode, key, nonce, plaintext, ciphertext, aad, tag);
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("> encrypt");
@@ -334,6 +335,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
 
             trace_debug_event(category_net, net_event_tls_write, &dbs);
         }
+#endif
     }
     __finally2 {
         // do nothing
@@ -399,6 +401,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
         ret = crypt.cbc_hmac_tls_encrypt(enc_alg, hmac_alg, enckey, mackey, iv, aad, plaintext, ciphertext);
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("> encrypt");
@@ -416,6 +419,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
     }
     __finally2 {
         // do nothing
@@ -615,6 +619,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         build_iv(session, secret_iv, nonce, record_no);
         ret = crypt.decrypt(cipher, mode, key, nonce, stream + pos, size, plaintext, aad, tag);
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("> decrypt");
@@ -631,6 +636,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
     }
     __finally2 {
         // do nothing
@@ -692,6 +698,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         //          \- plainsize
         ret = crypt.cbc_hmac_tls_decrypt(enc_alg, hmac_alg, enckey, mackey, iv, aad, stream + bpos, size - bpos, plaintext, tag);
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("> decrypt");
@@ -709,6 +716,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
     }
     __finally2 {
         // do nothing
@@ -812,6 +820,7 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
 
                 mask.resize(masklen);
 
+#if defined DEBUG
                 if (istraceable()) {
                     basic_stream dbs;
                     dbs.println("> protection");
@@ -820,6 +829,7 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
                     dbs.println(" > mask %s", base16_encode(mask).c_str());
                     trace_debug_event(category_net, net_event_tls_dump, &dbs);
                 }
+#endif
             }
         }
     }

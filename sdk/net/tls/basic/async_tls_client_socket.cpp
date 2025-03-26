@@ -183,22 +183,18 @@ return_t async_tls_client_socket::do_handshake() {
 
         ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
 
-        session->wait_change_session_status(session_server_finished, 1000);  // wait server hello .. server finished
+        session->wait_change_session_status(session_server_cert_verified | session_server_finished, 1000);  // wait server hello .. server finished
         uint16 session_status = session->get_session_status();
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
-            dbs.println("> session status");
-            if (session_cert_verified & session_status) {
-                dbs.println(" certificate verified");
-            }
-            if (session_server_finished & session_status) {
-                dbs.println(" server finished");
-            }
+            dbs.println("> session status 0x%04x", session_status);
             trace_debug_event(category_debug_internal, 0, &dbs);
         }
+#endif
 
-        if (0 == (session_status & (session_cert_verified | session_server_finished))) {
+        if (0 == (session_status & (session_server_cert_verified | session_server_finished))) {
             ret = error_handshake;
             __leave2;
         }
@@ -322,6 +318,8 @@ return_t async_tls_client_socket::do_shutdown() {
 
         size_t cbsent = 0;
         ret = send((char*)&bin[0], bin.size(), &cbsent);
+
+        ret = session->wait_change_session_status(session_server_close_notified, 1000);
     }
     __finally2 {}
 

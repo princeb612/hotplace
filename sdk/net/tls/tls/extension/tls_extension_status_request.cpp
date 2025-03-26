@@ -52,6 +52,7 @@ return_t tls_extension_status_request::do_read_body(const byte_t* stream, size_t
             pl.get_binary(constexpr_request_ext_info, request_ext_info);
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -64,6 +65,7 @@ return_t tls_extension_status_request::do_read_body(const byte_t* stream, size_t
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
 
         {
             _cert_status_type = cert_status_type;

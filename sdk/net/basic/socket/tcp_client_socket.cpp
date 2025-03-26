@@ -120,5 +120,7 @@ return_t tcp_client_socket::send(const char* ptr_data, size_t size_data, size_t*
 
 int tcp_client_socket::socket_type() { return SOCK_STREAM; }
 
+socket_t tcp_client_socket::get_socket() { return _fd; }
+
 }  // namespace net
 }  // namespace hotplace

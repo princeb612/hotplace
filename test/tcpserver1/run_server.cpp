@@ -163,7 +163,7 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
             mplexer.unbind(handle, sockcli, nullptr);
             close(sockcli);
         } else {
-            _logger->writeln("[%d] %.*s", ret_recv, ret_recv, buf);
+            _logger->writeln("[%d][len %d] %.*s", sockcli, ret_recv, ret_recv, buf);
             send(sockcli, buf, ret_recv, 0);
         }
     }
@@ -181,16 +181,15 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
 
     __try2 {
         if (mux_read == type) {
+            auto sockcli = netsocket_event->cli_socket;
             netbuffer_t& wsabuf_read = netsocket_event->netio_read;
             wsabuf_read.wsabuf.len = bytes_transfered;
 
-            if (0 != strnicmp("\r\n", wsabuf_read.wsabuf.buf, 2)) {
-                _logger->writeln("[%d] %.*s", (int)bytes_transfered, (int)bytes_transfered, wsabuf_read.wsabuf.buf);
-            }
+            _logger->writeln("[%d][len %d] %.*s", sockcli, (int)bytes_transfered, (int)bytes_transfered, wsabuf_read.wsabuf.buf);
 
             /* echo */
             DWORD size_sent = 0;
-            WSASend(netsocket_event->cli_socket, &(wsabuf_read.wsabuf), 1, &size_sent, 0, nullptr, nullptr);
+            WSASend(sockcli, &(wsabuf_read.wsabuf), 1, &size_sent, 0, nullptr, nullptr);
 
             async_handler(netsocket_event);
         }

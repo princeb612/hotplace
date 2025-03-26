@@ -125,6 +125,7 @@ return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t siz
             ret = protection.calc_psk(session, context_resumption_binder_hash, psk_binder);
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("   > %s 0x%04x(%i)", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
@@ -137,6 +138,7 @@ return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t siz
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
 
         {
             _psk_identities_len = psk_identities_len;
@@ -169,12 +171,14 @@ return_t tls_extension_server_psk::do_read_body(const byte_t* stream, size_t siz
             selected_identity = pl.t_value_of<uint16>(constexpr_selected_identity);
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("   > %s %i", constexpr_selected_identity, selected_identity);
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
 
         {
             //

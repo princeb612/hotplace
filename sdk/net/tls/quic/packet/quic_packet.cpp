@@ -215,6 +215,7 @@ return_t quic_packet::write_common_header(binary_t& header) {
 }
 
 void quic_packet::dump() {
+#if defined DEBUG
     if (istraceable()) {
         basic_stream dbs;
 
@@ -248,6 +249,7 @@ void quic_packet::dump() {
         }
         trace_debug_event(category_net, net_event_quic_dump, &dbs);
     }
+#endif
 }
 
 void quic_packet::set_pn(uint32 pn, uint8 len) {

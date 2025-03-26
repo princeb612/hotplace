@@ -49,6 +49,7 @@ return_t quic_frame_reset_stream::do_read_body(tls_direction_t dir, const byte_t
         uint64 error_code = pl.t_value_of<uint64>(constexpr_error_code);
         uint64 final_size = pl.t_value_of<uint64>(constexpr_final_size);
 
+#if defined DEBUG
         if (istraceable(category_net)) {
             basic_stream dbs;
             dbs.println("   > %s %I64i", constexpr_stream_id, stream_id);
@@ -56,6 +57,7 @@ return_t quic_frame_reset_stream::do_read_body(tls_direction_t dir, const byte_t
             dbs.println("   > %s %I64i", constexpr_final_size, final_size);
             trace_debug_event(category_net, net_event_quic_dump, &dbs);
         }
+#endif
     }
     __finally2 {}
     return ret;

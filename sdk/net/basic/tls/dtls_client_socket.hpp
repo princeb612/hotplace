@@ -31,6 +31,7 @@ class dtls_client_socket : public client_socket {
 
     virtual bool support_tls();
     virtual int socket_type();
+    virtual socket_t get_socket();
 
    protected:
     transport_layer_security* _tls;

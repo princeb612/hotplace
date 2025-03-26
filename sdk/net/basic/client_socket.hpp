@@ -55,6 +55,7 @@ class client_socket : public basic_socket {
      */
     virtual return_t sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen);
 
+    virtual socket_t get_socket();
     void set_wto(uint32 milliseconds);
     uint32 get_wto();
 

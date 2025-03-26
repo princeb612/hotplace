@@ -227,6 +227,7 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
             ciphertext = std::move(bin_ciphertext);
             tag = std::move(bin_tag);
 
+#if defined DEBUG
             if (istraceable()) {
                 dump();
 
@@ -241,6 +242,7 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
                 };
                 frames.for_each(lambda_foreach);
             }
+#endif
         } else {
             header = std::move(bin_unprotected_header);
         }
@@ -252,6 +254,7 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
 }
 
 void quic_packet_initial::dump() {
+#if defined DEBUG
     if (istraceable()) {
         quic_packet::dump();
 
@@ -272,6 +275,7 @@ void quic_packet_initial::dump() {
 
         trace_debug_event(category_net, net_event_quic_dump, &dbs);
     }
+#endif
 }
 
 quic_packet_initial& quic_packet_initial::set_token(const binary_t& token) {

@@ -41,6 +41,7 @@ return_t tls_extension_alpn::do_read_body(const byte_t* stream, size_t size, siz
             pl.get_binary(constexpr_protocol, protocols);
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("   > %s %i", constexpr_alpn_len, alpn_len);
@@ -48,6 +49,7 @@ return_t tls_extension_alpn::do_read_body(const byte_t* stream, size_t size, siz
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
 
         {
             //

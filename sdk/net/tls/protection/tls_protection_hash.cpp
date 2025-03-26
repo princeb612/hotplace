@@ -36,6 +36,7 @@ transcript_hash *tls_protection::get_transcript_hash() {
             transcript_hash_builder builder;
             _transcript_hash = builder.set(hashalg).build();
 
+#if defined DEBUG
             if (istraceable()) {
                 constexpr char constexpr_transcript_hash[] = "starting transcript_hash";
                 constexpr char constexpr_cipher_suite[] = "cipher suite";
@@ -48,6 +49,7 @@ transcript_hash *tls_protection::get_transcript_hash() {
                 dbs.println(" > %s", mdname);
                 trace_debug_event(category_debug_internal, 0, &dbs);
             }
+#endif
         }
     }
     if (_transcript_hash) {

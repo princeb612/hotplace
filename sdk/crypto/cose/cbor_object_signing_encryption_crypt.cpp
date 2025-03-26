@@ -213,11 +213,13 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
             __leave2;
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("docrypt alg %i (%s)", alg, hint->name);
             trace_debug_event(category_crypto, crypto_event_cose, &dbs);
         }
+#endif
 
         if (iv.size() && partial_iv.size()) {
             // TEST FAILED - TODO
@@ -314,6 +316,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
             ret = errorcode_t::bad_request;
         }
 
+#if defined DEBUG
         if (istraceable()) {
             // std::function<void (const char* text, binary_t& bin)> dump;
             auto dump = [&](const char* text, binary_t& bin) -> void {
@@ -329,6 +332,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
             dump("iv", iv);
             dump("output", output);
         }
+#endif
 
         if (errorcode_t::success != ret) {
             __leave2;

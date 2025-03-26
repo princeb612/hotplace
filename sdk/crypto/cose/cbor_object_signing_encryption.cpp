@@ -858,11 +858,13 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
             if (0 == dgst_klen) {
                 dgst_klen = alg_hint->dgst.dlen;
             }
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.println("process_keydistribution alg %i (%s)", alg, hint->name);
                 trace_debug_event(category_crypto, crypto_event_cose, &dbs);
             }
+#endif
 
             cose_group_t group = alg_hint->group;
             const char* enc_alg = alg_hint->enc.algname;
@@ -871,10 +873,12 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
 
             // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
 
+#if defined DEBUG
             if (istraceable()) {
                 constexpr char constexpr_debug_alg[] = "alg %i(group %i) ";
                 handle->debug_stream.printf(constexpr_debug_alg, alg, group);
             }
+#endif
 
             if (cose_group_t::cose_group_key_direct == group) {
                 // RFC 8152 12.1. Direct Encryption
@@ -975,6 +979,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
 
             layer->setparam(cose_param_t::cose_param_cek, cek);
 
+#if defined DEBUG
             if (istraceable()) {
                 layer->get_composer()
                     ->get_unsent()
@@ -999,6 +1004,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
                 dump("kek", kek);
                 dump("secret", secret);
             }
+#endif
         } else {
             binary_t cek;
             const EVP_PKEY* pkey = key->choose(kid, kty, check);

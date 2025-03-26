@@ -89,6 +89,9 @@ void trace_debug_event(trace_category_t category, uint32 event, stream_t* s);
 void trace_debug_event(trace_category_t category, uint32 event, const char* fmt, ...);
 void trace_debug_filter(trace_category_t category, bool filter);
 bool trace_debug_filtered(trace_category_t category);
+/**
+ * @brief trace (only debug build)
+ */
 bool istraceable();
 bool istraceable(trace_category_t category);
 /**

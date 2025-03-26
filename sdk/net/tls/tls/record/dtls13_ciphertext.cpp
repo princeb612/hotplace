@@ -110,6 +110,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
             offset_encdata = pl.offset_of(constexpr_encdata);
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("> %s", constexpr_unified_header);
@@ -127,6 +128,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
 
         {
             _content_type = uhdr;
@@ -195,6 +197,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
             ret = protection.decrypt(session, dir, stream, size - additional.size(), recpos, plaintext, additional);
         }
 
+#if defined DEBUG
         if (check_trace_level(2) && istraceable()) {
             basic_stream dbs;
 
@@ -215,12 +218,14 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
 
         // record
         if (errorcode_t::success == ret) {
             uint8 type = *plaintext.rbegin();
             size_t tpos = 0;
 
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
 
@@ -234,6 +239,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
                 trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
+#endif
 
             switch (type) {
                 case tls_content_type_alert: {
@@ -360,6 +366,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
             binary_append(bin, block);
         }
 
+#if defined DEBUG
         if (check_trace_level(2) && istraceable()) {
             basic_stream dbs;
 
@@ -370,6 +377,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
     }
     __finally2 {}
     return ret;

@@ -131,6 +131,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 ret = errorcode_t::error_verify;
             }
 
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(1);
@@ -144,6 +145,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
 
                 trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
+#endif
         }
     }
     __finally2 {
@@ -187,6 +189,7 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
             pl.write(bin);
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("> %s", constexpr_verify_data);
@@ -197,6 +200,7 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
 
             trace_debug_event(category_net, net_event_tls_write, &dbs);
         }
+#endif
     }
     __finally2 {}
     return ret;

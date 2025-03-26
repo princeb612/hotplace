@@ -179,11 +179,13 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
             __leave2;
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("dosign alg %i (%s)", alg, hint->name);
             trace_debug_event(category_crypto, crypto_event_cose, &dbs);
         }
+#endif
 
         // RFC 8152 8.1.  ECDSA
         // In order to promote interoperability, it is suggested that SHA-256 be
@@ -232,6 +234,7 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
                 break;
         }
 
+#if defined DEBUG
         if (istraceable()) {
             auto dump = [&](const char* text, binary_t& bin) -> void {
                 if (bin.size()) {
@@ -244,6 +247,7 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
             dump("tobesigned", tobesigned);
             dump("signature", signature);
         }
+#endif
     }
     __finally2 {
         // do nothing

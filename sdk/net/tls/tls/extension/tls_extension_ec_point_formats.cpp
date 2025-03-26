@@ -70,6 +70,7 @@ return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size
             }
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -82,6 +83,7 @@ return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
     }
     __finally2 {
         // do nothing

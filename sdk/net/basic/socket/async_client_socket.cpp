@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace net {
 
-async_client_socket::async_client_socket() : client_socket(), _fd(INVALID_SOCKET), _mphandle(nullptr), _thread(nullptr), _wto(3000) {}
+async_client_socket::async_client_socket() : client_socket(), _fd(INVALID_SOCKET), _mphandle(nullptr), _thread(nullptr) {}
 
 async_client_socket::~async_client_socket() { close(); }
 
@@ -31,6 +31,7 @@ return_t async_client_socket::open(sockaddr_storage_t* sa, const char* address, 
         if (errorcode_t::success != ret) {
             __leave2;
         }
+
         if (SOCK_DGRAM == type) {
             start_consumer();
         }
@@ -59,6 +60,9 @@ return_t async_client_socket::connect(const char* address, uint16 port, uint32 t
 
         addr_to_sockaddr(&sa, address, port);
         ret = connect_socket_addr(_fd, (sockaddr*)&sa, sizeof(sa), timeout);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         start_consumer();
 
@@ -67,11 +71,7 @@ return_t async_client_socket::connect(const char* address, uint16 port, uint32 t
             __leave2;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            close();
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -167,25 +167,30 @@ return_t async_client_socket::sendto(const char* ptr_data, size_t size_data, siz
     return ret;
 }
 
-void async_client_socket::set_wto(uint32 milliseconds) { _wto = milliseconds; }
-
-uint32 async_client_socket::get_wto() { return _wto; }
+socket_t async_client_socket::get_socket() { return _fd; }
 
 return_t async_client_socket::start_consumer() {
     return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr != _mphandle) {
+            __leave2;
+        }
+
 #if defined __linux__
-    multiplexer_epoll mplexer;
+        multiplexer_epoll mplexer;
 #elif defined _WIN32 || defined _WIN64
-    multiplexer_iocp mplexer;
+        multiplexer_iocp mplexer;
 #endif
 
-    mplexer.open(&_mphandle, 5);
-    mplexer.bind(_mphandle, (handle_t)_fd, &_mplexer_key);
+        mplexer.open(&_mphandle, 5);
+        mplexer.bind(_mphandle, (handle_t)_fd, &_mplexer_key);
 
-    _thread = new thread(producer_thread, this);
-    _thread->start();
+        _thread = new thread(producer_thread, this);
+        _thread->start();
 
-    async_read();
+        async_read();
+    }
+    __finally2 {}
 
     return ret;
 }
@@ -290,7 +295,7 @@ return_t async_client_socket::do_consumer_routine(uint32 type, uint32 data_count
                 item.buffer.write(netbuf.buffer, rc);
 
                 critical_section_guard guard(_rlock);
-                _rq.push(item);
+                _rq.push(std::move(item));
             }
 #elif defined _WIN32 || defined _WIN64
             uint32 bytes_transfered = (uint32)(arch_t)data_array[1];
@@ -303,7 +308,7 @@ return_t async_client_socket::do_consumer_routine(uint32 type, uint32 data_count
                 }
 
                 critical_section_guard guard(_rlock);
-                _rq.push(item);
+                _rq.push(std::move(item));
             }
             async_read();
 #endif
@@ -328,13 +333,12 @@ void async_client_socket::async_read() {
     auto type = socket_type();
 
     DWORD flags = 0;
-    DWORD bytes_received = 0;
     if (SOCK_STREAM == type) {
-        WSARecv(_fd, &netbuf.wsabuf, 1, &bytes_received, &flags, &netbuf.overlapped, nullptr);
+        WSARecv(_fd, &netbuf.wsabuf, 1, nullptr, &flags, &netbuf.overlapped, nullptr);
     } else {
         auto& netaddr = _mplexer_key.addr;
         int addrlen = sizeof(sockaddr_storage_t);
-        WSARecvFrom(_fd, &netbuf.wsabuf, 1, &bytes_received, &flags, (sockaddr*)&netaddr, &addrlen, &netbuf.overlapped, nullptr);
+        WSARecvFrom(_fd, &netbuf.wsabuf, 1, nullptr, &flags, (sockaddr*)&netaddr, &addrlen, &netbuf.overlapped, nullptr);
     }
 #endif
 }

@@ -106,5 +106,13 @@ bool tls_client_socket::support_tls() { return true; }
 
 int tls_client_socket::socket_type() { return SOCK_STREAM; }
 
+socket_t tls_client_socket::get_socket() {
+    socket_t sock = INVALID_SOCKET;
+    if (_handle) {
+        sock = _handle->fd;
+    }
+    return sock;
+}
+
 }  // namespace net
 }  // namespace hotplace

@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_IO_SOCKET__
 #define __HOTPLACE_SDK_IO_SOCKET__
 
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/io/types.hpp>
 
 namespace hotplace {
@@ -117,6 +118,26 @@ return_t typeof_socket(socket_t sock, int& type);
 return_t winsock_startup();
 void winsock_cleanup();
 #endif
+
+class socket_advisor {
+   public:
+    static socket_advisor* get_instance();
+    std::string nameof_family(int code);
+    std::string nameof_type(int code);
+    std::string nameof_protocol(int code);
+
+   protected:
+    socket_advisor();
+    void build();
+
+   private:
+    static socket_advisor _instance;
+
+    critical_section _lock;
+    std::map<int, std::string> _family;
+    std::map<int, std::string> _type;
+    std::map<int, std::string> _protocol;
+};
 
 }  // namespace io
 }  // namespace hotplace

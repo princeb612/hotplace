@@ -34,7 +34,8 @@ class tcp_client_socket : public client_socket {
     virtual return_t more(char* ptr_data, size_t size_data, size_t* cbread);
     virtual return_t send(const char* ptr_data, size_t size_data, size_t* cbsent);
 
-    int socket_type();
+    virtual int socket_type();
+    virtual socket_t get_socket();
 
    protected:
    private:

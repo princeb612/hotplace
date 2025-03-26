@@ -41,7 +41,7 @@ return_t tls_session::wait_change_session_status(uint16 status, unsigned msec) {
     while (1) {
         ret = _sem.wait(msec);
 
-        if (_status & status) {
+        if (status == (_status & status)) {
             break;
         }
 

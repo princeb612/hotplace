@@ -65,6 +65,7 @@ return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size
             pl.get_binary(constexpr_hostname, hostname);
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -74,6 +75,7 @@ return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
 
         {
             _nametype = type;

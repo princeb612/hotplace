@@ -198,11 +198,13 @@ return_t http_dynamic_table::commit() {
                 _hook(category_net, net_event_header_compression_insert);
             }
 
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream bs;
                 bs.printf("insert entry[%zi] %s=%s\n", _inserted, name.c_str(), value.c_str());
                 trace_debug_event(category_net, net_event_header_compression_insert, &bs);
             }
+#endif
 
             _inserted++;
         } else {
@@ -244,11 +246,13 @@ return_t http_dynamic_table::evict() {
                         _hook(category_net, net_event_header_compression_evict);
                     }
 
+#if defined DEBUG
                     if (istraceable()) {
                         basic_stream bs;
                         bs.printf("evict entry[%zi] %s=%s\n", entry, name.c_str(), val.c_str());
                         trace_debug_event(category_net, net_event_header_compression_evict, &bs);
                     }
+#endif
                     _dynamic_map.erase(iter);
                     break;
                 }

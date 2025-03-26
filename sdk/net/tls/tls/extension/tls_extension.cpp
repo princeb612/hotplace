@@ -201,6 +201,7 @@ return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t
             _size = 4 + ext_len;  // pos - extpos + ext_len
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -213,6 +214,7 @@ return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
     }
     __finally2 {
         // do nothing

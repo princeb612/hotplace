@@ -218,6 +218,7 @@ return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size
             add_pubkey(group, pubkey, keydesc(get_kid()));
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -249,6 +250,7 @@ return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
     }
     __finally2 {
         // do nothing
@@ -349,6 +351,7 @@ return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size
             add_pubkey(group, pubkey, keydesc(get_kid()));
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -362,6 +365,7 @@ return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
 
         {
             // _group = group;

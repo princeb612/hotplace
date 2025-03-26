@@ -17,6 +17,8 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/system/multiplexer.hpp>
 #include <sdk/io/system/socket.hpp>
 
@@ -80,6 +82,14 @@ return_t multiplexer_epoll::open(multiplexer_context_t** handle, size_t concurre
         context->handle_controller = handle_controller;
 
         *handle = context;
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("epoll handle %i created", epollfd);
+            trace_debug_event(category_debug_internal, 0, &dbs);
+        }
+#endif
     }
     __finally2 {
         if (errorcode_t::success != ret) {
@@ -153,6 +163,14 @@ return_t multiplexer_epoll::bind(multiplexer_context_t* handle, handle_t eventso
             ret = errno;
             __leave2;
         }
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("epoll handle %i bind %i", context->epoll_fd, eventsource);
+            trace_debug_event(category_debug_internal, 0, &dbs);
+        }
+#endif
     }
     __finally2 {
         // do nothing
@@ -183,6 +201,13 @@ return_t multiplexer_epoll::unbind(multiplexer_context_t* handle, handle_t event
             ret = errno;
             __leave2;
         }
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("epoll handle %i unbind %i", context->epoll_fd, eventsource);
+            trace_debug_event(category_debug_internal, 0, &dbs);
+        }
+#endif
     }
     __finally2 {
         // do nothing
@@ -216,6 +241,12 @@ return_t multiplexer_epoll::event_loop_run(multiplexer_context_t* handle, handle
         typeof_socket((socket_t)listenfd, socktype);
         bool is_dgram = (SOCK_DGRAM == socktype);
 
+        int is_listen_socket = 0;
+        if (SOCK_STREAM == socktype) {
+            socklen_t optlen = sizeof(is_listen_socket);
+            getsockopt(listenfd, SOL_SOCKET, SO_ACCEPTCONN , (char*)&is_listen_socket, &optlen);
+        }
+
         while (true) {
             bool ret_event_loop_test_broken = controller.event_loop_test_broken(context->handle_controller, token_handle);
             if (true == ret_event_loop_test_broken) {
@@ -240,11 +271,16 @@ return_t multiplexer_epoll::event_loop_run(multiplexer_context_t* handle, handle
                 data_vector[0] = handle;
                 data_vector[1] = (void*)(arch_t)context->events[i].data.fd;
 
-                if (context->events[i].data.fd == listenfd) {
-                    multiplexer_event_type_t type = (is_dgram ? multiplexer_event_type_t::mux_dgram : multiplexer_event_type_t::mux_connect);
+                if (context->events[i].events & EPOLLIN) {
+                    multiplexer_event_type_t type = multiplexer_event_type_t::mux_read;
+                    if (context->events[i].data.fd == listenfd) {
+                        if (is_listen_socket) {
+                            type = multiplexer_event_type_t::mux_connect;
+                        } else if (is_dgram) {
+                            type = multiplexer_event_type_t::mux_dgram;
+                        }
+                    }
                     event_callback_routine(type, 2, data_vector, &callback_control, parameter);
-                } else if (context->events[i].events & EPOLLIN) {
-                    event_callback_routine(multiplexer_event_type_t::mux_read, 2, data_vector, &callback_control, parameter);
                 } else if (context->events[i].events & (EPOLLHUP | EPOLLRDHUP | EPOLLERR)) {
                     event_callback_routine(multiplexer_event_type_t::mux_disconnect, 2, data_vector, &callback_control, parameter);
                 }

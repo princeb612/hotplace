@@ -107,6 +107,7 @@ return_t quic_packet_retry::write(tls_direction_t dir, binary_t& packet) {
 }
 
 void quic_packet_retry::dump() {
+#if defined DEBUG
     if (istraceable()) {
         quic_packet::dump();
 
@@ -117,6 +118,7 @@ void quic_packet_retry::dump() {
 
         trace_debug_event(category_net, net_event_quic_dump, &dbs);
     }
+#endif
 }
 
 quic_packet_retry& quic_packet_retry::set_retry_token(const binary_t& token) {

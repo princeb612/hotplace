@@ -91,12 +91,14 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
 
         do_postprocess(dir);  // change secret, recno
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("# record constructed");
             dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
             trace_debug_event(category_net, net_event_tls_write, &dbs);
         }
+#endif
     }
     __finally2 {}
     return ret;
@@ -203,6 +205,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             _range.end = pos;
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -223,6 +226,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
 
         set_legacy_version(legacy_version);
 

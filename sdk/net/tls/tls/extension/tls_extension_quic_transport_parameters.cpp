@@ -48,6 +48,7 @@ return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* str
             _params.insert({param_id, std::move(param)});
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -74,6 +75,7 @@ return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* str
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
     }
     __finally2 {
         // do nothing

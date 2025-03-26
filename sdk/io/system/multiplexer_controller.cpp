@@ -9,8 +9,10 @@
  */
 
 #include <map>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/thread.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/system/multiplexer.hpp>
 
 namespace hotplace {
@@ -107,6 +109,14 @@ return_t multiplexer_controller::event_loop_new(multiplexer_controller_context_t
         if (nullptr != token_handle) {
             *token_handle = tid;
         }
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("- event_loop_new tid %08x", tid);
+            trace_debug_event(category_debug_internal, 0, &dbs);
+        }
+#endif
     }
     __finally2 {
         // do nothing
@@ -167,6 +177,14 @@ return_t multiplexer_controller::event_loop_break_concurrent(multiplexer_control
             __leave2;
         }
 
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("- event_loop_break_concurrent : break %zi/%zi", concurrent, context->control.size());
+            trace_debug_event(category_debug_internal, 0, &dbs);
+        }
+#endif
+
         /* signal */
 
         size_t i = 0;
@@ -200,6 +218,13 @@ bool multiplexer_controller::event_loop_test_broken(multiplexer_controller_conte
         if (context->control.end() != iter) {
             if (0 == iter->second) {
                 ret_value = true;
+#if defined DEBUG
+                if (istraceable()) {
+                    basic_stream dbs;
+                    dbs.println("- event_loop_test_broken : broken detected");
+                    trace_debug_event(category_debug_internal, 0, &dbs);
+                }
+#endif
             }
         } else {
             ret_value = true;

@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/system/socket.hpp>
 
 namespace hotplace {
@@ -74,6 +76,11 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
         memset(&hints, 0, sizeof(hints));
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = address_type;
+        if (SOCK_STREAM == address_type) {
+            hints.ai_protocol = IPPROTO_TCP;
+        } else if (SOCK_DGRAM == address_type) {
+            hints.ai_protocol = IPPROTO_UDP;
+        }
         if (address_t::addr_host == address_type_adjusted) {
             hints.ai_flags = AI_PASSIVE;
         } else {
@@ -90,9 +97,32 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
 
         addrinf_traverse = addrinf;
         do {
-            if (AF_INET == addrinf_traverse->ai_family || AF_INET6 == addrinf_traverse->ai_family) {
-                s = socket(addrinf_traverse->ai_family, addrinf_traverse->ai_socktype, addrinf_traverse->ai_protocol);
+            auto family = addrinf_traverse->ai_family;
+            auto socktype = addrinf_traverse->ai_socktype;
+            auto protocol = addrinf_traverse->ai_protocol;
+
+            if (AF_INET == family || AF_INET6 == family) {
+#if defined __linux__
+                s = socket(family, socktype, protocol);
+#elif defined _WIN32 || defined _WIN64
+                s = WSASocket(family, socktype, protocol, nullptr, 0, WSA_FLAG_OVERLAPPED);
+#endif
                 if (INVALID_SOCKET != s) {
+                    // bind(s, addrinf_traverse->ai_addr, (int)addrinf_traverse->ai_addrlen);
+
+#if defined DEBUG
+                    if (istraceable()) {
+                        socket_advisor* advisor = socket_advisor::get_instance();
+                        basic_stream dbs;
+                        dbs.println("socket %d created family %i(%s) type %i(%s) protocol %i(%s)",  //
+                                    s,                                                              //
+                                    family, advisor->nameof_family(family).c_str(),                 //
+                                    socktype, advisor->nameof_type(socktype).c_str(),               //
+                                    protocol, advisor->nameof_protocol(protocol).c_str());          //
+                        trace_debug_event(category_debug_internal, 0, &dbs);
+                    }
+#endif
+
                     break;
                 }
             }
@@ -193,23 +223,39 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
         addrinf_traverse = addrinf;
 
         while (nullptr != addrinf_traverse) {
+            auto family = addrinf_traverse->ai_family;
+            auto socktype = addrinf_traverse->ai_socktype;
+            auto protocol = addrinf_traverse->ai_protocol;
+
             for (index = 0; index < size_vector; index++) {
-                if ((int)vector_family[index] == addrinf_traverse->ai_family) {
+                if ((int)vector_family[index] == family) {
                     socket_t sock = INVALID_SOCKET;
                     __try2 {
 #if defined __linux__
-                        sock = socket(addrinf_traverse->ai_family, addrinf_traverse->ai_socktype, addrinf_traverse->ai_protocol);
+                        sock = socket(family, socktype, protocol);
 #elif defined _WIN32 || defined _WIN64
-                        sock = WSASocket(addrinf_traverse->ai_family, addrinf_traverse->ai_socktype, addrinf_traverse->ai_protocol, nullptr, 0,
-                                         WSA_FLAG_OVERLAPPED);
+                        sock = WSASocket(family, socktype, protocol, nullptr, 0, WSA_FLAG_OVERLAPPED);
 #endif
                         if (INVALID_SOCKET == sock) {
                             ret = get_lasterror(sock, wsaerror);
                             __leave2;
                         }
 
+#if defined DEBUG
+                        if (istraceable()) {
+                            socket_advisor* advisor = socket_advisor::get_instance();
+                            basic_stream dbs;
+                            dbs.println("socket %d created family %i(%s) type %i(%s) protocol %i(%s)",  //
+                                        sock,                                                           //
+                                        family, advisor->nameof_family(family).c_str(),                 //
+                                        socktype, advisor->nameof_type(socktype).c_str(),               //
+                                        protocol, advisor->nameof_protocol(protocol).c_str());          //
+                            trace_debug_event(category_debug_internal, 0, &dbs);
+                        }
+#endif
+
 #if defined __linux__
-                        if (PF_INET6 == addrinf_traverse->ai_family) {
+                        if (PF_INET6 == family) {
                             int only_ipv6 = 1;
                             setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &only_ipv6, sizeof(only_ipv6));
                         }
@@ -217,7 +263,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
                         int reuse = 1;
                         setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse, sizeof(reuse));
 #ifdef SO_REUSEPORT
-                        setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (char*)&reuse, sizeof(reuse));
+                        // setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (char*)&reuse, sizeof(reuse));
 #endif
 
                         ret_function = bind(sock, addrinf_traverse->ai_addr, (int)addrinf_traverse->ai_addrlen);
@@ -344,7 +390,7 @@ return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addr
                 FD_SET(sock, &fds);                                               /* VC 6.0 - C4127 */
                 ret_routine = select((int)sock + 1, nullptr, &fds, nullptr, &tv); /* zero if timeout, -1 if an error occurred */
                 if (0 == ret_routine) {
-                    ret = errorcode_t::timeout;
+                    ret = errorcode_t::error_connect;  // timeout
                 } else if (ret_routine < 0) {
                     ret = get_lasterror(ret_routine, wsaerror);
                 }

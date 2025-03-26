@@ -114,5 +114,7 @@ return_t udp_client_socket::sendto(const char* ptr_data, size_t size_data, size_
 
 int udp_client_socket::socket_type() { return SOCK_DGRAM; }
 
+socket_t udp_client_socket::get_socket() { return _fd; }
+
 }  // namespace net
 }  // namespace hotplace

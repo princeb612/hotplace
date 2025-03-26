@@ -334,12 +334,15 @@ http_response& http_response::get_response(basic_stream& bs) {
                 bs.write(content(), content_size());
             }
         }
+
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dump_memory(bs.data(), bs.size(), &dbs, 16, 2, 0, dump_notrunc);
 
             trace_debug_event(category_net, net_event_httpresponse, &dbs);
         }
+#endif
     }
     return *this;
 }
@@ -425,6 +428,7 @@ http_response& http_response::get_response_h2(binary_t& bin) {
         }
 
         auto lambda_debug = [&](http2_frame* frame) -> void {
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
                 frame->dump(&dbs);
@@ -432,6 +436,7 @@ http_response& http_response::get_response_h2(binary_t& bin) {
 
                 trace_debug_event(category_net, net_event_httpresponse, &dbs);
             }
+#endif
         };
 
         // RFC 7838 4.  The ALTSVC HTTP/2 Frame

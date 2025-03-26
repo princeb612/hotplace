@@ -491,6 +491,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 }
             }
 
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.println("> hmac alg %x", hmac_alg);
@@ -499,6 +500,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 dbs.println("> pre master secret %s", base16_encode(pre_master_secret).c_str());
                 trace_debug_event(category_debug_internal, 0, &dbs);
             }
+#endif
 
             crypto_hmac_builder builder;
             auto hmac_master = builder.set(hmac_alg).set(pre_master_secret).build();

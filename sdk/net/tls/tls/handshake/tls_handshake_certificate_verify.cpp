@@ -42,7 +42,7 @@ return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, c
         protection.update_transcript_hash(session, stream + hspos, get_size());
 
         if (from_server == dir) {
-            session->update_session_status(session_cert_verified);
+            session->update_session_status(session_server_cert_verified);
         }
     }
     __finally2 {
@@ -233,6 +233,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
 
             ret = verify_certverify(pkey, dir, scheme, signature);
 
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(1);
@@ -246,6 +247,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
 
                 trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
+#endif
         }
     }
     __finally2 {

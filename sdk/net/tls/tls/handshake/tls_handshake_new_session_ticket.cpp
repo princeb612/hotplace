@@ -100,6 +100,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
                 pl.get_binary(constexpr_ticket_extensions, ticket_extensions);
             }
 
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(1);
@@ -113,6 +114,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
 
                 trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
+#endif
         }
     }
     __finally2 {

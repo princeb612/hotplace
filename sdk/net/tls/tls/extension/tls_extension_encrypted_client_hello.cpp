@@ -63,6 +63,7 @@ return_t tls_extension_encrypted_client_hello::do_read_body(const byte_t* stream
             pl.get_binary(constexpr_payload, enc_payload);
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -78,6 +79,7 @@ return_t tls_extension_encrypted_client_hello::do_read_body(const byte_t* stream
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
 
         {
             _client_hello_type = client_hello_type;

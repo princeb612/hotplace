@@ -46,6 +46,7 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             pl.get_binary(constexpr_ack, ack);
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("> %s %04x(%i)", constexpr_ack_len, ack_len, ack_len);
@@ -53,6 +54,7 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
+#endif
 
         pos += len;
     }

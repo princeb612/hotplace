@@ -65,6 +65,7 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
         binary_t crypto_data;
         pl.get_binary(constexpr_crypto_data, crypto_data);
 
+#if defined DEBUG
         if (istraceable(category_net)) {
             basic_stream dbs;
             dbs.println("   > %s %I64i", constexpr_offset, offset);
@@ -73,6 +74,7 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
             dump_memory(crypto_data, &dbs, 16, 5, 0x0, dump_notrunc);
             trace_debug_event(category_net, net_event_quic_dump, &dbs);
         }
+#endif
 
         if (offset) {
             binary_t defragment;

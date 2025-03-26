@@ -26,7 +26,8 @@ class udp_client_socket : public client_socket {
     virtual return_t recvfrom(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);
     virtual return_t sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen);
 
-    int socket_type();
+    virtual int socket_type();
+    virtual socket_t get_socket();
 
    protected:
    private:

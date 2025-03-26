@@ -204,6 +204,7 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
     size_t bufsize = (size_t)data_array[2];
 
 #if 0
+#if defined DEBUG
     if (istraceable()) {
         netsocket_t* session_socket = (netsocket_t*)data_array[0];
         basic_stream bs;
@@ -226,6 +227,7 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
         }
         trace_debug_event(category_net, net_event_httpserver_consume, &bs);
     }
+#endif
 #endif
 
     if (errorcode_t::success == get_http_protocol().is_kind_of(buf, bufsize)) {  // HTTP/1.1

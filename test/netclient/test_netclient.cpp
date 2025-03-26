@@ -46,7 +46,7 @@ void tcp_client() {
                             bs.write(buffer, cbread);
                         }
                     }
-                    _logger->writeln("received response: %s", bs.c_str());
+                    _logger->writeln("received response: [%d][len %zi]%s", cli->get_socket(), bs.size(), bs.c_str());
                     bs.clear();
                 }
             }
@@ -65,15 +65,11 @@ void udp_client() {
 
     return_t ret = errorcode_t::success;
     client_socket* cli = nullptr;
-#if 1
-    cli = new udp_client_socket;
-#else  // UDP test failed
     if (0 == option.async) {
         cli = new udp_client_socket;
     } else {
         cli = new async_udp_client_socket;
     }
-#endif
 
     char buffer[option.bufsize];
     basic_stream bs;
@@ -94,7 +90,7 @@ void udp_client() {
                 test = cli->recvfrom(buffer, option.bufsize, &cbread, (sockaddr*)&addr, &addrlen);
                 if (errorcode_t::success == test) {
                     bs.write(buffer, cbread);
-                    _logger->writeln("received response: %s", bs.c_str());
+                    _logger->writeln("received response: [%d][len %zi]%s", cli->get_socket(), bs.size(), bs.c_str());
                     bs.clear();
                 }
             }
@@ -144,7 +140,8 @@ void tls_client() {
                         }
                     }
                 }
-                _logger->dump(bs);
+                _logger->writeln("received response: [%d][len %zi]%s", cli.get_socket(), bs.size(), bs.c_str());
+                // _logger->dump(bs);
                 bs.clear();
             }
         }
@@ -191,7 +188,8 @@ void async_tls_client() {
                         }
                     }
                 }
-                _logger->dump(bs);
+                _logger->writeln("received response: [%d][len %zi]%s", cli.get_socket(), bs.size(), bs.c_str());
+                // _logger->dump(bs);
                 bs.clear();
             }
         }
@@ -238,7 +236,7 @@ void dtls_client() {
                 test = cli.recvfrom(buffer, option.bufsize, &cbread, (sockaddr*)&addr, &addrlen);
                 if (errorcode_t::success == test) {
                     bs.write(buffer, cbread);
-                    _logger->writeln("received response: %s", bs.c_str());
+                    _logger->writeln("received response: [%d][len %zi]%s", cli.get_socket(), bs.size(), bs.c_str());
                     bs.clear();
                 }
             }

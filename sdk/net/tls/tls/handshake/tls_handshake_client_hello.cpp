@@ -237,6 +237,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                 protection.set_item(tls_context_client_hello_random, random);
             }
 
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -267,6 +268,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
 
                 trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
+#endif
 
             ret = get_extensions().read(tls_hs_client_hello, session, dir, stream, size, pos);
         }

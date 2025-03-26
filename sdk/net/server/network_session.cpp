@@ -74,11 +74,14 @@ return_t network_session::ready_to_read() {
 #if defined _WIN32 || defined _WIN64
     /* asynchronous read */
     int type = get_server_socket()->socket_type();
+    socket_t sock = _session.netsock.get_event_socket();
+    WSABUF& wsabuf = _session.buf.wsabuf;
+    OVERLAPPED& ov = _session.buf.overlapped;
     if (SOCK_STREAM == type) {
         DWORD dwFlags = 0;
         DWORD dwRecvBytes = 0;
 
-        WSARecv((socket_t)_session.netsock.get_event_socket(), &(_session.buf.wsabuf), 1, &dwRecvBytes, &dwFlags, &(_session.buf.overlapped), nullptr);
+        WSARecv(sock, &wsabuf, 1, &dwRecvBytes, &dwFlags, &ov, nullptr);
     } else if (SOCK_DGRAM == type) {
         uint32 flags = 0;
         if (get_server_socket()->support_tls()) {
@@ -122,8 +125,7 @@ return_t network_session::ready_to_read() {
             flags = MSG_PEEK;
         }
         int addrlen = sizeof(sockaddr_storage_t);
-        WSARecvFrom((socket_t)_session.netsock.get_event_socket(), &get_buffer()->wsabuf, 1, nullptr, &flags, (sockaddr*)&socket_info()->cli_addr, &addrlen,
-                    &get_buffer()->overlapped, nullptr);
+        WSARecvFrom(sock, &wsabuf, 1, nullptr, &flags, (sockaddr*)&socket_info()->cli_addr, &addrlen, &ov, nullptr);
     }
 #endif
     return ret;
@@ -267,13 +269,14 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
 
                     data_ready = true;
 
+#if defined DEBUG
                     if (istraceable()) {
                         basic_stream bs;
                         bs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                         trace_debug_event(category_net, net_event_netsession_produce, &bs);
                     }
-
+#endif
                 } else {
                     break;
                 }
@@ -297,12 +300,14 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
             q->push(get_priority(), this);
 #endif
 
+#if defined DEBUG
             if (istraceable() && (errorcode_t::success == ret)) {
                 basic_stream bs;
                 bs << "[ns] read " << _session.netsock.get_event_socket() << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                 trace_debug_event(category_net, net_event_netsession_produce, &bs);
             }
+#endif
         }
     }
     __finally2 {
@@ -356,12 +361,14 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 
                     data_ready = true;
 
+#if defined DEBUG
                     if (istraceable()) {
                         basic_stream bs;
                         bs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                         trace_debug_event(category_net, net_event_netsession_produce, &bs);
                     }
+#endif
                 }
 
                 if (data_ready) {
@@ -388,12 +395,14 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
             q->push(get_priority(), this);
 #endif
 
+#if defined DEBUG
             if (istraceable() && (errorcode_t::success == ret)) {
                 basic_stream bs;
                 bs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
                 trace_debug_event(category_net, net_event_netsession_produce, &bs);
             }
+#endif
         }
     }
     __finally2 {

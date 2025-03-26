@@ -42,15 +42,18 @@ void trace_debug_filter(trace_category_t category, bool filter) { _debug_categor
 bool trace_debug_filtered(trace_category_t category) { return _debug_category_filter[category]; }
 
 bool istraceable() {
-    bool ret = true;
+    bool ret = false;
+#if defined DEBUG
     // std::function
     // operator bool : checks if a target is contained
     // operator==    : compares a std::function with nullptr
     // operator!=    : (removed in C++20)
     if ((trace_debug & get_trace_option()) && _internal_debug) {
+        ret = true;
     } else {
         ret = false;
     }
+#endif
     return ret;
 }
 

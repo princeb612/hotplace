@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/system/multiplexer.hpp>
 #include <sdk/io/system/socket.hpp>
 
@@ -32,7 +34,7 @@ multiplexer_iocp::~multiplexer_iocp() {
 
 return_t multiplexer_iocp::open(multiplexer_context_t** handle, size_t concurrent) {
     return_t ret = errorcode_t::success;
-    multiplexer_iocp_context_t* pContext = nullptr;
+    multiplexer_iocp_context_t* context = nullptr;
     HANDLE handle_iocp = nullptr;
     multiplexer_controller_context_t* handle_controller = nullptr;
     multiplexer_controller controller;
@@ -42,7 +44,7 @@ return_t multiplexer_iocp::open(multiplexer_context_t** handle, size_t concurren
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        __try_new_catch(pContext, new multiplexer_iocp_context_t, ret, __leave2);
+        __try_new_catch(context, new multiplexer_iocp_context_t, ret, __leave2);
 
         ret = controller.open(&handle_controller);
         if (errorcode_t::success != ret) {
@@ -51,11 +53,19 @@ return_t multiplexer_iocp::open(multiplexer_context_t** handle, size_t concurren
 
         handle_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0);
 
-        pContext->signature = MULTIPLEXER_IOCP_CONTEXT_SIGNATURE;
-        pContext->handle_iocp = handle_iocp;
-        pContext->handle_controller = handle_controller;
+        context->signature = MULTIPLEXER_IOCP_CONTEXT_SIGNATURE;
+        context->handle_iocp = handle_iocp;
+        context->handle_controller = handle_controller;
 
-        *handle = pContext;
+        *handle = context;
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("iocp handle %08x created", handle_iocp);
+            trace_debug_event(category_debug_internal, 0, &dbs);
+        }
+#endif
     }
     __finally2 {
         // do nothing
@@ -66,7 +76,7 @@ return_t multiplexer_iocp::open(multiplexer_context_t** handle, size_t concurren
 
 return_t multiplexer_iocp::close(multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
-    multiplexer_iocp_context_t* pContext = (multiplexer_iocp_context_t*)handle;
+    multiplexer_iocp_context_t* context = (multiplexer_iocp_context_t*)handle;
     multiplexer_controller controller;
 
     __try2 {
@@ -74,19 +84,19 @@ return_t multiplexer_iocp::close(multiplexer_context_t* handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != pContext->signature) {
+        if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != context->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
         event_loop_break(handle);
 
-        CloseHandle(pContext->handle_iocp);
+        CloseHandle(context->handle_iocp);
 
-        controller.close(pContext->handle_controller);
+        controller.close(context->handle_controller);
 
-        pContext->signature = 0;
-        delete pContext;
+        context->signature = 0;
+        delete context;
     }
     __finally2 {
         // do nothing
@@ -96,7 +106,7 @@ return_t multiplexer_iocp::close(multiplexer_context_t* handle) {
 
 return_t multiplexer_iocp::bind(multiplexer_context_t* handle, handle_t eventsource, void* data) {
     return_t ret = errorcode_t::success;
-    multiplexer_iocp_context_t* pContext = (multiplexer_iocp_context_t*)handle;
+    multiplexer_iocp_context_t* context = (multiplexer_iocp_context_t*)handle;
 
     __try2 {
         if (nullptr == handle) {
@@ -107,16 +117,24 @@ return_t multiplexer_iocp::bind(multiplexer_context_t* handle, handle_t eventsou
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != pContext->signature) {
+        if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != context->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
-        HANDLE handle = CreateIoCompletionPort(eventsource, pContext->handle_iocp, (ULONG_PTR)data, 0);
+        HANDLE handle = CreateIoCompletionPort(eventsource, context->handle_iocp, (ULONG_PTR)data, 0);
         if (nullptr == handle) {
             ret = GetLastError();
             __leave2;
         }
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("iocp handle %08x bind %i", context->handle_iocp, eventsource);
+            trace_debug_event(category_debug_internal, 0, &dbs);
+        }
+#endif
     }
     __finally2 {
         // do nothing
@@ -132,7 +150,7 @@ return_t multiplexer_iocp::unbind(multiplexer_context_t* handle, handle_t events
 
 return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_t listenfd, TYPE_CALLBACK_HANDLEREXV event_callback_routine, void* parameter) {
     return_t ret = errorcode_t::success;
-    multiplexer_iocp_context_t* pContext = (multiplexer_iocp_context_t*)handle;
+    multiplexer_iocp_context_t* context = (multiplexer_iocp_context_t*)handle;
     UINT_PTR token_handle = 0;
     multiplexer_controller controller;
 
@@ -141,12 +159,12 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != pContext->signature) {
+        if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != context->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
-        ret = controller.event_loop_new(pContext->handle_controller, &token_handle);
+        ret = controller.event_loop_new(context->handle_controller, &token_handle);
 
         int socktype = 0;
         typeof_socket((socket_t)listenfd, socktype);
@@ -154,7 +172,7 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
 
         BOOL bRet = TRUE;
         while (true) {
-            bool broken = controller.event_loop_test_broken(pContext->handle_controller, token_handle);
+            bool broken = controller.event_loop_test_broken(context->handle_controller, token_handle);
             if (true == broken) {
                 break;
             }
@@ -165,7 +183,8 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
             DWORD size_transfered = 0;
             ULONG_PTR completion_key = 0;
             LPOVERLAPPED overlapped = nullptr;
-            bRet = GetQueuedCompletionStatus(pContext->handle_iocp, &size_transfered, &completion_key, &overlapped, 100);
+            bRet = GetQueuedCompletionStatus(context->handle_iocp, &size_transfered, &completion_key, &overlapped, 100);
+
             if ((FALSE == bRet) && (nullptr == overlapped)) {
                 ret = GetLastError();
                 if (WAIT_TIMEOUT == ret) { /* timeout */
@@ -180,6 +199,7 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
                 // response event_loop_break
                 break;
             }
+
             void* data_vector[4] = {nullptr};
             data_vector[0] = (void*)handle;
             data_vector[1] = (void*)(arch_t)size_transfered;
@@ -196,7 +216,7 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
             event_callback_routine(type, 4, data_vector, nullptr, parameter);
         }
 
-        controller.event_loop_close(pContext->handle_controller, token_handle);
+        controller.event_loop_close(context->handle_controller, token_handle);
     }
     __finally2 {
         // do nothing
@@ -206,7 +226,7 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_
 
 return_t multiplexer_iocp::event_loop_break(multiplexer_context_t* handle, arch_t* token_handle) {
     return_t ret = errorcode_t::success;
-    multiplexer_iocp_context_t* pContext = (multiplexer_iocp_context_t*)handle;
+    multiplexer_iocp_context_t* context = (multiplexer_iocp_context_t*)handle;
     multiplexer_controller controller;
 
     __try2 {
@@ -214,13 +234,13 @@ return_t multiplexer_iocp::event_loop_break(multiplexer_context_t* handle, arch_
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != pContext->signature) {
+        if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != context->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
         /* signal */
-        ret = controller.event_loop_break(pContext->handle_controller, token_handle);
+        ret = controller.event_loop_break(context->handle_controller, token_handle);
     }
     __finally2 {
         // do nothing
@@ -230,7 +250,7 @@ return_t multiplexer_iocp::event_loop_break(multiplexer_context_t* handle, arch_
 
 return_t multiplexer_iocp::event_loop_break_concurrent(multiplexer_context_t* handle, size_t concurrent) {
     return_t ret = errorcode_t::success;
-    multiplexer_iocp_context_t* pContext = (multiplexer_iocp_context_t*)handle;
+    multiplexer_iocp_context_t* context = (multiplexer_iocp_context_t*)handle;
     multiplexer_controller controller;
 
     __try2 {
@@ -238,13 +258,13 @@ return_t multiplexer_iocp::event_loop_break_concurrent(multiplexer_context_t* ha
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != pContext->signature) {
+        if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != context->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
         /* signal */
-        ret = controller.event_loop_break_concurrent(pContext->handle_controller, concurrent);
+        ret = controller.event_loop_break_concurrent(context->handle_controller, concurrent);
     }
     __finally2 {
         // do nothing
@@ -256,19 +276,19 @@ return_t multiplexer_iocp::event_loop_break_concurrent(multiplexer_context_t* ha
 return_t multiplexer_iocp::post(multiplexer_context_t* handle, uint32 size_vecotor, void* data_vector[]) {
     return_t ret = errorcode_t::success;
 
-    multiplexer_iocp_context_t* pContext = (multiplexer_iocp_context_t*)handle;
+    multiplexer_iocp_context_t* context = (multiplexer_iocp_context_t*)handle;
 
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != pContext->signature) {
+        if (MULTIPLEXER_IOCP_CONTEXT_SIGNATURE != context->signature) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
 
-        PostQueuedCompletionStatus(pContext->handle_iocp, (DWORD)(arch_t)data_vector[1], (ULONG_PTR)data_vector[2], (LPOVERLAPPED)data_vector[3]);
+        PostQueuedCompletionStatus(context->handle_iocp, (DWORD)(arch_t)data_vector[1], (ULONG_PTR)data_vector[2], (LPOVERLAPPED)data_vector[3]);
     }
     __finally2 {
         // do nothing

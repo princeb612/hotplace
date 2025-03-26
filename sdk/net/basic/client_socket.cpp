@@ -37,6 +37,8 @@ return_t client_socket::sendto(const char* ptr_data, size_t size_data, size_t* c
     return errorcode_t::do_nothing;
 }
 
+socket_t client_socket::get_socket() { return INVALID_SOCKET; }
+
 void client_socket::set_wto(uint32 milliseconds) { _wto = milliseconds; }
 
 uint32 client_socket::get_wto() { return _wto; }

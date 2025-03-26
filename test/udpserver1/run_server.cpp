@@ -50,28 +50,28 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
     if (mux_dgram == type) {
 #if defined __linux__
         multiplexer_context_t* handle = (multiplexer_context_t*)data_array[0];
-        int svr_cli = (int)(long)data_array[1];
+        int sock = (int)(long)data_array[1];
         char buffer[BUFSIZE];
         sockaddr_storage_t sockaddr_storage;
         socklen_t socklen = sizeof(sockaddr_storage_t);
-        int ret_recv = recvfrom(svr_cli, buffer, (int)sizeof(buffer), 0, (sockaddr*)&sockaddr_storage, &socklen);
+        int ret_recv = recvfrom(sock, buffer, (int)sizeof(buffer), 0, (sockaddr*)&sockaddr_storage, &socklen);
         if (ret_recv > 0) {
-            _logger->writeln("[%d] %.*s", (int)ret_recv, (int)ret_recv, buffer);
-            sendto(svr_cli, buffer, ret_recv, 0, (sockaddr*)&sockaddr_storage, socklen);
+            _logger->writeln("[%d][len %d] %.*s", sock, (int)ret_recv, (int)ret_recv, buffer);
+            sendto(sock, buffer, ret_recv, 0, (sockaddr*)&sockaddr_storage, socklen);
         }
 #elif defined _WIN32 || defined _WIN64
         uint32 bytes_transfered = (uint32)(arch_t)data_array[1];
         netsocket_event_t* netsock_event_ptr = (netsocket_event_t*)data_array[2];
+        auto sock = accept_context->udp_server_sock;
 
         uint32 flags = 0;
         netbuffer_t& wsabuf_read = netsock_event_ptr->netio_read;
 
-        _logger->writeln("[%d] %.*s", (int)bytes_transfered, (int)bytes_transfered, wsabuf_read.wsabuf.buf);
+        _logger->writeln("[%d][len %d] %.*s", sock, (int)bytes_transfered, (int)bytes_transfered, wsabuf_read.wsabuf.buf);
 
         wsabuf_read.wsabuf.len = bytes_transfered;
         int addrlen = sizeof(sockaddr_storage_t);
-        WSASendTo(accept_context->udp_server_sock, &wsabuf_read.wsabuf, 1, nullptr, flags, (sockaddr*)&netsock_event_ptr->client_addr, addrlen, nullptr,
-                  nullptr);
+        WSASendTo(sock, &wsabuf_read.wsabuf, 1, nullptr, flags, (sockaddr*)&netsock_event_ptr->client_addr, addrlen, nullptr, nullptr);
 
         async_handler(accept_context, &netsock_event);
 #endif

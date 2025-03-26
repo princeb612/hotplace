@@ -31,19 +31,22 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
     netsocket_t* network_session = (netsocket_t*)data_array[0];
     char* buf = (char*)data_array[1];
     size_t bufsize = (size_t)data_array[2];
+    socket_t sock = INVALID_SOCKET;
+    if (network_session) {
+        sock = network_session->get_event_socket();
+    }
 
     switch (type) {
-        case multiplexer_event_type_t::mux_connect:
-            _logger->writeln("connect %d", network_session->get_event_socket());
-            break;
+        case multiplexer_event_type_t::mux_connect: {
+            _logger->writeln("connect %d", sock);
+        } break;
         case multiplexer_event_type_t::mux_read: {
-            auto sock = network_session->get_event_socket();
             _logger->writeln("read %d msg [%.*s]", sock, (unsigned)bufsize, buf);
             send(sock, buf, bufsize, 0);
         } break;
-        case multiplexer_event_type_t::mux_disconnect:
-            _logger->writeln("disconnect %d", network_session->get_event_socket());
-            break;
+        case multiplexer_event_type_t::mux_disconnect: {
+            _logger->writeln("disconnect %d", sock);
+        } break;
     }
     return ret;
 }

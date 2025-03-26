@@ -85,6 +85,9 @@ int main(int argc, char** argv) {
 #endif
 
         switch (option.prot) {
+            case 1:
+                tcp_client();
+                break;
             case 2:
                 udp_client();
                 break;
@@ -97,9 +100,6 @@ int main(int argc, char** argv) {
                 break;
             case 4:
                 dtls_client();
-                break;
-            case 1:
-                tcp_client();
                 break;
             default:
                 break;

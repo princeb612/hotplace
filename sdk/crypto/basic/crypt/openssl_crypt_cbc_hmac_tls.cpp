@@ -143,12 +143,14 @@ return_t openssl_crypt::cbc_hmac_tls_decrypt(crypt_algorithm_t enc_alg, hash_alg
             __leave2;
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("> tag");
             dump_memory(tag, &dbs, 16, 3, 0x0, dump_notrunc);
             trace_debug_event(category_crypto, crypto_event_openssl_info, &dbs);
         }
+#endif
 
         if (tag != verifydata) {
             ret = errorcode_t::mismatch;

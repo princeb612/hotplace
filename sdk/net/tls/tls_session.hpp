@@ -32,10 +32,11 @@ enum session_type_t {
 
 enum session_status_t : uint16 {
     session_key_exchanged = (1 << 0),
-    session_cert_verified = (1 << 1),    // tls_handshake_certificate_verify
-    session_server_finished = (1 << 2),  // tls_handshake_finished
-    session_client_finished = (1 << 3),  // tls_handshake_finished
-    session_close_notified = (1 << 15),
+    session_server_cert_verified = (1 << 1),  // tls_handshake_certificate_verify
+    session_server_finished = (1 << 2),       // tls_handshake_finished
+    session_client_finished = (1 << 3),       // tls_handshake_finished
+    session_client_close_notified = (1 << 14),
+    session_server_close_notified = (1 << 15),
 };
 
 /**

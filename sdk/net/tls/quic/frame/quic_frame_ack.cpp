@@ -73,6 +73,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
         uint64 ack_range_count = pl.t_value_of<uint64>(constexpr_ack_range_count);
         uint64 first_ack_range = pl.t_value_of<uint64>(constexpr_first_ack_range);
 
+#if defined DEBUG
         basic_stream dbs;
 
         if (istraceable(category_net)) {
@@ -81,6 +82,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             dbs.println("   > %s %I64i", constexpr_ack_range_count, ack_range_count);
             dbs.println("   > %s %I64i", constexpr_first_ack_range, first_ack_range);
         }
+#endif
 
         constexpr char constexpr_ack_ranges[] = "ack ranges";
         constexpr char constexpr_gap[] = "gap";
@@ -101,11 +103,13 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             uint64 gap = ack_ranges.t_value_of<uint64>(constexpr_gap);
             uint64 range_length = ack_ranges.t_value_of<uint64>(constexpr_range_length);
 
+#if defined DEBUG
             if (istraceable(category_net)) {
                 dbs.println("   > %s", constexpr_ack_ranges);
                 dbs.println("    > %s %I64i", constexpr_gap, gap);
                 dbs.println("    > %s %I64i", constexpr_range_length, range_length);
             }
+#endif
         }
 
         // RFC 9001 19.3.2.  ECN Counts
@@ -126,17 +130,21 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             uint64 ect1_count = ecn_counts.t_value_of<uint64>(constexpr_ect1_count);
             uint64 ectce_count = ecn_counts.t_value_of<uint64>(constexpr_ectce_count);
 
+#if defined DEBUG
             if (istraceable(category_net)) {
                 dbs.println("   > %s", constexpr_ecn_counts);
                 dbs.println("    > %s %I64i", constexpr_ect0_count, ect0_count);
                 dbs.println("    > %s %I64i", constexpr_ect1_count, ect1_count);
                 dbs.println("    > %s %I64i", constexpr_ectce_count, ectce_count);
             }
+#endif
         }
 
+#if defined DEBUG
         if (istraceable(category_net)) {
             trace_debug_event(category_net, net_event_quic_dump, &dbs);
         }
+#endif
     }
     __finally2 {}
     return ret;

@@ -218,6 +218,7 @@ return_t quic_packet_handshake::write(tls_direction_t dir, binary_t& header, bin
             ciphertext = std::move(bin_ciphertext);
             tag = std::move(bin_tag);
 
+#if defined DEBUG
             if (istraceable()) {
                 dump();
 
@@ -226,6 +227,7 @@ return_t quic_packet_handshake::write(tls_direction_t dir, binary_t& header, bin
                 quic_frames frames;
                 frames.read(session, dir, &_payload[0], _payload.size(), pos);
             }
+#endif
         } else {
             header = std::move(bin_unprotected_header);
         }
@@ -237,6 +239,7 @@ return_t quic_packet_handshake::write(tls_direction_t dir, binary_t& header, bin
 }
 
 void quic_packet_handshake::dump() {
+#if defined DEBUG
     if (istraceable()) {
         quic_packet::dump();
 
@@ -254,6 +257,7 @@ void quic_packet_handshake::dump() {
 
         trace_debug_event(category_net, net_event_quic_dump, &dbs);
     }
+#endif
 }
 
 uint64 quic_packet_handshake::get_length() {

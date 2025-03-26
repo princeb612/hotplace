@@ -187,11 +187,13 @@ return_t http2_serverpush::do_push_promise(const std::string &promise, uint32 st
             frame.write_compressed_header(&header, fragment);
             frame.set_fragment(fragment);
 
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream bs;
                 frame.dump(&bs);
                 trace_debug_event(category_net, net_event_http2_push_promise, &bs);
             }
+#endif
         }
     }
     __finally2 {

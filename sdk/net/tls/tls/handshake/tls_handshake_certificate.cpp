@@ -166,6 +166,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             }
             ret = keychain.load_der(&servercert, &cert[0], cert.size(), desc);
 
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(1);
@@ -180,6 +181,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
                 trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
+#endif
         }
     }
     __finally2 {
@@ -216,6 +218,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
         crypto_keychain keychain;
         keychain.write_der(x509, certificate);
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.autoindent(1);
@@ -225,6 +228,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
 
             trace_debug_event(category_net, net_event_tls_write, &dbs);
         }
+#endif
 
         binary_t cert_extensions;
         uint32 certificate_len = certificate.size();

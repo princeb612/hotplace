@@ -183,6 +183,7 @@ return_t quic_packet_1rtt::write(tls_direction_t dir, binary_t& header, binary_t
             ciphertext = std::move(bin_ciphertext);
             tag = std::move(bin_tag);
 
+#if defined DEBUG
             if (istraceable()) {
                 dump();
 
@@ -191,6 +192,7 @@ return_t quic_packet_1rtt::write(tls_direction_t dir, binary_t& header, binary_t
                 quic_frames frames;
                 frames.read(session, dir, &_payload[0], _payload.size(), pos);
             }
+#endif
         } else {
             header = std::move(bin_unprotected_header);
         }

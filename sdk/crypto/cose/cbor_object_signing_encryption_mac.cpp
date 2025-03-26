@@ -185,11 +185,13 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
             __leave2;
         }
 
+#if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("domac alg %i (%s)", alg, hint->name);
             trace_debug_event(category_crypto, crypto_event_cose, &dbs);
         }
+#endif
 
         if (iv.size() && partial_iv.size()) {
             // TEST FAILED

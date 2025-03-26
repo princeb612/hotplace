@@ -61,8 +61,7 @@ class async_client_socket : public client_socket {
      */
     virtual return_t sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen);
 
-    void set_wto(uint32 milliseconds);
-    uint32 get_wto();
+    virtual socket_t get_socket();
 
    protected:
     async_client_socket();
@@ -86,7 +85,6 @@ class async_client_socket : public client_socket {
     socket_t _fd;
     multiplexer_context_t* _mphandle;
     thread* _thread;
-    uint32 _wto;
 
     // WIN32 IOCP key
     struct mplexer_key {

@@ -207,6 +207,7 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
     return_t ret = errorcode_t::success;
     auto& protection = get_session()->get_tls_protection();
     auto lambda = [&](const binary_t& msg, uint8 trail) -> void {
+#if defined DEBUG
         if (msg.size() > trail) {
             if (istraceable()) {
                 basic_stream dbs;
@@ -218,6 +219,7 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
                 trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
         }
+#endif
     };
 
     if (untag) {
