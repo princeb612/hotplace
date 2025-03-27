@@ -211,7 +211,7 @@ enum errorcode_t {
     /* 0xef01000e 4009820174 */ no_data,
     /* 0xef01000f 4009820175 */ bad_data,
     /* 0xef010010 4009820176 */ bad_format,
-    /* 0xef010011 4009820177 */ reserved1,  //
+    /* 0xef010011 4009820177 */ error_overflow,
     /* 0xef010012 4009820178 */ empty,
     /* 0xef010013 4009820179 */ full,
     /* 0xef010014 4009820180 */ out_of_range,
@@ -259,7 +259,7 @@ enum errorcode_t {
     /* 0xef01003d 4009820221 */ abandoned,
     /* 0xef01003e 4009820222 */ different_type,
     /* 0xef01003f 4009820223 */ narrow_type,
-    /* 0xef010040 4009820224 */ reserved6,  //
+    /* 0xef010040 4009820224 */ error_certificate,
     /* 0xef010041 4009820225 */ exceed,
     /* 0xef010042 4009820226 */ trunc_detected,
 

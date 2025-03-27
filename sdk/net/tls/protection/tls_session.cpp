@@ -92,6 +92,20 @@ void tls_session::session_info::reset_recordno(protection_level_t level) { _reco
 
 void tls_session::session_info::set_recordno(uint64 recordno, protection_level_t level) { _recordno_spaces[level] = recordno; }
 
+void tls_session::session_info::push_alert(uint8 level, uint8 desc) {
+    critical_section_guard guard(_alerts_lock);
+    _alerts.push_back(alert(level, desc));
+}
+
+void tls_session::session_info::get_alert(std::function<void(uint8, uint8)> func) {
+    critical_section_guard guard(_alerts_lock);
+    for (auto iter = _alerts.begin(); iter != _alerts.end(); iter++) {
+        const auto& item = *iter;
+        func(item.level, item.desc);
+    }
+    _alerts.clear();
+}
+
 void tls_session::schedule(tls_handshake* handshake) {
     if (handshake) {
         critical_section_guard guard(_lock);
@@ -110,26 +124,9 @@ void tls_session::run_scheduled(tls_direction_t dir) {
     }
 }
 
-void tls_session::push_alert(uint8 level, uint8 desc) {
-    critical_section_guard guard(_lock);
-    _alerts.push(alert(level, desc));
-}
+void tls_session::push_alert(tls_direction_t dir, uint8 level, uint8 desc) { get_session_info(dir).push_alert(level, desc); }
 
-size_t tls_session::numberof_alerts() { return _alerts.size(); }
-
-return_t tls_session::pop_alert(uint8& level, uint8& desc) {
-    return_t ret = errorcode_t::success;
-    critical_section_guard guard(_lock);
-    if (_alerts.empty()) {
-        ret = errorcode_t::not_found;
-    } else {
-        auto& item = _alerts.front();
-        level = item.level;
-        desc = item.desc;
-        _alerts.pop();
-    }
-    return ret;
-}
+void tls_session::get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func) { get_session_info(dir).get_alert(func); }
 
 }  // namespace net
 }  // namespace hotplace

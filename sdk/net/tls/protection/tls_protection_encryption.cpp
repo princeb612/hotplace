@@ -468,7 +468,11 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
             } break;
         }
     }
-    __finally2 {}
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
+        }
+    }
     return ret;
 }
 
@@ -515,7 +519,11 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
             } break;
         }
     }
-    __finally2 {}
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
+        }
+    }
     return ret;
 }
 
@@ -550,7 +558,11 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
             } break;
         }
     }
-    __finally2 {}
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
+        }
+    }
     return ret;
 }
 

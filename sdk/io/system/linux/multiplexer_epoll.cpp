@@ -244,7 +244,7 @@ return_t multiplexer_epoll::event_loop_run(multiplexer_context_t* handle, handle
         int is_listen_socket = 0;
         if (SOCK_STREAM == socktype) {
             socklen_t optlen = sizeof(is_listen_socket);
-            getsockopt(listenfd, SOL_SOCKET, SO_ACCEPTCONN , (char*)&is_listen_socket, &optlen);
+            getsockopt(listenfd, SOL_SOCKET, SO_ACCEPTCONN, (char*)&is_listen_socket, &optlen);
         }
 
         while (true) {

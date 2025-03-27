@@ -273,6 +273,12 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
         crypto_key& key = protection.get_keyexchange();
         auto pkey = key.find(kid);
 
+        if (nullptr == pkey) {
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
+            ret = error_certificate;
+            __leave2;
+        }
+
         uint16 scheme = 0;
         binary_t signature;
         ret = sign_certverify(pkey, dir, scheme, signature);

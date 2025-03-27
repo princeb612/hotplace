@@ -207,19 +207,21 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
     return_t ret = errorcode_t::success;
     auto& protection = get_session()->get_tls_protection();
     auto lambda = [&](const binary_t& msg, uint8 trail) -> void {
-#if defined DEBUG
         if (msg.size() > trail) {
+            _bin.clear();
+            binary_append(_bin, &msg[0], msg.size() - trail);
+#if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.autoindent(3);
                 dbs.println(" > %s", constexpr_application_data);  // data
-                dump_memory(&msg[0], msg.size() - trail, &dbs, 16, 3, 0x0, dump_notrunc);
+                dump_memory(_bin, &dbs, 16, 3, 0x0, dump_notrunc);
                 dbs.autoindent(0);
 
                 trace_debug_event(category_net, net_event_tls_read, &dbs);
             }
-        }
 #endif
+        }
     };
 
     if (untag) {

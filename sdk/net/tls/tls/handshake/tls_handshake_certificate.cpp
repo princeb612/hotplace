@@ -210,7 +210,8 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
         }
         auto x509 = keyexchange.find_x509(kid);
         if (nullptr == x509) {
-            ret = errorcode_t::not_found;
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
+            ret = error_certificate;
             __leave2;
         }
 

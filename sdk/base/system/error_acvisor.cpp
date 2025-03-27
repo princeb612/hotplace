@@ -190,6 +190,7 @@ const error_description error_descriptions[] = {
     errordef(no_data, "no data"),
     errordef(bad_data, "bad data"),
     errordef(bad_format, "bad format"),
+    errordef(error_overflow, "overflow"),
     errordef(empty, "empty"),
     errordef(full, "full"),
     errordef(out_of_range, "out of range"),
@@ -233,6 +234,7 @@ const error_description error_descriptions[] = {
     errordef(different_type, "different type"),
     errordef(narrow_type, "narrow type"),
     errordef(narrow_type, "narrow type"),
+    errordef(error_certificate, "certificate"),
     errordef(exceed, "exceed the designed size"),
     errordef(trunc_detected, "truncation detected"),
 

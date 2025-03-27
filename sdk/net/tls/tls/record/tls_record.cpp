@@ -192,6 +192,11 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         if (size - pos < len) {
             ret = errorcode_t::bad_data;
             __leave2;
+        } else if (len > 16384 + 2048) {
+            // more than 2^14+2048 bytes
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_record_overflow);
+            ret = errorcode_t::error_overflow;
+            __leave2;
         }
 
         {

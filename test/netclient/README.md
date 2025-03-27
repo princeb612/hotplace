@@ -23,5 +23,8 @@
 | dtls_client_socket        | PASS  | PASS  |
 | async_tcp_client_socket   | PASS  | PASS  |
 | async_udp_client_socket   | test  | PASS  |
-| async_tls_client_socket   | test  | test  |
+| async_tls_client_socket   | PASS  | todo1 |
 | async_dtls_client_socket  | -     | -     |
+
+- todo1
+  - simetimes EVP_CipherFinal while decryption

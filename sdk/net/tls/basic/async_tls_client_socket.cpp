@@ -288,18 +288,38 @@ return_t async_tls_client_socket::do_secure() {
                             tls_record_application_data* appdata = (tls_record_application_data*)record;
                             const auto& bin = appdata->get_binary();
 
-                            bufferqueue_item_t item;
-                            critical_section_guard guard(_mlock);
-                            item.buffer << bin;
-                            _mq.push(item);
+                            if (false == bin.empty()) {
+                                bufferqueue_item_t item;
+                                critical_section_guard guard(_mlock);
+                                item.buffer << bin;
+                                _mq.push(std::move(item));
 
-                            _msem.signal();
+                                _msem.signal();
+                            }
                         }
                     }
                     record->release();
                 }
             }
             _mbs.cut(0, pos);
+        }
+        // RFC 2246 7.2.2. Error alerts
+        // RFC 8448 6.2.  Error Alerts
+        {
+            binary_t bin;
+            tls_direction_t dir = from_server;
+
+            auto lambda = [&](uint8 level, uint8 desc) -> void {
+                tls_record_application_data record(session);
+                record.get_records().add(new tls_record_alert(session, level, desc));
+                record.write(dir, bin);
+            };
+            session->get_alert(dir, lambda);
+
+            if (false == bin.empty()) {
+                size_t cbsent = 0;
+                ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
+            }
         }
     }
     return ret;
@@ -309,17 +329,21 @@ return_t async_tls_client_socket::do_shutdown() {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        auto session = &_session;
+#if 0
+        // TLS 00000304 00004008 SSL_write:callback:fatal:bad record mac
 
+        auto session = &_session;
+        
         binary_t bin;
         tls_record_application_data record(session);
         record.get_records().add(new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify));
         record.write(from_client, bin);
-
+        
         size_t cbsent = 0;
         ret = send((char*)&bin[0], bin.size(), &cbsent);
-
+        
         ret = session->wait_change_session_status(session_server_close_notified, 1000);
+#endif
     }
     __finally2 {}
 

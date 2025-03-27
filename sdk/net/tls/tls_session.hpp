@@ -71,6 +71,12 @@ class tls_session {
 
     t_key_value<uint16, uint16>& get_conf();
 
+    struct alert {
+        uint8 level;
+        uint8 desc;
+        alert(uint8 l, uint8 d) : level(l), desc(d) {}
+    };
+
     class session_info {
        public:
         session_info();
@@ -86,11 +92,17 @@ class tls_session {
         void begin_protection();
         bool apply_protection();
 
+        void push_alert(uint8 level, uint8 desc);
+        void get_alert(std::function<void(uint8, uint8)> func);
+
        private:
         tls_hs_type_t _hstype;
         bool _protection;
         // RFC 9000 12.3.  Packet Numbers
         std::map<protection_level_t, uint64> _recordno_spaces;
+
+        critical_section _alerts_lock;
+        std::list<alert> _alerts;
     };
 
     session_info& get_session_info(tls_direction_t dir);
@@ -119,17 +131,17 @@ class tls_session {
      *         // ...
      *      }
      * consume
-     *      if (numberof_alerts()) {
-     *          session->pop_alert(level, desc);
+     *      binanry_t bin;
+     *      auto lambda = [&](uint8 level, uint8 desc) -> void {
      *          tls_record_application_data record(session);
      *          record.get_records().add(new tls_record_alert(session, level, desc));
      *          record.write(dir, bin);
-     *          // tcpsession->send(&bin[0], bin.size());
-     *      }
+     *      };
+     *      session->get_alert(lambda);
+     *       // tcpsession->send(&bin[0], bin.size());
      */
-    void push_alert(uint8 level, uint8 desc);
-    size_t numberof_alerts();
-    return_t pop_alert(uint8& level, uint8& desc);
+    void push_alert(tls_direction_t dir, uint8 level, uint8 desc);
+    void get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func);
 
    private:
     critical_section _lock;
@@ -141,13 +153,6 @@ class tls_session {
     session_type_t _type;
     uint16 _status;
     semaphore _sem;  // _status related
-
-    struct alert {
-        uint8 level;
-        uint8 desc;
-        alert(uint8 l, uint8 d) : level(l), desc(d) {}
-    };
-    std::queue<alert> _alerts;
 
     t_key_value<uint16, uint16> _kv;
 };
