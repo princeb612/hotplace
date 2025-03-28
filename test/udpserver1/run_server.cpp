@@ -54,13 +54,13 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
         multiplexer_context_t* handle = (multiplexer_context_t*)data_array[0];
         int sock = (int)(long)data_array[1];
         char buffer[BUFSIZE];
-        sockaddr_storage_t sockaddr_storage;
+        sockaddr_storage_t addr;
         socklen_t socklen = sizeof(sockaddr_storage_t);
-        int ret_recv = recvfrom(sock, buffer, (int)sizeof(buffer), 0, (sockaddr*)&sockaddr_storage, &socklen);
+        int ret_recv = recvfrom(sock, buffer, (int)sizeof(buffer), 0, (sockaddr*)&addr, &socklen);
         if (ret_recv > 0) {
             sockaddr_string(addr, address);
             _logger->writeln("[%d][%s][len %d] %.*s", sock, address.c_str(), (int)ret_recv, (int)ret_recv, buffer);
-            sendto(sock, buffer, ret_recv, 0, (sockaddr*)&sockaddr_storage, socklen);
+            sendto(sock, buffer, ret_recv, 0, (sockaddr*)&addr, socklen);
         }
 #elif defined _WIN32 || defined _WIN64
         uint32 bytes_transfered = (uint32)(arch_t)data_array[1];
