@@ -3,6 +3,7 @@
  * @file {file}
  * @author  Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc    UDP server using multiplexer
+ *          only support IPv4
  * @sa      See in the following order : udpserver, udpserver2, dtlsserver
  *
  * Revision History
@@ -46,6 +47,7 @@ return_t async_handler(accept_context_t* accept_context, netsocket_event_t* nets
 return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     accept_context_t* accept_context = (accept_context_t*)user_context;
     return_t ret = errorcode_t::success;
+    std::string address;
 
     if (mux_dgram == type) {
 #if defined __linux__
@@ -56,22 +58,25 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
         socklen_t socklen = sizeof(sockaddr_storage_t);
         int ret_recv = recvfrom(sock, buffer, (int)sizeof(buffer), 0, (sockaddr*)&sockaddr_storage, &socklen);
         if (ret_recv > 0) {
-            _logger->writeln("[%d][len %d] %.*s", sock, (int)ret_recv, (int)ret_recv, buffer);
+            sockaddr_string(addr, address);
+            _logger->writeln("[%d][%s][len %d] %.*s", sock, address.c_str(), (int)ret_recv, (int)ret_recv, buffer);
             sendto(sock, buffer, ret_recv, 0, (sockaddr*)&sockaddr_storage, socklen);
         }
 #elif defined _WIN32 || defined _WIN64
         uint32 bytes_transfered = (uint32)(arch_t)data_array[1];
         netsocket_event_t* netsock_event_ptr = (netsocket_event_t*)data_array[2];
         auto sock = accept_context->udp_server_sock;
+        auto& addr = netsock_event_ptr->client_addr;
 
         uint32 flags = 0;
         netbuffer_t& wsabuf_read = netsock_event_ptr->netio_read;
+        sockaddr_string(addr, address);
 
-        _logger->writeln("[%d][len %d] %.*s", sock, (int)bytes_transfered, (int)bytes_transfered, wsabuf_read.wsabuf.buf);
+        _logger->writeln("[%d][%s][len %d] %.*s", sock, address.c_str(), (int)bytes_transfered, (int)bytes_transfered, wsabuf_read.wsabuf.buf);
 
         wsabuf_read.wsabuf.len = bytes_transfered;
         int addrlen = sizeof(sockaddr_storage_t);
-        WSASendTo(sock, &wsabuf_read.wsabuf, 1, nullptr, flags, (sockaddr*)&netsock_event_ptr->client_addr, addrlen, nullptr, nullptr);
+        WSASendTo(sock, &wsabuf_read.wsabuf, 1, nullptr, flags, (sockaddr*)&addr, addrlen, nullptr, nullptr);
 
         async_handler(accept_context, &netsock_event);
 #endif

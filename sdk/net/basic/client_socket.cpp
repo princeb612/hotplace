@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace net {
 
-client_socket::client_socket() : basic_socket(), _wto(3000) {}
+client_socket::client_socket() : basic_socket(), _wto(1000) {}
 
 client_socket::~client_socket() { close(); }
 

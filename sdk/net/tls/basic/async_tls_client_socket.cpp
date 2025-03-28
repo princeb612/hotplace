@@ -264,6 +264,8 @@ return_t async_tls_client_socket::do_secure() {
     return_t ret = errorcode_t::success;
     auto session = &_session;
     auto type = socket_type();
+    tls_direction_t dir = from_server;
+
     if (SOCK_STREAM == type) {
         {
             critical_section_guard guard(_rlock);
@@ -282,7 +284,7 @@ return_t async_tls_client_socket::do_secure() {
                 tls_record_builder builder;
                 auto record = builder.set(session).set(content_type).build();
                 if (record) {
-                    ret = record->read(from_server, stream, size, pos);
+                    ret = record->read(dir, stream, size, pos);
                     if (errorcode_t::success == ret) {
                         if (tls_content_type_application_data == content_type) {
                             tls_record_application_data* appdata = (tls_record_application_data*)record;
@@ -307,7 +309,6 @@ return_t async_tls_client_socket::do_secure() {
         // RFC 8448 6.2.  Error Alerts
         {
             binary_t bin;
-            tls_direction_t dir = from_server;
 
             auto lambda = [&](uint8 level, uint8 desc) -> void {
                 tls_record_application_data record(session);
@@ -327,26 +328,8 @@ return_t async_tls_client_socket::do_secure() {
 
 return_t async_tls_client_socket::do_shutdown() {
     return_t ret = errorcode_t::success;
-
-    __try2 {
-#if 0
-        // TLS 00000304 00004008 SSL_write:callback:fatal:bad record mac
-
-        auto session = &_session;
-        
-        binary_t bin;
-        tls_record_application_data record(session);
-        record.get_records().add(new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify));
-        record.write(from_client, bin);
-        
-        size_t cbsent = 0;
-        ret = send((char*)&bin[0], bin.size(), &cbsent);
-        
-        ret = session->wait_change_session_status(session_server_close_notified, 1000);
-#endif
-    }
+    __try2 {}
     __finally2 {}
-
     return ret;
 }
 

@@ -137,7 +137,7 @@ class tls_session {
      *          record.get_records().add(new tls_record_alert(session, level, desc));
      *          record.write(dir, bin);
      *      };
-     *      session->get_alert(lambda);
+     *      session->get_alert(dir, lambda);
      *       // tcpsession->send(&bin[0], bin.size());
      */
     void push_alert(tls_direction_t dir, uint8 level, uint8 desc);

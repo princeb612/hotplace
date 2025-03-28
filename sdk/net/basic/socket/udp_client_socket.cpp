@@ -57,14 +57,6 @@ return_t udp_client_socket::recvfrom(char* ptr_data, size_t size_data, size_t* c
 
         ret = wait_socket(_fd, get_wto(), SOCK_WAIT_READABLE);
         if (errorcode_t::success == ret) {
-#if 0
-            int size_peek = ::recvfrom(_fd, ptr_data, size_data, MSG_PEEK, nullptr, nullptr);
-            if (size_data < size_peek) {
-                ret = errorcode_t::insufficient_buffer;
-                __leave2;
-            }
-#endif
-
 #if defined __linux__
             int ret_recv = ::recvfrom(_fd, ptr_data, size_data, 0, addr, addrlen);
 #elif defined _WIN32 || defined _WIN64

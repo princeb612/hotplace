@@ -335,7 +335,7 @@ void async_client_socket::async_read() {
     DWORD flags = 0;
     if (SOCK_STREAM == type) {
         WSARecv(_fd, &netbuf.wsabuf, 1, nullptr, &flags, &netbuf.overlapped, nullptr);
-    } else {
+    } else if (SOCK_DGRAM == type) {
         auto& netaddr = _mplexer_key.addr;
         int addrlen = sizeof(sockaddr_storage_t);
         WSARecvFrom(_fd, &netbuf.wsabuf, 1, nullptr, &flags, (sockaddr*)&netaddr, &addrlen, &netbuf.overlapped, nullptr);

@@ -51,13 +51,6 @@ return_t udp_server_socket::recvfrom(socket_context_t* handle, int mode, char* p
         }
 
         auto sock = handle->fd;
-#if 0
-        int size_peek = recvfrom(sock, ptr_data, size_data, MSG_PEEK, nullptr, nullptr);
-        if (size_data < size_peek) {
-            ret = errorcode_t::insufficient_buffer;
-            __leave2;
-        }
-#endif
 
 #if defined __linux__
         int ret_recv = ::recvfrom(sock, ptr_data, size_data, 0, addr, addrlen);

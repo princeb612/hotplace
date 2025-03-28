@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc    UDP server using network_server
+ *          support IPv4 and IPv6
  * @sa      See in the following order : udpserver1, udpserver2, dtlsserver
  *
  * Revision History
@@ -23,10 +24,12 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
 
     basic_stream bs;
     std::string message;
+    std::string address;
 
     switch (type) {
         case mux_dgram:
-            _logger->writeln("read %d msg [%.*s]", session_socket->get_event_socket(), (unsigned)bufsize, buf);
+            sockaddr_string(*addr, address);
+            _logger->writeln("read %d [%s] msg [%.*s]", session_socket->get_event_socket(), address.c_str(), (unsigned)bufsize, buf);
             // dump_memory (buf, bufsize, &bs, 16, 4);
             // std::cout << bs << std::endl;
             session->sendto((char*)buf, bufsize, addr);

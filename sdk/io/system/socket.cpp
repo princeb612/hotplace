@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/system/socket.hpp>
@@ -95,6 +96,8 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
             __leave2;
         }
 
+        sockaddr_storage_t sa = {0};
+
         addrinf_traverse = addrinf;
         do {
             auto family = addrinf_traverse->ai_family;
@@ -108,7 +111,15 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
                 s = WSASocket(family, socktype, protocol, nullptr, 0, WSA_FLAG_OVERLAPPED);
 #endif
                 if (INVALID_SOCKET != s) {
-                    // bind(s, addrinf_traverse->ai_addr, (int)addrinf_traverse->ai_addrlen);
+#if defined _WIN32 || defined _WIN64
+                    if (SOCK_DGRAM == socktype) {
+                        // (IOCP) bind UDP socket
+                        //        sin_addr = 0.0.0.0
+                        //        sin.port = 0
+                        sa.ss_family = family;
+                        bind(s, (sockaddr*)&sa, sizeof(sa));
+                    }
+#endif
 
 #if defined DEBUG
                     if (istraceable()) {
@@ -532,6 +543,26 @@ return_t addr_to_sockaddr(sockaddr_storage_t* storage, const char* address, uint
         // do nothing
     }
     return ret;
+}
+
+void sockaddr_string(const sockaddr_storage_t& addr, std::string& address) {
+    __try2 {
+        const char* ret = nullptr;
+        char buf[INET6_ADDRSTRLEN] = {0};  // 45 + 1
+
+        auto family = addr.ss_family;
+        if (AF_INET == family) {
+            struct sockaddr_in* ipv4 = (struct sockaddr_in*)&addr;
+            ret = inet_ntop(family, &ipv4->sin_addr, buf, sizeof(buf));
+        } else if (AF_INET6 == family) {
+            struct sockaddr_in6* ipv6 = (struct sockaddr_in6*)&addr;
+            ret = inet_ntop(family, &ipv6->sin6_addr, buf, sizeof(buf));
+        }
+        if (ret) {
+            address = buf;
+        }
+    }
+    __finally2 {}
 }
 
 return_t typeof_socket(socket_t sock, int& type) {

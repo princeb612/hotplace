@@ -101,6 +101,7 @@ return_t set_sock_nbio(socket_t sock, uint32 nbio_mode);
  * @param   uint16 port [in]
  */
 return_t addr_to_sockaddr(sockaddr_storage_t* storage, const char* address, uint16 port);
+void sockaddr_string(const sockaddr_storage_t& addr, std::string& address);
 
 /**
  * @brief   type of socket
