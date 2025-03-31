@@ -86,7 +86,7 @@ return_t async_tls_client_socket::do_handshake() {
         // client hello
         {
             tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
             tls_handshake_client_hello* handshake = nullptr;
 
             handshake = new tls_handshake_client_hello(session);
@@ -202,7 +202,7 @@ return_t async_tls_client_socket::do_handshake() {
         auto tlsver = protection.get_tls_version();
 
         if (tls_13 == tlsver) {
-            session->waitall_change_session_status(session_server_cert_verified | session_server_finished, 1000);
+            session->waitall_change_session_status(session_server_cert_verified | session_server_finished, get_wto());
             session_status = session->get_session_status();
 
             if (0 == (session_status & (session_server_cert_verified | session_server_finished))) {
@@ -218,7 +218,7 @@ return_t async_tls_client_socket::do_handshake() {
             // client finished
             {
                 tls_record_builder builder;
-                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
 
                 *record << new tls_handshake_finished(session);
                 record->write(dir, bin);
@@ -232,7 +232,7 @@ return_t async_tls_client_socket::do_handshake() {
             // certificate
             // server_key_exchange
             // server_hello_done
-            session->waitall_change_session_status(session_server_key_exchange | session_server_hello_done, 1000);
+            session->waitall_change_session_status(session_server_key_exchange | session_server_hello_done, get_wto());
             session_status = session->get_session_status();
 
             if (0 == (session_status & (session_server_key_exchange | session_server_hello_done))) {
@@ -245,7 +245,7 @@ return_t async_tls_client_socket::do_handshake() {
 
             {
                 tls_record_builder builder;
-                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
 
                 *record << new tls_handshake_client_key_exchange(session);
                 record->write(from_client, bin);
@@ -257,7 +257,7 @@ return_t async_tls_client_socket::do_handshake() {
             }
             {
                 tls_record_builder builder;
-                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
 
                 *record << new tls_handshake_finished(session);
                 record->write(dir, bin);
@@ -404,7 +404,7 @@ return_t async_tls_client_socket::do_shutdown() {
         {
             auto dir = from_client;
             tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_alert).set(dir).writemode().build();
+            auto record = builder.set(session).set(tls_content_type_alert).set(dir).construct().build();
 
             *record << new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify);
             record->write(dir, bin);

@@ -272,7 +272,7 @@ static return_t do_test_construct_encrypted_extensions(tls_direction_t dir, tls_
         if (tls_13 == session->get_tls_protection().get_tls_version()) {
             if (session->get_session_info(dir).apply_protection()) {
                 tls_record_builder builder;
-                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
 
                 auto handshake = new tls_handshake_encrypted_extensions(session);
                 {
@@ -310,7 +310,7 @@ static return_t do_test_construct_certificate(tls_direction_t dir, tls_session* 
 
         // SC (server certificate)
         tls_record_builder builder;
-        auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+        auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
 
         auto handshake = new tls_handshake_certificate(session);
         handshake->set(dir, certfile, keyfile);
@@ -337,7 +337,7 @@ static return_t do_test_construct_server_key_exchange(tls_direction_t dir, tls_s
 
         if (tls_12 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
 
             *record << new tls_handshake_server_key_exchange(session);
             record->write(dir, bin);
@@ -362,7 +362,7 @@ static return_t do_test_construct_server_hello_done(tls_direction_t dir, tls_ses
 
         if (tls_12 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
 
             *record << new tls_handshake_server_hello_done(session);
             record->write(dir, bin);
@@ -387,7 +387,7 @@ static return_t do_test_construct_client_key_exchange(tls_direction_t dir, tls_s
 
         if (tls_12 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
 
             *record << new tls_handshake_client_key_exchange(session);
             record->write(dir, bin);
@@ -412,7 +412,7 @@ static return_t do_test_construct_certificate_verify(tls_direction_t dir, tls_se
 
         if (tls_13 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
 
             *record << new tls_handshake_certificate_verify(session);
             record->write(dir, bin);
@@ -436,7 +436,7 @@ static return_t do_test_construct_server_finished(tls_direction_t dir, tls_sessi
         }
 
         tls_record_builder builder;
-        auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+        auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
 
         *record << new tls_handshake_finished(session);
         record->write(dir, bin);
@@ -459,7 +459,7 @@ static return_t do_test_construct_client_finished(tls_direction_t dir, tls_sessi
         }
 
         tls_record_builder builder;
-        auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+        auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
 
         *record << new tls_handshake_finished(session);
         record->write(dir, bin);
@@ -541,7 +541,7 @@ static return_t do_test_construct_close_notify(tls_direction_t dir, tls_session*
         }
 
         tls_record_builder builder;
-        auto record = builder.set(session).set(tls_content_type_alert).set(dir).writemode().build();
+        auto record = builder.set(session).set(tls_content_type_alert).set(dir).construct().build();
 
         *record << new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify);
         record->write(dir, bin);

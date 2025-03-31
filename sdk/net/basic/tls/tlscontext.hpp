@@ -30,12 +30,11 @@ enum tlscontext_flag_t : uint32 {
  * @param uint32 flag [in] tlscontext_flag_tls or tlscontext_flag_dtls
  * @remarks
  *          tlscontext_flag_tls
- *              only works TLS 1.3, if not specify tlscontext_flag_allow_tls13 nor tlscontext_flag_allow_tls12
  *              to support TLS 1.3 and TLS 1.2
+ *                  tlscontext_open_simple(&context, tlscontext_flag_tls);
  *                  tlscontext_open_simple(&context, tlscontext_flag_tls | tlscontext_flag_allow_tls13 | tlscontext_flag_allow_tls12);
  *              to support only TLS 1.3
  *                  tlscontext_open_simple(&context, tlscontext_flag_tls | tlscontext_flag_allow_tls13);
- *                  tlscontext_open_simple(&context, tlscontext_flag_tls);
  *              to support only TLS 1.2
  *                  tlscontext_open_simple(&context, tlscontext_flag_tls | tlscontext_flag_allow_tls12);
  *          tlscontext_flag_dtls

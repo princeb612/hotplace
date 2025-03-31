@@ -21,7 +21,7 @@ class tls_record_builder {
     tls_record_builder& set(tls_session* session);
     tls_record_builder& set(uint8 type);
     tls_record_builder& set(tls_direction_t dir);
-    tls_record_builder& writemode();
+    tls_record_builder& construct();
     tls_record* build();
 
     tls_session* get_session();
@@ -33,7 +33,7 @@ class tls_record_builder {
     tls_session* _session;
     uint8 _type;
     tls_direction_t _dir;
-    bool _writemode;
+    bool _construct;
 };
 
 }  // namespace net

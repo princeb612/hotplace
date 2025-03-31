@@ -115,6 +115,9 @@ void tls_client() {
     if (option.flags & flag_allow_tls12) {
         tlscontext_flags |= tlscontext_flag_allow_tls12;
     }
+    if (option.flags & flag_allow_tls13) {
+        tlscontext_flags |= tlscontext_flag_allow_tls13;
+    }
     tlscontext_open_simple(&sslctx, tlscontext_flags);
     transport_layer_security tls(sslctx);
     tls_client_socket cli(&tls);

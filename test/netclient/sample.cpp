@@ -35,6 +35,9 @@ uint16 toprot(OPTION& o, const char* source) {
         type = 2;
     } else if (("tls" == text) || ("3" == text)) {
         type = 3;
+    } else if ("tls13" == text) {
+        type = 3;
+        o.flags |= flag_allow_tls13;
     } else if ("tls12" == text) {
         type = 3;
         o.flags |= flag_allow_tls12;
@@ -58,7 +61,7 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
                 << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-P", "protocol tcp|udp|tls|tls12|dtls (1 tcp, 2 udp, 3 tls, 4 dtls)",
+                << t_cmdarg_t<OPTION>("-P", "protocol tcp|udp|tls|tls13|tls12|dtls (1 tcp, 2 udp, 3 tls, 4 dtls)",
                                       [](OPTION& o, char* param) -> void { o.prot = toprot(o, param); })
                        .preced()
                 << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()

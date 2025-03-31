@@ -408,6 +408,8 @@ return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addr
             }
         }
 
+        set_sock_nbio(sock, 0);
+
 #if defined __linux__
         // connect SO_ERROR 111 return 0
         int optval = 0;
@@ -423,12 +425,10 @@ return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addr
             dbs.println("connect SO_ERROR %i return %i", optval, rc);
             trace_debug_event(category_net, net_event_tls_read, &dbs);
         }
-#endif
-
 #elif defined _WIN32 || defined _WIN64
         // connect SO_ERROR 0 return 0
 #endif
-        set_sock_nbio(sock, 0);
+#endif
 
 #if 0
         INT optval = 0;

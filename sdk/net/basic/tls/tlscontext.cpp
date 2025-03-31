@@ -170,8 +170,11 @@ return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {
                 } else {
                     maxver = TLS1_2_VERSION;
                 }
-            } else {
+            } else if (tlscontext_flag_allow_tls13 & flags) {
                 minver = TLS1_3_VERSION;
+                maxver = TLS1_3_VERSION;
+            } else {
+                minver = TLS1_2_VERSION;
                 maxver = TLS1_3_VERSION;
             }
             SSL_CTX_set_min_proto_version(ssl_ctx, minver);

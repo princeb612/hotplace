@@ -225,7 +225,7 @@ flowchart LR
   - [x] TLS construct
     - [x] TLS version
       - [x] TLS1.3
-      - [x] TLS1.2
+      - [x] TLS1.2 (fixed rev.740)
   - [ ] DTLS construct
     - [x] TLS version
       - [x] TLS1.3

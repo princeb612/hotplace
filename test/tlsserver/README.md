@@ -7,15 +7,15 @@
 ### test
 
 - case1
-  - [x] server 1.2/1.3, client 1.3
+  - [x] server, client 1.3
     - env
-      - ./test-tlsserver -v -d -r -tls13 -tls12 &
+      - ./test-tlsserver -v -d -r &
       - openssl s_client -connect localhost:9000 -state -debug -tls1_3
     - summary : TLSv1.3, TLS_AES_256_GCM_SHA384
     - result  : PASS
-  - [x] server 1.2/1.3, client 1.2
+  - [x] server, client 1.2
     - env
-      - ./test-tlsserver -v -d -r -tls13 -tls12 &
+      - ./test-tlsserver -v -d -r &
       - openssl s_client -connect localhost:9000 -state -debug -tls1_3
     - summary : TLSv1.2, ECDHE-RSA-AES256-GCM-SHA384
     - result  : PASS
@@ -23,7 +23,6 @@
   - [x] server 1.3, client 1.3
     - env
       - ./test-tlsserver -v -d -r -tls13 &
-        - it works like ./test-tlsserver -v -d -r
       - openssl s_client -connect localhost:9000 -state -debug -tls1_3
     - summary : TLSv1.3, TLS_AES_256_GCM_SHA384
     - result  : PASS
@@ -49,9 +48,8 @@
 
 ### TLS 1.3
 
-- TLS 1.3
-  - openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -tls1_3
-  - openssl s_client -connect localhost:9000 -state -debug -tls1_3
+- openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -tls1_3
+- openssl s_client -connect localhost:9000 -state -debug -tls1_3
 
 ````
 $ openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -tls1_3
@@ -592,9 +590,8 @@ read from 0x27911612ee0 [0x27911557c60] (16384 bytes => 0)
 
 ### TLS 1.2
 
-- TLS 1.2
-  - openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -no_tls1_3
-  - openssl s_client -connect localhost:9000 -state -debug -tls1_2
+- openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -no_tls1_3
+- openssl s_client -connect localhost:9000 -state -debug -tls1_2
 
 ````
 $ openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -no_tls1_3

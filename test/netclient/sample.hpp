@@ -17,6 +17,7 @@ enum {
     flag_async = 1 << 0,
     flag_http = 1 << 1,
     flag_allow_tls12 = 1 << 2,
+    flag_allow_tls13 = 1 << 3,
 };
 
 typedef struct _OPTION {

@@ -25,7 +25,7 @@
 namespace hotplace {
 namespace net {
 
-tls_record_builder::tls_record_builder() : _session(nullptr), _type(0), _dir(from_any), _writemode(false) {}
+tls_record_builder::tls_record_builder() : _session(nullptr), _type(0), _dir(from_any), _construct(false) {}
 
 tls_record_builder& tls_record_builder::set(tls_session* session) {
     _session = session;
@@ -42,8 +42,8 @@ tls_record_builder& tls_record_builder::set(tls_direction_t dir) {
     return *this;
 }
 
-tls_record_builder& tls_record_builder::writemode() {
-    _writemode = true;
+tls_record_builder& tls_record_builder::construct() {
+    _construct = true;
     return *this;
 }
 
@@ -111,7 +111,7 @@ uint8 tls_record_builder::get_type() { return _type; }
 
 tls_direction_t tls_record_builder::get_direction() { return _dir; }
 
-bool tls_record_builder::is_writemode() { return _writemode; }
+bool tls_record_builder::is_writemode() { return _construct; }
 
 }  // namespace net
 }  // namespace hotplace
