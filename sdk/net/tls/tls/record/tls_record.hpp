@@ -38,6 +38,9 @@ class tls_record {
     uint16 get_key_epoch();                 // DTLS key epoch
     const binary_t& get_dtls_record_seq();  // DTLS record sequence number
 
+    virtual void operator<<(tls_record* record);
+    virtual void operator<<(tls_handshake* handshake);
+
     void addref();
     void release();
 
@@ -48,7 +51,9 @@ class tls_record {
     virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body);
+    return_t do_write_header_internal(tls_direction_t dir, binary_t& bin, const binary_t& body);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+    virtual bool apply_protection();
 
     const range_t& get_header_range();
     uint16 get_body_size();

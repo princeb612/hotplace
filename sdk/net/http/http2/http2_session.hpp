@@ -50,6 +50,8 @@ class http2_session {
     bool is_push_enabled();
 
    protected:
+    return_t consume(const byte_t* buf, size_t bufsize, http_request** request, binary_t& bin_resp);
+
    private:
     critical_section _lock;
     typedef std::map<uint32, uint8> flags_t;

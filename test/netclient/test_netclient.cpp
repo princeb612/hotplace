@@ -17,7 +17,7 @@ void tcp_client() {
 
     return_t ret = errorcode_t::success;
     client_socket* cli = nullptr;
-    if (0 == option.async) {
+    if (0 == (option.flags & flag_async)) {
         cli = new tcp_client_socket;
     } else {
         cli = new async_tcp_client_socket;
@@ -65,7 +65,7 @@ void udp_client() {
 
     return_t ret = errorcode_t::success;
     client_socket* cli = nullptr;
-    if (0 == option.async) {
+    if (0 == (option.flags & flag_async)) {
         cli = new udp_client_socket;
     } else {
         cli = new async_udp_client_socket;
@@ -107,9 +107,15 @@ void udp_client() {
 void tls_client() {
     const OPTION& option = _cmdline->value();
 
+    // server TLS 1.2 cipher suites
+
     return_t ret = errorcode_t::success;
     SSL_CTX* sslctx = nullptr;
-    tlscert_open_simple(tlscert_flag_tls, &sslctx);
+    uint32 tlscontext_flags = tlscontext_flag_tls;
+    if (option.flags & flag_allow_tls12) {
+        tlscontext_flags |= tlscontext_flag_allow_tls12;
+    }
+    tlscontext_open_simple(&sslctx, tlscontext_flags);
     transport_layer_security tls(sslctx);
     tls_client_socket cli(&tls);
 
@@ -159,7 +165,8 @@ void async_tls_client() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    async_tls_client_socket cli(tls_13);
+    auto minver = (option.flags & flag_allow_tls12) ? tls_12 : tls_13;
+    async_tls_client_socket cli(minver);
 
     char buffer[option.bufsize];
     basic_stream bs;
@@ -207,7 +214,7 @@ void dtls_client() {
 
     return_t ret = errorcode_t::success;
     SSL_CTX* sslctx = nullptr;
-    tlscert_open_simple(tlscert_flag_dtls, &sslctx);
+    tlscontext_open_simple(&sslctx, tlscontext_flag_dtls);
     transport_layer_security tls(sslctx);
     dtls_client_socket cli(&tls);
     sockaddr_storage_t addr;
@@ -248,6 +255,53 @@ void dtls_client() {
 #if defined _WIN32 || defined _WIN64
         winsock_cleanup();
 #endif
+        openssl_cleanup();
+
+        _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);
+    }
+}
+
+void async_dtls_client() {
+    const OPTION& option = _cmdline->value();
+
+    return_t ret = errorcode_t::success;
+    async_dtls_client_socket cli(tls_12);
+
+    char buffer[option.bufsize];
+    basic_stream bs;
+    sockaddr_storage_t sa;
+
+    __try2 {
+        openssl_startup();
+
+        ret = cli.open(&sa, option.address.c_str(), option.port);
+        _test_case.test(ret, __FUNCTION__, "open");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        for (auto i = 0; i < option.count; i++) {
+            size_t cbsent = 0;
+            auto test = cli.sendto(option.message.c_str(), option.message.size(), &cbsent, (sockaddr*)&sa, sizeof(sa));
+            if (errorcode_t::success == test) {
+                size_t cbread = 0;
+                sockaddr_storage_t peer;
+                std::string addr;
+                socklen_t addrlen = sizeof(addr);
+
+                test = cli.recvfrom(buffer, option.bufsize, &cbread, (sockaddr*)&peer, &addrlen);
+
+                if (success == test) {
+                    sockaddr_string(peer, addr);
+
+                    _logger->writeln("received response: [%d][len %zi]%.*s", cli.get_socket(), cbread, cbread, buffer);
+                    bs.clear();
+                }
+            }
+        }
+    }
+    __finally2 {
+        cli.close();
         openssl_cleanup();
 
         _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);

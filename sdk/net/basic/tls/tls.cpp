@@ -21,7 +21,7 @@
 #include <sdk/io/system/socket.hpp>
 #include <sdk/net/basic/tls/sdk.hpp>
 #include <sdk/net/basic/tls/tls.hpp>
-#include <sdk/net/basic/tls/tlscert.hpp>
+#include <sdk/net/basic/tls/tlscontext.hpp>
 #include <sdk/net/basic/tls/types.hpp>
 
 namespace hotplace {
@@ -37,7 +37,7 @@ transport_layer_security::transport_layer_security(SSL_CTX* ctx) : _ctx(ctx) {
     _shared.make_share(this);
 }
 
-transport_layer_security::transport_layer_security(tlscert* cert) : _ctx(nullptr) {
+transport_layer_security::transport_layer_security(tlscontext* cert) : _ctx(nullptr) {
     if (cert) {
         _ctx = cert->get_ctx();
     }

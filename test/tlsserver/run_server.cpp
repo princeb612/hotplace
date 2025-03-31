@@ -66,19 +66,35 @@ return_t echo_server(void*) {
 
     __try2 {
         // part of ssl certificate
-        ret = tlscert_open(tlscert_flag_tls, &sslctx, "server.crt", "server.key");
 
-        const char* ciphersuites =
-            "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256:"
-            "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:"
-            "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384:"
-            "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM:TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8:"
-            "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384:"
-            "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256:"
-            "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384:"
-            "TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256";
+        uint32 tlscontext_flags = tlscontext_flag_tls;
+        std::string ciphersuites;
+        if (option.flags & option_flag_allow_tls13) {
+            tlscontext_flags |= tlscontext_flag_allow_tls13;
 
-        SSL_CTX_set_cipher_list(sslctx, ciphersuites);
+            ciphersuites += "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256";
+        }
+        if (option.flags & option_flag_allow_tls12) {
+            tlscontext_flags |= tlscontext_flag_allow_tls12;
+
+            if (false == ciphersuites.empty()) {
+                ciphersuites += ":";
+            }
+            ciphersuites +=
+                "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:"
+                "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384:"
+                "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM:TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8:"
+                "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384:"
+                "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256:"
+                "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384:"
+                "TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256";
+        }
+
+        ret = tlscontext_open(&sslctx, tlscontext_flags, "server.crt", "server.key");
+
+        SSL_CTX_set_cipher_list(sslctx, ciphersuites.c_str());
+
+        _logger->writeln("ciphersuites %s", ciphersuites.c_str());
 
         SSL_CTX_set_verify(sslctx, 0, nullptr);
 

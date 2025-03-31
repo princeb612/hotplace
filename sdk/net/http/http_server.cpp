@@ -61,7 +61,7 @@ return_t http_server::accept_handler(socket_t socket, sockaddr_storage_t* client
 return_t http_server::startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
     return_t ret = errorcode_t::success;
     __try2 {
-        __try_new_catch(_tlscert, new tlscert(tlscert_flag_tls, server_cert.c_str(), server_key.c_str()), ret, __leave2);
+        __try_new_catch(_tlscert, new tlscontext(tlscontext_flag_tls, server_cert.c_str(), server_key.c_str()), ret, __leave2);
         __try_new_catch(_tls, new transport_layer_security(_tlscert->get_ctx()), ret, __leave2);
         __try_new_catch(_tls_server_socket, new tls_server_socket(_tls), ret, __leave2);
     }
@@ -96,7 +96,7 @@ return_t http_server::shutdown_tls() {
 return_t http_server::startup_dtls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
     return_t ret = errorcode_t::success;
     __try2 {
-        __try_new_catch(_dtlscert, new tlscert(tlscert_flag_dtls, server_cert.c_str(), server_key.c_str()), ret, __leave2);
+        __try_new_catch(_dtlscert, new tlscontext(tlscontext_flag_dtls, server_cert.c_str(), server_key.c_str()), ret, __leave2);
         __try_new_catch(_dtls, new transport_layer_security(_dtlscert->get_ctx()), ret, __leave2);
         __try_new_catch(_dtls_server_socket, new dtls_server_socket(_dtls), ret, __leave2);
     }
@@ -270,7 +270,7 @@ http_router& http_server::get_http_router() { return _router; }
 
 ipaddr_acl& http_server::get_ipaddr_acl() { return _acl; }
 
-tlscert* http_server::get_tlscert() { return _tlscert; }
+tlscontext* http_server::get_tlscert() { return _tlscert; }
 
 }  // namespace net
 }  // namespace hotplace

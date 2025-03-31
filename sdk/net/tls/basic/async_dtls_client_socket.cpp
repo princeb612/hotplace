@@ -3,6 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *          openssl not support DTLS 1.3 yet
  *
  * Revision History
  * Date         Name                Description
@@ -12,7 +13,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
-#include <sdk/net/tls/basic/async_tls_client_socket.hpp>
+#include <sdk/net/tls/basic/async_dtls_client_socket.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_ec_point_formats.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_key_share.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
@@ -22,10 +23,9 @@
 #include <sdk/net/tls/tls/extension/tls_extension_supported_versions.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_unknown.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_client_hello.hpp>
-#include <sdk/net/tls/tls/handshake/tls_handshake_client_key_exchange.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_finished.hpp>
-#include <sdk/net/tls/tls/handshake/tls_handshake_server_hello_done.hpp>
-#include <sdk/net/tls/tls/handshake/tls_handshake_server_key_exchange.hpp>
+#include <sdk/net/tls/tls/record/dtls13_ciphertext.hpp>
+#include <sdk/net/tls/tls/record/tls_record_ack.hpp>
 #include <sdk/net/tls/tls/record/tls_record_alert.hpp>
 #include <sdk/net/tls/tls/record/tls_record_application_data.hpp>
 #include <sdk/net/tls/tls/record/tls_record_builder.hpp>
@@ -33,19 +33,20 @@
 #include <sdk/net/tls/tls/record/tls_record_handshake.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
+#include <sdk/net/tls/types.hpp>
 
 namespace hotplace {
 namespace net {
 
-async_tls_client_socket::async_tls_client_socket(tls_version_t minver) : async_client_socket(), _minver(minver) {
+async_dtls_client_socket::async_dtls_client_socket(tls_version_t minver) : async_client_socket(), _minver(minver) {
     auto session = &_session;
-    session->get_tls_protection().set_legacy_version(tls_12);
+    session->get_tls_protection().set_legacy_version(dtls_12);
 }
 
-return_t async_tls_client_socket::send(const char* ptr_data, size_t size_data, size_t* cbsent) {
+return_t async_dtls_client_socket::sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == ptr_data || nullptr == cbsent) {
+        if (nullptr == ptr_data || nullptr == cbsent || nullptr == addr) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -53,14 +54,22 @@ return_t async_tls_client_socket::send(const char* ptr_data, size_t size_data, s
         *cbsent = 0;
 
         auto session = &_session;
-
         binary_t bin;
-        tls_record_application_data record(session);
-        record.get_records().add(new tls_record_application_data(session, (byte_t*)ptr_data, size_data));
-        record.write(from_client, bin);
+
+        auto tlsver = session->get_tls_protection().get_tls_version();
+
+        if (dtls_13 == tlsver) {
+            dtls13_ciphertext record(tls_content_type_application_data, session);
+            record.get_records().add(new tls_record_application_data(session, (byte_t*)ptr_data, size_data));
+            record.write(from_client, bin);
+        } else {
+            tls_record_application_data record(session);
+            record.get_records().add(new tls_record_application_data(session, (byte_t*)ptr_data, size_data));
+            record.write(from_client, bin);
+        }
 
         size_t sent = 0;
-        ret = async_client_socket::send((char*)&bin[0], bin.size(), &sent);
+        ret = async_client_socket::sendto((char*)&bin[0], bin.size(), &sent, addr, addrlen);
         if (errorcode_t::success == ret) {
             *cbsent = size_data;
         }
@@ -69,7 +78,7 @@ return_t async_tls_client_socket::send(const char* ptr_data, size_t size_data, s
     return ret;
 }
 
-return_t async_tls_client_socket::do_handshake() {
+return_t async_dtls_client_socket::do_handshake() {
     return_t ret = errorcode_t::success;
     const size_t bufsize = (1 << 16);
     char buffer[bufsize];
@@ -81,12 +90,10 @@ return_t async_tls_client_socket::do_handshake() {
 
         auto session = &_session;
         auto& protection = session->get_tls_protection();
-        tls_direction_t dir = from_client;
 
         // client hello
+        tls_record_handshake clienthello(session);
         {
-            tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
             tls_handshake_client_hello* handshake = nullptr;
 
             handshake = new tls_handshake_client_hello(session);
@@ -96,39 +103,23 @@ return_t async_tls_client_socket::do_handshake() {
                 openssl_prng prng;
 
                 binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
+                time_t gmt_unix_time = time(nullptr);
+                binary_append(random, gmt_unix_time, hton64);
+                random.resize(sizeof(uint32));
                 binary_t temp;
-                prng.random(temp, 32);
+                prng.random(temp, 28);
+                binary_append(random, temp);
                 handshake->set_random(random);
-
-                binary_t session_id;
-                prng.random(session_id, 32);
-                handshake->set_session_id(session_id);
             }
 
             // cipher suites
             {
-                if (tls_13 == _minver) {
-                    handshake->add_ciphersuite(0x1301);
-                    handshake->add_ciphersuite(0x1302);
-                    handshake->add_ciphersuite(0x1303);
-                    handshake->add_ciphersuite(0x1304);
-                    handshake->add_ciphersuite(0x1305);
-                }
-                handshake->add_ciphersuite(0xc023);
-                handshake->add_ciphersuite(0xc024);
-                handshake->add_ciphersuite(0xc027);
-                handshake->add_ciphersuite(0xc028);
-                handshake->add_ciphersuite(0xc02b);
-                handshake->add_ciphersuite(0xc02c);
-                handshake->add_ciphersuite(0xc02f);
-                handshake->add_ciphersuite(0xc030);
+                handshake->add_ciphersuite(0x1301);
+                handshake->add_ciphersuite(0x1302);
+                handshake->add_ciphersuite(0x1303);
+                handshake->add_ciphersuite(0x1304);
+                handshake->add_ciphersuite(0x1305);
             }
-            // {
-            //     auto sni = new tls_extension_sni(session);
-            //     auto& hostname = sni->get_hostname();
-            //     hostname = "test.server.com";
-            //     handshake->get_extensions().add(sni);
-            // }
             {
                 // RFC 9325 4.2.1
                 // Note that [RFC8422] deprecates all but the uncompressed point format.
@@ -164,10 +155,10 @@ return_t async_tls_client_socket::do_handshake() {
             }
             {
                 auto supported_versions = new tls_extension_client_supported_versions(session);
-                if (_minver == tls_13) {
-                    (*supported_versions).add(tls_13);
+                (*supported_versions).add(dtls_13);
+                if (_minver < tls_13) {
+                    (*supported_versions).add(dtls_12);
                 }
-                (*supported_versions).add(tls_12);
                 handshake->get_extensions().add(supported_versions);
             }
             {
@@ -181,107 +172,70 @@ return_t async_tls_client_socket::do_handshake() {
                 handshake->get_extensions().add(key_share);
             }
 
-            *record << handshake;
-            ret = record->write(dir, bin);
-            record->release();
+            clienthello.get_handshakes().add(handshake);
+            ret = clienthello.write(from_client, bin);
         }  // end of client hello
 
-        {
-            ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
-            bin.clear();
-        }
+        ret = async_client_socket::sendto((char*)&bin[0], bin.size(), &cbsent, (sockaddr*)&_sa, sizeof(_sa));
 
-        session->waitall_change_session_status(session_server_hello, get_wto());
+        // DTLS 1.2 server key exchange
+        session->wait1_change_session_status(session_hello_verify_request | session_server_key_exchange | session_server_finished,
+                                             1000);  // wait server hello .. server finished
         session_status = session->get_session_status();
 
-        if (0 == (session_status & session_server_hello)) {
-            ret = errorcode_t::error_handshake;
+        if (session_status & session_hello_verify_request) {
+            const binary_t& cookie = protection.get_item(tls_context_cookie);
+            tls_handshake_client_hello* handshake = (tls_handshake_client_hello*)clienthello.get_handshakes().get(tls_hs_client_hello);
+            handshake->set_cookie(cookie);
+            ret = clienthello.write(from_client, bin);
+            ret = async_client_socket::sendto((char*)&bin[0], bin.size(), &cbsent, (sockaddr*)&_sa, sizeof(_sa));
+
+            session->wait1_change_session_status(session_server_cert_verified | session_server_finished, 1000);  // wait server hello .. server finished
+            session_status = session->get_session_status();
+        }
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("> session status 0x%04x", session_status);
+            trace_debug_event(category_debug_internal, 0, &dbs);
+        }
+#endif
+
+        if (0 == (session_status & (session_server_cert_verified | session_server_finished))) {
+            ret = error_handshake;
             __leave2;
         }
 
-        auto tlsver = protection.get_tls_version();
+        auto tlsver = session->get_tls_protection().get_tls_version();
 
-        if (tls_13 == tlsver) {
-            session->waitall_change_session_status(session_server_cert_verified | session_server_finished, 1000);
-            session_status = session->get_session_status();
+        bin.clear();
 
-            if (0 == (session_status & (session_server_cert_verified | session_server_finished))) {
-                ret = error_handshake;
-                __leave2;
-            }
-
-            {
-                tls_record_change_cipher_spec record(session);
-                ret = record.write(dir, bin);
-            }
-
-            // client finished
-            {
-                tls_record_builder builder;
-                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
-
-                *record << new tls_handshake_finished(session);
-                record->write(dir, bin);
-                record->release();
-            }
-
-            ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
-            bin.clear();
-        } else if (tls_12 == tlsver) {
-            // server_hello
-            // certificate
-            // server_key_exchange
-            // server_hello_done
-            session->waitall_change_session_status(session_server_key_exchange | session_server_hello_done, 1000);
-            session_status = session->get_session_status();
-
-            if (0 == (session_status & (session_server_key_exchange | session_server_hello_done))) {
-                ret = errorcode_t::error_handshake;
-                __leave2;
-            }
-
-            // client_key_exchange
-            // client_finished
-
-            {
-                tls_record_builder builder;
-                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
-
-                *record << new tls_handshake_client_key_exchange(session);
-                record->write(from_client, bin);
-                record->release();
-            }
-            {
-                tls_record_change_cipher_spec record(session);
-                ret = record.write(from_client, bin);
-            }
-            {
-                tls_record_builder builder;
-                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
-
-                *record << new tls_handshake_finished(session);
-                record->write(dir, bin);
-                record->release();
-            }
-
-            ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
-            bin.clear();
-
-            session->waitall_change_session_status(session_server_finished, get_wto());
-            session_status = session->get_session_status();
-
-            if (0 == (session_status & session_server_finished)) {
-                ret = errorcode_t::error_handshake;
-                __leave2;
-            }
+        // client finished
+        {
+            tls_record_application_data record(session);
+            record.get_handshakes().add(new tls_handshake_finished(session));
+            record.write(from_client, bin);
         }
+
+        // client ack
+        if (dtls_13 == tlsver) {
+            dtls13_ciphertext record(tls_content_type_ack, session);
+            record.get_records().add(new tls_record_ack(session));
+            record.write(from_client, bin);
+        } else {
+            tls_record_ack record(session);
+            record.write(from_client, bin);
+        }
+
+        ret = async_client_socket::sendto((char*)&bin[0], bin.size(), &cbsent, (sockaddr*)&_sa, sizeof(_sa));
     }
     __finally2 {}
 
     return ret;
 }
 
-return_t async_tls_client_socket::do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
+return_t async_dtls_client_socket::do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     *cbread = 0;
     auto type = socket_type();
@@ -321,7 +275,7 @@ return_t async_tls_client_socket::do_read(char* ptr_data, size_t size_data, size
     return ret;
 }
 
-return_t async_tls_client_socket::do_secure() {
+return_t async_dtls_client_socket::do_secure() {
     return_t ret = errorcode_t::success;
     auto session = &_session;
     auto type = socket_type();
@@ -387,41 +341,16 @@ return_t async_tls_client_socket::do_secure() {
     return ret;
 }
 
-return_t async_tls_client_socket::do_shutdown() {
+return_t async_dtls_client_socket::do_shutdown() {
     return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = &_session;
-        auto session_status = session->get_session_status();
-
-        if (0 == (session_status & session_server_finished)) {
-            ret = errorcode_t::disconnect;
-            __leave2;
-        }
-
-        binary_t bin;
-        size_t cbsent = 0;
-
-        {
-            auto dir = from_client;
-            tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_alert).set(dir).writemode().build();
-
-            *record << new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify);
-            record->write(dir, bin);
-            record->release();
-        }
-
-        ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
-
-        // session->waitall_change_session_status(session_server_close_notified, get_wto());
-    }
+    __try2 {}
     __finally2 {}
     return ret;
 }
 
-bool async_tls_client_socket::support_tls() { return true; }
+bool async_dtls_client_socket::support_tls() { return true; }
 
-int async_tls_client_socket::socket_type() { return SOCK_STREAM; }
+int async_dtls_client_socket::socket_type() { return SOCK_DGRAM; }
 
 }  // namespace net
 }  // namespace hotplace

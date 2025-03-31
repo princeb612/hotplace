@@ -19,6 +19,7 @@
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_alert[] = "alert";
 constexpr char constexpr_level[] = "alert level";
 constexpr char constexpr_desc[] = "alert desc ";
 
@@ -106,10 +107,11 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
             basic_stream dbs;
             tls_advisor* advisor = tls_advisor::get_instance();
 
+            dbs.println("\e[1;35m > %s\e[0m", constexpr_alert);
             dbs.println(" > %s %i %s", constexpr_level, level, advisor->alert_level_string(level).c_str());
             dbs.println(" > %s %i %s", constexpr_desc, desc, advisor->alert_desc_string(desc).c_str());
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(category_debug_internal, net_event_tls_read, &dbs);
         }
 #endif
     }
@@ -124,6 +126,24 @@ return_t tls_record_alert::do_write_body(tls_direction_t dir, binary_t& bin) {
     binary_append(bin, get_level());
     binary_append(bin, get_desc());
     return ret;
+}
+
+bool tls_record_alert::apply_protection() { return true; }
+
+tls_record_alert& tls_record_alert::set(uint8 level, uint8 desc) {
+    _level = level;
+    _desc = desc;
+    return *this;
+}
+
+void tls_record_alert::operator<<(tls_record* record) {
+    if (record) {
+        if (tls_content_type_alert == record->get_type()) {
+            tls_record_alert* alert = (tls_record_alert*)record;
+            set(alert->get_level(), alert->get_desc());
+        }
+        record->release();
+    }
 }
 
 uint8 tls_record_alert::get_level() const { return _level; }

@@ -66,6 +66,11 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
 return_t tls_record_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
+    {
+        payload pl;
+        pl << new payload_member(uint16(0), true);
+        pl.write(bin);
+    }
     return ret;
 }
 

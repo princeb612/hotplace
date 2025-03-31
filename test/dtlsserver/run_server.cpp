@@ -24,10 +24,12 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
 
     basic_stream bs;
     std::string message;
+    std::string address;
 
     switch (type) {
         case mux_dgram:
-            _logger->writeln("read %d msg [%.*s]", session_socket->get_event_socket(), (unsigned)bufsize, buf);
+            sockaddr_string(*addr, address);
+            _logger->writeln("read %d [%s] msg [%.*s]", session_socket->get_event_socket(), address.c_str(), (unsigned)bufsize, buf);
             // dump_memory (buf, bufsize, &bs, 16, 4);
             // std::cout << bs << std::endl;
             session->sendto(buf, bufsize, addr);
@@ -67,7 +69,7 @@ return_t echo_server(void*) {
 
     __try2 {
         // part of ssl certificate
-        ret = tlscert_open(tlscert_flag_dtls, &sslctx, "server.crt", "server.key");
+        ret = tlscontext_open(&sslctx, tlscontext_flag_dtls, "server.crt", "server.key");
 
         // https://docs.openssl.org/1.1.1/man1/ciphers/
         // TLS 1.2

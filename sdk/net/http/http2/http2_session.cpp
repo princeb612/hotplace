@@ -31,7 +31,6 @@ http2_session::http2_session() : _enable_push(false) {}
 
 http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data_array[], http_server* server, http_request** request) {
     return_t ret = errorcode_t::success;
-    http_request* req = nullptr;
 
     __try2 {
         if (nullptr == data_array || nullptr == server || nullptr == request) {
@@ -42,34 +41,54 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
 #if defined DEBUG
         if (istraceable()) {
             netsocket_t* session_socket = (netsocket_t*)data_array[0];
-            basic_stream bs;
+            basic_stream dbs;
 
             switch (type) {
                 case mux_connect:
-                    bs.printf("[h2] connect %i\n", session_socket->event_handle->fd);
+                    dbs.println("[h2] connect %i", session_socket->event_handle->fd);
                     break;
                 case mux_read: {
-                    bs.printf("[h2] read %i\n", session_socket->event_handle->fd);
+                    dbs.println("[h2] read %i", session_socket->event_handle->fd);
                     byte_t* buf = (byte_t*)data_array[1];
                     size_t bufsize = (size_t)data_array[2];
-                    dump_memory((byte_t*)buf, bufsize, &bs, 16, 2, 0, dump_memory_flag_t::dump_notrunc);
+                    dump_memory((byte_t*)buf, bufsize, &dbs, 16, 2, 0, dump_memory_flag_t::dump_notrunc);
                 } break;
                 case mux_disconnect:
-                    bs.printf("[h2] disconnect %i\n", session_socket->event_handle->fd);
+                    dbs.println("[h2] disconnect %i", session_socket->event_handle->fd);
                     break;
                 default:
                     break;
             }
-            trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
+            trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
         }
 #endif
 
         netsocket_t* session_socket = (netsocket_t*)data_array[0];
         byte_t* buf = (byte_t*)data_array[1];
         size_t bufsize = (size_t)data_array[2];
-        basic_stream bs;
 
         network_session* session = (network_session*)data_array[3];
+
+        binary_t bin_resp;
+        consume(buf, bufsize, request, bin_resp);
+
+        if (false == bin_resp.empty()) {
+            session->send(&bin_resp[0], bin_resp.size());
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return *this;
+}
+
+return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request** request, binary_t& bin_resp) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == buf || nullptr == request) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
         constexpr char preface[] = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
         const uint16 sizeof_preface = 24;
@@ -90,6 +109,10 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         uint8 flags = hdr->flags;
         uint32 stream_id = ntoh32(hdr->stream_id);
         uint32 mask = (h2_flag_end_stream | h2_flag_end_headers);
+        http_request* req = nullptr;
+#if defined DEBUG
+        basic_stream dbs;
+#endif
 
         uint8 f = 0;
         flags_pib_t flags_pib = _flags.insert(std::make_pair(stream_id, flags));
@@ -113,8 +136,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.read(hdr, frame_size);
 #if defined DEBUG
             if (istraceable()) {
-                frame.dump(&bs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
+                frame.dump(&dbs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
             }
 #endif
 
@@ -130,8 +153,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.set_hpack_session(&get_hpack_session());
 #if defined DEBUG
             if (istraceable()) {
-                frame.dump(&bs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
+                frame.dump(&dbs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
             }
 #endif
 
@@ -147,8 +170,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.read(hdr, frame_size);
 #if defined DEBUG
             if (istraceable()) {
-                frame.dump(&bs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
+                frame.dump(&dbs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
             }
 #endif
         } else if (h2_frame_t::h2_frame_rst_stream == hdr->type) {
@@ -156,8 +179,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.read(hdr, frame_size);
 #if defined DEBUG
             if (istraceable()) {
-                frame.dump(&bs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
+                frame.dump(&dbs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
             }
 #endif
             reset = true;
@@ -166,8 +189,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.read(hdr, frame_size);
 #if defined DEBUG
             if (istraceable()) {
-                frame.dump(&bs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
+                frame.dump(&dbs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
             }
 #endif
 
@@ -194,7 +217,6 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
                 enable_push(push ? true : false);
             }
 
-            binary_t bin_resp;
             http2_frame_settings resp_settings;
 
             if (frame.get_flags()) {
@@ -204,16 +226,14 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             }
 
             resp_settings.write(bin_resp);
-
-            session->send((char*)&bin_resp[0], bin_resp.size());
         } else if (h2_frame_t::h2_frame_push_promise == hdr->type) {
             http2_frame_push_promise frame;
             frame.read(hdr, frame_size);
             frame.set_hpack_session(&get_hpack_session());
 #if defined DEBUG
             if (istraceable()) {
-                frame.dump(&bs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
+                frame.dump(&dbs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
             }
 #endif
 
@@ -221,24 +241,22 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.read_compressed_header(frame.get_fragment(), lambda);
         } else if (h2_frame_t::h2_frame_ping == hdr->type) {
             http2_frame_ping frame;
-            binary_t bin_resp;
             frame.read(hdr, frame_size);
 #if defined DEBUG
             if (istraceable()) {
-                frame.dump(&bs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
+                frame.dump(&dbs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
             }
 #endif
             frame.set_flags(h2_flag_ack);
             frame.write(bin_resp);
-            session->send(&bin_resp[0], bin_resp.size());
         } else if (h2_frame_t::h2_frame_goaway == hdr->type) {
             http2_frame_goaway frame;
             frame.read(hdr, frame_size);
 #if defined DEBUG
             if (istraceable()) {
-                frame.dump(&bs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
+                frame.dump(&dbs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
             }
 #endif
         } else if (h2_frame_t::h2_frame_window_update == hdr->type) {
@@ -246,8 +264,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.read(hdr, frame_size);
 #if defined DEBUG
             if (istraceable()) {
-                frame.dump(&bs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
+                frame.dump(&dbs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
             }
 #endif
         } else if (h2_frame_t::h2_frame_continuation == hdr->type) {
@@ -256,8 +274,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             frame.set_hpack_session(&get_hpack_session());
 #if defined DEBUG
             if (istraceable()) {
-                frame.dump(&bs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &bs);
+                frame.dump(&dbs);
+                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
             }
 #endif
 
@@ -277,10 +295,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             _headers.erase(stream_id);
         }
     }
-    __finally2 {
-        // do nothing
-    }
-    return *this;
+    __finally2 {}
+    return ret;
 }
 
 hpack_dynamic_table& http2_session::get_hpack_session() { return _hpack_session; }

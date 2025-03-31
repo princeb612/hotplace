@@ -13,9 +13,10 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls/record/tls_record.hpp>
-#include <sdk/net/tls/tls/record/tls_record_builder.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -89,8 +90,6 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
 
         ret = do_write_header(dir, bin, body);  // encryption
 
-        do_postprocess(dir);  // change secret, recno
-
 #if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
@@ -99,6 +98,8 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
             trace_debug_event(category_net, net_event_tls_write, &dbs);
         }
 #endif
+
+        do_postprocess(dir);  // change secret, recno
     }
     __finally2 {}
     return ret;
@@ -252,6 +253,87 @@ return_t tls_record::do_read_body(tls_direction_t dir, const byte_t* stream, siz
 return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        if (apply_protection() && session->get_session_info(dir).apply_protection()) {
+            binary_t additional;
+            binary_t ciphertext;
+            binary_t tag;
+
+            auto& protection = session->get_tls_protection();
+            auto legacy_version = protection.get_lagacy_version();
+            auto tagsize = protection.get_tag_size();
+            auto tlsversion = protection.get_tls_version();
+            auto cs = protection.get_cipher_suite();
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
+            if (nullptr == hint) {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+            auto hint_cipher = advisor->hintof_blockcipher(hint->cipher);
+            if (nullptr == hint_cipher) {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+            auto ivsize = sizeof_iv(hint_cipher);
+            uint16 len = (cbc == hint->mode) ? body.size() + tagsize + ivsize : body.size() + tagsize;
+
+            {
+                payload pl;
+                pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
+                   << new payload_member(uint16(legacy_version), true, constexpr_legacy_version)                            // tls, dtls
+                   << new payload_member(uint16(get_key_epoch()), true, constexpr_key_epoch, constexpr_group_dtls)          // dtls
+                   << new payload_member(binary_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
+                   << new payload_member(uint16(len), true, constexpr_len);                                                 // tls, dtls
+
+                pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
+                pl.write(additional);
+            }
+
+            if (cbc == hint->mode) {
+                // additional = content header + iv
+                binary_t iv;
+                openssl_prng prng;
+                prng.random(iv, ivsize);
+                binary_append(additional, iv);
+
+                binary_t encbody;
+                ret = protection.encrypt(session, dir, body, encbody, additional, tag);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
+
+                binary_append(ciphertext, iv);
+                binary_append(ciphertext, encbody);
+            } else {
+                // additional = content header as AAD
+                ret = protection.encrypt(session, dir, body, ciphertext, additional, tag);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
+
+                binary_append(ciphertext, tag);
+            }
+
+            // content header + ciphertext
+            do_write_header_internal(dir, bin, ciphertext);
+        } else {
+            do_write_header_internal(dir, bin, body);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin, const binary_t& body) {
+    return_t ret = errorcode_t::success;
+    __try2 {
         uint16 legacy_version = get_legacy_version();
 
         {
@@ -268,7 +350,7 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
         {
             payload pl;
             pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
-               << new payload_member(uint16(get_legacy_version()), true, constexpr_legacy_version)                      // tls, dtls
+               << new payload_member(uint16(legacy_version), true, constexpr_legacy_version)                            // tls, dtls
                << new payload_member(uint16(get_key_epoch()), true, constexpr_key_epoch, constexpr_group_dtls)          // dtls
                << new payload_member(binary_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                << new payload_member(uint16(body.size()), true, constexpr_len);                                         // tls, dtls
@@ -286,6 +368,8 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
 }
 
 return_t tls_record::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
+
+bool tls_record::apply_protection() { return false; }
 
 tls_session* tls_record::get_session() { return _session; }
 
@@ -332,6 +416,10 @@ const range_t& tls_record::get_header_range() { return _range; }
 size_t tls_record::offsetof_header() { return _range.begin; }
 
 size_t tls_record::offsetof_body() { return _range.end; }
+
+void tls_record::operator<<(tls_record* record) {}
+
+void tls_record::operator<<(tls_handshake* handshake) {}
 
 void tls_record::addref() { _shared.addref(); }
 

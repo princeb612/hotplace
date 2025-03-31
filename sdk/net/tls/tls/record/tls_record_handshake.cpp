@@ -8,6 +8,9 @@
  * Date         Name                Description
  */
 
+#include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
+#include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <sdk/net/tls/tls/record/tls_record_handshake.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
@@ -16,6 +19,15 @@
 
 namespace hotplace {
 namespace net {
+
+constexpr char constexpr_content_type[] = "record content type";
+constexpr char constexpr_legacy_version[] = "legacy record version";
+constexpr char constexpr_len[] = "len";
+constexpr char constexpr_application_data[] = "application data";
+
+constexpr char constexpr_group_dtls[] = "dtls";
+constexpr char constexpr_key_epoch[] = "key epoch";
+constexpr char constexpr_dtls_record_seq[] = "dtls record sequence number";
 
 tls_record_handshake::tls_record_handshake(tls_session* session) : tls_record(tls_content_type_handshake, session) {}
 
@@ -32,8 +44,7 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
             size_t recpos = offsetof_header();
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            auto session_info = session->get_session_info(dir);
-            if (session_info.apply_protection()) {
+            if (session->get_session_info(dir).apply_protection()) {
                 /**
                  * RFC 2246 6.2.3. Record payload protection
                  *     struct {
@@ -96,6 +107,10 @@ return_t tls_record_handshake::do_write_body(tls_direction_t dir, binary_t& bin)
     }
     return ret;
 }
+
+bool tls_record_handshake::apply_protection() { return true; }
+
+void tls_record_handshake::operator<<(tls_handshake* handshake) { get_handshakes().add(handshake); }
 
 }  // namespace net
 }  // namespace hotplace

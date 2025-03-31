@@ -53,7 +53,7 @@ class http_server {
     http2_protocol& get_http2_protocol();
     http_router& get_http_router();
     ipaddr_acl& get_ipaddr_acl();
-    tlscert* get_tlscert();
+    tlscontext* get_tlscert();
 
    protected:
     http_server();
@@ -113,12 +113,12 @@ class http_server {
     tcp_server_socket _server_socket;
 
     // TLS
-    tlscert* _tlscert;
+    tlscontext* _tlscert;
     transport_layer_security* _tls;
     tls_server_socket* _tls_server_socket;
 
     // DTLS
-    tlscert* _dtlscert;
+    tlscontext* _dtlscert;
     transport_layer_security* _dtls;
     dtls_server_socket* _dtls_server_socket;
 

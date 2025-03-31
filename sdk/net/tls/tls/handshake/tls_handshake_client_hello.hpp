@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSHANDSHAKE_CLIENT_HELLO__
-#define __HOTPLACE_SDK_NET_TLS_TLSHANDSHAKE_CLIENT_HELLO__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKECLIENTHELLO__
+#define __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKECLIENTHELLO__
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -74,8 +74,10 @@ class tls_handshake_client_hello : public tls_handshake {
 
     void set_random(const binary_t& value);
     void set_session_id(const binary_t& value);
-    const binary& get_random();
-    const binary& get_session_id();
+    void set_cookie(const binary_t& cookie);
+    const binary_t& get_random();
+    const binary_t& get_session_id();
+    const binary_t& get_cookie();
     const std::vector<uint16>& get_cipher_suites();
     const std::vector<uint8>& get_compression_methods();
 
@@ -91,8 +93,9 @@ class tls_handshake_client_hello : public tls_handshake {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
-    binary _random;  // 32 bytes
-    binary _session_id;
+    binary_t _random;  // 32 bytes
+    binary_t _session_id;
+    binary_t _cookie;
     std::vector<uint16> _cipher_suites;
     std::vector<uint8> _compression_methods;
 };

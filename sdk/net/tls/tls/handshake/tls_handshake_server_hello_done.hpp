@@ -6,25 +6,25 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKESERVERKEYEXCHANGE__
-#define __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKESERVERKEYEXCHANGE__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKESERVERHELLODONE__
+#define __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKESERVERHELLODONE__
 
+#include <sdk/base/basic/binary.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
 
 namespace hotplace {
 namespace net {
 
-/**
- * RFC 5246 7.4.3.  Server Key Exchange Message
- */
-class tls_handshake_server_key_exchange : public tls_handshake {
+class tls_handshake_server_hello_done : public tls_handshake {
    public:
-    tls_handshake_server_key_exchange(tls_session* session);
+    tls_handshake_server_hello_done(tls_session* session);
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+
+   private:
 };
 
 }  // namespace net

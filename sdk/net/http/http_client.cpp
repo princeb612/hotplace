@@ -23,7 +23,7 @@ namespace hotplace {
 namespace net {
 
 http_client::http_client() : _client_socket(nullptr), _tlsctx(nullptr), _wto(1000) {
-    tlscert_open_simple(tlscert_flag_tls, &_tlsctx);
+    tlscontext_open_simple(&_tlsctx, tlscontext_flag_tls);
     _tls_client_socket = new tls_client_socket(new transport_layer_security(_tlsctx));
     _client_socket = new tcp_client_socket;
 }

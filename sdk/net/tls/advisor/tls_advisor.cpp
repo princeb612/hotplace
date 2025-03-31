@@ -201,6 +201,16 @@ const hint_blockcipher_t* tls_advisor::hintof_blockcipher(uint16 code) {
     return hint;
 }
 
+bool tls_advisor::is_kindof_cbc(uint16 code) {
+    bool ret = false;
+    auto iter = _cipher_suite_codes.find(code);
+    if (_cipher_suite_codes.end() != iter) {
+        auto item = iter->second;
+        ret = (cbc == item->mode);
+    }
+    return ret;
+}
+
 const hint_digest_t* tls_advisor::hintof_digest(uint16 code) {
     const hint_digest_t* hint = nullptr;
     auto hint_alg = hintof_cipher_suite(code);
@@ -313,18 +323,35 @@ std::string tls_advisor::quic_packet_type_string(uint8 code) {
     return value;
 }
 
-bool tls_advisor::is_kindof_tls13(uint16 ver) { return (tls_13 == ver) || (dtls_13 == ver); }
+bool tls_advisor::is_kindof_tls13(uint16 ver) {
+    bool ret = false;
+    auto hint = hintof_tls_version(ver);
+    ret = (hint && hint->spec == tls_13);
+    return ret;
+}
 
-bool tls_advisor::is_kindof_tls(uint16 ver) { return (tls_13 == ver) || (tls_12 == ver) || (tls_11 == ver) || (tls_10 == ver); }
+bool tls_advisor::is_kindof_tls(uint16 ver) {
+    bool ret = false;
+    auto hint = hintof_tls_version(ver);
+    ret = (hint && (hint->flags & flag_kindof_tls));
+    return ret;
+}
 
-bool tls_advisor::is_kindof_dtls(uint16 ver) { return (dtls_13 == ver) || (dtls_12 == ver); }
+bool tls_advisor::is_kindof_dtls(uint16 ver) {
+    bool ret = false;
+    auto hint = hintof_tls_version(ver);
+    ret = (hint && (0 == hint->flags & flag_kindof_tls));
+    return ret;
+}
 
 bool tls_advisor::is_kindof(uint16 lhs, uint16 rhs) {
     bool ret = false;
-    if ((tls_13 == lhs) || (dtls_13 == lhs)) {
-        ret = (tls_13 == rhs) || (dtls_13 == rhs);
-    } else if ((tls_12 == lhs) || (dtls_12 == lhs)) {
-        ret = (tls_12 == rhs) || (dtls_12 == rhs);
+    auto lhint = hintof_tls_version(lhs);
+    auto rhint = hintof_tls_version(rhs);
+    if (lhint && rhint) {
+        if (lhs == rhs || lhint->spec == rhs || rhint->spec == lhs) {
+            ret = true;
+        }
     }
     return ret;
 }

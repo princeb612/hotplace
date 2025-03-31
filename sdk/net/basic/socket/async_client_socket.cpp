@@ -21,6 +21,10 @@ async_client_socket::~async_client_socket() { close(); }
 return_t async_client_socket::open(sockaddr_storage_t* sa, const char* address, uint16 port) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if (nullptr == sa || nullptr == address) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
         if (INVALID_SOCKET != _fd) {
             ret = errorcode_t::already_assigned;
             __leave2;
@@ -33,7 +37,9 @@ return_t async_client_socket::open(sockaddr_storage_t* sa, const char* address, 
         }
 
         if (SOCK_DGRAM == type) {
+            memcpy(&_sa, sa, sizeof(sockaddr_storage_t));
             start_consumer();
+            do_handshake();
         }
     }
     __finally2 {}
@@ -49,17 +55,16 @@ return_t async_client_socket::connect(const char* address, uint16 port, uint32 t
             __leave2;
         }
 
-        sockaddr_storage_t sa;
         if (INVALID_SOCKET == _fd) {
             auto type = socket_type();
-            ret = create_socket(&_fd, &sa, type, address, port);
+            ret = create_socket(&_fd, &_sa, type, address, port);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
         }
 
-        addr_to_sockaddr(&sa, address, port);
-        ret = connect_socket_addr(_fd, (sockaddr*)&sa, sizeof(sa), timeout);
+        addr_to_sockaddr(&_sa, address, port);
+        ret = connect_socket_addr(_fd, (sockaddr*)&_sa, sizeof(_sa), timeout);
         if (errorcode_t::success != ret) {
             __leave2;
         }

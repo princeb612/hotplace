@@ -21,9 +21,12 @@ class tls_record_handshake : public tls_record {
 
     tls_handshakes& get_handshakes();
 
+    virtual void operator<<(tls_handshake* handshake);
+
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+    virtual bool apply_protection();
 
    private:
     tls_handshakes _handshakes;

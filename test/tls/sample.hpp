@@ -17,6 +17,7 @@ struct OPTION {
     int trace_level;
     int log;
     int time;
+    binary_t clienthello;
 
     OPTION() : verbose(0), debug(0), trace_level(0), log(0), time(0) {
         // do nothing
@@ -62,5 +63,7 @@ void test_use_pre_master_secret();
 void test_construct_tls();
 void test_construct_dtls();
 void test_validate();
+
+void dump_clienthello();
 
 #endif

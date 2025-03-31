@@ -86,7 +86,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                     ret = get_handshakes().read(session, dir, &plaintext[0], plainsize - 1, tpos);
                 } else if (tls_content_type_application_data == last_byte) {
                     if (cbc == hint->mode) {
-                        ret = get_application_data(plaintext, true);
+                        ret = get_application_data(plaintext, false);
                     } else {
                         ret = get_application_data(plaintext, false);
                     }
@@ -97,83 +97,6 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
     __finally2 {
         // do nothing
     }
-    return ret;
-}
-
-return_t tls_record_application_data::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        binary_t additional;
-        binary_t ciphertext;
-        binary_t tag;
-
-        auto& protection = session->get_tls_protection();
-        auto legacy_version = protection.get_lagacy_version();
-        auto tagsize = protection.get_tag_size();
-        auto tlsversion = protection.get_tls_version();
-        auto cs = protection.get_cipher_suite();
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
-        if (nullptr == hint) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-        auto hint_cipher = advisor->hintof_blockcipher(hint->cipher);
-        if (nullptr == hint_cipher) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-        auto ivsize = sizeof_iv(hint_cipher);
-        uint16 len = (cbc == hint->mode) ? body.size() + tagsize + ivsize : body.size() + tagsize;
-
-        {
-            payload pl;
-            pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
-               << new payload_member(uint16(legacy_version), true, constexpr_legacy_version)                            // tls, dtls
-               << new payload_member(uint16(get_key_epoch()), true, constexpr_key_epoch, constexpr_group_dtls)          // dtls
-               << new payload_member(binary_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
-               << new payload_member(uint16(len), true, constexpr_len);                                                 // tls, dtls
-
-            pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
-            pl.write(additional);
-        }
-
-        if (cbc == hint->mode) {
-            // additional = content header + iv
-            binary_t iv;
-            openssl_prng prng;
-            prng.random(iv, ivsize);
-            binary_append(additional, iv);
-
-            binary_t encbody;
-            ret = protection.encrypt(session, dir, body, encbody, additional, tag);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-
-            binary_append(ciphertext, iv);
-            binary_append(ciphertext, encbody);
-        } else {
-            // additional = content header as AAD
-            ret = protection.encrypt(session, dir, body, ciphertext, additional, tag);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-
-            binary_append(ciphertext, tag);
-        }
-
-        // content header + ciphertext
-        tls_record::do_write_header(dir, bin, ciphertext);
-    }
-    __finally2 {}
     return ret;
 }
 
@@ -202,6 +125,8 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
     }
     return ret;
 }
+
+bool tls_record_application_data::apply_protection() { return true; }
 
 return_t tls_record_application_data::get_application_data(binary_t& message, bool untag) {
     return_t ret = errorcode_t::success;
@@ -238,6 +163,10 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
     }
     return ret;
 }
+
+void tls_record_application_data::operator<<(tls_record* record) { get_records().add(record); }
+
+void tls_record_application_data::operator<<(tls_handshake* handshake) { get_handshakes().add(handshake); }
 
 }  // namespace net
 }  // namespace hotplace

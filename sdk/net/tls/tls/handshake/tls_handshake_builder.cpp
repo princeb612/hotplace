@@ -17,8 +17,10 @@
 #include <sdk/net/tls/tls/handshake/tls_handshake_encrypted_extensions.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_end_of_early_data.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_finished.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshake_hello_verify_request.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_new_session_ticket.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_server_hello.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshake_server_hello_done.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_server_key_exchange.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_unknown.hpp>
 
@@ -48,6 +50,9 @@ tls_handshake* tls_handshake_builder::build() {
         case tls_hs_server_hello: {
             __try_new_catch_only(handshake, new tls_handshake_server_hello(session));
         } break;
+        case tls_hs_hello_verify_request: {
+            __try_new_catch_only(handshake, new tls_handshake_hello_verify_request(session));
+        }
         case tls_hs_new_session_ticket: {
             __try_new_catch_only(handshake, new tls_handshake_new_session_ticket(session));
         } break;
@@ -63,6 +68,9 @@ tls_handshake* tls_handshake_builder::build() {
         case tls_hs_server_key_exchange: {
             __try_new_catch_only(handshake, new tls_handshake_server_key_exchange(session));
         } break;
+        case tls_hs_server_hello_done: {
+            __try_new_catch_only(handshake, new tls_handshake_server_hello_done(session));
+        } break;
         case tls_hs_certificate_verify: {
             __try_new_catch_only(handshake, new tls_handshake_certificate_verify(session));
         } break;
@@ -76,7 +84,6 @@ tls_handshake* tls_handshake_builder::build() {
         case tls_hs_request_connection_id:
         case tls_hs_new_connection_id:
         case tls_hs_certificate_request:  // RFC 4346 7.4.4. Certificate request
-        case tls_hs_server_hello_done:
         case tls_hs_client_certificate_request:
         case tls_hs_certificate_url:
         case tls_hs_certificate_status:

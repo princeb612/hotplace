@@ -269,20 +269,27 @@ static return_t do_test_construct_encrypted_extensions(tls_direction_t dir, tls_
             __leave2;
         }
 
-        tls_record_application_data record(session);
-        auto handshake = new tls_handshake_encrypted_extensions(session);
-        {
-            auto extension = new tls_extension_alpn(session);
-            binary_t protocols;
-            binary_append(protocols, uint8(2));
-            binary_append(protocols, "h2");
-            binary_append(protocols, uint8(8));
-            binary_append(protocols, "http/1.1");
-            extension->set_protocols(protocols);
-            handshake->get_extensions().add(extension);
+        if (tls_13 == session->get_tls_protection().get_tls_version()) {
+            if (session->get_session_info(dir).apply_protection()) {
+                tls_record_builder builder;
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+
+                auto handshake = new tls_handshake_encrypted_extensions(session);
+                {
+                    auto extension = new tls_extension_alpn(session);
+                    binary_t protocols;
+                    binary_append(protocols, uint8(2));
+                    binary_append(protocols, "h2");
+                    binary_append(protocols, uint8(8));
+                    binary_append(protocols, "http/1.1");
+                    extension->set_protocols(protocols);
+                    handshake->get_extensions().add(extension);
+                }
+                *record << handshake;
+                ret = record->write(dir, bin);
+                record->release();
+            }
         }
-        record.get_handshakes().add(handshake);
-        ret = record.write(dir, bin);
     }
     __finally2 {
         std::string dirstr;
@@ -292,8 +299,8 @@ static return_t do_test_construct_encrypted_extensions(tls_direction_t dir, tls_
     return ret;
 }
 
-static return_t do_test_construct_certificate(tls_direction_t dir, tls_session* session, tls_content_type_t content_type, const char* certfile,
-                                              const char* keyfile, binary_t& bin, const char* message) {
+static return_t do_test_construct_certificate(tls_direction_t dir, tls_session* session, const char* certfile, const char* keyfile, binary_t& bin,
+                                              const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -302,26 +309,15 @@ static return_t do_test_construct_certificate(tls_direction_t dir, tls_session* 
         }
 
         // SC (server certificate)
-        if (tls_content_type_application_data == content_type) {
-            tls_record_application_data record(session);
+        tls_record_builder builder;
+        auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
 
-            auto handshake = new tls_handshake_certificate(session);
-            handshake->set(dir, certfile, keyfile);
+        auto handshake = new tls_handshake_certificate(session);
+        handshake->set(dir, certfile, keyfile);
+        *record << handshake;
 
-            record.get_handshakes().add(handshake);
-            record.write(dir, bin);
-        } else if (tls_content_type_handshake == content_type) {
-            tls_record_handshake record(session);
-
-            auto handshake = new tls_handshake_certificate(session);
-            handshake->set(dir, certfile, keyfile);
-
-            record.get_handshakes().add(handshake);
-            record.write(dir, bin);
-        } else {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+        record->write(dir, bin);
+        record->release();
     }
     __finally2 {
         std::string dirstr;
@@ -339,12 +335,14 @@ static return_t do_test_construct_server_key_exchange(tls_direction_t dir, tls_s
             __leave2;
         }
 
-        tls_record_handshake record(session);
+        if (tls_12 == session->get_tls_protection().get_tls_version()) {
+            tls_record_builder builder;
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
 
-        auto handshake = new tls_handshake_server_key_exchange(session);
-
-        record.get_handshakes().add(handshake);
-        record.write(dir, bin);
+            *record << new tls_handshake_server_key_exchange(session);
+            record->write(dir, bin);
+            record->release();
+        }
     }
     __finally2 {
         std::string dirstr;
@@ -356,6 +354,26 @@ static return_t do_test_construct_server_key_exchange(tls_direction_t dir, tls_s
 
 static return_t do_test_construct_server_hello_done(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (tls_12 == session->get_tls_protection().get_tls_version()) {
+            tls_record_builder builder;
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+
+            *record << new tls_handshake_server_hello_done(session);
+            record->write(dir, bin);
+            record->release();
+        }
+    }
+    __finally2 {
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
     return ret;
 }
 
@@ -367,12 +385,14 @@ static return_t do_test_construct_client_key_exchange(tls_direction_t dir, tls_s
             __leave2;
         }
 
-        tls_record_handshake record(session);
+        if (tls_12 == session->get_tls_protection().get_tls_version()) {
+            tls_record_builder builder;
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
 
-        auto handshake = new tls_handshake_client_key_exchange(session);
-
-        record.get_handshakes().add(handshake);
-        record.write(dir, bin);
+            *record << new tls_handshake_client_key_exchange(session);
+            record->write(dir, bin);
+            record->release();
+        }
     }
     __finally2 {
         std::string dirstr;
@@ -390,9 +410,14 @@ static return_t do_test_construct_certificate_verify(tls_direction_t dir, tls_se
             __leave2;
         }
 
-        tls_record_application_data record(session);
-        record.get_handshakes().add(new tls_handshake_certificate_verify(session));
-        record.write(dir, bin);
+        if (tls_13 == session->get_tls_protection().get_tls_version()) {
+            tls_record_builder builder;
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+
+            *record << new tls_handshake_certificate_verify(session);
+            record->write(dir, bin);
+            record->release();
+        }
     }
     __finally2 {
         std::string dirstr;
@@ -410,9 +435,12 @@ static return_t do_test_construct_server_finished(tls_direction_t dir, tls_sessi
             __leave2;
         }
 
-        tls_record_application_data record(session);
-        record.get_handshakes().add(new tls_handshake_finished(session));
-        record.write(dir, bin);
+        tls_record_builder builder;
+        auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+
+        *record << new tls_handshake_finished(session);
+        record->write(dir, bin);
+        record->release();
     }
     __finally2 {
         std::string dirstr;
@@ -430,9 +458,12 @@ static return_t do_test_construct_client_finished(tls_direction_t dir, tls_sessi
             __leave2;
         }
 
-        tls_record_application_data record(session);
-        record.get_handshakes().add(new tls_handshake_finished(session));
-        record.write(dir, bin);
+        tls_record_builder builder;
+        auto record = builder.set(session).set(tls_content_type_handshake).set(dir).writemode().build();
+
+        *record << new tls_handshake_finished(session);
+        record->write(dir, bin);
+        record->release();
     }
     __finally2 {
         std::string dirstr;
@@ -509,9 +540,12 @@ static return_t do_test_construct_close_notify(tls_direction_t dir, tls_session*
             __leave2;
         }
 
-        tls_record_application_data record(session);
-        record.get_records().add(new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify));
-        record.write(dir, bin);
+        tls_record_builder builder;
+        auto record = builder.set(session).set(tls_content_type_alert).set(dir).writemode().build();
+
+        *record << new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify);
+        record->write(dir, bin);
+        record->release();
     }
     __finally2 {
         std::string dirstr;
@@ -633,11 +667,70 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             } break;
         }
 
-        if (keyexchange_null != keyexchange) {
+        if (tls_13 == tlsversion) {
+            // S -> C CCS
+            binary_t bin_server_change_cipher_spec;
+            do_test_construct_server_change_cipher_spec(from_server, &server_session, bin_server_change_cipher_spec, "construct change_cipher_spec");
+            do_test_send_record(from_server, &client_session, bin_server_change_cipher_spec, "send change_cipher_spec");
+
+            {
+                //
+                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
+            }
+
+            // S -> C EE
+            binary_t bin_encrypted_extensions;
+            do_test_construct_encrypted_extensions(from_server, &server_session, bin_encrypted_extensions, "construct encrypted extensions");
+            do_test_send_record(from_server, &client_session, bin_encrypted_extensions, "send encrypted extensions");
+
+            {
+                //
+                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
+            }
+
             // S -> C SC
             binary_t bin_certificate;
-            do_test_construct_certificate(from_server, &server_session, tls_content_type_handshake, certfile, keyfile, bin_certificate,
-                                          "construct certificate");
+            do_test_construct_certificate(from_server, &server_session, certfile, keyfile, bin_certificate, "construct certificate");
+            do_test_send_record(from_server, &client_session, bin_certificate, "send cerficate");
+
+            {
+                //
+                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
+            }
+
+            // S -> C SCV
+            binary_t bin_certificate_verify;
+            do_test_construct_certificate_verify(from_server, &server_session, bin_certificate_verify, "construct certificate verify");
+            do_test_send_record(from_server, &client_session, bin_certificate_verify, "send cerficate verify");
+
+            {
+                //
+                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
+            }
+
+            // S -> C SF
+            binary_t bin_server_finished;
+            do_test_construct_server_finished(from_server, &server_session, bin_server_finished, "construct server finished");
+            do_test_send_record(from_server, &client_session, bin_server_finished, "send server finished");
+
+            // C -> S CCS
+            binary_t bin_client_change_cipher_spec;
+            do_test_construct_client_change_cipher_spec(from_client, &client_session, bin_client_change_cipher_spec, "construct change_cipher_spec");
+            do_test_send_record(from_client, &server_session, bin_client_change_cipher_spec, "send change_cipher_spec");
+
+            {
+                //
+                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
+            }
+
+            // C -> S CF
+            binary_t bin_client_finished;
+            do_test_construct_client_finished(from_client, &client_session, bin_client_finished, "construct client finished");
+            do_test_send_record(from_client, &server_session, bin_client_finished, "send client finished");
+        } else if (tls_12 == tlsversion) {
+            // S -> C SC
+            binary_t bin_certificate;
+            do_test_construct_certificate(from_server, &server_session, certfile, keyfile, bin_certificate, "construct certificate");
             do_test_send_record(from_server, &client_session, bin_certificate, "send cerficate");
 
             {
@@ -658,9 +751,15 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
             }
 
-            // binary_t bin_server_hello_done;
-            // do_test_construct_server_hello_done(from_server, &server_session, bin_server_hello_done, "construct server_hello_done");
-            // do_test_send_record(from_server, &client_session, bin_server_hello_done, "send server_hello_done");
+            binary_t bin_server_hello_done;
+            do_test_construct_server_hello_done(from_server, &server_session, bin_server_hello_done, "construct server_hello_done");
+            do_test_send_record(from_server, &client_session, bin_server_hello_done, "send server_hello_done");
+
+            {
+                //
+                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
+            }
+
             binary_t bin_client_key_exchange;
             do_test_construct_client_key_exchange(from_client, &client_session, bin_client_key_exchange, "construct client_key_exchange");
             do_test_send_record(from_client, &server_session, bin_client_key_exchange, "send client_key_exchange");
@@ -674,19 +773,6 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 do_cross_check_keycalc(&client_session, &server_session, tls_secret_client_key, "tls_secret_client_key");
                 do_cross_check_keycalc(&client_session, &server_session, tls_secret_client_mac_key, "tls_secret_client_mac_key");
             }
-        }
-
-        // change_cipher_spec
-        {
-            // S -> C CCS
-            binary_t bin_server_change_cipher_spec;
-            do_test_construct_server_change_cipher_spec(from_server, &server_session, bin_server_change_cipher_spec, "construct change_cipher_spec");
-            do_test_send_record(from_server, &client_session, bin_server_change_cipher_spec, "send change_cipher_spec");
-
-            {
-                //
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            }
 
             // C -> S CCS
             binary_t bin_client_change_cipher_spec;
@@ -697,47 +783,27 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 //
                 do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
             }
-        }
 
-        if (tls_13 == tlsversion) {
-            // S -> C EE
-            binary_t bin_encrypted_extensions;
-            do_test_construct_encrypted_extensions(from_server, &server_session, bin_encrypted_extensions, "construct encrypted extensions");
-            do_test_send_record(from_server, &client_session, bin_encrypted_extensions, "send encrypted extensions");
+            // C -> S CF
+            binary_t bin_client_finished;
+            do_test_construct_client_finished(from_client, &client_session, bin_client_finished, "construct client finished");
+            do_test_send_record(from_client, &server_session, bin_client_finished, "send client finished");
 
-            {
-                //
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            }
-        }
-
-        // S -> C SC
-        binary_t bin_certificate;
-        do_test_construct_certificate(from_server, &server_session, tls_content_type_application_data, certfile, keyfile, bin_certificate,
-                                      "construct certificate");
-        do_test_send_record(from_server, &client_session, bin_certificate, "send cerficate");
-
-        {
-            //
-            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-        }
-
-        if (tls_13 == tlsversion) {
-            // S -> C SCV
-            binary_t bin_certificate_verify;
-            do_test_construct_certificate_verify(from_server, &server_session, bin_certificate_verify, "construct certificate verify");
-            do_test_send_record(from_server, &client_session, bin_certificate_verify, "send cerficate verify");
+            // S -> C CCS
+            binary_t bin_server_change_cipher_spec;
+            do_test_construct_server_change_cipher_spec(from_server, &server_session, bin_server_change_cipher_spec, "construct change_cipher_spec");
+            do_test_send_record(from_server, &client_session, bin_server_change_cipher_spec, "send change_cipher_spec");
 
             {
                 //
                 do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
             }
-        }
 
-        // S -> C SF
-        binary_t bin_server_finished;
-        do_test_construct_server_finished(from_server, &server_session, bin_server_finished, "construct server finished");
-        do_test_send_record(from_server, &client_session, bin_server_finished, "send server finished");
+            // S -> C SF
+            binary_t bin_server_finished;
+            do_test_construct_server_finished(from_server, &server_session, bin_server_finished, "construct server finished");
+            do_test_send_record(from_server, &client_session, bin_server_finished, "send server finished");
+        }
 
         {
             do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
@@ -753,11 +819,6 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 do_cross_check_keycalc(&client_session, &server_session, tls_secret_exp_master, "tls_secret_exp_master");
             }
         }
-
-        // C -> S CF
-        binary_t bin_client_finished;
-        do_test_construct_client_finished(from_client, &client_session, bin_client_finished, "construct client finished");
-        do_test_send_record(from_client, &server_session, bin_client_finished, "send client finished");
 
         {
             do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");

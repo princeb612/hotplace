@@ -15,7 +15,7 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/net/basic/tls/sdk.hpp>
-#include <sdk/net/basic/tls/tlscert.hpp>
+#include <sdk/net/basic/tls/tlscontext.hpp>
 
 namespace hotplace {
 namespace net {
@@ -121,7 +121,7 @@ static int set_cookie_verify_callback_routine(SSL* ssl, const unsigned char* coo
     return ret;
 }
 
-return_t tlscert_open_simple(uint32 flag, SSL_CTX** context) {
+return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {
     return_t ret = errorcode_t::success;
     SSL_CTX* ssl_ctx = nullptr;
 
@@ -132,13 +132,13 @@ return_t tlscert_open_simple(uint32 flag, SSL_CTX** context) {
         }
 
         const SSL_METHOD* method = nullptr;
-        if (tlscert_flag_tls & flag) {
+        if (tlscontext_flag_tls & flags) {
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
             method = TLS_method();
 #else
             method = TLSv1_2_method();  // openssl-1.0
 #endif
-        } else if (tlscert_flag_dtls & flag) {
+        } else if (tlscontext_flag_dtls & flags) {
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
             method = DTLS_method();
 #else
@@ -155,9 +155,34 @@ return_t tlscert_open_simple(uint32 flag, SSL_CTX** context) {
             __leave2;
         }
 
-        long option_flags = 0;
-
-        /* 1.0.x defines SSL_OP_NO_SSLv2~SSL_OP_NO_TLSv1_1 */
+        /*
+         * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
+         * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
+         */
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+        int minver = 0;
+        int maxver = 0;
+        if (tlscontext_flag_tls & flags) {
+            if (tlscontext_flag_allow_tls12 & flags) {
+                minver = TLS1_2_VERSION;
+                if (tlscontext_flag_allow_tls13 & flags) {
+                    maxver = TLS1_3_VERSION;
+                } else {
+                    maxver = TLS1_2_VERSION;
+                }
+            } else {
+                minver = TLS1_3_VERSION;
+                maxver = TLS1_3_VERSION;
+            }
+            SSL_CTX_set_min_proto_version(ssl_ctx, minver);
+            SSL_CTX_set_max_proto_version(ssl_ctx, maxver);
+        } else if (tlscontext_flag_dtls & flags) {
+            SSL_CTX_set_min_proto_version(ssl_ctx, DTLS1_2_VERSION);
+            SSL_CTX_set_cookie_generate_cb(ssl_ctx, set_cookie_generate_callback_routine);
+            SSL_CTX_set_cookie_verify_cb(ssl_ctx, set_cookie_verify_callback_routine);
+        }
+#else
+/* 1.0.x defines SSL_OP_NO_SSLv2~SSL_OP_NO_TLSv1_1 */
 #ifndef SSL_OP_NO_TLSv1_2
 #define SSL_OP_NO_TLSv1_2 0x0
 #endif
@@ -167,31 +192,29 @@ return_t tlscert_open_simple(uint32 flag, SSL_CTX** context) {
 #ifndef SSL_OP_NO_DTLSv1_2
 #define SSL_OP_NO_DTLSv1_2 0x0
 #endif
-
-        /*
-         * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
-         * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
-         */
-        if (tlscert_flag_tls & flag) {
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-            SSL_CTX_set_min_proto_version(ssl_ctx, TLS1_3_VERSION);
-#endif
-        } else if (tlscert_flag_dtls & flag) {
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-            SSL_CTX_set_min_proto_version(ssl_ctx, DTLS1_2_VERSION);
-#endif
-            SSL_CTX_set_cookie_generate_cb(ssl_ctx, set_cookie_generate_callback_routine);
-            SSL_CTX_set_cookie_verify_cb(ssl_ctx, set_cookie_verify_callback_routine);
-        }
+        long option_flags = 0;
         option_flags = (SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1 | SSL_OP_NO_DTLSv1); /* TLS 1.2 and above */
-
         SSL_CTX_set_options(ssl_ctx, option_flags);
+#endif
+
         SSL_CTX_set_verify(ssl_ctx, 0, nullptr);
 
         uint32 option = get_trace_option();
         if (trace_option_t::trace_debug & option) {
             SSL_CTX_set_info_callback(ssl_ctx, set_info_callback_routine);
         }
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("flag %08x", flags);
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+            dbs.println("min proto version %08x", minver);
+            dbs.println("max proto version %08x", maxver);
+#endif
+            trace_debug_event(category_debug_internal, 0, &dbs);
+        }
+#endif
 
         *context = ssl_ctx;
     }
@@ -209,7 +232,7 @@ static int set_default_passwd_callback_routine(char* buf, int num, int rwflag, v
     return len;
 }
 
-return_t tlscert_open(uint32 flag, SSL_CTX** context, const char* cert_file, const char* key_file, const char* password, const char* chain_file) {
+return_t tlscontext_open(SSL_CTX** context, uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file) {
     return_t ret = errorcode_t::success;
     SSL_CTX* ssl_ctx = nullptr;
     SSL* ssl = nullptr;
@@ -220,7 +243,7 @@ return_t tlscert_open(uint32 flag, SSL_CTX** context, const char* cert_file, con
             __leave2;
         }
 
-        ret = tlscert_open_simple(flag, &ssl_ctx);
+        ret = tlscontext_open_simple(&ssl_ctx, flag);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -326,19 +349,19 @@ return_t tlscert_open(uint32 flag, SSL_CTX** context, const char* cert_file, con
     return ret;
 }
 
-tlscert::tlscert(uint32 flag) : _ctx(nullptr) { tlscert_open_simple(flag, &_ctx); }
+tlscontext::tlscontext(uint32 flag) : _ctx(nullptr) { tlscontext_open_simple(&_ctx, flag); }
 
-tlscert::tlscert(uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file) : _ctx(nullptr) {
-    tlscert_open(flag, &_ctx, cert_file, key_file, password, chain_file);
+tlscontext::tlscontext(uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file) : _ctx(nullptr) {
+    tlscontext_open(&_ctx, flag, cert_file, key_file, password, chain_file);
 }
 
-tlscert::~tlscert() {
+tlscontext::~tlscontext() {
     if (_ctx) {
         SSL_CTX_free(_ctx);
     }
 }
 
-tlscert& tlscert::set_cipher_list(const char* list) {
+tlscontext& tlscontext::set_cipher_list(const char* list) {
     if (list) {
         if (_ctx) {
             SSL_CTX_set_cipher_list(_ctx, list);
@@ -347,7 +370,7 @@ tlscert& tlscert::set_cipher_list(const char* list) {
     return *this;
 }
 
-tlscert& tlscert::set_use_dh(int bits) {
+tlscontext& tlscontext::set_use_dh(int bits) {
     return_t ret = errorcode_t::success;
     DH* dh = nullptr;
     int rc = 0;
@@ -402,7 +425,7 @@ tlscert& tlscert::set_use_dh(int bits) {
     return *this;
 }
 
-tlscert& tlscert::set_verify(int mode) {
+tlscontext& tlscontext::set_verify(int mode) {
     if (_ctx) {
         SSL_CTX_set_verify(_ctx, mode, nullptr);
     }
@@ -475,7 +498,7 @@ static int set_alpn_select_h2_cb(SSL* ssl, const unsigned char** out, unsigned c
     return ret;
 }
 
-tlscert& tlscert::enable_alpn_h2(bool enable) {
+tlscontext& tlscontext::enable_alpn_h2(bool enable) {
     if (enable) {
         // RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
         // RFC 7540 3.1.  HTTP/2 Version Identification
@@ -490,7 +513,7 @@ tlscert& tlscert::enable_alpn_h2(bool enable) {
     return *this;
 }
 
-SSL_CTX* tlscert::get_ctx() { return _ctx; }
+SSL_CTX* tlscontext::get_ctx() { return _ctx; }
 
 }  // namespace net
 }  // namespace hotplace

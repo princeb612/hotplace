@@ -230,8 +230,11 @@ flowchart LR
     - [x] TLS version
       - [x] TLS1.3
       - [ ] TLS1.2
-  - [ ] TLS over TCP
+  - [ ] TLS over TCP (example netclient)
+    - [ ] (linux) sometimes EVP_CipherFinal error while decryption
+    - [x] HTTP/1.1
   - [ ] DTLS over UDP
+    - [ ] async_dtls_client_socket
 
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)

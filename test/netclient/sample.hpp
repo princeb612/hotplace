@@ -13,6 +13,12 @@ using namespace hotplace::crypto;
 using namespace hotplace::io;
 using namespace hotplace::net;
 
+enum {
+    flag_async = 1 << 0,
+    flag_http = 1 << 1,
+    flag_allow_tls12 = 1 << 2,
+};
+
 typedef struct _OPTION {
     int verbose;
     int debug;
@@ -24,10 +30,10 @@ typedef struct _OPTION {
     uint16 port;
     uint16 prot;
     uint16 count;
-    uint16 async;
+    uint16 flags;
     std::string message;
 
-    _OPTION() : verbose(0), debug(0), log(0), time(0), bufsize(1500), address("127.0.0.1"), port(9000), prot(0), count(1), async(0), message("hello") {
+    _OPTION() : verbose(0), debug(0), log(0), time(0), bufsize(1500), address("127.0.0.1"), port(9000), prot(0), count(1), flags(0), message("hello") {
         // do nothing
     }
 } OPTION;
@@ -43,5 +49,6 @@ void dtls_client();
 
 // insecure simple implementation to understand TLS
 void async_tls_client();
+void async_dtls_client();
 
 #endif

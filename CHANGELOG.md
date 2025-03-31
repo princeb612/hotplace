@@ -4,7 +4,8 @@
   * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 739
+* Revision 740
+  * [fixed] TLS 1.2
 
 * Revision 731
   * [tested] valgrind (tcpserver1, tcpserver2, tlsserver, udpserver1, udpserver2, dtlsserver)

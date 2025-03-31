@@ -31,10 +31,14 @@ enum session_type_t {
 };
 
 enum session_status_t : uint16 {
-    session_key_exchanged = (1 << 0),
-    session_server_cert_verified = (1 << 1),  // tls_handshake_certificate_verify
-    session_server_finished = (1 << 2),       // tls_handshake_finished
-    session_client_finished = (1 << 3),       // tls_handshake_finished
+    session_hello_verify_request = (1 << 0),  // 0001
+    session_server_hello = (1 << 1),          // 0002
+    session_server_key_exchange = (1 << 2),   // 0004
+    session_client_key_exchange = (1 << 3),   // 0008
+    session_server_cert_verified = (1 << 4),  // 0010 tls_handshake_certificate_verify
+    session_server_hello_done = (1 << 5),     // 0020 tls_hs_server_hello_done
+    session_server_finished = (1 << 6),       // 0040 tls_handshake_finished
+    session_client_finished = (1 << 7),       // 0080 tls_handshake_finished
     session_client_close_notified = (1 << 14),
     session_server_close_notified = (1 << 15),
 };
@@ -66,8 +70,10 @@ class tls_session {
     session_type_t get_type();
 
     void update_session_status(session_status_t status);
+    void clear_session_status(session_status_t status);
     uint16 get_session_status();
-    return_t wait_change_session_status(uint16 status, unsigned msec);
+    return_t wait1_change_session_status(uint16 status, unsigned msec);
+    return_t waitall_change_session_status(uint16 status, unsigned msec);
 
     t_key_value<uint16, uint16>& get_conf();
 

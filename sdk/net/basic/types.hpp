@@ -90,7 +90,7 @@ class dtls_server_socket;
 class tls_client_socket;
 class tls_server_socket;
 class transport_layer_security;
-class tlscert;
+class tlscontext;
 
 }  // namespace net
 }  // namespace hotplace

@@ -19,8 +19,11 @@ class tls_record_alert : public tls_record {
     tls_record_alert(tls_session* session);
     tls_record_alert(tls_session* session, uint8 level, uint8 desc);
 
+    virtual void operator<<(tls_record* record);
+
     virtual return_t read_plaintext(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
 
+    tls_record_alert& set(uint8 level, uint8 desc);
     uint8 get_level() const;
     uint8 get_desc() const;
 
@@ -28,6 +31,7 @@ class tls_record_alert : public tls_record {
     virtual return_t do_postprocess(tls_direction_t dir);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+    virtual bool apply_protection();
 
    private:
     uint8 _level;

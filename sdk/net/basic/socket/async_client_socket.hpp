@@ -83,6 +83,7 @@ class async_client_socket : public client_socket {
 
    protected:
     socket_t _fd;
+    sockaddr_storage_t _sa;
     multiplexer_context_t* _mphandle;
     thread* _thread;
 

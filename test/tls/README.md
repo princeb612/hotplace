@@ -31,3 +31,44 @@
 | 0xc076 | TLS 1.2 | TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256    | tested |
 | 0xc077 | TLS 1.2 | TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384    | tested |
 | 0xcca8 | TLS 1.2 | TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256   | tested |
+
+### test_construct_tls_routine
+
+- https://tls13.xargs.org
+  - C->S client_hello
+  - S->C server_hello
+  - S->C change_cipher_spec
+  - S->C encrypted_extensions
+  - S->C certificate
+  - S->C certificate_verify
+  - S->C finished
+  - C->S change_cipher_spec
+  - C->S finished
+- https://tls12.xargs.org
+  - C->S client_hello
+  - S->C server_hello
+  - S->C certificate
+  - S->C server_key_exchange
+  - S->C server_hello_done
+  - C->S client_key_exchange
+  - C->S change_cipher_spec
+  - C->S finished
+  - S->C change_cipher_spec
+  - S->C finished
+- TLS 1.3
+  - openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -tls1_3
+  - openssl s_client -connect localhost:9000 -state -debug -tls1_3
+- TLS 1.2
+  - openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -no_tls1_3
+  - openssl s_client -connect localhost:9000 -state -debug -tls1_2
+  - C->S client_hello
+  - S->C server_hello
+  - S->C certificate
+  - S->C server_key_exchange
+  - S->C server_hello_done
+  - C->S client_key_exchange
+  - C->S change_cipher_spec
+  - C->S finished
+  - S->C new_session_ticket
+  - S->C change_cipher_spec
+  - S->C finished  

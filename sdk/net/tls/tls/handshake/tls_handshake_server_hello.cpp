@@ -34,11 +34,16 @@ constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_cookie_len[] = "cookie len";
 constexpr char constexpr_cookie[] = "cookie";
 
-tls_handshake_server_hello::tls_handshake_server_hello(tls_session* session) : tls_handshake(tls_hs_server_hello, session), _compression_method(0) {}
+tls_handshake_server_hello::tls_handshake_server_hello(tls_session* session)
+    : tls_handshake(tls_hs_server_hello, session), _version(0), _compression_method(0) {}
+
+void tls_handshake_server_hello::set_version(uint16 version) { _version = version; }
 
 void tls_handshake_server_hello::set_random(const binary_t& value) { _random = value; }
 
 void tls_handshake_server_hello::set_session_id(const binary_t& value) { _session_id = value; }
+
+uint16 tls_handshake_server_hello::get_version() { return _version; }
 
 const binary& tls_handshake_server_hello::get_random() { return _random; }
 
@@ -189,6 +194,12 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
         if ((session_quic == session_type) || (session_quic2 == session_type)) {
             session->reset_recordno(from_server);
         }
+        session->update_session_status(session_server_hello);
+        auto ext = get_extensions().get(tls1_ext_supported_versions);
+        if (nullptr == ext) {
+            auto legacy_version = protection.get_lagacy_version();
+            protection.set_tls_version(_version ? _version : legacy_version);
+        }
     }
     __finally2 {
         // do nothing
@@ -288,6 +299,8 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
 
             // server_key_update
             session->get_tls_protection().set_item(tls_context_server_hello_random, random);
+
+            _version = version;
         }
     }
     __finally2 {
@@ -308,13 +321,13 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
 
         {
             payload pl;
-            pl << new payload_member(uint16(legacy_version), true, constexpr_version)            //
-               << new payload_member(_random, constexpr_random)                                  //
-               << new payload_member(uint8(_session_id.size()), constexpr_session_id_len)        //
-               << new payload_member(_session_id, constexpr_session_id)                          //
-               << new payload_member(uint16(get_cipher_suite()), true, constexpr_cipher_suite)   //
-               << new payload_member(uint8(0), constexpr_compression_method)                     //
-               << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);  //
+            pl << new payload_member(uint16(_version ? _version : legacy_version), true, constexpr_version)  //
+               << new payload_member(_random, constexpr_random)                                              //
+               << new payload_member(uint8(_session_id.size()), constexpr_session_id_len)                    //
+               << new payload_member(_session_id, constexpr_session_id)                                      //
+               << new payload_member(uint16(get_cipher_suite()), true, constexpr_cipher_suite)               //
+               << new payload_member(uint8(0), constexpr_compression_method)                                 //
+               << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);              //
 
             pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
             pl.write(bin);

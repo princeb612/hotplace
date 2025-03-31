@@ -305,6 +305,8 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
     auto& protection = session->get_tls_protection();
     auto legacy_version = protection.get_lagacy_version();
 
+    _fragment_len = body.size();
+
     payload pl;
     pl << new payload_member(uint8(get_type()), constexpr_message_type)
        << new payload_member(uint32_24_t(body.size()), constexpr_len)

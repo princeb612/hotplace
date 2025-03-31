@@ -11,6 +11,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -31,17 +33,69 @@ session_type_t tls_session::get_type() { return _type; }
 void tls_session::update_session_status(session_status_t status) {
     _status |= status;
     _sem.signal();
+#if defined DEBUG
+    if (istraceable()) {
+        basic_stream dbs;
+        dbs.println("\e[1;34msession status %02x (update %02x)\e[0m", _status, status);
+        trace_debug_event(category_debug_internal, 0, &dbs);
+    }
+#endif
 }
+
+void tls_session::clear_session_status(session_status_t status) { _status &= ~status; }
 
 uint16 tls_session::get_session_status() { return _status; }
 
-return_t tls_session::wait_change_session_status(uint16 status, unsigned msec) {
-    return_t ret = errorcode_t::success;
+return_t tls_session::wait1_change_session_status(uint16 status, unsigned msec) {
+    return_t ret = errorcode_t::mismatch;
+
+    while (0) {
+        ret = _sem.wait(msec);
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("\e[1;34msession status %02x (wait1 %02x) %s\e[0m", _status, status, _status & status ? "true" : "false");
+            trace_debug_event(category_debug_internal, 0, &dbs);
+        }
+#endif
+
+        if (0 == _status) {
+            break;
+        }
+
+        if (_status & status) {
+            ret = errorcode_t::success;
+            break;
+        }
+
+        if (errorcode_t::timeout == ret) {
+            break;
+        }
+    }
+    return ret;
+}
+
+return_t tls_session::waitall_change_session_status(uint16 status, unsigned msec) {
+    return_t ret = errorcode_t::mismatch;
 
     while (1) {
         ret = _sem.wait(msec);
 
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("\e[1;34msession status %02x (waitall %02x) %s\e[0m", _status, status, status == (_status & status) ? "true" : "false");
+            trace_debug_event(category_debug_internal, 0, &dbs);
+        }
+#endif
+
+        if (0 == _status) {
+            break;
+        }
+
         if (status == (_status & status)) {
+            ret = errorcode_t::success;
             break;
         }
 

@@ -173,6 +173,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             uint8 session_id_len = 0;
             uint16 cipher_suite_len = 0;
             uint8 compression_method_len = 0;
+            binary_t cookie;
             uint16 extension_len = 0;
 
             {
@@ -208,6 +209,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                 pl.get_binary(constexpr_random, random);
                 session_id_len = pl.t_value_of<uint8>(constexpr_session_id_len);
                 pl.get_binary(constexpr_session_id, session_id);
+                pl.get_binary(constexpr_cookie, cookie);
                 cipher_suite_len = pl.t_value_of<uint16>(constexpr_cipher_suite_len);
                 pl.get_binary(constexpr_cipher_suite, cipher_suites);
                 compression_method_len = pl.t_value_of<uint8>(constexpr_compression_method_len);
@@ -229,6 +231,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             {
                 _random = random;
                 _session_id = session_id;
+                _cookie = cookie;
                 set_extension_len(extension_len);
             }
 
@@ -253,6 +256,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                 if (session_id.size()) {
                     dbs.println("   %s", base16_encode(session_id).c_str());
                 }
+                dbs.println(" > %s %s", constexpr_cookie, base16_encode(cookie).c_str());
                 dbs.println(" > %s %04x(%i ent.)", constexpr_cipher_suite_len, cipher_suite_len, cipher_suite_len >> 1);
                 i = 0;
                 for (auto cs : _cipher_suites) {
@@ -304,7 +308,8 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
             compression_methods.resize(1);
 
             if (32 != _random.size()) {
-                _random.get().resize(32);
+                openssl_prng prng;
+                prng.random(_random, 32);
             }
 
             payload pl;
@@ -312,8 +317,8 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
                << new payload_member(_random, constexpr_random)                                            //
                << new payload_member(uint8(_session_id.size()), constexpr_session_id_len)                  //
                << new payload_member(_session_id, constexpr_session_id)                                    //
-               << new payload_member(uint8(0), constexpr_cookie_len, constexpr_group_dtls)                 // dtls
-               << new payload_member(binary_t(), constexpr_cookie, constexpr_group_dtls)                   // dtls
+               << new payload_member(uint8(_cookie.size()), constexpr_cookie_len, constexpr_group_dtls)    // dtls
+               << new payload_member(_cookie, constexpr_cookie, constexpr_group_dtls)                      // dtls
                << new payload_member(uint16(cipher_suites.size()), true, constexpr_cipher_suite_len)       //
                << new payload_member(cipher_suites, constexpr_cipher_suite)                                //
                << new payload_member(uint8(compression_methods.size()), constexpr_compression_method_len)  //
@@ -338,9 +343,13 @@ void tls_handshake_client_hello::set_random(const binary_t& value) { _random = v
 
 void tls_handshake_client_hello::set_session_id(const binary_t& value) { _session_id = value; }
 
-const binary& tls_handshake_client_hello::get_random() { return _random; }
+void tls_handshake_client_hello::set_cookie(const binary_t& cookie) { _cookie = cookie; }
 
-const binary& tls_handshake_client_hello::get_session_id() { return _session_id; }
+const binary_t& tls_handshake_client_hello::get_random() { return _random; }
+
+const binary_t& tls_handshake_client_hello::get_session_id() { return _session_id; }
+
+const binary_t& tls_handshake_client_hello::get_cookie() { return _cookie; }
 
 const std::vector<uint16>& tls_handshake_client_hello::get_cipher_suites() { return _cipher_suites; }
 

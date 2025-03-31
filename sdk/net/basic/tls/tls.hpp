@@ -21,7 +21,7 @@ namespace net {
  * @brief TLS
  * @example
  *      uint32 ret = errorcode_t::success;
- *      tlscert_open_simple(tlscert_flag_tls, &sslctx);
+ *      tlscontext_open_simple(tlscontext_flag_tls, &sslctx);
  *      transport_layer_security tls(sslctx);
  *      tls_client_socket cli(&tls);
  *      cli.connect(&sock, &tlshandle, host, port, 1);
@@ -39,7 +39,7 @@ namespace net {
 class transport_layer_security {
    public:
     transport_layer_security(SSL_CTX* sslctx);
-    transport_layer_security(tlscert* cert);
+    transport_layer_security(tlscontext* cert);
     ~transport_layer_security();
 
     /**

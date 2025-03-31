@@ -136,7 +136,15 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-D", "trace level 0|1|2", [](OPTION& o, char* param) -> void { o.trace_level = atoi(param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-c", "dump clienthello (base16 stream)",
+                                      [](OPTION& o, char* param) -> void {
+                                          o.verbose = 1;
+                                          o.debug = 1;
+                                          o.clienthello = base16_decode_rfc(param);
+                                      })
+                       .optional()
+                       .preced();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -162,33 +170,38 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
-    test_validate();
+    if (option.clienthello.empty()) {
+        test_validate();
 
-    // https://tls13.xargs.org/
-    test_tls13_xargs_org();
-    // https://tls12.xargs.org/
-    test_tls12_xargs_org();
-    // https://github.com/syncsynchalt/illustrated-tls13/captures/
-    test_use_pre_master_secret();
-    // https://dtls.xargs.org/
-    test_dtls_xargs_org();
+        // https://tls13.xargs.org/
+        test_tls13_xargs_org();
+        // https://tls12.xargs.org/
+        test_tls12_xargs_org();
+        // https://github.com/syncsynchalt/illustrated-tls13/captures/
+        test_use_pre_master_secret();
+        // https://dtls.xargs.org/
+        test_dtls_xargs_org();
 
-    // RFC 8448 Example Handshake Traces for TLS 1.3
-    test_rfc8448_2();
-    test_rfc8448_3();
-    test_rfc8448_4();
-    test_rfc8448_5();
-    test_rfc8448_6();
-    test_rfc8448_7();
+        // RFC 8448 Example Handshake Traces for TLS 1.3
+        test_rfc8448_2();
+        test_rfc8448_3();
+        test_rfc8448_4();
+        test_rfc8448_5();
+        test_rfc8448_6();
+        test_rfc8448_7();
 
-    test_construct_tls();
-    test_construct_dtls();
+        test_construct_tls();
+        test_construct_dtls();
+    } else {
+        dump_clienthello();
+    }
 
     openssl_cleanup();
 
     _logger->flush();
 
     _test_case.report(5);
+
     _cmdline->help();
     return _test_case.result();
 }

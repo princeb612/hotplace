@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_BASIC_TLSCLIENTSOCKET__
-#define __HOTPLACE_SDK_NET_TLS_BASIC_TLSCLIENTSOCKET__
+#ifndef __HOTPLACE_SDK_NET_TLS_BASIC_DTLSCLIENTSOCKET__
+#define __HOTPLACE_SDK_NET_TLS_BASIC_DTLSCLIENTSOCKET__
 
 #include <sdk/net/basic/socket/async_client_socket.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -33,11 +33,11 @@ namespace net {
  *              }
  *          }
  */
-class async_tls_client_socket : public async_client_socket {
+class async_dtls_client_socket : public async_client_socket {
    public:
-    async_tls_client_socket(tls_version_t minver = tls_12);
+    async_dtls_client_socket(tls_version_t minver = dtls_12);
 
-    virtual return_t send(const char* ptr_data, size_t size_data, size_t* cbsent);
+    virtual return_t sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen);
 
     virtual bool support_tls();
     virtual int socket_type();

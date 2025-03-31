@@ -64,6 +64,8 @@ enum tls_version_t : uint16 {
     tls_10 = 0x0301,   // RFC 2246
     dtls_13 = 0xfefc,  // RFC 6347
     dtls_12 = 0xfefd,  // RFC 9147
+    dtls_11 = 0xfefe,
+    dtls_10 = 0xfeff,
 };
 
 /*
@@ -517,6 +519,7 @@ enum tls_secret_t : uint16 {
 
     tls_context_quic_dcid = (TLS_SECRET_USERCONTEXT | 0x11),
     tls_context_fragment = (TLS_SECRET_USERCONTEXT | 0x1b),  // DTLS, QUIC
+    tls_context_cookie = (TLS_SECRET_USERCONTEXT | 0x1c),
 };
 
 enum tls_direction_t {

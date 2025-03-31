@@ -737,7 +737,7 @@ void test_get_tlsclient() {
         }
 
         SSL_CTX *sslctx = nullptr;
-        tlscert_open_simple(tlscert_flag_tls, &sslctx);
+        tlscontext_open_simple(&sslctx, tlscontext_flag_tls);
         transport_layer_security tls(sslctx);
         tls_client_socket cli(&tls);
         basic_stream bs;

@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_TLSHANDSHAKE_SERVER_HELLO__
-#define __HOTPLACE_SDK_NET_TLS_TLSHANDSHAKE_SERVER_HELLO__
+#ifndef __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKESERVERHELLO__
+#define __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKESERVERHELLO__
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -58,8 +58,10 @@ class tls_handshake_server_hello : public tls_handshake {
    public:
     tls_handshake_server_hello(tls_session* session);
 
+    void set_version(uint16 version);
     void set_random(const binary_t& value);
     void set_session_id(const binary_t& value);
+    uint16 get_version();
     const binary& get_random();
     const binary& get_session_id();
     uint16 get_cipher_suite();
@@ -73,6 +75,7 @@ class tls_handshake_server_hello : public tls_handshake {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
+    uint16 _version;
     binary _random;  // 32 bytes
     binary _session_id;
     uint8 _compression_method;

@@ -256,18 +256,10 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
          * Data (AEAD) ciphersuite, it MUST NOT send an encrypt-then-MAC
          * response extension back to the client.
          */
-        switch (mode) {
-            // AEAD
-            case gcm:
-            case ccm:
-            case ccm8:
-            case mode_poly1305: {
-                ret = encrypt_aead(session, dir, plaintext, ciphertext, additional, tag, level);
-            } break;
-            // encrypt-then-MAC
-            case cbc: {
-                ret = encrypt_cbc_hmac(session, dir, plaintext, ciphertext, additional, tag);
-            } break;
+        if (cbc == mode) {
+            ret = encrypt_cbc_hmac(session, dir, plaintext, ciphertext, additional, tag);
+        } else {
+            ret = encrypt_aead(session, dir, plaintext, ciphertext, additional, tag, level);
         }
         if (errorcode_t::success != ret) {
             __leave2;
@@ -441,31 +433,11 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
         }
 
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
-        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
-        if (nullptr == hint) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-        /**
-         * RFC 7366
-         * If a server receives an encrypt-then-MAC request extension from a client
-         * and then selects a stream or Authenticated Encryption with Associated
-         * Data (AEAD) ciphersuite, it MUST NOT send an encrypt-then-MAC
-         * response extension back to the client.
-         */
-        auto mode = hint->mode;
-        switch (mode) {
-            // AEAD
-            case gcm:
-            case ccm:
-            case ccm8:
-            case mode_poly1305: {
-                ret = decrypt_aead(session, dir, stream, size, pos, plaintext, level);
-            } break;
-            // encrypt-then-MAC
-            case cbc: {
-                ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
-            } break;
+        bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite());
+        if (is_kindof_cbc) {
+            ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
+        } else {
+            ret = decrypt_aead(session, dir, stream, size, pos, plaintext, level);
         }
     }
     __finally2 {
@@ -488,29 +460,18 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
         switch (session_type) {
             case session_tls: {
                 tls_advisor *tlsadvisor = tls_advisor::get_instance();
-                const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
-                if (nullptr == hint) {
-                    ret = errorcode_t::not_supported;
-                    __leave2;
-                }
-                auto mode = hint->mode;
-                switch (mode) {
-                    case gcm:
-                    case ccm:
-                    case ccm8:
-                    case mode_poly1305: {
-                        auto aadlen = aad.size();
-                        auto tagsize = get_tag_size();
-                        binary_t tag;
+                bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite());
+                if (is_kindof_cbc) {
+                    ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
+                } else {
+                    auto aadlen = aad.size();
+                    auto tagsize = get_tag_size();
+                    binary_t tag;
 
-                        // ... aad(aadlen) encdata tag(tagsize)
-                        //     \_ pos
-                        binary_append(tag, stream + pos + aadlen + size - tagsize, tagsize);
-                        ret = decrypt_aead(session, dir, stream, size - tagsize, pos + aadlen, plaintext, aad, tag, level);
-                    } break;
-                    case cbc: {
-                        ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
-                    } break;
+                    // ... aad(aadlen) encdata tag(tagsize)
+                    //     \_ pos
+                    binary_append(tag, stream + pos + aadlen + size - tagsize, tagsize);
+                    ret = decrypt_aead(session, dir, stream, size - tagsize, pos + aadlen, plaintext, aad, tag, level);
                 }
             } break;
             case session_quic:
@@ -544,18 +505,10 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
             __leave2;
         }
 
-        switch (mode) {
-            case gcm:
-            case ccm:
-            case ccm8:
-            case mode_poly1305: {
-                ret = decrypt_aead(session, dir, stream, size, pos, plaintext, aad, tag, level);
-                break;
-            }
-            default: {
-                ret = errorcode_t::not_supported;
-                break;
-            } break;
+        if (cbc == mode) {
+            ret = errorcode_t::not_supported;
+        } else {
+            ret = decrypt_aead(session, dir, stream, size, pos, plaintext, aad, tag, level);
         }
     }
     __finally2 {
@@ -682,7 +635,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         auto ivsize = sizeof_iv(hint_cipher);
         size_t content_header_size = get_header_size();
         binary_t iv;
-        binary_append(iv, stream + content_header_size, ivsize);
+        binary_append(iv, stream + pos + content_header_size, ivsize);
         size_t bpos = content_header_size + ivsize;
 
         openssl_crypt crypt;
@@ -703,12 +656,12 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         binary_t aad;
         binary_t tag;
         binary_append(aad, uint64(record_no), hton64);  // sequence
-        binary_append(aad, stream, 3);                  // rechdr (content_type, version)
+        binary_append(aad, stream + pos, 3);            // rechdr (content_type, version)
         size_t plainsize = 0;
 
         // plaintext || tag
         //          \- plainsize
-        ret = crypt.cbc_hmac_tls_decrypt(enc_alg, hmac_alg, enckey, mackey, iv, aad, stream + bpos, size - bpos, plaintext, tag);
+        ret = crypt.cbc_hmac_tls_decrypt(enc_alg, hmac_alg, enckey, mackey, iv, aad, stream + pos + bpos, size - pos - bpos, plaintext, tag);
 
 #if defined DEBUG
         if (istraceable()) {
@@ -722,7 +675,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
             dbs.println(" > mackey[%08x] %s", secret_mac_key, base16_encode(mackey).c_str());
             dbs.println(" > record no %i", record_no);
             dbs.println(" > ciphertext");
-            dump_memory(stream + bpos, size - bpos, &dbs, 16, 3, 0x0, dump_notrunc);
+            dump_memory(stream + pos + bpos, size - pos - bpos, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.println(" > plaintext 0x%x(%i)", plainsize, plainsize);
             dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
 

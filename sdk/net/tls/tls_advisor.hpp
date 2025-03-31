@@ -77,10 +77,14 @@ declare_tls_resource(quic_trans_error_code, uint64);
 // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
 declare_tls_resource(aead_alg_code, uint16);
 
+enum tls_version_hint_flag_t : uint8 {
+    flag_kindof_tls = (1 << 0),
+};
 struct tls_version_hint_t {
     uint16 code;
+    uint16 spec;
     uint8 support;
-    uint8 reserved;
+    uint8 flags;
     const char* name;
 };
 extern const tls_version_hint_t tls_version_hint[];
@@ -142,6 +146,7 @@ class tls_advisor {
     const tls_cipher_suite_t* hintof_cipher_suite(uint16 code);
     const tls_cipher_suite_t* hintof_cipher_suite(const std::string& name);
     const hint_blockcipher_t* hintof_blockcipher(uint16 code);
+    bool is_kindof_cbc(uint16 code);
     const hint_digest_t* hintof_digest(uint16 code);
     const tls_sig_scheme_t* hintof_signature_scheme(uint16 code);
     const tls_sig_scheme_t* hintof_signature_scheme(const std::string& name);

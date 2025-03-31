@@ -372,7 +372,7 @@ return_t connect_socket(socket_t* socket, const char* address, uint16 port, uint
 
 return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addrlen, uint32 wto) {
     return_t ret = errorcode_t::success;
-    int ret_routine = 0;
+    int rc = 0;
 
     __try2 {
         if (nullptr == addr) {
@@ -386,8 +386,8 @@ return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addr
 
         set_sock_nbio(sock, 1);
 
-        ret_routine = connect(sock, addr, addrlen);
-        if (-1 == ret_routine) {
+        rc = connect(sock, addr, addrlen);
+        if (-1 == rc) {
 #if defined __linux__
             if (EINPROGRESS == errno)
 #elif defined _WIN32 || defined _WIN64
@@ -398,16 +398,36 @@ return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addr
                 fd_set fds;
                 struct timeval tv = {(int32)wto, 0};  // linux { time_t, suseconds_t }, windows { long, long }
                 FD_ZERO(&fds);
-                FD_SET(sock, &fds);                                               /* VC 6.0 - C4127 */
-                ret_routine = select((int)sock + 1, nullptr, &fds, nullptr, &tv); /* zero if timeout, -1 if an error occurred */
-                if (0 == ret_routine) {
+                FD_SET(sock, &fds);                                      /* VC 6.0 - C4127 */
+                rc = select((int)sock + 1, nullptr, &fds, nullptr, &tv); /* zero if timeout, -1 if an error occurred */
+                if (0 == rc) {
                     ret = errorcode_t::error_connect;  // timeout
-                } else if (ret_routine < 0) {
-                    ret = get_lasterror(ret_routine, wsaerror);
+                } else if (rc < 0) {
+                    ret = get_lasterror(rc, wsaerror);
                 }
             }
         }
 
+#if defined __linux__
+        // connect SO_ERROR 111 return 0
+        int optval = 0;
+        socklen_t optlen = sizeof(optval);
+        rc = getsockopt(sock, SOL_SOCKET, SO_ERROR, (char*)&optval, &optlen);
+        if ((rc < 0) || (ECONNREFUSED == optval)) {
+            ret = errorcode_t::disconnect;
+        }
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("connect SO_ERROR %i return %i", optval, rc);
+            trace_debug_event(category_net, net_event_tls_read, &dbs);
+        }
+#endif
+
+#elif defined _WIN32 || defined _WIN64
+        // connect SO_ERROR 0 return 0
+#endif
         set_sock_nbio(sock, 0);
 
 #if 0
@@ -547,6 +567,8 @@ return_t addr_to_sockaddr(sockaddr_storage_t* storage, const char* address, uint
 
 void sockaddr_string(const sockaddr_storage_t& addr, std::string& address) {
     __try2 {
+        address.clear();
+
         const char* ret = nullptr;
         char buf[INET6_ADDRSTRLEN] = {0};  // 45 + 1
 
