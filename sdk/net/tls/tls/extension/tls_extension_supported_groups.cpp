@@ -81,7 +81,7 @@ return_t tls_extension_supported_groups::do_read_body(const byte_t* stream, size
                 dbs.println("     [%i] 0x%04x(%i) %s", i++, curve, curve, tlsadvisor->supported_group_name(curve).c_str());
             }
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }
 #endif
     }

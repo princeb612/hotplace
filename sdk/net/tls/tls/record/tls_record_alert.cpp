@@ -29,14 +29,6 @@ tls_record_alert::tls_record_alert(tls_session* session, uint8 level, uint8 desc
 
 return_t tls_record_alert::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
-    if ((tls_alertlevel_warning == get_level()) && (tls_alertdesc_close_notify == get_desc())) {
-        auto session = get_session();
-        if (from_client == dir) {
-            session->update_session_status(session_client_close_notified);
-        } else if (from_server == dir) {
-            session->update_session_status(session_server_close_notified);
-        }
-    }
     return ret;
 }
 
@@ -102,6 +94,8 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
             _desc = desc;
         }
 
+        check_status(dir);
+
 #if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
@@ -111,7 +105,7 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
             dbs.println(" > %s %i %s", constexpr_level, level, advisor->alert_level_string(level).c_str());
             dbs.println(" > %s %i %s", constexpr_desc, desc, advisor->alert_desc_string(desc).c_str());
 
-            trace_debug_event(category_debug_internal, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
         }
 #endif
     }
@@ -149,6 +143,17 @@ void tls_record_alert::operator<<(tls_record* record) {
 uint8 tls_record_alert::get_level() const { return _level; }
 
 uint8 tls_record_alert::get_desc() const { return _desc; }
+
+void tls_record_alert::check_status(tls_direction_t dir) {
+    if ((tls_alertlevel_warning == get_level()) && (tls_alertdesc_close_notify == get_desc())) {
+        auto session = get_session();
+        if (from_client == dir) {
+            session->update_session_status(session_client_close_notified);
+        } else if (from_server == dir) {
+            session->update_session_status(session_server_close_notified);
+        }
+    }
+}
 
 }  // namespace net
 }  // namespace hotplace

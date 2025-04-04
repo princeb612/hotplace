@@ -59,7 +59,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
                 default:
                     break;
             }
-            trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
+            trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
         }
 #endif
 
@@ -137,7 +137,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 #if defined DEBUG
             if (istraceable()) {
                 frame.dump(&dbs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
 #endif
 
@@ -154,7 +154,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 #if defined DEBUG
             if (istraceable()) {
                 frame.dump(&dbs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
 #endif
 
@@ -171,7 +171,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 #if defined DEBUG
             if (istraceable()) {
                 frame.dump(&dbs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
 #endif
         } else if (h2_frame_t::h2_frame_rst_stream == hdr->type) {
@@ -180,7 +180,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 #if defined DEBUG
             if (istraceable()) {
                 frame.dump(&dbs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
 #endif
             reset = true;
@@ -190,7 +190,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 #if defined DEBUG
             if (istraceable()) {
                 frame.dump(&dbs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
 #endif
 
@@ -233,7 +233,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 #if defined DEBUG
             if (istraceable()) {
                 frame.dump(&dbs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
 #endif
 
@@ -245,7 +245,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 #if defined DEBUG
             if (istraceable()) {
                 frame.dump(&dbs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
 #endif
             frame.set_flags(h2_flag_ack);
@@ -256,7 +256,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 #if defined DEBUG
             if (istraceable()) {
                 frame.dump(&dbs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
 #endif
         } else if (h2_frame_t::h2_frame_window_update == hdr->type) {
@@ -265,7 +265,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 #if defined DEBUG
             if (istraceable()) {
                 frame.dump(&dbs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
 #endif
         } else if (h2_frame_t::h2_frame_continuation == hdr->type) {
@@ -275,7 +275,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 #if defined DEBUG
             if (istraceable()) {
                 frame.dump(&dbs);
-                trace_debug_event(category_net, net_event_netsession_consume_http2, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
 #endif
 

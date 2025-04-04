@@ -66,19 +66,19 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
         pl.get_binary(constexpr_crypto_data, crypto_data);
 
 #if defined DEBUG
-        if (istraceable(category_net)) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("   > %s %I64i", constexpr_offset, offset);
             dbs.println("   > %s %I64i", constexpr_length, length);
             dbs.println("   > %s (%zi)", constexpr_crypto_data, crypto_data.size());
             dump_memory(crypto_data, &dbs, 16, 5, 0x0, dump_notrunc);
-            trace_debug_event(category_net, net_event_quic_dump, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif
 
         if (offset) {
             binary_t defragment;
-            protection.get_item(tls_context_fragment, defragment, 1);
+            protection.consume_item(tls_context_fragment, defragment);
             binary_append(defragment, crypto_data);
             crypto_data = std::move(defragment);
         }

@@ -1,10 +1,14 @@
-### TOC
+#### TOC
 
 - [test](#test)
-- [TLS 1.3](#tls_13)
-- [TLS 1.2](#tls_12)
+- TLS 1.3
+  - [server](#tls-13-server)
+  - [client](#tls-13-client)
+- TLS 1.2
+  - [server](#tls-12-server)
+  - [client](#tls-12-client)
 
-### test
+#### test
 
 - case1
   - [x] server, client 1.3
@@ -46,10 +50,7 @@
     - summary : TLSv1.2, ECDHE-RSA-AES256-GCM-SHA384
     - result  : PASS
 
-### TLS 1.3
-
-- openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -tls1_3
-- openssl s_client -connect localhost:9000 -state -debug -tls1_3
+#### TLS 1.3 server
 
 ````
 $ openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -tls1_3
@@ -256,6 +257,8 @@ SSL3 alert write:warning:close notify
 CONNECTION CLOSED
 
 ````
+
+#### TLS 1.3 client
 
 ````
 $ openssl s_client -connect localhost:9000 -state -debug -tls1_3
@@ -588,10 +591,7 @@ read from 0x27911612ee0 [0x27911557c60] (16384 bytes => 0)
 
 ````
 
-### TLS 1.2
-
-- openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -no_tls1_3
-- openssl s_client -connect localhost:9000 -state -debug -tls1_2
+### TLS 1.2 server
 
 ````
 $ openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -no_tls1_3
@@ -784,6 +784,8 @@ write to 0x2042710f960 [0x204275399f3] (69 bytes => 69 (0x45))
 SSL3 alert write:warning:close notify
 CONNECTION CLOSED
 ````
+
+### TLS 1.2 client
 
 ````
 $ openssl s_client -connect localhost:9000 -state -debug -tls1_2

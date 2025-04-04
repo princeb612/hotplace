@@ -66,7 +66,7 @@ return_t dump_handshake(const char* text, tls_session* session, const binary_t& 
 };
 
 void test_keycalc(tls_session* session, tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect) {
-    session->get_tls_protection().get_item(tls_secret, secret);
+    secret = session->get_tls_protection().get_item(tls_secret);
     _logger->writeln("> %s : %s", text, base16_encode(secret).c_str());
     _test_case.assert(secret == base16_decode(expect), __FUNCTION__, text);
 };
@@ -111,11 +111,8 @@ void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tl
     auto& client_protection = clisession->get_tls_protection();
     auto& server_protection = svrsession->get_tls_protection();
 
-    binary_t client_secret;
-    binary_t server_secret;
-
-    client_protection.get_item(secret, client_secret);
-    server_protection.get_item(secret, server_secret);
+    auto client_secret = client_protection.get_item(secret);
+    auto server_secret = server_protection.get_item(secret);
 
     _logger->writeln("client secret %s (internal 0x%04x) (%p) %s", secret_name, secret, svrsession, base16_encode(client_secret).c_str());
     _logger->writeln("server secret %s (internal 0x%04x) (%p) %s", secret_name, secret, clisession, base16_encode(server_secret).c_str());
@@ -192,6 +189,8 @@ int main(int argc, char** argv) {
 
         test_construct_tls();
         test_construct_dtls();
+
+        test_dtls12();
     } else {
         dump_clienthello();
     }

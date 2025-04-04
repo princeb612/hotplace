@@ -17,6 +17,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/io/system/socket.hpp>
 #include <sdk/net/basic/tls/sdk.hpp>
@@ -666,6 +668,15 @@ return_t transport_layer_security::read(socket_context_t* handle, int mode, void
                 int condition = SSL_get_error(ssl, rc);
                 if (SSL_ERROR_WANT_READ == condition || SSL_ERROR_WANT_WRITE == condition) {
                     ret = errorcode_t::pending;
+                } else if (SSL_ERROR_ZERO_RETURN == condition) {
+                    auto rcs = SSL_shutdown(ssl);
+                    if (2 == rcs) {
+                        // The shutdown is not yet finished
+                        SSL_shutdown(ssl);
+                    }
+                    ret = errorcode_t::disconnect;
+                } else if (SSL_ERROR_NONE == condition) {
+                    // do nothing
                 } else {
                     ret = errorcode_t::internal_error;
                 }
@@ -738,6 +749,13 @@ return_t transport_layer_security::recvfrom(socket_context_t* handle, int mode, 
             if (rc <= 0) {
                 if (SSL_ERROR_WANT_READ == condition || SSL_ERROR_WANT_WRITE == condition) {
                     ret = errorcode_t::pending;
+                } else if (SSL_ERROR_ZERO_RETURN == condition) {
+                    auto rcs = SSL_shutdown(ssl);
+                    if (2 == rcs) {
+                        // The shutdown is not yet finished
+                        SSL_shutdown(ssl);
+                    }
+                    ret = errorcode_t::disconnect;
                 } else if (SSL_ERROR_NONE == condition) {
                     // do nothing
                 } else {

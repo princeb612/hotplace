@@ -212,7 +212,7 @@ return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t
             }
             dbs.println("   > %s 0x%04x(%i)", constexpr_ext_len, ext_len, ext_len);
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }
 #endif
     }

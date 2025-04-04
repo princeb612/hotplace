@@ -498,7 +498,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 dbs.println("> client hello random %s", base16_encode(client_hello_random).c_str());
                 dbs.println("> server hello random %s", base16_encode(server_hello_random).c_str());
                 dbs.println("> pre master secret %s", base16_encode(pre_master_secret).c_str());
-                trace_debug_event(category_debug_internal, 0, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
             }
 #endif
 

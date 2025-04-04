@@ -36,47 +36,22 @@ void tls_session::update_session_status(session_status_t status) {
 #if defined DEBUG
     if (istraceable()) {
         basic_stream dbs;
-        dbs.println("\e[1;34msession status %02x (update %02x)\e[0m", _status, status);
-        trace_debug_event(category_debug_internal, 0, &dbs);
+        auto tlsadvisor = tls_advisor::get_instance();
+        dbs.println("\e[1;34msession status %08x (update %08x)\e[0m", _status, status);
+        dbs.println("> update status 0x%08x", status);
+        tlsadvisor->enum_session_status_string(status, [&](const char* desc) -> void { dbs.println("  %s", desc); });
+        dbs.println("> session status 0x%08x", _status);
+        tlsadvisor->enum_session_status_string(_status, [&](const char* desc) -> void { dbs.println("  %s", desc); });
+        trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
     }
 #endif
 }
 
 void tls_session::clear_session_status(session_status_t status) { _status &= ~status; }
 
-uint16 tls_session::get_session_status() { return _status; }
+uint32 tls_session::get_session_status() { return _status; }
 
-return_t tls_session::wait1_change_session_status(uint16 status, unsigned msec) {
-    return_t ret = errorcode_t::mismatch;
-
-    while (0) {
-        ret = _sem.wait(msec);
-
-#if defined DEBUG
-        if (istraceable()) {
-            basic_stream dbs;
-            dbs.println("\e[1;34msession status %02x (wait1 %02x) %s\e[0m", _status, status, _status & status ? "true" : "false");
-            trace_debug_event(category_debug_internal, 0, &dbs);
-        }
-#endif
-
-        if (0 == _status) {
-            break;
-        }
-
-        if (_status & status) {
-            ret = errorcode_t::success;
-            break;
-        }
-
-        if (errorcode_t::timeout == ret) {
-            break;
-        }
-    }
-    return ret;
-}
-
-return_t tls_session::waitall_change_session_status(uint16 status, unsigned msec) {
+return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, bool waitall) {
     return_t ret = errorcode_t::mismatch;
 
     while (1) {
@@ -85,8 +60,9 @@ return_t tls_session::waitall_change_session_status(uint16 status, unsigned msec
 #if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
-            dbs.println("\e[1;34msession status %02x (waitall %02x) %s\e[0m", _status, status, status == (_status & status) ? "true" : "false");
-            trace_debug_event(category_debug_internal, 0, &dbs);
+            dbs.println("\e[1;34msession status %08x (wait%s %08x) %s\e[0m", _status, waitall ? "all" : "", status,
+                        status == (_status & status) ? "true" : "false");
+            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
         }
 #endif
 
@@ -94,9 +70,17 @@ return_t tls_session::waitall_change_session_status(uint16 status, unsigned msec
             break;
         }
 
-        if (status == (_status & status)) {
-            ret = errorcode_t::success;
-            break;
+        auto test = _status & status;
+        if (waitall) {
+            if (status == test) {
+                ret = errorcode_t::success;
+                break;
+            }
+        } else {
+            if (test) {
+                ret = errorcode_t::success;
+                break;
+            }
         }
 
         if (errorcode_t::timeout == ret) {

@@ -28,36 +28,48 @@ void trace_advisor::load() {
             {
                 events e;
                 e.cname = "internal";
-                _resource_map.insert({category_debug_internal, e});
+                e.event_map.insert({trace_event_internal, ""});
+                e.event_map.insert({trace_event_backtrace, "backtrace"});
+                e.event_map.insert({trace_event_multiplexer, "multiplexer"});
+                e.event_map.insert({trace_event_socket, "socket"});
+                _resource_map.insert({trace_category_internal, e});
             }
             {
                 events e;
                 e.cname = "crypto";
-                e.event_map.insert({crypto_event_openssl_info, "openssl info"});
-                e.event_map.insert({crypto_event_openssl_nosupport, "no support"});
-                e.event_map.insert({crypto_event_openssl_tls_state, "state"});
-                e.event_map.insert({crypto_event_jose, "JOSE"});
-                e.event_map.insert({crypto_event_cose, "COSE"});
-                _resource_map.insert({category_crypto, e});
+                e.event_map.insert({trace_event_openssl_info, "openssl info"});
+                e.event_map.insert({trace_event_openssl_nosupport, "no support"});
+                e.event_map.insert({trace_event_encryption, "encryption"});
+                e.event_map.insert({trace_event_decryption, "decryption"});
+                e.event_map.insert({trace_event_digest, "digest"});
+                e.event_map.insert({trace_event_mac, "mac"});
+                e.event_map.insert({trace_event_jose_encryption, "JOSE encryption"});
+                e.event_map.insert({trace_event_jose_signing, "JOSE signing"});
+                e.event_map.insert({trace_event_cose_keydistribution, "COSE keydistribution"});
+                e.event_map.insert({trace_event_cose_encryption, "COSE encryption"});
+                e.event_map.insert({trace_event_cose_signing, "COSE signing"});
+                e.event_map.insert({trace_event_cose_mac, "COSE mac"});
+                _resource_map.insert({trace_category_crypto, e});
             }
             {
                 events e;
                 e.cname = "network";
-                e.event_map.insert({net_event_netsession_produce, "produce network session"});
-                e.event_map.insert({net_event_netsession_consume_http2, "consume network session"});
-                e.event_map.insert({net_event_httpserver_consume, "consume http_server"});
-                e.event_map.insert({net_event_httpresponse, "http_response"});
-                e.event_map.insert({net_event_header_compression_insert, "header compression insert"});
-                e.event_map.insert({net_event_header_compression_evict, "header compression evict"});
-                e.event_map.insert({net_event_header_compression_select, "header compression select"});
-                e.event_map.insert({net_event_http2_push_promise, "push promise"});
-                e.event_map.insert({net_event_tls_read, "TLS read"});
-                e.event_map.insert({net_event_tls_write, "TLS write"});
-                e.event_map.insert({net_event_tls_dump, "TLS dump"});
-                e.event_map.insert({net_event_quic_read, "QUIC read"});
-                e.event_map.insert({net_event_quic_write, "QUIC write"});
-                e.event_map.insert({net_event_quic_dump, "QUIC dump"});
-                _resource_map.insert({category_net, e});
+                e.event_map.insert({trace_event_net_produce, "produce"});
+                e.event_map.insert({trace_event_net_consume, "consume"});
+                e.event_map.insert({trace_event_net_request, "request"});
+                e.event_map.insert({trace_event_net_response, "response"});
+                e.event_map.insert({trace_event_header_compression_insert, "header compression insert"});
+                e.event_map.insert({trace_event_header_compression_evict, "header compression evict"});
+                e.event_map.insert({trace_event_header_compression_select, "header compression select"});
+                e.event_map.insert({trace_event_http2_push_promise, "push promise"});
+                e.event_map.insert({trace_event_openssl_tls_state, "TLS state"});
+                e.event_map.insert({trace_event_tls_protection, "TLS protection"});
+                e.event_map.insert({trace_event_tls_record, "TLS record"});
+                e.event_map.insert({trace_event_tls_handshake, "TLS handshake"});
+                e.event_map.insert({trace_event_tls_extension, "TLS extension"});
+                e.event_map.insert({trace_event_quic_packet, "QUIC packet"});
+                e.event_map.insert({trace_event_quic_frame, "QUIC frame"});
+                _resource_map.insert({trace_category_net, e});
             }
         }
     }

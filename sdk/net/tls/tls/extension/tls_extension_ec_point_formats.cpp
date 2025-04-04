@@ -81,7 +81,7 @@ return_t tls_extension_ec_point_formats::do_read_body(const byte_t* stream, size
                 dbs.println("     [%i] 0x%02x(%i) %s", i++, fmt, fmt, tlsadvisor->ec_point_format_name(fmt).c_str());
             }
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }
 #endif
     }
@@ -101,7 +101,12 @@ return_t tls_extension_ec_point_formats::do_write_body(binary_t& bin) {
         binary_t bin_formats;
         {
             for (auto epf : _ec_point_formats) {
-                binary_append(bin_formats, epf);
+                // RFC 9325 4.2.1
+                // Note that [RFC8422] deprecates all but the uncompressed point format.
+                // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
+                if (0 == epf) {
+                    binary_append(bin_formats, epf);
+                }
             }
             cbsize_formats = bin_formats.size();
         }
@@ -118,12 +123,7 @@ return_t tls_extension_ec_point_formats::do_write_body(binary_t& bin) {
 }
 
 tls_extension_ec_point_formats& tls_extension_ec_point_formats::add(uint8 code) {
-    // RFC 9325 4.2.1
-    // Note that [RFC8422] deprecates all but the uncompressed point format.
-    // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-    if (0 == code) {
-        _ec_point_formats.push_back(code);
-    }
+    _ec_point_formats.push_back(code);
     return *this;
 }
 

@@ -89,7 +89,7 @@ static void set_info_callback_routine(const SSL* ssl, int where, int ret) {
             default:
                 break;
         }
-        trace_debug_event(category_crypto, crypto_event_openssl_tls_state, &bs);
+        trace_debug_event(trace_category_net, trace_event_openssl_tls_state, &bs);
     }
     __finally2 {
         // do nothing
@@ -215,7 +215,7 @@ return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {
             dbs.println("min proto version %08x", minver);
             dbs.println("max proto version %08x", maxver);
 #endif
-            trace_debug_event(category_debug_internal, 0, &dbs);
+            trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
         }
 #endif
 

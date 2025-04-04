@@ -136,7 +136,7 @@ return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t siz
             dbs.println("   > %s %s \e[1;33m%s\e[0m", constexpr_psk_binder, base16_encode(psk_binder).c_str(),
                         (errorcode_t::success == ret) ? "true" : "false");
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }
 #endif
 
@@ -176,7 +176,7 @@ return_t tls_extension_server_psk::do_read_body(const byte_t* stream, size_t siz
             basic_stream dbs;
             dbs.println("   > %s %i", constexpr_selected_identity, selected_identity);
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }
 #endif
 

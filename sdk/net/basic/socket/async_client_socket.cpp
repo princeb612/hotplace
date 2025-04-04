@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/basic/socket/async_client_socket.hpp>
 
@@ -39,7 +41,7 @@ return_t async_client_socket::open(sockaddr_storage_t* sa, const char* address, 
         if (SOCK_DGRAM == type) {
             memcpy(&_sa, sa, sizeof(sockaddr_storage_t));
             start_consumer();
-            do_handshake();
+            ret = do_handshake();
         }
     }
     __finally2 {}
@@ -117,11 +119,13 @@ return_t async_client_socket::send(const char* ptr_data, size_t size_data, size_
             __leave2;
         }
 
+        int flags = 0;
         int ret_send = 0;
 #if defined __linux__
-        ret_send = ::send(_fd, ptr_data, size_data, 0);
+        flags = MSG_NOSIGNAL;  // Don't generate a SIGPIPE signal
+        ret_send = ::send(_fd, ptr_data, size_data, flags);
 #elif defined _WIN32 || defined _WIN64
-        ret_send = ::send(_fd, ptr_data, (int)size_data, 0);
+        ret_send = ::send(_fd, ptr_data, (int)size_data, flags);
 #endif
         if (-1 == ret_send) {
             ret = get_lasterror(ret_send);
@@ -256,28 +260,18 @@ return_t async_client_socket::do_consumer_routine(uint32 type, uint32 data_count
         if (mux_read == type) {
             bufferqueue_item_t item;
 #if defined __linux__
-            // multiplexer_epoll mplexer;
-            // multiplexer_context_t* handle = (multiplexer_context_t*)data_array[0];
             int sock = (int)(long)data_array[1];
             auto& netbuf = _mplexer_key.buffer;
             int rc = recv(sock, netbuf.buffer, netbuf.buflen, 0);
             if (rc <= 0) {
                 __leave2;
             } else {
-                item.buffer.write(netbuf.buffer, rc);
-
-                critical_section_guard guard(_rlock);
-                _rq.push(item);
+                enqueue(item, netbuf.buffer, rc);
             }
 #elif defined _WIN32 || defined _WIN64
             uint32 bytes_transfered = (uint32)(arch_t)data_array[1];
             mplexer_key_t* netbuf = (mplexer_key_t*)data_array[2];
-            {
-                item.buffer.write(netbuf->buffer.wsabuf.buf, bytes_transfered);
-
-                critical_section_guard guard(_rlock);
-                _rq.push(item);
-            }
+            enqueue(item, netbuf->buffer.wsabuf.buf, bytes_transfered);
             async_read();
 #endif
             if (false == support_tls()) {
@@ -288,8 +282,6 @@ return_t async_client_socket::do_consumer_routine(uint32 type, uint32 data_count
         } else if (mux_dgram == type) {
             bufferqueue_item_t item;
 #if defined __linux__
-            // multiplexer_epoll mplexer;
-            // multiplexer_context_t* handle = (multiplexer_context_t*)data_array[0];
             socklen_t socklen = sizeof(sockaddr_storage_t);
             int sock = (int)(long)data_array[1];
             auto& netbuf = _mplexer_key.buffer;
@@ -297,24 +289,16 @@ return_t async_client_socket::do_consumer_routine(uint32 type, uint32 data_count
             if (rc <= 0) {
                 __leave2;
             } else {
-                item.buffer.write(netbuf.buffer, rc);
-
-                critical_section_guard guard(_rlock);
-                _rq.push(std::move(item));
+                enqueue(item, netbuf.buffer, rc);
             }
 #elif defined _WIN32 || defined _WIN64
             uint32 bytes_transfered = (uint32)(arch_t)data_array[1];
             mplexer_key_t* mpkey = (mplexer_key_t*)data_array[2];
             auto& netbuf = mpkey->buffer;
-            {
-                item.buffer.write(netbuf.wsabuf.buf, bytes_transfered);
-                if (SOCK_DGRAM == socket_type()) {
-                    memcpy(&item.addr, &mpkey->addr, sizeof(sockaddr_storage_t));
-                }
-
-                critical_section_guard guard(_rlock);
-                _rq.push(std::move(item));
+            if (SOCK_DGRAM == socket_type()) {
+                memcpy(&item.addr, &mpkey->addr, sizeof(sockaddr_storage_t));
             }
+            enqueue(item, netbuf.wsabuf.buf, bytes_transfered);
             async_read();
 #endif
             if (false == support_tls()) {
@@ -328,6 +312,23 @@ return_t async_client_socket::do_consumer_routine(uint32 type, uint32 data_count
     }
     __finally2 {}
     return ret;
+}
+
+void async_client_socket::enqueue(bufferqueue_item_t& item, const char* buf, size_t size) {
+    if (buf) {
+        item.buffer.write((byte_t*)buf, size);
+
+        critical_section_guard guard(_rlock);
+        _rq.push(item);
+    }
+#if defined DEBUG
+    if (istraceable()) {
+        basic_stream dbs;
+        dbs.println("[ns] read 0x%x", size);
+        dump_memory((byte_t*)buf, size, &dbs, 16, 3, 0, dump_notrunc);
+        trace_debug_event(trace_category_net, trace_event_net_produce, &dbs);
+    }
+#endif
 }
 
 void async_client_socket::async_read() {

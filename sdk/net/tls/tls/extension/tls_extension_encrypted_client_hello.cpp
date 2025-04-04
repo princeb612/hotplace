@@ -77,7 +77,7 @@ return_t tls_extension_encrypted_client_hello::do_read_body(const byte_t* stream
             dbs.println("   > %s %i", constexpr_payload_len, enc_payload_len);
             dump_memory(enc_payload, &dbs, 16, 4, 0x0, dump_notrunc);
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }
 #endif
 

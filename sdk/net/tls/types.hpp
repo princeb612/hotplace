@@ -98,6 +98,7 @@ enum tls_hs_type_t : uint8 {
     tls_hs_supplemental_data = 23,           // 0x17     RFC 8446
     tls_hs_key_update = 24,                  // 0x18     RFC 8446
     tls_hs_compressed_certificate = 25,      //
+    tls_hs_ekt_key = 25,                     //
     tls_hs_message_hash = 254,               // 0xfe, server hello, RFC 8446 4.4.1.  The Transcript Hash
 };
 
@@ -161,6 +162,9 @@ enum tls1_ext_type_t : uint16 {
     tls1_ext_truncated_hmac = 0x0004,                          // RFC 4366
     tls1_ext_status_request = 0x0005,                          // RFC 6066
     tls1_ext_user_mapping = 0x0006,                            // RFC 4681
+    tls1_ext_client_authz = 0x0007,                            //
+    tls1_ext_server_authz = 0x0008,                            //
+    tls1_ext_cert_type = 0x0009,                               //
     tls1_ext_supported_groups = 0x000a,                        // RFC 8422, 7919
     tls1_ext_ec_point_formats = 0x000b,                        // RFC 8422
     tls1_ext_srp = 0x000c,                                     // RFC 5054
@@ -180,9 +184,16 @@ enum tls1_ext_type_t : uint16 {
     tls1_ext_cached_info = 0x0019,                             // RFC 7924
     tls1_ext_compress_certificate = 0x001b,                    // RFC 8879
     tls1_ext_record_size_limit = 0x001c,                       // RFC 8449
+    tls1_ext_pwd_protect = 0x001d,                             //
+    tls1_ext_pwd_clear = 0x001e,                               //
+    tls1_ext_password_salt = 0x001f,                           //
+    tls1_ext_ticket_pinning = 0x0020,                          //
+    tls1_ext_cert_with_extern_psk = 0x0021,                    //
     tls1_ext_delegated_credential = 0x0022,                    // RFC 9345
     tls1_ext_session_ticket = 0x0023,                          // RFC 5077, 8447
     tls1_ext_tlmsp = 0x0024,                                   // extended master secret
+    tls1_ext_tlmsp_proxying = 0x0025,                          //
+    tls1_ext_tlmsp_delegate = 0x0026,                          //
     tls1_ext_supported_ekt_ciphers = 0x0027,                   // RFC 8870
     tls1_ext_pre_shared_key = 0x0029,                          // RFC 8446
     tls1_ext_early_data = 0x002a,                              // RFC 8446
@@ -195,10 +206,15 @@ enum tls1_ext_type_t : uint16 {
     tls1_ext_signature_algorithms_cert = 0x0032,               // RFC 8446
     tls1_ext_key_share = 0x0033,                               // RFC 8446
     tls1_ext_transparency_info = 0x0034,                       // RFC 9162 Certificate Transparency Version 2.0
+    tls1_ext_connection_id = 0x0036,                           //
     tls1_ext_external_id_hash = 0x0037,                        // RFC 8844
     tls1_ext_external_session_id = 0x0038,                     // RFC 8844
     tls1_ext_quic_transport_parameters = 0x0039,               // RFC 9001, see quic_param_t
     tls1_ext_ticket_request = 0x003a,                          // RFC 9149 TLS Ticket Requests
+    tls1_ext_dnssec_chain = 0x003b,                            //
+    tls1_ext_sequence_number_encryption_algorithms = 0x003c,   //
+    tls1_ext_rrc = 0x003d,                                     //
+    tls1_ext_tls_flags = 0x003e,                               //
     tls1_ext_next_protocol_negotiation = 0x3374,
     tls1_ext_application_layer_protocol_settings = 0x4469,
     tls1_ext_alps = 0x4469,
@@ -539,17 +555,32 @@ enum tls_message_flow_t {
  * @remarks
  *          TLS, DTLS
  *          RFC 9000 12.3.  Packet Numbers
- *          | space                  |                         | level                  |
- *          | N/A                    | TLS, DTLS               | protection_default     |
- *          | initial space          | initial packets         | protection_initial     |
- *          | handshake space        | handshake packets       | protection_handshake   |
- *          | application data space | 0-RTT and 1-RTT packets | protection_application |
+ *          |           | space                  | cryptographic separation | level                  |
+ *          | TLS, DTLS | N/A                    | N/A                      | protection_default     |
+ *          | QUIC      | initial space          | initial packets          | protection_initial     |
+ *          | QUIC      | handshake space        | handshake packets        | protection_handshake   |
+ *          | QUIC      | application data space | 0-RTT and 1-RTT packets  | protection_application |
  */
 enum protection_level_t : uint8 {
     protection_default = 0,
     protection_initial = 1,
     protection_handshake = 2,
     protection_application = 3,
+};
+
+enum session_status_t : uint32 {
+    session_client_hello = (1 << 0),          // 00000001
+    session_server_hello = (1 << 1),          // 00000002
+    session_hello_verify_request = (1 << 2),  // 00000004
+    session_server_cert = (1 << 3),           // 00000008
+    session_server_key_exchange = (1 << 4),   // 00000010
+    session_server_hello_done = (1 << 5),     // 00000020 tls_hs_server_hello_done
+    session_server_cert_verified = (1 << 6),  // 00000040 tls_handshake_certificate_verify
+    session_client_key_exchange = (1 << 7),   // 00000080
+    session_server_finished = (1 << 8),       // 00000100 tls_handshake_finished
+    session_client_finished = (1 << 9),       // 00000200 tls_handshake_finished
+    session_client_close_notified = 0x40000000,
+    session_server_close_notified = 0x80000000,
 };
 
 class tls_protection;

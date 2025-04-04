@@ -29,12 +29,13 @@ socket_context_t::socket_context_t(socket_t s, uint32 f) : fd(s), flags(f), ssl(
 
 socket_context_t::~socket_context_t() {
     if (ssl) {
-        SSL_shutdown(ssl);
-        /**
-         *  int status = SSL_get_shutdown(ssl);
-         *  (SSL_SENT_SHUTDOWN & status)
-         *  no event - GetQueuedCompletionStatus
-         */
+        int rc = SSL_shutdown(ssl);
+        if (2 == rc) {
+            // received close notify - SSL_RECEIVED_SHUTDOWN & SSL_get_shutdown(ssl)
+            // send close notify
+            SSL_shutdown(ssl);
+        }
+
         SSL_free(ssl);
     }
 

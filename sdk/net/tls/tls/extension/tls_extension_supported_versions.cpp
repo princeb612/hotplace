@@ -77,7 +77,7 @@ return_t tls_extension_client_supported_versions::do_read_body(const byte_t* str
                 dbs.println("      [%i] 0x%04x %s", i++, ver, tlsadvisor->tls_version_string(ver).c_str());
             }
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }
 #endif
     }
@@ -160,7 +160,7 @@ return_t tls_extension_server_supported_versions::do_read_body(const byte_t* str
 
             dbs.println("    > 0x%04x %s", version, tlsadvisor->tls_version_string(version).c_str());
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }
 #endif
     }

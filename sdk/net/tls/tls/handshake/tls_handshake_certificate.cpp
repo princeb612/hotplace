@@ -83,6 +83,9 @@ return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, const by
         auto hssize = get_size();
 
         protection.update_transcript_hash(session, stream + hspos, hssize);
+        if (from_server == dir) {
+            session->update_session_status(session_server_cert);
+        }
     }
     __finally2 {
         // do nothing
@@ -179,7 +182,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
                 dump_key(servercert.find(desc.get_kid_cstr()), &dbs, 15, 4, dump_notrunc);
                 dbs.autoindent(0);
 
-                trace_debug_event(category_net, net_event_tls_read, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
         }
@@ -227,7 +230,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
             dump_memory(certificate, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.autoindent(0);
 
-            trace_debug_event(category_net, net_event_tls_write, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
         }
 #endif
 

@@ -58,6 +58,15 @@
 - TLS 1.3
   - openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -tls1_3
   - openssl s_client -connect localhost:9000 -state -debug -tls1_3
+  - C->S client_hello
+  - S->C server_hello
+  - S->C change_cipher_spec
+  - S->C encrypted_extensions
+  - S->C certificate
+  - S->C certificate_verify
+  - S->C finished
+  - C->S finished
+  - S->C new_session_ticket
 - TLS 1.2
   - openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -no_tls1_3
   - openssl s_client -connect localhost:9000 -state -debug -tls1_2
@@ -72,3 +81,19 @@
   - S->C new_session_ticket
   - S->C change_cipher_spec
   - S->C finished  
+- DTLS 1.2
+  - openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -dtls
+  - openssl s_client -connect localhost:9000 -state -debug -dtls
+  - C->S client_hello
+  - S->C hello_verify_request
+  - C->S client_hello
+  - S->C server_hello
+  - S->C certificate
+  - S->C server_key_exchange
+  - S->C server_hello_done
+  - C->S client_key_exchange
+  - C->S change_cipher_spec
+  - C->S finished
+  - S->C new_session_ticket
+  - S->C change_cipher_spec
+  - S->C finished

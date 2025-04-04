@@ -195,6 +195,7 @@ const error_description error_descriptions[] = {
     errordef(full, "full"),
     errordef(out_of_range, "out of range"),
     errordef(mismatch, "mismatch"),
+    errordef(error_integrity, "integrity error"),
     errordef(expired, "expired"),
     errordef(canceled, "canceled"),
     errordef(invalid_request, "invalid request"),  // RFC 6749 4.1.2.1. Error Response
@@ -236,7 +237,7 @@ const error_description error_descriptions[] = {
     errordef(narrow_type, "narrow type"),
     errordef(error_certificate, "certificate"),
     errordef(exceed, "exceed the designed size"),
-    errordef(trunc_detected, "truncation detected"),
+    errordef(fragmented, "fragment detected"),
 
     errordef(not_supported, "not supported"),
     errordef(expect_failure, "expect failure (negative test)"),
@@ -249,6 +250,7 @@ const error_description error_descriptions[] = {
     errordef(busy, "busy"),
     errordef(no_more, "no more data"),
     errordef(more_data, "more data"),
+    errordef(reassemble, "reassemble"),
 };  // namespace hotplace
 
 error_advisor error_advisor::_instance;

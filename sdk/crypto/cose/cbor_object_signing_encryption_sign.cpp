@@ -183,7 +183,7 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("dosign alg %i (%s)", alg, hint->name);
-            trace_debug_event(category_crypto, crypto_event_cose, &dbs);
+            trace_debug_event(trace_category_crypto, trace_event_cose_signing, &dbs);
         }
 #endif
 
@@ -240,7 +240,7 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
                 if (bin.size()) {
                     basic_stream dbs;
                     dbs.println("  %-10s %s", text ? text : "", base16_encode(bin).c_str());
-                    trace_debug_event(category_crypto, crypto_event_cose, &dbs);
+                    trace_debug_event(trace_category_crypto, trace_event_cose_signing, &dbs);
                 }
             };
 

@@ -16,6 +16,7 @@
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <sdk/net/tls/tls/record/tls_record.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
@@ -95,7 +96,7 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
             basic_stream dbs;
             dbs.println("# record constructed");
             dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
-            trace_debug_event(category_net, net_event_tls_write, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
         }
 #endif
 
@@ -217,10 +218,14 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto const& range = get_header_range();
 
-            dbs.println("# record %s", (from_server == dir) ? "(server)" : (from_client == dir) ? "(client)" : "");
-            auto remains = size - pos;
-            auto dumpsize = pos - recpos + len;
-            dump_memory(stream + recpos, (dumpsize > remains) ? remains : dumpsize, &dbs, 16, 3, 0, dump_notrunc);
+            dbs.println("# record %s [size 0x%x pos 0x%x]", (from_server == dir) ? "(server)" : (from_client == dir) ? "(client)" : "", size, recpos);
+            uint16 content_header_size = 0;
+            if (tlsadvisor->is_kindof_tls(legacy_version)) {
+                content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
+            } else {
+                content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
+            }
+            dump_memory(stream + recpos, content_header_size + len, &dbs, 16, 3, 0, dump_notrunc);
 
             dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
             dbs.println(" > %s 0x%04x (%s)", constexpr_legacy_version, legacy_version, tlsadvisor->tls_version_string(legacy_version).c_str());
@@ -230,7 +235,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             }
             dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
         }
 #endif
 
@@ -417,9 +422,17 @@ size_t tls_record::offsetof_header() { return _range.begin; }
 
 size_t tls_record::offsetof_body() { return _range.end; }
 
-void tls_record::operator<<(tls_record* record) {}
+void tls_record::operator<<(tls_record* record) {
+    if (record) {
+        record->release();
+    }
+}
 
-void tls_record::operator<<(tls_handshake* handshake) {}
+void tls_record::operator<<(tls_handshake* handshake) {
+    if (handshake) {
+        handshake->release();
+    }
+}
 
 void tls_record::addref() { _shared.addref(); }
 

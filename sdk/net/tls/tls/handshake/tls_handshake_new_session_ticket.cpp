@@ -112,7 +112,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
                 dbs.println(" > %s %s", constexpr_ticket_extensions, base16_encode(ticket_extensions).c_str());
                 dbs.autoindent(0);
 
-                trace_debug_event(category_net, net_event_tls_read, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
         }

@@ -47,7 +47,7 @@ transcript_hash *tls_protection::get_transcript_hash() {
                 dbs.println("# %s", constexpr_transcript_hash);
                 dbs.println(" > %s 0x%04x %s", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
                 dbs.println(" > %s", mdname);
-                trace_debug_event(category_debug_internal, 0, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
             }
 #endif
         }

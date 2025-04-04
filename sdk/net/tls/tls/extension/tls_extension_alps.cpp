@@ -47,7 +47,7 @@ return_t tls_extension_alps::do_read_body(const byte_t* stream, size_t size, siz
             dbs.println("   > %s %i", constexpr_alps_len, alps_len);
             dump_memory(alpn, &dbs, 16, 4, 0x0, dump_notrunc);
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }
 #endif
 

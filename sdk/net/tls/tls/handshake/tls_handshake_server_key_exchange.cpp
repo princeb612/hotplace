@@ -162,7 +162,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 dump_memory(sig, &dbs, 16, 3, 0x0, dump_notrunc);
                 dbs.autoindent(0);
 
-                trace_debug_event(category_net, net_event_tls_read, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
         }
@@ -288,7 +288,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
         dump_memory(sig, &dbs, 16, 3, 0, dump_notrunc);
         dbs.autoindent(0);
 
-        trace_debug_event(category_net, net_event_tls_write, &dbs);
+        trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
     }
 #endif
 

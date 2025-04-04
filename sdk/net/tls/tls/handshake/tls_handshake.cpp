@@ -26,6 +26,7 @@ constexpr char constexpr_message_type[] = "message type";
 constexpr char constexpr_len[] = "len";
 constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_handshake_message_seq[] = "handshake message sequence number";
+constexpr char constexpr_fragment[] = "fragment";
 constexpr char constexpr_fragment_offset[] = "fragment offset";
 constexpr char constexpr_fragment_len[] = "fragment len";
 
@@ -90,9 +91,12 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
 
         size_t bpos = pos;
 
-        ret = do_read_header(dir, stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
+        auto test = do_read_header(dir, stream, size, pos);
+        if (errorcode_t::success != test) {
+            if (errorcode_t::reassemble != test) {
+                ret = test;
+                __leave2;
+            }
         }
 
         ret = do_preprocess(dir);
@@ -107,7 +111,16 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
         if (tls_hs_encrypted_extensions == get_type()) {
             ret = do_read_body(dir, stream, offsetof_body() + get_body_size(), pos);
         } else {
-            ret = do_read_body(dir, stream, size, pos);
+            if (reassemble == test) {
+                auto& protection = session->get_tls_protection();
+                binary_t assemble;
+                protection.consume_item(tls_context_fragment, assemble);
+                size_t tpos = 0;
+                ret = do_read_body(dir, &assemble[0], assemble.size(), tpos);
+                pos += _fragment_len;
+            } else {
+                ret = do_read_body(dir, stream, size, pos);
+            }
         }
         if ((errorcode_t::success != ret) && (errorcode_t::no_more != ret)) {
             __leave2;
@@ -181,6 +194,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
 
         size_t hspos = pos;
         auto& protection = session->get_tls_protection();
+        auto type = session->get_type();
 
         tls_hs_type_t hstype;
         uint32 length = 0;
@@ -248,13 +262,44 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             _size = size_header_body;
         }
 
-        if (hspos + length > size) {
-            ret = errorcode_t::trunc_detected;
-            protection.set_item(tls_context_fragment, stream + hspos, size - hspos);
+        if (cond_dtls && (session_tls == type)) {
+            if (fragment_len < length) {
+                if (0 == fragment_offset) {
+                    protection.clear_item(tls_context_fragment);
+                }
+                protection.append_item(tls_context_fragment, stream + pos, fragment_len);
+
+                if (length == protection.get_item(tls_context_fragment).size()) {
+                    ret = errorcode_t::reassemble;
+                } else {
+                    ret = errorcode_t::fragmented;
+                }
+            }
+        }
+        if (session_quic == type) {
+            // header     body     end-of-stream
+            // \- hspos   \-pos    \-size
+            // case not fragmented
+            // case fragmented
+
+            if (hspos + length > size) {
+                ret = errorcode_t::fragmented;
+                protection.append_item(tls_context_fragment, stream + hspos, size - hspos);
+#if defined DEBUG
+                if (istraceable()) {
+                    basic_stream dbs;
+                    dbs.printf("\e[1;33m");
+                    dbs.println("# fragment");
+                    dump_memory(stream + hspos, size - hspos, &dbs, 16, 3, 0, dump_notrunc);
+                    dbs.printf("\e[0m");
+                    trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+                }
+#endif
+            }
         }
 
         /**
-         *   if (trunc_detected) {
+         *   if (fragmented) {
          *      store trunc part
          *   }
          *   if (offset) // DTLS, quic_frame_crypto
@@ -270,16 +315,18 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             dbs.println("> handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
             dbs.println(" > length 0x%06x(%i)", length, length);
-            if (errorcode_t::trunc_detected == ret) {
+            if (errorcode_t::fragmented == ret) {
                 dbs.println(" > fragment");
             }
             if (cond_dtls) {
                 dbs.println(" > %s 0x%04x", constexpr_handshake_message_seq, dtls_seq);
                 dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_offset, fragment_offset, fragment_offset);
                 dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_len, fragment_len, fragment_len);
+                const binary_t& assembled = protection.get_item(tls_context_fragment);
+                dump_memory(assembled, &dbs, 16, 3, 0, dump_notrunc);
             }
             dbs.autoindent(0);
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
         }
 #endif
     }

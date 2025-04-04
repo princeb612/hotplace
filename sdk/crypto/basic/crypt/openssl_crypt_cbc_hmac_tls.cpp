@@ -148,7 +148,7 @@ return_t openssl_crypt::cbc_hmac_tls_decrypt(crypt_algorithm_t enc_alg, hash_alg
             basic_stream dbs;
             dbs.println("> tag");
             dump_memory(tag, &dbs, 16, 3, 0x0, dump_notrunc);
-            trace_debug_event(category_crypto, crypto_event_openssl_info, &dbs);
+            trace_debug_event(trace_category_crypto, trace_event_decryption, &dbs);
         }
 #endif
 

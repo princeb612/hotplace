@@ -3,9 +3,6 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *  RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm (September 2002)
- *  RFC 5649 Advanced Encryption Starndard (AES) Key Wrap with Padding Algorithm (September 2009)
- *  RFC 8017 PKCS #1: RSA Cryptography Specifications Version 2.2
  *
  * Revision History
  * Date         Name                Description

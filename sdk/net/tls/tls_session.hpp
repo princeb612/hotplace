@@ -30,19 +30,6 @@ enum session_type_t {
     session_quic2 = 3,  // QUIC Version 2
 };
 
-enum session_status_t : uint16 {
-    session_hello_verify_request = (1 << 0),  // 0001
-    session_server_hello = (1 << 1),          // 0002
-    session_server_key_exchange = (1 << 2),   // 0004
-    session_client_key_exchange = (1 << 3),   // 0008
-    session_server_cert_verified = (1 << 4),  // 0010 tls_handshake_certificate_verify
-    session_server_hello_done = (1 << 5),     // 0020 tls_hs_server_hello_done
-    session_server_finished = (1 << 6),       // 0040 tls_handshake_finished
-    session_client_finished = (1 << 7),       // 0080 tls_handshake_finished
-    session_client_close_notified = (1 << 14),
-    session_server_close_notified = (1 << 15),
-};
-
 /**
  *   tls_session session;
  *   session.get_conf().set(key, value);
@@ -71,9 +58,8 @@ class tls_session {
 
     void update_session_status(session_status_t status);
     void clear_session_status(session_status_t status);
-    uint16 get_session_status();
-    return_t wait1_change_session_status(uint16 status, unsigned msec);
-    return_t waitall_change_session_status(uint16 status, unsigned msec);
+    uint32 get_session_status();
+    return_t wait_change_session_status(uint32 status, unsigned msec, bool waitall = true);
 
     t_key_value<uint16, uint16>& get_conf();
 
@@ -157,7 +143,7 @@ class tls_session {
     std::queue<tls_handshake*> _que;
     tls_protection _tls_protection;
     session_type_t _type;
-    uint16 _status;
+    uint32 _status;
     semaphore _sem;  // _status related
 
     t_key_value<uint16, uint16> _kv;

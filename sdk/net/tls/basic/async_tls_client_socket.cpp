@@ -77,7 +77,7 @@ return_t async_tls_client_socket::do_handshake() {
     __try2 {
         size_t cbsent = 0;
         binary_t bin;
-        uint16 session_status = 0;
+        uint32 session_status = 0;
 
         auto session = &_session;
         auto& protection = session->get_tls_protection();
@@ -191,7 +191,7 @@ return_t async_tls_client_socket::do_handshake() {
             bin.clear();
         }
 
-        session->waitall_change_session_status(session_server_hello, get_wto());
+        session->wait_change_session_status(session_server_hello, get_wto());
         session_status = session->get_session_status();
 
         if (0 == (session_status & session_server_hello)) {
@@ -202,10 +202,11 @@ return_t async_tls_client_socket::do_handshake() {
         auto tlsver = protection.get_tls_version();
 
         if (tls_13 == tlsver) {
-            session->waitall_change_session_status(session_server_cert_verified | session_server_finished, get_wto());
+            uint32 server_status = session_server_hello | session_server_cert | session_server_cert_verified | session_server_finished;
+            session->wait_change_session_status(server_status, get_wto());
             session_status = session->get_session_status();
 
-            if (0 == (session_status & (session_server_cert_verified | session_server_finished))) {
+            if (0 == (session_status & server_status)) {
                 ret = error_handshake;
                 __leave2;
             }
@@ -232,10 +233,11 @@ return_t async_tls_client_socket::do_handshake() {
             // certificate
             // server_key_exchange
             // server_hello_done
-            session->waitall_change_session_status(session_server_key_exchange | session_server_hello_done, get_wto());
+            uint32 server_status = session_server_hello | session_server_cert | session_server_key_exchange | session_server_hello_done;
+            session->wait_change_session_status(server_status, get_wto());
             session_status = session->get_session_status();
 
-            if (0 == (session_status & (session_server_key_exchange | session_server_hello_done))) {
+            if (0 == (session_status & server_status)) {
                 ret = errorcode_t::error_handshake;
                 __leave2;
             }
@@ -267,7 +269,7 @@ return_t async_tls_client_socket::do_handshake() {
             ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
             bin.clear();
 
-            session->waitall_change_session_status(session_server_finished, get_wto());
+            session->wait_change_session_status(session_server_finished, get_wto());
             session_status = session->get_session_status();
 
             if (0 == (session_status & session_server_finished)) {
@@ -391,12 +393,6 @@ return_t async_tls_client_socket::do_shutdown() {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = &_session;
-        auto session_status = session->get_session_status();
-
-        if (0 == (session_status & session_server_finished)) {
-            ret = errorcode_t::disconnect;
-            __leave2;
-        }
 
         binary_t bin;
         size_t cbsent = 0;
@@ -413,7 +409,8 @@ return_t async_tls_client_socket::do_shutdown() {
 
         ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
 
-        // session->waitall_change_session_status(session_server_close_notified, get_wto());
+        // session->wait_change_session_status(session_server_close_notified, get_wto());
+        // auto session_status = session->get_session_status();
     }
     __finally2 {}
     return ret;

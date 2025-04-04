@@ -33,6 +33,8 @@ class tls_record_alert : public tls_record {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
     virtual bool apply_protection();
 
+    void check_status(tls_direction_t dir);
+
    private:
     uint8 _level;
     uint8 _desc;

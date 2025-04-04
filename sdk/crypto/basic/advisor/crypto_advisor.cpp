@@ -45,7 +45,7 @@ return_t crypto_advisor::build() {
 
     uint32 i = 0;
     unsigned long osslver = OpenSSL_version_num();
-    trace_debug_event(category_crypto, crypto_event_openssl_info, "version %x\n", osslver);
+    trace_debug_event(trace_category_crypto, trace_event_openssl_info, "version %x\n", osslver);
 
     auto set_feature = [&](const std::string& key, uint32 feature) -> void {
         auto pib = _features.insert({key, feature});
@@ -85,7 +85,7 @@ return_t crypto_advisor::build() {
 #endif
         if (nullptr == evp_cipher) {
             // __trace(errorcode_t::debug, "%s", nameof_alg(item));
-            trace_debug_event(category_crypto, crypto_event_openssl_nosupport, "no %s\n", nameof_alg(item));
+            trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport, "no %s\n", nameof_alg(item));
         }
 
         _cipher_fetch_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(typeof_alg(item), typeof_mode(item)), item));
@@ -122,7 +122,7 @@ return_t crypto_advisor::build() {
 #endif
         if (nullptr == evp_md) {
             // __trace(errorcode_t::debug, "%s", nameof_alg(item));
-            trace_debug_event(category_crypto, crypto_event_openssl_nosupport, "no %s\n", nameof_alg(item));
+            trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport, "no %s\n", nameof_alg(item));
         }
         _md_fetch_map.insert(std::make_pair(typeof_alg(item), item));
         _md_byname_map.insert(std::make_pair(nameof_alg(item), item));

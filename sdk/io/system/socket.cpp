@@ -130,7 +130,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
                                     family, advisor->nameof_family(family).c_str(),                 //
                                     socktype, advisor->nameof_type(socktype).c_str(),               //
                                     protocol, advisor->nameof_protocol(protocol).c_str());          //
-                        trace_debug_event(category_debug_internal, 0, &dbs);
+                        trace_debug_event(trace_category_internal, trace_event_socket, &dbs);
                     }
 #endif
 
@@ -261,7 +261,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
                                         family, advisor->nameof_family(family).c_str(),                 //
                                         socktype, advisor->nameof_type(socktype).c_str(),               //
                                         protocol, advisor->nameof_protocol(protocol).c_str());          //
-                            trace_debug_event(category_debug_internal, 0, &dbs);
+                            trace_debug_event(trace_category_internal, trace_event_socket, &dbs);
                         }
 #endif
 
@@ -423,7 +423,7 @@ return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addr
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("connect SO_ERROR %i return %i", optval, rc);
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_internal, trace_event_socket, &dbs);
         }
 #elif defined _WIN32 || defined _WIN64
         // connect SO_ERROR 0 return 0
@@ -448,6 +448,14 @@ return_t close_socket(socket_t sock, bool bOnOff, uint16 wLinger) {
     return_t ret = errorcode_t::success;
 
     if (INVALID_SOCKET != sock) {
+        int how = 0;
+#if defined __linux__
+        how = SHUT_RDWR;
+#elif defined _WIN32 || defined _WIN64
+        how = SD_BOTH;
+#endif
+        shutdown(sock, how);
+
         int optval = 0;
         socklen_t optlen = sizeof(optval);
         getsockopt(sock, SOL_SOCKET, SO_TYPE, (char*)&optval, &optlen);

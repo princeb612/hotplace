@@ -20,13 +20,13 @@ unsigned int count_evict_encoder = 0;
 unsigned int count_evict_decoder = 0;
 
 void debug_hpack_encoder(trace_category_t, uint32 event) {
-    if (net_event_header_compression_evict == event) {
+    if (trace_event_header_compression_evict == event) {
         count_evict_encoder++;
     }
 };
 
 void debug_hpack_decoder(trace_category_t, uint32 event) {
-    if (net_event_header_compression_evict == event) {
+    if (trace_event_header_compression_evict == event) {
         count_evict_decoder++;
     }
 };

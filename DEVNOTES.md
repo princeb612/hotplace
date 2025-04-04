@@ -230,11 +230,9 @@ flowchart LR
     - [x] TLS version
       - [x] TLS1.3
       - [ ] TLS1.2
-  - [ ] TLS over TCP (example netclient)
-    - [ ] (linux) sometimes EVP_CipherFinal error while decryption
+  - [x] TLS over TCP (example netclient)
     - [x] HTTP/1.1
   - [ ] DTLS over UDP
-    - [ ] async_dtls_client_socket
 
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)
@@ -301,6 +299,8 @@ journey
   section 2025.03
     Zelda BOTW Master Mode:5:game
     Monster Hunter Wilds:7:game
+    TLS 1.2:3:github
+  section 2025.04
 ```
 
 ```mermaid

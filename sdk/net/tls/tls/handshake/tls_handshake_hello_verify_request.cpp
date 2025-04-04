@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_hello_verify_request.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
@@ -18,6 +19,7 @@
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_version[] = "version";
 constexpr char constexpr_cookie_len[] = "cookie len";
 constexpr char constexpr_cookie[] = "cookie";
 
@@ -38,6 +40,8 @@ return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir,
             //
             protection.update_transcript_hash(session, stream + hspos, get_size());
             protection.set_item(tls_context_cookie, _cookie);
+
+            session->clear_session_status(session_client_hello);
             session->update_session_status(session_hello_verify_request);
         }
     }
@@ -65,11 +69,20 @@ return_t tls_handshake_hello_verify_request::do_read_body(tls_direction_t dir, c
          */
 
         payload pl;
-        pl << new payload_member(uint8(0), constexpr_cookie_len) << new payload_member(binary_t(), constexpr_cookie);
+        pl << new payload_member(uint16(0), true, constexpr_version) << new payload_member(uint8(0), constexpr_cookie_len)
+           << new payload_member(binary_t(), constexpr_cookie);
         pl.set_reference_value(constexpr_cookie, constexpr_cookie_len);
         pl.read(stream, size, pos);
 
         pl.get_binary(constexpr_cookie, _cookie);
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println(" > cookie %s", base16_encode(_cookie).c_str());
+            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+        }
+#endif
     }
     __finally2 {}
     return ret;
@@ -78,8 +91,10 @@ return_t tls_handshake_hello_verify_request::do_read_body(tls_direction_t dir, c
 return_t tls_handshake_hello_verify_request::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto version = get_session()->get_tls_protection().get_lagacy_version();
         payload pl;
-        pl << new payload_member(uint8(_cookie.size()), constexpr_cookie_len) << new payload_member(_cookie, constexpr_cookie);
+        pl << new payload_member(uint16(0), true, constexpr_version) << new payload_member(uint8(_cookie.size()), constexpr_cookie_len)
+           << new payload_member(_cookie, constexpr_cookie);
         pl.write(bin);
     }
     __finally2 {}

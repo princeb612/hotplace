@@ -47,10 +47,17 @@ void test_transcript_hash(tls_session* session, const binary_t& expect);
 void direction_string(tls_direction_t dir, int send, std::string& s);
 void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tls_secret_t secret, const char* secret_name);
 
+// xargs.org
 void test_tls13_xargs_org();
 void test_tls12_xargs_org();
 void test_dtls_xargs_org();
 
+// test vector created by openssl (wireshark capture)
+// $ openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -dtls
+// $ openssl s_client -connect localhost:9000 -state -debug -dtls
+void test_dtls12();
+
+// RFC
 void test_rfc8448_2();
 void test_rfc8448_3();
 void test_rfc8448_4();

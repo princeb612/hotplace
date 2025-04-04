@@ -255,7 +255,7 @@ void quic_packet_handshake::dump() {
         dbs.println(" > payload (len %zi)", _payload.size());
         dump_memory(_payload, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
 
-        trace_debug_event(category_net, net_event_quic_dump, &dbs);
+        trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
     }
 #endif
 }

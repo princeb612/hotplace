@@ -216,7 +216,7 @@ enum errorcode_t {
     /* 0xef010013 4009820179 */ full,
     /* 0xef010014 4009820180 */ out_of_range,
     /* 0xef010015 4009820181 */ mismatch,
-    /* 0xef010016 4009820182 */ reserved2,  //
+    /* 0xef010016 4009820182 */ error_integrity,
     /* 0xef010017 4009820183 */ expired,
     /* 0xef010018 4009820184 */ canceled,
     /* 0xef010019 4009820185 */ bad_request,
@@ -261,7 +261,7 @@ enum errorcode_t {
     /* 0xef01003f 4009820223 */ narrow_type,
     /* 0xef010040 4009820224 */ error_certificate,
     /* 0xef010041 4009820225 */ exceed,
-    /* 0xef010042 4009820226 */ trunc_detected,
+    /* 0xef010042 4009820226 */ fragmented,
 
     /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,
@@ -292,7 +292,8 @@ enum errorcode_t {
     /* 0xff010007 4278255623 */ timeout,
     /* 0xff010008 4278255624 */ busy,
     /* 0xff010009 4278255625 */ no_more,
-    /* 0xff01000a 4278255626 */ more_data
+    /* 0xff01000a 4278255626 */ more_data,
+    /* 0xff01000b 4278255627 */ reassemble,
 };
 
 /*

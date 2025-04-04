@@ -102,6 +102,8 @@ class async_client_socket : public client_socket {
     };
     typedef struct bufferqueue_item bufferqueue_item_t;
 
+    void enqueue(bufferqueue_item_t& item, const char* buf, size_t size);
+
     critical_section _rlock;
     std::queue<bufferqueue_item_t> _rq;
     semaphore _rsem;

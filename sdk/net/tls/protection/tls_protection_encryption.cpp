@@ -325,7 +325,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
             dbs.println(" > ciphertext");
             dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
 
-            trace_debug_event(category_net, net_event_tls_write, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
         }
 #endif
     }
@@ -409,7 +409,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
             dbs.println(" > ciphertext");
             dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
         }
 #endif
     }
@@ -599,7 +599,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
             dbs.println(" > plaintext");
             dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
         }
 #endif
     }
@@ -679,7 +679,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
             dbs.println(" > plaintext 0x%x(%i)", plainsize, plainsize);
             dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
         }
 #endif
     }
@@ -792,7 +792,7 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
                     dbs.println(" > key[%08x] %s", secret_key, base16_encode(key).c_str());
                     dbs.println(" > sample %s", base16_encode(stream, samplesize).c_str());
                     dbs.println(" > mask %s", base16_encode(mask).c_str());
-                    trace_debug_event(category_net, net_event_tls_dump, &dbs);
+                    trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
                 }
 #endif
             }

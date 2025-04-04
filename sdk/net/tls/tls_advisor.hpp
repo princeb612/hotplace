@@ -202,6 +202,8 @@ class tls_advisor {
      */
     bool is_kindof(uint16 lhs, uint16 rhs);
 
+    void enum_session_status_string(uint32 status, std::function<void(const char*)> func);
+
    protected:
     tls_advisor();
     void load_resource();

@@ -76,7 +76,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 #if defined DEBUG
         basic_stream dbs;
 
-        if (istraceable(category_net)) {
+        if (istraceable(trace_category_net)) {
             dbs.println("   > %s %I64i", constexpr_largest_ack, largest_ack);
             dbs.println("   > %s %I64i", constexpr_ack_delay, ack_delay);
             dbs.println("   > %s %I64i", constexpr_ack_range_count, ack_range_count);
@@ -104,7 +104,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             uint64 range_length = ack_ranges.t_value_of<uint64>(constexpr_range_length);
 
 #if defined DEBUG
-            if (istraceable(category_net)) {
+            if (istraceable(trace_category_net)) {
                 dbs.println("   > %s", constexpr_ack_ranges);
                 dbs.println("    > %s %I64i", constexpr_gap, gap);
                 dbs.println("    > %s %I64i", constexpr_range_length, range_length);
@@ -131,7 +131,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             uint64 ectce_count = ecn_counts.t_value_of<uint64>(constexpr_ectce_count);
 
 #if defined DEBUG
-            if (istraceable(category_net)) {
+            if (istraceable(trace_category_net)) {
                 dbs.println("   > %s", constexpr_ecn_counts);
                 dbs.println("    > %s %I64i", constexpr_ect0_count, ect0_count);
                 dbs.println("    > %s %I64i", constexpr_ect1_count, ect1_count);
@@ -141,8 +141,8 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
         }
 
 #if defined DEBUG
-        if (istraceable(category_net)) {
-            trace_debug_event(category_net, net_event_quic_dump, &dbs);
+        if (istraceable(trace_category_net)) {
+            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif
     }

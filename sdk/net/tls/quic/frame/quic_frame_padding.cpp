@@ -33,9 +33,9 @@ return_t quic_frame_padding::do_read_body(tls_direction_t dir, const byte_t* str
         // Figure 23: PADDING Frame Format
 #if 0
 #if defined DEBUG
-        if (istraceable(category_net)) {
+        if (istraceable(trace_category_net)) {
             dbs.println("  > frame %s @%zi", constexpr_frame_padding, begin);
-            trace_debug_event(category_net, net_event_quic_dump, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif
 #endif

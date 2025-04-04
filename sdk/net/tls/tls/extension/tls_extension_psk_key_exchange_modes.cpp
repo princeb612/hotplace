@@ -61,7 +61,7 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(const byte_t* stream
             for (auto m : _modes) {
                 dbs.println("     [%i] %i %s", i++, m, tlsadvisor->psk_key_exchange_mode_name(m).c_str());
             }
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }
 #endif
     }

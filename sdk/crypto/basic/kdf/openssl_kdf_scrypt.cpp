@@ -3,10 +3,7 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *  RFC 6070 PKCS #5: Password-Based Key Derivation Function 2 (PBKDF2)
  *  RFC 7914 The scrypt Password-Based Key Derivation Function
- *  RFC 9106 Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications
- *  - openssl-3.2 required
  *
  * Revision History
  * Date         Name                Description

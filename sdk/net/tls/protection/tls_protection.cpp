@@ -62,15 +62,11 @@ void tls_protection::use_pre_master_secret(bool use) { _use_pre_master_secret = 
 
 bool tls_protection::use_pre_master_secret() { return _use_pre_master_secret; }
 
-void tls_protection::get_item(tls_secret_t type, binary_t &item, uint8 flag) {
-    if (0 == flag) {
-        item = _kv[type];
-    } else if (1 == flag) {
-        auto iter = _kv.find(type);
-        if (_kv.end() != iter) {
-            auto &value = iter->second;
-            item = std::move(value);
-        }
+void tls_protection::consume_item(tls_secret_t type, binary_t &item) {
+    auto iter = _kv.find(type);
+    if (_kv.end() != iter) {
+        auto &value = iter->second;
+        item = std::move(value);
     }
 }
 
@@ -82,6 +78,20 @@ void tls_protection::set_item(tls_secret_t type, const byte_t *stream, size_t si
     if (stream) {
         binary_t bin;
         bin.insert(bin.end(), stream, stream + size);
+        _kv[type] = std::move(bin);
+    }
+}
+
+void tls_protection::append_item(tls_secret_t type, const binary_t &item) {
+    binary_t bin = std::move(_kv[type]);
+    binary_append(bin, item);
+    _kv[type] = std::move(bin);
+}
+
+void tls_protection::append_item(tls_secret_t type, const byte_t *stream, size_t size) {
+    if (stream) {
+        binary_t bin = std::move(_kv[type]);
+        binary_append(bin, stream, size);
         _kv[type] = std::move(bin);
     }
 }

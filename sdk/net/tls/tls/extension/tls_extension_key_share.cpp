@@ -248,7 +248,7 @@ return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size
             dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
             dbs.println("       %s", base16_encode(pubkey).c_str());
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }
 #endif
     }
@@ -363,7 +363,7 @@ return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size
                 dbs.println("     %s", base16_encode(pubkey).c_str());
             }
 
-            trace_debug_event(category_net, net_event_tls_read, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }
 #endif
 

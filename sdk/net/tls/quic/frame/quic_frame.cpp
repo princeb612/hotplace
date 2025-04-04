@@ -47,10 +47,10 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
         }
 
 #if defined DEBUG
-        if (istraceable(category_net)) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("  > frame %s @%zi", tlsadvisor->quic_frame_type_string(type).c_str(), begin);
-            trace_debug_event(category_net, net_event_quic_dump, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif
 

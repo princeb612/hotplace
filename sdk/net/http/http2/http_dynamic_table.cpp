@@ -148,7 +148,7 @@ return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& nam
         if (errorcode_t::success == ret) {
             basic_stream bs;
             bs << "index [" << index << "] " << name << "=" << value << "\n";
-            trace_debug_event(category_net, net_event_header_compression_select, &bs);
+            trace_debug_event(trace_category_net, trace_event_header_compression_select, &bs);
         }
     }
     __finally2 {
@@ -195,14 +195,14 @@ return_t http_dynamic_table::commit() {
             _dynamic_reversemap.insert({_inserted, {name, entrysize}});
 
             if (_hook) {
-                _hook(category_net, net_event_header_compression_insert);
+                _hook(trace_category_net, trace_event_header_compression_insert);
             }
 
 #if defined DEBUG
             if (istraceable()) {
                 basic_stream bs;
                 bs.printf("insert entry[%zi] %s=%s\n", _inserted, name.c_str(), value.c_str());
-                trace_debug_event(category_net, net_event_header_compression_insert, &bs);
+                trace_debug_event(trace_category_net, trace_event_header_compression_insert, &bs);
             }
 #endif
 
@@ -243,14 +243,14 @@ return_t http_dynamic_table::evict() {
                 auto const& ent = v.second;
                 if (ent == t) {
                     if (_hook) {
-                        _hook(category_net, net_event_header_compression_evict);
+                        _hook(trace_category_net, trace_event_header_compression_evict);
                     }
 
 #if defined DEBUG
                     if (istraceable()) {
                         basic_stream bs;
                         bs.printf("evict entry[%zi] %s=%s\n", entry, name.c_str(), val.c_str());
-                        trace_debug_event(category_net, net_event_header_compression_evict, &bs);
+                        trace_debug_event(trace_category_net, trace_event_header_compression_evict, &bs);
                     }
 #endif
                     _dynamic_map.erase(iter);

@@ -120,13 +120,25 @@ class tls_protection {
     /**
      * @param   tls_secret_t type [in]
      * @param   binary_t& item [out]
-     * @param   uint8 flag [inopt] 0 get, 1 get and clear
      */
-    void get_item(tls_secret_t type, binary_t& item, uint8 flag = 0);
+    void consume_item(tls_secret_t type, binary_t& item);
 
     const binary_t& get_item(tls_secret_t type);
     void set_item(tls_secret_t type, const binary_t& item);
     void set_item(tls_secret_t type, const byte_t* stream, size_t size);
+    /**
+     * @brief append
+     * @param tls_secret_t type [in] tls_context_fragment
+     * @param const binary_t& item [in]
+     */
+    void append_item(tls_secret_t type, const binary_t& item);
+    /**
+     * @brief append
+     * @param tls_secret_t type [in] tls_context_fragment
+     * @param const byte_t* stream [in]
+     * @param size_t size [in]
+     */
+    void append_item(tls_secret_t type, const byte_t* stream, size_t size);
     void clear_item(tls_secret_t type);
 
     size_t get_header_size();

@@ -247,7 +247,7 @@ void quic_packet::dump() {
                 dbs.println(" > packet length %i", get_pn_length());
                 break;
         }
-        trace_debug_event(category_net, net_event_quic_dump, &dbs);
+        trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
     }
 #endif
 }

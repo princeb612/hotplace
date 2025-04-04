@@ -24,7 +24,7 @@ void test_quic_xargs_org() {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
     auto lambda_test_secret = [&](tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect) -> void {
-        protection.get_item(tls_secret, secret);
+        secret = protection.get_item(tls_secret);
         _logger->writeln("> %s : %s", text, base16_encode(secret).c_str());
         _test_case.assert(secret == base16_decode(expect), __FUNCTION__, text);
     };

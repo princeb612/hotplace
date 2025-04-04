@@ -49,7 +49,7 @@ return_t trace_backtrace(return_t errorcode) {
             ret = dbg.trace(handle, &rtlcontext, &dbs);
             dbg.close(handle);
 
-            trace_debug_event(category_debug_internal, 0, &dbs);
+            trace_debug_event(trace_category_internal, trace_event_backtrace, &dbs);
         }
     }
     return ret;

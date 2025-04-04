@@ -45,11 +45,11 @@ return_t quic_frame_stop_sending::do_read_body(tls_direction_t dir, const byte_t
         uint64 error_code = pl.t_value_of<uint64>(constexpr_error_code);
 
 #if defined DEBUG
-        if (istraceable(category_net)) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("   > %s %I64i", constexpr_stream_id, stream_id);
             dbs.println("   > %s %I64i", constexpr_error_code, error_code);
-            trace_debug_event(category_net, net_event_quic_dump, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif
     }

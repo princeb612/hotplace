@@ -340,7 +340,7 @@ http_response& http_response::get_response(basic_stream& bs) {
             basic_stream dbs;
             dump_memory(bs.data(), bs.size(), &dbs, 16, 2, 0, dump_notrunc);
 
-            trace_debug_event(category_net, net_event_httpresponse, &dbs);
+            trace_debug_event(trace_category_net, trace_event_net_response, &dbs);
         }
 #endif
     }
@@ -434,7 +434,7 @@ http_response& http_response::get_response_h2(binary_t& bin) {
                 frame->dump(&dbs);
                 dbs.println("");
 
-                trace_debug_event(category_net, net_event_httpresponse, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_response, &dbs);
             }
 #endif
         };

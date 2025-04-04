@@ -274,7 +274,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
                         basic_stream bs;
                         bs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                        trace_debug_event(category_net, net_event_netsession_produce, &bs);
+                        trace_debug_event(trace_category_net, trace_event_net_produce, &bs);
                     }
 #endif
                 } else {
@@ -305,7 +305,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
                 basic_stream bs;
                 bs << "[ns] read " << _session.netsock.get_event_socket() << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                trace_debug_event(category_net, net_event_netsession_produce, &bs);
+                trace_debug_event(trace_category_net, trace_event_net_produce, &bs);
             }
 #endif
         }
@@ -366,7 +366,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                         basic_stream bs;
                         bs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
                         dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                        trace_debug_event(category_net, net_event_netsession_produce, &bs);
+                        trace_debug_event(trace_category_net, trace_event_net_produce, &bs);
                     }
 #endif
                 }
@@ -400,7 +400,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                 basic_stream bs;
                 bs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
                 dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                trace_debug_event(category_net, net_event_netsession_produce, &bs);
+                trace_debug_event(trace_category_net, trace_event_net_produce, &bs);
             }
 #endif
         }

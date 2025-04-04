@@ -356,6 +356,41 @@ bool tls_advisor::is_kindof(uint16 lhs, uint16 rhs) {
     return ret;
 }
 
+void tls_advisor::enum_session_status_string(uint32 status, std::function<void(const char*)> func) {
+    if (func) {
+        struct status_t {
+            uint32 status;
+            std::string desc;
+
+            status_t(uint32 s, const char* d) : status(s) {
+                if (d) {
+                    desc = d;
+                }
+            }
+        };
+
+        std::list<status_t> table;
+        table.push_back(status_t(session_client_hello, "client_hello"));
+        table.push_back(status_t(session_server_hello, "server_hello"));
+        table.push_back(status_t(session_hello_verify_request, "hello_verify_request"));
+        table.push_back(status_t(session_server_cert, "server_certificate"));
+        table.push_back(status_t(session_server_key_exchange, "server_key_exchange"));
+        table.push_back(status_t(session_server_hello_done, "server_hello_done"));
+        table.push_back(status_t(session_server_cert_verified, "server_certificate_verified"));
+        table.push_back(status_t(session_client_key_exchange, "client_key_exchange"));
+        table.push_back(status_t(session_server_finished, "server_finished"));
+        table.push_back(status_t(session_client_finished, "client_finished"));
+        table.push_back(status_t(session_client_close_notified, "client_close_notify"));
+        table.push_back(status_t(session_server_close_notified, "server_close_notify"));
+
+        for (const auto& item : table) {
+            if (status & item.status) {
+                func(item.desc.c_str());
+            }
+        }
+    }
+}
+
 bool is_kindof_tls13(uint16 ver) { return tls_advisor::get_instance()->is_kindof_tls13(ver); }
 
 bool is_kindof_tls(uint16 ver) { return tls_advisor::get_instance()->is_kindof_tls(ver); }

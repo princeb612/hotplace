@@ -114,7 +114,7 @@ define_tls_sizeof_variable(kdf_id_code);
 define_tls_variable(handshake_type_code) = {
     {1, "client_hello"},
     {2, "server_hello"},
-    {3, "hello_verify_request_RESERVED"},
+    {3, "hello_verify_request"},
     {4, "new_session_ticket"},
     {5, "end_of_early_data"},
     {6, "hello_retry_request_RESERVED"},

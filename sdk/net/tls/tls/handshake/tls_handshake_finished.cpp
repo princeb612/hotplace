@@ -143,7 +143,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 dbs.println("  > maced       %s", base16_encode(maced).c_str());
                 dbs.autoindent(0);
 
-                trace_debug_event(category_net, net_event_tls_read, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
         }
@@ -198,7 +198,7 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
             dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
             dbs.println("  > verify data %s", base16_encode(verify_data).c_str());
 
-            trace_debug_event(category_net, net_event_tls_write, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
         }
 #endif
     }

@@ -94,6 +94,14 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
         }
         auto& protection = session->get_tls_protection();
 
+        auto session_status = session->get_session_status();
+        if (session_hello_verify_request & session_status) {
+            if (get_cookie() != protection.get_item(tls_context_cookie)) {
+                ret = errorcode_t::error_handshake;
+                __leave2;
+            }
+        }
+
         // keycalc
         {
             auto hspos = offsetof_header();
@@ -116,13 +124,15 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
 
             session->get_session_info(dir).set_status(get_type());
         }
-        // protection_context
+
         auto& protection_context = protection.get_protection_context();
         {
             for (auto cs : _cipher_suites) {
                 protection_context.add_cipher_suite(cs);
             }
         }
+
+        session->update_session_status(session_client_hello);
     }
     __finally2 {
         // do nothing
@@ -270,7 +280,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                 dbs.println(" > %s 0x%04x(%i)", constexpr_extension_len, extension_len, extension_len);
                 dbs.autoindent(0);
 
-                trace_debug_event(category_net, net_event_tls_read, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
 

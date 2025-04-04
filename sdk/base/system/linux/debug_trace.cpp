@@ -46,7 +46,7 @@ return_t trace_backtrace(return_t errorcode) {
 
             debug_trace(&dbs);
 
-            trace_debug_event(category_debug_internal, 0, &dbs);
+            trace_debug_event(trace_category_internal, trace_event_backtrace, &dbs);
         }
     }
     return ret;

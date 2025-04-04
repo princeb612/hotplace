@@ -18,3 +18,11 @@ mindmap
         content-encoding
       filestream
 ```
+
+### references
+
+* books
+* RFC
+  * RFC 7049 Concise Binary Object Representation (CBOR)
+  * RFC 8949 Concise Binary Object Representation (CBOR)
+* online resources

@@ -194,12 +194,14 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
         if ((session_quic == session_type) || (session_quic2 == session_type)) {
             session->reset_recordno(from_server);
         }
-        session->update_session_status(session_server_hello);
+
         auto ext = get_extensions().get(tls1_ext_supported_versions);
         if (nullptr == ext) {
             auto legacy_version = protection.get_lagacy_version();
             protection.set_tls_version(_version ? _version : legacy_version);
         }
+
+        session->update_session_status(session_server_hello);
     }
     __finally2 {
         // do nothing
@@ -288,7 +290,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 dbs.println(" > %s 0x%02x(%i)", constexpr_extension_len, extension_len, extension_len);
                 dbs.autoindent(0);
 
-                trace_debug_event(category_net, net_event_tls_read, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
 

@@ -245,7 +245,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
                 dump_memory(signature, &dbs, 16, 3, 0x00, dump_notrunc);
                 dbs.autoindent(0);
 
-                trace_debug_event(category_net, net_event_tls_read, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
         }

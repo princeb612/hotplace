@@ -52,7 +52,7 @@ tls_handshake* tls_handshake_builder::build() {
         } break;
         case tls_hs_hello_verify_request: {
             __try_new_catch_only(handshake, new tls_handshake_hello_verify_request(session));
-        }
+        } break;
         case tls_hs_new_session_ticket: {
             __try_new_catch_only(handshake, new tls_handshake_new_session_ticket(session));
         } break;
