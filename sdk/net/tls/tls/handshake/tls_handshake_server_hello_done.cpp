@@ -48,7 +48,6 @@ return_t tls_handshake_server_hello_done::do_postprocess(tls_direction_t dir, co
         auto& protection = session->get_tls_protection();
 
         {
-            //
             protection.update_transcript_hash(session, stream + hspos, get_size());
             session->update_session_status(session_server_hello_done);
         }

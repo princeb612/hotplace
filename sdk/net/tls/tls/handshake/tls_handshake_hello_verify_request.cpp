@@ -36,14 +36,10 @@ return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir,
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
 
-        {
-            //
-            protection.update_transcript_hash(session, stream + hspos, get_size());
-            protection.set_item(tls_context_cookie, _cookie);
+        protection.set_item(tls_context_cookie, _cookie);
 
-            session->clear_session_status(session_client_hello);
-            session->update_session_status(session_hello_verify_request);
-        }
+        session->clear_session_status(session_client_hello);
+        session->update_session_status(session_hello_verify_request);
     }
     __finally2 {
         // do nothing

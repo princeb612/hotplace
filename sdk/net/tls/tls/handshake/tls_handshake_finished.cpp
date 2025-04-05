@@ -59,13 +59,13 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
             // from_client : resumption related
             protection.calc(session, tls_hs_finished, dir);
 
-            session->schedule(this);  // run_scheduled
-        }
+            if (from_server == dir) {
+                session->update_session_status(session_server_finished);
+            } else if (from_client == dir) {
+                session->update_session_status(session_client_finished);
+            }
 
-        if (from_server == dir) {
-            session->update_session_status(session_server_finished);
-        } else if (from_client == dir) {
-            session->update_session_status(session_client_finished);
+            session->schedule(this);  // run_scheduled
         }
     }
     __finally2 {

@@ -29,21 +29,33 @@ void test_dtls12() {
     binary_t bin_clienthello_record;
     binary_t bin_serverhello_record;
     tls_advisor* advisor = tls_advisor::get_instance();
+    constexpr char constexpr_master_secret[] = "93be6304758c8b4f0e106df7bbbb7a4edc23ed6188d44ed4d567b6e375400a74471fda4ad6748c84bda37a19399bd4a4";
 
-    // self-signed certificate, private key
     {
+        auto& protection = session.get_tls_protection();
+        protection.use_pre_master_secret(true);
+
         crypto_keychain keychain;
         auto key = session.get_tls_protection().get_keyexchange();
-        keychain.load_file(&key, key_certfile, "rsa.crt", KID_TLS_SERVER_CERTIFICATE_PUBLIC);
-        keychain.load_file(&key, key_pemfile, "rsa.key", KID_TLS_SERVER_CERTIFICATE_PRIVATE);
+        keychain.load_file(&key, key_certfile, "server.crt", KID_TLS_SERVER_CERTIFICATE_PUBLIC);
+        keychain.load_file(&key, key_pemfile, "server.key", KID_TLS_SERVER_CERTIFICATE_PRIVATE);
+
+        auto lambda_change_status = [&](uint32 status) -> void {
+            if (session_client_key_exchange & status) {
+                // client.keylog
+                // CLIENT_RANDOM client_random master_secret
+                protection.set_item(tls_secret_master, base16_decode(constexpr_master_secret));
+            }
+        };
+        session.set_hook_change_session_status(lambda_change_status);
     }
     // client_hello (fragment)
     {
         const char* record =
             "16 fe ff 00 00 00 00 00 00 00 00 00 c3 01 00 00"
-            "bd 00 00 00 00 00 00 00 b7 fe fd 6d 15 62 78 04"
-            "d2 bb d6 0b aa 05 f2 c6 68 06 7a ac 89 35 37 d4"
-            "07 46 43 26 8d a7 03 e4 84 fb 4d 00 00 00 36 c0"
+            "bd 00 00 00 00 00 00 00 b7 fe fd 9f c7 e2 53 87"
+            "0b 87 fa a8 21 b7 76 16 c4 c3 6f 60 6f 82 ed 8c"
+            "d7 86 d7 0a f2 d4 23 6e 99 2e 07 00 00 00 36 c0"
             "2c c0 30 00 9f cc a9 cc a8 cc aa c0 2b c0 2f 00"
             "9e c0 24 c0 28 00 6b c0 23 c0 27 00 67 c0 0a c0"
             "14 00 39 c0 09 c0 13 00 33 00 9d 00 9c 00 3d 00"
@@ -68,8 +80,8 @@ void test_dtls12() {
     {
         const char* record =
             "16 fe ff 00 00 00 00 00 00 00 00 00 23 03 00 00"
-            "17 00 00 00 00 00 00 00 17 fe ff 14 9c 97 bf b8"
-            "5b 6a 73 10 45 43 86 9e 69 c4 2d 7e 9f 62 61 08";
+            "17 00 00 00 00 00 00 00 17 fe ff 14 d8 32 1d 16"
+            "e2 72 e5 3c bc 26 77 2d ff 69 a2 56 ed cd cc 0a";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("hello_verify_request", &session, bin_record, from_server);
     }
@@ -77,11 +89,11 @@ void test_dtls12() {
     {
         const char* record =
             "16 fe ff 00 00 00 00 00 00 00 02 00 c3 01 00 00"
-            "d1 00 01 00 00 00 00 00 b7 fe fd 6d 15 62 78 04"
-            "d2 bb d6 0b aa 05 f2 c6 68 06 7a ac 89 35 37 d4"
-            "07 46 43 26 8d a7 03 e4 84 fb 4d 00 14 9c 97 bf"
-            "b8 5b 6a 73 10 45 43 86 9e 69 c4 2d 7e 9f 62 61"
-            "08 00 36 c0 2c c0 30 00 9f cc a9 cc a8 cc aa c0"
+            "d1 00 01 00 00 00 00 00 b7 fe fd 9f c7 e2 53 87"
+            "0b 87 fa a8 21 b7 76 16 c4 c3 6f 60 6f 82 ed 8c"
+            "d7 86 d7 0a f2 d4 23 6e 99 2e 07 00 14 d8 32 1d"
+            "16 e2 72 e5 3c bc 26 77 2d ff 69 a2 56 ed cd cc"
+            "0a 00 36 c0 2c c0 30 00 9f cc a9 cc a8 cc aa c0"
             "2b c0 2f 00 9e c0 24 c0 28 00 6b c0 23 c0 27 00"
             "67 c0 0a c0 14 00 39 c0 09 c0 13 00 33 00 9d 00"
             "9c 00 3d 00 3c 00 35 00 2f 01 00 00 5d ff 01 00"
@@ -106,9 +118,9 @@ void test_dtls12() {
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 01 00 4d 02 00 00"
-            "41 00 01 00 00 00 00 00 41 fe fd 09 4f 1e cb b2"
-            "49 7b 95 a0 b5 61 14 c6 fe f7 7e 68 43 1e 11 c2"
-            "78 24 70 1e b1 d2 03 dc 33 11 74 00 c0 27 00 00"
+            "41 00 01 00 00 00 00 00 41 fe fd f0 21 fa a3 69"
+            "c3 88 f4 80 2c 34 4d 67 cb 23 d9 6e 79 b6 85 68"
+            "d2 ad ee 45 b0 0c cc 36 a7 7f 8a 00 c0 27 00 00"
             "19 ff 01 00 01 00 00 0b 00 04 03 00 01 02 00 23"
             "00 00 00 16 00 00 00 17 00 00 16 fe fd 00 00 00"
             "00 00 00 00 02 00 69 0b 00 03 66 00 02 00 00 00"
@@ -202,13 +214,13 @@ void test_dtls12() {
             "c5 af 76 e3 6e f9 a1 dc 78 a2 bd 54 41 04 99 e5"
             "56 32 ba 02 fd 72 16 fe fd 00 00 00 00 00 00 00"
             "08 00 7d 0c 00 01 28 00 03 00 00 00 00 00 71 03"
-            "00 1d 20 34 0d c9 22 f7 ee a7 2b a1 13 ca 5a dc"
-            "09 53 d5 05 69 a6 80 31 dc 5b fc 4d d2 06 70 68"
-            "34 e1 26 08 04 01 00 67 2a 94 51 63 88 0d 13 a5"
-            "14 33 30 96 db ba 6c 01 d7 b0 70 25 e2 60 3d 50"
-            "aa 84 5c 32 fb 4f da 69 88 b8 70 96 78 a8 f6 ea"
-            "a2 fc 61 06 45 11 94 e6 6c 4f 25 23 fd 16 36 24"
-            "75 ca d2 43 01 80 27 63 56 a8 d9 13 01 4d 25 2c";
+            "00 1d 20 a4 a9 ba 02 fb 67 3f 13 6f bf af d8 43"
+            "b9 c8 7a 23 20 d8 5e 20 de a7 d1 bc 41 59 76 68"
+            "c9 e5 6a 08 04 01 00 81 f4 db ab 15 fc ab 02 6b"
+            "85 ef 8d 5b 5d 17 a8 d7 e8 88 a2 fa 5a 8f 2e a9"
+            "53 cc 65 89 9e 9b 35 45 63 15 92 99 92 6f 3d 06"
+            "ce c0 0b 05 c0 d7 b1 73 c2 61 1c 65 8b f1 e0 bf"
+            "68 e6 22 c4 c3 5f ff 90 70 3e 95 cc 0b e3 e6 ef";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("certificate (reassembled), server_key_exchange (fragment)", &session, bin_record, from_server);
     }
@@ -216,18 +228,18 @@ void test_dtls12() {
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 09 00 c3 0c 00 01"
-            "28 00 03 00 00 71 00 00 b7 f2 3e 92 12 0a 35 87"
-            "85 40 56 b5 29 73 06 1d 2d 90 42 ab 12 52 a2 91"
-            "ca 03 92 87 1b df e9 f7 7c be 32 f3 ac cf 33 3b"
-            "84 56 a7 f0 06 07 c2 4f 54 c4 15 e6 dd 0f df 2d"
-            "e0 de 7b 91 62 fb ae 38 84 32 d7 c9 f3 ba 72 3b"
-            "ca e9 30 d3 b2 13 21 e4 02 02 bd 21 0c 46 18 a6"
-            "f8 76 ec ad 81 24 44 7f a3 e8 7d 83 0c 90 7b 80"
-            "25 b6 04 5a 11 c9 2b ed 17 c2 c8 ed 96 4c 79 06"
-            "fb cb 8e d5 a5 1e 6e 3a 12 1b bd a4 10 cd f0 7d"
-            "fa 32 78 86 86 df db 11 9f 70 d2 b0 1d 9d c9 c1"
-            "e5 99 8b 00 3a 22 9e 32 61 de 05 69 fb fa cd 65"
-            "a8 74 8b b8 e3 23 26 d5 f8 dc df cb ed 41 89 d2";
+            "28 00 03 00 00 71 00 00 b7 81 36 3e 53 1e c2 40"
+            "e5 2a 99 11 79 bd 23 62 29 df d4 ba 03 7f e4 5c"
+            "6b 89 4f c0 0e f5 12 68 5f bf c4 54 f1 9f 91 db"
+            "0d 58 75 f9 29 bf 8f b1 90 a2 84 0d 4a 6c 04 ad"
+            "ea 1c 35 c6 b1 8f c4 49 e4 31 d9 dc 36 9a 81 ae"
+            "db 28 cf 33 1b bf c8 23 b7 c7 11 c8 cf f6 69 69"
+            "3c 21 0c 1b 58 73 25 39 76 dc 33 be 71 9e 28 cb"
+            "df 28 e8 ca df ac 64 d6 c2 09 68 cd 9f d9 0f 8a"
+            "f7 99 dd f8 93 01 19 68 7b e8 89 f5 c5 e7 0b 27"
+            "18 8b 62 17 5d 7b 13 c2 4a 64 9c 38 46 56 c3 11"
+            "3b 41 4b a5 26 20 df e0 a8 6d f9 72 31 fe 95 da"
+            "a9 f3 a6 a1 54 e3 74 e1 7b 00 54 b7 eb 8e cc 5e";
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("server_key_exchange (reassembled)", &session, bin_record, from_server);
     }
@@ -239,64 +251,43 @@ void test_dtls12() {
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("server_hello_done", &session, bin_record, from_server);
     }
-#if 0
-    // client_key_exchange, change_cipher_spec, encrypted_handshake message
+
+    // client_key_exchange, change_cipher_spec, finished
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 04 00 2d 10 00 00"
-            "21 00 02 00 00 00 00 00 21 20 72 b7 34 6a 14 e0"
-            "d7 20 8a e7 99 63 92 c0 8f c1 f1 1a 9c 60 48 9a"
-            "41 44 09 b7 bb 3f 93 59 d7 5e 14 fe fd 00 00 00"
+            "21 00 02 00 00 00 00 00 21 20 50 42 a8 d6 b5 bb"
+            "fe 9a 7a d0 69 fc 48 e4 59 d5 c2 be f4 c5 f2 15"
+            "3f 31 df 94 de 89 03 2e f9 57 14 fe fd 00 00 00"
             "00 00 00 00 05 00 01 01 16 fe fd 00 01 00 00 00"
-            "00 00 00 00 50 58 2f 88 eb cc 17 af 37 40 3f 1a"
-            "f0 0f c0 04 d6 17 17 05 41 c6 ca 59 3a 46 aa bd"
-            "47 25 96 ea 1b 99 57 32 00 b4 39 bc 9f 2e f2 bd"
-            "2e 4d c5 7c 9e 9b aa ae 1d 7c 1f 4e f9 f6 05 98"
-            "18 c1 a6 f2 f5 a8 f4 22 f3 88 e0 05 13 79 72 2d"
-            "a5 b2 38 84 cb";
+            "00 00 00 00 50 41 e2 f4 6b 71 97 6e a4 73 76 92"
+            "a1 a5 d7 d0 da 07 06 ef 1b 20 34 9a 04 83 f7 ae"
+            "c6 8c 3a c6 6e 12 a3 d9 32 f3 07 a3 ef 74 cb e6"
+            "6c 29 4e c9 c2 a0 12 4e e2 5c 98 69 c2 68 3b 10"
+            "93 e2 cd ca 56 4a d7 d7 71 39 66 41 13 ec e4 96"
+            "73 20 46 d5 6a";
         binary_t bin_record = base16_decode_rfc(record);
-        dump_record("client_key_exchange, change_cipher_spec, encrypted_handshake message", &session, bin_record, from_client);
+        dump_record("client_key_exchange, change_cipher_spec, finished", &session, bin_record, from_client);
     }
+#if 0
     // new_session_ticket
     {
-        const char* record =
-            "16 fe fd 00 00 00 00 00 00 00 0b 00 c2 04 00 00"
-            "b6 00 05 00 00 00 00 00 b6 00 00 1c 20 00 b0 77"
-            "15 7d 9f 0b 34 65 1b 65 82 9d d1 cf 3d 23 9b 47"
-            "c7 5b 89 d0 1b c2 ef d3 a7 23 e8 40 5e bd 60 36"
-            "e0 5a 61 b3 68 bf 58 69 58 e9 6a dc ad 8e 1c 80"
-            "c0 66 5c f2 68 59 9c a0 bf 68 23 e9 37 eb 15 d8"
-            "da cb e5 6d ef ba a9 f0 fd ab bc 32 fb e7 ff 29"
-            "4d 08 e5 9d 7a f9 01 cd 71 1f 7d 76 cd 3d 6a ac"
-            "64 b2 c1 09 9c 97 6b 3a 91 98 c0 00 d3 c0 6d c0"
-            "c5 b9 2c a2 ff 97 de 1d 37 b2 b9 39 e1 4a 7c 88"
-            "49 3e 88 9c 97 2a 3a bd 61 e9 a5 40 e9 87 29 66"
-            "02 c6 d9 ed bb 5a ad d9 5a 59 51 2d ca 8d ac 9e"
-            "50 13 43 08 d8 e5 bf c8 b9 4f fb e8 a3 98 c7";
+        const char* record = ""
+        ;
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("new_session_ticket", &session, bin_record, from_server);
     }
     // change_cipher_spec, encrypted_handshake message
     {
-        const char* record =
-            "14 fe fd 00 00 00 00 00 00 00 0c 00 01 01 16 fe"
-            "fd 00 01 00 00 00 00 00 00 00 50 24 28 4f f3 13"
-            "22 6a c4 98 d9 14 66 28 e9 82 07 d9 61 00 7e 0e"
-            "a0 ee 63 99 71 e9 29 6e 8d 2e 04 12 77 9c c2 4c"
-            "6d 95 ce 58 bd 8c cb 0d 1b 4f da 1b a7 80 52 e6"
-            "60 a2 c6 3e 05 32 df 0a 68 7f b5 5d 66 16 53 ec"
-            "d2 73 3e 72 12 fd 79 e1 f3 d7 71";
+        const char* record = ""
+        ;
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("change_cipher_spec, encrypted_handshake message", &session, bin_record, from_server);
     }
     // application data
     {
-        const char* record =
-            "17 fe fd 00 01 00 00 00 00 00 01 00 40 1e a9 65"
-            "81 47 fc e3 95 e4 71 a6 bf 0c 85 61 df 2c 79 f4"
-            "70 2f 7b 15 45 e9 08 72 28 ed dc 1d bb 88 7d e4"
-            "a4 e5 af 8a 1e 4b 4e 16 9e 6f 16 cf 8c 64 a5 01"
-            "f7 8f d6 6f 19 e9 34 9c 1b 51 61 43 f1";
+        const char* record = ""
+        ;
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("application data (hello)", &session, bin_record, from_client);
     }

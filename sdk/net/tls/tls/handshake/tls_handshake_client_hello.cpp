@@ -102,6 +102,8 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
             }
         }
 
+        session->update_session_status(session_client_hello);
+
         // keycalc
         {
             auto hspos = offsetof_header();
@@ -131,8 +133,6 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 protection_context.add_cipher_suite(cs);
             }
         }
-
-        session->update_session_status(session_client_hello);
     }
     __finally2 {
         // do nothing

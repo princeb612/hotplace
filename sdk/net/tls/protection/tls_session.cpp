@@ -33,6 +33,9 @@ session_type_t tls_session::get_type() { return _type; }
 void tls_session::update_session_status(session_status_t status) {
     _status |= status;
     _sem.signal();
+    if (_change_status_hook) {
+        _change_status_hook(status);
+    }
 #if defined DEBUG
     if (istraceable()) {
         basic_stream dbs;
@@ -47,7 +50,10 @@ void tls_session::update_session_status(session_status_t status) {
 #endif
 }
 
-void tls_session::clear_session_status(session_status_t status) { _status &= ~status; }
+void tls_session::clear_session_status(session_status_t status) {
+    _status &= ~status;
+    _sem.signal();
+}
 
 uint32 tls_session::get_session_status() { return _status; }
 
@@ -89,6 +95,8 @@ return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, b
     }
     return ret;
 }
+
+void tls_session::set_hook_change_session_status(std::function<void(uint32 status)> func) { _change_status_hook = func; }
 
 t_key_value<uint16, uint16>& tls_session::get_conf() { return _kv; }
 

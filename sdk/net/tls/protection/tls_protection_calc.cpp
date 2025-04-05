@@ -452,102 +452,105 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             }
 
         } else if (tls_hs_client_key_exchange == type) {
-            /**
-             * RFC 2246 8.1. Computing the master secret
-             * RFC 5246 8.1.  Computing the Master Secret
-             * master_secret = PRF(pre_master_secret, "master secret",
-             *                     ClientHello.random + ServerHello.random)
-             *                     [0..47];
-             */
-
-            hash_algorithm_t hmac_alg = algof_mac(hint_tls_alg);
-
-            binary_t pre_master_secret;
+            crypto_hmac_builder builder;
             binary_t master_secret;
+            hash_algorithm_t hmac_alg = algof_mac(hint_tls_alg);
             const binary_t &client_hello_random = get_item(tls_context_client_hello_random);
             const binary_t &server_hello_random = get_item(tls_context_server_hello_random);
 
-            {
-                const EVP_PKEY *pkey_priv = nullptr;
-                const EVP_PKEY *pkey_pub = nullptr;
-                auto pkey_ske = get_keyexchange().find(KID_TLS_SERVER_KEY_EXCHANGE);
-                auto pkey_cke = get_keyexchange().find(KID_TLS_CLIENT_KEY_EXCHANGE);
-                bool test = false;
-                is_private_key(pkey_ske, test);
-                if (test) {
-                    pkey_priv = pkey_ske;
-                    pkey_pub = pkey_cke;
-                } else {
-                    pkey_priv = pkey_cke;
-                    pkey_pub = pkey_ske;
+            if (use_pre_master_secret()) {
+                master_secret = get_item(tls_secret_master);
+            } else {
+                /**
+                 * RFC 2246 8.1. Computing the master secret
+                 * RFC 5246 8.1.  Computing the Master Secret
+                 * master_secret = PRF(pre_master_secret, "master secret",
+                 *                     ClientHello.random + ServerHello.random)
+                 *                     [0..47];
+                 */
+
+                binary_t pre_master_secret;
+                {
+                    const EVP_PKEY *pkey_priv = nullptr;
+                    const EVP_PKEY *pkey_pub = nullptr;
+                    auto pkey_ske = get_keyexchange().find(KID_TLS_SERVER_KEY_EXCHANGE);
+                    auto pkey_cke = get_keyexchange().find(KID_TLS_CLIENT_KEY_EXCHANGE);
+                    bool test = false;
+                    is_private_key(pkey_ske, test);
+                    if (test) {
+                        pkey_priv = pkey_ske;
+                        pkey_pub = pkey_cke;
+                    } else {
+                        pkey_priv = pkey_cke;
+                        pkey_pub = pkey_ske;
+                    }
+                    if (nullptr == pkey_priv || nullptr == pkey_pub) {
+                        ret = errorcode_t::not_found;
+                        __leave2;
+                    }
+                    ret = dh_key_agreement(pkey_priv, pkey_pub, pre_master_secret);
+                    if (errorcode_t::success != ret) {
+                        __leave2;
+                    }
                 }
-                if (nullptr == pkey_priv || nullptr == pkey_pub) {
-                    ret = errorcode_t::not_found;
-                    __leave2;
-                }
-                ret = dh_key_agreement(pkey_priv, pkey_pub, pre_master_secret);
-                if (errorcode_t::success != ret) {
-                    __leave2;
-                }
-            }
 
 #if defined DEBUG
-            if (istraceable()) {
-                basic_stream dbs;
-                dbs.println("> hmac alg %x", hmac_alg);
-                dbs.println("> client hello random %s", base16_encode(client_hello_random).c_str());
-                dbs.println("> server hello random %s", base16_encode(server_hello_random).c_str());
-                dbs.println("> pre master secret %s", base16_encode(pre_master_secret).c_str());
-                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
-            }
+                if (istraceable()) {
+                    basic_stream dbs;
+                    dbs.println("> hmac alg %x", hmac_alg);
+                    dbs.println("> client hello random %s", base16_encode(client_hello_random).c_str());
+                    dbs.println("> server hello random %s", base16_encode(server_hello_random).c_str());
+                    dbs.println("> pre master secret %s", base16_encode(pre_master_secret).c_str());
+                    trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                }
 #endif
 
-            crypto_hmac_builder builder;
-            auto hmac_master = builder.set(hmac_alg).set(pre_master_secret).build();
-            if (hmac_master) {
-                /**
-                 * master secret
-                 * RFC 2246 5. HMAC and the pseudorandom function
-                 * RFC 2246 8.1. Computing the master secret
-                 *   master_secret = PRF(pre_master_secret, "master secret",
-                 *                       ClientHello.random + ServerHello.random)
-                 *                       [0..47];
-                 * RFC 2246 5. HMAC and the pseudorandom function
-                 * RFC 5246 5.  HMAC and the Pseudorandom Function
-                 *   P_hash(secret, seed) = HMAC_hash(secret, A(1) + seed) +
-                 *                          HMAC_hash(secret, A(2) + seed) +
-                 *                          HMAC_hash(secret, A(3) + seed) + ...
-                 *   A() is defined as:
-                 *       A(0) = seed
-                 *       A(i) = HMAC_hash(secret, A(i-1))
-                 *   PRF(secret, label, seed) = P_<hash>(secret, label + seed)
-                 */
-                binary_t seed;
-                hash_context_t *hmac_handle = nullptr;
-                size_t size_master_secret = 48;
+                auto hmac_master = builder.set(hmac_alg).set(pre_master_secret).build();
+                if (hmac_master) {
+                    /**
+                     * master secret
+                     * RFC 2246 5. HMAC and the pseudorandom function
+                     * RFC 2246 8.1. Computing the master secret
+                     *   master_secret = PRF(pre_master_secret, "master secret",
+                     *                       ClientHello.random + ServerHello.random)
+                     *                       [0..47];
+                     * RFC 2246 5. HMAC and the pseudorandom function
+                     * RFC 5246 5.  HMAC and the Pseudorandom Function
+                     *   P_hash(secret, seed) = HMAC_hash(secret, A(1) + seed) +
+                     *                          HMAC_hash(secret, A(2) + seed) +
+                     *                          HMAC_hash(secret, A(3) + seed) + ...
+                     *   A() is defined as:
+                     *       A(0) = seed
+                     *       A(i) = HMAC_hash(secret, A(i-1))
+                     *   PRF(secret, label, seed) = P_<hash>(secret, label + seed)
+                     */
+                    binary_t seed;
+                    hash_context_t *hmac_handle = nullptr;
+                    size_t size_master_secret = 48;
 
-                binary_append(seed, str2bin("master secret"));
-                binary_append(seed, client_hello_random);
-                binary_append(seed, server_hello_random);
+                    binary_append(seed, str2bin("master secret"));
+                    binary_append(seed, client_hello_random);
+                    binary_append(seed, server_hello_random);
 
-                binary_t temp = seed;
-                binary_t atemp;
-                binary_t ptemp;
-                while (master_secret.size() < size_master_secret) {
-                    hmac_master->mac(temp, atemp);
-                    hmac_master->update(atemp).update(seed).finalize(ptemp);
-                    binary_append(master_secret, ptemp);
-                    temp = atemp;
+                    binary_t temp = seed;
+                    binary_t atemp;
+                    binary_t ptemp;
+                    while (master_secret.size() < size_master_secret) {
+                        hmac_master->mac(temp, atemp);
+                        hmac_master->update(atemp).update(seed).finalize(ptemp);
+                        binary_append(master_secret, ptemp);
+                        temp = atemp;
+                    }
+
+                    master_secret.resize(48);  // 48 bytes
+
+                    set_item(tls_secret_master, master_secret);
+
+                    hmac_master->release();
+                } else {
+                    ret = errorcode_t::not_supported;
+                    __leave2;
                 }
-
-                master_secret.resize(48);  // 48 bytes
-
-                set_item(tls_secret_master, master_secret);
-
-                hmac_master->release();
-            } else {
-                ret = errorcode_t::not_supported;
-                __leave2;
             }
 
             auto hmac_expansion = builder.set(hmac_alg).set(master_secret).build();

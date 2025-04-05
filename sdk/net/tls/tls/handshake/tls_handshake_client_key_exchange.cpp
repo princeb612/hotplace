@@ -42,8 +42,8 @@ return_t tls_handshake_client_key_exchange::do_postprocess(tls_direction_t dir, 
 
         {
             protection.update_transcript_hash(session, stream + hspos, hssize);
-            protection.calc(session, tls_hs_client_key_exchange, dir);
             session->update_session_status(session_client_key_exchange);
+            protection.calc(session, tls_hs_client_key_exchange, dir);
         }
     }
     __finally2 {
