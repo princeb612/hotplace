@@ -159,14 +159,14 @@ define_tls_sizeof_variable(sig_alg_code);
  * DO NOT USE if pri 0
  */
 const tls_sig_scheme_t tls_sig_schemes[] = {
-    {0x0201, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha1, "rsa_pkcs1_sha1"},  // RFC 9155
-    {0x0202, 0, kty_dh, crypt_sig_dsa, NID_dhKeyAgreement, sig_sha1, "dsa_sha1_RESERVED"},
-    {0x0203, 0, kty_ec, crypt_sig_ecdsa, 0, sig_sha1, "ecdsa_sha1"},  // RFC 9155
-    {0x0301, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha224, "sha224 RSA"},
-    {0x0302, 0, kty_dsa, crypt_sig_dsa, NID_dsa, sig_sha224, "sha224 DSA"},
-    {0x0303, 0, kty_ec, crypt_sig_ecdsa, 0, sig_sha224, "sha224 ECDSA"},
-    {0x0401, 2, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha256, "rsa_pkcs1_sha256"},  // RFC 8446 9.1 MUST
-    {0x0402, 0, kty_dh, crypt_sig_dsa, NID_dhKeyAgreement, sig_sha256, "dsa_sha256_RESERVED"},
+    {0x0201, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha1, "rsa_pkcs1_sha1"},                // RFC 9155
+    {0x0202, 0, kty_dh, crypt_sig_dsa, NID_dhKeyAgreement, sig_sha1, "dsa_sha1_RESERVED"},             //
+    {0x0203, 0, kty_ec, crypt_sig_ecdsa, 0, sig_sha1, "ecdsa_sha1"},                                   // RFC 9155
+    {0x0301, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha224, "SHA224 RSA"},                  // bakward compatibility, wireshark
+    {0x0302, 0, kty_dsa, crypt_sig_dsa, NID_dsa, sig_sha224, "SHA224 DSA"},                            // bakward compatibility, wireshark
+    {0x0303, 0, kty_ec, crypt_sig_ecdsa, 0, sig_sha224, "SHA224 ECDSA"},                               // bakward compatibility, wireshark
+    {0x0401, 2, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha256, "rsa_pkcs1_sha256"},            // RFC 8446 9.1 MUST
+    {0x0402, 0, kty_dh, crypt_sig_dsa, NID_dhKeyAgreement, sig_sha256, "dsa_sha256_RESERVED"},         //
     {0x0403, 2, kty_ec, crypt_sig_ecdsa, NID_X9_62_prime256v1, sig_sha256, "ecdsa_secp256r1_sha256"},  // RFC 8446 9.1 MUST, RFC 8446 11 Recommended
     {0x0420, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha256, "rsa_pkcs1_sha256_legacy"},
     {0x0501, 0, kty_rsa, crypt_sig_rsassa_pkcs15, NID_rsa, sig_sha384, "rsa_pkcs1_sha384"},

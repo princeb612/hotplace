@@ -90,13 +90,10 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
         // auto session_type = session->get_type();
 
         size_t bpos = pos;
-        bool is_fragmented = false;
 
         auto test = do_read_header(dir, stream, size, pos);
         if (errorcode_t::success != test) {
-            if (errorcode_t::reassemble == test) {
-                // do nothing
-            } else {
+            if (errorcode_t::reassemble != test) {
                 ret = test;
                 __leave2;
             }
@@ -108,15 +105,15 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
         }
 
         // RFC 9147 5.5.  Handshake Message Fragmentation and Reassembly
-        if (reassemble == test) {
-            auto& protection = session->get_tls_protection();
-            binary_t assemble;
-            protection.consume_item(tls_context_fragment, assemble);
-            size_t tpos = 0;
-            ret = do_read_body(dir, &assemble[0], assemble.size(), tpos);
+        if (tls_hs_encrypted_extensions == get_type()) {
+            ret = do_read_body(dir, stream, offsetof_body() + get_body_size(), pos);
         } else {
-            if (tls_hs_encrypted_extensions == get_type()) {
-                ret = do_read_body(dir, stream, offsetof_body() + get_body_size(), pos);
+            if (reassemble == test) {
+                auto& protection = session->get_tls_protection();
+                binary_t assemble;
+                protection.consume_item(tls_context_fragment, assemble);
+                size_t tpos = 0;
+                ret = do_read_body(dir, &assemble[0], assemble.size(), tpos);
             } else {
                 ret = do_read_body(dir, stream, size, pos);
             }
@@ -261,8 +258,8 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             _size = size_header_body;
         }
 
-        if (cond_dtls) {
-            if (session_tls == type) {
+        if (session_tls == type) {
+            if (cond_dtls) {
                 if (fragment_len < length) {
                     if (0 == fragment_offset) {
                         protection.clear_item(tls_context_fragment);
@@ -276,26 +273,26 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                         ret = errorcode_t::fragmented;
                     }
                 }
-            } else if (session_quic == type) {
-                // header     body     end-of-stream
-                // \- hspos   \-pos    \-size
-                // case not fragmented
-                // case fragmented
+            }
+        } else if (session_quic == type) {
+            // header     body     end-of-stream
+            // \- hspos   \-pos    \-size
+            // case not fragmented
+            // case fragmented
 
-                if (hspos + length > size) {
-                    ret = errorcode_t::fragmented;
-                    protection.append_item(tls_context_fragment, stream + hspos, size - hspos);
+            if (hspos + length > size) {
+                ret = errorcode_t::fragmented;
+                protection.append_item(tls_context_fragment, stream + hspos, size - hspos);
 #if defined DEBUG
-                    if (istraceable()) {
-                        basic_stream dbs;
-                        dbs.printf("\e[1;33m");
-                        dbs.println("# fragment");
-                        dump_memory(stream + hspos, size - hspos, &dbs, 16, 3, 0, dump_notrunc);
-                        dbs.printf("\e[0m");
-                        trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
-                    }
-#endif
+                if (istraceable()) {
+                    basic_stream dbs;
+                    dbs.printf("\e[1;33m");
+                    dbs.println("# fragment");
+                    // dump_memory(stream + hspos, size - hspos, &dbs, 16, 3, 0, dump_notrunc);
+                    dbs.printf("\e[0m");
+                    trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
                 }
+#endif
             }
         }
 

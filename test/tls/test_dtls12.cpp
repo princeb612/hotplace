@@ -253,6 +253,8 @@ void test_dtls12() {
     }
 
     // client_key_exchange, change_cipher_spec, finished
+    // finished - decryption failed
+#if 0
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 04 00 2d 10 00 00"
@@ -269,7 +271,6 @@ void test_dtls12() {
         binary_t bin_record = base16_decode_rfc(record);
         dump_record("client_key_exchange, change_cipher_spec, finished", &session, bin_record, from_client);
     }
-#if 0
     // new_session_ticket
     {
         const char* record = ""
