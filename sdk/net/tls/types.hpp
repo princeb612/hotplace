@@ -106,7 +106,7 @@ enum tls_hs_type_t : uint8 {
 #pragma pack(push, 1)
 struct tls_handshake_t {
     tls_hs_type_t msg_type;
-    uint24_t length;
+    byte_t length[3];
 };
 #pragma pack(pop)
 

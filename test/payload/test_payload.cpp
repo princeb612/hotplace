@@ -135,7 +135,7 @@ void test_uint24() {
 //
 //  type        size    endian      name        group
 //  uint8       1       N/A         "padlen"    N/A
-//  uint32_24_t 3       N/A         "data"      N/A
+//  uint24_t    3       N/A         "data"      N/A
 //  uint32      4       true        "value"     N/A
 //  binary_t    *       N/A         "pad"       N/A
 
@@ -152,8 +152,8 @@ void test_payload_uint24() {
         payload pl;
         uint8 padlen = 3;  // "pad"
         basic_stream bs;
-        uint32_24_t i32_24(0x100000);  // 32/24 [0 .. 0x00ffffff]
-        uint32 i32 = 0x10000000;       // 32/32 [0 .. 0xffffffff]
+        uint24_t i32_24(0x100000);  // 32/24 [0 .. 0x00ffffff]
+        uint32 i32 = 0x10000000;    // 32/32 [0 .. 0xffffffff]
 
         pl << new payload_member(padlen, "padlen") << new payload_member(i32_24, "int32_24") << new payload_member(i32, true, "int32_32")
            << new payload_member(pad, "pad");
@@ -168,7 +168,7 @@ void test_payload_uint24() {
     // read
     {
         payload pl;
-        uint32_24_t i32_24;
+        uint24_t i32_24;
         pl << new payload_member((uint8)0, "padlen") << new payload_member(i32_24, "int32_24") << new payload_member((uint32)0, true, "int32_32")
            << new payload_member(pad, "pad");
 
@@ -176,12 +176,11 @@ void test_payload_uint24() {
 
         // test
         uint8 padlen = pl.t_value_of<uint8>("padlen");
-        uint32_24_t i24 = pl.t_value_of<uint32>("int32_24");
+        uint32 i24_value = pl.t_value_of<uint32>("int32_24");
         uint32 i32 = pl.t_value_of<uint32>("int32_32");
-        uint32 i24_value = i24.get();
         _logger->writeln("padlen %u uint32_24 %u (0x%08x) uint32_32 %u (0x%08x)", padlen, i24_value, i24_value, i32, i32);
         _test_case.assert(3 == padlen, __FUNCTION__, "read #padlen");
-        _test_case.assert(0x100000 == i24.get(), __FUNCTION__, "read #i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
+        _test_case.assert(0x100000 == i24_value, __FUNCTION__, "read #i32_b24");  // 3(1) || i32_24(3) || i32_32(4) || "pad"(3)
 
         binary_t bin_dump;
         pl.write(bin_dump);

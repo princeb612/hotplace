@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSION__
 #define __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSION__
 
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>

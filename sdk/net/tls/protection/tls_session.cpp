@@ -98,7 +98,7 @@ return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, b
 
 void tls_session::set_hook_change_session_status(std::function<void(uint32 status)> func) { _change_status_hook = func; }
 
-t_key_value<uint16, uint16>& tls_session::get_conf() { return _kv; }
+t_key_value<uint16, uint16>& tls_session::get_keyvalue() { return _kv; }
 
 tls_session::session_info& tls_session::get_session_info(tls_direction_t dir) { return _direction[dir]; }
 
@@ -151,6 +151,8 @@ void tls_session::session_info::get_alert(std::function<void(uint8, uint8)> func
     }
     _alerts.clear();
 }
+
+t_key_value<uint8, uint64>& tls_session::session_info::get_keyvalue() { return _kv; }
 
 void tls_session::schedule(tls_handshake* handshake) {
     if (handshake) {

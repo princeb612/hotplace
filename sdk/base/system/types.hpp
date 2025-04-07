@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_TYPES__
 #define __HOTPLACE_SDK_BASE_SYSTEM_TYPES__
 
+#include <functional>
 #include <sdk/base/error.hpp>
 #include <sdk/base/stream.hpp>
 #include <sdk/base/syntax.hpp>
@@ -39,6 +40,35 @@ namespace hotplace {
     }
 #endif
 
+template <typename TYPE, uint8 N>
+struct t_uint_custom_t {
+    byte_t data[N];
+
+    t_uint_custom_t() { memset(data, 0, N); }
+    t_uint_custom_t(const t_uint_custom_t &rhs) { memcpy(data, rhs.data, N); }
+    t_uint_custom_t(const byte_t *p, size_t size) {
+        if (p && (size >= N)) {
+            memcpy(data, p, N);
+        } else {
+            memset(data, 0, N);
+        }
+    }
+
+    operator TYPE() {
+        TYPE value = TYPE(0);
+        ntoh(data, N, value);
+        return value;
+    }
+    t_uint_custom_t &operator=(const TYPE &v) {
+        set(v);
+        return *this;
+    }
+    void set(const TYPE &v) { hton(data, N, v); }
+
+    virtual return_t hton(byte_t *p, uint8 len, const TYPE &value) { return errorcode_t::do_nothing; }
+    virtual return_t ntoh(const byte_t *p, uint8 len, TYPE &value) { return errorcode_t::do_nothing; }
+};
+
 /**
  * @brief   uint24 utility function (0 to 0x00ffffff)
  * @see     RFC 7540 4. HTTP Frames, Figure 1: Frame Layout
@@ -48,12 +78,36 @@ namespace hotplace {
 return_t b24_i32(const byte_t *p, uint8 len, uint32 &value);
 return_t i32_b24(byte_t *p, uint8 len, uint32 value);
 
-struct uint24_t {
-    byte_t data[3];
+/* TLS handshake length */
+struct uint24_t : t_uint_custom_t<uint32, 3> {
+    uint24_t();
+    uint24_t(const uint24_t &rhs);
+    uint24_t(const byte_t *p, size_t size);
+    uint24_t(uint32 v);
+
+    return_t hton(byte_t *p, uint8 len, const uint32 &value) override;
+    return_t ntoh(const byte_t *p, uint8 len, uint32 &value) override;
 };
 
 return_t b24_i32(const uint24_t &u, uint32 &value);
 return_t i32_b24(uint24_t &u, uint32 value);
+
+return_t b48_i64(const byte_t *p, uint8 len, uint64 &value);
+return_t i64_b48(byte_t *p, uint8 len, uint64 value);
+
+/* DTLS record sequence */
+struct uint48_t : t_uint_custom_t<uint64, 6> {
+    uint48_t();
+    uint48_t(const uint48_t &rhs);
+    uint48_t(const byte_t *p, size_t size);
+    uint48_t(uint64 v);
+
+    return_t hton(byte_t *p, uint8 len, const uint64 &value) override;
+    return_t ntoh(const byte_t *p, uint8 len, uint64 &value) override;
+};
+
+return_t b48_i64(const uint48_t &u, uint64 &value);
+return_t i64_b48(uint48_t &u, uint64 value);
 
 }  // namespace hotplace
 

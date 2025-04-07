@@ -13,6 +13,7 @@
 #define __HOTPLACE_SDK_IO_BASIC_PARSER__
 
 #include <sdk/base/basic/keyvalue.hpp>
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
 #include <sdk/base/pattern/aho_corasick.hpp>

@@ -29,6 +29,7 @@ void test_tls13_xargs_org() {
     tls_advisor* advisor = tls_advisor::get_instance();
 
     {
+        // https://tls13.xargs.org/files/server.crt
         const char* servercert =
             "-----BEGIN CERTIFICATE-----\n"
             "MIIDITCCAgmgAwIBAgIIFVqSrcIEj5AwDQYJKoZIhvcNAQELBQAwIjELMAkGA1UE\n"
@@ -51,11 +52,13 @@ void test_tls13_xargs_org() {
             "-----END CERTIFICATE-----";
 
         crypto_key key;
-        keychain.load_cert(&key, servercert, 0);
+        ret = keychain.load_cert(&key, servercert, strlen(servercert));
 
         dump_key(key.any(), &bs);
         _logger->writeln(bs);
         bs.clear();
+
+        _test_case.test(ret, __FUNCTION__, "certificate");
     }
 
     /**

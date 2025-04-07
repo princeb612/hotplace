@@ -322,7 +322,7 @@ void test_case::test(return_t result, const char* test_function, const char* mes
 
         console_color_t color = console_color_t::yellow;
         auto category = advisor->categoryof(result);
-        switch (result) {
+        switch (category) {
             case error_category_success:
                 _total._count_success++;
                 break;

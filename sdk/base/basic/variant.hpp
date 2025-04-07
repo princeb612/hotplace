@@ -15,6 +15,7 @@
 
 #include <sdk/base/basic/types.hpp>
 #include <sdk/base/system/datetime.hpp>
+#include <sdk/base/system/types.hpp>
 
 namespace hotplace {
 
@@ -102,8 +103,10 @@ enum vartype_t {
     TYPE_JCHAR = 35,    /* unsigned short */
     TYPE_JSTRING = 36,  /* java/lang/String */
 
-    TYPE_INT24 = 37,
-    TYPE_UINT24 = 38,
+    TYPE_INT24 = 37,  /* ex. TLS handshake length */
+    TYPE_UINT24 = 38, /* ex. TLS handshake length */
+    TYPE_INT48 = 39,  /* ex. DTLS record sequence */
+    TYPE_UINT48 = 40, /* ex. DTLS record sequence */
 
     TYPE_RESERVED = 0x1000,
 
@@ -250,8 +253,10 @@ class variant {
     variant(uint8 value);
     variant(int16 value);
     variant(uint16 value);
+    variant(const uint24_t& value);
     variant(int32 value);
     variant(uint32 value);
+    variant(const uint48_t& value);
     variant(int64 value);
     variant(uint64 value);
 #if defined __SIZEOF_INT128__
@@ -290,8 +295,14 @@ class variant {
     variant& set_uint16(uint16 value);
     variant& set_int24(int32 value);    // 32/24 [0 .. 0x00ffffff]
     variant& set_uint24(uint32 value);  // 32/24 [0 .. 0x00ffffff]
+    variant& set_uint24(const byte_t* p, size_t len);
+    variant& set_uint24(const uint24_t& value);
     variant& set_int32(int32 value);    // 32/32 [0 .. 0xffffffff]
     variant& set_uint32(uint32 value);  // 32/32 [0 .. 0xffffffff]
+    variant& set_int48(int64 value);
+    variant& set_uint48(uint64 value);
+    variant& set_uint48(const byte_t* p, size_t len);
+    variant& set_uint48(const uint48_t& value);
     variant& set_int64(int64 value);
     variant& set_uint64(uint64 value);
 #if defined __SIZEOF_INT128__

@@ -35,6 +35,7 @@
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/base/basic/obfuscate_string.hpp>
+#include <sdk/base/basic/range.hpp>
 #include <sdk/base/basic/template.hpp>
 #include <sdk/base/basic/types.hpp>
 #include <sdk/base/basic/valist.hpp>

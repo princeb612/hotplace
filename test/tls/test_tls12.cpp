@@ -19,7 +19,7 @@ void test_tls12_xargs_org() {
     return_t ret = errorcode_t::success;
     tls_session session;
     // to test unsupported cipher suite TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
-    session.get_conf().set(session_debug_deprecated_ciphersuite, 1);
+    session.get_keyvalue().set(session_debug_deprecated_ciphersuite, 1);
 
     crypto_keychain keychain;
     openssl_digest dgst;

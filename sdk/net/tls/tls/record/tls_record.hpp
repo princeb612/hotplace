@@ -9,6 +9,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORD__
 #define __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORD__
 
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
@@ -35,8 +36,8 @@ class tls_record {
     void set_tls_version(uint16 version);
 
     bool is_dtls();
-    uint16 get_key_epoch();                 // DTLS key epoch
-    const binary_t& get_dtls_record_seq();  // DTLS record sequence number
+    uint16 get_key_epoch();        // DTLS key epoch
+    uint64 get_dtls_record_seq();  // DTLS record sequence number
 
     virtual void operator<<(tls_record* record);
     virtual void operator<<(tls_handshake* handshake);
@@ -64,7 +65,7 @@ class tls_record {
     uint8 _content_type;
     bool _cond_dtls;
     uint16 _key_epoch;
-    binary_t _dtls_record_seq;
+    uint64 _dtls_record_seq;  // uint48_t
     uint16 _bodysize;
 
     tls_session* _session;

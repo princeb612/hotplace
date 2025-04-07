@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_NOSTD_RANGE__
-#define __HOTPLACE_SDK_BASE_NOSTD_RANGE__
+#ifndef __HOTPLACE_SDK_BASE_BASIC_RANGE__
+#define __HOTPLACE_SDK_BASE_BASIC_RANGE__
 
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>
@@ -18,6 +18,23 @@
 #include <sdk/base/types.hpp>
 
 namespace hotplace {
+
+struct range_t {
+    size_t begin;
+    size_t end;
+    range_t() : begin(0), end(0) {}
+    range_t(size_t b, size_t e) : begin(b), end(e) {}
+    bool operator<(const range_t& rhs) const {
+        bool ret = false;
+        if (begin < rhs.begin) {
+            ret = true;
+        } else if (begin == rhs.begin) {
+            ret = (end < rhs.end);
+        }
+        return ret;
+    }
+    bool operator==(const range_t& rhs) const { return (begin == rhs.begin) && (end == rhs.end); }
+};
 
 template <typename T>
 class t_range {

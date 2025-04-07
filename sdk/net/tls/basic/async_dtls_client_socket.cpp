@@ -158,36 +158,37 @@ return_t async_dtls_client_socket::do_handshake() {
                         .add("rsa_pss_rsae_sha512");
                     handshake->get_extensions().add(signature_algorithms);
                 }
-                {
-                    auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(session);
-                    (*psk_key_exchange_modes).add("psk_dhe_ke");
-                    handshake->get_extensions().add(psk_key_exchange_modes);
-                }
-                {
-                    auto key_share = new tls_extension_client_key_share(session);
-                    (*key_share).add("x25519");
-                    handshake->get_extensions().add(key_share);
-                }
-
-                *record << handshake;
-                ret = record->write(dir, bin);
+                // {
+                //     auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(session);
+                //     (*psk_key_exchange_modes).add("psk_dhe_ke");
+                //     handshake->get_extensions().add(psk_key_exchange_modes);
+                // }
+                // {
+                //     auto key_share = new tls_extension_client_key_share(session);
+                //     (*key_share).add("x25519");
+                //     handshake->get_extensions().add(key_share);
+                // }
 
                 {
+                    *record << handshake;
+                    ret = record->write(dir, bin);
+
                     ret = async_client_socket::sendto((char*)&bin[0], bin.size(), &cbsent, (sockaddr*)&_sa, sizeof(_sa));
                     bin.clear();
                 }
 
-                session->wait_change_session_status(session_hello_verify_request, get_wto());
-                session_status = session->get_session_status();
-
-                if (0 == (session_status & session_hello_verify_request)) {
-                    ret = error_handshake;
-                    __leave2;
-                }
-
                 {
+                    session->wait_change_session_status(session_hello_verify_request, get_wto());
+                    session_status = session->get_session_status();
+
+                    if (0 == (session_status & session_hello_verify_request)) {
+                        ret = error_handshake;
+                        __leave2;
+                    }
+
                     handshake->set_cookie(protection.get_item(tls_context_cookie));
                     ret = record->write(dir, bin);
+
                     ret = async_client_socket::sendto((char*)&bin[0], bin.size(), &cbsent, (sockaddr*)&_sa, sizeof(_sa));
                     bin.clear();
                 }
@@ -216,12 +217,18 @@ return_t async_dtls_client_socket::do_handshake() {
             record->write(dir, bin);
             record->release();
         }
-
+        // change_cipher_spec
+        {
+            tls_record_change_cipher_spec record(session);
+            record.write(dir, bin);
+        }
         // client finished
         {
-            tls_record_application_data record(session);
-            record.get_handshakes().add(new tls_handshake_finished(session));
-            record.write(dir, bin);
+            tls_record_builder builder;
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+            *record << new tls_handshake_finished(session);
+            record->write(dir, bin);
+            record->release();
         }
 
         ret = async_client_socket::sendto((char*)&bin[0], bin.size(), &cbsent, (sockaddr*)&_sa, sizeof(_sa));

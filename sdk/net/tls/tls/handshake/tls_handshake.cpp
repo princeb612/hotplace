@@ -222,11 +222,11 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             {
                 payload pl;
                 pl << new payload_member(uint8(0), constexpr_message_type)
-                   << new payload_member(uint32_24_t(), constexpr_len)
+                   << new payload_member(uint24_t(0), constexpr_len)
                    // DTLS handshake reconstruction data
                    << new payload_member(uint16(0), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
-                   << new payload_member(uint32_24_t(), constexpr_fragment_offset, constexpr_group_dtls)          // dtls
-                   << new payload_member(uint32_24_t(), constexpr_fragment_len, constexpr_group_dtls);            // dtls
+                   << new payload_member(uint24_t(0), constexpr_fragment_offset, constexpr_group_dtls)            // dtls
+                   << new payload_member(uint24_t(0), constexpr_fragment_len, constexpr_group_dtls);              // dtls
                 ;
 
                 pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
@@ -344,11 +344,11 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
 
     payload pl;
     pl << new payload_member(uint8(get_type()), constexpr_message_type)
-       << new payload_member(uint32_24_t(body.size()), constexpr_len)
+       << new payload_member(uint24_t(body.size()), constexpr_len)
        // DTLS handshake reconstruction data
        << new payload_member(uint16(_dtls_seq), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
-       << new payload_member(uint32_24_t(_fragment_offset), constexpr_fragment_offset, constexpr_group_dtls)  // dtls
-       << new payload_member(uint32_24_t(_fragment_len), constexpr_fragment_len, constexpr_group_dtls);       // dtls
+       << new payload_member(uint24_t(_fragment_offset), constexpr_fragment_offset, constexpr_group_dtls)     // dtls
+       << new payload_member(uint24_t(_fragment_len), constexpr_fragment_len, constexpr_group_dtls);          // dtls
     ;
 
     pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));

@@ -10,6 +10,7 @@
 
 #include <sdk/base/basic/base16.hpp>
 #include <sdk/base/basic/ieee754.hpp>
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/basic/valist.hpp>
 #include <sdk/base/pattern/aho_corasick.hpp>
 #include <sdk/base/stream/printf.hpp>

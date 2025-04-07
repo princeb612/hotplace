@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_TYPES__
 #define __HOTPLACE_SDK_BASE_BASIC_TYPES__
 
+#include <sdk/base/basic/range.hpp>
 #include <sdk/base/callback.hpp>
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>

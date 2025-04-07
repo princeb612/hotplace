@@ -344,7 +344,7 @@ error_category_t error_advisor::categoryof(return_t code) {
         category = error_category_not_supported;
     } else if (low_security == code) {
         category = error_category_low_security;
-    } else if (code > success && code < WARN_CODE_BEGIN) {
+    } else if ((code > success) && (code < WARN_CODE_BEGIN)) {
         category = error_category_severe;
     } else if (code >= WARN_CODE_BEGIN) {
         category = error_category_warn;

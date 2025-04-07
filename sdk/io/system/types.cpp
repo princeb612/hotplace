@@ -26,42 +26,5 @@ uint128 atou128(const std::string& in) { return t_atoi<uint128>(in); }
 
 #endif
 
-uint32_24_t::uint32_24_t() { memset(_value.data, 0, RTL_FIELD_SIZE(uint24_t, data)); }
-
-uint32_24_t::uint32_24_t(byte_t* p, size_t size) {
-    size_t len = RTL_FIELD_SIZE(uint24_t, data);
-    if (size >= len) {
-        memcpy(_value.data, p, len);
-    } else {
-        memset(_value.data, 0, len);
-    }
-}
-
-uint32_24_t::uint32_24_t(uint24_t value) { set(value); }
-
-uint32_24_t::uint32_24_t(uint32 value) { set(value); }
-
-uint32_24_t::operator uint32() { return get(); }
-
-uint32 uint32_24_t::get() {
-    uint32 value = 0;
-    b24_i32(_value, value);
-    return value;
-}
-
-return_t uint32_24_t::set(uint24_t value) {
-    return_t ret = errorcode_t::success;
-    size_t len = RTL_FIELD_SIZE(uint24_t, data);
-    memcpy(&_value, &value, len);
-    return ret;
-}
-
-return_t uint32_24_t::set(uint32 value) { return i32_b24(_value, value); }
-
-uint32_24_t& uint32_24_t::operator=(uint32 value) {
-    set(value);
-    return *this;
-}
-
 }  // namespace io
 }  // namespace hotplace

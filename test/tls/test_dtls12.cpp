@@ -29,26 +29,19 @@ void test_dtls12() {
     binary_t bin_clienthello_record;
     binary_t bin_serverhello_record;
     tls_advisor* advisor = tls_advisor::get_instance();
-    constexpr char constexpr_master_secret[] = "93be6304758c8b4f0e106df7bbbb7a4edc23ed6188d44ed4d567b6e375400a74471fda4ad6748c84bda37a19399bd4a4";
+    auto& protection = session.get_tls_protection();
 
     {
-        auto& protection = session.get_tls_protection();
-        protection.use_pre_master_secret(true);
-
         crypto_keychain keychain;
         auto key = session.get_tls_protection().get_keyexchange();
         keychain.load_file(&key, key_certfile, "server.crt", KID_TLS_SERVER_CERTIFICATE_PUBLIC);
         keychain.load_file(&key, key_pemfile, "server.key", KID_TLS_SERVER_CERTIFICATE_PRIVATE);
 
-        auto lambda_change_status = [&](uint32 status) -> void {
-            if (session_client_key_exchange & status) {
-                // client.keylog
-                // CLIENT_RANDOM client_random master_secret
-                protection.set_item(tls_secret_master, base16_decode(constexpr_master_secret));
-            }
-        };
-        session.set_hook_change_session_status(lambda_change_status);
+        constexpr char constexpr_master_secret[] = "93be6304758c8b4f0e106df7bbbb7a4edc23ed6188d44ed4d567b6e375400a74471fda4ad6748c84bda37a19399bd4a4";
+        protection.use_pre_master_secret(true);
+        protection.set_item(tls_secret_master, base16_decode(constexpr_master_secret));
     }
+
     // client_hello (fragment)
     {
         const char* record =
@@ -252,9 +245,9 @@ void test_dtls12() {
         dump_record("server_hello_done", &session, bin_record, from_server);
     }
 
+#if 0
     // client_key_exchange, change_cipher_spec, finished
     // finished - decryption failed
-#if 0
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 04 00 2d 10 00 00"

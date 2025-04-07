@@ -17,6 +17,7 @@
 #include <map>
 #include <sdk/base/basic/types.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/datetime.hpp>
 
 namespace hotplace {
@@ -354,6 +355,9 @@ class t_stringkey_value {
 
 typedef t_stringkey_value<std::string> skey_value;
 
+/**
+ * integer value
+ */
 template <typename key_t, typename value_t>
 class t_key_value {
    public:
@@ -366,6 +370,7 @@ class t_key_value {
     t_key_value<key_t, value_t> &set(key_t key, const value_t &value) {
         return_t ret = errorcode_t::success;
 
+        critical_section_guard guard(_lock);
         keyvalue_map_pib_t pib = _keyvalue_map.insert(std::make_pair(key, value));
         if (false == pib.second) {
             pib.first->second = value;
@@ -376,6 +381,7 @@ class t_key_value {
     value_t get(const key_t &key) {
         value_t value = value_t();
 
+        critical_section_guard guard(_lock);
         typename keyvalue_map_t::iterator iter = _keyvalue_map.find(key);
         if (_keyvalue_map.end() != iter) {
             value = iter->second;
@@ -383,7 +389,14 @@ class t_key_value {
 
         return value;
     }
+    value_t inc(const key_t &key) {
+        critical_section_guard guard(_lock);
+        auto value = _keyvalue_map[key];
+        _keyvalue_map[key] = ++value;
+        return value;
+    }
     t_key_value<key_t, value_t> &operator=(const t_key_value<key_t, value_t> &rhs) {
+        critical_section_guard guard(_lock);
         _keyvalue_map.clear();
         _keyvalue_map = rhs._keyvalue_map;
         return *this;
@@ -393,6 +406,7 @@ class t_key_value {
         if (nullptr == rhs) {
             ret = errorcode_t::invalid_parameter;
         } else {
+            critical_section_guard guard(_lock);
             _keyvalue_map.clear();
             _keyvalue_map = rhs->_keyvalue_map;
         }
@@ -400,6 +414,7 @@ class t_key_value {
     }
 
    private:
+    critical_section _lock;
     keyvalue_map_t _keyvalue_map;
 };
 

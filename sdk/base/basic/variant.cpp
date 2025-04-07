@@ -49,9 +49,13 @@ variant::variant(int16 value) { set_int16(value); }
 
 variant::variant(uint16 value) { set_uint16(value); }
 
+variant::variant(const uint24_t &value) { set_uint24(value); }
+
 variant::variant(int32 value) { set_int32(value); }
 
 variant::variant(uint32 value) { set_uint32(value); }
+
+variant::variant(const uint48_t &value) { set_uint48(value); }
 
 variant::variant(int64 value) { set_int64(value); }
 
@@ -165,7 +169,7 @@ variant &variant::set_uint16(uint16 value) {
 variant &variant::set_int24(int32 value) {
     _vt.type = TYPE_INT24;
     _vt.data.i32 = (value & 0x00ffffff);
-    _vt.size = RTL_FIELD_SIZE(uint24_t, data);  // 3
+    _vt.size = RTL_FIELD_SIZE(uint24_t, data);
     _vt.flag = flag_int;
     return *this;
 }
@@ -173,7 +177,23 @@ variant &variant::set_int24(int32 value) {
 variant &variant::set_uint24(uint32 value) {
     _vt.type = TYPE_UINT24;
     _vt.data.ui32 = (value & 0x00ffffff);
-    _vt.size = RTL_FIELD_SIZE(uint24_t, data);  // 3
+    _vt.size = RTL_FIELD_SIZE(uint24_t, data);
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant &variant::set_uint24(const byte_t *p, size_t len) {
+    _vt.type = TYPE_UINT24;
+    b24_i32(p, len, _vt.data.ui32);
+    _vt.size = RTL_FIELD_SIZE(uint24_t, data);
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant &variant::set_uint24(const uint24_t &value) {
+    _vt.type = TYPE_UINT24;
+    b24_i32(value, _vt.data.ui32);
+    _vt.size = RTL_FIELD_SIZE(uint24_t, data);
     _vt.flag = flag_int;
     return *this;
 }
@@ -190,6 +210,38 @@ variant &variant::set_uint32(uint32 value) {
     _vt.type = TYPE_UINT32;
     _vt.data.ui32 = (value);
     _vt.size = sizeof(uint32);
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant &variant::set_int48(int64 value) {
+    _vt.type = TYPE_INT48;
+    _vt.data.i64 = (value & 0x0000ffffffffffff);
+    _vt.size = RTL_FIELD_SIZE(uint48_t, data);
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant &variant::set_uint48(uint64 value) {
+    _vt.type = TYPE_UINT48;
+    _vt.data.ui64 = (value & 0x0000ffffffffffff);
+    _vt.size = RTL_FIELD_SIZE(uint48_t, data);
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant &variant::set_uint48(const byte_t *p, size_t len) {
+    _vt.type = TYPE_UINT48;
+    b48_i64(p, len, _vt.data.ui64);
+    _vt.size = RTL_FIELD_SIZE(uint48_t, data);
+    _vt.flag = flag_int;
+    return *this;
+}
+
+variant &variant::set_uint48(const uint48_t &value) {
+    _vt.type = TYPE_UINT48;
+    b48_i64(value, _vt.data.ui64);
+    _vt.size = RTL_FIELD_SIZE(uint48_t, data);
     _vt.flag = flag_int;
     return *this;
 }
@@ -487,6 +539,12 @@ return_t variant::to_binary(binary_t &target, uint32 flags) const {
                 binary_append(target, _vt.data.ui32);
             }
             break;
+        case TYPE_INT48:
+        case TYPE_UINT48: {
+            uint48_t temp;
+            i64_b48(temp, _vt.data.ui64);
+            binary_append(target, temp.data, RTL_FIELD_SIZE(uint48_t, data));
+        } break;
         case TYPE_INT64:
         case TYPE_UINT64:
             if (change_endian) {
@@ -569,17 +627,21 @@ return_t variant::to_string(std::string &target) const {
         case TYPE_UINT16:
             target = format("%u", _vt.data.ui16);
             break;
+        case TYPE_INT24:
         case TYPE_INT32:
             target = format("%i", _vt.data.i32);
             break;
+        case TYPE_UINT24:
         case TYPE_UINT32:
             target = format("%u", _vt.data.ui32);
             break;
+        case TYPE_INT48:
         case TYPE_INT64: {
             basic_stream bs;
             bs.printf("%I64i", _vt.data.i64);
             target << bs;
         } break;
+        case TYPE_UINT48:
         case TYPE_UINT64: {
             basic_stream bs;
             bs.printf("%I64u", _vt.data.ui64);

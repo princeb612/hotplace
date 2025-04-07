@@ -140,8 +140,10 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
                 payload pl;
                 pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)  // TLS 1.3
                    << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)    // TLS 1.3
-                   << new payload_member(uint32_24_t(), constexpr_certificates_len) << new payload_member(uint32_24_t(), constexpr_certificate_len)
-                   << new payload_member(binary_t(), constexpr_certificate) << new payload_member(uint16(0), true, constexpr_certificate_extensions_len)
+                   << new payload_member(uint24_t(0), constexpr_certificates_len)                         //
+                   << new payload_member(uint24_t(0), constexpr_certificate_len)                          //
+                   << new payload_member(binary_t(), constexpr_certificate)                               //
+                   << new payload_member(uint16(0), true, constexpr_certificate_extensions_len)           //
                    << new payload_member(binary_t(), constexpr_certificate_extensions);
 
                 pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
@@ -242,8 +244,8 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
         payload pl;
         pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)           // TLS 1.3
            << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)             // TLS 1.3
-           << new payload_member(uint32_24_t(certificates_len), constexpr_certificates_len)                // certificate + extensions
-           << new payload_member(uint32_24_t(certificate_len), constexpr_certificate_len)                  // certificate
+           << new payload_member(uint24_t(certificates_len), constexpr_certificates_len)                   // certificate + extensions
+           << new payload_member(uint24_t(certificate_len), constexpr_certificate_len)                     // certificate
            << new payload_member(certificate, constexpr_certificate)                                       // certificate
            << new payload_member(uint16(cert_extensions_len), true, constexpr_certificate_extensions_len)  // extensions
            << new payload_member(cert_extensions, constexpr_certificate_extensions);                       // extensions

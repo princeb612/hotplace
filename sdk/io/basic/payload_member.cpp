@@ -36,23 +36,22 @@ payload_member::payload_member(uint16 value, bool bigendian, const char* name, c
     get_variant().set_uint16(value);
 }
 
-payload_member::payload_member(uint24_t value, const char* name, const char* group) : _bigendian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
-    set_name(name).set_group(group);
-    uint32 ui32 = 0;
-    b24_i32((byte_t*)&value, 3, ui32);
-    get_variant().set_uint24(ui32);
-}
-
-payload_member::payload_member(uint32_24_t value, const char* name, const char* group)
+payload_member::payload_member(const uint24_t& value, const char* name, const char* group)
     : _bigendian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
-    get_variant().set_uint24(value.get());
+    get_variant().set_uint24(value);
 }
 
 payload_member::payload_member(uint32 value, bool bigendian, const char* name, const char* group)
     : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
     set_name(name).set_group(group);
     get_variant().set_uint32(value);
+}
+
+payload_member::payload_member(const uint48_t& value, const char* name, const char* group)
+    : _bigendian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    set_name(name).set_group(group);
+    get_variant().set_uint48(value);
 }
 
 payload_member::payload_member(uint64 value, bool bigendian, const char* name, const char* group)
@@ -216,11 +215,13 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
             uint16 vsize = v.size();
             if (limit >= vsize) {
                 switch (type) {
+                    /* int8, uint8 */
                     case TYPE_INT8:
                     case TYPE_UINT8: {
                         v.clear().set_uint8(*(uint8*)rebase);
                         *size_read = vsize;
                     } break;
+                    /* int16, uint16 */
                     case TYPE_INT16:
                     case TYPE_UINT16: {
                         uint16 temp = *(uint16*)rebase;
@@ -230,6 +231,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         v.clear().set_uint16(temp);
                         *size_read = vsize;
                     } break;
+                    /* TLS handshake length */
                     case TYPE_INT24:
                     case TYPE_UINT24: {
                         uint32 temp = 0;
@@ -237,6 +239,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         v.clear().set_uint24(temp);
                         *size_read = vsize;
                     } break;
+                    /* int32, uint32 */
                     case TYPE_INT32:
                     case TYPE_UINT32: {
                         uint32 temp = *(uint32*)rebase;
@@ -246,6 +249,15 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         v.clear().set_uint32(temp);
                         *size_read = vsize;
                     } break;
+                    /* DTLS record sequence */
+                    case TYPE_INT48:
+                    case TYPE_UINT48: {
+                        uint64 temp = 0;
+                        b48_i64(rebase, limit, temp);
+                        v.clear().set_uint48(temp);
+                        *size_read = vsize;
+                    } break;
+                    /* int64, uint64 */
                     case TYPE_INT64:
                     case TYPE_UINT64: {
                         uint64 temp = *(uint64*)rebase;
@@ -256,6 +268,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         *size_read = vsize;
                     } break;
 #if defined __SIZEOF_INT128__
+                    /* int128, uint128 */
                     case TYPE_INT128:
                     case TYPE_UINT128: {
                         uint128 temp = *(uint128*)rebase;

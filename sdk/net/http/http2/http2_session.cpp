@@ -103,8 +103,8 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 
         http2_frame_header_t* hdr = (http2_frame_header_t*)(buf + pos_frame);
         size_t frame_size = bufsize - pos_frame;
-        uint32_24_t i32_24((byte_t*)hdr, frame_size);
-        uint32 payload_size = i32_24.get();
+        uint24_t i32_24((byte_t*)hdr, frame_size);
+        uint32 payload_size = i32_24;
         uint32 packet_size = sizeof(http2_frame_header_t) + payload_size;
         uint8 flags = hdr->flags;
         uint32 stream_id = ntoh32(hdr->stream_id);

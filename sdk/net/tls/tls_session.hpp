@@ -32,9 +32,14 @@ enum session_type_t {
 
 /**
  *   tls_session session;
- *   session.get_conf().set(key, value);
+ *   session.get_keyvalue().set(key, value);
  */
 enum session_conf_t {
+    // session->get_session_info(dir).get_keyvalue()
+    session_dtls_epoch = 1,
+    session_dtls_seq = 2,
+
+    // session->get_keyvalue()
     session_debug_deprecated_ciphersuite = 1000,  // to test unsupported cipher suite
 };
 
@@ -62,7 +67,7 @@ class tls_session {
     return_t wait_change_session_status(uint32 status, unsigned msec, bool waitall = true);
     void set_hook_change_session_status(std::function<void(uint32 status)> func);
 
-    t_key_value<uint16, uint16>& get_conf();
+    t_key_value<uint16, uint16>& get_keyvalue();
 
     struct alert {
         uint8 level;
@@ -88,6 +93,8 @@ class tls_session {
         void push_alert(uint8 level, uint8 desc);
         void get_alert(std::function<void(uint8, uint8)> func);
 
+        t_key_value<uint8, uint64>& get_keyvalue();
+
        private:
         tls_hs_type_t _hstype;
         bool _protection;
@@ -96,6 +103,7 @@ class tls_session {
 
         critical_section _alerts_lock;
         std::list<alert> _alerts;
+        t_key_value<uint8, uint64> _kv;  // DTLS epoch, sequence
     };
 
     session_info& get_session_info(tls_direction_t dir);

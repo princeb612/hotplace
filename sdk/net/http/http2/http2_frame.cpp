@@ -153,7 +153,7 @@ return_t http2_frame::read(http2_frame_header_t const* header, size_t size) {
         }
 
         payload pl;
-        pl << new payload_member(uint32_24_t(0), constexpr_frame_length) << new payload_member((uint8)0, constexpr_frame_type)
+        pl << new payload_member(uint24_t(0), constexpr_frame_length) << new payload_member((uint8)0, constexpr_frame_type)
            << new payload_member((uint8)0, constexpr_frame_flags) << new payload_member((uint32)0, true, constexpr_frame_stream_identifier);
 
         pl.read((byte_t*)header, size);
@@ -173,7 +173,7 @@ return_t http2_frame::write(binary_t& frame) {
     return_t ret = errorcode_t::success;
 
     payload pl;
-    pl << new payload_member(uint32_24_t(_payload_size), constexpr_frame_length) << new payload_member((uint8)_type, constexpr_frame_type)
+    pl << new payload_member(uint24_t(_payload_size), constexpr_frame_length) << new payload_member((uint8)_type, constexpr_frame_type)
        << new payload_member((uint8)_flags, constexpr_frame_flags) << new payload_member((uint32)_stream_id, true, constexpr_frame_stream_identifier);
 
     pl.write(frame);

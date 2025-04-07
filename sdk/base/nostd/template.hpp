@@ -14,9 +14,7 @@
 
 #include <algorithm>
 #include <functional>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
+#include <sdk/base/basic/types.hpp>
 #include <set>
 
 namespace hotplace {
