@@ -24,7 +24,7 @@ void test_quic_integer() {
         "68 20 49 6E 74 65 67 65 72 20 45 6E 63 6F 64 69"  // h Integer Encodi
         "6E 67 -- -- -- -- -- -- -- -- -- -- -- -- -- --"  // ng
         ;
-    binary_t bin_expect = base16_decode_rfc(expect);
+    binary_t bin_expect = std::move(base16_decode_rfc(expect));
 
     // step.1 a variable length integer + set_reference_value
     {
@@ -75,7 +75,7 @@ void test_quic_integer() {
     // step.4 zero-length
     {
         const char* expect_zero_length = "00";
-        binary_t bin_expect_zero_length = base16_decode_rfc(expect_zero_length);
+        binary_t bin_expect_zero_length = std::move(base16_decode_rfc(expect_zero_length));
         payload pl1;
         binary_t bin1;
         pl1 << new payload_member(new quic_encoded(""));
@@ -96,7 +96,7 @@ void test_quic_integer() {
         constexpr char constexpr_input[] = "input";
         constexpr char input[] = "05 01 02 03 04 05";
         constexpr char data[] = "01 02 03 04 05";
-        binary_t bin_input = base16_decode_rfc(input);
+        binary_t bin_input = std::move(base16_decode_rfc(input));
         payload pl;
         pl << new payload_member(new quic_encoded(binary_t()), constexpr_input);
         size_t pos = 0;
@@ -112,7 +112,7 @@ void test_quic_integer() {
 
     // integer
     auto test_lambda = [&](uint64 value, const char* expect) -> void {
-        binary_t bin_expect = base16_decode_rfc(expect);
+        binary_t bin_expect = std::move(base16_decode_rfc(expect));
         payload pl1;
         binary_t bin1;
 

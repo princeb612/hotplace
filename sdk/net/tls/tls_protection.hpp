@@ -83,6 +83,8 @@ class protection_context {
 };
 
 class tls_protection {
+    friend class tls_session;
+
    public:
     /**
      * @brief    TLS protection
@@ -104,7 +106,6 @@ class tls_protection {
     uint16 get_cipher_suite();
     void set_cipher_suite(uint16 ciphersuite);
     uint16 get_lagacy_version();
-    void set_legacy_version(uint16 version);
     bool is_kindof_tls();
     bool is_kindof_dtls();
     bool is_kindof_tls13();
@@ -250,10 +251,12 @@ class tls_protection {
      */
     return_t decrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext);
 
+    void set_session(tls_session* session);
+
    private:
+    tls_session* _session;                 //
     tls_message_flow_t _flow;              // TLS flow
     uint16 _ciphersuite;                   // cipher suite negotiated
-    uint16 _lagacy_version;                // legacy version
     uint16 _version;                       // negotiated version
     transcript_hash* _transcript_hash;     // transcript hash
     critical_section _lock;                // lock

@@ -51,7 +51,7 @@ void do_test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, con
     uint8 test_h2_header_frame_fragment = 0;
     test_h2_header_frame_fragment = (expect && (i == value));
     if (test_h2_header_frame_fragment) {
-        binary_t bin_expect = base16_decode_rfc(expect);
+        binary_t bin_expect = std::move(base16_decode_rfc(expect));
         test_h2_header_frame_fragment = (test_h2_header_frame_fragment && (bin == bin_expect));
     }
     _test_case.assert(test_h2_header_frame_fragment, __FUNCTION__, text);

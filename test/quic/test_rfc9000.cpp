@@ -16,7 +16,7 @@ void test_rfc_9000_a1() {
     _test_case.begin("RFC 9000 A.1.  Sample Variable-Length Integer Decoding");
 
     auto lambda_read = [&](const char* input, uint64 expect) -> void {
-        binary_t bin = base16_decode_rfc(input);
+        binary_t bin = std::move(base16_decode_rfc(input));
         size_t pos = 0;
         uint64 value = 0;
         quic_read_vle_int(&bin[0], bin.size(), pos, value);
@@ -45,7 +45,7 @@ void test_rfc_9000_a1() {
     auto lambda_write = [&](uint64 value, const char* expect) -> void {
         binary_t bin_value;
         binary_t bin_expect;
-        bin_expect = base16_decode_rfc(expect);
+        bin_expect = std::move(base16_decode_rfc(expect));
         quic_write_vle_int(value, bin_value);
         _logger->writeln("> encode/write %I64i -> %s", value, base16_encode(bin_value).c_str());
         _test_case.assert(bin_value == bin_expect, __FUNCTION__, R"(RFC 9000 A.1. %I64i -> "%s")", value, expect);
@@ -67,7 +67,7 @@ void test_rfc_9000_a1() {
     auto lambda_write2 = [&](uint64 value, uint8 prefix, const char* expect) -> void {
         binary_t bin_value;
         binary_t bin_expect;
-        bin_expect = base16_decode_rfc(expect);
+        bin_expect = std::move(base16_decode_rfc(expect));
         quic_write_vle_int(value, prefix, bin_value);
         _logger->writeln("> encode/write %I64i -> %s", value, base16_encode(bin_value).c_str());
         _test_case.assert(bin_value == bin_expect, __FUNCTION__, R"(RFC 9000 A.1. %I64i -> "%s")", value, expect);

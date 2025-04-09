@@ -68,7 +68,7 @@ void test_h2_header_frame_fragment() {
     }
 
     pos = 0;
-    bin = base16_decode_rfc(sample1);
+    bin = std::move(base16_decode_rfc(sample1));
     skey_value kv1;
     while (pos < bin.size()) {
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
@@ -104,7 +104,7 @@ void test_h2_header_frame_fragment() {
     }
 
     pos = 0;
-    bin = base16_decode_rfc(sample2);
+    bin = std::move(base16_decode_rfc(sample2));
     skey_value kv2;
     while (pos < bin.size()) {
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);

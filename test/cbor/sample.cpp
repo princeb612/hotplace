@@ -22,7 +22,7 @@ void whatsthis(int argc, char** argv) {
     if (option.content.empty()) {
         _cmdline->help();
     } else {
-        binary_t what = base16_decode(option.content);
+        binary_t what = std::move(base16_decode(option.content));
         basic_stream diagnostic;
         cbor_reader_context_t* handle = nullptr;
         cbor_reader reader;

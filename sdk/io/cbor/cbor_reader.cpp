@@ -115,7 +115,7 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const char* expr) {
 
         binary_t bin;
 
-        bin = base16_decode(expr);
+        bin = std::move(base16_decode(expr));
         ret = parse(handle, bin);
     }
     __finally2 {

@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
                                       [](OPTION& o, char* param) -> void {
                                           o.verbose = 1;
                                           o.debug = 1;
-                                          o.clienthello = base16_decode_rfc(param);
+                                          o.clienthello = std::move(base16_decode_rfc(param));
                                       })
                        .optional()
                        .preced();

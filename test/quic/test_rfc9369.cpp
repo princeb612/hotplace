@@ -18,7 +18,7 @@ static tls_session client_session(session_quic2);
 void test_rfc_9369_prepare_a1() {
     // Destination Connection ID of 0x8394c8f03e515708
     const char* dcid = "0x8394c8f03e515708";
-    binary_t bin_dcid = base16_decode_rfc(dcid);
+    binary_t bin_dcid = std::move(base16_decode_rfc(dcid));
 
     {
         auto& protection = server_session.get_tls_protection();
@@ -52,31 +52,31 @@ void test_rfc_9369_a1() {
 
         binary_t bin_expect;
 
-        bin_expect = base16_decode("2062e8b3cd8d52092614b8071d0aa1fb7c2e3ac193f78b280e72d8f5751f6aba");
+        bin_expect = std::move(base16_decode("2062e8b3cd8d52092614b8071d0aa1fb7c2e3ac193f78b280e72d8f5751f6aba"));
         lambda_test(__FUNCTION__, "tls_secret_initial_quic", protection.get_item(tls_secret_initial_quic), bin_expect);
 
-        bin_expect = base16_decode("14ec9d6eb9fd7af83bf5a668bc17a7e283766aade7ecd0891f70f9ff7f4bf47b");
+        bin_expect = std::move(base16_decode("14ec9d6eb9fd7af83bf5a668bc17a7e283766aade7ecd0891f70f9ff7f4bf47b"));
         lambda_test(__FUNCTION__, "client_initial_secret", protection.get_item(tls_secret_initial_quic_client), bin_expect);
 
-        bin_expect = base16_decode("8b1a0bc121284290a29e0971b5cd045d");
+        bin_expect = std::move(base16_decode("8b1a0bc121284290a29e0971b5cd045d"));
         lambda_test(__FUNCTION__, "client key", protection.get_item(tls_secret_initial_quic_client_key), bin_expect);
 
-        bin_expect = base16_decode("91f73e2351d8fa91660e909f");
+        bin_expect = std::move(base16_decode("91f73e2351d8fa91660e909f"));
         lambda_test(__FUNCTION__, "client iv", protection.get_item(tls_secret_initial_quic_client_iv), bin_expect);
 
-        bin_expect = base16_decode("45b95e15235d6f45a6b19cbcb0294ba9");
+        bin_expect = std::move(base16_decode("45b95e15235d6f45a6b19cbcb0294ba9"));
         lambda_test(__FUNCTION__, "client hp", protection.get_item(tls_secret_initial_quic_client_hp), bin_expect);
 
-        bin_expect = base16_decode("0263db1782731bf4588e7e4d93b7463907cb8cd8200b5da55a8bd488eafc37c1");
+        bin_expect = std::move(base16_decode("0263db1782731bf4588e7e4d93b7463907cb8cd8200b5da55a8bd488eafc37c1"));
         lambda_test(__FUNCTION__, "server_initial_secret", protection.get_item(tls_secret_initial_quic_server), bin_expect);
 
-        bin_expect = base16_decode("82db637861d55e1d011f19ea71d5d2a7");
+        bin_expect = std::move(base16_decode("82db637861d55e1d011f19ea71d5d2a7"));
         lambda_test(__FUNCTION__, "server key", protection.get_item(tls_secret_initial_quic_server_key), bin_expect);
 
-        bin_expect = base16_decode("dd13c276499c0249d3310652");
+        bin_expect = std::move(base16_decode("dd13c276499c0249d3310652"));
         lambda_test(__FUNCTION__, "server iv", protection.get_item(tls_secret_initial_quic_server_iv), bin_expect);
 
-        bin_expect = base16_decode("edf6d05c83121201b436e16877593c3a");
+        bin_expect = std::move(base16_decode("edf6d05c83121201b436e16877593c3a"));
         lambda_test(__FUNCTION__, "server hp", protection.get_item(tls_secret_initial_quic_server_hp), bin_expect);
     }
 }

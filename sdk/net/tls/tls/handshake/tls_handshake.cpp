@@ -25,7 +25,7 @@ namespace net {
 constexpr char constexpr_message_type[] = "message type";
 constexpr char constexpr_len[] = "len";
 constexpr char constexpr_group_dtls[] = "dtls";
-constexpr char constexpr_handshake_message_seq[] = "handshake message sequence number";
+constexpr char constexpr_handshake_message_seq[] = "sequence number";
 constexpr char constexpr_fragment[] = "fragment";
 constexpr char constexpr_fragment_offset[] = "fragment offset";
 constexpr char constexpr_fragment_len[] = "fragment len";
@@ -258,7 +258,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             _size = size_header_body;
         }
 
-        if (session_tls == type) {
+        if ((session_tls == type) || (session_dtls == type)) {
             if (cond_dtls) {
                 if (fragment_len < length) {
                     if (0 == fragment_offset) {
@@ -274,7 +274,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                     }
                 }
             }
-        } else if (session_quic == type) {
+        } else if ((session_quic == type) || (session_quic2 == type)) {
             // header     body     end-of-stream
             // \- hspos   \-pos    \-size
             // case not fragmented

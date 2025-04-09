@@ -115,11 +115,11 @@ void test_kdf_extract_expand_rfc5869() {
         //  PRK = HMAC-Hash(salt, IKM)
         binary_t bin_prk;
         auto alg = expand_vector[i].alg;
-        binary_t ikm = base16_decode(expand_vector[i].ikm);
-        binary_t salt = base16_decode(expand_vector[i].salt);
-        binary_t info = base16_decode(expand_vector[i].info);
-        binary_t prk = base16_decode(expand_vector[i].prk);
-        binary_t okm = base16_decode(expand_vector[i].okm);
+        binary_t ikm = std::move(base16_decode(expand_vector[i].ikm));
+        binary_t salt = std::move(base16_decode(expand_vector[i].salt));
+        binary_t info = std::move(base16_decode(expand_vector[i].info));
+        binary_t prk = std::move(base16_decode(expand_vector[i].prk));
+        binary_t okm = std::move(base16_decode(expand_vector[i].okm));
         auto dlen = expand_vector[i].dlen;
         auto desc = expand_vector[i].desc;
 

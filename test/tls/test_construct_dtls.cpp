@@ -19,7 +19,6 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
     tls_record_handshake record(session);
     tls_handshake_client_hello* handshake = nullptr;
 
-    record.set_legacy_version(dtls_12);
     record.set_tls_version(option.version);
 
     __try2 {
@@ -148,7 +147,6 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
     return_t ret = errorcode_t::success;
 
     auto& protection = session->get_tls_protection();
-    protection.set_legacy_version(dtls_12);
     protection.set_tls_version(option.version);
 
     uint16 server_cs = 0;
@@ -213,7 +211,6 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
     __finally2 {
         if (errorcode_t::success == ret) {
             tls_record_handshake record(session);
-            record.set_legacy_version(dtls_12);
             record.set_tls_version(option.version);
 
             record.get_handshakes().add(handshake);
@@ -448,8 +445,8 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        tls_session client_session;
-        tls_session server_session;
+        tls_session client_session(session_dtls);
+        tls_session server_session(session_dtls);
 
         // C -> S CH
         binary_t bin_client_hello;

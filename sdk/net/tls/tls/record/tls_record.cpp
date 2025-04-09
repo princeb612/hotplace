@@ -26,16 +26,16 @@ namespace hotplace {
 namespace net {
 
 constexpr char constexpr_content_type[] = "record content type";
-constexpr char constexpr_legacy_version[] = "legacy record version";
+constexpr char constexpr_record_version[] = "record version";
 constexpr char constexpr_len[] = "len";
 constexpr char constexpr_application_data[] = "application data";
 
 constexpr char constexpr_group_dtls[] = "dtls";
-constexpr char constexpr_key_epoch[] = "key epoch";
-constexpr char constexpr_dtls_record_seq[] = "dtls record sequence number";
+constexpr char constexpr_dtls_epoch[] = "epoch";
+constexpr char constexpr_dtls_record_seq[] = "sequence number";
 
 tls_record::tls_record(uint8 type, tls_session* session)
-    : _content_type(type), _cond_dtls(false), _key_epoch(0), _dtls_record_seq(0), _bodysize(0), _session(session) {
+    : _content_type(type), _cond_dtls(false), _dtls_epoch(0), _dtls_record_seq(0), _bodysize(0), _session(session) {
     if (session) {
         session->addref();
     }
@@ -90,10 +90,15 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
             __leave2;
         }
 
-        auto& kv = session->get_session_info(dir).get_keyvalue();
+        auto session_type = session->get_type();
+        auto& protection = session->get_tls_protection();
+        auto is_dtls = (session_type == session_dtls);
 
-        _key_epoch = kv.get(session_dtls_epoch);
-        _dtls_record_seq = kv.get(session_dtls_seq);
+        if (is_dtls) {
+            auto& kv = session->get_session_info(dir).get_keyvalue();
+            _dtls_epoch = kv.get(session_dtls_epoch);
+            _dtls_record_seq = kv.get(session_dtls_seq);
+        }
 
         ret = do_write_header(dir, bin, body);  // encryption
 
@@ -108,11 +113,14 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
 
         do_postprocess(dir);  // change secret, recno
 
-        if (tls_content_type_change_cipher_spec == get_type()) {
-            kv.inc(session_dtls_epoch);
-            kv.set(session_dtls_seq, 0);
-        } else {
-            kv.inc(session_dtls_seq);
+        if (is_dtls) {
+            auto& kv = session->get_session_info(dir).get_keyvalue();
+            if (tls_content_type_change_cipher_spec == get_type()) {
+                kv.inc(session_dtls_epoch);
+                kv.set(session_dtls_seq, 0);
+            } else {
+                kv.inc(session_dtls_seq);
+            }
         }
     }
     __finally2 {}
@@ -149,11 +157,12 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         auto session = get_session();
 
         uint8 content_type = 0;
-        uint16 legacy_version = 0;
+        uint16 record_version = 0;
         uint16 len = 0;
         bool cond_dtls = false;
         uint16 key_epoch = 0;
         uint64 dtls_record_seq = 0;
+        auto session_type = session->get_type();
 
         {
             /**
@@ -181,8 +190,8 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
              */
             payload pl;
             pl << new payload_member(uint8(0), constexpr_content_type)                              // tls, dtls
-               << new payload_member(uint16(0), true, constexpr_legacy_version)                     // tls, dtls
-               << new payload_member(uint16(0), true, constexpr_key_epoch, constexpr_group_dtls)    // dtls
+               << new payload_member(uint16(0), true, constexpr_record_version)                     // tls, dtls
+               << new payload_member(uint16(0), true, constexpr_dtls_epoch, constexpr_group_dtls)   // dtls
                << new payload_member(uint48_t(0), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                << new payload_member(uint16(0), true, constexpr_len);                               // tls, dtls
 
@@ -190,15 +199,15 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
                 auto ver = pl->t_value_of<uint16>(item);
                 pl->set_group(constexpr_group_dtls, is_kindof_dtls(ver));
             };
-            pl.set_condition(constexpr_legacy_version, lambda_check_dtls);
+            pl.set_condition(constexpr_record_version, lambda_check_dtls);
             pl.read(stream, size, pos);
 
             content_type = pl.t_value_of<uint8>(constexpr_content_type);
-            legacy_version = pl.t_value_of<uint16>(constexpr_legacy_version);
+            record_version = pl.t_value_of<uint16>(constexpr_record_version);
             len = pl.t_value_of<uint16>(constexpr_len);
             cond_dtls = pl.get_group_condition(constexpr_group_dtls);
             if (cond_dtls) {
-                key_epoch = pl.t_value_of<uint16>(constexpr_key_epoch);
+                key_epoch = pl.t_value_of<uint16>(constexpr_dtls_epoch);
                 dtls_record_seq = pl.t_value_of<uint64>(constexpr_dtls_record_seq);
             }
         }
@@ -218,7 +227,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             _bodysize = len;
             _cond_dtls = cond_dtls;
             if (cond_dtls) {
-                _key_epoch = key_epoch;
+                _dtls_epoch = key_epoch;
             }
             _range.begin = recpos;
             _range.end = pos;
@@ -232,7 +241,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
 
             dbs.println("# record %s [size 0x%x pos 0x%x]", (from_server == dir) ? "(server)" : (from_client == dir) ? "(client)" : "", size, recpos);
             uint16 content_header_size = 0;
-            if (tlsadvisor->is_kindof_tls(legacy_version)) {
+            if (tlsadvisor->is_kindof_tls(record_version)) {
                 content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
             } else {
                 content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
@@ -240,19 +249,16 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             dump_memory(stream + recpos, content_header_size + len, &dbs, 16, 3, 0, dump_notrunc);
 
             dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
-            dbs.println(" > %s 0x%04x (%s)", constexpr_legacy_version, legacy_version, tlsadvisor->tls_version_string(legacy_version).c_str());
+            dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->tls_version_string(record_version).c_str());
             if (is_dtls()) {
-                dbs.println(" > %s 0x%04x", constexpr_key_epoch, key_epoch);
-                dbs.println(" > %s %I64x", constexpr_dtls_record_seq, dtls_record_seq);
+                dbs.println(" > %s 0x%04x", constexpr_dtls_epoch, key_epoch);
+                dbs.println(" > %s 0x%012I64x (%I64u)", constexpr_dtls_record_seq, dtls_record_seq, dtls_record_seq);
             }
             dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
 
             trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
         }
 #endif
-
-        set_legacy_version(legacy_version);
-
         if (cond_dtls) {
             _dtls_record_seq = dtls_record_seq;
         }
@@ -282,7 +288,7 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
             binary_t tag;
 
             auto& protection = session->get_tls_protection();
-            auto legacy_version = protection.get_lagacy_version();
+            auto record_version = protection.get_lagacy_version();
             auto tagsize = protection.get_tag_size();
             auto tlsversion = protection.get_tls_version();
             auto cs = protection.get_cipher_suite();
@@ -301,15 +307,17 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
             auto ivsize = sizeof_iv(hint_cipher);
             uint16 len = (cbc == hint->mode) ? body.size() + tagsize + ivsize : body.size() + tagsize;
 
+            auto is_tls = is_kindof_tls(record_version);
+
             {
                 payload pl;
                 pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
-                   << new payload_member(uint16(legacy_version), true, constexpr_legacy_version)                            // tls, dtls
-                   << new payload_member(uint16(get_key_epoch()), true, constexpr_key_epoch, constexpr_group_dtls)          // dtls
+                   << new payload_member(uint16(record_version), true, constexpr_record_version)                            // tls, dtls
+                   << new payload_member(uint16(get_key_epoch()), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
                    << new payload_member(uint48_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                    << new payload_member(uint16(len), true, constexpr_len);                                                 // tls, dtls
 
-                pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
+                pl.set_group(constexpr_group_dtls, false == is_tls);
                 pl.write(additional);
             }
 
@@ -351,7 +359,8 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
 return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
     __try2 {
-        uint16 legacy_version = get_legacy_version();
+        uint16 record_version = get_legacy_version();
+        auto is_tls = is_kindof_tls(record_version);
 
         {
             _range.begin = bin.size();
@@ -361,12 +370,12 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
         {
             payload pl;
             pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
-               << new payload_member(uint16(legacy_version), true, constexpr_legacy_version)                            // tls, dtls
-               << new payload_member(uint16(get_key_epoch()), true, constexpr_key_epoch, constexpr_group_dtls)          // dtls
+               << new payload_member(uint16(record_version), true, constexpr_record_version)                            // tls, dtls
+               << new payload_member(uint16(get_key_epoch()), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
                << new payload_member(uint48_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                << new payload_member(uint16(body.size()), true, constexpr_len);                                         // tls, dtls
 
-            pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
+            pl.set_group(constexpr_group_dtls, is_kindof_dtls(record_version));
             pl.write(bin);
         }
 
@@ -394,12 +403,6 @@ uint16 tls_record::get_legacy_version() {
     return version;
 }
 
-void tls_record::set_legacy_version(uint16 version) {
-    auto session = get_session();
-    auto& protection = session->get_tls_protection();
-    protection.set_legacy_version(version);
-}
-
 uint16 tls_record::get_tls_version() {
     uint16 version = 0;
     auto session = get_session();
@@ -416,7 +419,7 @@ void tls_record::set_tls_version(uint16 version) {
 
 bool tls_record::is_dtls() { return _cond_dtls; }
 
-uint16 tls_record::get_key_epoch() { return _key_epoch; }
+uint16 tls_record::get_key_epoch() { return _dtls_epoch; }
 
 uint64 tls_record::get_dtls_record_seq() { return _dtls_record_seq; }
 

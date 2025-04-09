@@ -62,7 +62,7 @@ return_t cbor_web_key::load_b16(crypto_key* cryptokey, const char* buffer, size_
             __leave2;
         }
 
-        binary_t bin = base16_decode(buffer, size);
+        binary_t bin = std::move(base16_decode(buffer, size));
         ret = load(cryptokey, &bin[0], bin.size(), flag);
     }
     __finally2 {

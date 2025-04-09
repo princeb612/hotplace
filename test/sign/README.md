@@ -1,4 +1,9 @@
-### ECDSA signature/hash algorithm
+#### signing
+* test vector
+  * RFC 6979 Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA)
+  * https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures
+
+#### ECDSA signature/hash algorithm
 
 | hash   | sizeof R+S |
 |   --   |     --     |

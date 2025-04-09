@@ -63,7 +63,7 @@ namespace io {
  *             << new payload_member(binary_t(), "data")
  *             << new payload_member(uint32(0), true, "value")
  *             << new payload_member(binary_t(), "pad", "pad");
- *          binary_t decoded = base16_decode("036461746100001000706164");
+ *          binary_t decoded = std::move(base16_decode("036461746100001000706164"));
  *          pl.set_reference_value("pad", "padlen");
  *          pl.read(decoded); // sizeof "pad" refers "padlen" value
  *
@@ -148,7 +148,7 @@ class payload_member {
  *          sketch
  *
  *          std::string data = "data";
- *          binary_t bin_stream = base16_decode("0x046461746110000102030405060708090a0b0c0d0e0f");
+ *          binary_t bin_stream = std::move(base16_decode("0x046461746110000102030405060708090a0b0c0d0e0f"));
  *          const byte_t* stream = &bin_stream[0];
  *          size_t streamsize = bin_stream.size();
  *
@@ -226,7 +226,7 @@ class payload {
      *          binary_t pad;
      *          pl << new payload_member((uint8)0, "padlen", "pad") << new payload_member(data, "data") << new payload_member((uint32)0, true, "value")
      *             << new payload_member(pad, "pad", "pad");
-     *          binary_t decoded = base16_decode("036461746100001000706164");
+     *          binary_t decoded = std::move(base16_decode("036461746100001000706164"));
      *          pl.set_reference_value("pad", "padlen"); // padlen=03, so length of pad 3 bytes
      *          pl.read(decoded);
      * @remarks
@@ -272,7 +272,7 @@ class payload {
      *
      *          // sample #1
      *          const char* case = "01 00 05 64 61 74 61 31 00 05 64 61 74 61 32";
-     *          binary_t bin = base16_decode_rfc(case);
+     *          binary_t bin = std::move(base16_decode_rfc(case));
      *          byte_t* stream = &bin[0];
      *          size_t size = stream.size();
      *          size_t pos = 0;

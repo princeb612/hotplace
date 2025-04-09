@@ -52,7 +52,7 @@ void test_cmac_rfc4493() {
          "51f0bebf7e3b9d92fc49741779363cfe"},
     };
 
-    binary_t bin_k1 = base16_decode(constexpr_key);
+    binary_t bin_k1 = std::move(base16_decode(constexpr_key));
 
     for (int i = 0; i < RTL_NUMBER_OF(tests); i++) {
         do_test_aes128cbc_mac_routine(bin_k1, base16_decode(tests[i].message), base16_decode(tests[i].result));

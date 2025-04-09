@@ -44,7 +44,7 @@ void test_tls12_xargs_org() {
             "17 00 18 00 19 00 0B 00 02 01 00 00 0D 00 12 00"
             "10 04 01 04 03 05 01 05 03 06 01 06 03 02 01 02"
             "03 FF 01 00 01 00 00 12 00 00 -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client_hello", &session, bin_record, from_client);
     }
     // https://tls12.xargs.org/#server-hello
@@ -54,7 +54,7 @@ void test_tls12_xargs_org() {
             "75 76 77 78 79 7A 7B 7C 7D 7E 7F 80 81 82 83 84"
             "85 86 87 88 89 8A 8B 8C 8D 8E 8F 00 C0 13 00 00"
             "05 FF 01 00 01 00 -- -- -- -- -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("server_hello", &session, bin_record, from_server);
 
         test_transcript_hash(&session, base16_decode_rfc("331f31e2702c54c318fef7d82f4ae6714bd5123b7be9d0c2b6428740cdb97356"));
@@ -114,7 +114,7 @@ void test_tls12_xargs_org() {
             "2B 95 9E D6 85 BC 5C 5D D6 45 ED 19 90 94 73 40"
             "29 26 DC B4 0E 34 69 A1 59 41 E8 E2 CC A8 4B B6"
             "08 46 36 A0 -- -- -- -- -- -- -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("certificate", &session, bin_record, from_server);
 
         test_transcript_hash(&session, base16_decode_rfc("f0851dbc5eaf7c855ebf15e1cba14617ed0a2c6d520261f72abb689b197b56cb"));
@@ -156,7 +156,7 @@ void test_tls12_xargs_org() {
             "0A B3 61 AC 5B AD 1C CD 84 0A 6C 8A 6E AA 00 1A"
             "9D 7D 87 DC 33 18 64 35 71 22 6C 4D D2 C2 AC 41"
             "FB -- -- -- -- -- -- -- -- -- -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("server_key_exchange", &session, bin_record, from_server);
 
         test_transcript_hash(&session, base16_decode_rfc("9f1b0b59a0bb1d533050e177f69addcf2243fbbcaa13d00ea8502dc66aef0414"));
@@ -164,7 +164,7 @@ void test_tls12_xargs_org() {
     // https://tls12.xargs.org/#server-hello-done
     {
         const char* record = "16 03 03 00 04 0e 00 00 00";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("server_hello_done", &session, bin_record, from_server);
 
         test_transcript_hash(&session, base16_decode_rfc("0d468c0e45b4e5da1baba29c3e835d8a9200e9d18ace76f360beab536275cab2"));
@@ -187,7 +187,7 @@ void test_tls12_xargs_org() {
             "16 03 03 00 25 10 00 00 21 20 35 80 72 D6 36 58"
             "80 D1 AE EA 32 9A DF 91 21 38 38 51 ED 21 A2 8E"
             "3B 75 E9 65 D0 D2 CD 16 62 54 -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client_key_exchange", &session, bin_record, from_client);
 
         test_transcript_hash(&session, base16_decode_rfc("061dda04b3c2217ff73bd79b9cf88a2bb6ec505404aac8722db03ef417b54cb4"));
@@ -212,7 +212,7 @@ void test_tls12_xargs_org() {
     }  // https://tls12.xargs.org/#client-change-cipher-spec/
     {
         const char* record = "14 03 03 00 01 01";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client change-cipher-spec", &session, bin_record, from_client);
 
         test_transcript_hash(&session, base16_decode_rfc("061dda04b3c2217ff73bd79b9cf88a2bb6ec505404aac8722db03ef417b54cb4"));
@@ -225,7 +225,7 @@ void test_tls12_xargs_org() {
             "F1 DF 50 84 4D 58 04 B7 EE B2 E2 14 C3 2B 68 92"
             "AC A3 DB 7B 78 07 7F DD 90 06 7C 51 6B AC B3 BA"
             "90 DE DF 72 0F -- -- -- -- -- -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client finished", &session, bin_record, from_client);
     }
     // https://tls12.xargs.org/#server-encryption-keys-calculation
@@ -234,7 +234,7 @@ void test_tls12_xargs_org() {
     }  // https://tls12.xargs.org/#server-change-cipher-spec
     {
         const char* record = "14 03 03 00 01 01";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("server change-cipher-spec", &session, bin_record, from_server);
     }
     // https://tls12.xargs.org/#server-handshake-finished
@@ -245,7 +245,7 @@ void test_tls12_xargs_org() {
             "CB F3 13 78 1A AC 73 EF E1 9F E2 5B A1 AF 59 C2"
             "0B E9 4F C0 1B DA 2D 68 00 29 8B 73 A7 E8 49 D7"
             "4B D4 94 CF 7D -- -- -- -- -- -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("server finished", &session, bin_record, from_server);
     }
     // https://tls12.xargs.org/#client-application-data
@@ -255,7 +255,7 @@ void test_tls12_xargs_org() {
             "0B 0C 0D 0E 0F 6C 42 1C 71 C4 2B 18 3B FA 06 19"
             "5D 13 3D 0A 09 D0 0F C7 CB 4E 0F 5D 1C DA 59 D1"
             "47 EC 79 0C 99 -- -- -- -- -- -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client application data", &session, bin_record, from_client);
     }
     // https://tls12.xargs.org/#server-application-data
@@ -266,7 +266,7 @@ void test_tls12_xargs_org() {
             "9D EB B5 34 DB 9F B0 7A 8C 27 21 DE E5 40 9F 77"
             "AF 0C 3D DE 56 -- -- -- -- -- -- -- -- -- -- --";
 
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("server application data", &session, bin_record, from_server);
     }
     // https://tls12.xargs.org/#client-close-notify
@@ -276,7 +276,7 @@ void test_tls12_xargs_org() {
             "1B 1C 1D 1E 1F 0D 83 F9 79 04 75 0D D8 FD 8A A1"
             "30 21 86 32 63 4F D0 65 E4 62 83 79 B8 8B BF 9E"
             "FD 12 87 A6 2D -- -- -- -- -- -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client close notify", &session, bin_record, from_client);
     }
 }

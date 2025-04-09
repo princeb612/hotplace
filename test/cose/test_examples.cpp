@@ -156,7 +156,7 @@ void test_github_example() {
         }
 
         _logger->colorln(vector->file);
-        binary_t cbor = base16_decode(vector->cbor);
+        binary_t cbor = std::move(base16_decode(vector->cbor));
         crypto_key* mapped_key = keymapper[vector->keysetname];
 
         mapped_key->for_each(dump_crypto_key, nullptr);

@@ -138,6 +138,35 @@ void test_graph() {
         do_test_graph_shortest_path<int>(g3, i);
     }
     do_test_graph_shortest_path<int>(g3, 1, 5);
+
+    t_graph<char> g4;
+    g4.add_undirected_edge('A', 'B')
+        .add_undirected_edge('A', 'E')
+        .add_undirected_edge('A', 'F')
+        .add_undirected_edge('B', 'C')
+        .add_undirected_edge('B', 'F')
+        .add_undirected_edge('C', 'D')
+        .add_undirected_edge('C', 'G')
+        .add_undirected_edge('D', 'G')
+        .add_undirected_edge('D', 'H')
+        .add_undirected_edge('E', 'F')
+        .add_undirected_edge('E', 'I')
+        .add_undirected_edge('F', 'I')
+        .add_undirected_edge('G', 'J')
+        .add_undirected_edge('G', 'K')
+        .add_undirected_edge('G', 'L')
+        .add_undirected_edge('H', 'L')
+        .add_undirected_edge('I', 'M')
+        .add_undirected_edge('I', 'J')
+        .add_undirected_edge('I', 'N')
+        .add_undirected_edge('J', 'K')
+        .add_undirected_edge('K', 'N')
+        .add_undirected_edge('K', 'O')
+        .add_undirected_edge('L', 'P')
+        .add_undirected_edge('M', 'N')
+        .add_undirected_edge('O', 'P');
+    do_test_graph<char>(g4, 'A');
+    do_test_graph_shortest_path<char>(g4, 'A', 'P');
 }
 
 /*

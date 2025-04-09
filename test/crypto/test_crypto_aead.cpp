@@ -13,9 +13,9 @@
 void test_crypto_aead() {
     _test_case.begin("crypto_aead");
 
-    binary_t key = base16_decode_rfc("000102030405060708090a0b0c0d0e0f 101112131415161718191a1b1c1d1e1f");
-    binary_t iv = base16_decode_rfc("000102030405060708090a0b0c0d0e0f");
-    binary_t aad = base16_decode_rfc("000102030405060708090a0b0c0d0e0f");
+    binary_t key = std::move(base16_decode_rfc("000102030405060708090a0b0c0d0e0f 101112131415161718191a1b1c1d1e1f"));
+    binary_t iv = std::move(base16_decode_rfc("000102030405060708090a0b0c0d0e0f"));
+    binary_t aad = std::move(base16_decode_rfc("000102030405060708090a0b0c0d0e0f"));
     binary_t nonce;
     constexpr char sample[] = "We don't playing because we grow old; we grow old because we stop playing.";
     size_t size = strlen(sample);

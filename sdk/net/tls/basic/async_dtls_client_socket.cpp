@@ -17,6 +17,7 @@
 #include <sdk/net/tls/tls/extension/tls_extension_ec_point_formats.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_key_share.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
+#include <sdk/net/tls/tls/extension/tls_extension_renegotiation_info.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_signature_algorithms.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_sni.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_supported_groups.hpp>
@@ -41,7 +42,7 @@ namespace net {
 
 async_dtls_client_socket::async_dtls_client_socket(tls_version_t minver) : async_client_socket(), _minver(minver) {
     auto session = &_session;
-    session->get_tls_protection().set_legacy_version(dtls_12);
+    session->set_type(session_dtls);
 }
 
 return_t async_dtls_client_socket::sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen) {
@@ -158,16 +159,10 @@ return_t async_dtls_client_socket::do_handshake() {
                         .add("rsa_pss_rsae_sha512");
                     handshake->get_extensions().add(signature_algorithms);
                 }
-                // {
-                //     auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(session);
-                //     (*psk_key_exchange_modes).add("psk_dhe_ke");
-                //     handshake->get_extensions().add(psk_key_exchange_modes);
-                // }
-                // {
-                //     auto key_share = new tls_extension_client_key_share(session);
-                //     (*key_share).add("x25519");
-                //     handshake->get_extensions().add(key_share);
-                // }
+                {
+                    auto renegotiation_info = new tls_extension_renegotiation_info(session);
+                    handshake->get_extensions().add(renegotiation_info);
+                }
 
                 {
                     *record << handshake;
@@ -281,26 +276,25 @@ return_t async_dtls_client_socket::do_read(char* ptr_data, size_t size_data, siz
 
 return_t async_dtls_client_socket::do_secure() {
     return_t ret = errorcode_t::success;
-    auto session = &_session;
     auto type = socket_type();
     tls_direction_t dir = from_server;
 
     {
         critical_section_guard guard(_rlock);
+
         while (false == _rq.empty()) {
             const auto& item = _rq.front();
             _mbs << item.buffer;
             _rq.pop();
         }
-    }
-    {
-        byte_t* stream = _mbs.data();
+
+        const byte_t* stream = _mbs.data();
         size_t size = _mbs.size();
         size_t pos = 0;
         while (pos < size) {
             uint8 content_type = stream[pos];
             tls_record_builder builder;
-            auto record = builder.set(session).set(content_type).build();
+            auto record = builder.set(&_session).set(content_type).build();
             if (record) {
                 ret = record->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {
@@ -310,8 +304,9 @@ return_t async_dtls_client_socket::do_secure() {
 
                         if (false == bin.empty()) {
                             bufferqueue_item_t item;
-                            critical_section_guard guard(_mlock);
                             item.buffer << bin;
+
+                            critical_section_guard guard(_mlock);
                             _mq.push(std::move(item));
 
                             _msem.signal();
@@ -325,21 +320,21 @@ return_t async_dtls_client_socket::do_secure() {
     }
     // RFC 2246 7.2.2. Error alerts
     // RFC 8448 6.2.  Error Alerts
-    {
-        binary_t bin;
-
-        auto lambda = [&](uint8 level, uint8 desc) -> void {
-            tls_record_application_data record(session);
-            record.get_records().add(new tls_record_alert(session, level, desc));
-            record.write(dir, bin);
-        };
-        session->get_alert(dir, lambda);
-
-        if (false == bin.empty()) {
-            size_t cbsent = 0;
-            ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
-        }
-    }
+    // {
+    //     binary_t bin;
+    //
+    //     auto lambda = [&](uint8 level, uint8 desc) -> void {
+    //         tls_record_application_data record(session);
+    //         record.get_records().add(new tls_record_alert(session, level, desc));
+    //         record.write(dir, bin);
+    //     };
+    //     session->get_alert(dir, lambda);
+    //
+    //     if (false == bin.empty()) {
+    //         size_t cbsent = 0;
+    //         ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
+    //     }
+    // }
 
     return ret;
 }

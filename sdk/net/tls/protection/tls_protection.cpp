@@ -23,7 +23,9 @@ namespace hotplace {
 namespace net {
 
 tls_protection::tls_protection()
-    : _flow(tls_1_rtt), _ciphersuite(0), _lagacy_version(tls_12), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
+    : _session(nullptr), _flow(tls_1_rtt), _ciphersuite(0), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {
+    crypto_advisor::get_instance();
+}
 
 tls_protection::~tls_protection() {
     if (_transcript_hash) {
@@ -42,13 +44,25 @@ void tls_protection::set_cipher_suite(uint16 ciphersuite) {
     get_protection_context().set_cipher_suite(ciphersuite);
 }
 
-uint16 tls_protection::get_lagacy_version() { return _lagacy_version; }
+uint16 tls_protection::get_lagacy_version() {
+    auto type = _session->get_type();
+    uint16 version = tls_12;
+    switch (type) {
+        case session_tls:
+        case session_quic:
+        case session_quic2:
+            version = tls_12;
+            break;
+        case session_dtls:
+            version = dtls_12;
+            break;
+    }
+    return version;
+}
 
-void tls_protection::set_legacy_version(uint16 version) { _lagacy_version = version; }
+bool tls_protection::is_kindof_tls() { return (false == tls_advisor::get_instance()->is_kindof_dtls(get_lagacy_version())); }
 
-bool tls_protection::is_kindof_tls() { return (false == tls_advisor::get_instance()->is_kindof_dtls(_lagacy_version)); }
-
-bool tls_protection::is_kindof_dtls() { return tls_advisor::get_instance()->is_kindof_dtls(_lagacy_version); }
+bool tls_protection::is_kindof_dtls() { return tls_advisor::get_instance()->is_kindof_dtls(get_lagacy_version()); }
 
 bool tls_protection::is_kindof_tls13() { return tls_advisor::get_instance()->is_kindof_tls13(_version); }
 
@@ -139,6 +153,8 @@ return_t tls_protection::handshake_hello(tls_session *client_session, tls_sessio
     __finally2 {}
     return ret;
 }
+
+void tls_protection::set_session(tls_session *session) { _session = session; }
 
 }  // namespace net
 }  // namespace hotplace

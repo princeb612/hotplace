@@ -87,9 +87,9 @@ void test_ckdf_rfc4615() {
         binary_t output;
 
         auto desc = extract_vector[i].desc;
-        binary_t salt = base16_decode_rfc(extract_vector[i].salt);
-        binary_t ikm = base16_decode_rfc(extract_vector[i].ikm);
-        binary_t prk = base16_decode_rfc(extract_vector[i].prk);
+        binary_t salt = std::move(base16_decode_rfc(extract_vector[i].salt));
+        binary_t ikm = std::move(base16_decode_rfc(extract_vector[i].ikm));
+        binary_t prk = std::move(base16_decode_rfc(extract_vector[i].prk));
 
         kdf.cmac_kdf_extract(output, crypt_algorithm_t::aes128, salt, ikm);
 
@@ -171,11 +171,11 @@ void test_ckdf_rfc4615() {
 
         auto desc = expand_vector[i].desc;
         auto dlen = expand_vector[i].dlen;
-        binary_t salt = base16_decode(expand_vector[i].salt);
-        binary_t ikm = base16_decode(expand_vector[i].ikm);
-        binary_t prk = base16_decode(expand_vector[i].prk);
-        binary_t info = base16_decode(expand_vector[i].info);
-        binary_t okm = base16_decode(expand_vector[i].okm);
+        binary_t salt = std::move(base16_decode(expand_vector[i].salt));
+        binary_t ikm = std::move(base16_decode(expand_vector[i].ikm));
+        binary_t prk = std::move(base16_decode(expand_vector[i].prk));
+        binary_t info = std::move(base16_decode(expand_vector[i].info));
+        binary_t okm = std::move(base16_decode(expand_vector[i].okm));
 
         kdf.cmac_kdf_extract(bin_prk, crypt_algorithm_t::aes128, salt, ikm);
 

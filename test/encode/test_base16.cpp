@@ -81,7 +81,7 @@ void test_base16_decode() {
 
 void test_base16_oddsize() {
     const char* test = "0cef3f4babe6f9875e5db28c27d6a197d607c3641a90f10c2cc2cb302ba658aa151dc76c507488b99f4b3c8bb404fb5c852f959273f412cbdd5e713c5e3f0e67f94";
-    binary_t bin_test = base16_decode(test);
+    binary_t bin_test = std::move(base16_decode(test));
 
     {
         test_case_notimecheck notimecheck(_test_case);
@@ -98,7 +98,7 @@ void do_dump_base16_rfc(const char* text, const char* input) {
     basic_stream bs;
 
     std::string encoded = base16_encode_rfc(input);
-    binary_t decoded = base16_decode(encoded);
+    binary_t decoded = std::move(base16_decode(encoded));
     dump_memory(decoded, &bs, 16, 4);
     _logger->writeln("%s\n  input   %s\n  encoded %s\n  decoded\n%s", text, input, encoded.c_str(), bs.c_str());
 }

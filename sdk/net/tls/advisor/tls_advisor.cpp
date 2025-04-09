@@ -56,6 +56,7 @@ void tls_advisor::load_resource() {
     load_tls_aead_parameters();
 
     load_tls_version();
+    load_etc();
 }
 
 void tls_advisor::load_tls_parameters() {
@@ -170,6 +171,13 @@ void tls_advisor::load_tls_version() {
     for (auto i = 0; i < sizeof_tls_version_hint; i++) {
         auto item = tls_version_hint + i;
         _tls_version.insert({item->code, item});
+    }
+}
+
+void tls_advisor::load_etc() {
+    for (auto i = 0; i < sizeof_tls_session_status_codes; i++) {
+        auto item = tls_session_status_codes + i;
+        _session_status_codes.insert({item->code, item});
     }
 }
 
@@ -356,36 +364,21 @@ bool tls_advisor::is_kindof(uint16 lhs, uint16 rhs) {
     return ret;
 }
 
+std::string tls_advisor::session_status_string(uint32 status) {
+    std::string value;
+    auto iter = _session_status_codes.find(status);
+    if (_session_status_codes.end() != iter) {
+        auto item = iter->second;
+        value = item->desc;
+    }
+    return value;
+}
+
 void tls_advisor::enum_session_status_string(uint32 status, std::function<void(const char*)> func) {
     if (func) {
-        struct status_t {
-            uint32 status;
-            std::string desc;
-
-            status_t(uint32 s, const char* d) : status(s) {
-                if (d) {
-                    desc = d;
-                }
-            }
-        };
-
-        std::list<status_t> table;
-        table.push_back(status_t(session_client_hello, "client_hello"));
-        table.push_back(status_t(session_server_hello, "server_hello"));
-        table.push_back(status_t(session_hello_verify_request, "hello_verify_request"));
-        table.push_back(status_t(session_server_cert, "server_certificate"));
-        table.push_back(status_t(session_server_key_exchange, "server_key_exchange"));
-        table.push_back(status_t(session_server_hello_done, "server_hello_done"));
-        table.push_back(status_t(session_server_cert_verified, "server_certificate_verified"));
-        table.push_back(status_t(session_client_key_exchange, "client_key_exchange"));
-        table.push_back(status_t(session_server_finished, "server_finished"));
-        table.push_back(status_t(session_client_finished, "client_finished"));
-        table.push_back(status_t(session_client_close_notified, "client_close_notify"));
-        table.push_back(status_t(session_server_close_notified, "server_close_notify"));
-
-        for (const auto& item : table) {
-            if (status & item.status) {
-                func(item.desc.c_str());
+        for (const auto& item : _session_status_codes) {
+            if (status & item.first) {
+                func(item.second->desc);
             }
         }
     }

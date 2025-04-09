@@ -77,6 +77,9 @@ declare_tls_resource(quic_trans_error_code, uint64);
 // https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
 declare_tls_resource(aead_alg_code, uint16);
 
+// etc.
+declare_tls_resource(session_status_code, uint32);
+
 enum tls_version_hint_flag_t : uint8 {
     flag_kindof_tls = (1 << 0),
 };
@@ -202,6 +205,7 @@ class tls_advisor {
      */
     bool is_kindof(uint16 lhs, uint16 rhs);
 
+    std::string session_status_string(uint32 status);
     void enum_session_status_string(uint32 status, std::function<void(const char*)> func);
 
    protected:
@@ -213,6 +217,7 @@ class tls_advisor {
     void load_tls_aead_parameters();
 
     void load_tls_version();
+    void load_etc();
 
    private:
     static tls_advisor _instance;
@@ -255,6 +260,8 @@ class tls_advisor {
     std::map<uint16, const tls_version_hint_t*> _tls_version;
     std::map<uint8, std::string> _cert_status_types;
     std::map<uint8, const tls_quic_packet_type_code_t*> _quic_packet_type_codes;
+
+    std::map<uint32, const tls_session_status_code_t*> _session_status_codes;
 
     bool _load;
 };

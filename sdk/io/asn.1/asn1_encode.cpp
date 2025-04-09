@@ -286,7 +286,7 @@ asn1_encode& asn1_encode::ia5string(binary_t& bin, const std::string& value) {
 }
 
 asn1_encode& asn1_encode::octstring(binary_t& bin, const std::string& value) {
-    binary_t oct = base16_decode(value);
+    binary_t oct = std::move(base16_decode(value));
     binary_push(bin, asn1_tag_octstring);
     t_asn1_length_octets<uint16>(bin, oct.size());
     binary_append(bin, oct);

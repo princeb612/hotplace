@@ -81,14 +81,14 @@ void do_test_ecdsa_testvector(const test_vector_nist_cavp_ecdsa_t* vector, size_
 
         keychain.add_ec_b16(&key, vector[i].nid, vector[i].x, vector[i].y, vector[i].d, keydesc());
         binary_t signature;
-        binary_t bin_r = base16_decode(vector[i].r);
-        binary_t bin_s = base16_decode(vector[i].s);
+        binary_t bin_r = std::move(base16_decode(vector[i].r));
+        binary_t bin_s = std::move(base16_decode(vector[i].s));
         signature.insert(signature.end(), bin_r.begin(), bin_r.end());
         signature.insert(signature.end(), bin_s.begin(), bin_s.end());
 
         binary_t message;
         if (base16) {
-            message = base16_decode(vector[i].msg);
+            message = std::move(base16_decode(vector[i].msg));
         } else {
             message = str2bin(vector[i].msg);
         }

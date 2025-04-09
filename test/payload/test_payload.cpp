@@ -75,7 +75,7 @@ void test_payload_read() {
 
     payload pl;
     binary_t bin_dump;
-    binary_t decoded = base16_decode("036461746100001000706164");
+    binary_t decoded = std::move(base16_decode("036461746100001000706164"));
 
     pl << new payload_member((uint8)0, "padlen", "pad") << new payload_member(binary_t(), "data") << new payload_member((uint32)0, true, "value")
        << new payload_member(binary_t(), "pad", "pad");
@@ -120,7 +120,7 @@ void test_payload_read() {
 void test_uint24() {
     _test_case.begin("uint24");
     const char* sample = "00 03 28";
-    binary_t bin = base16_decode_rfc(sample);
+    binary_t bin = std::move(base16_decode_rfc(sample));
 
     uint32 ui32 = 0;
     b24_i32(&bin[0], bin.size(), ui32);
@@ -145,7 +145,7 @@ void test_payload_uint24() {
 
     binary_t pad = str2bin("pad");
     binary_t bin_payload;
-    binary_t expect = base16_decode("0310000010000000706164");
+    binary_t expect = std::move(base16_decode("0310000010000000706164"));
 
     // write
     {
@@ -197,7 +197,7 @@ void test_group(const char* input, bool expect) {
     constexpr char constexpr_data2[] = "data2";
     constexpr char constexpr_group2[] = "group2";
 
-    binary_t bin = base16_decode_rfc(input);
+    binary_t bin = std::move(base16_decode_rfc(input));
     size_t pos = 0;
 
     bool cond_group2 = false;
@@ -268,4 +268,79 @@ void test_group() {
     const char* case2 = "00 00 05 64 61 74 61 31";
     test_group(case1, true);
     test_group(case2, false);
+}
+
+void test_uint48() {
+    _test_case.begin("uint48");
+
+    // DTLS server_hello, certificate (fragment) - wireshark captured
+    const char* record =
+        "16 FE FD 00 00 00 00 00 00 00 01 00 61 02 00 00"
+        "55 00 00 00 00 00 00 00 55 FE FD B6 B3 09 E6 1C"
+        "73 94 D9 68 BA 61 49 61 3A 2F 26 D1 01 D1 A3 F0"
+        "A4 46 12 E4 6B 4B 16 D1 CD 99 F7 20 07 F8 D4 76"
+        "8B 17 1C F6 15 32 D1 D2 3E F1 75 49 ED D6 DE 52"
+        "CC 6F 32 FF 82 50 D3 6A 9A E5 AD D7 C0 27 00 00"
+        "0D FF 01 00 01 00 00 0B 00 04 03 00 01 02 16 FE"
+        "FD 00 00 00 00 00 00 00 02 00 69 0B 00 03 66 00"
+        "01 00 00 00 00 00 5D 00 03 63 00 03 60 30 82 03"
+        "5C 30 82 02 44 A0 03 02 01 02 02 14 63 A6 71 10"
+        "79 D6 A6 48 59 DA 67 A9 04 E8 E3 5F E2 03 A3 26"
+        "30 0D 06 09 2A 86 48 86 F7 0D 01 01 0B 05 00 30"
+        "59 31 0B 30 09 06 03 55 04 06 13 02 4B 52 31 0B"
+        "30 09 06 03 55 04 08 0C 02 47 47 31 0B 30 09 06"
+        "03 55 04 07 -- -- -- -- -- -- -- -- -- -- -- --";
+    binary_t bin = std::move(base16_decode_rfc(record));
+
+    constexpr char constexpr_content_type[] = "record content type";
+    constexpr char constexpr_record_version[] = "record version";
+    constexpr char constexpr_len[] = "len";
+    constexpr char constexpr_application_data[] = "application data";
+
+    constexpr char constexpr_group_dtls[] = "dtls";
+    constexpr char constexpr_dtls_epoch[] = "epoch";
+    constexpr char constexpr_dtls_record_seq[] = "sequence number";
+
+    payload pl;
+    {
+        pl << new payload_member(uint8(0), constexpr_content_type)                              // tls, dtls
+           << new payload_member(uint16(0), true, constexpr_record_version)                     // tls, dtls
+           << new payload_member(uint16(0), true, constexpr_dtls_epoch, constexpr_group_dtls)   // dtls
+           << new payload_member(uint48_t(0), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
+           << new payload_member(uint16(0), true, constexpr_len);                               // tls, dtls
+
+        auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
+            auto ver = pl->t_value_of<uint16>(item);
+            pl->set_group(constexpr_group_dtls, is_kindof_dtls(ver));
+        };
+        pl.set_condition(constexpr_record_version, lambda_check_dtls);
+        size_t pos = 0;
+        pl.read(&bin[0], bin.size(), pos);
+    }
+
+    {
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        uint8 content_type = 0;
+        uint16 record_version = 0;
+        uint16 len = 0;
+        bool cond_dtls = false;
+        uint16 dtls_record_epoch = 0;
+        uint64 dtls_record_seq = 0;
+
+        content_type = pl.t_value_of<uint8>(constexpr_content_type);
+        record_version = pl.t_value_of<uint16>(constexpr_record_version);
+        len = pl.t_value_of<uint16>(constexpr_len);
+        cond_dtls = pl.get_group_condition(constexpr_group_dtls);
+        if (cond_dtls) {
+            dtls_record_epoch = pl.t_value_of<uint16>(constexpr_dtls_epoch);
+            dtls_record_seq = pl.t_value_of<uint64>(constexpr_dtls_record_seq);
+        }
+        _test_case.assert(tls_content_type_handshake == content_type, __FUNCTION__, "content_type 0x%02x (%s)", content_type,
+                          tlsadvisor->content_type_string(content_type).c_str());
+        _test_case.assert(dtls_12 == record_version, __FUNCTION__, "record_version 0x%04x (%s)", record_version,
+                          tlsadvisor->tls_version_string(record_version).c_str());
+        _test_case.assert(0 == dtls_record_epoch, __FUNCTION__, "dtls_record_epoch %u", dtls_record_epoch);
+        _test_case.assert(1 == dtls_record_seq, __FUNCTION__, "dtls_record_seq %I64u", dtls_record_seq);
+        _test_case.assert(0x61 == len, __FUNCTION__, "len %u", len);
+    }
 }

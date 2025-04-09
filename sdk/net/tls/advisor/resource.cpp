@@ -26,6 +26,22 @@ const tls_version_hint_t tls_version_hint[] = {
 };
 const size_t sizeof_tls_version_hint = RTL_NUMBER_OF(tls_version_hint);
 
+define_tls_variable(session_status_code) = {
+    {session_client_hello, "client_hello"},
+    {session_server_hello, "server_hello"},
+    {session_hello_verify_request, "hello_verify_request"},
+    {session_server_cert, "server_certificate"},
+    {session_server_key_exchange, "server_key_exchange"},
+    {session_server_hello_done, "server_hello_done"},
+    {session_server_cert_verified, "server_certificate_verified"},
+    {session_client_key_exchange, "client_key_exchange"},
+    {session_server_finished, "server_finished"},
+    {session_client_finished, "client_finished"},
+    {session_client_close_notified, "client_close_notify"},
+    {session_server_close_notified, "server_close_notify"},
+};
+define_tls_sizeof_variable(session_status_code);
+
 #if 0
 
 enum tls_layer_t : uint8 {

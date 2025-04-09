@@ -62,7 +62,7 @@ void test_rfc8448_6() {
             "10 a7 a3 62 00 2b 00 03 02 03 04 00 0d 00 20 00 1e 04 03 05 03"
             "06 03 02 03 08 04 08 05 08 06 04 01 05 01 06 01 02 01 04 02 05"
             "02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client_hello", &session, bin_record, from_client);
     }
     {
@@ -91,7 +91,7 @@ void test_rfc8448_6() {
             "58 2c 0e a0 32 87 42 55 fe 6e 00 13 01 00 00 2e 00 33 00 24 00"
             "1d 00 20 6c 2e 50 e8 65 91 9a 6b 5a 12 df af 91 8f 92 b4 42 56"
             "7b 0f 89 bc 54 47 8c 69 21 36 66 58 f0 62 00 2b 00 02 03 04";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("server_hello", &session, bin_record, from_server);
     }
     {
@@ -139,7 +139,7 @@ void test_rfc8448_6() {
             "e1 89 1a 6d 33 43 2d 52 ed db 0b 8c ee 91 81 d4 03 ec cc 12 99"
             "1f 1a d4 aa 62 c3 60 49 71 3a 7b b1 35 fd da 66 61 a0 5a 93 f8"
             "c1 6f";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("encrypted_extensions certificate_request certificate certificate_verify finished", &session, bin_record, from_server);
     }
     {
@@ -199,7 +199,7 @@ void test_rfc8448_6() {
             "27 32 ab 59 7f 7d 59 23 c7 73 86 aa 51 24 73 1f 8c c7 3e 70 3b"
             "34 1c 17 5a 45 49 39 a7 7a b6 43 13 c1 5c f3 fe 03 c4 f3 38 42"
             "56 49 76";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("certificate certificate_verify finished", &session, bin_record, from_client);
     }
     {
@@ -214,7 +214,7 @@ void test_rfc8448_6() {
         const char* record =
             "17 03 03 00 13 e4 ad 7d 44 c2 92 45"
             "33 9d 35 59 62 c7 79 b8 9e f4 4c 58";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("alert (close_notify)", &session, bin_record, from_client);
     }
     {
@@ -222,7 +222,7 @@ void test_rfc8448_6() {
         const char* record =
             "17 03 03 00 13 1d ec c5 d6 e6 4b ba"
             "8a 6f 21 b4 fd 07 74 97 da 2a 90 cb";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("alert (close_notify)", &session, bin_record, from_server);
     }
 }

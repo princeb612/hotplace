@@ -14,15 +14,23 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
+#include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
+#include <sdk/net/tls/types.hpp>
 
 namespace hotplace {
 namespace net {
 
-tls_session::tls_session() : _type(session_tls), _status(0) { _shared.make_share(this); }
+tls_session::tls_session() : _type(session_tls), _status(0) {
+    _shared.make_share(this);
+    _tls_protection.set_session(this);
+}
 
-tls_session::tls_session(session_type_t type) : _type(type), _status(0) { _shared.make_share(this); }
+tls_session::tls_session(session_type_t type) : _type(type), _status(0) {
+    _shared.make_share(this);
+    _tls_protection.set_session(this);
+}
 
 tls_protection& tls_session::get_tls_protection() { return _tls_protection; }
 
@@ -38,8 +46,8 @@ void tls_session::update_session_status(session_status_t status) {
     }
 #if defined DEBUG
     if (istraceable()) {
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         basic_stream dbs;
-        auto tlsadvisor = tls_advisor::get_instance();
         dbs.println("\e[1;34msession status %08x (update %08x)\e[0m", _status, status);
         dbs.println("> update status 0x%08x", status);
         tlsadvisor->enum_session_status_string(status, [&](const char* desc) -> void { dbs.println("  %s", desc); });
@@ -63,15 +71,6 @@ return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, b
     while (1) {
         ret = _sem.wait(msec);
 
-#if defined DEBUG
-        if (istraceable()) {
-            basic_stream dbs;
-            dbs.println("\e[1;34msession status %08x (wait%s %08x) %s\e[0m", _status, waitall ? "all" : "", status,
-                        status == (_status & status) ? "true" : "false");
-            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
-        }
-#endif
-
         if (0 == _status) {
             break;
         }
@@ -93,6 +92,16 @@ return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, b
             break;
         }
     }
+
+#if defined DEBUG
+    if (istraceable()) {
+        basic_stream dbs;
+        dbs.println("\e[1;34msession status %08x (wait%s %08x) %s\e[0m", _status, waitall ? "all" : "", status,
+                    status == (_status & status) ? "true" : "false");
+        trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+    }
+#endif
+
     return ret;
 }
 
@@ -100,7 +109,10 @@ void tls_session::set_hook_change_session_status(std::function<void(uint32 statu
 
 t_key_value<uint16, uint16>& tls_session::get_keyvalue() { return _kv; }
 
-tls_session::session_info& tls_session::get_session_info(tls_direction_t dir) { return _direction[dir]; }
+tls_session::session_info& tls_session::get_session_info(tls_direction_t dir) {
+    // critical_section_guard guard(_lock);
+    return _direction[dir];
+}
 
 uint64 tls_session::get_recordno(tls_direction_t dir, bool inc, protection_level_t level) { return get_session_info(dir).get_recordno(inc, level); }
 
@@ -139,12 +151,12 @@ void tls_session::session_info::reset_recordno(protection_level_t level) { _reco
 void tls_session::session_info::set_recordno(uint64 recordno, protection_level_t level) { _recordno_spaces[level] = recordno; }
 
 void tls_session::session_info::push_alert(uint8 level, uint8 desc) {
-    critical_section_guard guard(_alerts_lock);
+    critical_section_guard guard(_info_lock);
     _alerts.push_back(alert(level, desc));
 }
 
 void tls_session::session_info::get_alert(std::function<void(uint8, uint8)> func) {
-    critical_section_guard guard(_alerts_lock);
+    critical_section_guard guard(_info_lock);
     for (auto iter = _alerts.begin(); iter != _alerts.end(); iter++) {
         const auto& item = *iter;
         func(item.level, item.desc);

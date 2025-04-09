@@ -59,7 +59,7 @@ void dotest_nist_cavp_rsa_signpss(crypto_key* key, const test_vector_nist_cavp_r
             auto pkey = key->find(item->kid);
             if (pkey) {
                 const binary_t& msg = base16_decode(item->msg);
-                binary_t signature = base16_decode(item->s);
+                binary_t signature = std::move(base16_decode(item->s));
                 ret = s->verify(pkey, msg, signature);
                 _logger->hdump("> input", msg);
                 _logger->hdump("> signature", signature);

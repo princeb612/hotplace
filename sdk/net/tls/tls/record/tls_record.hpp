@@ -31,7 +31,6 @@ class tls_record {
 
     tls_content_type_t get_type();  // content type
     uint16 get_legacy_version();    // legacy version
-    void set_legacy_version(uint16 version);
     uint16 get_tls_version();
     void set_tls_version(uint16 version);
 
@@ -64,7 +63,7 @@ class tls_record {
    private:
     uint8 _content_type;
     bool _cond_dtls;
-    uint16 _key_epoch;
+    uint16 _dtls_epoch;
     uint64 _dtls_record_seq;  // uint48_t
     uint16 _bodysize;
 

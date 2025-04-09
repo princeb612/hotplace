@@ -33,8 +33,8 @@ void test_cipher_encrypt() {
         }
     };
 
-    binary_t key = base16_decode("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f");
-    binary_t iv = base16_decode("000102030405060708090a0b0c0d0e0f");
+    binary_t key = std::move(base16_decode("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"));
+    binary_t iv = std::move(base16_decode("000102030405060708090a0b0c0d0e0f"));
     constexpr char sample[] = "We don't playing because we grow old; we grow old because we stop playing.";
     size_t len = strlen(sample);
     lambda_test(aes128, cbc, key, iv, (byte_t*)sample, len);

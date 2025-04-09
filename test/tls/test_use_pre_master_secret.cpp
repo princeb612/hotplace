@@ -56,7 +56,7 @@ void test_use_pre_master_secret() {
             "fdfeff000813021303130100ff010000a30000001800160000136578616d706c652e756c666865696d2e6e6574000b000403000102000a00160014001d0017001e0019001801000101"
             "010201030104002300000016000000170000000d001e001c040305030603080708080809080a080b080408050806040105010601002b0003020304002d00020101003300260024001d"
             "0020358072d6365880d1aeea329adf9121383851ed21a28e3b75e965d0d2cd166254";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client hello", &session, bin_record, from_client);
     }
     {
@@ -80,19 +80,19 @@ void test_use_pre_master_secret() {
             "8bec56c81ea3d7217ab8e85a88715395899c90587f72e8ddd74b26d8edc1c7c837d9f2ebbc260962219038b05654a63a0b12999b4a8306a3ddcc0e17c53ba8f9c80363f7841354d291"
             "b4ace0c0f330c0fcd5aa9deef969ae8ab2d98da88ebb6ea80a3a11f00ea296a3232367ff075e1c66dd9cbedc471317030300451061de27e51c2c9f342911806f282b710c10632ca500"
             "6755880dbf7006002d0e84fed9adf27a43b5192303e4df5c285d58e3c76224078440c0742374744aecf28cf3182fd0";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("server hello ... server finished", &session, bin_record, from_server);
     }
     {
         const char* record =
             "14030300010117030300459ff9b063175177322a46dd9896f3c3bb820ab51743ebc25fdadd53454b73deb54cc7248d411a18bccf657a960824e9a19364837c350a69a88d4bf635c85e"
             "b874aebc9dfde8";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("change_cipher_spec ... client finished", &session, bin_record, from_client);
     }
     {
         const char* record = "1703030015828139cb7b73aaabf5b82fbf9a2961bcde10038a32";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("application_data (ping)", &session, bin_record, from_client);
     }
     {
@@ -101,7 +101,7 @@ void test_use_pre_master_secret() {
             "1af53a03ca197795778fff2ffe1d3b99b34de782a76abfa840e6366cd7349d9bcff641f5e0dff95e40d72e09effe18ee64672cb96005404488ad1896c44a5fd174998e9b0094d8e6d8"
             "4d2929b7883dc9a3c3c7313a87293f31b61d24d99097c8853bfbeb95d1d01f99ca05b0501859cf6340e8377075970152fa94f5f5be2906e72a15e40836a41f4cd3dbe7d513c16e8861"
             "1d3eae9338d9db1f91ca3d5842602a610b43a463";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("application_data (new_session_ticket)", &session, bin_record, from_server);
     }
     {
@@ -110,12 +110,12 @@ void test_use_pre_master_secret() {
             "7d401236dafc2f7292ff0cc886a4ef389f2ced1226c6b4dcf69d994ff9148ef969bc77d9433ab1d3a932542182829f889ad95f04c752f94ace57146a5d84b042bfb3485a64e7e957b0"
             "8980cd08baf9698b8929986d1174d4aa6dd7a7e8c086052c3c76d81934bdf59b966e392031f3471adebddddbe84fcf1ff408846ae9b28ca4a9e728844a493d80455d6eaff205b40a1e"
             "f18574efc0b96ad383afbd8dfc86f8087c1f7dc8";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("application_data (new_session_ticket)", &session, bin_record, from_server);
     }
     {
         const char* record = "17030300150cda85f1447ae23fa66d56f4c5408482b1b1d4c998";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("application_data (pong)", &session, bin_record, from_server);
     }
 }

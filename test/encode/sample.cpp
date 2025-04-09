@@ -89,13 +89,13 @@ void whatsthis() {
                 additional << "> b64url\n  " << base64_encode(o.content, base64_encoding_t::base64url_encoding).c_str() << "\n";
                 break;
             case decode_b16:
-                what = base16_decode(o.content);
+                what = std::move(base16_decode(o.content));
                 additional << "> b64\n  " << base64_encode(what).c_str() << "\n";
                 additional << "> b64url\n  " << base64_encode(what, base64_encoding_t::base64url_encoding).c_str() << "\n";
                 break;
             case encode_b16_rfc:
                 stemp = base16_encode_rfc(o.content);
-                what = base16_decode(stemp);
+                what = std::move(base16_decode(stemp));
                 additional << "> b16\n  " << stemp.c_str() << "\n";
                 additional << "> b64\n  " << base64_encode(what).c_str() << "\n";
                 additional << "> b64url\n  " << base64_encode(what, base64_encoding_t::base64url_encoding).c_str() << "\n";

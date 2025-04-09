@@ -122,7 +122,8 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
         auto hsstatus = session->get_session_info(dir).get_status();
 
         switch (session_type) {
-            case session_tls: {
+            case session_tls:
+            case session_dtls: {
                 if (from_client == dir) {
                     // TLS, DTLS
                     auto flow = get_flow();
@@ -458,7 +459,8 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
         }
         auto session_type = session->get_type();
         switch (session_type) {
-            case session_tls: {
+            case session_tls:
+            case session_dtls: {
                 tls_advisor *tlsadvisor = tls_advisor::get_instance();
                 bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite());
                 if (is_kindof_cbc) {
@@ -696,7 +698,8 @@ return_t tls_protection::get_protection_mask_key(tls_session *session, tls_direc
         auto hsstatus = session->get_session_info(dir).get_status();
 
         switch (session_type) {
-            case session_tls: {
+            case session_tls:
+            case session_dtls: {
                 if (is_kindof_dtls()) {
                     if (from_server == dir) {
                         if (tls_hs_finished == hsstatus) {

@@ -769,7 +769,7 @@ return_t json_object_encryption::composer::doparse_decryption(jose_context_t *ha
         // do not update if crypt_item_t::item_aad already exists
         // see RFC 7520 5.10.  Including Additional Authenticated Data
         if (protected_header) {
-            item.datamap.insert(std::make_pair(crypt_item_t::item_aad, str2bin(protected_header)));
+            item.datamap.insert(std::make_pair(crypt_item_t::item_aad, std::move(str2bin(protected_header))));
         }
 
         item.header = protected_header_decoded;
@@ -781,7 +781,7 @@ return_t json_object_encryption::composer::doparse_decryption(jose_context_t *ha
         json_unpack_helper(pool, "zip", &zip);
         if (zip) {
             // RFC 7520 5.9.  Compressed Content
-            item.datamap[crypt_item_t::item_zip] = str2bin(zip);
+            item.datamap[crypt_item_t::item_zip] = std::move(str2bin(zip));
         }
     }
     __finally2 {

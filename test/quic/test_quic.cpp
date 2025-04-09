@@ -61,8 +61,8 @@ void test_quic_xargs_org() {
      */
     const char* dcid = "00 01 02 03 04 05 06 07";
     const char* scid = "63 5f 63 69 64";
-    binary_t bin_dcid = base16_decode_rfc(dcid);
-    binary_t bin_scid = base16_decode_rfc(scid);
+    binary_t bin_dcid = std::move(base16_decode_rfc(dcid));
+    binary_t bin_scid = std::move(base16_decode_rfc(scid));
 
     protection.set_item(tls_context_quic_dcid, bin_dcid);
     protection.calc(&server_session, tls_hs_client_hello, from_client);
@@ -108,7 +108,7 @@ void test_quic_xargs_org() {
             "21 b4 b8 4e 15 65 e3 ca 31 96 7a c8 60 4d 40 32"
             "17 0d ec 28 0a ee fa 09 5d 08 b3 b7 24 1e f6 64"
             "6a 6c 86 e5 c6 2c e0 8b e0 99 -- -- -- -- -- --";
-        binary_t bin_packet = base16_decode_rfc(packet);
+        binary_t bin_packet = std::move(base16_decode_rfc(packet));
         lambda_read_packet(&server_session, from_client, bin_packet, __FUNCTION__, "client_hello");
     }
 
@@ -172,7 +172,7 @@ void test_quic_xargs_org() {
             "2f 66 31 bc ad c7 40 2c 10 f6 5c 52 ed 15 b4 42"
             "9c 9f 64 d8 4d 64 fa 40 6c f0 b5 17 a9 26 d6 2a"
             "54 a9 29 41 36 b1 43 b0 33 -- -- -- -- -- -- --";
-        binary_t bin_packet = base16_decode_rfc(packet);
+        binary_t bin_packet = std::move(base16_decode_rfc(packet));
         lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "server_hello");
     }
 
@@ -299,7 +299,7 @@ void test_quic_xargs_org() {
             "bd 70 d5 30 fe 31 96 06 9f c0 07 8e 89 fb b7 0d"
             "c1 b3 8a b4 e1 77 0c 8f fb 53 31 6d 67 3a 32 b8"
             "92 59 b5 d3 3e 94 ad -- -- -- -- -- -- -- -- --";
-        binary_t bin_packet = base16_decode_rfc(packet);
+        binary_t bin_packet = std::move(base16_decode_rfc(packet));
         lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "encrypted_extensions..certificate_verify(truncated at 1K boundary)");
     }
 
@@ -326,7 +326,7 @@ void test_quic_xargs_org() {
             "4a f2 dc 45 8a e0 39 44 de 51 26 fe 08 d6 6a 6e"
             "f3 ba 2e d1 02 5f 98 fe a6 d6 02 49 98 18 46 87"
             "dc 06 -- -- -- -- -- -- -- -- -- -- -- -- -- --";
-        binary_t bin_packet = base16_decode_rfc(packet);
+        binary_t bin_packet = std::move(base16_decode_rfc(packet));
         lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "certificate_verify(fragmented)..server finished");
     }
 
@@ -349,7 +349,7 @@ void test_quic_xargs_org() {
             "cf 00 00 00 01 05 73 5f 63 69 64 05 63 5f 63 69"
             "64 00 40 17 56 6e 1f 98 ed 1f 7b 05 55 cd b7 83"
             "fb df 5b 52 72 4b 7d 29 f0 af e3 -- -- -- -- --";
-        binary_t bin_packet = base16_decode_rfc(packet);
+        binary_t bin_packet = std::move(base16_decode_rfc(packet));
         lambda_read_packet(&server_session, from_client, bin_packet, __FUNCTION__, "ack");
     }
     {
@@ -365,7 +365,7 @@ void test_quic_xargs_org() {
             "EE 00 00 00 01 05 73 5F 63 69 64 05 63 5F 63 69"
             "64 40 16 8C B1 95 1F C6 CC 12 51 2D 7E DA 14 1E"
             "C0 57 B8 04 D3 0F EB 51 5B -- -- -- -- -- -- --";
-        binary_t bin_packet = base16_decode_rfc(packet);
+        binary_t bin_packet = std::move(base16_decode_rfc(packet));
         lambda_read_packet(&server_session, from_client, bin_packet, __FUNCTION__, "ack");
     }
 
@@ -392,7 +392,7 @@ void test_quic_xargs_org() {
             "F1 1C 31 2E 7F 9C 04 A4 3C D5 30 F3 D9 81 D5 02"
             "3A BD 5E 98 F2 2D C6 F2 59 79 91 9B AD 30 2F 44"
             "8C 0A -- -- -- -- -- -- -- -- -- -- -- -- -- --";
-        binary_t bin_packet = base16_decode_rfc(packet);
+        binary_t bin_packet = std::move(base16_decode_rfc(packet));
         lambda_read_packet(&server_session, from_client, bin_packet, __FUNCTION__, "finished");
     }
     /**
@@ -403,7 +403,7 @@ void test_quic_xargs_org() {
         const char* packet =
             "4E 73 5F 63 69 64 1E CC 91 70 E6 6E 8E E9 50 BA"
             "8B 8E D1 0C BA 39 A0 6A B7 B0 67 0A 50 EF 68 E6";
-        binary_t bin_packet = base16_decode_rfc(packet);
+        binary_t bin_packet = std::move(base16_decode_rfc(packet));
         lambda_read_packet(&server_session, from_client, bin_packet, __FUNCTION__, "ping");
     }
     /**
@@ -416,7 +416,7 @@ void test_quic_xargs_org() {
             "E5 00 00 00 01 05 63 5F 63 69 64 05 73 5F 63 69"
             "64 40 16 A4 87 5B 25 16 9E 6F 1B 81 7E 46 23 E1"
             "AC BE 1D B3 89 9B 00 EC FB -- -- -- -- -- -- --";
-        binary_t bin_packet = base16_decode_rfc(packet);
+        binary_t bin_packet = std::move(base16_decode_rfc(packet));
         lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "ack");
     }
     /**
@@ -428,7 +428,7 @@ void test_quic_xargs_org() {
             "49 63 5F 63 69 64 CD 9A 64 12 40 57 C8 83 E9 4D"
             "9C 29 6B AA 8C A0 EA 6E 3A 21 FA AF 99 AF 2F E1"
             "03 21 69 20 57 D2 -- -- -- -- -- -- -- -- -- --";
-        binary_t bin_packet = base16_decode_rfc(packet);
+        binary_t bin_packet = std::move(base16_decode_rfc(packet));
         lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "pong");
     }
     /**
@@ -440,7 +440,7 @@ void test_quic_xargs_org() {
         const char* packet =
             "5A 73 5F 63 69 64 C8 67 E0 B4 90 58 8B 44 B1 0D"
             "7C D3 2B 03 E3 45 02 80 2F 25 A1 93 -- -- -- --";
-        binary_t bin_packet = base16_decode_rfc(packet);
+        binary_t bin_packet = std::move(base16_decode_rfc(packet));
         lambda_read_packet(&server_session, from_client, bin_packet, __FUNCTION__, "ack");
     }
     /**
@@ -453,7 +453,7 @@ void test_quic_xargs_org() {
             "54 63 5F 63 69 64 95 18 C4 A5 FF EB 17 B6 7E C2"
             "7F 97 E5 0D 27 1D C7 02 D9 2C EF B0 68 8B E9 FD"
             "7B 30 2D 9E B4 7C DF 1F C4 CD 9A AC -- -- -- --";
-        binary_t bin_packet = base16_decode_rfc(packet);
+        binary_t bin_packet = std::move(base16_decode_rfc(packet));
         lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "connection_close");
     }
 }

@@ -31,9 +31,9 @@ void test_dsa() {
 
         const std::string &nameof_param = item->param;
         hash_algorithm_t hashalg = item->hashalg;
-        binary_t msg = base16_decode(item->msg);
-        binary_t bin_r = base16_decode(item->r);
-        binary_t bin_s = base16_decode(item->s);
+        binary_t msg = std::move(base16_decode(item->msg));
+        binary_t bin_r = std::move(base16_decode(item->r));
+        binary_t bin_s = std::move(base16_decode(item->s));
 
         auto param = param_map[nameof_param];
         keychain.add_dsa_b16(&key, nid_dsa, item->y, item->x, param->p, param->q, param->g, keydesc("DSA"));

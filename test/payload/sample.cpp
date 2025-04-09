@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
     test_group();
     test_http2_frame();
     test_quic_integer();
+    test_uint48();
 
     _logger->flush();
 

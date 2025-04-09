@@ -14,7 +14,7 @@ void test_der() {
     _test_case.begin("DER");
     return_t ret = success;
     // RFC 8448
-    // 3.  Simple 1-RTT Handshake
+    // 3.  Simple 1-RTT Handshake
     // server certificate
     const char* cert =
         "30 82 01 AC 30 82 01 15 A0 03 02 01 02 02 01 02"
@@ -44,7 +44,7 @@ void test_der() {
         "2A 99 BE 5C 3E B7 10 7C 3C 54 E9 B9 EB 2B D5 20"
         "3B 1C 3B 84 E0 A8 B2 F7 59 40 9B A3 EA C9 D9 1D"
         "40 2D CC 0C C8 F8 96 12 29 AC 91 87 B4 2B 4D E1";
-    binary_t bin_sample = base16_decode_rfc(cert);
+    binary_t bin_sample = std::move(base16_decode_rfc(cert));
 
     const char* kid = "der";
     basic_stream bs;

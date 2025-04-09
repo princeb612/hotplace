@@ -107,7 +107,7 @@ void test_tls13_xargs_org() {
             "02 01 01 00 33 00 26 00 24 00 1D 00 20 35 80 72"
             "D6 36 58 80 D1 AE EA 32 9A DF 91 21 38 38 51 ED"
             "21 A2 8E 3B 75 E9 65 D0 D2 CD 16 62 54 -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client_hello", &session, bin_record, from_client);
     }
     /**
@@ -140,7 +140,7 @@ void test_tls13_xargs_org() {
             "2E 00 2B 00 02 03 04 00 33 00 24 00 1D 00 20 9F"
             "D7 AD 6D CF F4 29 8D D3 F9 6D 5B 1B 2A F9 10 A0"
             "53 5B 14 88 D7 F8 FA BB 34 9A 98 28 80 B6 15 --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("server_hello", &session, bin_record, from_server);
 
         test_transcript_hash(&session, base16_decode_rfc("e05f64fcd082bdb0dce473adf669c2769f257a1c75a51b7887468b5e0e7a7de4f4d34555112077f16e079019d5a845bd"));
@@ -195,7 +195,7 @@ void test_tls13_xargs_org() {
      */
     {
         const char* record = "14 03 03 00 01 01";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("change cipher spec", &session, bin_record, from_server);
     }
 
@@ -207,7 +207,7 @@ void test_tls13_xargs_org() {
         const char* record =
             "17 03 03 00 17 6B E0 2F 9D A7 C2 DC 9D DE F5 6F"
             "24 68 B9 0A DF A2 51 01 AB 03 44 AE -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("wrapped-record (encrypted_extensions)", &session, bin_record, from_server);
 
         test_transcript_hash(&session, base16_decode_rfc("e5fd6bf6b5ed5ac5c86681cf91e804b4884c9199ab5a863d1ecd2469edc64e126f798bedf1362f384e7f091dfe8bd46b"));
@@ -277,7 +277,7 @@ void test_tls13_xargs_org() {
             "D4 56 FF 83 D4 1F 7B 8B 4F 06 9B 02 8A 2A 63 A9"
             "19 A7 0E 3A 10 E3 08 41 58 FA A5 BA FA 30 18 6C"
             "6B 2F 23 8E B5 30 C7 3E -- -- -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("wrapped-record-2 (certificate)", &session, bin_record, from_server);
 
         test_transcript_hash(&session, base16_decode_rfc("21b247c6683dabfa05de7135250552028184f98348c97b2a44f390fffb9880be6b55efeba044fd00930999ae4caae963"));
@@ -367,7 +367,7 @@ void test_tls13_xargs_org() {
             "B4 AC E0 C0 F3 30 C0 FC D5 AA 9D EE F9 69 AE 8A"
             "B2 D9 8D A8 8E BB 6E A8 0A 3A 11 F0 0E A2 96 A3"
             "23 23 67 FF 07 5E 1C 66 DD 9C BE DC 47 13 -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         // > handshake type 15 (certificate_verify)
         //  > signature algorithm 0x0804 rsa_pss_rsae_sha256
         //  > len 0x0100(256)
@@ -387,7 +387,7 @@ void test_tls13_xargs_org() {
             "70 06 00 2D 0E 84 FE D9 AD F2 7A 43 B5 19 23 03"
             "E4 DF 5C 28 5D 58 E3 C7 62 24 07 84 40 C0 74 23"
             "74 74 4A EC F2 8C F3 18 2F D0 -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("wrapped-record-4 (finished)", &session, bin_record, from_server);
 
         test_transcript_hash(&session, base16_decode_rfc("fa6800169a6baac19159524fa7b9721b41be3c9db6f3f93fa5ff7e3db3ece204d2b456c51046e40ec5312c55a86126f5"));
@@ -426,7 +426,7 @@ void test_tls13_xargs_org() {
      */
     {
         const char* record = "14 03 03 00 01 01";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client-change-cipher-spec", &session, bin_record, from_client);
     }
     /**
@@ -441,7 +441,7 @@ void test_tls13_xargs_org() {
             "45 4B 73 DE B5 4C C7 24 8D 41 1A 18 BC CF 65 7A"
             "96 08 24 E9 A1 93 64 83 7C 35 0A 69 A8 8D 4B F6"
             "35 C8 5E B8 74 AE BC 9D FD E8 -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("wrapped-record-5 (finished)", &session, bin_record, from_client);
     }
     /**
@@ -453,7 +453,7 @@ void test_tls13_xargs_org() {
         const char* record =
             "17 03 03 00 15 82 81 39 CB 7B 73 AA AB F5 B8 2F"
             "BF 9A 29 61 BC DE 10 03 8A 32 -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("wrapped-record-6 (ping)", &session, bin_record, from_client);
     }
     /**
@@ -478,7 +478,7 @@ void test_tls13_xargs_org() {
             "01 52 FA 94 F5 F5 BE 29 06 E7 2A 15 E4 08 36 A4"
             "1F 4C D3 DB E7 D5 13 C1 6E 88 61 1D 3E AE 93 38"
             "D9 DB 1F 91 CA 3D 58 42 60 2A 61 0B 43 A4 63 --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("wrapped-record-7 (new_session_ticket)", &session, bin_record, from_server);
     }
     /**
@@ -503,7 +503,7 @@ void test_tls13_xargs_org() {
             "CF 1F F4 08 84 6A E9 B2 8C A4 A9 E7 28 84 4A 49"
             "3D 80 45 5D 6E AF F2 05 B4 0A 1E F1 85 74 EF C0"
             "B9 6A D3 83 AF BD 8D FC 86 F8 08 7C 1F 7D C8 --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("wrapped-record-8 (new_session_ticket)", &session, bin_record, from_server);
     }
     /**
@@ -515,7 +515,7 @@ void test_tls13_xargs_org() {
         const char* record =
             "17 03 03 00 15 0C DA 85 F1 44 7A E2 3F A6 6D 56"
             "F4 C5 40 84 82 B1 B1 D4 C9 98 -- -- -- -- -- --";
-        binary_t bin_record = base16_decode_rfc(record);
+        binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("wrapped-record-9 (pong)", &session, bin_record, from_server);
     }
 }

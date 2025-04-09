@@ -38,10 +38,10 @@ return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_c
 
         const char* enc_alg = vector->enc_alg;
         const char* mac_alg = vector->mac_alg;
-        binary_t k = base16_decode(vector->k);
-        binary_t iv = base16_decode(vector->iv);
-        binary_t a = base16_decode(vector->a);
-        binary_t p = base16_decode(vector->p);
+        binary_t k = std::move(base16_decode(vector->k));
+        binary_t iv = std::move(base16_decode(vector->iv));
+        binary_t a = std::move(base16_decode(vector->a));
+        binary_t p = std::move(base16_decode(vector->p));
         binary_t mac_key;
         binary_t enc_key;
         binary_t ps;

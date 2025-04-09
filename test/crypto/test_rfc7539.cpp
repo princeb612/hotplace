@@ -81,11 +81,11 @@ void test_chacha20_rfc7539_crypto_aead() {
         auto item = test_vector_rfc7539 + i;
         if (0 == strcmp("chacha20-poly1305", item->alg)) {
             return_t ret = errorcode_t::success;
-            binary_t key = base16_decode_rfc(item->key);
-            binary_t iv = base16_decode_rfc(item->iv);
-            binary_t aad = base16_decode_rfc(item->aad);
-            binary_t tag = base16_decode_rfc(item->tag);
-            binary_t expect = base16_decode_rfc(item->expect);
+            binary_t key = std::move(base16_decode_rfc(item->key));
+            binary_t iv = std::move(base16_decode_rfc(item->iv));
+            binary_t aad = std::move(base16_decode_rfc(item->aad));
+            binary_t tag = std::move(base16_decode_rfc(item->tag));
+            binary_t expect = std::move(base16_decode_rfc(item->expect));
             binary_t nonce;
             binary_t ciphertext;
             binary_t plaintext;

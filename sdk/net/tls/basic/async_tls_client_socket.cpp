@@ -39,7 +39,7 @@ namespace net {
 
 async_tls_client_socket::async_tls_client_socket(tls_version_t minver) : async_client_socket(), _minver(minver) {
     auto session = &_session;
-    session->get_tls_protection().set_legacy_version(tls_12);
+    session->set_type(session_tls);
 }
 
 return_t async_tls_client_socket::send(const char* ptr_data, size_t size_data, size_t* cbsent) {
@@ -332,13 +332,13 @@ return_t async_tls_client_socket::do_secure() {
     if (SOCK_STREAM == type) {
         {
             critical_section_guard guard(_rlock);
+
             while (false == _rq.empty()) {
                 const auto& item = _rq.front();
                 _mbs << item.buffer;
                 _rq.pop();
             }
-        }
-        {
+
             byte_t* stream = _mbs.data();
             size_t size = _mbs.size();
             size_t pos = 0;
@@ -355,8 +355,9 @@ return_t async_tls_client_socket::do_secure() {
 
                             if (false == bin.empty()) {
                                 bufferqueue_item_t item;
-                                critical_section_guard guard(_mlock);
                                 item.buffer << bin;
+
+                                critical_section_guard guard(_mlock);
                                 _mq.push(std::move(item));
 
                                 _msem.signal();

@@ -220,18 +220,18 @@ cose_data& cose_data::set(const binary_t& bin) {
 }
 
 cose_data& cose_data::set(const std::string& value) {
-    _payload = str2bin(value);
+    _payload = std::move(str2bin(value));
     return *this;
 }
 
 cose_data& cose_data::set_b16(std::string const value) {
-    _payload = base16_decode(value);
+    _payload = std::move(base16_decode(value));
     return *this;
 }
 
 cose_data& cose_data::set_b16(const char* value) {
     if (value) {
-        _payload = base16_decode(value, strlen(value));
+        _payload = std::move(base16_decode(value, strlen(value)));
     }
     return *this;
 }

@@ -61,6 +61,14 @@ T t_to_int(const variant_t& vt, return_t& errorcode) {
             vsize = RTL_FIELD_SIZE(vartype_union, ui32);
             i = vt.data.ui32;
             break;
+        case TYPE_INT48:
+            vsize = RTL_FIELD_SIZE(vartype_union, i64);
+            i = vt.data.i64;
+            break;
+        case TYPE_UINT48:
+            vsize = RTL_FIELD_SIZE(vartype_union, ui64);
+            i = vt.data.ui64;
+            break;
         case TYPE_INT64:
             vsize = RTL_FIELD_SIZE(vartype_union, i64);
             i = (T)vt.data.i64;

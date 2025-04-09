@@ -40,6 +40,37 @@ namespace hotplace {
     }
 #endif
 
+/**
+ * @brief   custom unsigned integer
+ * @remarks MUST sizeof(TYPE) > N
+ * @example
+ *          1 uint24
+ *            usage cases
+ *              TLS handshake length
+ *              HTTP/2 frame header length
+ *              ASN.1 Certificate length
+ *            implement
+ *              return_t b24_i32(const byte_t *p, uint8 len, uint32 &value)
+ *              return_t i32_b24(byte_t *p, uint8 len, uint32 value)
+ *              struct uint24_t : t_uint_custom_t<uint32, 3>
+ *          2 uint40
+ *            implement
+ *              return_t b40_i64(const byte_t *p, uint8 len, uint64 &value)
+ *              return_t i64_b40(byte_t *p, uint8 len, uint64 value)
+ *              struct uint40_t : t_uint_custom_t<uint64, 5>
+ *          3 uint48
+ *            usage case
+ *              DTLS record sequence
+ *            implement
+ *              return_t b48_i64(const byte_t *p, uint8 len, uint64 &value)
+ *              return_t i64_b48(byte_t *p, uint8 len, uint64 value)
+ *              struct uint48_t : t_uint_custom_t<uint64, 6>
+ *          4 uint56
+ *            implement
+ *              return_t b56_i64(const byte_t *p, uint8 len, uint64 &value)
+ *              return_t i64_b56(byte_t *p, uint8 len, uint64 value)
+ *              struct uint56_t : t_uint_custom_t<uint64, 7>
+ */
 template <typename TYPE, uint8 N>
 struct t_uint_custom_t {
     byte_t data[N];
@@ -92,10 +123,10 @@ struct uint24_t : t_uint_custom_t<uint32, 3> {
 return_t b24_i32(const uint24_t &u, uint32 &value);
 return_t i32_b24(uint24_t &u, uint32 value);
 
+/* DTLS record sequence */
 return_t b48_i64(const byte_t *p, uint8 len, uint64 &value);
 return_t i64_b48(byte_t *p, uint8 len, uint64 value);
 
-/* DTLS record sequence */
 struct uint48_t : t_uint_custom_t<uint64, 6> {
     uint48_t();
     uint48_t(const uint48_t &rhs);

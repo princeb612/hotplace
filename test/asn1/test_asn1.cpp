@@ -237,7 +237,7 @@ void test_x690_encoding_value() {
 
             _logger->writeln("%s", base16_encode(bin).c_str());
 
-            binary_t bin_expect = base16_decode_rfc(entry.expect);
+            binary_t bin_expect = std::move(base16_decode_rfc(entry.expect));
             return_t ret = errorcode_t::success;
             if (bin_expect.empty()) {
                 ret = errorcode_t::not_supported;

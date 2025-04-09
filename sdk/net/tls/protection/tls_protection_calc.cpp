@@ -160,7 +160,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             // res binder (see tls1_ext_pre_shared_key)
             // exp master (see tls_context_server_finished)
 
-            if (session_tls == session_type) {
+            if ((session_tls == session_type) || (session_dtls == session_type)) {
                 if (is_kindof_tls13()) {
                     if (tls_0_rtt == get_flow()) {
                         // 0-RTT
@@ -185,11 +185,11 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     binary_t bin_initial_salt;
                     if (session_quic == session_type) {
                         // RFC 9001 5.2.  Initial Secrets
-                        bin_initial_salt = base16_decode("0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a");
-                    } else {
+                        bin_initial_salt = std::move(base16_decode("0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a"));
+                    } else if (session_quic2 == session_type) {
                         // RFC 9369 3.3.1.  Initial Salt
-                        bin_initial_salt = base16_decode("0x0dede3def700a6db819381be6e269dcbf9bd2ed9");
-                    }
+                        bin_initial_salt = std::move(base16_decode("0x0dede3def700a6db819381be6e269dcbf9bd2ed9"));
+                    }  // else do not reach
 
                     openssl_kdf kdf;
                     binary_t bin;

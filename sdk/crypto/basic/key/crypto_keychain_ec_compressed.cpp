@@ -191,7 +191,7 @@ return_t crypto_keychain::add_ec_compressed_b16(crypto_key* cryptokey, uint32 ni
 
         auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
-                output = base16_decode(input, strlen(input));
+                output = std::move(base16_decode(input, strlen(input)));
             }
         };
 
@@ -219,7 +219,7 @@ return_t crypto_keychain::add_ec_compressed_b16rfc(crypto_key* cryptokey, uint32
 
         auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
-                output = base16_decode_rfc(std::string(input));
+                output = std::move(base16_decode_rfc(std::string(input)));
             }
         };
 
