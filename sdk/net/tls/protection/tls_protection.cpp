@@ -24,7 +24,8 @@ namespace net {
 
 tls_protection::tls_protection()
     : _session(nullptr), _flow(tls_1_rtt), _ciphersuite(0), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {
-    crypto_advisor::get_instance();
+    // crypto_advisor::get_instance();
+    // \-- linux crash
 }
 
 tls_protection::~tls_protection() {
