@@ -23,6 +23,7 @@
 #include <sdk/net/tls/tls/extension/tls_extension_pre_shared_key.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_quic_transport_parameters.hpp>
+#include <sdk/net/tls/tls/extension/tls_extension_renegotiation_info.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_signature_algorithms.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_sni.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_status_request.hpp>
@@ -124,6 +125,9 @@ tls_extension* tls_extension_builder::build() {
         case tls1_ext_encrypted_client_hello: /* 0xfe0d */ {
             __try_new_catch_only(extension, new tls_extension_encrypted_client_hello(get_session()));
         } break;
+        case tls1_ext_renegotiation_info: /* 0xff01 */ {
+            __try_new_catch_only(extension, new tls_extension_renegotiation_info(get_session()));
+        } break;
 
         case tls1_ext_max_fragment_length:          /* 0x0001 */
         case tls1_ext_client_certificate_url:       /* 0x0002 */
@@ -144,7 +148,6 @@ tls_extension* tls_extension_builder::build() {
         case tls1_ext_oid_filters:                  /* 0x0030 */
         case tls1_ext_post_handshake_auth:          /* 0x0031 */
         case tls1_ext_signature_algorithms_cert:    /* 0x0032 */
-        case tls1_ext_renegotiation_info:           /* 0xff01 */
         default: {
             __try_new_catch_only(extension, new tls_extension_unknown(_type, get_session()));
         } break;

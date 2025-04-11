@@ -55,6 +55,21 @@ union tls_content_t {
 };
 #pragma pack(pop)
 
+#pragma pack(push, 1)
+struct tls_header {
+    tls_content_type_t type;
+    uint16 version;
+    uint16 length;
+};
+struct dtls_header {
+    tls_content_type_t type;
+    uint16 version;
+    uint16 keyepoch;
+    byte_t recordseq[6];
+    uint16 length;
+};
+#pragma pack(pop)
+
 enum tls_version_t : uint16 {
     tls_unknown = 0,   // internal
     tls_draft = 1,     // internal
@@ -107,6 +122,13 @@ enum tls_hs_type_t : uint8 {
 struct tls_handshake_t {
     tls_hs_type_t msg_type;
     byte_t length[3];
+};
+struct dtls_handshake_t {
+    tls_hs_type_t msg_type;
+    byte_t length[3];
+    uint16 seq;
+    byte_t fragment_offset[3];
+    byte_t fragment_len[3];
 };
 #pragma pack(pop)
 

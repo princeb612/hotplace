@@ -8,6 +8,9 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/transcript_hash.hpp>
 
 namespace hotplace {
@@ -46,6 +49,16 @@ return_t transcript_hash::update(const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     openssl_hash hash;
     ret = hash.update(_handle, stream, size);
+#if defined DEBUG
+    if (check_trace_level(2) && istraceable()) {
+        basic_stream dbs;
+        dbs.printf("\e[1;36m");
+        dbs.println("> update transcript hash");
+        dump_memory(stream, size, &dbs, 16, 3, 0, dump_notrunc);
+        dbs.printf("\e[0m");
+        trace_debug_event(trace_category_crypto, trace_event_digest, &dbs);
+    }
+#endif
     return ret;
 }
 

@@ -34,6 +34,8 @@ tls_session::tls_session(session_type_t type) : _type(type), _status(0) {
 
 tls_protection& tls_session::get_tls_protection() { return _tls_protection; }
 
+dtls_record_reorder& tls_session::get_dtls_record_reorder() { return _dtls_record_reorder; }
+
 void tls_session::set_type(session_type_t type) { _type = type; }
 
 session_type_t tls_session::get_type() { return _type; }
@@ -45,7 +47,7 @@ void tls_session::update_session_status(session_status_t status) {
         _change_status_hook(status);
     }
 #if defined DEBUG
-    if (istraceable()) {
+    if (check_trace_level(2) && istraceable()) {
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         basic_stream dbs;
         dbs.println("\e[1;34msession status %08x (update %08x)\e[0m", _status, status);
@@ -94,7 +96,7 @@ return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, b
     }
 
 #if defined DEBUG
-    if (istraceable()) {
+    if (check_trace_level(2) && istraceable()) {
         basic_stream dbs;
         dbs.println("\e[1;34msession status %08x (wait%s %08x) %s\e[0m", _status, waitall ? "all" : "", status,
                     status == (_status & status) ? "true" : "false");

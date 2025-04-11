@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
@@ -32,6 +33,20 @@ return_t tls_extension_renegotiation_info::do_read_body(const byte_t* stream, si
            << new payload_member(binary_t(), constexpr_renegotiation_info);
         pl.set_reference_value(constexpr_renegotiation_info, constexpr_renegotiation_info_length);
         pl.read(stream, size, pos);
+
+        uint8 len = 0;
+        binary_t info;
+        len = pl.t_value_of<uint8>(constexpr_renegotiation_info_length);
+        pl.get_binary(constexpr_renegotiation_info, info);
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("   > %s %u", constexpr_renegotiation_info_length, len);
+            dump_memory(info, &dbs, 16, 4, 0x0, dump_notrunc);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
+        }
+#endif
     }
     __finally2 {
         // do nothing

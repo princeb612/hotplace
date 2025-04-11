@@ -42,7 +42,7 @@ void test_dtls12() {
         protection.set_item(tls_secret_master, base16_decode(constexpr_master_secret));
     }
 
-    // client_hello (fragment)
+    // C->S, epoch 0 seq 0 - client_hello (fragment)
     {
         const char* record =
             "16 fe ff 00 00 00 00 00 00 00 00 00 c3 01 00 00"
@@ -61,7 +61,7 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client_hello (fragment)", &session, bin_record, from_client);
     }
-    // client_hello (reassembled)
+    // C->S, epoch 0 seq 1 - client_hello (reassembled)
     {
         const char* record =
             "16 fe ff 00 00 00 00 00 00 00 01 00 12 01 00 00"
@@ -69,7 +69,7 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client_hello (reassembled)", &session, bin_record, from_client);
     }
-    // hello verify request
+    // S->C, epoch 0 seq 0 - hello_verify_request
     {
         const char* record =
             "16 fe ff 00 00 00 00 00 00 00 00 00 23 03 00 00"
@@ -78,7 +78,7 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("hello_verify_request", &session, bin_record, from_server);
     }
-    // client_hello (fragment)
+    // C->S, epoch 0 seq 2 - client_hello (fragment)
     {
         const char* record =
             "16 fe ff 00 00 00 00 00 00 00 02 00 c3 01 00 00"
@@ -97,7 +97,7 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client_hello (fragment)", &session, bin_record, from_client);
     }
-    // client_hello (reassembled)
+    // C->S, epoch 0 seq 3 - client_hello (reassembled)
     {
         const char* record =
             "16 fe ff 00 00 00 00 00 00 00 03 00 26 01 00 00"
@@ -107,7 +107,8 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client_hello (reassembled)", &session, bin_record, from_client);
     }
-    // server_hello, certificate (fragment)
+    // S->C, epoch 0 seq 1 - server_hello
+    // S->C, epoch 0 seq 2 - certificate (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 01 00 4d 02 00 00"
@@ -126,6 +127,7 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("server_hello, certificate (fragment)", &session, bin_record, from_server);
     }
+    // S->C, epoch 0 seq 3 - certificate (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 03 00 c3 0b 00 03"
@@ -144,6 +146,7 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("certificate (fragment)", &session, bin_record, from_server);
     }
+    // S->C, epoch 0 seq 4 - certificate (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 04 00 c3 0b 00 03"
@@ -162,6 +165,7 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("certificate (fragment)", &session, bin_record, from_server);
     }
+    // S->C, epoch 0 seq 5 - certificate (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 05 00 c3 0b 00 03"
@@ -180,6 +184,7 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("certificate (fragment)", &session, bin_record, from_server);
     }
+    // S->C, epoch 0 seq 6 - certificate (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 06 00 c3 0b 00 03"
@@ -198,7 +203,8 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("certificate (fragment)", &session, bin_record, from_server);
     }
-    // certificate (reassembled), server_key_exchange (fragment)
+    // S->C, epoch 0 seq 7 - certificate (reassembled)
+    // S->C, epoch 0 seq 8 - server_key_exchange (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 07 00 39 0b 00 03"
@@ -217,7 +223,7 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("certificate (reassembled), server_key_exchange (fragment)", &session, bin_record, from_server);
     }
-    // server_key_exchange (reassembled)
+    // S->C, epoch 0 seq 9 - server_key_exchange (reassembled)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 09 00 c3 0c 00 01"
@@ -236,7 +242,7 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("server_key_exchange (reassembled)", &session, bin_record, from_server);
     }
-    // server_hello_done
+    // S->C, epoch 0 seq 10 - server_hello_done
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 0a 00 0c 0e 00 00"
@@ -245,9 +251,9 @@ void test_dtls12() {
         dump_record("server_hello_done", &session, bin_record, from_server);
     }
 
-#if 0
-    // client_key_exchange, change_cipher_spec, finished
-    // finished - decryption failed
+    // C->S, epoch 0 seq 4 - client_key_exchange
+    // C->S, epoch 0 seq 5 - change_cipher_spec
+    // C->S, epoch 1 seq 0 - finished
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 04 00 2d 10 00 00"
@@ -264,26 +270,68 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client_key_exchange, change_cipher_spec, finished", &session, bin_record, from_client);
     }
-    // new_session_ticket
+#if 0
+    // S->C, epoch 0 seq 11 - new_session_ticket
     {
-        const char* record = ""
-        ;
+        const char* record =
+            "16 fe fd 00 00 00 00 00 00 00 0b 00 c2 04 00 00"
+            "b6 00 05 00 00 00 00 00 b6 00 00 1c 20 00 b0 81"
+            "91 12 df b7 f9 8c 99 db 44 56 fa 53 74 da 51 bb"
+            "30 e2 f5 f2 f0 81 66 13 76 33 40 22 0b 0b f0 c5"
+            "20 81 2b 62 f9 fa cc ac aa e8 08 a2 c2 c6 3e 70"
+            "51 fc 62 e1 cb 88 8e d2 7c e3 d8 d1 ae f4 3f 01"
+            "21 f4 37 a8 22 34 4d 66 7c d6 aa 16 70 28 f1 ca"
+            "8e 66 71 8a fe 80 22 26 66 33 57 28 6d bd c5 04"
+            "c1 66 02 d7 ac 0d 38 97 db f3 a3 77 73 4f 10 46"
+            "ef f1 b9 9a e7 3b 84 fb 35 6a 44 d7 fd 94 7c b2"
+            "78 1c b3 ff 90 be ad 1b 0b 5d 9e 95 db 51 35 e9"
+            "3f 42 7f af a8 10 94 64 8f 2d e4 0d 30 ba c4 14"
+            "a2 f2 63 3b 0d a5 6f b4 9f 52 81 e0 3b dd ac";
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("new_session_ticket", &session, bin_record, from_server);
     }
-    // change_cipher_spec, encrypted_handshake message
+    // S->C, epoch 0 seq 12 - change_cipher_spec
+    // S->C, epoch 1 seq 0 - encrypted_handshake message
     {
-        const char* record = ""
-        ;
+        const char* record =
+            "14 fe fd 00 00 00 00 00 00 00 0c 00 01 01 16 fe"
+            "fd 00 01 00 00 00 00 00 00 00 50 43 7b 0b 20 0b"
+            "70 d3 a0 5e a6 31 8d af dc 14 5f ca 16 e2 05 03"
+            "40 2a a2 0d 11 74 68 17 a5 60 f0 94 5b b7 a2 30"
+            "e0 7e 05 a1 80 ba f8 1d 01 a0 62 ec 7c b4 95 da"
+            "c3 99 95 90 59 4c f5 83 e3 cf 53 c8 16 6c 2d 8f"
+            "70 4e 30 15 d9 f7 43 d7 3a 65 94";
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("change_cipher_spec, encrypted_handshake message", &session, bin_record, from_server);
     }
-    // application data
+    // C->S, epoch 1 seq 1 - application data
     {
-        const char* record = ""
-        ;
+        const char* record =
+            "17 fe fd 00 01 00 00 00 00 00 01 00 40 22 6b 6d"
+            "36 ec 69 1e 1b db 72 89 60 db 4f a2 c8 7c cd fb"
+            "7b 52 24 83 e4 92 61 43 ac f2 2c 86 da 36 89 0a"
+            "68 69 49 7e 64 b5 e7 ad 60 36 19 7e 6f 83 e2 70"
+            "5e 07 9a 10 cd 3f d5 d3 cd 89 1f 94 c9";
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("application data (hello)", &session, bin_record, from_client);
+    }
+    // C->S, epoch 1 seq 2 - encrypted alert
+    {
+        const char* record =
+            "15 fe fd 00 01 00 00 00 00 00 02 00 40 7c 68 12"
+            "83 f5 e2 60 f7 0b 87 c1 46 64 75 3f 16 a3 f7 c3"
+            "22 16 21 41 a5 4b 0a e7 d6 7a e4 d3 d8 52 58 c7"
+            "37 80 61 63 1e b3 1f 52 54 c8 06 37 60 22 f0 1b"
+            "a7 fd 78 98 5e e3 dd d8 7b bd 94 e1 15";
+    }
+    // S->C, epoch 1 seq 1 - encrypted alert
+    {
+        const char* record =
+            "15 fe fd 00 01 00 00 00 00 00 01 00 40 1c 80 74"
+            "c8 39 a7 19 3d 4e 1d 31 82 f0 5c f9 ca c3 1d 8b"
+            "0f 0c 8c 3a 1a be 77 ee 4b e7 96 8d bf fb 32 ed"
+            "06 d6 56 2d b9 e5 d9 62 23 fc c2 c0 cf 39 aa bd"
+            "3e 38 e8 ab 29 14 61 64 11 28 45 a9 59";
     }
 #endif
 }

@@ -19,6 +19,7 @@
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/types.hpp>
+#include <sdk/net/tls/dtls_record_reorder.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 
 namespace hotplace {
@@ -59,6 +60,7 @@ class tls_session {
     tls_session(session_type_t type);
 
     tls_protection& get_tls_protection();
+    dtls_record_reorder& get_dtls_record_reorder();
     void set_type(session_type_t type);
     session_type_t get_type();
 
@@ -159,6 +161,9 @@ class tls_session {
     t_key_value<uint16, uint16> _kv;
 
     std::function<void(uint32 status)> _change_status_hook;
+
+    critical_section _dtls_lock;
+    dtls_record_reorder _dtls_record_reorder;
 };
 
 }  // namespace net

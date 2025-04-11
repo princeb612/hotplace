@@ -190,6 +190,7 @@ int main(int argc, char** argv) {
         test_construct_tls();
         test_construct_dtls();
 
+        test_dtls_record_reoder();
         test_dtls12();
     } else {
         dump_clienthello();

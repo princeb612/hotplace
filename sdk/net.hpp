@@ -85,6 +85,7 @@
 #include <sdk/net/server/network_stream.hpp>
 
 /* TLS */
+#include <sdk/net/tls/dtls_record_reorder.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>

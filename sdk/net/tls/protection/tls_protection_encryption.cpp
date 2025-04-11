@@ -499,15 +499,10 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
             __leave2;
         }
 
-        crypt_algorithm_t alg = crypt_alg_unknown;
-        crypt_mode_t mode = mode_unknown;
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite());
 
-        ret = get_cipher_info(session, alg, mode);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        if (cbc == mode) {
+        if (is_kindof_cbc) {
             ret = errorcode_t::not_supported;
         } else {
             ret = decrypt_aead(session, dir, stream, size, pos, plaintext, aad, tag, level);
