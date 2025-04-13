@@ -120,6 +120,15 @@ void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tl
     _test_case.assert((false == client_secret.empty()) && (client_secret == server_secret), __FUNCTION__, "cross-check secret %s", secret_name);
 }
 
+void play_pcap(tls_session* session, pcap_testvector* testvector, size_t size) {
+    for (auto i = 0; i < size; i++) {
+        pcap_testvector* item = testvector + i;
+
+        binary_t bin_record = std::move(base16_decode_rfc(item->record));
+        dump_record(item->desc, session, bin_record, item->dir);
+    }
+}
+
 tls_session rfc8448_session;
 tls_session rfc8448_session2;
 
@@ -190,8 +199,9 @@ int main(int argc, char** argv) {
         test_construct_tls();
         test_construct_dtls();
 
+        test_captured_tls12();
         test_dtls_record_reoder();
-        test_dtls12();
+        test_captured_dtls12();
     } else {
         dump_clienthello();
     }

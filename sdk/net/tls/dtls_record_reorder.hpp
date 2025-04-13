@@ -44,8 +44,8 @@ class dtls_record_reorder {
    protected:
     tls_session* get_session();
 
-    uint64 make_epoch_seq(uint16 epoch, uint64 seq);
-    void get_epoch_seq(uint64 key, uint16& epoch, uint64& seq);
+    static uint64 make_epoch_seq(uint16 epoch, uint64 seq);
+    static void get_epoch_seq(uint64 key, uint16& epoch, uint64& seq);
 
     tls_session* _session;
     uint16 _epoch;

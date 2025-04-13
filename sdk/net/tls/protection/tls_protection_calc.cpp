@@ -497,10 +497,12 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 #if defined DEBUG
                 if (istraceable()) {
                     basic_stream dbs;
+                    dbs.printf("\e[1;36m");
                     dbs.println("> hmac alg %x", hmac_alg);
                     dbs.println("> client hello random %s", base16_encode(client_hello_random).c_str());
                     dbs.println("> server hello random %s", base16_encode(server_hello_random).c_str());
                     dbs.println("> pre master secret %s", base16_encode(pre_master_secret).c_str());
+                    dbs.printf("\e[0m");
                     trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
                 }
 #endif
@@ -552,6 +554,19 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     __leave2;
                 }
             }
+
+#if defined DEBUG
+            if (istraceable()) {
+                // CLIENT_RANDOM
+                basic_stream dbs;
+                const std::string &keylog_client_random = base16_encode(get_item(tls_context_client_hello_random));
+                const std::string &keylog_master_secret = base16_encode(master_secret);
+                dbs.printf("\e[1;36m");
+                dbs.println("# CLIENT_RANDOM %s %s", keylog_client_random.c_str(), keylog_master_secret.c_str());
+                dbs.printf("\e[0m");
+                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            }
+#endif
 
             auto hmac_expansion = builder.set(hmac_alg).set(master_secret).build();
             if (hmac_expansion) {
@@ -629,6 +644,21 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 set_item(tls_secret_server_key, secret_server_key);
                 set_item(tls_secret_client_iv, secret_client_iv);
                 set_item(tls_secret_server_iv, secret_server_iv);
+
+#if defined DEBUG
+                if (istraceable()) {
+                    basic_stream dbs;
+                    dbs.printf("\e[1;36m");
+                    dbs.println("> secret_client_mac_key[%08x] %s", tls_secret_client_mac_key, base16_encode(secret_client_mac_key).c_str());
+                    dbs.println("> secret_server_mac_key[%08x] %s", tls_secret_server_mac_key, base16_encode(secret_server_mac_key).c_str());
+                    dbs.println("> secret_client_key[%08x] %s", tls_secret_client_key, base16_encode(secret_client_key).c_str());
+                    dbs.println("> secret_server_key[%08x] %s", tls_secret_server_key, base16_encode(secret_server_key).c_str());
+                    dbs.println("> secret_client_iv[%08x] %s", tls_secret_client_iv, base16_encode(secret_client_iv).c_str());
+                    dbs.println("> secret_server_iv[%08x] %s", tls_secret_server_iv, base16_encode(secret_server_iv).c_str());
+                    dbs.printf("\e[0m");
+                    trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                }
+#endif
 
                 hmac_expansion->release();
             } else {

@@ -163,6 +163,18 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
 return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto hstype = get_type();
+            dbs.printf("\e[1;36m");
+            dbs.println("# write handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+            dbs.printf("\e[0m");
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+        }
+#endif
+
         auto session = get_session();
         if (nullptr == session) {
             ret = errorcode_t::invalid_context;
@@ -346,11 +358,6 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                 dbs.println(" > %s 0x%04x", constexpr_handshake_message_seq, dtls_seq);
                 dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_offset, fragment_offset, fragment_offset);
                 dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_len, fragment_len, fragment_len);
-                // if (errorcode_t::fragmented == ret || errorcode_t::reassemble == ret) {
-                //     dbs.println(" > fragment");
-                //     const binary_t& assembled = protection.get_item(tls_context_fragment);
-                //     dump_memory(assembled, &dbs, 16, 3, 0, dump_notrunc);
-                // }
             }
             dbs.autoindent(0);
             trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);

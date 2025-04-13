@@ -1155,6 +1155,11 @@ enum nid_t : uint32 {
     nid_dsa = 116,         // NID_dsa
 };
 
+enum encrypt_flag : uint8 {
+    mac_then_encrypt = 0,
+    encrypt_then_mac = 1,
+};
+
 }  // namespace crypto
 }  // namespace hotplace
 

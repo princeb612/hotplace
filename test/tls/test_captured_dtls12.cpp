@@ -8,13 +8,12 @@
  * Revision History
  * Date         Name                Description
  *
- *  https://dtls.xargs.org/
  */
 
 #include "sample.hpp"
 
-void test_dtls12() {
-    _test_case.begin("DTLS 1.2");
+void test_captured_dtls12() {
+    _test_case.begin("DTLS 1.2 pre master secret, encrypt_then_mac");
     // dtlsserver
     // openssl s_client -connect localhost:9000 -state -debug -dtls1_2
 
@@ -251,6 +250,7 @@ void test_dtls12() {
         dump_record("server_hello_done", &session, bin_record, from_server);
     }
 
+#if 0
     // C->S, epoch 0 seq 4 - client_key_exchange
     // C->S, epoch 0 seq 5 - change_cipher_spec
     // C->S, epoch 1 seq 0 - finished
@@ -270,7 +270,6 @@ void test_dtls12() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         dump_record("client_key_exchange, change_cipher_spec, finished", &session, bin_record, from_client);
     }
-#if 0
     // S->C, epoch 0 seq 11 - new_session_ticket
     {
         const char* record =

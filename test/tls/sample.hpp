@@ -52,10 +52,18 @@ void test_tls13_xargs_org();
 void test_tls12_xargs_org();
 void test_dtls_xargs_org();
 
+struct pcap_testvector {
+    tls_direction_t dir;
+    const char* desc;
+    const char* record;
+};
+void play_pcap(tls_session* session, pcap_testvector* testvector, size_t size);
+
+void test_captured_tls12();
 // test vector created by openssl (wireshark capture)
 // $ openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -dtls
 // $ openssl s_client -connect localhost:9000 -state -debug -dtls
-void test_dtls12();
+void test_captured_dtls12();
 void test_dtls_record_reoder();
 
 // RFC

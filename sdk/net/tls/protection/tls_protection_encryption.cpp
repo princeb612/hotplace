@@ -392,7 +392,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         binary_append(aad, &additional[0], 3);          // rechdr (content_type, version)
         size_t plainsize = 0;
 
-        ret = crypt.cbc_hmac_tls_encrypt(enc_alg, hmac_alg, enckey, mackey, iv, aad, plaintext, ciphertext);
+        ret = crypt.cbc_hmac_mte_encrypt(enc_alg, hmac_alg, enckey, mackey, iv, aad, plaintext, ciphertext);
 
 #if defined DEBUG
         if (istraceable()) {
@@ -649,6 +649,15 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         auto hmac_alg = hint->mac;  // do not promote insecure algorithm
         const binary_t &mackey = get_item(secret_mac_key);
 
+        // RFC 7366 3.  Applying Encrypt-then-MAC
+        // MAC(MAC_write_key, seq_num +
+        //     TLSCipherText.type +
+        //     TLSCipherText.version +
+        //     TLSCipherText.length +
+        //     IV +
+        //     ENC(content + padding + padding_length));
+        // For DTLS, the sequence number is replaced by the combined epoch and sequence number as per DTLS (RFC 6347)
+
         binary_t verifydata;
         binary_t aad;
         binary_t tag;
@@ -658,7 +667,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
         // plaintext || tag
         //          \- plainsize
-        ret = crypt.cbc_hmac_tls_decrypt(enc_alg, hmac_alg, enckey, mackey, iv, aad, stream + pos + bpos, size - pos - bpos, plaintext, tag);
+        ret = crypt.cbc_hmac_mte_decrypt(enc_alg, hmac_alg, enckey, mackey, iv, aad, stream + pos + bpos, size - pos - bpos, plaintext, tag);
 
 #if defined DEBUG
         if (istraceable()) {

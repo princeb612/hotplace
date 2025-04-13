@@ -16,6 +16,7 @@
 #include <sdk/net/tls/tls/extension/tls_extension_ec_point_formats.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_key_share.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
+#include <sdk/net/tls/tls/extension/tls_extension_renegotiation_info.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_signature_algorithms.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_sni.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_supported_groups.hpp>
@@ -99,10 +100,6 @@ return_t async_tls_client_socket::do_handshake() {
                 binary_t temp;
                 prng.random(temp, 32);
                 handshake->set_random(random);
-
-                binary_t session_id;
-                prng.random(session_id, 32);
-                handshake->set_session_id(session_id);
             }
 
             // cipher suites
@@ -123,12 +120,12 @@ return_t async_tls_client_socket::do_handshake() {
                 handshake->add_ciphersuite(0xc02f);
                 handshake->add_ciphersuite(0xc030);
             }
-            // {
-            //     auto sni = new tls_extension_sni(session);
-            //     auto& hostname = sni->get_hostname();
-            //     hostname = "test.server.com";
-            //     handshake->get_extensions().add(sni);
-            // }
+            {
+                handshake->get_extensions().add(new tls_extension_renegotiation_info(session));
+                handshake->get_extensions().add(new tls_extension_unknown(tls1_ext_session_ticket, session));
+                // handshake->get_extensions().add(new tls_extension_unknown(tls1_ext_encrypt_then_mac, session));
+                handshake->get_extensions().add(new tls_extension_unknown(tls1_ext_extended_master_secret, session));
+            }
             {
                 // RFC 9325 4.2.1
                 // Note that [RFC8422] deprecates all but the uncompressed point format.

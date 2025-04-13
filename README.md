@@ -18,7 +18,8 @@
   * CBOR,COSE ![implemented](https://img.shields.io/badge/implemented+SDK-green)
   * HTTP/1.1 ![implemented](https://img.shields.io/badge/implemented+SDK-green)
   * HTTP/2 ![implemented](https://img.shields.io/badge/implemented+SDK-green)
-  * TLS,DTLS,QUIC ![studying](https://img.shields.io/badge/implemented-green)
+  * TLS over TCP ![implemented](https://img.shields.io/badge/implemented+SDK-green)
+  * DTLS,QUIC ![studying](https://img.shields.io/badge/studying-magenta)
   * HTTP/3 ![studying](https://img.shields.io/badge/studying-magenta)
   * ASN.1 ![studying](https://img.shields.io/badge/studying-magenta)
 * link

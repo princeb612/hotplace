@@ -235,7 +235,8 @@ return_t tls_extension::do_write_header(binary_t& bin, const binary_t& body) {
     {
         // header
         payload pl;
-        pl << new payload_member(uint16(get_type()), true, constexpr_extension_type) << new payload_member(uint16(_bodysize), true, constexpr_ext_len);
+        pl << new payload_member(uint16(get_type()), true, constexpr_extension_type)  //
+           << new payload_member(uint16(_bodysize), true, constexpr_ext_len);
         pl.write(bin);
     }
     {

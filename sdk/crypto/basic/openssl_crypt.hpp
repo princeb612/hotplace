@@ -437,23 +437,47 @@ class openssl_crypt : public crypt_t {
      */
     virtual return_t query(crypt_context_t* handle, size_t cmd, size_t& value);
 
+    return_t cbc_hmac_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv, const binary_t& aad,
+                              const binary_t& ciphertext, binary_t& plaintext, binary_t& tag, uint8 flag = mac_then_encrypt);
+    return_t cbc_hmac_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv, const binary_t& aad,
+                              const byte_t* ciphertext, size_t ciphersize, binary_t& plaintext, binary_t& tag, uint8 flag = mac_then_encrypt);
+
+    return_t cbc_hmac_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                              const binary_t& aad, const binary_t& ciphertext, binary_t& plaintext, binary_t& tag, uint8 flag = mac_then_encrypt);
+    return_t cbc_hmac_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                              const binary_t& aad, const byte_t* ciphertext, size_t ciphersize, binary_t& plaintext, binary_t& tag,
+                              uint8 flag = mac_then_encrypt);
+
     /**
      * @brief Authenticated Encryption with AES-CBC and HMAC-SHA (JOSE)
      *          tag = HMAC(aad || iv || ciphertext || uint64(aad_len))
      *
-     *        https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
-     *        2.4 AEAD_AES_128_CBC_HMAC_SHA_256 AES-128 SHA-256 K 32 MAC_KEY_LEN 16 ENC_KEY_LEN 16 T_LEN=16
-     *        2.5 AEAD_AES_192_CBC_HMAC_SHA_384 AES-192 SHA-384 K 48 MAC_KEY_LEN 24 ENC_KEY_LEN 24 T_LEN=24
-     *        2.6 AEAD_AES_256_CBC_HMAC_SHA_384 AES-256 SHA-384 K 56 MAC_KEY_LEN 32 ENC_KEY_LEN 24 T_LEN=24
-     *        2.7 AEAD_AES_256_CBC_HMAC_SHA_512 AES-256 SHA-512 K 64 MAC_KEY_LEN 32 ENC_KEY_LEN 32 T_LEN=32
+     *          https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
+     *          2.4 AEAD_AES_128_CBC_HMAC_SHA_256 AES-128 SHA-256 K 32 MAC_KEY_LEN 16 ENC_KEY_LEN 16 T_LEN=16
+     *          2.5 AEAD_AES_192_CBC_HMAC_SHA_384 AES-192 SHA-384 K 48 MAC_KEY_LEN 24 ENC_KEY_LEN 24 T_LEN=24
+     *          2.6 AEAD_AES_256_CBC_HMAC_SHA_384 AES-256 SHA-384 K 56 MAC_KEY_LEN 32 ENC_KEY_LEN 24 T_LEN=24
+     *          2.7 AEAD_AES_256_CBC_HMAC_SHA_512 AES-256 SHA-512 K 64 MAC_KEY_LEN 32 ENC_KEY_LEN 32 T_LEN=32
+     *
+     *        RFC 7366 Encrypt-then-MAC for Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)
+     *          3.  Applying Encrypt-then-MAC
+     *
+     *          encrypt( data || MAC || pad )
+     *
+     *          MAC(MAC_write_key, seq_num +
+     *              TLSCipherText.type +
+     *              TLSCipherText.version +
+     *              TLSCipherText.length +
+     *              IV +
+     *              ENC(content + padding + padding_length));
+     *
      * @param   const char* enc_alg [in] "aes-128-cbc"
      * @param   const char* mac_alg [in] "sha256"
      * @param   const binary_t& k [in] MAC_KEY || ENC_KEY
      * @param   const binary_t& iv [in] iv
-     * @param   const binary_t& a [in] aad
-     * @param   const binary_t& p [in] plaintext
-     * @param   binary_t& q [out] ciphertext
-     * @param   binary_t& t [out] AE tag
+     * @param   const binary_t& aad [in] aad
+     * @param   const binary_t& plaintext [in] plaintext
+     * @param   binary_t& ciphertext [out] ciphertext
+     * @param   binary_t& tag [out] AE tag
      * @return  error code (see error.hpp)
      * @remarks
      *
@@ -468,30 +492,19 @@ class openssl_crypt : public crypt_t {
      *
      * @sa      RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
      */
-    return_t cbc_hmac_rfc7516_encrypt(const char* enc_alg, const char* mac_alg, const binary_t& k, const binary_t& iv, const binary_t& a, const binary_t& p,
-                                      binary_t& q, binary_t& t);
-    return_t cbc_hmac_rfc7516_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& k, const binary_t& iv,
-                                      const binary_t& a, const binary_t& p, binary_t& q, binary_t& t);
-
+    return_t cbc_hmac_etm_encrypt(const char* enc_alg, const char* mac_alg, const binary_t& k, const binary_t& iv, const binary_t& aad,
+                                  const binary_t& plaintext, binary_t& ciphertext, binary_t& tag);
     /**
      * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA (JOSE)
-     * @return  error code (see error.hpp)
-     * @desc    ENC_KEY, MAC_KEY
-     */
-    return_t cbc_hmac_rfc7516_encrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
-                                      const binary_t& a, const binary_t& p, binary_t& q, binary_t& t);
-    return_t cbc_hmac_rfc7516_encrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k,
-                                      const binary_t& iv, const binary_t& a, const binary_t& p, binary_t& q, binary_t& t);
-    /**
-     * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA (JOSE)
+     *          RFC 7366 Encrypt-then-MAC for Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)
      * @param   const char* enc_alg [in] "aes-128-cbc"
      * @param   const char* mac_alg [in] "sha256"
      * @param   const binary_t& k [in] MAC_KEY || ENC_KEY
      * @param   const binary_t& iv [in] iv
-     * @param   const binary_t& a [in] aad
-     * @param   const binary_t& q [in] ciphertext
-     * @param   binary_t& p [out] plaintext
-     * @param   binary_t& t [in] AE tag
+     * @param   const binary_t& aad [in] aad
+     * @param   const binary_t& ciphertext [in] ciphertext
+     * @param   binary_t& plaintext [out] plaintext
+     * @param   binary_t& tag [in] AE tag
      * @return  error code (see error.hpp)
      * @desc
      *          K = MAC_KEY || ENC_KEY
@@ -505,19 +518,31 @@ class openssl_crypt : public crypt_t {
      *
      * @sa      RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
      */
-    return_t cbc_hmac_rfc7516_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& k, const binary_t& iv, const binary_t& a, const binary_t& q,
-                                      binary_t& p, const binary_t& t);
-    return_t cbc_hmac_rfc7516_decrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& k, const binary_t& iv,
-                                      const binary_t& a, const binary_t& q, binary_t& p, const binary_t& t);
-    /**
-     * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA (JOSE)
-     * @return  error code (see error.hpp)
-     * @desc    ENC_KEY, MAC_KEY
-     */
-    return_t cbc_hmac_rfc7516_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
-                                      const binary_t& a, const binary_t& q, binary_t& p, const binary_t& t);
-    return_t cbc_hmac_rfc7516_decrypt(crypt_algorithm_t enc_alg, crypt_mode_t enc_mode, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k,
-                                      const binary_t& iv, const binary_t& a, const binary_t& q, binary_t& p, const binary_t& t);
+    return_t cbc_hmac_etm_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& k, const binary_t& iv, const binary_t& aad,
+                                  const binary_t& ciphertext, binary_t& plaintext, const binary_t& tag);
+
+    return_t cbc_hmac_etm_encrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& k, const binary_t& iv, const binary_t& aad,
+                                  const binary_t& plaintext, binary_t& ciphertext, binary_t& tag);
+    return_t cbc_hmac_etm_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& k, const binary_t& iv, const binary_t& aad,
+                                  const binary_t& ciphertext, binary_t& plaintext, const binary_t& tag);
+
+    return_t cbc_hmac_etm_encrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const binary_t& plaintext, binary_t& ciphertext, binary_t& tag);
+    return_t cbc_hmac_etm_encrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const byte_t* plaintext, size_t plainsize, binary_t& ciphertext, binary_t& tag);
+    return_t cbc_hmac_etm_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const binary_t& ciphertext, binary_t& plaintext, const binary_t& tag);
+    return_t cbc_hmac_etm_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const byte_t* ciphertext, size_t ciphersize, binary_t& plaintext, const binary_t& tag);
+
+    return_t cbc_hmac_etm_encrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const binary_t& plaintext, binary_t& ciphertext, binary_t& tag);
+    return_t cbc_hmac_etm_encrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const byte_t* plaintext, size_t plainsize, binary_t& ciphertext, binary_t& tag);
+    return_t cbc_hmac_etm_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const binary_t& ciphertext, binary_t& plaintext, const binary_t& tag);
+    return_t cbc_hmac_etm_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const byte_t* ciphertext, size_t ciphersize, binary_t& plaintext, const binary_t& tag);
 
     /**
      * @brief   Authenticated Encryption with AES-CBC and HMAC-SHA (TLS)
@@ -527,11 +552,11 @@ class openssl_crypt : public crypt_t {
      *            plainsize = DECRYPT(ciphertext).size - tag.size - 1
      *            plaintext = binary_t(plaintag.begin(), plaintag.begin() + plainsize)
      *
-     *            scv = hton64(sequence) || uint8(content_type) || hton16(tls_version)
+     *            aad = hton64(sequence) || uint8(content_type) || hton16(tls_version)
      *
      *          while decryption
      *            plaintag = decrypt(ciphertext) // including tag
-     *            tag = HMAC(scv || hton16(plaintext.size) || plaintext)
+     *            tag = HMAC(aad || hton16(plaintext.size) || plaintext)
      *
      *          plaintext
      *            // sample #1
@@ -540,7 +565,7 @@ class openssl_crypt : public crypt_t {
      *              //                    \- ptsize
      *              binary_t plaintag;
      *              size_t ptsize = 0;
-     *              cbc_hmac_tls_decrypt(aes128, sha1, key, mackey, iv, aad, ciphertext, plaintag, ptsize);
+     *              cbc_hmac_mte_decrypt(aes128, sha1, key, mackey, iv, aad, ciphertext, plaintag, ptsize);
      *              binary_t pt(plaintag.begin(), plaintag.begin() + ptsize);
      *            }
      *            // sample #2
@@ -548,21 +573,31 @@ class openssl_crypt : public crypt_t {
      *              // plaintext, tag separated
      *              binary_t plaintext;
      *              binary_t tag;
-     *              cbc_hmac_tls_decrypt(aes128, sha1, key, mackey, iv, aad, ciphertext, plaintext, tag);
+     *              cbc_hmac_mte_decrypt(aes128, sha1, key, mackey, iv, aad, ciphertext, plaintext, tag);
      *            }
      */
-    return_t cbc_hmac_tls_encrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
-                                  const binary_t& scv, const binary_t& plaintext, binary_t& ciphertext);
-    return_t cbc_hmac_tls_encrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
-                                  const binary_t& scv, const byte_t* plaintext, size_t size, binary_t& ciphertext);
-    return_t cbc_hmac_tls_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
-                                  const binary_t& scv, const binary_t& ciphertext, binary_t& plaintag, size_t& ptsize);
-    return_t cbc_hmac_tls_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
-                                  const binary_t& scv, const byte_t* ciphertext, size_t size, binary_t& plaintag, size_t& ptsize);
-    return_t cbc_hmac_tls_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
-                                  const binary_t& scv, const binary_t& ciphertext, binary_t& plaintext, binary_t& tag);
-    return_t cbc_hmac_tls_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
-                                  const binary_t& scv, const byte_t* ciphertext, size_t size, binary_t& plaintext, binary_t& tag);
+    return_t cbc_hmac_mte_encrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const binary_t& plaintext, binary_t& ciphertext);
+    return_t cbc_hmac_mte_encrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const byte_t* plaintext, size_t size, binary_t& ciphertext);
+    return_t cbc_hmac_mte_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const binary_t& ciphertext, binary_t& plaintext, binary_t& tag);
+    return_t cbc_hmac_mte_decrypt(const char* enc_alg, const char* mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const byte_t* ciphertext, size_t size, binary_t& plaintext, binary_t& tag);
+
+    return_t cbc_hmac_mte_encrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const binary_t& plaintext, binary_t& ciphertext);
+    return_t cbc_hmac_mte_encrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const byte_t* plaintext, size_t size, binary_t& ciphertext);
+    return_t cbc_hmac_mte_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const binary_t& ciphertext, binary_t& plaintext, binary_t& tag);
+    return_t cbc_hmac_mte_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const byte_t* ciphertext, size_t size, binary_t& plaintext, binary_t& tag);
+
+    return_t cbc_hmac_mte_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const binary_t& ciphertext, binary_t& plaintag, size_t& ptsize);
+    return_t cbc_hmac_mte_decrypt(crypt_algorithm_t enc_alg, hash_algorithm_t mac_alg, const binary_t& enc_k, const binary_t& mac_k, const binary_t& iv,
+                                  const binary_t& aad, const byte_t* ciphertext, size_t size, binary_t& plaintag, size_t& ptsize);
 
    protected:
     return_t encrypt_internal(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, unsigned char* ciphertext, size_t* ciphersize,

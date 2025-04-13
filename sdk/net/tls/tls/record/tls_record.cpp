@@ -78,6 +78,18 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
 return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto content_type = get_type();
+            dbs.printf("\e[1;36m");
+            dbs.println("# write %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type,
+                        tlsadvisor->content_type_string(content_type).c_str());
+            dbs.printf("\e[0m");
+            trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+        }
+#endif
         auto session = get_session();
         if (nullptr == session) {
             ret = errorcode_t::invalid_context;
@@ -105,7 +117,9 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
 #if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
+            dbs.printf("\e[1;36m");
             dbs.println("# record constructed");
+            dbs.printf("\e[0m");
             dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
             trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
         }

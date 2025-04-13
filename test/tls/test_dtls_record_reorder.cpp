@@ -8,7 +8,6 @@
  * Revision History
  * Date         Name                Description
  *
- *  https://dtls.xargs.org/
  */
 
 #include "sample.hpp"
