@@ -18,7 +18,7 @@ namespace hotplace {
 namespace net {
 
 /**
- * @brief   tls1_ext_key_share (0x0033)
+ * @brief   tls_ext_key_share (0x0033)
  */
 class tls_extension_key_share : public tls_extension {
    public:

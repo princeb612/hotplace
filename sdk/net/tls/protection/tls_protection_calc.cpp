@@ -110,9 +110,9 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                                        const binary_t &context) -> void {
             okm.clear();
             if (is_kindof_dtls()) {
-                kdf.hkdf_expand_dtls13_label(okm, hashalg, dlen, secret, str2bin(label), context);
+                kdf.hkdf_expand_dtls13_label(okm, hashalg, dlen, secret, label, context);
             } else {
-                kdf.hkdf_expand_tls13_label(okm, hashalg, dlen, secret, str2bin(label), context);
+                kdf.hkdf_expand_tls13_label(okm, hashalg, dlen, secret, label, context);
             }
             _kv[sec] = okm;
         };
@@ -157,7 +157,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
              *             v
              */
 
-            // res binder (see tls1_ext_pre_shared_key)
+            // res binder (see tls_ext_pre_shared_key)
             // exp master (see tls_context_server_finished)
 
             if ((session_tls == session_type) || (session_dtls == session_type)) {
@@ -223,7 +223,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_client_initial_secret, label_quic_hp, context);
                     _kv[tls_secret_initial_quic_client_hp] = bin;
 
-                    kdf.hkdf_expand_tls13_label(bin_server_initial_secret, alg, 32, bin_initial_secret, str2bin("server in"), context);
+                    kdf.hkdf_expand_tls13_label(bin_server_initial_secret, alg, 32, bin_initial_secret, "server in", context);
                     _kv[tls_secret_initial_quic_server] = bin_server_initial_secret;
 
                     kdf.hkdf_expand_tls13_label(bin, alg, keysize, bin_server_initial_secret, label_quic_key, context);
@@ -530,7 +530,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     hash_context_t *hmac_handle = nullptr;
                     size_t size_master_secret = 48;
 
-                    binary_append(seed, str2bin("master secret"));
+                    binary_append(seed, "master secret");
                     binary_append(seed, client_hello_random);
                     binary_append(seed, server_hello_random);
 
@@ -588,7 +588,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                  * server_write_IV[SecurityParameters.IV_size]
                  */
                 binary_t seed;
-                binary_append(seed, str2bin("key expansion"));
+                binary_append(seed, "key expansion");
                 binary_append(seed, server_hello_random);
                 binary_append(seed, client_hello_random);
 
@@ -753,9 +753,9 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
             openssl_kdf kdf;
             binary_t context;
             if (is_kindof_dtls()) {
-                kdf.hkdf_expand_dtls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
+                kdf.hkdf_expand_dtls13_label(fin_key, hashalg, dlen, ht_secret, "finished", context);
             } else {
-                kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen, ht_secret, str2bin("finished"), context);
+                kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen, ht_secret, "finished", context);
             }
             crypto_hmac_builder builder;
             crypto_hmac *hmac = builder.set(hashalg).set(fin_key).build();

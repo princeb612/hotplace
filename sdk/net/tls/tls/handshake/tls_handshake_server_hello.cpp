@@ -128,6 +128,12 @@ return_t tls_handshake_server_hello::set_cipher_suite(const char* cs) {
 
 uint8 tls_handshake_server_hello::get_compression_method() { return _compression_method; }
 
+return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    get_session()->get_keyvalue().remove(session_encrypt_then_mac);
+    return ret;
+}
+
 return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -195,10 +201,14 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             session->reset_recordno(from_server);
         }
 
-        auto ext = get_extensions().get(tls1_ext_supported_versions);
-        if (nullptr == ext) {
+        auto ext_version = get_extensions().get(tls_ext_supported_versions);
+        if (nullptr == ext_version) {
             auto legacy_version = protection.get_lagacy_version();
             protection.set_tls_version(_version ? _version : legacy_version);
+        }
+        auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
+        if (ext_etm) {
+            session->get_keyvalue().set(session_encrypt_then_mac, 1);
         }
 
         session->update_session_status(session_server_hello);

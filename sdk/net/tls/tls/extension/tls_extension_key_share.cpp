@@ -28,7 +28,7 @@ constexpr char constexpr_group[] = "group";
 constexpr char constexpr_pubkey_len[] = "public key len";
 constexpr char constexpr_pubkey[] = "public key";
 
-tls_extension_key_share::tls_extension_key_share(tls_session* session) : tls_extension(tls1_ext_key_share, session) {}
+tls_extension_key_share::tls_extension_key_share(tls_session* session) : tls_extension(tls_ext_key_share, session) {}
 
 return_t tls_extension_key_share::add(uint16 group) { return errorcode_t::success; }
 

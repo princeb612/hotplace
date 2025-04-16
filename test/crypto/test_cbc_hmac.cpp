@@ -41,36 +41,34 @@ void test_cbc_hmac_mte() {
 
     return_t ret = errorcode_t::success;
     openssl_crypt crypt;
+    crypto_cbc_hmac cbchmac;
 
     {
+        cbchmac.set_enc(aes128).set_mac(sha1).set_flag(tls_mac_then_encrypt);
         _logger->hdump("> key", key, 16, 3);
         _logger->hdump("> iv", iv, 16, 3);
         _logger->hdump("> mackey", mackey, 16, 3);
         _logger->hdump("> aad", aad, 16, 3);
     }
     {
-        binary_t out;
-        size_t ptsize = 0;
-        ret = crypt.cbc_hmac_mte_decrypt(aes128, sha1, key, mackey, iv, aad, ciphertext, out, ptsize);
+        binary_t pt;
+        ret = cbchmac.decrypt(key, mackey, iv, aad, ciphertext, pt);
         _test_case.test(ret, __FUNCTION__, "mac then encrypt");
         _logger->hdump("> ciphertext", ciphertext, 16, 3);
-        _logger->hdump("> plaintag", out, 16, 3);
-        binary_t pt(out.begin(), out.begin() + ptsize);
-        _logger->writeln("> plaintext.size %zi", ptsize);
         _logger->hdump("> plaintext", pt, 16, 3);
         _test_case.assert(plaintext == pt, __FUNCTION__, "AES-128-CBC-SHA #decryption");
     }
     {
-        binary_t out;
-        crypt.cbc_hmac_mte_encrypt(aes128, sha1, key, mackey, iv, aad, plaintext, out);
+        binary_t ct;
+        ret = cbchmac.encrypt(key, mackey, iv, aad, plaintext, ct);
+        _test_case.test(ret, __FUNCTION__, "mac then encrypt");
         _logger->hdump("> plaintext", plaintext, 16, 3);
-        _logger->hdump("> ciphertext", out, 16, 3);
-        _test_case.assert(ciphertext == out, __FUNCTION__, "AES-128-CBC-SHA #mac-then-encrypt");
+        _logger->hdump("> ciphertext", ct, 16, 3);
+        _test_case.assert(ciphertext == ct, __FUNCTION__, "AES-128-CBC-SHA #mac-then-encrypt");
     }
 }
 
 void test_cbc_hmac_etm() {
-#if 0
     _test_case.begin("encrypt_then_mac");
 
     // test/tls/tls12/tls12etm.pcapng
@@ -93,50 +91,42 @@ void test_cbc_hmac_etm() {
     // 90 63 48 d9 ab"
 
     const char* encdata =
-        "b2 08 4a 5b 1d d6 15 cd 05 6d 1f"
-        "28 8f b8 e5 7b 7e eb d2 6f bb 00 18 32 c0 6c de"
-        "4b 8f a4 77 10 43 71 e5 ba 2a 09 1b 70 3b bc 80"
-        "69 bc 97 bc 2d";
-    const char* enctag = "d0d236fa3089553b17e96ec6a46410c0002dab9e5ce6dfb4a8539c906348d9ab";
-    const char* content_aad = "00000000000000001603030050";
-
-    //  RFC 7366 Encrypt-then-MAC for Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)
-    //    3.  Applying Encrypt-then-MAC
-    //    encrypt( data || MAC || pad )
-    //    MAC(MAC_write_key, seq_num +
-    //        TLSCipherText.type +
-    //        TLSCipherText.version +
-    //        TLSCipherText.length +
-    //        IV +
-    //        ENC(content + padding + padding_length));
+        "b2 08 4a 5b 1d d6 15 cd 05 6d 1f 28 8f b8 e5 7b"
+        "7e eb d2 6f bb 00 18 32 c0 6c de 4b 8f a4 77 10"
+        "43 71 e5 ba 2a 09 1b 70 3b bc 80 69 bc 97 bc 2d"  // b2..2d ciphertext
+        "d0 d2 36 fa 30 89 55 3b 17 e9 6e c6 a4 64 10 c0"
+        "00 2d ab 9e 5c e6 df b4 a8 53 9c 90 63 48 d9 ab";  // d0..ab tag
+    const char* content_aad = "0000000000000000 160303";    // sequence || type || version
+    const char* plaindata = "cace85bac5cfeea0bb0ae507869d2e4c1400000c9bf2cb3b4a834cc4dfa8478f0f";
 
     binary_t ciphertext = std::move(base16_decode_rfc(encdata));
     binary_t key = std::move(base16_decode("12edab3ca03602d1f8f97c4fbe97a414"));
     binary_t iv = std::move(base16_decode("c27bdd86b59b64171cb1f15bce8c6cc8"));
     binary_t mackey = std::move(base16_decode("05eaa1434e103c19701b389ed010afdd5753fc039fbc9a01da45361c642582cb"));
-    binary_t aad = std::move(base16_decode(content_aad));
-    binary_t tag = std::move(base16_decode(enctag));
+    binary_t aad = std::move(base16_decode_rfc(content_aad));
+    binary_t plaintext = std::move(base16_decode_rfc(plaindata));
 
     return_t ret = errorcode_t::success;
-    openssl_crypt crypt;
     {
-        _logger->hdump("> key", key, 16, 3);
-        _logger->hdump("> iv", iv, 16, 3);
-        _logger->hdump("> mackey", mackey, 16, 3);
-        _logger->hdump("> aad", aad, 16, 3);
+        _logger->writeln("> key       %s", base16_encode(key).c_str());
+        _logger->writeln("> iv        %s", base16_encode(iv).c_str());
+        _logger->writeln("> mackey    %s", base16_encode(mackey).c_str());
+        _logger->writeln("> aad       %s", base16_encode(aad).c_str());
+        _logger->writeln("> plaintext %s", base16_encode(plaintext).c_str());
+    }
+
+    crypto_cbc_hmac cbchmac;
+    cbchmac.set_enc(aes128).set_mac(sha2_256).set_flag(tls_encrypt_then_mac);
+    binary_t pt;
+    binary_t ct;
+    {
+        ret = cbchmac.decrypt(key, mackey, iv, aad, ciphertext, pt);
+        _logger->writeln("> pt        %s", base16_encode(pt).c_str());
+        _test_case.assert(pt == plaintext, __FUNCTION__, "encrypt_then_mac #encryption");
     }
     {
-        binary_t ct;
-        binary_t pt;
-        size_t ptsize = 0;
-        ret = crypt.cbc_hmac_etm_decrypt(aes128, sha2_256, key, mackey, iv, aad, ciphertext, pt, tag);
-        _test_case.test(ret, __FUNCTION__, "encrypt then mac");
-        // crypt.cbc_hmac_mte_encrypt(aes128, sha2_256, key, mackey, iv, aad, plaintext, ct, encrypt_then_mac);
-        // _logger->hdump("> plaintext", plaintext, 16, 3);
-        _logger->hdump("> ciphertext", ciphertext, 16, 3);
-        // crypt.cbc_hmac_mte_decrypt(aes128, sha2_256, key, mackey, iv, aad, ct, pt, ptsize, encrypt_then_mac);
-        _logger->hdump("> plaintext", pt, 16, 3);
-        // _test_case.assert(plaintext == pt, __FUNCTION__, "AES-128-CBC-SHA #encrypt-then-mac");
+        ret = cbchmac.encrypt(key, mackey, iv, aad, pt, ct);
+        _logger->writeln("> ct        %s", base16_encode(ct).c_str());
+        _test_case.assert(ct == ciphertext, __FUNCTION__, "encrypt_then_mac #decryption");
     }
-#endif
 }

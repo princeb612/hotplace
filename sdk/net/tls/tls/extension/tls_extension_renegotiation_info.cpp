@@ -23,7 +23,7 @@ namespace net {
 constexpr char constexpr_renegotiation_info_length[] = "renegotiation_info len";
 constexpr char constexpr_renegotiation_info[] = "renegotiation_info";
 
-tls_extension_renegotiation_info::tls_extension_renegotiation_info(tls_session* session) : tls_extension(tls1_ext_renegotiation_info, session), _modes(0) {}
+tls_extension_renegotiation_info::tls_extension_renegotiation_info(tls_session* session) : tls_extension(tls_ext_renegotiation_info, session), _modes(0) {}
 
 return_t tls_extension_renegotiation_info::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

@@ -21,6 +21,7 @@
 #include <sdk/crypto/basic/cipher_encrypt.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_aead.hpp>
+#include <sdk/crypto/basic/crypto_cbc_hmac.hpp>
 #include <sdk/crypto/basic/crypto_encrypt.hpp>
 #include <sdk/crypto/basic/crypto_hash.hpp>
 #include <sdk/crypto/basic/crypto_hmac.hpp>

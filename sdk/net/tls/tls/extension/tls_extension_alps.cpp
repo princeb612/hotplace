@@ -23,7 +23,7 @@ constexpr char constexpr_alps_len[] = "alps len";
 constexpr char constexpr_alpn_len[] = "alpn len";
 constexpr char constexpr_alpn[] = "alpn";
 
-tls_extension_alps::tls_extension_alps(tls_session* session) : tls_extension(tls1_ext_application_layer_protocol_settings, session), _alps_len(0) {}
+tls_extension_alps::tls_extension_alps(tls_session* session) : tls_extension(tls_ext_application_layer_protocol_settings, session), _alps_len(0) {}
 
 return_t tls_extension_alps::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

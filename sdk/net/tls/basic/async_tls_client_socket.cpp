@@ -122,9 +122,9 @@ return_t async_tls_client_socket::do_handshake() {
             }
             {
                 handshake->get_extensions().add(new tls_extension_renegotiation_info(session));
-                handshake->get_extensions().add(new tls_extension_unknown(tls1_ext_session_ticket, session));
-                // handshake->get_extensions().add(new tls_extension_unknown(tls1_ext_encrypt_then_mac, session));
-                handshake->get_extensions().add(new tls_extension_unknown(tls1_ext_extended_master_secret, session));
+                handshake->get_extensions().add(new tls_extension_unknown(tls_ext_session_ticket, session));
+                // handshake->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
+                // handshake->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, session));
             }
             {
                 // RFC 9325 4.2.1

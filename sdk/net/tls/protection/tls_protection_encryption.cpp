@@ -12,6 +12,7 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/cipher_encrypt.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/crypto_cbc_hmac.hpp>
 #include <sdk/io/asn.1/types.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
@@ -376,23 +377,18 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         auto hmac_alg = hint->mac;  // do not promote insecure algorithm
         const binary_t &mackey = get_item(secret_mac_key);
 
-        /**
-         * RFC 7366 3.  Applying Encrypt-then-MAC
-         *   -- for TLS 1.1 and greater with an explicit IV
-         *   MAC(MAC_write_key, seq_num +
-         *       TLSCipherText.type +
-         *       TLSCipherText.version +
-         *       TLSCipherText.length +
-         *       IV +
-         *       ENC(content + padding + padding_length));
-         */
+        bool etm = session->get_keyvalue().get(session_encrypt_then_mac);
+        uint16 flag = etm ? tls_encrypt_then_mac : tls_mac_then_encrypt;
+
         binary_t verifydata;
         binary_t aad;
         binary_append(aad, uint64(record_no), hton64);  // sequence
         binary_append(aad, &additional[0], 3);          // rechdr (content_type, version)
         size_t plainsize = 0;
 
-        ret = crypt.cbc_hmac_mte_encrypt(enc_alg, hmac_alg, enckey, mackey, iv, aad, plaintext, ciphertext);
+        crypto_cbc_hmac cbchmac;
+        cbchmac.set_enc(enc_alg).set_mac(hmac_alg).set_flag(flag);
+        ret = cbchmac.encrypt(enckey, mackey, iv, aad, plaintext, ciphertext);
 
 #if defined DEBUG
         if (istraceable()) {
@@ -631,9 +627,6 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         }
         auto ivsize = sizeof_iv(hint_cipher);
         size_t content_header_size = get_header_size();
-        binary_t iv;
-        binary_append(iv, stream + pos + content_header_size, ivsize);
-        size_t bpos = content_header_size + ivsize;
 
         openssl_crypt crypt;
 
@@ -649,14 +642,8 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         auto hmac_alg = hint->mac;  // do not promote insecure algorithm
         const binary_t &mackey = get_item(secret_mac_key);
 
-        // RFC 7366 3.  Applying Encrypt-then-MAC
-        // MAC(MAC_write_key, seq_num +
-        //     TLSCipherText.type +
-        //     TLSCipherText.version +
-        //     TLSCipherText.length +
-        //     IV +
-        //     ENC(content + padding + padding_length));
-        // For DTLS, the sequence number is replaced by the combined epoch and sequence number as per DTLS (RFC 6347)
+        bool etm = session->get_keyvalue().get(session_encrypt_then_mac);
+        uint16 flag = etm ? tls_encrypt_then_mac : tls_mac_then_encrypt;
 
         binary_t verifydata;
         binary_t aad;
@@ -665,9 +652,34 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         binary_append(aad, stream + pos, 3);            // rechdr (content_type, version)
         size_t plainsize = 0;
 
-        // plaintext || tag
-        //          \- plainsize
-        ret = crypt.cbc_hmac_mte_decrypt(enc_alg, hmac_alg, enckey, mackey, iv, aad, stream + pos + bpos, size - pos - bpos, plaintext, tag);
+        // MtE
+        //   plaintext || tag
+        //            \- plainsize
+        // EtM
+        //   ciphertext || tag
+        binary_t iv;
+        size_t bpos = 0;
+        const byte_t *ciphertext = nullptr;
+        size_t ciphersize = 0;
+        if (etm) {
+            bpos = content_header_size;
+            ciphertext = stream + pos + bpos;
+            ciphersize = size - pos - bpos;
+            if (from_client == dir) {
+                iv = get_item(tls_secret_client_iv);
+            } else if (from_server == dir) {
+                iv = get_item(tls_secret_server_iv);
+            }
+        } else {
+            bpos = content_header_size + ivsize;
+            ciphertext = stream + pos + bpos;
+            ciphersize = size - pos - bpos;
+            binary_append(iv, stream + pos + content_header_size, ivsize);
+        }
+
+        crypto_cbc_hmac cbchmac;
+        cbchmac.set_enc(enc_alg).set_mac(hmac_alg).set_flag(flag);
+        ret = cbchmac.decrypt(enckey, mackey, iv, aad, ciphertext, ciphersize, plaintext);
 
 #if defined DEBUG
         if (istraceable()) {
@@ -681,7 +693,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
             dbs.println(" > mackey[%08x] %s", secret_mac_key, base16_encode(mackey).c_str());
             dbs.println(" > record no %i", record_no);
             dbs.println(" > ciphertext");
-            dump_memory(stream + pos + bpos, size - pos - bpos, &dbs, 16, 3, 0x0, dump_notrunc);
+            dump_memory(ciphertext, ciphersize, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.println(" > plaintext 0x%x(%i)", plainsize, plainsize);
             dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
 

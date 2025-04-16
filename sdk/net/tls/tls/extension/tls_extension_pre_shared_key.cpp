@@ -28,7 +28,7 @@ constexpr char constexpr_psk_binder_len[] = "psk binder len";
 constexpr char constexpr_psk_binder[] = "psk binder";
 constexpr char constexpr_selected_identity[] = "selected identity";
 
-tls_extension_psk::tls_extension_psk(tls_session* session) : tls_extension(tls1_ext_pre_shared_key, session) {}
+tls_extension_psk::tls_extension_psk(tls_session* session) : tls_extension(tls_ext_pre_shared_key, session) {}
 
 tls_extension_client_psk::tls_extension_client_psk(tls_session* session)
     : tls_extension_psk(session), _psk_identities_len(0), _obfuscated_ticket_age(0), _psk_binders_len(0) {}

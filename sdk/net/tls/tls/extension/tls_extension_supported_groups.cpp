@@ -22,7 +22,7 @@ namespace net {
 constexpr char constexpr_curves[] = "curves";
 constexpr char constexpr_curve[] = "curve";
 
-tls_extension_supported_groups::tls_extension_supported_groups(tls_session* session) : tls_extension(tls1_ext_supported_groups, session) {}
+tls_extension_supported_groups::tls_extension_supported_groups(tls_session* session) : tls_extension(tls_ext_supported_groups, session) {}
 
 return_t tls_extension_supported_groups::do_postprocess() {
     return_t ret = errorcode_t::success;

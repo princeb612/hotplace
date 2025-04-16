@@ -59,28 +59,28 @@ tls_hs_type_t tls_extension_builder::get_handshake() { return _handshake; }
 tls_extension* tls_extension_builder::build() {
     tls_extension* extension = nullptr;
     switch (_type) {
-        case tls1_ext_server_name: /* 0x0000 */ {
+        case tls_ext_server_name: /* 0x0000 */ {
             __try_new_catch_only(extension, new tls_extension_sni(get_session()));
         } break;
-        case tls1_ext_status_request: /* 0x0005 */ {
+        case tls_ext_status_request: /* 0x0005 */ {
             __try_new_catch_only(extension, new tls_extension_status_request(get_session()));
         } break;
-        case tls1_ext_supported_groups: /* 0x000a */ {
+        case tls_ext_supported_groups: /* 0x000a */ {
             __try_new_catch_only(extension, new tls_extension_supported_groups(get_session()));
         } break;
-        case tls1_ext_ec_point_formats: /* 0x000b */ {
+        case tls_ext_ec_point_formats: /* 0x000b */ {
             __try_new_catch_only(extension, new tls_extension_ec_point_formats(get_session()));
         } break;
-        case tls1_ext_signature_algorithms: /* 0x000d */ {
+        case tls_ext_signature_algorithms: /* 0x000d */ {
             __try_new_catch_only(extension, new tls_extension_signature_algorithms(get_session()));
         } break;
-        case tls1_ext_application_layer_protocol_negotiation: /* 0x0010 */ {
+        case tls_ext_application_layer_protocol_negotiation: /* 0x0010 */ {
             __try_new_catch_only(extension, new tls_extension_alpn(get_session()));
         } break;
-        case tls1_ext_compress_certificate: /* 0x001b */ {
+        case tls_ext_compress_certificate: /* 0x001b */ {
             __try_new_catch_only(extension, new tls_extension_compress_certificate(get_session()));
         } break;
-        case tls1_ext_pre_shared_key: /* 0x0029 */ {
+        case tls_ext_pre_shared_key: /* 0x0029 */ {
             auto session = get_session();
             if (session) {
                 auto hstype = get_handshake();
@@ -91,7 +91,7 @@ tls_extension* tls_extension_builder::build() {
                 }
             }
         } break;
-        case tls1_ext_supported_versions: /* 0x002b */ {
+        case tls_ext_supported_versions: /* 0x002b */ {
             auto session = get_session();
             if (session) {
                 auto hstype = get_handshake();
@@ -102,10 +102,10 @@ tls_extension* tls_extension_builder::build() {
                 }
             }
         } break;
-        case tls1_ext_psk_key_exchange_modes: /* 0x002d */ {
+        case tls_ext_psk_key_exchange_modes: /* 0x002d */ {
             __try_new_catch_only(extension, new tls_extension_psk_key_exchange_modes(get_session()));
         } break;
-        case tls1_ext_key_share: /* 0x0033 */ {
+        case tls_ext_key_share: /* 0x0033 */ {
             auto session = get_session();
             if (session) {
                 auto hstype = get_handshake();
@@ -116,38 +116,38 @@ tls_extension* tls_extension_builder::build() {
                 }
             }
         } break;
-        case tls1_ext_quic_transport_parameters: /* 0x0039 */ {
+        case tls_ext_quic_transport_parameters: /* 0x0039 */ {
             __try_new_catch_only(extension, new tls_extension_quic_transport_parameters(get_session()));
         } break;
-        case tls1_ext_application_layer_protocol_settings: /* 0x4469 */ {
+        case tls_ext_application_layer_protocol_settings: /* 0x4469 */ {
             __try_new_catch_only(extension, new tls_extension_alps(get_session()));
         } break;
-        case tls1_ext_encrypted_client_hello: /* 0xfe0d */ {
+        case tls_ext_encrypted_client_hello: /* 0xfe0d */ {
             __try_new_catch_only(extension, new tls_extension_encrypted_client_hello(get_session()));
         } break;
-        case tls1_ext_renegotiation_info: /* 0xff01 */ {
+        case tls_ext_renegotiation_info: /* 0xff01 */ {
             __try_new_catch_only(extension, new tls_extension_renegotiation_info(get_session()));
         } break;
 
-        case tls1_ext_max_fragment_length:          /* 0x0001 */
-        case tls1_ext_client_certificate_url:       /* 0x0002 */
-        case tls1_ext_use_srtp:                     /* 0x000e */
-        case tls1_ext_heartbeat:                    /* 0x000f */
-        case tls1_ext_signed_certificate_timestamp: /* 0x0012 */
-        case tls1_ext_client_certificate_type:      /* 0x0013 */
-        case tls1_ext_server_certificate_type:      /* 0x0014 */
-        case tls1_ext_padding:                      /* 0x0015 */
-        case tls1_ext_encrypt_then_mac:             /* 0x0016 */
-        case tls1_ext_extended_master_secret:       /* 0x0017 */
-        case tls1_ext_record_size_limit:            /* 0x001c */
-        case tls1_ext_session_ticket:               /* 0x0023 */
-        case tls1_ext_tlmsp:                        /* 0x0024 */
-        case tls1_ext_early_data:                   /* 0x002a */
-        case tls1_ext_cookie:                       /* 0x002c */
-        case tls1_ext_certificate_authorities:      /* 0x002f */
-        case tls1_ext_oid_filters:                  /* 0x0030 */
-        case tls1_ext_post_handshake_auth:          /* 0x0031 */
-        case tls1_ext_signature_algorithms_cert:    /* 0x0032 */
+        case tls_ext_max_fragment_length:          /* 0x0001 */
+        case tls_ext_client_certificate_url:       /* 0x0002 */
+        case tls_ext_use_srtp:                     /* 0x000e */
+        case tls_ext_heartbeat:                    /* 0x000f */
+        case tls_ext_signed_certificate_timestamp: /* 0x0012 */
+        case tls_ext_client_certificate_type:      /* 0x0013 */
+        case tls_ext_server_certificate_type:      /* 0x0014 */
+        case tls_ext_padding:                      /* 0x0015 */
+        case tls_ext_encrypt_then_mac:             /* 0x0016 */
+        case tls_ext_extended_master_secret:       /* 0x0017 */
+        case tls_ext_record_size_limit:            /* 0x001c */
+        case tls_ext_session_ticket:               /* 0x0023 */
+        case tls_ext_tlmsp:                        /* 0x0024 */
+        case tls_ext_early_data:                   /* 0x002a */
+        case tls_ext_cookie:                       /* 0x002c */
+        case tls_ext_certificate_authorities:      /* 0x002f */
+        case tls_ext_oid_filters:                  /* 0x0030 */
+        case tls_ext_post_handshake_auth:          /* 0x0031 */
+        case tls_ext_signature_algorithms_cert:    /* 0x0032 */
         default: {
             __try_new_catch_only(extension, new tls_extension_unknown(_type, get_session()));
         } break;

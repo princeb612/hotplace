@@ -25,7 +25,7 @@ constexpr char constexpr_param_id[] = "param id";
 constexpr char constexpr_param[] = "param";
 
 tls_extension_quic_transport_parameters::tls_extension_quic_transport_parameters(tls_session* session)
-    : tls_extension(tls1_ext_quic_transport_parameters, session) {}
+    : tls_extension(tls_ext_quic_transport_parameters, session) {}
 
 return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

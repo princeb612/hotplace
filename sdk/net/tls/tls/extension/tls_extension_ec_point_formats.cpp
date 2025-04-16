@@ -22,7 +22,7 @@ namespace net {
 constexpr char constexpr_len[] = "len";
 constexpr char constexpr_formats[] = "formats";
 
-tls_extension_ec_point_formats::tls_extension_ec_point_formats(tls_session* session) : tls_extension(tls1_ext_ec_point_formats, session) {}
+tls_extension_ec_point_formats::tls_extension_ec_point_formats(tls_session* session) : tls_extension(tls_ext_ec_point_formats, session) {}
 
 return_t tls_extension_ec_point_formats::do_postprocess() {
     return_t ret = errorcode_t::success;

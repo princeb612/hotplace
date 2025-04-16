@@ -22,7 +22,7 @@ namespace net {
 constexpr char constexpr_alpn_len[] = "alpn len";
 constexpr char constexpr_protocol[] = "alpn protocol";
 
-tls_extension_alpn::tls_extension_alpn(tls_session* session) : tls_extension(tls1_ext_application_layer_protocol_negotiation, session) {}
+tls_extension_alpn::tls_extension_alpn(tls_session* session) : tls_extension(tls_ext_application_layer_protocol_negotiation, session) {}
 
 return_t tls_extension_alpn::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

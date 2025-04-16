@@ -27,7 +27,7 @@ constexpr char constexpr_name_type[] = "name type";
 constexpr char constexpr_hostname_len[] = "hostname len";
 constexpr char constexpr_hostname[] = "hostname";
 
-tls_extension_sni::tls_extension_sni(tls_session* session) : tls_extension(tls1_ext_server_name, session), _nametype(0) {}
+tls_extension_sni::tls_extension_sni(tls_session* session) : tls_extension(tls_ext_server_name, session), _nametype(0) {}
 
 return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

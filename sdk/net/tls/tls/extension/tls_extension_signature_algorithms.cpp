@@ -22,7 +22,7 @@ namespace net {
 constexpr char constexpr_algorithms[] = "algorithms";
 constexpr char constexpr_algorithm[] = "algorithm";
 
-tls_extension_signature_algorithms::tls_extension_signature_algorithms(tls_session* session) : tls_extension(tls1_ext_signature_algorithms, session) {}
+tls_extension_signature_algorithms::tls_extension_signature_algorithms(tls_session* session) : tls_extension(tls_ext_signature_algorithms, session) {}
 
 return_t tls_extension_signature_algorithms::do_postprocess() {
     return_t ret = errorcode_t::success;

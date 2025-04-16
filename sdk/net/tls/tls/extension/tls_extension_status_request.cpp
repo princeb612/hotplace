@@ -26,7 +26,7 @@ constexpr char constexpr_responderid_info[] = "responderid information";
 constexpr char constexpr_request_ext_info_len[] = "request extension information len";
 constexpr char constexpr_request_ext_info[] = "request extension information";
 
-tls_extension_status_request::tls_extension_status_request(tls_session* session) : tls_extension(tls1_ext_status_request, session) {}
+tls_extension_status_request::tls_extension_status_request(tls_session* session) : tls_extension(tls_ext_status_request, session) {}
 
 return_t tls_extension_status_request::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

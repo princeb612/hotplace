@@ -395,6 +395,13 @@ class t_key_value {
         _keyvalue_map[key] = ++value;
         return value;
     }
+    void remove(const key_t &key) {
+        critical_section_guard guard(_lock);
+        typename keyvalue_map_t::iterator iter = _keyvalue_map.find(key);
+        if (_keyvalue_map.end() != iter) {
+            _keyvalue_map.erase(iter);
+        }
+    }
     t_key_value<key_t, value_t> &operator=(const t_key_value<key_t, value_t> &rhs) {
         critical_section_guard guard(_lock);
         _keyvalue_map.clear();

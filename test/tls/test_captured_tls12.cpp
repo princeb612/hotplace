@@ -12,9 +12,9 @@
 
 #include "sample.hpp"
 
-// test/tls/tls12/tls12sclient.pcapng
+// test/tls/tls12/tls12etm.pcapng
 // Encrypt-then-MAC EtM
-pcap_testvector tls12_capture_sclient[] = {
+pcap_testvector capture_tls12etm[] = {
     // C->S, client_hello
     {
         from_client, "client_hello",
@@ -116,6 +116,7 @@ pcap_testvector tls12_capture_sclient[] = {
         "4a 84 be 16 2b c6 10 a8 b2 f7 16 03 03 00 04 0e"  // 04e0
         "00 00 00"                                         // 04f0
     },
+#if 0
     // C->S, client_key_exchange, change_cipher_spec, finished
     {
         from_client, "client_key_exchange, change_cipher_spec, finished",
@@ -178,10 +179,11 @@ pcap_testvector tls12_capture_sclient[] = {
         "fe b8 b2 58 a2 26 1b 9b ec dc eb 52 6e 49 c0 a1"  // 0030
         "1f 93 e5 d6 ea"                                   // 0040
     },
+#endif
 };
 
-// test/tls/tls12/tls12netclient.pcapng
-pcap_testvector tls12_capture_netclient[] = {
+// test/tls/tls12/tls12mte.pcapng
+pcap_testvector capture_tls12mte[] = {
     // C->S, client_hello
     {
         from_client, "client_hello",
@@ -341,7 +343,6 @@ pcap_testvector tls12_capture_netclient[] = {
 void test_captured_tls12() {
     return_t ret = errorcode_t::success;
 
-#if 0
     _test_case.begin("TLS 1.2 pre master secret encrypt_then_mac");
     {
         tls_session session_sclient(session_tls);
@@ -356,9 +357,8 @@ void test_captured_tls12() {
         protection.use_pre_master_secret(true);
         protection.set_item(tls_secret_master, base16_decode(constexpr_master_secret));
 
-        play_pcap(&session_sclient, tls12_capture_sclient, RTL_NUMBER_OF(tls12_capture_sclient));
+        play_pcap(&session_sclient, capture_tls12etm, RTL_NUMBER_OF(capture_tls12etm));
     }
-#endif
 
     _test_case.begin("TLS 1.2 pre master secret w/o encrypt_then_mac");
     {
@@ -369,6 +369,6 @@ void test_captured_tls12() {
         protection.use_pre_master_secret(true);
         protection.set_item(tls_secret_master, base16_decode(constexpr_master_secret));
 
-        play_pcap(&session_netclient, tls12_capture_netclient, RTL_NUMBER_OF(tls12_capture_netclient));
+        play_pcap(&session_netclient, capture_tls12mte, RTL_NUMBER_OF(capture_tls12mte));
     }
 }

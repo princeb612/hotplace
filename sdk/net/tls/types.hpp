@@ -177,75 +177,75 @@ enum tls_alertdesc_t : uint8 {
 };
 
 enum tls1_ext_type_t : uint16 {
-    tls1_ext_server_name = 0x0000,                             // RFC 6066
-    tls1_ext_max_fragment_length = 0x0001,                     // RFC 6066
-    tls1_ext_client_certificate_url = 0x0002,                  // RFC 4366
-    tls1_ext_trusted_ca_keys = 0x0003,                         // RFC 4366
-    tls1_ext_truncated_hmac = 0x0004,                          // RFC 4366
-    tls1_ext_status_request = 0x0005,                          // RFC 6066
-    tls1_ext_user_mapping = 0x0006,                            // RFC 4681
-    tls1_ext_client_authz = 0x0007,                            //
-    tls1_ext_server_authz = 0x0008,                            //
-    tls1_ext_cert_type = 0x0009,                               //
-    tls1_ext_supported_groups = 0x000a,                        // RFC 8422, 7919
-    tls1_ext_ec_point_formats = 0x000b,                        // RFC 8422
-    tls1_ext_srp = 0x000c,                                     // RFC 5054
-    tls1_ext_signature_algorithms = 0x000d,                    // RFC 8446
-    tls1_ext_use_srtp = 0x000e,                                // RFC 5764
-    tls1_ext_heartbeat = 0x000f,                               // RFC 6520
-    tls1_ext_application_layer_protocol_negotiation = 0x0010,  // RFC 7301
-    tls1_ext_alpn = 0x0010,                                    // abbr.
-    tls1_ext_status_request_v2 = 0x0011,                       // RFC 6961
-    tls1_ext_signed_certificate_timestamp = 0x0012,            // RFC 6962
-    tls1_ext_client_certificate_type = 0x0013,                 // RFC 7250
-    tls1_ext_server_certificate_type = 0x0014,                 // RFC 7250
-    tls1_ext_padding = 0x0015,                                 // RFC 7685
-    tls1_ext_encrypt_then_mac = 0x0016,                        // RFC 7366
-    tls1_ext_extended_master_secret = 0x0017,                  // RFC 7627
-    tls1_ext_token_binding = 0x0018,                           // RFC 8472
-    tls1_ext_cached_info = 0x0019,                             // RFC 7924
-    tls1_ext_compress_certificate = 0x001b,                    // RFC 8879
-    tls1_ext_record_size_limit = 0x001c,                       // RFC 8449
-    tls1_ext_pwd_protect = 0x001d,                             //
-    tls1_ext_pwd_clear = 0x001e,                               //
-    tls1_ext_password_salt = 0x001f,                           //
-    tls1_ext_ticket_pinning = 0x0020,                          //
-    tls1_ext_cert_with_extern_psk = 0x0021,                    //
-    tls1_ext_delegated_credential = 0x0022,                    // RFC 9345
-    tls1_ext_session_ticket = 0x0023,                          // RFC 5077, 8447
-    tls1_ext_tlmsp = 0x0024,                                   // extended master secret
-    tls1_ext_tlmsp_proxying = 0x0025,                          //
-    tls1_ext_tlmsp_delegate = 0x0026,                          //
-    tls1_ext_supported_ekt_ciphers = 0x0027,                   // RFC 8870
-    tls1_ext_pre_shared_key = 0x0029,                          // RFC 8446
-    tls1_ext_early_data = 0x002a,                              // RFC 8446
-    tls1_ext_supported_versions = 0x002b,                      // RFC 8446
-    tls1_ext_cookie = 0x002c,                                  // RFC 8446
-    tls1_ext_psk_key_exchange_modes = 0x002d,                  // RFC 8446
-    tls1_ext_certificate_authorities = 0x002f,                 // RFC 8446
-    tls1_ext_oid_filters = 0x0030,                             // RFC 8446
-    tls1_ext_post_handshake_auth = 0x0031,                     // RFC 8446
-    tls1_ext_signature_algorithms_cert = 0x0032,               // RFC 8446
-    tls1_ext_key_share = 0x0033,                               // RFC 8446
-    tls1_ext_transparency_info = 0x0034,                       // RFC 9162 Certificate Transparency Version 2.0
-    tls1_ext_connection_id = 0x0036,                           //
-    tls1_ext_external_id_hash = 0x0037,                        // RFC 8844
-    tls1_ext_external_session_id = 0x0038,                     // RFC 8844
-    tls1_ext_quic_transport_parameters = 0x0039,               // RFC 9001, see quic_param_t
-    tls1_ext_ticket_request = 0x003a,                          // RFC 9149 TLS Ticket Requests
-    tls1_ext_dnssec_chain = 0x003b,                            //
-    tls1_ext_sequence_number_encryption_algorithms = 0x003c,   //
-    tls1_ext_rrc = 0x003d,                                     //
-    tls1_ext_tls_flags = 0x003e,                               //
-    tls1_ext_next_protocol_negotiation = 0x3374,
-    tls1_ext_application_layer_protocol_settings = 0x4469,
-    tls1_ext_alps = 0x4469,
-    tls1_ext_encrypted_client_hello = 0xfe0d,
-    tls1_ext_renegotiation_info = 0xff01,  // RFC 5746 Transport Layer Security (TLS) Renegotiation Indication Extension
+    tls_ext_server_name = 0x0000,                             // RFC 6066
+    tls_ext_max_fragment_length = 0x0001,                     // RFC 6066
+    tls_ext_client_certificate_url = 0x0002,                  // RFC 4366
+    tls_ext_trusted_ca_keys = 0x0003,                         // RFC 4366
+    tls_ext_truncated_hmac = 0x0004,                          // RFC 4366
+    tls_ext_status_request = 0x0005,                          // RFC 6066
+    tls_ext_user_mapping = 0x0006,                            // RFC 4681
+    tls_ext_client_authz = 0x0007,                            //
+    tls_ext_server_authz = 0x0008,                            //
+    tls_ext_cert_type = 0x0009,                               //
+    tls_ext_supported_groups = 0x000a,                        // RFC 8422, 7919
+    tls_ext_ec_point_formats = 0x000b,                        // RFC 8422
+    tls_ext_srp = 0x000c,                                     // RFC 5054
+    tls_ext_signature_algorithms = 0x000d,                    // RFC 8446
+    tls_ext_use_srtp = 0x000e,                                // RFC 5764
+    tls_ext_heartbeat = 0x000f,                               // RFC 6520
+    tls_ext_application_layer_protocol_negotiation = 0x0010,  // RFC 7301
+    tls_ext_alpn = 0x0010,                                    // abbr.
+    tls_ext_status_request_v2 = 0x0011,                       // RFC 6961
+    tls_ext_signed_certificate_timestamp = 0x0012,            // RFC 6962
+    tls_ext_client_certificate_type = 0x0013,                 // RFC 7250
+    tls_ext_server_certificate_type = 0x0014,                 // RFC 7250
+    tls_ext_padding = 0x0015,                                 // RFC 7685
+    tls_ext_encrypt_then_mac = 0x0016,                        // RFC 7366
+    tls_ext_extended_master_secret = 0x0017,                  // RFC 7627
+    tls_ext_token_binding = 0x0018,                           // RFC 8472
+    tls_ext_cached_info = 0x0019,                             // RFC 7924
+    tls_ext_compress_certificate = 0x001b,                    // RFC 8879
+    tls_ext_record_size_limit = 0x001c,                       // RFC 8449
+    tls_ext_pwd_protect = 0x001d,                             //
+    tls_ext_pwd_clear = 0x001e,                               //
+    tls_ext_password_salt = 0x001f,                           //
+    tls_ext_ticket_pinning = 0x0020,                          //
+    tls_ext_cert_with_extern_psk = 0x0021,                    //
+    tls_ext_delegated_credential = 0x0022,                    // RFC 9345
+    tls_ext_session_ticket = 0x0023,                          // RFC 5077, 8447
+    tls_ext_tlmsp = 0x0024,                                   // extended master secret
+    tls_ext_tlmsp_proxying = 0x0025,                          //
+    tls_ext_tlmsp_delegate = 0x0026,                          //
+    tls_ext_supported_ekt_ciphers = 0x0027,                   // RFC 8870
+    tls_ext_pre_shared_key = 0x0029,                          // RFC 8446
+    tls_ext_early_data = 0x002a,                              // RFC 8446
+    tls_ext_supported_versions = 0x002b,                      // RFC 8446
+    tls_ext_cookie = 0x002c,                                  // RFC 8446
+    tls_ext_psk_key_exchange_modes = 0x002d,                  // RFC 8446
+    tls_ext_certificate_authorities = 0x002f,                 // RFC 8446
+    tls_ext_oid_filters = 0x0030,                             // RFC 8446
+    tls_ext_post_handshake_auth = 0x0031,                     // RFC 8446
+    tls_ext_signature_algorithms_cert = 0x0032,               // RFC 8446
+    tls_ext_key_share = 0x0033,                               // RFC 8446
+    tls_ext_transparency_info = 0x0034,                       // RFC 9162 Certificate Transparency Version 2.0
+    tls_ext_connection_id = 0x0036,                           //
+    tls_ext_external_id_hash = 0x0037,                        // RFC 8844
+    tls_ext_external_session_id = 0x0038,                     // RFC 8844
+    tls_ext_quic_transport_parameters = 0x0039,               // RFC 9001, see quic_param_t
+    tls_ext_ticket_request = 0x003a,                          // RFC 9149 TLS Ticket Requests
+    tls_ext_dnssec_chain = 0x003b,                            //
+    tls_ext_sequence_number_encryption_algorithms = 0x003c,   //
+    tls_ext_rrc = 0x003d,                                     //
+    tls_ext_tls_flags = 0x003e,                               //
+    tls_ext_next_protocol_negotiation = 0x3374,
+    tls_ext_application_layer_protocol_settings = 0x4469,
+    tls_ext_alps = 0x4469,
+    tls_ext_encrypted_client_hello = 0xfe0d,
+    tls_ext_renegotiation_info = 0xff01,  // RFC 5746 Transport Layer Security (TLS) Renegotiation Indication Extension
 };
 
 /**
- * tls1_ext_supported_groups
+ * tls_ext_supported_groups
  * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  */
 enum tls_named_curve_t : uint16 {
@@ -272,7 +272,7 @@ enum tls_named_curve_t : uint16 {
 
 /**
  * RFC 8446 4.2.3.  Signature Algorithms
- * tls1_ext_signature_algorithms
+ * tls_ext_signature_algorithms
  */
 enum tls_signature_scheme_t : uint16 {
     /* RSASSA-PKCS1-v1_5 algorithms */

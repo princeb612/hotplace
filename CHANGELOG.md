@@ -4,12 +4,16 @@
   * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 749
+* Revision 750
+
+* Revision 741 (Tag 1.14)
 
 * Revision 740
   * [fixed] TLS 1.2
 
-* Revision 731
+* Revision 732 (Tag 1.13)
+
+* Revision 731 (Tag 1.12)
   * [tested] valgrind (tcpserver1, tcpserver2, tlsserver, udpserver1, udpserver2, dtlsserver)
 
 * Revision 729
@@ -18,17 +22,29 @@
       * ./test-tlsserver -v -d -r &
       * ./test-netclient -v -d -P 5
 
+* Revision 721 (Tag 1.11)
+
+* Revision 717 (Tag 1.09)
+
 * Revision 716
   * [tested] RFC 9369 QUIC Version 2
 
-* Revision 715
+* Revision 715 (Tag 1.07)
   * [tested] valgrind
 
 * Revision 714
   * [tested] https://quic.xargs.org/
 
+* Revision 705 (Tag 1.05)
+
 * Revision 702
   * [tested] DSA
+
+* Revision 700 (Tag 1.02)
+
+* Revision 684 (Tag 0.97)
+
+* Revision 681 (Tag 0.96)
 
 * Revision 679
   * [tested] RFC 8448 6.  Client Authentication
@@ -45,6 +61,8 @@
 
 * Revision 669
   * [study] SSLKEYLOGFILE
+
+* Revision 668 (Tag 0.95)
 
 * Revision 667
   * [tested] https://tls12.xargs.org/
@@ -167,6 +185,8 @@
 * Revision 536
   * [feature] parser
   * [feature] Knuth-Morris-Pratt Algorithm
+
+* Revision 528 (Tag 0.56)
 
 * Revision 524
   * [feature] logger

@@ -13,6 +13,7 @@
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/string/string.hpp>  // split_begin, split_count, split_get, split_end
 #include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/crypto_cbc_hmac.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
@@ -415,8 +416,12 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
             uint32 enc_group = enc_hint->group;
             if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
                 // RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
-                openssl_crypt aead;
-                ret = aead.cbc_hmac_etm_encrypt(enc_crypt_alg, enc_hash_alg, cek, iv, aad, input, ciphertext, tag);
+                crypto_cbc_hmac cbchmac;
+                cbchmac.set_enc(enc_crypt_alg).set_mac(enc_hash_alg).set_flag(jose_encrypt_then_mac);
+                binary_t enckey;
+                binary_t mackey;
+                cbchmac.split_key(cek, enckey, mackey);
+                ret = cbchmac.encrypt(enckey, mackey, iv, aad, input, ciphertext, tag);
             } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
                 ret = crypt.encrypt(enc_crypt_alg, enc_crypt_mode, cek, iv, input, ciphertext, aad, tag);
             }
@@ -624,8 +629,12 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
             uint32 enc_group = enc_hint->group;
             if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
                 // RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
-                openssl_crypt aead;
-                ret = aead.cbc_hmac_etm_decrypt(enc_crypt_alg, enc_hash_alg, cek, iv, aad, ciphertext, output, tag);
+                crypto_cbc_hmac cbchmac;
+                cbchmac.set_enc(enc_crypt_alg).set_mac(enc_hash_alg).set_flag(jose_encrypt_then_mac);
+                binary_t enckey;
+                binary_t mackey;
+                cbchmac.split_key(cek, enckey, mackey);
+                ret = cbchmac.decrypt(enckey, mackey, iv, aad, ciphertext, output, tag);
             } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
                 ret = crypt.decrypt(enc_crypt_alg, enc_crypt_mode, cek, iv, ciphertext, output, aad, tag);
             }

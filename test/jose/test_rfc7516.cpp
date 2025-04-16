@@ -525,6 +525,46 @@ void test_rfc7516_B() {
         crypt.close(crypt_handle);
         hash.close(hash_handle);
     }
+
+    __try2 {
+        binary_t bin_pt;
+        binary_t bin_ct;
+        binary_t bin_t;
+        binary_t bin_key;
+        binary_t bin_iv;
+        binary_t bin_aad;
+        binary_t bin_plain;
+        binary_t bin_cipher;
+        binary_t bin_tag;
+
+        binary_append(bin_key, key, RTL_NUMBER_OF(key));
+        binary_append(bin_iv, iv, RTL_NUMBER_OF(iv));
+        binary_append(bin_aad, aad, RTL_NUMBER_OF(aad));
+        binary_append(bin_plain, plain, RTL_NUMBER_OF(plain));
+        binary_append(bin_cipher, encrypted_data, RTL_NUMBER_OF(encrypted_data));
+        binary_append(bin_tag, tag, RTL_NUMBER_OF(tag));
+
+        crypto_cbc_hmac cbchmac;
+
+        binary_t enckey;
+        binary_t mackey;
+
+        cbchmac.set_enc(aes128).set_mac(sha2_256).set_flag(jose_encrypt_then_mac);
+        cbchmac.split_key(bin_key, enckey, mackey);
+
+        cbchmac.encrypt(enckey, mackey, bin_iv, bin_aad, bin_plain, bin_ct, bin_t);
+
+        _logger->hdump("ciphertext", bin_ct, 16, 3);
+        _logger->hdump("tag", bin_t, 16, 3);
+        _test_case.assert(bin_ct == bin_cipher, __FUNCTION__, "cbc_hmac_etm_encrypt");
+        _test_case.assert(bin_t == bin_tag, __FUNCTION__, "cbc_hmac_etm_encrypt");
+
+        cbchmac.decrypt(enckey, mackey, bin_iv, bin_aad, bin_ct, bin_pt, bin_t);
+
+        _logger->hdump("plaintext", bin_pt, 16, 3);
+        _test_case.assert(bin_pt == bin_plain, __FUNCTION__, "cbc_hmac_etm_decrypt");
+    }
+    __finally2 {}
 }
 
 void test_jwk() {

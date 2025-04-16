@@ -156,19 +156,31 @@ return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_c
 void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
     return_t ret = errorcode_t::success;
     const OPTION& option = _cmdline->value();
-    openssl_crypt aead;
+    // openssl_crypt aead;
+
+    binary_t cek = std::move(base16_decode(vector->k));
+    binary_t iv = std::move(base16_decode(vector->iv));
+    binary_t aad = std::move(base16_decode(vector->a));
+    binary_t plaintext = std::move(base16_decode(vector->p));
+    binary_t ciphertext = std::move(base16_decode(vector->q));
+
+    crypto_cbc_hmac cbchmac;
+    cbchmac.set_enc(vector->enc_alg).set_mac(vector->mac_alg).set_flag(jose_encrypt_then_mac);
+
+    binary_t enckey;
+    binary_t mackey;
+    cbchmac.split_key(cek, enckey, mackey);
 
     binary_t q;
     binary_t t;
-    ret = aead.cbc_hmac_etm_encrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a),
-                                    base16_decode(vector->p), q, t);
+    ret = cbchmac.encrypt(enckey, mackey, iv, aad, plaintext, q, t);
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         dump(q);
     }
-    _test_case.assert(base16_decode(vector->q) == q, __FUNCTION__, "encrypt %s", vector->text);
+    _test_case.assert(ciphertext == q, __FUNCTION__, "encrypt %s", vector->text);
     binary_t p;
-    ret = aead.cbc_hmac_etm_decrypt(vector->enc_alg, vector->mac_alg, base16_decode(vector->k), base16_decode(vector->iv), base16_decode(vector->a), q, p, t);
+    ret = cbchmac.decrypt(enckey, mackey, iv, aad, q, p, t);
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         dump(p);

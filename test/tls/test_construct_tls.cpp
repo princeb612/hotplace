@@ -89,19 +89,19 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
             handshake->get_extensions().add(supported_groups);
         }
         {
-            auto extension = new tls_extension_unknown(tls1_ext_next_protocol_negotiation, session);
+            auto extension = new tls_extension_unknown(tls_ext_next_protocol_negotiation, session);
             handshake->get_extensions().add(extension);
         }
         {
-            auto extension = new tls_extension_unknown(tls1_ext_encrypt_then_mac, session);
+            auto extension = new tls_extension_unknown(tls_ext_encrypt_then_mac, session);
             handshake->get_extensions().add(extension);
         }
         {
-            auto extension = new tls_extension_unknown(tls1_ext_extended_master_secret, session);
+            auto extension = new tls_extension_unknown(tls_ext_extended_master_secret, session);
             handshake->get_extensions().add(extension);
         }
         {
-            auto extension = new tls_extension_unknown(tls1_ext_post_handshake_auth, session);
+            auto extension = new tls_extension_unknown(tls_ext_post_handshake_auth, session);
             handshake->get_extensions().add(extension);
         }
         {

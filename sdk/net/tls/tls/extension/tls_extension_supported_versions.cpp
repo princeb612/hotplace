@@ -22,7 +22,7 @@ namespace net {
 constexpr char constexpr_versions[] = "supported versions";
 constexpr char constexpr_version[] = "version";
 
-tls_extension_supported_versions::tls_extension_supported_versions(tls_session* session) : tls_extension(tls1_ext_supported_versions, session) {}
+tls_extension_supported_versions::tls_extension_supported_versions(tls_session* session) : tls_extension(tls_ext_supported_versions, session) {}
 
 tls_extension_client_supported_versions::tls_extension_client_supported_versions(tls_session* session) : tls_extension_supported_versions(session) {}
 

@@ -29,7 +29,7 @@ constexpr char constexpr_payload_len[] = "payload len";
 constexpr char constexpr_payload[] = "payload";
 
 tls_extension_encrypted_client_hello::tls_extension_encrypted_client_hello(tls_session* session)
-    : tls_extension(tls1_ext_encrypted_client_hello, session), _client_hello_type(0), _kdf(0), _aead(0), _config_id(0), _enc_len(0), _enc_payload_len(0) {}
+    : tls_extension(tls_ext_encrypted_client_hello, session), _client_hello_type(0), _kdf(0), _aead(0), _config_id(0), _enc_len(0), _enc_payload_len(0) {}
 
 return_t tls_extension_encrypted_client_hello::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
