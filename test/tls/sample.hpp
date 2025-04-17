@@ -59,6 +59,7 @@ struct pcap_testvector {
 };
 void play_pcap(tls_session* session, pcap_testvector* testvector, size_t size);
 
+void test_captured_tls13();
 void test_captured_tls12();
 // test vector created by openssl (wireshark capture)
 // $ openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -dtls

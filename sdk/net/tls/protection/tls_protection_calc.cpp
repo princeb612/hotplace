@@ -763,6 +763,16 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
                 hmac->mac(fin_hash, maced);
                 hmac->release();
             }
+#if defined DEBUG
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.println("> finished");
+                dbs.println("  key   %s", base16_encode(fin_key).c_str());
+                dbs.println("  hash  %s", base16_encode(fin_hash).c_str());
+                dbs.println("  maced %s", base16_encode(maced).c_str());
+                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            }
+#endif
         } else {
             binary_t seed;
             if (from_client == dir) {
@@ -791,6 +801,16 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
                 hmac->release();
                 maced.resize(size_maced);
             }
+#if defined DEBUG
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.println("> finished");
+                dbs.println("  key   %s", base16_encode(fin_key).c_str());
+                dbs.println("  hash  %s", base16_encode(fin_hash).c_str());
+                dbs.println("  maced %s", base16_encode(maced).c_str());
+                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            }
+#endif
         }
     }
     __finally2 {}

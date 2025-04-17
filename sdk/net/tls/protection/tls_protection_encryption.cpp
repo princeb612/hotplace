@@ -345,6 +345,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        auto session_type = session->get_type();
 
         crypto_advisor *advisor = crypto_advisor::get_instance();
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
@@ -370,7 +371,6 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         get_cbc_hmac_key(session, dir, secret_key, secret_mac_key);
 
         uint64 record_no = 0;
-        record_no = session->get_recordno(dir, true);
 
         const binary_t &enckey = get_item(secret_key);
         auto enc_alg = hint->cipher;
@@ -382,6 +382,15 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
         binary_t verifydata;
         binary_t aad;
+        if (session_dtls == session_type) {
+            auto &kv = session->get_session_info(dir).get_keyvalue();
+            uint16 epoch = kv.get(session_dtls_epoch);
+            uint64 seq = kv.get(session_dtls_seq);
+            record_no = session->get_dtls_record_reorder().make_epoch_seq(epoch, seq);
+        } else {
+            // TLS, QUIC, QUIC2
+            record_no = session->get_recordno(dir, true);
+        }
         binary_append(aad, uint64(record_no), hton64);  // sequence
         binary_append(aad, &additional[0], 3);          // rechdr (content_type, version)
         size_t plainsize = 0;
@@ -400,7 +409,11 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
             dbs.println(" > iv %s", base16_encode(iv).c_str());
             dbs.println(" > mac %s", advisor->nameof_md(hmac_alg));
             dbs.println(" > mackey[%08x] %s", secret_mac_key, base16_encode(mackey).c_str());
-            dbs.println(" > record no %i", record_no);
+            if (session_dtls == session_type) {
+            } else {
+                // TLS, QUIC, QUIC2
+                dbs.println(" > record no %i", record_no);
+            }
             dbs.println(" > plaintext");
             dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.println(" > ciphertext");
@@ -610,6 +623,8 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
             __leave2;
         }
 
+        auto session_type = session->get_type();
+
         // stream = unprotected(content header + iv) + protected(ciphertext)
         // ciphertext = enc(plaintext + tag)
 
@@ -635,7 +650,6 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         get_cbc_hmac_key(session, dir, secret_key, secret_mac_key);
 
         uint64 record_no = 0;
-        record_no = session->get_recordno(dir, true);
 
         const binary_t &enckey = get_item(secret_key);
         auto enc_alg = hint->cipher;
@@ -648,6 +662,14 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         binary_t verifydata;
         binary_t aad;
         binary_t tag;
+        if (session_dtls == session_type) {
+            auto &kv = session->get_session_info(dir).get_keyvalue();
+            uint16 epoch = kv.get(session_dtls_epoch);
+            uint64 seq = kv.get(session_dtls_seq);
+            record_no = session->get_dtls_record_reorder().make_epoch_seq(epoch, seq);
+        } else {
+            record_no = session->get_recordno(dir, true);
+        }
         binary_append(aad, uint64(record_no), hton64);  // sequence
         binary_append(aad, stream + pos, 3);            // rechdr (content_type, version)
         size_t plainsize = 0;

@@ -12,325 +12,189 @@
 
 #include "sample.hpp"
 
-void test_tls13() {
-    _test_case.begin("TLS 1.2");
-    // dtlsserver
-    // openssl s_client -connect localhost:9000 -state -debug -dtls1_2
+// tls13/tls13.pcapng
 
-    return_t ret = errorcode_t::success;
-    tls_session session(session_dtls);
+pcap_testvector capture_tls13[] = {
 
-    crypto_keychain keychain;
-    openssl_digest dgst;
-    openssl_kdf kdf;
-    basic_stream bs;
-    size_t pos = 0;
-    binary_t bin_clienthello_record;
-    binary_t bin_serverhello_record;
-    tls_advisor* advisor = tls_advisor::get_instance();
-    auto& protection = session.get_tls_protection();
+    {from_client, "client_hello",
+     "16 03 01 00 e7 01 00 00 e3 03 03 b9 39 8c 3a f3"
+     "5d 14 01 fe 4a a6 2e a9 4b 26 43 37 f1 85 bc 84"
+     "4e 1b c2 dd ed 35 86 b8 da e2 25 20 43 9a cd c3"
+     "2a 47 ca 3c 67 bf d9 ae dc fa ee 66 3b 49 bc f8"
+     "c7 da 1c 8e 36 ed 29 c9 d9 43 62 30 00 06 13 02"
+     "13 03 13 01 01 00 00 94 00 0b 00 04 03 00 01 02"
+     "00 0a 00 16 00 14 00 1d 00 17 00 1e 00 19 00 18"
+     "01 00 01 01 01 02 01 03 01 04 00 23 00 00 00 16"
+     "00 00 00 17 00 00 00 0d 00 24 00 22 04 03 05 03"
+     "06 03 08 07 08 08 08 1a 08 1b 08 1c 08 09 08 0a"
+     "08 0b 08 04 08 05 08 06 04 01 05 01 06 01 00 2b"
+     "00 03 02 03 04 00 2d 00 02 01 01 00 33 00 26 00"
+     "24 00 1d 00 20 54 10 c0 fe 90 88 d2 f5 df 0f c5"
+     "dc bf 60 75 9b 96 f5 75 f8 aa 91 14 37 5f d5 e6"
+     "d7 e9 b0 94 23 00 1b 00 03 02 00 01"},
+    {from_server, "server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
+     "16 03 03 00 7a 02 00 00 76 03 03 73 8a 10 e3 4d"
+     "0a d3 4b 5c 0c 9b b5 6b 9b 20 f9 b6 1e 55 73 6e"
+     "35 ca cb a3 14 7d ff 09 f8 5a 9a 20 43 9a cd c3"
+     "2a 47 ca 3c 67 bf d9 ae dc fa ee 66 3b 49 bc f8"
+     "c7 da 1c 8e 36 ed 29 c9 d9 43 62 30 13 02 00 00"
+     "2e 00 2b 00 02 03 04 00 33 00 24 00 1d 00 20 60"
+     "63 09 ac 36 97 58 a7 33 00 a4 68 13 ce 40 6f e8"
+     "3c 90 a0 0c 5b 9a be a2 52 64 00 2d 79 ec 00 14"
+     "03 03 00 01 01 17 03 03 00 17 a1 f9 36 57 36 ea"
+     "54 b8 3b 6f b2 eb 7b 3b 6e 1a 2a e4 88 1b 24 64"
+     "03 17 03 03 03 7e 39 1a 84 b4 f7 2d 0b ee 0e 47"
+     "f1 9d 78 19 a5 bc 24 f8 02 51 48 1c 61 df 5d c0"
+     "2d d2 76 02 1f 39 30 49 b9 66 72 67 d0 58 67 d3"
+     "25 f9 20 53 1c 31 3b c2 a7 98 86 d7 20 1a f1 bf"
+     "30 89 a4 d1 de f3 1d ff 91 04 2f 6e d5 f8 97 69"
+     "ef 99 96 5e b7 7c 2f 9d 4c 79 2a 47 8a 75 11 65"
+     "ff c8 cf cb 24 eb b8 e1 10 36 b6 ec bd f1 19 cd"
+     "bb 12 c0 e2 8b 7d db 8b 03 83 19 1c 6e 24 87 38"
+     "6c cb 2a 79 9b 89 f0 e2 4a 73 21 61 3d e2 45 19"
+     "99 bf 46 64 60 d5 50 10 10 32 ec 3d 9b d3 4e 00"
+     "0c 28 47 9a f6 d7 ca 7e 42 2b 6d 50 ca f3 56 8d"
+     "5f 6a 43 3f e7 2c 81 57 7b 2a 27 db 2b 86 79 16"
+     "a3 04 6a 2f 1a 6d a9 06 da 58 0a a2 c2 47 42 16"
+     "e5 81 1d b2 cf fe 81 c9 d9 e0 bf 8b 11 49 86 33"
+     "13 be 57 78 7c 8f 8a 3e 06 06 75 b3 bc 8f 6b 0f"
+     "f6 5a 58 be 49 d4 d4 da 17 8a 89 5b c4 9c 6f c6"
+     "0a c9 15 9d 87 31 0e c5 7b e3 a3 2d 13 2c d9 9c"
+     "58 0b a5 1f f7 c1 ba ae b7 66 9a 90 09 11 f4 ba"
+     "cc f1 84 79 e2 c7 bd 5c 9a cf 11 1d c1 7f 20 97"
+     "68 7f 87 8b 63 28 af 35 60 d1 ab c2 aa f8 cb 90"
+     "c3 69 7b 6f e4 c2 a9 69 e5 fb e6 9f 39 9a 8b ff"
+     "07 4c ab a4 48 93 1f 63 7e 3e e8 ae 86 26 0a 36"
+     "9a bd cb a6 9a 22 28 bc a3 d9 c9 16 ed e6 48 da"
+     "22 50 eb 17 75 52 fc 6e 95 eb d1 a2 e4 4e e9 8e"
+     "49 37 e6 81 56 53 19 ff e8 7d ac f1 fb e2 10 45"
+     "37 93 6a f4 39 d0 17 ea 30 0a c2 e6 7d 60 81 ab"
+     "02 32 6c aa a1 2e 7c c4 ee 24 47 40 e5 2a 64 c4"
+     "f2 37 a9 9e 54 89 7a cd 74 22 6b 96 b8 e2 0d 1e"
+     "93 31 83 fe 63 06 3d 20 e9 8f c7 cd 79 de 03 ca"
+     "d3 37 c8 a7 f5 8b f1 aa c4 63 ef fa 2e d1 31 1b"
+     "04 1b ef e1 51 40 8c c6 c7 38 c8 be 02 34 42 bf"
+     "66 a2 7f 1a f7 5f c8 c9 47 90 91 9a 3f 9f 6b 1c"
+     "6b e0 3c 8c ed f9 aa de bc 92 c9 26 2f f6 d3 e8"
+     "0e 04 77 b2 d0 cb 10 72 4a 9e 96 00 fd 5c 04 91"
+     "08 c7 05 d0 8f 00 68 35 1e 6b 46 b8 66 f0 f9 62"
+     "46 59 cf a7 e2 15 7a 3c a2 47 a8 f4 8e e8 b5 90"
+     "95 4a 75 8d f5 5d cb d0 7d 69 9f 0a 3c 34 a5 41"
+     "8c 99 6d e4 4b 66 d9 d1 18 8d 39 f1 19 25 43 1e"
+     "6e 1d a4 92 04 64 f5 03 92 2d 75 e7 58 d0 f7 83"
+     "83 2e ca 39 f5 99 fc 2d 4b 7d 1b e7 f6 a0 32 ea"
+     "54 03 20 16 37 b2 65 c0 b6 51 a3 a8 d4 e2 8e 3a"
+     "97 83 86 4e ad 16 fe d9 45 91 79 ce 84 f6 f7 40"
+     "4e 2e 61 c3 1d 04 7c 04 4e 99 d5 61 98 6a bd 17"
+     "b8 2f 3a c9 e4 db 43 02 6a 28 63 cc 12 19 e0 5f"
+     "18 62 31 c9 c3 93 fd e4 79 d6 f2 6c c0 fc 18 1e"
+     "31 6f 1b 9d 72 f0 91 f5 b7 89 20 79 cb 0e 1d d2"
+     "70 3a a5 dd bc 5a 60 a3 0d 01 4b a7 d9 68 d9 32"
+     "58 6a db 0d 67 6f 9a 54 5f 97 c2 02 87 07 30 2e"
+     "38 15 33 a5 90 d1 1e 75 fe 9d e3 97 e5 b9 80 d4"
+     "7d b0 33 13 53 6a 8d e7 a1 7d 8c d8 bc 05 3f ac"
+     "0a d4 07 d4 d1 00 45 be 97 ec a0 a1 3a d1 c1 c6"
+     "48 48 5a ff b2 4a 9e 00 f9 a8 09 b0 08 86 9a ca"
+     "d0 5d 79 dc 20 5b a5 87 5c 68 45 e2 52 31 22 36"
+     "0f cf 98 45 9c b0 81 ee e0 2f eb 02 8e b0 7b 21"
+     "58 a0 d2 02 12 c2 99 82 bf 15 b1 93 cb 3a df 88"
+     "88 9e 44 a5 4a dc 12 35 2f 77 95 04 44 9d 90 b2"
+     "d5 c2 29 a0 17 03 03 01 19 ed 30 de 7c 10 91 7d"
+     "7d 38 0a 9b cf 9c ed 40 d8 c0 30 3e 01 ed 3f 2a"
+     "a8 c0 b1 a1 3c 1f 88 a4 fb 9e 77 2e 9a b9 78 ed"
+     "22 82 4c c4 7f 65 74 ba b4 5f 90 91 35 0a f8 16"
+     "41 ef 5f 83 a1 a5 fd 78 e7 9f f0 10 79 f4 e7 5c"
+     "2c 50 e1 6b 22 ff c3 62 03 e9 b8 7f 67 79 3b bd"
+     "b4 0d f1 83 89 2e f4 fa 99 41 a4 1b 6f d0 ee b2"
+     "db 56 1c 5d 24 80 6f 1e 03 be 13 1d 4d 17 70 d2"
+     "27 81 72 31 34 e4 cf cf 3c 60 fb 07 60 18 a8 92"
+     "17 61 95 be b7 f4 e9 1f 16 9a ae 41 2c 35 d8 71"
+     "7c 62 2a 42 17 70 eb e9 c4 ee cc 42 4c 6b 4d 3a"
+     "c4 2a 5c c6 df ff 11 45 6a b8 61 2b 84 eb 3b 37"
+     "ae a7 ff b5 4b 5a 3b c7 83 32 6a e1 76 4d c6 78"
+     "10 9b be e7 85 90 5d 80 b6 ff e7 04 77 e6 28 41"
+     "f6 69 a8 17 1d 02 8e 6d eb 79 f9 34 8b bf 9c 10"
+     "2b 5d 51 6e 61 e5 2a e7 7c db d7 ea 2d e9 28 5f"
+     "0d 07 6d e1 05 8d 2e 71 f0 7d 53 87 ba 7e 31 11"
+     "d8 38 93 83 05 f2 95 7b 58 99 89 df 82 2c 2d 74"
+     "82 40 17 03 03 00 45 9b df d7 61 a6 0d 5d b2 76"
+     "7c f2 ae c5 b6 c4 ee 63 21 23 6a 56 0d 9e c8 c4"
+     "69 36 2a e1 1c 52 a7 9d e0 64 75 60 04 94 c9 6a"
+     "bf 43 e0 0e 36 17 ca a9 93 39 c9 d7 59 d2 9e 37"
+     "d1 47 b5 dd ca 40 69 4a 7d 48 8b ad"},
+    {from_client, "change_cipher_spec, finished",
+     "14 03 03 00 01 01 17 03 03 00 45 3e 55 2d be a4"
+     "88 ba 1f 12 73 73 f8 84 75 05 d9 9f d2 1a 84 aa"
+     "b7 7c e4 3f f4 ea 4e de fa 94 da c7 3c 66 fc 29"
+     "95 13 f1 23 48 a0 20 68 d5 db 44 d8 99 df 30 45"
+     "ea f9 f1 f5 ed 8e 39 5a d6 d8 ae 3a 21 6e ac b1"},
+    {from_server, "new_session_ticket",
+     "17 03 03 00 fa e1 f5 d3 d5 fc 93 f7 11 d4 e9 0c"
+     "dc 95 00 2d 83 56 34 e6 dc 11 98 7f 89 ad 9c 36"
+     "95 e0 52 f4 59 4a a7 96 c9 69 63 1c b7 68 79 f6"
+     "58 86 84 91 00 bb 22 e6 58 ac 03 3f 87 58 08 fa"
+     "16 ce 29 fc d4 1a 67 df 21 8e 4d b7 0f 48 86 46"
+     "66 2d fe d8 cd 13 16 f5 95 53 0d f2 f9 3b 24 0e"
+     "c7 fd 5d 9e 56 88 ce 8b f0 45 a1 bc 7e 18 8e f9"
+     "ab 94 8b 6e fb c6 4a 1d d6 3d ca 7d cb 30 30 83"
+     "4d cc 17 0d b6 47 b1 32 4f c7 49 c8 f6 d9 b8 4f"
+     "d1 83 f1 e8 d4 0d fb d0 6f 44 f5 da db a2 05 7e"
+     "4d 5a 62 81 e8 38 0b ba f5 58 c4 5c b4 3a 14 0c"
+     "b6 fe 34 c2 c3 9a f2 9e ee 36 66 84 be af fb 8d"
+     "4a 4f 1e ec f9 b6 73 84 7e 51 5a d8 23 f1 a4 0c"
+     "9b ee a8 c8 32 52 68 64 d5 92 2d a4 ed b2 ed fd"
+     "2c be a4 ff 71 5b 8f 79 7e a0 d5 69 a1 33 65 e4"
+     "d1 ef 20 be 29 1f f9 56 15 be 2a f8 12 25 9c"},
+    {from_server, "new_session_ticket",
+     "17 03 03 00 fa 73 0c 72 9b 71 6d b8 a1 02 19 32"
+     "1d bf fa 05 89 82 b6 bb 0c c5 fd 9c 00 14 20 5c"
+     "2c e7 2a cb d5 f9 a5 b2 e7 68 d5 76 e3 ca 0c 71"
+     "ca 7e 83 1c 1f fa 62 da b8 fb e7 58 9f 2a 81 92"
+     "d9 73 82 a5 9d dc 21 4b 1e c0 27 52 63 03 b3 83"
+     "15 bc 2b c8 08 8a 94 09 95 f2 49 ba 60 92 eb 3d"
+     "8a a9 eb eb b8 eb 42 08 e0 32 17 c3 ad 63 5c 2b"
+     "fa e5 68 47 32 19 a5 d3 15 26 2b 1c d2 48 b3 7b"
+     "f4 a5 c2 2c 3e 61 0e b3 c1 81 c7 5e 87 5c 6b da"
+     "14 65 9e 3d 1f c1 f7 56 9b 08 f2 af cc f6 d8 c6"
+     "7f 94 c8 f1 5a 1b 6a 1e 57 0e 07 f2 2c dc 78 88"
+     "76 7b e7 95 6c 00 9d 76 5e 4e 62 9c e7 45 31 66"
+     "cf 84 eb bc 77 a5 4d 31 61 91 49 c1 a5 70 a7 c4"
+     "99 1d 1e 05 9e 96 e2 e4 7d d6 f6 4b 56 ac 24 87"
+     "9c 33 22 62 08 1c ac d6 34 85 0e 08 81 ea 48 1b"
+     "cd 41 31 35 a4 28 34 c8 d9 43 06 9c c9 e3 1c"},
+    {from_client, "application data",
+     "17 03 03 00 18 f1 40 f0 3b 33 67 09 18 be 0a 57"
+     "fc 94 64 08 ae b5 4f 02 20 fe 01 46 ec"},
+    {from_client, "alert",
+     "17 03 03 00 13 a0 d4 71 0a 7a 11 44 63 97 ff 63"
+     "2c 0c b5 b1 23 cb a9 01"},
+    {from_server, "alert",
+     "17 03 03 00 13 6e ca 59 6f 00 37 ca bd 87 17 10"
+     "1a ab 9c d9 1c 38 23 9d"},
+};
 
-    {
-        crypto_keychain keychain;
-        auto key = session.get_tls_protection().get_keyexchange();
-        keychain.load_file(&key, key_certfile, "server.crt", KID_TLS_SERVER_CERTIFICATE_PUBLIC);
-        keychain.load_file(&key, key_pemfile, "server.key", KID_TLS_SERVER_CERTIFICATE_PRIVATE);
+void test_captured_tls13() {
+    _test_case.begin("TLS 1.3");
 
-        constexpr char constexpr_master_secret[] = "93be6304758c8b4f0e106df7bbbb7a4edc23ed6188d44ed4d567b6e375400a74471fda4ad6748c84bda37a19399bd4a4";
-        protection.use_pre_master_secret(true);
-        protection.set_item(tls_secret_master, base16_decode(constexpr_master_secret));
-    }
+    tls_session session_sclient(session_tls);
+    auto& protection = session_sclient.get_tls_protection();
 
-    // C->S, epoch 0 seq 0 - client_hello (fragment)
-    {
-        const char* record =
-            "16 fe ff 00 00 00 00 00 00 00 00 00 c3 01 00 00"
-            "bd 00 00 00 00 00 00 00 b7 fe fd 9f c7 e2 53 87"
-            "0b 87 fa a8 21 b7 76 16 c4 c3 6f 60 6f 82 ed 8c"
-            "d7 86 d7 0a f2 d4 23 6e 99 2e 07 00 00 00 36 c0"
-            "2c c0 30 00 9f cc a9 cc a8 cc aa c0 2b c0 2f 00"
-            "9e c0 24 c0 28 00 6b c0 23 c0 27 00 67 c0 0a c0"
-            "14 00 39 c0 09 c0 13 00 33 00 9d 00 9c 00 3d 00"
-            "3c 00 35 00 2f 01 00 00 5d ff 01 00 01 00 00 0b"
-            "00 04 03 00 01 02 00 0a 00 0c 00 0a 00 1d 00 17"
-            "00 1e 00 19 00 18 00 23 00 00 00 16 00 00 00 17"
-            "00 00 00 0d 00 30 00 2e 04 03 05 03 06 03 08 07"
-            "08 08 08 1a 08 1b 08 1c 08 09 08 0a 08 0b 08 04"
-            "08 05 08 06 04 01 05 01 06 01 03 03 03 01 03 02";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("client_hello (fragment)", &session, bin_record, from_client);
-    }
-    // C->S, epoch 0 seq 1 - client_hello (reassembled)
-    {
-        const char* record =
-            "16 fe ff 00 00 00 00 00 00 00 01 00 12 01 00 00"
-            "bd 00 00 00 00 b7 00 00 06 04 02 05 02 06 02";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("client_hello (reassembled)", &session, bin_record, from_client);
-    }
-    // S->C, epoch 0 seq 0 - hello_verify_request
-    {
-        const char* record =
-            "16 fe ff 00 00 00 00 00 00 00 00 00 23 03 00 00"
-            "17 00 00 00 00 00 00 00 17 fe ff 14 d8 32 1d 16"
-            "e2 72 e5 3c bc 26 77 2d ff 69 a2 56 ed cd cc 0a";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("hello_verify_request", &session, bin_record, from_server);
-    }
-    // C->S, epoch 0 seq 2 - client_hello (fragment)
-    {
-        const char* record =
-            "16 fe ff 00 00 00 00 00 00 00 02 00 c3 01 00 00"
-            "d1 00 01 00 00 00 00 00 b7 fe fd 9f c7 e2 53 87"
-            "0b 87 fa a8 21 b7 76 16 c4 c3 6f 60 6f 82 ed 8c"
-            "d7 86 d7 0a f2 d4 23 6e 99 2e 07 00 14 d8 32 1d"
-            "16 e2 72 e5 3c bc 26 77 2d ff 69 a2 56 ed cd cc"
-            "0a 00 36 c0 2c c0 30 00 9f cc a9 cc a8 cc aa c0"
-            "2b c0 2f 00 9e c0 24 c0 28 00 6b c0 23 c0 27 00"
-            "67 c0 0a c0 14 00 39 c0 09 c0 13 00 33 00 9d 00"
-            "9c 00 3d 00 3c 00 35 00 2f 01 00 00 5d ff 01 00"
-            "01 00 00 0b 00 04 03 00 01 02 00 0a 00 0c 00 0a"
-            "00 1d 00 17 00 1e 00 19 00 18 00 23 00 00 00 16"
-            "00 00 00 17 00 00 00 0d 00 30 00 2e 04 03 05 03"
-            "06 03 08 07 08 08 08 1a 08 1b 08 1c 08 09 08 0a";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("client_hello (fragment)", &session, bin_record, from_client);
-    }
-    // C->S, epoch 0 seq 3 - client_hello (reassembled)
-    {
-        const char* record =
-            "16 fe ff 00 00 00 00 00 00 00 03 00 26 01 00 00"
-            "d1 00 01 00 00 b7 00 00 1a 08 0b 08 04 08 05 08"
-            "06 04 01 05 01 06 01 03 03 03 01 03 02 04 02 05"
-            "02 06 02";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("client_hello (reassembled)", &session, bin_record, from_client);
-    }
-    // S->C, epoch 0 seq 1 - server_hello
-    // S->C, epoch 0 seq 2 - certificate (fragment)
-    {
-        const char* record =
-            "16 fe fd 00 00 00 00 00 00 00 01 00 4d 02 00 00"
-            "41 00 01 00 00 00 00 00 41 fe fd f0 21 fa a3 69"
-            "c3 88 f4 80 2c 34 4d 67 cb 23 d9 6e 79 b6 85 68"
-            "d2 ad ee 45 b0 0c cc 36 a7 7f 8a 00 c0 27 00 00"
-            "19 ff 01 00 01 00 00 0b 00 04 03 00 01 02 00 23"
-            "00 00 00 16 00 00 00 17 00 00 16 fe fd 00 00 00"
-            "00 00 00 00 02 00 69 0b 00 03 66 00 02 00 00 00"
-            "00 00 5d 00 03 63 00 03 60 30 82 03 5c 30 82 02"
-            "44 a0 03 02 01 02 02 14 63 a6 71 10 79 d6 a6 48"
-            "59 da 67 a9 04 e8 e3 5f e2 03 a3 26 30 0d 06 09"
-            "2a 86 48 86 f7 0d 01 01 0b 05 00 30 59 31 0b 30"
-            "09 06 03 55 04 06 13 02 4b 52 31 0b 30 09 06 03"
-            "55 04 08 0c 02 47 47 31 0b 30 09 06 03 55 04 07";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("server_hello, certificate (fragment)", &session, bin_record, from_server);
-    }
-    // S->C, epoch 0 seq 3 - certificate (fragment)
-    {
-        const char* record =
-            "16 fe fd 00 00 00 00 00 00 00 03 00 c3 0b 00 03"
-            "66 00 02 00 00 5d 00 00 b7 0c 02 59 49 31 0d 30"
-            "0b 06 03 55 04 0a 0c 04 54 65 73 74 31 0d 30 0b"
-            "06 03 55 04 0b 0c 04 54 65 73 74 31 12 30 10 06"
-            "03 55 04 03 0c 09 54 65 73 74 20 52 6f 6f 74 30"
-            "1e 17 0d 32 34 30 38 32 39 30 36 32 37 31 37 5a"
-            "17 0d 32 35 30 38 32 39 30 36 32 37 31 37 5a 30"
-            "54 31 0b 30 09 06 03 55 04 06 13 02 4b 52 31 0b"
-            "30 09 06 03 55 04 08 0c 02 47 47 31 0b 30 09 06"
-            "03 55 04 07 0c 02 59 49 31 0d 30 0b 06 03 55 04"
-            "0a 0c 04 54 65 73 74 31 0d 30 0b 06 03 55 04 0b"
-            "0c 04 54 65 73 74 31 0d 30 0b 06 03 55 04 03 0c"
-            "04 54 65 73 74 30 82 01 22 30 0d 06 09 2a 86 48";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("certificate (fragment)", &session, bin_record, from_server);
-    }
-    // S->C, epoch 0 seq 4 - certificate (fragment)
-    {
-        const char* record =
-            "16 fe fd 00 00 00 00 00 00 00 04 00 c3 0b 00 03"
-            "66 00 02 00 01 14 00 00 b7 86 f7 0d 01 01 01 05"
-            "00 03 82 01 0f 00 30 82 01 0a 02 82 01 01 00 ad"
-            "9a 29 67 5f f3 a4 79 b4 c6 e6 32 73 d8 d7 ed 88"
-            "94 15 83 e4 31 00 04 6c b5 8c ac 87 ab 74 44 13"
-            "76 ca 0b 74 29 40 9e 97 2a 01 d7 8b 46 26 6e 19"
-            "35 4d c0 d3 b5 ea 0e 93 3a 06 e8 e5 85 b5 27 05"
-            "63 db 28 b8 92 da 5a 14 39 0f da 68 6d 6f 0a fb"
-            "52 dc 08 0f 54 d3 e4 a2 28 9d a0 71 50 82 e0 db"
-            "ca d1 94 dd 42 98 3a 09 33 a8 d9 ef fb d2 35 43"
-            "b1 22 a2 be 41 6d ba 91 dc 0b 31 4e 88 f9 4d 9c"
-            "61 2d ec b2 13 0a c2 91 8e a2 d6 e9 40 b9 32 b9"
-            "80 8f b3 18 a3 33 13 23 d5 d0 7e d9 d0 7f 93 e0";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("certificate (fragment)", &session, bin_record, from_server);
-    }
-    // S->C, epoch 0 seq 5 - certificate (fragment)
-    {
-        const char* record =
-            "16 fe fd 00 00 00 00 00 00 00 05 00 c3 0b 00 03"
-            "66 00 02 00 01 cb 00 00 b7 2d 4d 90 c5 58 24 56"
-            "d5 c9 10 13 4a b2 99 23 7d 34 b9 8e 97 19 69 6f"
-            "ce c6 3f d6 17 a7 d2 43 e0 36 cb 51 7b 2f 18 8b"
-            "c2 33 f8 57 cf d1 61 0b 7c ed 37 35 e3 13 7a 24"
-            "2e 77 08 c2 e3 d9 e6 17 d3 a5 c6 34 5a da 86 a7"
-            "f8 02 36 1d 66 63 cf e9 c0 3d 82 fb 39 a2 8d 92"
-            "01 4a 83 cf e2 76 3d 87 02 03 01 00 01 a3 21 30"
-            "1f 30 1d 06 03 55 1d 11 04 16 30 14 82 12 74 65"
-            "73 74 2e 70 72 69 6e 63 65 62 36 31 32 2e 70 65"
-            "30 0d 06 09 2a 86 48 86 f7 0d 01 01 0b 05 00 03"
-            "82 01 01 00 00 a5 f5 54 18 ab ad 36 38 c8 fc 0b"
-            "66 60 dd 9f 75 9d 86 5b 79 2f ee 57 f1 79 1c 15";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("certificate (fragment)", &session, bin_record, from_server);
-    }
-    // S->C, epoch 0 seq 6 - certificate (fragment)
-    {
-        const char* record =
-            "16 fe fd 00 00 00 00 00 00 00 06 00 c3 0b 00 03"
-            "66 00 02 00 02 82 00 00 b7 a1 34 23 d0 1c a9 58"
-            "51 a4 d0 08 f5 d8 f7 49 e9 c5 b5 65 91 51 2d 6d"
-            "e4 3b 0e 77 02 1f 45 8e 34 e5 bb eb f6 9d df 4a"
-            "40 60 21 b3 8e 16 33 3f f4 b6 90 d3 3c 34 ce e6"
-            "d9 47 07 a7 57 14 0c f9 78 0b 36 72 a9 88 07 07"
-            "93 b4 d7 fe 29 5e e8 41 37 20 a5 03 c7 97 cb 82"
-            "ca db 14 e5 8b 96 1f a9 e9 20 3d 6b 25 ae f4 89"
-            "4c 60 8d e9 14 33 47 4b 88 54 a2 47 19 81 c8 7b"
-            "0e 32 52 2b 91 88 ad 0f 6d 73 30 8c 00 af d5 fc"
-            "46 46 af 3a c2 17 89 ec c8 83 ae da e6 69 63 e0"
-            "9c 84 22 c5 7a de e8 23 6b 53 9d 6f 94 d2 7f 5c"
-            "be 1d 0c de 0e 07 0d 52 a5 43 8c e8 05 ef c0 ff";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("certificate (fragment)", &session, bin_record, from_server);
-    }
-    // S->C, epoch 0 seq 7 - certificate (reassembled)
-    // S->C, epoch 0 seq 8 - server_key_exchange (fragment)
-    {
-        const char* record =
-            "16 fe fd 00 00 00 00 00 00 00 07 00 39 0b 00 03"
-            "66 00 02 00 03 39 00 00 2d f0 73 fa dc 5a 51 4c"
-            "24 09 65 45 7d ab 52 8b 7e 5d f0 fb de a7 3d 43"
-            "c5 af 76 e3 6e f9 a1 dc 78 a2 bd 54 41 04 99 e5"
-            "56 32 ba 02 fd 72 16 fe fd 00 00 00 00 00 00 00"
-            "08 00 7d 0c 00 01 28 00 03 00 00 00 00 00 71 03"
-            "00 1d 20 a4 a9 ba 02 fb 67 3f 13 6f bf af d8 43"
-            "b9 c8 7a 23 20 d8 5e 20 de a7 d1 bc 41 59 76 68"
-            "c9 e5 6a 08 04 01 00 81 f4 db ab 15 fc ab 02 6b"
-            "85 ef 8d 5b 5d 17 a8 d7 e8 88 a2 fa 5a 8f 2e a9"
-            "53 cc 65 89 9e 9b 35 45 63 15 92 99 92 6f 3d 06"
-            "ce c0 0b 05 c0 d7 b1 73 c2 61 1c 65 8b f1 e0 bf"
-            "68 e6 22 c4 c3 5f ff 90 70 3e 95 cc 0b e3 e6 ef";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("certificate (reassembled), server_key_exchange (fragment)", &session, bin_record, from_server);
-    }
-    // S->C, epoch 0 seq 9 - server_key_exchange (reassembled)
-    {
-        const char* record =
-            "16 fe fd 00 00 00 00 00 00 00 09 00 c3 0c 00 01"
-            "28 00 03 00 00 71 00 00 b7 81 36 3e 53 1e c2 40"
-            "e5 2a 99 11 79 bd 23 62 29 df d4 ba 03 7f e4 5c"
-            "6b 89 4f c0 0e f5 12 68 5f bf c4 54 f1 9f 91 db"
-            "0d 58 75 f9 29 bf 8f b1 90 a2 84 0d 4a 6c 04 ad"
-            "ea 1c 35 c6 b1 8f c4 49 e4 31 d9 dc 36 9a 81 ae"
-            "db 28 cf 33 1b bf c8 23 b7 c7 11 c8 cf f6 69 69"
-            "3c 21 0c 1b 58 73 25 39 76 dc 33 be 71 9e 28 cb"
-            "df 28 e8 ca df ac 64 d6 c2 09 68 cd 9f d9 0f 8a"
-            "f7 99 dd f8 93 01 19 68 7b e8 89 f5 c5 e7 0b 27"
-            "18 8b 62 17 5d 7b 13 c2 4a 64 9c 38 46 56 c3 11"
-            "3b 41 4b a5 26 20 df e0 a8 6d f9 72 31 fe 95 da"
-            "a9 f3 a6 a1 54 e3 74 e1 7b 00 54 b7 eb 8e cc 5e";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("server_key_exchange (reassembled)", &session, bin_record, from_server);
-    }
-    // S->C, epoch 0 seq 10 - server_hello_done
-    {
-        const char* record =
-            "16 fe fd 00 00 00 00 00 00 00 0a 00 0c 0e 00 00"
-            "00 00 04 00 00 00 00 00 00";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("server_hello_done", &session, bin_record, from_server);
-    }
+    protection.use_pre_master_secret(true);
+    // SERVER_HANDSHAKE_TRAFFIC_SECRET (server_handshake_traffic_secret)
+    protection.set_item(server_handshake_traffic_secret,
+                        base16_decode_rfc("e232d8af6204b54f5e85d8c93cb3b2f69fc13ff439e029b6d9ec95a0175451bf333c312ebfa032fa44624a688bf954b8"));
+    // CLIENT_HANDSHAKE_TRAFFIC_SECRET (client_handshake_traffic_secret)
+    protection.set_item(client_handshake_traffic_secret,
+                        base16_decode_rfc("1a469cb11a59d969868f7e62a939233422ad82ee6d866eebb5dc17cd2f32b2916be8706c9e63fe24294763e36ae1ea38"));
+    // EXPORTER_SECRET
+    protection.set_item(tls_secret_exp_master,
+                        base16_decode_rfc("02e5c7ebbe3315502d186dfb8385092e303472483e861aeb2c89accefead3e249b55150bb195bd82c7f1e05b017ca6fa"));
+    // SERVER_TRAFFIC_SECRET_0 (server_application_traffic_secret_0)
+    protection.set_item(server_application_traffic_secret_0,
+                        base16_decode_rfc("cc899e0330367316bb2ab23949dc71a991b38b42025dc1fa9a05643b161c9ec1f0c6696f60b5ed8ef76524779b0e5abb"));
+    // CLIENT_TRAFFIC_SECRET_0 (client_application_traffic_secret_0)
+    protection.set_item(client_application_traffic_secret_0,
+                        base16_decode_rfc("7c6e80aea2d0f6f9411f921fcd28963383a82d54d01cd8f2a822ee8dce354fb7984b7211785e36de6ec19fcb9bcd1cb8"));
 
-    // C->S, epoch 0 seq 4 - client_key_exchange
-    // C->S, epoch 0 seq 5 - change_cipher_spec
-    // C->S, epoch 1 seq 0 - finished
-    {
-        const char* record =
-            "16 fe fd 00 00 00 00 00 00 00 04 00 2d 10 00 00"
-            "21 00 02 00 00 00 00 00 21 20 50 42 a8 d6 b5 bb"
-            "fe 9a 7a d0 69 fc 48 e4 59 d5 c2 be f4 c5 f2 15"
-            "3f 31 df 94 de 89 03 2e f9 57 14 fe fd 00 00 00"
-            "00 00 00 00 05 00 01 01 16 fe fd 00 01 00 00 00"
-            "00 00 00 00 50 41 e2 f4 6b 71 97 6e a4 73 76 92"
-            "a1 a5 d7 d0 da 07 06 ef 1b 20 34 9a 04 83 f7 ae"
-            "c6 8c 3a c6 6e 12 a3 d9 32 f3 07 a3 ef 74 cb e6"
-            "6c 29 4e c9 c2 a0 12 4e e2 5c 98 69 c2 68 3b 10"
-            "93 e2 cd ca 56 4a d7 d7 71 39 66 41 13 ec e4 96"
-            "73 20 46 d5 6a";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("client_key_exchange, change_cipher_spec, finished", &session, bin_record, from_client);
-    }
-#if 0
-    // S->C, epoch 0 seq 11 - new_session_ticket
-    {
-        const char* record =
-            "16 fe fd 00 00 00 00 00 00 00 0b 00 c2 04 00 00"
-            "b6 00 05 00 00 00 00 00 b6 00 00 1c 20 00 b0 81"
-            "91 12 df b7 f9 8c 99 db 44 56 fa 53 74 da 51 bb"
-            "30 e2 f5 f2 f0 81 66 13 76 33 40 22 0b 0b f0 c5"
-            "20 81 2b 62 f9 fa cc ac aa e8 08 a2 c2 c6 3e 70"
-            "51 fc 62 e1 cb 88 8e d2 7c e3 d8 d1 ae f4 3f 01"
-            "21 f4 37 a8 22 34 4d 66 7c d6 aa 16 70 28 f1 ca"
-            "8e 66 71 8a fe 80 22 26 66 33 57 28 6d bd c5 04"
-            "c1 66 02 d7 ac 0d 38 97 db f3 a3 77 73 4f 10 46"
-            "ef f1 b9 9a e7 3b 84 fb 35 6a 44 d7 fd 94 7c b2"
-            "78 1c b3 ff 90 be ad 1b 0b 5d 9e 95 db 51 35 e9"
-            "3f 42 7f af a8 10 94 64 8f 2d e4 0d 30 ba c4 14"
-            "a2 f2 63 3b 0d a5 6f b4 9f 52 81 e0 3b dd ac";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("new_session_ticket", &session, bin_record, from_server);
-    }
-    // S->C, epoch 0 seq 12 - change_cipher_spec
-    // S->C, epoch 1 seq 0 - encrypted_handshake message
-    {
-        const char* record =
-            "14 fe fd 00 00 00 00 00 00 00 0c 00 01 01 16 fe"
-            "fd 00 01 00 00 00 00 00 00 00 50 43 7b 0b 20 0b"
-            "70 d3 a0 5e a6 31 8d af dc 14 5f ca 16 e2 05 03"
-            "40 2a a2 0d 11 74 68 17 a5 60 f0 94 5b b7 a2 30"
-            "e0 7e 05 a1 80 ba f8 1d 01 a0 62 ec 7c b4 95 da"
-            "c3 99 95 90 59 4c f5 83 e3 cf 53 c8 16 6c 2d 8f"
-            "70 4e 30 15 d9 f7 43 d7 3a 65 94";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("change_cipher_spec, encrypted_handshake message", &session, bin_record, from_server);
-    }
-    // C->S, epoch 1 seq 1 - application data
-    {
-        const char* record =
-            "17 fe fd 00 01 00 00 00 00 00 01 00 40 22 6b 6d"
-            "36 ec 69 1e 1b db 72 89 60 db 4f a2 c8 7c cd fb"
-            "7b 52 24 83 e4 92 61 43 ac f2 2c 86 da 36 89 0a"
-            "68 69 49 7e 64 b5 e7 ad 60 36 19 7e 6f 83 e2 70"
-            "5e 07 9a 10 cd 3f d5 d3 cd 89 1f 94 c9";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("application data (hello)", &session, bin_record, from_client);
-    }
-    // C->S, epoch 1 seq 2 - encrypted alert
-    {
-        const char* record =
-            "15 fe fd 00 01 00 00 00 00 00 02 00 40 7c 68 12"
-            "83 f5 e2 60 f7 0b 87 c1 46 64 75 3f 16 a3 f7 c3"
-            "22 16 21 41 a5 4b 0a e7 d6 7a e4 d3 d8 52 58 c7"
-            "37 80 61 63 1e b3 1f 52 54 c8 06 37 60 22 f0 1b"
-            "a7 fd 78 98 5e e3 dd d8 7b bd 94 e1 15";
-    }
-    // S->C, epoch 1 seq 1 - encrypted alert
-    {
-        const char* record =
-            "15 fe fd 00 01 00 00 00 00 00 01 00 40 1c 80 74"
-            "c8 39 a7 19 3d 4e 1d 31 82 f0 5c f9 ca c3 1d 8b"
-            "0f 0c 8c 3a 1a be 77 ee 4b e7 96 8d bf fb 32 ed"
-            "06 d6 56 2d b9 e5 d9 62 23 fc c2 c0 cf 39 aa bd"
-            "3e 38 e8 ab 29 14 61 64 11 28 45 a9 59";
-    }
-#endif
+    play_pcap(&session_sclient, capture_tls13, RTL_NUMBER_OF(capture_tls13));
 }

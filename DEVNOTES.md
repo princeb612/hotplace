@@ -227,12 +227,15 @@ flowchart LR
       - [x] TLS1.3
       - [x] TLS1.2 (fixed rev.740)
   - [ ] DTLS construct
-    - [x] TLS version
-      - [x] TLS1.3
-      - [ ] TLS1.2
+    - [x] DTLS version
+      - [x] DTLS1.3
+      - [x] DTLS1.2 (rev.751)
   - [x] TLS over TCP (example netclient)
     - [x] HTTP/1.1
   - [ ] DTLS over UDP
+  - [ ] encrypt_then_mac
+    - [ ] encrypt
+    - [x] decrypt
 
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)

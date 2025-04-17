@@ -136,6 +136,14 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
         auto enc_alg = get_enc_alg();
         auto mac_alg = get_mac_alg();
 
+        const hint_blockcipher_t* hint_blockcipher = advisor->hintof_blockcipher(enc_alg);
+        if (nullptr == hint_blockcipher) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        uint16 blocksize = sizeof_block(hint_blockcipher);
+
         ret = crypt.open(&crypt_handle, enc_alg, cbc, enckey, iv);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -155,14 +163,6 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
 
             {
                 // encrypt
-
-                const hint_blockcipher_t* hint_blockcipher = advisor->hintof_blockcipher(enc_alg);
-                if (nullptr == hint_blockcipher) {
-                    ret = errorcode_t::invalid_parameter;
-                    __leave2;
-                }
-
-                uint16 blocksize = sizeof_block(hint_blockcipher);
 
                 // plaintext || tag || 1byte
                 binary_t temp;
@@ -186,13 +186,27 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
         } else if (tls_encrypt_then_mac == flag) {
             {
                 // encrypt
-                ret = crypt.encrypt(crypt_handle, plaintext, plainsize, ciphertext);
+
+                // TODO
+                binary_t temp;
+                temp.resize(blocksize);  // how to calc 1st block ...?
+                // TODO
+
+                temp.insert(temp.end(), plaintext, plaintext + plainsize);
+                uint32 mod = temp.size() % blocksize;
+                uint32 imod = blocksize - mod;
+                uint8 padvalue = imod - 1;
+                temp.insert(temp.end(), padvalue);
+
+                ret = crypt.encrypt(crypt_handle, temp, ciphertext);
             }
             {
                 // mac
                 (*hmac).update(aad).update(uint16(ciphertext.size()), hton16).update(ciphertext).finalize(tag);
                 ciphertext.insert(ciphertext.end(), tag.begin(), tag.end());
             }
+        } else {
+            ret = errorcode_t::unknown;
         }
     }
     __finally2 {
@@ -293,7 +307,20 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
             {
                 // encrypt
                 ret = crypt.decrypt(crypt_handle, ciphertext, datalen, plaintext);
+
+                const hint_blockcipher_t* hint_blockcipher = advisor->hintof_blockcipher(enc_alg);
+                if (nullptr == hint_blockcipher) {
+                    ret = errorcode_t::invalid_parameter;
+                    __leave2;
+                }
+
+                uint16 blocksize = sizeof_block(hint_blockcipher);
+
+                plaintext.erase(plaintext.begin(), plaintext.begin() + blocksize);  // block
+                plaintext.erase(plaintext.end() - 1);                               // pad1
             }
+        } else {
+            ret = errorcode_t::unknown;
         }
     }
     __finally2 {

@@ -1,4 +1,4 @@
 #### HPACK
 
 * test vector
-  * HPACK: Header Compression for HTTP/2
+  * RFC 7541 HPACK: Header Compression for HTTP/2

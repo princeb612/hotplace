@@ -199,6 +199,7 @@ int main(int argc, char** argv) {
         test_construct_tls();
         test_construct_dtls();
 
+        test_captured_tls13();
         test_captured_tls12();
         test_dtls_record_reoder();
         test_captured_dtls12();

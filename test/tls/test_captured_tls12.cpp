@@ -116,7 +116,6 @@ pcap_testvector capture_tls12etm[] = {
         "4a 84 be 16 2b c6 10 a8 b2 f7 16 03 03 00 04 0e"  // 04e0
         "00 00 00"                                         // 04f0
     },
-#if 0
     // C->S, client_key_exchange, change_cipher_spec, finished
     {
         from_client, "client_key_exchange, change_cipher_spec, finished",
@@ -179,7 +178,6 @@ pcap_testvector capture_tls12etm[] = {
         "fe b8 b2 58 a2 26 1b 9b ec dc eb 52 6e 49 c0 a1"  // 0030
         "1f 93 e5 d6 ea"                                   // 0040
     },
-#endif
 };
 
 // test/tls/tls12/tls12mte.pcapng
@@ -345,11 +343,11 @@ void test_captured_tls12() {
 
     _test_case.begin("TLS 1.2 pre master secret encrypt_then_mac");
     {
-        tls_session session_sclient(session_tls);
-        auto& protection = session_sclient.get_tls_protection();
+        tls_session session_etm(session_tls);
+        auto& protection = session_etm.get_tls_protection();
 
         // crypto_keychain keychain;
-        // auto key = session_sclient.get_tls_protection().get_keyexchange();
+        // auto key = session_etm.get_tls_protection().get_keyexchange();
         // keychain.load_file(&key, key_certfile, "server.crt", KID_TLS_SERVER_CERTIFICATE_PUBLIC);
         // keychain.load_file(&key, key_pemfile, "server.key", KID_TLS_SERVER_CERTIFICATE_PRIVATE);
 
@@ -357,18 +355,18 @@ void test_captured_tls12() {
         protection.use_pre_master_secret(true);
         protection.set_item(tls_secret_master, base16_decode(constexpr_master_secret));
 
-        play_pcap(&session_sclient, capture_tls12etm, RTL_NUMBER_OF(capture_tls12etm));
+        play_pcap(&session_etm, capture_tls12etm, RTL_NUMBER_OF(capture_tls12etm));
     }
 
     _test_case.begin("TLS 1.2 pre master secret w/o encrypt_then_mac");
     {
-        tls_session session_netclient(session_tls);
-        auto& protection = session_netclient.get_tls_protection();
+        tls_session session_mte(session_tls);
+        auto& protection = session_mte.get_tls_protection();
 
         constexpr char constexpr_master_secret[] = "1598a9701b35936119d3b114b9b4df696d3d0fbcd92ee122612b59cdf0752f392e3ff27b38b9b585aa60e09408833a36";
         protection.use_pre_master_secret(true);
         protection.set_item(tls_secret_master, base16_decode(constexpr_master_secret));
 
-        play_pcap(&session_netclient, capture_tls12mte, RTL_NUMBER_OF(capture_tls12mte));
+        play_pcap(&session_mte, capture_tls12mte, RTL_NUMBER_OF(capture_tls12mte));
     }
 }

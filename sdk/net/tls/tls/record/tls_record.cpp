@@ -275,6 +275,10 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
 #endif
         if (cond_dtls) {
             _dtls_record_seq = dtls_record_seq;
+
+            auto& kv = session->get_session_info(dir).get_keyvalue();
+            kv.set(session_dtls_epoch, key_epoch);
+            kv.set(session_dtls_seq, dtls_record_seq);
         }
     }
     __finally2 {

@@ -41,11 +41,11 @@ class dtls_record_reorder {
     return_t consume(binary_t& bin);
     return_t consume(uint16& epoch, uint64& seq, binary_t& bin);
 
-   protected:
-    tls_session* get_session();
-
     static uint64 make_epoch_seq(uint16 epoch, uint64 seq);
     static void get_epoch_seq(uint64 key, uint16& epoch, uint64& seq);
+
+   protected:
+    tls_session* get_session();
 
     tls_session* _session;
     uint16 _epoch;
