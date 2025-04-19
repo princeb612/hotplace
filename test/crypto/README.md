@@ -66,9 +66,9 @@
     * unprotected
       * uint8(type)
       * uint16(version)
-      * uint16(lenth)
+      * uint16(length)
     * MtE protected
       * 16(IV)
-      * ciphertext = CBC-ENCRYPT(enckey, IV, content || mac || pad1)
+      * ciphertext := CBC-ENCRYPT(enckey, IV, content || mac || pad1)
     * EtM protected
-      * ciphertext = = CBC-ENCRYPT(enckey, IV, 16bytes || content || pad1)
+      * ciphertext := CBC-ENCRYPT(enckey, IV, 16bytes || content || pad1)

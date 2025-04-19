@@ -13,6 +13,7 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension.hpp>
+#include <sdk/net/tls/tls/extension/tls_extension_unknown.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_server_hello.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
@@ -128,12 +129,6 @@ return_t tls_handshake_server_hello::set_cipher_suite(const char* cs) {
 
 uint8 tls_handshake_server_hello::get_compression_method() { return _compression_method; }
 
-return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
-    return_t ret = errorcode_t::success;
-    get_session()->get_keyvalue().remove(session_encrypt_then_mac);
-    return ret;
-}
-
 return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -205,10 +200,6 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
         if (nullptr == ext_version) {
             auto legacy_version = protection.get_lagacy_version();
             protection.set_tls_version(_version ? _version : legacy_version);
-        }
-        auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
-        if (ext_etm) {
-            session->get_keyvalue().set(session_encrypt_then_mac, 1);
         }
 
         session->update_session_status(session_server_hello);
@@ -306,6 +297,9 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
 
             ret = get_extensions().read(tls_hs_server_hello, session, dir, stream, size, pos);
 
+            auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
+            session->get_keyvalue().set(session_encrypt_then_mac, ext_etm ? 1 : 0);
+
             // cipher_suite
             set_cipher_suite(cipher_suite);
 
@@ -323,10 +317,23 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
 
 return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
     __try2 {
         auto session = get_session();
-
         auto legacy_version = session->get_tls_protection().get_lagacy_version();
+        auto cs = get_cipher_suite();
+        auto session_etm = session->get_keyvalue().get(session_encrypt_then_mac);  // from client_hello
+
+        uint16 etm_status = 0;
+        if (session_etm && tlsadvisor->is_kindof_cbc(cs)) {
+            auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
+            if (nullptr == ext_etm) {
+                // if not exist encrypt_then_mac extension
+                get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
+            }
+            etm_status = 1;
+        }
+        session->get_keyvalue().set(session_encrypt_then_mac, etm_status);
 
         binary_t extensions;
         get_extensions().write(extensions);
@@ -337,7 +344,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
                << new payload_member(_random, constexpr_random)                                              //
                << new payload_member(uint8(_session_id.size()), constexpr_session_id_len)                    //
                << new payload_member(_session_id, constexpr_session_id)                                      //
-               << new payload_member(uint16(get_cipher_suite()), true, constexpr_cipher_suite)               //
+               << new payload_member(uint16(cs), true, constexpr_cipher_suite)                               //
                << new payload_member(uint8(0), constexpr_compression_method)                                 //
                << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);              //
 

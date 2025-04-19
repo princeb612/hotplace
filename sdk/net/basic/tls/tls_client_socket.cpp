@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace net {
 
-tls_client_socket::tls_client_socket(transport_layer_security* tls) : client_socket(), _tls(tls), _handle(nullptr) {
+tls_client_socket::tls_client_socket(openssl_tls* tls) : client_socket(), _tls(tls), _handle(nullptr) {
     if (nullptr == tls) {
         throw errorcode_t::insufficient;
     }

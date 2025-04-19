@@ -13,6 +13,7 @@
 #include <sdk/crypto/basic/cipher_encrypt.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_cbc_hmac.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/io/asn.1/types.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
@@ -341,6 +342,8 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
                                           const binary_t &additional, binary_t &maced) {
     return_t ret = errorcode_t::success;
     __try2 {
+        ciphertext.clear();
+
         if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -359,10 +362,6 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
             ret = errorcode_t::not_supported;
             __leave2;
         }
-        auto ivsize = sizeof_iv(hint_cipher);
-        size_t content_header_size = get_header_size();
-        binary_t iv;
-        binary_append(iv, &additional[content_header_size], ivsize);
 
         openssl_crypt crypt;
 
@@ -379,6 +378,19 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
         bool etm = session->get_keyvalue().get(session_encrypt_then_mac);
         uint16 flag = etm ? tls_encrypt_then_mac : tls_mac_then_encrypt;
+
+        binary_t iv;
+        if (etm) {
+            if (from_client == dir) {
+                iv = get_item(tls_secret_client_iv);
+            } else if (from_server == dir) {
+                iv = get_item(tls_secret_server_iv);
+            }
+        } else {
+            auto ivsize = sizeof_iv(hint_cipher);
+            openssl_prng prng;
+            prng.random(iv, ivsize);
+        }
 
         binary_t verifydata;
         binary_t aad;
@@ -399,6 +411,12 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         cbchmac.set_enc(enc_alg).set_mac(hmac_alg).set_flag(flag);
         ret = cbchmac.encrypt(enckey, mackey, iv, aad, plaintext, ciphertext);
 
+        if (etm) {
+            // do nothing
+        } else {
+            ciphertext.insert(ciphertext.begin(), iv.begin(), iv.end());
+        }
+
 #if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
@@ -409,14 +427,10 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
             dbs.println(" > iv %s", base16_encode(iv).c_str());
             dbs.println(" > mac %s", advisor->nameof_md(hmac_alg));
             dbs.println(" > mackey[%08x] %s", secret_mac_key, base16_encode(mackey).c_str());
-            if (session_dtls == session_type) {
-            } else {
-                // TLS, QUIC, QUIC2
-                dbs.println(" > record no %i", record_no);
-            }
+            dbs.println(" > record no %i", record_no);
             dbs.println(" > plaintext");
             dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.println(" > ciphertext");
+            dbs.println(" > cbcmaced");
             dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
 
             trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);

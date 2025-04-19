@@ -169,6 +169,7 @@ class quic_frame_stream_blocked;
 class quic_frame_stream_data_blocked;
 class quic_frame_stop_sending;
 class quic_frames;
+
 class quic_packet;
 class quic_packet_version_negotiation;
 class quic_packet_initial;

@@ -12,15 +12,15 @@
 #define __HOTPLACE_SDK_NET_BASIC_TLS_TLSSERVERSOCKET__
 
 #include <sdk/net/basic/socket/tcp_server_socket.hpp>  // tcp_server_socket
-#include <sdk/net/basic/tls/tls.hpp>
-#include <sdk/net/basic/tls/tlscontext.hpp>
+#include <sdk/net/basic/tls/openssl_tls.hpp>
+#include <sdk/net/basic/tls/openssl_tls_context.hpp>
 
 namespace hotplace {
 namespace net {
 
 class tls_server_socket : public tcp_server_socket {
    public:
-    tls_server_socket(transport_layer_security* tls);
+    tls_server_socket(openssl_tls* tls);
     virtual ~tls_server_socket();
 
     /**
@@ -59,7 +59,7 @@ class tls_server_socket : public tcp_server_socket {
 
    protected:
    private:
-    transport_layer_security* _tls;
+    openssl_tls* _tls;
 };
 
 }  // namespace net

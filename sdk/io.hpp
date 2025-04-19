@@ -18,8 +18,10 @@
 /* basic */
 #include <sdk/io/basic/json.hpp>
 #include <sdk/io/basic/mlfq.hpp>
+#include <sdk/io/basic/oid.hpp>
 #include <sdk/io/basic/parser.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/io/basic/types.hpp>
 #include <sdk/io/basic/zlib.hpp>
 
 /* CBOR */
@@ -37,6 +39,7 @@
 #include <sdk/io/stream/file_stream.hpp>
 #include <sdk/io/stream/stream.hpp>
 #include <sdk/io/stream/string.hpp>
+#include <sdk/io/stream/types.hpp>
 
 /* string */
 #include <sdk/io/string/string.hpp>

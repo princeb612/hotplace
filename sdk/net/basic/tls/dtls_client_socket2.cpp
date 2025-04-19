@@ -13,7 +13,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
-#include <sdk/net/tls/basic/async_dtls_client_socket.hpp>
+#include <sdk/net/basic/tls/dtls_client_socket2.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_ec_point_formats.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_key_share.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
@@ -40,12 +40,12 @@
 namespace hotplace {
 namespace net {
 
-async_dtls_client_socket::async_dtls_client_socket(tls_version_t minver) : async_client_socket(), _minver(minver) {
+dtls_client_socket2::dtls_client_socket2(tls_version_t minver) : async_client_socket(), _minver(minver) {
     auto session = &_session;
     session->set_type(session_dtls);
 }
 
-return_t async_dtls_client_socket::sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen) {
+return_t dtls_client_socket2::sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == ptr_data || nullptr == cbsent || nullptr == addr) {
@@ -80,7 +80,7 @@ return_t async_dtls_client_socket::sendto(const char* ptr_data, size_t size_data
     return ret;
 }
 
-return_t async_dtls_client_socket::do_handshake() {
+return_t dtls_client_socket2::do_handshake() {
     return_t ret = errorcode_t::success;
     const size_t bufsize = (1 << 16);
     char buffer[bufsize];
@@ -234,7 +234,7 @@ return_t async_dtls_client_socket::do_handshake() {
     return ret;
 }
 
-return_t async_dtls_client_socket::do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
+return_t dtls_client_socket2::do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     *cbread = 0;
     auto type = socket_type();
@@ -274,7 +274,7 @@ return_t async_dtls_client_socket::do_read(char* ptr_data, size_t size_data, siz
     return ret;
 }
 
-return_t async_dtls_client_socket::do_secure() {
+return_t dtls_client_socket2::do_secure() {
     return_t ret = errorcode_t::success;
     auto type = socket_type();
     tls_direction_t dir = from_server;
@@ -339,16 +339,16 @@ return_t async_dtls_client_socket::do_secure() {
     return ret;
 }
 
-return_t async_dtls_client_socket::do_shutdown() {
+return_t dtls_client_socket2::do_shutdown() {
     return_t ret = errorcode_t::success;
     __try2 {}
     __finally2 {}
     return ret;
 }
 
-bool async_dtls_client_socket::support_tls() { return true; }
+bool dtls_client_socket2::support_tls() { return true; }
 
-int async_dtls_client_socket::socket_type() { return SOCK_DGRAM; }
+int dtls_client_socket2::socket_type() { return SOCK_DGRAM; }
 
 }  // namespace net
 }  // namespace hotplace

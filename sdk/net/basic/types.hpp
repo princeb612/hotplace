@@ -89,8 +89,8 @@ class dtls_client_socket;
 class dtls_server_socket;
 class tls_client_socket;
 class tls_server_socket;
-class transport_layer_security;
-class tlscontext;
+class openssl_tls;
+class openssl_tls_context;
 
 }  // namespace net
 }  // namespace hotplace

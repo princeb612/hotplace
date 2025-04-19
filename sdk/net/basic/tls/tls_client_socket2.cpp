@@ -12,7 +12,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
-#include <sdk/net/tls/basic/async_tls_client_socket.hpp>
+#include <sdk/net/basic/tls/tls_client_socket2.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_ec_point_formats.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_key_share.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
@@ -38,12 +38,12 @@
 namespace hotplace {
 namespace net {
 
-async_tls_client_socket::async_tls_client_socket(tls_version_t minver) : async_client_socket(), _minver(minver) {
+tls_client_socket2::tls_client_socket2(tls_version_t minver) : async_client_socket(), _minver(minver) {
     auto session = &_session;
     session->set_type(session_tls);
 }
 
-return_t async_tls_client_socket::send(const char* ptr_data, size_t size_data, size_t* cbsent) {
+return_t tls_client_socket2::send(const char* ptr_data, size_t size_data, size_t* cbsent) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == ptr_data || nullptr == cbsent) {
@@ -70,10 +70,11 @@ return_t async_tls_client_socket::send(const char* ptr_data, size_t size_data, s
     return ret;
 }
 
-return_t async_tls_client_socket::do_handshake() {
+return_t tls_client_socket2::do_handshake() {
     return_t ret = errorcode_t::success;
     const size_t bufsize = (1 << 16);
     char buffer[bufsize];
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
     __try2 {
         size_t cbsent = 0;
@@ -102,28 +103,32 @@ return_t async_tls_client_socket::do_handshake() {
                 handshake->set_random(random);
             }
 
+            bool enable_etm = false;
+            if (session->get_keyvalue().get(session_enable_encrypt_then_mac)) {
+                enable_etm = true;
+            }
+
             // cipher suites
             {
-                if (tls_13 == _minver) {
-                    handshake->add_ciphersuite(0x1301);
-                    handshake->add_ciphersuite(0x1302);
-                    handshake->add_ciphersuite(0x1303);
-                    handshake->add_ciphersuite(0x1304);
-                    handshake->add_ciphersuite(0x1305);
-                }
-                handshake->add_ciphersuite(0xc023);
-                handshake->add_ciphersuite(0xc024);
-                handshake->add_ciphersuite(0xc027);
-                handshake->add_ciphersuite(0xc028);
-                handshake->add_ciphersuite(0xc02b);
-                handshake->add_ciphersuite(0xc02c);
-                handshake->add_ciphersuite(0xc02f);
-                handshake->add_ciphersuite(0xc030);
+                auto lambda_cs = [&](const tls_cipher_suite_t* cs) -> void {
+                    if (cs->version >= _minver) {
+                        if (enable_etm && (tls_12 == _minver)) {
+                            if (cbc == cs->mode) {
+                                handshake->add_ciphersuite(cs->code);
+                            }
+                        } else {
+                            handshake->add_ciphersuite(cs->code);
+                        }
+                    }
+                };
+                tlsadvisor->enum_cipher_suites(lambda_cs);
             }
             {
                 handshake->get_extensions().add(new tls_extension_renegotiation_info(session));
                 handshake->get_extensions().add(new tls_extension_unknown(tls_ext_session_ticket, session));
-                // handshake->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
+                if (enable_etm && (tls_12 == _minver)) {
+                    handshake->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
+                }
                 // handshake->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, session));
             }
             {
@@ -280,7 +285,7 @@ return_t async_tls_client_socket::do_handshake() {
     return ret;
 }
 
-return_t async_tls_client_socket::do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
+return_t tls_client_socket2::do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     *cbread = 0;
     auto type = socket_type();
@@ -320,7 +325,7 @@ return_t async_tls_client_socket::do_read(char* ptr_data, size_t size_data, size
     return ret;
 }
 
-return_t async_tls_client_socket::do_secure() {
+return_t tls_client_socket2::do_secure() {
     return_t ret = errorcode_t::success;
     auto session = &_session;
     auto type = socket_type();
@@ -387,7 +392,7 @@ return_t async_tls_client_socket::do_secure() {
     return ret;
 }
 
-return_t async_tls_client_socket::do_shutdown() {
+return_t tls_client_socket2::do_shutdown() {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = &_session;
@@ -414,9 +419,11 @@ return_t async_tls_client_socket::do_shutdown() {
     return ret;
 }
 
-bool async_tls_client_socket::support_tls() { return true; }
+tls_session& tls_client_socket2::get_session() { return _session; }
 
-int async_tls_client_socket::socket_type() { return SOCK_STREAM; }
+bool tls_client_socket2::support_tls() { return true; }
+
+int tls_client_socket2::socket_type() { return SOCK_STREAM; }
 
 }  // namespace net
 }  // namespace hotplace

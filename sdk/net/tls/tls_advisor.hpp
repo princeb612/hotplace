@@ -148,6 +148,7 @@ class tls_advisor {
     const tls_version_hint_t* hintof_tls_version(uint16 code);
     const tls_cipher_suite_t* hintof_cipher_suite(uint16 code);
     const tls_cipher_suite_t* hintof_cipher_suite(const std::string& name);
+    void enum_cipher_suites(std::function<void(const tls_cipher_suite_t*)> fn);
     const hint_blockcipher_t* hintof_blockcipher(uint16 code);
     bool is_kindof_cbc(uint16 code);
     const hint_digest_t* hintof_digest(uint16 code);

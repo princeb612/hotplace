@@ -119,7 +119,7 @@ void tls_client() {
         tlscontext_flags |= tlscontext_flag_allow_tls13;
     }
     tlscontext_open_simple(&sslctx, tlscontext_flags);
-    transport_layer_security tls(sslctx);
+    openssl_tls tls(sslctx);
     tls_client_socket cli(&tls);
 
     char buffer[option.bufsize];
@@ -169,7 +169,11 @@ void async_tls_client() {
 
     return_t ret = errorcode_t::success;
     auto minver = (option.flags & flag_allow_tls12) ? tls_12 : tls_13;
-    async_tls_client_socket cli(minver);
+    tls_client_socket2 cli(minver);
+
+    if (option.flags & flag_enable_etm) {
+        cli.get_session().get_keyvalue().set(session_enable_encrypt_then_mac, 1);
+    }
 
     char buffer[option.bufsize];
     basic_stream bs;
@@ -218,7 +222,7 @@ void dtls_client() {
     return_t ret = errorcode_t::success;
     SSL_CTX* sslctx = nullptr;
     tlscontext_open_simple(&sslctx, tlscontext_flag_dtls);
-    transport_layer_security tls(sslctx);
+    openssl_tls tls(sslctx);
     dtls_client_socket cli(&tls);
     sockaddr_storage_t addr;
     socklen_t addrlen = sizeof(addr);
@@ -268,7 +272,7 @@ void async_dtls_client() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    async_dtls_client_socket cli(tls_12);
+    dtls_client_socket2 cli(tls_12);
 
     char buffer[option.bufsize];
     basic_stream bs;

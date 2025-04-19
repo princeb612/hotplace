@@ -52,7 +52,7 @@ return_t echo_server(void*) {
     fclose(fp);
 
     SSL_CTX* sslctx = nullptr;
-    transport_layer_security* tls = nullptr;
+    openssl_tls* tls = nullptr;
     dtls_server_socket* tls_socket = nullptr;
     // DTLS handshake and thread-model
     //          single      multi
@@ -81,7 +81,7 @@ return_t echo_server(void*) {
             "AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA");
         SSL_CTX_set_verify(sslctx, 0, nullptr);
 
-        __try_new_catch(tls, new transport_layer_security(sslctx), ret, __leave2);
+        __try_new_catch(tls, new openssl_tls(sslctx), ret, __leave2);
         __try_new_catch(tls_socket, new dtls_server_socket(tls), ret, __leave2);
 
         server_conf conf;

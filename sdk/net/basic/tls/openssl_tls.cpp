@@ -21,9 +21,9 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/io/system/socket.hpp>
+#include <sdk/net/basic/tls/openssl_tls.hpp>
+#include <sdk/net/basic/tls/openssl_tls_context.hpp>
 #include <sdk/net/basic/tls/sdk.hpp>
-#include <sdk/net/basic/tls/tls.hpp>
-#include <sdk/net/basic/tls/tlscontext.hpp>
 #include <sdk/net/basic/tls/types.hpp>
 
 namespace hotplace {
@@ -31,7 +31,7 @@ namespace net {
 
 // #define TLS_CONTEXT_SIGNATURE 0x20120119
 
-transport_layer_security::transport_layer_security(SSL_CTX* ctx) : _ctx(ctx) {
+openssl_tls::openssl_tls(SSL_CTX* ctx) : _ctx(ctx) {
     if (nullptr == ctx) {
         throw errorcode_t::insufficient;
     }
@@ -39,7 +39,7 @@ transport_layer_security::transport_layer_security(SSL_CTX* ctx) : _ctx(ctx) {
     _shared.make_share(this);
 }
 
-transport_layer_security::transport_layer_security(tlscontext* cert) : _ctx(nullptr) {
+openssl_tls::openssl_tls(openssl_tls_context* cert) : _ctx(nullptr) {
     if (cert) {
         _ctx = cert->get_ctx();
     }
@@ -50,13 +50,13 @@ transport_layer_security::transport_layer_security(tlscontext* cert) : _ctx(null
     _shared.make_share(this);
 }
 
-transport_layer_security::~transport_layer_security() { SSL_CTX_free(_ctx); }
+openssl_tls::~openssl_tls() { SSL_CTX_free(_ctx); }
 
-int transport_layer_security::addref() { return _shared.addref(); }
+int openssl_tls::addref() { return _shared.addref(); }
 
-int transport_layer_security::release() { return _shared.delref(); }
+int openssl_tls::release() { return _shared.delref(); }
 
-return_t transport_layer_security::tls_open(socket_context_t** handle, socket_t fd, uint32 flags) {
+return_t openssl_tls::tls_open(socket_context_t** handle, socket_t fd, uint32 flags) {
     return_t ret = errorcode_t::success;
     socket_context_t* context = nullptr;
 
@@ -94,7 +94,7 @@ return_t transport_layer_security::tls_open(socket_context_t** handle, socket_t 
     return ret;
 }
 
-return_t transport_layer_security::dtls_open(socket_context_t** handle, socket_t fd, uint32 flags) {
+return_t openssl_tls::dtls_open(socket_context_t** handle, socket_t fd, uint32 flags) {
     return_t ret = errorcode_t::success;
     socket_context_t* context = nullptr;
 
@@ -136,7 +136,7 @@ return_t transport_layer_security::dtls_open(socket_context_t** handle, socket_t
     return ret;
 }
 
-return_t transport_layer_security::close(socket_context_t* handle) {
+return_t openssl_tls::close(socket_context_t* handle) {
     return_t ret = errorcode_t::success;
     socket_context_t* context = nullptr;
 
@@ -154,7 +154,7 @@ return_t transport_layer_security::close(socket_context_t* handle) {
     return ret;
 }
 
-return_t transport_layer_security::connect(socket_context_t** handle, int type, const char* address, uint16 port, uint32 wto) {
+return_t openssl_tls::connect(socket_context_t** handle, int type, const char* address, uint16 port, uint32 wto) {
     return_t ret = errorcode_t::success;
     socket_t fd = INVALID_SOCKET;
     BIO* sbio_read = nullptr;
@@ -205,7 +205,7 @@ return_t transport_layer_security::connect(socket_context_t** handle, int type, 
     return ret;
 }
 
-return_t transport_layer_security::connectto(socket_context_t** handle, socket_t fd, const char* address, uint16 port, uint32 wto) {
+return_t openssl_tls::connectto(socket_context_t** handle, socket_t fd, const char* address, uint16 port, uint32 wto) {
     return_t ret = errorcode_t::success;
     sockaddr_storage_t addr = {
         0,
@@ -230,7 +230,7 @@ return_t transport_layer_security::connectto(socket_context_t** handle, socket_t
     return ret;
 }
 
-return_t transport_layer_security::connectto(socket_context_t** handle, socket_t fd, const sockaddr* addr, socklen_t addrlen, uint32 wto) {
+return_t openssl_tls::connectto(socket_context_t** handle, socket_t fd, const sockaddr* addr, socklen_t addrlen, uint32 wto) {
     return_t ret = errorcode_t::success;
     socket_context_t* context = nullptr;
 
@@ -271,7 +271,7 @@ return_t transport_layer_security::connectto(socket_context_t** handle, socket_t
     return ret;
 }
 
-return_t transport_layer_security::tls_handshake(socket_context_t** handle, socket_t fd) {
+return_t openssl_tls::tls_handshake(socket_context_t** handle, socket_t fd) {
     return_t ret = errorcode_t::success;
     socket_context_t* context = nullptr;
 
@@ -317,7 +317,7 @@ return_t transport_layer_security::tls_handshake(socket_context_t** handle, sock
     return ret;
 }
 
-return_t transport_layer_security::dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen) {
+return_t openssl_tls::dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -362,7 +362,7 @@ return_t transport_layer_security::dtls_handshake(socket_context_t* handle, sock
     return ret;
 }
 
-return_t transport_layer_security::do_connect(socket_context_t* handle, uint32 wto) {
+return_t openssl_tls::do_connect(socket_context_t* handle, uint32 wto) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -444,7 +444,7 @@ return_t transport_layer_security::do_connect(socket_context_t* handle, uint32 w
     return ret;
 }
 
-return_t transport_layer_security::do_dtls_listen(socket_context_t* handle, sockaddr* addr, socklen_t addrlen) {
+return_t openssl_tls::do_dtls_listen(socket_context_t* handle, sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     BIO_ADDR* bio_addr = nullptr;
     __try2 {
@@ -506,7 +506,7 @@ return_t transport_layer_security::do_dtls_listen(socket_context_t* handle, sock
     return ret;
 }
 
-return_t transport_layer_security::do_accept(socket_context_t* handle) {
+return_t openssl_tls::do_accept(socket_context_t* handle) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -578,7 +578,7 @@ return_t transport_layer_security::do_accept(socket_context_t* handle) {
     return ret;
 }
 
-return_t transport_layer_security::set_tls_io(socket_context_t* handle, int type) {
+return_t openssl_tls::set_tls_io(socket_context_t* handle, int type) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -617,7 +617,7 @@ return_t transport_layer_security::set_tls_io(socket_context_t* handle, int type
     return ret;
 }
 
-return_t transport_layer_security::read(socket_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* cbread) {
+return_t openssl_tls::read(socket_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* cbread) {
     return_t ret = errorcode_t::success;
     int rc = 0;
 
@@ -698,8 +698,8 @@ return_t transport_layer_security::read(socket_context_t* handle, int mode, void
     return ret;
 }
 
-return_t transport_layer_security::recvfrom(socket_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* cbread, struct sockaddr* addr,
-                                            socklen_t* addrlen) {
+return_t openssl_tls::recvfrom(socket_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* cbread, struct sockaddr* addr,
+                               socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     int rc = 0;
 
@@ -775,7 +775,7 @@ return_t transport_layer_security::recvfrom(socket_context_t* handle, int mode, 
     return ret;
 }
 
-return_t transport_layer_security::send(socket_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent) {
+return_t openssl_tls::send(socket_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -827,8 +827,8 @@ return_t transport_layer_security::send(socket_context_t* handle, int mode, cons
     return ret;
 }
 
-return_t transport_layer_security::sendto(socket_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent,
-                                          const struct sockaddr* addr, socklen_t addrlen) {
+return_t openssl_tls::sendto(socket_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent, const struct sockaddr* addr,
+                             socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -879,7 +879,7 @@ return_t transport_layer_security::sendto(socket_context_t* handle, int mode, co
     return ret;
 }
 
-socket_t transport_layer_security::get_socket(socket_context_t* handle) {
+socket_t openssl_tls::get_socket(socket_context_t* handle) {
     socket_t fd = INVALID_SOCKET;
 
     if (nullptr != handle) {
@@ -888,7 +888,7 @@ socket_t transport_layer_security::get_socket(socket_context_t* handle) {
     return fd;
 }
 
-SSL_CTX* transport_layer_security::get() { return _ctx; }
+SSL_CTX* openssl_tls::get() { return _ctx; }
 
 }  // namespace net
 }  // namespace hotplace

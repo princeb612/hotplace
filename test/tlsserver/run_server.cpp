@@ -61,7 +61,7 @@ return_t echo_server(void*) {
 
     SSL_CTX* sslctx = nullptr;
     // http_protocol* http_prot = nullptr;
-    transport_layer_security* tls = nullptr;
+    openssl_tls* tls = nullptr;
     tls_server_socket* tls_socket = nullptr;
 
     __try2 {
@@ -96,7 +96,7 @@ return_t echo_server(void*) {
 
         SSL_CTX_set_verify(sslctx, 0, nullptr);
 
-        __try_new_catch(tls, new transport_layer_security(sslctx), ret, __leave2);
+        __try_new_catch(tls, new openssl_tls(sslctx), ret, __leave2);
         __try_new_catch(tls_socket, new tls_server_socket(tls), ret, __leave2);
 
         server_conf conf;

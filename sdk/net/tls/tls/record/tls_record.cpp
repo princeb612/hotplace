@@ -322,45 +322,50 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
                 ret = errorcode_t::not_supported;
                 __leave2;
             }
-            auto ivsize = sizeof_iv(hint_cipher);
-            uint16 len = (cbc == hint->mode) ? body.size() + tagsize + ivsize : body.size() + tagsize;
-
-            auto is_tls = is_kindof_tls(record_version);
 
             {
+                bool etm = session->get_keyvalue().get(session_encrypt_then_mac);
+                auto is_tls = is_kindof_tls(record_version);
+                auto ivsize = sizeof_iv(hint_cipher);
+                uint16 len = 0;
+                if (cbc == hint->mode) {
+                    if (etm) {
+                        len = body.size() + tagsize;
+                    } else {
+                        len = body.size() + tagsize + ivsize;
+                    }
+                } else {
+                    len = body.size() + tagsize;
+                }
+
+                /**
+                 * AAD
+                 *   CBC  uint8(type) || uint16(version)
+                 *   AEAD uint8(type) || uint16(version) || uint16(len)
+                 */
                 payload pl;
                 pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
                    << new payload_member(uint16(record_version), true, constexpr_record_version)                            // tls, dtls
                    << new payload_member(uint16(get_key_epoch()), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
                    << new payload_member(uint48_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
-                   << new payload_member(uint16(len), true, constexpr_len);                                                 // tls, dtls
+                   << new payload_member(uint16(len), true, constexpr_len);
 
                 pl.set_group(constexpr_group_dtls, false == is_tls);
                 pl.write(additional);
             }
 
             if (cbc == hint->mode) {
-                // additional = content header + iv
-                binary_t iv;
-                openssl_prng prng;
-                prng.random(iv, ivsize);
-                binary_append(additional, iv);
-
-                binary_t encbody;
-                ret = protection.encrypt(session, dir, body, encbody, additional, tag);
-                if (errorcode_t::success != ret) {
-                    __leave2;
-                }
-
-                binary_append(ciphertext, iv);
-                binary_append(ciphertext, encbody);
-            } else {
-                // additional = content header as AAD
+                // nested tag
                 ret = protection.encrypt(session, dir, body, ciphertext, additional, tag);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }
-
+            } else {
+                // concatenated tag
+                ret = protection.encrypt(session, dir, body, ciphertext, additional, tag);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
                 binary_append(ciphertext, tag);
             }
 

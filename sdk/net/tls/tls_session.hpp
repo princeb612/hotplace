@@ -44,6 +44,7 @@ enum session_conf_t {
     // session->get_keyvalue()
     session_debug_deprecated_ciphersuite = 1000,  // to test unsupported cipher suite
     session_encrypt_then_mac = 1001,
+    session_enable_encrypt_then_mac = 1002,
 };
 
 class tls_session {

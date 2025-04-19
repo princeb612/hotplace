@@ -12,15 +12,15 @@
 #define __HOTPLACE_SDK_NET_BASIC_TLS_TLSCLIENTSOCKET__
 
 #include <sdk/net/basic/socket/tcp_client_socket.hpp>  // tcp_client_socket
-#include <sdk/net/basic/tls/tls.hpp>
-#include <sdk/net/basic/tls/tlscontext.hpp>
+#include <sdk/net/basic/tls/openssl_tls.hpp>
+#include <sdk/net/basic/tls/openssl_tls_context.hpp>
 
 namespace hotplace {
 namespace net {
 
 class tls_client_socket : public client_socket {
    public:
-    tls_client_socket(transport_layer_security* tls);
+    tls_client_socket(openssl_tls* tls);
     virtual ~tls_client_socket();
 
     virtual return_t connect(const char* address, uint16 port, uint32 timeout);
@@ -36,7 +36,7 @@ class tls_client_socket : public client_socket {
 
    protected:
    private:
-    transport_layer_security* _tls;
+    openssl_tls* _tls;
     socket_context_t* _handle;
 };
 

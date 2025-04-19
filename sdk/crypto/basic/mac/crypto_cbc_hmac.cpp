@@ -14,6 +14,7 @@
 #include <sdk/crypto/basic/crypto_hmac.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -173,10 +174,10 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
                 uint8 padvalue = imod - 1;
 
 #if 1
-                binary_append(temp, padvalue);
+                temp.insert(temp.end(), padvalue);
 #else
                 temp.insert(temp.end(), imod, padvalue);
-                set(crypt_handle, crypt_ctrl_padding, 0);
+                crypt.set(crypt_handle, crypt_ctrl_padding, 0);
 #endif
                 ret = crypt.encrypt(crypt_handle, temp, ciphertext);
                 if (errorcode_t::success != ret) {
@@ -187,17 +188,22 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
             {
                 // encrypt
 
-                // TODO
                 binary_t temp;
-                temp.resize(blocksize);  // how to calc 1st block ...?
-                // TODO
+
+                openssl_prng prng;
+                prng.random(temp, blocksize);  // random
 
                 temp.insert(temp.end(), plaintext, plaintext + plainsize);
+
                 uint32 mod = temp.size() % blocksize;
                 uint32 imod = blocksize - mod;
                 uint8 padvalue = imod - 1;
+#if 1
                 temp.insert(temp.end(), padvalue);
-
+#else
+                temp.insert(temp.end(), imod, padvalue);
+                crypt.set(crypt_handle, crypt_ctrl_padding, 0);
+#endif
                 ret = crypt.encrypt(crypt_handle, temp, ciphertext);
             }
             {

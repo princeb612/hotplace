@@ -12,15 +12,15 @@
 #define __HOTPLACE_SDK_NET_BASIC_TLS_DTLSCLIENTSOCKET__
 
 #include <sdk/net/basic/socket/udp_client_socket.hpp>  // udp_client_socket
-#include <sdk/net/basic/tls/tls.hpp>
-#include <sdk/net/basic/tls/tlscontext.hpp>
+#include <sdk/net/basic/tls/openssl_tls.hpp>
+#include <sdk/net/basic/tls/openssl_tls_context.hpp>
 
 namespace hotplace {
 namespace net {
 
 class dtls_client_socket : public client_socket {
    public:
-    dtls_client_socket(transport_layer_security* tls);
+    dtls_client_socket(openssl_tls* tls);
     virtual ~dtls_client_socket();
 
     virtual return_t open(sockaddr_storage_t* sa, const char* address, uint16 port);
@@ -34,7 +34,7 @@ class dtls_client_socket : public client_socket {
     virtual socket_t get_socket();
 
    protected:
-    transport_layer_security* _tls;
+    openssl_tls* _tls;
     socket_context_t* _handle;
 };
 

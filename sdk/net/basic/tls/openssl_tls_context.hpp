@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_BASIC_TLS_TLSCONTEXT__
-#define __HOTPLACE_SDK_NET_BASIC_TLS_TLSCONTEXT__
+#ifndef __HOTPLACE_SDK_NET_BASIC_TLS_OPENSSLTLSCONTEXT__
+#define __HOTPLACE_SDK_NET_BASIC_TLS_OPENSSLTLSCONTEXT__
 
 #include <sdk/crypto/basic/types.hpp>
 
@@ -71,9 +71,9 @@ return_t tlscontext_open_simple(SSL_CTX** context, uint32 flag);
 return_t tlscontext_open(SSL_CTX** context, uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr,
                          const char* chain_file = nullptr);
 
-class tlscontext {
+class openssl_tls_context {
    public:
-    tlscontext(uint32 flag = tlscontext_flag_tls);
+    openssl_tls_context(uint32 flag = tlscontext_flag_tls);
     /**
      * @brief   SSL_CTX*
      * @param   uint32 flags [in] tlscontext_flag_tls, tlscontext_flag_dtls
@@ -83,25 +83,25 @@ class tlscontext {
      * @param   const char* password [inopt]
      * @param   const char* chain_file [inopt]
      */
-    tlscontext(uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr);
-    ~tlscontext();
+    openssl_tls_context(uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr);
+    ~openssl_tls_context();
 
     /**
      * SSL_CTX_set_cipher_list
      */
-    tlscontext& set_cipher_list(const char* list);
+    openssl_tls_context& set_cipher_list(const char* list);
     /**
      * DH_generate_parameters_ex, SSL_CTX_set_tmp_dh
      */
-    tlscontext& set_use_dh(int bits);
+    openssl_tls_context& set_use_dh(int bits);
     /**
      * SSL_CTX_set_verify
      */
-    tlscontext& set_verify(int mode);
+    openssl_tls_context& set_verify(int mode);
     /**
      * SSL_CTX_set_alpn_select_cb
      */
-    tlscontext& enable_alpn_h2(bool enable);
+    openssl_tls_context& enable_alpn_h2(bool enable);
 
     /**
      * @brief   call openssl api

@@ -199,6 +199,15 @@ const tls_cipher_suite_t* tls_advisor::hintof_cipher_suite(const std::string& na
     return item;
 }
 
+void tls_advisor::enum_cipher_suites(std::function<void(const tls_cipher_suite_t*)> fn) {
+    for (auto i = 0; i < sizeof_tls_cipher_suites; i++) {
+        auto item = tls_cipher_suites + i;
+        if (item->support) {
+            fn(item);
+        }
+    }
+}
+
 const hint_blockcipher_t* tls_advisor::hintof_blockcipher(uint16 code) {
     const hint_blockcipher_t* hint = nullptr;
     auto hint_alg = hintof_cipher_suite(code);

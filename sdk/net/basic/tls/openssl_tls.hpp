@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_BASIC_TLS_TLS__
-#define __HOTPLACE_SDK_NET_BASIC_TLS_TLS__
+#ifndef __HOTPLACE_SDK_NET_BASIC_TLS_OPENSSLTLS__
+#define __HOTPLACE_SDK_NET_BASIC_TLS_OPENSSLTLS__
 
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/net/basic/tls/types.hpp>
@@ -22,7 +22,7 @@ namespace net {
  * @example
  *      uint32 ret = errorcode_t::success;
  *      tlscontext_open_simple(tlscontext_flag_tls, &sslctx);
- *      transport_layer_security tls(sslctx);
+ *      openssl_tls tls(sslctx);
  *      tls_client_socket cli(&tls);
  *      cli.connect(&sock, &tlshandle, host, port, 1);
  *      cli.send(sock, tlshandle, message, size, &cbsent);
@@ -36,11 +36,11 @@ namespace net {
  *      cli.close(sock, tlshandle);
  *      SSL_CTX_free(sslctx);
  */
-class transport_layer_security {
+class openssl_tls {
    public:
-    transport_layer_security(SSL_CTX* sslctx);
-    transport_layer_security(tlscontext* cert);
-    ~transport_layer_security();
+    openssl_tls(SSL_CTX* sslctx);
+    openssl_tls(openssl_tls_context* cert);
+    ~openssl_tls();
 
     /**
      * @brief   TLS
@@ -226,7 +226,7 @@ class transport_layer_security {
 
    private:
     SSL_CTX* _ctx;
-    t_shared_reference<transport_layer_security> _shared;
+    t_shared_reference<openssl_tls> _shared;
 };
 
 }  // namespace net

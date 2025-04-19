@@ -15,8 +15,8 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <sdk/net/basic/tls/openssl_tls_context.hpp>
 #include <sdk/net/basic/tls/sdk.hpp>
-#include <sdk/net/basic/tls/tlscontext.hpp>
 
 namespace hotplace {
 namespace net {
@@ -353,19 +353,20 @@ return_t tlscontext_open(SSL_CTX** context, uint32 flag, const char* cert_file, 
     return ret;
 }
 
-tlscontext::tlscontext(uint32 flag) : _ctx(nullptr) { tlscontext_open_simple(&_ctx, flag); }
+openssl_tls_context::openssl_tls_context(uint32 flag) : _ctx(nullptr) { tlscontext_open_simple(&_ctx, flag); }
 
-tlscontext::tlscontext(uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file) : _ctx(nullptr) {
+openssl_tls_context::openssl_tls_context(uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file)
+    : _ctx(nullptr) {
     tlscontext_open(&_ctx, flag, cert_file, key_file, password, chain_file);
 }
 
-tlscontext::~tlscontext() {
+openssl_tls_context::~openssl_tls_context() {
     if (_ctx) {
         SSL_CTX_free(_ctx);
     }
 }
 
-tlscontext& tlscontext::set_cipher_list(const char* list) {
+openssl_tls_context& openssl_tls_context::set_cipher_list(const char* list) {
     if (list) {
         if (_ctx) {
             SSL_CTX_set_cipher_list(_ctx, list);
@@ -374,7 +375,7 @@ tlscontext& tlscontext::set_cipher_list(const char* list) {
     return *this;
 }
 
-tlscontext& tlscontext::set_use_dh(int bits) {
+openssl_tls_context& openssl_tls_context::set_use_dh(int bits) {
     return_t ret = errorcode_t::success;
     DH* dh = nullptr;
     int rc = 0;
@@ -429,7 +430,7 @@ tlscontext& tlscontext::set_use_dh(int bits) {
     return *this;
 }
 
-tlscontext& tlscontext::set_verify(int mode) {
+openssl_tls_context& openssl_tls_context::set_verify(int mode) {
     if (_ctx) {
         SSL_CTX_set_verify(_ctx, mode, nullptr);
     }
@@ -502,7 +503,7 @@ static int set_alpn_select_h2_cb(SSL* ssl, const unsigned char** out, unsigned c
     return ret;
 }
 
-tlscontext& tlscontext::enable_alpn_h2(bool enable) {
+openssl_tls_context& openssl_tls_context::enable_alpn_h2(bool enable) {
     if (enable) {
         // RFC 7301 Transport Layer Security (TLS) Application-Layer Protocol Negotiation Extension
         // RFC 7540 3.1.  HTTP/2 Version Identification
@@ -517,7 +518,7 @@ tlscontext& tlscontext::enable_alpn_h2(bool enable) {
     return *this;
 }
 
-SSL_CTX* tlscontext::get_ctx() { return _ctx; }
+SSL_CTX* openssl_tls_context::get_ctx() { return _ctx; }
 
 }  // namespace net
 }  // namespace hotplace

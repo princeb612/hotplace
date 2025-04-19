@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_BASIC_DTLSCLIENTSOCKET__
-#define __HOTPLACE_SDK_NET_TLS_BASIC_DTLSCLIENTSOCKET__
+#ifndef __HOTPLACE_SDK_NET_BASIC_TLS_DTLSCLIENTSOCKET2__
+#define __HOTPLACE_SDK_NET_BASIC_TLS_DTLSCLIENTSOCKET2__
 
 #include <sdk/net/basic/socket/async_client_socket.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -23,19 +23,19 @@ namespace net {
  * @brief   client
  * @sample
  *          // sketch
- *          tls_client_socket2 cli;
- *          cli.set_minimum_version(tls_12);
- *          ret = cli.connect(addr, port, tmo);
+ *          dtls_client_socket2 cli;
+ *          cli.set_minimum_version(dtls_12);
+ *          ret = cli.open(&addr, addr, port)
  *          if (success == ret) {
- *              ret = cli.send(msg.c_str(), msg.size(), &cbsent);
+ *              ret = cli.sendto(msg.c_str(), msg.size(), &cbsent, , (sockaddr*)&addr, sizeof(addr));
  *              if (success == ret) {
- *                  cli.read(buf, bufsize, &cbread);
+ *                  cli.recvfrom(buf, bufsize, &cbread, (sockaddr*)&addr, &addrlen);
  *              }
  *          }
  */
-class async_dtls_client_socket : public async_client_socket {
+class dtls_client_socket2 : public async_client_socket {
    public:
-    async_dtls_client_socket(tls_version_t minver = dtls_12);
+    dtls_client_socket2(tls_version_t minver = dtls_12);
 
     virtual return_t sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen);
 

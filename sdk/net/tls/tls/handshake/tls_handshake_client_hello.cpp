@@ -77,6 +77,11 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 } break;
             }
         }
+
+        auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
+        if (ext_etm) {
+            session->get_keyvalue().set(session_encrypt_then_mac, 1);
+        }
     }
     __finally2 {
         // do nothing

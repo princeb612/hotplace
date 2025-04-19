@@ -233,8 +233,8 @@ flowchart LR
   - [x] TLS over TCP (example netclient)
     - [x] HTTP/1.1
   - [ ] DTLS over UDP
-  - [ ] encrypt_then_mac
-    - [ ] encrypt
+  - [x] encrypt_then_mac
+    - [x] encrypt
     - [x] decrypt
 
 - [x] UDP/DTLS

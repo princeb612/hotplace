@@ -47,6 +47,7 @@
 #include <sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
 #include <sdk/crypto/authenticode/authenticode_verifier.hpp>
 #include <sdk/crypto/authenticode/sdk.hpp>
+#include <sdk/crypto/authenticode/types.hpp>
 
 /* COSE */
 #include <sdk/crypto/cose/cbor_object_encryption.hpp>
