@@ -313,6 +313,9 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
             {
                 // encrypt
                 ret = crypt.decrypt(crypt_handle, ciphertext, datalen, plaintext);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
 
                 const hint_blockcipher_t* hint_blockcipher = advisor->hintof_blockcipher(enc_alg);
                 if (nullptr == hint_blockcipher) {
