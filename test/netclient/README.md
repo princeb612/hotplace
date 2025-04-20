@@ -19,9 +19,16 @@
 | --                          | --    | --    | --      | --      |
 | tcp_client_socket           | PASS  | PASS  | N/A     | N/A     |
 | udp_client_socket           | PASS  | PASS  | N/A     | N/A     |
-| async_tcp_client_socket     | PASS  | PASS  | N/A     | N/A     |
-| async_udp_client_socket     | PASS  | PASS  | N/A     | N/A     |
+| tcp_client_socket2          | PASS  | PASS  | N/A     | N/A     |
+| udp_client_socket2          | PASS  | PASS  | N/A     | N/A     |
 | tls_client_socket (openssl) | PASS  | PASS  | PASS    | PASS    |
 | dtls_client_socket(openssl) | PASS  | PASS  | N/A     | PASS    |
-| async_tls_client_socket     | PASS  | study | PASS    | PASS    |
-| async_dtls_client_socket    | study | study | -       | study   |
+| tls_client_socket2          | PASS  | study | PASS    | PASS    |
+| dtls_client_socket2         | study | study | -       | study   |
+
+3. help
+
+* run with debugging option
+  * ./test-netclient -v -d -P tls12
+* run with TLS debugging details
+  * ./test-netclient -v -d -P tls12 -D

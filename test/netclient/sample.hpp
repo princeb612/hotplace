@@ -14,7 +14,7 @@ using namespace hotplace::io;
 using namespace hotplace::net;
 
 enum {
-    flag_async = 1 << 0,
+    flag_debug_tls_inside = 1 << 0,
     flag_http = 1 << 1,
     flag_allow_tls12 = 1 << 2,
     flag_allow_tls13 = 1 << 3,

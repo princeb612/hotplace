@@ -109,15 +109,15 @@ class async_client_socket : public client_socket {
     semaphore _rsem;
 };
 
-class async_tcp_client_socket : public async_client_socket {
+class tcp_client_socket2 : public async_client_socket {
    public:
-    async_tcp_client_socket();
+    tcp_client_socket2();
     virtual int socket_type();
 };
 
-class async_udp_client_socket : public async_client_socket {
+class udp_client_socket2 : public async_client_socket {
    public:
-    async_udp_client_socket();
+    udp_client_socket2();
     virtual int socket_type();
 };
 

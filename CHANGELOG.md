@@ -4,8 +4,10 @@
   * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
+* Revision 753
+
 * Revision 752 (Tag 1.17)
-  * encrypt_then_mac
+  * [tested] encrypt_then_mac
 
 * Revision 751 (Tag 1.16)
 

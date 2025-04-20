@@ -34,8 +34,8 @@ void test_cbc_hmac_rfc7516();
 void test_cipher_encrypt();
 void test_crypto_encrypt();
 void test_crypto_aead();
-void test_cbc_hmac_mte();
-void test_cbc_hmac_etm();
+void test_cbc_hmac_tls_mte();
+void test_cbc_hmac_tls_etm();
 
 typedef struct _test_vector_nist_cavp_blockcipher_t {
     const char* desc;
@@ -61,6 +61,7 @@ typedef struct _test_vector_rfc3394_t {
 extern const test_vector_rfc3394_t test_vector_rfc3394[];
 extern const size_t sizeof_test_vector_rfc3394;
 
+// CBC-HMAC JOSE
 // Authenticated Encryption with AES-CBC and HMAC-SHA
 typedef struct _test_vector_aead_aes_cbc_hmac_sha2_t {
     const char* text;
@@ -93,5 +94,23 @@ typedef struct _test_vector_rfc7539_t {
 
 extern const test_vector_rfc7539_t test_vector_rfc7539[];
 extern const size_t sizeof_test_vector_rfc7539;
+
+// CBC-HMAC TLS
+struct test_vector_cbchmac_tls_t {
+    const char* desc;
+    uint16 flag;
+    hash_algorithm_t hashalg;
+    const char* key;
+    const char* iv;
+    const char* mackey;
+    const char* aad;
+    const char* plaintext;
+    const char* cbcmaced;
+};
+
+extern test_vector_cbchmac_tls_t test_vector_tls_mte[];
+extern const size_t sizeof_test_vector_tls_mte;
+extern test_vector_cbchmac_tls_t test_vector_tls_etm[];
+extern const size_t sizeof_test_vector_tls_etm;
 
 #endif

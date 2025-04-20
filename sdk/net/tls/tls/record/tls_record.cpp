@@ -348,7 +348,7 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
                    << new payload_member(uint16(record_version), true, constexpr_record_version)                            // tls, dtls
                    << new payload_member(uint16(get_key_epoch()), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
                    << new payload_member(uint48_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
-                   << new payload_member(uint16(len), true, constexpr_len);
+                   << new payload_member(uint16(len), true, constexpr_len);                                                 // tls, dtls
 
                 pl.set_group(constexpr_group_dtls, false == is_tls);
                 pl.write(additional);

@@ -13,9 +13,9 @@
 namespace hotplace {
 namespace net {
 
-async_tcp_client_socket::async_tcp_client_socket() : async_client_socket() {}
+udp_client_socket2::udp_client_socket2() : async_client_socket() {}
 
-int async_tcp_client_socket::socket_type() { return SOCK_STREAM; }
+int udp_client_socket2::socket_type() { return SOCK_DGRAM; }
 
 }  // namespace net
 }  // namespace hotplace

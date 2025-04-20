@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
                                       [](OPTION& o, char* param) -> void { o.prot = toprot(o, param); })
                        .preced()
                 << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-A", "async", [](OPTION& o, char* param) -> void { o.flags |= flag_async; }).optional()
+                << t_cmdarg_t<OPTION>("-D", "debug TLS inside", [](OPTION& o, char* param) -> void { o.flags |= flag_debug_tls_inside; }).optional()
                 << t_cmdarg_t<OPTION>("-h", "HTTP/1.1",
                                       [](OPTION& o, char* param) -> void {
                                           o.flags |= flag_http;
@@ -108,14 +108,14 @@ int main(int argc, char** argv) {
                 udp_client();
                 break;
             case 3:
-                if (0 == (option.flags & flag_async)) {
+                if (0 == (option.flags & flag_debug_tls_inside)) {
                     tls_client();
                 } else {
                     async_tls_client();
                 }
                 break;
             case 4:
-                if (0 == (option.flags & flag_async)) {
+                if (0 == (option.flags & flag_debug_tls_inside)) {
                     dtls_client();
                 } else {
                     async_dtls_client();

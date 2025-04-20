@@ -17,10 +17,10 @@ void tcp_client() {
 
     return_t ret = errorcode_t::success;
     client_socket* cli = nullptr;
-    if (0 == (option.flags & flag_async)) {
+    if (0 == (option.flags & flag_debug_tls_inside)) {
         cli = new tcp_client_socket;
     } else {
-        cli = new async_tcp_client_socket;
+        cli = new tcp_client_socket2;
     }
 
     char buffer[option.bufsize];
@@ -65,10 +65,10 @@ void udp_client() {
 
     return_t ret = errorcode_t::success;
     client_socket* cli = nullptr;
-    if (0 == (option.flags & flag_async)) {
+    if (0 == (option.flags & flag_debug_tls_inside)) {
         cli = new udp_client_socket;
     } else {
-        cli = new async_udp_client_socket;
+        cli = new udp_client_socket2;
     }
 
     char buffer[option.bufsize];
