@@ -623,6 +623,8 @@ class crypto_advisor {
      */
     void get_cookie_secret(uint8 key, size_t secret_size, binary_t& secret);
 
+    std::string nameof_authenticated_encryption(uint16 code);
+
    protected:
     return_t load();
     return_t build();
@@ -726,6 +728,7 @@ class crypto_advisor {
     std::map<std::string, uint32> _features;
     std::map<std::string, uint32> _versions;
     std::map<uint8, binary_t> _cookie_secret;
+    std::map<uint16, std::string> _ae_names;  // authenticated_encryption_flag_t
     ///////////////////////////////////////////////////////////////////////////
     int _flag;
 

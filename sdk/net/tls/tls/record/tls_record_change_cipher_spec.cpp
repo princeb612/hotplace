@@ -9,6 +9,8 @@
  */
 
 #include <sdk/base/basic/binary.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/tls/tls/record/tls_record_change_cipher_spec.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -24,6 +26,13 @@ return_t tls_record_change_cipher_spec::do_postprocess(tls_direction_t dir) {
     if (session) {
         session->get_session_info(dir).begin_protection();
         session->reset_recordno(dir);
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("> change_cipher_spec %i", dir);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+        }
+#endif
     }
     return ret;
 }

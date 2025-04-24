@@ -277,6 +277,11 @@ return_t crypto_advisor::build() {
             _versions.insert({item.feature, item.version});
         }
     }
+    {
+        _ae_names.insert({tls_mac_then_encrypt, "mac_then_encrypt"});   // TLS
+        _ae_names.insert({jose_encrypt_then_mac, "encrypt_then_mac"});  // JOSE
+        _ae_names.insert({tls_encrypt_then_mac, "encrypt_then_mac"});   // TLS
+    }
 
     return ret;
 }
@@ -331,6 +336,15 @@ void crypto_advisor::get_cookie_secret(uint8 key, size_t secret_size, binary_t& 
     } else {
         secret = iter->second;
     }
+}
+
+std::string crypto_advisor::nameof_authenticated_encryption(uint16 code) {
+    std::string value;
+    auto iter = _ae_names.find(code);
+    if (_ae_names.end() != iter) {
+        value = iter->second;
+    }
+    return value;
 }
 
 }  // namespace crypto

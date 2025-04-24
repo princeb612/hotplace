@@ -33,6 +33,8 @@ namespace net {
  *            record epoch:0 seq:2
  */
 class dtls_record_reorder {
+    friend class tls_session;
+
    public:
     dtls_record_reorder();
     ~dtls_record_reorder();
@@ -45,8 +47,10 @@ class dtls_record_reorder {
     static void get_epoch_seq(uint64 key, uint16& epoch, uint64& seq);
 
    protected:
+    void set_session(tls_session* session);
     tls_session* get_session();
 
+   private:
     tls_session* _session;
     uint16 _epoch;
     uint64 _seq;

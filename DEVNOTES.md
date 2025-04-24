@@ -229,7 +229,9 @@ flowchart LR
   - [ ] DTLS construct
     - [x] DTLS version
       - [x] DTLS1.3
-      - [x] DTLS1.2 (rev.751)
+      - [ ] DTLS1.2 (rev.751)
+        - [ ] finished
+      - [ ] fragmentation
   - [x] TLS over TCP (example netclient)
     - [x] HTTP/1.1
   - [ ] DTLS over UDP
@@ -304,6 +306,8 @@ journey
     Monster Hunter Wilds:7:game
     TLS 1.2:3:github
   section 2025.04
+    Monster Hunter Wilds:7:game
+    TLS 1.2:3:github
 ```
 
 ```mermaid

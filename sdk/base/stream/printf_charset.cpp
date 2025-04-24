@@ -711,7 +711,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
 
                     _ulong = (uint64)va_arg(ap, uint64);
 
-                    if ('i' == *fmt) {
+                    if (_T('i') == *fmt) {
                         fmt++;
                         if ((int64)_ulong < 0) {
                             _ulong = -(int64)_ulong;
@@ -719,10 +719,10 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                         }
                         base = DEC;
                         goto number;
-                    } else if ('u' == *fmt) {
+                    } else if (_T('u') == *fmt) {
                         fmt++;
                         goto nosign;
-                    } else if ('x' == *fmt) {
+                    } else if (_T('x') == *fmt) {
                         fmt++;
                         base = HEX;
                         goto number;
@@ -736,7 +736,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
 
                     _ulong = (uint128)va_arg(ap, uint128);
 
-                    if ('i' == *fmt) {
+                    if (_T('i') == *fmt) {
                         fmt++;
                         if ((int128)_ulong < 0) {
                             _ulong = -(int128)_ulong;
@@ -744,10 +744,10 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                         }
                         base = DEC;
                         goto number;
-                    } else if ('u' == *fmt) {
+                    } else if (_T('u') == *fmt) {
                         fmt++;
                         goto nosign;
-                    } else if ('x' == *fmt) {
+                    } else if (_T('x') == *fmt) {
                         fmt++;
                         base = HEX;
                         goto number;
@@ -764,7 +764,6 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
 
             case _T('z'):
                 base = DEC;
-                fmt++;
                 _ulong = (size_t)va_arg(ap, size_t);
                 if (_T('i') == *fmt) {
                     fmt++;
@@ -772,6 +771,10 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                 } else if (_T('u') == *fmt) {
                     fmt++;
                     goto nosign;
+                } else if (_T('x') == *fmt) {
+                    fmt++;
+                    base = HEX;
+                    goto number;
                 } else {
                     goto number;
                 }

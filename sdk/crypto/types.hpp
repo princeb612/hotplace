@@ -1155,9 +1155,8 @@ enum nid_t : uint32 {
     nid_dsa = 116,         // NID_dsa
 };
 
-enum mac_flag : uint16 {
-    tls_mac_then_encrypt = 0x01,
-    mask_encrypt_then_mac = 0x8000,
+enum authenticated_encryption_flag_t : uint16 {
+    tls_mac_then_encrypt = 0x0001,
     jose_encrypt_then_mac = 0x8001,
     tls_encrypt_then_mac = 0x8002,
 };

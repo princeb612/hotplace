@@ -96,8 +96,8 @@ class tls_protection {
     // basic
     ///////////////////////////////////////////////////////////////////////////
 
-    tls_message_flow_t get_flow();
-    void set_flow(tls_message_flow_t flow);
+    tls_flow_t get_flow();
+    void set_flow(tls_flow_t flow);
 
     /**
      * @brief   cipher suite
@@ -255,7 +255,7 @@ class tls_protection {
 
    private:
     tls_session* _session;                 //
-    tls_message_flow_t _flow;              // TLS flow
+    tls_flow_t _flow;                      // TLS flow
     uint16 _ciphersuite;                   // cipher suite negotiated
     uint16 _version;                       // negotiated version
     transcript_hash* _transcript_hash;     // transcript hash

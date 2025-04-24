@@ -212,6 +212,7 @@ const error_description error_descriptions[] = {
     errordef(error_query, "query"),
     errordef(error_fetch, "fetch"),
     errordef(insufficient, "insufficient"),
+    errordef(confidential, "confidential"),
     errordef(suspicious, "suspicious"),
     errordef(unknown, "unknown"),
     errordef(inaccurate, "inaccurate"),

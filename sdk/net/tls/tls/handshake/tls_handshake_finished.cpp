@@ -9,7 +9,6 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_hmac.hpp>
@@ -39,6 +38,25 @@ void tls_handshake_finished::run_scheduled(tls_direction_t dir) {
     auto& session_info = session->get_session_info(dir);
     session_info.set_status(get_type());
     session->reset_recordno(dir);
+}
+
+return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    auto session = get_session();
+    auto tlsver = session->get_tls_protection().get_tls_version();
+    if (true == tlsadvisor->is_kindof_tls13(tlsver)) {
+        // RFC 8446 5.  Record Protocol
+        //  The change_cipher_spec record is used only for compatibility purposes.
+        // RFC 8448 3.  Simple 1-RTT Handshake
+    } else {
+        // TLS 1.2, DTLS 1.2
+        bool isprotected = session->get_session_info(dir).apply_protection();
+        if (false == isprotected) {
+            ret = errorcode_t::confidential;
+        }
+    }
+    return ret;
 }
 
 return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {

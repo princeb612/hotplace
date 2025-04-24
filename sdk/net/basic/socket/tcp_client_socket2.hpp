@@ -8,14 +8,21 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/socket/udp_client_socket2.hpp>
+#ifndef __HOTPLACE_SDK_NET_BASIC_TCPCLIENTSOCKET2__
+#define __HOTPLACE_SDK_NET_BASIC_TCPCLIENTSOCKET2__
+
+#include <sdk/net/basic/socket/async_client_socket.hpp>
 
 namespace hotplace {
 namespace net {
 
-udp_client_socket2::udp_client_socket2() : async_client_socket() {}
-
-int udp_client_socket2::socket_type() { return SOCK_DGRAM; }
+class tcp_client_socket2 : public async_client_socket {
+   public:
+    tcp_client_socket2();
+    virtual int socket_type();
+};
 
 }  // namespace net
 }  // namespace hotplace
+
+#endif

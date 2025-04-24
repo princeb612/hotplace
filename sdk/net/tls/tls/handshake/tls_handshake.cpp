@@ -31,7 +31,16 @@ constexpr char constexpr_fragment_offset[] = "fragment offset";
 constexpr char constexpr_fragment_len[] = "fragment len";
 
 tls_handshake::tls_handshake(tls_hs_type_t type, tls_session* session)
-    : _session(session), _type(type), _bodysize(0), _is_dtls(false), _dtls_seq(0), _fragment_offset(0), _fragment_len(0), _size(0), _extension_len(0) {
+    : _session(session),
+      _type(type),
+      _bodysize(0),
+      _is_dtls(false),
+      _dtls_seq(0),
+      _fragment_offset(0),
+      _fragment_len(0),
+      _reassembled_size(0),
+      _size(0),
+      _extension_len(0) {
     if (session) {
         session->addref();
     }
@@ -206,6 +215,32 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
 }
 
 void tls_handshake::run_scheduled(tls_direction_t dir) {}
+
+return_t tls_handshake::prepare_fragment(const byte_t* stream, uint32 size, uint16 seq, uint32 fragment_offset, uint32 fragment_length) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+
+        if (session_dtls != session->get_type()) {
+            ret = errorcode_t::do_nothing;
+            __leave2;
+        }
+
+        if (fragment_offset + fragment_length > size) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        _dtls_seq = seq;
+        _reassembled_size = size;
+        _fragment_offset = fragment_offset;
+        _fragment_len = fragment_length;
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
 
 return_t tls_handshake::do_preprocess(tls_direction_t dir) { return errorcode_t::success; }
 
@@ -390,7 +425,7 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
 
     payload pl;
     pl << new payload_member(uint8(get_type()), constexpr_message_type)
-       << new payload_member(uint24_t(body.size()), constexpr_len)
+       << new payload_member(uint24_t(_reassembled_size ? _reassembled_size : body.size()), constexpr_len)
        // DTLS handshake reconstruction data
        << new payload_member(uint16(_dtls_seq), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
        << new payload_member(uint24_t(_fragment_offset), constexpr_fragment_offset, constexpr_group_dtls)     // dtls

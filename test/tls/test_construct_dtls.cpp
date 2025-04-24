@@ -57,12 +57,6 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
         }
 
         {
-            auto sni = new tls_extension_sni(session);
-            auto& hostname = sni->get_hostname();
-            // hostname = "server";
-            handshake->get_extensions().add(sni);
-        }
-        {
             auto ec_point_formats = new tls_extension_ec_point_formats(session);
             (*ec_point_formats).add("uncompressed");
             handshake->get_extensions().add(ec_point_formats);
@@ -110,23 +104,25 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
             }
             handshake->get_extensions().add(supported_versions);
         }
-        {
-            auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(session);
-            (*psk_key_exchange_modes).add("psk_dhe_ke");
-            handshake->get_extensions().add(psk_key_exchange_modes);
-        }
-        {
-            auto key_share = new tls_extension_client_key_share(session);
-            key_share->clear();
-            key_share->add("x25519");
-            handshake->get_extensions().add(key_share);
-        }
-        {
-            basic_stream bs;
-            auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
-            dump_key(pkey, &bs);
-            _logger->write(bs);
-            _test_case.assert(pkey, __FUNCTION__, "{client} key share (client generated)");
+        if (tlsadvisor->is_kindof(tls_13, option.version)) {
+            {
+                auto key_share = new tls_extension_client_key_share(session);
+                key_share->clear();
+                key_share->add("x25519");
+                handshake->get_extensions().add(key_share);
+            }
+            {
+                auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(session);
+                (*psk_key_exchange_modes).add("psk_dhe_ke");
+                handshake->get_extensions().add(psk_key_exchange_modes);
+            }
+            {
+                basic_stream bs;
+                auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
+                dump_key(pkey, &bs);
+                _logger->write(bs);
+                _test_case.assert(pkey, __FUNCTION__, "{client} key share (client generated)");
+            }
         }
     }
     __finally2 {
@@ -181,10 +177,6 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
             prng.random(temp, 28);
             binary_append(random, temp);
             handshake->set_random(random);
-
-            // binary_t session_id;
-            // prng.random(session_id, 32);
-            // handshake->get_session_id() = session_id;
 
             handshake->set_cipher_suite(server_cs);
         }

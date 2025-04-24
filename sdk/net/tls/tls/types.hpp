@@ -30,6 +30,7 @@ class tls_record_unknown;
 class tls_records;
 
 // handshake
+class dtls_handshake_fragmented;
 class tls_handshake;
 class tls_handshake_builder;
 class tls_handshake_certificate;

@@ -129,7 +129,7 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
                 if (from_client == dir) {
                     // TLS, DTLS
                     auto flow = get_flow();
-                    if (tls_1_rtt == flow || tls_hello_retry_request == flow) {
+                    if (tls_flow_1rtt == flow || tls_flow_hello_retry_request == flow) {
                         if (tls_hs_finished == hsstatus) {
                             secret_key = tls_secret_application_client_key;
                             secret_iv = tls_secret_application_client_iv;
@@ -420,7 +420,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 #if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
-            dbs.println("> encrypt");
+            dbs.println("> encrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
             dbs.println(" > aad %s", base16_encode(aad).c_str());
             dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, cbc));
             dbs.println(" > enckey[%08x] %s", secret_key, base16_encode(enckey).c_str());
@@ -720,7 +720,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
 #if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
-            dbs.println("> decrypt");
+            dbs.println("> decrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
             dbs.println(" > aad %s", base16_encode(aad).c_str());
             dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, cbc));
             dbs.println(" > enckey[%08x] %s", secret_key, base16_encode(enckey).c_str());

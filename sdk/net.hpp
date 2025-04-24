@@ -26,8 +26,10 @@
 /* basic/socket */
 #include <sdk/net/basic/socket/async_client_socket.hpp>
 #include <sdk/net/basic/socket/tcp_client_socket.hpp>
+#include <sdk/net/basic/socket/tcp_client_socket2.hpp>
 #include <sdk/net/basic/socket/tcp_server_socket.hpp>
 #include <sdk/net/basic/socket/udp_client_socket.hpp>
+#include <sdk/net/basic/socket/udp_client_socket2.hpp>
 #include <sdk/net/basic/socket/udp_server_socket.hpp>
 
 /* basic/tls */
@@ -92,6 +94,7 @@
 #include <sdk/net/server/types.hpp>
 
 /* tls */
+#include <sdk/net/tls/dtls_record_publisher.hpp>
 #include <sdk/net/tls/dtls_record_reorder.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
@@ -129,6 +132,7 @@
 #include <sdk/net/tls/tls/record/tls_records.hpp>
 
 /* tls/tls/handshake */
+#include <sdk/net/tls/tls/handshake/dtls_handshake_fragmented.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_builder.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_certificate.hpp>

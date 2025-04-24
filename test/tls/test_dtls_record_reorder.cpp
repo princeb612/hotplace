@@ -83,7 +83,7 @@ void test_dtls_record_reoder() {
         reorder.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (3 == seq), __FUNCTION__, "expect epoch 0 seq 3");
         ret = reorder.consume(epoch, seq, packet);
-        _test_case.assert(errorcode_t::not_ready == ret, __FUNCTION__, "expect not_ready");
+        _test_case.assert(errorcode_t::empty == ret, __FUNCTION__, "expect empty");
     }
     // S->C, epoch 0 seq 5 - certificate (fragment)
     {

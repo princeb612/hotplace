@@ -162,7 +162,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
             if ((session_tls == session_type) || (session_dtls == session_type)) {
                 if (is_kindof_tls13()) {
-                    if (tls_0_rtt == get_flow()) {
+                    if (tls_flow_0rtt == get_flow()) {
                         // 0-RTT
                         const binary_t &secret_resumption_early = get_item(tls_secret_resumption_early);  // client finished
 
@@ -312,11 +312,11 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
                     binary_t secret_handshake_derived;
                     switch (get_flow()) {
-                        case tls_1_rtt:
-                        case tls_hello_retry_request: {
+                        case tls_flow_1rtt:
+                        case tls_flow_hello_retry_request: {
                             lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, early_secret, "derived", empty_hash);
                         } break;
-                        case tls_0_rtt: {
+                        case tls_flow_0rtt: {
                             const binary_t &secret_resumption_early = get_item(tls_secret_resumption_early);
                             lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, secret_resumption_early, "derived",
                                                 empty_hash);

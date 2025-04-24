@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_STREAM_STREAM__
 #define __HOTPLACE_SDK_STREAM_STREAM__
 
-#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/stream/types.hpp>
 
 namespace hotplace {
 namespace io {
@@ -40,6 +40,33 @@ enum filestream_flag_t {
 #define FILE_BEGIN 0
 #define FILE_CURRENT 1
 #define FILE_END 2
+
+/**
+ * @brief split
+ * @param const byte_t* stream [in]
+ * @param size_t size [in]
+ * @param size_t fragment_size [in]
+ * @param std::function<void(const byte_t*, size_t, size_t, size_t)> fn [in]
+ *              const byte_t* stream
+ *              size_t size
+ *              size_t fragment_offset
+ *              size_t fragment_size
+ */
+return_t split(const binary_t& stream, size_t fragment_size, std::function<void(const byte_t*, size_t, size_t, size_t)> fn);
+return_t split(const byte_t* stream, size_t size, size_t fragment_size, std::function<void(const byte_t*, size_t, size_t, size_t)> fn);
+/**
+ * @brief split
+ * @param const byte_t* stream [in]
+ * @param size_t size [in]
+ * @param size_t fragment_size [in]
+ * @param size_t pre [in]
+ *                          case fragment_size 50
+ *                            if size of last block of previous stream 30
+ *                            size of first block of current stream 20 (not 50)
+ * @param std::function<void(const byte_t*, size_t, size_t, size_t)> fn [in]
+ */
+return_t split(const binary_t& stream, size_t fragment_size, size_t pre, std::function<void(const byte_t*, size_t, size_t, size_t)> fn);
+return_t split(const byte_t* stream, size_t size, size_t fragment_size, size_t pre, std::function<void(const byte_t*, size_t, size_t, size_t)> fn);
 
 }  // namespace io
 }  // namespace hotplace

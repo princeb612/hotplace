@@ -236,7 +236,7 @@ enum errorcode_t {
     /* 0xef010026 4009820198 */ error_query,
     /* 0xef010027 4009820199 */ error_fetch,
     /* 0xef010028 4009820200 */ insufficient,
-    /* 0xef010029 4009820201 */ reserved5,  //
+    /* 0xef010029 4009820201 */ confidential,
     /* 0xef01002a 4009820202 */ suspicious,
     /* 0xef01002b 4009820203 */ unknown,
     /* 0xef01002c 4009820204 */ inaccurate,

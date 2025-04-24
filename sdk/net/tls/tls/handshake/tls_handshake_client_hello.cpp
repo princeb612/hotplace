@@ -57,18 +57,18 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
             auto hsstatus = session->get_session_info(dir).get_status();
             if (tls_hs_finished == hsstatus) {
                 // 0-RTT
-                protection.set_flow(tls_0_rtt);
+                protection.set_flow(tls_flow_0rtt);
             }
             switch (protection.get_flow()) {
-                case tls_1_rtt: {
+                case tls_flow_1rtt: {
                 } break;
-                case tls_0_rtt: {
+                case tls_flow_0rtt: {
                     protection.get_keyexchange().clear();
 
                     session->reset_recordno(from_client);
                     session->reset_recordno(from_server);
                 } break;
-                case tls_hello_retry_request: {
+                case tls_flow_hello_retry_request: {
                     auto& keyexchange = protection.get_keyexchange();
                     keyexchange.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);  // client_hello key_share
                     keyexchange.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello key_share
@@ -115,16 +115,16 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
             auto size_header_body = get_size();
 
             switch (protection.get_flow()) {
-                case tls_1_rtt: {
+                case tls_flow_1rtt: {
                     // 1-RTT
                     protection.set_item(tls_context_client_hello, stream + hspos, size_header_body);  // transcript hash, see server_hello
                 } break;
-                case tls_0_rtt: {
+                case tls_flow_0rtt: {
                     protection.reset_transcript_hash(session);
                     protection.update_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
                     ret = protection.calc(session, tls_hs_client_hello, dir);
                 } break;
-                case tls_hello_retry_request: {
+                case tls_flow_hello_retry_request: {
                     protection.update_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
                 } break;
             }

@@ -566,10 +566,10 @@ enum tls_direction_t {
     from_server = 2,  // server -> client
 };
 
-enum tls_message_flow_t {
-    tls_1_rtt = 0,
-    tls_0_rtt = 1,
-    tls_hello_retry_request = 2,
+enum tls_flow_t {
+    tls_flow_1rtt = 0,
+    tls_flow_0rtt = 1,
+    tls_flow_hello_retry_request = 2,
 };
 
 /**
@@ -605,6 +605,8 @@ enum session_status_t : uint32 {
     session_server_close_notified = 0x80000000,
 };
 
+class dtls_record_publisher;
+class dtls_record_reorder;
 class tls_protection;
 class tls_session;
 class tls_advisor;

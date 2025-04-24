@@ -203,6 +203,8 @@ int main(int argc, char** argv) {
         test_captured_tls12();
         test_dtls_record_reoder();
         test_captured_dtls12();
+
+        test_construct_dtls12();  // generate and reorder fragmented diagrams
     } else {
         dump_clienthello();
     }

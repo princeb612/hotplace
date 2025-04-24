@@ -83,7 +83,7 @@ return_t dtls_record_reorder::consume(uint16& epoch, uint64& seq, binary_t& bin)
         {
             critical_section_guard guard(_lock);
             if (_packets.empty()) {
-                ret = errorcode_t::not_ready;
+                ret = errorcode_t::empty;
                 __leave2;
             }
 
@@ -135,6 +135,10 @@ void dtls_record_reorder::get_epoch_seq(uint64 key, uint16& epoch, uint64& seq) 
     memcpy(s.data, (byte_t*)&stemp + 2, 6);
     seq = s;
 }
+
+void dtls_record_reorder::set_session(tls_session* session) { _session = session; }
+
+tls_session* dtls_record_reorder::get_session() { return _session; }
 
 }  // namespace net
 }  // namespace hotplace

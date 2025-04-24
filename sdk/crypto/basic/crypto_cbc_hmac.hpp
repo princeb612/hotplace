@@ -142,7 +142,7 @@ class crypto_cbc_hmac {
 
     crypt_algorithm_t _enc_alg;
     hash_algorithm_t _mac_alg;
-    uint16 _flag;  // mac_flag
+    uint16 _flag;  // authenticated_encryption_flag_t
 };
 
 }  // namespace crypto

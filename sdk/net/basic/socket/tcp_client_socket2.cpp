@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/socket/async_client_socket.hpp>
+#include <sdk/net/basic/socket/tcp_client_socket2.hpp>
 
 namespace hotplace {
 namespace net {

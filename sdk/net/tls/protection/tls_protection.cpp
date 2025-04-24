@@ -23,7 +23,7 @@ namespace hotplace {
 namespace net {
 
 tls_protection::tls_protection()
-    : _session(nullptr), _flow(tls_1_rtt), _ciphersuite(0), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {
+    : _session(nullptr), _flow(tls_flow_1rtt), _ciphersuite(0), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {
     // crypto_advisor::get_instance();
     // \-- linux crash
 }
@@ -34,9 +34,9 @@ tls_protection::~tls_protection() {
     }
 }
 
-tls_message_flow_t tls_protection::get_flow() { return _flow; }
+tls_flow_t tls_protection::get_flow() { return _flow; }
 
-void tls_protection::set_flow(tls_message_flow_t flow) { _flow = flow; }
+void tls_protection::set_flow(tls_flow_t flow) { _flow = flow; }
 
 uint16 tls_protection::get_cipher_suite() { return _ciphersuite; }
 

@@ -109,18 +109,6 @@ class async_client_socket : public client_socket {
     semaphore _rsem;
 };
 
-class tcp_client_socket2 : public async_client_socket {
-   public:
-    tcp_client_socket2();
-    virtual int socket_type();
-};
-
-class udp_client_socket2 : public async_client_socket {
-   public:
-    udp_client_socket2();
-    virtual int socket_type();
-};
-
 }  // namespace net
 }  // namespace hotplace
 

@@ -146,7 +146,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
         {
             // calculates the hash of all handshake messages to this point (ClientHello and ServerHello).
             binary_t hello_hash;
-            if (tls_1_rtt == protection.get_flow()) {
+            if (tls_flow_1rtt == protection.get_flow()) {
                 const binary_t& client_hello = protection.get_item(tls_context_client_hello);
                 protection.update_transcript_hash(session, &client_hello[0], client_hello.size());  // client_hello
             }
@@ -158,7 +158,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             session->get_session_info(from_client).set_status(get_type());
             if (errorcode_t::warn_retry == test) {
                 // if warn_retry, do HRR
-                protection.set_flow(tls_hello_retry_request);
+                protection.set_flow(tls_flow_hello_retry_request);
 
                 /**
                  *    RFC 8446 4.4.1.  The Transcript Hash
