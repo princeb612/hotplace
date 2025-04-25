@@ -146,7 +146,7 @@ void test_rfc7518_C() {
     dump_elem(derived);
 
     std::string sample = "VqqN6vgjbSBcIijNcacQGg";
-    std::string computation = base64_encode(derived, base64_encoding_t::base64url_encoding);
+    std::string computation = base64_encode(derived, encoding_t::encoding_base64url);
     _logger->writeln(computation);
 
     bool result = (sample == computation);

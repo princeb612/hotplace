@@ -78,8 +78,8 @@ return_t digest_access_authentication_provider::request_auth(network_session* se
         std::string nonce;
         std::string opaque;
 
-        nonce = prng.nonce(16);
-        opaque = prng.nonce(16);
+        nonce = prng.nonce(16, encoding_t::encoding_base16);
+        opaque = prng.nonce(16, encoding_t::encoding_base16);
         session->get_session_data()->set("nonce", nonce);    // should be uniquely generated each time a 401 response is made
         session->get_session_data()->set("opaque", opaque);  // should be returned by the client unchanged in the Authorization header of subsequent requests
 

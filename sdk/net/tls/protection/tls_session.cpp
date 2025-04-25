@@ -25,22 +25,22 @@ namespace net {
 tls_session::tls_session() : _type(session_tls), _status(0) {
     _shared.make_share(this);
     _tls_protection.set_session(this);
-    _dtls_record_builder.set_session(this);
-    _dtls_record_reorder.set_session(this);
+    _dtls_record_publisher.set_session(this);
+    _dtls_record_arrange.set_session(this);
 }
 
 tls_session::tls_session(session_type_t type) : _type(type), _status(0) {
     _shared.make_share(this);
     _tls_protection.set_session(this);
-    _dtls_record_builder.set_session(this);
-    _dtls_record_reorder.set_session(this);
+    _dtls_record_publisher.set_session(this);
+    _dtls_record_arrange.set_session(this);
 }
 
 tls_protection& tls_session::get_tls_protection() { return _tls_protection; }
 
-dtls_record_publisher& tls_session::get_dtls_record_publisher() { return _dtls_record_builder; }
+dtls_record_publisher& tls_session::get_dtls_record_publisher() { return _dtls_record_publisher; }
 
-dtls_record_reorder& tls_session::get_dtls_record_reorder() { return _dtls_record_reorder; }
+dtls_record_arrange& tls_session::get_dtls_record_arrange() { return _dtls_record_arrange; }
 
 void tls_session::set_type(session_type_t type) { _type = type; }
 

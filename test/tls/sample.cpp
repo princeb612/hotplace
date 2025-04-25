@@ -197,14 +197,14 @@ int main(int argc, char** argv) {
         test_rfc8448_7();
 
         test_construct_tls();
-        test_construct_dtls();
+        test_construct_dtls13();
 
         test_captured_tls13();
         test_captured_tls12();
         test_dtls_record_reoder();
         test_captured_dtls12();
 
-        test_construct_dtls12();  // generate and reorder fragmented diagrams
+        test_construct_dtls12();  // generate and arrange fragmented diagrams
     } else {
         dump_clienthello();
     }

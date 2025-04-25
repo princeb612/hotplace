@@ -13,9 +13,9 @@
 #include "sample.hpp"
 
 void test_dtls_record_reoder() {
-    _test_case.begin("DTLS record reorder");
+    _test_case.begin("arrange DTLS record");
     tls_session session(session_dtls);
-    auto& reorder = session.get_dtls_record_reorder();
+    auto& arrange = session.get_dtls_record_arrange();
 
     return_t ret = errorcode_t::success;
     uint16 epoch = 0;
@@ -29,9 +29,9 @@ void test_dtls_record_reoder() {
             "17 00 00 00 00 00 00 00 17 fe ff 14 d8 32 1d 16"
             "e2 72 e5 3c bc 26 77 2d ff 69 a2 56 ed cd cc 0a";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        reorder.produce(&bin_record[0], bin_record.size());
+        arrange.produce(&bin_record[0], bin_record.size());
 
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (0 == seq), __FUNCTION__, "expect epoch 0 seq 0");
     }
     // S->C, epoch 0 seq 3 - certificate (fragment)
@@ -51,9 +51,9 @@ void test_dtls_record_reoder() {
             "0c 04 54 65 73 74 31 0d 30 0b 06 03 55 04 03 0c"
             "04 54 65 73 74 30 82 01 22 30 0d 06 09 2a 86 48";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        reorder.produce(&bin_record[0], bin_record.size());
+        arrange.produce(&bin_record[0], bin_record.size());
 
-        ret = reorder.consume(epoch, seq, packet);
+        ret = arrange.consume(epoch, seq, packet);
         _test_case.assert(errorcode_t::not_ready == ret, __FUNCTION__, "expect not_ready");
     }
     // S->C, epoch 0 seq 1 - server_hello
@@ -74,15 +74,15 @@ void test_dtls_record_reoder() {
             "09 06 03 55 04 06 13 02 4b 52 31 0b 30 09 06 03"
             "55 04 08 0c 02 47 47 31 0b 30 09 06 03 55 04 07";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        reorder.produce(&bin_record[0], bin_record.size());
+        arrange.produce(&bin_record[0], bin_record.size());
 
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (1 == seq), __FUNCTION__, "expect epoch 0 seq 1");
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (2 == seq), __FUNCTION__, "expect epoch 0 seq 2");
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (3 == seq), __FUNCTION__, "expect epoch 0 seq 3");
-        ret = reorder.consume(epoch, seq, packet);
+        ret = arrange.consume(epoch, seq, packet);
         _test_case.assert(errorcode_t::empty == ret, __FUNCTION__, "expect empty");
     }
     // S->C, epoch 0 seq 5 - certificate (fragment)
@@ -102,7 +102,7 @@ void test_dtls_record_reoder() {
             "82 01 01 00 00 a5 f5 54 18 ab ad 36 38 c8 fc 0b"
             "66 60 dd 9f 75 9d 86 5b 79 2f ee 57 f1 79 1c 15";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        reorder.produce(&bin_record[0], bin_record.size());
+        arrange.produce(&bin_record[0], bin_record.size());
     }
     // S->C, epoch 0 seq 4 - certificate (fragment)
     {
@@ -121,11 +121,11 @@ void test_dtls_record_reoder() {
             "61 2d ec b2 13 0a c2 91 8e a2 d6 e9 40 b9 32 b9"
             "80 8f b3 18 a3 33 13 23 d5 d0 7e d9 d0 7f 93 e0";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        reorder.produce(&bin_record[0], bin_record.size());
+        arrange.produce(&bin_record[0], bin_record.size());
 
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (4 == seq), __FUNCTION__, "expect epoch 0 seq 4");
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (5 == seq), __FUNCTION__, "expect epoch 0 seq 5");
     }
     // S->C, epoch 0 seq 7 - certificate (reassembled)
@@ -146,7 +146,7 @@ void test_dtls_record_reoder() {
             "ce c0 0b 05 c0 d7 b1 73 c2 61 1c 65 8b f1 e0 bf"
             "68 e6 22 c4 c3 5f ff 90 70 3e 95 cc 0b e3 e6 ef";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        reorder.produce(&bin_record[0], bin_record.size());
+        arrange.produce(&bin_record[0], bin_record.size());
     }
     // S->C, epoch 0 seq 6 - certificate (fragment)
     {
@@ -165,13 +165,13 @@ void test_dtls_record_reoder() {
             "9c 84 22 c5 7a de e8 23 6b 53 9d 6f 94 d2 7f 5c"
             "be 1d 0c de 0e 07 0d 52 a5 43 8c e8 05 ef c0 ff";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        reorder.produce(&bin_record[0], bin_record.size());
+        arrange.produce(&bin_record[0], bin_record.size());
 
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (6 == seq), __FUNCTION__, "expect epoch 0 seq 6");
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (7 == seq), __FUNCTION__, "expect epoch 0 seq 7");
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (8 == seq), __FUNCTION__, "expect epoch 0 seq 8");
     }
     // epoch 0 seq 10 - server_hello_done
@@ -180,7 +180,7 @@ void test_dtls_record_reoder() {
             "16 fe fd 00 00 00 00 00 00 00 0a 00 0c 0e 00 00"
             "00 00 04 00 00 00 00 00 00";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        reorder.produce(&bin_record[0], bin_record.size());
+        arrange.produce(&bin_record[0], bin_record.size());
     }
     // S->C, epoch 0 seq 9 - server_key_exchange (reassembled)
     {
@@ -199,7 +199,7 @@ void test_dtls_record_reoder() {
             "3b 41 4b a5 26 20 df e0 a8 6d f9 72 31 fe 95 da"
             "a9 f3 a6 a1 54 e3 74 e1 7b 00 54 b7 eb 8e cc 5e";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        reorder.produce(&bin_record[0], bin_record.size());
+        arrange.produce(&bin_record[0], bin_record.size());
     }
     // S->C, epoch 1 seq 1 - encrypted alert
     {
@@ -210,7 +210,7 @@ void test_dtls_record_reoder() {
             "06 d6 56 2d b9 e5 d9 62 23 fc c2 c0 cf 39 aa bd"
             "3e 38 e8 ab 29 14 61 64 11 28 45 a9 59";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        reorder.produce(&bin_record[0], bin_record.size());
+        arrange.produce(&bin_record[0], bin_record.size());
     }
     // S->C, epoch 0 seq 12 - change_cipher_spec
     // S->C, epoch 1 seq 0 - encrypted_handshake message
@@ -224,7 +224,7 @@ void test_dtls_record_reoder() {
             "c3 99 95 90 59 4c f5 83 e3 cf 53 c8 16 6c 2d 8f"
             "70 4e 30 15 d9 f7 43 d7 3a 65 94";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        reorder.produce(&bin_record[0], bin_record.size());
+        arrange.produce(&bin_record[0], bin_record.size());
     }
     // S->C, epoch 0 seq 11 - new_session_ticket
     {
@@ -243,18 +243,18 @@ void test_dtls_record_reoder() {
             "3f 42 7f af a8 10 94 64 8f 2d e4 0d 30 ba c4 14"
             "a2 f2 63 3b 0d a5 6f b4 9f 52 81 e0 3b dd ac";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        reorder.produce(&bin_record[0], bin_record.size());
+        arrange.produce(&bin_record[0], bin_record.size());
     }
     {
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (9 == seq), __FUNCTION__, "expect epoch 0 seq 9");
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (10 == seq), __FUNCTION__, "expect epoch 0 seq 10");
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (11 == seq), __FUNCTION__, "expect epoch 0 seq 11");
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (12 == seq), __FUNCTION__, "expect epoch 0 seq 12");
-        reorder.consume(epoch, seq, packet);
+        arrange.consume(epoch, seq, packet);
         _test_case.assert((1 == epoch) && (0 == seq), __FUNCTION__, "expect epoch 1 seq 0");
     }
 }

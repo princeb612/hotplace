@@ -41,20 +41,26 @@ void dtls_record_publisher::set_fragment_size(uint16 size) {
 
 uint16 dtls_record_publisher::get_fragment_size() { return _fragment_size; }
 
-return_t dtls_record_publisher::publish(std::vector<tls_record*>& records, tls_record_handshake& record, tls_direction_t dir) {
+return_t dtls_record_publisher::publish(std::vector<tls_record*>& records, tls_record* record, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if (nullptr == record) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         tls_record_builder builder;
         auto session = get_session();
 
         {
+            auto rctype = record->get_type();
             tls_hs_type_t hstype = tls_hs_client_hello;
             uint16 hsseq = 0;
             size_t last_fragment_size = 0;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
             auto lambda_fragment = [&](const byte_t* stream, size_t size, size_t fragment_offset, size_t fragment_size) -> void {
-                auto record_fragmented = builder.set(session).set(record.get_type()).set(dir).construct().build();
+                auto record_fragmented = builder.set(session).set(rctype).set(dir).construct().build();
                 if (record_fragmented) {
                     auto handshake = new dtls_handshake_fragmented(hstype, session);
                     if (handshake) {
@@ -72,12 +78,18 @@ return_t dtls_record_publisher::publish(std::vector<tls_record*>& records, tls_r
                 binary_t bin;
                 handshake->do_write_body(dir, bin);
                 hstype = handshake->get_type();
-                hsseq = session->get_keyvalue().inc(session_dtls_message_seq);
+                hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq, true);
                 // split(bin, get_fragment_size(), last_fragment_size, lambda_fragment);
                 split(bin, get_fragment_size(), lambda_fragment);
             };
 
-            record.get_handshakes().for_each(lambda_handshake);
+            if (tls_content_type_handshake == rctype) {
+                tls_record_handshake* record_handshake = static_cast<tls_record_handshake*>(record);
+                record_handshake->get_handshakes().for_each(lambda_handshake);
+            } else {
+                record->addref();
+                records.push_back(record);
+            }
         }
     }
     __finally2 {

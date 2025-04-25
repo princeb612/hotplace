@@ -378,15 +378,12 @@ class t_key_value {
 
         return *this;
     }
-    value_t get(const key_t &key) {
-        value_t value = value_t();
-
+    value_t get(const key_t &key, bool get_then_inc = false) {
         critical_section_guard guard(_lock);
-        typename keyvalue_map_t::iterator iter = _keyvalue_map.find(key);
-        if (_keyvalue_map.end() != iter) {
-            value = iter->second;
+        auto value = _keyvalue_map[key];
+        if (get_then_inc) {
+            _keyvalue_map[key] = value + 1;
         }
-
         return value;
     }
     value_t inc(const key_t &key) {

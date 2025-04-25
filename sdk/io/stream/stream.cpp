@@ -25,7 +25,7 @@ return_t split(const binary_t& stream, size_t fragment_size, std::function<void(
 return_t split(const byte_t* stream, size_t size, size_t fragment_size, std::function<void(const byte_t*, size_t, size_t, size_t)> fn) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if ((nullptr == stream) || (0 == fragment_size) || (nullptr == fn)) {
+        if ((size && (nullptr == stream)) || (0 == fragment_size) || (nullptr == fn)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -38,6 +38,9 @@ return_t split(const byte_t* stream, size_t size, size_t fragment_size, std::fun
             trace_debug_event(trace_category_internal, trace_event_internal, &dbs);
         }
 #endif
+        if (0 == size) {
+            fn(stream, size, 0, 0);
+        }
 
         size_t offset = 0;
         for (size_t offset = 0; offset < size; offset += fragment_size) {

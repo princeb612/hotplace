@@ -57,6 +57,43 @@ class udp_traffic {
 
 udp_traffic _traffic;
 
+static return_t construct_record_fragmented(tls_record* record, tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == record) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        record->addref();
+
+        binary_t bin_record;
+        auto type = record->get_type();
+        if (tls_content_type_handshake == type) {
+            record->write(dir, bin_record, record_nochange_dtls_epochseq);
+
+            std::vector<tls_record*> records;
+            auto session = record->get_session();
+            session->get_dtls_record_publisher().publish(records, record, dir);
+            for (auto fragment : records) {
+                binary_t bin_fragmented_record;
+                fragment->write(dir, bin_fragmented_record);
+                _traffic.sendto(std::move(bin_fragmented_record));
+                fragment->release();
+            }
+        } else {
+            record->write(dir, bin_record);
+            _traffic.sendto(std::move(bin_record));
+        }
+
+        record->release();
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 static return_t do_test_construct_client_hello(tls_direction_t dir, tls_session* session, const char* message) {
     return_t ret = errorcode_t::success;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -77,6 +114,11 @@ static return_t do_test_construct_client_hello(tls_direction_t dir, tls_session*
             prng.random(temp, 28);
             binary_append(random, temp);
             handshake->set_random(random);
+
+            const auto& cookie = session->get_tls_protection().get_item(tls_context_cookie);
+            if (false == cookie.empty()) {
+                handshake->set_cookie(cookie);
+            }
         }
 
         // cipher suites
@@ -147,23 +189,38 @@ static return_t do_test_construct_client_hello(tls_direction_t dir, tls_session*
         if (errorcode_t::success == ret) {
             tls_record_handshake record(session);
             record << handshake;
-            binary_t bin_record;
-            record.write(dir, bin_record, record_nochange_dtls_epochseq);
 
-            std::vector<tls_record*> records;
-            session->get_dtls_record_publisher().publish(records, record, dir);
-            for (auto fragment : records) {
-                binary_t bin_fragmented_record;
-                fragment->write(dir, bin_fragmented_record);
-                _traffic.sendto(std::move(bin_fragmented_record));
-                fragment->release();
-            }
+            construct_record_fragmented(&record, dir);
         }
 
         std::string dirstr;
         direction_string(dir, 0, dirstr);
         _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
     }
+    return ret;
+}
+
+static return_t do_test_construct_hello_verify_request(tls_direction_t dir, tls_session* session, const char* message) {
+    return_t ret = errorcode_t::success;
+
+    auto handshake = new tls_handshake_hello_verify_request(session);
+    if (errorcode_t::success == ret) {
+        binary_t cookie;
+        openssl_prng prng;
+        prng.random(cookie, 20);
+
+        handshake->set_cookie(std::move(cookie));
+
+        tls_record_handshake record(session);
+        record << handshake;
+
+        construct_record_fragmented(&record, dir);
+    }
+
+    std::string dirstr;
+    direction_string(dir, 0, dirstr);
+    _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+
     return ret;
 }
 
@@ -236,23 +293,114 @@ static return_t do_test_construct_server_hello(tls_direction_t dir, tls_session*
         if (errorcode_t::success == ret) {
             tls_record_handshake record(session);
             record << handshake;
-            binary_t bin_record;
-            record.write(dir, bin_record, record_nochange_dtls_epochseq);
 
-            std::vector<tls_record*> records;
-            session->get_dtls_record_publisher().publish(records, record, dir);
-            for (auto fragment : records) {
-                binary_t bin_fragmented_record;
-                fragment->write(dir, bin_fragmented_record);
-                _traffic.sendto(std::move(bin_fragmented_record));
-                fragment->release();
-            }
+            construct_record_fragmented(&record, dir);
         }
 
         std::string dirstr;
         direction_string(dir, 0, dirstr);
         _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
     }
+    return ret;
+}
+
+static return_t do_test_construct_certificate(tls_direction_t dir, tls_session* session, const char* certfile, const char* keyfile, const char* message) {
+    return_t ret = errorcode_t::success;
+
+    auto handshake = new tls_handshake_certificate(session);
+    handshake->set(dir, certfile, keyfile);
+
+    tls_record_handshake record(session);
+    record << handshake;
+
+    construct_record_fragmented(&record, dir);
+
+    std::string dirstr;
+    direction_string(dir, 0, dirstr);
+    _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+
+    return ret;
+}
+
+static return_t do_test_construct_server_key_exchange(tls_direction_t dir, tls_session* session, const char* message) {
+    return_t ret = errorcode_t::success;
+
+    auto handshake = new tls_handshake_server_key_exchange(session);
+
+    tls_record_handshake record(session);
+    record << handshake;
+
+    construct_record_fragmented(&record, dir);
+
+    std::string dirstr;
+    direction_string(dir, 0, dirstr);
+    _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+
+    return ret;
+}
+
+static return_t do_test_construct_server_hello_done(tls_direction_t dir, tls_session* session, const char* message) {
+    return_t ret = errorcode_t::success;
+
+    auto handshake = new tls_handshake_server_hello_done(session);
+
+    tls_record_handshake record(session);
+    record << handshake;
+
+    construct_record_fragmented(&record, dir);
+
+    std::string dirstr;
+    direction_string(dir, 0, dirstr);
+    _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+
+    return ret;
+}
+
+static return_t do_test_construct_client_key_exchange(tls_direction_t dir, tls_session* session, const char* message) {
+    return_t ret = errorcode_t::success;
+
+    auto handshake = new tls_handshake_client_key_exchange(session);
+
+    tls_record_handshake record(session);
+    record << handshake;
+
+    construct_record_fragmented(&record, dir);
+
+    std::string dirstr;
+    direction_string(dir, 0, dirstr);
+    _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+
+    return ret;
+}
+
+static return_t do_test_construct_change_cipher_spec(tls_direction_t dir, tls_session* session, const char* message) {
+    return_t ret = errorcode_t::success;
+
+    tls_record_change_cipher_spec record(session);
+
+    construct_record_fragmented(&record, dir);
+
+    std::string dirstr;
+    direction_string(dir, 0, dirstr);
+    _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+
+    return ret;
+}
+
+static return_t do_test_construct_finished(tls_direction_t dir, tls_session* session, const char* message) {
+    return_t ret = errorcode_t::success;
+
+    auto handshake = new tls_handshake_finished(session);
+
+    tls_record_handshake record(session);
+    record << handshake;
+
+    construct_record_fragmented(&record, dir);
+
+    std::string dirstr;
+    direction_string(dir, 0, dirstr);
+    _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+
     return ret;
 }
 
@@ -264,29 +412,29 @@ static return_t do_test_send_record(tls_direction_t dir, tls_session* session, c
             __leave2;
         }
 
-        auto& reorder = session->get_dtls_record_reorder();
+        auto& arrange = session->get_dtls_record_arrange();
 
-        // sketch - reorder, reassemble
+        // sketch - arrange, reassemble
 
         // UDP traffic
         _traffic.shuffle();
-        auto lambda = [&](const binary_t& bin) { reorder.produce(&bin[0], bin.size()); };
+        auto lambda = [&](const binary_t& bin) { arrange.produce(&bin[0], bin.size()); };
         _traffic.consume(lambda);
 
-        // reorder
+        // arrange
         binary_t bin;
         uint16 epoch = 0;
         uint64 seq = 0;
 
         while (1) {
-            auto test = reorder.consume(epoch, seq, bin);
+            auto test = arrange.consume(epoch, seq, bin);
             if (empty == test) {
                 break;
             } else if (not_ready == test) {
                 continue;
             }
 
-            _logger->hdump(format("epoch %i seq %I64i", epoch, seq).c_str(), bin, 16, 3);
+            // _logger->hdump(format("epoch %i seq %I64i", epoch, seq).c_str(), bin, 16, 3);
 
             tls_records records;
             records.read(session, dir, bin);
@@ -300,6 +448,9 @@ static return_t do_test_send_record(tls_direction_t dir, tls_session* session, c
     return ret;
 }
 
+// TODO
+// server_hello + certificate + server_key_exchange ... not yet
+// DTLS 1.2 finished ... calcuration (no test vector exist)
 void test_construct_dtls12() {
     _test_case.begin("construct DTLS 1.2");
 
@@ -307,10 +458,78 @@ void test_construct_dtls12() {
     tls_session session_server(session_dtls);
 
     session_client.get_dtls_record_publisher().set_fragment_size(128);
+    session_server.get_dtls_record_publisher().set_fragment_size(128);
 
+    auto lambda_test_next_seq = [&](const char* func, tls_direction_t dir, tls_session* session, uint64 expect_next_rcseq, uint16 expect_next_hsseq) -> void {
+        uint64 next_rcseq = 0;
+        next_rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
+        _test_case.assert(expect_next_rcseq == next_rcseq, func, "record next sequence %I64i", next_rcseq);
+        uint16 next_hsseq = 0;
+        next_hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
+        _test_case.assert(expect_next_hsseq == next_hsseq, func, "handshake next sequence %i", next_hsseq);
+    };
+
+    // C->S, record epoch 0, sequence 0..1, handshake sequence 0
     do_test_construct_client_hello(from_client, &session_client, "client hello");
     do_test_send_record(from_client, &session_server, "client hello");
+    lambda_test_next_seq(__FUNCTION__, from_client, &session_client, 2, 1);
 
+    // S->C, record epoch 0, sequence 0, handshake sequence 0
+    do_test_construct_hello_verify_request(from_server, &session_server, "hello verify request");
+    do_test_send_record(from_server, &session_client, "hello verify request");
+    lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 1, 1);
+
+    // C->S, record epoch 0, sequence 2..3, handshake sequence 1
+    do_test_construct_client_hello(from_client, &session_client, "client hello");
+    do_test_send_record(from_client, &session_server, "client hello");
+    lambda_test_next_seq(__FUNCTION__, from_client, &session_client, 4, 2);
+
+    // S->C, record epoch 0, sequence 1, handshake sequence 1
     do_test_construct_server_hello(from_server, &session_server, &session_client, "server hello");
     do_test_send_record(from_server, &session_client, "server hello");
+    lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 2, 2);
+
+    // S->C, record epoch 0, sequence 2..8, handshake sequence 2
+    do_test_construct_certificate(from_server, &session_server, "server.crt", "server.key", "certificate");
+    do_test_send_record(from_server, &session_client, "certificate");
+    lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 9, 3);
+
+    // S->C, record epoch 0, sequence 9..11, handshake sequence 3
+    do_test_construct_server_key_exchange(from_server, &session_server, "server key exchange");
+    do_test_send_record(from_server, &session_client, "server key exchange");
+    lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 12, 4);
+
+    // S->C, record epoch 0, sequence 12, handshake sequence 4
+    do_test_construct_server_hello_done(from_server, &session_server, "server hello done");
+    do_test_send_record(from_server, &session_client, "server hello done");
+    lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 13, 5);
+
+    // C->S, record epoch 0, sequence 4, handshake sequence 2
+    do_test_construct_client_key_exchange(from_client, &session_client, "client key exchange");
+    do_test_send_record(from_client, &session_server, "client key exchange");
+    lambda_test_next_seq(__FUNCTION__, from_client, &session_client, 5, 3);
+
+    // C->S, record epoch 0, sequence 5, change cipher spec
+    do_test_construct_change_cipher_spec(from_client, &session_client, "change cipher spec");
+    do_test_send_record(from_client, &session_server, "change cipher spec");
+    lambda_test_next_seq(__FUNCTION__, from_client, &session_client, 0, 3);
+
+    // C->S, record epoch 1, sequence 0, handshake sequence 3
+    do_test_construct_finished(from_client, &session_client, "finished");
+    do_test_send_record(from_client, &session_server, "finished");
+    lambda_test_next_seq(__FUNCTION__, from_client, &session_client, 1, 4);
+
+    // S->C, record epoch 0, sequence 13, change cipher spec
+    do_test_construct_change_cipher_spec(from_server, &session_server, "change cipher spec");
+    do_test_send_record(from_server, &session_client, "change cipher spec");
+    lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 0, 5);
+
+    // S->C, record epoch 1, sequence 0, handshake sequence 5
+    do_test_construct_finished(from_client, &session_client, "finished");
+    do_test_send_record(from_client, &session_server, "finished");
+    lambda_test_next_seq(__FUNCTION__, from_client, &session_client, 2, 5);
+
+    // skip followings
+    // - application data
+    // - alert close_notify
 }

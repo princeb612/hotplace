@@ -73,9 +73,9 @@ typedef unsigned int uint;
 typedef std::vector<byte_t> binary_t;
 
 enum encoding_t {
-    encoding_base16 = 1,
-    encoding_base64,
-    encoding_base64url,
+    encoding_base16 = 1,     // BASE16
+    encoding_base64 = 2,     // BASE64    + /
+    encoding_base64url = 3,  // BASE64URL - _ without padding
 };
 
 #define UINT128(hi, lo) (((__uint128_t)(hi)) << 64 | (lo))

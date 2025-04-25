@@ -165,8 +165,7 @@ return_t base16_encode(const char* source, binary_t& outpart) {
     return_t ret = errorcode_t::success;
     if (source) {
         size_t slen = strlen(source);
-        size_t dlen = 0;
-        ret = base16_encode((const byte_t*)source, slen, (char*)&outpart[0], &dlen);
+        size_t dlen = slen << 1;
         outpart.resize(dlen);
         ret = base16_encode((const byte_t*)source, slen, (char*)&outpart[0], &dlen);
     }
@@ -276,7 +275,7 @@ return_t base16_decode(const std::string& source, stream_t* stream, uint32 flags
 binary_t base16_decode(const char* source) {
     binary_t outpart;
     if (source) {
-        outpart = base16_decode(source, strlen(source));
+        outpart = std::move(base16_decode(source, strlen(source)));
     }
     return outpart;
 }
@@ -324,7 +323,7 @@ std::string base16_encode_rfc(const std::string& source) {
             };
             split_foreach(handle, lambda);
             split_end(handle);
-            outpart = base16_encode(temp);
+            outpart = std::move(base16_encode(temp));
         }
         // pattern 2 hex:hex:...:hex
         else {
@@ -379,7 +378,7 @@ binary_t base16_decode_rfc(const std::string& source) {
                     temp.push_back(e);
                 }
             }
-            outpart = base16_decode(temp);
+            outpart = std::move(base16_decode(temp));
         }
     }
     return outpart;

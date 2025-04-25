@@ -131,10 +131,10 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin, uint32 flags) {
         if (is_dtls && change_dtls_epochseq) {
             auto& kv = session->get_session_info(dir).get_keyvalue();
             if (tls_content_type_change_cipher_spec == get_type()) {
-                kv.inc(session_dtls_epoch);
+                kv.get(session_dtls_epoch, true);
                 kv.set(session_dtls_seq, 0);
             } else {
-                kv.inc(session_dtls_seq);
+                kv.get(session_dtls_seq, true);
             }
         }
     }

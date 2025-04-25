@@ -83,9 +83,9 @@ std::string openssl_prng::rand(size_t size, encoding_t expr, bool usetime) {
         dt.gettimespec(&ts);
         uint64 sec = hton64(ts.tv_sec);
         if (encoding_t::encoding_base64 == expr) {
-            ret_value = base64_encode((byte_t*)&sec, sizeof(sec), base64_encoding_t::base64_encoding);
+            ret_value = base64_encode((byte_t*)&sec, sizeof(sec), encoding_t::encoding_base64);
         } else if (encoding_t::encoding_base64url == expr) {
-            ret_value = base64_encode((byte_t*)&sec, sizeof(sec), base64_encoding_t::base64url_encoding);
+            ret_value = base64_encode((byte_t*)&sec, sizeof(sec), encoding_t::encoding_base64url);
         } else {  // encoding_t::encoding_base16
             base16_encode((byte_t*)&sec, sizeof(sec), ret_value);
         }
@@ -95,9 +95,9 @@ std::string openssl_prng::rand(size_t size, encoding_t expr, bool usetime) {
     buffer.resize(size);
     RAND_bytes(&buffer[0], buffer.size());
     if (encoding_t::encoding_base64 == expr) {
-        ret_value += base64_encode(buffer, base64_encoding_t::base64_encoding);
+        ret_value += base64_encode(buffer, encoding_t::encoding_base64);
     } else if (encoding_t::encoding_base64url == expr) {
-        ret_value += base64_encode(buffer, base64_encoding_t::base64url_encoding);
+        ret_value += base64_encode(buffer, encoding_t::encoding_base64url);
     } else {  // encoding_t::encoding_base16
         ret_value += base16_encode(buffer);
     }
@@ -105,9 +105,9 @@ std::string openssl_prng::rand(size_t size, encoding_t expr, bool usetime) {
     return ret_value;
 }
 
-std::string openssl_prng::nonce(size_t size) { return rand(size, encoding_t::encoding_base16, false); }
+std::string openssl_prng::nonce(size_t size, encoding_t expr) { return rand(size, expr, false); }
 
-std::string openssl_prng::token(size_t size) { return rand(size, encoding_t::encoding_base64url, false); }
+std::string openssl_prng::token(size_t size, encoding_t expr) { return rand(size, expr, false); }
 
 }  // namespace crypto
 }  // namespace hotplace

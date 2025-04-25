@@ -38,9 +38,9 @@ void test_jwk_thumbprint() {
     _logger->writeln("y : %s", base16_encode(pub2).c_str());
 
     json_root = json_object();
-    json_object_set_new(json_root, "e", json_string(base64_encode(pub2, base64_encoding_t::base64url_encoding).c_str()));
+    json_object_set_new(json_root, "e", json_string(base64_encode(pub2, encoding_t::encoding_base64url).c_str()));
     json_object_set_new(json_root, "kty", json_string("RSA"));
-    json_object_set_new(json_root, "n", json_string(base64_encode(pub1, base64_encoding_t::base64url_encoding).c_str()));
+    json_object_set_new(json_root, "n", json_string(base64_encode(pub1, encoding_t::encoding_base64url).c_str()));
     char* contents = json_dumps(json_root, JSON_COMPACT);
     if (contents) {
         buffer = contents;
@@ -53,7 +53,7 @@ void test_jwk_thumbprint() {
     dump_elem(buffer);
 
     hash_stream("sha256", (byte_t*)buffer.c_str(), buffer.size(), hash_value);
-    thumbprint = base64_encode(hash_value, base64_encoding_t::base64url_encoding);
+    thumbprint = base64_encode(hash_value, encoding_t::encoding_base64url);
 
     const OPTION& option = _cmdline->value();
     if (option.verbose) {

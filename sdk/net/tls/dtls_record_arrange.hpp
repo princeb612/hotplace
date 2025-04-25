@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_DTLSRECORDREORDER__
-#define __HOTPLACE_SDK_NET_TLS_DTLSRECORDREORDER__
+#ifndef __HOTPLACE_SDK_NET_TLS_DTLSRECORDARRANGE__
+#define __HOTPLACE_SDK_NET_TLS_DTLSRECORDARRANGE__
 
 #include <queue>
 #include <sdk/base/system/critical_section.hpp>
@@ -32,12 +32,12 @@ namespace net {
  *            record epoch:0 seq:1
  *            record epoch:0 seq:2
  */
-class dtls_record_reorder {
+class dtls_record_arrange {
     friend class tls_session;
 
    public:
-    dtls_record_reorder();
-    ~dtls_record_reorder();
+    dtls_record_arrange();
+    ~dtls_record_arrange();
 
     return_t produce(const byte_t* stream, size_t size);
     return_t consume(binary_t& bin);

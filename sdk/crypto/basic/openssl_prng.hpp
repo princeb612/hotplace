@@ -55,13 +55,17 @@ class openssl_prng {
     /**
      * @brief   nonce
      * @remarks minimum size is 8
+     * @example
+     *          auto nc = std::move(prng.nonce(20, encoding_t::encoding_base16));
      */
-    std::string nonce(size_t size);
+    std::string nonce(size_t size, encoding_t expr);
     /**
      * @brief   token
      * @remarks minimum size is 8
+     * @example
+     *          auto token = std::move(prng.token(20, encoding_t::encoding_base64url));
      */
-    std::string token(size_t size);
+    std::string token(size_t size, encoding_t expr);
 };
 
 }  // namespace crypto

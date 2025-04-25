@@ -214,25 +214,25 @@ static void jwk_serialize_item(int flag, const json_mapper_item_t& item, json_t*
 
     /* param */
     if (crypto_kty_t::kty_oct == item.type) {
-        json_object_set_new(json_item, "k", json_string(base64_encode(item.priv, base64_encoding_t::base64url_encoding).c_str()));
+        json_object_set_new(json_item, "k", json_string(base64_encode(item.priv, encoding_t::encoding_base64url).c_str()));
     } else if (crypto_kty_t::kty_rsa == item.type) {
-        json_object_set_new(json_item, "n", json_string(base64_encode(item.pub1, base64_encoding_t::base64url_encoding).c_str()));
-        json_object_set_new(json_item, "e", json_string(base64_encode(item.pub2, base64_encoding_t::base64url_encoding).c_str()));
+        json_object_set_new(json_item, "n", json_string(base64_encode(item.pub1, encoding_t::encoding_base64url).c_str()));
+        json_object_set_new(json_item, "e", json_string(base64_encode(item.pub2, encoding_t::encoding_base64url).c_str()));
         if (false == item.priv.empty()) {
-            json_object_set_new(json_item, "d", json_string(base64_encode(item.priv, base64_encoding_t::base64url_encoding).c_str()));
+            json_object_set_new(json_item, "d", json_string(base64_encode(item.priv, encoding_t::encoding_base64url).c_str()));
         }
     } else if (crypto_kty_t::kty_ec == item.type) {
         json_object_set_new(json_item, "crv", json_string(curve_name.c_str()));
-        json_object_set_new(json_item, "x", json_string(base64_encode(item.pub1, base64_encoding_t::base64url_encoding).c_str()));
-        json_object_set_new(json_item, "y", json_string(base64_encode(item.pub2, base64_encoding_t::base64url_encoding).c_str()));
+        json_object_set_new(json_item, "x", json_string(base64_encode(item.pub1, encoding_t::encoding_base64url).c_str()));
+        json_object_set_new(json_item, "y", json_string(base64_encode(item.pub2, encoding_t::encoding_base64url).c_str()));
         if (false == item.priv.empty()) {
-            json_object_set_new(json_item, "d", json_string(base64_encode(item.priv, base64_encoding_t::base64url_encoding).c_str()));
+            json_object_set_new(json_item, "d", json_string(base64_encode(item.priv, encoding_t::encoding_base64url).c_str()));
         }
     } else if (crypto_kty_t::kty_okp == item.type) {
         json_object_set_new(json_item, "crv", json_string(curve_name.c_str()));
-        json_object_set_new(json_item, "x", json_string(base64_encode(item.pub1, base64_encoding_t::base64url_encoding).c_str()));
+        json_object_set_new(json_item, "x", json_string(base64_encode(item.pub1, encoding_t::encoding_base64url).c_str()));
         if (false == item.priv.empty()) {
-            json_object_set_new(json_item, "d", json_string(base64_encode(item.priv, base64_encoding_t::base64url_encoding).c_str()));
+            json_object_set_new(json_item, "d", json_string(base64_encode(item.priv, encoding_t::encoding_base64url).c_str()));
         }
     }
 }

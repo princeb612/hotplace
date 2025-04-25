@@ -78,7 +78,7 @@ void test_rfc8448_7();
 void test_use_pre_master_secret();
 
 void test_construct_tls();
-void test_construct_dtls();
+void test_construct_dtls13();
 void test_construct_dtls12();
 void test_validate();
 

@@ -37,6 +37,6 @@ void test_base64() {
     constexpr char lyrics[] = "still a man hears what he wants to hear and disregards the rest";
     size_t len = strlen(lyrics);
 
-    do_test_base64_routine(lyrics, len, base64_encoding_t::base64_encoding);
-    do_test_base64_routine(lyrics, len, base64_encoding_t::base64url_encoding);
+    do_test_base64_routine(lyrics, len, encoding_t::encoding_base64);
+    do_test_base64_routine(lyrics, len, encoding_t::encoding_base64url);
 }

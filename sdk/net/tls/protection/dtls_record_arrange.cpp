@@ -14,7 +14,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/net/tls/dtls_record_reorder.hpp>
+#include <sdk/net/tls/dtls_record_arrange.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -23,11 +23,11 @@
 namespace hotplace {
 namespace net {
 
-dtls_record_reorder::dtls_record_reorder() : _epoch(0), _seq(0) {}
+dtls_record_arrange::dtls_record_arrange() : _epoch(0), _seq(0) {}
 
-dtls_record_reorder::~dtls_record_reorder() {}
+dtls_record_arrange::~dtls_record_arrange() {}
 
-return_t dtls_record_reorder::produce(const byte_t* stream, size_t size) {
+return_t dtls_record_arrange::produce(const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream || size < sizeof(dtls_header)) {
@@ -67,13 +67,13 @@ return_t dtls_record_reorder::produce(const byte_t* stream, size_t size) {
     return ret;
 }
 
-return_t dtls_record_reorder::consume(binary_t& bin) {
+return_t dtls_record_arrange::consume(binary_t& bin) {
     uint16 epoch = 0;
     uint64 seq = 0;
     return consume(epoch, seq, bin);
 }
 
-return_t dtls_record_reorder::consume(uint16& epoch, uint64& seq, binary_t& bin) {
+return_t dtls_record_arrange::consume(uint16& epoch, uint64& seq, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         epoch = 0;
@@ -115,7 +115,7 @@ return_t dtls_record_reorder::consume(uint16& epoch, uint64& seq, binary_t& bin)
     return ret;
 }
 
-uint64 dtls_record_reorder::make_epoch_seq(uint16 epoch, uint64 seq) {
+uint64 dtls_record_arrange::make_epoch_seq(uint16 epoch, uint64 seq) {
     uint64 value = 0;
     uint16 e = hton16(epoch);
     uint48_t s(seq);
@@ -124,7 +124,7 @@ uint64 dtls_record_reorder::make_epoch_seq(uint16 epoch, uint64 seq) {
     return ntoh64(value);
 }
 
-void dtls_record_reorder::get_epoch_seq(uint64 key, uint16& epoch, uint64& seq) {
+void dtls_record_arrange::get_epoch_seq(uint64 key, uint16& epoch, uint64& seq) {
     uint16 etemp = 0;
     uint64 stemp = hton64(key);
 
@@ -136,9 +136,9 @@ void dtls_record_reorder::get_epoch_seq(uint64 key, uint16& epoch, uint64& seq) 
     seq = s;
 }
 
-void dtls_record_reorder::set_session(tls_session* session) { _session = session; }
+void dtls_record_arrange::set_session(tls_session* session) { _session = session; }
 
-tls_session* dtls_record_reorder::get_session() { return _session; }
+tls_session* dtls_record_arrange::get_session() { return _session; }
 
 }  // namespace net
 }  // namespace hotplace

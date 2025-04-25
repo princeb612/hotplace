@@ -56,9 +56,6 @@ return_t transcript_hash::update(const byte_t* stream, size_t size) {
         dbs.println("> update transcript hash");
         dump_memory(stream, size, &dbs, 16, 3, 0, dump_notrunc);
         dbs.printf("\e[0m");
-        // binary_t res;
-        // digest(res);
-        // dbs.println("# %s", base16_encode(res).c_str());
         trace_debug_event(trace_category_crypto, trace_event_digest, &dbs);
     }
 #endif

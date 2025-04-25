@@ -41,7 +41,7 @@ void test_nonce() {
     int times = 30;
 
     for (i = 0; i < times; i++) {
-        nonce = random.nonce(16);
+        nonce = random.nonce(16, encoding_t::encoding_base16);
         if (option.verbose) {
             _logger->writeln("nonce.1 %s", nonce.c_str());
         }
@@ -67,7 +67,7 @@ void test_token() {
     int times = 30;
 
     for (i = 0; i < times; i++) {
-        token = random.token(16);
+        token = random.token(16, encoding_t::encoding_base64url);
         if (option.verbose) {
             _logger->writeln("token.1 %s", token.c_str());
         }

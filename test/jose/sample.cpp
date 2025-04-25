@@ -45,7 +45,7 @@ void dump_b64url(const char* text, const byte_t* addr, size_t size) {
     if (text && addr) {
         const OPTION& option = _cmdline->value();
         if (option.verbose) {
-            _logger->writeln("%s\n  %s", text, base64_encode(addr, size, base64_encoding_t::base64url_encoding).c_str());
+            _logger->writeln("%s\n  %s", text, base64_encode(addr, size, encoding_t::encoding_base64url).c_str());
         }
     }
 }
@@ -54,7 +54,7 @@ void dump_b64url(const char* text, const binary_t& bin) {
     if (text) {
         const OPTION& option = _cmdline->value();
         if (option.verbose) {
-            _logger->writeln("%s\n  %s", text, base64_encode(bin, base64_encoding_t::base64url_encoding).c_str());
+            _logger->writeln("%s\n  %s", text, base64_encode(bin, encoding_t::encoding_base64url).c_str());
         }
     }
 }

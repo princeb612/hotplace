@@ -261,7 +261,6 @@ return_t cbor_web_key::write(crypto_key* cryptokey, stream_t* stream, int flag) 
         }
 
         stream->write(&cbor[0], cbor.size());  // binary
-        // ret = base16_encode(cbor, stream); // base16
     }
     __finally2 {
         // do nothing

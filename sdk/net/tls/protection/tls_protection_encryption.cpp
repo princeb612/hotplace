@@ -398,7 +398,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
             auto &kv = session->get_session_info(dir).get_keyvalue();
             uint16 epoch = kv.get(session_dtls_epoch);
             uint64 seq = kv.get(session_dtls_seq);
-            record_no = session->get_dtls_record_reorder().make_epoch_seq(epoch, seq);
+            record_no = session->get_dtls_record_arrange().make_epoch_seq(epoch, seq);
         } else {
             // TLS, QUIC, QUIC2
             record_no = session->get_recordno(dir, true);
@@ -680,7 +680,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
             auto &kv = session->get_session_info(dir).get_keyvalue();
             uint16 epoch = kv.get(session_dtls_epoch);
             uint64 seq = kv.get(session_dtls_seq);
-            record_no = session->get_dtls_record_reorder().make_epoch_seq(epoch, seq);
+            record_no = session->get_dtls_record_arrange().make_epoch_seq(epoch, seq);
         } else {
             record_no = session->get_recordno(dir, true);
         }

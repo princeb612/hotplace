@@ -99,6 +99,8 @@ return_t tls_handshake_hello_verify_request::do_write_body(tls_direction_t dir, 
 
 void tls_handshake_hello_verify_request::set_cookie(const binary_t& cookie) { _cookie = cookie; }
 
+void tls_handshake_hello_verify_request::set_cookie(binary_t&& cookie) { _cookie = std::move(cookie); }
+
 const binary_t& tls_handshake_hello_verify_request::get_cookie() { return _cookie; }
 
 }  // namespace net

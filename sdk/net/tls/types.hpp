@@ -606,7 +606,7 @@ enum session_status_t : uint32 {
 };
 
 class dtls_record_publisher;
-class dtls_record_reorder;
+class dtls_record_arrange;
 class tls_protection;
 class tls_session;
 class tls_advisor;

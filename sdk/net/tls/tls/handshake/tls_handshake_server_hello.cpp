@@ -129,6 +129,26 @@ return_t tls_handshake_server_hello::set_cipher_suite(const char* cs) {
 
 uint8 tls_handshake_server_hello::get_compression_method() { return _compression_method; }
 
+return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        auto session_status = session->get_session_status();
+        if (0 == (session_client_hello & session_status)) {
+            ret = errorcode_t::error_handshake;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {

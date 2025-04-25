@@ -19,6 +19,7 @@ class tls_handshake_hello_verify_request : public tls_handshake {
     tls_handshake_hello_verify_request(tls_session* session);
 
     void set_cookie(const binary_t& cookie);
+    void set_cookie(binary_t&& cookie);
     const binary_t& get_cookie();
 
    protected:

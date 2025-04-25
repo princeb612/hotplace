@@ -75,11 +75,11 @@ return_t openssl_digest::digest(const char* alg, const basic_stream& input, std:
     binary_t output;
     ret = digest(alg, input, output);
     if (encoding_t::encoding_base64 == encoding) {
-        hashstring = base64_encode(output, base64_encoding_t::base64_encoding);
+        hashstring = std::move(base64_encode(output, encoding_t::encoding_base64));
     } else if (encoding_t::encoding_base64url == encoding) {
-        hashstring = base64_encode(output, base64_encoding_t::base64url_encoding);
+        hashstring = std::move(base64_encode(output, encoding_t::encoding_base64url));
     } else {
-        hashstring = base16_encode(output);
+        hashstring = std::move(base16_encode(output));
     }
     return ret;
 }
@@ -106,11 +106,11 @@ return_t openssl_digest::digest(const char* alg, const std::string& input, std::
     binary_t output;
     ret = digest(alg, input, output);
     if (encoding_t::encoding_base64 == encoding) {
-        hashstring = base64_encode(output, base64_encoding_t::base64_encoding);
+        hashstring = std::move(base64_encode(output, encoding_t::encoding_base64));
     } else if (encoding_t::encoding_base64 == encoding) {
-        hashstring = base64_encode(output, base64_encoding_t::base64url_encoding);
+        hashstring = std::move(base64_encode(output, encoding_t::encoding_base64url));
     } else {
-        hashstring = base16_encode(output);
+        hashstring = std::move(base16_encode(output));
     }
     return ret;
 }

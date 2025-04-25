@@ -579,7 +579,7 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
     __finally2 {}
 }
 
-void test_construct_dtls() {
+void test_construct_dtls13() {
     TLS_OPTION testvector[] = {
         {dtls_13, "TLS_AES_128_GCM_SHA256"},        //
         {dtls_13, "TLS_AES_256_GCM_SHA384"},        //

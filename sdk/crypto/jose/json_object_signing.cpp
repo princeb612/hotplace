@@ -98,8 +98,8 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
                 }
             }
 
-            std::string header_encoded = base64_encode((byte_t*)header.c_str(), header.size(), base64_encoding_t::base64url_encoding);
-            std::string claims_encoded = base64_encode((byte_t*)input.c_str(), input.size(), base64_encoding_t::base64url_encoding);
+            std::string header_encoded = base64_encode((byte_t*)header.c_str(), header.size(), encoding_t::encoding_base64url);
+            std::string claims_encoded = base64_encode((byte_t*)input.c_str(), input.size(), encoding_t::encoding_base64url);
 
             binary_t header_claims;
 
@@ -118,7 +118,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
 
             item.header = header_encoded;
             item.payload = claims_encoded;
-            item.signature = base64_encode(&signature[0], signature.size(), base64_encoding_t::base64url_encoding);
+            item.signature = base64_encode(&signature[0], signature.size(), encoding_t::encoding_base64url);
 
             item.kid = kid;
             item.sig = sig;
@@ -158,7 +158,7 @@ return_t json_object_signing::verify(jose_context_t* handle, const std::string& 
         for (const auto& item : handle->signs) {
             bool result_per_signature = false;
 
-            std::string protected_header = base64_decode_careful(item.header, base64_encoding_t::base64url_encoding);
+            std::string protected_header = base64_decode_careful(item.header, encoding_t::encoding_base64url);
             jws_t sig;
             std::string header_kid;
 
@@ -187,7 +187,7 @@ return_t json_object_signing::verify(jose_context_t* handle, const std::string& 
             }
             binary_t signature_decoded;
 
-            base64_decode(item.signature, signature_decoded, base64_encoding_t::base64url_encoding);
+            base64_decode(item.signature, signature_decoded, encoding_t::encoding_base64url);
             ret = doverify(handle->key, kid, sig, header_claims, signature_decoded, result_per_signature);
             if (errorcode_t::success != ret) {
                 break;

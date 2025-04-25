@@ -355,7 +355,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const ch
 
         auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
-                output = base64_decode(input, strlen(input), base64_encoding_t::base64_encoding);
+                output = base64_decode(input, strlen(input), encoding_t::encoding_base64);
             }
         };
 
@@ -385,7 +385,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const c
 
         auto os2b = [](const char* input, binary_t& output) -> void {
             if (input) {
-                output = base64_decode(input, strlen(input), base64_encoding_t::base64url_encoding);
+                output = base64_decode(input, strlen(input), encoding_t::encoding_base64url);
             }
         };
 

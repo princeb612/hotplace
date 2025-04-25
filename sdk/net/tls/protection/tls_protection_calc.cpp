@@ -559,8 +559,8 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             if (istraceable()) {
                 // CLIENT_RANDOM
                 basic_stream dbs;
-                const std::string &keylog_client_random = base16_encode(get_item(tls_context_client_hello_random));
-                const std::string &keylog_master_secret = base16_encode(master_secret);
+                std::string keylog_client_random = std::move(base16_encode(get_item(tls_context_client_hello_random)));
+                std::string keylog_master_secret = std::move(base16_encode(master_secret));
                 dbs.printf("\e[1;36m");
                 dbs.println("# CLIENT_RANDOM %s %s", keylog_client_random.c_str(), keylog_master_secret.c_str());
                 dbs.printf("\e[0m");

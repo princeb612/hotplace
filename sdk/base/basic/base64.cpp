@@ -112,7 +112,7 @@ return_t base64_encode(const byte_t* source, size_t source_size, byte_t* buffer,
         // 7 => 12, 10; 8 => 12, 11; 9 => 12, 12
 
         const byte_t* table = MIME_BASE64_ENCODE;
-        if (base64_encoding_t::base64url_encoding == encoding) {
+        if (encoding_t::encoding_base64url == encoding) {
             // RFC 7515 Appendix C.  Notes on Implementing base64url Encoding without Padding
             table = MIME_BASE64URL_ENCODE;
         }
@@ -146,7 +146,7 @@ return_t base64_encode(const byte_t* source, size_t source_size, byte_t* buffer,
             buffer[j + 3] = table[temp.e1];
 
             // RFC 7515 Appendix C.  Notes on Implementing base64url Encoding without Padding
-            if (base64_encoding_t::base64_encoding == encoding) {
+            if (encoding_t::encoding_base64 == encoding) {
                 if ((i + 2) > source_size) {
                     buffer[j + 2] = '=';
                 }
@@ -156,7 +156,7 @@ return_t base64_encode(const byte_t* source, size_t source_size, byte_t* buffer,
             }
         }
 
-        if (base64_encoding_t::base64url_encoding == encoding) {
+        if (encoding_t::encoding_base64url == encoding) {
             size_need = (4 * (source_size / 3)) + (source_size % 3 ? (source_size % 3) + 1 : 0);
         }
 
@@ -186,7 +186,7 @@ return_t base64_decode(const byte_t* source, size_t source_size, byte_t* buffer,
         // if x=4 then 1~4 -> 4, 5~8 -> 8
 
         const int* table = MIME_BASE64_DECODE;
-        if (base64_encoding_t::base64url_encoding == encoding) {
+        if (encoding_t::encoding_base64url == encoding) {
             table = MIME_BASE64URL_DECODE;
         }
 
