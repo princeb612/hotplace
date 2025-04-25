@@ -75,7 +75,7 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
     return ret;
 }
 
-return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
+return_t tls_record::write(tls_direction_t dir, binary_t& bin, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
 #if defined DEBUG
@@ -127,7 +127,8 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
 
         do_postprocess(dir);  // change secret, recno
 
-        if (is_dtls) {
+        bool change_dtls_epochseq = (0 == (record_nochange_dtls_epochseq & flags));
+        if (is_dtls && change_dtls_epochseq) {
             auto& kv = session->get_session_info(dir).get_keyvalue();
             if (tls_content_type_change_cipher_spec == get_type()) {
                 kv.inc(session_dtls_epoch);

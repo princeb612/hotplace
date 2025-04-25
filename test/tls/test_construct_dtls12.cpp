@@ -91,6 +91,10 @@ static return_t do_test_construct_client_hello(tls_direction_t dir, tls_session*
         }
 
         {
+            auto renegotiation_info = new tls_extension_renegotiation_info(session);
+            handshake->get_extensions().add(renegotiation_info);
+        }
+        {
             auto ec_point_formats = new tls_extension_ec_point_formats(session);
             (*ec_point_formats).add("uncompressed");
             handshake->get_extensions().add(ec_point_formats);
@@ -109,6 +113,10 @@ static return_t do_test_construct_client_hello(tls_direction_t dir, tls_session*
                 .add("ffdhe6144")
                 .add("ffdhe8192");
             handshake->get_extensions().add(supported_groups);
+        }
+        {
+            // encrypt_then_mac
+            handshake->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
         }
         {
             auto signature_algorithms = new tls_extension_signature_algorithms(session);
@@ -137,22 +145,100 @@ static return_t do_test_construct_client_hello(tls_direction_t dir, tls_session*
     }
     __finally2 {
         if (errorcode_t::success == ret) {
-#if 0
-            {
-                // cross-check : record in single block
-                binary_t tbin;
-                tls_session tsession(session_dtls);
-                tls_record_handshake trecord(&tsession);
-                trecord.get_handshakes().add(handshake, true);
-                trecord.write(dir, tbin);
-            }
-#endif
-
             tls_record_handshake record(session);
             record << handshake;
-            // do not call record.write (not to affect epoch, sequence, ...)
+            binary_t bin_record;
+            record.write(dir, bin_record, record_nochange_dtls_epochseq);
 
-            // sketch
+            std::vector<tls_record*> records;
+            session->get_dtls_record_publisher().publish(records, record, dir);
+            for (auto fragment : records) {
+                binary_t bin_fragmented_record;
+                fragment->write(dir, bin_fragmented_record);
+                _traffic.sendto(std::move(bin_fragmented_record));
+                fragment->release();
+            }
+        }
+
+        std::string dirstr;
+        direction_string(dir, 0, dirstr);
+        _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
+    }
+    return ret;
+}
+
+static return_t do_test_construct_server_hello(tls_direction_t dir, tls_session* session, tls_session* client_session, const char* message) {
+    return_t ret = errorcode_t::success;
+    auto& protection = session->get_tls_protection();
+    protection.set_tls_version(dtls_12);
+
+    uint16 server_cs = 0;
+    uint16 server_version = 0;
+    protection.handshake_hello(client_session, session, server_cs, server_version);
+
+    tls_handshake_server_hello* handshake = nullptr;
+
+    __try2 {
+        if (0x0000 == server_cs) {
+            ret = errorcode_t::unknown;
+            _test_case.test(ret, __FUNCTION__, "no cipher suite");
+            __leave2;
+        }
+
+        __try_new_catch(handshake, new tls_handshake_server_hello(session), ret, __leave2);
+
+        {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto csname = tlsadvisor->cipher_suite_string(server_cs);
+            _test_case.assert(csname.size(), __FUNCTION__, "%s", csname.c_str());
+        }
+
+        {
+            openssl_prng prng;
+
+            binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
+            time_t gmt_unix_time = time(nullptr);
+            binary_append(random, gmt_unix_time, hton64);
+            random.resize(sizeof(uint32));
+            binary_t temp;
+            prng.random(temp, 28);
+            binary_append(random, temp);
+            handshake->set_random(random);
+
+            handshake->set_cipher_suite(server_cs);
+        }
+
+        {
+            auto renegotiation_info = new tls_extension_renegotiation_info(session);
+            handshake->get_extensions().add(renegotiation_info);
+        }
+        {
+            auto ec_point_formats = new tls_extension_ec_point_formats(session);
+            (*ec_point_formats).add("uncompressed");
+            handshake->get_extensions().add(ec_point_formats);
+        }
+        {
+            auto supported_groups = new tls_extension_supported_groups(session);
+            (*supported_groups).add("x25519");
+            handshake->get_extensions().add(supported_groups);
+        }
+        {
+            // encrypt_then_mac
+            handshake->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
+        }
+        {
+            auto supported_versions = new tls_extension_server_supported_versions(session);
+            (*supported_versions).set(server_version);
+            handshake->get_extensions().add(supported_versions);
+        }
+    }
+    __finally2 {
+        if (errorcode_t::success == ret) {
+            tls_record_handshake record(session);
+            record << handshake;
+            binary_t bin_record;
+            record.write(dir, bin_record, record_nochange_dtls_epochseq);
+
             std::vector<tls_record*> records;
             session->get_dtls_record_publisher().publish(records, record, dir);
             for (auto fragment : records) {
@@ -202,8 +288,8 @@ static return_t do_test_send_record(tls_direction_t dir, tls_session* session, c
 
             _logger->hdump(format("epoch %i seq %I64i", epoch, seq).c_str(), bin, 16, 3);
 
-            // tls_records records;
-            // records.read(session, dir, bin);
+            tls_records records;
+            records.read(session, dir, bin);
         }
     }
     __finally2 {
@@ -224,4 +310,7 @@ void test_construct_dtls12() {
 
     do_test_construct_client_hello(from_client, &session_client, "client hello");
     do_test_send_record(from_client, &session_server, "client hello");
+
+    do_test_construct_server_hello(from_server, &session_server, &session_client, "server hello");
+    do_test_send_record(from_server, &session_client, "server hello");
 }

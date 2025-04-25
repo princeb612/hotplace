@@ -70,7 +70,7 @@ return_t dtls_record_publisher::publish(std::vector<tls_record*>& records, tls_r
 
             auto lambda_handshake = [&](tls_handshake* handshake) -> void {
                 binary_t bin;
-                handshake->write(dir, bin);
+                handshake->do_write_body(dir, bin);
                 hstype = handshake->get_type();
                 hsseq = session->get_keyvalue().inc(session_dtls_message_seq);
                 // split(bin, get_fragment_size(), last_fragment_size, lambda_fragment);

@@ -9,6 +9,8 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls/handshake/dtls_handshake_fragmented.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
@@ -40,6 +42,16 @@ return_t dtls_handshake_fragmented::prepare_fragment(const byte_t* stream, uint3
         }
 
         _fragmented.insert(_fragmented.end(), stream + fragment_offset, stream + fragment_offset + fragment_length);
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("> prepare fragment");
+            // dump_memory(stream + fragment_offset, fragment_length, &dbs, 16, 3, 0, dump_notrunc);
+            dump_memory(_fragmented, &dbs, 16, 3, 0, dump_notrunc);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+        }
+#endif
     }
     __finally2 {
         // do nothing

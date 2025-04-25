@@ -19,6 +19,7 @@ namespace hotplace {
 namespace net {
 
 class tls_handshake {
+    friend class dtls_record_publisher;
     friend class tls_handshakes;
 
    public:

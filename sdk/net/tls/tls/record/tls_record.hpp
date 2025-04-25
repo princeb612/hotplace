@@ -17,6 +17,10 @@
 namespace hotplace {
 namespace net {
 
+enum record_flag_t : uint32 {
+    record_nochange_dtls_epochseq = (1 << 0),
+};
+
 class tls_record {
     friend class tls_record_application_data;
     friend class dtls13_ciphertext;
@@ -25,7 +29,7 @@ class tls_record {
     virtual ~tls_record();
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(tls_direction_t dir, binary_t& bin);
+    virtual return_t write(tls_direction_t dir, binary_t& bin, uint32 flags = 0);
 
     tls_session* get_session();  // session
 
