@@ -301,6 +301,7 @@ void test_uint48() {
     constexpr char constexpr_dtls_epoch[] = "epoch";
     constexpr char constexpr_dtls_record_seq[] = "sequence number";
 
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
     payload pl;
     {
         pl << new payload_member(uint8(0), constexpr_content_type)                              // tls, dtls
@@ -311,7 +312,7 @@ void test_uint48() {
 
         auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
             auto ver = pl->t_value_of<uint16>(item);
-            pl->set_group(constexpr_group_dtls, is_kindof_dtls(ver));
+            pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(ver));
         };
         pl.set_condition(constexpr_record_version, lambda_check_dtls);
         size_t pos = 0;
@@ -319,7 +320,6 @@ void test_uint48() {
     }
 
     {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         uint8 content_type = 0;
         uint16 record_version = 0;
         uint16 len = 0;
