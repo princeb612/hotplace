@@ -142,10 +142,10 @@ void test_rfc7516_A1_test() {
     dump2("tag", tag, RTL_NUMBER_OF(tag));
 
     // A.1.1
-    jose_header_encoded = base64_encode((byte_t*)jose_header.c_str(), jose_header.size(), encoding_t::encoding_base64url);
+    jose_header_encoded = std::move(base64_encode((byte_t*)jose_header.c_str(), jose_header.size(), encoding_t::encoding_base64url));
     dump("jose_header_encoded", jose_header_encoded);
     // A.1.3
-    encrypted_key_encoded = base64_encode(encrypted_key, RTL_NUMBER_OF(encrypted_key), encoding_t::encoding_base64url);
+    encrypted_key_encoded = std::move(base64_encode(encrypted_key, RTL_NUMBER_OF(encrypted_key), encoding_t::encoding_base64url));
     dump("encrypted_key_encoded", encrypted_key_encoded);
 
     encrypted_key_data.insert(encrypted_key_data.end(), encrypted_key, encrypted_key + RTL_NUMBER_OF(encrypted_key));

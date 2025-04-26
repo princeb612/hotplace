@@ -156,12 +156,12 @@ return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorit
         /* encrypt and decrypt re-initialize iv */
         ret_init = EVP_CipherInit_ex(context->encrypt_context, cipher, nullptr, &temp_key[0], nullptr, 1);
         if (1 != ret_init) {
-            ret = errorcode_t::bad_request;
+            ret = errorcode_t::error_cipher;
             __leave2_trace_openssl(ret);
         }
         ret_init = EVP_CipherInit_ex(context->decrypt_context, cipher, nullptr, &temp_key[0], nullptr, 0);
         if (1 != ret_init) {
-            ret = errorcode_t::bad_request;
+            ret = errorcode_t::error_cipher;
             __leave2_trace_openssl(ret);
         }
 
@@ -373,14 +373,14 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
 
                 ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, nullptr, plainsize);
                 if (1 > ret_cipher) {
-                    ret = errorcode_t::internal_error;
+                    ret = errorcode_t::error_cipher;
                     __leave2_trace_openssl(ret);
                 }
             }
 
             ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, &(*aad)[0], aad->size());
             if (1 > ret_cipher) {
-                ret = errorcode_t::internal_error;
+                ret = errorcode_t::error_cipher;
                 __leave2_trace_openssl(ret);
             }
         }
@@ -405,7 +405,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
             crypto_advisor *advisor = crypto_advisor::get_instance();
             const hint_blockcipher_t *hint_cipher = advisor->hintof_blockcipher(context->algorithm);
             if (nullptr == hint_cipher) {
-                ret = errorcode_t::internal_error;
+                ret = errorcode_t::not_supported;
                 __leave2;
             }
             uint16 blocksize = sizeof_block(hint_cipher);
@@ -429,14 +429,14 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
 
             ret_cipher = EVP_CipherUpdate(context->encrypt_context, ciphertext, &size_update, plaintext, plainsize);
             if (1 > ret_cipher) {
-                ret = errorcode_t::internal_error;
+                ret = errorcode_t::error_cipher;
                 __leave2_trace_openssl(ret);
             }
         }
 
         ret_cipher = EVP_CipherFinal(context->encrypt_context, ciphertext + size_update, &size_final);
         if (1 > ret_cipher) {
-            ret = errorcode_t::internal_error;
+            ret = errorcode_t::error_cipher;
             __leave2_trace_openssl(ret);
         }
 
@@ -444,7 +444,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
             tag->resize(tag_size);
             ret_cipher = EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_GET_TAG, tag->size(), &(*tag)[0]);
             if (1 > ret_cipher) {
-                ret = errorcode_t::internal_error;
+                ret = errorcode_t::error_cipher;
                 __leave2_trace_openssl(ret);
             }
         }
@@ -532,14 +532,14 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
             } else if (crypt_mode_t::gcm == context->mode || crypt_mode_t::mode_poly1305 == context->mode) {
                 ret_cipher = EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag->size(), (void *)&(*tag)[0]);
                 if (1 != ret_cipher) {
-                    ret = errorcode_t::internal_error;
+                    ret = errorcode_t::error_cipher;
                     __leave2_trace_openssl(ret);
                 }
             }
 
             ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, &(*aad)[0], aad->size());
             if (1 != ret_cipher) {
-                ret = errorcode_t::internal_error;
+                ret = errorcode_t::error_cipher;
                 __leave2_trace_openssl(ret);
             }
         }
@@ -562,7 +562,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
             crypto_advisor *advisor = crypto_advisor::get_instance();
             const hint_blockcipher_t *hint_cipher = advisor->hintof_blockcipher(context->algorithm);
             if (nullptr == hint_cipher) {
-                ret = errorcode_t::internal_error;
+                ret = errorcode_t::not_supported;
                 __leave2;
             }
             uint16 blocksize = sizeof_block(hint_cipher);
@@ -586,14 +586,14 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
 
             ret_cipher = EVP_CipherUpdate(context->decrypt_context, plaintext, &size_update, ciphertext, ciphersize);
             if (1 != ret_cipher) {
-                ret = errorcode_t::internal_error;
+                ret = errorcode_t::error_cipher;
                 __leave2_trace_openssl(ret);
             }
         }
 
         ret_cipher = EVP_CipherFinal(context->decrypt_context, plaintext + size_update, &size_final);
         if (1 != ret_cipher) {
-            ret = errorcode_t::internal_error;
+            ret = errorcode_t::error_cipher;
             __leave2_trace_openssl(ret);
         }
 

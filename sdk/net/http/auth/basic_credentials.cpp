@@ -24,7 +24,7 @@ basic_credentials& basic_credentials::add(const std::string& username, const std
     basic_stream bs;
     bs << username << ":" << password;
 
-    std::string challenge = base64_encode(bs.data(), bs.size());
+    std::string challenge = std::move(base64_encode(bs.data(), bs.size()));
     return add(challenge);
 }
 

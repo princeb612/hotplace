@@ -139,7 +139,7 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
 
         const hint_blockcipher_t* hint_blockcipher = advisor->hintof_blockcipher(enc_alg);
         if (nullptr == hint_blockcipher) {
-            ret = errorcode_t::invalid_parameter;
+            ret = errorcode_t::not_supported;
             __leave2;
         }
 
@@ -295,7 +295,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
                 // mac
                 (*hmac).update(aad).update(datalen, hton16).update(plaintext).finalize(tag);
                 if (tag != mac) {
-                    ret = errorcode_t::mismatch;
+                    ret = errorcode_t::error_verify;
                     __leave2;
                 }
             }
@@ -306,7 +306,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
                 binary_append(mac, ciphertext + datalen, dlen);
                 (*hmac).update(aad).update(uint16(datalen), hton16).update(ciphertext, datalen).finalize(tag);
                 if (tag != mac) {
-                    ret = errorcode_t::mismatch;
+                    ret = errorcode_t::error_verify;
                     __leave2;
                 }
             }

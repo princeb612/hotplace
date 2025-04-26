@@ -65,6 +65,8 @@ bool tls_protection::is_kindof_tls() { return (false == tls_advisor::get_instanc
 
 bool tls_protection::is_kindof_dtls() { return tls_advisor::get_instance()->is_kindof_dtls(get_lagacy_version()); }
 
+bool tls_protection::is_kindof_tls12() { return tls_advisor::get_instance()->is_kindof_tls12(_version); }
+
 bool tls_protection::is_kindof_tls13() { return tls_advisor::get_instance()->is_kindof_tls13(_version); }
 
 uint16 tls_protection::get_tls_version() { return _version; }

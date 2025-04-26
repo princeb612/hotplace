@@ -136,7 +136,7 @@ void test_selfgen(crypto_key* key) {
     _test_case.begin("key generation");
 
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    binary_t input = str2bin("hello world");
+    binary_t input = std::move(str2bin("hello world"));
     std::list<cose_alg_t> algs;
     size_t i = 0;
     size_t j = 0;
@@ -294,7 +294,7 @@ void test_cose(crypto_key* key) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption cose;
-    binary_t input = str2bin("hello world");
+    binary_t input = std::move(str2bin("hello world"));
     size_t i = 0;
     size_t j = 0;
 

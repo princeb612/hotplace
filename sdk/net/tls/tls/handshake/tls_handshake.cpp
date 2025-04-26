@@ -259,6 +259,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             __leave2;
         }
 
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         size_t hspos = pos;
         auto& protection = session->get_tls_protection();
         auto type = session->get_type();
@@ -274,7 +275,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
         {
             uint16 legacy_version = protection.get_lagacy_version();
             size_t sizeof_dtls_recons = 0;
-            if (is_kindof_dtls(legacy_version)) {
+            if (tlsadvisor->is_kindof_dtls(legacy_version)) {
                 // checkpoint
                 //    1) reconstruction_data size (8 bytes)
                 //       tls_content_t::length    included
@@ -300,7 +301,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                    << new payload_member(uint24_t(0), constexpr_fragment_len, constexpr_group_dtls);              // dtls
                 ;
 
-                pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
+                pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
                 pl.read(stream, size, pos);
 
                 hstype = (tls_hs_type_t)pl.t_value_of<uint8>(constexpr_message_type);
@@ -417,6 +418,7 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
     //   TLS 1.3 ClientHellos are identified as having a legacy_version of 0x0303 and a supported_versions extension
     //   present with 0x0304 as the highest version indicated therein.
 
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     auto legacy_version = protection.get_lagacy_version();
@@ -432,7 +434,7 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
        << new payload_member(uint24_t(_fragment_len), constexpr_fragment_len, constexpr_group_dtls);          // dtls
     ;
 
-    pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
+    pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
     {
         _range.begin = bin.size();
         _bodysize = body.size();

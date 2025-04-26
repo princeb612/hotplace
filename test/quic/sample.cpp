@@ -43,7 +43,7 @@ void whatsthis() {
         case mode_encnum: {
             auto i64_input = t_atoi<uint64>(option.content);
             quic_write_vle_int(i64_input, bin_encoded);
-            auto encoded = base16_encode(bin_encoded);
+            auto encoded = std::move(base16_encode(bin_encoded));
             bs.printf("> encode\n");
             bs.printf("  %I64i (0x%I64x) -> %s\n", i64_input, i64_input, encoded.c_str());
         } break;
@@ -51,7 +51,7 @@ void whatsthis() {
             bin_input = std::move(base16_decode_rfc(option.content));
             auto i64_input = t_binary_to_integer<uint64>(bin_input);
             quic_write_vle_int(i64_input, bin_encoded);
-            auto encoded = base16_encode(bin_encoded);
+            auto encoded = std::move(base16_encode(bin_encoded));
             bs.printf("> encode\n");
             bs.printf("  0x%I64x (%I64i) -> %s\n", i64_input, i64_input, encoded.c_str());
         } break;

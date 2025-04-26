@@ -603,6 +603,9 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         binary_t nonce = iv;
         build_iv(session, secret_iv, nonce, record_no);
         ret = crypt.decrypt(cipher, mode, key, nonce, stream + pos, size, plaintext, aad, tag);
+        if (errorcode_t::success != ret) {
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
+        }
 
 #if defined DEBUG
         if (istraceable()) {
@@ -716,6 +719,16 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         crypto_cbc_hmac cbchmac;
         cbchmac.set_enc(enc_alg).set_mac(hmac_alg).set_flag(flag);
         ret = cbchmac.decrypt(enckey, mackey, iv, aad, ciphertext, ciphersize, plaintext);
+        switch (ret) {
+            case errorcode_t::success:
+                break;
+            case errorcode_t::error_cipher:
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
+                break;
+            case errorcode_t::error_verify:
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_bad_record_mac);
+                break;
+        }
 
 #if defined DEBUG
         if (istraceable()) {

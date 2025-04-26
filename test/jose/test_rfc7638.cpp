@@ -53,7 +53,7 @@ void test_jwk_thumbprint() {
     dump_elem(buffer);
 
     hash_stream("sha256", (byte_t*)buffer.c_str(), buffer.size(), hash_value);
-    thumbprint = base64_encode(hash_value, encoding_t::encoding_base64url);
+    thumbprint = std::move(base64_encode(hash_value, encoding_t::encoding_base64url));
 
     const OPTION& option = _cmdline->value();
     if (option.verbose) {

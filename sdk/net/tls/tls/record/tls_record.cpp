@@ -131,10 +131,10 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin, uint32 flags) {
         if (is_dtls && change_dtls_epochseq) {
             auto& kv = session->get_session_info(dir).get_keyvalue();
             if (tls_content_type_change_cipher_spec == get_type()) {
-                kv.get(session_dtls_epoch, true);
+                kv.inc(session_dtls_epoch);
                 kv.set(session_dtls_seq, 0);
             } else {
-                kv.get(session_dtls_seq, true);
+                kv.inc(session_dtls_seq);
             }
         }
     }
@@ -212,7 +212,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
 
             auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
                 auto ver = pl->t_value_of<uint16>(item);
-                pl->set_group(constexpr_group_dtls, is_kindof_dtls(ver));
+                pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(ver));
             };
             pl.set_condition(constexpr_record_version, lambda_check_dtls);
             pl.read(stream, size, pos);
@@ -326,7 +326,7 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
 
             {
                 bool etm = session->get_keyvalue().get(session_encrypt_then_mac);
-                auto is_tls = is_kindof_tls(record_version);
+                auto is_tls = tlsadvisor->is_kindof_tls(record_version);
                 auto ivsize = sizeof_iv(hint_cipher);
                 uint16 len = 0;
                 if (cbc == hint->mode) {
@@ -383,8 +383,9 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
 return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
     __try2 {
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         uint16 record_version = get_legacy_version();
-        auto is_tls = is_kindof_tls(record_version);
+        auto is_tls = tlsadvisor->is_kindof_tls(record_version);
 
         {
             _range.begin = bin.size();
@@ -399,7 +400,7 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
                << new payload_member(uint48_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                << new payload_member(uint16(body.size()), true, constexpr_len);                                         // tls, dtls
 
-            pl.set_group(constexpr_group_dtls, is_kindof_dtls(record_version));
+            pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(record_version));
             pl.write(bin);
         }
 

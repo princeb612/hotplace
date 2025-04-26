@@ -97,7 +97,7 @@ void test_base16_oddsize() {
 void do_dump_base16_rfc(const char* text, const char* input) {
     basic_stream bs;
 
-    std::string encoded = base16_encode_rfc(input);
+    std::string encoded = std::move(base16_encode_rfc(input));
     binary_t decoded = std::move(base16_decode(encoded));
     dump_memory(decoded, &bs, 16, 4);
     _logger->writeln("%s\n  input   %s\n  encoded %s\n  decoded\n%s", text, input, encoded.c_str(), bs.c_str());

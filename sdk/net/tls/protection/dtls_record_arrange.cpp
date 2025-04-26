@@ -43,7 +43,7 @@ return_t dtls_record_arrange::produce(const byte_t* stream, size_t size) {
 
             // uint8 type = header->type;
             uint16 version = ntoh16(header->version);
-            if (false == is_kindof_dtls(version)) {
+            if (false == tlsadvisor->is_kindof_dtls(version)) {
                 ret = errorcode_t::bad_data;
                 __leave2;
             }

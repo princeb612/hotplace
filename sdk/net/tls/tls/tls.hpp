@@ -76,10 +76,6 @@ return_t tls_dump_record(tls_session* session, const byte_t* stream, size_t size
 return_t tls_dump_handshake(tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
 return_t tls_dump_extension(tls_hs_type_t hstype, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
 
-bool is_kindof_tls13(uint16 ver);
-bool is_kindof_tls(uint16 ver);
-bool is_kindof_dtls(uint16 ver);
-
 }  // namespace net
 }  // namespace hotplace
 

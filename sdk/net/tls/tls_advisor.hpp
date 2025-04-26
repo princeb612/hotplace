@@ -198,6 +198,7 @@ class tls_advisor {
     std::string quic_packet_type_string(uint8 code);
 
     bool is_kindof_tls13(uint16 ver);
+    bool is_kindof_tls12(uint16 ver);
     bool is_kindof_tls(uint16 ver);
     bool is_kindof_dtls(uint16 ver);
     /**

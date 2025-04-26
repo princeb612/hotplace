@@ -90,7 +90,7 @@ void do_test_ecdsa_testvector(const test_vector_nist_cavp_ecdsa_t* vector, size_
         if (base16) {
             message = std::move(base16_decode(vector[i].msg));
         } else {
-            message = str2bin(vector[i].msg);
+            message = std::move(str2bin(vector[i].msg));
         }
         do_test_ecdsa(&key, vector[i].nid, vector[i].alg, message, signature);
     }

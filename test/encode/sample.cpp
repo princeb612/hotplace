@@ -72,17 +72,17 @@ void whatsthis() {
         std::string stemp;
         switch (o.mode) {
             case decode_b64u:
-                what = base64_decode(o.content, encoding_t::encoding_base64url);
+                what = std::move(base64_decode(o.content, encoding_t::encoding_base64url));
                 additional << "> b16\n  " << base16_encode(what).c_str() << "\n";
                 additional << "> b64\n  " << base64_encode(what).c_str() << "\n";
                 break;
             case decode_b64:
-                what = base64_decode(o.content, encoding_t::encoding_base64);
+                what = std::move(base64_decode(o.content, encoding_t::encoding_base64));
                 additional << "> b16\n  " << base16_encode(what).c_str() << "\n";
                 additional << "> b64u\n  " << base64_encode(what, encoding_t::encoding_base64url).c_str() << "\n";
                 break;
             case encode_plaintext:
-                what = str2bin(o.content);
+                what = std::move(str2bin(o.content));
                 base16_encode(o.content, temp);
                 additional << "> b16\n  " << bin2str(temp).c_str() << "\n";
                 additional << "> b64\n  " << base64_encode(o.content).c_str() << "\n";
@@ -94,7 +94,7 @@ void whatsthis() {
                 additional << "> b64url\n  " << base64_encode(what, encoding_t::encoding_base64url).c_str() << "\n";
                 break;
             case encode_b16_rfc:
-                stemp = base16_encode_rfc(o.content);
+                stemp = std::move(base16_encode_rfc(o.content));
                 what = std::move(base16_decode(stemp));
                 additional << "> b16\n  " << stemp.c_str() << "\n";
                 additional << "> b64\n  " << base64_encode(what).c_str() << "\n";

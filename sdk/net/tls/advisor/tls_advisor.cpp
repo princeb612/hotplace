@@ -347,6 +347,13 @@ bool tls_advisor::is_kindof_tls13(uint16 ver) {
     return ret;
 }
 
+bool tls_advisor::is_kindof_tls12(uint16 ver) {
+    bool ret = false;
+    auto hint = hintof_tls_version(ver);
+    ret = (hint && hint->spec == tls_12);
+    return ret;
+}
+
 bool tls_advisor::is_kindof_tls(uint16 ver) {
     bool ret = false;
     auto hint = hintof_tls_version(ver);
@@ -392,12 +399,6 @@ void tls_advisor::enum_session_status_string(uint32 status, std::function<void(c
         }
     }
 }
-
-bool is_kindof_tls13(uint16 ver) { return tls_advisor::get_instance()->is_kindof_tls13(ver); }
-
-bool is_kindof_tls(uint16 ver) { return tls_advisor::get_instance()->is_kindof_tls(ver); }
-
-bool is_kindof_dtls(uint16 ver) { return tls_advisor::get_instance()->is_kindof_dtls(ver); }
 
 }  // namespace net
 }  // namespace hotplace

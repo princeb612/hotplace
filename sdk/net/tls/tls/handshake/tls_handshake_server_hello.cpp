@@ -141,6 +141,8 @@ return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
         auto session_status = session->get_session_status();
         if (0 == (session_client_hello & session_status)) {
             ret = errorcode_t::error_handshake;
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+            __leave2;
         }
     }
     __finally2 {
@@ -271,7 +273,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                    << new payload_member(uint8(0), constexpr_compression_method)     //
                    << new payload_member(uint16(0), true, constexpr_extension_len);  //
 
-                pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
+                pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
 
                 pl.reserve(constexpr_random, 32);
                 pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
@@ -368,7 +370,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
                << new payload_member(uint8(0), constexpr_compression_method)                                 //
                << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);              //
 
-            pl.set_group(constexpr_group_dtls, is_kindof_dtls(legacy_version));
+            pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
             pl.write(bin);
         }
 

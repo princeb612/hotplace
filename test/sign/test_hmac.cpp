@@ -21,7 +21,7 @@ void test_hash_hmac_sign() {
     // Rhapsody - Emerald Sword
     constexpr char in_source[] = "I crossed the valleys the dust of midlands / To search for the third key to open the gates";
     binary_t bin_key = std::move(base16_decode(key_source));
-    binary_t bin_in = str2bin(in_source);
+    binary_t bin_in = std::move(str2bin(in_source));
 
     keychain.add_oct_b16(&key, key_source, keydesc());
     binary_t result_hash;

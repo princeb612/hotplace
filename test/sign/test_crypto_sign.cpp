@@ -119,7 +119,7 @@ void test_crypto_sign() {
     }
 
     constexpr char sample[] = "We don't playing because we grow old; we grow old because we stop playing.";
-    binary_t bin_sample = str2bin(sample);
+    binary_t bin_sample = std::move(str2bin(sample));
 
     auto lambda_sign_kid = [&](const char* text, const char* kid, crypto_kty_t kty, crypt_sig_type_t scheme, hash_algorithm_t alg, bool expect) -> void {
         const OPTION option = _cmdline->value();

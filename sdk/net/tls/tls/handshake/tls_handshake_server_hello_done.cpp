@@ -36,6 +36,30 @@ constexpr char constexpr_cookie[] = "cookie";
 
 tls_handshake_server_hello_done::tls_handshake_server_hello_done(tls_session* session) : tls_handshake(tls_hs_server_hello_done, session) {}
 
+return_t tls_handshake_server_hello_done::do_preprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        if (session->get_tls_protection().is_kindof_tls12()) {
+            auto session_status = session->get_session_status();
+            if (0 == (session_server_key_exchange & session_status)) {
+                ret = errorcode_t::error_handshake;
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                __leave2;
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t tls_handshake_server_hello_done::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -55,20 +79,6 @@ return_t tls_handshake_server_hello_done::do_postprocess(tls_direction_t dir, co
     __finally2 {
         // do nothing
     }
-    return ret;
-}
-
-return_t tls_handshake_server_hello_done::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {}
-    __finally2 {}
-    return ret;
-}
-
-return_t tls_handshake_server_hello_done::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {}
-    __finally2 {}
     return ret;
 }
 

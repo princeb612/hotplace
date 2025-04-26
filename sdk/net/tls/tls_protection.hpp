@@ -108,6 +108,7 @@ class tls_protection {
     uint16 get_lagacy_version();
     bool is_kindof_tls();
     bool is_kindof_dtls();
+    bool is_kindof_tls12();
     bool is_kindof_tls13();
     uint16 get_tls_version();
     void set_tls_version(uint16 version);

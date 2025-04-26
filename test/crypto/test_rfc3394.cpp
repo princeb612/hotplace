@@ -18,9 +18,9 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
 
     crypt_algorithm_t alg = vector->alg;
     const char* algname = vector->algname;
-    const binary_t& kek = base16_decode(vector->kek);
-    const binary_t& key = base16_decode(vector->key);
-    const binary_t& expect = base16_decode(vector->expect);
+    binary_t kek = std::move(base16_decode(vector->kek));
+    binary_t key = std::move(base16_decode(vector->key));
+    binary_t expect = std::move(base16_decode(vector->expect));
     const char* msg = vector->message;
 
     openssl_crypt crypt;

@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
     test_stream_stdmap();
     test_vtprintf();
     test_autoindent();
+    test_split();
 
     _logger->flush();
 

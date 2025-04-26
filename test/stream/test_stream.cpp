@@ -91,7 +91,7 @@ void test_dumpmemory() {
     _logger->writeln("dump\n%s", bs.c_str());
     _test_case.test(ret, __FUNCTION__, "dump std::string");
 
-    binary_t bin = str2bin(str);
+    binary_t bin = std::move(str2bin(str));
     ret = dump_memory(bin, &bs);
     _logger->writeln("dump\n%s", bs.c_str());
     _test_case.test(ret, __FUNCTION__, "dump std::vector<byte_t>");
@@ -381,4 +381,36 @@ void test_autoindent() {
     const char* expect = "  test\n  test";
     _logger->writeln(bs);
     _test_case.assert(bs == expect, __FUNCTION__, "indent");
+}
+
+void test_split() {
+    _test_case.begin("split");
+
+    const size_t testsize = 0x410;  // 1024 + 16
+    const size_t testfragsize = 0x80;
+    binary_t block;
+    for (auto i = 0; i < testsize; i++) {
+        block.push_back((byte_t)(i % 0x100));
+    }
+
+    typedef std::map<size_t, size_t> split_table;
+    split_table table1;
+    split_table expect1 = {{0x0, 0x80}, {0x80, 0x80}, {0x100, 0x80}, {0x180, 0x80}, {0x200, 0x80}, {0x280, 0x80}, {0x300, 0x80}, {0x380, 0x80}, {0x400, 0x10}};
+    auto lambda1 = [&](const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize) -> void {
+        table1.insert({fragoffset, fragsize});
+        _logger->writeln("split @0x%03zx [0x%zx]", fragoffset, fragsize);
+        _logger->dump(stream + fragoffset, fragsize, 16, 3);
+    };
+    split(block, testfragsize, lambda1);
+    _test_case.assert(table1 == expect1, __FUNCTION__, "split");
+
+    split_table table2;
+    split_table expect2 = {{0x0, 0x70}, {0x70, 0x80}, {0x0f0, 0x80}, {0x170, 0x80}, {0x1f0, 0x80}, {0x270, 0x80}, {0x2f0, 0x80}, {0x370, 0x80}, {0x3f0, 0x20}};
+    auto lambda2 = [&](const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize) -> void {
+        table2.insert({fragoffset, fragsize});
+        _logger->writeln("split @0x%03zx [0x%zx]", fragoffset, fragsize);
+        _logger->dump(stream + fragoffset, fragsize, 16, 3);
+    };
+    split(block, testfragsize, 0x10, lambda2);
+    _test_case.assert(table2 == expect2, __FUNCTION__, "split");
 }

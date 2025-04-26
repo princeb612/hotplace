@@ -21,7 +21,7 @@ void dotest_nist_cavp_rsa_signgen15(crypto_key* key, const test_vector_nist_cavp
         if (s) {
             auto pkey = key->find(item->kid);
             if (pkey) {
-                const binary_t& msg = base16_decode(item->msg);
+                binary_t msg = std::move(base16_decode(item->msg));
                 binary_t signature;
                 ret = s->sign(pkey, msg, signature);
                 _logger->hdump("> input", msg);
@@ -53,12 +53,12 @@ void dotest_nist_cavp_rsa_signpss(crypto_key* key, const test_vector_nist_cavp_r
         const char* hashalg = advisor->nameof_md(item->alg);
         if (s) {
             if (item->salt) {
-                const binary_t& salt = base16_decode(item->salt);
+                binary_t salt = std::move(base16_decode(item->salt));
                 s->set_saltlen(salt.size());  // set saltlen
             }
             auto pkey = key->find(item->kid);
             if (pkey) {
-                const binary_t& msg = base16_decode(item->msg);
+                binary_t msg = std::move(base16_decode(item->msg));
                 binary_t signature = std::move(base16_decode(item->s));
                 ret = s->verify(pkey, msg, signature);
                 _logger->hdump("> input", msg);

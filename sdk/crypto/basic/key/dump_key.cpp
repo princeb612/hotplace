@@ -82,7 +82,7 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
         }
 
         /* base64url encoding */
-        std::string b64url_encoded = base64_encode(key, encoding_t::encoding_base64url);
+        std::string b64url_encoded = std::move(base64_encode(key, encoding_t::encoding_base64url));
         cbor_data* root = new cbor_data(key);
 
         /* openssl evp_pkey_print style */
