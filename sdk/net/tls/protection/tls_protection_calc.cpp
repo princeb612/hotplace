@@ -45,12 +45,6 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (tls_hs_client_hello == type) {
-            if (tls_flow_0rtt != get_flow()) {
-                ret = errorcode_t::bad_request;
-                __leave2;
-            }
-        }
 
         auto session_type = session->get_type();
         uint16 cipher_suite = get_cipher_suite();

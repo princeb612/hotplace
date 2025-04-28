@@ -113,8 +113,6 @@ void tls_protection::append_item(tls_secret_t type, const byte_t *stream, size_t
     }
 }
 
-void tls_protection::move_item(tls_secret_t from, tls_secret_t to) { _kv[to] = std::move(_kv[from]); }
-
 void tls_protection::clear_item(tls_secret_t type) {
     auto iter = _kv.find(type);
     if (_kv.end() != iter) {

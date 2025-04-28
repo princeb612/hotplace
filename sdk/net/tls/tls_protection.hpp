@@ -141,7 +141,6 @@ class tls_protection {
      * @param size_t size [in]
      */
     void append_item(tls_secret_t type, const byte_t* stream, size_t size);
-    void move_item(tls_secret_t from, tls_secret_t to);
     void clear_item(tls_secret_t type);
 
     size_t get_header_size();
