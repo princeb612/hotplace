@@ -75,7 +75,7 @@ return_t tls_protection::update_transcript_hash(tls_session *session, const byte
 
         auto hash = get_transcript_hash();
         if (hash) {
-            if (is_kindof_dtls()) {
+            if (is_kindof_dtls() && is_kindof_tls13()) {
                 basic_stream bs;
                 // DTLS
                 size_t offset_version = 12;
@@ -86,10 +86,46 @@ return_t tls_protection::update_transcript_hash(tls_session *session, const byte
                 //
                 // 12.. $ handshake, extension
                 hash->update(stream + offset_version, size - offset_version);
+#if defined DEBUG
+                if (check_trace_level(2) && istraceable()) {
+                    basic_stream dbs;
+                    binary_t digest;
+                    hash->digest(digest);
+                    dbs.printf("\e[1;34m");
+                    dbs.println("> update transcript hash 0x@%p", this);
+                    dump_memory(stream, sizeof(tls_handshake_t), &dbs, 16, 3, 0, dump_notrunc);
+                    dbs.println("> update transcript hash 0x@%p", this);
+                    dump_memory(stream + offset_version, size - offset_version, &dbs, 16, 3, 0, dump_notrunc);
+                    dbs.printf("\e[1;33m");
+                    dbs.println("   %s", base16_encode(digest).c_str());
+                    dbs.printf("\e[0m");
+                    trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                }
+#endif
             } else {
-                // TLS
-                // hash->digest(stream, size, digest);
+                // RFC 6347 4.2.6.  CertificateVerify and Finished Messages
+                // Hash calculations include entire handshake messages, including DTLS-specific fields: message_seq, fragment_offset, and fragment_length.
+                // the initial ClientHello and HelloVerifyRequest MUST NOT be included in the CertificateVerify or Finished MAC computations.
+
+                // RFC 9147 5.2.  DTLS Handshake Message Format
+                // In DTLS 1.3, the message transcript is computed over the original TLS 1.3-style Handshake messages
+                // without the message_seq, fragment_offset, and fragment_length values.
+
                 hash->update(stream, size);
+#if defined DEBUG
+                if (check_trace_level(2) && istraceable()) {
+                    basic_stream dbs;
+                    binary_t digest;
+                    hash->digest(digest);
+                    dbs.printf("\e[1;34m");
+                    dbs.println("> update transcript hash 0x@%p", this);
+                    dump_memory(stream, size, &dbs, 16, 3, 0, dump_notrunc);
+                    dbs.printf("\e[1;33m");
+                    dbs.println("   %s", base16_encode(digest).c_str());
+                    dbs.printf("\e[0m");
+                    trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                }
+#endif
             }
 
             hash->release();

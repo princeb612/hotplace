@@ -42,18 +42,6 @@ return_t dtls_handshake_fragmented::prepare_fragment(const byte_t* stream, uint3
         }
 
         _fragmented.insert(_fragmented.end(), stream + fragment_offset, stream + fragment_offset + fragment_length);
-
-#if 0
-#if defined DEBUG
-        if (check_trace_level(2) && istraceable()) {
-            basic_stream dbs;
-            dbs.println("> prepare fragment");
-            // dump_memory(stream + fragment_offset, fragment_length, &dbs, 16, 3, 0, dump_notrunc);
-            dump_memory(_fragmented, &dbs, 16, 3, 0, dump_notrunc);
-            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
-        }
-#endif
-#endif
     }
     __finally2 {
         // do nothing

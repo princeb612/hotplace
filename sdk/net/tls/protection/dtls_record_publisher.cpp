@@ -79,7 +79,6 @@ return_t dtls_record_publisher::publish(std::vector<tls_record*>& records, tls_r
                 handshake->do_write_body(dir, bin);
                 hstype = handshake->get_type();
                 hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq, true);
-                // split(bin, get_fragment_size(), last_fragment_size, lambda_fragment);
                 split(bin, get_fragment_size(), lambda_fragment);
             };
 

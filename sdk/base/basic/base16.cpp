@@ -384,4 +384,12 @@ binary_t base16_decode_rfc(const std::string& source) {
     return outpart;
 }
 
+binary_t base16_decode_rfc(const char* source) {
+    std::string input;
+    if (source) {
+        input = source;
+    }
+    return base16_decode_rfc(input);
+}
+
 }  // namespace hotplace

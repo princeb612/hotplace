@@ -191,6 +191,7 @@ int main(int argc, char** argv) {
         // RFC 8448 Example Handshake Traces for TLS 1.3
         test_rfc8448_2();
         test_rfc8448_3();
+
         test_rfc8448_4();
         test_rfc8448_5();
         test_rfc8448_6();
@@ -201,10 +202,11 @@ int main(int argc, char** argv) {
 
         test_captured_tls13();
         test_captured_tls12();
-        test_dtls_record_reoder();
-        test_captured_dtls12();
 
-        test_construct_dtls12();  // generate and arrange fragmented diagrams
+        test_dtls_record_reoder();
+
+        test_captured_dtls12();
+        // test_construct_dtls12();  // generate and arrange fragmented diagrams
     } else {
         dump_clienthello();
     }

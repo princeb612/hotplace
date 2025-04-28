@@ -30,14 +30,6 @@ return_t split(const byte_t* stream, size_t size, size_t fragment_size, std::fun
             __leave2;
         }
 
-#if defined DEBUG
-        if (check_trace_level(2) && istraceable()) {
-            basic_stream dbs;
-            dbs.println("> split [stream = size 0x%zx(%zi)]", size, size);
-            dump_memory(stream, size, &dbs, 16, 3, 0, dump_notrunc);
-            trace_debug_event(trace_category_internal, trace_event_internal, &dbs);
-        }
-#endif
         if (0 == size) {
             fn(stream, size, 0, 0);
         }
@@ -52,16 +44,6 @@ return_t split(const byte_t* stream, size_t size, size_t fragment_size, std::fun
                 blocksize = remains;
             }
             fn(stream, size, offset, blocksize);
-
-#if defined DEBUG
-            if (check_trace_level(2) && istraceable()) {
-                basic_stream dbs;
-                dbs.println("> split [fragment = unit 0x%zx(%zi) offset 0x%zx(%zi) size 0x%zx(%zi)]", fragment_size, fragment_size, offset, offset, blocksize,
-                            blocksize);
-                dump_memory(stream + offset, blocksize, &dbs, 16, 3, 0, dump_notrunc);
-                trace_debug_event(trace_category_internal, trace_event_internal, &dbs);
-            }
-#endif
         }
     }
     __finally2 {

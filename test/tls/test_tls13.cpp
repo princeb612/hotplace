@@ -212,7 +212,6 @@ void test_tls13_xargs_org() {
 
         test_transcript_hash(&session, base16_decode_rfc("e5fd6bf6b5ed5ac5c86681cf91e804b4884c9199ab5a863d1ecd2469edc64e126f798bedf1362f384e7f091dfe8bd46b"));
 
-        // TODO
         // https://tls13.xargs.org/#server-encrypted-extensions/annotated
 
         // > decrypted

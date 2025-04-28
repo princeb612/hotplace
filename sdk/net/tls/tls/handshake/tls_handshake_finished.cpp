@@ -83,6 +83,9 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
                 session->update_session_status(session_client_finished);
             }
 
+            protection.clear_item(tls_context_client_hello_random);
+            protection.clear_item(tls_context_server_hello_random);
+
             session->schedule(this);  // run_scheduled
         }
     }

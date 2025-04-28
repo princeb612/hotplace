@@ -71,6 +71,7 @@ class tls_session {
 
     void update_session_status(session_status_t status);
     void clear_session_status(session_status_t status);
+    void reset_session_status();
     uint32 get_session_status();
     return_t wait_change_session_status(uint32 status, unsigned msec, bool waitall = true);
     void set_hook_change_session_status(std::function<void(uint32 status)> func);

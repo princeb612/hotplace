@@ -101,7 +101,10 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
 
         auto session_status = session->get_session_status();
         if (session_hello_verify_request & session_status) {
-            if (get_cookie() != protection.get_item(tls_context_cookie)) {
+            if ((get_cookie() != protection.get_item(tls_context_cookie)) || (get_random() != protection.get_item(tls_context_client_hello_random))) {
+                // client_hello
+                // hello_verify_request (cookie)
+                // client_hello (cookie)
                 ret = errorcode_t::error_handshake;
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
                 __leave2;
@@ -117,7 +120,6 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
 
             switch (protection.get_flow()) {
                 case tls_flow_1rtt: {
-                    // 1-RTT
                     protection.set_item(tls_context_client_hello, stream + hspos, size_header_body);  // transcript hash, see server_hello
                 } break;
                 case tls_flow_0rtt: {
@@ -324,9 +326,14 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
             binary_t compression_methods;
             compression_methods.resize(1);
 
-            if (32 != _random.size()) {
-                openssl_prng prng;
-                prng.random(_random, 32);
+            auto session_status = session->get_session_status();
+            if (session_hello_verify_request & session_status) {
+                _random = protection.get_item(tls_context_client_hello_random);
+            } else {
+                if (32 != _random.size()) {
+                    openssl_prng prng;
+                    prng.random(_random, 32);
+                }
             }
 
             payload pl;

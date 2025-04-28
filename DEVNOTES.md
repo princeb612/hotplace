@@ -229,13 +229,12 @@ flowchart LR
   - [ ] DTLS construct
     - [x] DTLS version
       - [x] DTLS1.3
-      - [ ] DTLS1.2 (rev.751)
-        - [ ] finished
-      - [ ] fragmentation
+      - [x] DTLS1.2 (rev.751, 760)
+      - [x] fragmentation (rev.758)
   - [x] TLS over TCP (example netclient)
     - [x] HTTP/1.1
   - [ ] DTLS over UDP
-  - [x] encrypt_then_mac
+  - [x] encrypt_then_mac (rev.752)
     - [x] encrypt
     - [x] decrypt
 

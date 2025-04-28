@@ -121,16 +121,6 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             binary_t assemble;
             protection.consume_item(tls_context_fragment, assemble);
 
-            dtls_handshake_t header;
-            header.msg_type = get_type();
-            uint24_t length(assemble.size());
-            memcpy(header.length, length.data, 3);
-            header.seq = 0;
-            memset(header.fragment_offset, 0, 3);
-            memcpy(header.fragment_len, length.data, 3);
-
-            assemble.insert(assemble.begin(), (byte_t*)&header, (byte_t*)&header + sizeof(header));
-
 #if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
@@ -141,6 +131,16 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
+
+            dtls_handshake_t header;
+            header.msg_type = get_type();
+            uint24_t length(assemble.size());
+            memcpy(header.length, length.data, 3);
+            header.seq = hton16(_dtls_seq);
+            memset(header.fragment_offset, 0, 3);
+            memcpy(header.fragment_len, length.data, 3);
+
+            assemble.insert(assemble.begin(), (byte_t*)&header, (byte_t*)&header + sizeof(header));
 
             ret = read(dir, &assemble[0], assemble.size(), tpos);
             __leave2;
@@ -190,6 +190,11 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
             __leave2;
         }
 
+        ret = do_preprocess(dir);
+        if (errorcode_t::success != ret) {
+            __leave2_trace(ret);
+        }
+
         binary_t body;
         ret = do_write_body(dir, body);
 
@@ -197,11 +202,6 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
 
         const byte_t* stream = &bin[0];
         size_t size = bin.size();
-
-        ret = do_preprocess(dir);
-        if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
-        }
 
         ret = do_postprocess(dir, stream, size);
         if (errorcode_t::success != ret) {

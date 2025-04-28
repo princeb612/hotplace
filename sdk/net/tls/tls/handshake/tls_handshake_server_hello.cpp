@@ -169,11 +169,14 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             // calculates the hash of all handshake messages to this point (ClientHello and ServerHello).
             binary_t hello_hash;
             if (tls_flow_1rtt == protection.get_flow()) {
+                protection.reset_transcript_hash(session);
+
                 const binary_t& client_hello = protection.get_item(tls_context_client_hello);
                 protection.update_transcript_hash(session, &client_hello[0], client_hello.size());  // client_hello
             }
 
             protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);  // server_hello
+
             auto test = protection.calc(session, tls_hs_server_hello, dir);
             auto& session_info = session->get_session_info(dir);
             session_info.set_status(get_type());
@@ -196,23 +199,31 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                  *                Hash(ClientHello1) ||  // Hash of ClientHello1
                  *                HelloRetryRequest  || ... || Mn)
                  */
+
                 binary_t handshake_hash;
-                const binary_t& client_hello = protection.get_item(tls_context_client_hello);
+
                 protection.reset_transcript_hash(session);
+
+                // client_hello
+                const binary_t& client_hello = protection.get_item(tls_context_client_hello);
                 protection.calc_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);
 
+                // uint8(FE) || uint24(hash.size) || hash
                 binary message_hash;
                 message_hash << uint8(tls_hs_message_hash) << uint16(0) << byte_t(handshake_hash.size()) << handshake_hash;
                 const binary_t& synthetic_handshake_message = message_hash.get();
 
                 protection.reset_transcript_hash(session);
+
                 protection.update_transcript_hash(session, &synthetic_handshake_message[0], synthetic_handshake_message.size());
+
+                // server_hello
                 protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);
+
+                protection.clear_item(tls_context_client_hello);
             } else {
                 ret = test;
             }
-
-            protection.clear_item(tls_context_client_hello);
         }
         if ((session_quic == session_type) || (session_quic2 == session_type)) {
             session->reset_recordno(from_server);

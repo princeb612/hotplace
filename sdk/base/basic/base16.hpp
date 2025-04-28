@@ -218,6 +218,7 @@ std::string base16_encode_rfc(const std::string& source);
  * @return  binary_t
  */
 binary_t base16_decode_rfc(const std::string& source);
+binary_t base16_decode_rfc(const char* source);
 
 }  // namespace hotplace
 

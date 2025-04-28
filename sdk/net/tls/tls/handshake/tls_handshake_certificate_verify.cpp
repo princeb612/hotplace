@@ -32,6 +32,28 @@ static return_t construct_certificate_verify_message(tls_session* session, tls_d
 
 tls_handshake_certificate_verify::tls_handshake_certificate_verify(tls_session* session) : tls_handshake(tls_hs_certificate_verify, session) {}
 
+return_t tls_handshake_certificate_verify::do_preprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        auto session_status = session->get_session_status();
+        if (0 == (session_server_cert & session_status)) {
+            ret = errorcode_t::error_handshake;
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+            __leave2;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {

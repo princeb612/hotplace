@@ -178,8 +178,10 @@ void test_rfc8448_5() {
         // {server}  extract secret "early"
         test_keycalc(&session, tls_secret_early_secret, bin, "early", "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
         // {server}  derive secret for handshake "tls13 derived"
+        test_keycalc(&session, tls_context_empty_hash, bin, "hash", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
         test_keycalc(&session, tls_secret_handshake_derived, bin, "derived", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
         // {server}  extract secret "handshake"
+        test_keycalc(&session, tls_context_shared_secret, bin, "ikm", "c142ce13ca11b5c2233652e63ad3d97844f1621fbfb9de69d547dc8fedeabeb4");
         test_keycalc(&session, tls_secret_handshake, bin, "handshake", "ce022e5e6e81e50736d773f2d3adfce8220d049bf510f0dbfac927ef4243b148");
 
         // Transcript-Hash(ClientHello1, HelloRetryRequest, ... Mn)

@@ -68,10 +68,9 @@ static return_t construct_record_fragmented(tls_record* record, tls_direction_t 
         record->addref();
 
         binary_t bin_record;
+
         auto type = record->get_type();
         if (tls_content_type_handshake == type) {
-            record->write(dir, bin_record, record_nochange_dtls_epochseq);
-
             std::vector<tls_record*> records;
             auto session = record->get_session();
             session->get_dtls_record_publisher().publish(records, record, dir);
@@ -81,6 +80,7 @@ static return_t construct_record_fragmented(tls_record* record, tls_direction_t 
                 _traffic.sendto(std::move(bin_fragmented_record));
                 fragment->release();
             }
+            record->write(dir, bin_record, record_nochange_dtls_epochseq);
         } else {
             record->write(dir, bin_record);
             _traffic.sendto(std::move(bin_record));
@@ -450,7 +450,7 @@ static return_t do_test_send_record(tls_direction_t dir, tls_session* session, c
 
 // TODO
 // server_hello + certificate + server_key_exchange ... not yet
-// DTLS 1.2 finished ... calcuration (no test vector exist)
+// message sequence
 void test_construct_dtls12() {
     _test_case.begin("construct DTLS 1.2");
 
@@ -525,9 +525,9 @@ void test_construct_dtls12() {
     lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 0, 5);
 
     // S->C, record epoch 1, sequence 0, handshake sequence 5
-    do_test_construct_finished(from_client, &session_client, "finished");
-    do_test_send_record(from_client, &session_server, "finished");
-    lambda_test_next_seq(__FUNCTION__, from_client, &session_client, 2, 5);
+    do_test_construct_finished(from_server, &session_server, "finished");
+    do_test_send_record(from_server, &session_client, "finished");
+    lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 1, 6);
 
     // skip followings
     // - application data

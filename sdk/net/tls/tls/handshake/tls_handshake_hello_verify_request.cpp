@@ -33,8 +33,10 @@ return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir,
             ret = errorcode_t::invalid_context;
             __leave2;
         }
+        auto session_type = session->get_type();
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
+        auto size_header_body = get_size();
 
         protection.set_item(tls_context_cookie, _cookie);
 

@@ -71,6 +71,8 @@ void tls_session::clear_session_status(session_status_t status) {
     _sem.signal();
 }
 
+void tls_session::reset_session_status() { _status = 0; }
+
 uint32 tls_session::get_session_status() { return _status; }
 
 return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, bool waitall) {

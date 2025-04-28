@@ -45,6 +45,12 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        if (tls_hs_client_hello == type) {
+            if (tls_flow_0rtt != get_flow()) {
+                ret = errorcode_t::bad_request;
+                __leave2;
+            }
+        }
 
         auto session_type = session->get_type();
         uint16 cipher_suite = get_cipher_suite();
@@ -122,7 +128,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
         };
 
         binary_t context_hash;
-        // server_hello~ or 0-RTT client_hello~
+        // transcript hash
         auto tshash = get_transcript_hash();
         if (tshash) {
             tshash->digest(context_hash);

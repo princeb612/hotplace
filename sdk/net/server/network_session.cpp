@@ -340,8 +340,6 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
         return_t result = errorcode_t::success;
 
         if (get_server_socket()->support_tls()) { /* TLS */
-            // TODO
-
             __try2 {
                 size_t cbread = 0;
                 bool data_ready = false;
