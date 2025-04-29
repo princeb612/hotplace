@@ -42,19 +42,47 @@ void tls_handshake_finished::run_scheduled(tls_direction_t dir) {
 
 return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    auto session = get_session();
-    auto tlsver = session->get_tls_protection().get_tls_version();
-    if (true == tlsadvisor->is_kindof_tls13(tlsver)) {
-        // RFC 8446 5.  Record Protocol
-        //  The change_cipher_spec record is used only for compatibility purposes.
-        // RFC 8448 3.  Simple 1-RTT Handshake
-    } else {
-        // TLS 1.2, DTLS 1.2
-        bool isprotected = session->get_session_info(dir).apply_protection();
-        if (false == isprotected) {
-            ret = errorcode_t::confidential;
+    __try2 {
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto session = get_session();
+        auto tlsver = session->get_tls_protection().get_tls_version();
+        auto session_status = session->get_session_status();
+        uint32 session_prerequisite = 0;
+        if (true == tlsadvisor->is_kindof_tls13(tlsver)) {
+            // RFC 8446 5.  Record Protocol
+            //  The change_cipher_spec record is used only for compatibility purposes.
+            // RFC 8448 3.  Simple 1-RTT Handshake
+
+            // certificate, certificate_verify, finished(server), finished(client)
+            session_prerequisite = session_status_server_cert_verified;
+            if (from_client == dir) {
+                session_prerequisite != session_status_server_finished;
+            }
+        } else {
+            // TLS 1.2, DTLS 1.2
+            // change_cipher_spec
+            bool isprotected = session->get_session_info(dir).apply_protection();
+            if (false == isprotected) {
+                ret = errorcode_t::confidential;
+                __leave2;
+            }
+
+            // certificate, server_key_exchange, server_hello_done, client_key_exchange
+            // change_cipher_spec(client), finished(client), change_cipher_spec(server), finished(server)
+            session_prerequisite = session_status_server_key_exchange | session_status_client_key_exchange;
+            if (from_server == dir) {
+                session_prerequisite |= session_status_client_finished;
+            }
         }
+
+        if (0 == (session_prerequisite & session_status)) {
+            ret = errorcode_t::error_handshake;
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+            __leave2;
+        }
+    }
+    __finally2 {
+        // do nothing
     }
     return ret;
 }
@@ -78,9 +106,9 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
             protection.calc(session, tls_hs_finished, dir);
 
             if (from_server == dir) {
-                session->update_session_status(session_server_finished);
+                session->update_session_status(session_status_server_finished);
             } else if (from_client == dir) {
-                session->update_session_status(session_client_finished);
+                session->update_session_status(session_status_client_finished);
             }
 
             protection.clear_item(tls_context_client_hello_random);
@@ -148,8 +176,10 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             protection.calc_finished(dir, hmacalg, dlen, typeof_secret, maced);
 
             verify_data.resize(maced.size());
-            if (verify_data != maced) {
+            if (maced.empty() || (verify_data != maced)) {
                 ret = errorcode_t::error_verify;
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+                __leave2;
             }
 
 #if defined DEBUG

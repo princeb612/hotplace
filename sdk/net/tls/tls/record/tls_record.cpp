@@ -35,7 +35,7 @@ constexpr char constexpr_dtls_epoch[] = "epoch";
 constexpr char constexpr_dtls_record_seq[] = "sequence number";
 
 tls_record::tls_record(uint8 type, tls_session* session)
-    : _content_type(type), _cond_dtls(false), _dtls_epoch(0), _dtls_record_seq(0), _bodysize(0), _session(session) {
+    : _content_type(type), _cond_dtls(false), _dtls_epoch(0), _dtls_record_seq(0), _bodysize(0), _session(session), _flags(0) {
     if (session) {
         session->addref();
     }
@@ -75,7 +75,7 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
     return ret;
 }
 
-return_t tls_record::write(tls_direction_t dir, binary_t& bin, uint32 flags) {
+return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
 #if defined DEBUG
@@ -127,15 +127,8 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin, uint32 flags) {
 
         do_postprocess(dir);  // change secret, recno
 
-        bool change_dtls_epochseq = (0 == (record_nochange_dtls_epochseq & flags));
-        if (is_dtls && change_dtls_epochseq) {
-            auto& kv = session->get_session_info(dir).get_keyvalue();
-            if (tls_content_type_change_cipher_spec == get_type()) {
-                kv.inc(session_dtls_epoch);
-                kv.set(session_dtls_seq, 0);
-            } else {
-                kv.inc(session_dtls_seq);
-            }
+        if (is_dtls && (0 == (dont_control_dtls_sequence & get_flags()))) {
+            change_epoch_seq(dir);
         }
     }
     __finally2 {}
@@ -471,6 +464,21 @@ void tls_record::operator<<(tls_handshake* handshake) {
 void tls_record::addref() { _shared.addref(); }
 
 void tls_record::release() { _shared.delref(); }
+
+void tls_record::set_flags(uint32 flags) { _flags = flags; }
+
+uint32 tls_record::get_flags() { return _flags; }
+
+void tls_record::change_epoch_seq(tls_direction_t dir) {
+    auto session = get_session();
+    auto& kv = session->get_session_info(dir).get_keyvalue();
+    if (tls_content_type_change_cipher_spec == get_type()) {
+        kv.inc(session_dtls_epoch);
+        kv.set(session_dtls_seq, 0);
+    } else {
+        kv.inc(session_dtls_seq);
+    }
+}
 
 }  // namespace net
 }  // namespace hotplace

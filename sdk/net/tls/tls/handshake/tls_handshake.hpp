@@ -46,6 +46,7 @@ class tls_handshake {
     uint32 get_body_size();
 
     return_t prepare_fragment(const byte_t *stream, uint32 size, uint16 seq, uint32 fragment_offset, uint32 fragment_length);
+    void set_dtls_seq(uint16 seq);
 
    protected:
     virtual return_t do_preprocess(tls_direction_t dir);

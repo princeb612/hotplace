@@ -173,10 +173,10 @@ return_t dtls_client_socket2::do_handshake() {
                 }
 
                 {
-                    session->wait_change_session_status(session_hello_verify_request, get_wto());
+                    session->wait_change_session_status(session_status_hello_verify_request, get_wto());
                     session_status = session->get_session_status();
 
-                    if (0 == (session_status & session_hello_verify_request)) {
+                    if (0 == (session_status & session_status_hello_verify_request)) {
                         ret = error_handshake;
                         __leave2;
                     }
@@ -195,7 +195,8 @@ return_t dtls_client_socket2::do_handshake() {
             __leave2;
         }
 
-        uint32 server_session_status = session_server_hello | session_server_cert | session_server_key_exchange | session_server_hello_done;
+        uint32 server_session_status =
+            session_status_server_hello | session_status_server_cert | session_status_server_key_exchange | session_status_server_hello_done;
         session->wait_change_session_status(server_session_status, get_wto());
         session_status = session->get_session_status();
 

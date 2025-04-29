@@ -25,6 +25,28 @@ constexpr char constexpr_cookie[] = "cookie";
 
 tls_handshake_hello_verify_request::tls_handshake_hello_verify_request(tls_session* session) : tls_handshake(tls_hs_hello_verify_request, session) {}
 
+return_t tls_handshake_hello_verify_request::do_preprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        auto session_status = session->get_session_status();
+        if (0 == (session_status_client_hello & session_status)) {
+            ret = errorcode_t::error_handshake;
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+            __leave2;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -40,8 +62,8 @@ return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir,
 
         protection.set_item(tls_context_cookie, _cookie);
 
-        session->clear_session_status(session_client_hello);
-        session->update_session_status(session_hello_verify_request);
+        session->clear_session_status(session_status_client_hello);
+        session->update_session_status(session_status_hello_verify_request);
     }
     __finally2 {
         // do nothing

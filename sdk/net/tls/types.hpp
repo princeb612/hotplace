@@ -591,18 +591,24 @@ enum protection_level_t : uint8 {
 };
 
 enum session_status_t : uint32 {
-    session_client_hello = (1 << 0),          // 00000001
-    session_server_hello = (1 << 1),          // 00000002
-    session_hello_verify_request = (1 << 2),  // 00000004
-    session_server_cert = (1 << 3),           // 00000008
-    session_server_key_exchange = (1 << 4),   // 00000010
-    session_server_hello_done = (1 << 5),     // 00000020 tls_hs_server_hello_done
-    session_server_cert_verified = (1 << 6),  // 00000040 tls_handshake_certificate_verify
-    session_client_key_exchange = (1 << 7),   // 00000080
-    session_server_finished = (1 << 8),       // 00000100 tls_handshake_finished
-    session_client_finished = (1 << 9),       // 00000200 tls_handshake_finished
-    session_client_close_notified = 0x40000000,
-    session_server_close_notified = 0x80000000,
+    session_status_client_hello = (1 << 0),          // 00000001
+    session_status_server_hello = (1 << 1),          // 00000002
+    session_status_hello_verify_request = (1 << 2),  // 00000004
+    session_status_server_cert = (1 << 3),           // 00000008
+    session_status_server_key_exchange = (1 << 4),   // 00000010
+    session_status_server_hello_done = (1 << 5),     // 00000020 tls_hs_server_hello_done
+    session_status_server_cert_verified = (1 << 6),  // 00000040 tls_handshake_certificate_verify
+    session_status_client_key_exchange = (1 << 7),   // 00000080
+    session_status_client_cert = (1 << 8),           // 00000100
+    session_status_client_cert_verified = (1 << 9),  // 00000200
+    session_status_server_finished = (1 << 10),      // 00000400 tls_handshake_finished
+    session_status_client_finished = (1 << 11),      // 00000800 tls_handshake_finished
+    session_status_client_close_notified = 0x40000000,
+    session_status_server_close_notified = 0x80000000,
+};
+
+enum tls_internal_flag_t : uint32 {
+    dont_control_dtls_sequence = (1 << 0),
 };
 
 class dtls_record_publisher;

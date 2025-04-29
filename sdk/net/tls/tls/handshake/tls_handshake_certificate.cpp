@@ -69,6 +69,28 @@ return_t tls_handshake_certificate::set(tls_direction_t dir, const char* certfil
     return ret;
 }
 
+return_t tls_handshake_certificate::do_preprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        auto session_status = session->get_session_status();
+        if (0 == (session_status_server_hello & session_status)) {
+            ret = errorcode_t::error_handshake;
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+            __leave2;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -84,7 +106,9 @@ return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, const by
 
         protection.update_transcript_hash(session, stream + hspos, hssize);
         if (from_server == dir) {
-            session->update_session_status(session_server_cert);
+            session->update_session_status(session_status_server_cert);
+        } else if (from_client == dir) {
+            session->update_session_status(session_status_client_cert);
         }
     }
     __finally2 {

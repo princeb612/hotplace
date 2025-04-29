@@ -177,6 +177,7 @@ int main(int argc, char** argv) {
     openssl_startup();
 
     if (option.clienthello.empty()) {
+#if 0
         test_validate();
 
         // https://tls13.xargs.org/
@@ -206,7 +207,8 @@ int main(int argc, char** argv) {
         test_dtls_record_reoder();
 
         test_captured_dtls12();
-        // test_construct_dtls12();  // generate and arrange fragmented diagrams
+#endif
+        test_construct_dtls12();  // generate and arrange fragmented diagrams
     } else {
         dump_clienthello();
     }

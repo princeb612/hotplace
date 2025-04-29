@@ -125,7 +125,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.printf("\e[1;33m");
-                dbs.println("> reassemble");
+                dbs.println("> reassemble message seq %i", _dtls_seq);
                 dump_memory(assemble, &dbs, 16, 3, 0, dump_notrunc);
                 dbs.printf("\e[0m");
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
@@ -143,7 +143,9 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             assemble.insert(assemble.begin(), (byte_t*)&header, (byte_t*)&header + sizeof(header));
 
             ret = read(dir, &assemble[0], assemble.size(), tpos);
-            __leave2;
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         } else {
             if (tls_hs_encrypted_extensions == get_type()) {
                 ret = do_read_body(dir, stream, offsetof_body() + get_body_size(), pos);
@@ -327,6 +329,16 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             _bodysize = length;
             _is_dtls = cond_dtls;
             if (cond_dtls) {
+                auto& kv = session->get_session_info(dir).get_keyvalue();
+                auto sess_dtls_seq = kv.get(session_dtls_message_seq);
+                if (sess_dtls_seq != dtls_seq) {
+                    if (sess_dtls_seq + 1 == dtls_seq) {
+                        kv.set(session_dtls_message_seq, dtls_seq);
+                    } else {
+                        ret = errorcode_t::error_handshake;
+                        __leave2;
+                    }
+                }
                 _dtls_seq = dtls_seq;
                 _fragment_offset = fragment_offset;
                 _fragment_len = fragment_len;
@@ -472,6 +484,8 @@ size_t tls_handshake::offsetof_body() { return _range.end; }
 uint32 tls_handshake::get_body_size() { return _fragment_len ? _fragment_len : _bodysize; }
 
 void tls_handshake::set_extension_len(uint16 len) { _extension_len = len; }
+
+void tls_handshake::set_dtls_seq(uint16 seq) { _dtls_seq = seq; }
 
 }  // namespace net
 }  // namespace hotplace

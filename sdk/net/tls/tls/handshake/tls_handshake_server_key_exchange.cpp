@@ -46,7 +46,7 @@ return_t tls_handshake_server_key_exchange::do_postprocess(tls_direction_t dir, 
         auto hssize = get_size();
 
         protection.update_transcript_hash(session, stream + hspos, hssize);
-        session->update_session_status(session_server_key_exchange);
+        session->update_session_status(session_status_server_key_exchange);
     }
     __finally2 {
         // do nothing

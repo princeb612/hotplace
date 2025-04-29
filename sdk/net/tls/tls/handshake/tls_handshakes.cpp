@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-tls_handshakes::tls_handshakes() {}
+tls_handshakes::tls_handshakes() : _dtls_seq(0) {}
 
 tls_handshakes::~tls_handshakes() { clear(); }
 
@@ -76,6 +76,11 @@ return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary
         if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
+        }
+
+        bool control_seq = false;
+        if (session_dtls == session->get_type()) {
+            control_seq = true;
         }
 
         auto lambda = [&](tls_handshake* handshake) -> void { handshake->write(dir, bin); };
@@ -153,6 +158,10 @@ void tls_handshakes::clear() {
     _handshakes.clear();
     _dictionary.clear();
 }
+
+void tls_handshakes::set_dtls_seq(uint16 seq) { _dtls_seq = seq; }
+
+uint16 tls_handshakes::get_dtls_seq() { return _dtls_seq; }
 
 }  // namespace net
 }  // namespace hotplace

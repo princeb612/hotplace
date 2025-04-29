@@ -41,10 +41,10 @@ void dtls_record_publisher::set_fragment_size(uint16 size) {
 
 uint16 dtls_record_publisher::get_fragment_size() { return _fragment_size; }
 
-return_t dtls_record_publisher::publish(std::vector<tls_record*>& records, tls_record* record, tls_direction_t dir) {
+return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir, std::function<void(binary_t& bin)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == record) {
+        if (nullptr == record || nullptr == func) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -55,9 +55,10 @@ return_t dtls_record_publisher::publish(std::vector<tls_record*>& records, tls_r
         {
             auto rctype = record->get_type();
             tls_hs_type_t hstype = tls_hs_client_hello;
-            uint16 hsseq = 0;
             size_t last_fragment_size = 0;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto& kv = session->get_session_info(dir).get_keyvalue();
+            uint16 hsseq = 0;
 
             auto lambda_fragment = [&](const byte_t* stream, size_t size, size_t fragment_offset, size_t fragment_size) -> void {
                 auto record_fragmented = builder.set(session).set(rctype).set(dir).construct().build();
@@ -67,10 +68,13 @@ return_t dtls_record_publisher::publish(std::vector<tls_record*>& records, tls_r
                         handshake->prepare_fragment(stream, size, hsseq, fragment_offset, fragment_size);
                         last_fragment_size = fragment_size;
                         *record_fragmented << handshake;
-                        records.push_back(record_fragmented);
-                    } else {
-                        record_fragmented->release();
                     }
+
+                    binary_t bin;
+                    record_fragmented->write(dir, bin);
+                    func(bin);
+
+                    record_fragmented->release();
                 }
             };
 
@@ -78,16 +82,28 @@ return_t dtls_record_publisher::publish(std::vector<tls_record*>& records, tls_r
                 binary_t bin;
                 handshake->do_write_body(dir, bin);
                 hstype = handshake->get_type();
-                hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq, true);
+                hsseq = kv.get(session_dtls_message_seq);
                 split(bin, get_fragment_size(), lambda_fragment);
+                kv.inc(session_dtls_message_seq);
             };
 
             if (tls_content_type_handshake == rctype) {
+                // do not change epoch, sequence
                 tls_record_handshake* record_handshake = static_cast<tls_record_handshake*>(record);
+
+                record_handshake->set_flags(dont_control_dtls_sequence);
+
                 record_handshake->get_handshakes().for_each(lambda_handshake);
+
+                binary_t bin_record;
+                record_handshake->write(dir, bin_record);
             } else {
                 record->addref();
-                records.push_back(record);
+
+                binary_t bin;
+                record->write(dir, bin);
+
+                func(bin);
             }
         }
     }

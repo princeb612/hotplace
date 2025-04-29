@@ -36,8 +36,12 @@ class tls_handshakes {
 
     void clear();
 
+    void set_dtls_seq(uint16 seq);
+    uint16 get_dtls_seq();
+
    protected:
    private:
+    uint16 _dtls_seq;
     critical_section _lock;
     std::map<uint8, tls_handshake*> _dictionary;  // tls_hs_type_t
     std::vector<tls_handshake*> _handshakes;      // ordered

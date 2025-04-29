@@ -34,11 +34,11 @@ class dtls_record_publisher {
 
     /**
      * @brief publish
-     * @param std::vector<tls_record*>& records [out]
      * @param tls_record_handshake* record [in]
      * @param tls_direction_t dir [in]
+     * @param std::function<void (binary_t& bin)> func [in]
      */
-    return_t publish(std::vector<tls_record*>& records, tls_record* record, tls_direction_t dir);
+    return_t publish(tls_record* record, tls_direction_t dir, std::function<void(binary_t& bin)> func);
 
    protected:
     void set_session(tls_session* session);

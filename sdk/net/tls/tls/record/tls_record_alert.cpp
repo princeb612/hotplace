@@ -148,9 +148,9 @@ void tls_record_alert::check_status(tls_direction_t dir) {
     if ((tls_alertlevel_warning == get_level()) && (tls_alertdesc_close_notify == get_desc())) {
         auto session = get_session();
         if (from_client == dir) {
-            session->update_session_status(session_client_close_notified);
+            session->update_session_status(session_status_client_close_notified);
         } else if (from_server == dir) {
-            session->update_session_status(session_server_close_notified);
+            session->update_session_status(session_status_server_close_notified);
         }
     }
 }

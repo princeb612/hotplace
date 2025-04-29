@@ -100,7 +100,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
         auto& protection = session->get_tls_protection();
 
         auto session_status = session->get_session_status();
-        if (session_hello_verify_request & session_status) {
+        if (session_status_hello_verify_request & session_status) {
             if ((get_cookie() != protection.get_item(tls_context_cookie)) || (get_random() != protection.get_item(tls_context_client_hello_random))) {
                 // client_hello
                 // hello_verify_request (cookie)
@@ -111,7 +111,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
             }
         }
 
-        session->update_session_status(session_client_hello);
+        session->update_session_status(session_status_client_hello);
 
         // keycalc
         {
@@ -327,7 +327,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
             compression_methods.resize(1);
 
             auto session_status = session->get_session_status();
-            if (session_hello_verify_request & session_status) {
+            if (session_status_hello_verify_request & session_status) {
                 _random = protection.get_item(tls_context_client_hello_random);
             } else {
                 if (32 != _random.size()) {

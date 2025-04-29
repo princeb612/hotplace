@@ -31,7 +31,7 @@ return_t dtls_handshake_fragmented::write(tls_direction_t dir, binary_t& bin) {
 return_t dtls_handshake_fragmented::prepare_fragment(const byte_t* stream, uint32 size, uint16 seq, uint32 fragment_offset, uint32 fragment_length) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == stream) {
+        if ((0 != size) && (nullptr == stream)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
