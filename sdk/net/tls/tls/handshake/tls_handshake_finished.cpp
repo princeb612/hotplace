@@ -148,7 +148,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
             if (nullptr == hint_tls_alg) {
-                ret = errorcode_t::success;
+                ret = errorcode_t::not_supported;
                 __leave2;
             }
             if (tlsadvisor->is_kindof_tls13(tlsversion)) {

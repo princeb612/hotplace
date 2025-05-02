@@ -37,6 +37,7 @@
 
 /* stream */
 #include <sdk/io/stream/file_stream.hpp>
+#include <sdk/io/stream/split.hpp>
 #include <sdk/io/stream/stream.hpp>
 #include <sdk/io/stream/string.hpp>
 #include <sdk/io/stream/types.hpp>

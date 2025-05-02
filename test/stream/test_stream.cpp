@@ -414,3 +414,81 @@ void test_split() {
     split(block, testfragsize, 0x10, lambda2);
     _test_case.assert(table2 == expect2, __FUNCTION__, "split");
 }
+
+void test_split2() {
+    /**
+     * input
+     *   group #0 "group0" size 100
+     *   group #1 "group1" size 210
+     *   group #2 "group2" size 30
+     *   group #3 "group3" size 0
+     *   segment size 80
+     * output
+     *   segment #0 group #0 "group0" offset 0 size 80
+     *   segment #1 group #0 "group0" offset 80 size 20
+     *   segment #1 group #1 "group1" offset 0 size 60
+     *   segment #2 group #1 "group1" offset 60 size 80
+     *   segment #3 group #1 "group1" offset 140 size 70
+     *   segment #3 group #2 "group2" offset 0 size 10
+     *   segment #4 group #2 "group2" offset 10 size 20
+     *   segment #4 group #3 "group3" offset 0 size 0
+     */
+    struct expect_table_t {
+        int segment;
+        int group;
+        std::string desc;
+        size_t offset;
+        size_t size;
+    } expect_table[] = {
+        {0, 0, "group0", 0, 80},   {1, 0, "group0", 80, 20}, {1, 1, "group1", 0, 60},  {2, 1, "group1", 60, 80},
+        {3, 1, "group1", 140, 70}, {3, 2, "group2", 0, 10},  {4, 2, "group2", 10, 20}, {4, 3, "group3", 0, 0},
+    };
+
+    binary_t group0;
+    binary_t group1;
+    binary_t group2;
+    binary_t group3;
+    for (auto i = 0; i < 100; i++) {
+        group0.push_back((byte_t)(i % 0x100));
+    }
+    for (auto i = 0; i < 210; i++) {
+        group1.push_back((byte_t)(i % 0x100));
+    }
+    for (auto i = 0; i < 30; i++) {
+        group2.push_back((byte_t)(i % 0x100));
+    }
+
+    splitter<std::string> spl;
+    spl.set_segment_size(80);
+    spl.add(std::move(group0), std::move(std::string("group0")));
+    spl.add(std::move(group1), std::move(std::string("group1")));
+    spl.add(std::move(group2), std::move(std::string("group2")));
+    spl.add(std::move(group3), std::move(std::string("group3")));
+    size_t idx = 0;
+    int segment = -1;
+    int group = -1;
+    const char* routine = __FUNCTION__;
+    auto lambda = [&](uint32 flags, const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize, const std::string& desc) -> void {
+        std::string comments;
+        if (splitter_flag_t::splitter_new_segment & flags) {
+            ++segment;
+            comments += "new segment";
+        }
+        if (splitter_flag_t::splitter_new_group & flags) {
+            ++group;
+            if (false == comments.empty()) {
+                comments += " & ";
+            }
+            comments += "new group";
+        }
+
+        auto expect = expect_table[idx++];
+        bool test = false;
+        test = (expect.segment == segment) && (expect.group == group) && (expect.desc == desc) && (expect.offset == fragoffset) && (expect.size == fragsize);
+        _test_case.assert(test, routine, R"(segment #%i group #%i "%s" size %zi fragment offset %zi fragment size %zi %s)", segment, group, desc.c_str(), size,
+                          fragoffset, fragsize, comments.c_str());
+
+        // dump if necessary
+    };
+    spl.run(lambda);
+}

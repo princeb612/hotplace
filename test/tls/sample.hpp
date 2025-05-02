@@ -47,6 +47,9 @@ void test_transcript_hash(tls_session* session, const binary_t& expect);
 void direction_string(tls_direction_t dir, int send, std::string& s);
 void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tls_secret_t secret, const char* secret_name);
 
+return_t construct_record_fragmented(tls_record* record, tls_direction_t dir, std::function<void(binary_t& bin)> func);
+return_t construct_record_fragmented(tls_records* records, tls_direction_t dir, std::function<void(binary_t& bin)> func);
+
 // xargs.org
 void test_tls13_xargs_org();
 void test_tls12_xargs_org();
@@ -65,7 +68,7 @@ void test_captured_tls12();
 // $ openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -dtls
 // $ openssl s_client -connect localhost:9000 -state -debug -dtls
 void test_captured_dtls12();
-void test_dtls_record_reoder();
+void test_dtls_record_rearrange();
 
 // RFC
 void test_rfc8448_2();
@@ -79,7 +82,8 @@ void test_use_pre_master_secret();
 
 void test_construct_tls();
 void test_construct_dtls13();
-void test_construct_dtls12();
+void test_construct_dtls12_1();
+void test_construct_dtls12_2();
 void test_validate();
 
 void dump_clienthello();

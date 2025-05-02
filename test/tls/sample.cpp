@@ -129,6 +129,48 @@ void play_pcap(tls_session* session, pcap_testvector* testvector, size_t size) {
     }
 }
 
+return_t construct_record_fragmented(tls_record* record, tls_direction_t dir, std::function<void(binary_t& bin)> func) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == record || nullptr == func) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        record->addref();
+
+        record->get_session()->get_dtls_record_publisher().publish(record, dir, func);
+
+        record->release();
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
+return_t construct_record_fragmented(tls_records* records, tls_direction_t dir, std::function<void(binary_t& bin)> func) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == records || nullptr == func) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        auto lambda = [&](tls_record* record) -> void {
+            record->addref();
+
+            record->get_session()->get_dtls_record_publisher().publish(record, dir, func);
+
+            record->release();
+        };
+        records->for_each(lambda);
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 tls_session rfc8448_session;
 tls_session rfc8448_session2;
 
@@ -177,7 +219,7 @@ int main(int argc, char** argv) {
     openssl_startup();
 
     if (option.clienthello.empty()) {
-#if 0
+#if 1
         test_validate();
 
         // https://tls13.xargs.org/
@@ -204,11 +246,13 @@ int main(int argc, char** argv) {
         test_captured_tls13();
         test_captured_tls12();
 
-        test_dtls_record_reoder();
+        test_dtls_record_rearrange();
 
         test_captured_dtls12();
+
 #endif
-        test_construct_dtls12();  // generate and arrange fragmented diagrams
+        test_construct_dtls12_1();  // generate and arrange fragmented diagrams (record-handshake multiplicity 1..1)
+        test_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
     } else {
         dump_clienthello();
     }

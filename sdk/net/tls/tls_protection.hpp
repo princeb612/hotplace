@@ -219,7 +219,7 @@ class tls_protection {
     return_t calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t& secret, binary_t& maced);
 
     ///////////////////////////////////////////////////////////////////////////
-    // mask for DTLS/QUIC header protection (aes-128-ecb)
+    // mask for DTLS 1.3/QUIC header protection (aes-128-ecb)
     ///////////////////////////////////////////////////////////////////////////
     return_t get_protection_mask_key(tls_session* session, tls_direction_t dir, protection_level_t level, tls_secret_t& secret);
     return_t protection_mask(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, binary_t& mask, size_t masklen,

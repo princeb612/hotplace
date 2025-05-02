@@ -20,6 +20,12 @@
 namespace hotplace {
 namespace net {
 
+enum dtls_record_publisher_flag_t : uint32 {
+    // tls_record_handshake contains multiple handshakes if possible
+    // if not set tls_record_handshake .. single handshake
+    dtls_record_publisher_multi_handshakes = (1 << 0),
+};
+
 class dtls_record_publisher {
     friend class tls_session;
 
@@ -39,6 +45,10 @@ class dtls_record_publisher {
      * @param std::function<void (binary_t& bin)> func [in]
      */
     return_t publish(tls_record* record, tls_direction_t dir, std::function<void(binary_t& bin)> func);
+    return_t publish(tls_records* records, tls_direction_t dir, std::function<void(binary_t& bin)> func);
+
+    void set_flags(uint32 flags);
+    uint32 get_flags();
 
    protected:
     void set_session(tls_session* session);
@@ -47,6 +57,7 @@ class dtls_record_publisher {
    private:
     tls_session* _session;
     uint16 _fragment_size;
+    uint32 _flags;
 };
 
 }  // namespace net

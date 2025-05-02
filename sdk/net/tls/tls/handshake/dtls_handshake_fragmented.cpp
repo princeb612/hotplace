@@ -20,7 +20,9 @@
 namespace hotplace {
 namespace net {
 
-dtls_handshake_fragmented::dtls_handshake_fragmented(tls_hs_type_t type, tls_session* session) : tls_handshake(type, session) {}
+dtls_handshake_fragmented::dtls_handshake_fragmented(tls_hs_type_t type, tls_session* session) : tls_handshake(type, session) {
+    set_flags(dont_control_dtls_handshake_sequence);
+}
 
 return_t dtls_handshake_fragmented::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;

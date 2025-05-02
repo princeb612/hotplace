@@ -40,7 +40,8 @@ tls_handshake::tls_handshake(tls_hs_type_t type, tls_session* session)
       _fragment_len(0),
       _reassembled_size(0),
       _size(0),
-      _extension_len(0) {
+      _extension_len(0),
+      _flags(0) {
     if (session) {
         session->addref();
     }
@@ -119,7 +120,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
 
             size_t tpos = 0;
             binary_t assemble;
-            protection.consume_item(tls_context_fragment, assemble);
+            protection.consume_item(tls_context_fragment, assemble);  // consume _bodysize
 
 #if defined DEBUG
             if (istraceable()) {
@@ -366,9 +367,11 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                     }
 #endif
 
-                    if (length == protection.get_item(tls_context_fragment).size()) {
+                    if (length <= protection.get_item(tls_context_fragment).size()) {
+                        pos += _fragment_len;
                         ret = errorcode_t::reassemble;
                     } else {
+                        pos += fragment_len;
                         ret = errorcode_t::fragmented;
                     }
                 }
@@ -434,17 +437,42 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     auto legacy_version = protection.get_lagacy_version();
+    auto& kv = session->get_session_info(dir).get_keyvalue();
 
     _fragment_len = body.size();
+    uint32 length = _reassembled_size ? _reassembled_size : body.size();
+    if (dont_control_dtls_handshake_sequence & get_flags()) {
+    } else {
+        _dtls_seq = kv.get(session_dtls_message_seq);
+    }
 
     payload pl;
     pl << new payload_member(uint8(get_type()), constexpr_message_type)
-       << new payload_member(uint24_t(_reassembled_size ? _reassembled_size : body.size()), constexpr_len)
+       << new payload_member(uint24_t(length), constexpr_len)
        // DTLS handshake reconstruction data
        << new payload_member(uint16(_dtls_seq), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
        << new payload_member(uint24_t(_fragment_offset), constexpr_fragment_offset, constexpr_group_dtls)     // dtls
        << new payload_member(uint24_t(_fragment_len), constexpr_fragment_len, constexpr_group_dtls);          // dtls
     ;
+
+#if defined DEBUG
+    if (istraceable()) {
+        basic_stream dbs;
+        dbs.autoindent(1);
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto hstype = get_type();
+        dbs.println("# handshake");
+        dbs.println("> handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+        dbs.println(" > length 0x%06x(%i)", length, length);
+        if (session_dtls == session->get_type()) {
+            dbs.println(" > %s 0x%04x", constexpr_handshake_message_seq, _dtls_seq);
+            dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_offset, _fragment_offset, _fragment_offset);
+            dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_len, _fragment_len, _fragment_len);
+        }
+        dbs.autoindent(0);
+        trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+    }
+#endif
 
     pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
     {
@@ -457,6 +485,11 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
         _size = bin.size() + body.size();
     }
     binary_append(bin, body);
+
+    if (dont_control_dtls_handshake_sequence & get_flags()) {
+    } else {
+        _dtls_seq = kv.inc(session_dtls_message_seq);
+    }
 
     return ret;
 }
@@ -486,6 +519,10 @@ uint32 tls_handshake::get_body_size() { return _fragment_len ? _fragment_len : _
 void tls_handshake::set_extension_len(uint16 len) { _extension_len = len; }
 
 void tls_handshake::set_dtls_seq(uint16 seq) { _dtls_seq = seq; }
+
+void tls_handshake::set_flags(uint32 flags) { _flags = flags; }
+
+uint32 tls_handshake::get_flags() { return _flags; }
 
 }  // namespace net
 }  // namespace hotplace

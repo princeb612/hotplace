@@ -25,7 +25,6 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte
             __leave2;
         }
 
-        size_t pos = 0;
         while (pos < size) {
             uint8 content_type = stream[pos];
             tls_record_builder builder;

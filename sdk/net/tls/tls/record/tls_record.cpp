@@ -108,8 +108,12 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
 
         if (is_dtls) {
             auto& kv = session->get_session_info(dir).get_keyvalue();
-            _dtls_epoch = kv.get(session_dtls_epoch);
-            _dtls_record_seq = kv.get(session_dtls_seq);
+            if (dont_control_dtls_sequence & get_flags()) {
+                // do nothing
+            } else {
+                _dtls_epoch = kv.get(session_dtls_epoch);
+                _dtls_record_seq = kv.get(session_dtls_seq);
+            }
         }
 
         ret = do_write_header(dir, bin, body);  // encryption
@@ -117,7 +121,11 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
 #if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
-            dbs.printf("\e[1;36m");
+            if (get_flags()) {
+                dbs.printf("\e[0;36m");
+            } else {
+                dbs.printf("\e[1;36m");
+            }
             dbs.println("# record constructed");
             dbs.printf("\e[0m");
             dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
@@ -400,6 +408,33 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
         _range.end = bin.size();
 
         binary_append(bin, body);
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto const& range = get_header_range();
+
+            dbs.println("# record %s", (from_server == dir) ? "(server)" : (from_client == dir) ? "(client)" : "");
+
+            auto content_type = get_type();
+            auto len = body.size();
+            dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
+            dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->tls_version_string(record_version).c_str());
+            if (session_dtls == get_session()->get_type()) {
+                if (dont_control_dtls_sequence & get_flags()) {
+                } else {
+                    uint16 key_epoch = get_key_epoch();
+                    uint64 dtls_record_seq = get_dtls_record_seq();
+                    dbs.println(" > %s 0x%04x", constexpr_dtls_epoch, key_epoch);
+                    dbs.println(" > %s 0x%012I64x (%I64u)", constexpr_dtls_record_seq, dtls_record_seq, dtls_record_seq);
+                }
+            }
+            dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
+
+            trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+        }
+#endif
     }
     __finally2 {}
     return ret;

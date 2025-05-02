@@ -27,7 +27,7 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
             __leave2;
         }
 
-        size_t pos = 0;
+        // read
         while (pos < size) {
             if (size - pos < 4) {
                 ret = errorcode_t::no_more;

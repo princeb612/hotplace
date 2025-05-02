@@ -292,7 +292,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             }
 #endif
 
-            ret = get_extensions().read(tls_hs_client_hello, session, dir, stream, size, pos);
+            ret = get_extensions().read(tls_hs_client_hello, session, dir, stream, pos + extension_len, pos);
         }
     }
     __finally2 {

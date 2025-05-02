@@ -37,5 +37,6 @@ void test_stream_stdmap();
 void test_vtprintf();
 void test_autoindent();
 void test_split();
+void test_split2();
 
 #endif

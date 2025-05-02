@@ -609,6 +609,7 @@ enum session_status_t : uint32 {
 
 enum tls_internal_flag_t : uint32 {
     dont_control_dtls_sequence = (1 << 0),
+    dont_control_dtls_handshake_sequence = (1 << 1),
 };
 
 class dtls_record_publisher;

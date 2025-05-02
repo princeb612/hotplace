@@ -100,7 +100,7 @@ return_t tls_handshake_hello_verify_request::do_read_body(tls_direction_t dir, c
         if (istraceable()) {
             basic_stream dbs;
             dbs.println("  > cookie %s", base16_encode(_cookie).c_str());
-            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
         }
 #endif
     }

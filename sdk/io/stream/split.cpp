@@ -13,7 +13,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
-#include <sdk/io/stream/stream.hpp>
+#include <sdk/io/stream/split.hpp>
 
 namespace hotplace {
 namespace io {
@@ -32,18 +32,18 @@ return_t split(const byte_t* stream, size_t size, size_t fragment_size, std::fun
 
         if (0 == size) {
             fn(stream, size, 0, 0);
-        }
-
-        size_t offset = 0;
-        for (size_t offset = 0; offset < size; offset += fragment_size) {
-            auto remains = size - offset;
-            size_t blocksize = 0;
-            if (remains >= fragment_size) {
-                blocksize = fragment_size;
-            } else {
-                blocksize = remains;
+        } else {
+            size_t offset = 0;
+            for (size_t offset = 0; offset < size; offset += fragment_size) {
+                auto remains = size - offset;
+                size_t blocksize = 0;
+                if (remains >= fragment_size) {
+                    blocksize = fragment_size;
+                } else {
+                    blocksize = remains;
+                }
+                fn(stream, size, offset, blocksize);
             }
-            fn(stream, size, offset, blocksize);
         }
     }
     __finally2 {
@@ -59,24 +59,28 @@ return_t split(const binary_t& stream, size_t fragment_size, size_t pre, std::fu
 return_t split(const byte_t* stream, size_t size, size_t fragment_size, size_t pre, std::function<void(const byte_t*, size_t, size_t, size_t)> fn) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if ((nullptr == stream) || (0 == fragment_size) || (nullptr == fn)) {
+        if ((size && (nullptr == stream)) || (0 == fragment_size) || (nullptr == fn)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        size_t offset = 0;
-        size_t blocksize = 0;
-        for (size_t offset = 0; offset < size; offset += blocksize) {
-            auto remains = size - offset;
-            if (0 == offset) {
-                blocksize = fragment_size - pre;
-            } else {
-                blocksize = fragment_size;
-            }
-            if (remains >= blocksize) {
-                fn(stream, size, offset, blocksize);
-            } else {
-                fn(stream, size, offset, remains);
+        if (0 == size) {
+            fn(stream, size, 0, 0);
+        } else {
+            size_t offset = 0;
+            size_t blocksize = 0;
+            for (size_t offset = 0; offset < size; offset += blocksize) {
+                auto remains = size - offset;
+                if (0 == offset) {
+                    blocksize = fragment_size - pre;
+                } else {
+                    blocksize = fragment_size;
+                }
+                if (remains >= blocksize) {
+                    fn(stream, size, offset, blocksize);
+                } else {
+                    fn(stream, size, offset, remains);
+                }
             }
         }
     }

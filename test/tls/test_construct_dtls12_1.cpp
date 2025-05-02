@@ -13,70 +13,9 @@
 #include <random>
 
 #include "sample.hpp"
+#include "udp_traffic.hpp"
 
-// simulate traffic
-class udp_traffic {
-   public:
-    udp_traffic() {}
-
-    void sendto(binary_t&& bin) {
-        critical_section_guard guard(_lock);
-        _packets.push_back(std::move(bin));
-    }
-    return_t recvfrom(binary_t& bin) {
-        return_t ret = errorcode_t::success;
-        if (_packets.empty()) {
-            ret = errorcode_t::empty;
-        } else {
-            critical_section_guard guard(_lock);
-            auto iter = _packets.begin();
-            bin = std::move(*iter);
-            _packets.erase(iter);
-        }
-        return ret;
-    }
-    void shuffle() {
-        critical_section_guard guard(_lock);
-        // https://en.cppreference.com/w/cpp/algorithm/random_shuffle
-        std::random_device rd;
-        std::mt19937 g(rd());
-        std::shuffle(_packets.begin(), _packets.end(), g);
-    }
-    void consume(std::function<void(const binary_t&)> fn) {
-        critical_section_guard guard(_lock);
-        for (auto packet : _packets) {
-            fn(packet);
-        }
-        _packets.clear();
-    }
-
-   private:
-    critical_section _lock;
-    std::vector<binary_t> _packets;
-};
-
-udp_traffic _traffic;
-
-static return_t construct_record_fragmented(tls_record* record, tls_direction_t dir) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == record) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        record->addref();
-
-        auto lambda = [&](binary_t& bin) { _traffic.sendto(std::move(bin)); };
-        record->get_session()->get_dtls_record_publisher().publish(record, dir, lambda);
-
-        record->release();
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
+static udp_traffic _traffic;
 
 static return_t do_test_construct_client_hello(tls_direction_t dir, tls_session* session, const char* message) {
     return_t ret = errorcode_t::success;
@@ -174,7 +113,7 @@ static return_t do_test_construct_client_hello(tls_direction_t dir, tls_session*
             tls_record_handshake record(session);
             record << handshake;
 
-            construct_record_fragmented(&record, dir);
+            construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
         }
 
         std::string dirstr;
@@ -198,7 +137,7 @@ static return_t do_test_construct_hello_verify_request(tls_direction_t dir, tls_
         tls_record_handshake record(session);
         record << handshake;
 
-        construct_record_fragmented(&record, dir);
+        construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
     }
 
     std::string dirstr;
@@ -278,7 +217,7 @@ static return_t do_test_construct_server_hello(tls_direction_t dir, tls_session*
             tls_record_handshake record(session);
             record << handshake;
 
-            construct_record_fragmented(&record, dir);
+            construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
         }
 
         std::string dirstr;
@@ -291,13 +230,12 @@ static return_t do_test_construct_server_hello(tls_direction_t dir, tls_session*
 static return_t do_test_construct_certificate(tls_direction_t dir, tls_session* session, const char* certfile, const char* keyfile, const char* message) {
     return_t ret = errorcode_t::success;
 
+    tls_record_handshake record(session);
     auto handshake = new tls_handshake_certificate(session);
     handshake->set(dir, certfile, keyfile);
-
-    tls_record_handshake record(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir);
+    construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -309,12 +247,11 @@ static return_t do_test_construct_certificate(tls_direction_t dir, tls_session* 
 static return_t do_test_construct_server_key_exchange(tls_direction_t dir, tls_session* session, const char* message) {
     return_t ret = errorcode_t::success;
 
-    auto handshake = new tls_handshake_server_key_exchange(session);
-
     tls_record_handshake record(session);
+    auto handshake = new tls_handshake_server_key_exchange(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir);
+    construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -326,12 +263,11 @@ static return_t do_test_construct_server_key_exchange(tls_direction_t dir, tls_s
 static return_t do_test_construct_server_hello_done(tls_direction_t dir, tls_session* session, const char* message) {
     return_t ret = errorcode_t::success;
 
-    auto handshake = new tls_handshake_server_hello_done(session);
-
     tls_record_handshake record(session);
+    auto handshake = new tls_handshake_server_hello_done(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir);
+    construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -343,12 +279,11 @@ static return_t do_test_construct_server_hello_done(tls_direction_t dir, tls_ses
 static return_t do_test_construct_client_key_exchange(tls_direction_t dir, tls_session* session, const char* message) {
     return_t ret = errorcode_t::success;
 
-    auto handshake = new tls_handshake_client_key_exchange(session);
-
     tls_record_handshake record(session);
+    auto handshake = new tls_handshake_client_key_exchange(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir);
+    construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -362,7 +297,7 @@ static return_t do_test_construct_change_cipher_spec(tls_direction_t dir, tls_se
 
     tls_record_change_cipher_spec record(session);
 
-    construct_record_fragmented(&record, dir);
+    construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -374,12 +309,11 @@ static return_t do_test_construct_change_cipher_spec(tls_direction_t dir, tls_se
 static return_t do_test_construct_finished(tls_direction_t dir, tls_session* session, const char* message) {
     return_t ret = errorcode_t::success;
 
-    auto handshake = new tls_handshake_finished(session);
-
     tls_record_handshake record(session);
+    auto handshake = new tls_handshake_finished(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir);
+    construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -432,10 +366,7 @@ static return_t do_test_send_record(tls_direction_t dir, tls_session* session, c
     return ret;
 }
 
-// TODO
-// server_hello + certificate + server_key_exchange ... not yet
-// message sequence
-void test_construct_dtls12() {
+void test_construct_dtls12_1() {
     _test_case.begin("construct DTLS 1.2");
 
     tls_session session_client(session_dtls);

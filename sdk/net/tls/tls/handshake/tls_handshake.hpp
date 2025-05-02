@@ -48,6 +48,9 @@ class tls_handshake {
     return_t prepare_fragment(const byte_t *stream, uint32 size, uint16 seq, uint32 fragment_offset, uint32 fragment_length);
     void set_dtls_seq(uint16 seq);
 
+    void set_flags(uint32 flags);
+    uint32 get_flags();
+
    protected:
     virtual return_t do_preprocess(tls_direction_t dir);
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t *stream, size_t size);
@@ -72,6 +75,7 @@ class tls_handshake {
     uint32 _fragment_len;
     uint32 _reassembled_size;
     size_t _size;
+    uint32 _flags;
 
     t_shared_reference<tls_handshake> _shared;
 };

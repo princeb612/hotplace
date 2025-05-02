@@ -29,8 +29,9 @@ return_t tls_record_change_cipher_spec::do_postprocess(tls_direction_t dir) {
 #if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
-            dbs.println("> change_cipher_spec %i", dir);
-            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            std::string dirstr = (from_server == dir) ? "server" : "client";
+            dbs.println("> change_cipher_spec %s", dirstr.c_str());
+            trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
         }
 #endif
     }

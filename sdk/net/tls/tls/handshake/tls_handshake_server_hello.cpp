@@ -328,7 +328,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             }
 #endif
 
-            ret = get_extensions().read(tls_hs_server_hello, session, dir, stream, size, pos);
+            ret = get_extensions().read(tls_hs_server_hello, session, dir, stream, pos + extension_len, pos);
 
             auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
             session->get_keyvalue().set(session_encrypt_then_mac, ext_etm ? 1 : 0);

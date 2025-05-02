@@ -55,6 +55,7 @@ int main(int argc, char** argv) {
     test_vtprintf();
     test_autoindent();
     test_split();
+    test_split2();
 
     _logger->flush();
 
