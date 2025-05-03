@@ -400,5 +400,29 @@ void tls_advisor::enum_session_status_string(uint32 status, std::function<void(c
     }
 }
 
+std::string tls_advisor::nameof_direction(tls_direction_t dir, bool longname) {
+    std::string value;
+    switch (dir) {
+        case from_client: {
+            if (longname) {
+                value = "client->server";
+            } else {
+                value = "client";
+            }
+        } break;
+        case from_server: {
+            if (longname) {
+                value = "server->client";
+            } else {
+                value = "server";
+            }
+        } break;
+        case from_any: {
+            value = "any";
+        } break;
+    }
+    return value;
+}
+
 }  // namespace net
 }  // namespace hotplace

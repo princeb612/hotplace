@@ -12,7 +12,7 @@
 
 #include "sample.hpp"
 
-void test_dtls_record_rearrange() {
+void test_dtls_record_arrange() {
     _test_case.begin("arrange DTLS record");
     tls_session session(session_dtls);
     auto& arrange = session.get_dtls_record_arrange();

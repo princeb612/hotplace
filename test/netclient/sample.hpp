@@ -50,7 +50,7 @@ void tls_client();
 void dtls_client();
 
 // insecure simple implementation to understand TLS
-void async_tls_client();
-void async_dtls_client();
+void tls_client2();
+void dtls_client2();
 
 #endif

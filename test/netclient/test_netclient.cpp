@@ -164,7 +164,7 @@ void tls_client() {
     }
 }
 
-void async_tls_client() {
+void tls_client2() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
@@ -268,7 +268,7 @@ void dtls_client() {
     }
 }
 
-void async_dtls_client() {
+void dtls_client2() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;

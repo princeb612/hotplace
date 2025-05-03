@@ -111,14 +111,14 @@ int main(int argc, char** argv) {
                 if (0 == (option.flags & flag_debug_tls_inside)) {
                     tls_client();
                 } else {
-                    async_tls_client();
+                    tls_client2();
                 }
                 break;
             case 4:
                 if (0 == (option.flags & flag_debug_tls_inside)) {
                     dtls_client();
                 } else {
-                    async_dtls_client();
+                    dtls_client2();
                 }
                 break;
             default:

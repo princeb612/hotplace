@@ -163,11 +163,11 @@ class tls_advisor {
     std::string alert_desc_string(uint8 code);
     std::string cipher_suite_string(uint16 code);
     uint16 cipher_suite_code(const std::string& ciphersuite);
-    std::string content_type_string(uint8 type);
+    std::string content_type_string(uint8 type);  // record->get_type()
     std::string ec_curve_type_string(uint8 code);
     std::string ec_point_format_name(uint8 code);
     uint16 ec_point_format_code(const std::string& name);
-    std::string handshake_type_string(uint8 type);
+    std::string handshake_type_string(uint8 type);  // handshake->get_type()
     std::string kdf_id_string(uint16 type);
     std::string psk_key_exchange_mode_name(uint8 code);
     uint8 psk_key_exchange_mode_code(const std::string& name);
@@ -179,7 +179,7 @@ class tls_advisor {
     // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
     std::string compression_alg_name(uint16 code);
     uint16 compression_alg_code(const std::string& name);
-    std::string tls_extension_string(uint16 code);
+    std::string tls_extension_string(uint16 code);  // extension->get_type()
     std::string cert_status_type_string(uint8 code);
 
     // https://www.iana.org/assignments/quic/quic.xhtml
@@ -209,6 +209,13 @@ class tls_advisor {
 
     std::string session_status_string(uint32 status);
     void enum_session_status_string(uint32 status, std::function<void(const char*)> func);
+    /**
+     * nameof_direction(from_client);        // "client"
+     * nameof_direction(from_client, true);  // "client->server"
+     * nameof_direction(from_server);        // "server"
+     * nameof_direction(from_server, true);  // "server->client"
+     */
+    std::string nameof_direction(tls_direction_t dir, bool longname = false);
 
    protected:
     tls_advisor();

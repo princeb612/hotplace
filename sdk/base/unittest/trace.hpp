@@ -101,6 +101,7 @@ bool istraceable();
 bool istraceable(trace_category_t category);
 /**
  * @remarks the higher level, the more informations
+ * @param int8 level [in] see loglevel_t
  * @sample
  *          if (check_trace_level(0) && istraceable()) { do_something(); }
  */

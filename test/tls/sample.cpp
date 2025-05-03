@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-D", "trace level 0|1|2", [](OPTION& o, char* param) -> void { o.trace_level = atoi(param); }).optional().preced()
+                << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, char* param) -> void { o.trace_level = atoi(param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-c", "dump clienthello (base16 stream)",
@@ -219,7 +219,6 @@ int main(int argc, char** argv) {
     openssl_startup();
 
     if (option.clienthello.empty()) {
-#if 1
         test_validate();
 
         // https://tls13.xargs.org/
@@ -246,11 +245,10 @@ int main(int argc, char** argv) {
         test_captured_tls13();
         test_captured_tls12();
 
-        test_dtls_record_rearrange();
+        test_dtls_record_arrange();
 
         test_captured_dtls12();
 
-#endif
         test_construct_dtls12_1();  // generate and arrange fragmented diagrams (record-handshake multiplicity 1..1)
         test_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
     } else {

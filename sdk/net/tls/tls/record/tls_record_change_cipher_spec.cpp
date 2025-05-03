@@ -23,14 +23,14 @@ tls_record_change_cipher_spec::tls_record_change_cipher_spec(tls_session* sessio
 return_t tls_record_change_cipher_spec::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     auto session = get_session();
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
     if (session) {
         session->get_session_info(dir).begin_protection();
         session->reset_recordno(dir);
 #if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
-            std::string dirstr = (from_server == dir) ? "server" : "client";
-            dbs.println("> change_cipher_spec %s", dirstr.c_str());
+            dbs.println("> change_cipher_spec %s", tlsadvisor->nameof_direction(dir).c_str());
             trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
         }
 #endif

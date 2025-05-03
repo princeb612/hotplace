@@ -4,7 +4,7 @@
   * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 763
+* Revision 764
 
 * Revision 762 (Tag 1.21)
   * [tested] DTLS reconstruction data (record epoch and sequence), handshake message sequence

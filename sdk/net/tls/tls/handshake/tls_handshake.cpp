@@ -126,7 +126,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.printf("\e[1;33m");
-                dbs.println("> reassemble message seq %i", _dtls_seq);
+                dbs.println("> reassemble handshake message seq %i", _dtls_seq);
                 dump_memory(assemble, &dbs, 16, 3, 0, dump_notrunc);
                 dbs.printf("\e[0m");
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
@@ -357,7 +357,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                     protection.append_item(tls_context_fragment, stream + pos, fragment_len);
 
 #if defined DEBUG
-                    if (check_trace_level(2) && istraceable()) {
+                    if (check_trace_level(loglevel_debug) && istraceable()) {
                         basic_stream dbs;
                         dbs.printf("\e[1;33m");
                         dbs.println(" > fragment");
@@ -386,7 +386,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                 ret = errorcode_t::fragmented;
                 protection.append_item(tls_context_fragment, stream + hspos, size - hspos);
 #if defined DEBUG
-                if (check_trace_level(2) && istraceable()) {
+                if (check_trace_level(loglevel_debug) && istraceable()) {
                     basic_stream dbs;
                     dbs.printf("\e[1;33m");
                     dbs.println(" > fragment");
@@ -479,10 +479,13 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
         _range.begin = bin.size();
         _bodysize = body.size();
     }
+
+    // handshakes 1..*
+    size_t bin_oldsize = bin.size();
     pl.write(bin);
     {
         _range.end = bin.size();
-        _size = bin.size() + body.size();
+        _size = bin.size() - bin_oldsize + body.size();
     }
     binary_append(bin, body);
 
@@ -519,6 +522,12 @@ uint32 tls_handshake::get_body_size() { return _fragment_len ? _fragment_len : _
 void tls_handshake::set_extension_len(uint16 len) { _extension_len = len; }
 
 void tls_handshake::set_dtls_seq(uint16 seq) { _dtls_seq = seq; }
+
+uint16 tls_handshake::get_dtls_seq() { return _dtls_seq; }
+
+uint32 tls_handshake::get_fragment_offset() { return _fragment_offset; }
+
+uint32 tls_handshake::get_fragment_len() { return _fragment_len; }
 
 void tls_handshake::set_flags(uint32 flags) { _flags = flags; }
 

@@ -261,7 +261,6 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
 #if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 uint16 i = 0;
 
                 dbs.autoindent(1);

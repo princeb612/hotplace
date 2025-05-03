@@ -62,7 +62,6 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
 
         {
             auto rctype = record->get_type();
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto& kv = session->get_session_info(dir).get_keyvalue();
             uint16 hsseq = kv.get(session_dtls_message_seq);
 
@@ -76,12 +75,35 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                 desc.hstype = handshake->get_type();
                 desc.hsseq = hsseq;
 
+#if defined DEBUG
+                if (check_trace_level(loglevel_debug) && istraceable()) {
+                    basic_stream dbs;
+                    dbs.printf("\e[1;36m");
+                    dbs.println("# publish %s %i %s", tlsadvisor->handshake_type_string(desc.hstype).c_str(), desc.hsseq,
+                                tlsadvisor->nameof_direction(dir, true).c_str());
+                    dbs.printf("\e[0m");
+                    dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
+                    trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+                }
+#endif
+
                 spl.add(std::move(bin), std::move(desc));
 
                 ++hsseq;
             };
 
             auto lambda_split = [&](uint32 flags, const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize, const spl_desc& desc) -> void {
+#if defined DEBUG
+                if (check_trace_level(loglevel_debug) && istraceable()) {
+                    basic_stream dbs;
+                    dbs.printf("\e[1;36m");
+                    dbs.println("# split %s %i %s", tlsadvisor->handshake_type_string(desc.hstype).c_str(), desc.hsseq,
+                                tlsadvisor->nameof_direction(dir, true).c_str());
+                    dbs.printf("\e[0m");
+                    dump_memory(stream + fragoffset, fragsize, &dbs, 16, 3, 0, dump_notrunc);
+                    trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+                }
+#endif
                 uint32 mask = splitter_flag_t::splitter_new_segment;
                 if (dtls_record_publisher_multi_handshakes & get_flags()) {
                     // each handshake starts a new record (easy to control max record size)

@@ -27,6 +27,17 @@ dtls_handshake_fragmented::dtls_handshake_fragmented(tls_hs_type_t type, tls_ses
 return_t dtls_handshake_fragmented::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     do_write_header(dir, bin, _fragmented);
+#if defined DEBUG
+    if (istraceable()) {
+        basic_stream dbs;
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        dbs.printf("\e[1;36m");
+        dbs.println("# generate %s seq %i", tlsadvisor->handshake_type_string(get_type()).c_str(), get_dtls_seq());
+        dbs.printf("\e[0m");
+        dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
+        trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+    }
+#endif
     return ret;
 }
 

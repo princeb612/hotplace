@@ -19,37 +19,11 @@ namespace hotplace {
 namespace io {
 
 return_t split(const binary_t& stream, size_t fragment_size, std::function<void(const byte_t*, size_t, size_t, size_t)> fn) {
-    return split(&stream[0], stream.size(), fragment_size, fn);
+    return split(&stream[0], stream.size(), fragment_size, 0, fn);
 }
 
 return_t split(const byte_t* stream, size_t size, size_t fragment_size, std::function<void(const byte_t*, size_t, size_t, size_t)> fn) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if ((size && (nullptr == stream)) || (0 == fragment_size) || (nullptr == fn)) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (0 == size) {
-            fn(stream, size, 0, 0);
-        } else {
-            size_t offset = 0;
-            for (size_t offset = 0; offset < size; offset += fragment_size) {
-                auto remains = size - offset;
-                size_t blocksize = 0;
-                if (remains >= fragment_size) {
-                    blocksize = fragment_size;
-                } else {
-                    blocksize = remains;
-                }
-                fn(stream, size, offset, blocksize);
-            }
-        }
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
+    return split(stream, size, fragment_size, 0, fn);
 }
 
 return_t split(const binary_t& stream, size_t fragment_size, size_t pre, std::function<void(const byte_t*, size_t, size_t, size_t)> fn) {
@@ -71,16 +45,11 @@ return_t split(const byte_t* stream, size_t size, size_t fragment_size, size_t p
             size_t blocksize = 0;
             for (size_t offset = 0; offset < size; offset += blocksize) {
                 auto remains = size - offset;
-                if (0 == offset) {
-                    blocksize = fragment_size - pre;
-                } else {
-                    blocksize = fragment_size;
+                blocksize = (0 == offset) ? (fragment_size - pre) : fragment_size;
+                if (remains < blocksize) {
+                    blocksize = remains;
                 }
-                if (remains >= blocksize) {
-                    fn(stream, size, offset, blocksize);
-                } else {
-                    fn(stream, size, offset, remains);
-                }
+                fn(stream, size, offset, blocksize);
             }
         }
     }

@@ -72,6 +72,16 @@ typedef unsigned char byte_t;
 typedef unsigned int uint;
 typedef std::vector<byte_t> binary_t;
 
+enum loglevel_t : uint8 {
+    loglevel_trace = 0,    // everything
+    loglevel_debug = 2,    // debug
+    loglevel_info = 4,     // information
+    loglevel_warn = 6,     // warning
+    loglevel_error = 8,    // error
+    loglevel_fatal = 10,   // fatal error
+    loglevel_notice = 12,  // notice
+};
+
 enum encoding_t {
     encoding_base16 = 1,     // BASE16
     encoding_base64 = 2,     // BASE64    + /

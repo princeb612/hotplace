@@ -68,7 +68,7 @@ void test_captured_tls12();
 // $ openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -dtls
 // $ openssl s_client -connect localhost:9000 -state -debug -dtls
 void test_captured_dtls12();
-void test_dtls_record_rearrange();
+void test_dtls_record_arrange();
 
 // RFC
 void test_rfc8448_2();

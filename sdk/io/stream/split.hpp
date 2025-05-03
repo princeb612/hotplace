@@ -52,24 +52,24 @@ return_t split(const byte_t* stream, size_t size, size_t fragment_size, size_t p
 /**
  * @brief splitter
  * @example
- *      // condition
+ *      // input
  *      //   group stream1 size 100
  *      //   group stream2 size 210
  *      //   group stream3 size 30
  *      //   segment size 80
- *      // solve
- *      //   segment #0 group #0 stream1 fragment offset 0 fragment size 80
- *      //   segment #1 group #0 stream1 fragment offset 80 fragment size 20
- *      //   segment #1 group #1 stream2 fragment offset 0 fragment size 60
- *      //   segment #2 group #1 stream2 fragment offset 60 fragment size 80
- *      //   segment #3 group #1 stream2 fragment offset 140 fragment size 70
- *      //   segment #3 group #2 stream3 fragment offset 0 fragment size 10
- *      //   segment #4 group #2 stream3 fragment offset 10 fragment size 20
+ *      // output
+ *      //   segment #0 group #0 "group1" fragment offset 0 fragment size 80
+ *      //   segment #1 group #0 "group1" fragment offset 80 fragment size 20
+ *      //   segment #1 group #1 "group2" fragment offset 0 fragment size 60
+ *      //   segment #2 group #1 "group2" fragment offset 60 fragment size 80
+ *      //   segment #3 group #1 "group2" fragment offset 140 fragment size 70
+ *      //   segment #3 group #2 "group3" fragment offset 0 fragment size 10
+ *      //   segment #4 group #2 "group3" fragment offset 10 fragment size 20
  *      splitter<std::string> spl;
  *      spl.set_segment_size(80);
- *      spl.add(std::move(stream1), std::move(std::string("stream1")));
- *      spl.add(std::move(stream2), std::move(std::string("stream2")));
- *      spl.add(std::move(stream3), std::move(std::string("stream3")));
+ *      spl.add(std::move(stream1), std::move(std::string("group1")));
+ *      spl.add(std::move(stream2), std::move(std::string("group2")));
+ *      spl.add(std::move(stream3), std::move(std::string("group3")));
  *      int segment = -1;
  *      int group = -1;
  *      auto lambda = [&](uint32 flags, const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize, const std::string& desc) -> void {

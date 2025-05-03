@@ -90,7 +90,7 @@ return_t tls_protection::update_transcript_hash(tls_session *session, const byte
                 // 12.. $ handshake, extension
                 hash->update(stream + offset_body, size - offset_body);
 #if defined DEBUG
-                if (check_trace_level(2) && istraceable()) {
+                if (check_trace_level(loglevel_debug) && istraceable()) {
                     basic_stream dbs;
                     binary_t digest;
                     hash->digest(digest);
@@ -112,12 +112,12 @@ return_t tls_protection::update_transcript_hash(tls_session *session, const byte
 
                 hash->update(stream, size);
 #if defined DEBUG
-                if (check_trace_level(2) && istraceable()) {
+                if (check_trace_level(loglevel_debug) && istraceable()) {
                     basic_stream dbs;
                     binary_t digest;
                     hash->digest(digest);
                     dbs.printf("\e[1;34m");
-                    dbs.println("> update transcript hash @0x%p", this);
+                    dbs.println("> update transcript hash @0x%p size 0x%zx", this, size);
                     dump_memory(stream, size, &dbs, 16, 3, 0, dump_notrunc);
                     dbs.printf("\e[1;33m");
                     dbs.println("   %s", base16_encode(digest).c_str());

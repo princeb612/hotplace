@@ -53,15 +53,6 @@ enum logger_t {
     logger_rotate_size = 5,  // log-rotate
     logger_max_file = 6,     // keep log files
 };
-enum loglevel_t {
-    loglevel_trace = 0,    // everything
-    loglevel_debug = 2,    // debug
-    loglevel_info = 4,     // information
-    loglevel_warn = 6,     // warning
-    loglevel_error = 8,    // error
-    loglevel_fatal = 10,   // fatal error
-    loglevel_notice = 12,  // notice
-};
 
 class test_case;
 class logger;

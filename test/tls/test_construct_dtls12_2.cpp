@@ -356,23 +356,25 @@ void do_test_construct_dtls12_2(uint32 flags) {
     session_client.get_dtls_record_publisher().set_fragment_size(128);
     session_server.get_dtls_record_publisher().set_fragment_size(128);
 
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
     auto lambda_test_next_seq = [&](const char* func, tls_direction_t dir, tls_session* session, uint16 expect_epoch, uint64 expect_next_rcseq,
                                     uint16 expect_next_hsseq) -> void {
-        std::string dirstr = (from_client == dir) ? "client" : "server";
         uint16 rcepoch = session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch);
         uint64 next_rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
         uint16 next_hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
         bool test = (expect_epoch == rcepoch) && (expect_next_hsseq == next_hsseq) && (expect_next_hsseq == next_hsseq);
-        _test_case.assert(test, func, "%s record (epoch %i next sequence %I64i) handshake (next sequence %i)", dirstr.c_str(), rcepoch, next_rcseq, next_hsseq);
+        _test_case.assert(test, func, "%s record (epoch %i next sequence %I64i) handshake (next sequence %i)", tlsadvisor->nameof_direction(dir).c_str(),
+                          rcepoch, next_rcseq, next_hsseq);
     };
     auto lambda_test_seq = [&](const char* func, tls_direction_t dir, tls_session* session, uint16 expect_epoch, uint64 expect_rcseq,
                                uint16 expect_hsseq) -> void {
-        std::string dirstr = (from_client == dir) ? "client" : "server";
         uint16 rcepoch = session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch);
         uint64 rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
         uint16 hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
         bool test = (expect_epoch == rcepoch) && (expect_hsseq == hsseq) && (expect_hsseq == hsseq);
-        _test_case.assert(test, func, "%s record (epoch %i sequence %I64i) handshake (sequence %i)", dirstr.c_str(), rcepoch, rcseq, hsseq);
+        _test_case.assert(test, func, "%s record (epoch %i sequence %I64i) handshake (sequence %i)", tlsadvisor->nameof_direction(dir).c_str(), rcepoch, rcseq,
+                          hsseq);
     };
 
     // C->S, record epoch 0, sequence 0..1, handshake sequence 0
@@ -434,7 +436,7 @@ void test_construct_dtls12_2() {
     //  [x] dtls_record_publisher
     //    [x] each handshake starts a new record (easy to control max record size)
     //    [x] record consist of handshakes in the segment
-    //  [ ] finished
+    //  [x] finished
     _test_case.begin("construct DTLS 1.2 (record-handshake 1..1)");
     do_test_construct_dtls12_2(0);
     _test_case.begin("construct DTLS 1.2 (record-handshake 1..*)");
