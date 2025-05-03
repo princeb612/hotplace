@@ -226,13 +226,13 @@ enum errorcode_t {
     /* 0xef01001c 4009820188 */ max_reached,
     /* 0xef01001d 4009820189 */ failed,
     /* 0xef01001e 4009820190 */ blocked,
-    /* 0xef01001f 4009820191 */ reserved3,  //
+    /* 0xef01001f 4009820191 */ not_implemented,
     /* 0xef010020 4009820192 */ closed,
     /* 0xef010021 4009820193 */ disconnect,
     /* 0xef010022 4009820194 */ error_cipher,
     /* 0xef010023 4009820195 */ error_digest,
     /* 0xef010024 4009820196 */ error_verify,
-    /* 0xef010025 4009820197 */ reserved4,  //
+    /* 0xef010025 4009820197 */ no_session,
     /* 0xef010026 4009820198 */ error_query,
     /* 0xef010027 4009820199 */ error_fetch,
     /* 0xef010028 4009820200 */ insufficient,

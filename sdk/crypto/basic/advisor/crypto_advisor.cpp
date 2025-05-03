@@ -89,7 +89,7 @@ return_t crypto_advisor::build() {
 #endif
         if (nullptr == evp_cipher) {
 #if defined DEBUG
-            if (check_trace_level(2) && istraceable()) {
+            if (check_trace_level(loglevel_debug) && istraceable()) {
                 // __trace(errorcode_t::debug, "%s", nameof_alg(item));
                 trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport, "no %s\n", nameof_alg(item));
             }
@@ -130,7 +130,7 @@ return_t crypto_advisor::build() {
 #endif
         if (nullptr == evp_md) {
 #if defined DEBUG
-            if (check_trace_level(2) && istraceable()) {
+            if (check_trace_level(loglevel_debug) && istraceable()) {
                 // __trace(errorcode_t::debug, "%s", nameof_alg(item));
                 trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport, "no %s\n", nameof_alg(item));
             }

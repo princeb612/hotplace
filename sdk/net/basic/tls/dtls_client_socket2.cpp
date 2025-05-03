@@ -86,6 +86,7 @@ return_t dtls_client_socket2::do_handshake() {
     char buffer[bufsize];
 
     __try2 {
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         size_t cbsent = 0;
         binary_t bin;
         uint32 session_status = 0;
@@ -98,97 +99,107 @@ return_t dtls_client_socket2::do_handshake() {
         {
             tls_record_builder builder;
             auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
-            auto* handshake = new tls_handshake_client_hello(session);
+            tls_handshake_client_hello* handshake = nullptr;
 
-            __try2 {
-                // random
-                {
-                    openssl_prng prng;
+            handshake = new tls_handshake_client_hello(session);
 
-                    binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
-                    time_t gmt_unix_time = time(nullptr);
-                    binary_append(random, gmt_unix_time, hton64);
-                    random.resize(sizeof(uint32));
-                    binary_t temp;
-                    prng.random(temp, 28);
-                    binary_append(random, temp);
-                    handshake->set_random(random);
-                }
+            // random
+            {
+                openssl_prng prng;
 
-                // cipher suites
-                {
-                    handshake->add_ciphersuite(0xc023);
-                    handshake->add_ciphersuite(0xc024);
-                    handshake->add_ciphersuite(0xc027);
-                    handshake->add_ciphersuite(0xc028);
-                    handshake->add_ciphersuite(0xc02b);
-                    handshake->add_ciphersuite(0xc02c);
-                    handshake->add_ciphersuite(0xc02f);
-                    handshake->add_ciphersuite(0xc030);
-                }
-                {
-                    // RFC 9325 4.2.1
-                    // Note that [RFC8422] deprecates all but the uncompressed point format.
-                    // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-                    auto ec_point_formats = new tls_extension_ec_point_formats(session);
-                    (*ec_point_formats).add("uncompressed");
-                    handshake->get_extensions().add(ec_point_formats);
-                }
-                {
-                    // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-                    auto supported_groups = new tls_extension_supported_groups(session);
-                    (*supported_groups).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
-                    handshake->get_extensions().add(supported_groups);
-                }
-                {
-                    auto signature_algorithms = new tls_extension_signature_algorithms(session);
-                    (*signature_algorithms)
-                        .add("ecdsa_secp256r1_sha256")
-                        .add("ecdsa_secp384r1_sha384")
-                        .add("ecdsa_secp521r1_sha512")
-                        .add("ed25519")
-                        .add("ed448")
-                        .add("rsa_pkcs1_sha256")
-                        .add("rsa_pkcs1_sha384")
-                        .add("rsa_pkcs1_sha512")
-                        .add("rsa_pss_pss_sha256")
-                        .add("rsa_pss_pss_sha384")
-                        .add("rsa_pss_pss_sha512")
-                        .add("rsa_pss_rsae_sha256")
-                        .add("rsa_pss_rsae_sha384")
-                        .add("rsa_pss_rsae_sha512");
-                    handshake->get_extensions().add(signature_algorithms);
-                }
-                {
-                    auto renegotiation_info = new tls_extension_renegotiation_info(session);
-                    handshake->get_extensions().add(renegotiation_info);
-                }
-
-                {
-                    *record << handshake;
-                    ret = record->write(dir, bin);
-
-                    ret = async_client_socket::sendto((char*)&bin[0], bin.size(), &cbsent, (sockaddr*)&_sa, sizeof(_sa));
-                    bin.clear();
-                }
-
-                {
-                    session->wait_change_session_status(session_status_hello_verify_request, get_wto());
-                    session_status = session->get_session_status();
-
-                    if (0 == (session_status & session_status_hello_verify_request)) {
-                        ret = error_handshake;
-                        __leave2;
-                    }
-
-                    handshake->set_cookie(protection.get_item(tls_context_cookie));
-                    ret = record->write(dir, bin);
-
-                    ret = async_client_socket::sendto((char*)&bin[0], bin.size(), &cbsent, (sockaddr*)&_sa, sizeof(_sa));
-                    bin.clear();
-                }
+                binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
+                time_t gmt_unix_time = time(nullptr);
+                binary_append(random, gmt_unix_time, hton64);
+                random.resize(sizeof(uint32));
+                binary_t temp;
+                prng.random(temp, 28);
+                binary_append(random, temp);
+                handshake->set_random(random);
             }
-            __finally2 { record->release(); }
+
+            bool enable_etm = false;
+            if (session->get_keyvalue().get(session_enable_encrypt_then_mac)) {
+                enable_etm = true;
+            }
+
+            // cipher suites
+            {
+                auto lambda_cs = [&](const tls_cipher_suite_t* cs) -> void {
+                    if (cs->version >= _minver) {
+                        if (enable_etm && (dtls_12 == _minver)) {
+                            if (cbc == cs->mode) {
+                                handshake->add_ciphersuite(cs->code);
+                            }
+                        } else {
+                            handshake->add_ciphersuite(cs->code);
+                        }
+                    }
+                };
+                tlsadvisor->enum_cipher_suites(lambda_cs);
+            }
+            {
+                handshake->get_extensions().add(new tls_extension_renegotiation_info(session));
+                handshake->get_extensions().add(new tls_extension_unknown(tls_ext_session_ticket, session));
+                if (enable_etm && (dtls_12 == _minver)) {
+                    handshake->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
+                }
+                // handshake->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, session));
+            }
+            {
+                // RFC 9325 4.2.1
+                // Note that [RFC8422] deprecates all but the uncompressed point format.
+                // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
+                auto ec_point_formats = new tls_extension_ec_point_formats(session);
+                (*ec_point_formats).add("uncompressed");
+                handshake->get_extensions().add(ec_point_formats);
+            }
+            {
+                // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
+                auto supported_groups = new tls_extension_supported_groups(session);
+                (*supported_groups).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
+                handshake->get_extensions().add(supported_groups);
+            }
+            {
+                auto signature_algorithms = new tls_extension_signature_algorithms(session);
+                (*signature_algorithms)
+                    .add("ecdsa_secp256r1_sha256")
+                    .add("ecdsa_secp384r1_sha384")
+                    .add("ecdsa_secp521r1_sha512")
+                    .add("ed25519")
+                    .add("ed448")
+                    .add("rsa_pkcs1_sha256")
+                    .add("rsa_pkcs1_sha384")
+                    .add("rsa_pkcs1_sha512")
+                    .add("rsa_pss_pss_sha256")
+                    .add("rsa_pss_pss_sha384")
+                    .add("rsa_pss_pss_sha512")
+                    .add("rsa_pss_rsae_sha256")
+                    .add("rsa_pss_rsae_sha384")
+                    .add("rsa_pss_rsae_sha512");
+                handshake->get_extensions().add(signature_algorithms);
+            }
+            {
+                auto supported_versions = new tls_extension_client_supported_versions(session);
+                if (_minver == dtls_13) {
+                    (*supported_versions).add(dtls_13);
+                }
+                (*supported_versions).add(dtls_12);
+                handshake->get_extensions().add(supported_versions);
+            }
+            {
+                auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(session);
+                (*psk_key_exchange_modes).add("psk_dhe_ke");
+                handshake->get_extensions().add(psk_key_exchange_modes);
+            }
+            {
+                auto key_share = new tls_extension_client_key_share(session);
+                (*key_share).add("x25519");
+                handshake->get_extensions().add(key_share);
+            }
+
+            *record << handshake;
+            ret = record->write(dir, bin);
+            record->release();
         }  // end of client hello
 
         if (errorcode_t::success != ret) {

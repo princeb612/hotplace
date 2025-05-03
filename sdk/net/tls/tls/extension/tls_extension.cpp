@@ -12,6 +12,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension.hpp>
@@ -30,6 +31,8 @@ constexpr char constexpr_extension_type[] = "extension type";
 tls_extension::tls_extension(tls_session* session) : _session(session), _type(0), _bodysize(0), _size(0) {
     if (session) {
         session->addref();
+    } else {
+        throw exception(no_session);
     }
     _shared.make_share(this);
 }

@@ -106,10 +106,10 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
 #endif
                 uint32 mask = splitter_flag_t::splitter_new_segment;
                 if (dtls_record_publisher_multi_handshakes & get_flags()) {
+                    // record consist of handshakes in the segment
+                } else {
                     // each handshake starts a new record (easy to control max record size)
                     mask |= splitter_flag_t::splitter_new_group;
-                } else {
-                    // record consist of handshakes in the segment
                 }
                 if (mask & flags) {
                     auto rec_built = builder.set(session).set(rctype).set(dir).construct().build();

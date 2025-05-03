@@ -12,6 +12,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
@@ -38,6 +39,8 @@ tls_record::tls_record(uint8 type, tls_session* session)
     : _content_type(type), _cond_dtls(false), _dtls_epoch(0), _dtls_record_seq(0), _bodysize(0), _session(session), _flags(0) {
     if (session) {
         session->addref();
+    } else {
+        throw exception(no_session);
     }
     _shared.make_share(this);
 }

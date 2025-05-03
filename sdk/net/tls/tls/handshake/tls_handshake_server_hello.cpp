@@ -76,7 +76,7 @@ return_t tls_handshake_server_hello::set_cipher_suite(uint16 cs) {
             __leave2;
         }
 
-        if (false == hint->support) {
+        if (0 == (tls_cs_support & hint->flags)) {
             auto test = session->get_keyvalue().get(session_debug_deprecated_ciphersuite);
             if (0 == test) {
                 ret = errorcode_t::bad_request;
@@ -112,7 +112,7 @@ return_t tls_handshake_server_hello::set_cipher_suite(const char* cs) {
             __leave2;
         }
 
-        if (false == hint->support) {
+        if (0 == (tls_cs_support & hint->flags)) {
             auto test = session->get_keyvalue().get(session_debug_deprecated_ciphersuite);
             if (0 == test) {
                 ret = errorcode_t::bad_request;

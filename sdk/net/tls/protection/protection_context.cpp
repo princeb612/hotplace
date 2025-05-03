@@ -142,7 +142,7 @@ return_t protection_context::select_from(const protection_context& rhs) {
             for (auto cs : rhs._cipher_suites) {
                 auto hint = tlsadvisor->hintof_cipher_suite(cs);
                 // RFC 5246 mandatory TLS_RSA_WITH_AES_128_CBC_SHA
-                if (hint && hint->support && tlsadvisor->is_kindof(hint->version, selected_version)) {
+                if (hint && (tls_cs_support & hint->flags) && tlsadvisor->is_kindof(hint->version, selected_version)) {
                     add_cipher_suite(cs);
                     set_cipher_suite(cs);
                     break;

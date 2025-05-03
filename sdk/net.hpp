@@ -41,6 +41,7 @@
 #include <sdk/net/basic/tls/sdk.hpp>
 #include <sdk/net/basic/tls/tls_client_socket.hpp>
 #include <sdk/net/basic/tls/tls_client_socket2.hpp>
+#include <sdk/net/basic/tls/tls_composer.hpp>
 #include <sdk/net/basic/tls/tls_server_socket.hpp>
 #include <sdk/net/basic/tls/types.hpp>
 

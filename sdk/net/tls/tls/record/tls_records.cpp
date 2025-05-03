@@ -9,6 +9,7 @@
 
 #include <sdk/net/tls/tls/record/tls_record_builder.hpp>
 #include <sdk/net/tls/tls/record/tls_records.hpp>
+#include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
@@ -52,6 +53,32 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const bina
     return read(session, dir, stream, size, pos);
 }
 
+return_t tls_records::write(tls_session* session, tls_direction_t dir, std::function<void(binary_t& bin)> func) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || nullptr == func) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        critical_section_guard guard(_lock);
+        if (session_dtls == session->get_type()) {
+            // fragmentation
+            session->get_dtls_record_publisher().publish(this, dir, func);
+        } else {
+            binary_t bin;
+            for (auto record : _records) {
+                record->write(dir, bin);  // append
+            }
+            func(bin);
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t tls_records::add(tls_record* record, bool upref) {
     return_t ret = errorcode_t::success;
     if (record) {
@@ -83,7 +110,6 @@ void tls_records::for_each(std::function<void(tls_record*)> func) {
 
 tls_record* tls_records::getat(size_t index, bool upref) const {
     tls_record* obj = nullptr;
-    // critical_section_guard guard(_lock);
     if (index < _records.size()) {
         obj = _records[index];
     }
@@ -94,8 +120,8 @@ size_t tls_records::size() { return _records.size(); }
 
 void tls_records::clear() {
     critical_section_guard guard(_lock);
-    for (auto item : _records) {
-        item->release();
+    for (auto record : _records) {
+        record->release();
     }
     _records.clear();
 }

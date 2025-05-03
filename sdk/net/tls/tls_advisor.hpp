@@ -97,12 +97,18 @@ extern const size_t sizeof_tls_version_hint;
  * @brief   cipher suites
  * @remarks
  *          cs_std, cs_ossl https://docs.openssl.org/1.1.1/man1/ciphers/
+ *
+ *          tls_cs_secure | tls_cs_support  recommended
+ *          tls_cs_support                  legacy or debugging purpose
  */
+enum tls_cipher_suite_flag_t : uint8 {
+    tls_cs_secure = (1 << 0),
+    tls_cs_support = (1 << 1),
+};
 struct tls_cipher_suite_t {
     uint16 code;                // 0xc023
     tls_version_t version;      // tls_12
-    uint8 secure;               // 0 : insecure or weak
-    uint8 support;              //
+    uint8 flags;                // tls_cipher_suite_flag_t
     const char* name_iana;      // TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
     const char* name_ossl;      // ECDHE-ECDSA-AES128-SHA256
     keyexchange_t keyexchange;  // keyexchange_ecdhe

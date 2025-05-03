@@ -119,7 +119,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
                 dbs.println(" > %s %s", constexpr_connection_id, base16_encode(connection_id).c_str());
             }
 
-            if (check_trace_level(2)) {
+            if (check_trace_level(loglevel_debug)) {
                 dbs.println(" > %s %04x", constexpr_sequence, sequence);
                 dbs.println(" > %s %04x", constexpr_len, len);
                 dbs.println(" > %s", constexpr_encdata);
@@ -198,7 +198,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
         }
 
 #if defined DEBUG
-        if (check_trace_level(2) && istraceable()) {
+        if (check_trace_level(loglevel_debug) && istraceable()) {
             basic_stream dbs;
 
             dbs.println("> rec_enc %04x", rec_enc);
@@ -367,7 +367,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
         }
 
 #if defined DEBUG
-        if (check_trace_level(2) && istraceable()) {
+        if (check_trace_level(loglevel_debug) && istraceable()) {
             basic_stream dbs;
 
             dbs.println("> header");

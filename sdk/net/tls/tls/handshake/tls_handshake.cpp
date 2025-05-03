@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
@@ -44,6 +45,8 @@ tls_handshake::tls_handshake(tls_hs_type_t type, tls_session* session)
       _flags(0) {
     if (session) {
         session->addref();
+    } else {
+        throw exception(no_session);
     }
     _shared.make_share(this);
 }
@@ -123,7 +126,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             protection.consume_item(tls_context_fragment, assemble);  // consume _bodysize
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (check_trace_level(loglevel_debug) && istraceable()) {
                 basic_stream dbs;
                 dbs.printf("\e[1;33m");
                 dbs.println("> reassemble handshake message seq %i", _dtls_seq);

@@ -53,7 +53,7 @@ void tls_session::update_session_status(session_status_t status) {
         _change_status_hook(status);
     }
 #if defined DEBUG
-    if (check_trace_level(2) && istraceable()) {
+    if (check_trace_level(loglevel_debug) && istraceable()) {
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         basic_stream dbs;
         dbs.println("\e[1;34msession status %08x (update %08x)\e[0m", _status, status);
@@ -104,7 +104,7 @@ return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, b
     }
 
 #if defined DEBUG
-    if (check_trace_level(2) && istraceable()) {
+    if (check_trace_level(loglevel_debug) && istraceable()) {
         basic_stream dbs;
         dbs.println("\e[1;34msession status %08x (wait%s %08x) %s\e[0m", _status, waitall ? "all" : "", status,
                     status == (_status & status) ? "true" : "false");

@@ -39,14 +39,17 @@ enum session_type_t {
  */
 enum session_conf_t {
     // session->get_session_info(dir).get_keyvalue()
+    // uint64
     session_dtls_epoch = 1,        // record epoch
     session_dtls_seq = 2,          // record sequence
     session_dtls_message_seq = 3,  // handshake sequence
 
     // session->get_keyvalue()
+    // uint16
     session_debug_deprecated_ciphersuite = 1000,  // to test unsupported cipher suite
     session_encrypt_then_mac = 1001,
     session_enable_encrypt_then_mac = 1002,
+    session_min_ver = 1003,
 };
 
 class tls_session {

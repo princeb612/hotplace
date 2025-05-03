@@ -138,5 +138,14 @@ mindmap
     * RFC 9114 HTTP/3
     * RFC 9204 QPACK: Field Compression for HTTP/3
 * online resources
+  * The Illustrated Connection
+    * https://tls13.xargs.org/
+    * https://tls12.xargs.org/
+    * https://dtls.xargs.org/
+    * https://quic.xargs.org/
+  * ciphersuites
+    * https://ciphersuite.info/cs/
+  * samplepackets
+    * https://wiki.wireshark.org/samplecaptures
   * The SSLKEYLOGFILE Format for TLS
     * https://www.ietf.org/archive/id/draft-thomson-tls-keylogfile-00.html

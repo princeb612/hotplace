@@ -51,7 +51,7 @@ class tls_client_socket2 : public async_client_socket {
 
    private:
     tls_session _session;
-    tls_version_t _minver;
+    tls_version_t _version;
 
     critical_section _mlock;
     std::queue<bufferqueue_item_t> _mq;

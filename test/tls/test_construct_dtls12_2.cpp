@@ -395,21 +395,37 @@ void do_test_construct_dtls12_2(uint32 flags) {
     lambda_test_next_seq(__FUNCTION__, from_client, &session_client, 0, 4, 2);
     lambda_test_seq(__FUNCTION__, from_client, &session_server, 0, 3, 1);
 
-    // S->C, record epoch 0, sequence 1..10, handshake sequence 1..4
-    //  server_hello        record epoch 0, sequence 1, handshake sequence 1
-    //  certificate         record epoch 0, sequence 1..8, handshake sequence 2
-    //  server_key_exchange record epoch 0, sequence 8..10, handshake sequence 3
-    //  server_hello_done   record epoch 0, sequence 10, handshake sequence 4
-    //  -> tls_record_handshake (epoch 0, sequence 1) contains server_hello and certificate (handshake sequences in order 1, 2)
-    //  -> tls_record_handshake (epoch 0, sequence 8) contains certificate and server_key_exchange (handshake sequences in order 2, 3)
-    //  -> tls_record_handshake (epoch 0, sequence 10) contains server_key_exchange and server_hello_done (handshake sequences in order 3, 4)
+    // S->C
+    // case dtls_record_publisher().set_flags(0)
+    // record epoch 0, sequence 1..13, handshake sequence 1..4
+    //   server_hello        record epoch 0, sequence 1, handshake sequence 1
+    //   certificate         record epoch 0, sequence 2..9, handshake sequence 2
+    //   server_key_exchange record epoch 0, sequence 10..12, handshake sequence 3
+    //   server_hello_done   record epoch 0, sequence 13, handshake sequence 4
+    //
+    // case dtls_record_publisher().set_flags(dtls_record_publisher_multi_handshakes)
+    // record epoch 0, sequence 1..10, handshake sequence 1..4
+    //   server_hello        record epoch 0, sequence 1, handshake sequence 1
+    //   certificate         record epoch 0, sequence 1..8, handshake sequence 2
+    //   server_key_exchange record epoch 0, sequence 8..10, handshake sequence 3
+    //   server_hello_done   record epoch 0, sequence 10, handshake sequence 4
+    //   -> tls_record_handshake (epoch 0, sequence 1) contains server_hello and certificate (handshake sequences in order 1, 2)
+    //   -> tls_record_handshake (epoch 0, sequence 8) contains certificate and server_key_exchange (handshake sequences in order 2, 3)
+    //   -> tls_record_handshake (epoch 0, sequence 10) contains server_key_exchange and server_hello_done (handshake sequences in order 3, 4)
     do_test_construct_from_server_hello_to_server_hello_done(from_server, &session_server, &session_client,
                                                              "server hello, certificate, server key exchange, server hello done");
     do_test_send_record(from_server, &session_client, "server hello, certificate, server key exchange, server hello done");
-    lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 0, 11, 5);
-    lambda_test_seq(__FUNCTION__, from_server, &session_client, 0, 10, 4);
+    if (flags & dtls_record_publisher_multi_handshakes) {
+        lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 0, 11, 5);
+        lambda_test_seq(__FUNCTION__, from_server, &session_client, 0, 10, 4);
+    } else {
+        lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 0, 14, 5);
+        lambda_test_seq(__FUNCTION__, from_server, &session_client, 0, 13, 4);
+    }
 
     // C->S
+    // case dtls_record_publisher().set_flags(0)
+    // case dtls_record_publisher().set_flags(dtls_record_publisher_multi_handshakes)
     //  client_key_exchange record epoch 0, sequence 4, handshake sequence 2
     //  change_ciphee_spec  record epoch 0, sequence 5
     //  finished            record epoch 1, sequence 0, handshake sequence 3
@@ -419,7 +435,12 @@ void do_test_construct_dtls12_2(uint32 flags) {
     lambda_test_seq(__FUNCTION__, from_client, &session_server, 1, 0, 3);
 
     // S->C
-    //  change_ciphee_spec  record epoch 0, sequence 13, change cipher spec
+    // case dtls_record_publisher().set_flags(0)
+    //  change_ciphee_spec  record epoch 0, sequence 14, change cipher spec
+    //  finished            epoch 1, sequence 0, handshake sequence 5
+    //
+    // case dtls_record_publisher().set_flags(dtls_record_publisher_multi_handshakes)
+    //  change_ciphee_spec  record epoch 0, sequence 11, change cipher spec
     //  finished            epoch 1, sequence 0, handshake sequence 5
     do_test_construct_from_change_cipher_spec_to_finished(from_server, &session_server, "change cipher spec, finished");
     do_test_send_record(from_server, &session_client, "change cipher spec, finished");

@@ -47,16 +47,16 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
         auto session = get_session();
         auto tlsver = session->get_tls_protection().get_tls_version();
         auto session_status = session->get_session_status();
-        uint32 session_prerequisite = 0;
+        uint32 session_status_prerequisite = 0;
         if (true == tlsadvisor->is_kindof_tls13(tlsver)) {
             // RFC 8446 5.  Record Protocol
             //  The change_cipher_spec record is used only for compatibility purposes.
             // RFC 8448 3.  Simple 1-RTT Handshake
 
             // certificate, certificate_verify, finished(server), finished(client)
-            session_prerequisite = session_status_server_cert_verified;
+            session_status_prerequisite = session_status_server_cert_verified;
             if (from_client == dir) {
-                session_prerequisite != session_status_server_finished;
+                session_status_prerequisite != session_status_server_finished;
             }
         } else {
             // TLS 1.2, DTLS 1.2
@@ -69,13 +69,13 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
 
             // certificate, server_key_exchange, server_hello_done, client_key_exchange
             // change_cipher_spec(client), finished(client), change_cipher_spec(server), finished(server)
-            session_prerequisite = session_status_server_key_exchange | session_status_client_key_exchange;
+            session_status_prerequisite = session_status_server_key_exchange | session_status_client_key_exchange;
             if (from_server == dir) {
-                session_prerequisite |= session_status_client_finished;
+                session_status_prerequisite |= session_status_client_finished;
             }
         }
 
-        if (0 == (session_prerequisite & session_status)) {
+        if (0 == (session_status_prerequisite & session_status)) {
             ret = errorcode_t::error_handshake;
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             __leave2;
