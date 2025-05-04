@@ -33,7 +33,7 @@
 namespace hotplace {
 namespace net {
 
-tls_composer::tls_composer(tls_session* session) : _session(session), _minver(tls_12), _maxver(tls_13) {
+tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(tls_12), _maxspec(tls_13) {
     if (session) {
         session->addref();
     } else {
@@ -111,6 +111,7 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
     __try2 {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        auto session_type = session->get_type();
         uint32 session_status = 0;
 
         ret = do_client_hello(func);
@@ -118,20 +119,33 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
             __leave2;
         }
 
+        if (session_dtls == session_type) {
+            session->wait_change_session_status(session_status_hello_verify_request, wto);
+            session_status = session->get_session_status();
+
+            if (0 == (session_status & session_status_hello_verify_request)) {
+                ret = errorcode_t::error_handshake;
+                __leave2_trace(ret);
+            }
+
+            ret = do_client_hello(func);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+        }
+
         session->wait_change_session_status(session_status_server_hello, wto);
         session_status = session->get_session_status();
 
         if (0 == (session_status & session_status_server_hello)) {
             ret = errorcode_t::error_handshake;
-            __leave2;
+            __leave2_trace(ret);
         }
-
-        auto tlsver = protection.get_tls_version();
 
         tls_records records;
         tls_record_builder builder;
 
-        if (tls_13 == tlsver) {
+        if (protection.is_kindof_tls13()) {
             uint32 session_status_prerequisite =
                 session_status_server_hello | session_status_server_cert | session_status_server_cert_verified | session_status_server_finished;
             session->wait_change_session_status(session_status_prerequisite, wto);
@@ -139,7 +153,7 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
 
             if (0 == (session_status & session_status_prerequisite)) {
                 ret = error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
 
             // change cipher spec
@@ -151,7 +165,7 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
             auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
             *record << new tls_handshake_finished(session);
             records << record;
-        } else if (tls_12 == tlsver) {
+        } else if (protection.is_kindof_tls12()) {
             // server_hello
             // certificate
             // server_key_exchange
@@ -163,7 +177,7 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
 
             if (0 == (session_status & session_status_prerequisite)) {
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
 
             {
@@ -194,7 +208,7 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
 
         if (0 == (session_status & session_status_server_finished)) {
             ret = errorcode_t::error_handshake;
-            __leave2;
+            __leave2_trace(ret);
         }
     }
     __finally2 {
@@ -225,10 +239,11 @@ return_t tls_composer::do_client_hello(std::function<void(binary_t&)> func) {
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto session_status = session->get_session_status();
+        uint32 session_status = 0;
         auto session_type = session->get_type();
         auto& protection = session->get_tls_protection();
         auto dir = from_client;
+        bool is_dtls = (session_dtls == session_type);
 
         tls_record_builder builder;
         record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
@@ -246,7 +261,7 @@ return_t tls_composer::do_client_hello(std::function<void(binary_t&)> func) {
 
             binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
             time_t gmt_unix_time = time(nullptr);
-            binary_append(random, gmt_unix_time, hton64);
+            binary_append(random, gmt_unix_time, hton32);
             random.resize(sizeof(uint32));
             binary_t temp;
             prng.random(temp, 28);
@@ -254,11 +269,22 @@ return_t tls_composer::do_client_hello(std::function<void(binary_t&)> func) {
             handshake->set_random(random);
         }
 
+        // cookie
+        {
+            session_status = session->get_session_status();
+            if (session_status_hello_verify_request & session_status) {
+                const auto& cookie = session->get_tls_protection().get_item(tls_context_cookie);
+                if (false == cookie.empty()) {
+                    handshake->set_cookie(cookie);
+                }
+            }
+        }
+
         {
             // cipher suites
             uint8 mask = tls_cs_secure | tls_cs_support;
             auto lambda_cs = [&](const tls_cipher_suite_t* cs) -> void {
-                if ((mask & cs->flags) && (cs->version >= _minver)) {
+                if ((mask & cs->flags) && (cs->version >= _minspec)) {
                     handshake->add_ciphersuite(cs->code);
                 }
             };
@@ -267,7 +293,7 @@ return_t tls_composer::do_client_hello(std::function<void(binary_t&)> func) {
 
         {
             // encrypt_then_mac
-            if (tls_12 == _minver) {
+            if (tls_12 == _minspec) {
                 if (session->get_keyvalue().get(session_enable_encrypt_then_mac)) {
                     handshake->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
                 }
@@ -310,14 +336,16 @@ return_t tls_composer::do_client_hello(std::function<void(binary_t&)> func) {
             handshake->get_extensions().add(signature_algorithms);
         }
 
-        if (tls_13 == _maxver) {
+        if (tls_13 == _maxspec) {
             // TLS 1.3
             {
                 // supported_versions
                 auto supported_versions = new tls_extension_client_supported_versions(session);
-                (*supported_versions).add(tls_13);
-                if (tls_12 == _minver) {
-                    (*supported_versions).add(tls_12);
+                if (tls_13 == _maxspec) {
+                    (*supported_versions).add(is_dtls ? dtls_13 : tls_13);
+                }
+                if (tls_12 == _minspec) {
+                    (*supported_versions).add(is_dtls ? dtls_12 : tls_12);
                 }
                 handshake->get_extensions().add(supported_versions);
             }
@@ -370,13 +398,25 @@ return_t tls_composer::do_server_hello(std::function<void(binary_t&)> func) {
 
 tls_session* tls_composer::get_session() { return _session; }
 
-void tls_composer::set_minver(tls_version_t version) { _minver = version; }
+void tls_composer::set_minver(tls_version_t version) {
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    auto hint = tlsadvisor->hintof_tls_version(version);
+    if (hint) {
+        _minspec = hint->spec;
+    }
+}
 
-void tls_composer::set_maxver(tls_version_t version) { _maxver = version; }
+void tls_composer::set_maxver(tls_version_t version) {
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    auto hint = tlsadvisor->hintof_tls_version(version);
+    if (hint) {
+        _maxspec = hint->spec;
+    }
+}
 
-tls_version_t tls_composer::get_minver() { return _minver; }
+uint16 tls_composer::get_minver() { return _minspec; }
 
-tls_version_t tls_composer::get_maxver() { return _maxver; }
+uint16 tls_composer::get_maxver() { return _maxspec; }
 
 }  // namespace net
 }  // namespace hotplace

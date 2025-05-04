@@ -1,7 +1,7 @@
 #### tls13.pcapng - server
 
 ````
-$ openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -keylogfile server.keylog -tls1_3
+$ openssl s_server -accept 9000 -cert server.crt -key server.key -state -debug -status_verbose -keylogfile server.keylog -tls1_3
 Using default temp DH parameters
 ACCEPT
 SSL_accept:before SSL initialization

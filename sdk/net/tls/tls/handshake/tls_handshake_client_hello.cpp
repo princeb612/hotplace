@@ -107,7 +107,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 // client_hello (cookie)
                 ret = errorcode_t::error_handshake;
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 

@@ -51,7 +51,7 @@ return_t tls_handshake_certificate_verify::do_preprocess(tls_direction_t dir) {
         if (0 == (session_status_prerequisite & session_status)) {
             ret = errorcode_t::error_handshake;
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_certificate_required);
-            __leave2;
+            __leave2_trace(ret);
         }
     }
     __finally2 {

@@ -56,6 +56,7 @@ int main(int argc, char** argv) {
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, char* param) -> void { o.trace_level = atoi(param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
@@ -65,7 +66,7 @@ int main(int argc, char** argv) {
                                       [](OPTION& o, char* param) -> void { o.prot = toprot(o, param); })
                        .preced()
                 << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-D", "debug TLS inside", [](OPTION& o, char* param) -> void { o.flags |= flag_debug_tls_inside; }).optional()
+                << t_cmdarg_t<OPTION>("-i", "debug TLS inside", [](OPTION& o, char* param) -> void { o.flags |= flag_debug_tls_inside; }).optional()
                 << t_cmdarg_t<OPTION>("-h", "HTTP/1.1",
                                       [](OPTION& o, char* param) -> void {
                                           o.flags |= flag_http;
@@ -90,10 +91,13 @@ int main(int argc, char** argv) {
         }
         _logger.make_share(builder.build());
 
-        if (option.debug) {
+        if (option.debug || option.trace_level) {
             auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void { _logger->write(s); };
             set_trace_debug(lambda_tracedebug);
             set_trace_option(trace_bt | trace_except | trace_debug);
+        }
+        if (option.trace_level) {
+            set_trace_level(option.trace_level);
         }
 
 #if defined _WIN32 || defined _WIN64

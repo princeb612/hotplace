@@ -14,32 +14,16 @@
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/net/basic/tls/tls_client_socket2.hpp>
 #include <sdk/net/basic/tls/tls_composer.hpp>
-#include <sdk/net/tls/tls/extension/tls_extension_ec_point_formats.hpp>
-#include <sdk/net/tls/tls/extension/tls_extension_key_share.hpp>
-#include <sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
-#include <sdk/net/tls/tls/extension/tls_extension_renegotiation_info.hpp>
-#include <sdk/net/tls/tls/extension/tls_extension_signature_algorithms.hpp>
-#include <sdk/net/tls/tls/extension/tls_extension_sni.hpp>
-#include <sdk/net/tls/tls/extension/tls_extension_supported_groups.hpp>
-#include <sdk/net/tls/tls/extension/tls_extension_supported_versions.hpp>
-#include <sdk/net/tls/tls/extension/tls_extension_unknown.hpp>
-#include <sdk/net/tls/tls/handshake/tls_handshake_client_hello.hpp>
-#include <sdk/net/tls/tls/handshake/tls_handshake_client_key_exchange.hpp>
-#include <sdk/net/tls/tls/handshake/tls_handshake_finished.hpp>
-#include <sdk/net/tls/tls/handshake/tls_handshake_server_hello_done.hpp>
-#include <sdk/net/tls/tls/handshake/tls_handshake_server_key_exchange.hpp>
 #include <sdk/net/tls/tls/record/tls_record_alert.hpp>
 #include <sdk/net/tls/tls/record/tls_record_application_data.hpp>
 #include <sdk/net/tls/tls/record/tls_record_builder.hpp>
-#include <sdk/net/tls/tls/record/tls_record_change_cipher_spec.hpp>
-#include <sdk/net/tls/tls/record/tls_record_handshake.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 
 namespace hotplace {
 namespace net {
 
-tls_client_socket2::tls_client_socket2(tls_version_t minver) : async_client_socket(), _version(minver) {
+tls_client_socket2::tls_client_socket2(tls_version_t version) : async_client_socket(), _version(version) {
     auto session = &_session;
     session->set_type(session_tls);
 }
@@ -229,8 +213,8 @@ return_t tls_client_socket2::do_shutdown() {
 
         ret = async_client_socket::send((char*)&bin[0], bin.size(), &cbsent);
 
-        // session->wait_change_session_status(session_server_close_notified, get_wto());
-        // auto session_status = session->get_session_status();
+        session->wait_change_session_status(session_status_server_close_notified, get_wto());
+        auto session_status = session->get_session_status();
     }
     __finally2 {}
     return ret;

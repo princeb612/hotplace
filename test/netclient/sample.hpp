@@ -24,6 +24,7 @@ enum {
 typedef struct _OPTION {
     int verbose;
     int debug;
+    int trace_level;
     int log;
     int time;
 
@@ -35,7 +36,19 @@ typedef struct _OPTION {
     uint16 flags;
     std::string message;
 
-    _OPTION() : verbose(0), debug(0), log(0), time(0), bufsize(1500), address("127.0.0.1"), port(9000), prot(0), count(1), flags(0), message("hello") {
+    _OPTION()
+        : verbose(0),
+          debug(0),
+          trace_level(0),
+          log(0),
+          time(0),
+          bufsize(1500),
+          address("127.0.0.1"),
+          port(9000),
+          prot(0),
+          count(1),
+          flags(0),
+          message("hello") {
         // do nothing
     }
 } OPTION;

@@ -1,7 +1,7 @@
 #### tls12mte.pcapng - client
 
 ````
-$ ./test-netclient.exe -v -d -D -P tls12
+$ ./test-netclient.exe -v -d -i -P tls12
 socket 464 created family 2(AF_INET) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
 iocp handle 000001e4 created
 iocp handle 000001e4 bind 464

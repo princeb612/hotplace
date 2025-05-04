@@ -26,8 +26,8 @@ class tls_composer {
     tls_session* get_session();
     void set_minver(tls_version_t version);
     void set_maxver(tls_version_t version);
-    tls_version_t get_minver();
-    tls_version_t get_maxver();
+    uint16 get_minver();
+    uint16 get_maxver();
 
    protected:
     return_t do_client_hello(std::function<void(binary_t&)> func);
@@ -39,8 +39,8 @@ class tls_composer {
     return_t do_compose(tls_records* records, tls_direction_t dir, std::function<void(binary_t&)> func);
 
     tls_session* _session;
-    tls_version_t _minver;
-    tls_version_t _maxver;
+    uint16 _minspec;
+    uint16 _maxspec;
 };
 
 }  // namespace net

@@ -338,9 +338,6 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                 if (sess_dtls_seq != dtls_seq) {
                     if (sess_dtls_seq + 1 == dtls_seq) {
                         kv.set(session_dtls_message_seq, dtls_seq);
-                    } else {
-                        ret = errorcode_t::error_handshake;
-                        __leave2;
                     }
                 }
                 _dtls_seq = dtls_seq;

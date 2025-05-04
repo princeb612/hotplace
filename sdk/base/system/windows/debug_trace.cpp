@@ -331,7 +331,7 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
     IMAGEHLP_SYMBOL* symbol = nullptr;
 
     __try2 {
-        if (nullptr == rtlcontext || nullptr == stream) {
+        if (nullptr == handle || nullptr == rtlcontext || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }

@@ -35,7 +35,7 @@ namespace net {
  */
 class tls_client_socket2 : public async_client_socket {
    public:
-    tls_client_socket2(tls_version_t minver = tls_12);
+    tls_client_socket2(tls_version_t version = tls_12);
 
     virtual return_t send(const char* ptr_data, size_t size_data, size_t* cbsent);
 

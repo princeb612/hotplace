@@ -31,6 +31,6 @@
 * run with debugging option
   * ./test-netclient -v -d -P tls12
 * run with TLS debugging details
-  * ./test-netclient -v -d -P tls12 -D
+  * ./test-netclient -v -d -P tls12 -i
 * TLS 1.3
-  * ./test-netclient -v -d -P tls13 -D
+  * ./test-netclient -v -d -P tls13 -i
