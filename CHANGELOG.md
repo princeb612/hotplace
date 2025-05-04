@@ -4,6 +4,8 @@
   * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
+* Revision 767
+
 * Revision 766 (Tag 1.23)
   * [tested] DTLS over UDP, client
 

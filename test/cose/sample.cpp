@@ -85,6 +85,8 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
+    test_validate_resource();
+
     // check format
     // install
     //      pacman -S rubygems (MINGW)

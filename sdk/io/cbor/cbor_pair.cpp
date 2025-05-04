@@ -11,6 +11,7 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/io/cbor/cbor_array.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/cbor/cbor_encode.hpp>
@@ -36,7 +37,7 @@ cbor_pair::cbor_pair(int64 value, cbor_data* object)
 
     __try2 {
         if (nullptr == object) {
-            throw errorcode_t::insufficient;
+            throw exception(errorcode_t::not_specified);
         }
         __try_new_catch(_lhs, new cbor_data(value), ret, __leave2);
     }
@@ -61,7 +62,7 @@ cbor_pair::cbor_pair(int64 value, cbor_map* object)
 
     __try2 {
         if (nullptr == object) {
-            throw errorcode_t::insufficient;
+            throw exception(errorcode_t::not_specified);
         }
         __try_new_catch(_lhs, new cbor_data(value), ret, __leave2);
     }
@@ -86,7 +87,7 @@ cbor_pair::cbor_pair(int64 value, cbor_array* object)
 
     __try2 {
         if (nullptr == object) {
-            throw errorcode_t::insufficient;
+            throw exception(errorcode_t::not_specified);
         }
         __try_new_catch(_lhs, new cbor_data(value), ret, __leave2);
     }
@@ -100,7 +101,7 @@ cbor_pair::cbor_pair(const char* key, cbor_data* object) : cbor_object(cbor_type
 
     __try2 {
         if (nullptr == object) {
-            throw errorcode_t::insufficient;
+            throw exception(errorcode_t::not_specified);
         }
         __try_new_catch(_lhs, new cbor_data(key), ret, __leave2);
     }
@@ -114,7 +115,7 @@ cbor_pair::cbor_pair(const char* key, cbor_map* object) : cbor_object(cbor_type_
 
     __try2 {
         if (nullptr == object) {
-            throw errorcode_t::insufficient;
+            throw exception(errorcode_t::not_specified);
         }
         __try_new_catch(_lhs, new cbor_data(key), ret, __leave2);
     }
@@ -128,7 +129,7 @@ cbor_pair::cbor_pair(const char* key, cbor_array* object) : cbor_object(cbor_typ
 
     __try2 {
         if (nullptr == object) {
-            throw errorcode_t::insufficient;
+            throw exception(errorcode_t::not_specified);
         }
         __try_new_catch(_lhs, new cbor_data(key), ret, __leave2);
     }
@@ -139,25 +140,25 @@ cbor_pair::cbor_pair(const char* key, cbor_array* object) : cbor_object(cbor_typ
 
 cbor_pair::cbor_pair(cbor_data* key, cbor_data* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
     if (nullptr == key || nullptr == object) {
-        throw errorcode_t::insufficient;
+        throw exception(errorcode_t::not_specified);
     }
 }
 
 cbor_pair::cbor_pair(cbor_data* key, cbor_map* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
     if (nullptr == key || nullptr == object) {
-        throw errorcode_t::insufficient;
+        throw exception(errorcode_t::not_specified);
     }
 }
 
 cbor_pair::cbor_pair(cbor_data* key, cbor_array* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
     if (nullptr == key || nullptr == object) {
-        throw errorcode_t::insufficient;
+        throw exception(errorcode_t::not_specified);
     }
 }
 
 cbor_pair::cbor_pair(cbor_data* key, cbor_object* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
     if (nullptr == key || nullptr == object) {
-        throw errorcode_t::insufficient;
+        throw exception(errorcode_t::not_specified);
     }
 }
 

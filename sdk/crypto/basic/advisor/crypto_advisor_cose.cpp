@@ -31,6 +31,14 @@ const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(cose_alg_t al
     return item;
 }
 
+const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(uint32 alg) {
+    const hint_cose_algorithm_t* item = nullptr;
+    t_maphint<uint32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
+
+    hint.find(alg, &item);
+    return item;
+}
+
 const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(const char* alg) {
     const hint_cose_algorithm_t* item = nullptr;
 

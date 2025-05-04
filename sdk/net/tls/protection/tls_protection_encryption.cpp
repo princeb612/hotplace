@@ -160,7 +160,7 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
                             } break;
                         }
                     }
-                } else {
+                } else if (from_server == dir) {
                     // from_server
                     if (tls_hs_finished == hsstatus) {
                         secret_key = tls_secret_application_server_key;
@@ -187,7 +187,7 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
                     } else {
                         ret = errorcode_t::invalid_parameter;
                     }
-                } else {
+                } else if (from_server == dir) {
                     if (protection_initial == level) {
                         secret_key = tls_secret_initial_quic_server_key;
                         secret_iv = tls_secret_initial_quic_server_iv;
@@ -216,7 +216,7 @@ return_t tls_protection::get_cbc_hmac_key(tls_session *session, tls_direction_t 
         if (from_client == dir) {
             secret_key = tls_secret_client_key;
             secret_mac_key = tls_secret_client_mac_key;
-        } else {
+        } else if (from_server == dir) {
             secret_key = tls_secret_server_key;
             secret_mac_key = tls_secret_server_mac_key;
         }

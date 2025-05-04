@@ -11,6 +11,7 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/io/cbor/cbor_object.hpp>
 #include <sdk/io/cbor/cbor_visitor.hpp>
 
@@ -19,7 +20,7 @@ namespace io {
 
 cbor_concise_visitor::cbor_concise_visitor(binary_t* concise) : _concise(concise) {
     if (nullptr == concise) {
-        throw errorcode_t::insufficient;
+        throw exception(errorcode_t::not_specified);
     }
 }
 
@@ -38,7 +39,7 @@ binary_t* cbor_concise_visitor::get_binary() { return _concise; }
 
 cbor_diagnostic_visitor::cbor_diagnostic_visitor(stream_t* stream) : _diagnostic(stream) {
     if (nullptr == stream) {
-        throw errorcode_t::insufficient;
+        throw exception(errorcode_t::not_specified);
     }
 }
 

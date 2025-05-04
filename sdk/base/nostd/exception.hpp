@@ -25,18 +25,14 @@ class exception {
     std::string _desc;
 
    public:
-    exception(errorcode_t err) { _errorcode = err; }
-    exception(errorcode_t err, const std::string& desc) : _errorcode(err), _desc(desc) {}
-    exception(const exception& rhs) : _errorcode(rhs._errorcode), _desc(rhs._desc) {}
-    exception(exception&& rhs) : _errorcode(rhs._errorcode), _desc(std::move(rhs._desc)) {}
+    exception(errorcode_t err);
+    exception(errorcode_t err, const std::string& desc);
+    exception(const exception& rhs);
+    exception(exception&& rhs);
 
-    errorcode_t get_errorcode() const { return _errorcode; }
-    std::string get_error_message() const {
-        std::string msg;
-        error_advisor::get_instance()->error_message(_errorcode, msg);
-        return msg;
-    }
-    std::string get_description() const { return _desc; }
+    errorcode_t get_errorcode() const;
+    std::string get_error_message() const;
+    std::string get_description() const;
 };
 
 }  // namespace hotplace

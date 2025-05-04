@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/io/stream/string.hpp>
 #include <sdk/odbc/basic/odbc_diagnose.hpp>
 #include <sdk/odbc/basic/odbc_query.hpp>
@@ -17,7 +18,7 @@ namespace odbc {
 
 odbc_sinker::odbc_sinker(odbc_query* dbquery, uint32 tmo_seconds) : _dbquery(dbquery), _tmo_seconds(tmo_seconds) {
     if (nullptr == dbquery) {
-        throw errorcode_t::insufficient;
+        throw exception(errorcode_t::not_specified);
     }
 
     time_monotonic(_timestamp);

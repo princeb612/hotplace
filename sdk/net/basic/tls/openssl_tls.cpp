@@ -17,6 +17,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
@@ -33,7 +34,7 @@ namespace net {
 
 openssl_tls::openssl_tls(SSL_CTX* ctx) : _ctx(ctx) {
     if (nullptr == ctx) {
-        throw errorcode_t::insufficient;
+        throw exception(errorcode_t::not_specified);
     }
     SSL_CTX_up_ref(ctx);
     _shared.make_share(this);
@@ -44,7 +45,7 @@ openssl_tls::openssl_tls(openssl_tls_context* cert) : _ctx(nullptr) {
         _ctx = cert->get_ctx();
     }
     if (nullptr == _ctx) {
-        throw errorcode_t::insufficient;
+        throw exception(errorcode_t::not_specified);
     }
     SSL_CTX_up_ref(_ctx);
     _shared.make_share(this);

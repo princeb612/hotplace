@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/net/basic/tls/tls_server_socket.hpp>
 
@@ -16,7 +17,7 @@ namespace net {
 
 tls_server_socket::tls_server_socket(openssl_tls* tls) : tcp_server_socket(), _tls(tls) {
     if (nullptr == tls) {
-        throw errorcode_t::insufficient;
+        throw exception(errorcode_t::not_specified);
     }
     tls->addref();
 }

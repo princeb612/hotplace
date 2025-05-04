@@ -9,6 +9,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/net/basic/tls/dtls_client_socket.hpp>
 
 namespace hotplace {
@@ -16,7 +17,7 @@ namespace net {
 
 dtls_client_socket::dtls_client_socket(openssl_tls* tls) : client_socket(), _tls(tls), _handle(nullptr) {
     if (nullptr == tls) {
-        throw errorcode_t::insufficient;
+        throw exception(errorcode_t::not_specified);
     }
     tls->addref();
 }

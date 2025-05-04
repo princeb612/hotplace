@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
@@ -129,7 +130,7 @@ return_t openssl_kdf::hmac_kdf_extract(binary_t& prk, const char* alg, const bin
             }
             uint16 size = sizeof_digest(hint);
             if (0 == size) {
-                throw;
+                throw exception(errorcode_t::unexpected);
             }
 
             binary_t temp;
@@ -254,7 +255,7 @@ return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, con
         uint16 blocksize = sizeof_block(hint);
 
         if (0 == blocksize) {
-            throw;
+            throw exception(errorcode_t::unexpected);
         }
         auto algorithm = typeof_alg(hint);
 

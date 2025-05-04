@@ -46,7 +46,7 @@ tls_handshake::tls_handshake(tls_hs_type_t type, tls_session* session)
     if (session) {
         session->addref();
     } else {
-        throw exception(no_session);
+        throw exception(errorcode_t::no_session);
     }
     _shared.make_share(this);
 }

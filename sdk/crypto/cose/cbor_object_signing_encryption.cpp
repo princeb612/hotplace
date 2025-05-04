@@ -10,6 +10,7 @@
  *
  */
 
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
@@ -576,6 +577,7 @@ return_t cbor_object_signing_encryption::compose_kdf_context(cose_context_t* han
     // AlgorithmID: ... This normally is either a key wrap algorithm identifier or a content encryption algorithm identifier.
 
     cbor_array* root = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         if (nullptr == handle) {
@@ -607,55 +609,15 @@ return_t cbor_object_signing_encryption::compose_kdf_context(cose_context_t* han
                 break;
         }
 
-        int keylen = 0;
-        switch (algid) {
-            case cose_aes128kw:
-            case cose_aes128gcm:
-            case cose_aesmac_128_64:
-            case cose_aesmac_128_128:
-            case cose_aesccm_16_64_128:
-            case cose_aesccm_64_64_128:
-            case cose_aesccm_16_128_128:
-            case cose_aesccm_64_128_128:
-            case cose_hkdf_sha256:
-            case cose_hkdf_aes128:
-            case cose_ecdhes_hkdf_256:
-            case cose_ecdhss_hkdf_256:
-            case cose_hs256_64:
-                keylen = 128;
-                break;
-            case cose_aes192kw:
-            case cose_aes192gcm:
-                keylen = 192;
-                break;
-            case cose_aes256kw:
-            case cose_aes256gcm:
-            case cose_aesmac_256_64:
-            case cose_aesmac_256_128:
-            case cose_aesccm_16_64_256:
-            case cose_aesccm_64_64_256:
-            case cose_aesccm_16_128_256:
-            case cose_aesccm_64_128_256:
-            case cose_hkdf_sha512:
-            case cose_hkdf_aes256:
-            case cose_ecdhes_hkdf_512:
-            case cose_ecdhss_hkdf_512:
-            case cose_hs256:
-                keylen = 256;
-                break;
-            case cose_hs384:
-                keylen = 384;
-                break;
-            case cose_hs512:
-                keylen = 512;
-                break;
-            default:
-                ret = errorcode_t::not_supported;  // studying
-                break;
+        auto hint = advisor->hintof_cose_algorithm(algid);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
         }
+        int keylen = hint->enc.ksize << 3;
 
         if (0 == keylen) {
-            throw;  // studying
+            throw exception(errorcode_t::unexpected);
         }
 
         __try_new_catch(root, new cbor_array(), ret, __leave2);

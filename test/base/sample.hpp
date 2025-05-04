@@ -31,4 +31,6 @@ void test_binary();
 
 void test_loglevel();
 
+void test_nostd();
+
 #endif

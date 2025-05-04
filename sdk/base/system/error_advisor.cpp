@@ -241,6 +241,7 @@ const error_description error_descriptions[] = {
     errordef(error_certificate, "certificate"),
     errordef(exceed, "exceed the designed size"),
     errordef(fragmented, "fragment detected"),
+    errordef(not_specified, "not specfied"),
 
     errordef(not_supported, "not supported"),
     errordef(expect_failure, "expect failure (negative test)"),

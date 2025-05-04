@@ -221,6 +221,10 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             "sha256",
             256 >> 3,  // 32
         },
+        {
+            nullptr,
+            128 >> 3,
+        },
     },
     {
         cose_alg_t::cose_hkdf_sha512,
@@ -232,6 +236,10 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {
             "sha512",
             512 >> 3,  // 64
+        },
+        {
+            nullptr,
+            256 >> 3,
         },
     },
     {
@@ -245,6 +253,10 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             "aes-128-cbc",
             32,
         },
+        {
+            nullptr,
+            128 >> 3,
+        },
     },
     {
         cose_alg_t::cose_hkdf_aes256,
@@ -257,67 +269,83 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             "aes-256-cbc",
             64,
         },
+        {
+            nullptr,
+            256 >> 3,
+        },
     },
-    {cose_alg_t::cose_sha1,
-     "SHA-1",
-     crypto_kty_t::kty_oct,
-     cose_group_t::cose_group_hash,
-     hint_cose_groups + (cose_group_t::cose_group_hash - 1),
-     {},
-     {
-         "sha1",
-         160 >> 3,
-     }},
-    {cose_alg_t::cose_sha256_64,
-     "SHA-256/64",
-     crypto_kty_t::kty_oct,
-     cose_group_t::cose_group_hash,
-     hint_cose_groups + (cose_group_t::cose_group_hash - 1),
-     {},
-     {
-         "sha256",
-         84 >> 3,
-     }},
-    {cose_alg_t::cose_sha256,
-     "SHA-256",
-     crypto_kty_t::kty_oct,
-     cose_group_t::cose_group_hash,
-     hint_cose_groups + (cose_group_t::cose_group_hash - 1),
-     {},
-     {
-         "sha256",
-         256 >> 3,
-     }},
-    {cose_alg_t::cose_sha512_256,
-     "SHA-512/256",
-     crypto_kty_t::kty_oct,
-     cose_group_t::cose_group_hash,
-     hint_cose_groups + (cose_group_t::cose_group_hash - 1),
-     {},
-     {
-         "sha512",
-         256 >> 3,
-     }},
-    {cose_alg_t::cose_sha384,
-     "SHA-384",
-     crypto_kty_t::kty_oct,
-     cose_group_t::cose_group_hash,
-     hint_cose_groups + (cose_group_t::cose_group_hash - 1),
-     {},
-     {
-         "sha384",
-         384 >> 3,
-     }},
-    {cose_alg_t::cose_sha512,
-     "SHA-512",
-     crypto_kty_t::kty_oct,
-     cose_group_t::cose_group_hash,
-     hint_cose_groups + (cose_group_t::cose_group_hash - 1),
-     {},
-     {
-         "sha512",
-         512 >> 3,
-     }},
+    {
+        cose_alg_t::cose_sha1,
+        "SHA-1",
+        crypto_kty_t::kty_oct,
+        cose_group_t::cose_group_hash,
+        hint_cose_groups + (cose_group_t::cose_group_hash - 1),
+        {},
+        {
+            "sha1",
+            160 >> 3,
+        },
+    },
+    {
+        cose_alg_t::cose_sha256_64,
+        "SHA-256/64",
+        crypto_kty_t::kty_oct,
+        cose_group_t::cose_group_hash,
+        hint_cose_groups + (cose_group_t::cose_group_hash - 1),
+        {},
+        {
+            "sha256",
+            84 >> 3,
+        },
+    },
+    {
+        cose_alg_t::cose_sha256,
+        "SHA-256",
+        crypto_kty_t::kty_oct,
+        cose_group_t::cose_group_hash,
+        hint_cose_groups + (cose_group_t::cose_group_hash - 1),
+        {},
+        {
+            "sha256",
+            256 >> 3,
+        },
+    },
+    {
+        cose_alg_t::cose_sha512_256,
+        "SHA-512/256",
+        crypto_kty_t::kty_oct,
+        cose_group_t::cose_group_hash,
+        hint_cose_groups + (cose_group_t::cose_group_hash - 1),
+        {},
+        {
+            "sha512",
+            256 >> 3,
+        },
+    },
+    {
+        cose_alg_t::cose_sha384,
+        "SHA-384",
+        crypto_kty_t::kty_oct,
+        cose_group_t::cose_group_hash,
+        hint_cose_groups + (cose_group_t::cose_group_hash - 1),
+        {},
+        {
+            "sha384",
+            384 >> 3,
+        },
+    },
+    {
+        cose_alg_t::cose_sha512,
+        "SHA-512",
+        crypto_kty_t::kty_oct,
+        cose_group_t::cose_group_hash,
+        hint_cose_groups + (cose_group_t::cose_group_hash - 1),
+        {},
+        {
+            "sha512",
+            512 >> 3,
+        },
+    },
     {
         cose_alg_t::cose_shake128,
         "SHAKE128",
@@ -329,15 +357,17 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             "shake128",
         },
     },
-    {cose_alg_t::cose_shake256,
-     "SHAKE256",
-     crypto_kty_t::kty_oct,
-     cose_group_t::cose_group_hash,
-     hint_cose_groups + (cose_group_t::cose_group_hash - 1),
-     {},
-     {
-         "shake256",
-     }},
+    {
+        cose_alg_t::cose_shake256,
+        "SHAKE256",
+        crypto_kty_t::kty_oct,
+        cose_group_t::cose_group_hash,
+        hint_cose_groups + (cose_group_t::cose_group_hash - 1),
+        {},
+        {
+            "shake256",
+        },
+    },
     {
         cose_alg_t::cose_ecdhes_hkdf_256,
         "ECDH-ES + HKDF-256",
@@ -351,6 +381,10 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {
             "sha256",
             256 >> 3,  // 32
+        },
+        {
+            nullptr,
+            128 >> 3,
         },
     },
     {
@@ -367,6 +401,10 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             "sha512",
             512 >> 3,  // 64
         },
+        {
+            nullptr,
+            256 >> 3,
+        },
     },
     {
         cose_alg_t::cose_ecdhss_hkdf_256,
@@ -382,6 +420,10 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             "sha256",
             256 >> 3,  // 32
         },
+        {
+            nullptr,
+            128 >> 3,
+        },
     },
     {
         cose_alg_t::cose_ecdhss_hkdf_512,
@@ -396,6 +438,10 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {
             "sha512",
             512 >> 3,  // 64
+        },
+        {
+            nullptr,
+            256 >> 3,
         },
     },
     {
@@ -413,7 +459,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             128 >> 3,  // 16
         },
         {
-            "aes-128-wrap",
+            "aes-128-wrap",  // -3
         },
     },
     {
@@ -431,7 +477,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             192 >> 3,  // 24
         },
         {
-            "aes-192-wrap",
+            "aes-192-wrap",  // -4
         },
     },
     {
@@ -449,7 +495,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             256 >> 3,  // 32
         },
         {
-            "aes-256-wrap",
+            "aes-256-wrap",  // -5
         },
     },
     {
@@ -467,7 +513,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             128 >> 3,  // 16
         },
         {
-            "aes-128-wrap",
+            "aes-128-wrap",  // -3
         },
     },
     {
@@ -485,7 +531,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             192 >> 3,  // 24
         },
         {
-            "aes-192-wrap",
+            "aes-192-wrap",  // -4
         },
     },
     {
@@ -503,7 +549,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             256 >> 3,  // 32
         },
         {
-            "aes-256-wrap",
+            "aes-256-wrap",  // -5
         },
     },
     {
@@ -641,6 +687,10 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             64 >> 3,  // 8
             256 >> 3,
         },
+        {
+            nullptr,
+            128 >> 3,
+        },
     },
     {
         cose_alg_t::cose_hs256,
@@ -652,6 +702,10 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {
             "sha256",
             256 >> 3,  // 32
+            256 >> 3,
+        },
+        {
+            nullptr,
             256 >> 3,
         },
     },
@@ -667,6 +721,10 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             384 >> 3,  // 48
             384 >> 3,
         },
+        {
+            nullptr,
+            384 >> 3,
+        },
     },
     {
         cose_alg_t::cose_hs512,
@@ -678,6 +736,10 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {
             "sha512",
             512 >> 3,  // 64
+            512 >> 3,
+        },
+        {
+            nullptr,
             512 >> 3,
         },
     },

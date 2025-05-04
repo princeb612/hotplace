@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/base/system/signalwait_threads.hpp>
@@ -161,8 +162,7 @@ return_t signalwait_threads::ready_to_join(threadid_t tid) {
 
     SIGNALWAITTHREADS_MAP::iterator iter = _container.find(tid);
     if (_container.end() == iter) {
-        ret = errorcode_t::not_found;
-        throw ret;
+        throw exception(errorcode_t::unexpected);
     } else {
         _readytojoin.insert({iter->first, iter->second});
         _container.erase(iter);

@@ -37,7 +37,7 @@ tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(t
     if (session) {
         session->addref();
     } else {
-        throw exception(no_session);
+        throw exception(errorcode_t::no_session);
     }
 }
 

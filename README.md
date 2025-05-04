@@ -19,7 +19,8 @@
   * HTTP/1.1 ![implemented](https://img.shields.io/badge/implemented+SDK-green)
   * HTTP/2 ![implemented](https://img.shields.io/badge/implemented+SDK-green)
   * TLS over TCP ![implemented](https://img.shields.io/badge/implemented+SDK-green)
-  * DTLS,QUIC ![studying](https://img.shields.io/badge/studying-magenta)
+  * DTLS over UDP ![implemented](https://img.shields.io/badge/implemented+SDK-green)
+  * QUIC ![studying](https://img.shields.io/badge/studying-magenta)
   * HTTP/3 ![studying](https://img.shields.io/badge/studying-magenta)
   * ASN.1 ![studying](https://img.shields.io/badge/studying-magenta)
 * link
@@ -121,12 +122,12 @@
   * Suffix Tree
   * Ukkonen algorithm
   * Aho-Corasick algorithm (wildcard)
-    * sdk/base/nostd/
+    * sdk/base/pattern/
     * test/pattern/
     * test/parser/
 * Graph
   * BFS, DFS, Djkstra
-    * sdk/base/nostd/
+    * sdk/base/graph/
     * test/graph/
 * Authenticode
   * Digital Certificate verification (plugin_msi, plugin_cabinet excluded)

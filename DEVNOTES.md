@@ -233,7 +233,7 @@ flowchart LR
       - [x] fragmentation (rev.758)
   - [x] TLS over TCP (example netclient)
     - [x] HTTP/1.1
-  - [ ] DTLS over UDP
+  - [x] DTLS over UDP (rev. 766)
   - [x] encrypt_then_mac (rev.752)
     - [x] encrypt
     - [x] decrypt

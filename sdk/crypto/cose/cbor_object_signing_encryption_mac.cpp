@@ -10,6 +10,7 @@
  *
  */
 
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
@@ -222,7 +223,7 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
         openssl_mac mac;
         cose_group_t group = hint->group;
         if (cose_group_t::cose_group_hash == group) {
-            throw;
+            throw exception(not_implemented);
         } else if (cose_group_t::cose_group_mac_hmac == group) {
             ret = mac.hmac(hint->dgst.algname, cek, tomac, tag);
             tag.resize(hint->dgst.dlen);  // sha256/64, sha512/256

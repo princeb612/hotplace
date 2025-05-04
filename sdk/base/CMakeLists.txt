@@ -16,6 +16,7 @@ file (GLOB FILEGROUP_SDK_HEADER_BASE
 file (GLOB FILEGROUP_SDK_SOURCE_BASE
     ${PROJECT_SOURCE_DIR}/sdk/base/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/basic/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/base/nostd/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/stream/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/string/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/system/*.cpp

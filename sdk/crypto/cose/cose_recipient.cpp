@@ -255,9 +255,8 @@ return_t cose_recipient::parse(cbor_array* root) {
         }
     }
     __finally2 {
-        // do nothing
         if (errorcode_t::success != ret) {
-            // throw;
+            // do nothing
         }
     }
     return ret;

@@ -64,6 +64,9 @@ extern crypto_key rfc8152_privkeys;
 extern crypto_key rfc8152_pubkeys;
 extern crypto_key rfc8152_privkeys_c4;
 
+// validate resources
+void test_validate_resource();
+
 // part 0 .. try to decode
 void test_rfc8152_read_cbor();
 

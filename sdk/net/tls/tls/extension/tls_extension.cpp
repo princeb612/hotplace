@@ -32,7 +32,7 @@ tls_extension::tls_extension(tls_session* session) : _session(session), _type(0)
     if (session) {
         session->addref();
     } else {
-        throw exception(no_session);
+        throw exception(errorcode_t::no_session);
     }
     _shared.make_share(this);
 }

@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
     test_maphint();
     test_binary();
     test_loglevel();
+    test_nostd();
 
     _logger->flush();
 

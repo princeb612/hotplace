@@ -495,6 +495,7 @@ class crypto_advisor {
      * @return const hint_cose_algorithm_t*
      */
     const hint_cose_algorithm_t* hintof_cose_algorithm(cose_alg_t alg);
+    const hint_cose_algorithm_t* hintof_cose_algorithm(uint32 alg);
     /**
      * @brief hint
      * @param const char* alg [in]

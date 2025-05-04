@@ -14,6 +14,7 @@
 
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/syntax.hpp>
 #include <sdk/base/system/atomic.hpp>
 #include <sdk/base/types.hpp>
@@ -175,7 +176,7 @@ class t_shared_instance {
         if (nullptr == _object) {
             _object = object;
         } else {
-            throw errorcode_t::already_assigned;
+            throw exception(errorcode_t::already_assigned);
         }
         return *this;
     }
