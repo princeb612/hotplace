@@ -68,7 +68,7 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
         } else {
             binary_t bin;
             for (auto record : _records) {
-                record->write(dir, bin);
+                record->write(dir, bin);  // append
             }
             func(bin);
         }

@@ -172,7 +172,7 @@ void tls_client2() {
     tls_client_socket2 cli(minver);
 
     if (option.flags & flag_enable_etm) {
-        cli.get_session()->get_keyvalue().set(session_enable_encrypt_then_mac, 1);
+        cli.get_session().get_keyvalue().set(session_enable_encrypt_then_mac, 1);
     }
 
     char buffer[option.bufsize];
@@ -272,8 +272,7 @@ void dtls_client2() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    dtls_client_socket2 cli(dtls_12);
-    cli.get_session()->get_dtls_record_publisher().set_fragment_size(256);
+    dtls_client_socket2 cli(tls_12);
 
     char buffer[option.bufsize];
     basic_stream bs;
