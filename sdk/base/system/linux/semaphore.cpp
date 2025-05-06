@@ -42,6 +42,10 @@ return_t semaphore::wait(unsigned msec) {
 
         int rc = sem_timedwait(&_sem, &ts);
         ret = get_lasterror(rc);
+        // if (timeout == ret || ETIMEDOUT == ret) { do something }
+        if (ETIMEDOUT == ret) {
+            ret = errorcode_t::timeout;
+        }
     }
     return ret;
 }
