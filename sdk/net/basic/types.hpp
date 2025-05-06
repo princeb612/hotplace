@@ -81,8 +81,10 @@ class client_socket;
 class ipaddr_acl;
 class server_socket;
 class tcp_client_socket;
+class tcp_client_socket2;
 class tcp_server_socket;
 class udp_client_socket;
+class udp_client_socket2;
 class udp_server_socket;
 
 class dtls_client_socket;
@@ -91,9 +93,6 @@ class tls_client_socket;
 class tls_server_socket;
 class openssl_tls;
 class openssl_tls_context;
-
-class tcp_client_socket2;
-class udp_client_socket2;
 
 }  // namespace net
 }  // namespace hotplace

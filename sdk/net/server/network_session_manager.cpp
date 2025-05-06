@@ -9,8 +9,8 @@
  */
 
 #include <sdk/base/types.hpp>
-#include <sdk/net/basic/openssl/sdk.hpp>
 #include <sdk/net/basic/server_socket.hpp>
+#include <sdk/net/basic/tls/sdk.hpp>
 #include <sdk/net/server/network_server.hpp>
 #include <sdk/net/server/network_session.hpp>
 
