@@ -12,8 +12,8 @@
  * 2023.09.07   Soo Han, Kim        refactor
  */
 
-#ifndef __HOTPLACE_SDK_ODBC_QUERY__
-#define __HOTPLACE_SDK_ODBC_QUERY__
+#ifndef __HOTPLACE_SDK_ODBC_BASIC_ODBCQUERY__
+#define __HOTPLACE_SDK_ODBC_BASIC_ODBCQUERY__
 
 #include <sdk/base.hpp>
 #include <sdk/odbc/basic/odbc_record.hpp>

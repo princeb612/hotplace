@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_UNITTEST_TRACEABLE__
-#define __HOTPLACE_SDK_BASE_UNITTEST_TRACEABLE__
+#ifndef __HOTPLACE_SDK_BASE_UNITTEST_TRACE__
+#define __HOTPLACE_SDK_BASE_UNITTEST_TRACE__
 
 #include <functional>
 #include <list>

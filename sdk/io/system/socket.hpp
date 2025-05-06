@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_SOCKET__
-#define __HOTPLACE_SDK_IO_SOCKET__
+#ifndef __HOTPLACE_SDK_IO_SYSTEM_SOCKET__
+#define __HOTPLACE_SDK_IO_SYSTEM_SOCKET__
 
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/io/types.hpp>

@@ -8,6 +8,9 @@
  * Date         Name                Description
  */
 
+#ifndef __HOTPLACE_SDK_IO_SYSTEM_LINUX_NETLINK__
+#define __HOTPLACE_SDK_IO_SYSTEM_LINUX_NETLINK__
+
 #if __GLIBC__ > 4
 
 #include <arpa/inet.h>
@@ -83,5 +86,7 @@ class netlink {
 
 }  // namespace io
 }  // namespace hotplace
+
+#endif
 
 #endif

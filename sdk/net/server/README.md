@@ -1,5 +1,11 @@
 #### network_server
 
+| dev    | support | platform |
+| --     | --      | --       |
+| epoll  |    O    | linux    |
+| iocp   |    O    | windows  |
+| kqueue |    X    |          |
+
 ````
 muliplexer
   event_loop_run

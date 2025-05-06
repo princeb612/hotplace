@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_LOGGER__
-#define __HOTPLACE_SDK_BASE_LOGGER__
+#ifndef __HOTPLACE_SDK_BASE_UNITTEST_LOGGER__
+#define __HOTPLACE_SDK_BASE_UNITTEST_LOGGER__
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/console_color.hpp>

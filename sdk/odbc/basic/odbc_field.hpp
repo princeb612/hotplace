@@ -12,8 +12,8 @@
  * 2023.09.07   Soo Han, Kim        refactor
  */
 
-#ifndef __HOTPLACE_SDK_ODBC_FIELD__
-#define __HOTPLACE_SDK_ODBC_FIELD__
+#ifndef __HOTPLACE_SDK_ODBC_BASIC_ODBCFIELD__
+#define __HOTPLACE_SDK_ODBC_BASIC_ODBCFIELD__
 
 #include <sdk/base/system/datetime.hpp>
 #include <sdk/base/system/shared_instance.hpp>

@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_QUIC_QUICPACKETBUILDER__
-#define __HOTPLACE_SDK_NET_TLS_QUIC_QUICPACKETBUILDER__
+#ifndef __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKETBUILDER__
+#define __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKETBUILDER__
 
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/types.hpp>

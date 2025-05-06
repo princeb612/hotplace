@@ -15,5 +15,7 @@ mindmap
             dtls_client_socket2
       server_socket
         tcp_server_socket
+          tls_server_socket
         udp_server_socket
+          dtls_server_socket
 ```

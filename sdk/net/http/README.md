@@ -1,9 +1,23 @@
-## HTTP/1.0
+### HTTP
+
+- [x] HTTP/1.1
+  - [x] Basic and Digest Access Authentication
+  - [x] HTTP/1.1 simple server
+- [x] HTTP/2
+  - [x] HPACK
+  - [x] HTTP/2 simple server
+    - [x] server push
+- [ ] HTTP/3
+  - [x] QPACK
+  - [ ] QUIC
+  - [ ] HTTP/3 simple server
+
+### HTTP/1.0
   - one request per connection
   - problem of RTT (packet round-trip time)
     - HTTP/1.1 Persistent Connection
 
-## HTTP/1.1
+### HTTP/1.1
   - Persistent Connection
     - keep-alive option
   - pipelining
@@ -13,17 +27,17 @@
     - if the response to the previous request is delayed, all subsequent requests are blocked and the response is delayed
     - HTTP/2.0 SPDY, HTTP/3.0 QUIC
 
-## HTTP/2.0
+### HTTP/2.0
   - Multiplexed streams
     - SPDY (TCP-based)
     - problem of HOLB still exists
   - Head Compression
   - Server Push
 
-## HTTP/3.0
+### HTTP/3.0
   - QUIC (UDP-based)
 
-## comments
+### comments
 
 | compression      |                       | compression                        |               |
 | --               | --                    | --                                 | --            |

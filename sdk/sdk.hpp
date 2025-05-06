@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK__
-#define __HOTPLACE_SDK__
+#ifndef __HOTPLACE_SDK_SDK__
+#define __HOTPLACE_SDK_SDK__
 
 #include <sdk/base.hpp>
 #include <sdk/crypto.hpp>

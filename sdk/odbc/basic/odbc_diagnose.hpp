@@ -12,8 +12,8 @@
  * 2023.09.07   Soo Han, Kim        refactor
  */
 
-#ifndef __HOTPLACE_SDK_ODBC_DIAGNOSE__
-#define __HOTPLACE_SDK_ODBC_DIAGNOSE__
+#ifndef __HOTPLACE_SDK_ODBC_BASIC_ODBCDIAGNOSE__
+#define __HOTPLACE_SDK_ODBC_BASIC_ODBCDIAGNOSE__
 
 #include <sdk/base.hpp>
 #include <sdk/odbc/types.hpp>

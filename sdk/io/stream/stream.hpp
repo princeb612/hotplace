@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_STREAM_STREAM__
-#define __HOTPLACE_SDK_STREAM_STREAM__
+#ifndef __HOTPLACE_SDK_IO_STREAM_STREAM__
+#define __HOTPLACE_SDK_IO_STREAM_STREAM__
 
 #include <sdk/base/stream/types.hpp>
 

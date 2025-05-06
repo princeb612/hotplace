@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_NET_TLS_QUIC_QUICPACKET__
-#define __HOTPLACE_SDK_NET_TLS_QUIC_QUICPACKET__
+#ifndef __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKET__
+#define __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKET__
 
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/types.hpp>

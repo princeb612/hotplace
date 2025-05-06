@@ -9,8 +9,8 @@
  * 2023.08.15   Soo Han, Kin        added : stopwatch
  */
 
-#ifndef __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_WINNT__
-#define __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_WINNT__
+#ifndef __HOTPLACE_SDK_IO_SYSTEM_LINUX_WINNT__
+#define __HOTPLACE_SDK_IO_SYSTEM_LINUX_WINNT__
 
 #include <sdk/base/charset.hpp>
 #include <sdk/base/error.hpp>

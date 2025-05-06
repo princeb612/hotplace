@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_BASIC_IPADDRACL__
-#define __HOTPLACE_SDK_NET_BASIC_IPADDRACL__
+#ifndef __HOTPLACE_SDK_NET_BASIC_UTIL_IPADDRACL__
+#define __HOTPLACE_SDK_NET_BASIC_UTIL_IPADDRACL__
 
 #include <map>
 #include <sdk/base/system/critical_section.hpp>

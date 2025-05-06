@@ -121,6 +121,13 @@ path[8->7] 8 -> 7 (distance : 7)
 path[8->7] 8 -> 6 -> 7 (distance : 7)
 ```
 
+![undirected](undirected2.jpg)
+
+```
+path[A->P] A -> B -> C -> G -> L -> P (distance : 5)
+
+```
+
 ![alternative](alternative.jpg)
 
 ```
