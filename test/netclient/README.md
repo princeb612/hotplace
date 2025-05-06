@@ -23,8 +23,8 @@
 | udp_client_socket2          | PASS  | PASS  | N/A     | N/A     |
 | tls_client_socket (openssl) | PASS  | PASS  | PASS    | PASS    |
 | dtls_client_socket(openssl) | PASS  | PASS  | N/A     | PASS    |
-| tls_client_socket2          | PASS  | study | PASS    | PASS    |
-| dtls_client_socket2         | study | study | -       | study   |
+| tls_client_socket2          | PASS  | PASS  | PASS    | PASS    |
+| dtls_client_socket2         | PASS  | PASS  | -       | PASS    |
 
 3. help
 
