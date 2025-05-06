@@ -58,7 +58,9 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
             tls_hs_type_t hstype;
             uint16 hsseq;
         };
+
         splitter<spl_desc> spl;
+        spl.set_segment_size(get_fragment_size());
 
         {
             auto rctype = record->get_type();

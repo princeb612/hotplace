@@ -11,7 +11,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
-#include <sdk/net/basic/tls/openssl_tls.hpp>
+#include <sdk/net/basic/openssl/openssl_tls.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 

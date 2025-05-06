@@ -23,27 +23,30 @@
 #include <sdk/net/basic/server_socket.hpp>
 #include <sdk/net/basic/types.hpp>
 
-/* basic/socket */
-#include <sdk/net/basic/socket/async_client_socket.hpp>
-#include <sdk/net/basic/socket/tcp_client_socket.hpp>
-#include <sdk/net/basic/socket/tcp_client_socket2.hpp>
-#include <sdk/net/basic/socket/tcp_server_socket.hpp>
-#include <sdk/net/basic/socket/udp_client_socket.hpp>
-#include <sdk/net/basic/socket/udp_client_socket2.hpp>
-#include <sdk/net/basic/socket/udp_server_socket.hpp>
+/* basic/naive */
+#include <sdk/net/basic/naive/tcp_client_socket.hpp>
+#include <sdk/net/basic/naive/tcp_server_socket.hpp>
+#include <sdk/net/basic/naive/udp_client_socket.hpp>
+#include <sdk/net/basic/naive/udp_server_socket.hpp>
 
-/* basic/tls */
-#include <sdk/net/basic/tls/dtls_client_socket.hpp>
-#include <sdk/net/basic/tls/dtls_client_socket2.hpp>
-#include <sdk/net/basic/tls/dtls_server_socket.hpp>
-#include <sdk/net/basic/tls/openssl_tls.hpp>
-#include <sdk/net/basic/tls/openssl_tls_context.hpp>
-#include <sdk/net/basic/tls/sdk.hpp>
-#include <sdk/net/basic/tls/tls_client_socket.hpp>
-#include <sdk/net/basic/tls/tls_client_socket2.hpp>
-#include <sdk/net/basic/tls/tls_composer.hpp>
-#include <sdk/net/basic/tls/tls_server_socket.hpp>
-#include <sdk/net/basic/tls/types.hpp>
+/* basic/openssl */
+#include <sdk/net/basic/openssl/dtls_client_socket.hpp>
+#include <sdk/net/basic/openssl/dtls_server_socket.hpp>
+#include <sdk/net/basic/openssl/openssl_tls.hpp>
+#include <sdk/net/basic/openssl/openssl_tls_context.hpp>
+#include <sdk/net/basic/openssl/sdk.hpp>
+#include <sdk/net/basic/openssl/tls_client_socket.hpp>
+#include <sdk/net/basic/openssl/tls_server_socket.hpp>
+#include <sdk/net/basic/openssl/types.hpp>
+
+/* basic/sdk */
+#include <sdk/net/basic/sdk/async_client_socket.hpp>
+#include <sdk/net/basic/sdk/dtls_client_socket2.hpp>
+#include <sdk/net/basic/sdk/secure_client_socket.hpp>
+#include <sdk/net/basic/sdk/tcp_client_socket2.hpp>
+#include <sdk/net/basic/sdk/tls_client_socket2.hpp>
+#include <sdk/net/basic/sdk/tls_composer.hpp>
+#include <sdk/net/basic/sdk/udp_client_socket2.hpp>
 
 // basic/util
 #include <sdk/net/basic/util/ipaddr_acl.hpp>
