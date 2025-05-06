@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/socket/tcp_client_socket.hpp>
-#include <sdk/net/basic/socket/udp_client_socket.hpp>
-#include <sdk/net/basic/tls/dtls_client_socket.hpp>
-#include <sdk/net/basic/tls/tls_client_socket.hpp>
+#include <sdk/net/basic/naive/tcp_client_socket.hpp>
+#include <sdk/net/basic/naive/udp_client_socket.hpp>
+#include <sdk/net/basic/openssl/dtls_client_socket.hpp>
+#include <sdk/net/basic/openssl/tls_client_socket.hpp>
 #include <sdk/net/http/http_client.hpp>
 #include <sdk/net/http/http_protocol.hpp>
 #include <sdk/net/http/http_request.hpp>
