@@ -36,11 +36,6 @@ return_t tls_handshake_certificate_verify::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
         auto session_status = session->get_session_status();
         uint32 session_status_prerequisite = 0;
         if (from_client == dir) {
@@ -89,6 +84,7 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
         auto session = get_session();
         tls_protection& protection = session->get_tls_protection();
         auto& protection_context = protection.get_protection_context();
@@ -135,6 +131,7 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
         auto session = get_session();
         tls_protection& protection = session->get_tls_protection();
 
@@ -222,63 +219,61 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
             __leave2;
         }
 
+        // RFC 8446 2.  Protocol Overview
+        // CertificateVerify:  A signature over the entire handshake using the
+        //    private key corresponding to the public key in the Certificate
+        //    message.  This message is omitted if the endpoint is not
+        //    authenticating via a certificate.  [Section 4.4.3]
+
+        // RFC 4346 7.4.8. Certificate verify
+
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
         tls_protection& protection = session->get_tls_protection();
+
+        uint16 scheme = 0;
+        uint16 len = 0;
+        binary_t signature;
         {
-            // RFC 8446 2.  Protocol Overview
-            // CertificateVerify:  A signature over the entire handshake using the
-            //    private key corresponding to the public key in the Certificate
-            //    message.  This message is omitted if the endpoint is not
-            //    authenticating via a certificate.  [Section 4.4.3]
+            payload pl;
+            pl << new payload_member(uint16(0), true, constexpr_signature_alg) << new payload_member(uint16(0), true, constexpr_len)
+               << new payload_member(binary_t(), constexpr_signature);
+            pl.set_reference_value(constexpr_signature, constexpr_len);
+            pl.read(stream, size, pos);
 
-            // RFC 4346 7.4.8. Certificate verify
+            scheme = pl.t_value_of<uint16>(constexpr_signature_alg);
+            len = pl.t_value_of<uint16>(constexpr_len);
+            pl.get_binary(constexpr_signature, signature);
+        }
 
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        // $ openssl x509 -pubkey -noout -in server.crt > server.pub
+        // public key from server certificate or handshake 0x11 certificate
+        const char* kid = nullptr;
+        if (from_server == dir) {
+            kid = KID_TLS_SERVER_CERTIFICATE_PUBLIC;  // Server Certificate
+        } else {
+            kid = KID_TLS_CLIENT_CERTIFICATE_PUBLIC;  // Client Certificate (Client Authentication, optional)
+        }
+        crypto_key& key = protection.get_keyexchange();
+        auto pkey = key.find(kid);
 
-            uint16 scheme = 0;
-            uint16 len = 0;
-            binary_t signature;
-            {
-                payload pl;
-                pl << new payload_member(uint16(0), true, constexpr_signature_alg) << new payload_member(uint16(0), true, constexpr_len)
-                   << new payload_member(binary_t(), constexpr_signature);
-                pl.set_reference_value(constexpr_signature, constexpr_len);
-                pl.read(stream, size, pos);
-
-                scheme = pl.t_value_of<uint16>(constexpr_signature_alg);
-                len = pl.t_value_of<uint16>(constexpr_len);
-                pl.get_binary(constexpr_signature, signature);
-            }
-
-            // $ openssl x509 -pubkey -noout -in server.crt > server.pub
-            // public key from server certificate or handshake 0x11 certificate
-            const char* kid = nullptr;
-            if (from_server == dir) {
-                kid = KID_TLS_SERVER_CERTIFICATE_PUBLIC;  // Server Certificate
-            } else {
-                kid = KID_TLS_CLIENT_CERTIFICATE_PUBLIC;  // Client Certificate (Client Authentication, optional)
-            }
-            crypto_key& key = protection.get_keyexchange();
-            auto pkey = key.find(kid);
-
-            ret = verify_certverify(pkey, dir, scheme, signature);
+        ret = verify_certverify(pkey, dir, scheme, signature);
 
 #if defined DEBUG
-            if (istraceable()) {
-                basic_stream dbs;
-                dbs.autoindent(1);
-                dbs.println(" > %s 0x%04x %s", constexpr_signature_alg, scheme, tlsadvisor->signature_scheme_name(scheme).c_str());
-                dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
-                // dbs.println(" > tosign");
-                // dump_memory(tosign, &dbs, 16, 3, 0x00, dump_notrunc);
-                dbs.println(" > %s \e[1;33m%s\e[0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
-                dump_memory(signature, &dbs, 16, 3, 0x00, dump_notrunc);
-                dbs.autoindent(0);
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.autoindent(1);
+            dbs.println(" > %s 0x%04x %s", constexpr_signature_alg, scheme, tlsadvisor->signature_scheme_name(scheme).c_str());
+            dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
+            // dbs.println(" > tosign");
+            // dump_memory(tosign, &dbs, 16, 3, 0x00, dump_notrunc);
+            dbs.println(" > %s \e[1;33m%s\e[0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
+            dump_memory(signature, &dbs, 16, 3, 0x00, dump_notrunc);
+            dbs.autoindent(0);
 
-                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
-            }
-#endif
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
         }
+#endif
     }
     __finally2 {
         // do nothing
@@ -325,11 +320,6 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
 static return_t construct_certificate_verify_message(tls_session* session, tls_direction_t dir, basic_stream& message) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
         auto& protection = session->get_tls_protection();
 
         binary_t transcripthash;

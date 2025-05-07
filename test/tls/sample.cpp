@@ -23,7 +23,7 @@ test_case _test_case;
 t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
-return_t dump_record(const char* text, tls_session* session, const binary_t& bin, tls_direction_t dir, bool expect) {
+return_t dump_record(const char* text, tls_session* session, tls_direction_t dir, const binary_t& bin, bool expect) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == text || nullptr == session) {
@@ -46,7 +46,7 @@ return_t dump_record(const char* text, tls_session* session, const binary_t& bin
     return ret;
 }
 
-return_t dump_handshake(const char* text, tls_session* session, const binary_t& bin, tls_direction_t dir) {
+return_t dump_handshake(const char* text, tls_session* session, tls_direction_t dir, const binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == text || nullptr == session) {
@@ -125,7 +125,7 @@ void play_pcap(tls_session* session, pcap_testvector* testvector, size_t size) {
         pcap_testvector* item = testvector + i;
 
         binary_t bin_record = std::move(base16_decode_rfc(item->record));
-        dump_record(item->desc, session, bin_record, item->dir);
+        dump_record(item->desc, session, item->dir, bin_record);
     }
 }
 

@@ -24,10 +24,6 @@ return_t tls_handshake_end_of_early_data::do_postprocess(tls_direction_t dir, co
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
 

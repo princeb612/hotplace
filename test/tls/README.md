@@ -80,7 +80,7 @@
   - C->S finished
   - S->C new_session_ticket
   - S->C change_cipher_spec
-  - S->C finished  
+  - S->C finished
 - DTLS 1.2
   - openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -dtls
   - openssl s_client -connect localhost:9000 -state -debug -dtls
@@ -103,3 +103,27 @@
 * [tls13](tls13/README.md)
 * [tls12](tls12/README.md)
 * [dtls12](dtls12/README.md)
+
+### TLS 1.3
+
+* 1-RTT
+  * C->S
+    *client_hello
+  * S->C
+    * server_hello
+    * encrypted_extensions
+    * certificate
+    * certificate_verify
+    * finished
+  * C->S
+    * finished
+  * S->C
+    * new_session_ticket
+  * C->S
+    * application data
+  * S->C
+    * application data
+  * C->S
+    * close_notify
+  * S->C
+    * close_notify

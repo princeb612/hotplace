@@ -4,6 +4,8 @@
   * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
+* Revision 771
+
 * Revision 770 (Tag 1.24)
   * [tested] valgrind
   * [applied] openssl-3.5.0 (LTS)

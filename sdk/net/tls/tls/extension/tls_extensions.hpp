@@ -19,8 +19,8 @@ class tls_extensions {
     tls_extensions();
     ~tls_extensions();
 
-    return_t read(tls_hs_type_t hstype, tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);
-    return_t read(tls_hs_type_t hstype, tls_session *session, tls_direction_t dir, const binary_t &bin);
+    return_t read(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);
+    return_t read(tls_session *session, tls_direction_t dir, const binary_t &bin);
 
     return_t write(binary_t &bin);
 
@@ -39,7 +39,7 @@ class tls_extensions {
    protected:
    private:
     critical_section _lock;
-    std::map<uint16, tls_extension *> _dictionary;  // tls1_ext_type_t
+    std::map<uint16, tls_extension *> _dictionary;  // tls_ext_type_t
     std::vector<tls_extension *> _extensions;       // ordered
 };
 

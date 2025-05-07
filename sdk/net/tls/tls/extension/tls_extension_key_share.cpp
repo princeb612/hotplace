@@ -38,10 +38,6 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
 
         std::string privkid;
         std::string pubkid;

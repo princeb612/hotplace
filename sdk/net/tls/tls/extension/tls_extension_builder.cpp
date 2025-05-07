@@ -17,6 +17,7 @@
 #include <sdk/net/tls/tls/extension/tls_extension_alps.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_builder.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_compress_certificate.hpp>
+#include <sdk/net/tls/tls/extension/tls_extension_early_data.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_ec_point_formats.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_encrypted_client_hello.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_key_share.hpp>
@@ -35,7 +36,7 @@
 namespace hotplace {
 namespace net {
 
-tls_extension_builder::tls_extension_builder() : _session(nullptr), _type(-1), _handshake(tls_hs_client_hello) {}
+tls_extension_builder::tls_extension_builder() : _session(nullptr), _type(-1), _dir(from_any), _hs(tls_hs_hello_request) {}
 
 tls_extension_builder& tls_extension_builder::set(tls_session* session) {
     _session = session;
@@ -47,18 +48,27 @@ tls_extension_builder& tls_extension_builder::set(uint16 type) {
     return *this;
 }
 
-tls_extension_builder& tls_extension_builder::set(tls_hs_type_t handshake) {
-    _handshake = handshake;
+tls_extension_builder& tls_extension_builder::set(tls_direction_t dir) {
+    _dir = dir;
+    return *this;
+}
+
+tls_extension_builder& tls_extension_builder::set(tls_hs_type_t hs) {
+    _hs = hs;
     return *this;
 }
 
 tls_session* tls_extension_builder::get_session() { return _session; }
 
-tls_hs_type_t tls_extension_builder::get_handshake() { return _handshake; }
+uint16 tls_extension_builder::get_type() { return _type; }
+
+tls_direction_t tls_extension_builder::get_direction() { return _dir; }
+
+tls_hs_type_t tls_extension_builder::get_handshake_type() { return _hs; }
 
 tls_extension* tls_extension_builder::build() {
     tls_extension* extension = nullptr;
-    switch (_type) {
+    switch (get_type()) {
         case tls_ext_server_name: /* 0x0000 */ {
             __try_new_catch_only(extension, new tls_extension_sni(get_session()));
         } break;
@@ -83,10 +93,10 @@ tls_extension* tls_extension_builder::build() {
         case tls_ext_pre_shared_key: /* 0x0029 */ {
             auto session = get_session();
             if (session) {
-                auto hstype = get_handshake();
-                if (tls_hs_client_hello == hstype) {
+                auto dir = get_direction();
+                if (from_client == dir) {
                     __try_new_catch_only(extension, new tls_extension_client_psk(get_session()));
-                } else if (tls_hs_server_hello == hstype) {
+                } else if (from_server == dir) {
                     __try_new_catch_only(extension, new tls_extension_server_psk(get_session()));
                 }
             }
@@ -94,10 +104,10 @@ tls_extension* tls_extension_builder::build() {
         case tls_ext_supported_versions: /* 0x002b */ {
             auto session = get_session();
             if (session) {
-                auto hstype = get_handshake();
-                if (tls_hs_client_hello == hstype) {
+                auto dir = get_direction();
+                if (from_client == dir) {
                     __try_new_catch_only(extension, new tls_extension_client_supported_versions(get_session()));
-                } else if (tls_hs_server_hello == hstype) {
+                } else if (from_server == dir) {
                     __try_new_catch_only(extension, new tls_extension_server_supported_versions(get_session()));
                 }
             }
@@ -108,10 +118,10 @@ tls_extension* tls_extension_builder::build() {
         case tls_ext_key_share: /* 0x0033 */ {
             auto session = get_session();
             if (session) {
-                auto hstype = get_handshake();
-                if (tls_hs_client_hello == hstype) {
+                auto dir = get_direction();
+                if (from_client == dir) {
                     __try_new_catch_only(extension, new tls_extension_client_key_share(get_session()));
-                } else if (tls_hs_server_hello == hstype) {
+                } else if (from_server == dir) {
                     __try_new_catch_only(extension, new tls_extension_server_key_share(get_session()));
                 }
             }
@@ -128,6 +138,9 @@ tls_extension* tls_extension_builder::build() {
         case tls_ext_renegotiation_info: /* 0xff01 */ {
             __try_new_catch_only(extension, new tls_extension_renegotiation_info(get_session()));
         } break;
+        case tls_ext_early_data: /* 0x002a */ {
+            __try_new_catch_only(extension, new tls_extension_early_data(get_session(), get_handshake_type()));
+        } break;
 
         case tls_ext_max_fragment_length:          /* 0x0001 */
         case tls_ext_client_certificate_url:       /* 0x0002 */
@@ -142,14 +155,13 @@ tls_extension* tls_extension_builder::build() {
         case tls_ext_record_size_limit:            /* 0x001c */
         case tls_ext_session_ticket:               /* 0x0023 */
         case tls_ext_tlmsp:                        /* 0x0024 */
-        case tls_ext_early_data:                   /* 0x002a */
         case tls_ext_cookie:                       /* 0x002c */
         case tls_ext_certificate_authorities:      /* 0x002f */
         case tls_ext_oid_filters:                  /* 0x0030 */
         case tls_ext_post_handshake_auth:          /* 0x0031 */
         case tls_ext_signature_algorithms_cert:    /* 0x0032 */
         default: {
-            __try_new_catch_only(extension, new tls_extension_unknown(_type, get_session()));
+            __try_new_catch_only(extension, new tls_extension_unknown(get_type(), get_session()));
         } break;
     }
     return extension;

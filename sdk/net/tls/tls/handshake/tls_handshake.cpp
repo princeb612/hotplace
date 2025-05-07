@@ -94,10 +94,6 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
 
         // auto& protection = session->get_tls_protection();
         // auto session_type = session->get_type();
@@ -191,10 +187,6 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
 #endif
 
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
 
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
@@ -255,11 +247,6 @@ return_t tls_handshake::do_postprocess(tls_direction_t dir, const byte_t* stream
 return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -267,6 +254,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         size_t hspos = pos;
+        auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto type = session->get_type();
 

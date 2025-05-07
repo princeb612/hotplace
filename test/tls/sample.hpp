@@ -40,8 +40,8 @@ extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 extern tls_session rfc8448_session;
 extern tls_session rfc8448_session2;
 
-return_t dump_record(const char* text, tls_session* session, const binary_t& bin, tls_direction_t dir = from_server, bool expect = true);
-return_t dump_handshake(const char* text, tls_session* session, const binary_t& bin, tls_direction_t dir = from_server);
+return_t dump_record(const char* text, tls_session* session, tls_direction_t dir, const binary_t& bin, bool expect = true);
+return_t dump_handshake(const char* text, tls_session* session, tls_direction_t dir, const binary_t& bin);
 void test_keycalc(tls_session* session, tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect);
 void test_transcript_hash(tls_session* session, const binary_t& expect);
 void direction_string(tls_direction_t dir, int send, std::string& s);

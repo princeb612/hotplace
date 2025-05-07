@@ -91,10 +91,6 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
 
@@ -131,9 +127,6 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             __leave2;
         }
 
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
-
         // RFC 8446 2.  Protocol Overview
         // Finished:  A MAC (Message Authentication Code) over the entire
         //    handshake.  This message provides key confirmation, binds the
@@ -141,6 +134,8 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
         //    authenticates the handshake.  [Section 4.4.4]
 
         crypto_advisor* advisor = crypto_advisor::get_instance();
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
         auto tlsversion = protection.get_tls_version();
         uint16 dlen = 0;
         hash_algorithm_t hmacalg;

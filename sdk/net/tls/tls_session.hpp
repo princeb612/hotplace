@@ -43,13 +43,15 @@ enum session_conf_t {
     session_dtls_epoch = 1,        // record epoch
     session_dtls_seq = 2,          // record sequence
     session_dtls_message_seq = 3,  // handshake sequence
+    session_ticket_lifetime = 4,   // RFC 8446 4.6.1. uint32
+    session_ticket_age_add = 5,    // RFC 8446 4.6.1. uint32
+    session_ticket_timestamp = 6,  // RFC 8446 4.2.11. see obfuscated_ticket_age
 
     // session->get_keyvalue()
     // uint16
     session_debug_deprecated_ciphersuite = 1000,  // to test unsupported cipher suite
     session_encrypt_then_mac = 1001,
     session_enable_encrypt_then_mac = 1002,
-    session_min_ver = 1003,
 };
 
 class tls_session {

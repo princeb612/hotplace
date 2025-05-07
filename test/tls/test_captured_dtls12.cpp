@@ -41,7 +41,7 @@ pcap_testvector capture_dtls12[] = {
     },
     {
         // S->C, epoch 0 seq 0 - hello_verify_request
-        from_client,
+        from_server,
         "hello_verify_request",
         "16 fe ff 00 00 00 00 00 00 00 00 00 23 03 00 00"
         "17 00 00 00 00 00 00 00 17 fe ff 14 d8 32 1d 16"
@@ -293,7 +293,7 @@ pcap_testvector capture_dtls12[] = {
 // dtls12/dtls12mtu1500.pcapng
 pcap_testvector capture_dtls12mtu1500[] = {
     {
-        from_server,
+        from_client,
         "client_hello",
         "16 fe ff 00 00 00 00 00 00 00 00 00 c9 01 00 00"
         "bd 00 00 00 00 00 00 00 bd fe fd 72 d4 34 26 a5"

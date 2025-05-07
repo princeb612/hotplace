@@ -9,6 +9,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKENEWSESSIONTICKET__
 #define __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKENEWSESSIONTICKET__
 
+#include <sdk/net/tls/tls/extension/tls_extensions.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
 
 namespace hotplace {
@@ -19,9 +20,12 @@ class tls_handshake_new_session_ticket : public tls_handshake {
     tls_handshake_new_session_ticket(tls_session* session);
 
    protected:
+    virtual return_t do_preprocess(tls_direction_t dir);
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+
+   private:
 };
 
 }  // namespace net

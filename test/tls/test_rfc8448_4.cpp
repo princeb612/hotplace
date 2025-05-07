@@ -82,7 +82,7 @@ void test_rfc8448_4() {
             "9d";
         // verify PSK binder == finished
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("client_hello", &rfc8448_session, bin_record, from_client);
+        dump_record("client_hello", &rfc8448_session, from_client, bin_record);
     }
     {
         openssl_kdf kdf;
@@ -120,7 +120,7 @@ void test_rfc8448_4() {
             "7a 7c c5 d2 84 4f 76 d5 ae e4 b4 ed bf 04 9b e0";
         // application_data after CH (decryption)
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("application_data", &rfc8448_session, bin_record, from_client);
+        dump_record("application_data", &rfc8448_session, from_client, bin_record);
     }
     {
         // {server}  create an ephemeral x25519 key pair
@@ -151,7 +151,7 @@ void test_rfc8448_4() {
             "dd 57 c2 05 3c d9 45 12 ab 47 f1 15 e8 6e ff 50 94 2c ea 31 00"
             "2b 00 02 03 04";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("server_hello", &rfc8448_session, bin_record, from_server);
+        dump_record("server_hello", &rfc8448_session, from_server, bin_record);
     }
     {
         // {server}  derive secret for handshake "tls13 derived"
@@ -178,7 +178,7 @@ void test_rfc8448_4() {
             "48 6b fd 08 43 b8 70 24 86 5c a3 5c c4 1c 4e 51 5c 64 dc b1 36"
             "9f 98 63 5b c7 a5";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("encrypted_extensions .. finished", &rfc8448_session, bin_record, from_server);
+        dump_record("encrypted_extensions .. finished", &rfc8448_session, from_server, bin_record);
     }
     {
         // {server}  derive secret "tls13 c ap traffic"
@@ -201,7 +201,7 @@ void test_rfc8448_4() {
             "17 03 03 00 15 ac a6 fc 94 48 41 29"
             "8d f9 95 93 72 5f 9b f9 75 44 29 b1 2f 09";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("end_of_early_data", &rfc8448_session, bin_record, from_client);
+        dump_record("end_of_early_data", &rfc8448_session, from_client, bin_record);
     }
     {
         // {client}  derive write traffic keys for handshake data
@@ -217,7 +217,7 @@ void test_rfc8448_4() {
             "ea fb b7 00 09 96 47 16 d8 34 fb 70 c3 d2 a5 6c 5b 1f 5f 6b db"
             "a6 c3 33 cf";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("finished", &rfc8448_session, bin_record, from_client);
+        dump_record("finished", &rfc8448_session, from_client, bin_record);
     }
     {
         test_keycalc(&rfc8448_session, tls_secret_application_client_key, bin, "secret_application_client_key", "3cf122f301c6358ca7989553250efd72");
@@ -232,7 +232,7 @@ void test_rfc8448_4() {
             "41 aa 03 1d 7a 74 d4 91 c9 9b 9d 4e 23 2b 74 20 6b c6 fb aa 04"
             "fe 78 be 44 a9 b4 f5 43 20 a1 7e b7 69 92 af ac 31 03";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("application_data", &rfc8448_session, bin_record, from_client);
+        dump_record("application_data", &rfc8448_session, from_client, bin_record);
     }
     {
         // {server}  send application_data record
@@ -242,7 +242,7 @@ void test_rfc8448_4() {
             "40 b5 a8 3f 46 2a 09 54 c3 58 13 93 a2 03 a2 5a 7d d1 41 41 ef"
             "1a 37 90 0c db 62 ff 62 de e1 ba 39 ab 25 90 cb f1 94";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("application_data", &rfc8448_session, bin_record, from_server);
+        dump_record("application_data", &rfc8448_session, from_server, bin_record);
     }
     {
         // {client}  send alert record
@@ -250,7 +250,7 @@ void test_rfc8448_4() {
             "17 03 03 00 13 0f ac ce 32 46 bd fc"
             "63 69 83 8d 6a 82 ae 6d e5 d4 22 dc";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("alert", &rfc8448_session, bin_record, from_client);
+        dump_record("alert", &rfc8448_session, from_client, bin_record);
     }
     {
         // {server}  send alert record
@@ -258,6 +258,6 @@ void test_rfc8448_4() {
             "17 03 03 00 13 5b 18 af 44 4e 8e 1e"
             "ec 71 58 fb 62 d8 f2 57 7d 37 ba 5d";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("alert", &rfc8448_session, bin_record, from_server);
+        dump_record("alert", &rfc8448_session, from_server, bin_record);
     }
 }

@@ -68,8 +68,8 @@ void test_rfc8448_3() {
             "01 04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01";
 
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("#1A client_hello", &rfc8448_session, bin_record, from_client);
-        dump_record("#1B client_hello", &rfc8448_session2, bin_record, from_client);
+        dump_record("#1A client_hello", &rfc8448_session, from_client, bin_record);
+        dump_record("#1B client_hello", &rfc8448_session2, from_client, bin_record);
     }
 
     // send server_epk.pub @server_hello
@@ -106,8 +106,8 @@ void test_rfc8448_3() {
             "1d 00 20 c9 82 88 76 11 20 95 fe 66 76 2b db f7 c6 72 e1 56 d6"
             "cc 25 3b 83 3d f1 dd 69 b1 b0 4e 75 1f 0f 00 2b 00 02 03 04";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("#2A server_hello", &rfc8448_session, bin_record);
-        dump_record("#2B server_hello", &rfc8448_session2, bin_record);
+        dump_record("#2A server_hello", &rfc8448_session, from_server, bin_record);
+        dump_record("#2B server_hello", &rfc8448_session2, from_server, bin_record);
 
         // > handshake type 2 (server_hello)
         //  > cipher suite 0x1301 TLS_AES_128_GCM_SHA256
@@ -189,7 +189,7 @@ void test_rfc8448_3() {
             "12 00 1d 00 17 00 18 00 19 01 00 01 01 01 02 01 03 01 04 00 1c"
             "00 02 40 01 00 00 00 00";
         binary_t bin_handshake = std::move(base16_decode_rfc(handshake));
-        dump_handshake("#3A1 encrypted_extensions", &rfc8448_session, bin_handshake);
+        dump_handshake("#3A1 encrypted_extensions", &rfc8448_session, from_server, bin_handshake);
 
         test_transcript_hash(&rfc8448_session, base16_decode_rfc("28477e0227567481e5ee83016a3e447840200586cf01526781898a964a45caf9"));
     }
@@ -220,7 +220,7 @@ void test_rfc8448_3() {
             "1c 3b 84 e0 a8 b2 f7 59 40 9b a3 ea c9 d9 1d 40 2d cc 0c c8 f8"
             "96 12 29 ac 91 87 b4 2b 4d e1 00 00";
         binary_t bin_handshake = std::move(base16_decode_rfc(handshake));
-        dump_handshake("#3A2 certificate", &rfc8448_session, bin_handshake);
+        dump_handshake("#3A2 certificate", &rfc8448_session, from_server, bin_handshake);
 
         test_transcript_hash(&rfc8448_session, base16_decode_rfc("764d6632b3c35c3f3205e3499ac3edbaabb88295fba751461d3678e2e5ea0687"));
     }
@@ -236,7 +236,7 @@ void test_rfc8448_3() {
             "5c 9e a5 8c 18 1e 81 8e 95 b8 c3 fb 0b f3 27 84 09 d3 be 15 2a"
             "3d a5 04 3e 06 3d da 65 cd f5 ae a2 0d 53 df ac d4 2f 74 f3";
         binary_t bin_handshake = std::move(base16_decode_rfc(handshake));
-        dump_handshake("#3A3 certificate_verify", &rfc8448_session, bin_handshake);
+        dump_handshake("#3A3 certificate_verify", &rfc8448_session, from_server, bin_handshake);
 
         test_transcript_hash(&rfc8448_session, base16_decode_rfc("edb7725fa7a3473b031ec8ef65a2485493900138a2b91291407d7951a06110ed"));
     }
@@ -248,7 +248,7 @@ void test_rfc8448_3() {
             "dc e7 1d f4 de da 4a b4 2c 30 95 72 cb 7f ff ee 54 54 b7 8f 07"
             "18";
         binary_t bin_handshake = std::move(base16_decode_rfc(handshake));
-        dump_handshake("#3A4 server finished", &rfc8448_session, bin_handshake);
+        dump_handshake("#3A4 server finished", &rfc8448_session, from_server, bin_handshake);
 
         test_transcript_hash(&rfc8448_session, base16_decode_rfc("9608102a0f1ccc6db6250b7b7e417b1a000eaada3daae4777a7686c9ff83df13"));
     }
@@ -304,7 +304,7 @@ void test_rfc8448_3() {
         //  > tag bf0253fe5175be898e750edc53370d2b
 
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("#3B (#3A1..#3A4)", &rfc8448_session2, bin_record);
+        dump_record("#3B (#3A1..#3A4)", &rfc8448_session2, from_server, bin_record);
 
         test_transcript_hash(&rfc8448_session2, base16_decode_rfc("9608102a0f1ccc6db6250b7b7e417b1a000eaada3daae4777a7686c9ff83df13"));
     }
@@ -354,8 +354,8 @@ void test_rfc8448_3() {
             "d8 7f 38 f8 03 38 ac 98 fc 46 de b3 84 bd 1c ae ac ab 68 67 d7"
             "26 c4 05 46";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("#4 client finished", &rfc8448_session, bin_record, from_client);
-        dump_record("#4 client finished", &rfc8448_session2, bin_record, from_client);
+        dump_record("#4 client finished", &rfc8448_session, from_client, bin_record);
+        dump_record("#4 client finished", &rfc8448_session2, from_client, bin_record);
     }
     // after client finished
     {
@@ -393,8 +393,8 @@ void test_rfc8448_3() {
             "df 35 30 05 f3 bc e1 86 96 12 9c 81 53 55 6b 3b 6c 67 79 b3 7b"
             "f1 59 85 68 4f";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("#5 new_session_ticket", &rfc8448_session, bin_record, from_server);
-        dump_record("#5 new_session_ticket", &rfc8448_session2, bin_record, from_server);
+        dump_record("#5 new_session_ticket", &rfc8448_session, from_server, bin_record);
+        dump_record("#5 new_session_ticket", &rfc8448_session2, from_server, bin_record);
     }
     // #6
     // {client}  send application_data record:
@@ -405,8 +405,8 @@ void test_rfc8448_3() {
             "98 19 a8 a5 b4 6b 39 5b d5 4a 9a 20 44 1e 2b 62 97 4e 1f 5a 62"
             "92 a2 97 70 14 bd 1e 3d ea e6 3a ee bb 21 69 49 15 e4";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("#6 application data", &rfc8448_session, bin_record, from_client);
-        dump_record("#6 application data", &rfc8448_session2, bin_record, from_client);
+        dump_record("#6 application data", &rfc8448_session, from_client, bin_record);
+        dump_record("#6 application data", &rfc8448_session2, from_client, bin_record);
     }
     // #7
     // {server}  send application_data record:
@@ -417,8 +417,8 @@ void test_rfc8448_3() {
             "0e fa f9 7d 90 e6 df fc 60 2d cb 50 1a 59 a8 fc c4 9c 4b f2 e5"
             "f0 a2 1c 00 47 c2 ab f3 32 54 0d d0 32 e1 67 c2 95 5d";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("#7 application data", &rfc8448_session, bin_record, from_server);
-        dump_record("#7 application data", &rfc8448_session2, bin_record, from_server);
+        dump_record("#7 application data", &rfc8448_session, from_server, bin_record);
+        dump_record("#7 application data", &rfc8448_session2, from_server, bin_record);
     }
     // #8
     // {client}  send alert record:
@@ -427,8 +427,8 @@ void test_rfc8448_3() {
             "17 03 03 00 13 c9 87 27 60 65 56 66"
             "b7 4d 7f f1 15 3e fd 6d b6 d0 b0 e3";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("#8 alert (close_notify)", &rfc8448_session, bin_record, from_client);
-        dump_record("#8 alert (close_notify)", &rfc8448_session2, bin_record, from_client);
+        dump_record("#8 alert (close_notify)", &rfc8448_session, from_client, bin_record);
+        dump_record("#8 alert (close_notify)", &rfc8448_session2, from_client, bin_record);
     }
     // #9
     // {server}  send alert record:
@@ -437,7 +437,7 @@ void test_rfc8448_3() {
             "17 03 03 00 13 b5 8f d6 71 66 eb f5"
             "99 d2 47 20 cf be 7e fa 7a 88 64 a9";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("#9 alert (close_notify)", &rfc8448_session, bin_record, from_server);
-        dump_record("#9 alert (close_notify)", &rfc8448_session2, bin_record, from_server);
+        dump_record("#9 alert (close_notify)", &rfc8448_session, from_server, bin_record);
+        dump_record("#9 alert (close_notify)", &rfc8448_session2, from_server, bin_record);
     }
 }

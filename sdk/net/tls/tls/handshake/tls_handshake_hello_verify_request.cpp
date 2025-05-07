@@ -28,12 +28,12 @@ tls_handshake_hello_verify_request::tls_handshake_hello_verify_request(tls_sessi
 return_t tls_handshake_hello_verify_request::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
+        if (from_server != dir) {
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 
+        auto session = get_session();
         auto session_status = session->get_session_status();
         if (0 == (session_status_client_hello & session_status)) {
             ret = errorcode_t::error_handshake;
@@ -51,10 +51,6 @@ return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir,
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         auto session_type = session->get_type();
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
@@ -75,10 +71,6 @@ return_t tls_handshake_hello_verify_request::do_read_body(tls_direction_t dir, c
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         auto& protection = session->get_tls_protection();
 
         /**

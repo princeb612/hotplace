@@ -72,9 +72,9 @@ namespace net {
  * @param   size_t& pos [inout]
  * @remarks
  */
-return_t tls_dump_record(tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
-return_t tls_dump_handshake(tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
-return_t tls_dump_extension(tls_hs_type_t hstype, tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_record(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_handshake(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+return_t tls_dump_extension(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
 
 }  // namespace net
 }  // namespace hotplace

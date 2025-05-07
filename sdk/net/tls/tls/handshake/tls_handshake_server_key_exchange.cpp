@@ -33,14 +33,24 @@ constexpr char constexpr_sig[] = "computed signature";
 
 tls_handshake_server_key_exchange::tls_handshake_server_key_exchange(tls_session* session) : tls_handshake(tls_hs_server_key_exchange, session) {}
 
+return_t tls_handshake_server_key_exchange::do_preprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (from_server != dir) {
+            ret = errorcode_t::bad_request;
+            __leave2;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
+}
+
 return_t tls_handshake_server_key_exchange::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
         auto hssize = get_size();
@@ -57,17 +67,13 @@ return_t tls_handshake_server_key_exchange::do_postprocess(tls_direction_t dir, 
 return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         {
+            auto session = get_session();
             auto& protection = session->get_tls_protection();
             auto& keyexchange = protection.get_keyexchange();
             crypto_advisor* advisor = crypto_advisor::get_instance();

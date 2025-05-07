@@ -18,7 +18,7 @@ tls_extensions::tls_extensions() {}
 
 tls_extensions::~tls_extensions() { clear(); }
 
-return_t tls_extensions::read(tls_hs_type_t hstype, tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extensions::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -31,15 +31,15 @@ return_t tls_extensions::read(tls_hs_type_t hstype, tls_session* session, tls_di
         //  uint16 len
         //  ...
 
+        tls_extension_builder builder;
         while (pos < size) {
             if (pos + 4 > size) {
                 ret = errorcode_t::no_more;
                 break;
             }
 
-            uint16 extension_type = ntoh16(*(uint16*)(stream + pos));
-            tls_extension_builder builder;
-            auto extension = builder.set(session).set(hstype).set(extension_type).build();
+            auto extension_type = ntoh16(*(uint16*)(stream + pos));
+            auto extension = builder.set(session).set(dir).set(extension_type).build();
             if (extension) {
                 ret = extension->read(stream, size, pos);
                 if (errorcode_t::success == ret) {
@@ -56,11 +56,11 @@ return_t tls_extensions::read(tls_hs_type_t hstype, tls_session* session, tls_di
     return ret;
 }
 
-return_t tls_extensions::read(tls_hs_type_t hstype, tls_session* session, tls_direction_t dir, const binary_t& bin) {
+return_t tls_extensions::read(tls_session* session, tls_direction_t dir, const binary_t& bin) {
     const byte_t* stream = &bin[0];
     size_t size = bin.size();
     size_t pos = 0;
-    return read(hstype, session, dir, stream, size, pos);
+    return read(session, dir, stream, size, pos);
 }
 
 return_t tls_extensions::write(binary_t& bin) {

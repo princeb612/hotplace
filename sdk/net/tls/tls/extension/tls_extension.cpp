@@ -41,6 +41,8 @@ tls_extension::tls_extension(const tls_extension& rhs) : _session(rhs._session),
     auto session = get_session();
     if (session) {
         _session->addref();
+    } else {
+        throw exception(errorcode_t::no_session);
     }
     _shared.make_share(this);
 }
@@ -48,6 +50,8 @@ tls_extension::tls_extension(const tls_extension& rhs) : _session(rhs._session),
 tls_extension::tls_extension(uint16 type, tls_session* session) : _session(session), _type(type), _bodysize(0) {
     if (session) {
         _session->addref();
+    } else {
+        throw exception(errorcode_t::no_session);
     }
     _shared.make_share(this);
 }
@@ -59,11 +63,11 @@ tls_extension::~tls_extension() {
     }
 }
 
-tls_extension* tls_extension::read(tls_hs_type_t hstype, tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
+tls_extension* tls_extension::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     tls_extension* obj = nullptr;
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == session || nullptr == stream) {
+        if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -77,9 +81,9 @@ tls_extension* tls_extension::read(tls_hs_type_t hstype, tls_session* session, t
         }
 
         {
-            uint16 extension_type = ntoh16(*(uint16*)(stream + pos));
+            auto extension_type = ntoh16(*(uint16*)(stream + pos));
             tls_extension_builder builder;
-            auto extension = builder.set(session).set(hstype).set(extension_type).build();
+            auto extension = builder.set(session).set(dir).set(extension_type).build();
             if (extension) {
                 ret = extension->read(stream, size, pos);
                 if (errorcode_t::success == ret) {
@@ -105,10 +109,6 @@ return_t tls_extension::read(const byte_t* stream, size_t size, size_t& pos) {
         }
 
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
 
         ret = do_preprocess();
         if (errorcode_t::success != ret) {

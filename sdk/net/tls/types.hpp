@@ -176,7 +176,7 @@ enum tls_alertdesc_t : uint8 {
     tls_alertdesc_no_application_protocol = 120,          // RFC 8446
 };
 
-enum tls1_ext_type_t : uint16 {
+enum tls_ext_type_t : uint16 {
     tls_ext_server_name = 0x0000,                             // RFC 6066
     tls_ext_max_fragment_length = 0x0001,                     // RFC 6066
     tls_ext_client_certificate_url = 0x0002,                  // RFC 4366
@@ -558,6 +558,7 @@ enum tls_secret_t : uint16 {
     tls_context_quic_dcid = (TLS_SECRET_USERCONTEXT | 0x11),
     tls_context_fragment = (TLS_SECRET_USERCONTEXT | 0x1b),  // DTLS, QUIC
     tls_context_cookie = (TLS_SECRET_USERCONTEXT | 0x1c),
+    tls_context_new_session_ticket = (TLS_SECRET_USERCONTEXT | 0x1d),  // RFC 8446 4.6.1. ticket
 };
 
 enum tls_direction_t {

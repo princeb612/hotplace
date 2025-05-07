@@ -42,11 +42,6 @@ return_t tls_extension_client_supported_versions::do_read_body(const byte_t* str
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
         auto& protection = session->get_tls_protection();
 
         uint16 count = 0;
@@ -91,11 +86,6 @@ return_t tls_extension_client_supported_versions::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
         auto& protection = session->get_tls_protection();
 
         uint8 cbsize_versions = 0;
@@ -133,10 +123,6 @@ return_t tls_extension_server_supported_versions::do_read_body(const byte_t* str
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
 
         uint16 version = 0;
 
@@ -174,10 +160,6 @@ return_t tls_extension_server_supported_versions::do_write_body(binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
 
         payload pl;
         pl << new payload_member(uint16(get_version()), true, constexpr_version);

@@ -43,6 +43,7 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
                     add(handshake);
                 } else {
                     handshake->release();
+                    break;  // if error, no more preceed
                 }
             }
         }

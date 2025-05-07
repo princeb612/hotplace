@@ -54,6 +54,7 @@ class tls_extension_alpn;
 class tls_extension_alps;
 class tls_extension_builder;
 class tls_extension_compress_certificate;
+class tls_extension_early_data;
 class tls_extension_ec_point_formats;
 class tls_extension_encrypted_client_hello;
 class tls_extension_key_share;

@@ -38,64 +38,62 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
     __try2 {
         uint16 len = get_body_size();
 
-        {
-            auto session = get_session();
-            size_t tpos = 0;
-            size_t recpos = offsetof_header();
+        auto session = get_session();
+        size_t tpos = 0;
+        size_t recpos = offsetof_header();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+
+        if (session->get_session_info(dir).apply_protection()) {
+            /**
+             * RFC 2246 6.2.3. Record payload protection
+             *     struct {
+             *         ContentType type;
+             *         ProtocolVersion version;
+             *         uint16 length;
+             *         select (CipherSpec.cipher_type) {
+             *             case stream: GenericStreamCipher;
+             *             case block: GenericBlockCipher;
+             *         } fragment;
+             *     } TLSCiphertext;
+             * RFC 2246 6.2.3.1. Null or standard stream cipher
+             *     stream-ciphered struct {
+             *         opaque content[TLSCompressed.length];
+             *         opaque MAC[CipherSpec.hash_size];
+             *     } GenericStreamCipher;
+             *     HMAC_hash(MAC_write_secret, seq_num + TLSCompressed.type +
+             *                   TLSCompressed.version + TLSCompressed.length +
+             *                   TLSCompressed.fragment));
+             * RFC 2246 6.2.3.2. CBC block cipher
+             *     block-ciphered struct {
+             *         opaque content[TLSCompressed.length];
+             *         opaque MAC[CipherSpec.hash_size];
+             *         uint8 padding[GenericBlockCipher.padding_length];
+             *         uint8 padding_length;
+             *     } GenericBlockCipher;
+             */
+            tls_protection& protection = session->get_tls_protection();
+            binary_t plaintext;
+
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
-            if (session->get_session_info(dir).apply_protection()) {
-                /**
-                 * RFC 2246 6.2.3. Record payload protection
-                 *     struct {
-                 *         ContentType type;
-                 *         ProtocolVersion version;
-                 *         uint16 length;
-                 *         select (CipherSpec.cipher_type) {
-                 *             case stream: GenericStreamCipher;
-                 *             case block: GenericBlockCipher;
-                 *         } fragment;
-                 *     } TLSCiphertext;
-                 * RFC 2246 6.2.3.1. Null or standard stream cipher
-                 *     stream-ciphered struct {
-                 *         opaque content[TLSCompressed.length];
-                 *         opaque MAC[CipherSpec.hash_size];
-                 *     } GenericStreamCipher;
-                 *     HMAC_hash(MAC_write_secret, seq_num + TLSCompressed.type +
-                 *                   TLSCompressed.version + TLSCompressed.length +
-                 *                   TLSCompressed.fragment));
-                 * RFC 2246 6.2.3.2. CBC block cipher
-                 *     block-ciphered struct {
-                 *         opaque content[TLSCompressed.length];
-                 *         opaque MAC[CipherSpec.hash_size];
-                 *         uint8 padding[GenericBlockCipher.padding_length];
-                 *         uint8 padding_length;
-                 *     } GenericBlockCipher;
-                 */
-                tls_protection& protection = session->get_tls_protection();
-                binary_t plaintext;
-
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                auto cs = protection.get_cipher_suite();
-                const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
-                auto declen = (cbc == hint->mode) ? size : len;
-                ret = protection.decrypt(session, dir, stream, declen, recpos, plaintext);
-                if (errorcode_t::success == ret) {
-                    tpos = 0;
-                    auto handshake = tls_handshake::read(session, dir, &plaintext[0], plaintext.size(), tpos);
-                    get_handshakes().add(handshake);
-                }
-            } else {
-#if 0
-                // record-handshake 1..1 (test vector, openssl)
-                tpos = pos;
-                auto handshake = tls_handshake::read(session, dir, stream, pos + len, tpos);
+            auto cs = protection.get_cipher_suite();
+            const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
+            auto declen = (cbc == hint->mode) ? size : len;
+            ret = protection.decrypt(session, dir, stream, declen, recpos, plaintext);
+            if (errorcode_t::success == ret) {
+                tpos = 0;
+                auto handshake = tls_handshake::read(session, dir, &plaintext[0], plaintext.size(), tpos);
                 get_handshakes().add(handshake);
-#else
-                // record-handshake 1..*
-                get_handshakes().read(session, dir, stream, pos + len, pos);
-#endif
             }
+        } else {
+#if 0
+            // record-handshake 1..1 (test vector, openssl)
+            tpos = pos;
+            auto handshake = tls_handshake::read(session, dir, stream, pos + len, tpos);
+            get_handshakes().add(handshake);
+#else
+            // record-handshake 1..*
+            get_handshakes().read(session, dir, stream, pos + len, pos);
+#endif
         }
     }
     __finally2 {

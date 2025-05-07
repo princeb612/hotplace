@@ -34,6 +34,7 @@ class tls_handshake_client_key_exchange : public tls_handshake {
     tls_handshake_client_key_exchange(tls_session* session);
 
    protected:
+    virtual return_t do_preprocess(tls_direction_t dir);
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);

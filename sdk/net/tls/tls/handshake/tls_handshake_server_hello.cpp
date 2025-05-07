@@ -53,23 +53,16 @@ const binary& tls_handshake_server_hello::get_session_id() { return _session_id;
 uint16 tls_handshake_server_hello::get_cipher_suite() {
     uint16 cs = 0;
     auto session = get_session();
-    if (session) {
-        auto& protection = session->get_tls_protection();
-        cs = protection.get_cipher_suite();
-    }
+    auto& protection = session->get_tls_protection();
+    cs = protection.get_cipher_suite();
     return cs;
 }
 
 return_t tls_handshake_server_hello::set_cipher_suite(uint16 cs) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto session = get_session();
         auto hint = tlsadvisor->hintof_cipher_suite(cs);
         if (nullptr == hint) {
             ret = errorcode_t::invalid_parameter;
@@ -99,13 +92,8 @@ return_t tls_handshake_server_hello::set_cipher_suite(const char* cs) {
             __leave2;
         }
 
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto session = get_session();
         auto hint = tlsadvisor->hintof_cipher_suite(cs);
         if (nullptr == hint) {
             ret = errorcode_t::invalid_parameter;
@@ -132,12 +120,12 @@ uint8 tls_handshake_server_hello::get_compression_method() { return _compression
 return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
+        if (from_server != dir) {
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 
+        auto session = get_session();
         auto session_status = session->get_session_status();
         if (0 == (session_status_client_hello & session_status)) {
             ret = errorcode_t::error_handshake;
@@ -155,11 +143,6 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
         auto hspos = offsetof_header();
         auto size_header_body = get_size();
         auto& protection = session->get_tls_protection();
@@ -246,11 +229,6 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
 return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -258,6 +236,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
 
         {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto session = get_session();
 
             /* RFC 8446 4.1.3.  Server Hello */
 
@@ -328,7 +307,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             }
 #endif
 
-            ret = get_extensions().read(tls_hs_server_hello, session, dir, stream, pos + extension_len, pos);
+            ret = get_extensions().read(session, dir, stream, pos + extension_len, pos);
 
             auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
             session->get_keyvalue().set(session_encrypt_then_mac, ext_etm ? 1 : 0);

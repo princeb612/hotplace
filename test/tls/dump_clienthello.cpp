@@ -22,6 +22,6 @@ void dump_clienthello() {
     if (false == clienthello.empty()) {
         tls_session session;
         size_t pos = 0;
-        tls_dump_record(&session, &clienthello[0], clienthello.size(), pos, from_server);
+        tls_dump_record(&session, from_client, &clienthello[0], clienthello.size(), pos);
     }
 }

@@ -4,6 +4,57 @@
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
+ *      RFC 4279 Pre-Shared Key Ciphersuites for Transport Layer Security (TLS)
+ *      RFC 4785 Pre-Shared Key (PSK) Ciphersuites with NULL Encryption for Transport Layer Security (TLS)
+ *      RFC 5487 Pre-Shared Key Cipher Suites for TLS with SHA-256/384 and AES Galois Counter Mode
+ *      RFC 5489 ECDHE_PSK Cipher Suites for Transport Layer Security (TLS)
+ *
+ *      RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_ke)
+ *      RFC 8446 4.2.10.  Early Data Indication
+ *      RFC 8446 4.2.11.  Pre-Shared Key Extension
+ *
+ *      struct {
+ *          opaque identity<1..2^16-1>;
+ *          uint32 obfuscated_ticket_age;
+ *      } PskIdentity;
+ *
+ *      opaque PskBinderEntry<32..255>;
+ *
+ *      struct {
+ *          PskIdentity identities<7..2^16-1>;
+ *          PskBinderEntry binders<33..2^16-1>;
+ *      } OfferedPsks;
+ *
+ *      struct {
+ *          select (Handshake.msg_type) {
+ *              case client_hello: OfferedPsks;
+ *              case server_hello: uint16 selected_identity;
+ *          };
+ *      } PreSharedKeyExtension;
+ *
+ *      RFC 9257 Guidance for External Pre-Shared Key (PSK) Usage in TLS
+ *
+ *      RFC 8446 4.2.11.  Pre-Shared Key Extension
+ *
+ *          obfuscated_ticket_age
+ *          For identities established externally, an obfuscated_ticket_age of 0 SHOULD be used, and servers MUST ignore the value.
+ *
+ *          For externally established PSKs, the Hash algorithm MUST be set when the PSK is established or default to SHA-256 if no such algorithm is defined.
+ *
+ *          Prior to accepting PSK key establishment, the server MUST validate the corresponding binder value.
+ *          If this value is not present or does not validate, the server MUST abort the handshake.
+ *
+ *          Clients MUST verify that the server's selected_identity is within the range supplied by the client, that the server selected a cipher suite
+ *          indicating a Hash associated with the PSK, and that a server "key_share" extension is present if required by the ClientHello
+ *          "psk_key_exchange_modes" extension.
+ *          If these values are not consistent, the client MUST abort the handshake with an "illegal_parameter" alert.
+ *
+ *          If the server supplies an "early_data" extension, the client MUST verify that the server's selected_identity is 0.
+ *          If any other value is returned, the client MUST abort the handshake with an "illegal_parameter" alert.
+ *
+ *          The "pre_shared_key" extension MUST be the last extension in the ClientHello (this facilitates implementation as described below).
+ *          Servers MUST check that it is the last extension and otherwise fail the handshake with an "illegal_parameter" alert.
+ *
  * Revision History
  * Date         Name                Description
  */
@@ -37,40 +88,7 @@ return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t siz
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        // RFC 4279 Pre-Shared Key Ciphersuites for Transport Layer Security (TLS)
-        // RFC 4785 Pre-Shared Key (PSK) Ciphersuites with NULL Encryption for Transport Layer Security (TLS)
-        // RFC 5487 Pre-Shared Key Cipher Suites for TLS with SHA-256/384 and AES Galois Counter Mode
-        // RFC 5489 ECDHE_PSK Cipher Suites for Transport Layer Security (TLS)
-        //
-        // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_ke)
-        // RFC 8446 4.2.10.  Early Data Indication
-        // RFC 8446 4.2.11.  Pre-Shared Key Extension
-        //
-        // struct {
-        //     opaque identity<1..2^16-1>;
-        //     uint32 obfuscated_ticket_age;
-        // } PskIdentity;
-        //
-        // opaque PskBinderEntry<32..255>;
-        //
-        // struct {
-        //     PskIdentity identities<7..2^16-1>;
-        //     PskBinderEntry binders<33..2^16-1>;
-        // } OfferedPsks;
-        //
-        // struct {
-        //     select (Handshake.msg_type) {
-        //         case client_hello: OfferedPsks;
-        //         case server_hello: uint16 selected_identity;
-        //     };
-        // } PreSharedKeyExtension;
-        //
-        // RFC 9257 Guidance for External Pre-Shared Key (PSK) Usage in TLS
+        auto& protection = session->get_tls_protection();
 
         uint16 psk_identities_len = 0;
         uint16 psk_identity_len = 0;
@@ -79,7 +97,6 @@ return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t siz
         uint16 psk_binders_len = 0;
         uint8 psk_binder_len = 0;
         binary_t psk_binder;
-        // openssl_kdf kdf;
 
         size_t offset_psk_binders_len = 0;
         {
@@ -103,7 +120,29 @@ return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t siz
         }
 
         {
+            // * TODO
+            //   * [ ] external PSK
+
+            auto& kv = session->get_session_info(from_server).get_keyvalue();
+            kv.get(session_ticket_age_add);
+            const binary_t& ticket = protection.get_item(tls_context_new_session_ticket);
+            if (psk_identity != ticket) {
+                ret = errorcode_t::error_handshake;
+                session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
+                __leave2_trace(ret);
+            }
+            uint32 ticket_lifetime = kv.get(session_ticket_lifetime);
+            uint32 ticket_age_add = kv.get(session_ticket_age_add);
+            if (obfuscated_ticket_age - ticket_age_add > ticket_lifetime) {
+                ret = errorcode_t::error_handshake;
+                session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
+                __leave2_trace(ret);
+            }
+        }
+
+        {
             // RFC 8448 4.  Resumed 0-RTT Handshake
+            // RFC 8448 4.2.11.1.  Ticket Age
 
             // binder hash
             auto& protection = session->get_tls_protection();
@@ -146,7 +185,6 @@ return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t siz
             _obfuscated_ticket_age = obfuscated_ticket_age;
             _psk_binders_len = psk_binders_len;
             _psk_binder = std::move(psk_binder);
-            // _offset_psk_binders_len = offset_psk_binders_len;
         }
     }
     __finally2 {

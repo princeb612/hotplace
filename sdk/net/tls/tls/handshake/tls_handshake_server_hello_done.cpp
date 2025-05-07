@@ -39,11 +39,12 @@ tls_handshake_server_hello_done::tls_handshake_server_hello_done(tls_session* se
 return_t tls_handshake_server_hello_done::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
+        if (from_server != dir) {
+            ret = errorcode_t::bad_request;
             __leave2;
         }
+
+        auto session = get_session();
 
         if (session->get_tls_protection().is_kindof_tls12()) {
             auto session_status = session->get_session_status();
@@ -65,10 +66,6 @@ return_t tls_handshake_server_hello_done::do_postprocess(tls_direction_t dir, co
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
 

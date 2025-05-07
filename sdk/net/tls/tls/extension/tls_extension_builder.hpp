@@ -22,16 +22,20 @@ class tls_extension_builder {
     tls_extension_builder();
     tls_extension_builder& set(tls_session* session);
     tls_extension_builder& set(uint16 type);
-    tls_extension_builder& set(tls_hs_type_t handshake);
+    tls_extension_builder& set(tls_direction_t dir);
+    tls_extension_builder& set(tls_hs_type_t hs);
     tls_extension* build();
 
     tls_session* get_session();
-    tls_hs_type_t get_handshake();
+    uint16 get_type();
+    tls_direction_t get_direction();
+    tls_hs_type_t get_handshake_type();
 
    private:
     tls_session* _session;
     uint16 _type;
-    tls_hs_type_t _handshake;
+    tls_direction_t _dir;
+    tls_hs_type_t _hs;
 };
 
 }  // namespace net
