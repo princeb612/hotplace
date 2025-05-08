@@ -49,9 +49,10 @@ enum session_conf_t {
 
     // session->get_keyvalue()
     // uint16
-    session_debug_deprecated_ciphersuite = 1000,  // to test unsupported cipher suite
-    session_encrypt_then_mac = 1001,
-    session_enable_encrypt_then_mac = 1002,
+    session_encrypt_then_mac = 0x1001,
+    session_enable_encrypt_then_mac = 0x1002,
+    session_tls_version = 0x1003,
+    session_debug_deprecated_ciphersuite = 0x2000,  // to test unsupported cipher suite
 };
 
 class tls_session {
@@ -75,7 +76,7 @@ class tls_session {
     session_type_t get_type();
 
     void update_session_status(session_status_t status);
-    void clear_session_status(session_status_t status);
+    void clear_session_status(uint32 status);
     void reset_session_status();
     uint32 get_session_status();
     return_t wait_change_session_status(uint32 status, unsigned msec, bool waitall = true);

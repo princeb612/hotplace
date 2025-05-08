@@ -129,6 +129,7 @@ return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
         auto session_status = session->get_session_status();
         if (0 == (session_status_client_hello & session_status)) {
             ret = errorcode_t::error_handshake;
+            session->reset_session_status();
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             __leave2_trace(ret);
         }
@@ -147,15 +148,45 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
         auto size_header_body = get_size();
         auto& protection = session->get_tls_protection();
         auto session_type = session->get_type();
+        auto& kv = session->get_keyvalue();
+
+        {
+            auto ext_version = get_extensions().get(tls_ext_supported_versions);
+            if (nullptr == ext_version) {
+                // TLS 1.2
+                auto legacy_version = protection.get_lagacy_version();
+                protection.set_tls_version(_version ? _version : legacy_version);
+            } else {
+                // TLS 1.3 supported_versions extension
+                // read/write member calls protection.set_tls_version
+            }
+        }
 
         {
             // calculates the hash of all handshake messages to this point (ClientHello and ServerHello).
             binary_t hello_hash;
-            if (tls_flow_1rtt == protection.get_flow()) {
-                protection.reset_transcript_hash(session);
+            switch (protection.get_flow()) {
+                case tls_flow_1rtt: {
+                    protection.reset_transcript_hash(session);
 
-                const binary_t& client_hello = protection.get_item(tls_context_client_hello);
-                protection.update_transcript_hash(session, &client_hello[0], client_hello.size());  // client_hello
+                    const binary_t& client_hello = protection.get_item(tls_context_client_hello);
+                    protection.update_transcript_hash(session, &client_hello[0], client_hello.size());  // client_hello
+                } break;
+                case tls_flow_0rtt:
+                case tls_flow_hello_retry_request: {
+                    auto session_version = kv.get(session_tls_version);
+                    auto version = protection.get_tls_version();
+
+                    bool downgrade = (session_dtls == session_type) ? (session_version < version) : (session_version > version);
+                    if (downgrade) {
+                        ret = errorcode_t::error_handshake;
+                        session->reset_session_status();
+                        session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_protocol_version);
+                    }
+                } break;
+            }
+            if (errorcode_t::success != ret) {
+                __leave2;
             }
 
             protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);  // server_hello
@@ -212,13 +243,9 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             session->reset_recordno(from_server);
         }
 
-        auto ext_version = get_extensions().get(tls_ext_supported_versions);
-        if (nullptr == ext_version) {
-            auto legacy_version = protection.get_lagacy_version();
-            protection.set_tls_version(_version ? _version : legacy_version);
-        }
-
         session->update_session_status(session_status_server_hello);
+
+        kv.set(session_tls_version, protection.get_tls_version());
     }
     __finally2 {
         // do nothing

@@ -66,7 +66,7 @@ void tls_session::update_session_status(session_status_t status) {
 #endif
 }
 
-void tls_session::clear_session_status(session_status_t status) {
+void tls_session::clear_session_status(uint32 status) {
     _status &= ~status;
     _sem.signal();
 }

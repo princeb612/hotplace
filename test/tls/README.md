@@ -108,7 +108,7 @@
 
 * 1-RTT
   * C->S
-    *client_hello
+    * client_hello
   * S->C
     * server_hello
     * encrypted_extensions
@@ -127,3 +127,11 @@
     * close_notify
   * S->C
     * close_notify
+* 0-RTT
+  * C->S
+    * client_hello
+      * pre_shared_key
+  * S->C
+    * server_hello
+    * encrypted_extensions
+    * finished

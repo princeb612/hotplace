@@ -45,18 +45,23 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
     __try2 {
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
-        auto tlsver = session->get_tls_protection().get_tls_version();
+        auto& protection = session->get_tls_protection();
+        auto tlsver = protection.get_tls_version();
         auto session_status = session->get_session_status();
         uint32 session_status_prerequisite = 0;
         if (true == tlsadvisor->is_kindof_tls13(tlsver)) {
-            // RFC 8446 5.  Record Protocol
-            //  The change_cipher_spec record is used only for compatibility purposes.
-            // RFC 8448 3.  Simple 1-RTT Handshake
+            if (tls_flow_1rtt == protection.get_flow()) {
+                // RFC 8446 5.  Record Protocol
+                //  The change_cipher_spec record is used only for compatibility purposes.
+                // RFC 8448 3.  Simple 1-RTT Handshake
 
-            // certificate, certificate_verify, finished(server), finished(client)
-            session_status_prerequisite = session_status_server_cert_verified;
-            if (from_client == dir) {
-                session_status_prerequisite != session_status_server_finished;
+                // certificate, certificate_verify, finished(server), finished(client)
+                session_status_prerequisite = session_status_server_cert_verified;
+                if (from_client == dir) {
+                    session_status_prerequisite != session_status_server_finished;
+                }
+            } else {
+                session_status_prerequisite = session_status_server_hello | session_status_client_finished;
             }
         } else {
             // TLS 1.2, DTLS 1.2
@@ -77,6 +82,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
 
         if (0 == (session_status_prerequisite & session_status)) {
             ret = errorcode_t::error_handshake;
+            session->reset_session_status();
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             __leave2_trace(ret);
         }

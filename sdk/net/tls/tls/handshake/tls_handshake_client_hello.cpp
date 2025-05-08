@@ -58,6 +58,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
         if (tls_hs_finished == hsstatus) {
             // 0-RTT
             protection.set_flow(tls_flow_0rtt);
+            session->reset_session_status();
         }
         switch (protection.get_flow()) {
             case tls_flow_1rtt: {
@@ -100,6 +101,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 // hello_verify_request (cookie)
                 // client_hello (cookie)
                 ret = errorcode_t::error_handshake;
+                session->reset_session_status();
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
                 __leave2_trace(ret);
             }
