@@ -281,6 +281,13 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
         }
 #endif
 
+        if (0 == extension_len) {
+            ret = errorcode_t::error_handshake;
+            session->reset_session_status();
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
+            __leave2;
+        }
+
         ret = get_extensions().read(session, dir, stream, pos + extension_len, pos);
     }
     __finally2 {

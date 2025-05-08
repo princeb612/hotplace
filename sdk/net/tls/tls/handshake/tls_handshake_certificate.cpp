@@ -72,7 +72,8 @@ return_t tls_handshake_certificate::do_preprocess(tls_direction_t dir) {
     __try2 {
         auto session = get_session();
         auto session_status = session->get_session_status();
-        if (0 == (session_status_server_hello & session_status)) {
+        uint32 session_status_prerequisite = session_status_client_hello | session_status_server_hello;
+        if (0 == (session_status_prerequisite & session_status)) {
             ret = errorcode_t::error_handshake;
             session->reset_session_status();
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);

@@ -119,27 +119,38 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
             __leave2;
         }
 
-        if (session_dtls == session_type) {
-            session->wait_change_session_status(session_status_hello_verify_request, wto);
+        uint8 retry = 3;
+        do {
+            if (session_dtls == session_type) {
+                session->wait_change_session_status(session_status_hello_verify_request, wto);
+                session_status = session->get_session_status();
+
+                if (0 == (session_status & session_status_hello_verify_request)) {
+                    ret = errorcode_t::error_handshake;
+                    __leave2_trace(ret);
+                }
+
+                ret = do_client_hello(func);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
+            }
+
+            session->wait_change_session_status(session_status_server_hello, wto);
             session_status = session->get_session_status();
 
-            if (0 == (session_status & session_status_hello_verify_request)) {
+            if (0 == (session_status & session_status_server_hello)) {
                 ret = errorcode_t::error_handshake;
-                __leave2_trace(ret);
+                break;
             }
+        } while ((tls_flow_hello_retry_request != protection.get_flow()) && (--retry));
 
-            ret = do_client_hello(func);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
-
-        session->wait_change_session_status(session_status_server_hello, wto);
-        session_status = session->get_session_status();
-
-        if (0 == (session_status & session_status_server_hello)) {
+        if (tls_flow_hello_retry_request == protection.get_flow()) {
             ret = errorcode_t::error_handshake;
-            __leave2_trace(ret);
+            __leave2;
         }
 
         tls_records records;
@@ -358,7 +369,9 @@ return_t tls_composer::do_client_hello(std::function<void(binary_t&)> func) {
             {
                 // key_share
                 auto key_share = new tls_extension_client_key_share(session);
-                (*key_share).add("x25519");
+                if (tls_flow_hello_retry_request != protection.get_flow()) {
+                    (*key_share).add("x25519");
+                }
                 ch->get_extensions().add(key_share);
             }
         }

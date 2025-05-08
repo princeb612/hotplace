@@ -260,6 +260,12 @@ return_t tls_extension_client_key_share::do_write_body(binary_t& bin) {
         crypto_advisor* advisor = crypto_advisor::get_instance();
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+
+        if (tls_flow_hello_retry_request == protection.get_flow()) {
+            clear();
+            add(session->get_session_info(from_server).get_keyvalue().get(session_key_share_group));
+        }
+
         auto& keyexchange = protection.get_keyexchange();
         auto pkey = keyexchange.find(get_kid().c_str());
         if (nullptr == pkey) {
@@ -296,8 +302,10 @@ return_t tls_extension_client_key_share::do_write_body(binary_t& bin) {
         }
 
         payload pl;
-        pl << new payload_member(uint16(4 + pubkeylen), true, constexpr_len) << new payload_member(uint16(group), true, constexpr_group)
-           << new payload_member(uint16(pubkeylen), true, constexpr_pubkey_len) << new payload_member(pubkey, constexpr_pubkey);
+        pl << new payload_member(uint16(4 + pubkeylen), true, constexpr_len)     //
+           << new payload_member(uint16(group), true, constexpr_group)           //
+           << new payload_member(uint16(pubkeylen), true, constexpr_pubkey_len)  //
+           << new payload_member(pubkey, constexpr_pubkey);
         pl.write(bin);
     }
     __finally2 {}
@@ -324,6 +332,7 @@ void tls_extension_server_key_share::clear() {
 return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
         uint16 group = 0;
         binary_t pubkey;
         uint16 pubkeylen = 0;
@@ -345,6 +354,9 @@ return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size
             pl.get_binary(constexpr_pubkey, pubkey);
 
             add_pubkey(group, pubkey, keydesc(get_kid()));
+
+            // HRR
+            session->get_session_info(from_server).get_keyvalue().set(session_key_share_group, group);
         }
 
 #if defined DEBUG
