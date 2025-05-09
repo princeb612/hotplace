@@ -56,8 +56,9 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
+
+        ret = do_preprocess(dir);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -145,6 +146,8 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
     __finally2 {}
     return ret;
 }
+
+return_t tls_record::do_preprocess(tls_direction_t dir) { return errorcode_t::success; }
 
 return_t tls_record::do_postprocess(tls_direction_t dir) {
     auto session = get_session();

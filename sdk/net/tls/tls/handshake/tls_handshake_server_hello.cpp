@@ -69,7 +69,7 @@ return_t tls_handshake_server_hello::set_cipher_suite(uint16 cs) {
             __leave2;
         }
 
-        if (0 == (tls_cs_support & hint->flags)) {
+        if (0 == (tls_flag_support & hint->flags)) {
             auto test = session->get_keyvalue().get(session_debug_deprecated_ciphersuite);
             if (0 == test) {
                 ret = errorcode_t::bad_request;
@@ -100,7 +100,7 @@ return_t tls_handshake_server_hello::set_cipher_suite(const char* cs) {
             __leave2;
         }
 
-        if (0 == (tls_cs_support & hint->flags)) {
+        if (0 == (tls_flag_support & hint->flags)) {
             auto test = session->get_keyvalue().get(session_debug_deprecated_ciphersuite);
             if (0 == test) {
                 ret = errorcode_t::bad_request;
@@ -174,6 +174,13 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                 } break;
                 case tls_flow_0rtt:
                 case tls_flow_hello_retry_request: {
+                    auto hs_finished = kv.get(session_handshake_finished);
+                    if (hs_finished) {
+                        protection.set_flow(tls_flow_0rtt);
+                    } else {
+                        protection.set_flow(tls_flow_1rtt);
+                    }
+
                     auto session_version = kv.get(session_tls_version);
                     auto version = protection.get_tls_version();
 
@@ -197,6 +204,11 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             session->get_session_info(from_client).set_status(get_type());
             if (errorcode_t::warn_retry == test) {
                 // if warn_retry, do HRR
+
+                // RFC 8446 2.1
+                // If the client has not provided a sufficient "key_share" extension, the server corrects the mismatch with a
+                // HelloRetryRequest and the client needs to restart the handshake with an appropriate "key_share" extension.
+
                 protection.set_flow(tls_flow_hello_retry_request);
                 session->clear_session_status(session_status_client_hello);
 

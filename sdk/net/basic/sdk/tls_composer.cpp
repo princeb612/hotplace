@@ -114,13 +114,13 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
         auto session_type = session->get_type();
         uint32 session_status = 0;
 
-        ret = do_client_hello(func);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         uint8 retry = 3;
         do {
+            ret = do_client_hello(func);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+
             if (session_dtls == session_type) {
                 session->wait_change_session_status(session_status_hello_verify_request, wto);
                 session_status = session->get_session_status();
@@ -143,18 +143,19 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
                 ret = errorcode_t::error_handshake;
                 break;
             }
-        } while ((tls_flow_hello_retry_request != protection.get_flow()) && (--retry));
+        } while ((tls_flow_hello_retry_request == protection.get_flow()) && (--retry));
 
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        if (tls_flow_hello_retry_request == protection.get_flow()) {
+        if (tls_flow_1rtt != protection.get_flow()) {
             ret = errorcode_t::error_handshake;
             __leave2;
         }
 
         tls_records records;
         tls_record_builder builder;
+        uint32 session_status_finished = 0;
 
         if (protection.is_kindof_tls13()) {
             uint32 session_status_prerequisite =
@@ -176,6 +177,8 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
             auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
             *record << new tls_handshake_finished(session);
             records << record;
+
+            session_status_finished = session_status_client_finished;
         } else if (protection.is_kindof_tls12()) {
             // server_hello
             // certificate
@@ -207,6 +210,8 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
                 *record << new tls_handshake_finished(session);
                 records << record;
             }
+
+            session_status_finished = session_status_server_finished;
         }
 
         ret = do_compose(&records, dir, func);
@@ -214,10 +219,10 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
             __leave2;
         }
 
-        session->wait_change_session_status(session_status_server_finished, wto);
+        session->wait_change_session_status(session_status_finished, wto);
         session_status = session->get_session_status();
 
-        if (0 == (session_status & session_status_server_finished)) {
+        if (0 == (session_status_finished & session_status)) {
             ret = errorcode_t::error_handshake;
             __leave2_trace(ret);
         }
@@ -293,7 +298,7 @@ return_t tls_composer::do_client_hello(std::function<void(binary_t&)> func) {
 
         {
             // cipher suites
-            uint8 mask = tls_cs_secure | tls_cs_support;
+            uint8 mask = tls_flag_secure | tls_flag_support;
             auto lambda_cs = [&](const tls_cipher_suite_t* cs) -> void {
                 if ((mask & cs->flags) && (cs->version >= _minspec)) {
                     ch->add_ciphersuite(cs->code);

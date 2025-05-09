@@ -12,7 +12,7 @@
 
 #include "sample.hpp"
 
-static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
@@ -138,7 +138,7 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_dir
     return ret;
 }
 
-static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_direction_t dir, tls_session* session, tls_session* client_session, binary_t& bin,
+static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_session* session, tls_session* client_session, tls_direction_t dir, binary_t& bin,
                                                const char* message) {
     return_t ret = errorcode_t::success;
 
@@ -147,7 +147,7 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
 
     uint16 server_cs = 0;
     uint16 server_version = 0;
-    protection.handshake_hello(client_session, session, server_cs, server_version);
+    protection.negotiate(client_session, session, server_cs, server_version);
 
     tls_handshake_server_hello* handshake = nullptr;
 
@@ -216,7 +216,7 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_dir
     return ret;
 }
 
-static return_t do_test_construct_encrypted_extensions(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+static return_t do_test_construct_encrypted_extensions(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == message) {
@@ -244,7 +244,7 @@ static return_t do_test_construct_encrypted_extensions(tls_direction_t dir, tls_
     return ret;
 }
 
-static return_t do_test_construct_certificate(tls_direction_t dir, tls_session* session, tls_content_type_t content_type, const char* certfile,
+static return_t do_test_construct_certificate(tls_session* session, tls_direction_t dir, tls_content_type_t content_type, const char* certfile,
                                               const char* keyfile, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -269,7 +269,7 @@ static return_t do_test_construct_certificate(tls_direction_t dir, tls_session* 
     return ret;
 }
 
-static return_t do_test_construct_certificate_verify(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+static return_t do_test_construct_certificate_verify(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -289,7 +289,7 @@ static return_t do_test_construct_certificate_verify(tls_direction_t dir, tls_se
     return ret;
 }
 
-static return_t do_test_construct_server_finished(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+static return_t do_test_construct_server_finished(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -309,7 +309,7 @@ static return_t do_test_construct_server_finished(tls_direction_t dir, tls_sessi
     return ret;
 }
 
-static return_t do_test_construct_client_finished(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+static return_t do_test_construct_client_finished(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -329,7 +329,7 @@ static return_t do_test_construct_client_finished(tls_direction_t dir, tls_sessi
     return ret;
 }
 
-static return_t do_test_construct_ack(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+static return_t do_test_construct_ack(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -349,7 +349,7 @@ static return_t do_test_construct_ack(tls_direction_t dir, tls_session* session,
     return ret;
 }
 
-static return_t do_test_construct_client_ping(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+static return_t do_test_construct_client_ping(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -369,7 +369,7 @@ static return_t do_test_construct_client_ping(tls_direction_t dir, tls_session* 
     return ret;
 }
 
-static return_t do_test_construct_server_pong(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+static return_t do_test_construct_server_pong(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -389,7 +389,7 @@ static return_t do_test_construct_server_pong(tls_direction_t dir, tls_session* 
     return ret;
 }
 
-static return_t do_test_construct_close_notify(tls_direction_t dir, tls_session* session, binary_t& bin, const char* message) {
+static return_t do_test_construct_close_notify(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -409,7 +409,7 @@ static return_t do_test_construct_close_notify(tls_direction_t dir, tls_session*
     return ret;
 }
 
-static return_t do_test_send_record(tls_direction_t dir, tls_session* session, const binary_t& bin, const char* message) {
+static return_t do_test_send_record(tls_session* session, tls_direction_t dir, const binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == message) {
@@ -442,19 +442,19 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
 
         // C -> S CH
         binary_t bin_client_hello;
-        ret = do_test_construct_client_hello(option, from_client, &client_session, bin_client_hello, "construct client hello");
+        ret = do_test_construct_client_hello(option, &client_session, from_client, bin_client_hello, "construct client hello");
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        do_test_send_record(from_client, &server_session, bin_client_hello, "send client hello");
+        do_test_send_record(&server_session, from_client, bin_client_hello, "send client hello");
 
         // S -> C SH
         binary_t bin_server_hello;
-        ret = do_test_construct_server_hello(option, from_server, &server_session, &client_session, bin_server_hello, "construct server hello");
+        ret = do_test_construct_server_hello(option, &server_session, &client_session, from_server, bin_server_hello, "construct server hello");
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        do_test_send_record(from_server, &client_session, bin_server_hello, "send server hello");
+        do_test_send_record(&client_session, from_server, bin_server_hello, "send server hello");
 
         {
             do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
@@ -478,8 +478,8 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
 
         // S->C C
         binary_t bin_encrypted_extensions;
-        do_test_construct_encrypted_extensions(from_server, &server_session, bin_encrypted_extensions, "construct encrypted_extensions");
-        do_test_send_record(from_server, &client_session, bin_encrypted_extensions, "send encrypted_extensions");
+        do_test_construct_encrypted_extensions(&server_session, from_server, bin_encrypted_extensions, "construct encrypted_extensions");
+        do_test_send_record(&client_session, from_server, bin_encrypted_extensions, "send encrypted_extensions");
 
         {
             //
@@ -507,8 +507,8 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
 
         // S -> C SC
         binary_t bin_certificate;
-        do_test_construct_certificate(from_server, &server_session, tls_content_type_handshake, certfile, keyfile, bin_certificate, "construct certificate");
-        do_test_send_record(from_server, &client_session, bin_certificate, "send cerficate");
+        do_test_construct_certificate(&server_session, from_server, tls_content_type_handshake, certfile, keyfile, bin_certificate, "construct certificate");
+        do_test_send_record(&client_session, from_server, bin_certificate, "send cerficate");
 
         {
             //
@@ -517,8 +517,8 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
 
         // S -> C SCV
         binary_t bin_certificate_verify;
-        do_test_construct_certificate_verify(from_server, &server_session, bin_certificate_verify, "construct certificate verify");
-        do_test_send_record(from_server, &client_session, bin_certificate_verify, "send cerficate verify");
+        do_test_construct_certificate_verify(&server_session, from_server, bin_certificate_verify, "construct certificate verify");
+        do_test_send_record(&client_session, from_server, bin_certificate_verify, "send cerficate verify");
 
         {
             //
@@ -527,8 +527,8 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
 
         // S -> C SF
         binary_t bin_server_finished;
-        do_test_construct_server_finished(from_server, &server_session, bin_server_finished, "construct server finished");
-        do_test_send_record(from_server, &client_session, bin_server_finished, "send server finished");
+        do_test_construct_server_finished(&server_session, from_server, bin_server_finished, "construct server finished");
+        do_test_send_record(&client_session, from_server, bin_server_finished, "send server finished");
 
         {
             do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
@@ -547,8 +547,8 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
 
         // C -> S CF
         binary_t bin_client_finished;
-        do_test_construct_client_finished(from_client, &client_session, bin_client_finished, "construct client finished");
-        do_test_send_record(from_client, &server_session, bin_client_finished, "send client finished");
+        do_test_construct_client_finished(&client_session, from_client, bin_client_finished, "construct client finished");
+        do_test_send_record(&server_session, from_client, bin_client_finished, "send client finished");
 
         {
             do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
@@ -558,23 +558,23 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
 
         // C->S ack
         binary_t bin_client_ack;
-        do_test_construct_ack(from_client, &client_session, bin_client_ack, "construct client ack");
-        do_test_send_record(from_client, &server_session, bin_client_ack, "send client ack");
+        do_test_construct_ack(&client_session, from_client, bin_client_ack, "construct client ack");
+        do_test_send_record(&server_session, from_client, bin_client_ack, "send client ack");
 
         // C->S ping
         binary_t bin_client_ping;
-        do_test_construct_client_ping(from_client, &client_session, bin_client_ping, "construct client ping");
-        do_test_send_record(from_client, &server_session, bin_client_ping, "send client ping");
+        do_test_construct_client_ping(&client_session, from_client, bin_client_ping, "construct client ping");
+        do_test_send_record(&server_session, from_client, bin_client_ping, "send client ping");
 
         // C<-S pong
         binary_t bin_server_pong;
-        do_test_construct_server_pong(from_server, &server_session, bin_server_pong, "construct server pong");
-        do_test_send_record(from_server, &client_session, bin_server_pong, "send server pong");
+        do_test_construct_server_pong(&server_session, from_server, bin_server_pong, "construct server pong");
+        do_test_send_record(&client_session, from_server, bin_server_pong, "send server pong");
 
         // S->C close notify
         binary_t bin_server_close_notify;
-        do_test_construct_close_notify(from_server, &server_session, bin_server_close_notify, "construct server close notify");
-        do_test_send_record(from_server, &client_session, bin_server_close_notify, "send server close notify");
+        do_test_construct_close_notify(&server_session, from_server, bin_server_close_notify, "construct server close notify");
+        do_test_send_record(&client_session, from_server, bin_server_close_notify, "send server close notify");
     }
     __finally2 {}
 }

@@ -88,4 +88,6 @@ void test_validate();
 
 void dump_clienthello();
 
+void test_helloretryrequest();
+
 #endif

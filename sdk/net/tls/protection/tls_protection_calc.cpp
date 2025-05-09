@@ -272,6 +272,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     {
                         const EVP_PKEY *pkey_priv = nullptr;
                         const EVP_PKEY *pkey_pub = nullptr;
+
                         pkey_priv = get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
                         if (pkey_priv) {
                             // in server ... priv(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC)
@@ -289,13 +290,29 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                             __leave2;
                         }
 
-                        uint32 nid_priv = 0;
-                        uint32 nid_pub = 0;
-                        nidof_evp_pkey(pkey_priv, nid_priv);
-                        nidof_evp_pkey(pkey_pub, nid_pub);
-                        if (nid_priv != nid_pub) {
-                            ret = errorcode_t::warn_retry;
-                            __leave2;  // HRR
+                        uint16 group_enforced = session->get_keyvalue().get(session_enforce_key_share_group);
+                        if (group_enforced) {
+                            auto hint = tlsadvisor->hintof_tls_group(group_enforced);
+                            // enforcing
+                            auto pkey_ch = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
+                            if (nullptr == pkey_ch) {
+                                pkey_ch = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
+                            }
+                            uint32 nid = 0;
+                            nidof_evp_pkey(pkey_ch, nid);
+                            if (nid != hint->nid) {
+                                ret = errorcode_t::warn_retry;
+                                __leave2;  // HRR
+                            }
+                        } else {
+                            uint32 nid_priv = 0;
+                            uint32 nid_pub = 0;
+                            nidof_evp_pkey(pkey_priv, nid_priv);
+                            nidof_evp_pkey(pkey_pub, nid_pub);
+                            if (nid_priv != nid_pub) {
+                                ret = errorcode_t::warn_retry;
+                                __leave2;  // HRR
+                            }
                         }
 
                         ret = dh_key_agreement(pkey_priv, pkey_pub, shared_secret);

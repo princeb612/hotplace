@@ -34,7 +34,7 @@ return_t tls_extension_supported_groups::do_postprocess() {
     protection_context.clear_supported_groups();
     for (auto curve : _supported_groups) {
         auto hint = tlsadvisor->hintof_tls_group(curve);
-        if (hint && hint->support) {
+        if (hint && (tls_flag_support & hint->flags)) {
             protection_context.add_supported_group(curve);
         }
     }
@@ -103,7 +103,7 @@ return_t tls_extension_supported_groups::do_write_body(binary_t& bin) {
         {
             for (auto curve : _supported_groups) {
                 auto hint = tlsadvisor->hintof_tls_group(curve);
-                if (hint && hint->support) {
+                if (hint && (tls_flag_support & hint->flags)) {
                     binary_append(bin_supported_groups, curve, hton16);
                 }
             }
@@ -122,7 +122,7 @@ return_t tls_extension_supported_groups::do_write_body(binary_t& bin) {
 tls_extension_supported_groups& tls_extension_supported_groups::add(uint16 code) {
     auto tlsadvisor = tls_advisor::get_instance();
     auto hint = tlsadvisor->hintof_tls_group(code);
-    if (hint && hint->support) {
+    if (hint && (tls_flag_support & hint->flags)) {
         _supported_groups.push_back(code);
     }
     return *this;
@@ -131,7 +131,7 @@ tls_extension_supported_groups& tls_extension_supported_groups::add(uint16 code)
 tls_extension_supported_groups& tls_extension_supported_groups::add(const std::string& name) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     auto hint = tlsadvisor->hintof_tls_group(name);
-    if (hint && hint->support) {
+    if (hint && (tls_flag_support & hint->flags)) {
         _supported_groups.push_back(hint->code);
     }
     return *this;

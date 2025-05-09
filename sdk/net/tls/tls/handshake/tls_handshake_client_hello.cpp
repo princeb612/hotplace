@@ -70,6 +70,8 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 session->reset_recordno(from_server);
             } break;
             case tls_flow_hello_retry_request: {
+                session->clear_session_status(session_status_server_hello);
+
                 auto& keyexchange = protection.get_keyexchange();
                 keyexchange.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);  // client_hello key_share
                 keyexchange.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello key_share
@@ -383,7 +385,7 @@ return_t tls_handshake_client_hello::add_ciphersuites(const char* ciphersuites) 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto lambda = [&](const std::string& item) -> void {
             auto hint = tlsadvisor->hintof_cipher_suite(item);
-            if (hint && (tls_cs_support & hint->flags)) {
+            if (hint && (tls_flag_support & hint->flags)) {
                 auto code = hint->code;
                 _cipher_suites.push_back(code);
             }

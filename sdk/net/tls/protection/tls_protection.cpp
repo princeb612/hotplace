@@ -136,7 +136,7 @@ size_t tls_protection::get_header_size() {
 
 protection_context &tls_protection::get_protection_context() { return _handshake_context; }
 
-return_t tls_protection::handshake_hello(tls_session *client_session, tls_session *server_session, uint16 &ciphersuite, uint16 &tlsversion) {
+return_t tls_protection::negotiate(tls_session *client_session, tls_session *server_session, uint16 &ciphersuite, uint16 &tlsversion) {
     return_t ret = errorcode_t::success;
     __try2 {
         ciphersuite = 0;

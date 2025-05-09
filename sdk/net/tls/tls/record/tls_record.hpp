@@ -50,6 +50,7 @@ class tls_record {
    protected:
     tls_record(uint8 type, tls_session* session);
 
+    virtual return_t do_preprocess(tls_direction_t dir);
     virtual return_t do_postprocess(tls_direction_t dir);
     virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

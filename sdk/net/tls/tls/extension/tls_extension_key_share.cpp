@@ -49,44 +49,27 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
             pubkid = KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC;
         }
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
         auto& protection = session->get_tls_protection();
         auto& keyshare = protection.get_keyexchange();
 
-        keydesc desc(privkid);
-        crypto_keychain keychain;
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto hint = tlsadvisor->hintof_tls_group(group);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
 
-        switch (group) {
-            case 0x0017: /* secp256r1 */ {
-                ret = keychain.add_ec(&keyshare, NID_X9_62_prime256v1, desc);
+        crypto_keychain keychain;
+        keydesc desc(privkid);
+        auto kty = hint->kty;
+        auto nid = hint->nid;
+        switch (kty) {
+            case kty_ec:
+            case kty_okp: {
+                ret = keychain.add_ec(&keyshare, nid, desc);
             } break;
-            case 0x0018: /* secp384r1 */ {
-                ret = keychain.add_ec(&keyshare, NID_secp384r1, desc);
-            } break;
-            case 0x0019: /* secp521r1 */ {
-                ret = keychain.add_ec(&keyshare, NID_secp521r1, desc);
-            } break;
-            case 0x001d: /* x25519 */ {
-                ret = keychain.add_ec(&keyshare, NID_X25519, desc);
-            } break;
-            case 0x001e: /* x448 */ {
-                ret = keychain.add_ec(&keyshare, NID_X448, desc);
-            } break;
-            case 0x0100: /* ffdhe2048 */ {
-                ret = keychain.add_dh(&keyshare, NID_ffdhe2048, desc);
-            } break;
-            case 0x0101: /* ffdhe3072 */ {
-                ret = keychain.add_dh(&keyshare, NID_ffdhe3072, desc);
-            } break;
-            case 0x0102: /* ffdhe4096 */ {
-                ret = keychain.add_dh(&keyshare, NID_ffdhe4096, desc);
-            } break;
-            case 0x0103: /* ffdhe6144 */ {
-                ret = keychain.add_dh(&keyshare, NID_ffdhe6144, desc);
-            } break;
-            case 0x0104: /* ffdhe8192 */ {
-                ret = keychain.add_dh(&keyshare, NID_ffdhe8192, desc);
+            case kty_dh: {
+                ret = keychain.add_dh(&keyshare, nid, desc);
             } break;
             default: {
                 ret = errorcode_t::not_supported;
@@ -123,36 +106,24 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
         auto& keyshare = protection.get_keyexchange();
 
         crypto_keychain keychain;
-        switch (group) {
-            case 0x0017: /* secp256r1 */ {
-                ret = keychain.add_ec_uncompressed(&keyshare, NID_X9_62_prime256v1, pubkey, binary_t(), desc);
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto hint = tlsadvisor->hintof_tls_group(group);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        auto kty = hint->kty;
+        auto nid = hint->nid;
+        switch (kty) {
+            case kty_ec: {
+                ret = keychain.add_ec_uncompressed(&keyshare, nid, pubkey, binary_t(), desc);
             } break;
-            case 0x0018: /* secp384r1 */ {
-                ret = keychain.add_ec_uncompressed(&keyshare, NID_secp384r1, pubkey, binary_t(), desc);
+            case kty_okp: {
+                ret = keychain.add_okp(&keyshare, nid, pubkey, binary_t(), desc);
             } break;
-            case 0x0019: /* secp521r1 */ {
-                ret = keychain.add_ec_uncompressed(&keyshare, NID_secp521r1, pubkey, binary_t(), desc);
-            } break;
-            case 0x001d: /* x25519 */ {
-                ret = keychain.add_okp(&keyshare, NID_X25519, pubkey, binary_t(), desc);
-            } break;
-            case 0x001e: /* x448 */ {
-                ret = keychain.add_okp(&keyshare, NID_X448, pubkey, binary_t(), desc);
-            } break;
-            case 0x0100: /* ffdhe2048 */ {
-                ret = keychain.add_dh(&keyshare, NID_ffdhe2048, pubkey, binary_t(), desc);
-            } break;
-            case 0x0101: /* ffdhe3072 */ {
-                ret = keychain.add_dh(&keyshare, NID_ffdhe3072, pubkey, binary_t(), desc);
-            } break;
-            case 0x0102: /* ffdhe4096 */ {
-                ret = keychain.add_dh(&keyshare, NID_ffdhe4096, pubkey, binary_t(), desc);
-            } break;
-            case 0x0103: /* ffdhe6144 */ {
-                ret = keychain.add_dh(&keyshare, NID_ffdhe6144, pubkey, binary_t(), desc);
-            } break;
-            case 0x0104: /* ffdhe8192 */ {
-                ret = keychain.add_dh(&keyshare, NID_ffdhe8192, pubkey, binary_t(), desc);
+            case kty_dh: {
+                ret = keychain.add_dh(&keyshare, nid, pubkey, binary_t(), desc);
             } break;
             default: {
                 ret = errorcode_t::not_supported;
@@ -353,6 +324,7 @@ return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size
             pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
             pl.get_binary(constexpr_pubkey, pubkey);
 
+            // RFC 8446 the server's share MUST be in the same group as one of the client's shares.
             add_pubkey(group, pubkey, keydesc(get_kid()));
 
             // HRR
@@ -471,25 +443,32 @@ return_t tls_extension_server_key_share::add_keyshare() {
     __try2 {
         auto session = get_session();
         auto advisor = crypto_advisor::get_instance();
+        auto tlsadvisor = tls_advisor::get_instance();
         auto& protection = session->get_tls_protection();
-        auto cli_keyshare = protection.get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
-        if (nullptr == cli_keyshare) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        uint32 nid = 0;
-        nidof_evp_pkey(cli_keyshare, nid);
-
-        auto hint = advisor->hintof_curve_nid(nid);
-        if (hint) {
-            auto group = tlsgroupof(hint);
-            if (group) {
-                add(group);
-            }
+        uint16 group_enforced = session->get_keyvalue().get(session_enforce_key_share_group);
+        if (group_enforced) {
+            add(group_enforced);
         } else {
-            ret = errorcode_t::not_supported;
-            __leave2;
+            auto cli_keyshare = protection.get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
+            if (nullptr == cli_keyshare) {
+                ret = errorcode_t::invalid_context;
+                __leave2;
+            }
+
+            auto kty = typeof_crypto_key(cli_keyshare);
+            uint32 nid = 0;
+            nidof_evp_pkey(cli_keyshare, nid);
+
+            auto hint = tlsadvisor->hintof_tls_group_nid(nid);
+            if (hint) {
+                auto group = hint->code;
+                if (group) {
+                    add(group);
+                }
+            } else {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
         }
     }
     __finally2 {}

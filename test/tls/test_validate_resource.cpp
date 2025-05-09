@@ -182,7 +182,7 @@ static void do_validate_resource_cipher_suite() {
             _test_case.assert(test, __FUNCTION__, "%-50s -> %s %s", name_iana.c_str(), name.c_str(), comments.c_str());
         }
         __finally2 {
-            if ((tls_cs_secure & item->flags) && (false == test)) {
+            if ((tls_flag_secure & item->flags) && (false == test)) {
                 _test_case.test(not_ready, __FUNCTION__, "%s not defined", name_iana.c_str());
             }
         }

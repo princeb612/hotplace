@@ -53,11 +53,11 @@ class protection_context {
     void clear_supported_versions();
     void clear_ec_point_formats();
 
-    void for_each_cipher_suites(std::function<void(uint16, bool*)> fn);
-    void for_each_signature_algorithms(std::function<void(uint16, bool*)> fn);
-    void for_each_supported_groups(std::function<void(uint16, bool*)> fn);
-    void for_each_supported_versions(std::function<void(uint16, bool*)> fn);
-    void for_each_ec_point_formats(std::function<void(uint8, bool*)> fn);
+    void for_each_cipher_suites(std::function<void(uint16, bool*)> fn) const;
+    void for_each_signature_algorithms(std::function<void(uint16, bool*)> fn) const;
+    void for_each_supported_groups(std::function<void(uint16, bool*)> fn) const;
+    void for_each_supported_versions(std::function<void(uint16, bool*)> fn) const;
+    void for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) const;
 
     return_t select_from(const protection_context& rhs);
 
@@ -144,7 +144,7 @@ class tls_protection {
     void clear_item(tls_secret_t type);
 
     size_t get_header_size();
-    static return_t handshake_hello(tls_session* client_session, tls_session* server_session, uint16& ciphersuite, uint16& tlsversion);
+    static return_t negotiate(tls_session* client_session, tls_session* server_session, uint16& ciphersuite, uint16& tlsversion);
 
     ///////////////////////////////////////////////////////////////////////////
     // hash

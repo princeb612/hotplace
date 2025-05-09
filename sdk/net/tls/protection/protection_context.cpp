@@ -56,7 +56,7 @@ void protection_context::clear_supported_versions() { _supported_versions.clear(
 
 void protection_context::clear_ec_point_formats() { _ec_point_formats.clear(); }
 
-void protection_context::for_each_cipher_suites(std::function<void(uint16, bool*)> fn) {
+void protection_context::for_each_cipher_suites(std::function<void(uint16, bool*)> fn) const {
     bool test = false;
     for (auto item : _cipher_suites) {
         fn(item, &test);
@@ -66,7 +66,7 @@ void protection_context::for_each_cipher_suites(std::function<void(uint16, bool*
     }
 }
 
-void protection_context::for_each_signature_algorithms(std::function<void(uint16, bool*)> fn) {
+void protection_context::for_each_signature_algorithms(std::function<void(uint16, bool*)> fn) const {
     bool test = false;
     for (auto item : _signature_algorithms) {
         fn(item, &test);
@@ -76,7 +76,7 @@ void protection_context::for_each_signature_algorithms(std::function<void(uint16
     }
 }
 
-void protection_context::for_each_supported_groups(std::function<void(uint16, bool*)> fn) {
+void protection_context::for_each_supported_groups(std::function<void(uint16, bool*)> fn) const {
     bool test = false;
     for (auto item : _supported_groups) {
         fn(item, &test);
@@ -86,7 +86,7 @@ void protection_context::for_each_supported_groups(std::function<void(uint16, bo
     }
 }
 
-void protection_context::for_each_supported_versions(std::function<void(uint16, bool*)> fn) {
+void protection_context::for_each_supported_versions(std::function<void(uint16, bool*)> fn) const {
     bool test = false;
     for (auto item : _supported_versions) {
         fn(item, &test);
@@ -96,7 +96,7 @@ void protection_context::for_each_supported_versions(std::function<void(uint16, 
     }
 }
 
-void protection_context::for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) {
+void protection_context::for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) const {
     bool test = false;
     for (auto item : _ec_point_formats) {
         fn(item, &test);
@@ -142,7 +142,7 @@ return_t protection_context::select_from(const protection_context& rhs) {
             for (auto cs : rhs._cipher_suites) {
                 auto hint = tlsadvisor->hintof_cipher_suite(cs);
                 // RFC 5246 mandatory TLS_RSA_WITH_AES_128_CBC_SHA
-                if (hint && (tls_cs_support & hint->flags) && tlsadvisor->is_kindof(hint->version, selected_version)) {
+                if (hint && (tls_flag_support & hint->flags) && tlsadvisor->is_kindof(hint->version, selected_version)) {
                     add_cipher_suite(cs);
                     set_cipher_suite(cs);
                     break;
@@ -156,7 +156,14 @@ return_t protection_context::select_from(const protection_context& rhs) {
         {
             // copy
             _signature_algorithms = rhs._signature_algorithms;
-            _supported_groups = rhs._supported_groups;
+
+            auto lambda_supported_groups = [&](uint16 group, bool*) -> void {
+                auto hint = tlsadvisor->hintof_tls_group(group);
+                if (hint && (tls_flag_support & hint->flags)) {
+                    _supported_groups.push_back(group);
+                }
+            };
+            rhs.for_each_supported_groups(lambda_supported_groups);
         }
     }
     __finally2 {}
@@ -195,7 +202,7 @@ uint16 protection_context::select_signature_algorithm(crypto_kty_t kty) {
     for (auto item : _signature_algorithms) {
         auto hint = tlsadvisor->hintof_signature_scheme(item);
         if (hint) {
-            if (hint->pri && (hint->kty == kty)) {
+            if ((tls_flag_support & hint->flags) && (hint->kty == kty)) {
                 ret_value = item;
                 break;
             }

@@ -59,17 +59,40 @@ const binary_t& tls_record_application_data::get_binary() { return _bin; }
 return_t tls_record_application_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        uint16 len = get_body_size();
-
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
+        tls_protection& protection = session->get_tls_protection();
+
+        uint16 len = get_body_size();
         size_t tpos = 0;
         size_t recpos = offsetof_header();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
-        tls_protection& protection = session->get_tls_protection();
         binary_t plaintext;
 
-        // tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        /**
+         * RFC 8446 Application Data MUST NOT be sent prior to sending the Finished message
+         *
+         * understanding TLS 1.3
+         *   server_hello
+         *   change_cipher_spec (optional)
+         *   application_data (handshake) // it's handshake (just encapsulated)
+         *   finished
+         *   application_data (application_data) // it's applicaton data
+         *
+         * encryption
+         *   TLS 1.3
+         *     handshake (server_hello)
+         *       -> tls_secret_handshake_(client|server)_key
+         *     application_data (handshake)
+         *     handshake (finished)
+         *       -> tls_secret_application_(client|server)_key
+         *     application_data (application_data)
+         *   TLS 1.2
+         *     client_key_exchange
+         *       -> tls_secret_(client|server)_key, tls_secret_(client|server)_mac_key
+         *     handshake (finished)
+         *     application_data (application_data)
+         */
+
         auto cs = protection.get_cipher_suite();
         const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
         auto declen = (cbc == hint->mode) ? pos + len : len;
@@ -85,6 +108,22 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                 } else if (tls_content_type_handshake == last_byte) {
                     ret = get_handshakes().read(session, dir, &plaintext[0], plainsize - 1, tpos);
                 } else if (tls_content_type_application_data == last_byte) {
+                    auto flow = protection.get_flow();
+                    if (tls_flow_1rtt == flow) {
+                        uint32 session_status_prerequisite = 0;
+                        if (protection.is_kindof_tls13()) {
+                            session_status_prerequisite = session_status_client_finished;
+                        } else {
+                            session_status_prerequisite = session_status_server_finished;
+                        }
+                        auto session_status = session->get_session_status();
+                        if (0 == (session_status_prerequisite & session_status)) {
+                            ret = errorcode_t::unexpected;
+                            session->reset_session_status();
+                            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                            __leave2_trace(ret);
+                        }
+                    }
                     if (cbc == hint->mode) {
                         ret = get_application_data(plaintext, false);
                     } else {

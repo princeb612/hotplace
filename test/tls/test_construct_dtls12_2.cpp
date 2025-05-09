@@ -17,7 +17,7 @@
 
 static udp_traffic _traffic;
 
-static return_t do_test_construct_client_hello(tls_direction_t dir, tls_session* session, const char* message) {
+static return_t do_test_construct_client_hello(tls_session* session, tls_direction_t dir, const char* message) {
     return_t ret = errorcode_t::success;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     tls_handshake_client_hello* handshake = nullptr;
@@ -123,7 +123,7 @@ static return_t do_test_construct_client_hello(tls_direction_t dir, tls_session*
     return ret;
 }
 
-static return_t do_test_construct_hello_verify_request(tls_direction_t dir, tls_session* session, const char* message) {
+static return_t do_test_construct_hello_verify_request(tls_session* session, tls_direction_t dir, const char* message) {
     return_t ret = errorcode_t::success;
 
     auto handshake = new tls_handshake_hello_verify_request(session);
@@ -147,7 +147,7 @@ static return_t do_test_construct_hello_verify_request(tls_direction_t dir, tls_
     return ret;
 }
 
-static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_direction_t dir, tls_session* session, tls_session* client_session,
+static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_session* session, tls_session* client_session, tls_direction_t dir,
                                                                          const char* message) {
     return_t ret = errorcode_t::success;
     auto& protection = session->get_tls_protection();
@@ -157,7 +157,7 @@ static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_dir
 
     uint16 server_cs = 0;
     uint16 server_version = 0;
-    protection.handshake_hello(client_session, session, server_cs, server_version);
+    protection.negotiate(client_session, session, server_cs, server_version);
 
     tls_handshake_server_hello* handshake = nullptr;
 
@@ -247,7 +247,7 @@ static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_dir
     return ret;
 }
 
-static return_t do_test_construct_from_client_key_exchange_to_finished(tls_direction_t dir, tls_session* session, const char* message) {
+static return_t do_test_construct_from_client_key_exchange_to_finished(tls_session* session, tls_direction_t dir, const char* message) {
     return_t ret = errorcode_t::success;
 
     tls_records records;
@@ -278,7 +278,7 @@ static return_t do_test_construct_from_client_key_exchange_to_finished(tls_direc
     return ret;
 }
 
-static return_t do_test_construct_from_change_cipher_spec_to_finished(tls_direction_t dir, tls_session* session, const char* message) {
+static return_t do_test_construct_from_change_cipher_spec_to_finished(tls_session* session, tls_direction_t dir, const char* message) {
     return_t ret = errorcode_t::success;
 
     tls_records records;
@@ -303,7 +303,7 @@ static return_t do_test_construct_from_change_cipher_spec_to_finished(tls_direct
     return ret;
 }
 
-static return_t do_test_send_record(tls_direction_t dir, tls_session* session, const char* message) {
+static return_t do_test_send_record(tls_session* session, tls_direction_t dir, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == message) {
@@ -358,7 +358,7 @@ void do_test_construct_dtls12_2(uint32 flags) {
 
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-    auto lambda_test_next_seq = [&](const char* func, tls_direction_t dir, tls_session* session, uint16 expect_epoch, uint64 expect_next_rcseq,
+    auto lambda_test_next_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_next_rcseq,
                                     uint16 expect_next_hsseq) -> void {
         uint16 rcepoch = session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch);
         uint64 next_rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
@@ -367,7 +367,7 @@ void do_test_construct_dtls12_2(uint32 flags) {
         _test_case.assert(test, func, "%s record (epoch %i next sequence %I64i) handshake (next sequence %i)", tlsadvisor->nameof_direction(dir).c_str(),
                           rcepoch, next_rcseq, next_hsseq);
     };
-    auto lambda_test_seq = [&](const char* func, tls_direction_t dir, tls_session* session, uint16 expect_epoch, uint64 expect_rcseq,
+    auto lambda_test_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_rcseq,
                                uint16 expect_hsseq) -> void {
         uint16 rcepoch = session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch);
         uint64 rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
@@ -378,22 +378,22 @@ void do_test_construct_dtls12_2(uint32 flags) {
     };
 
     // C->S, record epoch 0, sequence 0..1, handshake sequence 0
-    do_test_construct_client_hello(from_client, &session_client, "client hello");
-    do_test_send_record(from_client, &session_server, "client hello");
-    lambda_test_next_seq(__FUNCTION__, from_client, &session_client, 0, 2, 1);
-    lambda_test_seq(__FUNCTION__, from_client, &session_server, 0, 1, 0);
+    do_test_construct_client_hello(&session_client, from_client, "client hello");
+    do_test_send_record(&session_server, from_client, "client hello");
+    lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 2, 1);
+    lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 1, 0);
 
     // S->C, record epoch 0, sequence 0, handshake sequence 0
-    do_test_construct_hello_verify_request(from_server, &session_server, "hello verify request");
-    do_test_send_record(from_server, &session_client, "hello verify request");
-    lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 0, 1, 1);
-    lambda_test_seq(__FUNCTION__, from_server, &session_client, 0, 0, 0);
+    do_test_construct_hello_verify_request(&session_server, from_server, "hello verify request");
+    do_test_send_record(&session_client, from_server, "hello verify request");
+    lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 1, 1);
+    lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 0, 0);
 
     // C->S, record epoch 0, sequence 2..3, handshake sequence 1
-    do_test_construct_client_hello(from_client, &session_client, "client hello");
-    do_test_send_record(from_client, &session_server, "client hello");
-    lambda_test_next_seq(__FUNCTION__, from_client, &session_client, 0, 4, 2);
-    lambda_test_seq(__FUNCTION__, from_client, &session_server, 0, 3, 1);
+    do_test_construct_client_hello(&session_client, from_client, "client hello");
+    do_test_send_record(&session_server, from_client, "client hello");
+    lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 4, 2);
+    lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 3, 1);
 
     // S->C
     // case dtls_record_publisher().set_flags(0)
@@ -412,15 +412,15 @@ void do_test_construct_dtls12_2(uint32 flags) {
     //   -> tls_record_handshake (epoch 0, sequence 1) contains server_hello and certificate (handshake sequences in order 1, 2)
     //   -> tls_record_handshake (epoch 0, sequence 8) contains certificate and server_key_exchange (handshake sequences in order 2, 3)
     //   -> tls_record_handshake (epoch 0, sequence 10) contains server_key_exchange and server_hello_done (handshake sequences in order 3, 4)
-    do_test_construct_from_server_hello_to_server_hello_done(from_server, &session_server, &session_client,
+    do_test_construct_from_server_hello_to_server_hello_done(&session_server, &session_client, from_server,
                                                              "server hello, certificate, server key exchange, server hello done");
-    do_test_send_record(from_server, &session_client, "server hello, certificate, server key exchange, server hello done");
+    do_test_send_record(&session_client, from_server, "server hello, certificate, server key exchange, server hello done");
     if (flags & dtls_record_publisher_multi_handshakes) {
-        lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 0, 11, 5);
-        lambda_test_seq(__FUNCTION__, from_server, &session_client, 0, 10, 4);
+        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 11, 5);
+        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 10, 4);
     } else {
-        lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 0, 14, 5);
-        lambda_test_seq(__FUNCTION__, from_server, &session_client, 0, 13, 4);
+        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 14, 5);
+        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 13, 4);
     }
 
     // C->S
@@ -429,10 +429,10 @@ void do_test_construct_dtls12_2(uint32 flags) {
     //  client_key_exchange record epoch 0, sequence 4, handshake sequence 2
     //  change_ciphee_spec  record epoch 0, sequence 5
     //  finished            record epoch 1, sequence 0, handshake sequence 3
-    do_test_construct_from_client_key_exchange_to_finished(from_client, &session_client, "client key exchange, change cipher spec, finished");
-    do_test_send_record(from_client, &session_server, "client key exchange, change cipher spec, finished");
-    lambda_test_next_seq(__FUNCTION__, from_client, &session_client, 1, 1, 4);
-    lambda_test_seq(__FUNCTION__, from_client, &session_server, 1, 0, 3);
+    do_test_construct_from_client_key_exchange_to_finished(&session_client, from_client, "client key exchange, change cipher spec, finished");
+    do_test_send_record(&session_server, from_client, "client key exchange, change cipher spec, finished");
+    lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 1, 1, 4);
+    lambda_test_seq(__FUNCTION__, &session_server, from_client, 1, 0, 3);
 
     // S->C
     // case dtls_record_publisher().set_flags(0)
@@ -442,10 +442,10 @@ void do_test_construct_dtls12_2(uint32 flags) {
     // case dtls_record_publisher().set_flags(dtls_record_publisher_multi_handshakes)
     //  change_ciphee_spec  record epoch 0, sequence 11, change cipher spec
     //  finished            epoch 1, sequence 0, handshake sequence 5
-    do_test_construct_from_change_cipher_spec_to_finished(from_server, &session_server, "change cipher spec, finished");
-    do_test_send_record(from_server, &session_client, "change cipher spec, finished");
-    lambda_test_next_seq(__FUNCTION__, from_server, &session_server, 1, 1, 6);
-    lambda_test_seq(__FUNCTION__, from_server, &session_client, 1, 0, 5);
+    do_test_construct_from_change_cipher_spec_to_finished(&session_server, from_server, "change cipher spec, finished");
+    do_test_send_record(&session_client, from_server, "change cipher spec, finished");
+    lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 1, 1, 6);
+    lambda_test_seq(__FUNCTION__, &session_client, from_server, 1, 0, 5);
 
     // skip followings
     // - application data

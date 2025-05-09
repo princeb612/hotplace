@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace net {
 
-enum tls_flag_t {
+enum socket_context_flag_t {
     closesocket_ondestroy = (1 << 0),
     tls_nbio = (1 << 1),
     closesocket_if_tcp = (1 << 2),
@@ -24,7 +24,7 @@ enum tls_flag_t {
 
 struct socket_context_t {
     socket_t fd;   // socket
-    uint32 flags;  // see tls_flag_t
+    uint32 flags;  // see socket_context_flag_t
     SSL* ssl;      // TLS
 
     socket_context_t();

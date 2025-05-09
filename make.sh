@@ -18,7 +18,7 @@ COMMENTS
 
 :<< HELP
     cf       - clang-format
-    cmake    - makefile only (only clang-format possible)
+    cmake    - makefile only
     ctest    - build and run ctest
     debug    - debug build
     format   - clang-format (syn. cf)

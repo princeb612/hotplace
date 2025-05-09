@@ -251,6 +251,8 @@ int main(int argc, char** argv) {
 
         test_construct_dtls12_1();  // generate and arrange fragmented diagrams (record-handshake multiplicity 1..1)
         test_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
+
+        test_helloretryrequest();
     } else {
         dump_clienthello();
     }

@@ -80,7 +80,7 @@ return_t openssl_tls::tls_open(socket_context_t** handle, socket_t fd, uint32 fl
         context->ssl = ssl;
         context->flags = flags;
 
-        if (flags & tls_flag_t::tls_nbio) {
+        if (flags & socket_context_flag_t::tls_nbio) {
             SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
             set_sock_nbio(fd, 1);
         }
@@ -121,7 +121,7 @@ return_t openssl_tls::dtls_open(socket_context_t** handle, socket_t fd, uint32 f
         context->ssl = ssl;
         context->flags = flags;
 
-        if (flags & tls_flag_t::tls_nbio) {
+        if (flags & socket_context_flag_t::tls_nbio) {
             SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
             set_sock_nbio(fd, 1);
         }
@@ -163,7 +163,7 @@ return_t openssl_tls::connect(socket_context_t** handle, int type, const char* a
     SSL* ssl = nullptr;
     socket_context_t* context = nullptr;
     sockaddr_storage_t addr;
-    uint32 flags = tls_flag_t::closesocket_ondestroy | tls_flag_t::tls_nbio;
+    uint32 flags = socket_context_flag_t::closesocket_ondestroy | socket_context_flag_t::tls_nbio;
 
     __try2 {
         if (nullptr == handle) {
@@ -292,7 +292,7 @@ return_t openssl_tls::tls_handshake(socket_context_t** handle, socket_t fd) {
          * non-blocking     passed
          */
 
-        int flags = tls_flag_t::closesocket_ondestroy | tls_flag_t::tls_nbio;
+        int flags = socket_context_flag_t::closesocket_ondestroy | socket_context_flag_t::tls_nbio;
         ret = tls_open(&context, fd, flags);
         if (errorcode_t::success != ret) {
             __leave2;

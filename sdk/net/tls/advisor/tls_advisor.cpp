@@ -114,6 +114,7 @@ void tls_advisor::load_tls_parameters() {
         auto item = tls_groups + i;
         _supported_group_codes.insert({item->code, item});
         _supported_group_names.insert({item->name, item});
+        _supported_group_nids.insert({item->nid, item});
     }
 }
 
@@ -202,7 +203,7 @@ const tls_cipher_suite_t* tls_advisor::hintof_cipher_suite(const std::string& na
 void tls_advisor::enum_cipher_suites(std::function<void(const tls_cipher_suite_t*)> fn) {
     for (auto i = 0; i < sizeof_tls_cipher_suites; i++) {
         auto item = tls_cipher_suites + i;
-        if (item->flags & tls_cs_support) {
+        if (item->flags & tls_flag_support) {
             fn(item);
         }
     }
@@ -247,6 +248,14 @@ const tls_sig_scheme_t* tls_advisor::hintof_signature_scheme(uint16 code) {
     return hint;
 }
 
+void tls_advisor::enum_signature_scheme(std::function<void(const tls_sig_scheme_t*)> func) {
+    if (func) {
+        for (auto item : _sig_scheme_codes) {
+            func(item.second);
+        }
+    }
+}
+
 const tls_group_t* tls_advisor::hintof_tls_group(uint16 code) {
     const tls_group_t* hint = nullptr;
     auto iter = _supported_group_codes.find(code);
@@ -263,6 +272,23 @@ const tls_group_t* tls_advisor::hintof_tls_group(const std::string& name) {
         hint = iter->second;
     }
     return hint;
+}
+
+const tls_group_t* tls_advisor::hintof_tls_group_nid(uint32 nid) {
+    const tls_group_t* hint = nullptr;
+    auto iter = _supported_group_nids.find(nid);
+    if (_supported_group_nids.end() != iter) {
+        hint = iter->second;
+    }
+    return hint;
+}
+
+void tls_advisor::enum_tls_group(std::function<void(const tls_group_t*)> func) {
+    if (func) {
+        for (auto item : _supported_group_codes) {
+            func(item.second);
+        }
+    }
 }
 
 hash_algorithm_t tls_advisor::hash_alg_of(uint16 code) {
@@ -378,6 +404,22 @@ bool tls_advisor::is_kindof(uint16 lhs, uint16 rhs) {
         }
     }
     return ret;
+}
+
+std::string tls_advisor::nameof_tls_flow(tls_flow_t flow) {
+    std::string value;
+    switch (flow) {
+        case tls_flow_1rtt: {
+            value = "1-RTT";
+        } break;
+        case tls_flow_0rtt: {
+            value = "0-RTT";
+        } break;
+        case tls_flow_hello_retry_request: {
+            value = "HelloRetryRequest";
+        } break;
+    }
+    return value;
 }
 
 std::string tls_advisor::session_status_string(uint32 status) {

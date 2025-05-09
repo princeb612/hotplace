@@ -98,17 +98,17 @@ extern const size_t sizeof_tls_version_hint;
  * @remarks
  *          cs_std, cs_ossl https://docs.openssl.org/1.1.1/man1/ciphers/
  *
- *          tls_cs_secure | tls_cs_support  recommended
- *          tls_cs_support                  legacy or debugging purpose
+ *          tls_flag_secure | tls_flag_support  recommended
+ *          tls_flag_support                    legacy or debugging purpose
  */
-enum tls_cipher_suite_flag_t : uint8 {
-    tls_cs_secure = (1 << 0),
-    tls_cs_support = (1 << 1),
+enum tls_resource_flag_t : uint8 {
+    tls_flag_secure = (1 << 0),
+    tls_flag_support = (1 << 1),
 };
 struct tls_cipher_suite_t {
     uint16 code;                // 0xc023
     tls_version_t version;      // tls_12
-    uint8 flags;                // tls_cipher_suite_flag_t
+    uint8 flags;                // tls_resource_flag_t
     const char* name_iana;      // TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
     const char* name_ossl;      // ECDHE-ECDSA-AES128-SHA256
     keyexchange_t keyexchange;  // keyexchange_ecdhe
@@ -123,8 +123,7 @@ hash_algorithm_t algof_mac(const tls_cipher_suite_t* info);
 
 struct tls_group_t {
     uint16 code;
-    uint8 support;
-    uint8 reserved;
+    uint8 flags;
     crypto_kty_t kty;
     uint16 nid;
     const char* name;
@@ -134,7 +133,7 @@ extern const size_t sizeof_tls_groups;
 
 struct tls_sig_scheme_t {
     uint16 code;
-    uint8 pri;
+    uint8 flags;
     crypto_kty_t kty;
     crypt_sig_type_t sigtype;  // crypt_sig_rsassa_pkcs15, crypt_sig_ecdsa, crypt_sig_rsassa_pss, crypt_sig_eddsa
     uint32 nid;
@@ -160,8 +159,11 @@ class tls_advisor {
     const hint_digest_t* hintof_digest(uint16 code);
     const tls_sig_scheme_t* hintof_signature_scheme(uint16 code);
     const tls_sig_scheme_t* hintof_signature_scheme(const std::string& name);
+    void enum_signature_scheme(std::function<void(const tls_sig_scheme_t*)> func);
     const tls_group_t* hintof_tls_group(uint16 code);
     const tls_group_t* hintof_tls_group(const std::string& name);
+    const tls_group_t* hintof_tls_group_nid(uint32 nid);
+    void enum_tls_group(std::function<void(const tls_group_t*)> func);
     hash_algorithm_t hash_alg_of(uint16 code);
 
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
@@ -213,6 +215,8 @@ class tls_advisor {
      */
     bool is_kindof(uint16 lhs, uint16 rhs);
 
+    std::string nameof_tls_flow(tls_flow_t flow);
+
     std::string session_status_string(uint32 status);
     void enum_session_status_string(uint32 status, std::function<void(const char*)> func);
     /**
@@ -256,6 +260,7 @@ class tls_advisor {
     std::map<std::string, const tls_sig_scheme_t*> _sig_scheme_names;
     std::map<uint16, const tls_group_t*> _supported_group_codes;
     std::map<std::string, const tls_group_t*> _supported_group_names;
+    std::map<uint32, const tls_group_t*> _supported_group_nids;
 
     // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
     std::map<uint16, const tls_compression_alg_code_t*> _compression_alg_codes;

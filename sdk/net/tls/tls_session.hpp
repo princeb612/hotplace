@@ -38,22 +38,25 @@ enum session_type_t {
  *   session.get_keyvalue().set(key, value);
  */
 enum session_conf_t {
-    // session->get_session_info(dir).get_keyvalue()
-    // uint64
+    // uint64, session->get_session_info(dir).get_keyvalue()
     session_dtls_epoch = 1,        // record epoch
     session_dtls_seq = 2,          // record sequence
     session_dtls_message_seq = 3,  // handshake sequence
     session_ticket_lifetime = 4,   // RFC 8446 4.6.1. uint32
     session_ticket_age_add = 5,    // RFC 8446 4.6.1. uint32
     session_ticket_timestamp = 6,  // RFC 8446 4.2.11. see obfuscated_ticket_age
-    session_key_share_group = 7,   // uint16
+    session_key_share_group = 7,   // HRR, uint16
 
-    // session->get_keyvalue()
-    // uint16
-    session_encrypt_then_mac = 0x1001,
-    session_enable_encrypt_then_mac = 0x1002,
-    session_tls_version = 0x1003,
-    session_debug_deprecated_ciphersuite = 0x2000,  // to test unsupported cipher suite
+    // uint16, session->get_keyvalue()
+    // config
+    session_enable_encrypt_then_mac = 0x1001,  // TLS 1.2 EtM
+    session_enforce_key_share_group = 0x1002,  // TLS 1.3 key share group
+    // status
+    session_tls_version = 0x2001,         // TLS version
+    session_encrypt_then_mac = 0x2002,    // TLS 1.2 EtM
+    session_handshake_finished = 0x2003,  // if finished HRR->0-RTT else HRR->1-RTT
+    // debug
+    session_debug_deprecated_ciphersuite = 0x3001,  // to test unsupported cipher suite
 };
 
 class tls_session {

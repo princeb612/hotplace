@@ -46,7 +46,7 @@ class openssl_tls {
      * @brief   TLS
      * @param   socket_context_t** handle  [out]
      * @param   socket_t        sock    [in]
-     * @param   uint32          flags   [inopt] see tls_flag_t
+     * @param   uint32          flags   [inopt] see socket_context_flag_t
      * @return  error code (see error.hpp)
      */
     return_t tls_open(socket_context_t** handle, socket_t sock, uint32 flags = 0);
@@ -54,7 +54,7 @@ class openssl_tls {
      * @brief   DTLS
      * @param   socket_context_t** handle  [out]
      * @param   socket_t        sock    [in] listen socket
-     * @param   uint32          flags   [inopt] see tls_flag_t
+     * @param   uint32          flags   [inopt] see socket_context_flag_t
      * @return  error code (see error.hpp)
      */
     return_t dtls_open(socket_context_t** handle, socket_t sock, uint32 flags = 0);

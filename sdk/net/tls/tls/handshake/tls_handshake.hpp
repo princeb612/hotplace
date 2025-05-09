@@ -55,11 +55,33 @@ class tls_handshake {
     uint32 get_flags();
 
    protected:
+    /**
+     * check message flow
+     * @remarks
+     *          RFC 8446 4.  Handshake Protocol
+     *            Protocol messages MUST be sent in the order
+     *            A peer which receives a handshake message in an unexpected order MUST abort the handshake with an "unexpected_message" alert.
+     */
     virtual return_t do_preprocess(tls_direction_t dir);
+    /**
+     * update transcript hash, key calcuration, ...
+     */
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t *stream, size_t size);
+    /**
+     * read header
+     */
     virtual return_t do_read_header(tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);
+    /**
+     * read body
+     */
     virtual return_t do_read_body(tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);
+    /**
+     * write header
+     */
     virtual return_t do_write_header(tls_direction_t dir, binary_t &bin, const binary_t &body);
+    /**
+     * write body
+     */
     virtual return_t do_write_body(tls_direction_t dir, binary_t &bin);
 
     void set_extension_len(uint16 len);
