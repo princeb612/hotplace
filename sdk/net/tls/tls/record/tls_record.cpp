@@ -19,6 +19,8 @@
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <sdk/net/tls/tls/record/tls_record.hpp>
+#include <sdk/net/tls/tls/record/tls_record_alert.hpp>
+#include <sdk/net/tls/tls/record/tls_record_builder.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -81,6 +83,8 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
 
 return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
+    auto session = get_session();
+    auto snapshot = bin.size();
     __try2 {
 #if defined DEBUG
         if (istraceable()) {
@@ -94,9 +98,8 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
             trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
         }
 #endif
-        auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
+        ret = do_preprocess(dir);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -143,7 +146,22 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
             change_epoch_seq(dir);
         }
     }
-    __finally2 {}
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            bin.resize(snapshot);  // rollback
+            tls_record_builder builder;
+            auto lambda = [&](uint8 level, uint8 desc) -> void {
+                auto record = builder.set(session).set(tls_content_type_alert).construct().build();
+                if (record) {
+                    tls_record_alert* alert_casted = (tls_record_alert*)record;
+                    alert_casted->set(level, desc);
+                    record->write(dir, bin);
+                    record->release();
+                }
+            };
+            session->get_alert(dir, lambda);
+        }
+    }
     return ret;
 }
 
@@ -303,10 +321,6 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
 
         if (apply_protection() && session->get_session_info(dir).apply_protection()) {
             binary_t additional;

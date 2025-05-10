@@ -190,7 +190,7 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
 
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
+            __leave2;
         }
 
         binary_t body;
@@ -203,7 +203,7 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
 
         ret = do_postprocess(dir, stream, size);
         if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
+            __leave2;
         }
     }
     __finally2 {

@@ -40,6 +40,17 @@ return_t tls_handshake_server_key_exchange::do_preprocess(tls_direction_t dir) {
             ret = errorcode_t::bad_request;
             __leave2;
         }
+
+        // TLS 1.2
+
+        auto session = get_session();
+        auto session_status = session->get_session_status();
+        if (0 == (session_status_server_cert & session_status)) {
+            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+            session->reset_session_status();
+            ret = errorcode_t::error_handshake;
+            __leave2;
+        }
     }
     __finally2 {
         // do nothing

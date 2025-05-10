@@ -252,6 +252,8 @@ int main(int argc, char** argv) {
         test_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
 
         test_helloretryrequest();
+
+        test_alert();
     } else {
         dump_clienthello();
     }

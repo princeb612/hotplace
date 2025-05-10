@@ -49,8 +49,9 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
         auto tlsver = protection.get_tls_version();
         auto session_status = session->get_session_status();
         uint32 session_status_prerequisite = 0;
+        auto flow = protection.get_flow();
         if (true == tlsadvisor->is_kindof_tls13(tlsver)) {
-            if (tls_flow_1rtt == protection.get_flow()) {
+            if (tls_flow_1rtt == flow) {
                 // RFC 8446 5.  Record Protocol
                 //  The change_cipher_spec record is used only for compatibility purposes.
                 // RFC 8448 3.  Simple 1-RTT Handshake
@@ -60,7 +61,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
                 if (from_client == dir) {
                     session_status_prerequisite != session_status_server_finished;
                 }
-            } else {
+            } else if (tls_flow_0rtt == flow) {
                 session_status_prerequisite = session_status_server_hello | session_status_client_finished;
             }
         } else {
@@ -81,10 +82,10 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
         }
 
         if (0 == (session_status_prerequisite & session_status)) {
-            ret = errorcode_t::error_handshake;
-            session->reset_session_status();
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
-            __leave2_trace(ret);
+            session->reset_session_status();
+            ret = errorcode_t::error_handshake;
+            __leave2;
         }
     }
     __finally2 {
@@ -179,8 +180,9 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
 
             verify_data.resize(maced.size());
             if (maced.empty() || (verify_data != maced)) {
-                ret = errorcode_t::error_verify;
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+                session->reset_session_status();
+                ret = errorcode_t::error_verify;
                 __leave2;
             }
 

@@ -569,8 +569,9 @@ enum tls_direction_t {
 
 enum tls_flow_t {
     tls_flow_1rtt = 0,
-    tls_flow_0rtt = 1,
-    tls_flow_hello_retry_request = 2,
+    tls_flow_0rtt = 1,                 // TLS 1.3
+    tls_flow_hello_retry_request = 2,  // TLS 1.3
+    tls_flow_renegotiation = 3,        // TLS 1.2
 };
 
 /**

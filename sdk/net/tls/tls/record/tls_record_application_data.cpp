@@ -121,7 +121,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                             ret = errorcode_t::unexpected;
                             session->reset_session_status();
                             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
-                            __leave2_trace(ret);
+                            __leave2;
                         }
                     }
                     if (cbc == hint->mode) {

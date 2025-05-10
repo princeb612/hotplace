@@ -44,10 +44,10 @@ return_t tls_handshake_certificate_verify::do_preprocess(tls_direction_t dir) {
             session_status_prerequisite = session_status_server_cert;
         }
         if (0 == (session_status_prerequisite & session_status)) {
-            ret = errorcode_t::error_handshake;
-            session->reset_session_status();
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_certificate_required);
-            __leave2_trace(ret);
+            session->reset_session_status();
+            ret = errorcode_t::error_handshake;
+            __leave2;
         }
     }
     __finally2 {
@@ -301,7 +301,8 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
 
         if (nullptr == pkey) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
-            ret = error_certificate;
+            session->reset_session_status();
+            ret = errorcode_t::error_certificate;
             __leave2;
         }
 
@@ -310,7 +311,8 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
         ret = sign_certverify(pkey, dir, scheme, signature);
 
         payload pl;
-        pl << new payload_member(uint16(scheme), true, constexpr_signature_alg) << new payload_member(uint16(signature.size()), true, constexpr_len)
+        pl << new payload_member(uint16(scheme), true, constexpr_signature_alg)  //
+           << new payload_member(uint16(signature.size()), true, constexpr_len)  //
            << new payload_member(signature, constexpr_signature);
         pl.write(bin);
     }

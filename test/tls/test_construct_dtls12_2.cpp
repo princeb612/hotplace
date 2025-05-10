@@ -25,18 +25,8 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
     __try2 {
         __try_new_catch(handshake, new tls_handshake_client_hello(session), ret, __leave2);
 
-        // random
         {
-            openssl_prng prng;
-
-            binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
-            time_t gmt_unix_time = time(nullptr);
-            binary_append(random, gmt_unix_time, hton64);
-            random.resize(sizeof(uint32));
-            binary_t temp;
-            prng.random(temp, 28);
-            binary_append(random, temp);
-            handshake->set_random(random);
+            // client_hello generate random member
 
             const auto& cookie = session->get_tls_protection().get_item(tls_context_cookie);
             if (false == cookie.empty()) {
@@ -179,16 +169,7 @@ static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_ses
             }
 
             {
-                openssl_prng prng;
-
-                binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
-                time_t gmt_unix_time = time(nullptr);
-                binary_append(random, gmt_unix_time, hton64);
-                random.resize(sizeof(uint32));
-                binary_t temp;
-                prng.random(temp, 28);
-                binary_append(random, temp);
-                handshake->set_random(random);
+                // server_hello generate random member
 
                 handshake->set_cipher_suite(server_cs);
             }
@@ -210,11 +191,6 @@ static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_ses
             {
                 // encrypt_then_mac
                 handshake->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
-            }
-            {
-                auto supported_versions = new tls_extension_server_supported_versions(session);
-                (*supported_versions).set(server_version);
-                handshake->get_extensions().add(supported_versions);
             }
 
             record << handshake;

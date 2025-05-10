@@ -107,7 +107,7 @@ return_t tls_record_handshake::do_write_body(tls_direction_t dir, binary_t& bin)
 
     __try2 {
         auto& handshakes = get_handshakes();
-        handshakes.write(get_session(), dir, bin);
+        ret = handshakes.write(get_session(), dir, bin);
     }
     __finally2 {
         // do nothing

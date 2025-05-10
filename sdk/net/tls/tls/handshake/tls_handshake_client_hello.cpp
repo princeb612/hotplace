@@ -53,13 +53,43 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto session_type = session->get_type();
+        auto session_status = session->get_session_status();
 
+        if (session_status) {
+            if (session_status_hello_verify_request & session_status) {
+                // DTLS cookie
+                if (session_status_server_hello & session_status) {
+                    session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                    session->reset_session_status();
+                    ret = errorcode_t::error_handshake;
+                    __leave2;
+                }
+            } else if ((session_status_server_finished | session_status_client_finished) & session_status) {
+                // 0-RTT, renegotiation
+            } else if (~(session_status_client_hello | session_status_server_hello) & session_status) {
+                // not HRR
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                session->reset_session_status();
+                ret = errorcode_t::error_handshake;
+                __leave2;
+            }
+        }
+
+        // finished -> client_hello
         auto hsstatus = session->get_session_info(dir).get_status();
         if (tls_hs_finished == hsstatus) {
-            // 0-RTT
-            protection.set_flow(tls_flow_0rtt);
-            session->reset_session_status();
+            if (protection.is_kindof_tls13()) {
+                // 0-RTT
+                protection.set_flow(tls_flow_0rtt);
+                session->reset_session_status();
+            } else {
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                session->reset_session_status();
+                ret = errorcode_t::error_handshake;
+                __leave2;
+            }
         }
+
         switch (protection.get_flow()) {
             case tls_flow_1rtt: {
             } break;
@@ -97,15 +127,16 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto session_status = session->get_session_status();
+
         if (session_status_hello_verify_request & session_status) {
             if ((get_cookie() != protection.get_item(tls_context_cookie)) || (get_random() != protection.get_item(tls_context_client_hello_random))) {
                 // client_hello
                 // hello_verify_request (cookie)
                 // client_hello (cookie)
-                ret = errorcode_t::error_handshake;
-                session->reset_session_status();
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
-                __leave2_trace(ret);
+                session->reset_session_status();
+                ret = errorcode_t::error_handshake;
+                __leave2;
             }
         }
 
@@ -115,9 +146,9 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
         if (tls_flow_0rtt == protection.get_flow()) {
             auto ext_psk = get_extensions().get(tls_ext_pre_shared_key);
             if (nullptr == ext_psk) {
-                ret = errorcode_t::error_handshake;
-                session->reset_session_status();
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+                session->reset_session_status();
+                ret = errorcode_t::error_handshake;
                 __leave2;
             }
         }
@@ -294,9 +325,9 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
 #endif
 
         if (0 == extension_len) {
-            ret = errorcode_t::error_handshake;
-            session->reset_session_status();
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
+            session->reset_session_status();
+            ret = errorcode_t::error_handshake;
             __leave2;
         }
 
@@ -336,7 +367,15 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
         } else {
             if (32 != _random.size()) {
                 openssl_prng prng;
-                prng.random(_random, 32);
+                binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
+                time_t gmt_unix_time = time(nullptr);
+                binary_append(random, gmt_unix_time, hton64);
+                random.resize(sizeof(uint32));
+                binary_t temp;
+                prng.random(temp, 28);
+                binary_append(random, temp);
+
+                _random = std::move(random);
             }
         }
 

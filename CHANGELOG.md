@@ -4,7 +4,7 @@
   * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 775
+* Revision 776
 
 * Revision 774 (Tag 1.27)
 

@@ -97,6 +97,7 @@ return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t siz
         uint16 psk_binders_len = 0;
         uint8 psk_binder_len = 0;
         binary_t psk_binder;
+        tls_direction_t dir = from_client;
 
         size_t offset_psk_binders_len = 0;
         {
@@ -120,23 +121,21 @@ return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t siz
         }
 
         {
-            // * TODO
-            //   * [ ] external PSK
-
             auto& kv = session->get_session_info(from_server).get_keyvalue();
-            kv.get(session_ticket_age_add);
             const binary_t& ticket = protection.get_item(tls_context_new_session_ticket);
             if (psk_identity != ticket) {
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
+                session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
-                __leave2_trace(ret);
+                __leave2;
             }
             uint32 ticket_lifetime = kv.get(session_ticket_lifetime);
             uint32 ticket_age_add = kv.get(session_ticket_age_add);
             if (obfuscated_ticket_age - ticket_age_add > ticket_lifetime) {
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
+                session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
-                __leave2_trace(ret);
+                __leave2;
             }
         }
 

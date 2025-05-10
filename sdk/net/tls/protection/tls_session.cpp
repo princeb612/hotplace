@@ -165,13 +165,15 @@ void tls_session::session_info::push_alert(uint8 level, uint8 desc) {
     _alerts.push_back(alert(level, desc));
 }
 
-void tls_session::session_info::get_alert(std::function<void(uint8, uint8)> func) {
+void tls_session::session_info::get_alert(std::function<void(uint8, uint8)> func, uint8 flags) {
     critical_section_guard guard(_info_lock);
     for (auto iter = _alerts.begin(); iter != _alerts.end(); iter++) {
         const auto& item = *iter;
         func(item.level, item.desc);
     }
-    _alerts.clear();
+    if (0 == (session_alert_peek & flags)) {
+        _alerts.clear();
+    }
 }
 
 bool tls_session::session_info::has_alert(uint8 level) {
@@ -209,7 +211,7 @@ void tls_session::run_scheduled(tls_direction_t dir) {
 
 void tls_session::push_alert(tls_direction_t dir, uint8 level, uint8 desc) { get_session_info(dir).push_alert(level, desc); }
 
-void tls_session::get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func) { get_session_info(dir).get_alert(func); }
+void tls_session::get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags) { get_session_info(dir).get_alert(func, flags); }
 
 bool tls_session::has_alert(tls_direction_t dir, uint8 level) { return get_session_info(dir).has_alert(level); }
 

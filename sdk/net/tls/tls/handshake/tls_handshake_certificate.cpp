@@ -57,8 +57,8 @@ return_t tls_handshake_certificate::set(tls_direction_t dir, const char* certfil
         }
         ret = keychain.load_file(&keyexchange, key_certfile, certfile, desc_crt);
         if (errorcode_t::success != ret) {
-            session->reset_session_status();
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
+            session->reset_session_status();
             __leave2;
         }
         ret = keychain.load_file(&keyexchange, key_pemfile, keyfile, desc_key);
@@ -74,10 +74,10 @@ return_t tls_handshake_certificate::do_preprocess(tls_direction_t dir) {
         auto session_status = session->get_session_status();
         uint32 session_status_prerequisite = session_status_client_hello | session_status_server_hello;
         if (0 == (session_status_prerequisite & session_status)) {
-            ret = errorcode_t::error_handshake;
-            session->reset_session_status();
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
-            __leave2_trace(ret);
+            session->reset_session_status();
+            ret = errorcode_t::error_handshake;
+            __leave2;
         }
     }
     __finally2 {
@@ -220,7 +220,8 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
         auto x509 = keyexchange.find_x509(kid);
         if (nullptr == x509) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
-            ret = error_certificate;
+            session->reset_session_status();
+            ret = errorcode_t::error_certificate;
             __leave2;
         }
 

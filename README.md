@@ -208,6 +208,7 @@
   * RFC 9114 HTTP/3
   * RFC 9368 Compatible Version Negotiation for QUIC
 * TLS,DTLS
+  * RFC 5746 Transport Layer Security (TLS) Renegotiation Indication Extension
   * RFC 6066 Transport Layer Security (TLS) Extensions: Extension Definitions
   * RFC 6347 Datagram Transport Layer Security Version 1.2
   * RFC 6797 HTTP Strict Transport Security (HSTS)

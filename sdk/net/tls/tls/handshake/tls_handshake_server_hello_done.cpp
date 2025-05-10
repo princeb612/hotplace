@@ -49,10 +49,10 @@ return_t tls_handshake_server_hello_done::do_preprocess(tls_direction_t dir) {
         if (session->get_tls_protection().is_kindof_tls12()) {
             auto session_status = session->get_session_status();
             if (0 == (session_status_server_key_exchange & session_status)) {
-                ret = errorcode_t::error_handshake;
-                session->reset_session_status();
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
-                __leave2_trace(ret);
+                session->reset_session_status();
+                ret = errorcode_t::error_handshake;
+                __leave2;
             }
         }
     }

@@ -24,19 +24,7 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
     __try2 {
         __try_new_catch(handshake, new tls_handshake_client_hello(session), ret, __leave2);
 
-        // random
-        {
-            openssl_prng prng;
-
-            binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
-            time_t gmt_unix_time = time(nullptr);
-            binary_append(random, gmt_unix_time, hton64);
-            random.resize(sizeof(uint32));
-            binary_t temp;
-            prng.random(temp, 28);
-            binary_append(random, temp);
-            handshake->set_random(random);
-        }
+        // client_hello generate random member
 
         // cipher suites
         {
@@ -167,16 +155,7 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
         }
 
         {
-            openssl_prng prng;
-
-            binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
-            time_t gmt_unix_time = time(nullptr);
-            binary_append(random, gmt_unix_time, hton64);
-            random.resize(sizeof(uint32));
-            binary_t temp;
-            prng.random(temp, 28);
-            binary_append(random, temp);
-            handshake->set_random(random);
+            // server_hello generate random member
 
             handshake->set_cipher_suite(server_cs);
         }

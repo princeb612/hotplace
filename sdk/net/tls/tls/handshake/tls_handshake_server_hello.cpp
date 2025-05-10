@@ -11,6 +11,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_supported_groups.hpp>
@@ -129,10 +130,10 @@ return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
         auto session = get_session();
         auto session_status = session->get_session_status();
         if (0 == (session_status_client_hello & session_status)) {
-            ret = errorcode_t::error_handshake;
-            session->reset_session_status();
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
-            __leave2_trace(ret);
+            session->reset_session_status();
+            ret = errorcode_t::error_handshake;
+            __leave2;
         }
     }
     __finally2 {
@@ -187,9 +188,9 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
 
                     bool downgrade = (session_dtls == session_type) ? (session_version < version) : (session_version > version);
                     if (downgrade) {
-                        ret = errorcode_t::error_handshake;
+                        session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_protocol_version);
                         session->reset_session_status();
-                        session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_protocol_version);
+                        ret = errorcode_t::error_handshake;
                     }
                 } break;
             }
@@ -348,9 +349,9 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
 #endif
 
             if (0 == extension_len) {
-                ret = errorcode_t::error_handshake;
-                session->reset_session_status();
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
+                session->reset_session_status();
+                ret = errorcode_t::error_handshake;
                 __leave2;
             }
 
@@ -409,11 +410,24 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         if (ext_sg) {
             tls_extension_supported_groups* ext_sg_casted = (tls_extension_supported_groups*)ext_sg;
             if (0 == ext_sg_casted->numberof_groups()) {
-                ret = errorcode_t::error_handshake;
-                session->reset_session_status();
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
-                __leave2_trace(ret);
+                session->reset_session_status();
+                ret = errorcode_t::error_handshake;
+                __leave2;
             }
+        }
+
+        if (32 != _random.size()) {
+            openssl_prng prng;
+            binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
+            time_t gmt_unix_time = time(nullptr);
+            binary_append(random, gmt_unix_time, hton64);
+            random.resize(sizeof(uint32));
+            binary_t temp;
+            prng.random(temp, 28);
+            binary_append(random, temp);
+
+            _random = std::move(random);
         }
 
         {

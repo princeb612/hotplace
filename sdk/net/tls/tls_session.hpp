@@ -33,6 +33,10 @@ enum session_type_t {
     session_quic2 = 4,  // QUIC Version 2
 };
 
+enum session_alert_flag_t : uint8 {
+    session_alert_peek = (1 << 0),
+};
+
 /**
  *   tls_session session;
  *   session.get_keyvalue().set(key, value);
@@ -51,6 +55,7 @@ enum session_conf_t {
     // config
     session_enable_encrypt_then_mac = 0x1001,  // TLS 1.2 EtM
     session_enforce_key_share_group = 0x1002,  // TLS 1.3 key share group
+    session_enable_renegotiation = 0x1003,     // TLS 1.2 renegotiation
     // status
     session_tls_version = 0x2001,         // TLS version
     session_encrypt_then_mac = 0x2002,    // TLS 1.2 EtM
@@ -110,7 +115,7 @@ class tls_session {
         bool apply_protection();
 
         void push_alert(uint8 level, uint8 desc);
-        void get_alert(std::function<void(uint8, uint8)> func);
+        void get_alert(std::function<void(uint8, uint8)> func, uint8 flags = 0);
         bool has_alert(uint8 level = tls_alertlevel_fatal);
 
         t_key_value<uint8, uint64>& get_keyvalue();
@@ -162,7 +167,7 @@ class tls_session {
      *       // tcpsession->send(&bin[0], bin.size());
      */
     void push_alert(tls_direction_t dir, uint8 level, uint8 desc);
-    void get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func);
+    void get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags = 0);
     bool has_alert(tls_direction_t dir, uint8 level = tls_alertlevel_fatal);
 
    private:
