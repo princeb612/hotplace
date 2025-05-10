@@ -111,6 +111,7 @@ class tls_session {
 
         void push_alert(uint8 level, uint8 desc);
         void get_alert(std::function<void(uint8, uint8)> func);
+        bool has_alert(uint8 level = tls_alertlevel_fatal);
 
         t_key_value<uint8, uint64>& get_keyvalue();
 
@@ -162,6 +163,7 @@ class tls_session {
      */
     void push_alert(tls_direction_t dir, uint8 level, uint8 desc);
     void get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func);
+    bool has_alert(tls_direction_t dir, uint8 level = tls_alertlevel_fatal);
 
    private:
     critical_section _lock;

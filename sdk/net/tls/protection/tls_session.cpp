@@ -174,6 +174,19 @@ void tls_session::session_info::get_alert(std::function<void(uint8, uint8)> func
     _alerts.clear();
 }
 
+bool tls_session::session_info::has_alert(uint8 level) {
+    bool ret = false;
+    critical_section_guard guard(_info_lock);
+    for (auto iter = _alerts.begin(); iter != _alerts.end(); iter++) {
+        const auto& item = *iter;
+        if (item.level == level) {
+            ret = true;
+            break;
+        }
+    }
+    return ret;
+}
+
 t_key_value<uint8, uint64>& tls_session::session_info::get_keyvalue() { return _kv; }
 
 void tls_session::schedule(tls_handshake* handshake) {
@@ -197,6 +210,8 @@ void tls_session::run_scheduled(tls_direction_t dir) {
 void tls_session::push_alert(tls_direction_t dir, uint8 level, uint8 desc) { get_session_info(dir).push_alert(level, desc); }
 
 void tls_session::get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func) { get_session_info(dir).get_alert(func); }
+
+bool tls_session::has_alert(tls_direction_t dir, uint8 level) { return get_session_info(dir).has_alert(level); }
 
 }  // namespace net
 }  // namespace hotplace

@@ -39,6 +39,14 @@ return_t tls_extension_early_data::do_read_body(const byte_t* stream, size_t siz
         //     };
         // } EarlyDataIndication;
 
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
+        // RFC 8446 Early data is not permitted after a HelloRetryRequest
+        if (tls_flow_hello_retry_request == protection.get_flow()) {
+            __leave2;
+        }
+
         {
             bool is_new_session_ticket = (tls_hs_new_session_ticket == get_handshake_type());
             uint32 max_early_data_size = 0;

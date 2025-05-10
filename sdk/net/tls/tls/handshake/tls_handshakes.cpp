@@ -84,8 +84,8 @@ return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary
             control_seq = true;
         }
 
-        auto lambda = [&](tls_handshake* handshake) -> void { handshake->write(dir, bin); };
-        for_each(lambda);
+        auto lambda = [&](tls_handshake* handshake) -> return_t { return handshake->write(dir, bin); };
+        ret = for_each(lambda);
     }
     __finally2 {}
     return ret;
@@ -118,13 +118,18 @@ tls_handshakes& tls_handshakes::operator<<(tls_handshake* handshake) {
     return *this;
 }
 
-void tls_handshakes::for_each(std::function<void(tls_handshake*)> func) {
+return_t tls_handshakes::for_each(std::function<return_t(tls_handshake*)> func) {
+    return_t ret = errorcode_t::success;
     if (func) {
         critical_section_guard guard(_lock);
         for (auto item : _handshakes) {
-            func(item);
+            ret = func(item);
+            if (errorcode_t::success != ret) {
+                break;
+            }
         }
     }
+    return ret;
 }
 
 tls_handshake* tls_handshakes::get(uint8 type, bool upref) {

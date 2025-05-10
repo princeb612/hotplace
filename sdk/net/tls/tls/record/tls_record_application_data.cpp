@@ -147,11 +147,14 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
         handshakes.write(get_session(), dir, bin);
         binary_append(bin, uint8(tls_content_type_handshake));
     } else if (records.size()) {
-        auto lambda = [&](tls_record* record) -> void {
-            record->do_write_body(dir, bin);
-            binary_append(bin, uint8(record->get_type()));
+        auto lambda = [&](tls_record* record) -> return_t {
+            ret = record->do_write_body(dir, bin);
+            if (errorcode_t::success == ret) {
+                binary_append(bin, uint8(record->get_type()));
+            }
+            return ret;
         };
-        records.for_each(lambda);
+        ret = records.for_each(lambda);
     } else if (get_binary().size()) {
         // RFC 8446 2.  Protocol Overview
         // Application Data MUST NOT be sent prior to sending the Finished message

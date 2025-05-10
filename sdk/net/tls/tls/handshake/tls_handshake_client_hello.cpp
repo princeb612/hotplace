@@ -104,13 +104,23 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 // client_hello (cookie)
                 ret = errorcode_t::error_handshake;
                 session->reset_session_status();
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 __leave2_trace(ret);
             }
         }
 
         session->update_session_status(session_status_client_hello);
 
+        // 0-RTT, pre_shared_key extension
+        if (tls_flow_0rtt == protection.get_flow()) {
+            auto ext_psk = get_extensions().get(tls_ext_pre_shared_key);
+            if (nullptr == ext_psk) {
+                ret = errorcode_t::error_handshake;
+                session->reset_session_status();
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+                __leave2;
+            }
+        }
         // keycalc
         {
             auto hspos = offsetof_header();
@@ -306,7 +316,10 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
         auto& protection = session->get_tls_protection();
 
         binary_t extensions;
-        get_extensions().write(extensions);
+        ret = get_extensions().write(extensions);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         auto legacy_version = protection.get_lagacy_version();
         binary_t cipher_suites;

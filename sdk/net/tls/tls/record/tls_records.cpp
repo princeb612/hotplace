@@ -67,9 +67,8 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
             session->get_dtls_record_publisher().publish(this, dir, func);
         } else {
             binary_t bin;
-            for (auto record : _records) {
-                record->write(dir, bin);
-            }
+            auto lambda = [&](tls_record* record) -> return_t { return record->write(dir, bin); };
+            ret = for_each(lambda);
             func(bin);
         }
     }
@@ -99,13 +98,18 @@ tls_records& tls_records::operator<<(tls_record* record) {
     return *this;
 }
 
-void tls_records::for_each(std::function<void(tls_record*)> func) {
+return_t tls_records::for_each(std::function<return_t(tls_record*)> func) {
+    return_t ret = errorcode_t::success;
     if (func) {
         critical_section_guard guard(_lock);
         for (auto item : _records) {
-            func(item);
+            ret = func(item);
+            if (errorcode_t::success != ret) {
+                break;
+            }
         }
     }
+    return ret;
 }
 
 tls_record* tls_records::getat(size_t index, bool upref) const {

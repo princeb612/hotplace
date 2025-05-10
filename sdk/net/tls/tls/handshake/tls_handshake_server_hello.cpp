@@ -13,6 +13,7 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension.hpp>
+#include <sdk/net/tls/tls/extension/tls_extension_supported_groups.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_unknown.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_server_hello.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
@@ -61,8 +62,8 @@ uint16 tls_handshake_server_hello::get_cipher_suite() {
 return_t tls_handshake_server_hello::set_cipher_suite(uint16 cs) {
     return_t ret = errorcode_t::success;
     __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto hint = tlsadvisor->hintof_cipher_suite(cs);
         if (nullptr == hint) {
             ret = errorcode_t::invalid_parameter;
@@ -92,8 +93,8 @@ return_t tls_handshake_server_hello::set_cipher_suite(const char* cs) {
             __leave2;
         }
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto hint = tlsadvisor->hintof_cipher_suite(cs);
         if (nullptr == hint) {
             ret = errorcode_t::invalid_parameter;
@@ -382,10 +383,10 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         auto& kv = session->get_keyvalue();
         auto legacy_version = protection.get_lagacy_version();
         auto cs = get_cipher_suite();
-        auto session_etm = kv.get(session_encrypt_then_mac);  // from client_hello
+        auto session_config_etm = kv.get(session_encrypt_then_mac);  // from client_hello
 
         uint16 etm_status = 0;
-        if (session_etm && tlsadvisor->is_kindof_cbc(cs)) {
+        if (session_config_etm && tlsadvisor->is_kindof_cbc(cs)) {
             auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
             if (nullptr == ext_etm) {
                 // if not exist encrypt_then_mac extension
@@ -396,7 +397,24 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         session->get_keyvalue().set(session_encrypt_then_mac, etm_status);
 
         binary_t extensions;
-        get_extensions().write(extensions);
+        ret = get_extensions().write(extensions);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // RFC 8446
+        // If there is no overlap between the received "supported_groups" and the groups supported by the server, then the
+        // server MUST abort the handshake with a "handshake_failure" or an "insufficient_security" alert.
+        auto ext_sg = get_extensions().get(tls_ext_supported_groups);
+        if (ext_sg) {
+            tls_extension_supported_groups* ext_sg_casted = (tls_extension_supported_groups*)ext_sg;
+            if (0 == ext_sg_casted->numberof_groups()) {
+                ret = errorcode_t::error_handshake;
+                session->reset_session_status();
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+                __leave2_trace(ret);
+            }
+        }
 
         {
             payload pl;

@@ -72,7 +72,8 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
 
                 std::list<tls_record*> records;
 
-                auto lambda_handshake = [&](tls_handshake* handshake) -> void {
+                auto lambda_handshake = [&](tls_handshake* handshake) -> return_t {
+                    return_t ret = errorcode_t::success;
                     binary_t bin;
                     handshake->do_write_body(dir, bin);
 
@@ -95,6 +96,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     spl.add(std::move(bin), std::move(desc));
 
                     ++hsseq;
+                    return ret;
                 };
 
                 auto lambda_split = [&](uint32 flags, const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize, const spl_desc& desc) -> void {
@@ -129,7 +131,10 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                 if (tls_content_type_handshake == rctype) {
                     tls_record_handshake* rec_handshake = static_cast<tls_record_handshake*>(record);
                     rec_handshake->set_flags(dont_control_dtls_sequence);  // do not change epoch, sequence (record)
-                    rec_handshake->get_handshakes().for_each(lambda_handshake);
+                    ret = rec_handshake->get_handshakes().for_each(lambda_handshake);
+                    if (errorcode_t::success != ret) {
+                        __leave2;
+                    }
 
                     spl.run(lambda_split);
 
@@ -144,7 +149,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     rec_handshake->write(dir, bin_record);  // transcript hash, key calcuration
                 } else {
                     binary_t bin;
-                    record->write(dir, bin);
+                    ret = record->write(dir, bin);
 
                     func(bin);
                 }
@@ -166,8 +171,8 @@ return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t di
             __leave2;
         }
 
-        auto lambda = [&](tls_record* record) -> void { publish(record, dir, func); };
-        records->for_each(lambda);
+        auto lambda = [&](tls_record* record) -> return_t { return publish(record, dir, func); };
+        ret = records->for_each(lambda);
     }
     __finally2 {
         // do nothing

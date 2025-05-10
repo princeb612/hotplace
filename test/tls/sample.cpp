@@ -156,14 +156,13 @@ return_t construct_record_fragmented(tls_records* records, tls_direction_t dir, 
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        auto lambda = [&](tls_record* record) -> void {
+        auto lambda = [&](tls_record* record) -> return_t {
             record->addref();
-
-            record->get_session()->get_dtls_record_publisher().publish(record, dir, func);
-
+            ret = record->get_session()->get_dtls_record_publisher().publish(record, dir, func);
             record->release();
+            return ret;
         };
-        records->for_each(lambda);
+        ret = records->for_each(lambda);
     }
     __finally2 {
         // do nothing

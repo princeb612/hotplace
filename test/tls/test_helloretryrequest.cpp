@@ -231,9 +231,7 @@ void test_helloretryrequest() {
     basic_stream step;
     binary_t bin;
 
-    auto lambda_session_status = [&](const char* status) -> void { _logger->writeln("- %s", status); };
-
-    // enforcing server key share group 0x001d "x25519"
+    // enforce server key share group 0x001d "x25519"
     session_server.get_keyvalue().set(session_enforce_key_share_group, 0x001d);
 
     {

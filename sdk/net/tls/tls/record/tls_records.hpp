@@ -26,7 +26,10 @@ class tls_records {
     return_t add(tls_record* record, bool upref = false);
     tls_records& operator<<(tls_record* record);
 
-    void for_each(std::function<void(tls_record*)> func);
+    /**
+     * do { } while (success == returnof_func);
+     */
+    return_t for_each(std::function<return_t(tls_record*)> func);
 
     tls_record* getat(size_t index, bool upref = false) const;
 

@@ -65,7 +65,8 @@ return_t tls_extensions::read(tls_session* session, tls_direction_t dir, const b
 
 return_t tls_extensions::write(binary_t& bin) {
     return_t ret = errorcode_t::success;
-    for_each([&](tls_extension* extension) -> void { extension->write(bin); });
+    auto lambda = [&](tls_extension* extension) -> return_t { return extension->write(bin); };
+    ret = for_each(lambda);
     return ret;
 }
 
@@ -96,13 +97,18 @@ tls_extensions& tls_extensions::operator<<(tls_extension* extension) {
     return *this;
 }
 
-void tls_extensions::for_each(std::function<void(tls_extension*)> func) {
+return_t tls_extensions::for_each(std::function<return_t(tls_extension*)> func) {
+    return_t ret = errorcode_t::success;
     if (func) {
         critical_section_guard guard(_lock);
         for (auto item : _extensions) {
-            func(item);
+            ret = func(item);
+            if (errorcode_t::success != ret) {
+                break;
+            }
         }
     }
+    return ret;
 }
 
 tls_extension* tls_extensions::get(uint16 type, bool upref) {

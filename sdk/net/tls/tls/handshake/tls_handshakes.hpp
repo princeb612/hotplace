@@ -27,7 +27,10 @@ class tls_handshakes {
     return_t add(tls_handshake* handshake, bool upref = false);
     tls_handshakes& operator<<(tls_handshake* handshake);
 
-    void for_each(std::function<void(tls_handshake*)> func);
+    /**
+     * do { } while (success == returnof_func);
+     */
+    return_t for_each(std::function<return_t(tls_handshake*)> func);
 
     tls_handshake* get(uint8 type, bool upref = false);
     tls_handshake* getat(size_t index, bool upref = false);

@@ -283,9 +283,13 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                             pkey_pub = get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello
                         }
 
+                        // warn_retry
+                        // If the server selects an (EC)DHE group and the client did not offer a compatible "key_share" extension in the initial ClientHello,
+                        // the server MUST respond with a HelloRetryRequest (Section 4.1.4) message.
+
                         if (nullptr == pkey_priv || nullptr == pkey_pub) {
                             if (is_kindof_tls13()) {
-                                ret = errorcode_t::not_found;
+                                ret = errorcode_t::warn_retry;  // HRR
                             }
                             __leave2;
                         }

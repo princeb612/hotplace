@@ -137,6 +137,8 @@ tls_extension_supported_groups& tls_extension_supported_groups::add(const std::s
     return *this;
 }
 
+size_t tls_extension_supported_groups::numberof_groups() { return _supported_groups.size(); }
+
 void tls_extension_supported_groups::clear() { _supported_groups.clear(); }
 
 }  // namespace net
