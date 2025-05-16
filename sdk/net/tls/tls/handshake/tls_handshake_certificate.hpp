@@ -30,7 +30,21 @@ class tls_handshake_certificate : public tls_handshake {
    public:
     tls_handshake_certificate(tls_session* session);
 
+    /**
+     * @param   tls_direction_t dir
+     * @param   const char* certfile
+     * @param   const char* keyfile
+     */
     return_t set(tls_direction_t dir, const char* certfile, const char* keyfile);
+    /**
+     * @brief   copy key pointer and increase reference counter
+     * @param   crypto_key* keys [in]
+     * @param   tls_direction_t dir [in]
+     * @param   const char* cert [in]
+     * @param   const char* key [in]
+     * @sa      crypto_key::reference
+     */
+    return_t refer(crypto_key* keys, tls_direction_t dir, const char* cert, const char* key);
 
    protected:
     virtual return_t do_preprocess(tls_direction_t dir);

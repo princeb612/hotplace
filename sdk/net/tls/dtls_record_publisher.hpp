@@ -42,10 +42,10 @@ class dtls_record_publisher {
      * @brief publish
      * @param tls_record_handshake* record [in]
      * @param tls_direction_t dir [in]
-     * @param std::function<void (binary_t& bin)> func [in]
+     * @param std::function<void (tls_session*, binary_t&)> func [in]
      */
-    return_t publish(tls_record* record, tls_direction_t dir, std::function<void(binary_t& bin)> func);
-    return_t publish(tls_records* records, tls_direction_t dir, std::function<void(binary_t& bin)> func);
+    return_t publish(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
+    return_t publish(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
 
     void set_flags(uint32 flags);
     uint32 get_flags();

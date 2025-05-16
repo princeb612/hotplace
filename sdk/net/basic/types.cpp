@@ -9,13 +9,15 @@
  */
 
 #include <sdk/net/basic/types.hpp>
+#include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-socket_context_t::socket_context_t() : fd(INVALID_SOCKET), flags(0), ssl(nullptr) {}
+socket_context_t::socket_context_t() : fd(INVALID_SOCKET), flags(0) { handle.ssl = nullptr; }
 
-socket_context_t::socket_context_t(socket_t s, uint32 f) : fd(s), flags(f), ssl(nullptr) {
+socket_context_t::socket_context_t(socket_t s, uint32 f) : fd(s), flags(f) {
+    handle.ssl = nullptr;
     if ((INVALID_SOCKET != s) && (closesocket_if_tcp & flags)) {
         int optval = 0;
         socklen_t optlen = sizeof(optval);
@@ -28,15 +30,23 @@ socket_context_t::socket_context_t(socket_t s, uint32 f) : fd(s), flags(f), ssl(
 }
 
 socket_context_t::~socket_context_t() {
-    if (ssl) {
-        int rc = SSL_shutdown(ssl);
-        if (2 == rc) {
-            // received close notify - SSL_RECEIVED_SHUTDOWN & SSL_get_shutdown(ssl)
-            // send close notify
-            SSL_shutdown(ssl);
-        }
+    if (tls_using_openssl & flags) {
+        auto ssl = handle.ssl;
+        if (ssl) {
+            int rc = SSL_shutdown(ssl);
+            if (2 == rc) {
+                // received close notify - SSL_RECEIVED_SHUTDOWN & SSL_get_shutdown(ssl)
+                // send close notify
+                SSL_shutdown(ssl);
+            }
 
-        SSL_free(ssl);
+            SSL_free(ssl);
+        }
+    } else {
+        auto session = handle.session;
+        if (session) {
+            session->release();
+        }
     }
 
     if (closesocket_ondestroy & flags) {

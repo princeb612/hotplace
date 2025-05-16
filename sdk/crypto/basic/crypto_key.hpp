@@ -122,6 +122,8 @@ class crypto_key_object {
     const keydesc& get_desc() const { return _desc; }
     const EVP_PKEY* get_pkey() const { return _pkey; }
     const X509* get_x509() const { return _x509; }
+    void set_desc(const keydesc& desc) { _desc = desc; }
+    void set_desc(keydesc&& desc) { _desc = std::move(desc); }
 
    private:
     const EVP_PKEY* _pkey;
@@ -563,6 +565,13 @@ class crypto_key {
      *          return nullptr, errorcode_t::not_exist : not exist kid nor kty
      */
     const EVP_PKEY* choose(const std::string& kid, crypto_kty_t kty, return_t& code);
+    /**
+     * @brief   copy pointer (EVP_PKEY_up_ref, X509_up_ref)
+     * @param   crypto_key* skeys [in]
+     * @param   const char* sname [in]
+     * @param   const char* dname [inopt] can be nullptr if same as sname
+     */
+    return_t reference(crypto_key* skeys, const char* sname, const char* dname = nullptr);
 
    protected:
     /**

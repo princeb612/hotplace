@@ -8,23 +8,23 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_BASIC_SDK_ASYNCCLIENTSOCKET__
-#define __HOTPLACE_SDK_NET_BASIC_SDK_ASYNCCLIENTSOCKET__
+#ifndef __HOTPLACE_SDK_NET_BASIC_SDK_CLIENTSOCKETPROSUMER__
+#define __HOTPLACE_SDK_NET_BASIC_SDK_CLIENTSOCKETPROSUMER__
 
 #include <queue>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/semaphore.hpp>
-#include <sdk/base/system/thread.hpp>
 #include <sdk/io/system/multiplexer.hpp>
 #include <sdk/net/basic/client_socket.hpp>
+#include <sdk/net/basic/sdk/types.hpp>
 
 namespace hotplace {
 namespace net {
 
-class async_client_socket : public client_socket {
+class client_socket_prosumer : public client_socket {
    public:
-    virtual ~async_client_socket();
+    virtual ~client_socket_prosumer();
 
     /**
      * @brief   open
@@ -64,8 +64,9 @@ class async_client_socket : public client_socket {
     virtual socket_t get_socket();
 
    protected:
-    async_client_socket();
+    client_socket_prosumer();
 
+    virtual return_t do_consume(basic_stream& stream);
     virtual return_t do_handshake();
     virtual return_t do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);
     virtual return_t do_secure();
@@ -96,16 +97,10 @@ class async_client_socket : public client_socket {
     mplexer_key_t _mplexer_key;
 
     // queue
-    struct bufferqueue_item {
-        basic_stream buffer;
-        sockaddr_storage_t addr;  // UDP
-    };
-    typedef struct bufferqueue_item bufferqueue_item_t;
-
-    void enqueue(bufferqueue_item_t& item, const char* buf, size_t size);
+    void enqueue(socket_buffer_t& item, const char* buf, size_t size);
 
     critical_section _rlock;
-    std::queue<bufferqueue_item_t> _rq;
+    std::queue<socket_buffer_t> _rq;
     semaphore _rsem;
 };
 

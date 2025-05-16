@@ -34,6 +34,18 @@ return_t tls_handshake_client_key_exchange::do_preprocess(tls_direction_t dir) {
             ret = errorcode_t::bad_request;
             __leave2;
         }
+
+        auto session = get_session();
+
+        if (session->get_tls_protection().is_kindof_tls12()) {
+            auto session_status = session->get_session_status();
+            if (0 == (session_status_server_hello_done & session_status)) {
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                session->reset_session_status();
+                ret = errorcode_t::error_handshake;
+                __leave2;
+            }
+        }
     }
     __finally2 {
         // do nothing
@@ -51,8 +63,8 @@ return_t tls_handshake_client_key_exchange::do_postprocess(tls_direction_t dir, 
 
         {
             protection.update_transcript_hash(session, stream + hspos, hssize);
-            session->update_session_status(session_status_client_key_exchange);
             protection.calc(session, tls_hs_client_key_exchange, dir);
+            session->update_session_status(session_status_client_key_exchange);
         }
     }
     __finally2 {

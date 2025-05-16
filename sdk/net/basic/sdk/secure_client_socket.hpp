@@ -13,7 +13,8 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_SDK_SECURECLIENTSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_SDK_SECURECLIENTSOCKET__
 
-#include <sdk/net/basic/sdk/async_client_socket.hpp>
+#include <sdk/net/basic/sdk/client_socket_prosumer.hpp>
+#include <sdk/net/basic/sdk/secure_prosumer.hpp>
 #include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
@@ -23,11 +24,12 @@ namespace net {
  * @brief   client
  * @sample
  */
-class secure_client_socket : public async_client_socket {
+class secure_client_socket : public client_socket_prosumer {
    public:
     tls_session* get_session();
     tls_version_t get_version();
     virtual bool support_tls();
+    secure_prosumer* get_secure_prosumer();
 
    protected:
     secure_client_socket(tls_version_t version = tls_12);
@@ -41,10 +43,7 @@ class secure_client_socket : public async_client_socket {
     tls_session _session;
     tls_version_t _version;
 
-    critical_section _mlock;
-    std::queue<bufferqueue_item_t> _mq;
-    semaphore _msem;
-    basic_stream _mbs;
+    secure_prosumer _secure;
 };
 
 }  // namespace net

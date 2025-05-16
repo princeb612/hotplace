@@ -10,17 +10,18 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/system/thread.hpp>
 #include <sdk/base/unittest/trace.hpp>
-#include <sdk/net/basic/sdk/async_client_socket.hpp>
+#include <sdk/net/basic/sdk/client_socket_prosumer.hpp>
 
 namespace hotplace {
 namespace net {
 
-async_client_socket::async_client_socket() : client_socket(), _fd(INVALID_SOCKET), _mphandle(nullptr), _thread(nullptr) {}
+client_socket_prosumer::client_socket_prosumer() : client_socket(), _fd(INVALID_SOCKET), _mphandle(nullptr), _thread(nullptr) {}
 
-async_client_socket::~async_client_socket() { close(); }
+client_socket_prosumer::~client_socket_prosumer() { close(); }
 
-return_t async_client_socket::open(sockaddr_storage_t* sa, const char* address, uint16 port) {
+return_t client_socket_prosumer::open(sockaddr_storage_t* sa, const char* address, uint16 port) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == sa || nullptr == address) {
@@ -48,7 +49,7 @@ return_t async_client_socket::open(sockaddr_storage_t* sa, const char* address, 
     return ret;
 }
 
-return_t async_client_socket::connect(const char* address, uint16 port, uint32 timeout) {
+return_t client_socket_prosumer::connect(const char* address, uint16 port, uint32 timeout) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto type = socket_type();
@@ -82,7 +83,7 @@ return_t async_client_socket::connect(const char* address, uint16 port, uint32 t
     return ret;
 }
 
-return_t async_client_socket::close() {
+return_t client_socket_prosumer::close() {
     return_t ret = errorcode_t::success;
     __try2 {
         ret = do_shutdown();
@@ -95,19 +96,19 @@ return_t async_client_socket::close() {
     return ret;
 }
 
-return_t async_client_socket::read(char* ptr_data, size_t size_data, size_t* cbread) {
+return_t client_socket_prosumer::read(char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;
     ret = do_read(ptr_data, size_data, cbread, nullptr, nullptr);
     return ret;
 }
 
-return_t async_client_socket::more(char* ptr_data, size_t size_data, size_t* cbread) {
+return_t client_socket_prosumer::more(char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;
     ret = read(ptr_data, size_data, cbread);
     return ret;
 }
 
-return_t async_client_socket::send(const char* ptr_data, size_t size_data, size_t* cbsent) {
+return_t client_socket_prosumer::send(const char* ptr_data, size_t size_data, size_t* cbsent) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (INVALID_SOCKET == _fd) {
@@ -140,13 +141,13 @@ return_t async_client_socket::send(const char* ptr_data, size_t size_data, size_
     return ret;
 }
 
-return_t async_client_socket::recvfrom(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
+return_t client_socket_prosumer::recvfrom(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     ret = do_read(ptr_data, size_data, cbread, addr, addrlen);
     return ret;
 }
 
-return_t async_client_socket::sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen) {
+return_t client_socket_prosumer::sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (INVALID_SOCKET == _fd) {
@@ -176,9 +177,9 @@ return_t async_client_socket::sendto(const char* ptr_data, size_t size_data, siz
     return ret;
 }
 
-socket_t async_client_socket::get_socket() { return _fd; }
+socket_t client_socket_prosumer::get_socket() { return _fd; }
 
-return_t async_client_socket::start_consumer() {
+return_t client_socket_prosumer::start_consumer() {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr != _mphandle) {
@@ -204,7 +205,7 @@ return_t async_client_socket::start_consumer() {
     return ret;
 }
 
-return_t async_client_socket::stop_consumer() {
+return_t client_socket_prosumer::stop_consumer() {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == _mphandle) {
@@ -231,12 +232,12 @@ return_t async_client_socket::stop_consumer() {
     return ret;
 }
 
-return_t async_client_socket::producer_thread(void* param) {
-    async_client_socket* instance = (async_client_socket*)param;
+return_t client_socket_prosumer::producer_thread(void* param) {
+    client_socket_prosumer* instance = (client_socket_prosumer*)param;
     return instance->producer_routine(param);
 }
 
-return_t async_client_socket::producer_routine(void* param) {
+return_t client_socket_prosumer::producer_routine(void* param) {
     return_t ret = errorcode_t::success;
 #if defined __linux__
     multiplexer_epoll mplexer;
@@ -247,18 +248,19 @@ return_t async_client_socket::producer_routine(void* param) {
     return ret;
 }
 
-return_t async_client_socket::consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+return_t client_socket_prosumer::consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
-    async_client_socket* instance = (async_client_socket*)user_context;
+    client_socket_prosumer* instance = (client_socket_prosumer*)user_context;
     ret = instance->do_consumer_routine(type, data_count, data_array, callback_control, user_context);
     return ret;
 }
 
-return_t async_client_socket::do_consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
+return_t client_socket_prosumer::do_consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control,
+                                                     void* user_context) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (mux_read == type) {
-            bufferqueue_item_t item;
+            socket_buffer_t item;
 #if defined __linux__
             int sock = (int)(long)data_array[1];
             auto& netbuf = _mplexer_key.buffer;
@@ -280,7 +282,7 @@ return_t async_client_socket::do_consumer_routine(uint32 type, uint32 data_count
 
             do_secure();
         } else if (mux_dgram == type) {
-            bufferqueue_item_t item;
+            socket_buffer_t item;
 #if defined __linux__
             socklen_t socklen = sizeof(sockaddr_storage_t);
             int sock = (int)(long)data_array[1];
@@ -314,7 +316,7 @@ return_t async_client_socket::do_consumer_routine(uint32 type, uint32 data_count
     return ret;
 }
 
-void async_client_socket::enqueue(bufferqueue_item_t& item, const char* buf, size_t size) {
+void client_socket_prosumer::enqueue(socket_buffer_t& item, const char* buf, size_t size) {
     if (buf) {
         item.buffer.write((byte_t*)buf, size);
 
@@ -331,7 +333,7 @@ void async_client_socket::enqueue(bufferqueue_item_t& item, const char* buf, siz
 #endif
 }
 
-void async_client_socket::async_read() {
+void client_socket_prosumer::async_read() {
 #if defined _WIN32 || defined _WIN64
     auto& netbuf = _mplexer_key.buffer;
     netbuf.init();
@@ -349,12 +351,29 @@ void async_client_socket::async_read() {
 #endif
 }
 
-return_t async_client_socket::do_handshake() {
+return_t client_socket_prosumer::do_consume(basic_stream& stream) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (support_tls()) {
+            critical_section_guard guard(_rlock);
+
+            while (false == _rq.empty()) {
+                const auto& item = _rq.front();
+                stream << item.buffer;
+                _rq.pop();
+            }
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t client_socket_prosumer::do_handshake() {
     return_t ret = errorcode_t::success;
     return ret;
 }
 
-return_t async_client_socket::do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
+return_t client_socket_prosumer::do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == ptr_data || nullptr == cbread) {
@@ -415,21 +434,21 @@ return_t async_client_socket::do_read(char* ptr_data, size_t size_data, size_t* 
     return ret;
 }
 
-return_t async_client_socket::do_secure() {
+return_t client_socket_prosumer::do_secure() {
     return_t ret = errorcode_t::success;
     __try2 {}
     __finally2 {}
     return ret;
 }
 
-return_t async_client_socket::do_shutdown() {
+return_t client_socket_prosumer::do_shutdown() {
     return_t ret = errorcode_t::success;
     __try2 {}
     __finally2 {}
     return ret;
 }
 
-return_t async_client_socket::do_close() {
+return_t client_socket_prosumer::do_close() {
     return_t ret = errorcode_t::success;
     __try2 {
         close_socket(_fd, true, 0);

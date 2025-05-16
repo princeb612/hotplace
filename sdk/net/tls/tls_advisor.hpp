@@ -227,6 +227,8 @@ class tls_advisor {
      */
     std::string nameof_direction(tls_direction_t dir, bool longname = false);
 
+    crypto_key& get_keys();
+
    protected:
     tls_advisor();
     void load_resource();
@@ -284,6 +286,7 @@ class tls_advisor {
     std::map<uint32, const tls_session_status_code_t*> _session_status_codes;
 
     bool _load;
+    crypto_key _keys;
 };
 
 }  // namespace net

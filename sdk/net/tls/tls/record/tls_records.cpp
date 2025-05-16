@@ -53,7 +53,7 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const bina
     return read(session, dir, stream, size, pos);
 }
 
-return_t tls_records::write(tls_session* session, tls_direction_t dir, std::function<void(binary_t& bin)> func) {
+return_t tls_records::write(tls_session* session, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == func) {
@@ -69,7 +69,7 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
             binary_t bin;
             auto lambda = [&](tls_record* record) -> return_t { return record->write(dir, bin); };
             ret = for_each(lambda);
-            func(bin);
+            func(session, bin);
         }
     }
     __finally2 {

@@ -258,9 +258,8 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             session->reset_recordno(from_server);
         }
 
-        session->update_session_status(session_status_server_hello);
-
         kv.set(session_tls_version, protection.get_tls_version());
+        session->update_session_status(session_status_server_hello);
     }
     __finally2 {
         // do nothing

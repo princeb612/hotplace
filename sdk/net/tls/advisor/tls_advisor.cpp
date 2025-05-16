@@ -466,5 +466,7 @@ std::string tls_advisor::nameof_direction(tls_direction_t dir, bool longname) {
     return value;
 }
 
+crypto_key& tls_advisor::get_keys() { return _keys; }
+
 }  // namespace net
 }  // namespace hotplace

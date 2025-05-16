@@ -44,7 +44,8 @@ if [ $OSTYPE = "msys" ]; then
     true
 else
     export SET_STDCPP=c++11
-    # -Wl,--copy-dt-needed-entries # DSO missing from command line
+    # DSO missing
+    # -Wl,--copy-dt-needed-entries
     CXXFLAGS='-Wl,--copy-dt-needed-entries '${CXXFLAGS}
 fi
 

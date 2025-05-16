@@ -38,7 +38,7 @@ return_t dtls_client_socket2::sendto(const char* ptr_data, size_t size_data, siz
 
         *cbsent = 0;
 
-        auto session = &_session;
+        auto session = get_session();
         binary_t bin;
 
         auto tlsver = session->get_tls_protection().get_tls_version();
@@ -54,7 +54,7 @@ return_t dtls_client_socket2::sendto(const char* ptr_data, size_t size_data, siz
         }
 
         size_t sent = 0;
-        ret = async_client_socket::sendto((char*)&bin[0], bin.size(), &sent, addr, addrlen);
+        ret = client_socket_prosumer::sendto((char*)&bin[0], bin.size(), &sent, addr, addrlen);
         if (errorcode_t::success == ret) {
             *cbsent = size_data;
         }
@@ -69,7 +69,7 @@ return_t dtls_client_socket2::do_send(binary_t& bin) {
         ret = errorcode_t::empty;
     } else {
         size_t cbsent = 0;
-        ret = async_client_socket::sendto((char*)&bin[0], bin.size(), &cbsent, (sockaddr*)&_sa, sizeof(_sa));
+        ret = client_socket_prosumer::sendto((char*)&bin[0], bin.size(), &cbsent, (sockaddr*)&_sa, sizeof(_sa));
     }
     return ret;
 }

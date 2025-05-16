@@ -22,14 +22,14 @@
 namespace hotplace {
 namespace net {
 
-tls_session::tls_session() : _type(session_tls), _status(0) {
+tls_session::tls_session() : _type(session_tls), _status(0), _hook_param(nullptr) {
     _shared.make_share(this);
     _tls_protection.set_session(this);
     _dtls_record_publisher.set_session(this);
     _dtls_record_arrange.set_session(this);
 }
 
-tls_session::tls_session(session_type_t type) : _type(type), _status(0) {
+tls_session::tls_session(session_type_t type) : _type(type), _status(0), _hook_param(nullptr) {
     _shared.make_share(this);
     _tls_protection.set_session(this);
     _dtls_record_publisher.set_session(this);
@@ -50,7 +50,7 @@ void tls_session::update_session_status(session_status_t status) {
     _status |= status;
     _sem.signal();
     if (_change_status_hook) {
-        _change_status_hook(status);
+        _change_status_hook(this, status);
     }
 #if defined DEBUG
     if (check_trace_level(loglevel_debug) && istraceable()) {
@@ -115,7 +115,11 @@ return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, b
     return ret;
 }
 
-void tls_session::set_hook_change_session_status(std::function<void(uint32 status)> func) { _change_status_hook = func; }
+void tls_session::set_hook_change_session_status(std::function<void(tls_session*, uint32)> func) { _change_status_hook = func; }
+
+void tls_session::set_hook_param(void* param) { _hook_param = param; }
+
+void* tls_session::get_hook_param() { return _hook_param; }
 
 t_key_value<uint16, uint16>& tls_session::get_keyvalue() { return _kv; }
 

@@ -8,20 +8,22 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_BASIC_OPENSSL_TLSSERVERSOCKET__
-#define __HOTPLACE_SDK_NET_BASIC_OPENSSL_TLSSERVERSOCKET__
+#ifndef __HOTPLACE_SDK_NET_BASIC_SDK_TLSSERVERSOCKET2__
+#define __HOTPLACE_SDK_NET_BASIC_SDK_TLSSERVERSOCKET2__
 
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/net/basic/naive/tcp_server_socket.hpp>  // tcp_server_socket
-#include <sdk/net/basic/openssl/openssl_tls.hpp>
-#include <sdk/net/basic/openssl/openssl_tls_context.hpp>
+#include <sdk/net/basic/sdk/secure_prosumer.hpp>
+#include <sdk/net/basic/sdk/types.hpp>
+#include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-class tls_server_socket : public tcp_server_socket {
+class tls_server_socket2 : public tcp_server_socket {
    public:
-    tls_server_socket(openssl_tls* tls);
-    virtual ~tls_server_socket();
+    tls_server_socket2(tls_version_t version = tls_12);
+    virtual ~tls_server_socket2();
 
     /**
      * @brief   tls accept
@@ -57,9 +59,14 @@ class tls_server_socket : public tcp_server_socket {
      */
     virtual bool support_tls();
 
+    uint32 get_wto();
+    secure_prosumer* get_secure_prosumer();
+
    protected:
    private:
-    openssl_tls* _tls;
+    tls_version_t _version;
+
+    secure_prosumer _secure;
 };
 
 }  // namespace net

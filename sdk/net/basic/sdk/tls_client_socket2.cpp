@@ -34,7 +34,7 @@ return_t tls_client_socket2::send(const char* ptr_data, size_t size_data, size_t
 
         *cbsent = 0;
 
-        auto session = &_session;
+        auto session = get_session();
 
         binary_t bin;
         tls_record_application_data record(session);
@@ -42,7 +42,7 @@ return_t tls_client_socket2::send(const char* ptr_data, size_t size_data, size_t
         record.write(from_client, bin);
 
         size_t sent = 0;
-        ret = async_client_socket::send((char*)&bin[0], bin.size(), &sent);
+        ret = client_socket_prosumer::send((char*)&bin[0], bin.size(), &sent);
         if (errorcode_t::success == ret) {
             *cbsent = size_data;
         }

@@ -103,7 +103,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
             tls_record_handshake record(session);
             record << handshake;
 
-            construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+            construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
         }
 
         std::string dirstr;
@@ -127,7 +127,7 @@ static return_t do_test_construct_hello_verify_request(tls_session* session, tls
         tls_record_handshake record(session);
         record << handshake;
 
-        construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+        construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
     }
 
     std::string dirstr;
@@ -193,7 +193,7 @@ static return_t do_test_construct_server_hello(tls_session* session, tls_session
             tls_record_handshake record(session);
             record << handshake;
 
-            construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+            construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
         }
 
         std::string dirstr;
@@ -211,7 +211,7 @@ static return_t do_test_construct_certificate(tls_session* session, tls_directio
     handshake->set(dir, certfile, keyfile);
     record << handshake;
 
-    construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+    construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -227,7 +227,7 @@ static return_t do_test_construct_server_key_exchange(tls_session* session, tls_
     auto handshake = new tls_handshake_server_key_exchange(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+    construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -243,7 +243,7 @@ static return_t do_test_construct_server_hello_done(tls_session* session, tls_di
     auto handshake = new tls_handshake_server_hello_done(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+    construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -259,7 +259,7 @@ static return_t do_test_construct_client_key_exchange(tls_session* session, tls_
     auto handshake = new tls_handshake_client_key_exchange(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+    construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -273,7 +273,7 @@ static return_t do_test_construct_change_cipher_spec(tls_session* session, tls_d
 
     tls_record_change_cipher_spec record(session);
 
-    construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+    construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -289,7 +289,7 @@ static return_t do_test_construct_finished(tls_session* session, tls_direction_t
     auto handshake = new tls_handshake_finished(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir, [&](binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+    construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);

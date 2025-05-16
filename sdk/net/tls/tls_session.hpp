@@ -89,7 +89,9 @@ class tls_session {
     void reset_session_status();
     uint32 get_session_status();
     return_t wait_change_session_status(uint32 status, unsigned msec, bool waitall = true);
-    void set_hook_change_session_status(std::function<void(uint32 status)> func);
+    void set_hook_change_session_status(std::function<void(tls_session*, uint32)> func);
+    void set_hook_param(void* param);
+    void* get_hook_param();
 
     t_key_value<uint16, uint16>& get_keyvalue();
 
@@ -183,7 +185,8 @@ class tls_session {
 
     t_key_value<uint16, uint16> _kv;
 
-    std::function<void(uint32 status)> _change_status_hook;
+    std::function<void(tls_session*, uint32)> _change_status_hook;
+    void* _hook_param;
 
     critical_section _dtls_lock;
     dtls_record_publisher _dtls_record_publisher;

@@ -247,7 +247,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
 
         return_t result = errorcode_t::success;
 
-        if (_session.netsock.event_handle->ssl) { /* TLS */
+        if (get_server_socket()->support_tls()) { /* TLS */
             size_t cbread = 0;
             bool data_ready = false;
             int mode = 0;

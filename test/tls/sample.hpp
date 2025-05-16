@@ -47,8 +47,8 @@ void test_transcript_hash(tls_session* session, const binary_t& expect);
 void direction_string(tls_direction_t dir, int send, std::string& s);
 void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tls_secret_t secret, const char* secret_name);
 
-return_t construct_record_fragmented(tls_record* record, tls_direction_t dir, std::function<void(binary_t& bin)> func);
-return_t construct_record_fragmented(tls_records* records, tls_direction_t dir, std::function<void(binary_t& bin)> func);
+return_t construct_record_fragmented(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func);
+return_t construct_record_fragmented(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func);
 
 // xargs.org
 void test_tls13_xargs_org();

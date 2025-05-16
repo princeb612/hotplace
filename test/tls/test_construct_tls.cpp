@@ -194,21 +194,42 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
         }
 
         {
-            auto supported_versions = new tls_extension_server_supported_versions(session);
-            (*supported_versions).set(server_version);
-            handshake->get_extensions().add(supported_versions);
+            {
+                auto renegotiation_info = new tls_extension_renegotiation_info(session);
+                handshake->get_extensions().add(renegotiation_info);
+            }
+            {
+                auto ec_point_formats = new tls_extension_ec_point_formats(session);
+                (*ec_point_formats).add("uncompressed");
+                handshake->get_extensions().add(ec_point_formats);
+            }
+            {
+                auto supported_groups = new tls_extension_supported_groups(session);
+                (*supported_groups).add("x25519");
+                handshake->get_extensions().add(supported_groups);
+            }
         }
-        if (tls_13 == option.version) {
-            auto key_share = new tls_extension_server_key_share(session);
-            key_share->clear();
-            key_share->add_keyshare();
-            handshake->get_extensions().add(key_share);
 
-            basic_stream bs;
-            auto svr_keyshare = protection.get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
-            dump_key(svr_keyshare, &bs);
-            _logger->write(bs);
-            _test_case.assert(svr_keyshare, __FUNCTION__, "{server} key share (server generated)");
+        if (tls_13 == option.version) {
+            {
+                auto supported_versions = new tls_extension_server_supported_versions(session);
+                (*supported_versions).set(server_version);
+                handshake->get_extensions().add(supported_versions);
+            }
+            {
+                auto key_share = new tls_extension_server_key_share(session);
+                key_share->clear();
+                key_share->add_keyshare();
+                handshake->get_extensions().add(key_share);
+
+                basic_stream bs;
+                auto svr_keyshare = protection.get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
+                dump_key(svr_keyshare, &bs);
+                _logger->write(bs);
+                _test_case.assert(svr_keyshare, __FUNCTION__, "{server} key share (server generated)");
+            }
+        } else {
+            //
         }
     }
     __finally2 {

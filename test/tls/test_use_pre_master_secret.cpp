@@ -12,6 +12,12 @@
 
 #include "sample.hpp"
 
+/**
+ * see also
+ *   test_captured_tls13
+ *   test_captured_tls12
+ *   test_captured_dtls12
+ */
 void test_use_pre_master_secret() {
     _test_case.begin("https://github.com/syncsynchalt/illustrated-tls13/captures/");
 

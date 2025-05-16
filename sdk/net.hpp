@@ -40,12 +40,12 @@
 #include <sdk/net/basic/openssl/types.hpp>
 
 /* basic/sdk */
-#include <sdk/net/basic/sdk/async_client_socket.hpp>
+#include <sdk/net/basic/sdk/client_socket_prosumer.hpp>
 #include <sdk/net/basic/sdk/dtls_client_socket2.hpp>
-#include <sdk/net/basic/sdk/secure_client_socket.hpp>
 #include <sdk/net/basic/sdk/tcp_client_socket2.hpp>
 #include <sdk/net/basic/sdk/tls_client_socket2.hpp>
 #include <sdk/net/basic/sdk/tls_composer.hpp>
+#include <sdk/net/basic/sdk/tls_server_socket2.hpp>
 #include <sdk/net/basic/sdk/udp_client_socket2.hpp>
 
 // basic/util

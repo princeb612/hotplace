@@ -11,12 +11,12 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_SDK_UDPCLIENTSOCKET2__
 #define __HOTPLACE_SDK_NET_BASIC_SDK_UDPCLIENTSOCKET2__
 
-#include <sdk/net/basic/sdk/async_client_socket.hpp>
+#include <sdk/net/basic/sdk/client_socket_prosumer.hpp>
 
 namespace hotplace {
 namespace net {
 
-class udp_client_socket2 : public async_client_socket {
+class udp_client_socket2 : public client_socket_prosumer {
    public:
     udp_client_socket2();
     virtual int socket_type();

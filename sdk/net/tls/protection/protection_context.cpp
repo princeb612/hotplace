@@ -8,6 +8,9 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -107,11 +110,11 @@ void protection_context::for_each_ec_point_formats(std::function<void(uint8, boo
 }
 
 void protection_context::clear() {
-    _cipher_suites.clear();
-    _signature_algorithms.clear();
-    _supported_groups.clear();
-    _supported_versions.clear();
-    _ec_point_formats.clear();
+    clear_cipher_suites();
+    clear_signature_algorithms();
+    clear_supported_groups();
+    clear_supported_versions();
+    clear_ec_point_formats();
 }
 
 return_t protection_context::select_from(const protection_context& rhs) {

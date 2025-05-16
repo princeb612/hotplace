@@ -24,7 +24,7 @@ tls_server_socket::tls_server_socket(openssl_tls* tls) : tcp_server_socket(), _t
 
 tls_server_socket::~tls_server_socket() { _tls->release(); }
 
-return_t tls_server_socket::tls_accept(socket_context_t** handle, socket_t listen_socket) {
+return_t tls_server_socket::tls_accept(socket_context_t** handle, socket_t cli_socket) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -32,7 +32,7 @@ return_t tls_server_socket::tls_accept(socket_context_t** handle, socket_t liste
             __leave2;
         }
 
-        ret = _tls->tls_handshake(handle, listen_socket); /* new TLS_CONTEXT, to release see close member  */
+        ret = _tls->tls_handshake(handle, cli_socket); /* new TLS_CONTEXT, to release see close member  */
         if (errorcode_t::success != ret) {
             __leave2;
         }

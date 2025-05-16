@@ -358,7 +358,7 @@ void test_captured_tls12() {
         play_pcap(&session_etm, capture_tls12etm, RTL_NUMBER_OF(capture_tls12etm));
     }
 
-    _test_case.begin("TLS 1.2 pre master secret w/o encrypt_then_mac");
+    _test_case.begin("TLS 1.2 pre master secret mac_then_encrypt");
     {
         tls_session session_mte(session_tls);
         auto& protection = session_mte.get_tls_protection();

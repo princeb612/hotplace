@@ -68,6 +68,10 @@ return_t crypto_key::add(crypto_key_object key, bool up_ref) {
 
         if (up_ref) {
             EVP_PKEY_up_ref((EVP_PKEY*)key.get_pkey());  // increments a reference counter
+            auto x509 = key.get_x509();
+            if (x509) {
+                X509_up_ref((X509*)x509);
+            }
         }
 
         _key_map.insert(std::make_pair(key.get_desc().get_kid_str(), key));

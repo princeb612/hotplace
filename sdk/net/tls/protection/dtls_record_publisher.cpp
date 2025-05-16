@@ -42,7 +42,7 @@ void dtls_record_publisher::set_fragment_size(uint16 size) {
 
 uint16 dtls_record_publisher::get_fragment_size() { return _fragment_size; }
 
-return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir, std::function<void(binary_t& bin)> func) {
+return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == record || nullptr == func) {
@@ -141,7 +141,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     for (auto item : records) {
                         binary_t bin;
                         item->write(dir, bin);
-                        func(bin);
+                        func(session, bin);
                         item->release();
                     }
 
@@ -151,7 +151,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     binary_t bin;
                     ret = record->write(dir, bin);
 
-                    func(bin);
+                    func(session, bin);
                 }
             }
         }
@@ -163,7 +163,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
     return ret;
 }
 
-return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t dir, std::function<void(binary_t& bin)> func) {
+return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == records) {

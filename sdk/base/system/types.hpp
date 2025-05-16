@@ -140,6 +140,12 @@ struct uint48_t : t_uint_custom_t<uint64, 6> {
 return_t b48_i64(const uint48_t &u, uint64 &value);
 return_t i64_b48(uint48_t &u, uint64 value);
 
+class critical_section;
+class datetime;
+class semaphore;
+class signalwait_threads;
+class thread;
+
 }  // namespace hotplace
 
 #endif

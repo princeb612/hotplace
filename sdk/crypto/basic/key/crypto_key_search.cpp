@@ -787,8 +787,7 @@ const X509* crypto_key::find_x509(const char* kid, crypto_use_t use, bool up_ref
 
             for (iter = lower_bound; iter != upper_bound; iter++) {
                 crypto_key_object& item = iter->second;
-                bool test =
-                    find_discriminant(item, kid, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, 0);  // using map, so don't care SEARCH_KID
+                bool test = find_discriminant(item, kid, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, SEARCH_KID);
                 if (test) {
                     ret_value = item.get_x509();
                     break;
@@ -828,6 +827,46 @@ const EVP_PKEY* crypto_key::choose(const std::string& kid, crypto_kty_t kty, ret
     }
 
     return pkey;
+}
+
+return_t crypto_key::reference(crypto_key* skeys, const char* sname, const char* dname) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == skeys || nullptr == sname) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        critical_section_guard guard(_lock);
+
+        crypto_key_map_t::iterator iter;
+        crypto_key_map_t::iterator lower_bound;
+        crypto_key_map_t::iterator upper_bound;
+        lower_bound = skeys->_key_map.lower_bound(sname);
+        upper_bound = skeys->_key_map.upper_bound(sname);
+
+        for (iter = lower_bound; iter != upper_bound; iter++) {
+            crypto_key_object& item = iter->second;
+            bool test = find_discriminant(item, sname, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use_any, SEARCH_KID);
+            if (test) {
+                crypto_key_object obj(item);
+                if (dname) {
+                    // update kid (dname)
+                    obj.set_desc(std::move(keydesc(dname)));
+                } else {
+                    // keep original kid (sname)
+                }
+
+                ret = add(obj, true);
+
+                break;
+            }
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
+    return ret;
 }
 
 }  // namespace crypto

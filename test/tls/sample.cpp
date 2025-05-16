@@ -129,7 +129,7 @@ void play_pcap(tls_session* session, pcap_testvector* testvector, size_t size) {
     }
 }
 
-return_t construct_record_fragmented(tls_record* record, tls_direction_t dir, std::function<void(binary_t& bin)> func) {
+return_t construct_record_fragmented(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == record || nullptr == func) {
@@ -149,7 +149,7 @@ return_t construct_record_fragmented(tls_record* record, tls_direction_t dir, st
     return ret;
 }
 
-return_t construct_record_fragmented(tls_records* records, tls_direction_t dir, std::function<void(binary_t& bin)> func) {
+return_t construct_record_fragmented(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == records || nullptr == func) {

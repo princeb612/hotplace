@@ -77,8 +77,8 @@ return_t openssl_tls::tls_open(socket_context_t** handle, socket_t fd, uint32 fl
         SSL_set_fd(ssl, (int)fd);
 
         context->fd = fd;
-        context->ssl = ssl;
-        context->flags = flags;
+        context->handle.ssl = ssl;
+        context->flags = flags | tls_using_openssl;
 
         if (flags & socket_context_flag_t::tls_nbio) {
             SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
@@ -118,8 +118,8 @@ return_t openssl_tls::dtls_open(socket_context_t** handle, socket_t fd, uint32 f
 
         /* compose the context */
         context->fd = fd;
-        context->ssl = ssl;
-        context->flags = flags;
+        context->handle.ssl = ssl;
+        context->flags = flags | tls_using_openssl;
 
         if (flags & socket_context_flag_t::tls_nbio) {
             SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
@@ -331,7 +331,7 @@ return_t openssl_tls::dtls_handshake(socket_context_t* handle, sockaddr* addr, s
          * non-blocking     not yet
          */
 
-        auto ssl = handle->ssl;
+        auto ssl = handle->handle.ssl;
         if (1 == SSL_is_init_finished(ssl)) {
             __leave2;
         }
@@ -372,7 +372,7 @@ return_t openssl_tls::do_connect(socket_context_t* handle, uint32 wto) {
             __leave2;
         }
 
-        auto ssl = handle->ssl;
+        auto ssl = handle->handle.ssl;
         auto fd = handle->fd;
         auto nbio = (handle->flags & tls_nbio) ? 1 : 0;
         int rc = 1;
@@ -455,7 +455,7 @@ return_t openssl_tls::do_dtls_listen(socket_context_t* handle, sockaddr* addr, s
         }
 
         auto fd = handle->fd;
-        auto ssl = handle->ssl;
+        auto ssl = handle->handle.ssl;
         int rc = 1;
         int flags = 0;
 
@@ -516,7 +516,7 @@ return_t openssl_tls::do_accept(socket_context_t* handle) {
         }
 
         auto fd = handle->fd;
-        auto ssl = handle->ssl;
+        auto ssl = handle->handle.ssl;
         auto tlsflags = handle->flags;
         int rc = 1;
         int flags = 0;
@@ -588,7 +588,7 @@ return_t openssl_tls::set_tls_io(socket_context_t* handle, int type) {
         }
 
         auto fd = handle->fd;
-        auto ssl = handle->ssl;
+        auto ssl = handle->handle.ssl;
         auto rbio = SSL_get_rbio(ssl);
 
         /**
@@ -650,7 +650,7 @@ return_t openssl_tls::read(socket_context_t* handle, int mode, void* buffer, siz
             }
         }
 
-        auto ssl = handle->ssl;
+        auto ssl = handle->handle.ssl;
         auto rbio = SSL_get_rbio(ssl);
 
         if (tls_io_flag_t::read_bio_write & mode) {
@@ -737,7 +737,7 @@ return_t openssl_tls::recvfrom(socket_context_t* handle, int mode, void* buffer,
             }
         }
 
-        auto ssl = handle->ssl;
+        auto ssl = handle->handle.ssl;
         auto rbio = SSL_get_rbio(ssl);
 
         if (tls_io_flag_t::read_bio_write & mode) {
@@ -789,7 +789,7 @@ return_t openssl_tls::send(socket_context_t* handle, int mode, const char* data,
             *size_sent = 0;
         }
 
-        auto ssl = handle->ssl;
+        auto ssl = handle->handle.ssl;
         auto wbio = SSL_get_wbio(ssl);
 
         if (tls_io_flag_t::send_ssl_write & mode) {
@@ -841,7 +841,7 @@ return_t openssl_tls::sendto(socket_context_t* handle, int mode, const char* dat
             *size_sent = 0;
         }
 
-        auto ssl = handle->ssl;
+        auto ssl = handle->handle.ssl;
         auto wbio = SSL_get_wbio(ssl);
 
         if (tls_io_flag_t::send_ssl_write & mode) {

@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/nostd/exception.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/net/basic/sdk/tls_composer.hpp>
 #include <sdk/net/tls/dtls_record_publisher.hpp>
@@ -20,14 +21,21 @@
 #include <sdk/net/tls/tls/extension/tls_extension_supported_groups.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_supported_versions.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_unknown.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshake_certificate.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshake_certificate_verify.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_client_hello.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_client_key_exchange.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_finished.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshake_server_hello.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshake_server_hello_done.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshake_server_key_exchange.hpp>
 #include <sdk/net/tls/tls/record/tls_record.hpp>
+#include <sdk/net/tls/tls/record/tls_record_application_data.hpp>
 #include <sdk/net/tls/tls/record/tls_record_builder.hpp>
 #include <sdk/net/tls/tls/record/tls_record_change_cipher_spec.hpp>
 #include <sdk/net/tls/tls/record/tls_records.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
+#include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
@@ -48,17 +56,61 @@ tls_composer::~tls_composer() {
     }
 }
 
-return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::function<void(binary_t&)> func) {
+return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     if (from_client == dir) {
         ret = do_client_handshake(dir, wto, func);
     } else if (from_server == dir) {
-        ret = do_server_handshake(dir, wto, func);
+        ret = errorcode_t::not_supported;
     }
     return ret;
 }
 
-return_t tls_composer::do_compose(tls_record* record, tls_direction_t dir, std::function<void(binary_t&)> func) {
+return_t tls_composer::session_status_changed(uint32 session_status, tls_direction_t dir, uint32 wto, std::function<void(tls_session*, binary_t&)> func) {
+    return_t ret = errorcode_t::success;
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    __try2 {
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("hook %s (%s)", tlsadvisor->session_status_string(session_status).c_str(), tlsadvisor->nameof_direction(dir).c_str());
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+        }
+#endif
+        if (from_client == dir) {
+            ret = errorcode_t::not_supported;
+        } else if (from_server == dir) {
+            auto session = get_session();
+            auto& protection = session->get_tls_protection();
+            auto session_type = session->get_type();
+
+            // TLS 1.3
+            //   C client_hello
+            //   S server_hello, certificate, certificate_verify, finished
+            //   C finished
+            // TLS 1.2
+            //   C client_hello
+            //   S server_hello, certificate, server_key_exchange, server_hello_done
+            //   C client_key_exchange, finished
+            //   S finished
+            switch (session_status) {
+                case session_status_client_hello: {
+                    ret = do_server_handshake_phase1(func);
+                } break;
+                case session_status_client_finished: {
+                    // TLS 1.2
+                    if (protection.is_kindof_tls12()) {
+                        ret = do_server_handshake_phase2(func);
+                    }
+                } break;
+            }
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_composer::do_compose(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == record || nullptr == func) {
@@ -74,7 +126,7 @@ return_t tls_composer::do_compose(tls_record* record, tls_direction_t dir, std::
         } else {
             binary_t bin;
             ret = record->write(dir, bin);
-            func(bin);
+            func(session, bin);
         }
     }
     __finally2 {
@@ -83,7 +135,7 @@ return_t tls_composer::do_compose(tls_record* record, tls_direction_t dir, std::
     return ret;
 }
 
-return_t tls_composer::do_compose(tls_records* records, tls_direction_t dir, std::function<void(binary_t&)> func) {
+return_t tls_composer::do_compose(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == records || nullptr == func) {
@@ -106,7 +158,7 @@ return_t tls_composer::do_compose(tls_records* records, tls_direction_t dir, std
     return ret;
 }
 
-return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, std::function<void(binary_t&)> func) {
+return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -233,15 +285,12 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
     return ret;
 }
 
-return_t tls_composer::do_server_handshake(tls_direction_t dir, unsigned wto, std::function<void(binary_t&)> func) {
-    // TODO ... server socket
-    return_t ret = errorcode_t::not_implemented;
-    return ret;
-}
-
-return_t tls_composer::do_client_hello(std::function<void(binary_t&)> func) {
+return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
     tls_record* record = nullptr;
+    tls_handshake_client_hello* ch = nullptr;
+    tls_direction_t dir = from_client;
     __try2 {
         if (nullptr == func) {
             ret = errorcode_t::invalid_parameter;
@@ -254,11 +303,9 @@ return_t tls_composer::do_client_hello(std::function<void(binary_t&)> func) {
             __leave2;
         }
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         uint32 session_status = 0;
         auto session_type = session->get_type();
         auto& protection = session->get_tls_protection();
-        auto dir = from_client;
         bool is_dtls = (session_dtls == session_type);
 
         tls_record_builder builder;
@@ -268,7 +315,6 @@ return_t tls_composer::do_client_hello(std::function<void(binary_t&)> func) {
             __leave2;
         }
 
-        tls_handshake_client_hello* ch = nullptr;
         __try_new_catch(ch, new tls_handshake_client_hello(session), ret, __leave2);
 
         // random
@@ -384,12 +430,8 @@ return_t tls_composer::do_client_hello(std::function<void(binary_t&)> func) {
         {
             // session_ticket
             ch->get_extensions().add(new tls_extension_unknown(tls_ext_session_ticket, session));
-        }
-        {
             // renegotiation_info
             ch->get_extensions().add(new tls_extension_renegotiation_info(session));
-        }
-        {
             // master_secret
             // ch->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, session));
         }
@@ -408,9 +450,147 @@ return_t tls_composer::do_client_hello(std::function<void(binary_t&)> func) {
     return ret;
 }
 
-return_t tls_composer::do_server_hello(std::function<void(binary_t&)> func) {
-    // TODO ... server socket
-    return_t ret = errorcode_t::not_implemented;
+return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session*, binary_t&)> func) {
+    return_t ret = errorcode_t::success;
+    tls_record_builder builder;
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    tls_direction_t dir = from_server;
+    tls_records records;
+    __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+        auto& prot_context = protection.get_protection_context();
+        auto nego_context = protection.get_protection_context();  // copy
+
+        prot_context.select_from(nego_context);
+
+        auto cs = prot_context.get0_cipher_suite();
+        auto tlsver = prot_context.get0_supported_version();
+
+        // server_hello
+        {
+            tls_record* record = nullptr;
+            tls_handshake_server_hello* hs = nullptr;
+
+            record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+            if (nullptr == record) {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+
+            __try_new_catch(hs, new tls_handshake_server_hello(session), ret, __leave2);
+
+            hs->set_cipher_suite(cs);
+
+            {
+                {
+                    auto renegotiation_info = new tls_extension_renegotiation_info(session);
+                    hs->get_extensions().add(renegotiation_info);
+                }
+                {
+                    auto ec_point_formats = new tls_extension_ec_point_formats(session);
+                    (*ec_point_formats).add("uncompressed");
+                    hs->get_extensions().add(ec_point_formats);
+                }
+                {
+                    auto supported_groups = new tls_extension_supported_groups(session);
+                    (*supported_groups).add("x25519");
+                    hs->get_extensions().add(supported_groups);
+                }
+            }
+
+            if (tlsadvisor->is_kindof_tls13(tlsver)) {
+                {
+                    auto supported_versions = new tls_extension_server_supported_versions(session);
+                    (*supported_versions).set(tlsver);
+                    hs->get_extensions().add(supported_versions);
+                }
+
+                {
+                    auto key_share = new tls_extension_server_key_share(session);
+                    key_share->clear();
+                    key_share->add_keyshare();
+                    hs->get_extensions().add(key_share);
+                }
+            }
+
+            *record << hs;
+
+            records << record;
+        }
+
+        auto lambda_certificate = [&]() -> void {
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+
+            auto& keys = tlsadvisor->get_keys();
+            auto hs = new tls_handshake_certificate(session);
+            hs->refer(&keys, from_server, "cert", "priv");  // TODO kid "cert", "priv"
+            *record << hs;
+
+            records << record;
+        };
+
+        if (tlsadvisor->is_kindof_tls13(tlsver)) {
+            // change_cipher_spec
+            records << new tls_record_change_cipher_spec(session);
+            // certificate
+            lambda_certificate();
+            // certificate_verify
+            {
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+                *record << new tls_handshake_certificate_verify(session);
+                records << record;
+            }
+            // finished
+            {
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+                *record << new tls_handshake_finished(session);
+                records << record;
+            }
+        } else {
+            // certificate
+            lambda_certificate();
+            // server_key_exchange
+            {
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+                *record << new tls_handshake_server_key_exchange(session);
+                records << record;
+            }
+            // server_hello_done
+            {
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+                *record << new tls_handshake_server_hello_done(session);
+                records << record;
+            }
+        }
+
+        do_compose(&records, dir, func);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_composer::do_server_handshake_phase2(std::function<void(tls_session*, binary_t&)> func) {
+    return_t ret = errorcode_t::success;
+    tls_record_builder builder;
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    tls_direction_t dir = from_server;
+    tls_records records;
+    __try2 {
+        auto session = get_session();
+
+        // change_cipher_spec
+        records << new tls_record_change_cipher_spec(session);
+        // finished
+        {
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+            *record << new tls_handshake_finished(session);
+            records << record;
+        }
+
+        do_compose(&records, dir, func);
+    }
+    __finally2 {}
     return ret;
 }
 
@@ -435,6 +615,11 @@ void tls_composer::set_maxver(tls_version_t version) {
 uint16 tls_composer::get_minver() { return _minspec; }
 
 uint16 tls_composer::get_maxver() { return _maxspec; }
+
+return_t tls_composer::set_certificate(tls_direction_t dir, const std::string& certfile, const std::string& keyfile) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

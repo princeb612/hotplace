@@ -55,6 +55,10 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
         auto session_type = session->get_type();
         auto session_status = session->get_session_status();
 
+        // RFC 8446
+        // Because TLS 1.3 forbids renegotiation, if a server has negotiated
+        // TLS 1.3 and receives a ClientHello at any other time, it MUST
+        // terminate the connection with an "unexpected_message" alert.
         if (session_status) {
             if (session_status_hello_verify_request & session_status) {
                 // DTLS cookie
@@ -140,8 +144,6 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
             }
         }
 
-        session->update_session_status(session_status_client_hello);
-
         // 0-RTT, pre_shared_key extension
         if (tls_flow_0rtt == protection.get_flow()) {
             auto ext_psk = get_extensions().get(tls_ext_pre_shared_key);
@@ -152,7 +154,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 __leave2;
             }
         }
-        // keycalc
+        // transcript hash, keycalc
         {
             auto hspos = offsetof_header();
             auto size_header_body = get_size();
@@ -179,7 +181,14 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
             for (auto cs : _cipher_suites) {
                 protection_context.add_cipher_suite(cs);
             }
+
+            auto ext_ver = get_extensions().get(tls_ext_supported_versions);
+            if (nullptr == ext_ver) {  // TLS 1.2
+                protection_context.add_supported_version(protection.get_lagacy_version());
+            }
         }
+
+        session->update_session_status(session_status_client_hello);
     }
     __finally2 {
         // do nothing

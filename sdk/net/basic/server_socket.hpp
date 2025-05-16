@@ -67,7 +67,7 @@ class server_socket : public basic_socket {
     /**
      * @brief   read
      * @param   socket_context_t* handle [in]
-     * @param   int mode [in]
+     * @param   int mode [in] see tls_io_flag_t
      * @param   char* ptr_data [out]
      * @param   size_t size_data [in]
      * @param   size_t* cbread [out]
@@ -76,7 +76,7 @@ class server_socket : public basic_socket {
     /**
      * @brief   recvfrom
      * @param   socket_context_t* handle [in]
-     * @param   int mode [in]
+     * @param   int mode [in] see tls_io_flag_t
      * @param   char* ptr_data [out]
      * @param   size_t size_data [in]
      * @param   size_t* cbread [out]

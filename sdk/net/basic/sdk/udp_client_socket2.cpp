@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace net {
 
-udp_client_socket2::udp_client_socket2() : async_client_socket() {}
+udp_client_socket2::udp_client_socket2() : client_socket_prosumer() {}
 
 int udp_client_socket2::socket_type() { return SOCK_DGRAM; }
 

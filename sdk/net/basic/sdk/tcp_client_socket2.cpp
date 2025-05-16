@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace net {
 
-tcp_client_socket2::tcp_client_socket2() : async_client_socket() {}
+tcp_client_socket2::tcp_client_socket2() : client_socket_prosumer() {}
 
 int tcp_client_socket2::socket_type() { return SOCK_STREAM; }
 

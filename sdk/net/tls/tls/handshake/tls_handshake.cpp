@@ -95,8 +95,17 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
     __try2 {
         auto session = get_session();
 
-        // auto& protection = session->get_tls_protection();
-        // auto session_type = session->get_type();
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto hstype = get_type();
+            dbs.printf("\e[1;36m");
+            dbs.println("# read %p handshake type 0x%02x(%i) (%s)", session, hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+            dbs.printf("\e[0m");
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+        }
+#endif
 
         size_t bpos = pos;
 
@@ -174,19 +183,19 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
 return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
+
 #if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto hstype = get_type();
             dbs.printf("\e[1;36m");
-            dbs.println("# write handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+            dbs.println("# write %p handshake type 0x%02x(%i) (%s)", session, hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
             dbs.printf("\e[0m");
             trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
         }
 #endif
-
-        auto session = get_session();
 
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {

@@ -57,11 +57,32 @@ return_t tls_handshake_certificate::set(tls_direction_t dir, const char* certfil
         }
         ret = keychain.load_file(&keyexchange, key_certfile, certfile, desc_crt);
         if (errorcode_t::success != ret) {
-            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
-            session->reset_session_status();
             __leave2;
         }
         ret = keychain.load_file(&keyexchange, key_pemfile, keyfile, desc_key);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_handshake_certificate::refer(crypto_key* keys, tls_direction_t dir, const char* cert, const char* priv) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (from_server == dir) {
+            auto session = get_session();
+            auto& protection = session->get_tls_protection();
+            auto& keyexchange = protection.get_keyexchange();
+            ret = keyexchange.reference(keys, cert, KID_TLS_SERVER_CERTIFICATE_PUBLIC);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+            ret = keyexchange.reference(keys, priv, KID_TLS_SERVER_CERTIFICATE_PRIVATE);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+        } else {
+            ret = errorcode_t::not_supported;
+        }
     }
     __finally2 {}
     return ret;
