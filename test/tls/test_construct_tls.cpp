@@ -115,24 +115,27 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
             handshake->get_extensions().add(signature_algorithms);
         }
         {
-            auto supported_versions = new tls_extension_client_supported_versions(session);
-            if (tlsadvisor->is_kindof(tls_13, option.version)) {
-                (*supported_versions).add(tls_13);
-            } else {
-                (*supported_versions).add(tls_12);
-            }
-            handshake->get_extensions().add(supported_versions);
-        }
-        {
             auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(session);
             (*psk_key_exchange_modes).add("psk_dhe_ke");
             handshake->get_extensions().add(psk_key_exchange_modes);
         }
         if (tls_13 == option.version) {
-            auto key_share = new tls_extension_client_key_share(session);
-            key_share->clear();
-            key_share->add("x25519");
-            handshake->get_extensions().add(key_share);
+            {
+                auto supported_versions = new tls_extension_client_supported_versions(session);
+                if (tlsadvisor->is_kindof(tls_13, option.version)) {
+                    (*supported_versions).add(tls_13);
+                } else {
+                    (*supported_versions).add(tls_12);
+                }
+                handshake->get_extensions().add(supported_versions);
+            }
+
+            {
+                auto key_share = new tls_extension_client_key_share(session);
+                key_share->clear();
+                key_share->add("x25519");
+                handshake->get_extensions().add(key_share);
+            }
 
             basic_stream bs;
             auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
@@ -303,8 +306,7 @@ static return_t do_test_construct_encrypted_extensions(tls_session* session, tls
     return ret;
 }
 
-static return_t do_test_construct_certificate(tls_session* session, tls_direction_t dir, const char* certfile, const char* keyfile, binary_t& bin,
-                                              const char* message) {
+static return_t do_test_construct_certificate(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -317,7 +319,6 @@ static return_t do_test_construct_certificate(tls_session* session, tls_directio
         auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
 
         auto handshake = new tls_handshake_certificate(session);
-        handshake->set(dir, certfile, keyfile);
         *record << handshake;
 
         record->write(dir, bin);
@@ -652,25 +653,6 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             _test_case.assert(svr_tlsversion == cli_tlsversion, __FUNCTION__, "TLS version %04x", svr_tlsversion);
         }
 
-        const char* certfile = nullptr;
-        const char* keyfile = nullptr;
-        switch (hint->auth) {
-            // ECDHE_RSA
-            case auth_rsa: {
-                certfile = "rsa.crt";
-                keyfile = "rsa.key";
-            } break;
-            // ECDHE_ECDSA
-            case auth_ecdsa: {
-                certfile = "ecdsa.crt";
-                keyfile = "ecdsa.key";
-            } break;
-            default: {
-                certfile = "ecdsa.crt";
-                keyfile = "ecdsa.key";
-            } break;
-        }
-
         if (tls_13 == tlsversion) {
             // S -> C CCS
             binary_t bin_server_change_cipher_spec;
@@ -694,7 +676,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
 
             // S -> C SC
             binary_t bin_certificate;
-            do_test_construct_certificate(&server_session, from_server, certfile, keyfile, bin_certificate, "construct certificate");
+            do_test_construct_certificate(&server_session, from_server, bin_certificate, "construct certificate");
             do_test_send_record(&client_session, from_server, bin_certificate, "send cerficate");
 
             {
@@ -734,7 +716,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
         } else if (tls_12 == tlsversion) {
             // S -> C SC
             binary_t bin_certificate;
-            do_test_construct_certificate(&server_session, from_server, certfile, keyfile, bin_certificate, "construct certificate");
+            do_test_construct_certificate(&server_session, from_server, bin_certificate, "construct certificate");
             do_test_send_record(&client_session, from_server, bin_certificate, "send cerficate");
 
             {

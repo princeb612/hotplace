@@ -539,6 +539,7 @@ enum tls_secret_t : uint16 {
     // HKDF_Extract(hashalg, empty_ikm, value(tls_secret_resumption))
     tls_secret_resumption_early = (TLS_SECRET_RESUMPTION | TLS_SECRET_EARLY),
 
+    /* TLS_SECRET_USERCONTEXT+0 ~ TLS_SECRET_USERCONTEXT+0xff */
     tls_context_shared_secret = (TLS_SECRET_USERCONTEXT | 0x01),
     tls_context_transcript_hash = (TLS_SECRET_USERCONTEXT | 0x02),
     tls_context_empty_hash = (TLS_SECRET_USERCONTEXT | 0x04),
@@ -550,15 +551,15 @@ enum tls_secret_t : uint16 {
     tls_context_server_hello_random = (TLS_SECRET_USERCONTEXT | 0x0a),      // SH server_hello (server_key_update)
     tls_context_server_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0b),      // SKE server_key_exchange (pre_master_secret)
     tls_context_client_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0c),      // CKE client_key_exchange (pre_master_secret)
-    tls_context_resumption_binder_key = (TLS_SECRET_USERCONTEXT | 0x0d),    // CH 0-RTT
-    tls_context_resumption_finished_key = (TLS_SECRET_USERCONTEXT | 0x0e),  // CH 0-RTT
-    tls_context_resumption_finished = (TLS_SECRET_USERCONTEXT | 0x0f),      // CH 0-RTT
-    tls_context_resumption_binder_hash = (TLS_SECRET_USERCONTEXT | 0x10),   // CH 0-RTT
-
-    tls_context_quic_dcid = (TLS_SECRET_USERCONTEXT | 0x11),
-    tls_context_fragment = (TLS_SECRET_USERCONTEXT | 0x1b),  // DTLS, QUIC
-    tls_context_cookie = (TLS_SECRET_USERCONTEXT | 0x1c),
-    tls_context_new_session_ticket = (TLS_SECRET_USERCONTEXT | 0x1d),  // RFC 8446 4.6.1. ticket
+    tls_context_session_id = (TLS_SECRET_USERCONTEXT | 0x0d),               //
+    tls_context_cookie = (TLS_SECRET_USERCONTEXT | 0x0e),                   //
+    tls_context_quic_dcid = (TLS_SECRET_USERCONTEXT | 0x11),                //
+    tls_context_fragment = (TLS_SECRET_USERCONTEXT | 0x1b),                 // DTLS, QUIC
+    tls_context_new_session_ticket = (TLS_SECRET_USERCONTEXT | 0x1d),       // RFC 8446 4.6.1. ticket
+    tls_context_resumption_binder_key = (TLS_SECRET_USERCONTEXT | 0x21),    // CH 0-RTT
+    tls_context_resumption_finished_key = (TLS_SECRET_USERCONTEXT | 0x22),  // CH 0-RTT
+    tls_context_resumption_finished = (TLS_SECRET_USERCONTEXT | 0x23),      // CH 0-RTT
+    tls_context_resumption_binder_hash = (TLS_SECRET_USERCONTEXT | 0x24),   // CH 0-RTT
 };
 
 enum tls_direction_t {

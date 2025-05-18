@@ -324,6 +324,26 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 extension_len = pl.t_value_of<uint16>(constexpr_extension_len);
             }
 
+            if (0 == extension_len) {
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
+                session->reset_session_status();
+                ret = errorcode_t::error_handshake;
+                __leave2;
+            }
+
+            ret = get_extensions().read(session, dir, stream, pos + extension_len, pos);
+
+            auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
+            session->get_keyvalue().set(session_encrypt_then_mac, ext_etm ? 1 : 0);
+
+            // cipher_suite
+            set_cipher_suite(cipher_suite);
+
+            // server_key_update
+            protection.set_item(tls_context_server_hello_random, random);
+
+            _version = version;
+
 #if defined DEBUG
             if (istraceable()) {
                 basic_stream dbs;
@@ -346,26 +366,6 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
-
-            if (0 == extension_len) {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
-                session->reset_session_status();
-                ret = errorcode_t::error_handshake;
-                __leave2;
-            }
-
-            ret = get_extensions().read(session, dir, stream, pos + extension_len, pos);
-
-            auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
-            session->get_keyvalue().set(session_encrypt_then_mac, ext_etm ? 1 : 0);
-
-            // cipher_suite
-            set_cipher_suite(cipher_suite);
-
-            // server_key_update
-            session->get_tls_protection().set_item(tls_context_server_hello_random, random);
-
-            _version = version;
         }
     }
     __finally2 {
@@ -391,8 +391,9 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             if (nullptr == ext_etm) {
                 // if not exist encrypt_then_mac extension
                 get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
+            } else {
+                etm_status = 1;
             }
-            etm_status = 1;
         }
         session->get_keyvalue().set(session_encrypt_then_mac, etm_status);
 
@@ -417,16 +418,19 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         }
 
         if (32 != _random.size()) {
+            // gmt_unix_time(4 bytes) + random(28 bytes)
             openssl_prng prng;
-            binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
+            binary_t random;
             time_t gmt_unix_time = time(nullptr);
-            binary_append(random, gmt_unix_time, hton64);
-            random.resize(sizeof(uint32));
+            uint32 gmt = (uint32)gmt_unix_time;
+            binary_append(random, gmt, hton32);
             binary_t temp;
             prng.random(temp, 28);
             binary_append(random, temp);
 
             _random = std::move(random);
+
+            _session_id = protection.get_item(tls_context_session_id);  // avoid routines:tls_process_server_hello:invalid session id
         }
 
         {

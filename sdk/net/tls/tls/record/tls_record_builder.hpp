@@ -69,18 +69,21 @@ class tls_record_builder {
      *          }
      */
     tls_record_builder& construct();
+    tls_record_builder& set_protected(bool protect);
     tls_record* build();
 
     tls_session* get_session();
     uint8 get_type();
     tls_direction_t get_direction();
     bool is_construct();
+    bool is_protected();
 
    private:
     tls_session* _session;
     uint8 _type;
     tls_direction_t _dir;
     bool _construct;
+    bool _protected;
 };
 
 }  // namespace net

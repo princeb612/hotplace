@@ -220,17 +220,19 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
                 __leave2_trace(ret);
             }
 
-            // change cipher spec
-            records << new tls_record_change_cipher_spec(session);
+            {
+                // change cipher spec
+                records << builder.set(session).set(tls_content_type_change_cipher_spec).set(dir).construct().build();
+            }
 
-            session->get_session_info(dir).begin_protection();
+            {
+                // client finished
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().set_protected(true).build();
+                *record << new tls_handshake_finished(session);
+                records << record;
 
-            // client finished
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
-            *record << new tls_handshake_finished(session);
-            records << record;
-
-            session_status_finished = session_status_client_finished;
+                session_status_finished = session_status_client_finished;
+            }
         } else if (protection.is_kindof_tls12()) {
             // server_hello
             // certificate
@@ -254,11 +256,11 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
             }
             {
                 // change cipher spec
-                records << new tls_record_change_cipher_spec(session);
+                records << builder.set(session).set(tls_content_type_change_cipher_spec).set(dir).construct().build();
             }
             {
                 // client_finished
-                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().set_protected(true).build();
                 *record << new tls_handshake_finished(session);
                 records << record;
             }
@@ -482,23 +484,6 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
 
             hs->set_cipher_suite(cs);
 
-            {
-                {
-                    auto renegotiation_info = new tls_extension_renegotiation_info(session);
-                    hs->get_extensions().add(renegotiation_info);
-                }
-                {
-                    auto ec_point_formats = new tls_extension_ec_point_formats(session);
-                    (*ec_point_formats).add("uncompressed");
-                    hs->get_extensions().add(ec_point_formats);
-                }
-                {
-                    auto supported_groups = new tls_extension_supported_groups(session);
-                    (*supported_groups).add("x25519");
-                    hs->get_extensions().add(supported_groups);
-                }
-            }
-
             if (tlsadvisor->is_kindof_tls13(tlsver)) {
                 {
                     auto supported_versions = new tls_extension_server_supported_versions(session);
@@ -512,6 +497,24 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
                     key_share->add_keyshare();
                     hs->get_extensions().add(key_share);
                 }
+            } else {
+                {
+                    // auto renegotiation_info = new tls_extension_renegotiation_info(session);
+                    // hs->get_extensions().add(renegotiation_info);
+                } {
+                    auto ec_point_formats = new tls_extension_ec_point_formats(session);
+                    (*ec_point_formats).add("uncompressed");
+                    hs->get_extensions().add(ec_point_formats);
+                }
+                {
+                    auto extension = new tls_extension_unknown(tls_ext_extended_master_secret, session);
+                    hs->get_extensions().add(extension);
+                }
+                {
+                    auto supported_groups = new tls_extension_supported_groups(session);
+                    (*supported_groups).add("x25519");
+                    hs->get_extensions().add(supported_groups);
+                }
             }
 
             *record << hs;
@@ -519,45 +522,50 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
             records << record;
         }
 
-        auto lambda_certificate = [&]() -> void {
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
-
-            auto& keys = tlsadvisor->get_keys();
-            auto hs = new tls_handshake_certificate(session);
-            hs->refer(&keys, from_server, "cert", "priv");  // TODO kid "cert", "priv"
-            *record << hs;
-
-            records << record;
-        };
-
         if (tlsadvisor->is_kindof_tls13(tlsver)) {
-            // change_cipher_spec
-            records << new tls_record_change_cipher_spec(session);
-            // certificate
-            lambda_certificate();
-            // certificate_verify
             {
-                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+                // change_cipher_spec
+                records << builder.set(session).set(tls_content_type_change_cipher_spec).set(dir).construct().build();
+            }
+            {
+                // certificate
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().set_protected(true).build();
+
+                auto hs = new tls_handshake_certificate(session);
+                *record << hs;
+
+                records << record;
+            }
+            {
+                // certificate_verify
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().set_protected(true).build();
                 *record << new tls_handshake_certificate_verify(session);
                 records << record;
             }
-            // finished
             {
-                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+                // finished
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().set_protected(true).build();
                 *record << new tls_handshake_finished(session);
                 records << record;
             }
         } else {
-            // certificate
-            lambda_certificate();
-            // server_key_exchange
             {
+                // certificate
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+
+                auto hs = new tls_handshake_certificate(session);
+                *record << hs;
+
+                records << record;
+            }
+            {
+                // server_key_exchange
                 auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
                 *record << new tls_handshake_server_key_exchange(session);
                 records << record;
             }
-            // server_hello_done
             {
+                // server_hello_done
                 auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
                 *record << new tls_handshake_server_hello_done(session);
                 records << record;
@@ -579,11 +587,13 @@ return_t tls_composer::do_server_handshake_phase2(std::function<void(tls_session
     __try2 {
         auto session = get_session();
 
-        // change_cipher_spec
-        records << new tls_record_change_cipher_spec(session);
-        // finished
         {
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+            // change_cipher_spec
+            records << builder.set(session).set(tls_content_type_change_cipher_spec).set(dir).construct().build();
+        }
+        {
+            // finished
+            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().set_protected(true).build();
             *record << new tls_handshake_finished(session);
             records << record;
         }

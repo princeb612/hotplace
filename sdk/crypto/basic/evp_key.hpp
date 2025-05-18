@@ -86,6 +86,7 @@ const char* nameof_key_type(crypto_kty_t type);
  * @param crypto_kty_t type [in]
  */
 bool is_kindof(const EVP_PKEY* pkey, crypto_kty_t type);
+
 /**
  * @brief bn2bin
  * @param const BIGNUM* bn [in]

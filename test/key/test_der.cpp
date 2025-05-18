@@ -54,7 +54,7 @@ void test_der() {
     _logger->hdump("DER", bin_sample, 16, 3);
     _test_case.test(ret, __FUNCTION__, "RFC 8448 3. server certificate");
 
-    auto x509 = key.find_x509(kid);
+    auto x509 = key.find_x509(kid, kty_rsa);
     _logger->write(bs);
     _test_case.assert(x509, __FUNCTION__, "dump");
 

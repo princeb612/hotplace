@@ -229,6 +229,9 @@ class tls_advisor {
 
     crypto_key& get_keys();
 
+    const EVP_PKEY* get_key(tls_session* session, const char* kid);
+    const X509* get_cert(tls_session* session, const char* kid);
+
    protected:
     tls_advisor();
     void load_resource();

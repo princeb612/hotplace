@@ -4,8 +4,10 @@
   * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 777
-  * [tested] tls_server_socket2 (test/tlsserver2)
+* Revision 777-778
+  * TLS server - research/debugging in progress, mingw64 environment
+  * Rev.777 - server socket, netserver integration
+  * Rev.778 - redesign server certificates
 
 * Revision 774 (Tag 1.27)
 

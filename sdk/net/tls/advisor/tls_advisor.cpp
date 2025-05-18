@@ -9,8 +9,10 @@
  */
 
 #include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
+#include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
@@ -467,6 +469,70 @@ std::string tls_advisor::nameof_direction(tls_direction_t dir, bool longname) {
 }
 
 crypto_key& tls_advisor::get_keys() { return _keys; }
+
+const EVP_PKEY* tls_advisor::get_key(tls_session* session, const char* kid) {
+    const EVP_PKEY* ret_value = nullptr;
+    __try2 {
+        if (nullptr == session || nullptr == kid) {
+            __leave2;
+        }
+
+        auto& protection = session->get_tls_protection();
+
+        auto kty = kty_unknown;
+        auto cs = protection.get_cipher_suite();
+        auto hint = hintof_cipher_suite(cs);
+        switch (hint->auth) {
+            case auth_rsa:
+                kty = kty_rsa;
+                break;
+            case auth_ecdsa:
+                kty = kty_ec;
+                break;
+            default:
+                break;
+        }
+
+        ret_value = protection.get_keyexchange().find(kid, kty);
+        if (nullptr == ret_value) {
+            ret_value = get_keys().find(kid, kty);
+        }
+    }
+    __finally2 {}
+    return ret_value;
+}
+
+const X509* tls_advisor::get_cert(tls_session* session, const char* kid) {
+    const X509* ret_value = nullptr;
+    __try2 {
+        if (nullptr == session || nullptr == kid) {
+            __leave2;
+        }
+
+        auto& protection = session->get_tls_protection();
+
+        auto kty = kty_unknown;
+        auto cs = protection.get_cipher_suite();
+        auto hint = hintof_cipher_suite(cs);
+        switch (hint->auth) {
+            case auth_rsa:
+                kty = kty_rsa;
+                break;
+            case auth_ecdsa:
+                kty = kty_ec;
+                break;
+            default:
+                break;
+        }
+
+        ret_value = protection.get_keyexchange().find_x509(kid, kty);
+        if (nullptr == ret_value) {
+            ret_value = get_keys().find_x509(kid, kty);
+        }
+    }
+    __finally2 {}
+    return ret_value;
+}
 
 }  // namespace net
 }  // namespace hotplace

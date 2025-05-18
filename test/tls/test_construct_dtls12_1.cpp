@@ -42,7 +42,8 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                        << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"
                        << "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
                        << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
-                       << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384";
+                       << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
+                       << "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384";
         }
 
         {
@@ -203,12 +204,11 @@ static return_t do_test_construct_server_hello(tls_session* session, tls_session
     return ret;
 }
 
-static return_t do_test_construct_certificate(tls_session* session, tls_direction_t dir, const char* certfile, const char* keyfile, const char* message) {
+static return_t do_test_construct_certificate(tls_session* session, tls_direction_t dir, const char* message) {
     return_t ret = errorcode_t::success;
 
     tls_record_handshake record(session);
     auto handshake = new tls_handshake_certificate(session);
-    handshake->set(dir, certfile, keyfile);
     record << handshake;
 
     construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
@@ -319,8 +319,8 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         binary_t bin;
         uint16 epoch = 0;
         uint64 seq = 0;
-
-        while (1) {
+        uint32 retry = 10;  // max elements
+        while (retry--) {
             auto test = arrange.consume(epoch, seq, bin);
             if (empty == test) {
                 break;
@@ -397,7 +397,7 @@ void test_construct_dtls12_1() {
     lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 1, 1);
 
     // S->C, record epoch 0, sequence 2..8, handshake sequence 2
-    do_test_construct_certificate(&session_server, from_server, "server.crt", "server.key", "certificate");
+    do_test_construct_certificate(&session_server, from_server, "certificate");
     do_test_send_record(&session_client, from_server, "certificate");
     lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 9, 3);
     lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 8, 2);

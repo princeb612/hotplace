@@ -25,7 +25,7 @@
 namespace hotplace {
 namespace net {
 
-tls_record_builder::tls_record_builder() : _session(nullptr), _type(0), _dir(from_any), _construct(false) {}
+tls_record_builder::tls_record_builder() : _session(nullptr), _type(0), _dir(from_any), _construct(false), _protected(false) {}
 
 tls_record_builder& tls_record_builder::set(tls_session* session) {
     _session = session;
@@ -47,6 +47,11 @@ tls_record_builder& tls_record_builder::construct() {
     return *this;
 }
 
+tls_record_builder& tls_record_builder::set_protected(bool protect) {
+    _protected = protect;
+    return *this;
+}
+
 tls_record* tls_record_builder::build() {
     tls_record* record = nullptr;
     auto session = get_session();
@@ -60,7 +65,7 @@ tls_record* tls_record_builder::build() {
                     bool is_kind_of_tls = session->get_tls_protection().is_kindof_tls();
                     bool is_kind_of_tls13 = session->get_tls_protection().is_kindof_tls13();
                     bool apply_protection = session->get_session_info(get_direction()).apply_protection();
-                    if (is_kind_of_tls13 && apply_protection) {
+                    if (is_kind_of_tls13 && (apply_protection || is_protected())) {
                         __try_new_catch_only(record, new tls_record_application_data(session));  // encapsulation
                     } else {
                         __try_new_catch_only(record, new tls_record_alert(session));
@@ -74,7 +79,7 @@ tls_record* tls_record_builder::build() {
                     bool is_kind_of_tls = session->get_tls_protection().is_kindof_tls();
                     bool is_kind_of_tls13 = session->get_tls_protection().is_kindof_tls13();
                     bool apply_protection = session->get_session_info(get_direction()).apply_protection();
-                    if (is_kind_of_tls13 && apply_protection) {
+                    if (is_kind_of_tls13 && (apply_protection || is_protected())) {
                         __try_new_catch_only(record, new tls_record_application_data(session));  // encapsulation
                     } else {
                         __try_new_catch_only(record, new tls_record_handshake(session));
@@ -112,6 +117,8 @@ uint8 tls_record_builder::get_type() { return _type; }
 tls_direction_t tls_record_builder::get_direction() { return _dir; }
 
 bool tls_record_builder::is_construct() { return _construct; }
+
+bool tls_record_builder::is_protected() { return _protected; }
 
 }  // namespace net
 }  // namespace hotplace

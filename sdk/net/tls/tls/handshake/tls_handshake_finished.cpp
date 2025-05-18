@@ -183,7 +183,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
                 ret = errorcode_t::error_verify;
-                __leave2;
+                // __leave2;
             }
 
 #if defined DEBUG

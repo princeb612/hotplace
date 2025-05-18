@@ -133,7 +133,9 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
         auto session_status = session->get_session_status();
 
         if (session_status_hello_verify_request & session_status) {
-            if ((get_cookie() != protection.get_item(tls_context_cookie)) || (get_random() != protection.get_item(tls_context_client_hello_random))) {
+            bool cond1 = (get_random() != protection.get_item(tls_context_client_hello_random));
+            bool cond2 = (get_cookie() != protection.get_item(tls_context_cookie));
+            if (cond1 || cond2) {
                 // client_hello
                 // hello_verify_request (cookie)
                 // client_hello (cookie)
@@ -298,6 +300,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
         {
             // server_key_update
             protection.set_item(tls_context_client_hello_random, random);
+            protection.set_item(tls_context_session_id, session_id);  // avoid routines:tls_process_server_hello:invalid session id
         }
 
 #if defined DEBUG
@@ -374,18 +377,22 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
         if (session_status_hello_verify_request & session_status) {
             _random = protection.get_item(tls_context_client_hello_random);
         } else {
+            openssl_prng prng;
             if (32 != _random.size()) {
-                openssl_prng prng;
-                binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
+                // gmt_unix_time(4 bytes) + random(28 bytes)
+                binary_t random;
                 time_t gmt_unix_time = time(nullptr);
-                binary_append(random, gmt_unix_time, hton64);
-                random.resize(sizeof(uint32));
+                uint32 gmt = (uint32)gmt_unix_time;
+                binary_append(random, gmt, hton32);
                 binary_t temp;
                 prng.random(temp, 28);
                 binary_append(random, temp);
 
                 _random = std::move(random);
             }
+            // if (_session_id.empty()) {
+            //     prng.random(_session_id, 32);
+            // }
         }
 
         {

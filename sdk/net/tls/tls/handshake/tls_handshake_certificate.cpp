@@ -12,6 +12,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
+#include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_certificate.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
@@ -32,61 +33,6 @@ constexpr char constexpr_certificate_extensions[] = "certificate extensions";
 constexpr char constexpr_record_type[] = "record type";
 
 tls_handshake_certificate::tls_handshake_certificate(tls_session* session) : tls_handshake(tls_hs_certificate, session) {}
-
-return_t tls_handshake_certificate::set(tls_direction_t dir, const char* certfile, const char* keyfile) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == certfile || nullptr == keyfile) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
-        auto& keyexchange = protection.get_keyexchange();
-
-        crypto_keychain keychain;
-        keydesc desc_crt;  // Certificate
-        keydesc desc_key;  // Private Key
-        if (from_server == dir) {
-            desc_crt.set_kid(KID_TLS_SERVER_CERTIFICATE_PUBLIC);
-            desc_key.set_kid(KID_TLS_SERVER_CERTIFICATE_PRIVATE);
-        } else {
-            desc_crt.set_kid(KID_TLS_CLIENT_CERTIFICATE_PUBLIC);
-            desc_key.set_kid(KID_TLS_CLIENT_CERTIFICATE_PRIVATE);
-        }
-        ret = keychain.load_file(&keyexchange, key_certfile, certfile, desc_crt);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        ret = keychain.load_file(&keyexchange, key_pemfile, keyfile, desc_key);
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t tls_handshake_certificate::refer(crypto_key* keys, tls_direction_t dir, const char* cert, const char* priv) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (from_server == dir) {
-            auto session = get_session();
-            auto& protection = session->get_tls_protection();
-            auto& keyexchange = protection.get_keyexchange();
-            ret = keyexchange.reference(keys, cert, KID_TLS_SERVER_CERTIFICATE_PUBLIC);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-            ret = keyexchange.reference(keys, priv, KID_TLS_SERVER_CERTIFICATE_PRIVATE);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-        } else {
-            ret = errorcode_t::not_supported;
-        }
-    }
-    __finally2 {}
-    return ret;
-}
 
 return_t tls_handshake_certificate::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
@@ -110,16 +56,19 @@ return_t tls_handshake_certificate::do_preprocess(tls_direction_t dir) {
 return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
         auto hssize = get_size();
 
-        protection.update_transcript_hash(session, stream + hspos, hssize);
-        if (from_server == dir) {
-            session->update_session_status(session_status_server_cert);
-        } else if (from_client == dir) {
-            session->update_session_status(session_status_client_cert);
+        {
+            protection.update_transcript_hash(session, stream + hspos, hssize);
+            if (from_server == dir) {
+                session->update_session_status(session_status_server_cert);
+            } else if (from_client == dir) {
+                session->update_session_status(session_status_client_cert);
+            }
         }
     }
     __finally2 {
@@ -158,6 +107,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
+        auto& protection = session->get_tls_protection();
 
         binary_t cert;
         crypto_keychain keychain;
@@ -173,26 +123,24 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
                << new payload_member(uint24_t(0), constexpr_certificates_len)                         //
                << new payload_member(uint24_t(0), constexpr_certificate_len)                          //
                << new payload_member(binary_t(), constexpr_certificate)                               //
-               << new payload_member(uint16(0), true, constexpr_certificate_extensions_len)           //
-               << new payload_member(binary_t(), constexpr_certificate_extensions);
+               << new payload_member(uint16(0), true, constexpr_certificate_extensions_len);          //
 
             pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
             pl.set_reference_value(constexpr_request_context, constexpr_request_context_len);
             auto tls_version = session->get_tls_protection().get_tls_version();
             pl.set_group(constexpr_group_tls13, tlsadvisor->is_kindof_tls13(tls_version));  // tls1_ext_supported_versions 0x002b server_hello
-            pl.reserve(constexpr_certificate_extensions, certificates_len - certificate_len - sizeof(uint24_t));
-            pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
             pl.read(stream, size, pos);
 
             request_context_len = pl.t_value_of<uint8>(constexpr_request_context_len);
             certificates_len = pl.t_value_of<uint32>(constexpr_certificates_len);
             certificate_len = pl.t_value_of<uint32>(constexpr_certificate_len);
             pl.get_binary(constexpr_certificate, cert);
-            pl.get_binary(constexpr_certificate_extensions, cert_extensions);
             cert_extensions_len = pl.t_value_of<uint16>(constexpr_certificate_extensions_len);
         }
 
-        auto& servercert = session->get_tls_protection().get_keyexchange();
+        get_extensions().read(session, dir, stream, pos + cert_extensions_len, pos);
+
+        auto& servercert = protection.get_keyexchange();
         keydesc desc(use_sig);
         if (from_server == dir) {
             desc.set_kid(KID_TLS_SERVER_CERTIFICATE_PUBLIC);
@@ -229,8 +177,6 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
     __try2 {
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
-        auto& protection = session->get_tls_protection();
-        auto& keyexchange = protection.get_keyexchange();
 
         const char* kid = nullptr;
         if (from_server == dir) {
@@ -238,7 +184,8 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
         } else {
             kid = KID_TLS_CLIENT_CERTIFICATE_PUBLIC;
         }
-        auto x509 = keyexchange.find_x509(kid);
+
+        auto x509 = tlsadvisor->get_cert(session, kid);
         if (nullptr == x509) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
             session->reset_session_status();
@@ -263,23 +210,31 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
 #endif
 
         {
-            binary_t cert_extensions;
+            auto tls_version = session->get_tls_protection().get_tls_version();
+            bool is_tls13 = tlsadvisor->is_kindof_tls13(tls_version);
+
+            binary_t extensions;
             uint32 certificate_len = certificate.size();
-            uint16 cert_extensions_len = cert_extensions.size();
-            uint32 certificates_len = sizeof(uint24_t) + certificate_len + sizeof(uint16) + cert_extensions_len;
+            uint32 certificates_len = 3 /* uint24 */ + certificate_len;  // TLS 1.2
+            if (is_tls13) {
+                certificates_len += sizeof(uint16);
+                get_extensions().write(extensions);
+            }
 
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)           // TLS 1.3
-               << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)             // TLS 1.3
-               << new payload_member(uint24_t(certificates_len), constexpr_certificates_len)                   // certificate + extensions
-               << new payload_member(uint24_t(certificate_len), constexpr_certificate_len)                     // certificate
-               << new payload_member(certificate, constexpr_certificate)                                       // certificate
-               << new payload_member(uint16(cert_extensions_len), true, constexpr_certificate_extensions_len)  // extensions
-               << new payload_member(cert_extensions, constexpr_certificate_extensions);                       // extensions
+            pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)                                 // TLS 1.3
+               << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)                                   // TLS 1.3
+               << new payload_member(uint24_t(certificates_len), constexpr_certificates_len)                                         // certificate + extensions
+               << new payload_member(uint24_t(certificate_len), constexpr_certificate_len)                                           // certificate
+               << new payload_member(certificate, constexpr_certificate)                                                             // certificate
+               << new payload_member(uint16(extensions.size()), true, constexpr_certificate_extensions_len, constexpr_group_tls13);  // extensions
 
-            auto tls_version = session->get_tls_protection().get_tls_version();
-            pl.set_group(constexpr_group_tls13, tlsadvisor->is_kindof_tls13(tls_version));  // tls1_ext_supported_versions 0x002b server_hello
+            pl.set_group(constexpr_group_tls13, is_tls13);  // tls1_ext_supported_versions 0x002b server_hello
             pl.write(bin);
+
+            if (is_tls13) {
+                binary_append(bin, extensions);
+            }
         }
     }
     __finally2 {}

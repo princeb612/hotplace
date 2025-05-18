@@ -370,10 +370,11 @@ class crypto_key {
     /**
      * @brief find
      * @param const char* kid [in]
+     * @param crypto_kty_t kty [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const X509* find_x509(const char* kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const X509* find_x509(const char* kid, crypto_kty_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
 
     /**
      * @brief public key
@@ -568,10 +569,11 @@ class crypto_key {
     /**
      * @brief   copy pointer (EVP_PKEY_up_ref, X509_up_ref)
      * @param   crypto_key* skeys [in]
+     * @param   crypto_kty_t kty [in]
      * @param   const char* sname [in]
      * @param   const char* dname [inopt] can be nullptr if same as sname
      */
-    return_t reference(crypto_key* skeys, const char* sname, const char* dname = nullptr);
+    return_t reference(crypto_key* skeys, crypto_kty_t kty, const char* sname, const char* dname = nullptr);
 
    protected:
     /**

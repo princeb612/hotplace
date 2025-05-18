@@ -50,6 +50,9 @@ bool find_discriminant(crypto_key_object item, const char* kid, ALGORITHM alg, c
             }
         }
         if (SEARCH_KTY & flags) {
+            if (crypto_kty_t::kty_unknown == kt) {
+                __leave2;
+            }
             cond_kty = (kt && is_kindof(item.get_pkey(), kt));
             if (false == cond_kty) {
                 if (crypto_kty_t::kty_unknown == alt) {
@@ -114,6 +117,9 @@ static bool find_discriminant(crypto_key_object item, const char* kid, const cha
                 }
             }
             if (SEARCH_KTY & flags) {
+                if (crypto_kty_t::kty_unknown == kt) {
+                    __leave2;
+                }
                 cond_kty = (kt && is_kindof(item.get_pkey(), kt));
                 if (false == cond_kty) {
                     if (crypto_kty_t::kty_unknown == alt) {
@@ -568,9 +574,14 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypto_kty_t kt, crypto_use_t 
                 alt = crypto_kty_t::kty_okp;
             }
 
+            uint32 flags = SEARCH_KID;
+            if (kty_unknown != kt) {
+                flags |= SEARCH_KTY;
+            }
+
             for (iter = lower_bound; iter != upper_bound; iter++) {
                 crypto_key_object& item = iter->second;
-                bool test = find_discriminant(item, kid, nullptr, kt, alt, use, SEARCH_KTY);
+                bool test = find_discriminant(item, kid, nullptr, kt, alt, use, flags);
                 if (test) {
                     ret_value = item.get_pkey();
                     break;
@@ -771,13 +782,18 @@ const X509* crypto_key::select_x509(crypto_use_t use, bool up_ref) {
     return ret_value;
 }
 
-const X509* crypto_key::find_x509(const char* kid, crypto_use_t use, bool up_ref) {
+const X509* crypto_key::find_x509(const char* kid, crypto_kty_t kty, crypto_use_t use, bool up_ref) {
     const X509* ret_value = nullptr;
     critical_section_guard guard(_lock);
     __try2 {
         std::string k;
         if (kid) {
             k = kid;
+
+            uint32 flags = SEARCH_KID;
+            if (kty_unknown != kty) {
+                flags |= SEARCH_KTY;
+            }
 
             crypto_key_map_t::iterator iter;
             crypto_key_map_t::iterator lower_bound;
@@ -787,7 +803,7 @@ const X509* crypto_key::find_x509(const char* kid, crypto_use_t use, bool up_ref
 
             for (iter = lower_bound; iter != upper_bound; iter++) {
                 crypto_key_object& item = iter->second;
-                bool test = find_discriminant(item, kid, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, SEARCH_KID);
+                bool test = find_discriminant(item, kid, nullptr, kty, crypto_kty_t::kty_unknown, use, flags);
                 if (test) {
                     ret_value = item.get_x509();
                     break;
@@ -829,7 +845,7 @@ const EVP_PKEY* crypto_key::choose(const std::string& kid, crypto_kty_t kty, ret
     return pkey;
 }
 
-return_t crypto_key::reference(crypto_key* skeys, const char* sname, const char* dname) {
+return_t crypto_key::reference(crypto_key* skeys, crypto_kty_t kty, const char* sname, const char* dname) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == skeys || nullptr == sname) {
@@ -847,7 +863,7 @@ return_t crypto_key::reference(crypto_key* skeys, const char* sname, const char*
 
         for (iter = lower_bound; iter != upper_bound; iter++) {
             crypto_key_object& item = iter->second;
-            bool test = find_discriminant(item, sname, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use_any, SEARCH_KID);
+            bool test = find_discriminant(item, sname, nullptr, kty, crypto_kty_t::kty_unknown, use_any, SEARCH_KID | SEARCH_KTY);
             if (test) {
                 crypto_key_object obj(item);
                 if (dname) {

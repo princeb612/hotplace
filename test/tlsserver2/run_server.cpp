@@ -63,18 +63,10 @@ return_t echo_server(void*) {
     tls_server_socket2* tls_socket = nullptr;
 
     __try2 {
-        {
-            auto& keys = tlsadvisor->get_keys();
-            crypto_keychain keychain;
-            ret = keychain.load_file(&keys, key_certfile, "server.crt", keydesc("cert"));
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-            ret = keychain.load_file(&keys, key_pemfile, "server.key", keydesc("priv"));
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-        }
+        // TLS_ECDHE_RSA ciphersuites
+        load_certificate("rsa.crt", "rsa.key", nullptr);
+        // TLS_ECDHE_ECDSA ciphersuites
+        load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
 
         tls_version_t tlsver = tls_12;
         uint32 tlscontext_flags = tlscontext_flag_tls;

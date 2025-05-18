@@ -1,11 +1,13 @@
 #### test
 
-- [x] TLS server socket
-  - [x] 1.2
-  - [x] 1.3
+- understanding state machine
+- debugging in progress
+  - MINGW64 only
+  - linux not tested yet
 
-- [ ] tasks
-  - [x] certificate (certificate, private key, chain)
-  - [ ] ciphersuites (ECDHE key agreements or TLS 1.3 ciphersuites)
-  - [ ] ALPN (http/1.1, h2, h3 https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml)
-
+| server     | client    | TLS 1.3 | TLS 1.2 |
+| --         | --        | --      |  --     |
+| tlsserver  | netclient | PASS    |  PASS   |
+| tlsserver2 | netclient | PASS    |  PASS   |
+| s_server   | netclient | PASS    |  PASS   |
+| tlsserver2 | s_client  | FAIL    |  FAIL   |

@@ -11,6 +11,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -142,10 +143,43 @@ return_t protection_context::select_from(const protection_context& rhs) {
             add_supported_version(selected_version);
         }
         {
+            // check certificate type(s), see load_certificate
+            std::set<crypto_kty_t> ktypes;
+            auto& keys = tlsadvisor->get_keys();
+            auto lambda = [&](crypto_key_object* k, void* param) -> void {
+                auto pkey = k->get_pkey();
+                auto kty = typeof_crypto_key(pkey);
+                ktypes.insert(kty);
+            };
+            keys.for_each(lambda, nullptr);
+
             for (auto cs : rhs._cipher_suites) {
                 auto hint = tlsadvisor->hintof_cipher_suite(cs);
                 // RFC 5246 mandatory TLS_RSA_WITH_AES_128_CBC_SHA
                 if (hint && (tls_flag_support & hint->flags) && tlsadvisor->is_kindof(hint->version, selected_version)) {
+                    if (tls_12 == hint->version) {
+                        bool match = false;
+                        switch (hint->auth) {
+                            case auth_rsa: {
+                                // allow TLS_ECDHE_RSA if RSA certificate exist
+                                auto iter = ktypes.find(kty_rsa);
+                                if (ktypes.end() != iter) {
+                                    match = true;
+                                }
+                            } break;
+                            case auth_ecdsa: {
+                                // allow TLS_ECDHE_ECDSA if EC certificate exist
+                                auto iter = ktypes.find(kty_ec);
+                                if (ktypes.end() != iter) {
+                                    match = true;
+                                }
+                            } break;
+                        }
+                        if (false == match) {
+                            continue;
+                        }
+                    }
+
                     add_cipher_suite(cs);
                     set_cipher_suite(cs);
                     break;

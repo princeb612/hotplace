@@ -27,6 +27,9 @@ else
     fi
 fi
 
+# valgrind -v --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=report-memcheck ...
+# valgrind -v --tool=helgrind --log-file=report-helgrind ...
+# valgrind -v --tool=drd --read-var-info=yes --log-file=report-drd ...
 tool=(memcheck helgrind drd)
 #tool+=(cachegrind)
 for item in ${array[@]}; do

@@ -223,8 +223,7 @@ static return_t do_test_construct_encrypted_extensions(tls_session* session, tls
     return ret;
 }
 
-static return_t do_test_construct_certificate(tls_session* session, tls_direction_t dir, tls_content_type_t content_type, const char* certfile,
-                                              const char* keyfile, binary_t& bin, const char* message) {
+static return_t do_test_construct_certificate(tls_session* session, tls_direction_t dir, tls_content_type_t content_type, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -235,7 +234,6 @@ static return_t do_test_construct_certificate(tls_session* session, tls_directio
         dtls13_ciphertext record(content_type, session);
 
         auto handshake = new tls_handshake_certificate(session);
-        handshake->set(dir, certfile, keyfile);
 
         record.get_handshakes().add(handshake);
         record.write(dir, bin);
@@ -465,28 +463,9 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
             do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
         }
 
-        const char* certfile = nullptr;
-        const char* keyfile = nullptr;
-        switch (hint->auth) {
-            // ECDHE_RSA
-            case auth_rsa: {
-                certfile = "rsa.crt";
-                keyfile = "rsa.key";
-            } break;
-            // ECDHE_ECDSA
-            case auth_ecdsa: {
-                certfile = "ecdsa.crt";
-                keyfile = "ecdsa.key";
-            } break;
-            default: {
-                certfile = "ecdsa.crt";
-                keyfile = "ecdsa.key";
-            } break;
-        }
-
         // S -> C SC
         binary_t bin_certificate;
-        do_test_construct_certificate(&server_session, from_server, tls_content_type_handshake, certfile, keyfile, bin_certificate, "construct certificate");
+        do_test_construct_certificate(&server_session, from_server, tls_content_type_handshake, bin_certificate, "construct certificate");
         do_test_send_record(&client_session, from_server, bin_certificate, "send cerficate");
 
         {

@@ -255,8 +255,8 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
         } else {
             kid = KID_TLS_CLIENT_CERTIFICATE_PUBLIC;  // Client Certificate (Client Authentication, optional)
         }
-        crypto_key& key = protection.get_keyexchange();
-        auto pkey = key.find(kid);
+
+        auto pkey = tlsadvisor->get_key(session, kid);
 
         ret = verify_certverify(pkey, dir, scheme, signature);
 
@@ -288,6 +288,7 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
         auto session = get_session();
         tls_protection& protection = session->get_tls_protection();
         auto& protection_context = protection.get_protection_context();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         const char* kid = nullptr;  // Private Key
         if (from_server == dir) {
@@ -296,9 +297,7 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
             kid = KID_TLS_CLIENT_CERTIFICATE_PRIVATE;
         }
 
-        crypto_key& key = protection.get_keyexchange();
-        auto pkey = key.find(kid);
-
+        auto pkey = tlsadvisor->get_key(session, kid);
         if (nullptr == pkey) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
             session->reset_session_status();

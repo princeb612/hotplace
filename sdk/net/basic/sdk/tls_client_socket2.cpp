@@ -12,7 +12,6 @@
 #include <sdk/net/basic/sdk/tls_composer.hpp>
 #include <sdk/net/tls/tls/record/tls_record_alert.hpp>
 #include <sdk/net/tls/tls/record/tls_record_application_data.hpp>
-#include <sdk/net/tls/tls/record/tls_record_builder.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 
