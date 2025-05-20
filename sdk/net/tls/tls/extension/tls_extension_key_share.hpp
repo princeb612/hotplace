@@ -44,8 +44,8 @@ class tls_extension_client_key_share : public tls_extension_key_share {
     virtual void clear();
 
    protected:
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t do_write_body(binary_t& bin);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
     virtual std::string get_kid();
 
    private:
@@ -64,8 +64,8 @@ class tls_extension_server_key_share : public tls_extension_key_share {
     virtual void clear();
 
    protected:
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t do_write_body(binary_t& bin);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
     virtual std::string get_kid();
 
     virtual return_t add(uint16 group);

@@ -41,7 +41,7 @@ return_t tls_extensions::read(tls_session* session, tls_direction_t dir, const b
             auto extension_type = ntoh16(*(uint16*)(stream + pos));
             auto extension = builder.set(session).set(dir).set(extension_type).build();
             if (extension) {
-                ret = extension->read(stream, size, pos);
+                ret = extension->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {
                     add(extension);
                 } else {
@@ -63,9 +63,9 @@ return_t tls_extensions::read(tls_session* session, tls_direction_t dir, const b
     return read(session, dir, stream, size, pos);
 }
 
-return_t tls_extensions::write(binary_t& bin) {
+return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
-    auto lambda = [&](tls_extension* extension) -> return_t { return extension->write(bin); };
+    auto lambda = [&](tls_extension* extension) -> return_t { return extension->write(dir, bin); };
     ret = for_each(lambda);
     return ret;
 }

@@ -29,7 +29,7 @@ constexpr char constexpr_hostname[] = "hostname";
 
 tls_extension_sni::tls_extension_sni(tls_session* session) : tls_extension(tls_ext_server_name, session), _nametype(0) {}
 
-return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 6066 3.  Server Name Indication
@@ -88,7 +88,7 @@ return_t tls_extension_sni::do_read_body(const byte_t* stream, size_t size, size
     return ret;
 }
 
-return_t tls_extension_sni::do_write_body(binary_t& bin) {
+return_t tls_extension_sni::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
 
     {

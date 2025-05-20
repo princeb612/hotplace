@@ -358,7 +358,7 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
         {
             // encrypt_then_mac
             if (tls_12 == _minspec) {
-                if (session->get_keyvalue().get(session_enable_encrypt_then_mac)) {
+                if (session->get_keyvalue().get(session_conf_enable_encrypt_then_mac)) {
                     ch->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
                 }
             }
@@ -435,7 +435,7 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
             // renegotiation_info
             ch->get_extensions().add(new tls_extension_renegotiation_info(session));
             // master_secret
-            // ch->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, session));
+            ch->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, session));
         }
 
         {
@@ -499,16 +499,12 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
                 }
             } else {
                 {
-                    // auto renegotiation_info = new tls_extension_renegotiation_info(session);
-                    // hs->get_extensions().add(renegotiation_info);
+                    // session_conf_enable_encrypt_then_mac
+                    // session_conf_enable_extended_master_secret
                 } {
                     auto ec_point_formats = new tls_extension_ec_point_formats(session);
                     (*ec_point_formats).add("uncompressed");
                     hs->get_extensions().add(ec_point_formats);
-                }
-                {
-                    auto extension = new tls_extension_unknown(tls_ext_extended_master_secret, session);
-                    hs->get_extensions().add(extension);
                 }
                 {
                     auto supported_groups = new tls_extension_supported_groups(session);

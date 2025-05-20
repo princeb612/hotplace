@@ -1,7 +1,7 @@
 #### dtls12.pcapng - client
 
 ````
-$ openssl s_client -connect localhost:9000 -state -debug -keylogfile client.keylog -dtls1_2
+$ openssl s_client -connect localhost:9000 -state -debug -keylogfile sslkeylog -dtls1_2
 Connecting to ::1
 CONNECTED(000001E0)
 SSL_connect:before SSL initialization

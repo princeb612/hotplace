@@ -113,6 +113,12 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
 
             session->get_keyvalue().set(session_handshake_finished, 1);
 
+            if (from_client == dir) {
+                protection.set_item(tls_context_client_verifydata, _verify_data);
+            } else if (from_server == dir) {
+                protection.set_item(tls_context_server_verifydata, _verify_data);
+            }
+
             if (from_server == dir) {
                 session->update_session_status(session_status_server_finished);
             } else if (from_client == dir) {
@@ -183,7 +189,6 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
                 ret = errorcode_t::error_verify;
-                // __leave2;
             }
 
 #if defined DEBUG
@@ -201,6 +206,12 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
+
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+
+            _verify_data = std::move(verify_data);
         }
     }
     __finally2 {
@@ -236,7 +247,7 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
 
         tls_secret_t typeof_secret;
         binary_t verify_data;
-        { protection.calc_finished(dir, hmacalg, dlen, typeof_secret, verify_data); }
+        protection.calc_finished(dir, hmacalg, dlen, typeof_secret, verify_data);
 
         {
             payload pl;
@@ -256,6 +267,8 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
             trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
         }
 #endif
+
+        _verify_data = std::move(verify_data);
     }
     __finally2 {}
     return ret;

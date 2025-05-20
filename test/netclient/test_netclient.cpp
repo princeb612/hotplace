@@ -172,7 +172,7 @@ void tls_client2() {
     tls_client_socket2 cli(minver);
 
     if (option.flags & flag_enable_etm) {
-        cli.get_session()->get_keyvalue().set(session_enable_encrypt_then_mac, 1);
+        cli.get_session()->get_keyvalue().set(session_conf_enable_encrypt_then_mac, 1);
     }
 
     char buffer[option.bufsize];

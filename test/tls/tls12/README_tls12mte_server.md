@@ -1,7 +1,7 @@
 #### tls12mte.pcapng - server
 
 ````
-$ openssl s_server -accept 9000 -cert server.crt -key server.key -state -debug -status_verbose -keylogfile server.keylog
+$ openssl s_server -accept 9000 -cert server.crt -key server.key -state -debug -status_verbose -keylogfile sslkeylog
 SSL_accept:before SSL initialization
 read from 0x2629d5f61a0 [0x2629d5e61e3] (5 bytes => 5 (0x5))
 0000 - 16 03 03 00 cc                                    .....

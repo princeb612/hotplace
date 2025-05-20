@@ -81,7 +81,7 @@ return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, c
 return_t tls_handshake_encrypted_extensions::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     binary_t extensions;
-    ret = get_extensions().write(extensions);
+    ret = get_extensions().write(dir, extensions);
     binary_append(bin, uint16(extensions.size()), hton16);
     binary_append(bin, extensions);
     return ret;

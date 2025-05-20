@@ -130,6 +130,8 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             _kv[tls_context_transcript_hash] = context_hash;
         }
 
+        auto flow = get_flow();
+
         if (tls_hs_client_hello == type) {
             /**
              *             0
@@ -162,7 +164,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
             if ((session_tls == session_type) || (session_dtls == session_type)) {
                 if (is_kindof_tls13()) {
-                    if (tls_flow_0rtt == get_flow()) {
+                    if (tls_flow_0rtt == flow) {
                         // 0-RTT
                         const binary_t &secret_resumption_early = get_item(tls_secret_resumption_early);  // client finished
 
@@ -177,6 +179,10 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                         lambda_expand_label(tls_secret_c_e_traffic_key, secret_c_e_traffic_key, hashalg, keysize, secret_c_e_traffic, "key", empty);
                         binary_t secret_c_e_traffic_iv;
                         lambda_expand_label(tls_secret_c_e_traffic_iv, secret_c_e_traffic_iv, hashalg, 12, secret_c_e_traffic, "iv", empty);
+                    }
+                } else {
+                    if (tls_flow_renegotiation == flow) {
+                        // TODO
                     }
                 }
             } else if ((session_quic == session_type) || (session_quic2 == session_type)) {
@@ -294,7 +300,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                             __leave2;
                         }
 
-                        uint16 group_enforced = session->get_keyvalue().get(session_enforce_key_share_group);
+                        uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
                         if (group_enforced) {
                             auto hint = tlsadvisor->hintof_tls_group(group_enforced);
                             // enforcing
@@ -332,7 +338,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     }
 
                     binary_t secret_handshake_derived;
-                    switch (get_flow()) {
+                    switch (flow) {
                         case tls_flow_1rtt:
                         case tls_flow_hello_retry_request: {
                             lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, early_secret, "derived", empty_hash);
@@ -341,6 +347,9 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                             const binary_t &secret_resumption_early = get_item(tls_secret_resumption_early);
                             lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, secret_resumption_early, "derived",
                                                 empty_hash);
+                        } break;
+                        case tls_flow_renegotiation: {
+                            // TODO
                         } break;
                     }
 
@@ -551,9 +560,15 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     hash_context_t *hmac_handle = nullptr;
                     size_t size_master_secret = 48;
 
-                    binary_append(seed, "master secret");
-                    binary_append(seed, client_hello_random);
-                    binary_append(seed, server_hello_random);
+                    auto use_ems = session->get_keyvalue().get(session_extended_master_secret);
+                    if (use_ems) {
+                        binary_append(seed, "extended master secret");
+                        binary_append(seed, context_hash);
+                    } else {
+                        binary_append(seed, "master secret");
+                        binary_append(seed, client_hello_random);
+                        binary_append(seed, server_hello_random);
+                    }
 
                     binary_t temp = seed;
                     binary_t atemp;
@@ -591,6 +606,9 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
             auto hmac_expansion = builder.set(hmac_alg).set(master_secret).build();
             if (hmac_expansion) {
+                auto cs = get_cipher_suite();
+                bool is_cbc = tlsadvisor->is_kindof_cbc(cs);
+
                 /**
                  * key expansion
                  * RFC 2246 5. HMAC and the pseudorandom function
@@ -646,18 +664,30 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 binary_t secret_server_iv;
 
                 // partition
-                binary_append(secret_client_mac_key, &p[offset], dlen);
-                offset += dlen;
-                binary_append(secret_server_mac_key, &p[offset], dlen);
-                offset += dlen;
-                binary_append(secret_client_key, &p[offset], keysize);
-                offset += keysize;
-                binary_append(secret_server_key, &p[offset], keysize);
-                offset += keysize;
-                binary_append(secret_client_iv, &p[offset], ivsize);
-                offset += ivsize;
-                binary_append(secret_server_iv, &p[offset], ivsize);
-                offset += ivsize;
+                if (is_cbc) {
+                    binary_append(secret_client_mac_key, &p[offset], dlen);
+                    offset += dlen;
+                    binary_append(secret_server_mac_key, &p[offset], dlen);
+                    offset += dlen;
+                    binary_append(secret_client_key, &p[offset], keysize);
+                    offset += keysize;
+                    binary_append(secret_server_key, &p[offset], keysize);
+                    offset += keysize;
+                    binary_append(secret_client_iv, &p[offset], ivsize);
+                    offset += ivsize;
+                    binary_append(secret_server_iv, &p[offset], ivsize);
+                    offset += ivsize;
+                } else {
+                    ivsize = 4;  // fixed iv (4) + explitcit iv (8) = 12
+                    binary_append(secret_client_key, &p[offset], keysize);
+                    offset += keysize;
+                    binary_append(secret_server_key, &p[offset], keysize);
+                    offset += keysize;
+                    binary_append(secret_client_iv, &p[offset], ivsize);
+                    offset += ivsize;
+                    binary_append(secret_server_iv, &p[offset], ivsize);
+                    offset += ivsize;
+                }
 
                 set_item(tls_secret_client_mac_key, secret_client_mac_key);
                 set_item(tls_secret_server_mac_key, secret_server_mac_key);

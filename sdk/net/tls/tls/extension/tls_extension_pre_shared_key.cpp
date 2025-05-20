@@ -84,7 +84,7 @@ tls_extension_psk::tls_extension_psk(tls_session* session) : tls_extension(tls_e
 tls_extension_client_psk::tls_extension_client_psk(tls_session* session)
     : tls_extension_psk(session), _psk_identities_len(0), _obfuscated_ticket_age(0), _psk_binders_len(0) {}
 
-return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -192,11 +192,11 @@ return_t tls_extension_client_psk::do_read_body(const byte_t* stream, size_t siz
     return ret;
 }
 
-return_t tls_extension_client_psk::do_write_body(binary_t& bin) { return not_supported; }
+return_t tls_extension_client_psk::do_write_body(tls_direction_t dir, binary_t& bin) { return not_supported; }
 
 tls_extension_server_psk::tls_extension_server_psk(tls_session* session) : tls_extension_psk(session), _selected_identity(0) {}
 
-return_t tls_extension_server_psk::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_server_psk::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 selected_identity = 0;
@@ -228,7 +228,7 @@ return_t tls_extension_server_psk::do_read_body(const byte_t* stream, size_t siz
     return ret;
 }
 
-return_t tls_extension_server_psk::do_write_body(binary_t& bin) { return not_supported; }
+return_t tls_extension_server_psk::do_write_body(tls_direction_t dir, binary_t& bin) { return not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

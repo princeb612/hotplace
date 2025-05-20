@@ -1,7 +1,7 @@
 #### server
 
 ````
-$ openssl s_server -accept 9000 -cert server.crt -key server.key -state -debug -status_verbose -keylogfile server.keylog -client_renegotiation
+$ openssl s_server -accept 9000 -cert server.crt -key server.key -state -debug -status_verbose -keylogfile sslkeylog -client_renegotiation
 Using default temp DH parameters
 ACCEPT
 SSL_accept:before SSL initialization

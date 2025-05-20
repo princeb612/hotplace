@@ -232,7 +232,7 @@ void test_helloretryrequest() {
     binary_t bin;
 
     // enforce server key share group 0x001d "x25519"
-    session_server.get_keyvalue().set(session_enforce_key_share_group, 0x001d);
+    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, 0x001d);
 
     {
         flow = session_server.get_tls_protection().get_flow();

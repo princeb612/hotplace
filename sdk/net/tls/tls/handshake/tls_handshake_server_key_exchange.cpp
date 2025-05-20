@@ -157,7 +157,23 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 crypto_sign_builder builder;
                 auto sign = builder.set_tls_sign_scheme(sigalg).build();
                 if (sign) {
-                    ret = sign->verify(pkey, message, sig);
+                    auto hint = tlsadvisor->hintof_signature_scheme(sigalg);
+                    auto kty = hint->kty;
+                    switch (kty) {
+                        case kty_ec: {
+                            crypto_advisor *advisor = crypto_advisor::get_instance();
+                            uint16 unitsize = advisor->sizeof_ecdsa(hint->sig) >> 1;
+
+                            // DER -> R || S
+                            binary_t rs;
+                            der2sig(sig, unitsize, rs);
+
+                            ret = sign->verify(pkey, message, rs);
+                        } break;
+                        default: {
+                            ret = sign->verify(pkey, message, sig);
+                        } break;
+                    }
                     sign->release();
                 } else {
                     ret = errorcode_t::not_supported;
@@ -173,7 +189,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 dbs.println("> %s", constexpr_pubkey);
                 dbs.println(" > %s %i", constexpr_pubkey_len, pubkey_len);
                 dump_memory(pubkey, &dbs, 16, 4, 0x0, dump_notrunc);
-                dbs.println("> %s", constexpr_signature);
+                dbs.println("> %s \e[1;33m%s\e[0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
                 dbs.println(" > 0x%04x %s", sigalg, tlsadvisor->signature_scheme_name(sigalg).c_str());
                 dbs.println(" > %s %i", constexpr_sig_len, sig_len);
                 dump_memory(sig, &dbs, 16, 3, 0x0, dump_notrunc);
@@ -182,6 +198,10 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
+
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
     }
     __finally2 {
@@ -238,19 +258,19 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
         protection_context.for_each_supported_groups(lambda);
     }
 
-    crypto_kty_t kty = kty_unknown;
-    auto cs = protection.get_cipher_suite();
-    auto hint = tlsadvisor->hintof_cipher_suite(cs);
-    switch (hint->auth) {
-        case auth_rsa:
-            kty = kty_rsa;
-            break;
-        case auth_ecdsa:
-            kty = kty_ec;
-            break;
-        default:
-            break;
-    }
+    // crypto_kty_t kty = kty_unknown;
+    // auto cs = protection.get_cipher_suite();
+    // auto hint = tlsadvisor->hintof_cipher_suite(cs);
+    // switch (hint->auth) {
+    //     case auth_rsa:
+    //         kty = kty_rsa;
+    //         break;
+    //     case auth_ecdsa:
+    //         kty = kty_ec;
+    //         break;
+    //     default:
+    //         break;
+    // }
 
     auto pkey_cert = tlsadvisor->get_key(session, KID_TLS_SERVER_CERTIFICATE_PRIVATE);
     auto kty_cert = typeof_crypto_key(pkey_cert);
@@ -284,7 +304,16 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
         crypto_sign_builder builder;
         auto sign = builder.set_tls_sign_scheme(sigalg).build();
         if (sign) {
-            ret = sign->sign(pkey_cert, message, sig);
+            switch (kty_cert) {
+                case kty_ec: {
+                    binary_t rs;
+                    ret = sign->sign(pkey_cert, message, rs);
+                    sig2der(rs, sig);
+                } break;
+                default: {
+                    ret = sign->sign(pkey_cert, message, sig);
+                } break;
+            }
             sign->release();
         } else {
             ret = errorcode_t::not_supported;

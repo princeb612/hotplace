@@ -346,11 +346,6 @@ void test_captured_tls12() {
         tls_session session_etm(session_tls);
         auto& protection = session_etm.get_tls_protection();
 
-        // crypto_keychain keychain;
-        // auto key = session_etm.get_tls_protection().get_keyexchange();
-        // keychain.load_file(&key, key_certfile, "server.crt", KID_TLS_SERVER_CERTIFICATE_PUBLIC);
-        // keychain.load_file(&key, key_pemfile, "server.key", KID_TLS_SERVER_CERTIFICATE_PRIVATE);
-
         constexpr char constexpr_master_secret[] = "3a3847a4d20f9766ff81040b9db89f85f56b1b9526afc626c0138e5b89d62c74680af78ba4d827ee38989518845bc985";
         protection.use_pre_master_secret(true);
         protection.set_item(tls_secret_master, base16_decode(constexpr_master_secret));

@@ -25,7 +25,7 @@ constexpr char constexpr_mode[] = "mode";
 tls_extension_psk_key_exchange_modes::tls_extension_psk_key_exchange_modes(tls_session* session)
     : tls_extension(tls_ext_psk_key_exchange_modes, session), _modes(0) {}
 
-return_t tls_extension_psk_key_exchange_modes::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes
@@ -71,7 +71,7 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(const byte_t* stream
     return ret;
 }
 
-return_t tls_extension_psk_key_exchange_modes::do_write_body(binary_t& bin) {
+return_t tls_extension_psk_key_exchange_modes::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     uint8 cbsize_modes = 0;
     binary_t bin_modes;

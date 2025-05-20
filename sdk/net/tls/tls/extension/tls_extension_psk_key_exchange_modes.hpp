@@ -28,8 +28,8 @@ class tls_extension_psk_key_exchange_modes : public tls_extension {
     tls_extension_psk_key_exchange_modes& add(const std::string& name);
 
    protected:
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t do_write_body(binary_t& bin);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
     std::list<uint8> _modes;

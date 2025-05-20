@@ -24,7 +24,7 @@ constexpr char constexpr_algorithm[] = "algorithm";
 
 tls_extension_compress_certificate::tls_extension_compress_certificate(tls_session* session) : tls_extension(tls_ext_compress_certificate, session) {}
 
-return_t tls_extension_compress_certificate::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_compress_certificate::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint8 algorithms_len = 0;
@@ -65,7 +65,7 @@ return_t tls_extension_compress_certificate::do_read_body(const byte_t* stream, 
     return ret;
 }
 
-return_t tls_extension_compress_certificate::do_write_body(binary_t& bin) {
+return_t tls_extension_compress_certificate::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     uint8 cbsize_algorithms = 0;
     binary_t bin_algorithms;

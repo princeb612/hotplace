@@ -1,5 +1,6 @@
-#### TOC
+#### DTLS 1.2
 
+- [sslkeylog](sslkeylog)
 - dtls12.pcapng
   - [server](README_dtls12_server.md)
   - [client](README_dtls12_client.md)
@@ -9,4 +10,3 @@
 - dtls12netclient.pcapng
   - [server](README_dtls12netclient_server.md)
   - [client](README_dtls12netclient_client.md)
-- [keylogfile](client.keylog)

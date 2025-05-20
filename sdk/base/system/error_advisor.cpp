@@ -242,6 +242,8 @@ const error_description error_descriptions[] = {
     errordef(exceed, "exceed the designed size"),
     errordef(fragmented, "fragment detected"),
     errordef(not_specified, "not specfied"),
+    errordef(error_negotiate, "(re)negotiation failed"),
+    errordef(illegal_parameter, "illegal parameter"),  // ie. invalid_parameter + error_verify
 
     errordef(not_supported, "not supported"),
     errordef(expect_failure, "expect failure (negative test)"),

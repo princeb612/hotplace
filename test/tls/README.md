@@ -1,5 +1,29 @@
 ## test
 
+- MINGW64 test in progress, linux not yet
+- [ ] tasks
+  - [ ] DTLS 1.2 (transcript hash mismatch)
+  - TLS server
+    - [x] handshake certificate
+    - [x] server key exchange
+      - [x] DER format
+    - [ ] renegotiation
+      - [x] client_hello renegotiation_info
+      - [x] server_hello renegotiation_info
+      - [ ] key calcurations
+    - [ ] TLS 1.3
+    - [x] TLS 1.2 CBC
+    - [ ] TLS 1.2 GCM
+      - [ ] protection_context::select_from (temporary SWITCH_ENFORCE_CBC_FOR_TEST set)
+      - [ ] test_construct_tls
+
+### packet capture
+
+* [tls13](tls13/README.md)
+* [tls12](tls12/README.md)
+* [dtls12](dtls12/README.md)
+* [linux](linux/README.md)
+
 ### Cipher Suites
 
 | code   | version | Cipher Suites                                 |        |
@@ -9,28 +33,28 @@
 | 0x1303 | TLS 1.3 | TLS_CHACHA20_POLY1305_SHA256                  | tested |
 | 0x1304 | TLS 1.3 | TLS_AES_128_CCM_SHA256                        | tested |
 | 0x1305 | TLS 1.3 | TLS_AES_128_CCM_8_SHA256                      | tested |
-| 0xc027 | TLS 1.2 | TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256         | tested |
-| 0xc028 | TLS 1.2 | TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384         | tested |
-| 0xc02b | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256       | tested |
-| 0xc02c | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384       | tested |
-| 0xc05c | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256      | tested |
-| 0xc05d | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384      | tested |
-| 0xc0ac | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_128_CCM              | tested |
-| 0xc0ad | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_256_CCM              | tested |
-| 0xc0ae | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8            | tested |
-| 0xc0af | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8            | tested |
-| 0xcca9 | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 | tested |
+| 0xc027 | TLS 1.2 | TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256         | -      |
+| 0xc028 | TLS 1.2 | TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384         | -      |
+| 0xc02b | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256       | -      |
+| 0xc02c | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384       | -      |
+| 0xc05c | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256      | -      |
+| 0xc05d | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384      | -      |
+| 0xc0ac | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_128_CCM              | -      |
+| 0xc0ad | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_256_CCM              | -      |
+| 0xc0ae | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8            | -      |
+| 0xc0af | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8            | -      |
+| 0xcca9 | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 | -      |
 | 0xc023 | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256       | tested |
 | 0xc024 | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384       | tested |
-| 0xc02f | TLS 1.2 | TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256         | tested |
-| 0xc030 | TLS 1.2 | TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384         | tested |
-| 0xc05c | TLS 1.2 | TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256        | tested |
-| 0xc05d | TLS 1.2 | TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384        | tested |
+| 0xc02f | TLS 1.2 | TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256         | -      |
+| 0xc030 | TLS 1.2 | TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384         | -      |
+| 0xc05c | TLS 1.2 | TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256        | -      |
+| 0xc05d | TLS 1.2 | TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384        | -      |
 | 0xc072 | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256  | tested |
 | 0xc073 | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384  | tested |
 | 0xc076 | TLS 1.2 | TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256    | tested |
 | 0xc077 | TLS 1.2 | TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384    | tested |
-| 0xcca8 | TLS 1.2 | TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256   | tested |
+| 0xcca8 | TLS 1.2 | TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256   | -      |
 
 ### test_construct_tls_routine
 
@@ -97,12 +121,6 @@
   - S->C new_session_ticket
   - S->C change_cipher_spec
   - S->C finished
-
-### packet capture
-
-* [tls13](tls13/README.md)
-* [tls12](tls12/README.md)
-* [dtls12](dtls12/README.md)
 
 ### TLS 1.3
 

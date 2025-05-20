@@ -420,6 +420,9 @@ std::string tls_advisor::nameof_tls_flow(tls_flow_t flow) {
         case tls_flow_hello_retry_request: {
             value = "HelloRetryRequest";
         } break;
+        case tls_flow_renegotiation: {
+            value = "renegotiation";
+        } break;
     }
     return value;
 }

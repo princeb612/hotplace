@@ -25,8 +25,8 @@ class tls_extension_encrypted_client_hello : public tls_extension {
     tls_extension_encrypted_client_hello(tls_session* session);
 
    protected:
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t do_write_body(binary_t& bin);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
     uint8 _client_hello_type;

@@ -145,6 +145,12 @@ mindmap
     * https://quic.xargs.org/
   * ciphersuites
     * https://ciphersuite.info/cs/
+    * https://docs.openssl.org/1.1.1/man1/ciphers/
+  * IANA
+    * https://www.iana.org/assignments/aead-parameters/aead-parameters.xhtml
+    * https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
+    * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
+    * https://www.iana.org/assignments/quic/quic.xhtml
   * samplepackets
     * https://wiki.wireshark.org/samplecaptures
   * The SSLKEYLOGFILE Format for TLS

@@ -34,9 +34,9 @@ class tls_extension_ec_point_formats : public tls_extension {
     void clear();
 
    protected:
-    virtual return_t do_postprocess();
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t do_write_body(binary_t& bin);
+    virtual return_t do_postprocess(tls_direction_t dir);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
     std::list<uint8> _ec_point_formats;

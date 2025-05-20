@@ -53,13 +53,15 @@ enum session_conf_t {
 
     // uint16, session->get_keyvalue()
     // config
-    session_enable_encrypt_then_mac = 0x1001,  // TLS 1.2 EtM
-    session_enforce_key_share_group = 0x1002,  // TLS 1.3 key share group
-    session_enable_renegotiation = 0x1003,     // TLS 1.2 renegotiation
+    session_conf_enable_encrypt_then_mac = 0x1001,        // TLS 1.2 EtM
+    session_conf_enforce_key_share_group = 0x1002,        // TLS 1.3 key share group
+    session_conf_enable_renegotiation = 0x1003,           // TLS 1.2 renegotiation
+    session_conf_enable_extended_master_secret = 0x1004,  // extended master secret
     // status
-    session_tls_version = 0x2001,         // TLS version
-    session_encrypt_then_mac = 0x2002,    // TLS 1.2 EtM
-    session_handshake_finished = 0x2003,  // if finished HRR->0-RTT else HRR->1-RTT
+    session_tls_version = 0x2001,             // TLS version
+    session_encrypt_then_mac = 0x2002,        // TLS 1.2 EtM
+    session_handshake_finished = 0x2003,      // if finished HRR->0-RTT else HRR->1-RTT
+    session_extended_master_secret = 0x2004,  // PRF("extended master secret", transcript_hash)
     // debug
     session_debug_deprecated_ciphersuite = 0x3001,  // to test unsupported cipher suite
 };

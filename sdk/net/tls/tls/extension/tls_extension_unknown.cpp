@@ -19,12 +19,12 @@ namespace net {
 
 tls_extension_unknown::tls_extension_unknown(uint16 type, tls_session* session) : tls_extension(type, session) {}
 
-return_t tls_extension_unknown::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_unknown::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     return ret;
 }
 
-return_t tls_extension_unknown::do_write_body(binary_t& bin) {
+return_t tls_extension_unknown::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     return ret;
 }

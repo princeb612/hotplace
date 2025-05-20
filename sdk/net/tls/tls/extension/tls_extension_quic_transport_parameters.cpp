@@ -27,7 +27,7 @@ constexpr char constexpr_param[] = "param";
 tls_extension_quic_transport_parameters::tls_extension_quic_transport_parameters(tls_session* session)
     : tls_extension(tls_ext_quic_transport_parameters, session) {}
 
-return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto tpos = offsetof_header();
@@ -83,7 +83,7 @@ return_t tls_extension_quic_transport_parameters::do_read_body(const byte_t* str
     return ret;
 }
 
-return_t tls_extension_quic_transport_parameters::do_write_body(binary_t& bin) { return errorcode_t::not_supported; }
+return_t tls_extension_quic_transport_parameters::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

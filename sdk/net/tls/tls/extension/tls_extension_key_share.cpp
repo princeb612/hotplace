@@ -153,7 +153,7 @@ void tls_extension_client_key_share::clear() {
     keyshare.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
 }
 
-return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 8446 4.2.8.  Key Share
@@ -225,7 +225,7 @@ return_t tls_extension_client_key_share::do_read_body(const byte_t* stream, size
     return ret;
 }
 
-return_t tls_extension_client_key_share::do_write_body(binary_t& bin) {
+return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -300,7 +300,7 @@ void tls_extension_server_key_share::clear() {
     keyshare.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);
 }
 
-return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -358,7 +358,7 @@ return_t tls_extension_server_key_share::do_read_body(const byte_t* stream, size
     return ret;
 }
 
-return_t tls_extension_server_key_share::do_write_body(binary_t& bin) {
+return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -445,7 +445,7 @@ return_t tls_extension_server_key_share::add_keyshare() {
         auto advisor = crypto_advisor::get_instance();
         auto tlsadvisor = tls_advisor::get_instance();
         auto& protection = session->get_tls_protection();
-        uint16 group_enforced = session->get_keyvalue().get(session_enforce_key_share_group);
+        uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
         if (group_enforced) {
             add(group_enforced);
         } else {

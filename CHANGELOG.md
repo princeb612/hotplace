@@ -1,279 +1,191 @@
 # history
 
-* understanding ...
+* topic
   * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
 
-* Revision 777-778
-  * TLS server - research/debugging in progress, mingw64 environment
-  * Rev.777 - server socket, netserver integration
-  * Rev.778 - redesign server certificates
-
-* Revision 774 (Tag 1.27)
-
-* Revision 772 (Tag 1.26)
-
-* Revision 771 (Tag 1.25)
-
-* Revision 770 (Tag 1.24)
-  * [tested] valgrind
-  * [applied] openssl-3.5.0 (LTS)
-
-* Revision 766 (Tag 1.23)
-  * [tested] DTLS over UDP, client
-
-* Revision 765
-
-* Revision 764 (Tag 1.22)
-  * [fixed] DTLS reconstruction data (record epoch and sequence), handshake message sequence
-
-* Revision 762 (Tag 1.21)
-  * [tested] DTLS reconstruction data (record epoch and sequence), handshake message sequence
-
-* Revision 761 (Tag 1.20)
-
-* Revision 760
-  * [tested] TLS 1.2 finished
-
-* Revision 759 (Tag 1.19)
-
-* Revision 752 (Tag 1.17)
-  * [tested] encrypt_then_mac
-
-* Revision 751 (Tag 1.16)
-
-* Revision 750 (Tag 1.15)
-
-* Revision 741 (Tag 1.14)
-
-* Revision 740
-  * [fixed] TLS 1.2
-
-* Revision 732 (Tag 1.13)
-
-* Revision 731 (Tag 1.12)
-  * [tested] valgrind (tcpserver1, tcpserver2, tlsserver, udpserver1, udpserver2, dtlsserver)
-
-* Revision 729
-  * simple client (TLS over TCP)
-    * test/netclient <-> test/tlsserver
-      * ./test-tlsserver -v -d -r &
-      * ./test-netclient -v -d -P 5
-
-* Revision 721 (Tag 1.11)
-
-* Revision 717 (Tag 1.09)
-
-* Revision 716
-  * [tested] RFC 9369 QUIC Version 2
-
-* Revision 715 (Tag 1.07)
-  * [tested] valgrind
-
-* Revision 714
-  * [tested] https://quic.xargs.org/
-
-* Revision 705 (Tag 1.05)
-
-* Revision 702
-  * [tested] DSA
-
-* Revision 700 (Tag 1.02)
-
-* Revision 684 (Tag 0.97)
-
-* Revision 681 (Tag 0.96)
-
-* Revision 679
-  * [tested] RFC 8448 6.  Client Authentication
-  * [tested] RFC 8448 7.  Compatibility Mode
-
-* Revision 677
-  * [tested] RFC 8448 5.  HelloRetryRequest
-
-* Revision 675
-  * [tested] RFC 8448 4.  Resumed 0-RTT Handshake
-
-* Revision 671
-  * [tested] https://dtls.xargs.org/
-
-* Revision 669
-  * [study] SSLKEYLOGFILE
-
-* Revision 668 (Tag 0.95)
-
-* Revision 667
-  * [tested] https://tls12.xargs.org/
-
-* Revision 663
-  * [tested] RFC 8448 3.  Simple 1-RTT Handshake
-
-* Revision 660
-  * [tested] https://tls13.xargs.org/
-
-* Revision 658
-  * [tested] TLS 1.3 certificate_verify, finished
-
-* Revision 657
-  * [added] ffdhe2048 ffdhe3072 ffdhe4096 ffdhe6144 ffdhe8192
-
-* Revision 656
-  * [tested] RSA_PSS key
-
-* Revision 654
-  * [tested] stream autoindent
-
-* Revision 647
-  * [tested] QUIC (RFC 9001)
-    * A.4.  Retry
-  * [study] TLS (RFC 8446)
-
-* Revision 646
-  * [tested] QUIC (RFC 9001)
-    * A.2.  Client Initial
-    * A.3.  Server Initial
-
-* Revision 644
-  * [added] log level
-
-* Revision 634, 635
-  * [tested] HPACK/QPACK
-
-* Revision 629, 630
-  * [study] HTTP/2 Server Push
-
-* Revision 627, 628
-  * [study] ALTSVC HTTP/2 Frame
-
-* Revision 626
-  * [tested] QPACK (RFC 9204)
-
-* Revision 625
-  * [tested] RFC 9204 Appendix B.
-  * [changed] QPACK RIC
-
-* Revision 624
-  * [changed] QPACK duplicate
-
-* Revision 623
-  * [tested] HPACK eviction
-
-* Revision 622
-  * [changed] HPACK/QPACK eviction
-
-* Revision 621
-  * [fixed] HPACK (changed parameter type to encode index over 255)
-
-* Revision 620
-  * [changed] faster match/select (hpack_dynamic_table)
-
-* Revision 617
-  * [feature] DTLS on network_server (epoll/IOCP)
-  * [tested] DTLS server (epoll)
-
-* Revision 615
-  * [changed] TLS non-blocking io
-
-* Revision 614
-  * [tested] DTLS server (IOCP)
-
-* Revision 613
-  * [added] TCP/TLS/UDP/DTLS client (see test/netclient)
-
-* Revision 607
-  * [fixed] sprintf
-
-* Revision 601
-  * [feature] UDP on network_server (epoll/IOCP)
-  * [tested] test/udpserver2 (udp server on network_server, epoll/iocp)
-
-* Revision 600
-  * [changed] udp server on network_server, epoll
-
-* Revision 598
-  * [changed] udp server on network_server, iocp
-
-* Revision 584
-  * [fixed] authenticode_verifier::verify
-    * std::equal (a.begin(), a.end(), empty.begin()) stack overflow
-  * [fixed] lower case digest algorithm
-
-* Revision 578
-  * [feature] Aho Corasick Algorithm + wildcard (single, any)
-  * [tested] Aho Corasick Algorithm + wildcard (any)
-
-* Revision 573
-  * [tested] Aho Corasick Algorithm + wildcard (single)
-
-* Revision 553
-  * [feature] Ukkonen algorithm
-
-* Revision 551
-  * [feature] suffix tree
-
-* Revision 550
-  * [feature] trie
-
-* Revision 548
-  * [feature] Aho Corasick algorithm
-
-* Revision 541
-  * [feature] shortest path (djkstra)
-
-* Revision 536
-  * [feature] parser
-  * [feature] Knuth-Morris-Pratt Algorithm
-
-* Revision 528 (Tag 0.56)
-
-* Revision 524
-  * [feature] logger
-
-* Revision 523
-  * [feature] HTTP/2 (RFC 7541, RFC 9113)
-
-* Revision 506
-  * [feature] HPACK (RFC 7541)
-
-* Revision 504
-  * [feature] huffman_coding
-
-* Revision 486
-  * [feature] OAuth 2.0 (RFC 6749)
-
-* Revision 472
-  * [added] RS1
-
-* Revision 455
-  * [feature] HTTP Digest Access Authentication (RFC 7616, userhash)
-
-* Revision 454
-  * [feature] HTTP Authentication: Basic and Digest Access Authentication (RFC 2617)
-
-* Revision 442
-  * [feature] COSE (RFC 8152, RFC 8230, RFC 8392, RFC 8812, RFC 9052, RFC 9053, RFC 9338)
-  * [tested] COSE (valgrind)
-
-* Revision 411
-  * [changed] COSE (RFC 8152 Appendix B. Two Layers of Recipient Information)
-
-* Revision 392
-  * [fixed] mingw terminal delay fixed
-
-* Revision 305
-  * [added] elliptic curves B-163, K-163, P-192
-
-* Revision 211
-  * [added] COSE (RFC 8152 examples .cbor, .diag)
-
-* Revision 108
-  * [feature] Authenticode (verification only)
-
-* Revision 107
-  * [feature] CBOR (RFC 7049, RFC 8949)
-
-* Revision 106
-  * [feature] ODBC
-
-* Revision 38
-  * [feature] HOTP(RFC 4226), TOTP(RFC 6238)
+* understanding
+  * Revision 777-
+    * TLS server - research/debugging in progress, mingw64 environment
+  * Revision 682-776 (Tag 1.28, Revision.776)
+    * TLS, DTLS client
+  * Revision 673-680 (Tag 0.97, Revision.684)
+    * RFC 8448
+  * Revision 650-672
+    * https://tls13.xargs.org/
+    * https://tls12.xargs.org/
+    * https://dtls.xargs.org/
+  * Revision 501-523 (Tag 0.56, Revision.528)
+    * HTTP/2
+
+* details
+  * Revision 779
+    * [fixed] server_key_exchange, rs2der
+  * Revision 778
+    * [tested] server certificates
+  * Revision 777
+    * [tested] server socket, netserver integration
+  * Revision 776 (Tag 1.28) - Release
+  * Revision 770
+    * [tested] valgrind
+    * [applied] openssl-3.5.0 (LTS)
+  * Revision 766
+    * [tested] DTLS over UDP, client
+  * Revision 764
+    * [fixed] DTLS reconstruction data (record epoch and sequence), handshake message sequence
+  * Revision 762
+    * [tested] DTLS reconstruction data (record epoch and sequence), handshake message sequence
+  * Revision 760
+    * [tested] TLS 1.2 finished
+  * Revision 752
+    * [tested] encrypt_then_mac
+  * Revision 740
+    * [fixed] TLS 1.2
+  * Revision 731
+    * [tested] valgrind (tcpserver1, tcpserver2, tlsserver, udpserver1, udpserver2, dtlsserver)
+  * Revision 729
+    * simple client (TLS over TCP)
+      * test/netclient <-> test/tlsserver
+        * ./test-tlsserver -v -d -r &
+        * ./test-netclient -v -d -P 5
+  * Revision 716
+    * [tested] RFC 9369 QUIC Version 2
+  * Revision 715
+    * [tested] valgrind
+  * Revision 714
+    * [tested] https://quic.xargs.org/
+  * Revision 702
+    * [tested] DSA
+  * Revision 684 (Tag 0.97) - Release
+  * Revision 679
+    * [tested] RFC 8448 6.  Client Authentication
+    * [tested] RFC 8448 7.  Compatibility Mode
+  * Revision 677
+    * [tested] RFC 8448 5.  HelloRetryRequest
+  * Revision 675
+    * [tested] RFC 8448 4.  Resumed 0-RTT Handshake
+  * Revision 671
+    * [tested] https://dtls.xargs.org/
+  * Revision 669
+    * [study] SSLKEYLOGFILE
+  * Revision 667
+    * [tested] https://tls12.xargs.org/
+  * Revision 663
+    * [tested] RFC 8448 3.  Simple 1-RTT Handshake
+  * Revision 660
+    * [tested] https://tls13.xargs.org/
+  * Revision 658
+    * [tested] TLS 1.3 certificate_verify, finished
+  * Revision 657
+    * [added] ffdhe2048 ffdhe3072 ffdhe4096 ffdhe6144 ffdhe8192
+  * Revision 656
+    * [tested] RSA_PSS key
+  * Revision 654
+    * [tested] stream autoindent
+  * Revision 647
+    * [tested] QUIC (RFC 9001)
+      * A.4.  Retry
+    * [study] TLS (RFC 8446)
+  * Revision 646
+    * [tested] QUIC (RFC 9001)
+      * A.2.  Client Initial
+      * A.3.  Server Initial
+  * Revision 644
+    * [added] log level
+  * Revision 634, 635
+    * [tested] HPACK/QPACK
+  * Revision 629, 630
+    * [study] HTTP/2 Server Push
+  * Revision 627, 628
+    * [study] ALTSVC HTTP/2 Frame
+  * Revision 626
+    * [tested] QPACK (RFC 9204)
+  * Revision 625
+    * [tested] RFC 9204 Appendix B.
+    * [changed] QPACK RIC
+  * Revision 624
+    * [changed] QPACK duplicate
+  * Revision 623
+    * [tested] HPACK eviction
+  * Revision 622
+    * [changed] HPACK/QPACK eviction
+  * Revision 621
+    * [fixed] HPACK (changed parameter type to encode index over 255)
+  * Revision 620
+    * [changed] faster match/select (hpack_dynamic_table)
+  * Revision 617
+    * [feature] DTLS on network_server (epoll/IOCP)
+    * [tested] DTLS server (epoll)
+  * Revision 615
+    * [changed] TLS non-blocking io
+  * Revision 614
+    * [tested] DTLS server (IOCP)
+  * Revision 613
+    * [added] TCP/TLS/UDP/DTLS client (see test/netclient)
+  * Revision 607
+    * [fixed] sprintf
+  * Revision 601
+    * [feature] UDP on network_server (epoll/IOCP)
+    * [tested] test/udpserver2 (udp server on network_server, epoll/iocp)
+  * Revision 600
+    * [changed] udp server on network_server, epoll
+  * Revision 598
+    * [changed] udp server on network_server, iocp
+  * Revision 584
+    * [fixed] authenticode_verifier::verify
+      * std::equal (a.begin(), a.end(), empty.begin()) stack overflow
+    * [fixed] lower case digest algorithm
+  * Revision 578
+    * [feature] Aho Corasick Algorithm + wildcard (single, any)
+    * [tested] Aho Corasick Algorithm + wildcard (any)
+  * Revision 573
+    * [tested] Aho Corasick Algorithm + wildcard (single)
+  * Revision 553
+    * [feature] Ukkonen algorithm
+  * Revision 551
+    * [feature] suffix tree
+  * Revision 550
+    * [feature] trie
+  * Revision 548
+    * [feature] Aho Corasick algorithm
+  * Revision 541
+    * [feature] shortest path (djkstra)
+  * Revision 536
+    * [feature] parser
+    * [feature] Knuth-Morris-Pratt Algorithm
+  * Revision 528 (Tag 0.56)
+  * Revision 524
+    * [feature] logger
+  * Revision 523
+    * [feature] HTTP/2 (RFC 7541, RFC 9113)
+  * Revision 506
+    * [feature] HPACK (RFC 7541)
+  * Revision 504
+    * [feature] huffman_coding
+  * Revision 486
+    * [feature] OAuth 2.0 (RFC 6749)
+  * Revision 472
+    * [added] RS1
+  * Revision 455
+    * [feature] HTTP Digest Access Authentication (RFC 7616, userhash)
+  * Revision 454
+    * [feature] HTTP Authentication: Basic and Digest Access Authentication (RFC 2617)
+  * Revision 442
+    * [feature] COSE (RFC 8152, RFC 8230, RFC 8392, RFC 8812, RFC 9052, RFC 9053, RFC 9338)
+    * [tested] COSE (valgrind)
+  * Revision 411
+    * [changed] COSE (RFC 8152 Appendix B. Two Layers of Recipient Information)
+  * Revision 392
+    * [fixed] mingw terminal delay fixed
+  * Revision 305
+    * [added] elliptic curves B-163, K-163, P-192
+  * Revision 211
+    * [added] COSE (RFC 8152 examples .cbor, .diag)
+  * Revision 108
+    * [feature] Authenticode (verification only)
+  * Revision 107
+    * [feature] CBOR (RFC 7049, RFC 8949)
+  * Revision 106
+    * [feature] ODBC
+  * Revision 38
+    * [feature] HOTP(RFC 4226), TOTP(RFC 6238)

@@ -28,8 +28,6 @@
 
 3. help
 
-* run with debugging option
-  * ./test-netclient -v -d -P tls12
 * TLS 1.2
   * ./test-netclient -v -d -P tls12 -i
 * TLS 1.3

@@ -34,8 +34,8 @@ class tls_extension {
 
     static tls_extension* read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
 
-    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(binary_t& bin);
+    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write(tls_direction_t dir, binary_t& bin);
 
     tls_session* get_session();
     void set_type(uint16 type);
@@ -51,12 +51,12 @@ class tls_extension {
     void release();
 
    protected:
-    virtual return_t do_preprocess();
-    virtual return_t do_postprocess();
-    virtual return_t do_read_header(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t do_write_header(binary_t& bin, const binary_t& body);
-    virtual return_t do_write_body(binary_t& bin);
+    virtual return_t do_preprocess(tls_direction_t dir);
+    virtual return_t do_postprocess(tls_direction_t dir);
+    virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
     t_shared_reference<tls_extension> _shared;

@@ -87,10 +87,41 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 protection.set_flow(tls_flow_0rtt);
                 session->reset_session_status();
             } else {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
-                session->reset_session_status();
-                ret = errorcode_t::error_handshake;
-                __leave2;
+                // renegotiation
+                //   review
+                //     - tls12renogotiation.pcapng
+                //       - client finished 92d20ede5b77d916bb376397 (tls_context_client_verifydata)
+                //       - server finished 522748448a013f75119810f6 (tls_context_server_verifydata)
+                //       - client_hello renegotiation_info 92d20ede5b77d916bb376397
+                //         - must be (tls_context_client_verifydata)
+                //       - server_hello renegotiation_info 92d20ede5b77d916bb376397522748448a013f75119810f6
+                //         - must be (tls_context_client_verifydata || tls_context_server_verifydata)
+                //     - tls12no_renogotiation.pcapng
+                //   tls_handshake_client_hello
+                //     - test the value of session_conf_enable_renegotiation
+                //       - if zero, renegotiation is prohibited
+                //         - alert(fatal, tls_alertdesc_no_renegotiation)
+                //       - else
+                //         - set_flow(tls_flow_renegotiation);
+                //         - renegotiation_info must be the verify data of finished
+                //         - key calcuration (TODO)
+                //   tls_handshake_server_hello
+                //     - if renegotiation allowed
+                //       - reply renegotiation_info
+                //       - key calcuration (TODO)
+                //
+#if 0
+                auto& kv = session->get_keyvalue();
+                if (kv.get(session_conf_enable_renegotiation)) {
+                    protection.set_flow(tls_flow_renegotiation);
+                } else
+#endif
+                {
+                    session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_renegotiation);
+                    session->reset_session_status();
+                    ret = errorcode_t::error_negotiate;
+                    __leave2;
+                }
             }
         }
 
@@ -110,13 +141,11 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 keyexchange.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);  // client_hello key_share
                 keyexchange.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello key_share
             } break;
+            case tls_flow_renegotiation: {
+                // TODO
+            } break;
             default: {
             } break;
-        }
-
-        auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
-        if (ext_etm) {
-            session->get_keyvalue().set(session_encrypt_then_mac, 1);
         }
     }
     __finally2 {
@@ -173,6 +202,9 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 case tls_flow_hello_retry_request: {
                     protection.update_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
                 } break;
+                case tls_flow_renegotiation: {
+                    // TODO
+                } break;
             }
 
             session->get_session_info(dir).set_status(get_type());
@@ -188,6 +220,16 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
             if (nullptr == ext_ver) {  // TLS 1.2
                 protection_context.add_supported_version(protection.get_lagacy_version());
             }
+        }
+
+        {
+            // encrypt_then_mac
+            auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
+            session->get_keyvalue().set(session_encrypt_then_mac, (ext_etm) ? 1 : 0);
+
+            // enxtended master secret
+            auto ext_ems = get_extensions().get(tls_ext_extended_master_secret);
+            session->get_keyvalue().set(session_extended_master_secret, (ext_ems) ? 1 : 0);
         }
 
         session->update_session_status(session_status_client_hello);
@@ -344,6 +386,20 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
         }
 
         ret = get_extensions().read(session, dir, stream, pos + extension_len, pos);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        if (tls_flow_renegotiation == protection.get_flow()) {
+            // client renegotiation
+            auto ext_renegotiationinfo = get_extensions().get(tls_ext_renegotiation_info);
+            if (nullptr == ext_renegotiationinfo) {
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
+                session->reset_session_status();
+                ret = errorcode_t::error_handshake;
+                __leave2;
+            }
+        }
     }
     __finally2 {
         // do nothing
@@ -359,7 +415,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
         auto& protection = session->get_tls_protection();
 
         binary_t extensions;
-        ret = get_extensions().write(extensions);
+        ret = get_extensions().write(dir, extensions);
         if (errorcode_t::success != ret) {
             __leave2;
         }

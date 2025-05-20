@@ -24,7 +24,7 @@ constexpr char constexpr_protocol[] = "alpn protocol";
 
 tls_extension_alpn::tls_extension_alpn(tls_session* session) : tls_extension(tls_ext_application_layer_protocol_negotiation, session) {}
 
-return_t tls_extension_alpn::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 alpn_len = 0;
@@ -62,7 +62,7 @@ return_t tls_extension_alpn::do_read_body(const byte_t* stream, size_t size, siz
     return ret;
 }
 
-return_t tls_extension_alpn::do_write_body(binary_t& bin) {
+return_t tls_extension_alpn::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     {
         payload pl;

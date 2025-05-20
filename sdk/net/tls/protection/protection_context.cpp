@@ -153,31 +153,38 @@ return_t protection_context::select_from(const protection_context& rhs) {
             };
             keys.for_each(lambda, nullptr);
 
+            uint16 candidate = 0;
+
             for (auto cs : rhs._cipher_suites) {
                 auto hint = tlsadvisor->hintof_cipher_suite(cs);
                 // RFC 5246 mandatory TLS_RSA_WITH_AES_128_CBC_SHA
                 if (hint && (tls_flag_support & hint->flags) && tlsadvisor->is_kindof(hint->version, selected_version)) {
                     if (tls_12 == hint->version) {
-                        bool match = false;
                         switch (hint->auth) {
                             case auth_rsa: {
                                 // allow TLS_ECDHE_RSA if RSA certificate exist
                                 auto iter = ktypes.find(kty_rsa);
-                                if (ktypes.end() != iter) {
-                                    match = true;
+                                if (ktypes.end() == iter) {
+                                    continue;
                                 }
                             } break;
                             case auth_ecdsa: {
                                 // allow TLS_ECDHE_ECDSA if EC certificate exist
                                 auto iter = ktypes.find(kty_ec);
-                                if (ktypes.end() != iter) {
-                                    match = true;
+                                if (ktypes.end() == iter) {
+                                    continue;
                                 }
                             } break;
                         }
-                        if (false == match) {
+
+#define SWITCH_ENFORCE_CBC_FOR_TEST
+
+#if defined SWITCH_ENFORCE_CBC_FOR_TEST
+                        if (cbc != hint->mode) {
+                            candidate = cs;
                             continue;
                         }
+#endif
                     }
 
                     add_cipher_suite(cs);
@@ -185,6 +192,14 @@ return_t protection_context::select_from(const protection_context& rhs) {
                     break;
                 }
             }
+#if defined SWITCH_ENFORCE_CBC_FOR_TEST
+            if (_cipher_suites.empty()) {
+                if (candidate) {
+                    add_cipher_suite(candidate);
+                    set_cipher_suite(candidate);
+                }
+            }
+#endif
             if (_cipher_suites.empty()) {
                 ret = errorcode_t::not_found;
                 __leave2;

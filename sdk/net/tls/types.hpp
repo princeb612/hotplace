@@ -554,6 +554,8 @@ enum tls_secret_t : uint16 {
     tls_context_session_id = (TLS_SECRET_USERCONTEXT | 0x0d),               //
     tls_context_cookie = (TLS_SECRET_USERCONTEXT | 0x0e),                   //
     tls_context_quic_dcid = (TLS_SECRET_USERCONTEXT | 0x11),                //
+    tls_context_client_verifydata = (TLS_SECRET_USERCONTEXT | 0x12),        //
+    tls_context_server_verifydata = (TLS_SECRET_USERCONTEXT | 0x13),        //
     tls_context_fragment = (TLS_SECRET_USERCONTEXT | 0x1b),                 // DTLS, QUIC
     tls_context_new_session_ticket = (TLS_SECRET_USERCONTEXT | 0x1d),       // RFC 8446 4.6.1. ticket
     tls_context_resumption_binder_key = (TLS_SECRET_USERCONTEXT | 0x21),    // CH 0-RTT

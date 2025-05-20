@@ -126,48 +126,60 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
         switch (session_type) {
             case session_tls:
             case session_dtls: {
-                if (from_client == dir) {
-                    // TLS, DTLS
-                    auto flow = get_flow();
-                    if (tls_flow_1rtt == flow || tls_flow_hello_retry_request == flow) {
-                        if (tls_hs_finished == hsstatus) {
-                            secret_key = tls_secret_application_client_key;
-                            secret_iv = tls_secret_application_client_iv;
-                        } else {
-                            secret_key = tls_secret_handshake_client_key;
-                            secret_iv = tls_secret_handshake_client_iv;
-                        }
-                    } else {
-                        // 1-RTT
-                        // 0-RTT
-                        // client_hello         c e traffic
-                        // end_of_early_data    c hs traffic
-                        // finished             c ap traffic
-                        switch (hsstatus) {
-                            case tls_hs_end_of_early_data: {
-                                secret_key = tls_secret_handshake_client_key;
-                                secret_iv = tls_secret_handshake_client_iv;
-                            } break;
-                            case tls_hs_finished: {
+                if (is_kindof_tls13()) {
+                    // TLS 1.3
+                    if (from_client == dir) {
+                        // TLS, DTLS
+                        auto flow = get_flow();
+                        if (tls_flow_1rtt == flow || tls_flow_hello_retry_request == flow) {
+                            if (tls_hs_finished == hsstatus) {
                                 secret_key = tls_secret_application_client_key;
                                 secret_iv = tls_secret_application_client_iv;
-                            } break;
-                            case tls_hs_client_hello:
-                            default: {
-                                // use early traffic
-                                secret_key = tls_secret_c_e_traffic_key;
-                                secret_iv = tls_secret_c_e_traffic_iv;
-                            } break;
+                            } else {
+                                secret_key = tls_secret_handshake_client_key;
+                                secret_iv = tls_secret_handshake_client_iv;
+                            }
+                        } else {
+                            // 1-RTT
+                            // 0-RTT
+                            // client_hello         c e traffic
+                            // end_of_early_data    c hs traffic
+                            // finished             c ap traffic
+                            switch (hsstatus) {
+                                case tls_hs_end_of_early_data: {
+                                    secret_key = tls_secret_handshake_client_key;
+                                    secret_iv = tls_secret_handshake_client_iv;
+                                } break;
+                                case tls_hs_finished: {
+                                    secret_key = tls_secret_application_client_key;
+                                    secret_iv = tls_secret_application_client_iv;
+                                } break;
+                                case tls_hs_client_hello:
+                                default: {
+                                    // use early traffic
+                                    secret_key = tls_secret_c_e_traffic_key;
+                                    secret_iv = tls_secret_c_e_traffic_iv;
+                                } break;
+                            }
+                        }
+                    } else if (from_server == dir) {
+                        // from_server
+                        if (tls_hs_finished == hsstatus) {
+                            secret_key = tls_secret_application_server_key;
+                            secret_iv = tls_secret_application_server_iv;
+                        } else {
+                            secret_key = tls_secret_handshake_server_key;
+                            secret_iv = tls_secret_handshake_server_iv;
                         }
                     }
-                } else if (from_server == dir) {
-                    // from_server
-                    if (tls_hs_finished == hsstatus) {
-                        secret_key = tls_secret_application_server_key;
-                        secret_iv = tls_secret_application_server_iv;
-                    } else {
-                        secret_key = tls_secret_handshake_server_key;
-                        secret_iv = tls_secret_handshake_server_iv;
+                } else {
+                    // TLS 1.2
+                    if (from_client == dir) {
+                        secret_key = tls_secret_client_key;
+                        secret_iv = tls_secret_client_iv;
+                    } else if (from_server == dir) {
+                        secret_key = tls_secret_server_key;
+                        secret_iv = tls_secret_server_iv;
                     }
                 }
             } break;

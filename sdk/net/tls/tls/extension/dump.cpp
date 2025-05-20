@@ -39,7 +39,7 @@ return_t tls_dump_extension(tls_session* session, tls_direction_t dir, const byt
             tls_extension_builder builder;
             auto extension = builder.set(session).set(dir).set(extension_type).build();
             if (extension) {
-                ret = extension->read(stream, size, pos);
+                ret = extension->read(dir, stream, size, pos);
                 extension->release();
             }
         }

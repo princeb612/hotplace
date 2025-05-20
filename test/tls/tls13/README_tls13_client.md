@@ -1,7 +1,7 @@
 #### tls13.pcapng - client
 
 ````
-$ openssl s_client -connect localhost:9000 -state -debug -keylogfile client.keylog -tls1_3
+$ openssl s_client -connect localhost:9000 -state -debug -keylogfile sslkeylog -tls1_3
 Connecting to ::1
 CONNECTED(000001DC)
 SSL_connect:before SSL initialization

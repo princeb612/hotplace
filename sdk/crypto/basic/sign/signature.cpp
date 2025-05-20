@@ -25,36 +25,67 @@
 namespace hotplace {
 namespace crypto {
 
+// ASN.1 DER
+constexpr char constexpr_sequence[] = "sequence";
+constexpr char constexpr_len[] = "len";
+constexpr char constexpr_rlen[] = "rlen";
+constexpr char constexpr_r[] = "r";
+constexpr char constexpr_slen[] = "slen";
+constexpr char constexpr_s[] = "s";
+
 return_t rs2der(const binary_t& r, const binary_t& s, binary_t& asn1der) {
     return_t ret = errorcode_t::success;
 
-    asn1der.clear();
+    __try2 {
+        asn1der.clear();
 
-    // ASN.1 DER
-    // ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
-    payload pl;
-    pl << new payload_member(uint8(0x30)) << new payload_member(uint8(r.size() + s.size() + 4)) << new payload_member(uint8(asn1_tag_integer))
-       << new payload_member(uint8(r.size())) << new payload_member(r) << new payload_member(uint8(asn1_tag_integer)) << new payload_member(uint8(s.size()))
-       << new payload_member(s);
-    pl.write(asn1der);
+        if (r.empty() || s.empty()) {
+            ret = errorcode_t::illegal_parameter;
+            __leave2;
+        }
+
+        // ASN.1 DER
+        // ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
+
+        // MSB determines sign. MSB 0x80 is set, prefix 00.
+        binary_t r1 = r;
+        binary_t s1 = s;
+        binary_t prefix;
+        prefix.push_back(0);
+        if (0x80 & r1[0]) {
+            r1.insert(r1.begin(), prefix.begin(), prefix.end());
+        }
+        if (0x80 & s1[0]) {
+            s1.insert(s1.begin(), prefix.begin(), prefix.end());
+        }
+
+        payload pl;
+        pl << new payload_member(uint8(0x30))                       //
+           << new payload_member(uint8(r1.size() + s1.size() + 4))  //
+           << new payload_member(uint8(asn1_tag_integer))           //
+           << new payload_member(uint8(r1.size()))                  //
+           << new payload_member(r1)                                //
+           << new payload_member(uint8(asn1_tag_integer))           //
+           << new payload_member(uint8(s1.size()))                  //
+           << new payload_member(s1);
+        pl.write(asn1der);
+    }
+    __finally2 {}
     return ret;
 }
 
 return_t der2rs(const binary_t& asn1der, uint16 unitsize, binary_t& r, binary_t& s) {
     return_t ret = errorcode_t::success;
     __try2 {
-        // ASN.1 DER
-        constexpr char constexpr_sequence[] = "sequence";
-        constexpr char constexpr_len[] = "len";
-        constexpr char constexpr_rlen[] = "rlen";
-        constexpr char constexpr_r[] = "r";
-        constexpr char constexpr_slen[] = "slen";
-        constexpr char constexpr_s[] = "s";
-
         payload pl;
-        pl << new payload_member(uint8(0), constexpr_sequence) << new payload_member(uint8(0), constexpr_len) << new payload_member(uint8(0))
-           << new payload_member(uint8(0), constexpr_rlen) << new payload_member(binary_t(), constexpr_r) << new payload_member(uint8(0))
-           << new payload_member(uint8(0), constexpr_slen) << new payload_member(binary_t(), constexpr_s);
+        pl << new payload_member(uint8(0), constexpr_sequence)  //
+           << new payload_member(uint8(0), constexpr_len)       //
+           << new payload_member(uint8(0))                      //
+           << new payload_member(uint8(0), constexpr_rlen)      //
+           << new payload_member(binary_t(), constexpr_r)       //
+           << new payload_member(uint8(0))                      //
+           << new payload_member(uint8(0), constexpr_slen)      //
+           << new payload_member(binary_t(), constexpr_s);
 
         pl.set_reference_value(constexpr_r, constexpr_rlen);
         pl.set_reference_value(constexpr_s, constexpr_slen);
@@ -62,13 +93,13 @@ return_t der2rs(const binary_t& asn1der, uint16 unitsize, binary_t& r, binary_t&
         pl.read(&asn1der[0], asn1der.size());
 
         uint8 sequence = pl.t_value_of<uint8>(constexpr_sequence);
+        uint8 rlen = pl.t_value_of<uint8>(constexpr_rlen);
+        uint8 slen = pl.t_value_of<uint8>(constexpr_slen);
         if (0x30 != sequence) {
             ret = errorcode_t::bad_format;
             __leave2;
         }
 
-        uint8 rlen = pl.t_value_of<uint8>(constexpr_rlen);
-        uint8 slen = pl.t_value_of<uint8>(constexpr_slen);
         pl.get_binary(constexpr_r, r);
         pl.get_binary(constexpr_s, s);
     }

@@ -85,7 +85,7 @@ tls_extension* tls_extension::read(tls_session* session, tls_direction_t dir, co
             tls_extension_builder builder;
             auto extension = builder.set(session).set(dir).set(extension_type).build();
             if (extension) {
-                ret = extension->read(stream, size, pos);
+                ret = extension->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {
                     obj = extension;
                 } else {
@@ -100,7 +100,7 @@ tls_extension* tls_extension::read(tls_session* session, tls_direction_t dir, co
     return obj;
 }
 
-return_t tls_extension::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -110,21 +110,21 @@ return_t tls_extension::read(const byte_t* stream, size_t size, size_t& pos) {
 
         auto session = get_session();
 
-        ret = do_preprocess();
+        ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        ret = do_read_header(stream, size, pos);
+        ret = do_read_header(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         size_t tpos = pos;  // responding to unhandled extentions
-        ret = do_read_body(stream, size, tpos);
+        ret = do_read_body(dir, stream, size, tpos);
         pos += get_body_size();  // responding to unhandled extentions
 
-        ret = do_postprocess();
+        ret = do_postprocess(dir);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -133,23 +133,28 @@ return_t tls_extension::read(const byte_t* stream, size_t size, size_t& pos) {
     return ret;
 }
 
-return_t tls_extension::write(binary_t& bin) {
+return_t tls_extension::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
 
     __try2 {
+        ret = do_preprocess(dir);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
         binary_t body;
-        ret = do_write_body(body);
+        ret = do_write_body(dir, body);
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = do_write_header(bin, body);
+        ret = do_write_header(dir, bin, body);
 
-        ret = do_preprocess();
+        ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        ret = do_postprocess();
+        ret = do_postprocess(dir);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -160,11 +165,11 @@ return_t tls_extension::write(binary_t& bin) {
     return ret;
 }
 
-return_t tls_extension::do_preprocess() { return errorcode_t::success; }
+return_t tls_extension::do_preprocess(tls_direction_t dir) { return errorcode_t::success; }
 
-return_t tls_extension::do_postprocess() { return errorcode_t::success; }
+return_t tls_extension::do_postprocess(tls_direction_t dir) { return errorcode_t::success; }
 
-return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -225,9 +230,9 @@ return_t tls_extension::do_read_header(const byte_t* stream, size_t size, size_t
     return ret;
 }
 
-return_t tls_extension::do_read_body(const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::not_supported; }
+return_t tls_extension::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::not_supported; }
 
-return_t tls_extension::do_write_header(binary_t& bin, const binary_t& body) {
+return_t tls_extension::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
     {
         _header_range.begin = bin.size();
@@ -249,7 +254,7 @@ return_t tls_extension::do_write_header(binary_t& bin, const binary_t& body) {
     return ret;
 }
 
-return_t tls_extension::do_write_body(binary_t& bin) { return errorcode_t::not_supported; }
+return_t tls_extension::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
 
 tls_session* tls_extension::get_session() { return _session; }
 

@@ -27,7 +27,7 @@ const char constexpr_new_session_ticket[] = "new session ticket";
 
 tls_extension_early_data::tls_extension_early_data(tls_session* session, tls_hs_type_t hs) : tls_extension(tls_ext_early_data, session), _hs(hs) {}
 
-return_t tls_extension_early_data::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         // RFC 8446 4.2.10.  Early Data Indication
@@ -76,7 +76,7 @@ return_t tls_extension_early_data::do_read_body(const byte_t* stream, size_t siz
     return ret;
 }
 
-return_t tls_extension_early_data::do_write_body(binary_t& bin) {
+return_t tls_extension_early_data::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     return ret;
 }

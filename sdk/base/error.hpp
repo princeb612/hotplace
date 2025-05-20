@@ -263,6 +263,8 @@ enum errorcode_t {
     /* 0xef010041 4009820225 */ exceed,
     /* 0xef010042 4009820226 */ fragmented,
     /* 0xef010043 4009820227 */ not_specified,
+    /* 0xef010044 4009820228 */ error_negotiate,
+    /* 0xef010045 4009820229 */ illegal_parameter,
 
     /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,

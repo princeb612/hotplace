@@ -1,7 +1,7 @@
 #### dtls12mtu1500.pcapng - client
 
 ````
-$ openssl s_client -connect localhost:9000 -state -debug -keylogfile client.keylog -mtu 1500 -dtls1_2
+$ openssl s_client -connect localhost:9000 -state -debug -keylogfile sslkeylog -mtu 1500 -dtls1_2
 Connecting to ::1
 CONNECTED(000001E0)
 SSL_connect:before SSL initialization

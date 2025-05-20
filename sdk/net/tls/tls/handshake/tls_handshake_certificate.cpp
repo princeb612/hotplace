@@ -218,7 +218,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
             uint32 certificates_len = 3 /* uint24 */ + certificate_len;  // TLS 1.2
             if (is_tls13) {
                 certificates_len += sizeof(uint16);
-                get_extensions().write(extensions);
+                get_extensions().write(dir, extensions);
             }
 
             payload pl;

@@ -31,7 +31,7 @@ constexpr char constexpr_payload[] = "payload";
 tls_extension_encrypted_client_hello::tls_extension_encrypted_client_hello(tls_session* session)
     : tls_extension(tls_ext_encrypted_client_hello, session), _client_hello_type(0), _kdf(0), _aead(0), _config_id(0), _enc_len(0), _enc_payload_len(0) {}
 
-return_t tls_extension_encrypted_client_hello::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint8 client_hello_type = 0;
@@ -98,7 +98,7 @@ return_t tls_extension_encrypted_client_hello::do_read_body(const byte_t* stream
     return ret;
 }
 
-return_t tls_extension_encrypted_client_hello::do_write_body(binary_t& bin) { return not_supported; }
+return_t tls_extension_encrypted_client_hello::do_write_body(tls_direction_t dir, binary_t& bin) { return not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

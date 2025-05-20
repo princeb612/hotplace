@@ -1,7 +1,7 @@
 #### client
 
 ````
-$ openssl s_client -connect localhost:9000 -state -debug -keylogfile client.keylog -tls1_2
+$ openssl s_client -connect localhost:9000 -state -debug -keylogfile sslkeylog -tls1_2
 Connecting to ::1
 CONNECTED(000001D8)
 SSL_connect:before SSL initialization
