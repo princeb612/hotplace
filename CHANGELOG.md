@@ -3,6 +3,8 @@
 * topic
   * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
+  * [study] HTTP/2 (RFC 7541, 7540, 9113)
+  * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
   * Revision 777-
@@ -17,10 +19,18 @@
     * https://dtls.xargs.org/
   * Revision 501-523 (Tag 0.56, Revision.528)
     * HTTP/2
+  * Revision 221-442
+    * COSE
+  * Revision 144-220
+    * CBOR
 
 * details
+  * Revision 780
+    * [tested] TLS 1.3
   * Revision 779
     * [fixed] server_key_exchange, rs2der
+    * [tested] extended_master_secret
+    * [tested] TLS 1.2 (CBC only)
   * Revision 778
     * [tested] server certificates
   * Revision 777

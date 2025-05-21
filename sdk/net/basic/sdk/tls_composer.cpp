@@ -25,6 +25,7 @@
 #include <sdk/net/tls/tls/handshake/tls_handshake_certificate_verify.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_client_hello.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_client_key_exchange.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshake_encrypted_extensions.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_finished.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_server_hello.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake_server_hello_done.hpp>
@@ -524,12 +525,14 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
                 records << builder.set(session).set(tls_content_type_change_cipher_spec).set(dir).construct().build();
             }
             {
+                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().set_protected(true).build();
+                *record << new tls_handshake_encrypted_extensions(session);
+                records << record;
+            }
+            {
                 // certificate
                 auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().set_protected(true).build();
-
-                auto hs = new tls_handshake_certificate(session);
-                *record << hs;
-
+                *record << new tls_handshake_certificate(session);
                 records << record;
             }
             {
@@ -548,9 +551,7 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
             {
                 // certificate
                 auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
-
-                auto hs = new tls_handshake_certificate(session);
-                *record << hs;
+                *record << new tls_handshake_certificate(session);
 
                 records << record;
             }

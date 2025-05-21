@@ -2,8 +2,7 @@
 
 - MINGW64 test in progress, linux not yet
 - [ ] tasks
-  - [ ] DTLS 1.2 (transcript hash mismatch)
-  - TLS server
+  - [ ] TLS server
     - [x] handshake certificate
     - [x] server key exchange
       - [x] DER format
@@ -11,11 +10,16 @@
       - [x] client_hello renegotiation_info
       - [x] server_hello renegotiation_info
       - [ ] key calcurations
-    - [ ] TLS 1.3
-    - [x] TLS 1.2 CBC
-    - [ ] TLS 1.2 GCM
-      - [ ] protection_context::select_from (temporary SWITCH_ENFORCE_CBC_FOR_TEST set)
-      - [ ] test_construct_tls
+    - [ ] TLS
+      - [x] TLS 1.3
+      - [ ] TLS 1.2
+        - [x] CBC
+        - [ ] GCM
+        - [x] extended_master_secret
+        - [ ] protection_context::select_from (temporary SWITCH_ENFORCE_CBC_FOR_TEST set)
+        - [ ] test_construct_tls
+    - [ ] DTLS
+      - [ ] DTLS 1.2 (transcript hash mismatch)
 
 ### packet capture
 

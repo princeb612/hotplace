@@ -167,6 +167,14 @@ void tls_session::session_info::set_recordno(uint64 recordno, protection_level_t
 void tls_session::session_info::push_alert(uint8 level, uint8 desc) {
     critical_section_guard guard(_info_lock);
     _alerts.push_back(alert(level, desc));
+#if defined DEBUG
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    if (istraceable()) {
+        basic_stream dbs;
+        dbs.println("\e[1;31malert level:%s desc:%s\e[0m", tlsadvisor->alert_level_string(level).c_str(), tlsadvisor->alert_desc_string(desc).c_str());
+        trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+    }
+#endif
 }
 
 void tls_session::session_info::get_alert(std::function<void(uint8, uint8)> func, uint8 flags) {

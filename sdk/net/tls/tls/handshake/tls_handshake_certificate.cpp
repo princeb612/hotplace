@@ -38,8 +38,12 @@ return_t tls_handshake_certificate::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
+        auto& protection = session->get_tls_protection();
         auto session_status = session->get_session_status();
         uint32 session_status_prerequisite = session_status_client_hello | session_status_server_hello;
+        if (protection.is_kindof_tls13()) {
+            session_status_prerequisite |= session_status_encrypted_extensions;
+        }
         if (0 == (session_status_prerequisite & session_status)) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();

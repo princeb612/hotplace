@@ -415,6 +415,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         auto& kv = session->get_keyvalue();
         auto legacy_version = protection.get_lagacy_version();
         auto cs = get_cipher_suite();
+        auto hint = tlsadvisor->hintof_cipher_suite(cs);
 
         {
             // encrypt_then_mac
@@ -434,17 +435,19 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         {
             // extended master secret
             auto request_ems = kv.get(session_extended_master_secret);
-            if (request_ems) {
-                auto ext_ems = get_extensions().get(tls_ext_extended_master_secret);
-                if (nullptr == ext_ems) {
-                    get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, session));
+            if (tls_12 == hint->version) {
+                if (request_ems) {
+                    auto ext_ems = get_extensions().get(tls_ext_extended_master_secret);
+                    if (nullptr == ext_ems) {
+                        get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, session));
+                    }
                 }
             }
             auto ext_ems = get_extensions().get(tls_ext_extended_master_secret);
             // test session_conf_ems && client_hello.get_extensions.has(ems extension) && server_hello.get_extensions.has(ems extension)
             session->get_keyvalue().set(session_extended_master_secret, (request_ems && ext_ems) ? 1 : 0);
         }
-        {
+        if (tls_12 == hint->version) {
             // fatal:handshake_failure
             // avoid final_renegotiate:unsafe legacy renegotiation disabled
             auto ext_renego = get_extensions().get(tls_ext_renegotiation_info);
