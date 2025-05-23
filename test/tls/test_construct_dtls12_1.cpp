@@ -396,11 +396,19 @@ void test_construct_dtls12_1() {
     lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 2, 2);
     lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 1, 1);
 
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_client_hello_random, "tls_context_client_hello_random");
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_server_hello_random, "tls_context_server_hello_random");
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_empty_hash, "tls_context_empty_hash");
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+
     // S->C, record epoch 0, sequence 2..8, handshake sequence 2
     do_test_construct_certificate(&session_server, from_server, "certificate");
     do_test_send_record(&session_client, from_server, "certificate");
     lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 9, 3);
     lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 8, 2);
+
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
     // S->C, record epoch 0, sequence 9..11, handshake sequence 3
     do_test_construct_server_key_exchange(&session_server, from_server, "server key exchange");
@@ -408,11 +416,15 @@ void test_construct_dtls12_1() {
     lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 12, 4);
     lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 11, 3);
 
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+
     // S->C, record epoch 0, sequence 12, handshake sequence 4
     do_test_construct_server_hello_done(&session_server, from_server, "server hello done");
     do_test_send_record(&session_client, from_server, "server hello done");
     lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 13, 5);
     lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 12, 4);
+
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
     // C->S, record epoch 0, sequence 4, handshake sequence 2
     do_test_construct_client_key_exchange(&session_client, from_client, "client key exchange");
@@ -420,16 +432,26 @@ void test_construct_dtls12_1() {
     lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 5, 3);
     lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 4, 2);
 
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+    do_cross_check_keycalc(&session_client, &session_server, tls_secret_server_key, "tls_secret_server_key");
+    do_cross_check_keycalc(&session_client, &session_server, tls_secret_server_mac_key, "tls_secret_server_mac_key");
+    do_cross_check_keycalc(&session_client, &session_server, tls_secret_client_key, "tls_secret_client_key");
+    do_cross_check_keycalc(&session_client, &session_server, tls_secret_client_mac_key, "tls_secret_client_mac_key");
+
     // C->S, record epoch 0, sequence 5, change cipher spec
     do_test_construct_change_cipher_spec(&session_client, from_client, "change cipher spec");
     do_test_send_record(&session_server, from_client, "change cipher spec");
     lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 1, 0, 3);
+
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
     // C->S, record epoch 1, sequence 0, handshake sequence 3
     do_test_construct_finished(&session_client, from_client, "finished");
     do_test_send_record(&session_server, from_client, "finished");
     lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 1, 1, 4);
     lambda_test_seq(__FUNCTION__, &session_server, from_client, 1, 0, 3);
+
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
     // S->C, record epoch 0, sequence 13, change cipher spec
     do_test_construct_change_cipher_spec(&session_server, from_server, "change cipher spec");
@@ -441,6 +463,10 @@ void test_construct_dtls12_1() {
     do_test_send_record(&session_client, from_server, "finished");
     lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 1, 1, 6);
     lambda_test_seq(__FUNCTION__, &session_client, from_server, 1, 0, 5);
+
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+    do_cross_check_keycalc(&session_client, &session_server, tls_secret_res_master, "tls_secret_res_master");
+    do_cross_check_keycalc(&session_client, &session_server, tls_secret_resumption, "tls_secret_resumption");
 
     // skip followings
     // - application data

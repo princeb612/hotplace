@@ -43,7 +43,7 @@ return_t tls_handshake_certificate_verify::do_preprocess(tls_direction_t dir) {
         } else {
             session_status_prerequisite = session_status_server_cert;
         }
-        if (0 == (session_status_prerequisite & session_status)) {
+        if (session_status_prerequisite != (session_status_prerequisite & session_status)) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_certificate_required);
             session->reset_session_status();
             ret = errorcode_t::error_handshake;

@@ -62,7 +62,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
                     session_status_prerequisite != session_status_server_finished;
                 }
             } else if (tls_flow_0rtt == flow) {
-                session_status_prerequisite = session_status_server_hello | session_status_client_finished;
+                session_status_prerequisite = session_status_client_hello | session_status_server_hello | session_status_encrypted_extensions;
             }
         } else {
             // TLS 1.2, DTLS 1.2
@@ -81,7 +81,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
             }
         }
 
-        if (0 == (session_status_prerequisite & session_status)) {
+        if (session_status_prerequisite != (session_status_prerequisite & session_status)) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();
             ret = errorcode_t::error_handshake;

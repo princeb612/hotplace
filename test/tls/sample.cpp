@@ -257,8 +257,9 @@ int main(int argc, char** argv) {
             test_dtls_record_arrange();
 
             test_captured_dtls12();
+        }
 
-#if 0
+        {
             // temporary disable Rev.778~
             // comments
             // - expectation mismatch
@@ -267,8 +268,8 @@ int main(int argc, char** argv) {
             //   - server_key_exchange - transcript hash mismatch
             test_construct_dtls12_1();  // generate and arrange fragmented diagrams (record-handshake multiplicity 1..1)
             test_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
-#endif
         }
+
         {
             test_helloretryrequest();
 

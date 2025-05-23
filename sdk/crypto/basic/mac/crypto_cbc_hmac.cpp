@@ -163,9 +163,13 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
             }
 
             {
-                // encrypt
+                /*
+                 * AAD = uint64(sequence) || uint8(type) || uint16(version)
+                 * nested tag = MAC(AAD || uint16(plaintext.length) || plaintext)
+                 * ciphertext = CBC(plaintext || tag || pad1)
+                 * image = ciphertext
+                 */
 
-                // plaintext || tag || 1byte
                 binary_t temp;
                 binary_append(temp, plaintext, plainsize);
                 binary_append(temp, tag);
@@ -186,7 +190,12 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
             }
         } else if (tls_encrypt_then_mac == flag) {
             {
-                // encrypt
+                /*
+                 * ciphertext = CBC(plaintext)
+                 * AAD = uint64(sequence) || uint8(type) || uint16(version) || uint16(ciphertext.length)
+                 * concatenated tag = CBC-HMAC(AAD || ciphertext)
+                 * image = CBC(plaintext) || tag
+                 */
 
                 binary_t temp;
 

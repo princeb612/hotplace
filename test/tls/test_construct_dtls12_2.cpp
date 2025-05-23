@@ -399,6 +399,12 @@ void do_test_construct_dtls12_2(uint32 flags) {
         lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 13, 4);
     }
 
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_client_hello_random, "tls_context_client_hello_random");
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_server_hello_random, "tls_context_server_hello_random");
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_empty_hash, "tls_context_empty_hash");
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+
     // C->S
     // case dtls_record_publisher().set_flags(0)
     // case dtls_record_publisher().set_flags(dtls_record_publisher_multi_handshakes)
@@ -409,6 +415,12 @@ void do_test_construct_dtls12_2(uint32 flags) {
     do_test_send_record(&session_server, from_client, "client key exchange, change cipher spec, finished");
     lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 1, 1, 4);
     lambda_test_seq(__FUNCTION__, &session_server, from_client, 1, 0, 3);
+
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+    do_cross_check_keycalc(&session_client, &session_server, tls_secret_server_key, "tls_secret_server_key");
+    do_cross_check_keycalc(&session_client, &session_server, tls_secret_server_mac_key, "tls_secret_server_mac_key");
+    do_cross_check_keycalc(&session_client, &session_server, tls_secret_client_key, "tls_secret_client_key");
+    do_cross_check_keycalc(&session_client, &session_server, tls_secret_client_mac_key, "tls_secret_client_mac_key");
 
     // S->C
     // case dtls_record_publisher().set_flags(0)
@@ -422,6 +434,10 @@ void do_test_construct_dtls12_2(uint32 flags) {
     do_test_send_record(&session_client, from_server, "change cipher spec, finished");
     lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 1, 1, 6);
     lambda_test_seq(__FUNCTION__, &session_client, from_server, 1, 0, 5);
+
+    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+    do_cross_check_keycalc(&session_client, &session_server, tls_secret_res_master, "tls_secret_res_master");
+    do_cross_check_keycalc(&session_client, &session_server, tls_secret_resumption, "tls_secret_resumption");
 
     // skip followings
     // - application data

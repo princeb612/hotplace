@@ -118,7 +118,15 @@ return_t tls_protection::update_transcript_hash(tls_session *session, const byte
                     hash->digest(digest);
                     dbs.printf("\e[1;34m");
                     dbs.println("> update transcript hash @0x%p size 0x%zx", this, size);
-                    dump_memory(stream, size, &dbs, 16, 3, 0, dump_notrunc);
+                    // dump_memory(stream, size, &dbs, 16, 3, 0, dump_notrunc);
+                    size_t hdrsize = 0;
+                    if (is_kindof_dtls()) {
+                        hdrsize = sizeof(dtls_handshake_t);
+                    } else {
+                        hdrsize = sizeof(tls_handshake_t);
+                    }
+                    dump_memory(stream, hdrsize, &dbs, 16, 3, 0, dump_notrunc);
+                    dump_memory(stream + hdrsize, size - hdrsize, &dbs, 16, 3, 0, dump_notrunc);
                     dbs.printf("\e[1;33m");
                     dbs.println("   %s", base16_encode(digest).c_str());
                     dbs.printf("\e[0m");

@@ -92,7 +92,7 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
             get_handshakes().add(handshake);
 #else
             // record-handshake 1..*
-            get_handshakes().read(session, dir, stream, pos + len, pos);
+            ret = get_handshakes().read(session, dir, stream, pos + len, pos);
 #endif
         }
     }

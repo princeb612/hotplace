@@ -56,6 +56,13 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             tls_record_builder builder;
             auto session = get_session();
+            auto session_type = session->get_type();
+            size_t hdrsize = 0;
+            if (session_tls == session_type) {
+                hdrsize = sizeof(tls_handshake_t);
+            } else {
+                hdrsize = sizeof(dtls_handshake_t);
+            }
 
             struct spl_desc {
                 tls_hs_type_t hstype;
@@ -75,24 +82,28 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                 auto lambda_handshake = [&](tls_handshake* handshake) -> return_t {
                     return_t ret = errorcode_t::success;
                     binary_t bin;
-                    handshake->do_write_body(dir, bin);
+                    // generate body + update transcript hash
+                    handshake->write(dir, bin);
+                    // and now trim handshake header
+                    bin.erase(bin.begin(), bin.begin() + hdrsize);
+
+                    auto hstype = handshake->get_type();
 
                     spl_desc desc;
-                    desc.hstype = handshake->get_type();
+                    desc.hstype = hstype;
                     desc.hsseq = hsseq;
 
 #if defined DEBUG
                     if (check_trace_level(loglevel_debug) && istraceable()) {
                         basic_stream dbs;
                         dbs.printf("\e[1;36m");
-                        dbs.println("# publish %s %i %s", tlsadvisor->handshake_type_string(desc.hstype).c_str(), desc.hsseq,
+                        dbs.println("# publish %s %i %s", tlsadvisor->handshake_type_string(hstype).c_str(), hsseq,
                                     tlsadvisor->nameof_direction(dir, true).c_str());
                         dbs.printf("\e[0m");
                         dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
                         trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
                     }
 #endif
-
                     spl.add(std::move(bin), std::move(desc));
 
                     ++hsseq;
@@ -130,23 +141,23 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
 
                 if (tls_content_type_handshake == rctype) {
                     tls_record_handshake* rec_handshake = static_cast<tls_record_handshake*>(record);
-                    rec_handshake->set_flags(dont_control_dtls_sequence);  // do not change epoch, sequence (record)
+                    // rec_handshake->set_flags(dont_control_dtls_sequence);  // do not change epoch, sequence (record)
+
+                    // split handshake
                     ret = rec_handshake->get_handshakes().for_each(lambda_handshake);
                     if (errorcode_t::success != ret) {
                         __leave2;
                     }
-
+                    // generate record
                     spl.run(lambda_split);
 
+                    // write record
                     for (auto item : records) {
                         binary_t bin;
                         item->write(dir, bin);
                         func(session, bin);
                         item->release();
                     }
-
-                    binary_t bin_record;
-                    rec_handshake->write(dir, bin_record);  // transcript hash, key calcuration
                 } else {
                     binary_t bin;
                     ret = record->write(dir, bin);

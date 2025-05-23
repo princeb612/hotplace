@@ -75,7 +75,8 @@ void test_alert() {
             "c8 3a c1 06 16 ad 35 4a 84 be 16 2b c6 10 a8 b2"
             "f7";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("server_key_exchange", &session, from_server, bin_record);
+        auto ret = dump_record("server_key_exchange", &session, from_server, bin_record, false);
+        _test_case.test(errorcode_t::error_handshake == ret, __FUNCTION__, "unexpected message");
     }
 
     {
@@ -92,22 +93,5 @@ void test_alert() {
         auto iter = fatal_alerts.find(tls_alertdesc_unexpected_message);
         bool test = (fatal_alerts.end() != iter);
         _test_case.assert(test, __FUNCTION__, "unexpected message");
-    }
-
-    // try server hello done
-    // alert unexpected message
-    {
-        binary_t bin;
-        tls_record_handshake record(&session);
-        auto handshake = new tls_handshake_server_hello_done(&session);
-        record << handshake;
-        record.write(from_server, bin);
-
-        // size_t pos = 0;
-        // tls_dump_record(&session, from_server, &bin[0], bin.size(), pos);
-
-        // tls_content_type_alert, 0x0303, 0002, fatal, unexpected_message
-        const char* expect = "15 03 03 00 02 02 0A";
-        _test_case.assert(base16_decode_rfc(expect) == bin, __FUNCTION__, "alert");
     }
 }

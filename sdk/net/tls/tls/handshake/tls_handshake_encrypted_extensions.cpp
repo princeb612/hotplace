@@ -28,7 +28,9 @@ return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir,
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
 
-        { protection.update_transcript_hash(session, stream + hspos, get_size()); }
+        protection.update_transcript_hash(session, stream + hspos, get_size());
+
+        session->update_session_status(session_status_encrypted_extensions);
     }
     __finally2 {
         // do nothing

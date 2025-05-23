@@ -56,6 +56,32 @@ void tls_record_application_data::set_binary(const binary_t bin) { _bin = bin; }
 
 const binary_t& tls_record_application_data::get_binary() { return _bin; }
 
+return_t tls_record_application_data::do_preprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto flow = protection.get_flow();
+    auto session_status = session->get_session_status();
+    uint32 session_status_prerequisite = 0;
+
+    if (tls_flow_1rtt == flow) {
+        if (protection.is_kindof_tls13()) {
+            session_status_prerequisite = session_status_server_hello;
+        } else {
+            session_status_prerequisite = session_status_server_finished;
+        }
+    } else if (tls_flow_0rtt == flow) {
+        // RTF 8448 RFC 8448 4.  Resumed 0-RTT Handshake
+        session_status_prerequisite = session_status_client_hello;
+    }
+    if (0 == (session_status_prerequisite & session_status)) {
+        session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+        session->reset_session_status();
+        ret = errorcode_t::error_handshake;
+    }
+    return ret;
+}
+
 return_t tls_record_application_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

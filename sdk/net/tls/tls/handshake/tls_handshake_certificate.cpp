@@ -44,7 +44,7 @@ return_t tls_handshake_certificate::do_preprocess(tls_direction_t dir) {
         if (protection.is_kindof_tls13()) {
             session_status_prerequisite |= session_status_encrypted_extensions;
         }
-        if (0 == (session_status_prerequisite & session_status)) {
+        if (session_status_prerequisite != (session_status_prerequisite & session_status)) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();
             ret = errorcode_t::error_handshake;

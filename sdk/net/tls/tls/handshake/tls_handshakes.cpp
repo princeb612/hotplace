@@ -38,11 +38,15 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
             tls_handshake_builder builder;
             auto handshake = builder.set(hs).set(session).build();
             if (handshake) {
-                ret = handshake->read(dir, stream, size, pos);
-                if (errorcode_t::success == ret) {
+                auto test = handshake->read(dir, stream, size, pos);
+                if (errorcode_t::success == test) {
                     add(handshake);
+                } else if (errorcode_t::fragmented == test) {
+                    handshake->release();
+                    continue;
                 } else {
                     handshake->release();
+                    ret = test;
                     break;  // if error, no more preceed
                 }
             }

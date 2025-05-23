@@ -507,8 +507,6 @@ void test_captured_dtls12() {
         auto& protection = session.get_tls_protection();
 
         auto key = session.get_tls_protection().get_keyexchange();
-        keychain.load_file(&key, key_certfile, "server.crt", KID_TLS_SERVER_CERTIFICATE_PUBLIC);
-        keychain.load_file(&key, key_pemfile, "server.key", KID_TLS_SERVER_CERTIFICATE_PRIVATE);
 
         constexpr char constexpr_master_secret[] = "93be6304758c8b4f0e106df7bbbb7a4edc23ed6188d44ed4d567b6e375400a74471fda4ad6748c84bda37a19399bd4a4";
         protection.use_pre_master_secret(true);

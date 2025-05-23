@@ -555,6 +555,13 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                      *       A(0) = seed
                      *       A(i) = HMAC_hash(secret, A(i-1))
                      *   PRF(secret, label, seed) = P_<hash>(secret, label + seed)
+                     *
+                     * extended master secret
+                     * RFC 7627 Transport Layer Security (TLS) Session Hash and Extended Master Secret Extension
+                     *   session_hash = Hash(handshake_messages)
+                     *   master_secret = PRF(pre_master_secret, "extended master secret",
+                     *                       session_hash)
+                     *                       [0..47];
                      */
                     binary_t seed;
                     hash_context_t *hmac_handle = nullptr;

@@ -25,6 +25,8 @@
     * CBOR
 
 * details
+  * Revision 781
+    * [tested] DTLS fragmentation
   * Revision 780
     * [tested] TLS 1.3
   * Revision 779
