@@ -56,12 +56,12 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
         const char *label_quic_iv = nullptr;
         const char *label_quic_hp = nullptr;
 
-        if ((session_quic == session_type) || (session_quic2 == session_type)) {
+        if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
             if (0 == cipher_suite) {
                 cipher_suite = 0x1301;  // TLS_AES_128_GCM_SHA256
             }
 
-            if (session_quic == session_type) {
+            if (session_type_quic == session_type) {
                 label_quic_key = constexpr_quic_key;
                 label_quic_iv = constexpr_quic_iv;
                 label_quic_hp = constexpr_quic_hp;
@@ -162,7 +162,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             // res binder (see tls_ext_pre_shared_key)
             // exp master (see tls_context_server_finished)
 
-            if ((session_tls == session_type) || (session_dtls == session_type)) {
+            if ((session_type_tls == session_type) || (session_type_dtls == session_type)) {
                 if (is_kindof_tls13()) {
                     if (tls_flow_0rtt == flow) {
                         // 0-RTT
@@ -185,14 +185,14 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                         // TODO
                     }
                 }
-            } else if ((session_quic == session_type) || (session_quic2 == session_type)) {
+            } else if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
                 const binary_t &salt = get_item(tls_context_quic_dcid);
                 if ((false == salt.empty()) && get_item(tls_secret_initial_quic).empty()) {
                     binary_t bin_initial_salt;
-                    if (session_quic == session_type) {
+                    if (session_type_quic == session_type) {
                         // RFC 9001 5.2.  Initial Secrets
                         bin_initial_salt = std::move(base16_decode("0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a"));
-                    } else if (session_quic2 == session_type) {
+                    } else if (session_type_quic2 == session_type) {
                         // RFC 9369 3.3.1.  Initial Salt
                         bin_initial_salt = std::move(base16_decode("0x0dede3def700a6db819381be6e269dcbf9bd2ed9"));
                     }  // else do not reach
@@ -379,7 +379,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     lambda_expand_label(tls_secret_handshake_client_sn_key, okm, hashalg, keysize, secret_handshake_client, "sn", empty);
                     lambda_expand_label(tls_secret_handshake_server_sn_key, okm, hashalg, keysize, secret_handshake_server, "sn", empty);
                 }
-                if ((session_quic == session_type) || (session_quic2 == session_type)) {
+                if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
                     lambda_expand_label(tls_secret_handshake_quic_client_key, okm, hashalg, keysize, secret_handshake_client, label_quic_key, empty);
                     lambda_expand_label(tls_secret_handshake_quic_client_iv, okm, hashalg, 12, secret_handshake_client, label_quic_iv, empty);
                     lambda_expand_label(tls_secret_handshake_quic_client_hp, okm, hashalg, keysize, secret_handshake_client, label_quic_hp, empty);
@@ -445,7 +445,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             if (is_kindof_dtls()) {
                 lambda_expand_label(tls_secret_application_server_sn_key, okm, hashalg, keysize, secret_application_server, "sn", empty);
             }
-            if ((session_quic == session_type) || (session_quic2 == session_type)) {
+            if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
                 lambda_expand_label(tls_secret_application_quic_client_key, okm, hashalg, keysize, secret_application_client, label_quic_key, empty);
                 lambda_expand_label(tls_secret_application_quic_client_iv, okm, hashalg, 12, secret_application_client, label_quic_iv, empty);
                 lambda_expand_label(tls_secret_application_quic_client_hp, okm, hashalg, keysize, secret_application_client, label_quic_hp, empty);
@@ -611,123 +611,131 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             }
 #endif
 
-            auto hmac_expansion = builder.set(hmac_alg).set(master_secret).build();
-            if (hmac_expansion) {
-                auto cs = get_cipher_suite();
-                bool is_cbc = tlsadvisor->is_kindof_cbc(cs);
-
-                /**
-                 * key expansion
-                 * RFC 2246 5. HMAC and the pseudorandom function
-                 * RFC 2246 6.3. Key calculation
-                 * RFC 5246 6.3.  Key Calculation
-                 * key_block = PRF(SecurityParameters.master_secret,
-                 *                    "key expansion",
-                 *                    SecurityParameters.server_random +
-                 *                    SecurityParameters.client_random);
-                 *
-                 * client_write_MAC_secret[SecurityParameters.hash_size]
-                 * server_write_MAC_secret[SecurityParameters.hash_size]
-                 * client_write_key[SecurityParameters.key_material_length]
-                 * server_write_key[SecurityParameters.key_material_length]
-                 * client_write_IV[SecurityParameters.IV_size]
-                 * server_write_IV[SecurityParameters.IV_size]
-                 */
-                binary_t seed;
-                binary_append(seed, "key expansion");
-                binary_append(seed, server_hello_random);
-                binary_append(seed, client_hello_random);
-
-                uint16 ciphersuite = get_cipher_suite();
-                auto hint_cipher = tlsadvisor->hintof_blockcipher(ciphersuite);
-                auto hint_digest = tlsadvisor->hintof_digest(ciphersuite);
-                if (nullptr == hint_cipher || nullptr == hint_digest) {
-                    ret = errorcode_t::not_supported;
-                    __leave2;
-                }
-                auto keysize = sizeof_key(hint_cipher);
-                auto ivsize = sizeof_iv(hint_cipher);
-                auto dlen = sizeof_digest(hint_digest);
-                size_t size_keycalc = (dlen << 1) + (keysize << 1) + (ivsize << 1);
-                size_t offset = 0;
-
-                // until enough output has been generated
-                binary_t p;
-                binary_t temp = seed;
-                binary_t atemp;
-                binary_t ptemp;
-                while (p.size() < size_keycalc) {
-                    hmac_expansion->mac(temp, atemp);
-                    hmac_expansion->update(atemp).update(seed).finalize(ptemp);
-                    binary_append(p, ptemp);
-                    temp = atemp;
-                }
-
-                binary_t secret_client_mac_key;
-                binary_t secret_server_mac_key;
-                binary_t secret_client_key;
-                binary_t secret_server_key;
-                binary_t secret_client_iv;
-                binary_t secret_server_iv;
-
-                // partition
-                if (is_cbc) {
-                    binary_append(secret_client_mac_key, &p[offset], dlen);
-                    offset += dlen;
-                    binary_append(secret_server_mac_key, &p[offset], dlen);
-                    offset += dlen;
-                    binary_append(secret_client_key, &p[offset], keysize);
-                    offset += keysize;
-                    binary_append(secret_server_key, &p[offset], keysize);
-                    offset += keysize;
-                    binary_append(secret_client_iv, &p[offset], ivsize);
-                    offset += ivsize;
-                    binary_append(secret_server_iv, &p[offset], ivsize);
-                    offset += ivsize;
-                } else {
-                    ivsize = 4;  // fixed iv (4) + explitcit iv (8) = 12
-                    binary_append(secret_client_key, &p[offset], keysize);
-                    offset += keysize;
-                    binary_append(secret_server_key, &p[offset], keysize);
-                    offset += keysize;
-                    binary_append(secret_client_iv, &p[offset], ivsize);
-                    offset += ivsize;
-                    binary_append(secret_server_iv, &p[offset], ivsize);
-                    offset += ivsize;
-                }
-
-                set_item(tls_secret_client_mac_key, secret_client_mac_key);
-                set_item(tls_secret_server_mac_key, secret_server_mac_key);
-                set_item(tls_secret_client_key, secret_client_key);
-                set_item(tls_secret_server_key, secret_server_key);
-                set_item(tls_secret_client_iv, secret_client_iv);
-                set_item(tls_secret_server_iv, secret_server_iv);
-
-#if defined DEBUG
-                if (istraceable()) {
-                    basic_stream dbs;
-                    dbs.printf("\e[1;36m");
-                    dbs.println("> secret_client_mac_key[%08x] %s", tls_secret_client_mac_key, base16_encode(secret_client_mac_key).c_str());
-                    dbs.println("> secret_server_mac_key[%08x] %s", tls_secret_server_mac_key, base16_encode(secret_server_mac_key).c_str());
-                    dbs.println("> secret_client_key[%08x] %s", tls_secret_client_key, base16_encode(secret_client_key).c_str());
-                    dbs.println("> secret_server_key[%08x] %s", tls_secret_server_key, base16_encode(secret_server_key).c_str());
-                    dbs.println("> secret_client_iv[%08x] %s", tls_secret_client_iv, base16_encode(secret_client_iv).c_str());
-                    dbs.println("> secret_server_iv[%08x] %s", tls_secret_server_iv, base16_encode(secret_server_iv).c_str());
-                    dbs.printf("\e[0m");
-                    trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
-                }
-#endif
-
-                hmac_expansion->release();
-            } else {
-                ret = errorcode_t::not_supported;
-                __leave2;
-            }
+            auto cs = get_cipher_suite();
+            ret = calc_keyblock(hmac_alg, master_secret, client_hello_random, server_hello_random, cs);
         }
     }
     __finally2 {
         // do nothing
     }
+    return ret;
+}
+
+return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t &master_secret, const binary_t &client_hello_random,
+                                       const binary_t &server_hello_random, uint16 cs) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+
+        crypto_hmac_builder builder;
+        auto hmac_expansion = builder.set(hmac_alg).set(master_secret).build();
+        if (hmac_expansion) {
+            bool is_cbc = tlsadvisor->is_kindof_cbc(cs);
+
+            /**
+             * key expansion
+             * RFC 2246 5. HMAC and the pseudorandom function
+             * RFC 2246 6.3. Key calculation
+             * RFC 5246 6.3.  Key Calculation
+             * key_block = PRF(SecurityParameters.master_secret,
+             *                    "key expansion",
+             *                    SecurityParameters.server_random +
+             *                    SecurityParameters.client_random);
+             *
+             * client_write_MAC_secret[SecurityParameters.hash_size]
+             * server_write_MAC_secret[SecurityParameters.hash_size]
+             * client_write_key[SecurityParameters.key_material_length]
+             * server_write_key[SecurityParameters.key_material_length]
+             * client_write_IV[SecurityParameters.IV_size]
+             * server_write_IV[SecurityParameters.IV_size]
+             */
+            binary_t seed;
+            binary_append(seed, "key expansion");
+            binary_append(seed, server_hello_random);
+            binary_append(seed, client_hello_random);
+
+            auto hint_cipher = tlsadvisor->hintof_blockcipher(cs);
+            auto hint_digest = tlsadvisor->hintof_digest(cs);
+            if (nullptr == hint_cipher || nullptr == hint_digest) {
+                ret = errorcode_t::not_supported;
+                __leave2;
+            }
+            auto keysize = sizeof_key(hint_cipher);
+            // TLS 1.2 GCM nonce = fixed iv (4) + explitcit iv (8) = 12
+            auto ivsize = (is_cbc) ? sizeof_iv(hint_cipher) : 4;
+            auto dlen = (is_cbc) ? sizeof_digest(hint_digest) : 0;
+            size_t size_keycalc = (dlen << 1) + (keysize << 1) + (ivsize << 1);
+            size_t offset = 0;
+
+            // until enough output has been generated
+            binary_t p;
+            binary_t temp = seed;
+            binary_t atemp;
+            binary_t ptemp;
+            while (p.size() < size_keycalc) {
+                hmac_expansion->mac(temp, atemp);
+                hmac_expansion->update(atemp).update(seed).finalize(ptemp);
+                binary_append(p, ptemp);
+                temp = atemp;
+            }
+
+            binary_t secret_client_mac_key;
+            binary_t secret_server_mac_key;
+            binary_t secret_client_key;
+            binary_t secret_server_key;
+            binary_t secret_client_iv;
+            binary_t secret_server_iv;
+
+            // partition
+            if (is_cbc) {
+                binary_append(secret_client_mac_key, &p[offset], dlen);
+                offset += dlen;
+                binary_append(secret_server_mac_key, &p[offset], dlen);
+                offset += dlen;
+            }
+
+            binary_append(secret_client_key, &p[offset], keysize);
+            offset += keysize;
+            binary_append(secret_server_key, &p[offset], keysize);
+            offset += keysize;
+            binary_append(secret_client_iv, &p[offset], ivsize);
+            offset += ivsize;
+            binary_append(secret_server_iv, &p[offset], ivsize);
+            offset += ivsize;
+
+            if (is_cbc) {
+                set_item(tls_secret_client_mac_key, secret_client_mac_key);
+                set_item(tls_secret_server_mac_key, secret_server_mac_key);
+            }
+            set_item(tls_secret_client_key, secret_client_key);
+            set_item(tls_secret_server_key, secret_server_key);
+            set_item(tls_secret_client_iv, secret_client_iv);
+            set_item(tls_secret_server_iv, secret_server_iv);
+
+#if defined DEBUG
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.printf("\e[1;36m");
+                if (is_cbc) {
+                    dbs.println("> secret_client_mac_key[%08x] %s", tls_secret_client_mac_key, base16_encode(secret_client_mac_key).c_str());
+                    dbs.println("> secret_server_mac_key[%08x] %s", tls_secret_server_mac_key, base16_encode(secret_server_mac_key).c_str());
+                }
+                dbs.println("> secret_client_key[%08x] %s", tls_secret_client_key, base16_encode(secret_client_key).c_str());
+                dbs.println("> secret_server_key[%08x] %s", tls_secret_server_key, base16_encode(secret_server_key).c_str());
+                dbs.println("> secret_client_iv[%08x] %s", tls_secret_client_iv, base16_encode(secret_client_iv).c_str());
+                dbs.println("> secret_server_iv[%08x] %s", tls_secret_server_iv, base16_encode(secret_server_iv).c_str());
+                dbs.printf("\e[0m");
+                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            }
+#endif
+
+            hmac_expansion->release();
+        } else {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+    }
+    __finally2 {}
     return ret;
 }
 

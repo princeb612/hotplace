@@ -1,4 +1,4 @@
-#### tls12etm_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384.pcapng - server
+#### server
 
 ````
 $ openssl s_server -accept 9000 -cert server.crt -key server.key -state -debug -status_verbose -keylogfile sslkeylog

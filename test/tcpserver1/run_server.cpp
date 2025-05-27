@@ -17,7 +17,7 @@
 
 typedef struct {
     multiplexer_context_t* mplex_handle;
-    socket_t tcp_server_socket;
+    socket_t naive_tcp_server_socket;
 } accept_context_t;
 
 /* windows */
@@ -104,7 +104,7 @@ return_t accept_thread_routine(void* user_context) {
     multiplexer_iocp mplexer;
 #endif
     multiplexer_context_t* handle = context->mplex_handle;
-    socket_t hServSock = (socket_t)context->tcp_server_socket;
+    socket_t hServSock = (socket_t)context->naive_tcp_server_socket;
 
     _test_case.test(errorcode_t::success, __FUNCTION__, "accepting");
 
@@ -215,7 +215,7 @@ return_t producer_thread_routine(void* user_context) {
 #elif defined _WIN32 || defined _WIN64
     multiplexer_iocp mplexer;
 #endif
-    mplexer.event_loop_run(accept_context->mplex_handle, (handle_t)accept_context->tcp_server_socket, consumer_routine, user_context);
+    mplexer.event_loop_run(accept_context->mplex_handle, (handle_t)accept_context->naive_tcp_server_socket, consumer_routine, user_context);
 
     return 0;
 }
@@ -278,9 +278,9 @@ return_t echo_server(void* param) {
         accept_context_t accept_context_ipv4;
         accept_context_t accept_context_ipv6;
         accept_context_ipv4.mplex_handle = handle_ipv4;
-        accept_context_ipv4.tcp_server_socket = socket_list[0];
+        accept_context_ipv4.naive_tcp_server_socket = socket_list[0];
         accept_context_ipv6.mplex_handle = handle_ipv6;
-        accept_context_ipv6.tcp_server_socket = socket_list[1];
+        accept_context_ipv6.naive_tcp_server_socket = socket_list[1];
 
         // acceptxxx_threads signal handler ... just call CloseListener
         acceptipv4_threads.set(1, accept_thread_routine, nullptr, &accept_context_ipv4);

@@ -13,15 +13,15 @@ mindmap
         network_session
       basic_socket
         server_socket
-          tcp_server_socket
-            tls_server_socket
-          udp_server_socket
-            dtls_server_socket
+          naive_tcp_server_socket
+            openssl_tls_server_socket
+          naive_udp_server_socket
+            openssl_dtls_server_socket
         client_socket
-          tcp_client_socket
-            tls_client_socket
-          udp_client_socket
-            dtls_client_socket
+          naive_tcp_client_socket
+            openssl_tls_client_socket
+          naive_udp_client_socket
+            openssl_dtls_client_socket
     http_server
       http_server_builder
       http_uri

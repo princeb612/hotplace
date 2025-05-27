@@ -12,8 +12,8 @@
 
 #include "sample.hpp"
 
-static tls_session server_session(session_quic);
-static tls_session client_session(session_quic);
+static tls_session server_session(session_type_quic);
+static tls_session client_session(session_type_quic);
 
 void test_rfc_9001_section4() {
     _test_case.begin("RFC 9001 4.  Carrying TLS Messages");

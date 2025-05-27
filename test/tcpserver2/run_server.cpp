@@ -58,7 +58,7 @@ return_t echo_server(void* param) {
     network_server network_server;
     network_multiplexer_context_t* handle_ipv4 = nullptr;
     network_multiplexer_context_t* handle_ipv6 = nullptr;
-    tcp_server_socket svr_sock;
+    naive_tcp_server_socket svr_sock;
     uint16 port = option.port;
 
     FILE* fp = fopen(FILENAME_RUN, "w");

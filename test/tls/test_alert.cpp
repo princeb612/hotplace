@@ -18,7 +18,7 @@ void test_alert() {
     tls_session session;
 
     // test scenario - flow violation
-    // test/tls/tls12/tls12etm.pcapng
+    // test/tls/tls12/tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256.pcapng
 
     // client hello
     {

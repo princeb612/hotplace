@@ -60,22 +60,15 @@ return_t echo_server(void*) {
     fclose(fp);
 
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    tls_server_socket2* tls_socket = nullptr;
+    trial_tls_server_socket* tls_socket = nullptr;
 
     __try2 {
-        // TLS_ECDHE_RSA ciphersuites
+        // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
         load_certificate("rsa.crt", "rsa.key", nullptr);
-        // TLS_ECDHE_ECDSA ciphersuites
+        // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
         load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
 
-        tls_version_t tlsver = tls_12;
-        uint32 tlscontext_flags = tlscontext_flag_tls;
-        std::string ciphersuites;
-        if (option.flags & option_flag_allow_tls13) {
-            tlsver = tls_13;
-        }
-
-        __try_new_catch(tls_socket, new tls_server_socket2(tlsver), ret, __leave2);
+        __try_new_catch(tls_socket, new trial_tls_server_socket(), ret, __leave2);
 
         server_conf conf;
         conf.set(netserver_config_t::serverconf_concurrent_event, 1024)  // concurrent (linux epoll concerns, windows ignore)

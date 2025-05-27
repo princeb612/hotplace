@@ -119,7 +119,7 @@ return_t udp_server(void* param) {
 
     fclose(fp);
 
-    udp_server_socket svr;
+    naive_udp_server_socket svr;
     multiplexer_context_t* handle_ipv4 = nullptr;
 #if defined __linux__
     multiplexer_epoll mplexer;

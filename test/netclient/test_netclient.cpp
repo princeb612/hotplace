@@ -18,9 +18,9 @@ void tcp_client() {
     return_t ret = errorcode_t::success;
     client_socket* cli = nullptr;
     if (0 == (option.flags & flag_debug_tls_inside)) {
-        cli = new tcp_client_socket;
+        cli = new naive_tcp_client_socket;
     } else {
-        cli = new tcp_client_socket2;
+        cli = new trial_tcp_client_socket;
     }
 
     char buffer[option.bufsize];
@@ -66,9 +66,9 @@ void udp_client() {
     return_t ret = errorcode_t::success;
     client_socket* cli = nullptr;
     if (0 == (option.flags & flag_debug_tls_inside)) {
-        cli = new udp_client_socket;
+        cli = new naive_udp_client_socket;
     } else {
-        cli = new udp_client_socket2;
+        cli = new trial_udp_client_socket;
     }
 
     char buffer[option.bufsize];
@@ -120,7 +120,7 @@ void tls_client() {
     }
     tlscontext_open_simple(&sslctx, tlscontext_flags);
     openssl_tls tls(sslctx);
-    tls_client_socket cli(&tls);
+    openssl_tls_client_socket cli(&tls);
 
     char buffer[option.bufsize];
     basic_stream bs;
@@ -169,7 +169,7 @@ void tls_client2() {
 
     return_t ret = errorcode_t::success;
     auto minver = (option.flags & flag_allow_tls12) ? tls_12 : tls_13;
-    tls_client_socket2 cli(minver);
+    trial_tls_client_socket cli(minver);
 
     if (option.flags & flag_enable_etm) {
         cli.get_session()->get_keyvalue().set(session_conf_enable_encrypt_then_mac, 1);
@@ -223,7 +223,7 @@ void dtls_client() {
     SSL_CTX* sslctx = nullptr;
     tlscontext_open_simple(&sslctx, tlscontext_flag_dtls);
     openssl_tls tls(sslctx);
-    dtls_client_socket cli(&tls);
+    openssl_dtls_client_socket cli(&tls);
     sockaddr_storage_t addr;
     socklen_t addrlen = sizeof(addr);
 
@@ -272,7 +272,7 @@ void dtls_client2() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    dtls_client_socket2 cli(dtls_12);
+    trial_dtls_client_socket cli(dtls_12);
     cli.get_session()->get_dtls_record_publisher().set_fragment_size(256);
 
     char buffer[option.bufsize];

@@ -414,8 +414,8 @@ void test_construct_dtls_routine(const TLS_OPTION& option) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        tls_session client_session(session_dtls);
-        tls_session server_session(session_dtls);
+        tls_session client_session(session_type_dtls);
+        tls_session server_session(session_type_dtls);
 
         // C -> S CH
         binary_t bin_client_hello;

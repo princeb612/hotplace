@@ -18,7 +18,7 @@ void test_dtls_xargs_org() {
     _test_case.begin("https://dtls.xargs.org/");
 
     return_t ret = errorcode_t::success;
-    tls_session session(session_dtls);
+    tls_session session(session_type_dtls);
 
     crypto_keychain keychain;
     openssl_digest dgst;

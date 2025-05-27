@@ -503,7 +503,7 @@ void test_captured_dtls12() {
 
     {
         _test_case.begin("DTLS dtls12.pcapng");
-        tls_session session(session_dtls);
+        tls_session session(session_type_dtls);
         auto& protection = session.get_tls_protection();
 
         auto key = session.get_tls_protection().get_keyexchange();
@@ -517,7 +517,7 @@ void test_captured_dtls12() {
 
     {
         _test_case.begin("DTLS dtls12mtu1500.pcapng");
-        tls_session session(session_dtls);
+        tls_session session(session_type_dtls);
         auto& protection = session.get_tls_protection();
 
         auto key = session.get_tls_protection().get_keyexchange();

@@ -124,8 +124,8 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
         auto hsstatus = session->get_session_info(dir).get_status();
 
         switch (session_type) {
-            case session_tls:
-            case session_dtls: {
+            case session_type_tls:
+            case session_type_dtls: {
                 if (is_kindof_tls13()) {
                     // TLS 1.3
                     if (from_client == dir) {
@@ -183,8 +183,8 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
                     }
                 }
             } break;
-            case session_quic:
-            case session_quic2: {
+            case session_type_quic:
+            case session_type_quic2: {
                 // QUIC
                 if (from_client == dir) {
                     if (protection_initial == level) {
@@ -406,7 +406,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
         binary_t verifydata;
         binary_t aad;
-        if (session_dtls == session_type) {
+        if (session_type_dtls == session_type) {
             auto &kv = session->get_session_info(dir).get_keyvalue();
             uint16 epoch = kv.get(session_dtls_epoch);
             uint64 seq = kv.get(session_dtls_seq);
@@ -493,8 +493,8 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
         }
         auto session_type = session->get_type();
         switch (session_type) {
-            case session_tls:
-            case session_dtls: {
+            case session_type_tls:
+            case session_type_dtls: {
                 tls_advisor *tlsadvisor = tls_advisor::get_instance();
                 bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite());
                 if (is_kindof_cbc) {
@@ -513,8 +513,8 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
                     session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
                 }
             } break;
-            case session_quic:
-            case session_quic2: {
+            case session_type_quic:
+            case session_type_quic2: {
                 ret = errorcode_t::not_supported;
             } break;
         }
@@ -609,9 +609,48 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 
         auto const &key = get_item(secret_key);
         auto const &iv = get_item(secret_iv);
+        binary_t tls12_aad;
         binary_t nonce = iv;
-        build_iv(session, secret_iv, nonce, record_no);
-        ret = crypt.decrypt(cipher, mode, key, nonce, stream + pos, size, plaintext, aad, tag);
+        size_t size_nonce_explicit = 8;
+        if (is_kindof_tls12()) {
+            size_t hdrsize = 0;
+            if (is_kindof_tls()) {
+                hdrsize = sizeof(tls_header);
+            } else {
+                hdrsize = sizeof(dtls_header);
+            }
+
+            /**
+             * RFC 5246 6.2.3.3.  AEAD Ciphers
+             *   struct {
+             *      opaque nonce_explicit[SecurityParameters.record_iv_length];
+             *      aead-ciphered struct {
+             *          opaque content[TLSCompressed.length];
+             *      };
+             *   } GenericAEADCipher;
+             * RFC 5288
+             *   struct {
+             *      opaque salt[4];
+             *      opaque nonce_explicit[8];
+             *   } GCMNonce;
+             */
+            binary_append(nonce, stream + pos, size_nonce_explicit);
+
+            /**
+             * RFC 5246 6.2.3.3.  AEAD Ciphers
+             * additional_data = seq_num + TLSCompressed.type +
+             *                   TLSCompressed.version + TLSCompressed.length;
+             */
+            binary_append(tls12_aad, record_no, hton64);
+            binary_append(tls12_aad, aad);
+
+            pos += size_nonce_explicit;
+            size -= size_nonce_explicit;
+            ret = crypt.decrypt(cipher, mode, key, nonce, stream + pos, size, plaintext, tls12_aad, tag);
+        } else {
+            build_iv(session, secret_iv, nonce, record_no);
+            ret = crypt.decrypt(cipher, mode, key, nonce, stream + pos, size, plaintext, aad, tag);
+        }
         if (errorcode_t::success != ret) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
         }
@@ -624,7 +663,11 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
             dbs.println(" > iv [%08x] %s", secret_iv, base16_encode(iv).c_str());
             dbs.println(" > record no %i", record_no);
             dbs.println(" > nonce %s", base16_encode(nonce).c_str());
-            dbs.println(" > aad %s", base16_encode(aad).c_str());
+            if (is_kindof_tls12()) {
+                dbs.println(" > aad %s", base16_encode(tls12_aad).c_str());
+            } else {
+                dbs.println(" > aad %s", base16_encode(aad).c_str());
+            }
             dbs.println(" > tag %s", base16_encode(tag).c_str());
             dbs.println(" > ciphertext");
             dump_memory(stream + pos, size, &dbs, 16, 3, 0x0, dump_notrunc);
@@ -688,7 +731,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         binary_t verifydata;
         binary_t aad;
         binary_t tag;
-        if (session_dtls == session_type) {
+        if (session_type_dtls == session_type) {
             auto &kv = session->get_session_info(dir).get_keyvalue();
             uint16 epoch = kv.get(session_dtls_epoch);
             uint64 seq = kv.get(session_dtls_seq);
@@ -772,8 +815,8 @@ return_t tls_protection::get_protection_mask_key(tls_session *session, tls_direc
         auto hsstatus = session->get_session_info(dir).get_status();
 
         switch (session_type) {
-            case session_tls:
-            case session_dtls: {
+            case session_type_tls:
+            case session_type_dtls: {
                 if (is_kindof_dtls()) {
                     if (from_server == dir) {
                         if (tls_hs_finished == hsstatus) {
@@ -790,8 +833,8 @@ return_t tls_protection::get_protection_mask_key(tls_session *session, tls_direc
                     }
                 }
             } break;
-            case session_quic:
-            case session_quic2: {
+            case session_type_quic:
+            case session_type_quic2: {
                 if (protection_initial == level) {
                     if (from_server == dir) {
                         secret_key = tls_secret_initial_quic_server_hp;

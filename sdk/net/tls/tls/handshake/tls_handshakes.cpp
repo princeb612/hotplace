@@ -84,7 +84,7 @@ return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary
         }
 
         bool control_seq = false;
-        if (session_dtls == session->get_type()) {
+        if (session_type_dtls == session->get_type()) {
             control_seq = true;
         }
 

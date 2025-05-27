@@ -12,7 +12,7 @@
 
 #include "sample.hpp"
 
-static tls_session server_session(session_quic);
+static tls_session server_session(session_type_quic);
 
 void test_quic_xargs_org() {
     _test_case.begin("https://quic.xargs.org/");

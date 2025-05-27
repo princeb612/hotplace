@@ -2,10 +2,13 @@
 
 - MINGW64 test in progress, linux not yet
 - [ ] tasks
+  - [x] TLS client (Revision 776)
   - [ ] TLS server
-    - [x] handshake certificate
-    - [x] server key exchange
-      - [x] DER format
+    - [x] verification
+      - [x] server_key_exchange (TLS 1.2)
+        - [x] DER format (Revision 779)
+      - [x] certificate_verify (TLS 1.3)
+      - [x] finished
     - [ ] renegotiation
       - [x] client_hello renegotiation_info
       - [x] server_hello renegotiation_info
@@ -13,13 +16,14 @@
     - [ ] TLS
       - [x] TLS 1.3
       - [ ] TLS 1.2
+        - [x] entrypt_then_mac (Revision 752)
         - [x] CBC
-        - [ ] GCM
-        - [x] extended_master_secret
-        - [ ] protection_context::select_from (temporary SWITCH_ENFORCE_CBC_FOR_TEST set)
-        - [ ] test_construct_tls
-    - [ ] DTLS
-      - [ ] DTLS 1.2 (transcript hash mismatch)
+        - [ ] GCM (EVP_CipherUpdate 1, EVP_CipherFinal 0 - decryption passed but authentication failed)
+          - [ ] protection_context::select_from (temporary SWITCH_ENFORCE_CBC_FOR_TEST set)
+          - [ ] test_construct_tls
+        - [x] extended_master_secret (Revision 779)
+  - [x] DTLS
+    - [x] DTLS 1.2 fragmentation (Revision 781)
 
 ### packet capture
 

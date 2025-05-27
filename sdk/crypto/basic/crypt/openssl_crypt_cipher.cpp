@@ -8,6 +8,9 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
@@ -589,6 +592,16 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                 ret = errorcode_t::error_cipher;
                 __leave2_trace_openssl(ret);
             }
+#if defined DEBUG
+            if (check_trace_level(loglevel_debug) && istraceable()) {
+                basic_stream dbs;
+                dbs.println("> ciphertext");
+                dump_memory(ciphertext, ciphersize, &dbs, 16, 3, 0, dump_notrunc);
+                dbs.println("> plaintext");
+                dump_memory(plaintext, size_update, &dbs, 16, 3, 0, dump_notrunc);
+                trace_debug_event(trace_category_crypto, trace_event_encryption, &dbs);
+            }
+#endif
         }
 
         ret_cipher = EVP_CipherFinal(context->decrypt_context, plaintext + size_update, &size_final);

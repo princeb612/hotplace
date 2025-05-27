@@ -175,6 +175,28 @@ class tls_protection {
 
     ///////////////////////////////////////////////////////////////////////////
     // encryption
+    // RFC 5246
+    //     struct {
+    //         ContentType type;
+    //         ProtocolVersion version;
+    //         uint16 length;
+    //         select (SecurityParameters.cipher_type) {
+    //             case stream: GenericStreamCipher;
+    //             case block:  GenericBlockCipher;
+    //             case aead:   GenericAEADCipher;
+    //         } fragment;
+    //     } TLSCiphertext;
+    //     struct {
+    //        opaque nonce_explicit[SecurityParameters.record_iv_length];
+    //        aead-ciphered struct {
+    //            opaque content[TLSCompressed.length];
+    //        };
+    //     } GenericAEADCipher;
+    // RFC 5288
+    //     struct {
+    //        opaque salt[4];
+    //        opaque nonce_explicit[8];
+    //     } GCMNonce;
     ///////////////////////////////////////////////////////////////////////////
     return_t get_cipher_info(tls_session* session, crypt_algorithm_t& alg, crypt_mode_t& mode);
     return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv, uint64 recordno);
@@ -215,6 +237,8 @@ class tls_protection {
      * @param   tls_hs_type_t type [in]
      */
     return_t calc(tls_session* session, tls_hs_type_t type, tls_direction_t dir);
+    return_t calc_keyblock(hash_algorithm_t hmac_alg, const binary_t& master_secret, const binary_t& client_hello_random, const binary_t& server_hello_random,
+                           uint16 cs);
     return_t calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder);
     return_t calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t& secret, binary_t& maced);
 

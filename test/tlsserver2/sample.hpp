@@ -11,11 +11,6 @@ using namespace hotplace::crypto;
 using namespace hotplace::io;
 using namespace hotplace::net;
 
-enum option_flag_t {
-    option_flag_allow_tls13 = (1 << 0),
-    option_flag_allow_tls12 = (1 << 1),
-};
-
 typedef struct _OPTION {
     int run;
     int verbose;

@@ -22,7 +22,7 @@
 namespace hotplace {
 namespace net {
 
-tls_session::tls_session() : _type(session_tls), _status(0), _hook_param(nullptr) {
+tls_session::tls_session() : _type(session_type_tls), _status(0), _hook_param(nullptr) {
     _shared.make_share(this);
     _tls_protection.set_session(this);
     _dtls_record_publisher.set_session(this);

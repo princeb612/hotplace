@@ -12,12 +12,12 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 
-#include <sdk/net/basic/naive/tcp_server_socket.hpp>  // tcp_server_socket
-#include <sdk/net/basic/openssl/openssl_tls.hpp>      //
-#include <sdk/net/basic/util/ipaddr_acl.hpp>          // ipaddr_acl
-#include <sdk/net/http/http2/http2_protocol.hpp>      // http2_protocol
-#include <sdk/net/http/http_protocol.hpp>             // http_protocol
-#include <sdk/net/http/http_router.hpp>               // http_router
+#include <sdk/net/basic/naive/naive_tcp_server_socket.hpp>  // naive_tcp_server_socket
+#include <sdk/net/basic/openssl/openssl_tls.hpp>            //
+#include <sdk/net/basic/util/ipaddr_acl.hpp>                // ipaddr_acl
+#include <sdk/net/http/http2/http2_protocol.hpp>            // http2_protocol
+#include <sdk/net/http/http_protocol.hpp>                   // http_protocol
+#include <sdk/net/http/http_router.hpp>                     // http_router
 #include <sdk/net/http/types.hpp>
 #include <sdk/net/server/network_server.hpp>  // network_server
 
@@ -110,17 +110,17 @@ class http_server {
     skey_value _httpconf;  // t_stringkey_value<std::string>
 
     // TCP
-    tcp_server_socket _server_socket;
+    naive_tcp_server_socket _server_socket;
 
     // TLS
     openssl_tls_context* _tlscert;
     openssl_tls* _tls;
-    tls_server_socket* _tls_server_socket;
+    openssl_tls_server_socket* _tls_server_socket;
 
     // DTLS
     openssl_tls_context* _dtlscert;
     openssl_tls* _dtls;
-    dtls_server_socket* _dtls_server_socket;
+    openssl_dtls_server_socket* _dtls_server_socket;
 
     // ACL
     ipaddr_acl _acl;

@@ -25,7 +25,7 @@ const size_t sizeof_test_vector_tls_mte = RTL_NUMBER_OF(test_vector_tls_mte);
 
 test_vector_cbchmac_tls_t test_vector_tls_etm[] = {
     {
-        // test/tls/tls12/tls12etm.pcapng
+        // test/tls/tls12/tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256.pcapng
 
         // # CLIENT_RANDOM 968988b10ed8d72be87faea564a0d815a462f141ca8019adc533aec989152bff
         // #               3a3847a4d20f9766ff81040b9db89f85f56b1b9526afc626c0138e5b89d62c74680af78ba4d827ee38989518845bc985
@@ -56,7 +56,7 @@ test_vector_cbchmac_tls_t test_vector_tls_etm[] = {
         "d0d236fa3089553b17e96ec6a46410c0002dab9e5ce6dfb4a8539c906348d9ab",
     },
     {
-        // test/tls/tls12/tls12etm.pcapng
+        // test/tls/tls12/tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256.pcapng
         "server finished",
         tls_encrypt_then_mac,
         sha2_256,
@@ -69,7 +69,7 @@ test_vector_cbchmac_tls_t test_vector_tls_etm[] = {
         "29a5cec9a866ebf1f8efe4e56286bee28ab6c69342924f2b7691e79e40f43331",
     },
     {
-        // test/tls/tls12/tls12etm.pcapng
+        // test/tls/tls12/tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256.pcapng
         // client application data "hello"
         "hello",
         tls_encrypt_then_mac,

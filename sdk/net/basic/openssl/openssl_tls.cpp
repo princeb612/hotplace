@@ -596,10 +596,10 @@ return_t openssl_tls::set_tls_io(socket_context_t* handle, int type) {
          *
          *  test
          *
-         *  tls_server_socket   BIO_s_mem       passed
-         *  tls_client_socket   BIO_s_mem       passed
-         *  dtls_server_socket  BIO_s_datagram  passed
-         *  dtls_client_socket  BIO_s_datagram  not yet
+         *  openssl_tls_server_socket   BIO_s_mem       passed
+         *  openssl_tls_client_socket   BIO_s_mem       passed
+         *  openssl_dtls_server_socket  BIO_s_datagram  passed
+         *  openssl_dtls_client_socket  BIO_s_datagram  not yet
          *                      BIO_s_mem       passed
          */
         if (0 == type) {

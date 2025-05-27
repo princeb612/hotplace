@@ -35,7 +35,7 @@ quic_packet* quic_packet_builder::build() {
     auto session_type = session->get_type();
     uint8 type = 0;
     bool is_longheader = false;
-    uint32 version = (session_quic == session_type) ? quic_1 : quic_2;
+    uint32 version = (session_type_quic == session_type) ? quic_1 : quic_2;
     quic_packet_get_type(version, get_msb(), type, is_longheader);
     switch (type) {
         case quic_packet_type_version_negotiation: {

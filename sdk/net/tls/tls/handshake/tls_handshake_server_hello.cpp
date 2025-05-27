@@ -187,7 +187,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                     auto session_version = kv.get(session_tls_version);
                     auto version = protection.get_tls_version();
 
-                    bool downgrade = (session_dtls == session_type) ? (session_version < version) : (session_version > version);
+                    bool downgrade = (session_type_dtls == session_type) ? (session_version < version) : (session_version > version);
                     if (downgrade) {
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_protocol_version);
                         session->reset_session_status();
@@ -255,7 +255,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                 ret = test;
             }
         }
-        if ((session_quic == session_type) || (session_quic2 == session_type)) {
+        if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
             session->reset_recordno(from_server);
         }
 

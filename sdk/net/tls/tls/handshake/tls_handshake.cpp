@@ -228,7 +228,7 @@ return_t tls_handshake::prepare_fragment(const byte_t* stream, uint32 size, uint
     __try2 {
         auto session = get_session();
 
-        if (session_dtls != session->get_type()) {
+        if (session_type_dtls != session->get_type()) {
             ret = errorcode_t::do_nothing;
             __leave2;
         }
@@ -344,7 +344,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             _size = size_header_body;
         }
 
-        if ((session_tls == type) || (session_dtls == type)) {
+        if ((session_type_tls == type) || (session_type_dtls == type)) {
             if (cond_dtls) {
                 if (fragment_len < length) {
                     if (0 == fragment_offset) {
@@ -373,7 +373,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                     }
                 }
             }
-        } else if ((session_quic == type) || (session_quic2 == type)) {
+        } else if ((session_type_quic == type) || (session_type_quic2 == type)) {
             // header     body     end-of-stream
             // \- hspos   \-pos    \-size
             // case not fragmented
@@ -461,7 +461,7 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
         dbs.println("# handshake");
         dbs.println("> handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
         dbs.println(" > length 0x%06x(%i)", length, length);
-        if (session_dtls == session->get_type()) {
+        if (session_type_dtls == session->get_type()) {
             dbs.println(" > %s 0x%04x", constexpr_handshake_message_seq, _dtls_seq);
             dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_offset, _fragment_offset, _fragment_offset);
             dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_len, _fragment_len, _fragment_len);

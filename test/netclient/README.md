@@ -15,16 +15,16 @@
 
 2. progress
 
-| status                      | MINGW | LINUX | TLSv1.3 | TLSv1.2 |
-| --                          | --    | --    | --      | --      |
-| tcp_client_socket           | PASS  | PASS  | N/A     | N/A     |
-| udp_client_socket           | PASS  | PASS  | N/A     | N/A     |
-| tcp_client_socket2          | PASS  | PASS  | N/A     | N/A     |
-| udp_client_socket2          | PASS  | PASS  | N/A     | N/A     |
-| tls_client_socket (openssl) | PASS  | PASS  | PASS    | PASS    |
-| dtls_client_socket(openssl) | PASS  | PASS  | N/A     | PASS    |
-| tls_client_socket2          | PASS  | PASS  | PASS    | PASS    |
-| dtls_client_socket2         | PASS  | PASS  | -       | PASS    |
+| status                     | MINGW | LINUX | TLSv1.3 | TLSv1.2 |
+| --                         | --    | --    | --      | --      |
+| naive_tcp_client_socket    | PASS  | PASS  | N/A     | N/A     |
+| naive_udp_client_socket    | PASS  | PASS  | N/A     | N/A     |
+| trial_tcp_client_socket    | PASS  | PASS  | N/A     | N/A     |
+| trial_udp_client_socket    | PASS  | PASS  | N/A     | N/A     |
+| openssl_tls_client_socket  | PASS  | PASS  | PASS    | PASS    |
+| openssl_dtls_client_socket | PASS  | PASS  | N/A     | PASS    |
+| trial_tls_client_socket    | PASS  | PASS  | PASS    | PASS    |
+| trial_dtls_client_socket   | PASS  | PASS  | -       | PASS    |
 
 3. help
 

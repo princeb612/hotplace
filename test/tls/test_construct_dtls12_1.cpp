@@ -345,8 +345,8 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
 void test_construct_dtls12_1() {
     _test_case.begin("construct DTLS 1.2");
 
-    tls_session session_client(session_dtls);
-    tls_session session_server(session_dtls);
+    tls_session session_client(session_type_dtls);
+    tls_session session_server(session_type_dtls);
 
     session_client.get_dtls_record_publisher().set_fragment_size(128);
     session_server.get_dtls_record_publisher().set_fragment_size(128);

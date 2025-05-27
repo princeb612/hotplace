@@ -14,7 +14,7 @@
 
 void test_dtls_record_arrange() {
     _test_case.begin("arrange DTLS record");
-    tls_session session(session_dtls);
+    tls_session session(session_type_dtls);
     auto& arrange = session.get_dtls_record_arrange();
 
     return_t ret = errorcode_t::success;

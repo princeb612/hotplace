@@ -62,7 +62,7 @@ return_t echo_server(void*) {
     SSL_CTX* sslctx = nullptr;
     // http_protocol* http_prot = nullptr;
     openssl_tls* tls = nullptr;
-    tls_server_socket* tls_socket = nullptr;
+    openssl_tls_server_socket* tls_socket = nullptr;
 
     __try2 {
         // part of ssl certificate
@@ -88,7 +88,7 @@ return_t echo_server(void*) {
             "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:"
             "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256";
 
-        ret = tlscontext_open(&sslctx, tlscontext_flags, "server.crt", "server.key");
+        ret = openssl_tls_context_open(&sslctx, tlscontext_flags, "server.crt", "server.key");
 
         SSL_CTX_set_cipher_list(sslctx, ciphersuites.c_str());
 
@@ -97,7 +97,7 @@ return_t echo_server(void*) {
         SSL_CTX_set_verify(sslctx, 0, nullptr);
 
         __try_new_catch(tls, new openssl_tls(sslctx), ret, __leave2);
-        __try_new_catch(tls_socket, new tls_server_socket(tls), ret, __leave2);
+        __try_new_catch(tls_socket, new openssl_tls_server_socket(tls), ret, __leave2);
 
         server_conf conf;
         conf.set(netserver_config_t::serverconf_concurrent_event, 1024)  // concurrent (linux epoll concerns, windows ignore)

@@ -20,8 +20,8 @@
 
 #include <queue>
 #include <sdk/base/system/signalwait_threads.hpp>
-#include <sdk/net/basic/naive/tcp_server_socket.hpp>
-#include <sdk/net/basic/naive/udp_server_socket.hpp>
+#include <sdk/net/basic/naive/naive_tcp_server_socket.hpp>
+#include <sdk/net/basic/naive/naive_udp_server_socket.hpp>
 #include <sdk/net/basic/openssl/openssl_tls.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_server.hpp>

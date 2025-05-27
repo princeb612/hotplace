@@ -121,8 +121,8 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
 
         auto cs = protection.get_cipher_suite();
         const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
-        auto declen = (cbc == hint->mode) ? pos + len : len;
-        ret = protection.decrypt(session, dir, stream, declen, recpos, plaintext);
+        auto ctsize = (cbc == hint->mode) ? pos + len : len;
+        ret = protection.decrypt(session, dir, stream, ctsize, recpos, plaintext);
         if (errorcode_t::success == ret) {
             auto plainsize = plaintext.size();
             if (plainsize) {

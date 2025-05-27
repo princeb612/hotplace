@@ -23,7 +23,7 @@ namespace net {
  *      uint32 ret = errorcode_t::success;
  *      tlscontext_open_simple(tlscontext_flag_tls, &sslctx);
  *      openssl_tls tls(sslctx);
- *      tls_client_socket cli(&tls);
+ *      openssl_tls_client_socket cli(&tls);
  *      cli.connect(&sock, &tlshandle, host, port, 1);
  *      cli.send(sock, tlshandle, message, size, &cbsent);
  *      size_t cbread = 0;

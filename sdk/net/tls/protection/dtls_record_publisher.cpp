@@ -12,6 +12,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/stream/split.hpp>
 #include <sdk/base/unittest/trace.hpp>
@@ -56,13 +57,15 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             tls_record_builder builder;
             auto session = get_session();
-            auto session_type = session->get_type();
-            size_t hdrsize = 0;
-            if (session_tls == session_type) {
-                hdrsize = sizeof(tls_handshake_t);
+            if (nullptr == session) {
+                throw exception(no_session);
             } else {
-                hdrsize = sizeof(dtls_handshake_t);
+                if (session_type_dtls != session->get_type()) {
+                    throw exception(no_session);
+                }
             }
+            auto session_type = session->get_type();
+            size_t hdrsize = sizeof(dtls_handshake_t);
 
             struct spl_desc {
                 tls_hs_type_t hstype;
@@ -191,7 +194,13 @@ return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t di
     return ret;
 }
 
-void dtls_record_publisher::set_session(tls_session* session) { _session = session; }
+void dtls_record_publisher::set_session(tls_session* session) {
+    if (nullptr == session) {
+        throw exception(no_session);
+    }
+
+    _session = session;
+}
 
 tls_session* dtls_record_publisher::get_session() { return _session; }
 

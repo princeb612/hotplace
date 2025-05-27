@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/naive/tcp_client_socket.hpp>
-#include <sdk/net/basic/naive/udp_client_socket.hpp>
-#include <sdk/net/basic/openssl/dtls_client_socket.hpp>
-#include <sdk/net/basic/openssl/tls_client_socket.hpp>
+#include <sdk/net/basic/naive/naive_tcp_client_socket.hpp>
+#include <sdk/net/basic/naive/naive_udp_client_socket.hpp>
+#include <sdk/net/basic/openssl/openssl_dtls_client_socket.hpp>
+#include <sdk/net/basic/openssl/openssl_tls_client_socket.hpp>
 #include <sdk/net/http/http_client.hpp>
 #include <sdk/net/http/http_protocol.hpp>
 #include <sdk/net/http/http_request.hpp>
@@ -24,8 +24,8 @@ namespace net {
 
 http_client::http_client() : _client_socket(nullptr), _tlsctx(nullptr), _wto(1000) {
     tlscontext_open_simple(&_tlsctx, tlscontext_flag_tls);
-    _tls_client_socket = new tls_client_socket(new openssl_tls(_tlsctx));
-    _client_socket = new tcp_client_socket;
+    _tls_client_socket = new openssl_tls_client_socket(new openssl_tls(_tlsctx));
+    _client_socket = new naive_tcp_client_socket;
 }
 
 http_client::~http_client() {

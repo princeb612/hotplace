@@ -60,13 +60,13 @@ uint8 quic_packet::get_type() { return _type; }
 void quic_packet::get_type(uint8 hdr, uint8& type, bool& is_longheader) { quic_packet_get_type(_version, hdr, type, is_longheader); }
 
 void quic_packet::set_type(uint8 type, uint8& hdr, bool& is_longheader) {
-    quic_packet_set_type(session_quic == get_session()->get_type() ? quic_1 : quic_2, type, hdr, is_longheader);
+    quic_packet_set_type(session_type_quic == get_session()->get_type() ? quic_1 : quic_2, type, hdr, is_longheader);
 }
 
 quic_packet& quic_packet::set_version() {
     auto session = get_session();
     uint32 session_type = session->get_type();
-    if (session_quic == session_type) {
+    if (session_type_quic == session_type) {
         _version = quic_1;
     } else {
         _version = quic_2;

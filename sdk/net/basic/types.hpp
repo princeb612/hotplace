@@ -98,20 +98,21 @@ struct netsocket_t {
 class client_socket;
 class ipaddr_acl;
 class server_socket;
-class tcp_client_socket;
-class tcp_server_socket;
-class udp_client_socket;
-class udp_server_socket;
 
-class dtls_client_socket;
-class dtls_server_socket;
-class tls_client_socket;
-class tls_server_socket;
+class naive_tcp_client_socket;
+class naive_tcp_server_socket;
+class naive_udp_client_socket;
+class naive_udp_server_socket;
+
+class openssl_dtls_client_socket;
+class openssl_dtls_server_socket;
+class openssl_tls_client_socket;
+class openssl_tls_server_socket;
 class openssl_tls;
 class openssl_tls_context;
 
-class tcp_client_socket2;
-class udp_client_socket2;
+class trial_tcp_client_socket;
+class trial_udp_client_socket;
 
 }  // namespace net
 }  // namespace hotplace

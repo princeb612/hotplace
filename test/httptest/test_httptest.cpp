@@ -284,7 +284,7 @@ void test_basic_authentication() {
     const OPTION &option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    tcp_server_socket socket;  // dummy
+    naive_tcp_server_socket socket;  // dummy
     network_session session(&socket);
     basic_authentication_provider provider("basic realm");
     http_authentication_resolver resolver;
@@ -441,7 +441,7 @@ void test_digest_access_authentication(const char *alg, unsigned long *ossl_minv
     }
 
     if (support) {
-        tcp_server_socket socket;  // dummy
+        naive_tcp_server_socket socket;  // dummy
         network_session session(&socket);
         std::string realm = "digest realm";
         std::string qop = "auth";
@@ -739,7 +739,7 @@ void test_get_tlsclient() {
         SSL_CTX *sslctx = nullptr;
         tlscontext_open_simple(&sslctx, tlscontext_flag_tls);
         openssl_tls tls(sslctx);
-        tls_client_socket cli(&tls);
+        openssl_tls_client_socket cli(&tls);
         basic_stream bs;
 
         ret = cli.connect(url_info.host.c_str(), url_info.port, 5);
@@ -811,7 +811,7 @@ void test_get_tlsclient() {
     __finally2 {
         // do nothing
     }
-    _test_case.assert(true, __FUNCTION__, "tls_client_socket");
+    _test_case.assert(true, __FUNCTION__, "openssl_tls_client_socket");
 }
 
 /*

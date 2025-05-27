@@ -176,7 +176,7 @@ pcap_testvector capture_tls13[] = {
 void test_captured_tls13() {
     _test_case.begin("TLS 1.3 pre master secret");
 
-    tls_session session_sclient(session_tls);
+    tls_session session_sclient(session_type_tls);
     auto& protection = session_sclient.get_tls_protection();
 
     protection.use_pre_master_secret(true);

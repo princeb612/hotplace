@@ -68,8 +68,8 @@ return_t tlscontext_open_simple(SSL_CTX** context, uint32 flag);
  *        unencrypted key (ex. -----BEGIN PRIVATE KEY-----)
  *          works good, password parameter useless
  */
-return_t tlscontext_open(SSL_CTX** context, uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr,
-                         const char* chain_file = nullptr);
+return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr,
+                                  const char* chain_file = nullptr);
 
 class openssl_tls_context {
    public:

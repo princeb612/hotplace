@@ -324,8 +324,8 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
 }
 
 void do_test_construct_dtls12_2(uint32 flags) {
-    tls_session session_client(session_dtls);
-    tls_session session_server(session_dtls);
+    tls_session session_client(session_type_dtls);
+    tls_session session_server(session_type_dtls);
 
     session_client.get_dtls_record_publisher().set_flags(flags);
     session_server.get_dtls_record_publisher().set_flags(flags);

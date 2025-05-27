@@ -49,12 +49,12 @@ uint16 tls_protection::get_lagacy_version() {
     auto type = _session->get_type();
     uint16 version = tls_12;
     switch (type) {
-        case session_tls:
-        case session_quic:
-        case session_quic2:
+        case session_type_tls:
+        case session_type_quic:
+        case session_type_quic2:
             version = tls_12;
             break;
-        case session_dtls:
+        case session_type_dtls:
             version = dtls_12;
             break;
     }

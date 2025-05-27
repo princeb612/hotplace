@@ -153,7 +153,7 @@ return_t quic_packet_retry::retry_integrity_tag(const quic_packet_retry& retry_p
         // RFC 9369 3.3.3.  Retry Integrity Tag
         const char* key = nullptr;
         const char* nonce = nullptr;
-        if (session_quic == session_type) {
+        if (session_type_quic == session_type) {
             key = "0xbe0c690b9f66575a1d766b54e368c84e";
             nonce = "0x461599d35d632bf2239825bb";
         } else {

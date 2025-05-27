@@ -12,8 +12,8 @@
 
 #include "sample.hpp"
 
-static tls_session server_session(session_quic2);
-static tls_session client_session(session_quic2);
+static tls_session server_session(session_type_quic2);
+static tls_session client_session(session_type_quic2);
 
 void test_rfc_9369_prepare_a1() {
     // Destination Connection ID of 0x8394c8f03e515708

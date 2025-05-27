@@ -879,7 +879,7 @@ help
 -i           debug TLS inside
 -h           HTTP/1.1
 -m arg       message
--etm         TLS 1.2 EtM (tls_client_socket2)
+-etm         TLS 1.2 EtM (trial_tls_client_socket)
 hush@hush:~/hotplace/build/test/netclient$ ./test-netclient -v -d -P tls12 -i
 socket 3 created family 2(AF_INET) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
 connect SO_ERROR 0 return 0
@@ -1516,7 +1516,7 @@ help
 -i           debug TLS inside
 -h           HTTP/1.1
 -m arg       message
--etm         TLS 1.2 EtM (tls_client_socket2)
+-etm         TLS 1.2 EtM (trial_tls_client_socket)
 ````
 
 [TOC](README.md)

@@ -236,7 +236,7 @@ static int set_default_passwd_callback_routine(char* buf, int num, int rwflag, v
     return len;
 }
 
-return_t tlscontext_open(SSL_CTX** context, uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file) {
+return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file) {
     return_t ret = errorcode_t::success;
     SSL_CTX* ssl_ctx = nullptr;
     SSL* ssl = nullptr;
@@ -357,7 +357,7 @@ openssl_tls_context::openssl_tls_context(uint32 flag) : _ctx(nullptr) { tlsconte
 
 openssl_tls_context::openssl_tls_context(uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file)
     : _ctx(nullptr) {
-    tlscontext_open(&_ctx, flag, cert_file, key_file, password, chain_file);
+    openssl_tls_context_open(&_ctx, flag, cert_file, key_file, password, chain_file);
 }
 
 openssl_tls_context::~openssl_tls_context() {

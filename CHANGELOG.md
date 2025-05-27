@@ -25,14 +25,15 @@
     * CBOR
 
 * details
+  * Revision 782
   * Revision 781
     * [tested] DTLS fragmentation
   * Revision 780
-    * [tested] TLS 1.3
+    * [tested] TLS 1.3 server feature
   * Revision 779
     * [fixed] server_key_exchange, rs2der
     * [tested] extended_master_secret
-    * [tested] TLS 1.2 (CBC only)
+    * [tested] TLS 1.2 server feature (support CBC only - no GCM)
   * Revision 778
     * [tested] server certificates
   * Revision 777

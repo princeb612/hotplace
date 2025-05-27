@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/openssl/dtls_server_socket.hpp>
-#include <sdk/net/basic/openssl/tls_server_socket.hpp>
+#include <sdk/net/basic/openssl/openssl_dtls_server_socket.hpp>
+#include <sdk/net/basic/openssl/openssl_tls_server_socket.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_server.hpp>
 #include <sdk/net/server/network_session.hpp>
@@ -63,7 +63,7 @@ return_t http_server::startup_tls(const std::string& server_cert, const std::str
     __try2 {
         __try_new_catch(_tlscert, new openssl_tls_context(tlscontext_flag_tls, server_cert.c_str(), server_key.c_str()), ret, __leave2);
         __try_new_catch(_tls, new openssl_tls(_tlscert->get_ctx()), ret, __leave2);
-        __try_new_catch(_tls_server_socket, new tls_server_socket(_tls), ret, __leave2);
+        __try_new_catch(_tls_server_socket, new openssl_tls_server_socket(_tls), ret, __leave2);
     }
     __finally2 {
         // do nothing
@@ -98,7 +98,7 @@ return_t http_server::startup_dtls(const std::string& server_cert, const std::st
     __try2 {
         __try_new_catch(_dtlscert, new openssl_tls_context(tlscontext_flag_dtls, server_cert.c_str(), server_key.c_str()), ret, __leave2);
         __try_new_catch(_dtls, new openssl_tls(_dtlscert->get_ctx()), ret, __leave2);
-        __try_new_catch(_dtls_server_socket, new dtls_server_socket(_dtls), ret, __leave2);
+        __try_new_catch(_dtls_server_socket, new openssl_dtls_server_socket(_dtls), ret, __leave2);
     }
     __finally2 {
         // do nothing

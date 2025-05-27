@@ -53,7 +53,7 @@ return_t echo_server(void*) {
 
     SSL_CTX* sslctx = nullptr;
     openssl_tls* tls = nullptr;
-    dtls_server_socket* tls_socket = nullptr;
+    openssl_dtls_server_socket* tls_socket = nullptr;
     // DTLS handshake and thread-model
     //          single      multi
     // epoll    passed      N/A
@@ -69,7 +69,7 @@ return_t echo_server(void*) {
 
     __try2 {
         // part of ssl certificate
-        ret = tlscontext_open(&sslctx, tlscontext_flag_dtls, "server.crt", "server.key");
+        ret = openssl_tls_context_open(&sslctx, tlscontext_flag_dtls, "server.crt", "server.key");
 
         // https://docs.openssl.org/1.1.1/man1/ciphers/
         // TLS 1.2
@@ -82,7 +82,7 @@ return_t echo_server(void*) {
         SSL_CTX_set_verify(sslctx, 0, nullptr);
 
         __try_new_catch(tls, new openssl_tls(sslctx), ret, __leave2);
-        __try_new_catch(tls_socket, new dtls_server_socket(tls), ret, __leave2);
+        __try_new_catch(tls_socket, new openssl_dtls_server_socket(tls), ret, __leave2);
 
         server_conf conf;
         conf.set(netserver_config_t::serverconf_concurrent_event, 1024)  // concurrent (linux epoll concerns, windows ignore)
