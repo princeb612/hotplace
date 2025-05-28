@@ -59,7 +59,7 @@ class protection_context {
     void for_each_supported_versions(std::function<void(uint16, bool*)> fn) const;
     void for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) const;
 
-    return_t select_from(const protection_context& rhs);
+    return_t select_from(const protection_context& rhs, tls_session* session);
 
     const tls_cipher_suite_t* get_cipher_suite_hint();
     void set_cipher_suite(uint16 cs);

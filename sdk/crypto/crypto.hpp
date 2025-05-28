@@ -18,8 +18,8 @@ namespace crypto {
 
 enum crypt_ctrl_t {
     crypt_ctrl_padding = 1,  // EVP_CIPHER_CTX_set_padding
-    crypt_ctrl_lsize = 2,    // L SIZE, sizeof_nonce(iv) = 15-L
-    crypt_ctrl_tsize = 3,    // TAG Size
+    crypt_ctrl_lsize = 2,    // SET_L 3, SET_IVLEN=15-L
+    crypt_ctrl_tsize = 3,    // AEAD_SET_TAG
 };
 
 class crypt_t {

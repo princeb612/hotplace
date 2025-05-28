@@ -465,7 +465,7 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
         auto& prot_context = protection.get_protection_context();
         auto nego_context = protection.get_protection_context();  // copy
 
-        prot_context.select_from(nego_context);
+        prot_context.select_from(nego_context, session);
 
         auto cs = prot_context.get0_cipher_suite();
         auto tlsver = prot_context.get0_supported_version();

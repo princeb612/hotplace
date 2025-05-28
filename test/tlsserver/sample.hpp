@@ -20,12 +20,13 @@ typedef struct _OPTION {
     int run;
     int verbose;
     int debug;
+    int trace_level;
     int log;
     int time;
     uint16 port;
     uint32 flags;
 
-    _OPTION() : run(0), verbose(0), debug(0), log(0), time(0), port(9000), flags(0) {
+    _OPTION() : run(0), verbose(0), debug(0), trace_level(0), log(0), time(0), port(9000), flags(0) {
         // do nothing
     }
 } OPTION;

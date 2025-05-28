@@ -1,4 +1,4 @@
-#### tls13.pcapng - client
+#### client
 
 ````
 $ openssl s_client -connect localhost:9000 -state -debug -keylogfile sslkeylog -tls1_3

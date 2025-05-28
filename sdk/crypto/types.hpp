@@ -118,8 +118,8 @@ enum crypt_mode_t {
     gcm = 8,
     wrap = 9,
     ccm = 10,    // 14-octet authentication tag
-    ccm8 = 13,   // 8-octet authentication
-    ccm16 = 14,  // 16-octet authentication [TLS]
+    ccm8 = 13,   //  8-octet authentication [TLS] CCM_SET_L 3, AEAD_SET_TAG 8
+    ccm16 = 14,  // 16-octet authentication [TLS] CCM_SET_L 3, AEAD_SET_TAG 16
 
     mode_cipher = 11,
     mode_chacha20 = mode_cipher,

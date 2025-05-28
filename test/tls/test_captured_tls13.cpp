@@ -12,9 +12,154 @@
 
 #include "sample.hpp"
 
-// tls13/tls13.pcapng
+// tls13_TLS_AES_128_GCM_SHA256.pcapng
+pcap_testvector capture_tls13_gcm_sha256[] = {
+    {
+        from_client,
+        "client_hello",
+        "16 03 01 00 e3 01 00 00 df 03 03 80 9e 81 58 ce"
+        "56 15 09 69 11 89 60 42 af a6 6b 1b df 63 67 8c"
+        "35 ac e0 66 18 e5 da 52 0c 2d ed 20 f7 9f 1a 7a"
+        "3f ad 6e 27 80 28 4f 41 2c df 99 29 f0 2d 86 8e"
+        "d4 0a 83 0e b2 b8 36 38 51 d8 e1 04 00 02 13 01"
+        "01 00 00 94 00 0b 00 04 03 00 01 02 00 0a 00 16"
+        "00 14 00 1d 00 17 00 1e 00 19 00 18 01 00 01 01"
+        "01 02 01 03 01 04 00 23 00 00 00 16 00 00 00 17"
+        "00 00 00 0d 00 24 00 22 04 03 05 03 06 03 08 07"
+        "08 08 08 1a 08 1b 08 1c 08 09 08 0a 08 0b 08 04"
+        "08 05 08 06 04 01 05 01 06 01 00 2b 00 03 02 03"
+        "04 00 2d 00 02 01 01 00 33 00 26 00 24 00 1d 00"
+        "20 c6 f8 68 91 cb 99 eb 2c cc 1f c2 05 4d a2 6f"
+        "fa ee 70 d3 69 82 97 8d a8 9d 2b 1a 40 a3 c7 7a"
+        "42 00 1b 00 03 02 00 01",
+    },
+    {
+        from_server,
+        "server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
+        "16 03 03 00 7a 02 00 00 76 03 03 1a ec 8f 05 c3"
+        "3b 74 5e 02 80 08 53 a1 1a b9 28 a4 5f 26 0a 57"
+        "2f 6a f6 a6 da 41 76 62 8e 59 59 20 f7 9f 1a 7a"
+        "3f ad 6e 27 80 28 4f 41 2c df 99 29 f0 2d 86 8e"
+        "d4 0a 83 0e b2 b8 36 38 51 d8 e1 04 13 01 00 00"
+        "2e 00 2b 00 02 03 04 00 33 00 24 00 1d 00 20 11"
+        "53 8f 59 ea 97 5f 73 69 7e 93 b8 de 74 00 30 b5"
+        "1e a3 1e f6 7a fa db 43 55 8e 7f 93 2d 8f 37 14"
+        "03 03 00 01 01 17 03 03 00 17 f5 e2 92 8c 6c ae"
+        "19 63 88 fa 9d 36 f6 e8 4a 7b 6f 7d a1 64 51 48"
+        "39 17 03 03 02 2a a9 68 4b bb 75 b7 76 c9 b7 ba"
+        "8a d6 a9 c5 42 f8 26 8f 97 fe c2 a9 a2 ec 4d 5e"
+        "7d 71 73 03 84 a2 31 87 b4 39 11 d6 29 37 4b b0"
+        "c0 22 30 1a 1f 85 98 9c 71 86 57 8f 0a 38 01 f3"
+        "38 96 92 9c 3b d0 da 6b dd 4f 7c 57 ad cf 60 9e"
+        "95 fe af b8 60 7d 89 25 6d 1f ba fa 82 7e f5 f8"
+        "55 e4 72 21 ff fd 38 4f b2 a0 2d 37 ad 5a cd 19"
+        "e2 a7 be ce d5 76 ee c8 e1 83 7f c0 6c 45 d7 52"
+        "9a 7a 0f ab 8b 7f e4 0b 34 32 29 60 6f 02 6c f3"
+        "62 00 9e c0 75 84 ca 4b 61 02 3c 40 b3 65 10 49"
+        "f4 26 93 29 16 2e 63 93 01 3c bc 70 f4 b0 fa 22"
+        "42 6c 9f 9a 33 ad b9 4e 91 42 2d 96 6b 6a 47 62"
+        "06 30 8e 4f da 12 7b f1 11 6d 34 78 52 4b db 09"
+        "d7 f0 39 52 fb eb 3d 65 ab a7 0f cf fc 6f 7d 50"
+        "db 5f 5d 18 a8 c5 d9 db 38 74 81 9d 4c b6 11 c2"
+        "57 98 31 42 ff 2f ce d3 ca 16 4b fe f1 40 ae bd"
+        "0f bb 56 72 01 3c 30 96 89 40 99 50 67 2b 9a 64"
+        "e9 87 36 cc 1c ee 13 87 ff fd f5 b0 40 9b 78 82"
+        "ae c0 86 20 60 14 16 ef 3a 83 35 f1 8c 7b 1a bc"
+        "ce c8 ce 54 e9 81 2e 4a 87 0f 4e a0 24 c5 11 bd"
+        "c9 b6 f4 61 4a be 00 2e ff 8b 3f db 46 8e fb 5e"
+        "b0 4a 59 2a 92 42 a5 c3 92 01 16 ad 76 a9 13 9a"
+        "c0 4e 44 49 20 24 e6 25 89 c9 78 08 db e0 ff 6f"
+        "43 5e 44 bc 3b a9 f8 94 2d 60 da 95 36 24 7c cc"
+        "0d e2 1a 79 90 f6 bc 66 79 1b 1a 28 fc 66 8c 46"
+        "29 4e aa 6a a3 eb 28 d9 b3 7a 3a 92 03 53 a7 bb"
+        "b9 26 e4 dc 0c 91 42 ac b3 d4 44 52 be c8 b1 d4"
+        "ce 5a 95 64 f7 cb 0a 6c 8e 7c 88 a1 f6 ef 58 d1"
+        "08 40 a9 5b b7 c9 ad 8e b3 9a 53 b5 62 07 17 90"
+        "fa aa ff cb a7 b3 ad bf 4d e2 a1 5f fb 4a 79 96"
+        "a7 3c 88 7c 8b 15 57 20 ce 8a aa 74 02 c7 0c 5c"
+        "3b 99 45 89 b8 00 08 a3 79 ae e9 96 54 80 41 e9"
+        "fe 30 88 9e af 1f 6c 23 f5 1d 1a 2f 3f e2 db eb"
+        "ef b9 7d 19 3c b8 d2 5c 59 4c 00 2b b6 6a 0a b4"
+        "de e3 72 07 7f d1 f2 54 7f 60 ce 77 7e f5 43 c5"
+        "17 03 03 00 60 23 bc f5 d4 62 52 b5 11 0b 96 2a"
+        "93 87 02 e4 94 62 35 20 9b a5 c7 87 3d 54 fc e0"
+        "f2 74 a8 ec b4 98 0e 04 24 7c 47 b0 4f 40 65 b0"
+        "40 86 52 84 12 df 8e 3e f0 4e 6d 7c 9a bb 5b a1"
+        "93 ed 8d 02 45 3d 16 3b 74 53 a0 db 05 2b bb 21"
+        "94 23 0d 84 35 c3 d6 ea 82 59 7d 30 53 cf 29 aa"
+        "8e 29 b4 d3 c1 17 03 03 00 35 64 46 bb 8b f1 80"
+        "d7 a7 b0 08 ae 1d 4a 60 18 a2 6e 3f c2 a3 ea d1"
+        "b3 02 19 b9 72 5b 69 7b c3 c6 fd ab 83 cd 6c 52"
+        "eb 0c 08 80 3e e5 90 26 80 66 a7 2f 98 5d 7e",
+    },
+    {
+        from_client,
+        "change_cipher_spec, finished",
+        "14 03 03 00 01 01 17 03 03 00 35 51 11 89 9e 96"
+        "36 37 43 e2 6c 51 36 59 79 87 1c cf 33 83 5e 01"
+        "d8 9d fe 33 d8 0d 91 a7 b3 16 f1 b0 35 5f c3 f2"
+        "58 33 b9 27 94 a8 03 f2 08 57 97 b6 48 c3 7c ac",
+    },
+    {
+        from_server,
+        "new_session_ticket",
+        "17 03 03 00 ea 37 46 36 b1 0b 9a ee d9 8a 7c d8"
+        "76 96 49 6d d5 4d 30 7c 77 f4 e9 0d 2e 64 4f 93"
+        "3d 28 0a 5f fb 6b e9 76 12 0e bd ec b8 b3 f7 62"
+        "cd 63 3d eb bb fd b9 9d e1 db 53 cd 07 0c f8 4a"
+        "e9 98 3d fa 2a b8 90 73 7d bd 21 d2 b1 ca 33 8d"
+        "12 0d 08 40 23 fa e0 e2 21 9f b8 b8 29 1f 17 4f"
+        "f6 bc a1 8d c1 41 fc 10 da 5d 82 f5 f4 88 42 76"
+        "d2 ab 2a bc e1 2c 3f 5a 2a a1 1e 8d a6 08 28 ab"
+        "fd c3 b7 17 06 7f b9 d0 97 13 d5 82 c9 37 c8 dd"
+        "6b 48 56 52 11 30 b7 9d 80 8d 9f 29 e3 6d 61 98"
+        "65 03 b3 f7 ec 6e df 48 48 79 d3 2f a7 a9 51 d9"
+        "64 91 af 96 0d 68 d7 77 d6 f4 93 69 1c e9 d1 ab"
+        "76 bd 3c 96 95 f0 62 d2 db ac 14 0d ce 89 f4 04"
+        "ab 75 74 e9 b3 ef fd 37 ac ff 7c 72 7b b4 e8 ad"
+        "90 a8 b9 9d 03 5d 61 29 e2 8b 0d 2d 10 33 08",
+    },
+    {
+        from_server,
+        "new_session_ticket",
+        "17 03 03 00 ea 15 0d c6 fc 46 1c 65 8c be cd 80"
+        "bc a5 30 eb b7 c5 e6 81 b4 15 91 87 bb 66 78 82"
+        "ae cc ae da df 8d ed a3 0b 5a 61 61 1e 3d 98 c9"
+        "79 d3 30 a9 e4 39 d5 a1 b5 ba 66 aa 7e 8c 98 ee"
+        "f1 7b 32 27 47 d7 75 02 53 eb 5b 4f e7 97 e1 ca"
+        "78 15 f2 16 dc 03 ec ad 08 a4 fa 63 7c 21 bb af"
+        "3b a5 7e aa 82 a6 2b 5a d6 06 9d 53 8f 9e 3a ab"
+        "1c 84 0c 61 70 f4 75 1f 53 d1 e8 11 57 87 6e 7a"
+        "fe 2c dd 6a d3 67 67 a0 41 de 0b fa 95 db d8 e6"
+        "92 26 c4 9a b3 76 6f d4 ca a1 3d cb e1 5a b2 18"
+        "69 e8 31 29 e3 7a fe 69 a0 96 17 b9 77 47 6e 86"
+        "a8 d6 93 fb dc 8d b3 b1 b1 37 7a 2a b8 5c 1e f4"
+        "58 44 39 2c 6b 99 c2 d1 54 57 ab d3 ec 4e 80 15"
+        "c0 c5 d9 ae e7 74 83 6a 74 13 bc 60 2d 44 a8 0b"
+        "f6 eb 0c 41 4f f9 19 bb 52 8e d6 53 28 00 3a",
+    },
+    {
+        from_client,
+        "application data",
+        "17 03 03 00 17 ab a5 35 84 e5 9c 28 a4 09 23 8f"
+        "2e 73 9e 56 84 79 01 9f 57 75 9b 98",
+    },
+    {
+        from_client,
+        "alert",
+        "17 03 03 00 13 8d 24 ce 45 63 68 f0 c4 16 60 8a"
+        "73 c2 90 5f e2 31 38 e0",
+    },
+    {
+        from_server,
+        "alert",
+        "17 03 03 00 13 d2 f3 f4 a5 33 e5 91 3d 7a 85 9e"
+        "5b 97 cf 7e c1 1c ba 03",
+    },
+};
 
-pcap_testvector capture_tls13[] = {
+// tls13_TLS_AES_256_GCM_SHA384.pcapng
+pcap_testvector capture_tls13_gcm_sha384[] = {
     {
         from_client,
         "client_hello",
@@ -196,6 +341,7 @@ pcap_testvector capture_tls13[] = {
     },
 };
 
+// tls13_TLS_AES_128_CCM_SHA256.pcapng
 pcap_testvector capture_tls13_ccm[] = {
     {
         from_client,
@@ -341,6 +487,7 @@ pcap_testvector capture_tls13_ccm[] = {
     },
 };
 
+// tls13_TLS_CHACHA20_POLY1305_SHA256.pcapng
 pcap_testvector capture_tls13_chacha20_poly1305[] = {
     {
         from_client,
@@ -488,7 +635,28 @@ pcap_testvector capture_tls13_chacha20_poly1305[] = {
 
 void test_captured_tls13() {
     {
-        _test_case.begin("TLS 1.3 pre master secret");
+        _test_case.begin("TLS 1.3 tls13_TLS_AES_128_GCM_SHA256.pcapng");
+
+        tls_session session_sclient(session_type_tls);
+        auto& protection = session_sclient.get_tls_protection();
+
+        protection.use_pre_master_secret(true);
+        // SERVER_HANDSHAKE_TRAFFIC_SECRET (server_handshake_traffic_secret)
+        protection.set_item(server_handshake_traffic_secret, base16_decode_rfc("173f64c03a1f2be84418c226be95396d493a262d9c0c31e06cf6fcbf77083e00"));
+        // CLIENT_HANDSHAKE_TRAFFIC_SECRET (client_handshake_traffic_secret)
+        protection.set_item(client_handshake_traffic_secret, base16_decode_rfc("747fb5763d962534c3bae4bf2af31a3e83fac020241842c6eb5e8d925d38e0e0"));
+        // EXPORTER_SECRET
+        protection.set_item(tls_secret_exp_master, base16_decode_rfc("72103e6785dbad8f2a62af7f78aaddffaab6b5e8bb4a2eb1d8f701b8a8196862"));
+        // SERVER_TRAFFIC_SECRET_0 (server_application_traffic_secret_0)
+        protection.set_item(server_application_traffic_secret_0, base16_decode_rfc("0fc45c37bf9ee0675e337b7fa53b052a8f1444d1e1626ec0e3207ef186334415"));
+        // CLIENT_TRAFFIC_SECRET_0 (client_application_traffic_secret_0)
+        protection.set_item(client_application_traffic_secret_0, base16_decode_rfc("78e236e89ebc5759d212eb5f5a548185cba9f511643d8e58afa2e0665f34806b"));
+
+        play_pcap(&session_sclient, capture_tls13_gcm_sha256, RTL_NUMBER_OF(capture_tls13_gcm_sha256));
+    }
+
+    {
+        _test_case.begin("TLS 1.3 tls13_TLS_AES_256_GCM_SHA384.pcapng");
 
         tls_session session_sclient(session_type_tls);
         auto& protection = session_sclient.get_tls_protection();
@@ -510,11 +678,11 @@ void test_captured_tls13() {
         protection.set_item(client_application_traffic_secret_0,
                             base16_decode_rfc("7c6e80aea2d0f6f9411f921fcd28963383a82d54d01cd8f2a822ee8dce354fb7984b7211785e36de6ec19fcb9bcd1cb8"));
 
-        play_pcap(&session_sclient, capture_tls13, RTL_NUMBER_OF(capture_tls13));
+        play_pcap(&session_sclient, capture_tls13_gcm_sha384, RTL_NUMBER_OF(capture_tls13_gcm_sha384));
     }
 
     {
-        _test_case.begin("TLS 1.3 pre master secret TLS_AES_128_CCM_SHA256");
+        _test_case.begin("TLS 1.3 tls13_TLS_AES_128_CCM_SHA256.pcapng");
 
         tls_session session_sclient(session_type_tls);
         auto& protection = session_sclient.get_tls_protection();
@@ -535,7 +703,7 @@ void test_captured_tls13() {
     }
 
     {
-        _test_case.begin("TLS 1.3 pre master secret TLS_CHACHA20_POLY1305_SHA256");
+        _test_case.begin("TLS 1.3 tls13_TLS_CHACHA20_POLY1305_SHA256.pcapng");
 
         tls_session session_sclient(session_type_tls);
         auto& protection = session_sclient.get_tls_protection();

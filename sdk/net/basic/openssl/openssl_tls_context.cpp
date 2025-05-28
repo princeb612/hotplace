@@ -122,6 +122,16 @@ static int set_cookie_verify_callback_routine(SSL* ssl, const unsigned char* coo
     return ret;
 }
 
+static void keylog_callback_routine(const SSL* ssl, const char* line) {
+#if defined DEBUG
+    if (check_trace_level(loglevel_debug) && istraceable()) {
+        basic_stream dbs;
+        dbs << line << "\n";
+        trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+    }
+#endif
+}
+
 return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {
     return_t ret = errorcode_t::success;
     SSL_CTX* ssl_ctx = nullptr;
@@ -206,6 +216,7 @@ return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {
         uint32 option = get_trace_option();
         if (trace_option_t::trace_debug & option) {
             SSL_CTX_set_info_callback(ssl_ctx, set_info_callback_routine);
+            SSL_CTX_set_keylog_callback(ssl_ctx, keylog_callback_routine);
         }
 
 #if defined DEBUG

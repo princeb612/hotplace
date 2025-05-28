@@ -25,6 +25,10 @@
     * CBOR
 
 * details
+  * Revision 784
+    * [tested] CCM_8
+      * no s_server/s_client test vector
+      * test/cryoto test_aead_ccm (CCM_SET_L 3, CCM_SET_IVLEN=15-L=12, AEAD_SET_TAG 8)
   * Revision 783
     * [fixed] AEAD_AES_128_CCM, AEAD_AES_256_CCM
   * Revision 781
@@ -34,7 +38,7 @@
   * Revision 779
     * [fixed] server_key_exchange, rs2der
     * [tested] extended_master_secret
-    * [tested] TLS 1.2 server feature (support CBC only - no GCM)
+    * [tested] TLS 1.2 server feature (support CBC only - not AEAD yet)
   * Revision 778
     * [tested] server certificates
   * Revision 777
@@ -61,7 +65,7 @@
     * simple client (TLS over TCP)
       * test/netclient <-> test/tlsserver
         * ./test-tlsserver -v -d -r &
-        * ./test-netclient -v -d -P 5
+        * ./test-netclient -v -d -P tls
   * Revision 716
     * [tested] RFC 9369 QUIC Version 2
   * Revision 715

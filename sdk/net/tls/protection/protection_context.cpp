@@ -118,7 +118,7 @@ void protection_context::clear() {
     clear_ec_point_formats();
 }
 
-return_t protection_context::select_from(const protection_context& rhs) {
+return_t protection_context::select_from(const protection_context& rhs, tls_session* session) {
     return_t ret = errorcode_t::success;
     __try2 {
         clear();
@@ -207,8 +207,9 @@ return_t protection_context::select_from(const protection_context& rhs) {
             }
 #endif
             if (_cipher_suites.empty()) {
-                throw exception(not_specified);
-                ret = errorcode_t::not_found;
+                session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+                session->reset_session_status();
+                ret = errorcode_t::error_handshake;
                 __leave2;
             }
         }

@@ -149,7 +149,7 @@ return_t tls_protection::negotiate(tls_session *client_session, tls_session *ser
 
         auto &client_handshake_context = client_session->get_tls_protection().get_protection_context();
         auto &server_handshake_context = server_session->get_tls_protection().get_protection_context();
-        server_handshake_context.select_from(client_handshake_context);
+        server_handshake_context.select_from(client_handshake_context, server_session);
         ciphersuite = server_handshake_context.get0_cipher_suite();
         tlsversion = server_handshake_context.get0_supported_version();
     }

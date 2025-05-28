@@ -1,4 +1,4 @@
-#### tls13.pcapng - server
+#### server
 
 ````
 $ openssl s_server -accept 9000 -cert server.crt -key server.key -state -debug -status_verbose -keylogfile sslkeylog -tls1_3
