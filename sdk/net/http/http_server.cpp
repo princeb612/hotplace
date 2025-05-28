@@ -8,8 +8,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/openssl/openssl_dtls_server_socket.hpp>
-#include <sdk/net/basic/openssl/openssl_tls_server_socket.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_server.hpp>
 #include <sdk/net/server/network_session.hpp>
@@ -17,8 +15,11 @@
 namespace hotplace {
 namespace net {
 
-http_server::http_server()
-    : _tlscert(nullptr), _dtlscert(nullptr), _tls(nullptr), _dtls(nullptr), _tls_server_socket(nullptr), _dtls_server_socket(nullptr), _user_context(nullptr) {
+http_server::http_server(server_socket_adapter* adapter) : _server_socket_adapter(adapter), _user_context(nullptr) {
+    if (nullptr == adapter) {
+        throw exception(not_specified);
+    }
+    get_server_socket_adapter()->addref();
     get_http_router().set_owner(this);
     get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);  // constraints maximum packet size to 4KB
 }
@@ -61,9 +62,12 @@ return_t http_server::accept_handler(socket_t socket, sockaddr_storage_t* client
 return_t http_server::startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
     return_t ret = errorcode_t::success;
     __try2 {
-        __try_new_catch(_tlscert, new openssl_tls_context(tlscontext_flag_tls, server_cert.c_str(), server_key.c_str()), ret, __leave2);
-        __try_new_catch(_tls, new openssl_tls(_tlscert->get_ctx()), ret, __leave2);
-        __try_new_catch(_tls_server_socket, new openssl_tls_server_socket(_tls), ret, __leave2);
+        auto adapter = get_server_socket_adapter();
+        if (nullptr == adapter) {
+            ret = errorcode_t::not_specified;
+            __leave2;
+        }
+        ret = adapter->startup_tls(server_cert, server_key, cipher_list, verify_peer);
     }
     __finally2 {
         // do nothing
@@ -74,18 +78,12 @@ return_t http_server::startup_tls(const std::string& server_cert, const std::str
 return_t http_server::shutdown_tls() {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (_tls_server_socket) {
-            _tls_server_socket->release();
-            _tls_server_socket = nullptr;
+        auto adapter = get_server_socket_adapter();
+        if (nullptr == adapter) {
+            ret = errorcode_t::not_specified;
+            __leave2;
         }
-        if (_tls) {
-            _tls->release();
-            _tls = nullptr;
-        }
-        if (_tlscert) {
-            delete _tlscert;
-            _tlscert = nullptr;
-        }
+        ret = adapter->shutdown_dtls();
     }
     __finally2 {
         // do nothing
@@ -96,9 +94,12 @@ return_t http_server::shutdown_tls() {
 return_t http_server::startup_dtls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
     return_t ret = errorcode_t::success;
     __try2 {
-        __try_new_catch(_dtlscert, new openssl_tls_context(tlscontext_flag_dtls, server_cert.c_str(), server_key.c_str()), ret, __leave2);
-        __try_new_catch(_dtls, new openssl_tls(_dtlscert->get_ctx()), ret, __leave2);
-        __try_new_catch(_dtls_server_socket, new openssl_dtls_server_socket(_dtls), ret, __leave2);
+        auto adapter = get_server_socket_adapter();
+        if (nullptr == adapter) {
+            ret = errorcode_t::not_specified;
+            __leave2;
+        }
+        ret = adapter->startup_dtls(server_cert, server_key, cipher_list, verify_peer);
     }
     __finally2 {
         // do nothing
@@ -109,18 +110,12 @@ return_t http_server::startup_dtls(const std::string& server_cert, const std::st
 return_t http_server::shutdown_dtls() {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (_dtls_server_socket) {
-            _dtls_server_socket->release();
-            _dtls_server_socket = nullptr;
+        auto adapter = get_server_socket_adapter();
+        if (nullptr == adapter) {
+            ret = errorcode_t::not_specified;
+            __leave2;
         }
-        if (_dtls) {
-            _dtls->release();
-            _dtls = nullptr;
-        }
-        if (_dtlscert) {
-            delete _dtlscert;
-            _dtlscert = nullptr;
-        }
+        ret = adapter->shutdown_dtls();
     }
     __finally2 {
         // do nothing
@@ -143,15 +138,20 @@ return_t http_server::startup_server(http_service_t service, uint16 family, uint
 
         switch (service) {
             case service_http:
-                socket = &_server_socket;
+                socket = get_server_socket_adapter()->get_tcp_server_socket();
                 break;
             case service_http3:
-                socket = _dtls_server_socket;
+                socket = get_server_socket_adapter()->get_dtls_server_socket();
                 break;
             case service_https:
             default:
-                socket = _tls_server_socket;
+                socket = get_server_socket_adapter()->get_tls_server_socket();
                 break;
+        }
+
+        if (nullptr == socket) {
+            ret = errorcode_t::not_specified;
+            __leave2;
         }
 
         ret = get_network_server().open(&handle, family, port, socket, &get_server_conf(), &consume_routine, this);
@@ -187,6 +187,7 @@ return_t http_server::shutdown_server() {
 void http_server::shutdown() {
     shutdown_server();
     shutdown_tls();
+    get_server_socket_adapter()->release();
 }
 
 return_t http_server::consume_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* server_context) {
@@ -270,7 +271,7 @@ http_router& http_server::get_http_router() { return _router; }
 
 ipaddr_acl& http_server::get_ipaddr_acl() { return _acl; }
 
-openssl_tls_context* http_server::get_tlscert() { return _tlscert; }
+server_socket_adapter* http_server::get_server_socket_adapter() { return _server_socket_adapter; }
 
 }  // namespace net
 }  // namespace hotplace

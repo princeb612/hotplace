@@ -12,14 +12,13 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 
-#include <sdk/net/basic/naive/naive_tcp_server_socket.hpp>  // naive_tcp_server_socket
-#include <sdk/net/basic/openssl/openssl_tls.hpp>            //
-#include <sdk/net/basic/util/ipaddr_acl.hpp>                // ipaddr_acl
-#include <sdk/net/http/http2/http2_protocol.hpp>            // http2_protocol
-#include <sdk/net/http/http_protocol.hpp>                   // http_protocol
-#include <sdk/net/http/http_router.hpp>                     // http_router
-#include <sdk/net/http/types.hpp>
-#include <sdk/net/server/network_server.hpp>  // network_server
+#include <sdk/net/basic/server_socket_adapter.hpp>
+#include <sdk/net/basic/util/ipaddr_acl.hpp>      // ipaddr_acl
+#include <sdk/net/http/http2/http2_protocol.hpp>  // http2_protocol
+#include <sdk/net/http/http_protocol.hpp>         // http_protocol
+#include <sdk/net/http/http_router.hpp>           // http_router
+#include <sdk/net/http/types.hpp>                 //
+#include <sdk/net/server/network_server.hpp>      // network_server
 
 namespace hotplace {
 namespace net {
@@ -53,10 +52,9 @@ class http_server {
     http2_protocol& get_http2_protocol();
     http_router& get_http_router();
     ipaddr_acl& get_ipaddr_acl();
-    openssl_tls_context* get_tlscert();
 
    protected:
-    http_server();
+    http_server(server_socket_adapter* adapter);
 
     static return_t accept_handler(socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
 
@@ -104,23 +102,14 @@ class http_server {
      */
     return_t consume(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context);
 
+    server_socket_adapter* get_server_socket_adapter();
+
    private:
     network_server _server;
     server_conf _conf;
     skey_value _httpconf;  // t_stringkey_value<std::string>
 
-    // TCP
-    naive_tcp_server_socket _server_socket;
-
-    // TLS
-    openssl_tls_context* _tlscert;
-    openssl_tls* _tls;
-    openssl_tls_server_socket* _tls_server_socket;
-
-    // DTLS
-    openssl_tls_context* _dtlscert;
-    openssl_tls* _dtls;
-    openssl_dtls_server_socket* _dtls_server_socket;
+    server_socket_adapter* _server_socket_adapter;
 
     // ACL
     ipaddr_acl _acl;

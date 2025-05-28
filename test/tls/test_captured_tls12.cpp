@@ -408,17 +408,19 @@ pcap_testvector capture_tls12_aes128gcm_sha256[] = {
         "54 40 f1 a0 c3 9a 81 fa 6d 16 03 03 00 04 0e 00"
         "00 00",
     },
+#if 0
     {
         from_client,
         "client_key_exchange, change_cipher_spec, finished",
         "16 03 03 00 25 10 00 00 21 20 ff 5f 0a 76 36 70"
         "e2 5d b7 ca 20 5e 76 55 ab ad 09 76 83 6c c0 5c"
         "0d 5e 78 c1 fc 37 a2 a0 51 39 14 03 03 00 01 01"
+        // finished
+        // 0000   14 00 00 0c ff 74 86 f7 d9 a3 13 84 a3 8c f5 62
         "16 03 03 00 28 f1 b1 d2 e2 78 b9 f2 34 5d d1 73"
         "bb f2 f3 7c ef 1f 1e 54 c5 af bb 79 b6 b0 e2 f8"
         "03 e9 98 40 94 3c 28 51 8b 1d b1 8f a8",
     },
-#if 0
     {
         from_server, "new_session_ticket, change_cipher_spec, finished",
         "16 03 03 00 ba 04 00 00 b6 00 00 1c 20 00 b0 60"
@@ -484,7 +486,6 @@ void test_captured_tls12() {
         play_pcap(&session_mte, capture_tls12mte, RTL_NUMBER_OF(capture_tls12mte));
     }
 
-#if 0
     // GCM (EVP_CipherUpdate 1, EVP_CipherFinal 0 - decryption passed but authentication failed)
     _test_case.begin("TLS 1.2 AES_128_GCM_SHA256");
     {
@@ -497,5 +498,4 @@ void test_captured_tls12() {
 
         play_pcap(&session_gcm, capture_tls12_aes128gcm_sha256, RTL_NUMBER_OF(capture_tls12_aes128gcm_sha256));
     }
-#endif
 }

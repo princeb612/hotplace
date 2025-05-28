@@ -25,7 +25,8 @@
     * CBOR
 
 * details
-  * Revision 782
+  * Revision 783
+    * [fixed] AEAD_AES_128_CCM, AEAD_AES_256_CCM
   * Revision 781
     * [tested] DTLS fragmentation
   * Revision 780

@@ -21,6 +21,7 @@
 #include <sdk/net/basic/basic_socket.hpp>
 #include <sdk/net/basic/client_socket.hpp>
 #include <sdk/net/basic/server_socket.hpp>
+#include <sdk/net/basic/server_socket_adapter.hpp>
 #include <sdk/net/basic/types.hpp>
 
 /* basic/naive */
@@ -32,6 +33,7 @@
 /* basic/openssl */
 #include <sdk/net/basic/openssl/openssl_dtls_client_socket.hpp>
 #include <sdk/net/basic/openssl/openssl_dtls_server_socket.hpp>
+#include <sdk/net/basic/openssl/openssl_server_socket_adapter.hpp>
 #include <sdk/net/basic/openssl/openssl_tls.hpp>
 #include <sdk/net/basic/openssl/openssl_tls_client_socket.hpp>
 #include <sdk/net/basic/openssl/openssl_tls_context.hpp>
@@ -39,10 +41,11 @@
 #include <sdk/net/basic/openssl/sdk.hpp>
 #include <sdk/net/basic/openssl/types.hpp>
 
-/* basic/sdk */
+/* basic/trial */
 #include <sdk/net/basic/trial/client_socket_prosumer.hpp>
 #include <sdk/net/basic/trial/tls_composer.hpp>
 #include <sdk/net/basic/trial/trial_dtls_client_socket.hpp>
+#include <sdk/net/basic/trial/trial_server_socket_adapter.hpp>
 #include <sdk/net/basic/trial/trial_tcp_client_socket.hpp>
 #include <sdk/net/basic/trial/trial_tls_client_socket.hpp>
 #include <sdk/net/basic/trial/trial_tls_server_socket.hpp>

@@ -8,13 +8,12 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/openssl/openssl_tls_context.hpp>
 #include <sdk/net/http/http_server_builder.hpp>
 
 namespace hotplace {
 namespace net {
 
-http_server_builder::http_server_builder() : _handler(nullptr), _user_context(nullptr) {
+http_server_builder::http_server_builder() : _handler(nullptr), _user_context(nullptr), _adapter(nullptr) {
     get_server_conf()
         .set(netserver_config_t::serverconf_enable_ipv4, 0)
         .set(netserver_config_t::serverconf_enable_ipv6, 0)
@@ -30,7 +29,14 @@ http_server_builder::http_server_builder() : _handler(nullptr), _user_context(nu
         .set(netserver_config_t::serverconf_concurrent_consume, 2);
 }
 
-http_server_builder::~http_server_builder() {}
+http_server_builder::~http_server_builder() { clear(); }
+
+void http_server_builder::clear() {
+    auto adapter = get_adapter();
+    if (adapter) {
+        adapter->release();
+    }
+}
 
 http_server_builder &http_server_builder::enable_http(bool enable) {
     get_server_conf().set(netserver_config_t::serverconf_enable_http, enable ? 1 : 0);
@@ -103,7 +109,13 @@ http_server *http_server_builder::build() {
     http_server *server = nullptr;
     return_t ret = errorcode_t::success;
     __try2 {
-        __try_new_catch(server, new http_server, ret, __leave2);
+        auto adapter = get_adapter();
+        if (nullptr == adapter) {
+            ret = errorcode_t::not_specified;
+            __leave2;
+        }
+
+        __try_new_catch(server, new http_server(adapter), ret, __leave2);
 
         server->get_server_conf().copyfrom(&get_server_conf());
 
@@ -160,9 +172,7 @@ http_server *http_server_builder::build() {
             }
 
             if (enable_h2) {
-                if (server->get_tlscert()) {
-                    server->get_tlscert()->enable_alpn_h2(true);
-                }
+                adapter->enable_alpn("h2");
             }
 
             if (false == _content_encoding.empty()) {
@@ -177,6 +187,13 @@ http_server *http_server_builder::build() {
 }
 
 server_conf &http_server_builder::get_server_conf() { return _config; }
+
+http_server_builder &http_server_builder::set(server_socket_adapter *adapter) {
+    _adapter = adapter;
+    return *this;
+}
+
+server_socket_adapter *http_server_builder::get_adapter() { return _adapter; }
 
 }  // namespace net
 }  // namespace hotplace

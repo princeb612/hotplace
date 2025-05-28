@@ -95,14 +95,30 @@ uint8 tls_protection::get_tag_size() {
 
         switch (mode) {
             case gcm:
-            case mode_poly1305:
+            case mode_poly1305:  // RFC 7905
                 ret_value = 16;
-                break;
-            case ccm:
-                ret_value = 14;
                 break;
             case ccm8:
                 ret_value = 8;
+                break;
+            case ccm:
+            case ccm16:
+                /**
+                 * RFC 6655 AES-CCM Cipher Suites for Transport Layer Security (TLS)
+                 *   3.  RSA-Based AES-CCM Cipher Suites
+                 *     AEAD_AES_128_CCM and AEAD_AES_256_CCM described in [RFC5116].
+                 *
+                 *     Each uses AES-CCM; those that end in "_8" have an 8-octet
+                 *     authentication tag, while the other ciphersuites have 16-octet
+                 *     authentication tags.
+                 *   6.1.  AES-128-CCM with an 8-Octet Integrity Check Value (ICV)
+                 *   6.2.  AES-256-CCM with a 8-Octet Integrity Check Value (ICV)
+                 *
+                 * RFC 5116
+                 *   5.3.  AEAD_AES_128_CCM
+                 *   5.4.  AEAD_AES_256_CCM
+                 */
+                ret_value = 16;
                 break;
             default:
                 ret_value = dlen;
@@ -638,8 +654,13 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 
             /**
              * RFC 5246 6.2.3.3.  AEAD Ciphers
-             * additional_data = seq_num + TLSCompressed.type +
-             *                   TLSCompressed.version + TLSCompressed.length;
+             *   additional_data = seq_num + TLSCompressed.type +
+             *                     TLSCompressed.version + TLSCompressed.length;
+             *   AEADEncrypted = AEAD-Encrypt(write_key, nonce, plaintext,
+             *                                additional_data)
+             *   TLSCompressed.fragment = AEAD-Decrypt(write_key, nonce,
+             *                                         AEADEncrypted,
+             *                                         additional_data)
              */
             binary_append(tls12_aad, record_no, hton64);
             binary_append(tls12_aad, aad);

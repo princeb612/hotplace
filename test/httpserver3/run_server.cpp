@@ -83,7 +83,7 @@ return_t simple_http2_server(void*) {
         "AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA";
 
     __try2 {
-        builder
+        builder.set(new openssl_server_socket_adapter)
             .enable_http(false)  // disable http scheme
             .set_port_http(option.port)
             .enable_https(true)  // enable https scheme

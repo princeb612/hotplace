@@ -21,7 +21,8 @@ namespace net {
  * @example
  *          // sketch
  *          http_server_builder builder;
- *          builder.enable_http(false)
+ *          builder.builder.set(new openssl_server_socket_adapter)
+ *                 .enable_http(false)
  *                 .enable_https(true).set_port_https(9000)
  *                 .tls_certificate("server.crt", "server.key")
  *                 .tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
@@ -39,6 +40,12 @@ class http_server_builder {
    public:
     http_server_builder();
     ~http_server_builder();
+
+    /**
+     * @remarks do not call adapter->release()
+     * @sa      clear member method
+     */
+    http_server_builder& set(server_socket_adapter* adapter);
 
     http_server_builder& enable_http(bool enable);
     http_server_builder& set_port_http(uint16 port = 80);
@@ -67,8 +74,11 @@ class http_server_builder {
 
     http_server* build();
     server_conf& get_server_conf();
+    server_socket_adapter* get_adapter();
 
    protected:
+    void clear();
+
    private:
     std::string _server_cert;
     std::string _server_key;
@@ -79,6 +89,7 @@ class http_server_builder {
 
     http_server_handler_t _handler;
     void* _user_context;
+    server_socket_adapter* _adapter;
 };
 
 }  // namespace net

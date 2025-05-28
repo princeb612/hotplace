@@ -187,6 +187,12 @@ return_t protection_context::select_from(const protection_context& rhs) {
 #endif
                     }
 
+                    if (check_trace_level(loglevel_debug) && istraceable()) {
+                        basic_stream dbs;
+                        dbs.printf("\e[1;33m# select 0x%04x %s\e[0m", cs, hint->name_iana);
+                        trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                    }
+
                     add_cipher_suite(cs);
                     set_cipher_suite(cs);
                     break;
@@ -201,6 +207,7 @@ return_t protection_context::select_from(const protection_context& rhs) {
             }
 #endif
             if (_cipher_suites.empty()) {
+                throw exception(not_specified);
                 ret = errorcode_t::not_found;
                 __leave2;
             }

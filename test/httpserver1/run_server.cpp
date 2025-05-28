@@ -106,7 +106,8 @@ return_t simple_http_server(void *) {
     fclose(fp);
 
     __try2 {
-        builder.enable_http(true)
+        builder.set(new openssl_server_socket_adapter)
+            .enable_http(true)
             .set_port_http(option.port)
             .enable_https(true)
             .set_port_https(option.port_tls)

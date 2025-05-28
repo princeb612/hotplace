@@ -10,9 +10,10 @@
  * Date         Name                Description
  *
  * @comments
- *      debug w/ curl
- *      curl -v -k https://localhost:9000 --http2
- *      curl -v -k https://localhost:9000 --http2  --http2-prior-knowledge
+ *
+ *      httpserver2 - using libssl api
+ *      httpserver4 - using sdk/net/tls api
+ *
  */
 
 #include "sample.hpp"
@@ -69,7 +70,7 @@ return_t simple_http2_server(void*) {
     fclose(fp);
 
     __try2 {
-        builder.set(new openssl_server_socket_adapter)
+        builder.set(new trial_server_socket_adapter)
             .enable_http(false)  // disable http scheme
             .set_port_http(option.port)
             .enable_https(true)  // enable https scheme
@@ -156,7 +157,7 @@ void run_server() {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        _test_case.begin("http/2 powered by http_server and libssl");
+        _test_case.begin("http/2 powered by http_server");
 
         thread1.start();
     }
