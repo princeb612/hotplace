@@ -33,6 +33,7 @@ void test_chacha20_rfc7539_crypto_aead();
 void test_cbc_hmac_rfc7516();
 void test_cipher_encrypt();
 void test_crypto_encrypt();
+void test_validate_resources();
 void test_crypto_aead();
 void test_cbc_hmac_tls_mte();
 void test_cbc_hmac_tls_etm();

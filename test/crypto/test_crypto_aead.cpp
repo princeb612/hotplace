@@ -20,7 +20,7 @@ void test_crypto_aead() {
     constexpr char sample[] = "We don't playing because we grow old; we grow old because we stop playing.";
     size_t size = strlen(sample);
 
-    auto lambda = [&](const char* text, crypto_aead_scheme_t scheme, const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size,
+    auto lambda = [&](const char* text, crypto_scheme_t scheme, const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size,
                       const binary_t& aad) -> void {
         return_t ret = errorcode_t::success;
         crypto_aead_builder builder;
@@ -45,32 +45,43 @@ void test_crypto_aead() {
         }
     };
 
-    lambda("aes128-gcm", aead_scheme_aes128_gcm, key, iv, (byte_t*)sample, size, aad);
-    lambda("aes192-gcm", aead_scheme_aes192_gcm, key, iv, (byte_t*)sample, size, aad);
-    lambda("aes256-gcm", aead_scheme_aes256_gcm, key, iv, (byte_t*)sample, size, aad);
+    lambda("aes128-gcm", crypto_scheme_aes_128_gcm, key, iv, (byte_t*)sample, size, aad);
+    lambda("aes192-gcm", crypto_scheme_aes_192_gcm, key, iv, (byte_t*)sample, size, aad);
+    lambda("aes256-gcm", crypto_scheme_aes_256_gcm, key, iv, (byte_t*)sample, size, aad);
 
-    lambda("aes128-ccm", aead_scheme_aes128_ccm, key, iv, (byte_t*)sample, size, aad);
-    lambda("aes192-ccm", aead_scheme_aes192_ccm, key, iv, (byte_t*)sample, size, aad);
-    lambda("aes256-ccm", aead_scheme_aes256_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("aes128-ccm", crypto_scheme_aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("aes192-ccm", crypto_scheme_aes_192_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("aes256-ccm", crypto_scheme_aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
 
-    lambda("aes128-ccm8", aead_scheme_aes128_ccm8, key, iv, (byte_t*)sample, size, aad);
-    lambda("aes192-ccm8", aead_scheme_aes192_ccm8, key, iv, (byte_t*)sample, size, aad);
-    lambda("aes256-ccm8", aead_scheme_aes256_ccm8, key, iv, (byte_t*)sample, size, aad);
+    lambda("aes128-gcm", crypto_scheme_tls_aes_128_gcm, key, iv, (byte_t*)sample, size, aad);
+    lambda("aes256-gcm", crypto_scheme_tls_aes_256_gcm, key, iv, (byte_t*)sample, size, aad);
+
+    lambda("aes128-ccm", crypto_scheme_tls_aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("aes256-ccm", crypto_scheme_tls_aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
+
+    lambda("aes128-ccm8", crypto_scheme_tls_aes_128_ccm_8, key, iv, (byte_t*)sample, size, aad);
+    lambda("aes256-ccm8", crypto_scheme_tls_aes_256_ccm_8, key, iv, (byte_t*)sample, size, aad);
 
     openssl_chacha20_iv(nonce, 1, iv);
-    lambda("chacha20-poly1305", aead_scheme_chacha20_poly1305, key, nonce, (byte_t*)sample, size, aad);
+    lambda("chacha20-poly1305", crypto_scheme_tls_chacha20_poly1305, key, nonce, (byte_t*)sample, size, aad);
 
-    lambda("aes128-gcm", aead_scheme_aes128_gcm, key, iv, nullptr, 0, aad);
-    lambda("aes192-gcm", aead_scheme_aes192_gcm, key, iv, nullptr, 0, aad);
-    lambda("aes256-gcm", aead_scheme_aes256_gcm, key, iv, nullptr, 0, aad);
+    lambda("aes128-gcm", crypto_scheme_aes_128_gcm, key, iv, nullptr, 0, aad);
+    lambda("aes192-gcm", crypto_scheme_aes_192_gcm, key, iv, nullptr, 0, aad);
+    lambda("aes256-gcm", crypto_scheme_aes_256_gcm, key, iv, nullptr, 0, aad);
 
-    lambda("aes128-ccm", aead_scheme_aes128_ccm, key, iv, nullptr, 0, aad);
-    lambda("aes192-ccm", aead_scheme_aes192_ccm, key, iv, nullptr, 0, aad);
-    lambda("aes256-ccm", aead_scheme_aes256_ccm, key, iv, nullptr, 0, aad);
+    lambda("aes128-ccm", crypto_scheme_aes_128_ccm, key, iv, nullptr, 0, aad);
+    lambda("aes192-ccm", crypto_scheme_aes_192_ccm, key, iv, nullptr, 0, aad);
+    lambda("aes256-ccm", crypto_scheme_aes_256_ccm, key, iv, nullptr, 0, aad);
 
-    lambda("aes128-ccm8", aead_scheme_aes128_ccm8, key, iv, nullptr, 0, aad);
-    lambda("aes192-ccm8", aead_scheme_aes192_ccm8, key, iv, nullptr, 0, aad);
-    lambda("aes256-ccm8", aead_scheme_aes256_ccm8, key, iv, nullptr, 0, aad);
+    lambda("aes128-gcm", crypto_scheme_tls_aes_128_gcm, key, iv, nullptr, 0, aad);
+    lambda("aes256-gcm", crypto_scheme_tls_aes_256_gcm, key, iv, nullptr, 0, aad);
 
-    lambda("chacha20-poly1305", aead_scheme_chacha20_poly1305, key, nonce, nullptr, 0, aad);
+    lambda("aes128-ccm", crypto_scheme_tls_aes_128_ccm, key, iv, nullptr, 0, aad);
+    lambda("aes256-ccm", crypto_scheme_tls_aes_256_ccm, key, iv, nullptr, 0, aad);
+
+    lambda("aes128-ccm8", crypto_scheme_tls_aes_128_ccm_8, key, iv, nullptr, 0, aad);
+    lambda("aes256-ccm8", crypto_scheme_tls_aes_256_ccm_8, key, iv, nullptr, 0, aad);
+
+    lambda("chacha20-poly1305", crypto_scheme_chacha20_poly1305, key, nonce, nullptr, 0, aad);
+    lambda("chacha20-poly1305", crypto_scheme_tls_chacha20_poly1305, key, nonce, nullptr, 0, aad);
 }

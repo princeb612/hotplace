@@ -94,7 +94,7 @@ void test_chacha20_rfc7539_crypto_aead() {
 
             openssl_chacha20_iv(nonce, counter, iv);
             crypto_aead_builder builder;
-            auto aead = builder.set_scheme(aead_scheme_chacha20_poly1305).build();
+            auto aead = builder.set_scheme(crypto_scheme_tls_chacha20_poly1305).build();
             if (aead) {
                 binary_t t;
 

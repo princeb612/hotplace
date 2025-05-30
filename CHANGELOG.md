@@ -25,6 +25,7 @@
     * CBOR
 
 * details
+  * Revision 785
   * Revision 784
     * [tested] CCM_8
       * no s_server/s_client test vector

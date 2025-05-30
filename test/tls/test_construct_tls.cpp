@@ -643,7 +643,6 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
             keyexchange = hint->keyexchange;
-            mode = hint->mode;
 
             auto svr_tlsversion = server_session.get_tls_protection().get_tls_version();
             auto cli_tlsversion = client_session.get_tls_protection().get_tls_version();
@@ -852,10 +851,10 @@ void test_construct_tls() {
         {tls_12, "TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384"},
 
 #if 0
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"},
+        // {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"},
+        // {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"},
+        // {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256"},
+        // {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"},
         {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM"},
         {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM"},
         {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8"},

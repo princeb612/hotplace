@@ -462,7 +462,7 @@ pcap_testvector capture_tls12_aes128gcm_sha256[] = {
 void test_captured_tls12() {
     return_t ret = errorcode_t::success;
 
-    _test_case.begin("TLS 1.2 encrypt_then_mac");
+    _test_case.begin("TLS 1.2 tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256.pcapng");
     {
         tls_session session_etm(session_type_tls);
         auto& protection = session_etm.get_tls_protection();
@@ -474,7 +474,7 @@ void test_captured_tls12() {
         play_pcap(&session_etm, capture_tls12etm, RTL_NUMBER_OF(capture_tls12etm));
     }
 
-    _test_case.begin("TLS 1.2 mac_then_encrypt");
+    _test_case.begin("TLS 1.2 tls12mte_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256.pcapng");
     {
         tls_session session_mte(session_type_tls);
         auto& protection = session_mte.get_tls_protection();
@@ -487,7 +487,7 @@ void test_captured_tls12() {
     }
 
     // GCM (EVP_CipherUpdate 1, EVP_CipherFinal 0 - decryption passed but authentication failed)
-    _test_case.begin("TLS 1.2 AES_128_GCM_SHA256");
+    _test_case.begin("TLS 1.2 tls12_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256.pcapng");
     {
         tls_session session_gcm(session_type_tls);
         auto& protection = session_gcm.get_tls_protection();

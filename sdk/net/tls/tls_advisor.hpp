@@ -113,8 +113,7 @@ struct tls_cipher_suite_t {
     const char* name_ossl;      // ECDHE-ECDSA-AES128-SHA256
     keyexchange_t keyexchange;  // keyexchange_ecdhe
     auth_t auth;                // auth_ecdsa
-    crypt_algorithm_t cipher;   // aes128
-    crypt_mode_t mode;          // cbc
+    crypto_scheme_t scheme;     //
     hash_algorithm_t mac;       // sha2_256
 };
 extern const tls_cipher_suite_t tls_cipher_suites[];
@@ -153,8 +152,9 @@ class tls_advisor {
     const tls_version_hint_t* hintof_tls_version(uint16 code);
     const tls_cipher_suite_t* hintof_cipher_suite(uint16 code);
     const tls_cipher_suite_t* hintof_cipher_suite(const std::string& name);
-    void enum_cipher_suites(std::function<void(const tls_cipher_suite_t*)> fn);
+    const hint_cipher_t* hintof_cipher(uint16 code);
     const hint_blockcipher_t* hintof_blockcipher(uint16 code);
+    void enum_cipher_suites(std::function<void(const tls_cipher_suite_t*)> fn);
     bool is_kindof_cbc(uint16 code);
     const hint_digest_t* hintof_digest(uint16 code);
     const tls_sig_scheme_t* hintof_signature_scheme(uint16 code);

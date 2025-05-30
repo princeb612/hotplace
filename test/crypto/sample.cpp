@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
         test_features();
 
         validate_openssl_crypt();  // validate wrapper class openssl_crypt
+        test_validate_resources();
 
         test_openssl_crypt(10, 4096);  // performance (for large stream encryption performance, just check error occurrence)
         test_openssl_crypt(0, 0);      // speed

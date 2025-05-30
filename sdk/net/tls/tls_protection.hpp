@@ -198,7 +198,6 @@ class tls_protection {
     //        opaque nonce_explicit[8];
     //     } GCMNonce;
     ///////////////////////////////////////////////////////////////////////////
-    return_t get_cipher_info(tls_session* session, crypt_algorithm_t& alg, crypt_mode_t& mode);
     return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv, uint64 recordno);
     uint8 get_tag_size();
 

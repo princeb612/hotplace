@@ -76,8 +76,8 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
 
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto cs = protection.get_cipher_suite();
-            const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
-            auto declen = (cbc == hint->mode) ? size : len;
+            bool is_cbc = tlsadvisor->is_kindof_cbc(cs);
+            auto declen = (is_cbc) ? size : len;
             ret = protection.decrypt(session, dir, stream, declen, recpos, plaintext);
             if (errorcode_t::success == ret) {
                 tpos = 0;

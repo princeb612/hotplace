@@ -15,8 +15,6 @@
 namespace hotplace {
 namespace crypto {
 
-#define CRYPT_CIPHER_VALUE(a, m) ((a << 16) | m)
-
 crypto_advisor crypto_advisor::_instance;
 
 crypto_advisor* crypto_advisor::get_instance() {
@@ -77,13 +75,13 @@ return_t crypto_advisor::build() {
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
         EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch(nullptr, nameof_alg(item), nullptr);
         if (evp_cipher) {
-            _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(typeof_alg(item), typeof_mode(item)), evp_cipher));
+            _cipher_map.insert(std::make_pair(CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item)), evp_cipher));
             _evp_cipher_map.insert(std::make_pair(evp_cipher, item));
         }
 #else
         const EVP_CIPHER* evp_cipher = EVP_get_cipherbyname(nameof_alg(item));
         if (evp_cipher) {
-            _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(typeof_alg(item), typeof_mode(item)), (EVP_CIPHER*)evp_cipher));
+            _cipher_map.insert(std::make_pair(CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item)), (EVP_CIPHER*)evp_cipher));
             _evp_cipher_map.insert(std::make_pair(evp_cipher, item));
         }
 #endif
@@ -96,18 +94,20 @@ return_t crypto_advisor::build() {
 #endif
         }
 
-        _cipher_fetch_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(typeof_alg(item), typeof_mode(item)), item));
+        _cipher_fetch_map.insert(std::make_pair(CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item)), item));
         _cipher_byname_map.insert(std::make_pair(nameof_alg(item), item));
 
         if (evp_cipher) {
             set_feature(nameof_alg(item), advisor_feature_cipher);
         }
+
+        _cipher_scheme_map.insert({item->scheme, item});
     }
 
     for (i = 0; i < sizeof_aes_wrap_methods; i++) {
         const openssl_evp_cipher_method_older_t* item = aes_wrap_methods + i;
         if (osslver < 0x30000000L) {
-            _cipher_map.insert(std::make_pair(CRYPT_CIPHER_VALUE(item->method.algorithm, item->method.mode), (EVP_CIPHER*)item->_cipher));
+            _cipher_map.insert(std::make_pair(CRYPTO_SCHEME16(item->method.algorithm, item->method.mode), (EVP_CIPHER*)item->_cipher));
             _evp_cipher_map.insert(std::make_pair(item->_cipher, &item->method));
         }
 

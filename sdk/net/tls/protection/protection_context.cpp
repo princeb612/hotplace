@@ -11,6 +11,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
@@ -123,6 +124,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
     __try2 {
         clear();
 
+        crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         uint16 selected_version = tls_10;
@@ -180,7 +182,8 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
 #define SWITCH_ENFORCE_CBC_FOR_TEST
 
 #if defined SWITCH_ENFORCE_CBC_FOR_TEST
-                        if (cbc != hint->mode) {
+                        auto hint_cipher = advisor->hintof_cipher(hint->scheme);
+                        if (cbc != hint_cipher->mode) {
                             candidate = cs;
                             continue;
                         }

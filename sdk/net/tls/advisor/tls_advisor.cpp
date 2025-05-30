@@ -185,21 +185,43 @@ void tls_advisor::load_etc() {
 }
 
 const tls_cipher_suite_t* tls_advisor::hintof_cipher_suite(uint16 code) {
-    const tls_cipher_suite_t* item = nullptr;
+    const tls_cipher_suite_t* ret_value = nullptr;
     auto iter = _cipher_suite_codes.find(code);
     if (_cipher_suite_codes.end() != iter) {
-        item = iter->second;
+        ret_value = iter->second;
     }
-    return item;
+    return ret_value;
 }
 
 const tls_cipher_suite_t* tls_advisor::hintof_cipher_suite(const std::string& name) {
-    const tls_cipher_suite_t* item = nullptr;
+    const tls_cipher_suite_t* ret_value = nullptr;
     auto iter = _cipher_suite_names.find(name);
     if (_cipher_suite_names.end() != iter) {
-        item = iter->second;
+        ret_value = iter->second;
     }
-    return item;
+    return ret_value;
+}
+
+const hint_cipher_t* tls_advisor::hintof_cipher(uint16 code) {
+    const hint_cipher_t* ret_value = nullptr;
+    auto iter = _cipher_suite_codes.find(code);
+    if (_cipher_suite_codes.end() != iter) {
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        auto hint_cs = iter->second;
+        ret_value = advisor->hintof_cipher(hint_cs->scheme);
+    }
+    return ret_value;
+}
+
+const hint_blockcipher_t* tls_advisor::hintof_blockcipher(uint16 code) {
+    const hint_blockcipher_t* ret_value = nullptr;
+    auto iter = _cipher_suite_codes.find(code);
+    if (_cipher_suite_codes.end() != iter) {
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        auto hint_cs = iter->second;
+        ret_value = advisor->hintof_blockcipher(hint_cs->scheme);
+    }
+    return ret_value;
 }
 
 void tls_advisor::enum_cipher_suites(std::function<void(const tls_cipher_suite_t*)> fn) {
@@ -211,43 +233,35 @@ void tls_advisor::enum_cipher_suites(std::function<void(const tls_cipher_suite_t
     }
 }
 
-const hint_blockcipher_t* tls_advisor::hintof_blockcipher(uint16 code) {
-    const hint_blockcipher_t* hint = nullptr;
-    auto hint_alg = hintof_cipher_suite(code);
-    if (hint_alg) {
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        hint = advisor->hintof_blockcipher(hint_alg->cipher);
-    }
-    return hint;
-}
-
 bool tls_advisor::is_kindof_cbc(uint16 code) {
     bool ret = false;
     auto iter = _cipher_suite_codes.find(code);
     if (_cipher_suite_codes.end() != iter) {
         auto item = iter->second;
-        ret = (cbc == item->mode);
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        auto hint_cipher = advisor->hintof_cipher(item->scheme);
+        ret = (cbc == typeof_mode(hint_cipher));
     }
     return ret;
 }
 
 const hint_digest_t* tls_advisor::hintof_digest(uint16 code) {
-    const hint_digest_t* hint = nullptr;
+    const hint_digest_t* ret_value = nullptr;
     auto hint_alg = hintof_cipher_suite(code);
     if (hint_alg) {
         crypto_advisor* advisor = crypto_advisor::get_instance();
-        hint = advisor->hintof_digest(hint_alg->mac);
+        ret_value = advisor->hintof_digest(hint_alg->mac);
     }
-    return hint;
+    return ret_value;
 }
 
 const tls_sig_scheme_t* tls_advisor::hintof_signature_scheme(uint16 code) {
-    const tls_sig_scheme_t* hint = nullptr;
+    const tls_sig_scheme_t* ret_value = nullptr;
     auto iter = _sig_scheme_codes.find(code);
     if (_sig_scheme_codes.end() != iter) {
-        hint = iter->second;
+        ret_value = iter->second;
     }
-    return hint;
+    return ret_value;
 }
 
 void tls_advisor::enum_signature_scheme(std::function<void(const tls_sig_scheme_t*)> func) {
@@ -259,30 +273,30 @@ void tls_advisor::enum_signature_scheme(std::function<void(const tls_sig_scheme_
 }
 
 const tls_group_t* tls_advisor::hintof_tls_group(uint16 code) {
-    const tls_group_t* hint = nullptr;
+    const tls_group_t* ret_value = nullptr;
     auto iter = _supported_group_codes.find(code);
     if (_supported_group_codes.end() != iter) {
-        hint = iter->second;
+        ret_value = iter->second;
     }
-    return hint;
+    return ret_value;
 }
 
 const tls_group_t* tls_advisor::hintof_tls_group(const std::string& name) {
-    const tls_group_t* hint = nullptr;
+    const tls_group_t* ret_value = nullptr;
     auto iter = _supported_group_names.find(name);
     if (_supported_group_names.end() != iter) {
-        hint = iter->second;
+        ret_value = iter->second;
     }
-    return hint;
+    return ret_value;
 }
 
 const tls_group_t* tls_advisor::hintof_tls_group_nid(uint32 nid) {
-    const tls_group_t* hint = nullptr;
+    const tls_group_t* ret_value = nullptr;
     auto iter = _supported_group_nids.find(nid);
     if (_supported_group_nids.end() != iter) {
-        hint = iter->second;
+        ret_value = iter->second;
     }
-    return hint;
+    return ret_value;
 }
 
 void tls_advisor::enum_tls_group(std::function<void(const tls_group_t*)> func) {
@@ -305,12 +319,12 @@ hash_algorithm_t tls_advisor::hash_alg_of(uint16 code) {
 // etc
 
 const tls_version_hint_t* tls_advisor::hintof_tls_version(uint16 code) {
-    const tls_version_hint_t* hint = nullptr;
+    const tls_version_hint_t* ret_value = nullptr;
     auto iter = _tls_version.find(code);
     if (_tls_version.end() != iter) {
-        hint = iter->second;
+        ret_value = iter->second;
     }
-    return hint;
+    return ret_value;
 }
 
 std::string tls_advisor::tls_version_string(uint16 code) {

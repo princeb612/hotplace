@@ -78,8 +78,8 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             __leave2;
         }
 
-        const hint_blockcipher_t *hint_cipher = advisor->hintof_blockcipher(hint_tls_alg->cipher);
-        if (nullptr == hint_cipher) {
+        const hint_blockcipher_t *hint_blockcipher = tlsadvisor->hintof_blockcipher(cipher_suite);
+        if (nullptr == hint_blockcipher) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -89,7 +89,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             __leave2;
         }
 
-        auto keysize = hint_cipher->keysize;
+        auto keysize = hint_blockcipher->keysize;
         auto dlen = hint_mac->digest_size;
         auto hashalg = hint_mac->fetchname;
 
@@ -654,15 +654,15 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
             binary_append(seed, server_hello_random);
             binary_append(seed, client_hello_random);
 
-            auto hint_cipher = tlsadvisor->hintof_blockcipher(cs);
+            auto hint_blockcipher = tlsadvisor->hintof_blockcipher(cs);
             auto hint_digest = tlsadvisor->hintof_digest(cs);
-            if (nullptr == hint_cipher || nullptr == hint_digest) {
+            if (nullptr == hint_blockcipher || nullptr == hint_digest) {
                 ret = errorcode_t::not_supported;
                 __leave2;
             }
-            auto keysize = sizeof_key(hint_cipher);
+            auto keysize = sizeof_key(hint_blockcipher);
             // TLS 1.2 GCM nonce = fixed iv (4) + explitcit iv (8) = 12
-            auto ivsize = (is_cbc) ? sizeof_iv(hint_cipher) : 4;
+            auto ivsize = (is_cbc) ? sizeof_iv(hint_blockcipher) : 4;
             auto dlen = (is_cbc) ? sizeof_digest(hint_digest) : 0;
             size_t size_keycalc = (dlen << 1) + (keysize << 1) + (ivsize << 1);
             size_t offset = 0;

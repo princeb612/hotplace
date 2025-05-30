@@ -60,6 +60,7 @@ class crypto_advisor {
      */
     const hint_blockcipher_t* hintof_blockcipher(crypt_algorithm_t alg);
     const hint_blockcipher_t* hintof_blockcipher(const char* alg);
+    const hint_blockcipher_t* hintof_blockcipher(crypto_scheme_t scheme);
     /**
      * @brief find blockcipher hint
      * @param const EVP_CIPHER* cipher [in]
@@ -85,6 +86,7 @@ class crypto_advisor {
      */
     const hint_cipher_t* hintof_cipher(const char* name);
     const hint_cipher_t* hintof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
+    const hint_cipher_t* hintof_cipher(crypto_scheme_t scheme);
     /**
      * @brief hint
      * @param const EVP_CIPHER* cipher [in]
@@ -106,6 +108,7 @@ class crypto_advisor {
      * @brief   for_each
      */
     return_t cipher_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
+    return_t cipher_for_each(std::function<void(const hint_cipher_t*)> func);
 
     ///////////////////////////////////////////////////////////////////////////
     // digest
@@ -646,11 +649,13 @@ class crypto_advisor {
     typedef std::map<uint32, const hint_cipher_t*> cipher_fetch_map_t;     /* pair (alg+mode, hint_cipher_t*) */
     typedef std::map<const EVP_CIPHER*, const hint_cipher_t*> evp_cipher_map_t;
     typedef std::map<std::string, const hint_cipher_t*> cipher_byname_map_t; /* "aes-256-cbc" to hint_cipher_t* */
+    typedef std::map<crypto_scheme_t, const hint_cipher_t*> cipher_scheme_map_t;
     blockcipher_map_t _blockcipher_map;
     cipher_map_t _cipher_map;
     cipher_fetch_map_t _cipher_fetch_map;
     evp_cipher_map_t _evp_cipher_map;
     cipher_byname_map_t _cipher_byname_map;
+    cipher_scheme_map_t _cipher_scheme_map;
     ///////////////////////////////////////////////////////////////////////////
     // digest
     ///////////////////////////////////////////////////////////////////////////

@@ -16,12 +16,13 @@ static void do_validate_resource_cipher_suite() {
     // validate const tls_cipher_suite_t tls_cipher_suites[] = ...
 
     crypto_advisor* advisor = crypto_advisor::get_instance();
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
     struct keyex_item_t {
         keyexchange_t keyex;
         const char* name;
     } keyex_table[] = {
-        {keyexchange_null, "NULL"},
+        {keyexchange_unknown, "NULL"},
         {keyexchange_rsa, "RSA"},
         {keyexchange_dh, "DH"},
         {keyexchange_dhe, "DHE"},
@@ -37,7 +38,7 @@ static void do_validate_resource_cipher_suite() {
         auth_t auth;
         const char* name;
     } auth_table[] = {
-        {auth_null, "NULL"},       {auth_dss, "DSS"},         {auth_rsa, "RSA"},       {auth_anon, "anon"},
+        {auth_unknown, "NULL"},    {auth_dss, "DSS"},         {auth_rsa, "RSA"},       {auth_anon, "anon"},
         {auth_krb5, "KRB5"},       {auth_psk, "PSK"},         {auth_ecdsa, "ECDSA"},   {auth_sha1, "SHA"},
         {auth_sha2_256, "SHA256"}, {auth_sha2_384, "SHA384"}, {auth_eccpwd, "ECCPWD"}, {auth_gost, "GOSTR341112_256"},
     };
@@ -89,16 +90,22 @@ static void do_validate_resource_cipher_suite() {
 
     for (size_t i = 0; i < sizeof_tls_cipher_suites; i++) {
         auto item = tls_cipher_suites + i;
+        auto hint_scheme = advisor->hintof_cipher(item->scheme);
+
+        if (nullptr == hint_scheme) {
+            continue;
+        }
+
+        auto cipher = typeof_alg(hint_scheme);
+        auto mode = typeof_mode(hint_scheme);
+        auto tsize = hint_scheme->tsize;
 
         bool test = false;
-        std::string name_iana = item->name_iana;
         std::string name;
-        __try2 {
-            std::string keyexauth;
-            std::string comments;
-            std::string cipher_name;
-            std::string digest_name;
+        std::string name_iana = item->name_iana;
 
+        __try2 {
+            std::string digest_name;
             auto hint_digest = advisor->hintof_digest(item->mac);
             if (hint_digest) {
                 digest_name = hint_digest->fetchname;
@@ -109,24 +116,15 @@ static void do_validate_resource_cipher_suite() {
                 continue;
             }
 
-            if (ccm8 == item->mode) {
-                auto hint_cipher = advisor->hintof_cipher(item->cipher, cbc);
-                if (hint_cipher) {
-                    cipher_name = hint_cipher->fetchname;
-                    replace(cipher_name, "cbc", "CCM_8");
-                    replace(cipher_name, "-", "_");
-                } else {
-                    cipher_name = "NULL";
-                }
-            } else {
-                auto hint_cipher = advisor->hintof_cipher(item->cipher, item->mode);
-                if (hint_cipher) {
-                    cipher_name = hint_cipher->fetchname;
-                    replace(cipher_name, "-", "_");
-                } else {
-                    cipher_name = "NULL";
-                }
+            std::string keyexauth;
+            std::string comments;
+            std::string cipher_name;
+
+            cipher_name = hint_scheme->fetchname;
+            if ((ccm == mode) && (8 == tsize)) {
+                replace(cipher_name, "ccm", "CCM_8");
             }
+            replace(cipher_name, "-", "_");
 
             auto const& keyex_val = keyex_map[item->keyexchange];
             auto const& auth_val = auth_map[item->auth];

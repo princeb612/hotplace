@@ -120,8 +120,8 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
          */
 
         auto cs = protection.get_cipher_suite();
-        const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
-        auto ctsize = (cbc == hint->mode) ? pos + len : len;
+        bool is_cbc = tlsadvisor->is_kindof_cbc(cs);
+        auto ctsize = (is_cbc) ? pos + len : len;
         ret = protection.decrypt(session, dir, stream, ctsize, recpos, plaintext);
         if (errorcode_t::success == ret) {
             auto plainsize = plaintext.size();
@@ -150,7 +150,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                             __leave2;
                         }
                     }
-                    if (cbc == hint->mode) {
+                    if (is_cbc) {
                         ret = get_application_data(plaintext, false);
                     } else {
                         ret = get_application_data(plaintext, false);

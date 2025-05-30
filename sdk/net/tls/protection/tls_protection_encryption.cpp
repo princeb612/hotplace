@@ -13,6 +13,7 @@
 #include <sdk/crypto/basic/cipher_encrypt.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_cbc_hmac.hpp>
+#include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/io/asn.1/types.hpp>
 #include <sdk/io/basic/payload.hpp>
@@ -25,35 +26,6 @@
 
 namespace hotplace {
 namespace net {
-
-return_t tls_protection::get_cipher_info(tls_session *session, crypt_algorithm_t &alg, crypt_mode_t &mode) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        alg = crypt_alg_unknown;
-        mode = mode_unknown;
-
-        auto session_type = session->get_type();
-        tls_advisor *tlsadvisor = tls_advisor::get_instance();
-
-        auto cs = get_cipher_suite();
-
-        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
-        if (nullptr == hint) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        alg = hint->cipher;
-        mode = hint->mode;
-    }
-    __finally2 {}
-    return ret;
-}
 
 return_t tls_protection::build_iv(tls_session *session, tls_secret_t type, binary_t &iv, uint64 recordno) {
     return_t ret = errorcode_t::success;
@@ -84,13 +56,14 @@ uint8 tls_protection::get_tag_size() {
     crypto_advisor *advisor = crypto_advisor::get_instance();
     tls_advisor *tlsadvisor = tls_advisor::get_instance();
     auto cs = get_cipher_suite();
-    const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
-    if (hint) {
+    auto hint = tlsadvisor->hintof_cipher_suite(cs);
+    auto hint_cipher = tlsadvisor->hintof_cipher(cs);
+    if (hint && hint_cipher) {
         auto hmac_alg = hint->mac;
         auto hint_digest = advisor->hintof_digest(hmac_alg);
 
-        auto cipher = hint->cipher;
-        auto mode = hint->mode;
+        auto cipher = hint_cipher->algorithm;
+        auto mode = hint_cipher->mode;
         auto dlen = sizeof_digest(hint_digest);
 
         switch (mode) {
@@ -98,11 +71,7 @@ uint8 tls_protection::get_tag_size() {
             case mode_poly1305:  // RFC 7905
                 ret_value = 16;
                 break;
-            case ccm8:
-                ret_value = 8;
-                break;
             case ccm:
-            case ccm16:
                 /**
                  * RFC 6655 AES-CCM Cipher Suites for Transport Layer Security (TLS)
                  *   3.  RSA-Based AES-CCM Cipher Suites
@@ -118,7 +87,7 @@ uint8 tls_protection::get_tag_size() {
                  *   5.3.  AEAD_AES_128_CCM
                  *   5.4.  AEAD_AES_256_CCM
                  */
-                ret_value = 16;
+                ret_value = hint_cipher->tsize;  // CCM (16), CCM_8 (8)
                 break;
             default:
                 ret_value = dlen;
@@ -272,13 +241,8 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
         size_t content_header_size = 0;
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
-        auto cipher = crypt_alg_unknown;
-        auto mode = mode_unknown;
-
-        ret = get_cipher_info(session, cipher, mode);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+        auto cs = get_cipher_suite();
+        auto is_cbc = tlsadvisor->is_kindof_cbc(cs);
 
         /**
          * RFC 7366
@@ -287,7 +251,7 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
          * Data (AEAD) ciphersuite, it MUST NOT send an encrypt-then-MAC
          * response extension back to the client.
          */
-        if (cbc == mode) {
+        if (is_cbc) {
             ret = encrypt_cbc_hmac(session, dir, plaintext, ciphertext, additional, tag);
         } else {
             ret = encrypt_aead(session, dir, plaintext, ciphertext, additional, tag, level);
@@ -317,13 +281,8 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         size_t content_header_size = 0;
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
-        auto cipher = crypt_alg_unknown;
-        auto mode = mode_unknown;
-
-        ret = get_cipher_info(session, cipher, mode);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+        auto cs = get_cipher_suite();
+        auto hint_cipher = tlsadvisor->hintof_cipher(cs);
 
         crypt_context_t *handle = nullptr;
         openssl_crypt crypt;
@@ -339,7 +298,8 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         auto const &iv = get_item(secret_iv);
         binary_t nonce = iv;
         build_iv(session, secret_iv, nonce, record_no);
-        ret = crypt.encrypt(cipher, mode, key, nonce, plaintext, ciphertext, aad, tag);
+        encrypt_option_t options[] = {{crypt_ctrl_lsize, hint_cipher->lsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
+        ret = crypt.encrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, nonce, plaintext, ciphertext, aad, tag, options);
 
 #if defined DEBUG
         if (istraceable()) {
@@ -377,15 +337,17 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
             __leave2;
         }
         auto session_type = session->get_type();
+        auto cs = get_cipher_suite();
 
         crypto_advisor *advisor = crypto_advisor::get_instance();
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
-        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+
+        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
         if (nullptr == hint) {
             ret = errorcode_t::not_supported;
             __leave2;
         }
-        auto hint_cipher = advisor->hintof_blockcipher(hint->cipher);
+        auto hint_cipher = tlsadvisor->hintof_blockcipher(cs);
         if (nullptr == hint_cipher) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -400,7 +362,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         uint64 record_no = 0;
 
         const binary_t &enckey = get_item(secret_key);
-        auto enc_alg = hint->cipher;
+        auto enc_alg = typeof_alg(hint_cipher);
         auto hmac_alg = hint->mac;  // do not promote insecure algorithm
         const binary_t &mackey = get_item(secret_mac_key);
 
@@ -602,19 +564,14 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
             __leave2;
         }
 
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
         auto session_type = session->get_type();
-        auto cipher = crypt_alg_unknown;
-        auto mode = mode_unknown;
-
         auto record_version = get_lagacy_version();
+        auto cs = get_cipher_suite();
+        auto hint_cipher = tlsadvisor->hintof_cipher(cs);
+        encrypt_option_t options[] = {{crypt_ctrl_lsize, hint_cipher->lsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
 
-        crypt_context_t *handle = nullptr;
         openssl_crypt crypt;
-
-        ret = get_cipher_info(session, cipher, mode);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
 
         tls_secret_t secret_key;
         tls_secret_t secret_iv;
@@ -623,8 +580,8 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         uint64 record_no = 0;
         record_no = session->get_recordno(dir, true, level);
 
-        auto const &key = get_item(secret_key);
-        auto const &iv = get_item(secret_iv);
+        const binary_t &key = get_item(secret_key);
+        const binary_t &iv = get_item(secret_iv);
         binary_t tls12_aad;
         binary_t nonce = iv;
         size_t size_nonce_explicit = 8;
@@ -667,10 +624,10 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 
             pos += size_nonce_explicit;
             size -= size_nonce_explicit;
-            ret = crypt.decrypt(cipher, mode, key, nonce, stream + pos, size, plaintext, tls12_aad, tag);
+            ret = crypt.decrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, nonce, stream + pos, size, plaintext, tls12_aad, tag, options);
         } else {
             build_iv(session, secret_iv, nonce, record_no);
-            ret = crypt.decrypt(cipher, mode, key, nonce, stream + pos, size, plaintext, aad, tag);
+            ret = crypt.decrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, nonce, stream + pos, size, plaintext, aad, tag, options);
         }
         if (errorcode_t::success != ret) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
@@ -714,18 +671,20 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         }
 
         auto session_type = session->get_type();
+        auto cs = get_cipher_suite();
 
         // stream = unprotected(content header + iv) + protected(ciphertext)
         // ciphertext = enc(plaintext + tag)
 
         crypto_advisor *advisor = crypto_advisor::get_instance();
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
-        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(get_cipher_suite());
+
+        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
         if (nullptr == hint) {
             ret = errorcode_t::not_supported;
             __leave2;
         }
-        auto hint_cipher = advisor->hintof_blockcipher(hint->cipher);
+        auto hint_cipher = tlsadvisor->hintof_blockcipher(cs);
         if (nullptr == hint_cipher) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -742,7 +701,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         uint64 record_no = 0;
 
         const binary_t &enckey = get_item(secret_key);
-        auto enc_alg = hint->cipher;
+        auto enc_alg = hint_cipher->algorithm;
         auto hmac_alg = hint->mac;  // do not promote insecure algorithm
         const binary_t &mackey = get_item(secret_mac_key);
 

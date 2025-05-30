@@ -172,15 +172,6 @@ return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorit
         EVP_CIPHER_CTX_set_padding(context->encrypt_context, 1);
         EVP_CIPHER_CTX_set_padding(context->decrypt_context, 1);
 
-        // TLS
-        if (ccm8 == mode) {
-            context->lsize = 3;  // CCM_SET_L 3, CCM_SET_IVLEN=15-L=12
-            context->tsize = 8;  // AEAD_SET_TAG 8
-        } else if (ccm16 == mode) {
-            context->lsize = 3;   // CCM_SET_L 3, CCM_SET_IVLEN=15-L=12
-            context->tsize = 16;  // AEAD_SET_TAG 16
-        }
-
         *handle = context;
     }
     __finally2 {
@@ -308,8 +299,6 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
                 is_aead = true;
                 break;
             case crypt_mode_t::ccm:
-            case crypt_mode_t::ccm8:
-            case crypt_mode_t::ccm16:
                 is_aead = true;
                 /**
                  * word-around related to aes-128-ccm
@@ -367,7 +356,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
                  * the size of the authentication tag is fixed at 128 bits
                  */
                 tag_size = context->tsize ? context->tsize : 16;
-            } else if ((crypt_mode_t::ccm == context->mode) || (crypt_mode_t::ccm8 == context->mode) || (crypt_mode_t::ccm16 == context->mode)) {
+            } else if (crypt_mode_t::ccm == context->mode) {
                 tag_size = context->tsize ? context->tsize : 14;
                 uint16 lsize = context->lsize ? context->lsize : 8;
                 uint16 nonce_size = 15 - lsize;
@@ -397,8 +386,6 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
         uint32 cooltime = ossl_get_cooltime();
         switch (context->mode) {
             case crypt_mode_t::ccm:
-            case crypt_mode_t::ccm8:
-            case crypt_mode_t::ccm16:
             case crypt_mode_t::wrap:
                 cooltime = 0;
                 break;
@@ -453,7 +440,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
 
         if (is_aead) {
             tag->resize(tag_size);
-            ret_cipher = EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_GET_TAG, (*tag).size(), &(*tag)[0]);
+            ret_cipher = EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_GET_TAG, tag_size, &(*tag)[0]);
             if (1 > ret_cipher) {
                 ret = errorcode_t::error_cipher;
                 __leave2_trace_openssl(ret);
@@ -505,6 +492,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
         int ret_cipher = 0;
         int size_update = 0;
         int size_final = 0;
+        int tag_size = 0;
         binary_t &iv = context->datamap[crypt_item_t::item_iv];
 
         EVP_CipherInit(context->decrypt_context, nullptr, nullptr, &iv[0], 0);
@@ -513,8 +501,6 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
         switch (context->mode) {
             case crypt_mode_t::gcm:
             case crypt_mode_t::ccm:
-            case crypt_mode_t::ccm8:
-            case crypt_mode_t::ccm16:
             case crypt_mode_t::mode_poly1305:
                 is_aead = true;
                 break;
@@ -528,21 +514,34 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                 __leave2_trace(ret);
             }
 
-            if ((crypt_mode_t::ccm) == context->mode || (crypt_mode_t::ccm8 == context->mode) || (crypt_mode_t::ccm16 == context->mode)) {
+            if (crypt_mode_t::ccm == context->mode) {
+                tag_size = context->tsize ? context->tsize : 14;
                 uint16 lsize = context->lsize ? context->lsize : 8;
                 uint16 nonce_size = 15 - lsize;
+
+                if (tag_size != (*tag).size()) {
+                    ret = errorcode_t::error_verify;
+                    __leave2_trace_openssl(ret);
+                }
 
                 EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_CCM_SET_L, lsize, nullptr);
                 // EVP_CTRL_CCM_SET_IVLEN for Nonce (15-L)
                 EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_CCM_SET_IVLEN, nonce_size, nullptr);
-                EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, (*tag).size(), (void *)&(*tag)[0]);
+                EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag_size, (void *)&(*tag)[0]);
 
                 binary_t &key = context->datamap[crypt_item_t::item_cek];
                 EVP_CipherInit_ex(context->decrypt_context, nullptr, nullptr, &key[0], &iv[0], 0);
 
                 ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, nullptr, ciphersize);
             } else if (crypt_mode_t::gcm == context->mode || crypt_mode_t::mode_poly1305 == context->mode) {
-                ret_cipher = EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, (*tag).size(), (void *)&(*tag)[0]);
+                tag_size = context->tsize ? context->tsize : 16;
+
+                if (tag_size != (*tag).size()) {
+                    ret = errorcode_t::error_verify;
+                    __leave2_trace_openssl(ret);
+                }
+
+                ret_cipher = EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag_size, (void *)&(*tag)[0]);
                 if (1 != ret_cipher) {
                     ret = errorcode_t::error_cipher;
                     __leave2_trace_openssl(ret);

@@ -11,30 +11,31 @@
 #include "sample.hpp"
 
 void test_aead_ccm() {
-    _test_case.begin("test CCM EVP_CTRL_CCM_SET_L, EVP_CTRL_AEAD_SET_TAG");
+    _test_case.begin("AEAD_AES_128_CCM, AEAD_AES_192_CCM, AEAD_AES_256_CCM");
     binary_t key = std::move(base16_decode_rfc("000102030405060708090a0b0c0d0e0f 101112131415161718191a1b1c1d1e1f"));
     binary_t iv = std::move(base16_decode_rfc("000102030405060708090a0b0c0d0e0f"));
     binary_t aad = std::move(base16_decode_rfc("000102030405060708090a0b0c0d0e0f"));
     binary_t nonce;
     constexpr char sample[] = "We don't playing because we grow old; we grow old because we stop playing.";
     size_t size = strlen(sample);
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
-    auto lambda = [&](const char* text, crypt_algorithm_t alg, crypt_mode_t mode, int lsize, int tsize, const binary_t& key, const binary_t& iv,
-                      const byte_t* stream, size_t size, const binary_t& aad) -> void {
+    auto lambda = [&](const char* text, crypto_scheme_t scheme, const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size,
+                      const binary_t& aad) -> void {
         return_t ret = errorcode_t::success;
         openssl_crypt crypt;
         crypt_context_t* handle = nullptr;
-        crypt_context_t* handle_ccm = nullptr;
         binary_t ciphertext;
         binary_t plaintext;
         binary_t plaintext_ccm;
         binary_t tag;
 
-        crypt.open(&handle, alg, mode, &key[0], key.size(), &iv[0], iv.size());
+        auto hint = advisor->hintof_cipher(scheme);
 
-        crypt.open(&handle_ccm, alg, ccm, &key[0], key.size(), &iv[0], iv.size());
-        crypt.set(handle_ccm, crypt_ctrl_lsize, lsize);  // CCM_SET_L
-        crypt.set(handle_ccm, crypt_ctrl_tsize, tsize);  // CCM_SET_IVLEN=15-L
+        crypt.open(&handle, typeof_alg(hint), typeof_mode(hint), &key[0], key.size(), &iv[0], iv.size());
+
+        crypt.set(handle, crypt_ctrl_lsize, hint->lsize);  // SET_L
+        crypt.set(handle, crypt_ctrl_tsize, hint->tsize);  // SET_IVLEN=15-L
 
         ret = crypt.encrypt(handle, stream, size, ciphertext, aad, tag);
 
@@ -52,24 +53,25 @@ void test_aead_ccm() {
             _logger->hdump("> plaintext", plaintext, 16, 3);
             _test_case.test(ret, __FUNCTION__, "%s #decrypt", text);
         }
-        ret = crypt.decrypt(handle_ccm, ciphertext, plaintext_ccm, aad, tag);
-        {
-            _logger->hdump("> plaintext", plaintext_ccm, 16, 3);
-            _test_case.test(ret, __FUNCTION__, "%s #decrypt", text);
-        }
-        _test_case.assert(plaintext == plaintext_ccm, __FUNCTION__, "%s #compare", text);
 
         crypt.close(handle);
-        crypt.close(handle_ccm);
     };
 
-    // compare ccm16 and CCM_SET_L 3, CCM_SET_IVLEN=15-L=12, AEAD_SET_TAG 16
-    lambda("AEAD_AES_128_CCM", aes128, ccm16, 3, 16, key, iv, (byte_t*)sample, size, aad);
-    lambda("AEAD_AES_192_CCM", aes192, ccm16, 3, 16, key, iv, (byte_t*)sample, size, aad);
-    lambda("AEAD_AES_256_CCM", aes256, ccm16, 3, 16, key, iv, (byte_t*)sample, size, aad);
+    // SET_L=8, SET_IVLEN=15-L=4, AEAD_SET_TAG=14
+    lambda("AES_128_GCM", crypto_scheme_aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AES_192_GCM", crypto_scheme_aes_192_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AES_256_GCM", crypto_scheme_aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
 
-    // compare ccm8 and CCM_SET_L 3, CCM_SET_IVLEN=15-L=12, AEAD_SET_TAG 8
-    lambda("AEAD_AES_128_CCM", aes128, ccm8, 3, 8, key, iv, (byte_t*)sample, size, aad);
-    lambda("AEAD_AES_192_CCM", aes192, ccm8, 3, 8, key, iv, (byte_t*)sample, size, aad);
-    lambda("AEAD_AES_256_CCM", aes256, ccm8, 3, 8, key, iv, (byte_t*)sample, size, aad);
+    // SET_L=8, SET_IVLEN=15-L=4, AEAD_SET_TAG=14
+    lambda("AES_128_CCM", crypto_scheme_aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AES_192_CCM", crypto_scheme_aes_192_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AES_256_CCM", crypto_scheme_aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
+
+    // SET_L=3, SET_IVLEN=15-L=12, AEAD_SET_TAG=16
+    lambda("AEAD_AES_128_CCM", crypto_scheme_tls_aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AEAD_AES_256_CCM", crypto_scheme_tls_aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
+
+    // SET_L=3, SET_IVLEN=15-L=12, AEAD_SET_TAG=8
+    lambda("AEAD_AES_128_CCM", crypto_scheme_tls_aes_128_ccm_8, key, iv, (byte_t*)sample, size, aad);
+    lambda("AEAD_AES_192_CCM", crypto_scheme_tls_aes_256_ccm_8, key, iv, (byte_t*)sample, size, aad);
 }

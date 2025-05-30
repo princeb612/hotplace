@@ -42,29 +42,29 @@ namespace crypto {
  *
  * International Data Encryption Algorithm (1991)
  */
-enum crypt_algorithm_t {
+enum crypt_algorithm_t : uint8 {
     crypt_alg_unknown = 0,
-    aes128 = 1,
-    aes192 = 2,
-    aes256 = 3,
-    aria128 = 4,
-    aria192 = 5,
-    aria256 = 6,
-    blowfish = 7,
-    camellia128 = 8,
-    camellia192 = 9,
-    camellia256 = 10,
-    cast = 11,
-    des = 12,
-    idea = 13,
-    rc2 = 14,
-    rc5 = 15,
-    seed = 16,
-    sm4 = 17,
 
-    // stream cipher
-    rc4 = 101,
-    chacha20 = 102,
+    aes128 = 0x01,
+    aes192 = 0x02,
+    aes256 = 0x03,
+    aria128 = 0x04,
+    aria192 = 0x05,
+    aria256 = 0x06,
+    camellia128 = 0x07,
+    camellia192 = 0x08,
+    camellia256 = 0x09,
+    chacha20 = 0x0a,
+
+    blowfish = 0xa1,
+    cast = 0xa2,
+    des = 0xa3,
+    idea = 0xa4,
+    rc2 = 0xa5,
+    rc5 = 0xa6,
+    seed = 0xa7,
+    sm4 = 0xa8,
+    rc4 = 0xa9,
 };
 
 /**
@@ -98,15 +98,12 @@ enum crypt_algorithm_t {
  *    SEED        : CBC, CFB,             OFB, ECB
  *    SM4         : CBC, CFB,             OFB, ECB, CTR
  *
- *  crypt_mode_t::ccm8
- *      openssl provide "aes-128-ccm", ... (not provice "aes-128-ccm8", ...)
- *      see EVP_CTRL_AEAD_SET_TAG
  *  sample
  *      auto cipher = EVP_CIPHER_fetch(nullptr, "aes-128-ccm", nullptr);
  *      EVP_CIPHER_CTX_init(context);
  *      EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_TAG, 8, nullptr);
  */
-enum crypt_mode_t {
+enum crypt_mode_t : uint8 {
     mode_unknown = 0,
     ecb = 1,
     cbc = 2,
@@ -117,9 +114,7 @@ enum crypt_mode_t {
     ctr = 7,
     gcm = 8,
     wrap = 9,
-    ccm = 10,    // 14-octet authentication tag
-    ccm8 = 13,   //  8-octet authentication [TLS] CCM_SET_L 3, AEAD_SET_TAG 8
-    ccm16 = 14,  // 16-octet authentication [TLS] CCM_SET_L 3, AEAD_SET_TAG 16
+    ccm = 10,  // 14-octet authentication tag
 
     mode_cipher = 11,
     mode_chacha20 = mode_cipher,
@@ -413,7 +408,7 @@ enum crypt_item_t : uint16 {
 
 // TLS key exchange
 enum keyexchange_t {
-    keyexchange_null = 0,
+    keyexchange_unknown = 0,
     keyexchange_rsa = 1,           // Rivest Shamir Adleman algorithm (RSA)
     keyexchange_dh = 2,            // Diffie-Hellman (DH)
     keyexchange_dhe = 3,           // Diffie-Hellman Ephemeral (DHE)
@@ -432,7 +427,7 @@ enum keyexchange_t {
 
 // TLS authentication
 enum auth_t {
-    auth_null = 0,
+    auth_unknown = 0,
     auth_dss = 1,       // Digital Signature Standard (DSS)
     auth_rsa = 2,       // Rivest Shamir Adleman algorithm (RSA)
     auth_anon = 3,      // Anonymous (anon)
@@ -917,6 +912,167 @@ enum cose_hint_flag_t {
     cose_hint_not_supported = 1 << 16,
 };
 
+/**
+ *  aabbccdd
+ *  \ \ \ \- mode
+ *   \ \ \-- algorithm
+ *    \ \--- hint
+ *     \---- category
+ */
+#define CRYPTO_SCHEME_CATEGORY_CBCHMAC 0x01000000
+#define CRYPTO_SCHEME_CATEGORY_TLS 0x02000000
+#define CRYPTO_SCHEME_HINT_CCM8 0x00010000
+#define CRYPTO_SCHEME16(c, m) ((c << 8) | (m & 0xff))
+#define CRYPTO_SCHEME32(d, c, m) ((d & 0xffff0000) | (c << 8) | (m & 0xff))
+
+enum crypto_scheme_t : uint32 {
+    crypto_scheme_unknown = 0,
+
+    crypto_scheme_aes_128_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::cbc),
+    crypto_scheme_aes_128_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::cfb),
+    crypto_scheme_aes_128_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::cfb1),
+    crypto_scheme_aes_128_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::cfb8),
+    crypto_scheme_aes_128_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::ctr),
+    crypto_scheme_aes_128_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::ecb),
+    crypto_scheme_aes_128_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::ofb),
+    crypto_scheme_aes_128_wrap = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::wrap),
+    crypto_scheme_aes_192_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::cbc),
+    crypto_scheme_aes_192_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::cfb),
+    crypto_scheme_aes_192_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::cfb1),
+    crypto_scheme_aes_192_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::cfb8),
+    crypto_scheme_aes_192_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::ctr),
+    crypto_scheme_aes_192_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::ecb),
+    crypto_scheme_aes_192_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::ofb),
+    crypto_scheme_aes_192_wrap = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::wrap),
+    crypto_scheme_aes_256_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::cbc),
+    crypto_scheme_aes_256_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::cfb),
+    crypto_scheme_aes_256_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::cfb1),
+    crypto_scheme_aes_256_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::cfb8),
+    crypto_scheme_aes_256_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::ctr),
+    crypto_scheme_aes_256_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::ecb),
+    crypto_scheme_aes_256_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::ofb),
+    crypto_scheme_aes_256_wrap = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::wrap),
+
+    crypto_scheme_aria_128_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::cbc),
+    crypto_scheme_aria_128_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::cfb),
+    crypto_scheme_aria_128_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::cfb1),
+    crypto_scheme_aria_128_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::cfb8),
+    crypto_scheme_aria_128_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::ctr),
+    crypto_scheme_aria_128_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::ecb),
+    crypto_scheme_aria_128_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::ofb),
+    crypto_scheme_aria_192_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::cbc),
+    crypto_scheme_aria_192_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::cfb),
+    crypto_scheme_aria_192_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::cfb1),
+    crypto_scheme_aria_192_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::cfb8),
+    crypto_scheme_aria_192_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::ctr),
+    crypto_scheme_aria_192_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::ecb),
+    crypto_scheme_aria_192_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::ofb),
+    crypto_scheme_aria_256_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::cbc),
+    crypto_scheme_aria_256_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::cfb),
+    crypto_scheme_aria_256_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::cfb1),
+    crypto_scheme_aria_256_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::cfb8),
+    crypto_scheme_aria_256_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::ctr),
+    crypto_scheme_aria_256_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::ecb),
+    crypto_scheme_aria_256_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::ofb),
+
+    crypto_scheme_bf_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::blowfish, crypt_mode_t::cbc),
+    crypto_scheme_bf_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::blowfish, crypt_mode_t::cfb),
+    crypto_scheme_bf_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::blowfish, crypt_mode_t::ecb),
+    crypto_scheme_bf_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::blowfish, crypt_mode_t::ofb),
+
+    crypto_scheme_camellia_128_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::cbc),
+    crypto_scheme_camellia_128_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::cfb),
+    crypto_scheme_camellia_128_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::cfb1),
+    crypto_scheme_camellia_128_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::cfb8),
+    crypto_scheme_camellia_128_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::ctr),
+    crypto_scheme_camellia_128_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::ecb),
+    crypto_scheme_camellia_128_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::ofb),
+    crypto_scheme_camellia_192_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::cbc),
+    crypto_scheme_camellia_192_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::cfb),
+    crypto_scheme_camellia_192_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::cfb1),
+    crypto_scheme_camellia_192_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::cfb8),
+    crypto_scheme_camellia_192_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::ctr),
+    crypto_scheme_camellia_192_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::ecb),
+    crypto_scheme_camellia_192_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::ofb),
+    crypto_scheme_camellia_256_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::cbc),
+    crypto_scheme_camellia_256_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::cfb),
+    crypto_scheme_camellia_256_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::cfb1),
+    crypto_scheme_camellia_256_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::cfb8),
+    crypto_scheme_camellia_256_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::ctr),
+    crypto_scheme_camellia_256_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::ecb),
+    crypto_scheme_camellia_256_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::ofb),
+
+    crypto_scheme_chacha20 = CRYPTO_SCHEME16(crypt_algorithm_t::chacha20, crypt_mode_t::mode_chacha20),
+    crypto_scheme_chacha20_poly1305 = CRYPTO_SCHEME16(crypt_algorithm_t::chacha20, crypt_mode_t::mode_poly1305),
+
+    crypto_scheme_cast5_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::cast, crypt_mode_t::cbc),
+    crypto_scheme_cast5_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::cast, crypt_mode_t::cfb),
+    crypto_scheme_cast5_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::cast, crypt_mode_t::ecb),
+    crypto_scheme_cast5_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::cast, crypt_mode_t::ofb),
+    crypto_scheme_idea_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::idea, crypt_mode_t::cbc),
+    crypto_scheme_idea_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::idea, crypt_mode_t::cfb),
+    crypto_scheme_idea_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::idea, crypt_mode_t::ecb),
+    crypto_scheme_idea_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::idea, crypt_mode_t::ofb),
+    crypto_scheme_rc2_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::rc2, crypt_mode_t::cbc),
+    crypto_scheme_rc2_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::rc2, crypt_mode_t::cfb),
+    crypto_scheme_rc2_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::rc2, crypt_mode_t::ecb),
+    crypto_scheme_rc2_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::rc2, crypt_mode_t::ofb),
+    crypto_scheme_rc5_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::rc5, crypt_mode_t::cbc),
+    crypto_scheme_rc5_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::rc5, crypt_mode_t::cfb),
+    crypto_scheme_rc5_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::rc5, crypt_mode_t::ecb),
+    crypto_scheme_rc5_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::rc5, crypt_mode_t::ofb),
+    crypto_scheme_sm4_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::sm4, crypt_mode_t::cbc),
+    crypto_scheme_sm4_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::sm4, crypt_mode_t::cfb),
+    crypto_scheme_sm4_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::sm4, crypt_mode_t::ecb),
+    crypto_scheme_sm4_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::sm4, crypt_mode_t::ofb),
+    crypto_scheme_sm4_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::sm4, crypt_mode_t::ctr),
+    crypto_scheme_seed_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::seed, crypt_mode_t::cbc),
+    crypto_scheme_seed_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::seed, crypt_mode_t::cfb),
+    crypto_scheme_seed_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::seed, crypt_mode_t::ecb),
+    crypto_scheme_seed_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::seed, crypt_mode_t::ofb),
+    crypto_scheme_rc4 = CRYPTO_SCHEME16(crypt_algorithm_t::rc4, crypt_mode_t::mode_cipher),
+
+    crypto_scheme_aes_128_ccm = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::ccm),
+    crypto_scheme_aes_128_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::gcm),
+    crypto_scheme_aes_192_ccm = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::ccm),
+    crypto_scheme_aes_192_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::gcm),
+    crypto_scheme_aes_256_ccm = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::ccm),
+    crypto_scheme_aes_256_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::gcm),
+    crypto_scheme_aria_128_ccm = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::ccm),
+    crypto_scheme_aria_128_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::gcm),
+    crypto_scheme_aria_192_ccm = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::ccm),
+    crypto_scheme_aria_192_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::gcm),
+    crypto_scheme_aria_256_ccm = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::ccm),
+    crypto_scheme_aria_256_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::gcm),
+    crypto_scheme_camellia_128_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::gcm),
+    crypto_scheme_camellia_192_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::gcm),
+    crypto_scheme_camellia_256_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::gcm),
+
+    /**
+     * CCM, GCM
+     *   SET_L=3, SET_IVLEN=15-L=12, AEAD_SET_TAG=16
+     * CCM8
+     *   SET_L=3, SET_IVLEN=15-L=12, AEAD_SET_TAG=8
+     */
+    crypto_scheme_tls_aes_128_ccm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aes128, crypt_mode_t::ccm),
+    crypto_scheme_tls_aes_256_ccm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aes256, crypt_mode_t::ccm),
+    crypto_scheme_tls_aes_128_ccm_8 = CRYPTO_SCHEME32((CRYPTO_SCHEME_CATEGORY_TLS | CRYPTO_SCHEME_HINT_CCM8), crypt_algorithm_t::aes128, crypt_mode_t::ccm),
+    crypto_scheme_tls_aes_256_ccm_8 = CRYPTO_SCHEME32((CRYPTO_SCHEME_CATEGORY_TLS | CRYPTO_SCHEME_HINT_CCM8), crypt_algorithm_t::aes256, crypt_mode_t::ccm),
+    crypto_scheme_tls_aes_128_gcm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aes128, crypt_mode_t::gcm),
+    crypto_scheme_tls_aes_256_gcm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aes256, crypt_mode_t::gcm),
+    crypto_scheme_tls_chacha20_poly1305 = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::chacha20, crypt_mode_t::mode_poly1305),
+    crypto_scheme_tls_aria_128_ccm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aria128, crypt_mode_t::ccm),
+    crypto_scheme_tls_aria_256_ccm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aria256, crypt_mode_t::ccm),
+    crypto_scheme_tls_aria_128_gcm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aria128, crypt_mode_t::gcm),
+    crypto_scheme_tls_aria_256_gcm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aria256, crypt_mode_t::gcm),
+    crypto_scheme_tls_camellia_128_gcm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::camellia128, crypt_mode_t::gcm),
+    crypto_scheme_tls_camellia_256_gcm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::camellia256, crypt_mode_t::gcm),
+
+    crypto_scheme_aead_aes_128_cbc_hmac_sha2 = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_CBCHMAC, crypt_algorithm_t::aes128, crypt_mode_t::cbc),
+    crypto_scheme_aead_aes_192_cbc_hmac_sha2 = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_CBCHMAC, crypt_algorithm_t::aes192, crypt_mode_t::cbc),
+    crypto_scheme_aead_aes_256_cbc_hmac_sha2 = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_CBCHMAC, crypt_algorithm_t::aes256, crypt_mode_t::cbc),
+};
+
 ///////////////////////////////////////////////////////////////////////////
 // crypt
 ///////////////////////////////////////////////////////////////////////////
@@ -935,10 +1091,14 @@ uint16 sizeof_block(const hint_blockcipher_t* hint);
 uint16 sizeof_blockkw(const hint_blockcipher_t* hint);
 
 typedef struct _hint_cipher_t {
+    crypto_scheme_t scheme;
     crypt_algorithm_t algorithm;
     crypt_mode_t mode;
     const char* fetchname;
+    uint8 lsize;
+    uint8 tsize;
 } hint_cipher_t;
+crypto_scheme_t typeof_sheme(const hint_cipher_t* hint);
 crypt_algorithm_t typeof_alg(const hint_cipher_t* hint);
 crypt_mode_t typeof_mode(const hint_cipher_t* hint);
 const char* nameof_alg(const hint_cipher_t* hint);
