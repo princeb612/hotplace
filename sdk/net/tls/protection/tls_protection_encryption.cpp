@@ -484,7 +484,7 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
 
                     // ... aad(aadlen) encdata tag(tagsize)
                     //     \_ pos
-                    binary_append(tag, stream + pos + aadlen + size - tagsize, tagsize);
+                    binary_append(tag, stream + size - tagsize, tagsize);
                     ret = decrypt_aead(session, dir, stream, size - tagsize, pos + aadlen, plaintext, aad, tag, level);
                 }
                 if (errorcode_t::success != ret) {
@@ -539,15 +539,15 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 
         binary_t aad;
         binary_append(aad, stream + pos, aadlen);
+        pos += aadlen;
 
+        // aad(aadlen) encdata tag(tagsize)
+        //             \_ pos
         binary_t tag;
         uint8 tagsize = get_tag_size();
+        binary_append(tag, stream + size - tagsize, tagsize);
 
-        // ... aad(aadlen) encdata tag(tagsize)
-        //     \_ pos
-        binary_append(tag, stream + (pos + aadlen) + size - tagsize, tagsize);
-
-        ret = decrypt_aead(session, dir, stream, size - tagsize, pos + aadlen, plaintext, aad, tag, level);
+        ret = decrypt_aead(session, dir, stream, size - tagsize, pos, plaintext, aad, tag, level);
     }
     __finally2 {
         // do nothing
@@ -585,6 +585,8 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         binary_t tls12_aad;
         binary_t nonce = iv;
         size_t size_nonce_explicit = 8;
+        auto alg = typeof_alg(hint_cipher);
+        auto mode = typeof_mode(hint_cipher);
         if (is_kindof_tls12()) {
             size_t hdrsize = 0;
             if (is_kindof_tls()) {
@@ -623,11 +625,11 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
             binary_append(tls12_aad, aad);
 
             pos += size_nonce_explicit;
-            size -= size_nonce_explicit;
-            ret = crypt.decrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, nonce, stream + pos, size, plaintext, tls12_aad, tag, options);
+
+            ret = crypt.decrypt(alg, mode, key, nonce, stream + pos, size - pos, plaintext, tls12_aad, tag, options);
         } else {
             build_iv(session, secret_iv, nonce, record_no);
-            ret = crypt.decrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, nonce, stream + pos, size, plaintext, aad, tag, options);
+            ret = crypt.decrypt(alg, mode, key, nonce, stream + pos, size - pos, plaintext, aad, tag, options);
         }
         if (errorcode_t::success != ret) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);

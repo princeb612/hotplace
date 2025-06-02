@@ -194,7 +194,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
         binary_t plaintext;
         {
             // decryption
-            ret = protection.decrypt(session, dir, stream, size - additional.size(), recpos, plaintext, additional);
+            ret = protection.decrypt(session, dir, stream, size, recpos, plaintext, additional);
         }
 
 #if defined DEBUG

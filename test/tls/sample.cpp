@@ -120,9 +120,9 @@ void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tl
     _test_case.assert((false == client_secret.empty()) && (client_secret == server_secret), __FUNCTION__, "cross-check secret %s", secret_name);
 }
 
-void play_pcap(tls_session* session, pcap_testvector* testvector, size_t size) {
+void play_pcap(tls_session* session, const pcap_testvector* testvector, size_t size) {
     for (auto i = 0; i < size; i++) {
-        pcap_testvector* item = testvector + i;
+        const pcap_testvector* item = testvector + i;
 
         binary_t bin_record = std::move(base16_decode_rfc(item->record));
         dump_record(item->desc, session, item->dir, bin_record);
@@ -228,8 +228,6 @@ int main(int argc, char** argv) {
             test_tls13_xargs_org();
             // https://tls12.xargs.org/
             test_tls12_xargs_org();
-            // https://github.com/syncsynchalt/illustrated-tls13/captures/
-            test_use_pre_master_secret();
             // https://dtls.xargs.org/
             test_dtls_xargs_org();
 
@@ -241,25 +239,25 @@ int main(int argc, char** argv) {
             test_rfc8448_5();
             test_rfc8448_6();
             test_rfc8448_7();
+
+            // https://github.com/syncsynchalt/illustrated-tls13/captures/
+            test_use_pre_master_secret();
         }
 
         load_certificate("rsa.crt", "rsa.key", nullptr);
         load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
 
         {
+            test_tls12_aead();
+            test_pcap_tls13();
+            test_pcap_tls12();
             test_construct_tls();
-            test_captured_tls13();
-            test_captured_tls12();
         }
 
         {
+            test_pcap_dtls12();
             test_construct_dtls13();
             test_dtls_record_arrange();
-
-            test_captured_dtls12();
-        }
-#if 0
-        {
             test_construct_dtls12_1();  // generate and arrange fragmented diagrams (record-handshake multiplicity 1..1)
             test_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
         }
@@ -268,7 +266,6 @@ int main(int argc, char** argv) {
             test_helloretryrequest();
             test_alert();
         }
-#endif
     } else {
         dump_clienthello();
     }

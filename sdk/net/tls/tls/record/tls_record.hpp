@@ -59,6 +59,7 @@ class tls_record {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
     virtual bool apply_protection();
 
+    size_t get_record_size();
     const range_t& get_header_range();
     uint16 get_body_size();
     size_t offsetof_header();

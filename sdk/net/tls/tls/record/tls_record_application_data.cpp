@@ -121,8 +121,8 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
 
         auto cs = protection.get_cipher_suite();
         bool is_cbc = tlsadvisor->is_kindof_cbc(cs);
-        auto ctsize = (is_cbc) ? pos + len : len;
-        ret = protection.decrypt(session, dir, stream, ctsize, recpos, plaintext);
+        auto limit = recpos + get_record_size();
+        ret = protection.decrypt(session, dir, stream, limit, recpos, plaintext);
         if (errorcode_t::success == ret) {
             auto plainsize = plaintext.size();
             if (plainsize) {

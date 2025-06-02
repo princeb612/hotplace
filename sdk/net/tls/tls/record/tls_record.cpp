@@ -518,6 +518,8 @@ uint64 tls_record::get_dtls_record_seq() { return _dtls_record_seq; }
 
 uint16 tls_record::get_body_size() { return _bodysize; }
 
+size_t tls_record::get_record_size() { return _range.width() + _bodysize; }
+
 const range_t& tls_record::get_header_range() { return _range; }
 
 size_t tls_record::offsetof_header() { return _range.begin; }

@@ -52,8 +52,8 @@ return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* strea
                 binary_t plaintext;
 
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                auto declen = tlsadvisor->is_kindof_cbc(cs) ? size : len;
-                ret = protection.decrypt(session, dir, stream, declen, recpos, plaintext);
+                auto limit = recpos + get_record_size();
+                ret = protection.decrypt(session, dir, stream, limit, recpos, plaintext);
                 if (errorcode_t::success == ret) {
                     tpos = 0;
                     ret = read_plaintext(dir, &plaintext[0], plaintext.size(), tpos);

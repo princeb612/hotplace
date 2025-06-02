@@ -28,7 +28,13 @@
 
 3. help
 
-* TLS 1.2
-  * ./test-netclient -v -d -P tls12 -i
-* TLS 1.3
-  * ./test-netclient -v -d -P tls13 -i
+* openssl libssl client
+  * TLS 1.2
+    * ./test-netclient -v -d -P tls12
+  * TLS 1.3
+    * ./test-netclient -v -d -P tls13
+* trial TLS over TCP client
+  * TLS 1.2
+    * ./test-netclient -v -d -P tls12 -i
+  * TLS 1.3
+    * ./test-netclient -v -d -P tls13 -i

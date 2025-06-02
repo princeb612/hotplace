@@ -60,16 +60,26 @@ struct pcap_testvector {
     const char* desc;
     const char* record;
 };
-void play_pcap(tls_session* session, pcap_testvector* testvector, size_t size);
+void play_pcap(tls_session* session, const pcap_testvector* testvector, size_t size);
 
-void test_captured_tls13();
-void test_captured_tls12();
-// test vector created by openssl (wireshark capture)
-// $ openssl s_server -accept 9000 -cert server.crt -key server.key -cipher TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 -state -debug -status_verbose -dtls
-// $ openssl s_client -connect localhost:9000 -state -debug -dtls
-void test_captured_dtls12();
-
-void test_dtls_record_arrange();
+extern const pcap_testvector pcap_tls13_aes128gcm_sha256[];
+extern const size_t sizeof_pcap_tls13_aes128gcm_sha256;
+extern const pcap_testvector pcap_tls13_aes256gcm_sha384[];
+extern const size_t sizeof_pcap_tls13_aes256gcm_sha384;
+extern const pcap_testvector pcap_tls13_aes128ccm_sha256[];
+extern const size_t sizeof_pcap_tls13_aes128ccm_sha256;
+extern const pcap_testvector pcap_tls13_chacha20_poly1305[];
+extern const size_t sizeof_pcap_tls13_chacha20_poly1305;
+extern const pcap_testvector pcap_tls12etm_aes128cbc_sha256[];
+extern const size_t sizeof_pcap_tls12etm_aes128cbc_sha256;
+extern const pcap_testvector pcap_tls12mte_aes128cbc_sha256[];
+extern const size_t sizeof_pcap_tls12mte_aes128cbc_sha256;
+extern const pcap_testvector capture_tls12_aes128gcm_sha256[];
+extern const size_t sizeof_capture_tls12_aes128gcm_sha256;
+extern const pcap_testvector pcap_dtls12[];
+extern const size_t sizeof_pcap_dtls12;
+extern const pcap_testvector pcap_dtls12_mtu1500[];
+extern const size_t sizeof_pcap_dtls12_mtu1500;
 
 // RFC
 void test_rfc8448_2();
@@ -80,6 +90,13 @@ void test_rfc8448_6();
 void test_rfc8448_7();
 
 void test_use_pre_master_secret();
+
+void test_tls12_aead();
+void test_pcap_tls13();
+void test_pcap_tls12();
+void test_pcap_dtls12();
+
+void test_dtls_record_arrange();
 
 void test_construct_tls();
 void test_construct_dtls13();

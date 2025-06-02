@@ -34,6 +34,15 @@ struct range_t {
         return ret;
     }
     bool operator==(const range_t& rhs) const { return (begin == rhs.begin) && (end == rhs.end); }
+    size_t width() {
+        size_t ret_value = 0;
+        if (begin <= end) {
+            ret_value = end - begin;
+        } else {
+            ret_value = begin - end;
+        }
+        return ret_value;
+    }
 };
 
 template <typename T>

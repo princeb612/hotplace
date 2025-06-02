@@ -9,7 +9,7 @@
 * understanding
   * Revision 777-
     * TLS server - research/debugging in progress, mingw64 environment
-  * Revision 682-776 (Tag 1.28, Revision.776)
+  * Revision 682-776 (Tag 1.29, Revision.785)
     * TLS, DTLS client
   * Revision 673-680 (Tag 0.97, Revision.684)
     * RFC 8448
@@ -25,7 +25,8 @@
     * CBOR
 
 * details
-  * Revision 785
+  * Revision 786
+  * Revision 785 (Tag 1.29)
   * Revision 784
     * [tested] CCM_8
       * no s_server/s_client test vector
@@ -44,7 +45,6 @@
     * [tested] server certificates
   * Revision 777
     * [tested] server socket, netserver integration
-  * Revision 776 (Tag 1.28) - Release
   * Revision 770
     * [tested] valgrind
     * [applied] openssl-3.5.0 (LTS)
@@ -65,8 +65,6 @@
   * Revision 729
     * simple client (TLS over TCP)
       * test/netclient <-> test/tlsserver
-        * ./test-tlsserver -v -d -r &
-        * ./test-netclient -v -d -P tls
   * Revision 716
     * [tested] RFC 9369 QUIC Version 2
   * Revision 715
