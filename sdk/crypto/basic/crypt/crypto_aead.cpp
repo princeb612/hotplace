@@ -39,7 +39,7 @@ return_t crypto_aead::encrypt(const binary_t& key, const binary_t& iv, const uns
         auto hint_cipher = advisor->hintof_cipher(get_scheme());
 
         openssl_crypt crypt;
-        encrypt_option_t options[] = {{crypt_ctrl_lsize, hint_cipher->lsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
+        encrypt_option_t options[] = {{crypt_ctrl_nsize, hint_cipher->nsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
 
         ret = crypt.encrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, iv, stream, size, ciphertext, aad, tag, options);
     }
@@ -67,7 +67,7 @@ return_t crypto_aead::decrypt(const binary_t& key, const binary_t& iv, const uns
         auto hint_cipher = advisor->hintof_cipher(get_scheme());
 
         openssl_crypt crypt;
-        encrypt_option_t options[] = {{crypt_ctrl_lsize, hint_cipher->lsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
+        encrypt_option_t options[] = {{crypt_ctrl_nsize, hint_cipher->nsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
 
         ret = crypt.decrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, iv, stream, size, plaintext, aad, tag, options);
     }

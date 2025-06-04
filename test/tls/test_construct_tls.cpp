@@ -570,6 +570,22 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
 
         tls_records records;
         ret = records.read(session, dir, bin);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        bool has_fatal = false;
+
+        auto lambda_test_fatal_alert = [&](uint8 level, uint8 desc) -> void {
+            if (tls_alertlevel_fatal == level) {
+                has_fatal = true;
+            }
+        };
+
+        if (has_fatal) {
+            ret = failed;
+            __leave2;
+        }
     }
     __finally2 {
         std::string dirstr;
@@ -604,7 +620,10 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        do_test_send_record(&server_session, from_client, bin_client_hello, "send client hello");
+        ret = do_test_send_record(&server_session, from_client, bin_client_hello, "send client hello");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         // S -> C SH
         binary_t bin_server_hello;
@@ -612,7 +631,10 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        do_test_send_record(&client_session, from_server, bin_server_hello, "send server hello");
+        ret = do_test_send_record(&client_session, from_server, bin_server_hello, "send server hello");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         {
             do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
@@ -656,7 +678,10 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             // S -> C CCS
             binary_t bin_server_change_cipher_spec;
             do_test_construct_server_change_cipher_spec(&server_session, from_server, bin_server_change_cipher_spec, "construct change_cipher_spec");
-            do_test_send_record(&client_session, from_server, bin_server_change_cipher_spec, "send change_cipher_spec");
+            ret = do_test_send_record(&client_session, from_server, bin_server_change_cipher_spec, "send change_cipher_spec");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             {
                 //
@@ -666,7 +691,10 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             // S -> C EE
             binary_t bin_encrypted_extensions;
             do_test_construct_encrypted_extensions(&server_session, from_server, bin_encrypted_extensions, "construct encrypted extensions");
-            do_test_send_record(&client_session, from_server, bin_encrypted_extensions, "send encrypted extensions");
+            ret = do_test_send_record(&client_session, from_server, bin_encrypted_extensions, "send encrypted extensions");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             {
                 //
@@ -676,7 +704,10 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             // S -> C SC
             binary_t bin_certificate;
             do_test_construct_certificate(&server_session, from_server, bin_certificate, "construct certificate");
-            do_test_send_record(&client_session, from_server, bin_certificate, "send cerficate");
+            ret = do_test_send_record(&client_session, from_server, bin_certificate, "send cerficate");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             {
                 //
@@ -686,7 +717,10 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             // S -> C SCV
             binary_t bin_certificate_verify;
             do_test_construct_certificate_verify(&server_session, from_server, bin_certificate_verify, "construct certificate verify");
-            do_test_send_record(&client_session, from_server, bin_certificate_verify, "send cerficate verify");
+            ret = do_test_send_record(&client_session, from_server, bin_certificate_verify, "send cerficate verify");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             {
                 //
@@ -701,7 +735,10 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             // C -> S CCS
             binary_t bin_client_change_cipher_spec;
             do_test_construct_client_change_cipher_spec(&client_session, from_client, bin_client_change_cipher_spec, "construct change_cipher_spec");
-            do_test_send_record(&server_session, from_client, bin_client_change_cipher_spec, "send change_cipher_spec");
+            ret = do_test_send_record(&server_session, from_client, bin_client_change_cipher_spec, "send change_cipher_spec");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             {
                 //
@@ -711,12 +748,18 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             // C -> S CF
             binary_t bin_client_finished;
             do_test_construct_client_finished(&client_session, from_client, bin_client_finished, "construct client finished");
-            do_test_send_record(&server_session, from_client, bin_client_finished, "send client finished");
+            ret = do_test_send_record(&server_session, from_client, bin_client_finished, "send client finished");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         } else if (tls_12 == tlsversion) {
             // S -> C SC
             binary_t bin_certificate;
             do_test_construct_certificate(&server_session, from_server, bin_certificate, "construct certificate");
-            do_test_send_record(&client_session, from_server, bin_certificate, "send cerficate");
+            ret = do_test_send_record(&client_session, from_server, bin_certificate, "send cerficate");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             {
                 //
@@ -729,7 +772,10 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             // C->S CKE client_key_exchange
             binary_t bin_server_key_exchange;
             do_test_construct_server_key_exchange(&server_session, from_server, bin_server_key_exchange, "construct server_key_exchange");
-            do_test_send_record(&client_session, from_server, bin_server_key_exchange, "send server_key_exchange");
+            ret = do_test_send_record(&client_session, from_server, bin_server_key_exchange, "send server_key_exchange");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             {
                 //
@@ -738,7 +784,10 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
 
             binary_t bin_server_hello_done;
             do_test_construct_server_hello_done(&server_session, from_server, bin_server_hello_done, "construct server_hello_done");
-            do_test_send_record(&client_session, from_server, bin_server_hello_done, "send server_hello_done");
+            ret = do_test_send_record(&client_session, from_server, bin_server_hello_done, "send server_hello_done");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             {
                 //
@@ -747,7 +796,10 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
 
             binary_t bin_client_key_exchange;
             do_test_construct_client_key_exchange(&client_session, from_client, bin_client_key_exchange, "construct client_key_exchange");
-            do_test_send_record(&server_session, from_client, bin_client_key_exchange, "send client_key_exchange");
+            ret = do_test_send_record(&server_session, from_client, bin_client_key_exchange, "send client_key_exchange");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             // CKE
 
@@ -762,7 +814,10 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             // C -> S CCS
             binary_t bin_client_change_cipher_spec;
             do_test_construct_client_change_cipher_spec(&client_session, from_client, bin_client_change_cipher_spec, "construct change_cipher_spec");
-            do_test_send_record(&server_session, from_client, bin_client_change_cipher_spec, "send change_cipher_spec");
+            ret = do_test_send_record(&server_session, from_client, bin_client_change_cipher_spec, "send change_cipher_spec");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             {
                 //
@@ -772,12 +827,18 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             // C -> S CF
             binary_t bin_client_finished;
             do_test_construct_client_finished(&client_session, from_client, bin_client_finished, "construct client finished");
-            do_test_send_record(&server_session, from_client, bin_client_finished, "send client finished");
+            ret = do_test_send_record(&server_session, from_client, bin_client_finished, "send client finished");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             // S -> C CCS
             binary_t bin_server_change_cipher_spec;
             do_test_construct_server_change_cipher_spec(&server_session, from_server, bin_server_change_cipher_spec, "construct change_cipher_spec");
-            do_test_send_record(&client_session, from_server, bin_server_change_cipher_spec, "send change_cipher_spec");
+            ret = do_test_send_record(&client_session, from_server, bin_server_change_cipher_spec, "send change_cipher_spec");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             {
                 //
@@ -787,7 +848,10 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             // S -> C SF
             binary_t bin_server_finished;
             do_test_construct_server_finished(&server_session, from_server, bin_server_finished, "construct server finished");
-            do_test_send_record(&client_session, from_server, bin_server_finished, "send server finished");
+            ret = do_test_send_record(&client_session, from_server, bin_server_finished, "send server finished");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
 
         {
@@ -814,22 +878,34 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
         // C->S ping
         binary_t bin_client_ping;
         do_test_construct_client_ping(&client_session, from_client, bin_client_ping, "construct client ping");
-        do_test_send_record(&server_session, from_client, bin_client_ping, "send client ping");
+        ret = do_test_send_record(&server_session, from_client, bin_client_ping, "send client ping");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         // C<-S pong
         binary_t bin_server_pong;
         do_test_construct_server_pong(&server_session, from_server, bin_server_pong, "construct server pong");
-        do_test_send_record(&client_session, from_server, bin_server_pong, "send server pong");
+        ret = do_test_send_record(&client_session, from_server, bin_server_pong, "send server pong");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         // C->S close notify
         binary_t bin_client_close_notify;
         do_test_construct_close_notify(&client_session, from_client, bin_client_close_notify, "construct client close notify");
-        do_test_send_record(&server_session, from_client, bin_client_close_notify, "send client close notify");
+        ret = do_test_send_record(&server_session, from_client, bin_client_close_notify, "send client close notify");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         // S->C close notify
         binary_t bin_server_close_notify;
         do_test_construct_close_notify(&server_session, from_server, bin_server_close_notify, "construct server close notify");
-        do_test_send_record(&client_session, from_server, bin_server_close_notify, "send server close notify");
+        ret = do_test_send_record(&client_session, from_server, bin_server_close_notify, "send server close notify");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
     }
     __finally2 {}
 }
@@ -851,21 +927,29 @@ void test_construct_tls() {
         {tls_12, "TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384"},
 
 #if 0
-        // {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"},
-        // {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"},
-        // {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256"},
-        // {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"},
-        {tls_12, "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"},
+        // decryption passed
+        // TODO ... construction
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"},
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"},
         {tls_12, "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"},
         {tls_12, "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256"},
-        {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384"},
+
+        // understanding ...
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"},
         {tls_12, "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"},
 #endif
+
+        // no test vector (feat. s_server and s_client)
+        // so the actual authenticity cannot be verified...
+
+        // {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256"},
+        // {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"},
+        // {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256"},
+        // {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384"},
+        // {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM"},
+        // {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM"},
+        // {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8"},
+        // {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"},
     };
 
     for (auto item : testvector) {

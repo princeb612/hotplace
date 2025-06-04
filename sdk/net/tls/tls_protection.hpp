@@ -173,6 +173,30 @@ class tls_protection {
      */
     return_t calc_context_hash(tls_session* session, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& digest);
 
+    /**
+     * RFC 5246 6.2.3.3.  AEAD Ciphers
+     *   additional_data = seq_num + TLSCompressed.type +
+     *                     TLSCompressed.version + TLSCompressed.length;
+     *   AEADEncrypted = AEAD-Encrypt(write_key, nonce, plaintext,
+     *                                additional_data)
+     *   TLSCompressed.fragment = AEAD-Decrypt(write_key, nonce,
+     *                                         AEADEncrypted,
+     *                                         additional_data)
+     *
+     * uint64(seq_num) || uint8(type) || uint16(version) || uint16(cipertext_wo_tag.size)
+     *
+     * RFC 6347 4.1.2.1.  MAC
+     *   The DTLS MAC is the same as that of TLS 1.2. However, rather than
+     *   using TLS's implicit sequence number, the sequence number used to
+     *   compute the MAC is the 64-bit value formed by concatenating the epoch
+     *   and the sequence number in the order they appear on the wire.  Note
+     *   that the DTLS epoch + sequence number is the same length as the TLS
+     *   sequence number.
+     *
+     * uint16(epoch) || uint48(seq_num) || uint8(type) || uint16(version) || uint16(cipertext_wo_tag.size)
+     */
+    return_t build_tls12_aad_from_record(tls_session* session, binary_t& aad, const binary_t& record_header, uint64 record_no);
+
     ///////////////////////////////////////////////////////////////////////////
     // encryption
     // RFC 5246
@@ -198,7 +222,7 @@ class tls_protection {
     //        opaque nonce_explicit[8];
     //     } GCMNonce;
     ///////////////////////////////////////////////////////////////////////////
-    return_t build_iv(tls_session* session, tls_secret_t type, binary_t& iv, uint64 recordno);
+    return_t build_iv(tls_session* session, binary_t& nonce, const binary_t& iv, uint64 recordno);
     uint8 get_tag_size();
 
     return_t get_aead_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& iv, protection_level_t level = protection_default);

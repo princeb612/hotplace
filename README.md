@@ -42,6 +42,7 @@
   * RFC 4346 The Transport Layer Security (TLS) Protocol Version 1.1
     * deprecated
   * RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
+  * RFC 6347 Datagram Transport Layer Security Version 1.2
   * RFC 7627 Transport Layer Security (TLS) Session Hash and Extended Master Secret Extension
   * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
   * RFC 8448 Example Handshake Traces for TLS 1.3

@@ -34,8 +34,8 @@ void test_aead_ccm() {
 
         crypt.open(&handle, typeof_alg(hint), typeof_mode(hint), &key[0], key.size(), &iv[0], iv.size());
 
-        crypt.set(handle, crypt_ctrl_lsize, hint->lsize);  // SET_L
-        crypt.set(handle, crypt_ctrl_tsize, hint->tsize);  // SET_IVLEN=15-L
+        crypt.set(handle, crypt_ctrl_nsize, hint->nsize);  // IV
+        crypt.set(handle, crypt_ctrl_tsize, hint->tsize);  // TAG
 
         ret = crypt.encrypt(handle, stream, size, ciphertext, aad, tag);
 

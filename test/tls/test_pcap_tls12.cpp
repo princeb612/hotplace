@@ -39,7 +39,6 @@ void test_pcap_tls12() {
         play_pcap(&session_mte, pcap_tls12mte_aes128cbc_sha256, sizeof_pcap_tls12mte_aes128cbc_sha256);
     }
 
-    // GCM (EVP_CipherUpdate 1, EVP_CipherFinal 0 - decryption passed but authentication failed)
     _test_case.begin("TLS 1.2 tls12_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256.pcapng");
     {
         tls_session session_gcm(session_type_tls);
@@ -51,4 +50,18 @@ void test_pcap_tls12() {
 
         play_pcap(&session_gcm, capture_tls12_aes128gcm_sha256, sizeof_capture_tls12_aes128gcm_sha256);
     }
+
+#if 0
+    _test_case.begin("tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256.pcapng");
+    {
+        tls_session session_gcm(session_type_tls);
+        auto& protection = session_gcm.get_tls_protection();
+
+        constexpr char constexpr_master_secret[] = "6525943d87978a14a4553a956b6f71501d0cbfd97aa856ce69b9aca4a7b5c1209d663b389778393170e9e4c068e51843";
+        protection.use_pre_master_secret(true);
+        protection.set_item(tls_secret_master, base16_decode(constexpr_master_secret));
+
+        play_pcap(&session_gcm, capture_tls12_chacha20poly1305_sha256, sizeof_capture_tls12_chacha20poly1305_sha256);
+    }
+#endif
 }

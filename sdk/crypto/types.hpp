@@ -1095,7 +1095,7 @@ typedef struct _hint_cipher_t {
     crypt_algorithm_t algorithm;
     crypt_mode_t mode;
     const char* fetchname;
-    uint8 lsize;
+    uint8 nsize;
     uint8 tsize;
 } hint_cipher_t;
 crypto_scheme_t typeof_sheme(const hint_cipher_t* hint);
@@ -1285,7 +1285,7 @@ typedef struct _hint_cose_algorithm_t {
         const char* algname;
         uint16 ksize;
         uint16 tsize;
-        uint16 lsize;
+        uint16 nsize;
     } enc;
 } hint_cose_algorithm_t;
 

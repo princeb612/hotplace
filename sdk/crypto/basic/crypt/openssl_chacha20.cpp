@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/binary.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 
 namespace hotplace {
@@ -24,22 +25,19 @@ return_t openssl_chacha20_iv(binary_t &iv, uint32 counter, const byte_t *nonce, 
             __leave2;
         }
 
-        // nonce = constant | iv
-        // constant to little-endian
-        uint32 constant = 0;
-        if (is_little_endian()) {
-            constant = counter;
-        } else {
-            constant = convert_endian(counter);
-        }
-
         if (nonce_size > 12) {
             nonce_size = 12;
         }
 
-        iv.resize(4);
-        memcpy(&iv[0], (byte_t *)&constant, sizeof(counter));
-        iv.insert(iv.end(), nonce, nonce + nonce_size);
+        // nonce = constant | iv
+        // constant is little-endian
+
+        if (is_little_endian()) {
+            binary_append(iv, counter);
+        } else {
+            binary_append(iv, convert_endian(counter));
+        }
+        binary_append(iv, nonce, nonce_size);
     }
     __finally2 {
         // do nothing

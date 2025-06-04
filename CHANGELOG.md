@@ -25,7 +25,7 @@
     * CBOR
 
 * details
-  * Revision 786
+  * Revision 787
   * Revision 785 (Tag 1.29)
   * Revision 784
     * [tested] CCM_8

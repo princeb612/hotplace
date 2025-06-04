@@ -27,7 +27,94 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_protection::build_iv(tls_session *session, tls_secret_t type, binary_t &iv, uint64 recordno) {
+constexpr char constexpr_content_type[] = "record content type";
+constexpr char constexpr_record_version[] = "record version";
+constexpr char constexpr_len[] = "len";
+constexpr char constexpr_application_data[] = "application data";
+
+constexpr char constexpr_group_tls[] = "tls";
+constexpr char constexpr_group_dtls[] = "dtls";
+constexpr char constexpr_dtls_epoch[] = "epoch";
+constexpr char constexpr_dtls_record_seq[] = "sequence number";
+
+return_t tls_protection::build_tls12_aad_from_record(tls_session *session, binary_t &aad, const binary_t &record_header, uint64 record_no) {
+    return_t ret = errorcode_t::success;
+
+    tls_advisor *tlsadvisor = tls_advisor::get_instance();
+    uint8 content_type = 0;
+    uint16 record_version = 0;
+    uint16 len = 0;
+    bool cond_dtls = false;
+    uint16 key_epoch = 0;
+    uint64 dtls_record_seq = 0;
+
+    {
+        payload pl;
+        pl << new payload_member(uint8(0), constexpr_content_type)                              // tls, dtls
+           << new payload_member(uint16(0), true, constexpr_record_version)                     // tls, dtls
+           << new payload_member(uint16(0), true, constexpr_dtls_epoch, constexpr_group_dtls)   // dtls
+           << new payload_member(uint48_t(0), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
+           << new payload_member(uint16(0), true, constexpr_len);                               // tls, dtls
+
+        auto lambda_check_dtls = [&](payload *pl, payload_member *item) -> void {
+            auto ver = pl->t_value_of<uint16>(item);
+            pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(ver));
+        };
+        pl.set_condition(constexpr_record_version, lambda_check_dtls);
+        size_t apos = 0;
+        pl.read(&record_header[0], record_header.size(), apos);
+
+        content_type = pl.t_value_of<uint8>(constexpr_content_type);
+        record_version = pl.t_value_of<uint16>(constexpr_record_version);
+        len = pl.t_value_of<uint16>(constexpr_len);
+        cond_dtls = pl.get_group_condition(constexpr_group_dtls);
+        if (cond_dtls) {
+            key_epoch = pl.t_value_of<uint16>(constexpr_dtls_epoch);
+            dtls_record_seq = pl.t_value_of<uint64>(constexpr_dtls_record_seq);
+        }
+    }
+    {
+        /**
+         * RFC 5246 6.2.3.3.  AEAD Ciphers
+         *   additional_data = seq_num + TLSCompressed.type +
+         *                     TLSCompressed.version + TLSCompressed.length;
+         *   AEADEncrypted = AEAD-Encrypt(write_key, nonce, plaintext,
+         *                                additional_data)
+         *   TLSCompressed.fragment = AEAD-Decrypt(write_key, nonce,
+         *                                         AEADEncrypted,
+         *                                         additional_data)
+         *
+         * uint64(seq_num) || uint8(type) || uint16(version) || uint16(cipertext.size)
+         *
+         * RFC 6347 4.1.2.1.  MAC
+         *   The DTLS MAC is the same as that of TLS 1.2. However, rather than
+         *   using TLS's implicit sequence number, the sequence number used to
+         *   compute the MAC is the 64-bit value formed by concatenating the epoch
+         *   and the sequence number in the order they appear on the wire.  Note
+         *   that the DTLS epoch + sequence number is the same length as the TLS
+         *   sequence number.
+         *
+         * uint16(epoch) || uint48(seq_num) || uint8(type) || uint16(version) || uint16(cipertext.size)
+         */
+
+        len -= (8 + get_tag_size());
+
+        payload pl;
+        pl << new payload_member(uint64(record_no), true, constexpr_dtls_epoch, constexpr_group_tls)
+           << new payload_member(uint16(key_epoch), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
+           << new payload_member(uint48_t(dtls_record_seq), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
+           << new payload_member(uint8(content_type), constexpr_content_type)                                 // tls, dtls
+           << new payload_member(uint16(record_version), true, constexpr_record_version)                      // tls, dtls
+           << new payload_member(uint16(len), true, constexpr_len);                                           // tls, dtls
+
+        pl.set_group(constexpr_group_tls, (false == cond_dtls));
+        pl.set_group(constexpr_group_dtls, (true == cond_dtls));
+        pl.write(aad);
+    }
+    return ret;
+}
+
+return_t tls_protection::build_iv(tls_session *session, binary_t &nonce, const binary_t &iv, uint64 recordno) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -35,14 +122,21 @@ return_t tls_protection::build_iv(tls_session *session, tls_secret_t type, binar
             __leave2;
         }
 
-        iv = get_item(type);
         if (iv.empty()) {
             ret = errorcode_t::bad_data;
             __leave2;
         }
 
+        //          0123456789abc
+        //  IV      IIIIIIIIIIIII
+        //  RECNO       NNNNNNNNN
+        //  NONCE   IIIIXXXXXXXXX
+
+        nonce = iv;
         for (uint64 i = 0; i < 8; i++) {
-            iv[12 - 1 - i] ^= ((recordno >> (i * 8)) & 0xff);
+            auto v = iv[12 - 1 - i];
+            auto n = ((recordno >> (i * 8)) & 0xff);
+            nonce[12 - 1 - i] = v ^ n;
         }
     }
     __finally2 {
@@ -296,10 +390,22 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
 
         auto const &key = get_item(secret_key);
         auto const &iv = get_item(secret_iv);
-        binary_t nonce = iv;
-        build_iv(session, secret_iv, nonce, record_no);
-        encrypt_option_t options[] = {{crypt_ctrl_lsize, hint_cipher->lsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
-        ret = crypt.encrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, nonce, plaintext, ciphertext, aad, tag, options);
+        binary_t nonce;
+        encrypt_option_t options[] = {{crypt_ctrl_nsize, hint_cipher->nsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
+        binary_t tls12_aad;
+
+        auto alg = typeof_alg(hint_cipher);
+        auto mode = typeof_mode(hint_cipher);
+        if (is_kindof_tls12()) {
+            const binary_t &nonce_explicit = get_item(tls_context_nonce_explicit);
+            binary_append(nonce, iv);
+            binary_append(nonce, nonce_explicit);
+            ret = crypt.encrypt(alg, mode, key, nonce, plaintext, ciphertext, aad, tag, options);
+            ciphertext.insert(ciphertext.begin(), nonce_explicit.begin(), nonce_explicit.end());
+        } else {
+            build_iv(session, nonce, iv, record_no);
+            ret = crypt.encrypt(alg, mode, key, nonce, plaintext, ciphertext, aad, tag, options);
+        }
 
 #if defined DEBUG
         if (istraceable()) {
@@ -569,7 +675,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         auto record_version = get_lagacy_version();
         auto cs = get_cipher_suite();
         auto hint_cipher = tlsadvisor->hintof_cipher(cs);
-        encrypt_option_t options[] = {{crypt_ctrl_lsize, hint_cipher->lsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
+        encrypt_option_t options[] = {{crypt_ctrl_nsize, hint_cipher->nsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
 
         openssl_crypt crypt;
 
@@ -577,60 +683,63 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         tls_secret_t secret_iv;
         get_aead_key(session, dir, secret_key, secret_iv, level);
 
-        uint64 record_no = 0;
-        record_no = session->get_recordno(dir, true, level);
+        uint64 record_no = session->get_recordno(dir, true, level);
 
         const binary_t &key = get_item(secret_key);
         const binary_t &iv = get_item(secret_iv);
         binary_t tls12_aad;
-        binary_t nonce = iv;
+        binary_t nonce;
         size_t size_nonce_explicit = 8;
         auto alg = typeof_alg(hint_cipher);
         auto mode = typeof_mode(hint_cipher);
+
         if (is_kindof_tls12()) {
-            size_t hdrsize = 0;
-            if (is_kindof_tls()) {
-                hdrsize = sizeof(tls_header);
-            } else {
-                hdrsize = sizeof(dtls_header);
+            build_tls12_aad_from_record(session, tls12_aad, aad, record_no);
+
+            if (mode_poly1305 == mode) {
+                /**
+                 * RFC 7905 2.  ChaCha20 Cipher Suites
+                 *   AEAD_CHACHA20_POLY1305 requires a 96-bit nonce, which is formed as
+                 *   follows:
+                 *
+                 *   1.  The 64-bit record sequence number is serialized as an 8-byte,
+                 *       big-endian value and padded on the left with four 0x00 bytes.
+                 *
+                 *   2.  The padded sequence number is XORed with the client_write_IV
+                 *       (when the client is sending) or server_write_IV (when the server
+                 *       is sending).
+                 */
+
+                binary_t temp;
+                openssl_chacha20_iv(temp, 0, &iv[0], iv.size());  // little_endian_uint32(0) || iv(8)
+                build_iv(session, nonce, temp, record_no);
+            } else if (ccm == mode || gcm == mode) {
+                /**
+                 * RFC 5246 6.2.3.3.  AEAD Ciphers
+                 *   struct {
+                 *      opaque nonce_explicit[SecurityParameters.record_iv_length];
+                 *      aead-ciphered struct {
+                 *          opaque content[TLSCompressed.length];
+                 *      };
+                 *   } GenericAEADCipher;
+                 * RFC 5288
+                 *   struct {
+                 *      opaque salt[4];
+                 *      opaque nonce_explicit[8];
+                 *   } GCMNonce;
+                 */
+                binary_append(nonce, iv);
+                binary_append(nonce, stream + pos, size_nonce_explicit);
+
+                pos += size_nonce_explicit;
             }
-
-            /**
-             * RFC 5246 6.2.3.3.  AEAD Ciphers
-             *   struct {
-             *      opaque nonce_explicit[SecurityParameters.record_iv_length];
-             *      aead-ciphered struct {
-             *          opaque content[TLSCompressed.length];
-             *      };
-             *   } GenericAEADCipher;
-             * RFC 5288
-             *   struct {
-             *      opaque salt[4];
-             *      opaque nonce_explicit[8];
-             *   } GCMNonce;
-             */
-            binary_append(nonce, stream + pos, size_nonce_explicit);
-
-            /**
-             * RFC 5246 6.2.3.3.  AEAD Ciphers
-             *   additional_data = seq_num + TLSCompressed.type +
-             *                     TLSCompressed.version + TLSCompressed.length;
-             *   AEADEncrypted = AEAD-Encrypt(write_key, nonce, plaintext,
-             *                                additional_data)
-             *   TLSCompressed.fragment = AEAD-Decrypt(write_key, nonce,
-             *                                         AEADEncrypted,
-             *                                         additional_data)
-             */
-            binary_append(tls12_aad, record_no, hton64);
-            binary_append(tls12_aad, aad);
-
-            pos += size_nonce_explicit;
 
             ret = crypt.decrypt(alg, mode, key, nonce, stream + pos, size - pos, plaintext, tls12_aad, tag, options);
         } else {
-            build_iv(session, secret_iv, nonce, record_no);
+            build_iv(session, nonce, iv, record_no);
             ret = crypt.decrypt(alg, mode, key, nonce, stream + pos, size - pos, plaintext, aad, tag, options);
         }
+
         if (errorcode_t::success != ret) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
         }
@@ -650,7 +759,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
             }
             dbs.println(" > tag %s", base16_encode(tag).c_str());
             dbs.println(" > ciphertext");
-            dump_memory(stream + pos, size, &dbs, 16, 3, 0x0, dump_notrunc);
+            dump_memory(stream + pos, size - pos, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.println(" > plaintext");
             dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
 

@@ -121,11 +121,25 @@ void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tl
 }
 
 void play_pcap(tls_session* session, const pcap_testvector* testvector, size_t size) {
+    bool has_fatal = false;
+
+    auto lambda_test_fatal_alert = [&](uint8 level, uint8 desc) -> void {
+        if (tls_alertlevel_fatal == level) {
+            has_fatal = true;
+        }
+    };
+
     for (auto i = 0; i < size; i++) {
         const pcap_testvector* item = testvector + i;
 
         binary_t bin_record = std::move(base16_decode_rfc(item->record));
         dump_record(item->desc, session, item->dir, bin_record);
+
+        session->get_alert(item->dir, lambda_test_fatal_alert);
+        if (has_fatal) {
+            _test_case.test(failed, __FUNCTION__, "fatal alert");
+            break;
+        }
     }
 }
 

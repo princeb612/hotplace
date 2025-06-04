@@ -553,6 +553,7 @@ enum tls_secret_t : uint16 {
     tls_context_client_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0c),      // CKE client_key_exchange (pre_master_secret)
     tls_context_session_id = (TLS_SECRET_USERCONTEXT | 0x0d),               //
     tls_context_cookie = (TLS_SECRET_USERCONTEXT | 0x0e),                   //
+    tls_context_nonce_explicit = (TLS_SECRET_USERCONTEXT | 0x0f),           //
     tls_context_quic_dcid = (TLS_SECRET_USERCONTEXT | 0x11),                //
     tls_context_client_verifydata = (TLS_SECRET_USERCONTEXT | 0x12),        //
     tls_context_server_verifydata = (TLS_SECRET_USERCONTEXT | 0x13),        //

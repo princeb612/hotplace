@@ -85,15 +85,8 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
                 get_handshakes().add(handshake);
             }
         } else {
-#if 0
-            // record-handshake 1..1 (test vector, openssl)
-            tpos = pos;
-            auto handshake = tls_handshake::read(session, dir, stream, pos + len, tpos);
-            get_handshakes().add(handshake);
-#else
             // record-handshake 1..*
             ret = get_handshakes().read(session, dir, stream, pos + len, pos);
-#endif
         }
     }
     __finally2 {

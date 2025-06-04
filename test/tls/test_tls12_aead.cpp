@@ -12,7 +12,7 @@
 
 #include "sample.hpp"
 
-void test_tls12_aead() {
+void test_tls12_aead_aes128gcm() {
     _test_case.begin("TLS 1.2 AEAD-AES-128-GCM");
 
     // see also
@@ -80,3 +80,5 @@ void test_tls12_aead() {
         _test_case.test(ret, __FUNCTION__, "decrypt");
     }
 }
+
+void test_tls12_aead() { test_tls12_aead_aes128gcm(); }

@@ -656,13 +656,27 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
 
             auto hint_blockcipher = tlsadvisor->hintof_blockcipher(cs);
             auto hint_digest = tlsadvisor->hintof_digest(cs);
+            auto hint_cipher = tlsadvisor->hintof_cipher(cs);
             if (nullptr == hint_blockcipher || nullptr == hint_digest) {
                 ret = errorcode_t::not_supported;
                 __leave2;
             }
+            auto mode = typeof_mode(hint_cipher);
             auto keysize = sizeof_key(hint_blockcipher);
             // TLS 1.2 GCM nonce = fixed iv (4) + explitcit iv (8) = 12
-            auto ivsize = (is_cbc) ? sizeof_iv(hint_blockcipher) : 4;
+            auto ivsize = 0;
+            switch (mode) {
+                case cbc: {
+                    ivsize = sizeof_iv(hint_blockcipher);
+                } break;
+                case mode_poly1305: {
+                    ivsize = 8;  // counter 0 || fixed iv 8
+                } break;
+                case ccm:
+                case gcm: {
+                    ivsize = 4;
+                } break;
+            }
             auto dlen = (is_cbc) ? sizeof_digest(hint_digest) : 0;
             size_t size_keycalc = (dlen << 1) + (keysize << 1) + (ivsize << 1);
             size_t offset = 0;
@@ -687,6 +701,8 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
             binary_t secret_server_iv;
 
             // partition
+            p.resize(size_keycalc);
+
             if (is_cbc) {
                 binary_append(secret_client_mac_key, &p[offset], dlen);
                 offset += dlen;
@@ -716,6 +732,11 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
             if (istraceable()) {
                 basic_stream dbs;
                 dbs.printf("\e[1;36m");
+                dbs.println("> cipher_suite %s", tlsadvisor->hintof_cipher_suite(cs)->name_iana);
+                dbs.println("> master_secret %s", base16_encode(master_secret).c_str());
+                dbs.println("> client_hello_random %s", base16_encode(client_hello_random).c_str());
+                dbs.println("> server_hello_random %s", base16_encode(server_hello_random).c_str());
+                dbs.println("> keyblock %s", base16_encode(p).c_str());
                 if (is_cbc) {
                     dbs.println("> secret_client_mac_key[%08x] %s", tls_secret_client_mac_key, base16_encode(secret_client_mac_key).c_str());
                     dbs.println("> secret_server_mac_key[%08x] %s", tls_secret_server_mac_key, base16_encode(secret_server_mac_key).c_str());

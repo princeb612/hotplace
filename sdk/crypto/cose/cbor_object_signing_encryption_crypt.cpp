@@ -268,7 +268,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
             // RFC 8152 10.2.  AES CCM - explains about L and M parameters
             encrypt_option_t options[] = {
                 {crypt_ctrl_t::crypt_ctrl_tsize, hint->enc.tsize},
-                {crypt_ctrl_t::crypt_ctrl_lsize, hint->enc.lsize},
+                {crypt_ctrl_t::crypt_ctrl_nsize, hint->enc.nsize},
                 {},
             };
             if (mode) {

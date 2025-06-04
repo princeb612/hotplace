@@ -76,6 +76,8 @@ extern const pcap_testvector pcap_tls12mte_aes128cbc_sha256[];
 extern const size_t sizeof_pcap_tls12mte_aes128cbc_sha256;
 extern const pcap_testvector capture_tls12_aes128gcm_sha256[];
 extern const size_t sizeof_capture_tls12_aes128gcm_sha256;
+extern const pcap_testvector capture_tls12_chacha20poly1305_sha256[];
+extern const size_t sizeof_capture_tls12_chacha20poly1305_sha256;
 extern const pcap_testvector pcap_dtls12[];
 extern const size_t sizeof_pcap_dtls12;
 extern const pcap_testvector pcap_dtls12_mtu1500[];

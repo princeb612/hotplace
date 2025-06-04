@@ -753,9 +753,9 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {},
         {
             "aes-128-ccm",
-            128 >> 3,  // 16
-            64 >> 3,   // 8
-            16 >> 3,   // len(IV) = 15-2 = 13
+            128 >> 3,        // 16
+            64 >> 3,         // 8
+            15 - (16 >> 3),  // len(IV) = 15-2 = 13
         },
     },
     {
@@ -768,9 +768,9 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {},
         {
             "aes-256-ccm",
-            256 >> 3,  // 32
-            64 >> 3,   // 8
-            16 >> 3,   // len(IV) = 15-2 = 13
+            256 >> 3,        // 32
+            64 >> 3,         // 8
+            15 - (16 >> 3),  // len(IV) = 15-2 = 13
         },
     },
     {
@@ -783,9 +783,9 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {},
         {
             "aes-128-ccm",
-            128 >> 3,  // 16
-            64 >> 3,   // 8
-            64 >> 3,   // len(IV) = 15-8 = 7
+            128 >> 3,        // 16
+            64 >> 3,         // 8
+            15 - (64 >> 3),  // len(IV) = 15-8 = 7
         },
     },
     {
@@ -798,9 +798,9 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {},
         {
             "aes-256-ccm",
-            256 >> 3,  // 32
-            64 >> 3,   // 8
-            64 >> 3,   // len(IV) = 15-8 = 7
+            256 >> 3,        // 32
+            64 >> 3,         // 8
+            15 - (64 >> 3),  // len(IV) = 15-8 = 7
         },
     },
     {
@@ -813,9 +813,9 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {},
         {
             "aes-128-ccm",
-            128 >> 3,  // 16
-            128 >> 3,  // 16
-            16 >> 3,   // len(IV) = 15-2 = 13
+            128 >> 3,        // 16
+            128 >> 3,        // 16
+            15 - (16 >> 3),  // len(IV) = 15-2 = 13
         },
     },
     {
@@ -828,9 +828,9 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {},
         {
             "aes-256-ccm",
-            256 >> 3,  // 32
-            128 >> 3,  // 16
-            16 >> 3,   // len(IV) = 15-2 = 13
+            256 >> 3,        // 32
+            128 >> 3,        // 16
+            15 - (16 >> 3),  // len(IV) = 15-2 = 13
         },
     },
     {
@@ -843,9 +843,9 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {},
         {
             "aes-128-ccm",
-            128 >> 3,  // 16
-            128 >> 3,  // 16
-            64 >> 3,   // len(IV) = 15-8 = 7
+            128 >> 3,        // 16
+            128 >> 3,        // 16
+            15 - (64 >> 3),  // len(IV) = 15-8 = 7
         },
     },
     {
@@ -858,9 +858,9 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
         {},
         {
             "aes-256-ccm",
-            256 >> 3,  // 32
-            128 >> 3,  // 16
-            64 >> 3,   // len(IV) = 15-8 = 7
+            256 >> 3,        // 32
+            128 >> 3,        // 16
+            15 - (64 >> 3),  // len(IV) = 15-8 = 7
         },
     },
     {

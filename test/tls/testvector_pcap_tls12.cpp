@@ -413,7 +413,6 @@ const pcap_testvector capture_tls12_aes128gcm_sha256[] = {
         "54 40 f1 a0 c3 9a 81 fa 6d 16 03 03 00 04 0e 00"
         "00 00",
     },
-#if 0
     {
         from_client,
         "client_key_exchange, change_cipher_spec, finished",
@@ -427,7 +426,8 @@ const pcap_testvector capture_tls12_aes128gcm_sha256[] = {
         "03 e9 98 40 94 3c 28 51 8b 1d b1 8f a8",
     },
     {
-        from_server, "new_session_ticket, change_cipher_spec, finished",
+        from_server,
+        "new_session_ticket, change_cipher_spec, finished",
         "16 03 03 00 ba 04 00 00 b6 00 00 1c 20 00 b0 60"
         "a0 3d 87 d7 e1 a2 7f b2 4b 57 b5 01 cc 06 ac 77"
         "7b eb 16 e1 8c 1f 76 34 b1 c1 f7 93 1d e6 3f e6"
@@ -446,21 +446,142 @@ const pcap_testvector capture_tls12_aes128gcm_sha256[] = {
         "41 dc",
     },
     {
-        from_client, "application_data",
+        from_client,
+        "application_data",
         "17 03 03 00 1e f1 b1 d2 e2 78 b9 f2 35 09 38 1f"
         "19 29 04 b3 fe 1a 05 2a 2e ce d8 05 84 04 10 e3"
         "b9 75 44",
     },
     {
-        from_client, "alert",
+        from_client,
+        "alert",
         "15 03 03 00 1a f1 b1 d2 e2 78 b9 f2 36 cf b1 9b"
         "ea 4b f4 47 e8 c7 cc 93 fd 64 d5 dd 2d 63 cc",
     },
     {
-        from_server, "alert",
+        from_server,
+        "alert",
         "15 03 03 00 1a a8 89 ac 79 78 9b 9a 84 71 05 60"
         "9e 34 20 56 86 ca a8 df f0 d2 6b 74 40 3a 07",
     },
-#endif
 };
 const size_t sizeof_capture_tls12_aes128gcm_sha256 = RTL_NUMBER_OF(capture_tls12_aes128gcm_sha256);
+
+const pcap_testvector capture_tls12_chacha20poly1305_sha256[] = {
+    {
+        from_client,
+        "client_hello",
+        "16 03 01 00 c2 01 00 00 be 03 03 19 58 76 98 67"
+        "6b 7f e8 6d 78 56 40 51 c0 c4 4d 0d 81 23 93 95"
+        "67 da fb c0 1b bf 8f 78 b3 23 c0 00 00 38 cc a9"
+        "c0 2c c0 30 00 9f cc a9 cc a8 cc aa c0 2b c0 2f"
+        "00 9e c0 24 c0 28 00 6b c0 23 c0 27 00 67 c0 0a"
+        "c0 14 00 39 c0 09 c0 13 00 33 00 9d 00 9c 00 3d"
+        "00 3c 00 35 00 2f 01 00 00 5d ff 01 00 01 00 00"
+        "0b 00 04 03 00 01 02 00 0a 00 0c 00 0a 00 1d 00"
+        "17 00 1e 00 19 00 18 00 23 00 00 00 16 00 00 00"
+        "17 00 00 00 0d 00 30 00 2e 04 03 05 03 06 03 08"
+        "07 08 08 08 1a 08 1b 08 1c 08 09 08 0a 08 0b 08"
+        "04 08 05 08 06 04 01 05 01 06 01 03 03 03 01 03"
+        "02 04 02 05 02 06 02",
+    },
+    {
+        from_server,
+        "server_hello, certificate, server_key_exchange, server_hello_done",
+        "16 03 03 00 41 02 00 00 3d 03 03 55 fb 6e 5d be"
+        "1f 6e c9 7a 7e 30 a6 d2 28 ab c6 70 79 3a d3 f6"
+        "e5 bb a6 44 4f 57 4e 47 52 44 01 00 cc a9 00 00"
+        "15 ff 01 00 01 00 00 0b 00 04 03 00 01 02 00 23"
+        "00 00 00 17 00 00 16 03 03 02 16 0b 00 02 12 00"
+        "02 0f 00 02 0c 30 82 02 08 30 82 01 ad a0 03 02"
+        "01 02 02 14 41 4d f6 cb ca 7e 42 21 ee 06 a6 88"
+        "02 79 a4 e0 c0 48 88 92 30 0a 06 08 2a 86 48 ce"
+        "3d 04 03 02 30 59 31 0b 30 09 06 03 55 04 06 13"
+        "02 4b 52 31 0b 30 09 06 03 55 04 08 0c 02 47 47"
+        "31 0b 30 09 06 03 55 04 07 0c 02 59 49 31 0d 30"
+        "0b 06 03 55 04 0a 0c 04 54 65 73 74 31 0d 30 0b"
+        "06 03 55 04 0b 0c 04 54 65 73 74 31 12 30 10 06"
+        "03 55 04 03 0c 09 54 65 73 74 20 52 6f 6f 74 30"
+        "1e 17 0d 32 35 30 32 30 39 31 34 34 39 35 37 5a"
+        "17 0d 32 36 30 32 30 39 31 34 34 39 35 37 5a 30"
+        "59 31 0b 30 09 06 03 55 04 06 13 02 4b 52 31 0b"
+        "30 09 06 03 55 04 08 0c 02 47 47 31 0b 30 09 06"
+        "03 55 04 07 0c 02 59 49 31 0d 30 0b 06 03 55 04"
+        "0a 0c 04 54 65 73 74 31 0d 30 0b 06 03 55 04 0b"
+        "0c 04 54 65 73 74 31 12 30 10 06 03 55 04 03 0c"
+        "09 54 65 73 74 20 52 6f 6f 74 30 59 30 13 06 07"
+        "2a 86 48 ce 3d 02 01 06 08 2a 86 48 ce 3d 03 01"
+        "07 03 42 00 04 56 af c0 cb 7b 57 8e 97 f3 4a 06"
+        "2d a5 91 ca 5f ac 2a 6a 24 f2 f1 16 c2 b7 91 28"
+        "2c 3e da 87 cc c1 40 14 33 f1 c5 1a 79 cc 31 01"
+        "4a c7 f2 62 3f 28 79 00 4c e1 6c a3 cc 90 23 a8"
+        "96 c1 73 3f 04 a3 53 30 51 30 1d 06 03 55 1d 0e"
+        "04 16 04 14 03 e0 ab e4 28 de e7 2f 73 e9 e1 5f"
+        "5e 47 0d b6 5f e8 24 ff 30 1f 06 03 55 1d 23 04"
+        "18 30 16 80 14 03 e0 ab e4 28 de e7 2f 73 e9 e1"
+        "5f 5e 47 0d b6 5f e8 24 ff 30 0f 06 03 55 1d 13"
+        "01 01 ff 04 05 30 03 01 01 ff 30 0a 06 08 2a 86"
+        "48 ce 3d 04 03 02 03 49 00 30 46 02 21 00 93 6c"
+        "1f 79 f6 7b 8e 21 b8 ff 00 91 9b 01 c9 0d 66 46"
+        "a2 72 44 c2 a4 8d fe 4e 12 41 d8 7a 07 94 02 21"
+        "00 fb bc a9 86 0e eb c5 a6 74 38 5f 05 54 2a fb"
+        "d2 57 7b 76 88 d7 fc d6 e4 e2 3b 55 05 df 38 d6"
+        "8e 16 03 03 00 73 0c 00 00 6f 03 00 1d 20 29 16"
+        "0d e3 5b 2e de ae a7 9a 72 0f 5e 74 fc 60 5e ce"
+        "a7 df dc 82 83 79 b3 9b 1a da b9 dc 8f 75 04 03"
+        "00 47 30 45 02 20 22 c8 c3 7e e3 ce e2 56 14 96"
+        "78 53 45 b1 57 5a 94 ba 48 4c fd fa a3 b6 de bf"
+        "d4 04 6e 52 6d 50 02 21 00 9e 97 b0 aa 31 9d 5b"
+        "3a 0c d9 b6 f8 88 76 43 73 b5 7b 8d 8c 67 5e 31"
+        "76 08 71 90 c9 95 52 1a 8f 16 03 03 00 04 0e 00"
+        "00 00",
+    },
+    {
+        from_client, "client_key_exchange, change_cipher_spec, finished",
+        "16 03 03 00 25 10 00 00 21 20 bf 37 a9 3e a7 d9"
+        "c5 de 95 f2 c3 78 a0 e1 9a e5 b7 50 f4 2e 01 08"
+        "6f 94 e5 34 1b d1 0a 82 33 65 14 03 03 00 01 01"
+        "16 03 03 00 20 be f5 78 ab c8 59 33 50 3c cf 80"
+        "07 91 fe 3c 78 e2 af 2c 60 e7 f4 4b c7 ea 33 21"
+        "c5 9d f9 02 36",                                
+    },
+    {
+        from_server,
+        "new_session_ticket, change_cipher_spec, finished",
+        "16 03 03 00 ba 04 00 00 b6 00 00 1c 20 00 b0 45"
+        "da bd 56 b9 c1 0c 6d c1 e2 5a 87 8c ad ae 6d 0a"
+        "2e 89 89 d1 7e d8 ce ed b4 ae 88 e4 35 62 34 bf"
+        "ea 39 2c bd 82 80 0a 19 3a 3f 58 db f8 16 06 2e"
+        "7d 6d c3 a1 b8 43 c7 ca 44 01 0f f3 60 1b 69 d2"
+        "fb b8 e5 1f 8e 8c 7d b9 39 b4 5b 9a eb 14 68 78"
+        "50 c8 ea 8e d4 5b 38 2c 5b d7 46 ae 53 6c 5a 73"
+        "b9 4d 15 24 70 a2 e5 fb db 48 4e 3a dc 0d bf 84"
+        "f8 67 32 66 6b ba 42 99 6a 22 1b 74 ed 0d 95 d8"
+        "b6 ac af 8d a1 32 8e 39 46 21 2e 3b ec 09 bc 1b"
+        "8a 7b 10 ea 71 9e ac a9 20 27 78 9b 93 99 78 fb"
+        "a5 7d 9a 03 39 37 67 cd 26 a5 8d 17 c9 37 07 14"
+        "03 03 00 01 01 16 03 03 00 20 fc 96 42 59 c2 1b"
+        "ce 2a 85 75 b5 a8 ce a0 c5 71 ec 99 dd 73 47 b4"
+        "15 2a 1c 2e f7 c3 7d 34 5e 64",
+    },
+    {
+        from_client,
+        "application_data",
+        "17 03 03 00 16 ef 2f cc c0 67 46 6d 26 cd 29 b4"
+        "97 58 92 b8 44 3c 4c d3 e3 58 44",
+    },
+    {
+        from_client,
+        "alert",
+        "15 03 03 00 12 fd 7c 83 2c fd ef 75 ff f5 3d 95"
+        "17 a8 3b dc 38 72 81",
+    },
+    {
+        from_server,
+        "alert",
+        "15 03 03 00 12 14 d9 a3 06 be 23 39 a4 40 fa a8"
+        "5a 20 a8 83 78 bc 01",
+    },
+};
+
+const size_t sizeof_capture_tls12_chacha20poly1305_sha256 = RTL_NUMBER_OF(capture_tls12_chacha20poly1305_sha256);

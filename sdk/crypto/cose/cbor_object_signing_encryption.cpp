@@ -508,12 +508,7 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
         uint32 flags = hint_group->hintflags;
 
         if (cose_hint_flag_t::cose_hint_iv & flags) {
-            uint16 ivlen = 16;
-            uint16 lsize = hint->enc.lsize;
-            if (lsize) {
-                ivlen = 15 - lsize;
-            }
-
+            uint16 ivlen = hint->enc.nsize;
             prng.random(temp, ivlen);
             layer->get_unprotected().add(cose_key_t::cose_iv, temp);
         }

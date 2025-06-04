@@ -307,19 +307,19 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypto_scheme_chacha20_poly1305, chacha20, mode_poly1305, "chacha20-poly1305"},
 
     // SET_L 3, SET_IVLEN=15-L=12, AEAD_SET_TAG 16 or 8
-    {crypto_scheme_tls_aes_128_gcm, aes128, gcm, "aes-128-gcm", 3, 16},
-    {crypto_scheme_tls_aes_256_gcm, aes256, gcm, "aes-256-gcm", 3, 16},
-    {crypto_scheme_tls_aes_128_ccm, aes128, ccm, "aes-128-ccm", 3, 16},
-    {crypto_scheme_tls_aes_256_ccm, aes256, ccm, "aes-256-ccm", 3, 16},
-    {crypto_scheme_tls_aes_128_ccm_8, aes128, ccm, "aes-128-ccm", 3, 8},
-    {crypto_scheme_tls_aes_256_ccm_8, aes256, ccm, "aes-256-ccm", 3, 8},
-    {crypto_scheme_tls_chacha20_poly1305, chacha20, mode_poly1305, "chacha20-poly1305", 3, 16},
-    {crypto_scheme_tls_aria_128_gcm, aria128, gcm, "aria-128-gcm", 3, 16},
-    {crypto_scheme_tls_aria_256_gcm, aria256, gcm, "aria-256-gcm", 3, 16},
-    {crypto_scheme_tls_aria_128_ccm, aria128, ccm, "aria-128-ccm", 3, 16},
-    {crypto_scheme_tls_aria_256_ccm, aria256, ccm, "aria-256-ccm", 3, 16},
-    {crypto_scheme_tls_camellia_128_gcm, camellia128, gcm, "camellia-128-gcm", 3, 16},
-    {crypto_scheme_tls_camellia_256_gcm, camellia256, gcm, "camellia-256-gcm", 3, 16},
+    {crypto_scheme_tls_aes_128_gcm, aes128, gcm, "aes-128-gcm", 15 - 3, 16},
+    {crypto_scheme_tls_aes_256_gcm, aes256, gcm, "aes-256-gcm", 15 - 3, 16},
+    {crypto_scheme_tls_aes_128_ccm, aes128, ccm, "aes-128-ccm", 15 - 3, 16},
+    {crypto_scheme_tls_aes_256_ccm, aes256, ccm, "aes-256-ccm", 15 - 3, 16},
+    {crypto_scheme_tls_aes_128_ccm_8, aes128, ccm, "aes-128-ccm", 15 - 3, 8},
+    {crypto_scheme_tls_aes_256_ccm_8, aes256, ccm, "aes-256-ccm", 15 - 3, 8},
+    {crypto_scheme_tls_chacha20_poly1305, chacha20, mode_poly1305, "chacha20-poly1305", 15 - 3, 16},
+    {crypto_scheme_tls_aria_128_gcm, aria128, gcm, "aria-128-gcm", 15 - 3, 16},
+    {crypto_scheme_tls_aria_256_gcm, aria256, gcm, "aria-256-gcm", 15 - 3, 16},
+    {crypto_scheme_tls_aria_128_ccm, aria128, ccm, "aria-128-ccm", 15 - 3, 16},
+    {crypto_scheme_tls_aria_256_ccm, aria256, ccm, "aria-256-ccm", 15 - 3, 16},
+    {crypto_scheme_tls_camellia_128_gcm, camellia128, gcm, "camellia-128-gcm", 15 - 3, 16},
+    {crypto_scheme_tls_camellia_256_gcm, camellia256, gcm, "camellia-256-gcm", 15 - 3, 16},
 };
 
 const size_t sizeof_evp_cipher_methods = RTL_NUMBER_OF(evp_cipher_methods);
