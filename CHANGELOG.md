@@ -25,7 +25,8 @@
     * CBOR
 
 * details
-  * Revision 787
+  * Revision 788
+    * [tested] TLS 1.2 AEAD (GCM, CCM)
   * Revision 785 (Tag 1.29)
   * Revision 784
     * [tested] CCM_8

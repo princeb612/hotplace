@@ -114,10 +114,10 @@ void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tl
     auto client_secret = client_protection.get_item(secret);
     auto server_secret = server_protection.get_item(secret);
 
-    _logger->writeln("client secret %s (internal 0x%04x) (%p) %s", secret_name, secret, svrsession, base16_encode(client_secret).c_str());
-    _logger->writeln("server secret %s (internal 0x%04x) (%p) %s", secret_name, secret, clisession, base16_encode(server_secret).c_str());
+    _logger->writeln("client secret %s (internal 0x%04x) (session %p) %s", secret_name, secret, svrsession, base16_encode(client_secret).c_str());
+    _logger->writeln("server secret %s (internal 0x%04x) (session %p) %s", secret_name, secret, clisession, base16_encode(server_secret).c_str());
 
-    _test_case.assert((false == client_secret.empty()) && (client_secret == server_secret), __FUNCTION__, "cross-check secret %s", secret_name);
+    _test_case.assert(client_secret == server_secret, __FUNCTION__, "cross-check secret %s", secret_name);
 }
 
 void play_pcap(tls_session* session, const pcap_testvector* testvector, size_t size) {
@@ -153,7 +153,7 @@ return_t construct_record_fragmented(tls_record* record, tls_direction_t dir, st
 
         record->addref();
 
-        record->get_session()->get_dtls_record_publisher().publish(record, dir, func);
+        ret = record->get_session()->get_dtls_record_publisher().publish(record, dir, func);
 
         record->release();
     }

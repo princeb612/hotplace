@@ -537,13 +537,14 @@ const pcap_testvector capture_tls12_chacha20poly1305_sha256[] = {
         "00 00",
     },
     {
-        from_client, "client_key_exchange, change_cipher_spec, finished",
+        from_client,
+        "client_key_exchange, change_cipher_spec, finished",
         "16 03 03 00 25 10 00 00 21 20 bf 37 a9 3e a7 d9"
         "c5 de 95 f2 c3 78 a0 e1 9a e5 b7 50 f4 2e 01 08"
         "6f 94 e5 34 1b d1 0a 82 33 65 14 03 03 00 01 01"
         "16 03 03 00 20 be f5 78 ab c8 59 33 50 3c cf 80"
         "07 91 fe 3c 78 e2 af 2c 60 e7 f4 4b c7 ea 33 21"
-        "c5 9d f9 02 36",                                
+        "c5 9d f9 02 36",
     },
     {
         from_server,

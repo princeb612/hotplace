@@ -229,7 +229,6 @@ void test_helloretryrequest() {
     tls_flow_t flow;
     std::string flow_status;
     basic_stream step;
-    binary_t bin;
 
     // enforce server key share group 0x001d "x25519"
     session_server.get_keyvalue().set(session_conf_enforce_key_share_group, 0x001d);
@@ -242,6 +241,7 @@ void test_helloretryrequest() {
 
     {
         // client hello
+        binary_t bin;
         step.clear();
         step << flow_status << " client hello";
         do_test_construct_client_hello(&session_client, from_client, "secp256r1", bin, step.c_str());
@@ -257,6 +257,7 @@ void test_helloretryrequest() {
     {
         // server hello
         // MUST be HelloRetryRequest
+        binary_t bin;
         step.clear();
         step << flow_status << " server hello";
         do_test_construct_server_hello(&session_server, &session_client, from_server, bin, step.c_str());
@@ -278,6 +279,7 @@ void test_helloretryrequest() {
     {
         // client hello
         // "x25519"
+        binary_t bin;
         step.clear();
         step << flow_status << " client hello";
         do_test_construct_client_hello(&session_client, from_client, "x25519", bin, step.c_str());
@@ -292,6 +294,7 @@ void test_helloretryrequest() {
 
     {
         // server hello
+        binary_t bin;
         step.clear();
         step << flow_status << " server hello";
         do_test_construct_server_hello(&session_server, &session_client, from_server, bin, step.c_str());

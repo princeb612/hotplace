@@ -36,14 +36,14 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
 
         // cipher suites
         {
-            *handshake << "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
-                       << "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"
-                       << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM"
-                       << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"
-                       << "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
-                       << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
-                       << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
-                       << "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384";
+            *handshake  // << "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+                        // << "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"
+                        // << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM"
+                        // << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"
+                        // << "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
+                << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
+                << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
+                << "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384";
         }
 
         {
@@ -104,7 +104,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
             tls_record_handshake record(session);
             record << handshake;
 
-            construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+            ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
         }
 
         std::string dirstr;
@@ -128,7 +128,7 @@ static return_t do_test_construct_hello_verify_request(tls_session* session, tls
         tls_record_handshake record(session);
         record << handshake;
 
-        construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+        ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
     }
 
     std::string dirstr;
@@ -194,7 +194,7 @@ static return_t do_test_construct_server_hello(tls_session* session, tls_session
             tls_record_handshake record(session);
             record << handshake;
 
-            construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+            ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
         }
 
         std::string dirstr;
@@ -211,7 +211,7 @@ static return_t do_test_construct_certificate(tls_session* session, tls_directio
     auto handshake = new tls_handshake_certificate(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+    ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -227,7 +227,7 @@ static return_t do_test_construct_server_key_exchange(tls_session* session, tls_
     auto handshake = new tls_handshake_server_key_exchange(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+    ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -243,7 +243,7 @@ static return_t do_test_construct_server_hello_done(tls_session* session, tls_di
     auto handshake = new tls_handshake_server_hello_done(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+    ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -259,7 +259,7 @@ static return_t do_test_construct_client_key_exchange(tls_session* session, tls_
     auto handshake = new tls_handshake_client_key_exchange(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+    ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -273,7 +273,7 @@ static return_t do_test_construct_change_cipher_spec(tls_session* session, tls_d
 
     tls_record_change_cipher_spec record(session);
 
-    construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+    ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -289,7 +289,7 @@ static return_t do_test_construct_finished(tls_session* session, tls_direction_t
     auto handshake = new tls_handshake_finished(session);
     record << handshake;
 
-    construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
+    ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
 
     std::string dirstr;
     direction_string(dir, 0, dirstr);
@@ -372,103 +372,184 @@ void test_construct_dtls12_1() {
                           hsseq);
     };
 
-    // C->S, record epoch 0, sequence 0..1, handshake sequence 0
-    do_test_construct_client_hello(&session_client, from_client, "client hello");
-    do_test_send_record(&session_server, from_client, "client hello");
-    lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 2, 1);
-    lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 1, 0);
+    return_t ret = errorcode_t::success;
 
-    // S->C, record epoch 0, sequence 0, handshake sequence 0
-    do_test_construct_hello_verify_request(&session_server, from_server, "hello verify request");
-    do_test_send_record(&session_client, from_server, "hello verify request");
-    lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 1, 1);
-    lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 0, 0);
+    __try2 {
+        // C->S, record epoch 0, sequence 0..1, handshake sequence 0
+        ret = do_test_construct_client_hello(&session_client, from_client, "client hello");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_test_send_record(&session_server, from_client, "client hello");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 2, 1);
+        lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 1, 0);
 
-    // C->S, record epoch 0, sequence 2..3, handshake sequence 1
-    do_test_construct_client_hello(&session_client, from_client, "client hello");
-    do_test_send_record(&session_server, from_client, "client hello");
-    lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 4, 2);
-    lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 3, 1);
+        // S->C, record epoch 0, sequence 0, handshake sequence 0
+        ret = do_test_construct_hello_verify_request(&session_server, from_server, "hello verify request");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_test_send_record(&session_client, from_server, "hello verify request");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 1, 1);
+        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 0, 0);
 
-    // S->C, record epoch 0, sequence 1, handshake sequence 1
-    do_test_construct_server_hello(&session_server, &session_client, from_server, "server hello");
-    do_test_send_record(&session_client, from_server, "server hello");
-    lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 2, 2);
-    lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 1, 1);
+        // C->S, record epoch 0, sequence 2..3, handshake sequence 1
+        ret = do_test_construct_client_hello(&session_client, from_client, "client hello");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_test_send_record(&session_server, from_client, "client hello");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 4, 2);
+        lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 3, 1);
 
-    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
-    do_cross_check_keycalc(&session_client, &session_server, tls_context_client_hello_random, "tls_context_client_hello_random");
-    do_cross_check_keycalc(&session_client, &session_server, tls_context_server_hello_random, "tls_context_server_hello_random");
-    do_cross_check_keycalc(&session_client, &session_server, tls_context_empty_hash, "tls_context_empty_hash");
-    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+        // S->C, record epoch 0, sequence 1, handshake sequence 1
+        ret = do_test_construct_server_hello(&session_server, &session_client, from_server, "server hello");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_test_send_record(&session_client, from_server, "server hello");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 2, 2);
+        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 1, 1);
 
-    // S->C, record epoch 0, sequence 2..8, handshake sequence 2
-    do_test_construct_certificate(&session_server, from_server, "certificate");
-    do_test_send_record(&session_client, from_server, "certificate");
-    lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 9, 3);
-    lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 8, 2);
+        do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+        do_cross_check_keycalc(&session_client, &session_server, tls_context_client_hello_random, "tls_context_client_hello_random");
+        do_cross_check_keycalc(&session_client, &session_server, tls_context_server_hello_random, "tls_context_server_hello_random");
+        do_cross_check_keycalc(&session_client, &session_server, tls_context_empty_hash, "tls_context_empty_hash");
+        do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
-    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+        // S->C, record epoch 0, sequence 2..8, handshake sequence 2
+        ret = do_test_construct_certificate(&session_server, from_server, "certificate");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_test_send_record(&session_client, from_server, "certificate");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 9, 3);
+        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 8, 2);
 
-    // S->C, record epoch 0, sequence 9..11, handshake sequence 3
-    do_test_construct_server_key_exchange(&session_server, from_server, "server key exchange");
-    do_test_send_record(&session_client, from_server, "server key exchange");
-    lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 12, 4);
-    lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 11, 3);
+        do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
-    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+        // S->C, record epoch 0, sequence 9..11, handshake sequence 3
+        ret = do_test_construct_server_key_exchange(&session_server, from_server, "server key exchange");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_test_send_record(&session_client, from_server, "server key exchange");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 12, 4);
+        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 11, 3);
 
-    // S->C, record epoch 0, sequence 12, handshake sequence 4
-    do_test_construct_server_hello_done(&session_server, from_server, "server hello done");
-    do_test_send_record(&session_client, from_server, "server hello done");
-    lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 13, 5);
-    lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 12, 4);
+        do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
-    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+        // S->C, record epoch 0, sequence 12, handshake sequence 4
+        ret = do_test_construct_server_hello_done(&session_server, from_server, "server hello done");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_test_send_record(&session_client, from_server, "server hello done");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 13, 5);
+        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 12, 4);
 
-    // C->S, record epoch 0, sequence 4, handshake sequence 2
-    do_test_construct_client_key_exchange(&session_client, from_client, "client key exchange");
-    do_test_send_record(&session_server, from_client, "client key exchange");
-    lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 5, 3);
-    lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 4, 2);
+        do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
-    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
-    do_cross_check_keycalc(&session_client, &session_server, tls_secret_server_key, "tls_secret_server_key");
-    do_cross_check_keycalc(&session_client, &session_server, tls_secret_server_mac_key, "tls_secret_server_mac_key");
-    do_cross_check_keycalc(&session_client, &session_server, tls_secret_client_key, "tls_secret_client_key");
-    do_cross_check_keycalc(&session_client, &session_server, tls_secret_client_mac_key, "tls_secret_client_mac_key");
+        // C->S, record epoch 0, sequence 4, handshake sequence 2
+        ret = do_test_construct_client_key_exchange(&session_client, from_client, "client key exchange");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_test_send_record(&session_server, from_client, "client key exchange");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 5, 3);
+        lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 4, 2);
 
-    // C->S, record epoch 0, sequence 5, change cipher spec
-    do_test_construct_change_cipher_spec(&session_client, from_client, "change cipher spec");
-    do_test_send_record(&session_server, from_client, "change cipher spec");
-    lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 1, 0, 3);
+        do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_server_key, "tls_secret_server_key");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_server_mac_key, "tls_secret_server_mac_key");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_client_key, "tls_secret_client_key");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_client_mac_key, "tls_secret_client_mac_key");
 
-    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+        // C->S, record epoch 0, sequence 5, change cipher spec
+        ret = do_test_construct_change_cipher_spec(&session_client, from_client, "change cipher spec");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_test_send_record(&session_server, from_client, "change cipher spec");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 1, 0, 3);
 
-    // C->S, record epoch 1, sequence 0, handshake sequence 3
-    do_test_construct_finished(&session_client, from_client, "finished");
-    do_test_send_record(&session_server, from_client, "finished");
-    lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 1, 1, 4);
-    lambda_test_seq(__FUNCTION__, &session_server, from_client, 1, 0, 3);
+        do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
-    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+        // C->S, record epoch 1, sequence 0, handshake sequence 3
+        ret = do_test_construct_finished(&session_client, from_client, "finished");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_test_send_record(&session_server, from_client, "finished");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 1, 1, 4);
+        lambda_test_seq(__FUNCTION__, &session_server, from_client, 1, 0, 3);
 
-    // S->C, record epoch 0, sequence 13, change cipher spec
-    do_test_construct_change_cipher_spec(&session_server, from_server, "change cipher spec");
-    do_test_send_record(&session_client, from_server, "change cipher spec");
-    lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 1, 0, 5);
+        do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
-    // S->C, record epoch 1, sequence 0, handshake sequence 5
-    do_test_construct_finished(&session_server, from_server, "finished");
-    do_test_send_record(&session_client, from_server, "finished");
-    lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 1, 1, 6);
-    lambda_test_seq(__FUNCTION__, &session_client, from_server, 1, 0, 5);
+        // S->C, record epoch 0, sequence 13, change cipher spec
+        ret = do_test_construct_change_cipher_spec(&session_server, from_server, "change cipher spec");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_test_send_record(&session_client, from_server, "change cipher spec");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 1, 0, 5);
 
-    do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
-    do_cross_check_keycalc(&session_client, &session_server, tls_secret_res_master, "tls_secret_res_master");
-    do_cross_check_keycalc(&session_client, &session_server, tls_secret_resumption, "tls_secret_resumption");
+        // S->C, record epoch 1, sequence 0, handshake sequence 5
+        ret = do_test_construct_finished(&session_server, from_server, "finished");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_test_send_record(&session_client, from_server, "finished");
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 1, 1, 6);
+        lambda_test_seq(__FUNCTION__, &session_client, from_server, 1, 0, 5);
 
-    // skip followings
-    // - application data
-    // - alert close_notify
+        do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_res_master, "tls_secret_res_master");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_resumption, "tls_secret_resumption");
+
+        // skip followings
+        // - application data
+        // - alert close_notify
+    }
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            _test_case.test(ret, __FUNCTION__, "DTLS 1.2 construction");
+        }
+    }
 }

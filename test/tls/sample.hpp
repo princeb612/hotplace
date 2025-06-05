@@ -82,6 +82,8 @@ extern const pcap_testvector pcap_dtls12[];
 extern const size_t sizeof_pcap_dtls12;
 extern const pcap_testvector pcap_dtls12_mtu1500[];
 extern const size_t sizeof_pcap_dtls12_mtu1500;
+extern const pcap_testvector pcap_dtls12_aes128gcm[];
+extern const size_t sizeof_pcap_dtls12_aes128gcm;
 
 // RFC
 void test_rfc8448_2();

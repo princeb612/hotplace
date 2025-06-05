@@ -179,15 +179,11 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                             } break;
                         }
 
-#define SWITCH_ENFORCE_CBC_FOR_TEST
-
-#if defined SWITCH_ENFORCE_CBC_FOR_TEST
                         auto hint_cipher = advisor->hintof_cipher(hint->scheme);
-                        if (cbc != hint_cipher->mode) {
-                            candidate = cs;
+                        if (mode_poly1305 == hint_cipher->mode) {
+                            // understanding
                             continue;
                         }
-#endif
                     }
 
                     if (check_trace_level(loglevel_debug) && istraceable()) {
@@ -201,14 +197,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                     break;
                 }
             }
-#if defined SWITCH_ENFORCE_CBC_FOR_TEST
-            if (_cipher_suites.empty()) {
-                if (candidate) {
-                    add_cipher_suite(candidate);
-                    set_cipher_suite(candidate);
-                }
-            }
-#endif
+
             if (_cipher_suites.empty()) {
                 session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();

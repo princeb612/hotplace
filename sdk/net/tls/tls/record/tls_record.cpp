@@ -589,14 +589,14 @@ return_t tls_record::write_aad(tls_session* session, tls_direction_t dir, binary
                 set_nonce_explicit = true;
 
                 // CCM, GCM
-                len = bodysize + tagsize;
+                len = bodysize;
 
                 // sketch ...
                 // tls_context_nonce_explicit 12-octet
-                // openssl_prng prng;
-                // binary_t temp;
-                // prng.random(temp, 12);
-                // protection.set_item(tls_context_nonce_explicit, temp);
+                openssl_prng prng;
+                binary_t temp;
+                prng.random(temp, 8);
+                protection.set_item(tls_context_nonce_explicit, temp);
             } else if (mode_poly1305) {
                 len = bodysize + tagsize;
             }

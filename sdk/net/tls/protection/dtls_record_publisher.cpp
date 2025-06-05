@@ -85,31 +85,37 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                 auto lambda_handshake = [&](tls_handshake* handshake) -> return_t {
                     return_t ret = errorcode_t::success;
                     binary_t bin;
-                    // generate body + update transcript hash
-                    handshake->write(dir, bin);
-                    // and now trim handshake header
-                    bin.erase(bin.begin(), bin.begin() + hdrsize);
+                    __try2 {
+                        // generate body + update transcript hash
+                        ret = handshake->write(dir, bin);
+                        if (errorcode_t::success != ret) {
+                            __leave2;
+                        }
+                        // and now trim handshake header
+                        bin.erase(bin.begin(), bin.begin() + hdrsize);
 
-                    auto hstype = handshake->get_type();
+                        auto hstype = handshake->get_type();
 
-                    spl_desc desc;
-                    desc.hstype = hstype;
-                    desc.hsseq = hsseq;
+                        spl_desc desc;
+                        desc.hstype = hstype;
+                        desc.hsseq = hsseq;
 
 #if defined DEBUG
-                    if (check_trace_level(loglevel_debug) && istraceable()) {
-                        basic_stream dbs;
-                        dbs.printf("\e[1;36m");
-                        dbs.println("# publish %s %i %s", tlsadvisor->handshake_type_string(hstype).c_str(), hsseq,
-                                    tlsadvisor->nameof_direction(dir, true).c_str());
-                        dbs.printf("\e[0m");
-                        dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
-                        trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
-                    }
+                        if (check_trace_level(loglevel_debug) && istraceable()) {
+                            basic_stream dbs;
+                            dbs.printf("\e[1;36m");
+                            dbs.println("# publish %s %i %s", tlsadvisor->handshake_type_string(hstype).c_str(), hsseq,
+                                        tlsadvisor->nameof_direction(dir, true).c_str());
+                            dbs.printf("\e[0m");
+                            dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
+                            trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+                        }
 #endif
-                    spl.add(std::move(bin), std::move(desc));
+                        spl.add(std::move(bin), std::move(desc));
 
-                    ++hsseq;
+                        ++hsseq;
+                    }
+                    __finally2 {}
                     return ret;
                 };
 

@@ -36,6 +36,7 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte
                     add(record);
                 } else {
                     record->release();
+                    break;
                 }
             }
         }
