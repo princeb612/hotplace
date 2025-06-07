@@ -296,6 +296,17 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         auto lambda = [&](const binary_t& bin) { arrange.produce(&bin[0], bin.size()); };
         _traffic.consume(lambda);
 
+        bool has_fatal = false;
+        auto lambda_test_fatal_alert = [&](uint8 level, uint8 desc) -> void {
+            if (tls_alertlevel_fatal == level) {
+                has_fatal = true;
+            }
+        };
+        session->get_alert(dir, lambda_test_fatal_alert);
+        if (has_fatal) {
+            __leave2;
+        }
+
         // arrange
         binary_t bin;
         uint16 epoch = 0;

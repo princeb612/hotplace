@@ -81,4 +81,54 @@ void test_tls12_aead_aes128gcm() {
     }
 }
 
-void test_tls12_aead() { test_tls12_aead_aes128gcm(); }
+void test_tls12_aead_chacha20poly1305() {
+    _test_case.begin("TLS 1.2 chacha20-poly1305");
+
+    return_t ret = errorcode_t::success;
+    tls_session session;
+    uint16 cs = 0xcca9;  // TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+    auto dir = from_client;
+
+    auto& protection = session.get_tls_protection();
+    protection.set_cipher_suite(cs);
+    protection.set_tls_version(tls_12);
+
+    {
+        binary_t client_hello_random = std::move(base16_decode("19587698676b7fe86d78564051c0c44d0d8123939567dafbc01bbf8f78b323c0"));
+        binary_t server_hello_random = std::move(base16_decode("55fb6e5dbe1f6ec97a7e30a6d228abc670793ad3f6e5bba6444f574e47524401"));
+        binary_t secret_master = std::move(base16_decode("6525943d87978a14a4553a956b6f71501d0cbfd97aa856ce69b9aca4a7b5c1209d663b389778393170e9e4c068e51843"));
+
+        ret = protection.calc_keyblock(sha2_256, secret_master, client_hello_random, server_hello_random, cs);
+
+        auto lambda_test_secret = [&](tls_secret_t secret, const char* value) -> return_t {
+            const binary_t& bin_secret = protection.get_item(secret);
+            binary_t bin_value = std::move(base16_decode(value));
+            return (bin_secret == bin_value) ? success : mismatch;
+        };
+
+        ret = lambda_test_secret(tls_secret_client_key, "4b403a5ecddb11ca66b808b90086a530ca1b0137a37db67b432dbf83e335f28a");
+        _test_case.test(ret, __FUNCTION__, "secret_client_key");
+        ret = lambda_test_secret(tls_secret_client_iv, "6918cfa52543e1f8");
+        _test_case.test(ret, __FUNCTION__, "secret_client_iv");
+    }
+
+    // 0x16    0x03    0x03    0x00    0x20
+    // 0xbe    0xf5    0x78    0xab    0xc8    0x59    0x33    0x50
+    // 0x3c    0xcf    0x80    0x07    0x91    0xfe    0x3c    0x78
+    // 0xe2    0xaf    0x2c    0x60    0xe7    0xf4    0x4b    0xc7
+    // 0xea    0x33    0x21    0xc5    0x9d    0xf9    0x02    0x36
+
+    {
+        binary_t ciphertext = std::move(base16_decode("1603030020bef578abc85933503ccf800791fe3c78e2af2c60e7f44bc7ea3321c59df90236"));
+        binary_t plaintext;
+
+        ret = protection.decrypt(&session, dir, &ciphertext[0], ciphertext.size(), 0, plaintext);
+
+        _test_case.test(ret, __FUNCTION__, "decrypt");
+    }
+}
+
+void test_tls12_aead() {
+    test_tls12_aead_aes128gcm();
+    // test_tls12_aead_chacha20poly1305();
+}

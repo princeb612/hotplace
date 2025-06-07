@@ -17,7 +17,7 @@
 
 static udp_traffic _traffic;
 
-static return_t do_test_construct_client_hello(tls_session* session, tls_direction_t dir, const char* message) {
+static return_t do_test_construct_client_hello(const char* ciphersuite, tls_session* session, tls_direction_t dir, const char* message) {
     return_t ret = errorcode_t::success;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     tls_handshake_client_hello* handshake = nullptr;
@@ -35,16 +35,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
         }
 
         // cipher suites
-        {
-            *handshake  // << "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
-                        // << "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"
-                        // << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM"
-                        // << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"
-                        // << "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
-                << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
-                << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
-                << "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384";
-        }
+        *handshake << ciphersuite;
 
         {
             auto renegotiation_info = new tls_extension_renegotiation_info(session);
@@ -315,6 +306,17 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         auto lambda = [&](const binary_t& bin) { arrange.produce(&bin[0], bin.size()); };
         _traffic.consume(lambda);
 
+        bool has_fatal = false;
+        auto lambda_test_fatal_alert = [&](uint8 level, uint8 desc) -> void {
+            if (tls_alertlevel_fatal == level) {
+                has_fatal = true;
+            }
+        };
+        session->get_alert(dir, lambda_test_fatal_alert);
+        if (has_fatal) {
+            __leave2;
+        }
+
         // arrange
         binary_t bin;
         uint16 epoch = 0;
@@ -342,8 +344,8 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
     return ret;
 }
 
-void test_construct_dtls12_1() {
-    _test_case.begin("construct DTLS 1.2");
+void do_test_construct_dtls12_1(const char* ciphersuite) {
+    _test_case.begin("construct DTLS 1.2 %s", ciphersuite);
 
     tls_session session_client(session_type_dtls);
     tls_session session_server(session_type_dtls);
@@ -352,6 +354,7 @@ void test_construct_dtls12_1() {
     session_server.get_dtls_record_publisher().set_fragment_size(128);
 
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    uint32 idx = 0;
 
     auto lambda_test_next_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_next_rcseq,
                                     uint16 expect_next_hsseq) -> void {
@@ -359,8 +362,8 @@ void test_construct_dtls12_1() {
         uint64 next_rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
         uint16 next_hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
         bool test = (expect_epoch == rcepoch) && (expect_next_hsseq == next_hsseq) && (expect_next_hsseq == next_hsseq);
-        _test_case.assert(test, func, "%s record (epoch %i next sequence %I64i) handshake (next sequence %i)", tlsadvisor->nameof_direction(dir).c_str(),
-                          rcepoch, next_rcseq, next_hsseq);
+        _test_case.assert(test, func, "#%i %s record (epoch %i next sequence %I64i) handshake (next sequence %i)", idx++,
+                          tlsadvisor->nameof_direction(dir).c_str(), rcepoch, next_rcseq, next_hsseq);
     };
     auto lambda_test_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_rcseq,
                                uint16 expect_hsseq) -> void {
@@ -368,15 +371,15 @@ void test_construct_dtls12_1() {
         uint64 rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
         uint16 hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
         bool test = (expect_epoch == rcepoch) && (expect_hsseq == hsseq) && (expect_hsseq == hsseq);
-        _test_case.assert(test, func, "%s record (epoch %i sequence %I64i) handshake (sequence %i)", tlsadvisor->nameof_direction(dir).c_str(), rcepoch, rcseq,
-                          hsseq);
+        _test_case.assert(test, func, "#%i %s record (epoch %i sequence %I64i) handshake (sequence %i)", idx++, tlsadvisor->nameof_direction(dir).c_str(),
+                          rcepoch, rcseq, hsseq);
     };
 
     return_t ret = errorcode_t::success;
 
     __try2 {
         // C->S, record epoch 0, sequence 0..1, handshake sequence 0
-        ret = do_test_construct_client_hello(&session_client, from_client, "client hello");
+        ret = do_test_construct_client_hello(ciphersuite, &session_client, from_client, "client hello");
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -384,8 +387,8 @@ void test_construct_dtls12_1() {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 2, 1);
-        lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 1, 0);
+        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 2, 1);  // #0
+        lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 1, 0);       // #1
 
         // S->C, record epoch 0, sequence 0, handshake sequence 0
         ret = do_test_construct_hello_verify_request(&session_server, from_server, "hello verify request");
@@ -400,7 +403,7 @@ void test_construct_dtls12_1() {
         lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 0, 0);
 
         // C->S, record epoch 0, sequence 2..3, handshake sequence 1
-        ret = do_test_construct_client_hello(&session_client, from_client, "client hello");
+        ret = do_test_construct_client_hello(ciphersuite, &session_client, from_client, "client hello");
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -552,4 +555,23 @@ void test_construct_dtls12_1() {
             _test_case.test(ret, __FUNCTION__, "DTLS 1.2 construction");
         }
     }
+}
+
+void test_construct_dtls12_1() {
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384");
+    do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256");
+    do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384");
+
+#if 0
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_128_CCM");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_256_CCM");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8");
+    // do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256");
+#endif
 }

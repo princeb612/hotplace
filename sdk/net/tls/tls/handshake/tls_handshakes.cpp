@@ -106,13 +106,13 @@ return_t tls_handshakes::add(tls_handshake* handshake, bool upref) {
 
         auto type = handshake->get_type();
         auto iter = _dictionary.find(type);
-        if (_dictionary.end() == iter) {
-            _dictionary.insert({type, handshake});
-            _handshakes.push_back(handshake);
-        } else {
-            handshake->release();
-            ret = errorcode_t::already_exist;
+        if (_dictionary.end() != iter) {
+            auto older = iter->second;
+            older->release();
+            _dictionary.erase(iter);
         }
+        _dictionary.insert({type, handshake});
+        _handshakes.push_back(handshake);
     }
     return ret;
 }

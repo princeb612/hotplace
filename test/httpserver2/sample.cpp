@@ -34,6 +34,7 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-e", "allow Content-Encoding", [](OPTION& o, char* param) -> void { o.content_encoding = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, char* param) -> void { o.trace_level = atoi(param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
 
@@ -52,10 +53,13 @@ int main(int argc, char** argv) {
     _logger.make_share(builder.build());
     _logger->setcolor(bold, cyan);
 
-    if (option.debug) {
+    if (option.debug || option.trace_level) {
         auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void { _logger->write(s); };
         set_trace_debug(lambda_tracedebug);
         set_trace_option(trace_bt | trace_except | trace_debug);
+    }
+    if (option.trace_level) {
+        set_trace_level(option.trace_level);
     }
 
     if (option.run) {

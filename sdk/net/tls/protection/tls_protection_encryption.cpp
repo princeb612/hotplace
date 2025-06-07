@@ -9,6 +9,8 @@
  */
 
 #include <sdk/base/basic/binary.hpp>
+#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/cipher_encrypt.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
@@ -20,9 +22,6 @@
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
-// debug
-#include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {
 namespace net {
@@ -689,7 +688,6 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         const binary_t &iv = get_item(secret_iv);
         binary_t tls12_aad;
         binary_t nonce;
-        size_t size_nonce_explicit = 8;
         auto alg = typeof_alg(hint_cipher);
         auto mode = typeof_mode(hint_cipher);
 
@@ -710,9 +708,9 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
                  *       is sending).
                  */
 
-                binary_t temp;
-                openssl_chacha20_iv(temp, 0, &iv[0], iv.size());  // little_endian_uint32(0) || iv(8)
-                build_iv(session, nonce, temp, record_no);
+                // binary_t temp;
+                // openssl_chacha20_iv(temp, 0, &iv[0], iv.size());  // little_endian_uint32(0) || iv(8)
+                build_iv(session, nonce, iv, record_no);
             } else if (ccm == mode || gcm == mode) {
                 /**
                  * RFC 5246 6.2.3.3.  AEAD Ciphers
@@ -728,6 +726,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
                  *      opaque nonce_explicit[8];
                  *   } GCMNonce;
                  */
+                size_t size_nonce_explicit = 8;
                 binary_append(nonce, iv);
                 binary_append(nonce, stream + pos, size_nonce_explicit);
 

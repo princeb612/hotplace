@@ -9,6 +9,8 @@
  */
 
 #include <sdk/base/basic/binary.hpp>
+#include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_aead.hpp>
@@ -23,9 +25,6 @@
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
-// debug
-#include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {
 namespace net {
@@ -670,7 +669,7 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
                     ivsize = sizeof_iv(hint_blockcipher);
                 } break;
                 case mode_poly1305: {
-                    ivsize = 8;  // counter 0 || fixed iv 8
+                    ivsize = 12;
                 } break;
                 case ccm:
                 case gcm: {
@@ -738,13 +737,17 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
                 dbs.println("> server_hello_random %s", base16_encode(server_hello_random).c_str());
                 dbs.println("> keyblock %s", base16_encode(p).c_str());
                 if (is_cbc) {
-                    dbs.println("> secret_client_mac_key[%08x] %s", tls_secret_client_mac_key, base16_encode(secret_client_mac_key).c_str());
-                    dbs.println("> secret_server_mac_key[%08x] %s", tls_secret_server_mac_key, base16_encode(secret_server_mac_key).c_str());
+                    dbs.println("> secret_client_mac_key[%08x] %s (%zi-octet)", tls_secret_client_mac_key, base16_encode(secret_client_mac_key).c_str(),
+                                secret_client_mac_key.size());
+                    dbs.println("> secret_server_mac_key[%08x] %s (%zi-octet)", tls_secret_server_mac_key, base16_encode(secret_server_mac_key).c_str(),
+                                secret_server_mac_key.size());
                 }
-                dbs.println("> secret_client_key[%08x] %s", tls_secret_client_key, base16_encode(secret_client_key).c_str());
-                dbs.println("> secret_server_key[%08x] %s", tls_secret_server_key, base16_encode(secret_server_key).c_str());
-                dbs.println("> secret_client_iv[%08x] %s", tls_secret_client_iv, base16_encode(secret_client_iv).c_str());
-                dbs.println("> secret_server_iv[%08x] %s", tls_secret_server_iv, base16_encode(secret_server_iv).c_str());
+                dbs.println("> secret_client_key[%08x] %s (%zi-octet)", tls_secret_client_key, base16_encode(secret_client_key).c_str(),
+                            secret_client_key.size());
+                dbs.println("> secret_server_key[%08x] %s (%zi-octet)", tls_secret_server_key, base16_encode(secret_server_key).c_str(),
+                            secret_server_key.size());
+                dbs.println("> secret_client_iv[%08x] %s (%zi-octet)", tls_secret_client_iv, base16_encode(secret_client_iv).c_str(), secret_client_iv.size());
+                dbs.println("> secret_server_iv[%08x] %s (%zi-octet)", tls_secret_server_iv, base16_encode(secret_server_iv).c_str(), secret_server_iv.size());
                 dbs.printf("\e[0m");
                 trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
             }

@@ -81,13 +81,13 @@ return_t tls_extensions::add(tls_extension* extension, bool upref) {
 
         auto type = extension->get_type();
         auto iter = _dictionary.find(type);
-        if (_dictionary.end() == iter) {
-            _dictionary.insert({type, extension});
-            _extensions.push_back(extension);
-        } else {
-            extension->release();
-            ret = errorcode_t::already_exist;
+        if (_dictionary.end() != iter) {
+            auto older = iter->second;
+            older->release();
+            _dictionary.erase(iter);
         }
+        _dictionary.insert({type, extension});
+        _extensions.push_back(extension);
     }
     return ret;
 }

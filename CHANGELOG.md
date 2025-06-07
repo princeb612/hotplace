@@ -25,8 +25,10 @@
     * CBOR
 
 * details
+  * Revision 789
+    * [fixed] key_share
   * Revision 788
-    * [tested] TLS 1.2 AEAD (GCM, CCM)
+    * [tested] TLS 1.2 ciphersuites (GCM)
   * Revision 785 (Tag 1.29)
   * Revision 784
     * [tested] CCM_8
@@ -36,12 +38,10 @@
     * [fixed] AEAD_AES_128_CCM, AEAD_AES_256_CCM
   * Revision 781
     * [tested] DTLS fragmentation
-  * Revision 780
-    * [tested] TLS 1.3 server feature
   * Revision 779
-    * [fixed] server_key_exchange, rs2der
+    * [fixed] server_key_exchange, ECDSA DER format
     * [tested] extended_master_secret
-    * [tested] TLS 1.2 server feature (support CBC only - not AEAD yet)
+    * [tested] TLS 1.2 ciphersuites (CBC)
   * Revision 778
     * [tested] server certificates
   * Revision 777

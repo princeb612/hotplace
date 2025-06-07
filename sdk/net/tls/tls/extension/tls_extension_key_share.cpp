@@ -159,8 +159,8 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
         // RFC 8446 4.2.8.  Key Share
         // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_dhe_ke)
 
+        size_t limit = endpos_extension();
         uint16 len = 0;
-        uint16 group = 0;
 
         //  struct {
         //      NamedGroup group;
@@ -172,52 +172,48 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
         //  } KeyShareClientHello;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_len) << new payload_member(uint16(0), true, constexpr_group)
-               << new payload_member(uint16(0), true, constexpr_pubkey_len) << new payload_member(binary_t(), constexpr_pubkey);
-            pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
-            pl.read(stream, endpos_extension(), pos);
-
+            pl << new payload_member(uint16(0), true, constexpr_len);
+            pl.read(stream, limit, pos);
             len = pl.t_value_of<uint16>(constexpr_len);
-            group = pl.t_value_of<uint16>(constexpr_group);
-            binary_t pubkey;
-            pl.get_binary(constexpr_pubkey, pubkey);
-
-            add_pubkey(group, pubkey, keydesc(get_kid()));
         }
+        while (pos < limit) {
+            uint16 group = 0;
+            binary_t pubkey;
+            {
+                payload pl;
+                pl << new payload_member(uint16(0), true, constexpr_group)       //
+                   << new payload_member(uint16(0), true, constexpr_pubkey_len)  //
+                   << new payload_member(binary_t(), constexpr_pubkey);          //
+                pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
+                pl.read(stream, limit, pos);
+
+                group = pl.t_value_of<uint16>(constexpr_group);
+                pl.get_binary(constexpr_pubkey, pubkey);
+
+                add_pubkey(group, pubkey, keydesc(get_kid()));
+            }
 
 #if defined DEBUG
-        if (istraceable()) {
-            basic_stream dbs;
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            if (istraceable()) {
+                basic_stream dbs;
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            auto session = get_session();
-            auto& protection = session->get_tls_protection();
-            auto& keyexchange = protection.get_keyexchange();
-            auto pkey = keyexchange.find(get_kid().c_str());
+                auto session = get_session();
+                auto& protection = session->get_tls_protection();
+                auto& keyexchange = protection.get_keyexchange();
+                auto hint_group = tlsadvisor->hintof_tls_group(group);
 
-            binary_t pubkey;
-            uint32 nid = 0;
-            auto kty = typeof_crypto_key(pkey);
-            if (kty_ec == kty) {
-                binary_t privkey;
-                keyexchange.ec_uncompressed_key(pkey, pubkey, privkey);
-            } else if (kty_okp == kty) {
-                binary_t temp;
-                binary_t privkey;
-                keyexchange.get_key(pkey, pubkey, temp, privkey, true);
+                dbs.println("   > %s %i(0x%04x)", constexpr_len, len, len);
+                dbs.println("    > %s", constexpr_key_share_entry);
+                dbs.println("     > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->supported_group_name(group).c_str());
+                dbs.println("     > %s %04x(%i)", constexpr_pubkey_len, pubkey.size(), pubkey.size());
+                dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
+                dbs.println("       %s", base16_encode(pubkey).c_str());
+
+                trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
             }
-            uint16 pubkeylen = pubkey.size();
-
-            dbs.println("   > %s %i(0x%04x)", constexpr_len, len, len);
-            dbs.println("    > %s", constexpr_key_share_entry);
-            dbs.println("     > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->supported_group_name(group).c_str());
-            dbs.println("     > %s %04x(%i)", constexpr_pubkey_len, pubkeylen, pubkeylen);
-            dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
-            dbs.println("       %s", base16_encode(pubkey).c_str());
-
-            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
-        }
 #endif
+        }
     }
     __finally2 {
         // do nothing
@@ -312,8 +308,9 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
             //      KeyShareEntry server_share;
             //  } KeyShareServerHello;
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_group) << new payload_member(uint16(0), true, constexpr_pubkey_len)
-               << new payload_member(binary_t(), constexpr_pubkey);
+            pl << new payload_member(uint16(0), true, constexpr_group)       //
+               << new payload_member(uint16(0), true, constexpr_pubkey_len)  //
+               << new payload_member(binary_t(), constexpr_pubkey);          //
             pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
             pl.read(stream, endpos_extension(), pos);
 

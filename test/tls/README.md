@@ -10,6 +10,8 @@
       - [x] certificate_verify (TLS 1.3)
       - [x] finished
       - [x] PSK
+    - [ ] extension
+      - [x] key_share (Revision 789)
     - [ ] renegotiation
       - [x] client_hello renegotiation_info
       - [x] server_hello renegotiation_info
@@ -19,9 +21,9 @@
       - [ ] TLS 1.2
         - [x] entrypt_then_mac (Revision 752)
         - [x] CBC
-        - [ ] GCM (EVP_CipherUpdate 1, EVP_CipherFinal 0 - decryption passed but authentication failed)
-          - [ ] protection_context::select_from (temporary SWITCH_ENFORCE_CBC_FOR_TEST set)
-          - [ ] test_construct_tls
+        - [x] GCM (Revision 788)
+        - [ ] CCM (no test vector)
+        - [ ] chacha20_poly1305
         - [x] extended_master_secret (Revision 779)
   - [x] DTLS
     - [x] DTLS 1.2 fragmentation (Revision 781)
