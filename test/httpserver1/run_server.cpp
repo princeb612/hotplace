@@ -107,13 +107,13 @@ return_t simple_http_server(void *) {
 
     __try2 {
         server_socket_adapter *adapter = nullptr;
-        std::string title;
+        const char* title = nullptr;
         if (option.trial_adapter) {
             title = "HTTP/1.1 powered by http_server";
             __try_new_catch(adapter, new trial_server_socket_adapter, ret, __leave2);
         } else {
             title = "HTTP/1.1 powered by http_server and libssl";
-            __try_new_catch(adapter, openssl_server_socket_adapter, ret, __leave2);
+            __try_new_catch(adapter, new openssl_server_socket_adapter, ret, __leave2);
         }
 
         _test_case.begin(title);
