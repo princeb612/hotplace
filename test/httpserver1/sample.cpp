@@ -18,8 +18,6 @@ t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 t_shared_instance<http_server> _http_server;
 
-#define FILENAME_RUN _T (".run")
-
 int main(int argc, char **argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -30,6 +28,7 @@ int main(int argc, char **argv) {
                 << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION &o, char *param) -> void { o.port = atoi(param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [](OPTION &o, char *param) -> void { o.port_tls = atoi(param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-e", "allow Content-Encoding", [](OPTION &o, char *param) -> void { o.content_encoding = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-T", "use trial adapter", [](OPTION &o, char *param) -> void { o.trial_adapter = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION &o, char *param) -> void { o.debug = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION &o, char *param) -> void { o.trace_level = atoi(param); }).optional().preced()

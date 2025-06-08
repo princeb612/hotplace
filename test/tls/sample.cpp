@@ -125,7 +125,9 @@ void play_pcap(tls_session* session, const pcap_testvector* testvector, size_t s
 
     auto lambda_test_fatal_alert = [&](uint8 level, uint8 desc) -> void {
         if (tls_alertlevel_fatal == level) {
-            has_fatal = true;
+            if (tls_alertdesc_certificate_unknown != desc) {
+                has_fatal = true;
+            }
         }
     };
 
@@ -279,6 +281,8 @@ int main(int argc, char** argv) {
         {
             test_helloretryrequest();
             test_alert();
+
+            test_pcap_tls13_http1();
         }
     } else {
         dump_clienthello();

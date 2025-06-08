@@ -58,7 +58,6 @@ add_subdirectory (httpaltsvc)
 add_subdirectory (tls)
 add_subdirectory (quic)
 # add_subdirectory (httpserver3)
-# add_subdirectory (httpserver2t)
 
 # odbc
 if (SUPPORT_ODBC)

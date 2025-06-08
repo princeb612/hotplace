@@ -84,6 +84,8 @@ extern const pcap_testvector pcap_dtls12_mtu1500[];
 extern const size_t sizeof_pcap_dtls12_mtu1500;
 extern const pcap_testvector pcap_dtls12_aes128gcm[];
 extern const size_t sizeof_pcap_dtls12_aes128gcm;
+extern const pcap_testvector pcap_tls13_http1_aes128gcm_sha256[];
+extern const size_t sizeof_pcap_tls13_http1_aes128gcm_sha256;
 
 // RFC
 void test_rfc8448_2();
@@ -99,6 +101,7 @@ void test_tls12_aead();
 void test_pcap_tls13();
 void test_pcap_tls12();
 void test_pcap_dtls12();
+void test_pcap_tls13_http1();
 
 void test_dtls_record_arrange();
 
@@ -113,5 +116,7 @@ void dump_clienthello();
 void test_helloretryrequest();
 
 void test_alert();
+
+void test_pcap_tls13_http1();
 
 #endif

@@ -106,7 +106,19 @@ return_t simple_http_server(void *) {
     fclose(fp);
 
     __try2 {
-        builder.set(new openssl_server_socket_adapter)
+        server_socket_adapter *adapter = nullptr;
+        std::string title;
+        if (option.trial_adapter) {
+            title = "HTTP/1.1 powered by http_server";
+            __try_new_catch(adapter, new trial_server_socket_adapter, ret, __leave2);
+        } else {
+            title = "HTTP/1.1 powered by http_server and libssl";
+            __try_new_catch(adapter, openssl_server_socket_adapter, ret, __leave2);
+        }
+
+        _test_case.begin(title);
+
+        builder.set(adapter)
             .enable_http(true)
             .set_port_http(option.port)
             .enable_https(true)
@@ -194,10 +206,6 @@ void run_server() {
     thread thread1(simple_http_server, nullptr);
     return_t ret = errorcode_t::success;
 
-    __try2 {
-        _test_case.begin("http/1.1 powered by http_server");
-
-        thread1.start();
-    }
+    __try2 { thread1.start(); }
     __finally2 { thread1.wait(-1); }
 }

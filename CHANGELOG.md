@@ -25,11 +25,12 @@
     * CBOR
 
 * details
+  * Revision 790
   * Revision 789
     * [fixed] key_share
-  * Revision 788
+  * Revision 788 (Tag 1.30)
     * [tested] TLS 1.2 ciphersuites (GCM)
-  * Revision 785 (Tag 1.29)
+  * Revision 785
   * Revision 784
     * [tested] CCM_8
       * no s_server/s_client test vector

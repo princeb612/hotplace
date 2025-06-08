@@ -69,13 +69,26 @@ return_t simple_http2_server(void*) {
     fclose(fp);
 
     __try2 {
-        builder.set(new openssl_server_socket_adapter)
+        server_socket_adapter* adapter = nullptr;
+        std::string title;
+        if (option.trial_adapter) {
+            title = "HTTP/2 powered by http_server";
+            __try_new_catch(adapter, new trial_server_socket_adapter, ret, __leave2);
+        } else {
+            title = "HTTP/2 powered by http_server and libssl";
+            __try_new_catch(adapter, openssl_server_socket_adapter, ret, __leave2);
+        }
+
+        _test_case.begin(title);
+
+        builder.set(adapter)
             .enable_http(false)  // disable http scheme
             .set_port_http(option.port)
             .enable_https(true)  // enable https scheme
             .set_port_https(option.port_tls)
-            .set_tls_certificate("server.crt", "server.key")
-            .set_tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
+            .set_tls_certificate("server.crt", "server.key")  // RSA certificate
+            .set_tls_cipher_list(
+                "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")  // TLS 1.3
             .set_tls_verify_peer(0)  // self-signed certificate
             .enable_ipv4(true)       // enable IPv4
             .enable_ipv6(false)      // disable IPv6
@@ -155,10 +168,6 @@ void run_server() {
     thread thread1(simple_http2_server, nullptr);
     return_t ret = errorcode_t::success;
 
-    __try2 {
-        _test_case.begin("http/2 powered by http_server and libssl");
-
-        thread1.start();
-    }
+    __try2 { thread1.start(); }
     __finally2 { thread1.wait(-1); }
 }

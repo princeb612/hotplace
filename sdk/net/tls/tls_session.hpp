@@ -117,6 +117,7 @@ class tls_session {
 
         void begin_protection();
         bool apply_protection();
+        void reset_protection();
 
         void push_alert(uint8 level, uint8 desc);
         void get_alert(std::function<void(uint8, uint8)> func, uint8 flags = 0);

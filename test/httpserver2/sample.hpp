@@ -17,13 +17,14 @@ typedef struct _OPTION {
     int port;
     int port_tls;
     int content_encoding;
+    int trial_adapter;
     int verbose;
     int debug;
     int trace_level;
     int log;
     int time;
 
-    _OPTION() : run(0), port(8080), port_tls(9000), content_encoding(0), verbose(0), debug(0), trace_level(0), log(0), time(0) {}
+    _OPTION() : run(0), port(8080), port_tls(9000), content_encoding(0), trial_adapter(0), verbose(0), debug(0), trace_level(0), log(0), time(0) {}
 } OPTION;
 
 extern test_case _test_case;

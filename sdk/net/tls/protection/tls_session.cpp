@@ -153,6 +153,8 @@ void tls_session::session_info::begin_protection() { _protection = true; }
 
 bool tls_session::session_info::apply_protection() { return _protection; }
 
+void tls_session::session_info::reset_protection() { _protection = false; }
+
 uint64 tls_session::session_info::get_recordno(bool inc, protection_level_t level) {
     auto& recordno = _recordno_spaces[level];
     return inc ? recordno++ : recordno;

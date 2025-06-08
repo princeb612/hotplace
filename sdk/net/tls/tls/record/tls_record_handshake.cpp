@@ -33,6 +33,16 @@ tls_record_handshake::tls_record_handshake(tls_session* session) : tls_record(tl
 
 tls_handshakes& tls_record_handshake::get_handshakes() { return _handshakes; }
 
+return_t tls_record_handshake::do_preprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    if (protection.is_kindof_tls13()) {
+        session->get_session_info(dir).reset_protection();
+    }
+    return ret;
+}
+
 return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

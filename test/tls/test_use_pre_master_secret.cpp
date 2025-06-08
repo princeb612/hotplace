@@ -39,23 +39,21 @@ void test_use_pre_master_secret() {
      */
 
     tls_session session;
-    auto& protection = session.get_tls_protection();
-    protection.use_pre_master_secret(true);
-    // SERVER_HANDSHAKE_TRAFFIC_SECRET (server_handshake_traffic_secret)
-    protection.set_item(server_handshake_traffic_secret,
-                        base16_decode_rfc("23323da031634b241dd37d61032b62a4f450584d1f7f47983ba2f7cc0cdcc39a68f481f2b019f9403a3051908a5d1622"));
-    // CLIENT_HANDSHAKE_TRAFFIC_SECRET (client_handshake_traffic_secret)
-    protection.set_item(client_handshake_traffic_secret,
-                        base16_decode_rfc("db89d2d6df0e84fed74a2288f8fd4d0959f790ff23946cdf4c26d85e51bebd42ae184501972f8d30c4a3e4a3693d0ef0"));
-    // EXPORTER_SECRET
-    protection.set_item(tls_secret_exp_master,
-                        base16_decode_rfc("5da16dd8325dd8279e4535363384d9ad0dbe370538fc3ad74e53d533b77ac35ee072d56c90871344e6857ccb2efc9e14"));
-    // SERVER_TRAFFIC_SECRET_0 (server_application_traffic_secret_0)
-    protection.set_item(server_application_traffic_secret_0,
-                        base16_decode_rfc("86c967fd7747a36a0685b4ed8d0e6b4c02b4ddaf3cd294aa44e9f6b0183bf911e89a189ba5dfd71fccffb5cc164901f8"));
-    // CLIENT_TRAFFIC_SECRET_0 (client_application_traffic_secret_0)
-    protection.set_item(client_application_traffic_secret_0,
-                        std::move(base16_decode_rfc("9e47af27cb60d818a9ea7d233cb5ed4cc525fcd74614fb24b0ee59acb8e5aa7ff8d88b89792114208fec291a6fa96bad")));
+
+    auto sslkeylog = sslkeylog_importer::get_instance();
+    sslkeylog->attach(&session);
+
+    (*sslkeylog) << "SERVER_HANDSHAKE_TRAFFIC_SECRET 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f "
+                    "23323da031634b241dd37d61032b62a4f450584d1f7f47983ba2f7cc0cdcc39a68f481f2b019f9403a3051908a5d1622";
+    (*sslkeylog) << "CLIENT_HANDSHAKE_TRAFFIC_SECRET 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f "
+                    "db89d2d6df0e84fed74a2288f8fd4d0959f790ff23946cdf4c26d85e51bebd42ae184501972f8d30c4a3e4a3693d0ef0";
+    (*sslkeylog) << "EXPORTER_SECRET 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f "
+                    "5da16dd8325dd8279e4535363384d9ad0dbe370538fc3ad74e53d533b77ac35ee072d56c90871344e6857ccb2efc9e14";
+    (*sslkeylog) << "SERVER_TRAFFIC_SECRET_0 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f "
+                    "86c967fd7747a36a0685b4ed8d0e6b4c02b4ddaf3cd294aa44e9f6b0183bf911e89a189ba5dfd71fccffb5cc164901f8";
+    (*sslkeylog) << "CLIENT_TRAFFIC_SECRET_0 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f "
+                    "9e47af27cb60d818a9ea7d233cb5ed4cc525fcd74614fb24b0ee59acb8e5aa7ff8d88b89792114208fec291a6fa96bad";
+
     {
         const char* record =
             "16030100f8010000f40303000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20e0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfc"

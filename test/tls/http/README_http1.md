@@ -7,45 +7,46 @@ $ ./test-httpserver1.exe -v -d -r -D 2&
 flag 00000001
 min proto version 00000303
 max proto version 00000304
-socket 508 created family 2(AF_INET) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
-iocp handle 000000d4 created
-socket 560 created family 23(AF_INET6) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
+socket 512 created family 2(AF_INET) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
+iocp handle 0000020c created
+socket 568 created family 23(AF_INET6) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
 iocp handle 0000023c created
-socket 612 created family 2(AF_INET) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
-iocp handle 0000026c created
-socket 656 created family 23(AF_INET6) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
-iocp handle 0000029c created
-- event_loop_new tid 00007d44
-- event_loop_new tid 00004760
-- event_loop_new tid 00006d4c
-- event_loop_new tid 00006d68
-- event_loop_new tid 00002564
-- event_loop_new tid 000044a8
-- event_loop_new tid 00002db4
-- event_loop_new tid 00008840
-- event_loop_new tid 00007434
-- event_loop_new tid 00003a7c
-- event_loop_new tid 00006930
-- event_loop_new tid 00001348
-- event_loop_new tid 00006624
-- event_loop_new tid 00006d48
-- event_loop_new tid 00001d90
-- event_loop_new tid 0000416c
+socket 620 created family 2(AF_INET) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
+iocp handle 00000270 created
+socket 660 created family 23(AF_INET6) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
+iocp handle 000002a0 created
+- event_loop_new tid 000066bc
+- event_loop_new tid 000077bc
+- event_loop_new tid 000056ec
+- event_loop_new tid 00006b68
+- event_loop_new tid 00009040
+- event_loop_new tid 00007338
+- event_loop_new tid 000047a4
+- event_loop_new tid 00003a20
+- event_loop_new tid 00004034
+- event_loop_new tid 00001ea8
+- event_loop_new tid 000019b4
+- event_loop_new tid 00004a68
+- event_loop_new tid 00007920
+- event_loop_new tid 000095fc
+- event_loop_new tid 00009380
+- event_loop_new tid 00006a78
 TLS 00000304 00000010 handshake start
 TLS 00000304 00002001 SSL_accept:loop:before SSL initialization:(NONE)
 TLS 00000304 00002001 SSL_accept:loop:before SSL initialization:(NONE)
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS read client hello:(NONE)
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS write server hello:(NONE)
-SERVER_HANDSHAKE_TRAFFIC_SECRET e4515425611b56917af0afaa58deac524cadd69b6c3b630acec2c691977995b3 5f05dead0e831f2c83cd36cd91fcbf1e2d9a76e2dc53753a60f0a56b21ad65ca
-CLIENT_HANDSHAKE_TRAFFIC_SECRET e4515425611b56917af0afaa58deac524cadd69b6c3b630acec2c691977995b3 6657c07ec3bc8467f4ce660f3615dd98a37d909d316b2954f5e4ab2df4cef33e
+SERVER_HANDSHAKE_TRAFFIC_SECRET c126cfafae8cb4f1ec61468e6f8b16db41bcb2bd16ff0c81610f8c40c5d028e4 03baaf4ead28ab678c4c6643185eb1fe2699de129cd39e341579d82a7b7218b6
+CLIENT_HANDSHAKE_TRAFFIC_SECRET c126cfafae8cb4f1ec61468e6f8b16db41bcb2bd16ff0c81610f8c40c5d028e4 8096092572254ce5bc0d0f1609ff6e0b9f0de2a2789c0e327504db5b3d8c09e2
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS write change cipher spec:TLS_AES_128_GCM_SHA256
 TLS 00000304 00002001 SSL_accept:loop:TLSv1.3 write encrypted extensions:TLS_AES_128_GCM_SHA256
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS write certificate:TLS_AES_128_GCM_SHA256
 TLS 00000304 00002001 SSL_accept:loop:TLSv1.3 write server certificate verify:TLS_AES_128_GCM_SHA256
-EXPORTER_SECRET e4515425611b56917af0afaa58deac524cadd69b6c3b630acec2c691977995b3 4f8eceb3a4a2d9a42eff0f1e7243ff6809e99b0652fc073b0c5c6f44417a7c8f
-SERVER_TRAFFIC_SECRET_0 e4515425611b56917af0afaa58deac524cadd69b6c3b630acec2c691977995b3 c0258dcff456066969e8eac57f777249594b8089c5fbcbb038925fd3cba6683b
+EXPORTER_SECRET c126cfafae8cb4f1ec61468e6f8b16db41bcb2bd16ff0c81610f8c40c5d028e4 3d371adf33f888bd3b88f1249c6009621881c29368107f2741b40a8b9d9c7767
+SERVER_TRAFFIC_SECRET_0 c126cfafae8cb4f1ec61468e6f8b16db41bcb2bd16ff0c81610f8c40c5d028e4 014469a0a1e8ca364a554a7dde68ab18d7a4c611d0bc5adc71952dc78fb7018d
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS write finished:TLS_AES_128_GCM_SHA256
 TLS 00000304 00002001 SSL_accept:loop:TLSv1.3 early data:TLS_AES_128_GCM_SHA256
+TLS 00000304 00002002 SSL_accept:exit:TLSv1.3 early data
 TLS 00000304 00004004 SSL_read:callback:fatal:certificate unknown
 TLS 00000304 00002002 SSL_accept:exit:error
 TLS 00000304 00000010 handshake start
@@ -53,25 +54,25 @@ TLS 00000304 00002001 SSL_accept:loop:before SSL initialization:(NONE)
 TLS 00000304 00002001 SSL_accept:loop:before SSL initialization:(NONE)
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS read client hello:(NONE)
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS write server hello:(NONE)
-SERVER_HANDSHAKE_TRAFFIC_SECRET 44adcb56e17f211a787ba64c596706c3c6d3c9dfdd6fc19c005f68783c055e35 dacf4796638d5e63ed8e0cc4fc5b6e1250fc7e73c51446f4320e100c12becc2e
-CLIENT_HANDSHAKE_TRAFFIC_SECRET 44adcb56e17f211a787ba64c596706c3c6d3c9dfdd6fc19c005f68783c055e35 017ff9c571b6a01ed52ae7a2853f568955224e6b5d0f454bbe37110de531d10b
+SERVER_HANDSHAKE_TRAFFIC_SECRET f9cef6ee59e41f07f495a835982451150e5ad090ff6b33547b56a364f58e8b62 cb49c716f80e75180c4e0337b88d305c15fd59459945124fa95fae1cc73522c0
+CLIENT_HANDSHAKE_TRAFFIC_SECRET f9cef6ee59e41f07f495a835982451150e5ad090ff6b33547b56a364f58e8b62 3f376c10a23552fc894187c1dbe853a72ac737f68ae4778f353d4daaa37963ad
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS write change cipher spec:TLS_AES_128_GCM_SHA256
 TLS 00000304 00002001 SSL_accept:loop:TLSv1.3 write encrypted extensions:TLS_AES_128_GCM_SHA256
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS write certificate:TLS_AES_128_GCM_SHA256
 TLS 00000304 00002001 SSL_accept:loop:TLSv1.3 write server certificate verify:TLS_AES_128_GCM_SHA256
-EXPORTER_SECRET 44adcb56e17f211a787ba64c596706c3c6d3c9dfdd6fc19c005f68783c055e35 a854c4b2270387c684892eafb898f1f9056fcbdd303ed45572b4171db302252f
-SERVER_TRAFFIC_SECRET_0 44adcb56e17f211a787ba64c596706c3c6d3c9dfdd6fc19c005f68783c055e35 91720f03db8c113fd0fc387aa38fe95637a26ea5f6882a4df542e2dba97fbf55
+EXPORTER_SECRET f9cef6ee59e41f07f495a835982451150e5ad090ff6b33547b56a364f58e8b62 d55fc9a65345c41ea52f76071340638216287b336a188e1c1c00d3012c371013
+SERVER_TRAFFIC_SECRET_0 f9cef6ee59e41f07f495a835982451150e5ad090ff6b33547b56a364f58e8b62 1c6a88896c6103e4c5d2f64a98809ffb6671ec792e2953873644f65ef6945882
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS write finished:TLS_AES_128_GCM_SHA256
 TLS 00000304 00002001 SSL_accept:loop:TLSv1.3 early data:TLS_AES_128_GCM_SHA256
 TLS 00000304 00002001 SSL_accept:loop:TLSv1.3 early data:TLS_AES_128_GCM_SHA256
-CLIENT_TRAFFIC_SECRET_0 44adcb56e17f211a787ba64c596706c3c6d3c9dfdd6fc19c005f68783c055e35 03c96fd1c75f3a6707c3cfb6ec4e10b0e96fa2266b23daee0b72564c84808a0b
+CLIENT_TRAFFIC_SECRET_0 f9cef6ee59e41f07f495a835982451150e5ad090ff6b33547b56a364f58e8b62 cd158cbf6313b8bffff5bc2236ae2caeba6f39b57f02c9aefdc076a67f23e7d6
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS read finished:TLS_AES_128_GCM_SHA256
 TLS 00000304 00000020 handshake done
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS write session ticket:TLS_AES_128_GCM_SHA256
 TLS 00000304 00002001 SSL_accept:loop:SSLv3/TLS write session ticket:TLS_AES_128_GCM_SHA256
 TLS 00000304 00002002 SSL_accept:exit:SSL negotiation finished successfully
-iocp handle 0000023c bind 996
-[ns] read 996
+iocp handle 0000023c bind 984
+[ns] read 984
   00000000 : 47 45 54 20 2F 20 48 54 54 50 2F 31 2E 31 0D 0A | GET / HTTP/1.1..
   00000010 : 48 6F 73 74 3A 20 6C 6F 63 61 6C 68 6F 73 74 3A | Host: localhost:
   00000020 : 39 30 30 30 0D 0A 43 6F 6E 6E 65 63 74 69 6F 6E | 9000..Connection
@@ -156,7 +157,7 @@ Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
   00000150 : 74 22 3E 72 65 73 70 6F 6E 73 65 3C 2F 61 3E 3C | t">response</a><
   00000160 : 2F 6C 69 3E 0A 20 20 3C 2F 75 6C 3E 0A 3C 2F 62 | /li>.  </ul>.</b
   00000170 : 6F 64 79 3E 0A 3C 2F 68 74 6D 6C 3E -- -- -- -- | ody>.</html>
-[ns] read 996
+[ns] read 984
   00000000 : 47 45 54 20 2F 66 61 76 69 63 6F 6E 2E 69 63 6F | GET /favicon.ico
   00000010 : 20 48 54 54 50 2F 31 2E 31 0D 0A 48 6F 73 74 3A |  HTTP/1.1..Host:
   00000020 : 20 6C 6F 63 61 6C 68 6F 73 74 3A 39 30 30 30 0D |  localhost:9000.
@@ -222,7 +223,7 @@ Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
   00000070 : 64 3C 70 72 65 3E 2F 66 61 76 69 63 6F 6E 2E 69 | d<pre>/favicon.i
   00000080 : 63 6F 3C 2F 70 72 65 3E 3C 2F 62 6F 64 79 3E 3C | co</pre></body><
   00000090 : 2F 68 74 6D 6C 3E -- -- -- -- -- -- -- -- -- -- | /html>
-[ns] read 996
+[ns] read 984
   00000000 : 47 45 54 20 2F 61 70 69 2F 68 74 6D 6C 20 48 54 | GET /api/html HT
   00000010 : 54 50 2F 31 2E 31 0D 0A 48 6F 73 74 3A 20 6C 6F | TP/1.1..Host: lo
   00000020 : 63 61 6C 68 6F 73 74 3A 39 30 30 30 0D 0A 43 6F | calhost:9000..Co
@@ -295,7 +296,7 @@ Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
   00000050 : 3A 20 33 34 0D 0A 0D 0A 3C 68 74 6D 6C 3E 3C 62 | : 34....<html><b
   00000060 : 6F 64 79 3E 70 61 67 65 20 2D 20 6F 6B 3C 62 6F | ody>page - ok<bo
   00000070 : 64 79 3E 3C 2F 68 74 6D 6C 3E -- -- -- -- -- -- | dy></html>
-[ns] read 996
+[ns] read 984
   00000000 : 47 45 54 20 2F 66 61 76 69 63 6F 6E 2E 69 63 6F | GET /favicon.ico
   00000010 : 20 48 54 54 50 2F 31 2E 31 0D 0A 48 6F 73 74 3A |  HTTP/1.1..Host:
   00000020 : 20 6C 6F 63 61 6C 68 6F 73 74 3A 39 30 30 30 0D |  localhost:9000.
@@ -361,7 +362,7 @@ Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
   00000070 : 64 3C 70 72 65 3E 2F 66 61 76 69 63 6F 6E 2E 69 | d<pre>/favicon.i
   00000080 : 63 6F 3C 2F 70 72 65 3E 3C 2F 62 6F 64 79 3E 3C | co</pre></body><
   00000090 : 2F 68 74 6D 6C 3E -- -- -- -- -- -- -- -- -- -- | /html>
-[ns] read 996
+[ns] read 984
   00000000 : 47 45 54 20 2F 66 61 76 69 63 6F 6E 2E 69 63 6F | GET /favicon.ico
   00000010 : 20 48 54 54 50 2F 31 2E 31 0D 0A 48 6F 73 74 3A |  HTTP/1.1..Host:
   00000020 : 20 6C 6F 63 61 6C 68 6F 73 74 3A 39 30 30 30 0D |  localhost:9000.
@@ -427,7 +428,7 @@ Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
   00000070 : 64 3C 70 72 65 3E 2F 66 61 76 69 63 6F 6E 2E 69 | d<pre>/favicon.i
   00000080 : 63 6F 3C 2F 70 72 65 3E 3C 2F 62 6F 64 79 3E 3C | co</pre></body><
   00000090 : 2F 68 74 6D 6C 3E -- -- -- -- -- -- -- -- -- -- | /html>
-[ns] read 996
+[ns] read 984
   00000000 : 47 45 54 20 2F 61 70 69 2F 6A 73 6F 6E 20 48 54 | GET /api/json HT
   00000010 : 54 50 2F 31 2E 31 0D 0A 48 6F 73 74 3A 20 6C 6F | TP/1.1..Host: lo
   00000020 : 63 61 6C 68 6F 73 74 3A 39 30 30 30 0D 0A 43 6F | calhost:9000..Co
@@ -499,7 +500,7 @@ Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
   00000040 : 70 2D 41 6C 69 76 65 0D 0A 43 6F 6E 74 65 6E 74 | p-Alive..Content
   00000050 : 2D 4C 65 6E 67 74 68 3A 20 31 35 0D 0A 0D 0A 7B | -Length: 15....{
   00000060 : 22 72 65 73 75 6C 74 22 3A 22 6F 6B 22 7D -- -- | "result":"ok"}
-[ns] read 996
+[ns] read 984
   00000000 : 47 45 54 20 2F 66 61 76 69 63 6F 6E 2E 69 63 6F | GET /favicon.ico
   00000010 : 20 48 54 54 50 2F 31 2E 31 0D 0A 48 6F 73 74 3A |  HTTP/1.1..Host:
   00000020 : 20 6C 6F 63 61 6C 68 6F 73 74 3A 39 30 30 30 0D |  localhost:9000.
@@ -565,7 +566,7 @@ Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
   00000070 : 64 3C 70 72 65 3E 2F 66 61 76 69 63 6F 6E 2E 69 | d<pre>/favicon.i
   00000080 : 63 6F 3C 2F 70 72 65 3E 3C 2F 62 6F 64 79 3E 3C | co</pre></body><
   00000090 : 2F 68 74 6D 6C 3E -- -- -- -- -- -- -- -- -- -- | /html>
-[ns] read 996
+[ns] read 984
   00000000 : 47 45 54 20 2F 66 61 76 69 63 6F 6E 2E 69 63 6F | GET /favicon.ico
   00000010 : 20 48 54 54 50 2F 31 2E 31 0D 0A 48 6F 73 74 3A |  HTTP/1.1..Host:
   00000020 : 20 6C 6F 63 61 6C 68 6F 73 74 3A 39 30 30 30 0D |  localhost:9000.
@@ -631,7 +632,7 @@ Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
   00000070 : 64 3C 70 72 65 3E 2F 66 61 76 69 63 6F 6E 2E 69 | d<pre>/favicon.i
   00000080 : 63 6F 3C 2F 70 72 65 3E 3C 2F 62 6F 64 79 3E 3C | co</pre></body><
   00000090 : 2F 68 74 6D 6C 3E -- -- -- -- -- -- -- -- -- -- | /html>
-[ns] read 996
+[ns] read 984
   00000000 : 47 45 54 20 2F 61 70 69 2F 74 65 73 74 20 48 54 | GET /api/test HT
   00000010 : 54 50 2F 31 2E 31 0D 0A 48 6F 73 74 3A 20 6C 6F | TP/1.1..Host: lo
   00000020 : 63 61 6C 68 6F 73 74 3A 39 30 30 30 0D 0A 43 6F | calhost:9000..Co
@@ -705,7 +706,7 @@ Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
   00000060 : 6F 64 79 3E 3C 70 72 65 3E 2F 61 70 69 2F 74 65 | ody><pre>/api/te
   00000070 : 73 74 3C 2F 70 72 65 3E 3C 2F 62 6F 64 79 3E 3C | st</pre></body><
   00000080 : 2F 68 74 6D 6C 3E -- -- -- -- -- -- -- -- -- -- | /html>
-[ns] read 996
+[ns] read 984
   00000000 : 47 45 54 20 2F 66 61 76 69 63 6F 6E 2E 69 63 6F | GET /favicon.ico
   00000010 : 20 48 54 54 50 2F 31 2E 31 0D 0A 48 6F 73 74 3A |  HTTP/1.1..Host:
   00000020 : 20 6C 6F 63 61 6C 68 6F 73 74 3A 39 30 30 30 0D |  localhost:9000.
@@ -771,7 +772,7 @@ Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
   00000070 : 64 3C 70 72 65 3E 2F 66 61 76 69 63 6F 6E 2E 69 | d<pre>/favicon.i
   00000080 : 63 6F 3C 2F 70 72 65 3E 3C 2F 62 6F 64 79 3E 3C | co</pre></body><
   00000090 : 2F 68 74 6D 6C 3E -- -- -- -- -- -- -- -- -- -- | /html>
-[ns] read 996
+[ns] read 984
   00000000 : 47 45 54 20 2F 66 61 76 69 63 6F 6E 2E 69 63 6F | GET /favicon.ico
   00000010 : 20 48 54 54 50 2F 31 2E 31 0D 0A 48 6F 73 74 3A |  HTTP/1.1..Host:
   00000020 : 20 6C 6F 63 61 6C 68 6F 73 74 3A 39 30 30 30 0D |  localhost:9000.
@@ -837,39 +838,7 @@ Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7
   00000070 : 64 3C 70 72 65 3E 2F 66 61 76 69 63 6F 6E 2E 69 | d<pre>/favicon.i
   00000080 : 63 6F 3C 2F 70 72 65 3E 3C 2F 62 6F 64 79 3E 3C | co</pre></body><
   00000090 : 2F 68 74 6D 6C 3E -- -- -- -- -- -- -- -- -- -- | /html>
-
-- event_loop_break_concurrent : break 1/4
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/3
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/2
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/1
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/4
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/3
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/2
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/1
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/4
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/3
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/2
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/1
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/4
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/3
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/2
-- event_loop_test_broken : broken detected
-- event_loop_break_concurrent : break 1/1
-- event_loop_test_broken : broken detected
+TLS 00000304 00004008 SSL_write:callback:warning:close notify
 ````
 
 [TOC](README.md)

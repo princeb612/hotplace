@@ -23,7 +23,7 @@
         - [x] CBC
         - [x] GCM (Revision 788)
         - [ ] CCM (no test vector)
-        - [ ] chacha20_poly1305
+        - [ ] chacha20-poly1305
         - [x] extended_master_secret (Revision 779)
   - [x] DTLS
     - [x] DTLS 1.2 fragmentation (Revision 781)
