@@ -25,8 +25,17 @@ class sslkeylog_importer {
     static sslkeylog_importer* get_instance();
 
     /**
-     * keylog << "SERVER_HANDSHAKE_TRAFFIC_SECRET e4515425611b56917af0afaa58deac524cadd69b6c3b630acec2c691977995b3
-     * 5f05dead0e831f2c83cd36cd91fcbf1e2d9a76e2dc53753a60f0a56b21ad65ca";
+     * @example
+     *          auto sslkeylog = sslkeylog_importer::get_instance();
+     *          sslkeylog->attach(&session);
+     *          // TLS 1.3
+     *          keylog << "SERVER_HANDSHAKE_TRAFFIC_SECRET RANDOM(64-letter) value";
+     *          keylog << "CLIENT_HANDSHAKE_TRAFFIC_SECRET RANDOM(64-letter) value";
+     *          keylog << "EXPORTER_SECRET RANDOM(64-letter) value";
+     *          keylog << "SERVER_TRAFFIC_SECRET_0 RANDOM(64-letter) value";
+     *          keylog << "CLIENT_TRAFFIC_SECRET_0 RANDOM(64-letter) value";
+     *          // TLS 1.2
+     *          keylog << "CLIENT_RANDOM RANDOM(64-letter) value";
      */
     sslkeylog_importer& operator<<(const std::string& secret);
 

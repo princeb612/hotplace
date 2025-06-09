@@ -28,6 +28,11 @@ namespace net {
  */
 return_t load_certificate(const char* certfile, const char* keyfile, const char* chainfile);
 
+/**
+ * @brief   keylog callback
+ */
+void set_tls_keylog_callback(std::function<void(const char*)> func);
+
 }  // namespace net
 }  // namespace hotplace
 

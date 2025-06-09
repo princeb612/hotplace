@@ -2,8 +2,6 @@
 /**
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
- * @desc
- *          -dump : dump all keys
  *
  * Revision History
  * Date         Name                Description

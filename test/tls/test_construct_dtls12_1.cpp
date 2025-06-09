@@ -568,6 +568,7 @@ void test_construct_dtls12_1() {
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384");
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256");
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384");
+
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_128_CCM");
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_256_CCM");
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8");

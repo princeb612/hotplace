@@ -234,6 +234,14 @@ int main(int argc, char** argv) {
     openssl_startup();
 
     if (option.clienthello.empty()) {
+#if defined DEBUG
+        auto lambda = [&](const char* line) -> void { _logger->writeln(line); };
+        if (check_trace_level(loglevel_debug) && istraceable()) {
+            auto sslkeylog = sslkeylog_exporter::get_instance();
+            sslkeylog->set(lambda);
+        }
+#endif
+
         {
             // resource validation
             test_validate();

@@ -104,6 +104,7 @@
 #include <sdk/net/tls/dtls_record_arrange.hpp>
 #include <sdk/net/tls/dtls_record_publisher.hpp>
 #include <sdk/net/tls/sdk.hpp>
+#include <sdk/net/tls/sslkeylog_exporter.hpp>
 #include <sdk/net/tls/sslkeylog_importer.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>

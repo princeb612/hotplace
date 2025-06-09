@@ -27,6 +27,7 @@
         - [x] extended_master_secret (Revision 779)
   - [x] DTLS
     - [x] DTLS 1.2 fragmentation (Revision 781)
+  - [x] sslkeylog (importer)
 
 ### packet capture
 

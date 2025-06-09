@@ -120,6 +120,8 @@ void test_case::begin(const char* case_name, ...) {
     reset_time();
 }
 
+void test_case::begin(const std::string& case_name) { begin(case_name.c_str()); }
+
 void test_case::reset_time() {
     struct timespec now = {0};
 

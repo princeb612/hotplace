@@ -57,7 +57,6 @@ add_subdirectory (qpack)
 add_subdirectory (httpaltsvc)
 add_subdirectory (tls)
 add_subdirectory (quic)
-# add_subdirectory (httpserver3)
 
 # odbc
 if (SUPPORT_ODBC)

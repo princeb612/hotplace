@@ -106,8 +106,16 @@ return_t simple_http_server(void *) {
     fclose(fp);
 
     __try2 {
+#if defined DEBUG
+        auto lambda = [&](const char *line) -> void { _logger->writeln(line); };
+        if (check_trace_level(loglevel_debug) && istraceable()) {
+            auto sslkeylog = sslkeylog_exporter::get_instance();
+            sslkeylog->set(lambda);
+        }
+#endif
+
         server_socket_adapter *adapter = nullptr;
-        const char* title = nullptr;
+        const char *title = nullptr;
         if (option.trial_adapter) {
             title = "HTTP/1.1 powered by http_server";
             __try_new_catch(adapter, new trial_server_socket_adapter, ret, __leave2);

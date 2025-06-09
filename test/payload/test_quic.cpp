@@ -7,8 +7,6 @@
  * Revision History
  * Date         Name                Description
  *
- * comments
- *  see HTTP/2 Frame
  */
 
 #include "sample.hpp"

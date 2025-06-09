@@ -76,6 +76,7 @@ class test_case {
      * @desc    reset stopwatch
      */
     void begin(const char* case_name, ...);
+    void begin(const std::string& case_name);
     /**
      * @brief   reset timer
      * @desc    to capture first unittest-time in thread, call reset_time at each thread startup code

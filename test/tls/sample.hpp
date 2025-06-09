@@ -86,6 +86,8 @@ extern const pcap_testvector pcap_dtls12_aes128gcm[];
 extern const size_t sizeof_pcap_dtls12_aes128gcm;
 extern const pcap_testvector pcap_tls13_http1_aes128gcm_sha256[];
 extern const size_t sizeof_pcap_tls13_http1_aes128gcm_sha256;
+extern const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[];
+extern const size_t sizeof_pcap_tls13_http2_aes128gcm_sha256;
 
 // RFC
 void test_rfc8448_2();

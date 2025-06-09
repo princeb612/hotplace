@@ -10,4 +10,4 @@
 | tlsserver  | netclient | PASS    |  PASS     |
 | tlsserver2 | netclient | PASS    |  PASS     |
 | s_server   | netclient | PASS    |  PASS     |
-| tlsserver2 | s_client  | PASS    |  CBC only |
+| tlsserver2 | s_client  | PASS    |  PASS     |

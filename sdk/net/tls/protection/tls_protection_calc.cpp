@@ -22,6 +22,7 @@
 #include <sdk/crypto/basic/openssl_kdf.hpp>
 #include <sdk/crypto/basic/transcript_hash.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls/sslkeylog_exporter.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -364,6 +365,10 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     lambda_expand_label(tls_secret_application_derived, secret_application_derived, hashalg, dlen, secret_handshake, "derived", empty_hash);
                     binary_t secret_application;
                     lambda_extract(tls_secret_application, secret_application, hashalg, secret_application_derived, empty_ikm);
+
+                    auto sslkeylog = sslkeylog_exporter::get_instance();
+                    sslkeylog->log(session, tls_secret_c_hs_traffic);
+                    sslkeylog->log(session, tls_secret_s_hs_traffic);
                 }
 
                 // calc
@@ -431,6 +436,11 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 lambda_expand_label(tls_secret_c_ap_traffic, secret_application_client, hashalg, dlen, secret_application, "c ap traffic", context_hash);
                 lambda_expand_label(tls_secret_s_ap_traffic, secret_application_server, hashalg, dlen, secret_application, "s ap traffic", context_hash);
                 lambda_expand_label(tls_secret_exp_master, secret_exporter_master, hashalg, dlen, secret_application, "exp master", context_hash);
+
+                auto sslkeylog = sslkeylog_exporter::get_instance();
+                sslkeylog->log(session, tls_secret_c_ap_traffic);
+                sslkeylog->log(session, tls_secret_s_ap_traffic);
+                sslkeylog->log(session, tls_secret_exp_master);
             }
 
             // calc
@@ -591,6 +601,9 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     set_item(tls_secret_master, master_secret);
 
                     hmac_master->release();
+
+                    auto sslkeylog = sslkeylog_exporter::get_instance();
+                    sslkeylog->log(session, tls_secret_master);
                 } else {
                     ret = errorcode_t::not_supported;
                     __leave2;

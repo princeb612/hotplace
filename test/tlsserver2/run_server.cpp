@@ -7,7 +7,7 @@
  *          openssl s_client -tls1_3 127.0.0.1:9000
  *          ctrl + c
  *      test.2
- *          test/etc/test-tlsclient
+ *          test-tlsclient
  *
  * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpauth, httpserver2
  *

@@ -6,7 +6,7 @@
  *  mingw
  *      ./test-authenticate /c/windows/explorer.exe
  *  linux
- *      copy explorer.exe by using scp
+ *      copy explorer.exe using scp
  *      ./test-authenticate explorer.exe
  *
  * Revision History
