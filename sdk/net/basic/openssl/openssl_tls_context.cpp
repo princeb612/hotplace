@@ -17,6 +17,7 @@
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/net/basic/openssl/openssl_tls_context.hpp>
 #include <sdk/net/basic/openssl/sdk.hpp>
+#include <sdk/net/tls/sslkeylog_exporter.hpp>
 
 namespace hotplace {
 namespace net {
@@ -123,13 +124,10 @@ static int set_cookie_verify_callback_routine(SSL* ssl, const unsigned char* coo
 }
 
 static void keylog_callback_routine(const SSL* ssl, const char* line) {
-#if defined DEBUG
-    if (check_trace_level(loglevel_debug) && istraceable()) {
-        basic_stream dbs;
-        dbs << line << "\n";
-        trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+    if (line) {
+        auto sslkeylog = sslkeylog_exporter::get_instance();
+        sslkeylog->log(line);
     }
-#endif
 }
 
 return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {

@@ -14,7 +14,7 @@ void tcp_client() {
 
     return_t ret = errorcode_t::success;
     client_socket* cli = nullptr;
-    if (0 == (option.flags & flag_debug_tls_inside)) {
+    if (0 == (option.flags & option_flag_debug_tls_inside)) {
         cli = new naive_tcp_client_socket;
     } else {
         cli = new trial_tcp_client_socket;
@@ -62,7 +62,7 @@ void udp_client() {
 
     return_t ret = errorcode_t::success;
     client_socket* cli = nullptr;
-    if (0 == (option.flags & flag_debug_tls_inside)) {
+    if (0 == (option.flags & option_flag_debug_tls_inside)) {
         cli = new naive_udp_client_socket;
     } else {
         cli = new trial_udp_client_socket;
@@ -109,10 +109,10 @@ void tls_client() {
     return_t ret = errorcode_t::success;
     SSL_CTX* sslctx = nullptr;
     uint32 tlscontext_flags = tlscontext_flag_tls;
-    if (option.flags & flag_allow_tls12) {
+    if (option.flags & option_flag_allow_tls12) {
         tlscontext_flags |= tlscontext_flag_allow_tls12;
     }
-    if (option.flags & flag_allow_tls13) {
+    if (option.flags & option_flag_allow_tls13) {
         tlscontext_flags |= tlscontext_flag_allow_tls13;
     }
     tlscontext_open_simple(&sslctx, tlscontext_flags);
@@ -165,10 +165,10 @@ void tls_client2() {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    auto minver = (option.flags & flag_allow_tls12) ? tls_12 : tls_13;
+    auto minver = (option.flags & option_flag_allow_tls12) ? tls_12 : tls_13;
     trial_tls_client_socket cli(minver);
 
-    if (option.flags & flag_enable_etm) {
+    if (option.flags & option_flag_enable_etm) {
         cli.get_session()->get_keyvalue().set(session_conf_enable_encrypt_then_mac, 1);
     }
 

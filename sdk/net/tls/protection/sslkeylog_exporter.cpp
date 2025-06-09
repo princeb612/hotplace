@@ -30,6 +30,12 @@ sslkeylog_exporter& sslkeylog_exporter::set(std::function<void(const char*)> fun
     return *this;
 }
 
+void sslkeylog_exporter::log(const char* line) {
+    if (_keylog_hook && line) {
+        _keylog_hook(line);
+    }
+}
+
 return_t sslkeylog_exporter::log(tls_session* session, tls_secret_t secret) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -43,29 +49,29 @@ return_t sslkeylog_exporter::log(tls_session* session, tls_secret_t secret) {
 
         auto& protection = session->get_tls_protection();
 
-        auto lambda = [&](const char* name, const binary_t& value) -> void {
+        auto lambda = [&](const char* name, const binary_t& client_random, const binary_t& value) -> void {
             basic_stream bs;
-            bs << name << " " << base16_encode(value);
+            bs << name << " " << base16_encode(client_random) << " " << base16_encode(value);
             _keylog_hook(bs);
         };
         switch (secret) {
             case tls_secret_c_ap_traffic: {
-                lambda("CLIENT_TRAFFIC_SECRET_0", protection.get_item(secret));
+                lambda("CLIENT_TRAFFIC_SECRET_0", protection.get_item(tls_context_client_hello_random), protection.get_item(secret));
             } break;
             case tls_secret_s_ap_traffic: {
-                lambda("SERVER_TRAFFIC_SECRET_0", protection.get_item(secret));
+                lambda("SERVER_TRAFFIC_SECRET_0", protection.get_item(tls_context_client_hello_random), protection.get_item(secret));
             } break;
             case tls_secret_exp_master: {
-                lambda("EXPORTER_SECRET", protection.get_item(secret));
+                lambda("EXPORTER_SECRET", protection.get_item(tls_context_client_hello_random), protection.get_item(secret));
             } break;
             case tls_secret_c_hs_traffic: {
-                lambda("CLIENT_HANDSHAKE_TRAFFIC_SECRET", protection.get_item(secret));
+                lambda("CLIENT_HANDSHAKE_TRAFFIC_SECRET", protection.get_item(tls_context_client_hello_random), protection.get_item(secret));
             } break;
             case tls_secret_s_hs_traffic: {
-                lambda("SERVER_HANDSHAKE_TRAFFIC_SECRET", protection.get_item(secret));
+                lambda("SERVER_HANDSHAKE_TRAFFIC_SECRET", protection.get_item(tls_context_client_hello_random), protection.get_item(secret));
             } break;
             case tls_secret_master: {
-                lambda("CLIENT_RANDOM", protection.get_item(secret));
+                lambda("CLIENT_RANDOM", protection.get_item(tls_context_client_hello_random), protection.get_item(secret));
             } break;
             default:
                 break;

@@ -437,10 +437,12 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 lambda_expand_label(tls_secret_s_ap_traffic, secret_application_server, hashalg, dlen, secret_application, "s ap traffic", context_hash);
                 lambda_expand_label(tls_secret_exp_master, secret_exporter_master, hashalg, dlen, secret_application, "exp master", context_hash);
 
-                auto sslkeylog = sslkeylog_exporter::get_instance();
-                sslkeylog->log(session, tls_secret_c_ap_traffic);
-                sslkeylog->log(session, tls_secret_s_ap_traffic);
-                sslkeylog->log(session, tls_secret_exp_master);
+                if (is_kindof_tls13()) {
+                    auto sslkeylog = sslkeylog_exporter::get_instance();
+                    sslkeylog->log(session, tls_secret_c_ap_traffic);
+                    sslkeylog->log(session, tls_secret_s_ap_traffic);
+                    sslkeylog->log(session, tls_secret_exp_master);
+                }
             }
 
             // calc

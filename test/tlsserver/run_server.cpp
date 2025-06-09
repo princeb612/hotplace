@@ -62,42 +62,51 @@ return_t echo_server(void*) {
     SSL_CTX* sslctx = nullptr;
     // http_protocol* http_prot = nullptr;
     openssl_tls* tls = nullptr;
-    openssl_tls_server_socket* tls_socket = nullptr;
+    server_socket* tls_socket = nullptr;
 
     __try2 {
-        // part of ssl certificate
+        if (option_flag_trial & option.flags) {
+            // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
+            load_certificate("rsa.crt", "rsa.key", nullptr);
+            // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
+            load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
 
-        uint32 tlscontext_flags = tlscontext_flag_tls;
-        std::string ciphersuites;
-        if (option.flags & option_flag_allow_tls13) {
-            tlscontext_flags |= tlscontext_flag_allow_tls13;
+            __try_new_catch(tls_socket, new trial_tls_server_socket, ret, __leave2);
+        } else {
+            // part of ssl certificate
+
+            uint32 tlscontext_flags = tlscontext_flag_tls;
+            std::string ciphersuites;
+            if (option.flags & option_flag_allow_tls13) {
+                tlscontext_flags |= tlscontext_flag_allow_tls13;
+            }
+            if (option.flags & option_flag_allow_tls12) {
+                tlscontext_flags |= tlscontext_flag_allow_tls12;
+            }
+
+            ciphersuites += "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256";
+            ciphersuites += ":";
+            ciphersuites +=
+                "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384:"
+                "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:"
+                "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM:"
+                "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8:"
+                "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:"
+                "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384:"
+                "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:"
+                "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256";
+
+            ret = openssl_tls_context_open(&sslctx, tlscontext_flags, "rsa.crt", "rsa.key");
+
+            SSL_CTX_set_cipher_list(sslctx, ciphersuites.c_str());
+
+            _logger->writeln("ciphersuites %s", ciphersuites.c_str());
+
+            SSL_CTX_set_verify(sslctx, 0, nullptr);
+
+            __try_new_catch(tls, new openssl_tls(sslctx), ret, __leave2);
+            __try_new_catch(tls_socket, new openssl_tls_server_socket(tls), ret, __leave2);
         }
-        if (option.flags & option_flag_allow_tls12) {
-            tlscontext_flags |= tlscontext_flag_allow_tls12;
-        }
-
-        ciphersuites += "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256";
-        ciphersuites += ":";
-        ciphersuites +=
-            "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384:"
-            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:"
-            "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM:"
-            "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8:"
-            "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:"
-            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384:"
-            "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:"
-            "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256";
-
-        ret = openssl_tls_context_open(&sslctx, tlscontext_flags, "server.crt", "server.key");
-
-        SSL_CTX_set_cipher_list(sslctx, ciphersuites.c_str());
-
-        _logger->writeln("ciphersuites %s", ciphersuites.c_str());
-
-        SSL_CTX_set_verify(sslctx, 0, nullptr);
-
-        __try_new_catch(tls, new openssl_tls(sslctx), ret, __leave2);
-        __try_new_catch(tls_socket, new openssl_tls_server_socket(tls), ret, __leave2);
 
         server_conf conf;
         conf.set(netserver_config_t::serverconf_concurrent_event, 1024)  // concurrent (linux epoll concerns, windows ignore)
@@ -140,8 +149,12 @@ return_t echo_server(void*) {
         netserver.close(handle_ipv6);
 
         tls_socket->release();
-        tls->release();
-        SSL_CTX_free(sslctx);
+
+        if (option_flag_trial & option.flags) {
+        } else {
+            tls->release();
+            SSL_CTX_free(sslctx);
+        }
     }
 
     return ret;

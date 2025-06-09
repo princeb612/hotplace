@@ -25,7 +25,7 @@
     * CBOR
 
 * details
-  * Revision 792
+  * Revision 793
   * Revision 789
     * [fixed] key_share
   * Revision 788 (Tag 1.30)

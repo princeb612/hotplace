@@ -37,10 +37,10 @@ uint16 toprot(OPTION& o, const char* source) {
         type = 3;
     } else if ("tls13" == text) {
         type = 3;
-        o.flags |= flag_allow_tls13;
+        o.flags |= option_flag_allow_tls13;
     } else if ("tls12" == text) {
         type = 3;
-        o.flags |= flag_allow_tls12;
+        o.flags |= option_flag_allow_tls12;
     } else if (("dtls" == text) || ("4" == text)) {
         type = 4;
     }
@@ -66,16 +66,17 @@ int main(int argc, char** argv) {
                                       [](OPTION& o, char* param) -> void { o.prot = toprot(o, param); })
                        .preced()
                 << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-i", "debug TLS inside", [](OPTION& o, char* param) -> void { o.flags |= flag_debug_tls_inside; }).optional()
+                << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.flags |= option_flag_keylog; }).optional()
+                << t_cmdarg_t<OPTION>("-i", "debug TLS inside", [](OPTION& o, char* param) -> void { o.flags |= option_flag_debug_tls_inside; }).optional()
                 << t_cmdarg_t<OPTION>("-h", "HTTP/1.1",
                                       [](OPTION& o, char* param) -> void {
-                                          o.flags |= flag_http;
+                                          o.flags |= option_flag_http;
                                           o.message = "GET / HTTP/1.1\r\n\r\n";
                                       })
                        .optional()
                 << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced()
                 << t_cmdarg_t<OPTION>("-etm", "TLS 1.2 EtM (trial_tls_client_socket)", [](OPTION& o, char* param) -> void {
-                       o.flags |= flag_enable_etm;
+                       o.flags |= option_flag_enable_etm;
                    }).optional();
     ret = _cmdline->parse(argc, argv);
     if (errorcode_t::success == ret) {
@@ -100,6 +101,12 @@ int main(int argc, char** argv) {
             set_trace_level(option.trace_level);
         }
 
+        auto lambda = [&](const char* line) -> void { _logger->writeln(line); };
+        if (option_flag_keylog & option.flags) {
+            auto sslkeylog = sslkeylog_exporter::get_instance();
+            sslkeylog->set(lambda);
+        }
+
 #if defined _WIN32 || defined _WIN64
         winsock_startup();
 #endif
@@ -112,14 +119,14 @@ int main(int argc, char** argv) {
                 udp_client();
                 break;
             case 3:
-                if (0 == (option.flags & flag_debug_tls_inside)) {
+                if (0 == (option.flags & option_flag_debug_tls_inside)) {
                     tls_client();
                 } else {
                     tls_client2();
                 }
                 break;
             case 4:
-                if (0 == (option.flags & flag_debug_tls_inside)) {
+                if (0 == (option.flags & option_flag_debug_tls_inside)) {
                     dtls_client();
                 } else {
                     dtls_client2();

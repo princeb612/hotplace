@@ -15,11 +15,12 @@ struct OPTION {
     int verbose;
     int debug;
     int trace_level;
+    int keylog;
     int log;
     int time;
     binary_t clienthello;
 
-    OPTION() : verbose(0), debug(0), trace_level(0), log(0), time(0) {
+    OPTION() : verbose(0), debug(0), trace_level(0), keylog(0), log(0), time(0) {
         // do nothing
     }
     void enable_debug() {

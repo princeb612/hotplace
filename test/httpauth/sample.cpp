@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-h2", "HTTP/2", [](OPTION& o, char* param) -> void { o.h2 = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.keylog = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
@@ -54,6 +55,12 @@ int main(int argc, char** argv) {
         auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void { _logger->write(s); };
         set_trace_debug(lambda_tracedebug);
         set_trace_option(trace_bt | trace_except | trace_debug);
+    }
+
+    auto lambda = [&](const char* line) -> void { _logger->writeln(line); };
+    if (option.keylog) {
+        auto sslkeylog = sslkeylog_exporter::get_instance();
+        sslkeylog->set(lambda);
     }
 
     if (option.run) {

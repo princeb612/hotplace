@@ -14,11 +14,12 @@ using namespace hotplace::io;
 using namespace hotplace::net;
 
 enum {
-    flag_debug_tls_inside = 1 << 0,
-    flag_http = 1 << 1,
-    flag_allow_tls12 = 1 << 2,
-    flag_allow_tls13 = 1 << 3,
-    flag_enable_etm = 1 << 4,
+    option_flag_debug_tls_inside = 1 << 0,
+    option_flag_http = 1 << 1,
+    option_flag_allow_tls12 = 1 << 2,
+    option_flag_allow_tls13 = 1 << 3,
+    option_flag_enable_etm = 1 << 4,
+    option_flag_keylog = 1 << 5,
 };
 
 typedef struct _OPTION {

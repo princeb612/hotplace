@@ -17,12 +17,13 @@ typedef struct _OPTION {
     int port;
     int port_tls;
     int h2;
+    int keylog;
     int verbose;
     int debug;
     int log;
     int time;
 
-    _OPTION() : run(0), port(8080), port_tls(9000), h2(0), verbose(0), debug(0), log(0), time(0) {}
+    _OPTION() : run(0), port(8080), port_tls(9000), h2(0), keylog(0), verbose(0), debug(0), log(0), time(0) {}
 } OPTION;
 
 extern test_case _test_case;

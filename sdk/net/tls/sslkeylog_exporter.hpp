@@ -25,19 +25,26 @@ namespace net {
  *          auto sslkeylog = sslkeylog_exporter::get_instance();
  *          auto lambda = [&](const char* line) -> void { _logger->writeln(line); };
  *          sslkeylog->set(lambda);
- *
- *          set_trace_level(loglevel_debug);
  */
 class sslkeylog_exporter {
+    friend class tls_protection;
+
    public:
     static sslkeylog_exporter* get_instance();
 
     sslkeylog_exporter& set(std::function<void(const char*)> func);
-
-    return_t log(tls_session* session, tls_secret_t secret);
+    /**
+     * SSL_CTX_set_keylog_callback
+     */
+    void log(const char* line);
 
    protected:
     sslkeylog_exporter();
+
+    /**
+     * tls_protection key calcuration
+     */
+    return_t log(tls_session* session, tls_secret_t secret);
 
     static sslkeylog_exporter _instance;
     std::function<void(const char*)> _keylog_hook;
