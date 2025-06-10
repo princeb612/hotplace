@@ -70,9 +70,9 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
             __leave2;
         }
 
-        size_t tpos = pos;                            // responding to unhandled records
-        ret = do_read_body(dir, stream, size, tpos);  // decryption
-        pos += get_body_size();                       // responding to unhandled records
+        size_t tpos = pos;
+        ret = do_read_body(dir, stream, size, tpos);
+        pos += get_body_size();
 
         do_postprocess(dir);
     }
@@ -209,13 +209,16 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if ((size < pos) || (size - pos < 5)) {
+
+        auto session = get_session();
+        size_t minsize = (session_type_dtls == session->get_type()) ? sizeof(dtls_header) : sizeof(tls_header);
+
+        if ((size < pos) || (size - pos < minsize)) {
             ret = errorcode_t::no_more;
             __leave2;
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto session = get_session();
 
         uint8 content_type = 0;
         uint16 record_version = 0;
@@ -330,7 +333,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
     }
     __finally2 {
         if (errorcode_t::success != ret) {
-            pos = recpos;
+            pos = recpos;  // rollback
         }
     }
     return ret;

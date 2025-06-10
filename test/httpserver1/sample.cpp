@@ -51,12 +51,10 @@ int main(int argc, char **argv) {
     _logger.make_share(builder.build());
     _logger->setcolor(bold, cyan);
 
-    if (option.debug || option.trace_level) {
+    if (option.debug) {
         auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t *s) -> void { _logger->write(s); };
         set_trace_debug(lambda_tracedebug);
         set_trace_option(trace_bt | trace_except | trace_debug);
-    }
-    if (option.trace_level) {
         set_trace_level(option.trace_level);
     }
 

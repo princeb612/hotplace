@@ -525,6 +525,7 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
                 records << builder.set(session).set(tls_content_type_change_cipher_spec).set(dir).construct().build();
             }
             {
+                // encrypted_extensions
                 auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().set_protected(true).build();
                 *record << new tls_handshake_encrypted_extensions(session);
                 records << record;

@@ -5,3 +5,102 @@ run debug
 cd module
 ./test-module -v -d
 ```
+
+### tasks
+- [ ] asn1
+  - pending
+- [x] authenticode
+- [x] base
+- [x] bufferio
+- [x] cbor
+  - [x] RFC 7049
+- [x] cmdline
+- [x] cose
+  - [x] RFC 8152
+  - [x] RFC 8778
+  - [x] RFC 9338
+- [x] crypto
+  - [x] RFC 3394
+  - [x] RFC 7516
+  - [x] RFC 7539
+- [x] datetime
+- [ ] dtlsserver
+  - [ ] integration
+    - [x] network_server
+    - [x] libssl
+    - [ ] trial
+- [x] encode
+- [x] etc
+- [x] graph
+- [x] hash
+  - [x] RFC 4226
+  - [x] RFC 4231
+  - [x] RFC 4493
+  - [x] RFC 6238
+- [x] hpack
+  - [x] RFC 7541
+- [x] httpaltsvc
+- [x] httpauth
+- [ ] httpserver1
+  - [ ] integration
+    - [x] network_server
+    - [x] libssl
+    - [ ] trial
+- [ ] httpserver2
+  - [ ] integration
+    - [x] network_server
+    - [x] libssl
+    - [ ] trial
+- [x] httptest
+- [x] ieee754
+- [x] ipaddr
+- [x] jose
+  - [x] RFC 7515
+  - [x] RFC 7516
+  - [x] RFC 7517
+  - [x] RFC 7518
+  - [x] RFC 7520
+  - [x] RFC 7638
+  - [x] RFC 8037
+- [x] kdf
+  - [x] RFC 4615
+  - [x] RFC 5869
+  - [x] RFC 6070
+  - [x] RFC 7914
+  - [x] RFC 9106
+- [x] key
+- [x] linux
+- [x] mlfq
+- [x] netclient
+- [x] nostd
+- [x] odbc
+- [x] parser
+- [x] pattern
+- [x] payload
+- [x] qpack
+  - [x] RFC 9204
+- [x] quic
+  - [x] RFC 9000
+  - [x] RFC 9001
+  - [x] RFC 9369
+- [x] random
+- [x] sign
+  - [x] RFC 6979
+- [x] stream
+- [x] string
+- [x] sysmon
+- [x] tcpserver1
+- [x] tcpserver2
+- [x] thread
+- [ ] tls
+  - [x] RFC 8448
+  - [ ] see [README.md](tls/README.md)
+- [x] tlsserver
+  - [x] integration
+    - [x] network_server
+    - [x] libssl
+    - [ ] trial
+- [x] udpserver1
+- [x] udpserver2
+- [x] unittest
+- [x] windows

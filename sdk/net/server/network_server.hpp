@@ -49,12 +49,13 @@ class server_conf : public t_key_value<netserver_config_t, uint16> {
 };
 
 enum netserver_cb_type_t {
-    netserver_cb_socket = 0,        // netsocket_t*
+    netserver_cb_netsocket = 0,     // netsocket_t* (can be nullptr in case of mux_tryconnect)
     netserver_cb_dataptr = 1,       // char*, byte_t*
     netserver_cb_datasize = 2,      // size_t
     netserver_cb_session = 3,       // network_session*
     netserver_cb_http_request = 4,  // http_request*
     netserver_cb_sockaddr = 5,      // sockaddr_storage_t*, udp client address
+    netserver_cb_socket = 6,        // mux_tryconnect
 };
 
 typedef return_t (*ACCEPT_CONTROL_CALLBACK_ROUTINE)(socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
@@ -99,20 +100,20 @@ typedef struct _network_multiplexer_context_t network_multiplexer_context_t;
  *  uint16 NetworkRoutine (uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context)
  *  {
  *     uint32 ret = errorcode_t::success;
- *     netsocket_t* pSession = (netsocket_t*)data_array[netserver_cb_type_t::netserver_cb_socket]; // [0]
- *     char* buf = (char*)data_array[netserver_cb_type_t::netserver_cb_dataptr]; // [1]
- *     size_t bufsize = (size_t)data_array[netserver_cb_type_t::netserver_cb_datasize]; // [2]
+ *     netsocket_t* netsock = (netsocket_t*)data_array[0]; // netserver_cb_type_t::netserver_cb_netsocket
+ *     char* buf = (char*)data_array[1]; // netserver_cb_type_t::netserver_cb_dataptr
+ *     size_t bufsize = (size_t)data_array[2]; // netserver_cb_type_t::netserver_cb_datasize
  *
  *     switch(type)
  *     {
  *     case multiplexer_event_type_t::mux_connect:
- *         _log(LOGHELPER_DEBUG, "connect %d", pSession->cli_socket);
+ *         _log(LOGHELPER_DEBUG, "connect %d", netsock->get_event_socket());
  *         break;
  *     case multiplexer_event_type_t::mux_read:
- *         _log(LOGHELPER_DEBUG, "read %d msg [\n%.*s]", pSession->cli_socket, bufsize, buf);
+ *         _log(LOGHELPER_DEBUG, "read %d msg [\n%.*s]", netsock->get_event_socket(), bufsize, buf);
  *         break;
  *     case multiplexer_event_type_t::mux_disconnect:
- *         _log(LOGHELPER_DEBUG, "disconnect %d", pSession->cli_socket);
+ *         _log(LOGHELPER_DEBUG, "disconnect %d", netsock->get_event_socket());
  *         break;
  *     }
  *     return ret;
@@ -148,7 +149,7 @@ class network_server {
      *              RTL_NUMBER_OF(third parameter)
      *            parameter 3
      *              data_array[0] netsocket_t*
-     *                equivalant data_array[netserver_cb_type_t::netserver_cb_socket]
+     *                equivalant data_array[netserver_cb_type_t::netserver_cb_netsocket]
      *              data_array[1] transfered buffer
      *                equivalant data_array[netserver_cb_type_t::netserver_cb_dataptr]
      *              data_array[2] transfered size
@@ -168,8 +169,8 @@ class network_server {
      *            parameter 2
      *              RTL_NUMBER_OF(third parameter)
      *            parameter 3
-     *              data_array[0] socket
-     *              data_array[1] sockaddr_storage_t*
+     *              data_array[5] sockaddr_storage_t*
+     *              data_array[6] socket_t
      *
      * @param   void*               callback_param  [IN] callback parameter
      * @return  error code (see error.hpp)

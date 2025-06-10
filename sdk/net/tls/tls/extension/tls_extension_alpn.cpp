@@ -27,6 +27,9 @@ tls_extension_alpn::tls_extension_alpn(tls_session* session) : tls_extension(tls
 return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
         uint16 alpn_len = 0;
         binary_t protocols;
         {
@@ -39,6 +42,12 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
 
             alpn_len = pl.t_value_of<uint16>(constexpr_alpn_len);
             pl.get_binary(constexpr_protocol, protocols);
+        }
+
+        {
+            // TODO
+            // auto tlsadvisor = tls_advisor::get_instance();
+            // tlsadvisor->negotiate_alpn(session, &protocols[0], protocols.size());
         }
 
 #if defined DEBUG
@@ -66,7 +75,8 @@ return_t tls_extension_alpn::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     {
         payload pl;
-        pl << new payload_member(uint16(_protocols.size()), true, constexpr_alpn_len) << new payload_member(_protocols, constexpr_protocol);
+        pl << new payload_member(uint16(_protocols.size()), true, constexpr_alpn_len)  //
+           << new payload_member(_protocols, constexpr_protocol);                      //
         pl.write(bin);
     }
     return ret;

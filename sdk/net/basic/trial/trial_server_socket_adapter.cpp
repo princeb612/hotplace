@@ -65,19 +65,8 @@ server_socket* trial_server_socket_adapter::get_dtls_server_socket() { return nu
 
 return_t trial_server_socket_adapter::enable_alpn(const char* prot) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == prot) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (0 == strcmp(prot, "h2")) {
-            // TODO
-        } else {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-    }
-    __finally2 {}
+    auto tlsadvisor = tls_advisor::get_instance();
+    ret = tlsadvisor->enable_alpn(prot);
     return ret;
 }
 

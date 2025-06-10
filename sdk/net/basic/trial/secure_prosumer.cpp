@@ -65,7 +65,7 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir) 
         const byte_t* stream = _mbs.data();
         size_t size = _mbs.size();
         size_t pos = 0;
-        while (pos < size) {
+        while ((errorcode_t::success == ret) && (pos < size)) {
             uint8 content_type = stream[pos];
             auto record = builder.set(session).set(content_type).build();
             if (record) {

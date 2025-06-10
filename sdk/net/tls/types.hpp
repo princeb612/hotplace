@@ -39,23 +39,6 @@ enum tls_content_type_t : uint8 {
 #define TLS_CONTENT_TYPE_MASK_CIPHERTEXT 0x20
 
 #pragma pack(push, 1)
-union tls_content_t {
-    struct {
-        tls_content_type_t type;
-        uint16 version;
-        uint16 length;
-    } tls;
-    struct {
-        tls_content_type_t type;
-        uint16 version;
-        uint16 keyepoch;
-        byte_t recordseq[6];
-        uint16 length;
-    } dtls;
-};
-#pragma pack(pop)
-
-#pragma pack(push, 1)
 struct tls_header {
     tls_content_type_t type;
     uint16 version;
@@ -67,6 +50,10 @@ struct dtls_header {
     uint16 keyepoch;
     byte_t recordseq[6];
     uint16 length;
+};
+union tls_content_t {
+    tls_header tls;
+    dtls_header dtls;
 };
 #pragma pack(pop)
 

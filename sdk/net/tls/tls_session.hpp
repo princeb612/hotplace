@@ -150,6 +150,8 @@ class tls_session {
 
     void schedule(tls_handshake* handshake);
     void run_scheduled(tls_direction_t dir);
+    void schedule(tls_extension* extension);
+    void run_scheduled_extension(tls_extensions* extensions);
 
     /**
      * If no common cryptographic parameters can be negotiated,
@@ -180,7 +182,8 @@ class tls_session {
     t_shared_reference<tls_session> _shared;
 
     std::map<tls_direction_t, session_info> _direction;
-    std::queue<tls_handshake*> _que;
+    std::queue<tls_handshake*> _handshake_que;
+    std::queue<tls_extension*> _extension_que;
     tls_protection _tls_protection;
     session_type_t _type;
     uint32 _status;

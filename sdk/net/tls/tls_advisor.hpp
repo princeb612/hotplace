@@ -232,6 +232,9 @@ class tls_advisor {
     const EVP_PKEY* get_key(tls_session* session, const char* kid);
     const X509* get_cert(tls_session* session, const char* kid);
 
+    return_t enable_alpn(const char* prot);
+    return_t negotiate_alpn(tls_session* session, const byte_t* alpn, size_t size);
+
    protected:
     tls_advisor();
     void load_resource();
@@ -287,6 +290,8 @@ class tls_advisor {
     std::map<uint8, const tls_quic_packet_type_code_t*> _quic_packet_type_codes;
 
     std::map<uint32, const tls_session_status_code_t*> _session_status_codes;
+
+    binary_t _prot;
 
     bool _load;
     crypto_key _keys;

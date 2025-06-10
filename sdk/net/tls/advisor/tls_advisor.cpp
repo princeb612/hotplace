@@ -8,11 +8,14 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/binary.hpp>
+#include <sdk/base/pattern/aho_corasick.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_session.hpp>
+#include <sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
 
 namespace hotplace {
 namespace net {
@@ -549,6 +552,57 @@ const X509* tls_advisor::get_cert(tls_session* session, const char* kid) {
     }
     __finally2 {}
     return ret_value;
+}
+
+return_t tls_advisor::enable_alpn(const char* prot) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        _prot.clear();
+        if (prot) {
+            size_t size = strlen(prot);
+            binary_append(_prot, uint8(size));
+            binary_append(_prot, prot, size);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_advisor::negotiate_alpn(tls_session* session, const byte_t* alpn, size_t size) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (_prot.empty()) {
+            __leave2;
+        }
+        if ((nullptr == alpn) && size) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        t_aho_corasick<byte_t> ac;
+        std::multimap<unsigned, range_t> rearranged;
+
+        ac.insert(&_prot[0], _prot.size());  // pattern [0]
+        ac.build();
+
+        auto result = ac.search(alpn, size);
+
+        ac.order_by_pattern(result, rearranged);
+
+        auto select = [&](unsigned patid) -> void {
+            auto iter = rearranged.lower_bound(patid);
+            if (rearranged.end() != iter) {
+                auto ext = new tls_extension_alpn(session);
+                ext->set_protocols(_prot);
+                session->schedule(ext);
+                ext->release();
+            }
+        };
+
+        select(0);
+    }
+    __finally2 {}
+    return ret;
 }
 
 }  // namespace net

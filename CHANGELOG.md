@@ -25,7 +25,8 @@
     * CBOR
 
 * details
-  * Revision 793
+  * Revision 794
+    * [tested] http_server integration (HTTP/1.1 only)
   * Revision 789
     * [fixed] key_share
   * Revision 788 (Tag 1.30)

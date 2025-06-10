@@ -209,17 +209,37 @@ void tls_session::schedule(tls_handshake* handshake) {
     if (handshake) {
         critical_section_guard guard(_lock);
         handshake->addref();
-        _que.push(handshake);
+        _handshake_que.push(handshake);
     }
 }
 
 void tls_session::run_scheduled(tls_direction_t dir) {
     critical_section_guard guard(_lock);
-    while (false == _que.empty()) {
-        auto handshake = _que.front();
+    while (false == _handshake_que.empty()) {
+        auto handshake = _handshake_que.front();
         handshake->run_scheduled(dir);
         handshake->release();
-        _que.pop();
+        _handshake_que.pop();
+    }
+}
+
+void tls_session::schedule(tls_extension* extension) {
+    if (extension) {
+        critical_section_guard guard(_lock);
+        extension->addref();
+        _extension_que.push(extension);
+    }
+}
+
+void tls_session::run_scheduled_extension(tls_extensions* extensions) {
+    if (extensions) {
+        critical_section_guard guard(_lock);
+        while (false == _extension_que.empty()) {
+            auto ext = _extension_que.front();
+            extensions->add(ext, true);
+            ext->release();
+            _extension_que.pop();
+        }
     }
 }
 

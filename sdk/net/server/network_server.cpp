@@ -596,12 +596,12 @@ return_t network_server::try_connected(network_multiplexer_context_t* handle, so
             __leave2;
         }
 
-        void* dispatch_data[4] = {
+        void* dispatch_data[7] = {
             nullptr,
         };
-        dispatch_data[0] = (void*)(arch_t)event_socket;
-        dispatch_data[1] = client_addr;
-        handle->callback_routine(multiplexer_event_type_t::mux_tryconnect, 4, dispatch_data, nullptr, handle->callback_param);
+        dispatch_data[5] = client_addr;
+        dispatch_data[6] = (void*)(arch_t)event_socket;
+        handle->callback_routine(multiplexer_event_type_t::mux_tryconnect, RTL_NUMBER_OF(dispatch_data), dispatch_data, nullptr, handle->callback_param);
     }
     __finally2 {
         // do nothing
@@ -945,7 +945,7 @@ return_t network_server::consumer_routine(network_multiplexer_context_t* handle)
                 void* dispatch_data[6] = {
                     nullptr,
                 };
-                dispatch_data[0] = session_object->socket_info(); /* netserver_cb_type_t::netserver_cb_socket */
+                dispatch_data[0] = session_object->socket_info(); /* netserver_cb_type_t::netserver_cb_netsocket */
                 dispatch_data[1] = buffer_object->content();      /* netserver_cb_type_t::netserver_cb_dataptr */
                 dispatch_data[2] = (void*)buffer_object->size();  /* netserver_cb_type_t::netserver_cb_datasize */
                 dispatch_data[3] = session_object;                /* netserver_cb_type_t::netserver_cb_session */

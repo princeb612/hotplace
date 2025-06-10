@@ -109,6 +109,9 @@ void sslkeylog_importer::session_status_changed(tls_session* session, uint32 sta
         const binary_t& client_random = protection.get_item(tls_context_client_hello_random);
         auto instance = sslkeylog_importer::get_instance();
         auto& secret_map = instance->_keylogs[client_random];
+#if defined DEBUG
+        auto client_random_b16 = base16_encode(client_random);
+#endif
         for (const auto& item : secret_map) {
             auto secret = item.first;
             const binary_t& value = item.second;
@@ -119,7 +122,7 @@ void sslkeylog_importer::session_status_changed(tls_session* session, uint32 sta
             if (istraceable()) {
                 basic_stream dbs;
                 auto& name = _instance._rtable[secret];
-                dbs.println("%s %s", name.c_str(), base16_encode(value).c_str());
+                dbs.println("%s %s %s", name.c_str(), client_random_b16.c_str(), base16_encode(value).c_str());
                 trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
             }
 #endif
