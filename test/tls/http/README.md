@@ -9,3 +9,7 @@
   - httpserver2
   - google chrome
   - [HTTP/2](README_http2.md)
+- http2_trial.pcapng
+  - httpserver2
+  - google chrome
+  - [HTTP/2](README_http2_trial.md)

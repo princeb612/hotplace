@@ -45,9 +45,8 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
         }
 
         {
-            // TODO
-            // auto tlsadvisor = tls_advisor::get_instance();
-            // tlsadvisor->negotiate_alpn(session, &protocols[0], protocols.size());
+            auto tlsadvisor = tls_advisor::get_instance();
+            tlsadvisor->negotiate_alpn(session, &protocols[0], protocols.size());
         }
 
 #if defined DEBUG

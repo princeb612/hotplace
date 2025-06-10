@@ -9,13 +9,15 @@
  */
 
 #include <sdk/base/basic/binary.hpp>
+#include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/pattern/aho_corasick.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
+#include <sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_session.hpp>
-#include <sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
 
 namespace hotplace {
 namespace net {
@@ -594,12 +596,23 @@ return_t tls_advisor::negotiate_alpn(tls_session* session, const byte_t* alpn, s
             if (rearranged.end() != iter) {
                 auto ext = new tls_extension_alpn(session);
                 ext->set_protocols(_prot);
-                session->schedule(ext);
+                session->schedule_extension(ext);
                 ext->release();
             }
         };
 
         select(0);
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("> protocols");
+            dump_memory(alpn, size, &dbs, 16, 3, 0, dump_notrunc);
+            dbs.println("> pattern");
+            dump_memory(_prot, &dbs, 16, 3, 0, dump_notrunc);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+        }
+#endif
     }
     __finally2 {}
     return ret;

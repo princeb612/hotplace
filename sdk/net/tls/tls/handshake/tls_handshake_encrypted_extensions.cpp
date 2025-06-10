@@ -84,7 +84,7 @@ return_t tls_handshake_encrypted_extensions::do_write_body(tls_direction_t dir, 
     return_t ret = errorcode_t::success;
     auto session = get_session();
     binary_t extensions;
-    session->run_scheduled_extension(&get_extensions());
+    session->select_into_scheduled_extension(&get_extensions());
     ret = get_extensions().write(dir, extensions);
     binary_append(bin, uint16(extensions.size()), hton16);
     binary_append(bin, extensions);

@@ -455,6 +455,10 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
                 auto renegotiation_info = new tls_extension_renegotiation_info(session);
                 get_extensions().add(renegotiation_info);
             }
+
+            // TLS 1.2 server_hello
+            // TLS 1.3 encrypted_extensions
+            session->select_into_scheduled_extension(&get_extensions(), tls_ext_alpn);
         }
 
         binary_t extensions;

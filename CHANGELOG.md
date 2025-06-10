@@ -7,9 +7,9 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
-  * Revision 777-
+  * Revision 777- (Tag 1.32, Revision.795)
     * TLS server - research/debugging in progress, mingw64 environment
-  * Revision 682-776 (Tag 1.29, Revision.785)
+  * Revision 682-776
     * TLS, DTLS client
   * Revision 673-680 (Tag 0.97, Revision.684)
     * RFC 8448
@@ -25,11 +25,13 @@
     * CBOR
 
 * details
+  * Revision 795
+    * [tested] http_server integration (HTTP/2)
   * Revision 794
-    * [tested] http_server integration (HTTP/1.1 only)
+    * [tested] http_server integration (HTTP/1.1)
   * Revision 789
     * [fixed] key_share
-  * Revision 788 (Tag 1.30)
+  * Revision 788
     * [tested] TLS 1.2 ciphersuites (GCM)
   * Revision 785
   * Revision 784

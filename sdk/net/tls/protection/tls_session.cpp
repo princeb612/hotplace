@@ -223,22 +223,37 @@ void tls_session::run_scheduled(tls_direction_t dir) {
     }
 }
 
-void tls_session::schedule(tls_extension* extension) {
+void tls_session::schedule_extension(tls_extension* extension) {
     if (extension) {
         critical_section_guard guard(_lock);
         extension->addref();
-        _extension_que.push(extension);
+        _extension_list.push_back(extension);
     }
 }
 
-void tls_session::run_scheduled_extension(tls_extensions* extensions) {
+void tls_session::select_into_scheduled_extension(tls_extensions* extensions) {
     if (extensions) {
         critical_section_guard guard(_lock);
-        while (false == _extension_que.empty()) {
-            auto ext = _extension_que.front();
+        for (auto ext : _extension_list) {
             extensions->add(ext, true);
             ext->release();
-            _extension_que.pop();
+        }
+        _extension_list.clear();
+    }
+}
+
+void tls_session::select_into_scheduled_extension(tls_extensions* extensions, tls_ext_type_t type) {
+    if (extensions) {
+        critical_section_guard guard(_lock);
+        for (auto iter = _extension_list.begin(); iter != _extension_list.end(); iter++) {
+            auto ext = *iter;
+            if (ext->get_type() == type) {
+                extensions->add(ext, true);
+                ext->release();
+
+                _extension_list.erase(iter);
+                break;
+            }
         }
     }
 }

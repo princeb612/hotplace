@@ -16,4 +16,4 @@ rm .run
   - [x] HTTP/2
   - [x] libssl
   - [x] trial
-  - [ ] ALPN
+  - [x] ALPN
