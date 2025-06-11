@@ -25,7 +25,7 @@
     * CBOR
 
 * details
-  * Revision 796
+  * Revision 797
   * Revision 795
     * [tested] http_server integration (HTTP/2)
   * Revision 794

@@ -87,7 +87,6 @@ return_t simple_http2_server(void*) {
             .enable_https(true)  // enable https scheme
             .set_port_https(option.port_tls)
             .set_tls_certificate("server.crt", "server.key")  // RSA certificate
-            .set_tls_cipher_list(option.cs.empty() ? cs : option.cs)
             .set_tls_verify_peer(0)  // self-signed certificate
             .enable_ipv4(true)       // enable IPv4
             .enable_ipv6(false)      // disable IPv6
