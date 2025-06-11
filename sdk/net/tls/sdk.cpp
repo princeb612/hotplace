@@ -11,6 +11,7 @@
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/net/tls/sdk.hpp>
+#include <sdk/net/tls/sslkeylog_exporter.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>  // KID
 
@@ -46,7 +47,10 @@ return_t load_certificate(const char* certfile, const char* keyfile, const char*
     return ret;
 }
 
-void set_tls_keylog_callback(std::function<void(const char*)> func) {}
+void set_tls_keylog_callback(std::function<void(const char*)> func) {
+    auto sslkeylog = sslkeylog_exporter::get_instance();
+    sslkeylog->set(func);
+}
 
 }  // namespace net
 }  // namespace hotplace

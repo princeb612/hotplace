@@ -127,53 +127,49 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        uint16 selected_version = tls_10;
-        {
-            auto& versions = rhs._supported_versions;
-            for (auto ver : versions) {
-                if (tlsadvisor->is_kindof(tls_13, ver)) {
-                    selected_version = ver;
-                    break;
-                } else if (tlsadvisor->is_kindof(tls_12, ver)) {
-                    selected_version = ver;
-                }
-            }
-            if (tls_10 == selected_version) {
-                ret = errorcode_t::not_supported;
-                __leave2;
-            }
-            add_supported_version(selected_version);
+        std::set<crypto_kty_t> ktypes_set;
+        std::map<uint16, uint16> tlsversion_map;
+        std::map<uint16, std::list<uint16>> cs_map;
+
+        for (auto ver : rhs._supported_versions) {
+            bool is_tls13 = tlsadvisor->is_kindof_tls13(ver);
+            tlsversion_map.insert({is_tls13 ? tls_13 : tls_12, ver});
         }
+
         {
             // check certificate type(s), see load_certificate
-            std::set<crypto_kty_t> ktypes;
             auto& keys = tlsadvisor->get_keys();
             auto lambda = [&](crypto_key_object* k, void* param) -> void {
                 auto pkey = k->get_pkey();
                 auto kty = typeof_crypto_key(pkey);
-                ktypes.insert(kty);
+                ktypes_set.insert(kty);
             };
             keys.for_each(lambda, nullptr);
+        }
 
+        {
             uint16 candidate = 0;
 
-            for (auto cs : rhs._cipher_suites) {
+            for (auto cs : rhs._cipher_suites) {  // request
                 auto hint = tlsadvisor->hintof_cipher_suite(cs);
-                // RFC 5246 mandatory TLS_RSA_WITH_AES_128_CBC_SHA
-                if (hint && (tls_flag_support & hint->flags) && tlsadvisor->is_kindof(hint->version, selected_version)) {
+                if (hint && (tls_flag_support & hint->flags)) {
+                    if (false == tlsadvisor->test_ciphersuite(cs)) {  // see set_ciphersuites
+                        continue;
+                    }
+
                     if (tls_12 == hint->version) {
                         switch (hint->auth) {
                             case auth_rsa: {
                                 // allow TLS_ECDHE_RSA if RSA certificate exist
-                                auto iter = ktypes.find(kty_rsa);
-                                if (ktypes.end() == iter) {
+                                auto iter = ktypes_set.find(kty_rsa);
+                                if (ktypes_set.end() == iter) {
                                     continue;
                                 }
                             } break;
                             case auth_ecdsa: {
                                 // allow TLS_ECDHE_ECDSA if EC certificate exist
-                                auto iter = ktypes.find(kty_ec);
-                                if (ktypes.end() == iter) {
+                                auto iter = ktypes_set.find(kty_ec);
+                                if (ktypes_set.end() == iter) {
                                     continue;
                                 }
                             } break;
@@ -185,26 +181,59 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                             continue;
                         }
                     }
-
-                    if (check_trace_level(loglevel_debug) && istraceable()) {
+#if defined DEBUG
+                    if (istraceable()) {
                         basic_stream dbs;
-                        dbs.printf("\e[1;33m# select 0x%04x %s\e[0m", cs, hint->name_iana);
+                        dbs.println(" - \e[1;33m# 0x%02x %s\e[0m", cs, hint->name_iana);
                         trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
                     }
-
-                    add_cipher_suite(cs);
-                    set_cipher_suite(cs);
-                    break;
+#endif
+                    cs_map[hint->version].push_back(cs);
                 }
             }
+        }
 
-            if (_cipher_suites.empty()) {
+        {
+            auto lambda = [&](tls_version_t ver) -> bool {
+                bool ret_value = false;
+                for (auto cs : cs_map[ver]) {
+                    add_supported_version(ver);
+                    add_cipher_suite(cs);
+                    set_cipher_suite(cs);
+                    ret_value = true;
+#if defined DEBUG
+                    if (istraceable()) {
+                        auto hint = tlsadvisor->hintof_cipher_suite(cs);
+                        basic_stream dbs;
+                        dbs.println(">> \e[1;33m# 0x%02x %s\e[0m", cs, hint->name_iana);
+                        trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                    }
+#endif
+                    break;
+                }
+                return ret_value;
+            };
+
+            bool test = false;
+            test = lambda(tls_13);
+            if (false == test) {
+                test = lambda(tls_12);
+            }
+            if (false == test) {
+                test = lambda(tls_11);
+            }
+            if (false == test) {
+                test = lambda(tls_10);
+            }
+
+            if (false == test) {
                 session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
                 __leave2;
             }
         }
+
         {
             // copy
             _signature_algorithms = rhs._signature_algorithms;

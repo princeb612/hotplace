@@ -24,6 +24,9 @@ return_t trial_server_socket_adapter::startup_tls(const std::string& server_cert
     __try2 {
         load_certificate(server_cert.c_str(), server_key.c_str(), nullptr);
         __try_new_catch(_tls_server_socket, new trial_tls_server_socket, ret, __leave2);
+
+        auto tlsadvisor = tls_advisor::get_instance();
+        tlsadvisor->set_ciphersuites(cipher_list.c_str());
     }
     __finally2 {}
     return ret;

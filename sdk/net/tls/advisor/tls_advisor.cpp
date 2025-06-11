@@ -11,6 +11,7 @@
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/pattern/aho_corasick.hpp>
+#include <sdk/base/string/string.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
@@ -554,6 +555,70 @@ const X509* tls_advisor::get_cert(tls_session* session, const char* kid) {
     }
     __finally2 {}
     return ret_value;
+}
+
+return_t tls_advisor::set_ciphersuites(const char* ciphersuites) {
+    return_t ret = errorcode_t::success;
+
+    __try2 {
+        if (nullptr == ciphersuites) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        _ciphersuites.clear();
+
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.println("# set ciphersuite(s)");
+            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+        }
+#endif
+
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto lambda = [&](const std::string& item) -> void {
+            auto hint = tlsadvisor->hintof_cipher_suite(item);
+            if (hint && (tls_flag_support & hint->flags)) {
+                auto code = hint->code;
+                _ciphersuites.insert(code);
+#if defined DEBUG
+                if (istraceable()) {
+                    basic_stream dbs;
+                    dbs.println(" > 0x%02x %s", hint->code, hint->name_iana);
+                    trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                }
+#endif
+            }
+        };
+
+        split_context_t* context = nullptr;
+        split_begin(&context, ciphersuites, ":");
+        split_foreach(context, lambda);
+        split_end(context);
+    }
+    __finally2 {}
+
+    return ret;
+}
+
+return_t tls_advisor::set_default_ciphersuites() {
+    return_t ret = errorcode_t::success;
+    _ciphersuites.clear();
+    return ret;
+}
+
+bool tls_advisor::test_ciphersuite(uint16 cs) {
+    bool ret = false;
+    if (_ciphersuites.empty()) {
+        ret = true;
+    } else {
+        auto iter = _ciphersuites.find(cs);
+        if (_ciphersuites.end() != iter) {
+            ret = true;
+        }
+    }
+    return ret;
 }
 
 return_t tls_advisor::enable_alpn(const char* prot) {

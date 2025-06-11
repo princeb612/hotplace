@@ -30,6 +30,7 @@ int main(int argc, char **argv) {
                 << t_cmdarg_t<OPTION>("-e", "allow Content-Encoding", [](OPTION &o, char *param) -> void { o.content_encoding = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-T", "use trial", [](OPTION &o, char *param) -> void { o.trial = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION &o, char *param) -> void { o.keylog = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-cs", "ciphersuite", [](OPTION &o, char *param) -> void { o.cs = param; }).optional().preced()
                 << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION &o, char *param) -> void { o.debug = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION &o, char *param) -> void { o.trace_level = atoi(param); }).optional().preced()

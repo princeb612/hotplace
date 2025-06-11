@@ -124,11 +124,18 @@ return_t simple_http_server(void *) {
             .enable_https(true)
             .set_port_https(option.port_tls)
             .set_tls_certificate("server.crt", "server.key")
-            .set_tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
             .set_tls_verify_peer(0)
             .enable_ipv4(true)
             .enable_ipv6(true)
             .set_handler(consumer_routine);
+        if (option.trial) {
+            builder.set_tls_cipher_list(option.cs);
+        } else {
+            builder.set_tls_cipher_list(
+                "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:"
+                "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:"
+                "TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256");
+        }
         if (option.content_encoding) {
             builder.allow_content_encoding("deflate, gzip");
         }

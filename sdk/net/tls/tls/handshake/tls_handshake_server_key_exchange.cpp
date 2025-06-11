@@ -258,20 +258,6 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
         protection_context.for_each_supported_groups(lambda);
     }
 
-    // crypto_kty_t kty = kty_unknown;
-    // auto cs = protection.get_cipher_suite();
-    // auto hint = tlsadvisor->hintof_cipher_suite(cs);
-    // switch (hint->auth) {
-    //     case auth_rsa:
-    //         kty = kty_rsa;
-    //         break;
-    //     case auth_ecdsa:
-    //         kty = kty_ec;
-    //         break;
-    //     default:
-    //         break;
-    // }
-
     auto pkey_cert = tlsadvisor->get_key(session, KID_TLS_SERVER_CERTIFICATE_PRIVATE);
     auto kty_cert = typeof_crypto_key(pkey_cert);
 

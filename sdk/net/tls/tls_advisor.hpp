@@ -17,6 +17,7 @@
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/types.hpp>
 #include <sdk/net/tls/types.hpp>
+#include <set>
 
 namespace hotplace {
 namespace net {
@@ -232,6 +233,18 @@ class tls_advisor {
     const EVP_PKEY* get_key(tls_session* session, const char* kid);
     const X509* get_cert(tls_session* session, const char* kid);
 
+    /**
+     * @brief   ciphersuite
+     * @remarks multi-thread unsafe
+     */
+    return_t set_ciphersuites(const char* ciphersuites);
+    return_t set_default_ciphersuites();
+    bool test_ciphersuite(uint16 ciphersuite);
+
+    /**
+     * @brief   ALPN
+     * @remarks multi-thread unsafe
+     */
     return_t enable_alpn(const char* prot);
     return_t negotiate_alpn(tls_session* session, const byte_t* alpn, size_t size);
 
@@ -291,6 +304,7 @@ class tls_advisor {
 
     std::map<uint32, const tls_session_status_code_t*> _session_status_codes;
 
+    std::set<uint16> _ciphersuites;
     binary_t _prot;
 
     bool _load;
