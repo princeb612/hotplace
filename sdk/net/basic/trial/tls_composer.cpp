@@ -624,10 +624,5 @@ uint16 tls_composer::get_minver() { return _minspec; }
 
 uint16 tls_composer::get_maxver() { return _maxspec; }
 
-return_t tls_composer::set_certificate(tls_direction_t dir, const std::string& certfile, const std::string& keyfile) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
-
 }  // namespace net
 }  // namespace hotplace

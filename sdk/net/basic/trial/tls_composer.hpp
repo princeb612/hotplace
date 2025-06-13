@@ -31,7 +31,6 @@ class tls_composer {
     tls_session* get_session();
     void set_minver(tls_version_t version);
     void set_maxver(tls_version_t version);
-    return_t set_certificate(tls_direction_t dir, const std::string& certfile, const std::string& keyfile);
     uint16 get_minver();
     uint16 get_maxver();
 

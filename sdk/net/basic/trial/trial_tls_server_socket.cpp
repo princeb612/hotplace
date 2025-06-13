@@ -73,6 +73,12 @@ return_t trial_tls_server_socket::read(socket_context_t *handle, int mode, char 
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+#if defined __linux
+        if (nullptr == cbread) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+#endif
 
         if (read_socket_recv & mode) {
             // epoll
@@ -81,13 +87,20 @@ return_t trial_tls_server_socket::read(socket_context_t *handle, int mode, char 
                 __leave2;
             }
         }
+
+        size_t ptr_size = 0;
+#if defined __linux__
+        ptr_size = *cbread;
+#elif defined _WIN32 || defined _WIN64
+        ptr_size = size_data;
+#endif
         if (read_bio_write & mode) {
             // iocp & epoll, handshake, alert
-            ret = get_secure_prosumer()->produce(handle->handle.session, from_client, (byte_t *)ptr_data, size_data);
+            ret = get_secure_prosumer()->produce(handle->handle.session, from_client, (byte_t *)ptr_data, ptr_size);
         }
         if (read_ssl_read & mode) {
             // iocp & epoll, application_data
-            ret = get_secure_prosumer()->consume(socket_type(), 0, ptr_data, size_data, cbread, nullptr, 0);
+            ret = get_secure_prosumer()->consume(socket_type(), 0, ptr_data, ptr_size, cbread, nullptr, 0);
         }
     }
     __finally2 {}

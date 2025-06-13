@@ -57,12 +57,12 @@ void test_aead_ccm() {
         crypt.close(handle);
     };
 
-    // SET_L=8, SET_IVLEN=15-L=4, AEAD_SET_TAG=14
+    // TAG 16
     lambda("AES_128_GCM", crypto_scheme_aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
     lambda("AES_192_GCM", crypto_scheme_aes_192_ccm, key, iv, (byte_t*)sample, size, aad);
     lambda("AES_256_GCM", crypto_scheme_aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
 
-    // SET_L=8, SET_IVLEN=15-L=4, AEAD_SET_TAG=14
+    // TAG 14
     lambda("AES_128_CCM", crypto_scheme_aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
     lambda("AES_192_CCM", crypto_scheme_aes_192_ccm, key, iv, (byte_t*)sample, size, aad);
     lambda("AES_256_CCM", crypto_scheme_aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
