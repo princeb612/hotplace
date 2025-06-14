@@ -72,6 +72,9 @@ return_t echo_server(void*) {
             load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
 
             __try_new_catch(tls_socket, new trial_tls_server_socket, ret, __leave2);
+
+            auto tlsadvisor = tls_advisor::get_instance();
+            tlsadvisor->set_ciphersuites(option.cs.c_str());
         } else {
             // part of ssl certificate
 
@@ -84,17 +87,21 @@ return_t echo_server(void*) {
                 tlscontext_flags |= tlscontext_flag_allow_tls12;
             }
 
-            ciphersuites += "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256";
-            ciphersuites += ":";
-            ciphersuites +=
-                "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384:"
-                "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:"
-                "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM:"
-                "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8:"
-                "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:"
-                "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384:"
-                "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:"
-                "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256";
+            if (option.cs.empty()) {
+                ciphersuites += "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256";
+                ciphersuites += ":";
+                ciphersuites +=
+                    "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384:"
+                    "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:"
+                    "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM:"
+                    "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8:"
+                    "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:"
+                    "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384:"
+                    "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:"
+                    "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256";
+            } else {
+                ciphersuites += option.cs;
+            }
 
             ret = openssl_tls_context_open(&sslctx, tlscontext_flags, "rsa.crt", "rsa.key");
 

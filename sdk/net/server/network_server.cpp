@@ -140,8 +140,7 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
 #if defined __linux__
             // (epoll) bind tcp.socket
             mplexer.bind(mplexer_handle, sock, nullptr);
-#endif
-#if defined _WIN32 || defined _WIN64
+#elif defined _WIN32 || defined _WIN64
             // use dummy signal handler ... just call CloseListener first, and signal_and_wait_all
             context->accept_threads.set(1, accept_thread, signalwait_threads::dummy_signal, context);
 #endif

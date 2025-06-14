@@ -8,7 +8,10 @@
 
 * understanding
   * Revision 777- (Tag 1.32, Revision.795)
-    * TLS, HTTP1.1, HTTP/2 server - mingw64 environment
+    * http_server trial-tls(tentative name) integration
+      * TLS, HTTP1.1 - mingw64 environment (Revision 794)
+      * HTTP/2 server - mingw64 environment (Revision 795)
+      * TLS, HTTP1.1 - linux environment (Revision 799)
   * Revision 682-776
     * TLS, DTLS client
   * Revision 673-680 (Tag 0.97, Revision.684)
@@ -25,9 +28,8 @@
     * CBOR
 
 * details
-  * Revision 798
+  * Revision 799
     * [tested] http_server HTTP/1.1 (linux environment)
-  * Revision 798
   * Revision 795
     * [tested] http_server HTTP/2 (MINGW64 environment)
   * Revision 794

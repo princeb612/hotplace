@@ -467,7 +467,7 @@ const pcap_testvector capture_tls12_aes128gcm_sha256[] = {
 };
 const size_t sizeof_capture_tls12_aes128gcm_sha256 = RTL_NUMBER_OF(capture_tls12_aes128gcm_sha256);
 
-const pcap_testvector capture_tls12_chacha20poly1305_sha256[] = {
+const pcap_testvector pcap_tls12_chacha20poly1305_sha256[] = {
     {
         from_client,
         "client_hello",
@@ -585,4 +585,4 @@ const pcap_testvector capture_tls12_chacha20poly1305_sha256[] = {
     },
 };
 
-const size_t sizeof_capture_tls12_chacha20poly1305_sha256 = RTL_NUMBER_OF(capture_tls12_chacha20poly1305_sha256);
+const size_t sizeof_pcap_tls12_chacha20poly1305_sha256 = RTL_NUMBER_OF(pcap_tls12_chacha20poly1305_sha256);

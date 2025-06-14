@@ -253,10 +253,11 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
             int mode = 0;
 #if defined __linux__
             mode = tls_io_flag_t::read_epoll;
+            ret = get_server_socket()->read(_session.netsock.event_handle, mode, (char*)buf_read, size_buf_read, &cbread);
 #elif defined _WIN32 || defined _WIN64
             mode = tls_io_flag_t::read_iocp;
+            ret = get_server_socket()->read(_session.netsock.event_handle, mode, (char*)buf_read, size_buf_read, nullptr);
 #endif
-            ret = get_server_socket()->read(_session.netsock.event_handle, mode, (char*)buf_read, size_buf_read, &cbread);
             if (errorcode_t::success != ret) {
                 __leave2;
             }

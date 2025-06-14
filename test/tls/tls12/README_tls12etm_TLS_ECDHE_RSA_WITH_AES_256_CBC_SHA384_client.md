@@ -1,7 +1,7 @@
 #### client
 
 ````
-$ ./test-netclient.exe -v -d -i -P tls12 -etm
+$ ./test-netclient.exe -v -d -T -P tls12 -etm
 socket 472 created family 2(AF_INET) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
 iocp handle 000001ec created
 iocp handle 000001ec bind 472

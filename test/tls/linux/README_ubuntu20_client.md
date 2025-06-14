@@ -1,7 +1,7 @@
 #### client
 
 ````
-hush@hush:~/hotplace/build/test/netclient$ ./test-netclient -v -d -P tls13 -i
+hush@hush:~/hotplace/build/test/netclient$ ./test-netclient -v -d -P tls13 -T
 socket 3 created family 2(AF_INET) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
 connect SO_ERROR 0 return 0
 epoll handle 4 created
@@ -876,11 +876,11 @@ help
 -p arg       port (9000)
 -P arg     v protocol tcp|udp|tls|tls13|tls12|dtls (1 tcp, 2 udp, 3 tls, 4 dtls)
 -c arg       count (1)
--i           debug TLS inside
+-T           use trial
 -h           HTTP/1.1
 -m arg       message
 -etm         TLS 1.2 EtM (trial_tls_client_socket)
-hush@hush:~/hotplace/build/test/netclient$ ./test-netclient -v -d -P tls12 -i
+hush@hush:~/hotplace/build/test/netclient$ ./test-netclient -v -d -P tls12 -T
 socket 3 created family 2(AF_INET) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
 connect SO_ERROR 0 return 0
 epoll handle 4 created
@@ -1513,7 +1513,7 @@ help
 -p arg       port (9000)
 -P arg     v protocol tcp|udp|tls|tls13|tls12|dtls (1 tcp, 2 udp, 3 tls, 4 dtls)
 -c arg       count (1)
--i           debug TLS inside
+-T           use trial
 -h           HTTP/1.1
 -m arg       message
 -etm         TLS 1.2 EtM (trial_tls_client_socket)

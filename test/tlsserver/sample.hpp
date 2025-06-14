@@ -27,6 +27,7 @@ typedef struct _OPTION {
     int time;
     uint16 port;
     uint32 flags;
+    std::string cs;
 
     _OPTION() : run(0), verbose(0), debug(0), trace_level(0), log(0), time(0), port(9000), flags(0) {
         // do nothing

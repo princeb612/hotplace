@@ -2,6 +2,10 @@
 
 - MINGW64 test in progress, linux not yet
 - [ ] tasks
+  - [x] baby steps
+    - [x] https://tls13.xargs.org
+    - [x] https://tls12.xargs.org
+    - [x] https://dtls.xargs.org
   - [x] TLS client (Revision 776)
   - [ ] TLS server
     - [x] verification

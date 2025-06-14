@@ -349,7 +349,7 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
             // cipher suites
             uint8 mask = tls_flag_secure | tls_flag_support;
             auto lambda_cs = [&](const tls_cipher_suite_t* cs) -> void {
-                if ((mask & cs->flags) && (cs->version >= _minspec)) {
+                if ((mask & cs->flags) && (cs->version <= _maxspec)) {
                     ch->add_ciphersuite(cs->code);
                 }
             };
@@ -502,7 +502,9 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
                 {
                     // session_conf_enable_encrypt_then_mac
                     // session_conf_enable_extended_master_secret
-                } {
+                }
+
+                {
                     auto ec_point_formats = new tls_extension_ec_point_formats(session);
                     (*ec_point_formats).add("uncompressed");
                     hs->get_extensions().add(ec_point_formats);

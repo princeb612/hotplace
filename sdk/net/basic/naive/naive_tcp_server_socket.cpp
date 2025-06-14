@@ -104,10 +104,12 @@ return_t naive_tcp_server_socket::send(socket_context_t* handle, const char* ptr
         }
 
         auto sock = handle->fd;
-#if defined _WIN32 || defined _WIN64
-        int ret_routine = ::send(sock, ptr_data, (int)size_data, 0);
-#elif defined __linux__
-        int ret_routine = ::send(sock, ptr_data, size_data, 0);
+        int flags = 0;
+#if defined __linux__
+        flags = MSG_NOSIGNAL;
+        int ret_routine = ::send(sock, ptr_data, size_data, flags);
+#elif defined _WIN32 || defined _WIN64
+        int ret_routine = ::send(sock, ptr_data, (int)size_data, flags);
 #endif
         if (-1 == ret_routine) {
             ret = get_lasterror(ret_routine);

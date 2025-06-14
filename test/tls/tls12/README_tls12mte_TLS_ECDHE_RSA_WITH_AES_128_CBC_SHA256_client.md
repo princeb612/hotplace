@@ -1,7 +1,7 @@
 #### tls12mte_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256.pcapng - client
 
 ````
-$ ./test-netclient.exe -v -d -i -P tls12
+$ ./test-netclient.exe -v -d -T -P tls12
 socket 464 created family 2(AF_INET) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)
 iocp handle 000001e4 created
 iocp handle 000001e4 bind 464

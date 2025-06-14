@@ -11,8 +11,8 @@
   - test step
     - $ sudo tcpdump -i lo tcp port 9000 -v -w ubuntu20.pcap
     - $ openssl s_server -accept 9000 -cert server.crt -key server.key -state -debug -status_verbose -keylogfile sslkeylog
-    - $ ./test-netclient -v -d -P tls13 -i
-    - $ ./test-netclient -v -d -P tls12 -i
+    - $ ./test-netclient -v -d -P tls13 -T
+    - $ ./test-netclient -v -d -P tls12 -T
   - files
     - [server](README_ubuntu20_server.md)
     - [client](README_ubuntu20_client.md)
