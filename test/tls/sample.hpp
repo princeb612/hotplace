@@ -1,5 +1,5 @@
-#ifndef __HOTPLACE_TEST_TLS13__
-#define __HOTPLACE_TEST_TLS13__
+#ifndef __HOTPLACE_TEST_TLS__
+#define __HOTPLACE_TEST_TLS__
 
 #include <stdio.h>
 

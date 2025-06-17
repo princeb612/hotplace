@@ -17,10 +17,31 @@ namespace net {
 
 http_dynamic_table::http_dynamic_table() : _type(header_compression_hpack), _inserted(0), _dropped(0), _capacity(0), _tablesize(0) {}
 
+void http_dynamic_table::pick(size_t entry, const std::string& name, std::string& value) {
+    critical_section_guard guard(_lock);
+    auto iter = _dynamic_reversemap.find(entry);
+    if (_dynamic_reversemap.end() != iter) {
+        const std::string& key = iter->second.first;
+        auto lbound = _dynamic_map.lower_bound(key);
+        auto ubound = _dynamic_map.upper_bound(key);
+        for (auto bound = lbound; bound != ubound; bound++) {
+            const auto& ent = bound->second;
+            if (entry == ent.second) {
+                value = ent.first;
+            }
+        }
+    }
+}
+
 void http_dynamic_table::for_each(std::function<void(const std::string&, const std::string&)> v) {
     if (v) {
-        for (auto item : _dynamic_map) {
-            v(item.first, item.second.first);
+        critical_section_guard guard(_lock);
+        for (auto iter = _dynamic_reversemap.rbegin(); iter != _dynamic_reversemap.rend(); iter++) {
+            size_t entry = iter->first;
+            const std::string& key = iter->second.first;
+            std::string value;
+            pick(entry, key, value);
+            v(key, value);
         }
     }
 }
@@ -31,6 +52,8 @@ bool http_dynamic_table::operator!=(const http_dynamic_table& rhs) { return (_ty
 
 match_result_t http_dynamic_table::match(uint32 flags, const std::string& name, const std::string& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;
+
+    critical_section_guard guard(_lock);
 
     auto lbound = _dynamic_map.lower_bound(name);
     auto ubound = _dynamic_map.upper_bound(name);
@@ -104,6 +127,8 @@ return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& nam
     return_t ret = errorcode_t::not_found;
 
     __try2 {
+        critical_section_guard guard(_lock);
+
         if (header_compression_hpack == get_type()) {
             // HPACK
             auto static_entries = http_resource::get_instance()->sizeof_hpack_static_table_entries();
@@ -218,6 +243,7 @@ return_t http_dynamic_table::commit() {
 return_t http_dynamic_table::evict() {
     return_t ret = errorcode_t::success;
 
+    critical_section_guard guard(_lock);
     while (_dynamic_reversemap.size() && (_tablesize > _capacity)) {
         // RFC 7541 4.2.  Maximum Table Size
         // RFC 7541 4.4.  Entry Eviction When Adding New Entries
@@ -249,7 +275,7 @@ return_t http_dynamic_table::evict() {
 #if defined DEBUG
                     if (istraceable()) {
                         basic_stream bs;
-                        bs.printf("evict entry[%zi] %s=%s\n", entry, name.c_str(), val.c_str());
+                        bs.printf("evict  entry[%zi] %s=%s\n", entry, name.c_str(), val.c_str());
                         trace_debug_event(trace_category_net, trace_event_header_compression_evict, &bs);
                     }
 #endif

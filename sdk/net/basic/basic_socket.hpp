@@ -18,7 +18,7 @@ namespace hotplace {
 namespace net {
 
 /**
- * @brief   client socket
+ * @brief   basic socket
  */
 class basic_socket {
    public:

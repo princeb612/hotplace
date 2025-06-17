@@ -35,6 +35,7 @@ class http2_session {
      * @param   http_request** request [outopt] can be nullptr if END_HEADERS, END_STREAM is not set
      */
     http2_session& consume(uint32 type, uint32 data_count, void* data_array[], http_server* server, http_request** request);
+    return_t consume(const byte_t* buf, size_t bufsize, http_request** request, binary_t& bin_resp);
 
     hpack_dynamic_table& get_hpack_session();
 
@@ -50,8 +51,6 @@ class http2_session {
     bool is_push_enabled();
 
    protected:
-    return_t consume(const byte_t* buf, size_t bufsize, http_request** request, binary_t& bin_resp);
-
    private:
     critical_section _lock;
     typedef std::map<uint32, uint8> flags_t;

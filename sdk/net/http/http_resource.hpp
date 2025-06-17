@@ -55,6 +55,12 @@ class http_resource {
     void for_each_qpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func);
     size_t sizeof_qpack_static_table_entries();
 
+    /**
+     * @brief   SETTINGS
+     * @remarks RFC 7540 6.5.2.  Defined SETTINGS Parameters
+     */
+    std::string get_h2_settings_name(uint16 type);
+
    protected:
     http_resource();
     void load_resources();
@@ -68,6 +74,7 @@ class http_resource {
     std::map<uint8, std::string> _frame_names;
     std::map<uint8, std::string> _frame_flags;
     std::map<uint8, std::string> _frame_flags2;
+    std::map<uint16, std::string> _frame_settings;
 };
 
 }  // namespace net

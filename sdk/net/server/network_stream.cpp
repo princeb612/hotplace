@@ -8,8 +8,10 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/nostd/list.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/server/network_protocol.hpp>
 #include <sdk/net/server/network_stream.hpp>
 
@@ -199,15 +201,23 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
         } else if (errorcode_t::success == test) {
             protocol->read_stream(&bufstream, &message_size, &state, &priority);
             switch (state) {
-                case protocol_state_t::protocol_state_complete:
+                case protocol_state_t::protocol_state_complete: {
                     target->produce(bufstream.data(), message_size, buffer_object->get_sockaddr());
                     _run = false;
-                    break;
+#if defined DEBUG
+                    if (istraceable()) {
+                        basic_stream dbs;
+                        dbs.println("* protocol complete %zi out of %zi", message_size, bufstream.size());
+                        trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
+                    }
+#endif
+
+                } break;
                 case protocol_state_t::protocol_state_forged:
                 case protocol_state_t::protocol_state_crash:
-                case protocol_state_t::protocol_state_large:
+                case protocol_state_t::protocol_state_large: {
                     _run = false;
-                    break;
+                } break;
                 default:
                     break;
             }

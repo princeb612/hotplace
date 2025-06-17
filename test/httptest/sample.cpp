@@ -30,15 +30,15 @@ int main(int argc, char **argv) {
      *      run first : httpauth -v
      *      and then  : httptest -c
      */
-    (*_cmdline) << t_cmdarg_t<OPTION>("-c", "connect", [](OPTION &o, char *param) -> void { o.connect = 1; }).optional()
+    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION &o, char *param) -> void { o.debug = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION &o, char *param) -> void { o.log = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-c", "connect", [](OPTION &o, char *param) -> void { o.connect = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-p", "read stream using http_protocol", [](OPTION &o, char *param) -> void { o.mode = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/) feat. httpauth", [](OPTION &o, char *param) -> void { o.url = param; })
                        .preced()
-                       .optional()
-                << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION &o, char *param) -> void { o.debug = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION &o, char *param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional();
+                       .optional();
 
     _cmdline->parse(argc, argv);
     const OPTION &option = _cmdline->value();
@@ -101,6 +101,8 @@ int main(int argc, char **argv) {
 
         test_bearer_token();
     }
+
+    test_http2();
 
     openssl_cleanup();
 

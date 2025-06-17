@@ -1,5 +1,37 @@
 ### HTTP
 
+```mermaid
+mindmap
+  root((http))
+    http_server
+    http_server_builder
+    http_uri
+    http_header
+    network_protocol
+      http_protocol
+      http2_protocol
+    http_request
+    http_response
+    http_router
+      html_documents
+      http_authentication_provider
+        basic_authentication_provider
+        digest_access_authentication_provider
+        bearer_authentication_provider
+      http_authentication_resolver
+        basic_credentials
+        digest_credentials
+        bearer_credentials
+        oauth2_credentials
+        custom_credentials
+      oauth2_provider
+        oauth2_grant_provider
+          oauth2_authorization_code_grant_provider
+          oauth2_implicit_grant_provider
+          oauth2_resource_owner_password_credentials_grant_provider
+          oauth2_client_credentials_grant_provider
+```
+
 - [x] HTTP/1.1
   - [x] Basic and Digest Access Authentication
   - [x] HTTP/1.1 simple server

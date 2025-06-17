@@ -1,5 +1,5 @@
-#ifndef __HOTPLACE_TEST_CBOR__
-#define __HOTPLACE_TEST_CBOR__
+#ifndef __HOTPLACE_TEST_NETCLIENT__
+#define __HOTPLACE_TEST_NETCLIENT__
 
 #include <math.h>
 #include <stdio.h>

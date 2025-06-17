@@ -46,6 +46,7 @@ return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, con
         }
 
         _mbs.write((byte_t*)ptr_data, size_data);
+
         ret = do_produce(session, dir);
     }
     __finally2 {}

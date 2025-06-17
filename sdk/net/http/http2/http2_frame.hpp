@@ -61,7 +61,7 @@ enum h2_flag_t {
  *          RFC 7540 6.5.2. Defined Settings Parameters
  *          RFC 7540 11.3. Settings Registry
  */
-enum h2_settings_param_t {
+enum h2_settings_param_t : uint16 {
     h2_settings_header_table_size = 0x1,
     h2_settings_enable_push = 0x2,
     h2_settings_max_concurrent_streams = 0x3,

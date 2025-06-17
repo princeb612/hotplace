@@ -26,6 +26,8 @@ extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 extern t_shared_instance<hpack_encoder> encoder;
 
+void dump_hpack_session_routine(const std::string& name, const std::string& value);
+
 void test_huffman_codes();
 void test_rfc7541_c_1();
 void test_rfc7541_c_2();
@@ -34,6 +36,6 @@ void test_rfc7541_c_4();
 void test_rfc7541_c_5();
 void test_rfc7541_c_6();
 
-void test_h2_header_frame_fragment();
+void test_h2_header_frame();
 
 #endif

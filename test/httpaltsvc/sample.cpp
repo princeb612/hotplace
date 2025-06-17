@@ -29,14 +29,14 @@ int main(int argc, char **argv) {
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     (*_cmdline)
-        << t_cmdarg_t<OPTION>("-r", "run server", [](OPTION &o, char *param) -> void { o.run = 1; }).optional()
-        << t_cmdarg_t<OPTION>("-1", "http/1.1 port (default 9000)", [](OPTION &o, char *param) -> void { o.port_h1 = atoi(param); }).preced().optional()
-        << t_cmdarg_t<OPTION>("-2", "http/2   port (default 9001)", [](OPTION &o, char *param) -> void { o.port_h2 = atoi(param); }).preced().optional()
-        << t_cmdarg_t<OPTION>("-p", "packet size (default 65535)", [](OPTION &o, char *param) -> void { o.packetsize = atoi(param); }).preced().optional()
         << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
         << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION &o, char *param) -> void { o.debug = 1; }).optional()
         << t_cmdarg_t<OPTION>("-l", "log", [](OPTION &o, char *param) -> void { o.log = 1; }).optional()
-        << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional();
+        << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-r", "run server", [](OPTION &o, char *param) -> void { o.run = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-1", "http/1.1 port (default 9000)", [](OPTION &o, char *param) -> void { o.port_h1 = atoi(param); }).preced().optional()
+        << t_cmdarg_t<OPTION>("-2", "http/2   port (default 9001)", [](OPTION &o, char *param) -> void { o.port_h2 = atoi(param); }).preced().optional()
+        << t_cmdarg_t<OPTION>("-p", "packet size (default 65535)", [](OPTION &o, char *param) -> void { o.packetsize = atoi(param); }).preced().optional();
 
     _cmdline->parse(argc, argv);
 

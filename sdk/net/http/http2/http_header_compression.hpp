@@ -386,6 +386,7 @@ class http_dynamic_table {
    protected:
     void set_type(uint8 type);
     size_t dynamic_map_size();
+    void pick(size_t entry, const std::string& name, std::string& value);
 
     critical_section _lock;
     uint32 _capacity;

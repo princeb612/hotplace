@@ -107,13 +107,15 @@ void http2_frame_settings::dump(stream_t* s) {
     if (s) {
         http2_frame::dump(s);
 
+        auto resource = http_resource::get_instance();
         h2_setting_map_t::iterator iter;
         for (const auto& pair : _settings) {
             const auto& k = pair.first;
             const auto& v = pair.second;
+            std::string setting(resource->get_h2_settings_name(k));
             s->printf(" > ");
             s->printf("%s %u ", constexpr_frame_identifier, k);
-            s->printf("%s %u (0x%08x) ", constexpr_frame_value, v, v);
+            s->printf("%s %u (%s 0x%08x) ", constexpr_frame_value, v, setting.c_str(), v);
             s->printf("\n");
         }
     }

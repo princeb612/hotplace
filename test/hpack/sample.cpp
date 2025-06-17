@@ -15,6 +15,10 @@ test_case _test_case;
 t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
+void dump_hpack_session_routine(const std::string& name, const std::string& value) {
+    _logger->writeln("  - (s = %zi) %s: %s", name.size() + value.size() + 32, name.c_str(), value.c_str());
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -59,7 +63,7 @@ int main(int argc, char** argv) {
     encoder.make_share(new hpack_encoder);
     _test_case.assert(true, __FUNCTION__, "check loading time of HPACK");
 
-    // and now .. test_h2_header_frame_fragment wo loading time
+    // and now .. test_h2_header_frame wo loading time
 
     // huffman codes
     test_huffman_codes();
@@ -71,7 +75,7 @@ int main(int argc, char** argv) {
     test_rfc7541_c_4();
     test_rfc7541_c_5();
     test_rfc7541_c_6();
-    test_h2_header_frame_fragment();
+    test_h2_header_frame();
 
     openssl_cleanup();
 
