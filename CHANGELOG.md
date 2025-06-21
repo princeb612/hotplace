@@ -28,7 +28,8 @@
     * CBOR
 
 * details
-  * Revision 802
+  * Revision 803
+    * [tested] HTTP/1.1 feat. curl
   * Revision 799
     * [tested] http_server HTTP/1.1 (linux environment)
   * Revision 795

@@ -126,35 +126,39 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
         if (errorcode_t::success == ret) {
             auto plainsize = plaintext.size();
             if (plainsize) {
-                auto tlsversion = protection.get_tls_version();
-                uint8 last_byte = *plaintext.rbegin();
-                if (tls_content_type_alert == last_byte) {
-                    tls_record_alert alert(session);
-                    alert.read_plaintext(dir, &plaintext[0], plainsize - 1, tpos);
-                } else if (tls_content_type_handshake == last_byte) {
-                    ret = get_handshakes().read(session, dir, &plaintext[0], plainsize - 1, tpos);
-                } else if (tls_content_type_application_data == last_byte) {
-                    auto flow = protection.get_flow();
-                    if (tls_flow_1rtt == flow) {
-                        uint32 session_status_prerequisite = 0;
-                        if (protection.is_kindof_tls13()) {
-                            session_status_prerequisite = session_status_client_finished;
+                if (protection.is_kindof_tls13()) {
+                    auto tlsversion = protection.get_tls_version();
+                    uint8 last_byte = *plaintext.rbegin();
+                    if (tls_content_type_alert == last_byte) {
+                        tls_record_alert alert(session);
+                        alert.read_plaintext(dir, &plaintext[0], plainsize - 1, tpos);
+                    } else if (tls_content_type_handshake == last_byte) {
+                        ret = get_handshakes().read(session, dir, &plaintext[0], plainsize - 1, tpos);
+                    } else if (tls_content_type_application_data == last_byte) {
+                        auto flow = protection.get_flow();
+                        if (tls_flow_1rtt == flow) {
+                            uint32 session_status_prerequisite = 0;
+                            if (protection.is_kindof_tls13()) {
+                                session_status_prerequisite = session_status_client_finished;
+                            } else {
+                                session_status_prerequisite = session_status_server_finished;
+                            }
+                            auto session_status = session->get_session_status();
+                            if (0 == (session_status_prerequisite & session_status)) {
+                                ret = errorcode_t::unexpected;
+                                session->reset_session_status();
+                                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                                __leave2;
+                            }
+                        }
+                        if (is_cbc) {
+                            ret = get_application_data(plaintext, false);
                         } else {
-                            session_status_prerequisite = session_status_server_finished;
-                        }
-                        auto session_status = session->get_session_status();
-                        if (0 == (session_status_prerequisite & session_status)) {
-                            ret = errorcode_t::unexpected;
-                            session->reset_session_status();
-                            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
-                            __leave2;
+                            ret = get_application_data(plaintext, false);
                         }
                     }
-                    if (is_cbc) {
-                        ret = get_application_data(plaintext, false);
-                    } else {
-                        ret = get_application_data(plaintext, false);
-                    }
+                } else {
+                    _bin = std::move(plaintext);
                 }
             }
         }
@@ -169,13 +173,18 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
     return_t ret = errorcode_t::success;
     auto& handshakes = get_handshakes();
     auto& records = get_records();
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto is_tls13 = protection.is_kindof_tls13();
     if (handshakes.size()) {
         handshakes.write(get_session(), dir, bin);
-        binary_append(bin, uint8(tls_content_type_handshake));
+        if (is_tls13) {
+            binary_append(bin, uint8(tls_content_type_handshake));
+        }
     } else if (records.size()) {
         auto lambda = [&](tls_record* record) -> return_t {
             ret = record->do_write_body(dir, bin);
-            if (errorcode_t::success == ret) {
+            if ((errorcode_t::success == ret) && is_tls13) {
                 binary_append(bin, uint8(record->get_type()));
             }
             return ret;

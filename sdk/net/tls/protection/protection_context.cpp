@@ -157,7 +157,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                         continue;
                     }
 
-                    if (tls_12 == hint->version) {
+                    if (tls_13 != hint->version) {
                         switch (hint->auth) {
                             case auth_rsa: {
                                 // allow TLS_ECDHE_RSA if RSA certificate exist
