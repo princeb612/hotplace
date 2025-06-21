@@ -158,7 +158,7 @@ class qpack_encoder : public http_header_compression {
      *          RFC 9204 4.3.  Encoder Instructions
      *          RFC 9204 4.3.4.  Duplicate
      */
-    qpack_encoder& duplicate(binary_t& target, size_t index);
+    qpack_encoder& duplicate(http_dynamic_table* session, binary_t& target, size_t index);
     /**
      * @breif   ack
      * @param   binary_t& target [out]
@@ -167,7 +167,7 @@ class qpack_encoder : public http_header_compression {
      *          RFC 9204 4.4.  Decoder Instructions
      *          RFC 9204 4.4.1.  Section Acknowledgment
      */
-    qpack_encoder& ack(binary_t& target, uint32 streamid);
+    qpack_encoder& ack(http_dynamic_table* session, binary_t& target, uint32 streamid);
     /**
      * @breif   cancel
      * @param   binary_t& target [out]
@@ -176,7 +176,7 @@ class qpack_encoder : public http_header_compression {
      *          RFC 9204 4.4.  Decoder Instructions
      *          RFC 9204 4.4.2.  Stream Cancellation
      */
-    qpack_encoder& cancel(binary_t& target, uint32 streamid);
+    qpack_encoder& cancel(http_dynamic_table* session, binary_t& target, uint32 streamid);
     /**
      * @breif   increment
      * @param   binary_t& target [out]
@@ -186,7 +186,7 @@ class qpack_encoder : public http_header_compression {
      *          RFC 9204 4.4.  Decoder Instructions
      *          RFC 9204 4.4.3.  Insert Count Increment
      */
-    qpack_encoder& increment(binary_t& target, size_t inc);
+    qpack_encoder& increment(http_dynamic_table* session, binary_t& target, size_t inc);
 
    protected:
     virtual return_t decode_encoder_stream(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
@@ -212,6 +212,10 @@ class qpack_static_table : public http_static_table {
 class qpack_dynamic_table : public http_dynamic_table {
    public:
     qpack_dynamic_table();
+
+    virtual void for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f);
+    virtual void dump(const std::string& desc, std::function<void(const char*, size_t)> f);
+
     /**
      * @brief   QPACK query function
      * @param   int cmd [in] see header_compression_cmd_t

@@ -307,12 +307,16 @@ class http_static_table {
  */
 class http_dynamic_table {
    public:
-    http_dynamic_table();
-
     /**
      * @brief   for_each
+     * @sample
+     *          auto lambda = [&](size_t entno, size_t entsize, const std::string& name, const std::string& value) -> void {
+     *              _logger->writeln("  - [%3zi](s = %zi) %s: %s", entno, entsize, name.c_str(), value.c_str());
+     *          };
+     *
      */
-    void for_each(std::function<void(const std::string&, const std::string&)> v);
+    virtual void for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f);
+    virtual void dump(const std::string& desc, std::function<void(const char*, size_t)> f);
     /**
      * @brief   compare
      */
@@ -383,7 +387,12 @@ class http_dynamic_table {
 
     void set_debug_hook(std::function<void(trace_category_t, uint32 event)> fn);
 
+    void ack();
+    void cancel();
+
    protected:
+    http_dynamic_table();
+
     void set_type(uint8 type);
     size_t dynamic_map_size();
     void pick(size_t entry, const std::string& name, std::string& value);
@@ -392,8 +401,8 @@ class http_dynamic_table {
     uint32 _capacity;
     size_t _inserted;
     size_t _dropped;
+    size_t _ack;  // qpack
 
-   private:
     typedef std::pair<std::string, size_t> table_entry_t;
     typedef std::multimap<std::string, table_entry_t> dynamic_map_t;  // table_entry_t(value, entry)
     typedef std::map<size_t, table_entry_t> dynamic_reversemap_t;     // table_entry_t(name, entry size)
@@ -407,6 +416,7 @@ class http_dynamic_table {
     dynamic_reversemap_t _dynamic_reversemap;
     commit_queue_t _commit_queue;
 
+   private:
     uint8 _type;  // see header_compression_type_t
     size_t _tablesize;
 

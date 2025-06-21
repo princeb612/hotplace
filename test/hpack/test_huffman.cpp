@@ -69,10 +69,14 @@ void test_huffman_codes() {
             "custom-value",
             "25a8 49e9 5bb8 e8b4 bf",
         },
-        {"still a man hears what he wants to hear and disregards the rest - The boxer, Simon and Garfunkel",
-         "424d450a0d4a4752939476214f138d2a4e553c0ea4a1449d49ca3b141d5229219161661d922144ce552c2a12a2ca6f9caa467f25b3e94dc6a4f5283aa45310ec96daba968f"},
-        {"We don't playing because we grow old; we grow old because we stop playing. - George Bernard Shaw",
-         "e455243d5fe92a5740fd1aa9948ca41da82a9e0aa4d61fc287a24fb53c1549ac3f850f448a46520ed4154f0551093d6a5740fd1aa99751653114f64c552e96ca87648a6e9c7e3f"},
+        {
+            "still a man hears what he wants to hear and disregards the rest - The boxer, Simon and Garfunkel",
+            "424d450a0d4a4752939476214f138d2a4e553c0ea4a1449d49ca3b141d5229219161661d922144ce552c2a12a2ca6f9caa467f25b3e94dc6a4f5283aa45310ec96daba968f",
+        },
+        {
+            "We don't playing because we grow old; we grow old because we stop playing. - George Bernard Shaw",
+            "e455243d5fe92a5740fd1aa9948ca41da82a9e0aa4d61fc287a24fb53c1549ac3f850f448a46520ed4154f0551093d6a5740fd1aa99751653114f64c552e96ca87648a6e9c7e3f",
+        },
     };
     for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
         huffman_coding_testvector* item = vector + i;

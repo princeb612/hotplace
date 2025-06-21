@@ -68,7 +68,7 @@ return_t qpack_encoder::encode(http_dynamic_table* dyntable, binary_t& target, c
                     ret = errorcode_t::already_exist;
                     dyntable->insert(name, value);  // duplicate
                     dyntable->commit();
-                    duplicate(target, index);
+                    duplicate(dyntable, target, index);
                 } else {
                     if (qpack_postbase_index & flags) {
                         size_t postbase = 0;
@@ -648,7 +648,7 @@ qpack_encoder& qpack_encoder::encode_name_value(http_dynamic_table* dyntable, bi
     return *this;
 }
 
-qpack_encoder& qpack_encoder::duplicate(binary_t& target, size_t index) {
+qpack_encoder& qpack_encoder::duplicate(http_dynamic_table* session, binary_t& target, size_t index) {
     /**
      * RFC 9204 4.3.4.  Duplicate
      *
@@ -665,7 +665,7 @@ qpack_encoder& qpack_encoder::duplicate(binary_t& target, size_t index) {
     return *this;
 }
 
-qpack_encoder& qpack_encoder::ack(binary_t& target, uint32 streamid) {
+qpack_encoder& qpack_encoder::ack(http_dynamic_table* session, binary_t& target, uint32 streamid) {
     /**
      * RFC 9204 4.4.1.  Section Acknowledgment
      *
@@ -679,10 +679,11 @@ qpack_encoder& qpack_encoder::ack(binary_t& target, uint32 streamid) {
     uint8 mask = 0x80;
     uint8 prefix = 7;
     encode_int(target, mask, prefix, streamid);
+    session->ack();
     return *this;
 }
 
-qpack_encoder& qpack_encoder::cancel(binary_t& target, uint32 streamid) {
+qpack_encoder& qpack_encoder::cancel(http_dynamic_table* session, binary_t& target, uint32 streamid) {
     /**
      * RFC 9204 4.4.2.  Stream Cancellation
      *
@@ -696,10 +697,11 @@ qpack_encoder& qpack_encoder::cancel(binary_t& target, uint32 streamid) {
     uint8 mask = 0x40;
     uint8 prefix = 6;
     encode_int(target, mask, prefix, streamid);
+    session->cancel();
     return *this;
 }
 
-qpack_encoder& qpack_encoder::increment(binary_t& target, size_t inc) {
+qpack_encoder& qpack_encoder::increment(http_dynamic_table* session, binary_t& target, size_t inc) {
     /**
      * RFC 9204 4.4.3.  Insert Count Increment
      *

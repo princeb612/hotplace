@@ -46,11 +46,8 @@ void test_h2_header_frame() {
 
         skey_value kv;
         lambda_decode(sess, kv, bin);
-        _logger->writeln("> dynamic table");
-        sess->for_each(dump_hpack_session_routine);
 
-        _logger->writeln("> dynamic table");
-        sess->for_each(dump_hpack_session_routine);
+        sess->dump("dynamic table", dump_hpack_session_routine);
 
         for (auto i = 0; i < size_tv; i++) {
             auto& item = tv[i];
@@ -284,15 +281,6 @@ void test_h2_header_frame() {
         "6f";
 
     testvector tv3[] = {
-        {":method", "GET"},
-        {":scheme", "https"},
-        {":authority", "localhost:9000"},
-        {":path", "/api/html"},
-        {"accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"},
-        {"sec-fetch-site", "same-origin"},
-        {"sec-fetch-dest", "document"},
-        {"referer", "https://localhost:9000/"},
-
         {":method", "GET"},
         {":authority", "localhost:9000"},
         {":scheme", "https"},

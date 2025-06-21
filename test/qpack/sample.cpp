@@ -17,6 +17,8 @@ test_case _test_case;
 t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
+void dump_qpack_session_routine(const char* stream, size_t size) { _logger->writeln(stream); }
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);

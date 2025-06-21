@@ -11,11 +11,11 @@
   * https://wiki.wireshark.org/samplecaptures
 
 * understanding TLS - DTLS - QUIC step by step
-  1. https://tls13.xargs.org/
-  2. https://tls12.xargs.org/
-  3. https://dtls.xargs.org/
-  4. RFC 9001
-  5. https://quic.xargs.org/
+  * https://tls13.xargs.org/
+  * https://tls12.xargs.org/
+  * https://dtls.xargs.org/
+  * RFC 9001
+  * https://quic.xargs.org/
 
 ### TLS
 

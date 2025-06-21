@@ -22,6 +22,66 @@ qpack_dynamic_table::qpack_dynamic_table() : http_dynamic_table() {
     _capacity = 0;
 }
 
+void qpack_dynamic_table::for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) {
+    if (f) {
+        critical_section_guard guard(_lock);
+        auto entries = _dynamic_reversemap.size();
+        for (auto iter = _dynamic_reversemap.begin(); iter != _dynamic_reversemap.end(); iter++) {
+            size_t entry = iter->first;
+            size_t entno = (entry - _dropped);
+            size_t entsize = iter->second.second;
+            const std::string& key = iter->second.first;
+            std::string value;
+            pick(entry, key, value);
+            f(entno, entsize, key, value);
+        }
+    }
+}
+
+void qpack_dynamic_table::dump(const std::string& desc, std::function<void(const char*, size_t)> f) {
+    if (f) {
+        critical_section_guard guard(_lock);
+        basic_stream bs;
+
+        bs << "> " << desc;
+        f(bs.c_str(), bs.size());
+
+        auto lambda = [&]() -> void {
+            bs.clear();
+            bs << "  ^-- acknowledged --^";
+            f(bs.c_str(), bs.size());
+        };
+
+        auto entries = _dynamic_reversemap.size();
+        if (0 == entries) {
+            lambda();
+        }
+        size_t entry = 0;
+        for (auto iter = _dynamic_reversemap.begin(); iter != _dynamic_reversemap.end(); iter++) {
+            entry = iter->first;
+            if (entry == _ack) {
+                lambda();
+            }
+
+            size_t entno = (entry - _dropped);
+            size_t entsize = iter->second.second;
+            const std::string& key = iter->second.first;
+            std::string value;
+            pick(entry, key, value);
+            bs.clear();
+            bs.printf(" %3zi (s = %zi) %s: %s", entno, entsize, key.c_str(), value.c_str());
+            f(bs.c_str(), bs.size());
+        }
+        if ((entry + 1) == _ack) {
+            lambda();
+        }
+
+        bs.clear();
+        bs.printf("  table size %zi", get_tablesize());
+        f(bs.c_str(), bs.size());
+    }
+}
+
 return_t qpack_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
     return_t ret = errorcode_t::success;
     __try2 {

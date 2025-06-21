@@ -173,6 +173,8 @@ http_server *http_server_builder::build() {
 
             if (enable_h2) {
                 adapter->enable_alpn("h2");
+            } else {
+                adapter->enable_alpn("http/1.1");
             }
 
             if (false == _content_encoding.empty()) {

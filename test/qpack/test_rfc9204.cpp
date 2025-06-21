@@ -104,6 +104,7 @@ void test_rfc9204_b() {
             _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "%s #field section prefix", text1);
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, qpack_quic_stream_header);  // field line
             session_decoder.commit();
+            session_decoder.dump("dynamic table", dump_qpack_session_routine);
             _test_case.assert((":path" == name) && ("/index.html" == value), __FUNCTION__, "%s #decode", text1);
             _test_case.assert(0 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
         }
@@ -162,6 +163,7 @@ void test_rfc9204_b() {
 
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
             session_decoder.commit();
+            session_decoder.dump("dynamic table", dump_qpack_session_routine);
             _test_case.assert(2 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text2);
 
             _test_case.assert((":path" == name) && ("/sample/path" == value), __FUNCTION__, "%s #decode", text2);
@@ -209,6 +211,7 @@ void test_rfc9204_b() {
             _test_case.assert((":authority" == name) && ("www.example.com" == value), __FUNCTION__, "%s #decode", text2);
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);  // :path
             session_decoder.commit();
+            session_decoder.dump("dynamic table", dump_qpack_session_routine);
             _test_case.assert((":path" == name) && ("/sample/path" == value), __FUNCTION__, "%s #decode", text2);
 
             _test_case.assert(session_encoder.get_entries() == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text2);
@@ -226,13 +229,21 @@ void test_rfc9204_b() {
          *                                 Size=106
          */
         uint32 streamid = 4;
-        enc.ack(bin, streamid);
+        enc.ack(&session_encoder, bin, streamid);
+        session_encoder.dump("dynamic table", dump_qpack_session_routine);
 
         // debug
         {
             const char* expect3 = "84";
             test_expect(bin, expect3, "%s #ack", text2);
             _test_case.assert(106 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
+        }
+        {
+            flags_decoder = qpack_quic_stream_header;
+            pos = 0;
+            ret = enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
+            session_decoder.dump("dynamic table", dump_qpack_session_routine);
+            _test_case.assert(106 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
         }
         bin.clear();
     }
@@ -288,7 +299,7 @@ void test_rfc9204_b() {
          *                                 Size=160
          */
         if (errorcode_t::success == ret) {
-            enc.increment(bin, 1);  // stream id 1
+            enc.increment(&session_decoder, bin, 1);  // stream id 1
         }
 
         test_expect(bin, "01", "%s #increment", text3);
@@ -402,7 +413,7 @@ void test_rfc9204_b() {
          */
 
         uint32 streamid = 8;
-        enc.cancel(bin, streamid);
+        enc.cancel(&session_decoder, bin, streamid);
         const char* expect4 = "48";
         test_expect(bin, expect4, "%s #cancel", text4);
         _test_case.assert(217 == session_encoder.get_tablesize(), __FUNCTION__, "%s #table size", text4);
@@ -448,6 +459,7 @@ void test_rfc9204_b() {
             pos = 0;
             enc.decode(&session_decoder, &bin[0], bin.size(), pos, name, value, flags_decoder);
             session_decoder.commit();
+            session_decoder.dump("dynamic table", dump_qpack_session_routine);
             _test_case.assert(("custom-key" == name) && ("custom-value2" == value), __FUNCTION__, "%s #decode", text5);
             _test_case.assert(1 == count_evict_decoder, __FUNCTION__, "%s #eviction", text5);
             _test_case.assert(4 == session_decoder.get_entries(), __FUNCTION__, "%s #entries", text5);

@@ -10,7 +10,7 @@
 #include "sample.hpp"
 
 void test_http2() {
-    _test_case.begin("check HTTP/2 prosumer");
+    _test_case.begin("HTTP/2");
 
     return_t ret = errorcode_t::success;
     network_session session(new naive_tcp_server_socket);

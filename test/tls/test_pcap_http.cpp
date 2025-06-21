@@ -118,4 +118,18 @@ void test_pcap_tls13_http1() {
 
         play_pcap(&session, pcap_tls13_http2_aes128gcm_sha256, sizeof_pcap_tls13_http2_aes128gcm_sha256);
     }
+
+    {
+        _test_case.begin("TLS 1.2 curl_http1_tls12.pcapng");
+
+        tls_session session(session_type_tls);
+
+        auto sslkeylog = sslkeylog_importer::get_instance();
+        sslkeylog->attach(&session);
+
+        (*sslkeylog) << "CLIENT_RANDOM 9d430031eb9bdfbf49a5efcbf57582b8828fd1825772855f549c496025822b7d "
+                        "44473b9ae5920d1a875a561d693bd3e010bcf1d970379bff3d6ec8a200158c395a4606305b61b9345462626a03110ed1";
+
+        play_pcap(&session, pcap_curl_http1_tls12, sizeof_pcap_curl_http1_tls12);
+    }
 }

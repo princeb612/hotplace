@@ -28,13 +28,13 @@ extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
-struct testvector_h2frame_t {
+struct testvector_http_t {
     tls_direction_t dir;
     const char* desc;
     const char* frame;
 };
 
-extern const testvector_h2frame_t testvector_h2frame[];
+extern const testvector_http_t testvector_h2frame[];
 extern const size_t sizeof_testvector_h2;
 
 void test_uri();

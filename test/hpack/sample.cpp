@@ -15,9 +15,7 @@ test_case _test_case;
 t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
-void dump_hpack_session_routine(const std::string& name, const std::string& value) {
-    _logger->writeln("  - (s = %zi) %s: %s", name.size() + value.size() + 32, name.c_str(), value.c_str());
-}
+void dump_hpack_session_routine(const char* stream, size_t size) { _logger->writeln(stream); }
 
 int main(int argc, char** argv) {
 #ifdef __MINGW32__

@@ -154,6 +154,10 @@ class hpack_static_table : public http_static_table {
 class hpack_dynamic_table : public http_dynamic_table {
    public:
     hpack_dynamic_table();
+
+    virtual void for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f);
+    virtual void dump(const std::string& desc, std::function<void(const char*, size_t)> f);
+
     /**
      * @brief   HPACK query function
      * @param   int cmd [in] see header_compression_cmd_t

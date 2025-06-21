@@ -24,9 +24,10 @@ namespace net {
 
 constexpr char constexpr_request_context_len[] = "request context len";
 constexpr char constexpr_request_context[] = "request context";
-constexpr char constexpr_certificates_len[] = "certifcates len";
-constexpr char constexpr_certificate_len[] = "certifcate len";
-constexpr char constexpr_certificate[] = "certifcate";
+constexpr char constexpr_certificates_len[] = "certificates len";
+constexpr char constexpr_certificates[] = "certificates";
+constexpr char constexpr_certificate_len[] = "certificate len";
+constexpr char constexpr_certificate[] = "certificate";
 constexpr char constexpr_group_tls13[] = "tls1.3";
 constexpr char constexpr_certificate_extensions_len[] = "certificate extensions len";
 constexpr char constexpr_certificate_extensions[] = "certificate extensions";
@@ -112,37 +113,44 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        auto tls_version = protection.get_tls_version();
+        auto is_tls13 = tlsadvisor->is_kindof_tls13(tls_version);
 
-        binary_t cert;
         crypto_keychain keychain;
         uint8 request_context_len = 0;
         uint32 certificates_len = 0;
-        uint32 certificate_len = 0;
-        binary_t cert_extensions;
-        uint16 cert_extensions_len = 0;
+        binary_t certificates;
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)  // TLS 1.3
-               << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)    // TLS 1.3
-               << new payload_member(uint24_t(0), constexpr_certificates_len)                         //
-               << new payload_member(uint24_t(0), constexpr_certificate_len)                          //
-               << new payload_member(binary_t(), constexpr_certificate)                               //
-               << new payload_member(uint16(0), true, constexpr_certificate_extensions_len);          //
+            pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)                // TLS 1.3
+               << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)                  // TLS 1.3
+               << new payload_member(uint24_t(0), constexpr_certificates_len)                                       //
+               << new payload_member(binary_t(), constexpr_certificates)                                            //
+               << new payload_member(uint16(0), true, constexpr_certificate_extensions_len, constexpr_group_tls13)  //
+               << new payload_member(binary_t(), constexpr_certificate_extensions, constexpr_group_tls13);          //
 
-            pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
             pl.set_reference_value(constexpr_request_context, constexpr_request_context_len);
-            auto tls_version = session->get_tls_protection().get_tls_version();
-            pl.set_group(constexpr_group_tls13, tlsadvisor->is_kindof_tls13(tls_version));  // tls1_ext_supported_versions 0x002b server_hello
+            pl.set_reference_value(constexpr_certificates, constexpr_certificates_len);
+            pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
+            pl.set_group(constexpr_group_tls13, is_tls13);  // tls1_ext_supported_versions 0x002b server_hello
             pl.read(stream, size, pos);
 
             request_context_len = pl.t_value_of<uint8>(constexpr_request_context_len);
             certificates_len = pl.t_value_of<uint32>(constexpr_certificates_len);
-            certificate_len = pl.t_value_of<uint32>(constexpr_certificate_len);
-            pl.get_binary(constexpr_certificate, cert);
-            cert_extensions_len = pl.t_value_of<uint16>(constexpr_certificate_extensions_len);
+            pl.get_binary(constexpr_certificates, certificates);
         }
 
-        get_extensions().read(session, dir, stream, pos + cert_extensions_len, pos);
+#if defined DEBUG
+        if (istraceable()) {
+            basic_stream dbs;
+            dbs.autoindent(1);
+            dbs.println(" > %s %i", constexpr_request_context_len, request_context_len);
+            dbs.println(" > %s 0x%04x(%i)", constexpr_certificates_len, certificates_len, certificates_len);
+            dbs.autoindent(0);
+
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+        }
+#endif
 
         auto& servercert = protection.get_keyexchange();
         keydesc desc(use_sig);
@@ -151,21 +159,53 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         } else {
             desc.set_kid(KID_TLS_CLIENT_CERTIFICATE_PUBLIC);
         }
-        ret = keychain.load_der(&servercert, &cert[0], cert.size(), desc);
+
+        uint16 idx = 0;
+        size_t cpos = 0;
+        /* while (cpos + 3 < certificates_len) */ {
+            // [0] server certificate
+            // [1] intermediate certificate authority
+            // [2] root certificate authority
+
+            payload pl;
+            pl << new payload_member(uint24_t(0), constexpr_certificate_len)  //
+               << new payload_member(binary_t(), constexpr_certificate);      //
+
+            pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
+
+            pl.read(&certificates[0], certificates.size(), cpos);
+
+            binary_t cert;
+            binary_t cert_extensions;
+
+            uint32 certificate_len = pl.t_value_of<uint32>(constexpr_certificate_len);
+            pl.get_binary(constexpr_certificate, cert);
+
+#if defined DEBUG
+            if (istraceable()) {
+                basic_stream dbs;
+                dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_len, idx, certificate_len, certificate_len);
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+            }
+#endif
+
+            /* if (0 == idx) */ { keychain.load_der(&servercert, &cert[0], cert.size(), desc); }
+
+            // idx++;
+        }
 
 #if defined DEBUG
         if (istraceable()) {
             basic_stream dbs;
             dbs.autoindent(1);
-            dbs.println(" > %s %i", constexpr_request_context_len, request_context_len);
-            dbs.println(" > %s 0x%04x(%i)", constexpr_certificates_len, certificates_len, certificates_len);
-            dbs.println(" > %s 0x%04x(%i)", constexpr_certificate_len, certificate_len, certificate_len);
-            dump_memory(cert, &dbs, 16, 3, 0x00, dump_notrunc);
-            dbs.println(" > %s 0x%04x(%i)", constexpr_certificate_extensions, cert_extensions_len, cert_extensions_len);
-            dump_memory(cert_extensions, &dbs, 16, 3, 0x00, dump_notrunc);
-            dump_key(servercert.find(desc.get_kid_cstr()), &dbs, 15, 4, dump_notrunc);
+            auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+                if (item->get_desc().get_kid_str() == desc.get_kid_str()) {
+                    dbs.println(R"(> kid "%s")", item->get_desc().get_kid_cstr());
+                    dump_key(item->get_pkey(), &dbs, 16, 3, dump_notrunc);
+                }
+            };
+            servercert.for_each(dump_crypto_key, nullptr);
             dbs.autoindent(0);
-
             trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
         }
 #endif

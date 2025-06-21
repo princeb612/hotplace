@@ -26,7 +26,7 @@ extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 extern t_shared_instance<hpack_encoder> encoder;
 
-void dump_hpack_session_routine(const std::string& name, const std::string& value);
+void dump_hpack_session_routine(const char* stream, size_t size);
 
 void test_huffman_codes();
 void test_rfc7541_c_1();

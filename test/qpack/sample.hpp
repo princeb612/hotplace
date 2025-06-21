@@ -29,6 +29,8 @@ extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 extern unsigned int count_evict_encoder;
 extern unsigned int count_evict_decoder;
 
+void dump_qpack_session_routine(const char* stream, size_t size);
+
 void test_expect(binary_t& bin, const char* expect, const char* text, ...);
 void test_dump(binary_t& bin, const char* text, ...);
 void debug_qpack_encoder(trace_category_t, uint32 event);

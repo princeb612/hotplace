@@ -68,6 +68,16 @@ struct testvector_retry_packet {
     tls_direction_t dir;
 };
 
+struct testvector_http3_t {
+    tls_direction_t dir;
+    uint8 prot;
+    const char* desc;
+    const char* frame;
+};
+
+extern const testvector_http_t testvector_http3[];
+extern const size_t sizeof_testvector_http3;
+
 std::string direction_string(tls_direction_t dir);
 
 // QUIC Version 1

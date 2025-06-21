@@ -11,7 +11,7 @@
 
 // test/tls/http/http2.pcapng
 // wireshark
-const testvector_h2frame_t testvector_h2frame[] = {
+const testvector_http_t testvector_h2frame[] = {
     {
         from_client,
         "#1 Magic, SETTINGS, WINDOW_UPDATE",

@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-http_dynamic_table::http_dynamic_table() : _type(header_compression_hpack), _inserted(0), _dropped(0), _capacity(0), _tablesize(0) {}
+http_dynamic_table::http_dynamic_table() : _type(header_compression_hpack), _inserted(0), _dropped(0), _ack(0), _capacity(0), _tablesize(0) {}
 
 void http_dynamic_table::pick(size_t entry, const std::string& name, std::string& value) {
     critical_section_guard guard(_lock);
@@ -33,18 +33,9 @@ void http_dynamic_table::pick(size_t entry, const std::string& name, std::string
     }
 }
 
-void http_dynamic_table::for_each(std::function<void(const std::string&, const std::string&)> v) {
-    if (v) {
-        critical_section_guard guard(_lock);
-        for (auto iter = _dynamic_reversemap.rbegin(); iter != _dynamic_reversemap.rend(); iter++) {
-            size_t entry = iter->first;
-            const std::string& key = iter->second.first;
-            std::string value;
-            pick(entry, key, value);
-            v(key, value);
-        }
-    }
-}
+void http_dynamic_table::for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) {}
+
+void http_dynamic_table::dump(const std::string& desc, std::function<void(const char*, size_t)> f) {}
 
 bool http_dynamic_table::operator==(const http_dynamic_table& rhs) { return (_type == rhs._type) && (_dynamic_map == rhs._dynamic_map); }
 
@@ -314,6 +305,10 @@ void http_dynamic_table::set_capacity(uint32 capacity) {
         evict();
     }
 }
+
+void http_dynamic_table::ack() { _ack = _inserted; }
+
+void http_dynamic_table::cancel() {}
 
 size_t http_dynamic_table::get_capacity() { return _capacity; }
 

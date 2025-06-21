@@ -96,8 +96,7 @@ void test_rfc7541_c_2() {
         pos = 0;
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
 
-        _logger->writeln("> dynamic table");
-        session.for_each(dump_hpack_session_routine);
+        session.dump("dynamic table", dump_hpack_session_routine);
         _test_case.assert(1 == session.get_entries(), __FUNCTION__, "%s #entry size", text1);
         _test_case.assert(55 == session.get_tablesize(), __FUNCTION__, "%s #table size", text1);
         _test_case.assert(("custom-key" == name) && ("custom-header" == value), __FUNCTION__, "%s #decode", text1);
@@ -122,8 +121,7 @@ void test_rfc7541_c_2() {
         pos = 0;
         encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
 
-        _logger->writeln("> dynamic table");
-        session.for_each(dump_hpack_session_routine);
+        session.dump("dynamic table", dump_hpack_session_routine);
         _test_case.assert(0 == session.get_entries(), __FUNCTION__, "%s #entry size", text2);
         _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s #table size", text2);
         _test_case.assert((":path" == name) && ("/sample/path" == value), __FUNCTION__, "%s #decode", text2);
@@ -149,8 +147,7 @@ void test_rfc7541_c_2() {
         // 00000010 : 74 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- | t
         _test_case.assert(bin == base16_decode_rfc(expect3), __FUNCTION__, "%s #encode", text3);
 
-        _logger->writeln("> dynamic table");
-        session.for_each(dump_hpack_session_routine);
+        session.dump("dynamic table", dump_hpack_session_routine);
         _test_case.assert(0 == session.get_entries(), __FUNCTION__, "%s #entry size", text3);
         _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s #table size", text3);
 
@@ -175,8 +172,7 @@ void test_rfc7541_c_2() {
         // 00000000 : 82 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- | .
         _test_case.assert(bin == base16_decode_rfc(expect4), __FUNCTION__, "%s #encode", text4);
 
-        _logger->writeln("> dynamic table");
-        session.for_each(dump_hpack_session_routine);
+        session.dump("dynamic table", dump_hpack_session_routine);
         _test_case.assert(0 == session.get_entries(), __FUNCTION__, "%s #entry size", text4);
         _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s #table size", text4);
 
@@ -210,10 +206,8 @@ void do_decode(const binary_t& bin, hpack_dynamic_table* session, hpack_dynamic_
     hp.commit();
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        _logger->writeln("> dynamic table (receiver)");
-        session->for_each(dump_hpack_session_routine);
-        _logger->writeln("> dynamic table (sender)");
-        session2->for_each(dump_hpack_session_routine);
+        session->dump("dynamic table (receiver)", dump_hpack_session_routine);
+        session2->dump("dynamic table (sender)", dump_hpack_session_routine);
         fflush(stdout);
     }
 }
@@ -258,8 +252,7 @@ void test_rfc7541_c_3() {
     do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text1);
-    _logger->writeln("> dynamic table");
-    session_decoder.for_each(dump_hpack_session_routine);
+    session_decoder.dump("dynamic table", dump_hpack_session_routine);
     _test_case.assert(1 == session_decoder.get_entries(), __FUNCTION__, "%s #entry size", text1);
     _test_case.assert(57 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
 
@@ -289,8 +282,7 @@ void test_rfc7541_c_3() {
     do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text2);
-    _logger->writeln("> dynamic table");
-    session_decoder.for_each(dump_hpack_session_routine);
+    session_decoder.dump("dynamic table", dump_hpack_session_routine);
     _test_case.assert(2 == session_decoder.get_entries(), __FUNCTION__, "%s #entry size", text1);
     _test_case.assert(110 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
 
@@ -322,8 +314,7 @@ void test_rfc7541_c_3() {
     do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text3);
-    _logger->writeln("> dynamic table");
-    session_decoder.for_each(dump_hpack_session_routine);
+    session_decoder.dump("dynamic table", dump_hpack_session_routine);
     _test_case.assert(3 == session_decoder.get_entries(), __FUNCTION__, "%s #entry size", text1);
     _test_case.assert(164 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text3);
 }
@@ -359,8 +350,7 @@ void test_rfc7541_c_4() {
     do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text1);
-    _logger->writeln("> dynamic table");
-    session_decoder.for_each(dump_hpack_session_routine);
+    session_decoder.dump("dynamic table", dump_hpack_session_routine);
     _test_case.assert(1 == session_decoder.get_entries(), __FUNCTION__, "%s #entry size", text1);
     _test_case.assert(57 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
 
@@ -385,8 +375,7 @@ void test_rfc7541_c_4() {
     do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text2);
-    _logger->writeln("> dynamic table");
-    session_decoder.for_each(dump_hpack_session_routine);
+    session_decoder.dump("dynamic table", dump_hpack_session_routine);
     _test_case.assert(2 == session_decoder.get_entries(), __FUNCTION__, "%s #entry size", text2);
     _test_case.assert(110 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
 
@@ -413,8 +402,7 @@ void test_rfc7541_c_4() {
     do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text3);
-    _logger->writeln("> dynamic table");
-    session_decoder.for_each(dump_hpack_session_routine);
+    session_decoder.dump("dynamic table", dump_hpack_session_routine);
     _test_case.assert(3 == session_decoder.get_entries(), __FUNCTION__, "%s #entry size", text3);
     _test_case.assert(164 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text3);
 }
@@ -462,8 +450,7 @@ void test_rfc7541_c_5() {
     do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text1);
-    _logger->writeln("> dynamic table");
-    session_decoder.for_each(dump_hpack_session_routine);
+    session_decoder.dump("dynamic table", dump_hpack_session_routine);
     _test_case.assert(4 == session_decoder.get_entries(), __FUNCTION__, "%s #entry size", text1);
     _test_case.assert(222 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
 
@@ -488,8 +475,7 @@ void test_rfc7541_c_5() {
     do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text2);
-    _logger->writeln("> dynamic table");
-    session_decoder.for_each(dump_hpack_session_routine);
+    session_decoder.dump("dynamic table", dump_hpack_session_routine);
     _test_case.assert(4 == session_decoder.get_entries(), __FUNCTION__, "%s #entry size", text2);
     _test_case.assert(222 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
     _test_case.assert(1 == count_evict_decoder, __FUNCTION__, "%s #check eviction %u", text2, count_evict_decoder);
@@ -524,8 +510,7 @@ void test_rfc7541_c_5() {
     do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text3);
-    _logger->writeln("> dynamic table");
-    session_decoder.for_each(dump_hpack_session_routine);
+    session_decoder.dump("dynamic table", dump_hpack_session_routine);
     _test_case.assert(3 == session_decoder.get_entries(), __FUNCTION__, "%s #entry size", text3);
     _test_case.assert(215 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text3);
     _test_case.assert(5 == count_evict_decoder, __FUNCTION__, "%s #check eviction %u", text3, count_evict_decoder);
@@ -574,8 +559,7 @@ void test_rfc7541_c_6() {
     do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text1);
-    _logger->writeln("> dynamic table");
-    session_decoder.for_each(dump_hpack_session_routine);
+    session_decoder.dump("dynamic table", dump_hpack_session_routine);
     _test_case.assert(4 == session_decoder.get_entries(), __FUNCTION__, "%s #entry size", text1);
     _test_case.assert(222 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text1);
 
@@ -600,8 +584,7 @@ void test_rfc7541_c_6() {
     do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text2);
-    _logger->writeln("> dynamic table");
-    session_decoder.for_each(dump_hpack_session_routine);
+    session_decoder.dump("dynamic table", dump_hpack_session_routine);
     _test_case.assert(4 == session_decoder.get_entries(), __FUNCTION__, "%s #entry size", text2);
     _test_case.assert(222 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text2);
     _test_case.assert(1 == count_evict_decoder, __FUNCTION__, "%s #check eviction %u", text2, count_evict_decoder);
@@ -634,8 +617,7 @@ void test_rfc7541_c_6() {
     do_decode(hp.get_binary(), &session_decoder, &session_encoder);
 
     _test_case.assert(session_encoder == session_decoder, __FUNCTION__, "%s #decode", text3);
-    _logger->writeln("> dynamic table");
-    session_decoder.for_each(dump_hpack_session_routine);
+    session_decoder.dump("dynamic table", dump_hpack_session_routine);
     _test_case.assert(3 == session_decoder.get_entries(), __FUNCTION__, "%s #entry size", text3);
     _test_case.assert(215 == session_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text3);
     _test_case.assert(5 == count_evict_decoder, __FUNCTION__, "%s #check eviction %u", text3, count_evict_decoder);

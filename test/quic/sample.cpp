@@ -368,6 +368,9 @@ int main(int argc, char** argv) {
         test_rfc_9369_a3();
         test_rfc_9369_a4();
         test_rfc_9369_a5();
+
+        // http3.pcapng
+        test_http3();
     }
 
     openssl_cleanup();
