@@ -75,7 +75,7 @@ struct testvector_http3_t {
     const char* frame;
 };
 
-extern const testvector_http_t testvector_http3[];
+extern const testvector_http3_t testvector_http3[];
 extern const size_t sizeof_testvector_http3;
 
 std::string direction_string(tls_direction_t dir);
@@ -104,5 +104,8 @@ void test_rfc_9369_a2();
 void test_rfc_9369_a3();
 void test_rfc_9369_a4();
 void test_rfc_9369_a5();
+
+// pcap
+void test_http3();
 
 #endif
