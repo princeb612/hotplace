@@ -7,7 +7,7 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
-  * Revision 777-800 (Tag 1.33, Revision.799)
+  * Revision 777- (Tag 1.34, Revision.803)
     * http_server trial-tls(tentative name) integration
       * TLS, HTTP1.1 - mingw64 environment (Revision 794)
       * HTTP/2 server - mingw64 environment (Revision 795)
@@ -28,6 +28,8 @@
     * CBOR
 
 * details
+  * Revision 804
+    * [tested] HTTP/2 feat. curl (MINGW64, linux environment)
   * Revision 803
     * [tested] HTTP/1.1 feat. curl
   * Revision 799

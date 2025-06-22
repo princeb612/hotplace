@@ -100,7 +100,7 @@ return_t trial_tls_server_socket::read(socket_context_t *handle, int mode, char 
         }
         if (read_ssl_read & mode) {
             // iocp & epoll, application_data
-            ret = get_secure_prosumer()->consume(socket_type(), 0, ptr_data, ptr_size, cbread, nullptr, 0);
+            ret = get_secure_prosumer()->consume(socket_type(), 0, ptr_data, size_data, cbread, nullptr, 0);
         }
     }
     __finally2 {}
