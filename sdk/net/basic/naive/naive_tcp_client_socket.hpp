@@ -16,6 +16,31 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * @brief   TCP client socket
+ * @sample
+ *          auto cli = new naive_tcp_client_socket;
+ *          ret = cli->connect(option.address.c_str(), option.port, 1);
+ *          if (errorcode_t::success == test) {
+ *              size_t cbsent = 0;
+ *              auto test = cli->send(option.message.c_str(), option.message.size(), &cbsent);
+ *              if (errorcode_t::success == test) {
+ *                  size_t cbread = 0;
+ *                  test = cli->read(buffer, option.bufsize, &cbread);
+ *                  if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
+ *                      // do_something(buffer, cbread);
+ *                      while (errorcode_t::more_data == test) {
+ *                          test = cli->more(buffer, option.bufsize, &cbread);
+ *                          if (errorcode_t::more_data == test) {
+ *                              // do_something(buffer, cbread);
+ *                          }
+ *                      }
+ *                  }
+ *              }
+ *              cli->close();
+ *          }
+ *          cli->release();
+ */
 class naive_tcp_client_socket : public client_socket {
    public:
     naive_tcp_client_socket();

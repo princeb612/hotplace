@@ -20,6 +20,9 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * @brief   TLS server socket
+ */
 class trial_tls_server_socket : public naive_tcp_server_socket {
    public:
     trial_tls_server_socket();

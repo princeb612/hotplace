@@ -19,9 +19,8 @@ namespace hotplace {
 namespace net {
 
 /**
- * @brief   client
+ * @brief   TLS client socket
  * @sample
- *          // sketch
  *          trial_tls_client_socket cli;
  *          ret = cli.connect(addr, port, tmo);
  *          if (success == ret) {

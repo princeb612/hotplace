@@ -183,7 +183,7 @@ class huffman_coding {
     reverse_codetable_t _reverse_codetable;
 #else
     t_trie<char> _trie;
-    t_range<size_t> _range;
+    t_sampling_range<size_t> _range;
 #endif
 };
 

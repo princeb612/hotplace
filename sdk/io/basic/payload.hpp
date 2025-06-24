@@ -31,8 +31,8 @@ namespace io {
  * @sample
  *          // sketch.1
  *          payload pl;
- *          binary_t data = str2bin("data");
- *          binary_t pad = str2bin("pad");
+ *          binary_t data = std::move(str2bin("data"));
+ *          binary_t pad = std::move(str2bin("pad"));
  *          uint8 padlen = 3;  // "pad"
  *          basic_stream bs;
  *          binary_t bin_padded;

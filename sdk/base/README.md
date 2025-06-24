@@ -4,12 +4,13 @@
 mindmap
   root((base))
     utilities
-      dump memory
       command line
-      binary
       customized printf
       customized stream
       customized shared pointer
+      dump memory
+      binary
+      variant
       valist
     encoding
       base16

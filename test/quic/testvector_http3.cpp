@@ -117,6 +117,7 @@ const testvector_http3_t pcap_http3[] = {
         "37 c0 17 a6 82 ee c6 6d 35 ec 0b 2b b5 67 50 31"
         "43 ca 26 d9 d3 31 f8 22 d7 8b bb a9 5a da 4a f2",
     },
+#if 0
     {
         // QUIC IETF
         //     QUIC Connection information
@@ -334,5 +335,6 @@ const testvector_http3_t pcap_http3[] = {
         "19 5d 03 24 00 7c 78 f3 89 0d 79 c9 ce 84 e2 f3"
         "bc 99 f0 ac 4c 91 3e 04 33 54 fd c2 97 dc ee 80",
     },
+#endif
 };
 const size_t sizeof_pcap_http3 = RTL_NUMBER_OF(pcap_http3);

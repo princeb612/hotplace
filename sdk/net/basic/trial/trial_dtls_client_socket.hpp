@@ -19,9 +19,8 @@ namespace hotplace {
 namespace net {
 
 /**
- * @brief   client
+ * @brief   DTLS client socket
  * @sample
- *          // sketch
  *          trial_dtls_client_socket cli;
  *          ret = cli.open(&addr, addr, port)
  *          if (success == ret) {

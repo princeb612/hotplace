@@ -19,6 +19,7 @@ namespace net {
 
 /**
  * @brief   basic socket
+ * @sa      client_socket, server_socket
  */
 class basic_socket {
    public:

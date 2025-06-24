@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
     test_binary();
     test_loglevel();
     test_nostd();
+    test_range();
 
     _logger->flush();
 

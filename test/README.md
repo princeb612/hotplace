@@ -99,7 +99,7 @@ cd module
   - [x] integration
     - [x] network_server
     - [x] libssl
-    - [ ] trial
+    - [x] trial
 - [x] udpserver1
 - [x] udpserver2
 - [x] unittest

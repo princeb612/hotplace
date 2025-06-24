@@ -16,6 +16,9 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * @brief   UDP client socket
+ */
 class trial_udp_client_socket : public client_socket_prosumer {
    public:
     trial_udp_client_socket();

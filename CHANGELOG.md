@@ -7,27 +7,25 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
-  * Revision 777- (Tag 1.34, Revision.803)
-    * http_server trial-tls(tentative name) integration
-      * TLS, HTTP1.1 - mingw64 environment (Revision 794)
-      * HTTP/2 server - mingw64 environment (Revision 795)
-      * TLS, HTTP1.1 - linux environment (Revision 799)
+  * Revision 777-804 (Tag 1.35, Revision.804)
+    * server - TLS, HTTP/1.1, HTTP/2 (trial)
   * Revision 682-776
-    * TLS, DTLS client
+    * client - TLS, DTLS
   * Revision 673-680 (Tag 0.97, Revision.684)
-    * RFC 8448
+    * RFC 8448 Example Handshake Traces for TLS 1.3
   * Revision 650-672
     * https://tls13.xargs.org/
     * https://tls12.xargs.org/
     * https://dtls.xargs.org/
   * Revision 501-523 (Tag 0.56, Revision.528)
-    * HTTP/2
+    * server - HTTP/2 (libssl)
   * Revision 221-442
     * COSE
   * Revision 144-220
     * CBOR
 
 * details
+  * Revision 805
   * Revision 804
     * [tested] HTTP/2 feat. curl (MINGW64, linux environment)
   * Revision 803
@@ -46,7 +44,6 @@
   * Revision 784
     * [tested] CCM_8
       * no s_server/s_client test vector
-      * test/cryoto test_aead_ccm (CCM_SET_L 3, CCM_SET_IVLEN=15-L=12, AEAD_SET_TAG 8)
   * Revision 783
     * [fixed] AEAD_AES_128_CCM, AEAD_AES_256_CCM
   * Revision 781

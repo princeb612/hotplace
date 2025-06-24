@@ -16,6 +16,14 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * @brief   client socket
+ * @sa
+ *          TCP - naive_tcp_client_socket
+ *          UDP - naive_udp_client_socket
+ *          TLS - openssl_tls_client_socket, trial_tls_client_socket
+ *          DTLS - openssl_dtls_client_socket, trial_dtls_client_socket
+ */
 class client_socket : public basic_socket {
    public:
     virtual ~client_socket();

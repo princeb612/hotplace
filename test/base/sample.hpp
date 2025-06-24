@@ -33,4 +33,6 @@ void test_loglevel();
 
 void test_nostd();
 
+void test_range();
+
 #endif

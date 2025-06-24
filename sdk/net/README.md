@@ -3,22 +3,22 @@
 ```mermaid
 mindmap
   root((net))
-    basic socket
+    socket
       tcp
       udp
       tls
       dtls
-    http
-      auth
-      http
-      http2
+    secure socket
+      tls
+      quic
     server
       network server
       network protocol
       session
-    tls
-      tls
-      quic
+    http server
+      auth
+      http
+      http2
 ```
 
 ### references

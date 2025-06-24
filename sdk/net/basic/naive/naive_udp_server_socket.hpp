@@ -17,8 +17,8 @@ namespace hotplace {
 namespace net {
 
 /**
- * @brief   naive_udp_server_socket
- * @sa      class openssl_dtls_server_socket : public naive_udp_server_socket
+ * @brief   UDP server socket
+ * @sa      openssl_dtls_server_socket
  */
 class naive_udp_server_socket : public server_socket {
    public:

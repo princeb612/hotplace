@@ -18,10 +18,18 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * @brief   server socket adapter
+ * @sa      http_server_builder
+ * @example
+ *          if (use_openssl_libssl) {
+ *              builder.builder.set(new openssl_server_socket_adapter);
+ *          } else {
+ *              builder.builder.set(new trial_server_socket_adapter);
+ *          }
+ */
 class server_socket_adapter {
    public:
-    server_socket_adapter();
-
     virtual return_t startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
     virtual return_t startup_dtls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
     virtual return_t shutdown_tls();
@@ -35,6 +43,9 @@ class server_socket_adapter {
 
     void addref();
     void release();
+
+   protected:
+    server_socket_adapter();
 
    private:
     t_shared_reference<server_socket_adapter> _shared;

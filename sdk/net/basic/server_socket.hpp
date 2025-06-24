@@ -16,6 +16,12 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * @brief   server socket
+ * @sa
+ *          naive_tcp_server_socket
+ *          naive_udp_server_socket
+ */
 class server_socket : public basic_socket {
    public:
     virtual ~server_socket();

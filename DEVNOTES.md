@@ -237,6 +237,7 @@ flowchart LR
   - [x] encrypt_then_mac (rev.752)
     - [x] encrypt
     - [x] decrypt
+  - [ ] TLS 1.2 chacha20-poly1305
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)
   - [x] integration - network_server

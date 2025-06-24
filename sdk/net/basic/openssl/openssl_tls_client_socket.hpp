@@ -18,6 +18,9 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * @brief   TLS client socket
+ */
 class openssl_tls_client_socket : public client_socket {
    public:
     openssl_tls_client_socket(openssl_tls* tls);

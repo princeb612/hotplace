@@ -17,8 +17,8 @@ namespace hotplace {
 namespace net {
 
 /**
- * @brief   naive_tcp_server_socket
- * @sa      class openssl_tls_server_socket : public naive_tcp_server_socket
+ * @brief   TCP server socket
+ * @sa      openssl_tls_server_socket, trial_tls_server_socket
  */
 class naive_tcp_server_socket : public server_socket {
    public:

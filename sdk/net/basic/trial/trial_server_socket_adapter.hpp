@@ -18,6 +18,10 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * @brief   TLS server socket adapter
+ * @sa      http_server_builder
+ */
 class trial_server_socket_adapter : public server_socket_adapter {
    public:
     trial_server_socket_adapter();

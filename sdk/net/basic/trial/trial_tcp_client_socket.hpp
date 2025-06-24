@@ -16,6 +16,9 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * @brief   TCP client socket
+ */
 class trial_tcp_client_socket : public client_socket_prosumer {
    public:
     trial_tcp_client_socket();
