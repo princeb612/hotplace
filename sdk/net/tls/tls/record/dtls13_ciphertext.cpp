@@ -111,7 +111,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("> %s", constexpr_unified_header);
             dbs.println(" > 0x%02x (C:%i S:%i L:%i E:%x)", uhdr, (uhdr & 0x10) ? 1 : 0, (uhdr & 0x08) ? 1 : 0, (uhdr & 0x04) ? 1 : 0, (uhdr & 0x03));
@@ -198,7 +198,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
         }
 
 #if defined DEBUG
-        if (check_trace_level(loglevel_debug) && istraceable()) {
+        if (istraceable(trace_category_net, loglevel_debug)) {
             basic_stream dbs;
 
             dbs.println("> rec_enc %04x", rec_enc);
@@ -226,7 +226,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
             size_t tpos = 0;
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 basic_stream dbs;
 
                 dbs.println("> content type 0x%02x(%i) %s", type, type, tlsadvisor->content_type_string(type).c_str());
@@ -367,7 +367,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
         }
 
 #if defined DEBUG
-        if (check_trace_level(loglevel_debug) && istraceable()) {
+        if (istraceable(trace_category_net, loglevel_debug)) {
             basic_stream dbs;
 
             dbs.println("> header");

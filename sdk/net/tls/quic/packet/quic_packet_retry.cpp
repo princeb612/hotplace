@@ -108,7 +108,7 @@ return_t quic_packet_retry::write(tls_direction_t dir, binary_t& packet) {
 
 void quic_packet_retry::dump() {
 #if defined DEBUG
-    if (istraceable()) {
+    if (istraceable(trace_category_net)) {
         quic_packet::dump();
 
         basic_stream dbs;

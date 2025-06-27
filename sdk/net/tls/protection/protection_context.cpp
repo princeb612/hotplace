@@ -182,7 +182,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                         }
                     }
 #if defined DEBUG
-                    if (istraceable()) {
+                    if (istraceable(trace_category_net)) {
                         basic_stream dbs;
                         dbs.println(" ? \e[1;33m# 0x%02x %s\e[0m", cs, hint->name_iana);
                         trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
@@ -202,7 +202,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                     set_cipher_suite(cs);
                     ret_value = true;
 #if defined DEBUG
-                    if (istraceable()) {
+                    if (istraceable(trace_category_net)) {
                         auto hint = tlsadvisor->hintof_cipher_suite(cs);
                         basic_stream dbs;
                         dbs.println(" ! \e[1;33m# 0x%02x %s\e[0m", cs, hint->name_iana);

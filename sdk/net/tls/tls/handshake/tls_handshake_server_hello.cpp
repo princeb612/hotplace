@@ -333,6 +333,29 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 __leave2;
             }
 
+#if defined DEBUG
+            if (istraceable(trace_category_net)) {
+                basic_stream dbs;
+                dbs.autoindent(1);
+                dbs.println(" > %s 0x%04x (%s)", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
+                dbs.println(" > %s", constexpr_random);
+                if (random.size()) {
+                    // dump_memory(random, s, 16, 3, 0x0, dump_notrunc);
+                    dbs.println("   %s", base16_encode(random).c_str());
+                }
+                dbs.println(" > %s", constexpr_session_id);
+                if (session_id.size()) {
+                    dbs.println("   %s", base16_encode(session_id).c_str());
+                }
+                dbs.println(" > %s 0x%04x %s", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
+                dbs.println(" > %s %i %s", constexpr_compression_method, compression_method, tlsadvisor->compression_method_string(compression_method).c_str());
+                dbs.println(" > %s 0x%02x(%i)", constexpr_extension_len, extension_len, extension_len);
+                dbs.autoindent(0);
+
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+            }
+#endif
+
             ret = get_extensions().read(session, dir, stream, pos + extension_len, pos);
 
             // encrypt_then_mac
@@ -375,29 +398,6 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             protection.set_item(tls_context_server_hello_random, random);
 
             _version = version;
-
-#if defined DEBUG
-            if (istraceable()) {
-                basic_stream dbs;
-                dbs.autoindent(1);
-                dbs.println(" > %s 0x%04x (%s)", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
-                dbs.println(" > %s", constexpr_random);
-                if (random.size()) {
-                    // dump_memory(random, s, 16, 3, 0x0, dump_notrunc);
-                    dbs.println("   %s", base16_encode(random).c_str());
-                }
-                dbs.println(" > %s", constexpr_session_id);
-                if (session_id.size()) {
-                    dbs.println("   %s", base16_encode(session_id).c_str());
-                }
-                dbs.println(" > %s 0x%04x %s", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
-                dbs.println(" > %s %i %s", constexpr_compression_method, compression_method, tlsadvisor->compression_method_string(compression_method).c_str());
-                dbs.println(" > %s 0x%02x(%i)", constexpr_extension_len, extension_len, extension_len);
-                dbs.autoindent(0);
-
-                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
-            }
-#endif
         }
     }
     __finally2 {
@@ -516,7 +516,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         binary_append(bin, extensions);
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("> encrypt_then_mac %i", kv.get(session_encrypt_then_mac) ? 1 : 0);
             dbs.println("> extended master secret %i", kv.get(session_extended_master_secret));

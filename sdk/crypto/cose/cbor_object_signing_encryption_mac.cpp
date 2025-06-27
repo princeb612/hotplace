@@ -187,7 +187,7 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_crypto)) {
             basic_stream dbs;
             dbs.println("domac alg %i (%s)", alg, hint->name);
             trace_debug_event(trace_category_crypto, trace_event_cose_mac, &dbs);

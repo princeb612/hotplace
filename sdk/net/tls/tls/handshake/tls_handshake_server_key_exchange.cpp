@@ -181,7 +181,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             }
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 basic_stream dbs;
                 dbs.autoindent(2);
                 dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
@@ -319,7 +319,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     }
 
 #if defined DEBUG
-    if (istraceable()) {
+    if (istraceable(trace_category_net)) {
         basic_stream dbs;
         dbs.autoindent(2);
         dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());

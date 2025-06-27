@@ -205,6 +205,7 @@ class tls_advisor {
     std::string compression_method_string(uint8 code);
     std::string sni_nametype_string(uint16 code);
     std::string quic_packet_type_string(uint8 code);
+    std::string nameof_secret(tls_secret_t secret);
 
     bool is_kindof_tls13(uint16 ver);
     bool is_kindof_tls12(uint16 ver);
@@ -301,6 +302,7 @@ class tls_advisor {
     std::map<uint16, const tls_version_hint_t*> _tls_version;
     std::map<uint8, std::string> _cert_status_types;
     std::map<uint8, const tls_quic_packet_type_code_t*> _quic_packet_type_codes;
+    std::map<tls_secret_t, std::string> _secret_names;
 
     std::map<uint32, const tls_session_status_code_t*> _session_status_codes;
 

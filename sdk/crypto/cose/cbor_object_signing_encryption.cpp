@@ -816,7 +816,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
                 dgst_klen = alg_hint->dgst.dlen;
             }
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_crypto)) {
                 basic_stream dbs;
                 dbs.println("process_keydistribution alg %i (%s)", alg, hint->name);
                 trace_debug_event(trace_category_crypto, trace_event_cose_keydistribution, &dbs);
@@ -831,7 +831,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
             // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_crypto)) {
                 constexpr char constexpr_debug_alg[] = "alg %i(group %i) ";
                 handle->debug_stream.printf(constexpr_debug_alg, alg, group);
             }
@@ -937,7 +937,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
             layer->setparam(cose_param_t::cose_param_cek, cek);
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_crypto)) {
                 layer->get_composer()
                     ->get_unsent()
                     .data()

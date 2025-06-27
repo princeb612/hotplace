@@ -38,7 +38,7 @@ return_t trial_tls_server_socket::tls_accept(socket_context_t **handle, socket_t
             auto lambda_send = [&](tls_session *sess, binary_t &bin) -> void {
                 socket_context_t *ctx = (socket_context_t *)(sess->get_hook_param());
 #if defined DEBUG
-                if (istraceable()) {
+                if (istraceable(trace_category_net)) {
                     basic_stream dbs;
                     dbs.println("send %p %i", ctx, ctx->fd);
                     dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);

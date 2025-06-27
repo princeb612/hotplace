@@ -3,6 +3,8 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
+ *          DTLS 1.3 ciphertext header protection
+ *          QUIC header protection
  *
  * Revision History
  * Date         Name                Description
@@ -98,6 +100,7 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
         auto &protection = session->get_tls_protection();
 
         crypto_advisor *advisor = crypto_advisor::get_instance();
+        tls_advisor *tlsadvisor = tls_advisor::get_instance();
         auto hint = advisor->hintof_blockcipher(aes128);
         uint16 blocksize = sizeof_block(hint);
         if (masklen > blocksize) {
@@ -124,10 +127,10 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
                 mask.resize(masklen);
 
 #if defined DEBUG
-                if (istraceable()) {
+                if (istraceable(trace_category_net)) {
                     basic_stream dbs;
                     dbs.println("> protection");
-                    dbs.println(" > key[%08x] %s", secret_key, base16_encode(key).c_str());
+                    dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
                     dbs.println(" > sample %s", base16_encode(stream, samplesize).c_str());
                     dbs.println(" > mask %s", base16_encode(mask).c_str());
                     trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);

@@ -60,7 +60,7 @@ return_t multiplexer_iocp::open(multiplexer_context_t **handle, size_t concurren
         *handle = context;
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_internal)) {
             basic_stream dbs;
             dbs.println("iocp handle %08x created", handle_iocp);
             trace_debug_event(trace_category_internal, trace_event_multiplexer, &dbs);
@@ -129,7 +129,7 @@ return_t multiplexer_iocp::bind(multiplexer_context_t *handle, handle_t eventsou
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_internal)) {
             basic_stream dbs;
             dbs.println("iocp handle %08x bind %i", context->handle_iocp, eventsource);
             trace_debug_event(trace_category_internal, trace_event_multiplexer, &dbs);

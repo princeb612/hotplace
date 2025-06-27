@@ -96,7 +96,7 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
         check_status(dir);
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* advisor = tls_advisor::get_instance();
 

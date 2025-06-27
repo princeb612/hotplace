@@ -68,9 +68,18 @@ struct testvector_retry_packet {
     tls_direction_t dir;
 };
 
+/**
+ * wireshark http3.pcapng
+ */
+enum prot_t : uint8 {
+    prot_quic = 1,
+    prot_tls13 = 2,
+    prot_http3 = 3,
+};
+
 struct testvector_http3_t {
     tls_direction_t dir;
-    uint8 prot;
+    prot_t prot;
     const char* desc;
     const char* frame;
 };

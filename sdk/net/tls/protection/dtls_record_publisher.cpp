@@ -101,7 +101,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                         desc.hsseq = hsseq;
 
 #if defined DEBUG
-                        if (check_trace_level(loglevel_debug) && istraceable()) {
+                        if (istraceable(trace_category_net, loglevel_debug)) {
                             basic_stream dbs;
                             dbs.printf("\e[1;36m");
                             dbs.println("# publish %s %i %s", tlsadvisor->handshake_type_string(hstype).c_str(), hsseq,
@@ -121,7 +121,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
 
                 auto lambda_split = [&](uint32 flags, const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize, const spl_desc& desc) -> void {
 #if defined DEBUG
-                    if (check_trace_level(loglevel_debug) && istraceable()) {
+                    if (istraceable(trace_category_net, loglevel_debug)) {
                         basic_stream dbs;
                         dbs.printf("\e[1;36m");
                         dbs.println("# split %s %i %s", tlsadvisor->handshake_type_string(desc.hstype).c_str(), desc.hsseq,

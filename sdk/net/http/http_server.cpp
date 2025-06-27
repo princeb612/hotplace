@@ -208,7 +208,7 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
     size_t bufsize = (size_t)data_array[2];
 
 #if defined DEBUG
-    if (check_trace_level(loglevel_debug) && istraceable()) {
+    if (istraceable(trace_category_net, loglevel_debug)) {
         netsocket_t* session_socket = (netsocket_t*)data_array[0];  // mux_tryconnect can be nullptr
         basic_stream bs;
 

@@ -610,7 +610,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                 __leave2_trace_openssl(ret);
             }
 #if defined DEBUG
-            if (check_trace_level(loglevel_debug) && istraceable()) {
+            if (istraceable(trace_category_crypto, loglevel_debug)) {
                 basic_stream dbs;
                 dbs.println("> ciphertext");
                 dump_memory(ciphertext, ciphersize, &dbs, 16, 3, 0, dump_notrunc);

@@ -38,7 +38,8 @@ return_t quic_frame_stop_sending::do_read_body(tls_direction_t dir, const byte_t
         // }
         // Figure 29: STOP_SENDING Frame Format
         payload pl;
-        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_stream_id) << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code);
+        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_stream_id)  //
+           << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code);
         pl.read(stream, size, pos);
 
         uint64 stream_id = pl.t_value_of<uint64>(constexpr_stream_id);
@@ -46,9 +47,10 @@ return_t quic_frame_stop_sending::do_read_body(tls_direction_t dir, const byte_t
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
             basic_stream dbs;
             dbs.println("   > %s %I64i", constexpr_stream_id, stream_id);
-            dbs.println("   > %s %I64i", constexpr_error_code, error_code);
+            dbs.println("   > %s %I64i %s", constexpr_error_code, error_code, tlsadvisor->quic_error_string(error_code).c_str());
             trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif

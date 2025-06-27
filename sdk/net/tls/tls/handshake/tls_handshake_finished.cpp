@@ -148,13 +148,13 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
         //    authenticates the handshake.  [Section 4.4.4]
 
         crypto_advisor* advisor = crypto_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto tlsversion = protection.get_tls_version();
         uint16 dlen = 0;
         hash_algorithm_t hmacalg;
         {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
             if (nullptr == hint_tls_alg) {
                 ret = errorcode_t::not_supported;
@@ -192,12 +192,13 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             }
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 basic_stream dbs;
                 dbs.autoindent(1);
                 dbs.println("> %s \e[1;33m%s\e[0m", constexpr_verify_data, (errorcode_t::success == ret) ? "true" : "false");
                 dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
-                dbs.println("  > secret (internal) 0x%08x", typeof_secret);
+                const binary_t ht_secret = protection.get_item(typeof_secret);
+                dbs.println("  > secret [0x%08x] %s (%s)", typeof_secret, base16_encode(ht_secret).c_str(), tlsadvisor->nameof_secret(typeof_secret).c_str());
                 dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
                 dbs.println("  > verify data %s", base16_encode(verify_data).c_str());
                 dbs.println("  > maced       %s", base16_encode(maced).c_str());
@@ -227,11 +228,11 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
         auto& protection = session->get_tls_protection();
 
         crypto_advisor* advisor = crypto_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto tlsversion = protection.get_tls_version();
         uint16 dlen = 0;
         hash_algorithm_t hmacalg;
         {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
             if (nullptr == hint_tls_alg) {
                 ret = errorcode_t::success;
@@ -256,11 +257,12 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("> %s", constexpr_verify_data);
             dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
-            dbs.println("  > secret (internal) 0x%08x", typeof_secret);
+            const binary_t ht_secret = protection.get_item(typeof_secret);
+            dbs.println("  > secret [0x%08x] %s (%s)", typeof_secret, base16_encode(ht_secret).c_str(), tlsadvisor->nameof_secret(typeof_secret).c_str());
             dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
             dbs.println("  > verify data %s", base16_encode(verify_data).c_str());
 

@@ -62,6 +62,7 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
         auto& protection = session->get_tls_protection();
         auto tagsize = protection.get_tag_size();
 
+        byte_t ht = stream[pos];
         ret = read_common_header(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -73,7 +74,6 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
 
         size_t ppos = pos;
         size_t offset_pnpayload = 0;
-        byte_t ht = stream[0];
 
         {
             constexpr char constexpr_token[] = "token";
@@ -99,6 +99,11 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
         }
 
         if (from_any != dir) {
+            if (protection.get_item(tls_secret_initial_quic_client_hp).empty()) {
+                protection.set_item(tls_context_quic_dcid, get_dcid());
+                protection.calc(session, tls_hs_client_hello, dir);  // calc initial keys
+            }
+
             ret = header_unprotect(dir, stream + (ppos + offset_pnpayload + 4), 16, protection_initial, _ht, _pn, _payload);
             if (errorcode_t::success != ret) {
                 __leave2;
@@ -110,10 +115,6 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
             // decrypt
             binary_t bin_plaintext;
             {
-                auto& protection = session->get_tls_protection();
-                protection.set_item(tls_context_quic_dcid, get_dcid());
-                protection.calc(session, tls_hs_client_hello, dir);  // calc initial keys
-
                 size_t pos = 0;
                 ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_plaintext, bin_unprotected_header, bin_tag, protection_initial);
                 if (errorcode_t::success == ret) {
@@ -227,8 +228,7 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
             ciphertext = std::move(bin_ciphertext);
             tag = std::move(bin_tag);
 
-#if defined DEBUG
-            if (istraceable()) {
+            if (0) {
                 dump();
 
                 size_t pos = 0;
@@ -242,7 +242,6 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
                 };
                 frames.for_each(lambda_foreach);
             }
-#endif
         } else {
             header = std::move(bin_unprotected_header);
         }
@@ -255,7 +254,7 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
 
 void quic_packet_initial::dump() {
 #if defined DEBUG
-    if (istraceable()) {
+    if (istraceable(trace_category_net)) {
         quic_packet::dump();
 
         auto session = get_session();

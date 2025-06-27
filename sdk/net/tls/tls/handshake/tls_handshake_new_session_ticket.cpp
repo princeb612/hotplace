@@ -122,7 +122,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.autoindent(1);
             dbs.println(" > %s 0x%08x (%i secs)", constexpr_ticket_lifetime, ticket_lifetime, ticket_lifetime);

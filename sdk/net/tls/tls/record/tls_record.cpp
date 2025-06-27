@@ -88,7 +88,7 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
     auto snapshot = bin.size();
     __try2 {
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto content_type = get_type();
@@ -127,7 +127,7 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
         ret = do_write_header(dir, bin, body);  // encryption
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             if (get_flags()) {
                 dbs.printf("\e[0;36m");
@@ -298,7 +298,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto const& range = get_header_range();
@@ -426,7 +426,7 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
         binary_append(bin, body);
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto const& range = get_header_range();

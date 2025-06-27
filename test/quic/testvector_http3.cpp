@@ -39,8 +39,8 @@ const testvector_http3_t pcap_http3[] = {
         //         Frame Type: PADDING (0x0000000000000000)
         //         [Padding Length: 878]
         from_client,
-        SOCK_DGRAM,
-        "QUIC Initial",
+        prot_quic,
+        "QUIC Initial #client_hello, padding",
         "c4 00 00 00 01 08 bd 21 df 6a 65 e7 6e 9e 00 00"
         "44 9e bc 72 3e 7a c5 67 fb 41 d7 d1 8c 63 93 2d"
         "ed 1e ec ff 46 95 3d cf 65 f2 37 28 94 d3 23 29"
@@ -117,7 +117,6 @@ const testvector_http3_t pcap_http3[] = {
         "37 c0 17 a6 82 ee c6 6d 35 ec 0b 2b b5 67 50 31"
         "43 ca 26 d9 d3 31 f8 22 d7 8b bb a9 5a da 4a f2",
     },
-#if 0
     {
         // QUIC IETF
         //     QUIC Connection information
@@ -152,8 +151,8 @@ const testvector_http3_t pcap_http3[] = {
         //         Frame Type: PADDING (0x0000000000000000)
         //         [Padding Length: 1066]
         from_server,
-        SOCK_DGRAM,
-        "QUIC Initial",
+        prot_quic,
+        "QUIC Initial #ack, server_hello, padding",
         "ca 00 00 00 01 00 08 fd 21 df 6a 65 e7 6e 9e 00"
         "44 9e 4d fc 5a cb 03 85 3b f2 1d cd 09 30 b6 49"
         "39 25 7f 26 2c 36 87 fe 2d e0 5c ad 19 f9 85 1e"
@@ -257,8 +256,8 @@ const testvector_http3_t pcap_http3[] = {
         //         Frame Type: PADDING (0x0000000000000000)
         //         [Padding Length: 1157]
         from_client,
-        SOCK_DGRAM,
-        "QUIC Initial",
+        prot_quic,
+        "QUIC Initial #ack, padding",
         "cb 00 00 00 01 08 fd 21 df 6a 65 e7 6e 9e 00 00"
         "44 9e 16 24 a8 37 8f 2e a7 dc 3b f7 cf c9 8b af"
         "db d7 51 a1 ec 3a 56 9f 84 14 39 1c d9 4d c8 24"
@@ -335,6 +334,5 @@ const testvector_http3_t pcap_http3[] = {
         "19 5d 03 24 00 7c 78 f3 89 0d 79 c9 ce 84 e2 f3"
         "bc 99 f0 ac 4c 91 3e 04 33 54 fd c2 97 dc ee 80",
     },
-#endif
 };
 const size_t sizeof_pcap_http3 = RTL_NUMBER_OF(pcap_http3);

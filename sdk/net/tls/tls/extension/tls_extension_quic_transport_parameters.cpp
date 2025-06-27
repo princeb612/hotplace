@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
@@ -35,9 +36,10 @@ return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t d
 
         // RFC 9001 8.2.  QUIC Transport Parameters Extension
         // RFC 9000 18.  Transport Parameter Encoding
-        while (pos < tpos + ext_len) {
+        while (pos <= tpos + ext_len) {
             payload pl;
-            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_param_id) << new payload_member(new quic_encoded(binary_t()), constexpr_param);
+            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_param_id)  //
+               << new payload_member(new quic_encoded(binary_t()), constexpr_param);   //
             pl.read(stream, endpos_extension(), pos);
 
             binary_t param;
@@ -49,7 +51,7 @@ return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t d
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             for (auto item : _keys) {
@@ -62,13 +64,14 @@ return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t d
                     case quic_param_original_destination_connection_id:
                     case quic_param_initial_source_connection_id:
                     case quic_param_retry_source_connection_id:
-                        dbs.println("   > %I64i (%s) %s", param_id, tlsadvisor->quic_param_string(param_id).c_str(), base16_encode(param).c_str());
+                        dbs.println("    > %I64i (%s) %s", param_id, tlsadvisor->quic_param_string(param_id).c_str(), base16_encode(param).c_str());
+                        dump_memory(param, &dbs, 16, 9, 0, dump_notrunc);
                         break;
                     default: {
                         size_t epos = 0;
                         uint64 value = 0;
                         quic_read_vle_int(&param[0], param.size(), epos, value);
-                        dbs.println("   > %I64i (%s) %I64i", param_id, tlsadvisor->quic_param_string(param_id).c_str(), value);
+                        dbs.println("    > %I64i (%s) 0x%I64x (%I64i)", param_id, tlsadvisor->quic_param_string(param_id).c_str(), value, value);
                     } break;
                 }
             }

@@ -19,7 +19,6 @@ void test_quic_xargs_org() {
 
     return_t ret = errorcode_t::success;
     tls_protection& protection = server_session.get_tls_protection();
-    protection.set_cipher_suite(0x1301);
 
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
 

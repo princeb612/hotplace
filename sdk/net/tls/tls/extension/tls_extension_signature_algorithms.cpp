@@ -63,7 +63,7 @@ return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, c
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 

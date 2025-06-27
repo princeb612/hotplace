@@ -219,7 +219,7 @@ return_t quic_packet_handshake::write(tls_direction_t dir, binary_t& header, bin
             tag = std::move(bin_tag);
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (0) {
                 dump();
 
                 auto session = get_session();
@@ -240,7 +240,7 @@ return_t quic_packet_handshake::write(tls_direction_t dir, binary_t& header, bin
 
 void quic_packet_handshake::dump() {
 #if defined DEBUG
-    if (istraceable()) {
+    if (istraceable(trace_category_net)) {
         quic_packet::dump();
 
         auto session = get_session();

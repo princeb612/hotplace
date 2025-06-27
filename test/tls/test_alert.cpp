@@ -75,8 +75,8 @@ void test_alert() {
             "c8 3a c1 06 16 ad 35 4a 84 be 16 2b c6 10 a8 b2"
             "f7";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        auto ret = dump_record("server_key_exchange", &session, from_server, bin_record, false);
-        _test_case.test(errorcode_t::error_handshake == ret, __FUNCTION__, "unexpected message");
+        auto ret = dump_record("server_key_exchange after server_hello (no certificate)", &session, from_server, bin_record, false);
+        _test_case.test(errorcode_t::error_handshake == ret, __FUNCTION__, "server_key_exchange -> {fatal, unexpected message}");
     }
 
     {
@@ -92,6 +92,6 @@ void test_alert() {
 
         auto iter = fatal_alerts.find(tls_alertdesc_unexpected_message);
         bool test = (fatal_alerts.end() != iter);
-        _test_case.assert(test, __FUNCTION__, "unexpected message");
+        _test_case.assert(test, __FUNCTION__, "alert == {fatal, unexpected message}");
     }
 }

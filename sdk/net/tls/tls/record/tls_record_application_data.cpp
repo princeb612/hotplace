@@ -213,7 +213,7 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
             _bin.clear();
             binary_append(_bin, &msg[0], msg.size() - trail);
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 basic_stream dbs;
                 dbs.autoindent(3);
                 dbs.println(" > %s", constexpr_application_data);  // data

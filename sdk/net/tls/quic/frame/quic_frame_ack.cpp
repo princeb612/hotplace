@@ -63,8 +63,9 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
         constexpr char constexpr_ectce_count[] = "ect-ce count";
 
         payload pl;
-        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_largest_ack) << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)
-           << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_range_count)
+        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_largest_ack)      //
+           << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)        //
+           << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_range_count)  //
            << new payload_member(new quic_encoded(uint64(0)), constexpr_first_ack_range);
         pl.read(stream, size, pos);
 
@@ -78,7 +79,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
         if (istraceable(trace_category_net)) {
             dbs.println("   > %s %I64i", constexpr_largest_ack, largest_ack);
-            dbs.println("   > %s %I64i", constexpr_ack_delay, ack_delay);
+            dbs.println("   > %s %I64i (%I64i microseconds)", constexpr_ack_delay, ack_delay, ack_delay << 3);
             dbs.println("   > %s %I64i", constexpr_ack_range_count, ack_range_count);
             dbs.println("   > %s %I64i", constexpr_first_ack_range, first_ack_range);
         }

@@ -19,13 +19,13 @@ static std::map<trace_category_t, bool> _debug_category_filter;
 void set_trace_debug(std::function<void(trace_category_t category, uint32 event, stream_t* s)> f) { _internal_debug = f; }
 
 void trace_debug_event(trace_category_t category, uint32 event, stream_t* s) {
-    if (s && (trace_debug & get_trace_option()) && (false == trace_debug_filtered(category)) && _internal_debug) {
+    if (s && (trace_debug & get_trace_option()) && trace_debug_filtered(category) && _internal_debug) {
         _internal_debug(category, event, s);
     }
 }
 
 void trace_debug_event(trace_category_t category, uint32 event, const char* fmt, ...) {
-    if (fmt && (false == trace_debug_filtered(category))) {
+    if (fmt && trace_debug_filtered(category)) {
         basic_stream bs;
         va_list ap;
 
@@ -39,7 +39,14 @@ void trace_debug_event(trace_category_t category, uint32 event, const char* fmt,
 
 void trace_debug_filter(trace_category_t category, bool filter) { _debug_category_filter[category] = filter; }
 
-bool trace_debug_filtered(trace_category_t category) { return _debug_category_filter[category]; }
+bool trace_debug_filtered(trace_category_t category) {
+    bool ret = true;
+    auto iter = _debug_category_filter.find(category);
+    if (_debug_category_filter.end() != iter) {
+        ret = iter->second;
+    }
+    return ret;
+}
 
 bool istraceable() {
     bool ret = false;
@@ -57,7 +64,9 @@ bool istraceable() {
     return ret;
 }
 
-bool istraceable(trace_category_t category) { return (istraceable() && (false == trace_debug_filtered(category))); }
+bool istraceable(trace_category_t category) { return (istraceable() && trace_debug_filtered(category)); }
+
+bool istraceable(trace_category_t category, int8 level) { return (istraceable() && trace_debug_filtered(category)) && check_trace_level(level); }
 
 static int8 _trace_level = 0;
 

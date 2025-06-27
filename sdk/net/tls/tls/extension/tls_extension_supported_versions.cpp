@@ -62,7 +62,7 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
@@ -140,7 +140,7 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 

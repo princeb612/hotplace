@@ -141,7 +141,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.autoindent(1);
             dbs.println(" > %s %i", constexpr_request_context_len, request_context_len);
@@ -182,7 +182,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             pl.get_binary(constexpr_certificate, cert);
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 basic_stream dbs;
                 dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_len, idx, certificate_len, certificate_len);
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
@@ -195,7 +195,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.autoindent(1);
             auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
@@ -242,7 +242,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
         keychain.write_der(x509, certificate);
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.autoindent(1);
             dbs.println("> %s", constexpr_certificate);

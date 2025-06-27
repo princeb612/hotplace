@@ -66,7 +66,7 @@ return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stre
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 

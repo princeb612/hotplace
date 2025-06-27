@@ -188,6 +188,88 @@ void tls_advisor::load_etc() {
         auto item = tls_session_status_codes + i;
         _session_status_codes.insert({item->code, item});
     }
+
+    _secret_names.insert({tls_secret_early_secret, "secret_early_secret"});
+    _secret_names.insert({tls_secret_master, "secret_master"});
+    _secret_names.insert({tls_secret_client_mac_key, "secret_client_mac_key"});
+    _secret_names.insert({tls_secret_server_mac_key, "secret_server_mac_key"});
+    _secret_names.insert({tls_secret_client_key, "secret_client_key"});
+    _secret_names.insert({tls_secret_client_iv, "secret_client_iv"});
+    _secret_names.insert({tls_secret_server_key, "secret_server_key"});
+    _secret_names.insert({tls_secret_server_iv, "secret_server_iv"});
+    _secret_names.insert({tls_secret_initial_quic, "secret_initial_quic"});
+    _secret_names.insert({tls_secret_initial_quic_client, "secret_initial_quic_client"});
+    _secret_names.insert({tls_secret_initial_quic_server, "secret_initial_quic_server"});
+    _secret_names.insert({tls_secret_initial_quic_client_key, "secret_initial_quic_client_key"});
+    _secret_names.insert({tls_secret_initial_quic_server_key, "secret_initial_quic_server_key"});
+    _secret_names.insert({tls_secret_initial_quic_client_iv, "secret_initial_quic_client_iv"});
+    _secret_names.insert({tls_secret_initial_quic_server_iv, "secret_initial_quic_server_iv"});
+    _secret_names.insert({tls_secret_initial_quic_client_hp, "secret_initial_quic_client_hp"});
+    _secret_names.insert({tls_secret_initial_quic_server_hp, "secret_initial_quic_server_hp"});
+    _secret_names.insert({tls_secret_handshake_derived, "secret_handshake_derived"});
+    _secret_names.insert({tls_secret_handshake, "secret_handshake"});
+    _secret_names.insert({tls_secret_c_hs_traffic, "secret_c_hs_traffic"});
+    _secret_names.insert({tls_secret_s_hs_traffic, "secret_s_hs_traffic"});
+    _secret_names.insert({tls_secret_handshake_client_key, "secret_handshake_client_key"});
+    _secret_names.insert({tls_secret_handshake_server_key, "secret_handshake_server_key"});
+    _secret_names.insert({tls_secret_handshake_client_iv, "secret_handshake_client_iv"});
+    _secret_names.insert({tls_secret_handshake_server_iv, "secret_handshake_server_iv"});
+    _secret_names.insert({tls_secret_handshake_client_sn_key, "secret_handshake_client_sn_key"});
+    _secret_names.insert({tls_secret_handshake_server_sn_key, "secret_handshake_server_sn_key"});
+    _secret_names.insert({tls_secret_handshake_quic_client_key, "secret_handshake_quic_client_key"});
+    _secret_names.insert({tls_secret_handshake_quic_server_key, "secret_handshake_quic_server_key"});
+    _secret_names.insert({tls_secret_handshake_quic_client_iv, "secret_handshake_quic_client_iv"});
+    _secret_names.insert({tls_secret_handshake_quic_server_iv, "secret_handshake_quic_server_iv"});
+    _secret_names.insert({tls_secret_handshake_quic_client_hp, "secret_handshake_quic_client_hp"});
+    _secret_names.insert({tls_secret_handshake_quic_server_hp, "secret_handshake_quic_server_hp"});
+    _secret_names.insert({tls_secret_c_e_traffic, "secret_c_e_traffic"});
+    _secret_names.insert({tls_secret_c_e_traffic_key, "secret_c_e_traffic_key"});
+    _secret_names.insert({tls_secret_c_e_traffic_iv, "secret_c_e_traffic_iv"});
+    _secret_names.insert({tls_secret_application_derived, "secret_application_derived"});
+    _secret_names.insert({tls_secret_application, "secret_application"});
+    _secret_names.insert({tls_secret_c_ap_traffic, "secret_c_ap_traffic"});
+    _secret_names.insert({tls_secret_s_ap_traffic, "secret_s_ap_traffic"});
+    _secret_names.insert({tls_secret_application_client_key, "secret_application_client_key"});
+    _secret_names.insert({tls_secret_application_server_key, "secret_application_server_key"});
+    _secret_names.insert({tls_secret_application_client_iv, "secret_application_client_iv"});
+    _secret_names.insert({tls_secret_application_server_iv, "secret_application_server_iv"});
+    _secret_names.insert({tls_secret_application_client_sn_key, "secret_application_client_sn_key"});
+    _secret_names.insert({tls_secret_application_server_sn_key, "secret_application_server_sn_key"});
+    _secret_names.insert({tls_secret_application_quic_client_key, "secret_application_quic_client_key"});
+    _secret_names.insert({tls_secret_application_quic_server_key, "secret_application_quic_server_key"});
+    _secret_names.insert({tls_secret_application_quic_client_iv, "secret_application_quic_client_iv"});
+    _secret_names.insert({tls_secret_application_quic_server_iv, "secret_application_quic_server_iv"});
+    _secret_names.insert({tls_secret_application_quic_client_hp, "secret_application_quic_client_hp"});
+    _secret_names.insert({tls_secret_application_quic_server_hp, "secret_application_quic_server_hp"});
+    _secret_names.insert({tls_secret_exp_master, "secret_exp_master"});
+    _secret_names.insert({tls_secret_e_exp_master, "secret_e_exp_master"});
+    _secret_names.insert({tls_secret_res_master, "secret_res_master"});
+    _secret_names.insert({tls_secret_resumption_master, "secret_resumption_master"});
+    _secret_names.insert({tls_secret_resumption, "secret_resumption"});
+    _secret_names.insert({tls_secret_resumption_early, "secret_resumption_early"});
+    _secret_names.insert({tls_context_shared_secret, "context_shared_secret"});
+    _secret_names.insert({tls_context_transcript_hash, "context_transcript_hash"});
+    _secret_names.insert({tls_context_empty_hash, "context_empty_hash"});
+    _secret_names.insert({tls_context_client_hello, "context_client_hello"});
+    _secret_names.insert({tls_context_server_hello, "context_server_hello"});
+    _secret_names.insert({tls_context_server_finished, "context_server_finished"});
+    _secret_names.insert({tls_context_client_finished, "context_client_finished"});
+    _secret_names.insert({tls_context_client_hello_random, "context_client_hello_random"});
+    _secret_names.insert({tls_context_server_hello_random, "context_server_hello_random"});
+    _secret_names.insert({tls_context_server_key_exchange, "context_server_key_exchange"});
+    _secret_names.insert({tls_context_client_key_exchange, "context_client_key_exchange"});
+    _secret_names.insert({tls_context_session_id, "context_session_id"});
+    _secret_names.insert({tls_context_cookie, "context_cookie"});
+    _secret_names.insert({tls_context_nonce_explicit, "context_nonce_explicit"});
+    _secret_names.insert({tls_context_quic_dcid, "context_quic_dcid"});
+    _secret_names.insert({tls_context_client_verifydata, "context_client_verifydata"});
+    _secret_names.insert({tls_context_server_verifydata, "context_server_verifydata"});
+    _secret_names.insert({tls_context_fragment, "context_fragment"});
+    _secret_names.insert({tls_context_new_session_ticket, "context_new_session_ticket"});
+    _secret_names.insert({tls_context_resumption_binder_key, "context_resumption_binder_key"});
+    _secret_names.insert({tls_context_resumption_finished_key, "context_resumption_finished_key"});
+    _secret_names.insert({tls_context_resumption_finished, "context_resumption_finished"});
+    _secret_names.insert({tls_context_resumption_binder_hash, "context_resumption_binder_hash"});
 }
 
 const tls_cipher_suite_t* tls_advisor::hintof_cipher_suite(uint16 code) {
@@ -388,6 +470,15 @@ std::string tls_advisor::quic_packet_type_string(uint8 code) {
     return value;
 }
 
+std::string tls_advisor::nameof_secret(tls_secret_t secret) {
+    std::string value;
+    auto iter = _secret_names.find(secret);
+    if (_secret_names.end() != iter) {
+        value = iter->second;
+    }
+    return value;
+}
+
 bool tls_advisor::is_kindof_tls13(uint16 ver) {
     bool ret = false;
     auto hint = hintof_tls_version(ver);
@@ -569,7 +660,7 @@ return_t tls_advisor::set_ciphersuites(const char* ciphersuites) {
         _ciphersuites.clear();
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("# set ciphersuite(s)");
             trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
@@ -583,7 +674,7 @@ return_t tls_advisor::set_ciphersuites(const char* ciphersuites) {
                 auto code = hint->code;
                 _ciphersuites.insert(code);
 #if defined DEBUG
-                if (istraceable()) {
+                if (istraceable(trace_category_net)) {
                     basic_stream dbs;
                     dbs.println(" > 0x%02x %s", hint->code, hint->name_iana);
                     trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
@@ -669,7 +760,7 @@ return_t tls_advisor::negotiate_alpn(tls_session* session, const byte_t* alpn, s
         select(0);
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("> protocols");
             dump_memory(alpn, size, &dbs, 16, 3, 0, dump_notrunc);

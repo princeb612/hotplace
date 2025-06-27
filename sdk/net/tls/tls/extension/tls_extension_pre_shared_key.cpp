@@ -164,7 +164,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("   > %s 0x%04x(%i)", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
             dump_memory(psk_identity, &dbs, 16, 4, 0x0, dump_notrunc);
@@ -209,7 +209,7 @@ return_t tls_extension_server_psk::do_read_body(tls_direction_t dir, const byte_
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("   > %s %i", constexpr_selected_identity, selected_identity);
 

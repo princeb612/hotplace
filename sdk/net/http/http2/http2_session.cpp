@@ -39,7 +39,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             netsocket_t* session_socket = (netsocket_t*)data_array[0];
             basic_stream dbs;
 
@@ -135,7 +135,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             http2_frame_data frame;
             frame.read(hdr, frame_size);
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 frame.dump(&dbs);
                 trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
@@ -152,7 +152,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             frame.read(hdr, frame_size);
             frame.set_hpack_session(&get_hpack_session());
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 frame.dump(&dbs);
                 trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
@@ -169,7 +169,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             http2_frame_priority frame;
             frame.read(hdr, frame_size);
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 frame.dump(&dbs);
                 trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
@@ -178,7 +178,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             http2_frame_rst_stream frame;
             frame.read(hdr, frame_size);
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 frame.dump(&dbs);
                 trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
@@ -188,7 +188,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             http2_frame_settings frame;
             frame.read(hdr, frame_size);
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 frame.dump(&dbs);
                 trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
@@ -231,7 +231,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             frame.read(hdr, frame_size);
             frame.set_hpack_session(&get_hpack_session());
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 frame.dump(&dbs);
                 trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
@@ -243,7 +243,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             http2_frame_ping frame;
             frame.read(hdr, frame_size);
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 frame.dump(&dbs);
                 trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
@@ -254,7 +254,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             http2_frame_goaway frame;
             frame.read(hdr, frame_size);
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 frame.dump(&dbs);
                 trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
@@ -263,7 +263,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             http2_frame_window_update frame;
             frame.read(hdr, frame_size);
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 frame.dump(&dbs);
                 trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
@@ -273,7 +273,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             frame.read(hdr, frame_size);
             frame.set_hpack_session(&get_hpack_session());
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 frame.dump(&dbs);
                 trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }

@@ -261,7 +261,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
         ret = verify_certverify(pkey, dir, scheme, signature);
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.autoindent(1);
             dbs.println(" > %s 0x%04x %s", constexpr_signature_alg, scheme, tlsadvisor->signature_scheme_name(scheme).c_str());

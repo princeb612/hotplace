@@ -205,7 +205,7 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
                     target->produce(bufstream.data(), message_size, buffer_object->get_sockaddr());
                     _run = false;
 #if defined DEBUG
-                    if (istraceable()) {
+                    if (istraceable(trace_category_net)) {
                         basic_stream dbs;
                         dbs.println("* protocol complete %zi out of %zi", message_size, bufstream.size());
                         trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);

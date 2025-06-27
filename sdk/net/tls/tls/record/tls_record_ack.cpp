@@ -47,7 +47,7 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("> %s %04x(%i)", constexpr_ack_len, ack_len, ack_len);
             dump_memory(ack, &dbs, 16, 3, 0x0, dump_notrunc);

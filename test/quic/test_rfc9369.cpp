@@ -22,14 +22,12 @@ void test_rfc_9369_prepare_a1() {
 
     {
         auto& protection = server_session.get_tls_protection();
-        protection.set_cipher_suite(0x1301);
         protection.set_item(tls_context_quic_dcid, bin_dcid);
         protection.calc(&server_session, tls_hs_client_hello, from_client);
     }
 
     {
         auto& protection = client_session.get_tls_protection();
-        protection.set_cipher_suite(0x1301);
         protection.set_item(tls_context_quic_dcid, bin_dcid);
         protection.calc(&server_session, tls_hs_client_hello, from_client);
     }
@@ -157,6 +155,8 @@ void test_rfc_9369_a2() {
     }
 
     test_rfc_9001_construct_initial(&test, &client_session);
+    client_session.update_session_status(session_status_client_hello);
+
     test_rfc_9001_send_initial(&test, &server_session);
 }
 
@@ -221,5 +221,29 @@ void test_rfc_9369_a4() {
 }
 
 void test_rfc_9369_a5() {
+    // The following shows the steps involved in protecting a minimal packet
+    // with an empty Destination Connection ID.  This packet contains a
+    // single PING frame (that is, a payload of just 0x01) and has a packet
+    // number of 654360564.  In this example, using a packet number of
+    // length 3 (that is, 49140 is encoded) avoids having to pad the payload
+    // of the packet; PADDING frames would be needed if the packet number is
+    // encoded on fewer bytes.
     //
+    // pn                 = 654360564 (decimal)
+    // nonce              = a6b5bc6ab7dafce328ff4a29
+    // unprotected header = 4200bff4
+    // payload plaintext  = 01
+    // payload ciphertext = 0ae7b6b932bc27d786f4bc2bb20f2162ba
+    //
+    // The resulting ciphertext is the minimum size possible.  One byte is
+    // skipped to produce the sample for header protection.
+    //
+    // sample = e7b6b932bc27d786f4bc2bb20f2162ba
+    // mask   = 97580e32bf
+    // header = 5558b1c6
+    //
+    // The protected packet is the smallest possible packet size of 21
+    // bytes.
+    //
+    // packet = 5558b1c60ae7b6b932bc27d786f4bc2bb20f2162ba
 }

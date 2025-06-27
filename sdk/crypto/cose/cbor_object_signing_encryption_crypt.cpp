@@ -214,7 +214,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_crypto)) {
             basic_stream dbs;
             dbs.println("docrypt alg %i (%s)", alg, hint->name);
             trace_debug_event(trace_category_crypto, trace_event_cose_encryption, &dbs);
@@ -317,7 +317,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_crypto)) {
             // std::function<void (const char* text, binary_t& bin)> dump;
             auto dump = [&](const char* text, binary_t& bin) -> void {
                 if (bin.size()) {

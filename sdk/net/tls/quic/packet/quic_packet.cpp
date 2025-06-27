@@ -160,7 +160,7 @@ return_t quic_packet::read_common_header(tls_direction_t dir, const byte_t* stre
             auto size_dcid = context_dcid.size();
             pl.reserve(constexpr_dcid, size_dcid);
         }
-        pl.set_group(constexpr_longheader, is_longheader);  // true
+        pl.set_group(constexpr_longheader, is_longheader);  // see get_type
 
         pl.read(stream, size, pos);
 
@@ -204,9 +204,9 @@ return_t quic_packet::write_common_header(binary_t& header) {
     payload pl;
     pl << new payload_member(hdr, constexpr_hdr)                                             //
        << new payload_member(_version, true, constexpr_version, constexpr_longheader)        //
-       << new payload_member((uint8)_dcid.size(), constexpr_dcid_len, constexpr_longheader)  //
+       << new payload_member(uint8(_dcid.size()), constexpr_dcid_len, constexpr_longheader)  //
        << new payload_member(_dcid, constexpr_dcid)                                          //
-       << new payload_member((uint8)_scid.size(), constexpr_scid_len, constexpr_longheader)  //
+       << new payload_member(uint8(_scid.size()), constexpr_scid_len, constexpr_longheader)  //
        << new payload_member(_scid, constexpr_scid, constexpr_longheader);                   //
     pl.set_group(constexpr_longheader, is_longheader);
     pl.write(header);
@@ -216,7 +216,7 @@ return_t quic_packet::write_common_header(binary_t& header) {
 
 void quic_packet::dump() {
 #if defined DEBUG
-    if (istraceable()) {
+    if (istraceable(trace_category_net)) {
         basic_stream dbs;
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -375,6 +375,8 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
             __leave2;
         }
 
+        uint8 hdr_backup = hdr;
+
         // unprotect ht
         if (quic_packet_field_hf & hdr) {
             hdr ^= (bin_mask[0] & 0x0f);
@@ -398,6 +400,25 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
         memxor(&bin_pn[0], &bin_mask[1], 4);
         bin_pn.resize(pn_length);
         pn = t_binary_to_integer<uint32>(bin_pn);
+
+#if defined DEBUG
+        if (istraceable(trace_category_net)) {
+            basic_stream dbs;
+            dbs.println(" > protected   packet header byte 0x%02x", hdr_backup);
+            dbs.println(" > unprotected packet header byte 0x%02x", hdr);
+            dbs.println(" > packet number length %i", pn_length);
+
+            binary_t bin_protected_pn;
+            binary_append(bin_protected_pn, &bin_payload[0], pn_length);
+            uint32 protected_pn = t_binary_to_integer<uint32>(bin_protected_pn);
+
+            dbs.println(" > protected   packet number 0x%02x", protected_pn);
+            dbs.println(" > unprotected packet number 0x%02x", pn);
+
+            trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+        }
+#endif
+
         bin_payload.erase(bin_payload.begin(), bin_payload.begin() + pn_length);
     }
     __finally2 {

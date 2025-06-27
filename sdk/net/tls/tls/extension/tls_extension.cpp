@@ -210,7 +210,7 @@ return_t tls_extension::do_read_header(tls_direction_t dir, const byte_t* stream
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 

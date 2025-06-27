@@ -536,7 +536,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 }
 
 #if defined DEBUG
-                if (istraceable()) {
+                if (istraceable(trace_category_net)) {
                     basic_stream dbs;
                     dbs.printf("\e[1;36m");
                     dbs.println("> hmac alg %x", hmac_alg);
@@ -613,7 +613,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             }
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 // CLIENT_RANDOM
                 basic_stream dbs;
                 std::string keylog_client_random = std::move(base16_encode(get_item(tls_context_client_hello_random)));
@@ -743,7 +743,7 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
             set_item(tls_secret_server_iv, secret_server_iv);
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 basic_stream dbs;
                 dbs.printf("\e[1;36m");
                 dbs.println("> cipher_suite %s", tlsadvisor->hintof_cipher_suite(cs)->name_iana);
@@ -869,7 +869,7 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
                 hmac->release();
             }
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 basic_stream dbs;
                 dbs.println("> finished");
                 dbs.println("  key   %s", base16_encode(fin_key).c_str());
@@ -907,7 +907,7 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
                 maced.resize(size_maced);
             }
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 basic_stream dbs;
                 dbs.println("> finished");
                 dbs.println("  key   %s", base16_encode(fin_key).c_str());

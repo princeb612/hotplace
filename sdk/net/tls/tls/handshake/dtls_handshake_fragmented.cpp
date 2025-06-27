@@ -28,7 +28,7 @@ return_t dtls_handshake_fragmented::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     do_write_header(dir, bin, _fragmented);
 #if defined DEBUG
-    if (check_trace_level(loglevel_debug) && istraceable()) {
+    if (istraceable(trace_category_net, loglevel_debug)) {
         basic_stream dbs;
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         dbs.printf("\e[1;36m");

@@ -74,6 +74,7 @@ class tls_session {
      * @brief TLS/DTLS session
      */
     tls_session();
+    ~tls_session();
     /**
      * @brief session
      * @param session_type_t type [in]
@@ -197,9 +198,10 @@ class tls_session {
     std::function<void(tls_session*, uint32)> _change_status_hook;
     void* _hook_param;
 
+    // session_type_dtls
     critical_section _dtls_lock;
-    dtls_record_publisher _dtls_record_publisher;
-    dtls_record_arrange _dtls_record_arrange;
+    dtls_record_publisher* _dtls_record_publisher;
+    dtls_record_arrange* _dtls_record_arrange;
 };
 
 }  // namespace net

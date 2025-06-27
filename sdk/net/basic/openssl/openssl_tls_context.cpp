@@ -218,7 +218,7 @@ return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_crypto)) {
             basic_stream dbs;
             dbs.println("flag %08x", flags);
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)

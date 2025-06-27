@@ -48,11 +48,9 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            if (quic_frame_type_padding != type) {
-                basic_stream dbs;
-                dbs.println("  > frame %s @%zi", tlsadvisor->quic_frame_type_string(type).c_str(), begin);
-                trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
-            }
+            basic_stream dbs;
+            dbs.println("  > frame %s @%zi", tlsadvisor->quic_frame_type_string(type).c_str(), begin);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif
 
@@ -66,6 +64,25 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
         }
 
         ret = do_postprocess(dir);
+
+        // trim padding
+        if (quic_frame_type_padding == type) {
+            size_t tpos = pos;
+            for (auto t = pos; t < size; t++) {
+                if (0 == stream[pos]) {
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+#if defined DEBUG
+            if (istraceable(trace_category_net)) {
+                basic_stream dbs;
+                dbs.println("   > len %zi", pos - tpos + 1);
+                trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
+            }
+#endif
+        }
     }
     __finally2 {
         // do nothing

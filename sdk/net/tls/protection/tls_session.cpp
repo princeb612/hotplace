@@ -22,27 +22,56 @@
 namespace hotplace {
 namespace net {
 
-tls_session::tls_session() : _type(session_type_tls), _status(0), _hook_param(nullptr) {
+tls_session::tls_session() : _type(session_type_tls), _status(0), _hook_param(nullptr), _dtls_record_publisher(nullptr), _dtls_record_arrange(nullptr) {
     _shared.make_share(this);
     _tls_protection.set_session(this);
-    _dtls_record_publisher.set_session(this);
-    _dtls_record_arrange.set_session(this);
 }
 
-tls_session::tls_session(session_type_t type) : _type(type), _status(0), _hook_param(nullptr) {
+tls_session::tls_session(session_type_t type) : _type(type), _status(0), _hook_param(nullptr), _dtls_record_publisher(nullptr), _dtls_record_arrange(nullptr) {
     _shared.make_share(this);
     _tls_protection.set_session(this);
-    _dtls_record_publisher.set_session(this);
-    _dtls_record_arrange.set_session(this);
+    set_type(type);
+}
+
+tls_session::~tls_session() {
+    if (_dtls_record_publisher) {
+        delete _dtls_record_publisher;
+    }
+    if (_dtls_record_arrange) {
+        delete _dtls_record_arrange;
+    }
 }
 
 tls_protection& tls_session::get_tls_protection() { return _tls_protection; }
 
-dtls_record_publisher& tls_session::get_dtls_record_publisher() { return _dtls_record_publisher; }
+dtls_record_publisher& tls_session::get_dtls_record_publisher() {
+    if (nullptr == _dtls_record_publisher) {
+        critical_section_guard guard(_dtls_lock);
+        if (nullptr == _dtls_record_publisher) {
+            _dtls_record_publisher = new dtls_record_publisher;
+            _dtls_record_publisher->set_session(this);
+        }
+    }
+    return *_dtls_record_publisher;
+}
 
-dtls_record_arrange& tls_session::get_dtls_record_arrange() { return _dtls_record_arrange; }
+dtls_record_arrange& tls_session::get_dtls_record_arrange() {
+    if (nullptr == _dtls_record_arrange) {
+        critical_section_guard guard(_dtls_lock);
+        if (nullptr == _dtls_record_arrange) {
+            _dtls_record_arrange = new dtls_record_arrange;
+            _dtls_record_arrange->set_session(this);
+        }
+    }
+    return *_dtls_record_arrange;
+}
 
-void tls_session::set_type(session_type_t type) { _type = type; }
+void tls_session::set_type(session_type_t type) {
+    _type = type;
+    if (session_type_quic == type || session_type_quic2 == type) {
+        _tls_protection.set_cipher_suite(0x1301);
+    }
+}
 
 session_type_t tls_session::get_type() { return _type; }
 
@@ -53,7 +82,7 @@ void tls_session::update_session_status(session_status_t status) {
         _change_status_hook(this, status);
     }
 #if defined DEBUG
-    if (check_trace_level(loglevel_debug) && istraceable()) {
+    if (istraceable(trace_category_net, loglevel_debug)) {
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         basic_stream dbs;
         dbs.println("\e[1;34msession status %08x (update %08x)\e[0m", _status, status);
@@ -104,7 +133,7 @@ return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, b
     }
 
 #if defined DEBUG
-    if (check_trace_level(loglevel_debug) && istraceable()) {
+    if (istraceable(trace_category_net, loglevel_debug)) {
         basic_stream dbs;
         dbs.println("\e[1;34msession status %08x (wait%s %08x) %s\e[0m", _status, waitall ? "all" : "", status,
                     status == (_status & status) ? "true" : "false");
@@ -171,7 +200,7 @@ void tls_session::session_info::push_alert(uint8 level, uint8 desc) {
     _alerts.push_back(alert(level, desc));
 #if defined DEBUG
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    if (istraceable()) {
+    if (istraceable(trace_category_net)) {
         basic_stream dbs;
         dbs.println("\e[1;31malert level:%s desc:%s\e[0m", tlsadvisor->alert_level_string(level).c_str(), tlsadvisor->alert_desc_string(desc).c_str());
         trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);

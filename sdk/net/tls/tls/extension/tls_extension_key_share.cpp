@@ -194,7 +194,7 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
             }
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 basic_stream dbs;
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
@@ -329,7 +329,7 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 

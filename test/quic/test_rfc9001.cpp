@@ -27,14 +27,12 @@ void test_rfc_9001_prepare_a1() {
 
     {
         auto& protection = server_session.get_tls_protection();
-        protection.set_cipher_suite(0x1301);
         protection.set_item(tls_context_quic_dcid, bin_dcid);
         protection.calc(&server_session, tls_hs_client_hello, from_client);
     }
 
     {
         auto& protection = client_session.get_tls_protection();
-        protection.set_cipher_suite(0x1301);
         protection.set_item(tls_context_quic_dcid, bin_dcid);
         protection.calc(&server_session, tls_hs_client_hello, from_client);
     }
@@ -200,6 +198,8 @@ void test_rfc_9001_a2() {
     }
 
     test_rfc_9001_construct_initial(&test, &client_session);
+    client_session.update_session_status(session_status_client_hello);
+
     test_rfc_9001_send_initial(&test, &server_session);
 }
 
@@ -314,4 +314,30 @@ void test_rfc_9001_a5() {
     _test_case.assert(bin_hp == base16_decode("25a282b9e82f06f21f488917a4fc8f1b73573685608597d0efcb076b0ab7a7a4"), __FUNCTION__, "hp");
     _logger->hdump("> ku", bin_ku, 16, 3);
     _test_case.assert(bin_ku == base16_decode("1223504755036d556342ee9361d253421a826c9ecdf3c7148684b36b714881f9"), __FUNCTION__, "ku");
+
+    // The following shows the steps involved in protecting a minimal packet
+    // with an empty Destination Connection ID.  This packet contains a
+    // single PING frame (that is, a payload of just 0x01) and has a packet
+    // number of 654360564.  In this example, using a packet number of
+    // length 3 (that is, 49140 is encoded) avoids having to pad the payload
+    // of the packet; PADDING frames would be needed if the packet number is
+    // encoded on fewer bytes.
+    //
+    // pn                 = 654360564 (decimal)
+    // nonce              = e0459b3474bdd0e46d417eb0
+    // unprotected header = 4200bff4
+    // payload plaintext  = 01
+    // payload ciphertext = 655e5cd55c41f69080575d7999c25a5bfb
+    //
+    // The resulting ciphertext is the minimum size possible.  One byte is
+    // skipped to produce the sample for header protection.
+    //
+    // sample = 5e5cd55c41f69080575d7999c25a5bfb
+    // mask   = aefefe7d03
+    // header = 4cfe4189
+    //
+    // The protected packet is the smallest possible packet size of 21
+    // bytes.
+    //
+    // packet = 4cfe4189655e5cd55c41f69080575d7999c25a5bfb
 }

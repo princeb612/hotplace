@@ -90,7 +90,7 @@ return_t tls_handshake_hello_verify_request::do_read_body(tls_direction_t dir, c
         pl.get_binary(constexpr_cookie, _cookie);
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("  > cookie %s", base16_encode(_cookie).c_str());
             trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);

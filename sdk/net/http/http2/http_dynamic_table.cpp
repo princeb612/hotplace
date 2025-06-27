@@ -215,7 +215,7 @@ return_t http_dynamic_table::commit() {
             }
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 basic_stream bs;
                 bs.printf("insert entry[%zi] %s=%s\n", _inserted, name.c_str(), value.c_str());
                 trace_debug_event(trace_category_net, trace_event_header_compression_insert, &bs);
@@ -264,7 +264,7 @@ return_t http_dynamic_table::evict() {
                     }
 
 #if defined DEBUG
-                    if (istraceable()) {
+                    if (istraceable(trace_category_net)) {
                         basic_stream bs;
                         bs.printf("evict  entry[%zi] %s=%s\n", entry, name.c_str(), val.c_str());
                         trace_debug_event(trace_category_net, trace_event_header_compression_evict, &bs);

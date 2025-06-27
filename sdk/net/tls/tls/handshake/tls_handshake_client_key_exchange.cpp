@@ -119,7 +119,7 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
             }
 
 #if defined DEBUG
-            if (istraceable()) {
+            if (istraceable(trace_category_net)) {
                 basic_stream dbs;
                 dbs.autoindent(1);
                 dbs.println(" > %s %i", constexpr_pubkey_len, pubkey_len);
@@ -190,7 +190,7 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
         }
 
 #if defined DEBUG
-        if (istraceable()) {
+        if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("> SKE");
             dump_key(pkey_ske, &dbs, 16, 3, dump_notrunc);

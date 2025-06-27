@@ -99,6 +99,7 @@ bool trace_debug_filtered(trace_category_t category);
  */
 bool istraceable();
 bool istraceable(trace_category_t category);
+bool istraceable(trace_category_t category, int8 level);
 /**
  * @remarks the higher level, the more informations
  * @param int8 level [in] see loglevel_t
