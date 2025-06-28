@@ -30,7 +30,6 @@ tls_session::tls_session() : _type(session_type_tls), _status(0), _hook_param(nu
 tls_session::tls_session(session_type_t type) : _type(type), _status(0), _hook_param(nullptr), _dtls_record_publisher(nullptr), _dtls_record_arrange(nullptr) {
     _shared.make_share(this);
     _tls_protection.set_session(this);
-    set_type(type);
 }
 
 tls_session::~tls_session() {
@@ -68,9 +67,7 @@ dtls_record_arrange& tls_session::get_dtls_record_arrange() {
 
 void tls_session::set_type(session_type_t type) {
     _type = type;
-    if (session_type_quic == type || session_type_quic2 == type) {
-        _tls_protection.set_cipher_suite(0x1301);
-    }
+    _tls_protection.set_session(this);
 }
 
 session_type_t tls_session::get_type() { return _type; }

@@ -38,7 +38,14 @@ tls_flow_t tls_protection::get_flow() { return _flow; }
 
 void tls_protection::set_flow(tls_flow_t flow) { _flow = flow; }
 
-uint16 tls_protection::get_cipher_suite() { return _ciphersuite; }
+uint16 tls_protection::get_cipher_suite() {
+    auto type = _session->get_type();
+    if (session_type_quic == type || session_type_quic2 == type) {
+        return (0x1301);
+    } else {
+        return _ciphersuite;
+    }
+}
 
 void tls_protection::set_cipher_suite(uint16 ciphersuite) {
     _ciphersuite = ciphersuite;
@@ -157,7 +164,18 @@ return_t tls_protection::negotiate(tls_session *client_session, tls_session *ser
     return ret;
 }
 
-void tls_protection::set_session(tls_session *session) { _session = session; }
+void tls_protection::set_session(tls_session *session) {
+    if (session) {
+        _session = session;
+
+        // segfault in linux
+
+        // auto type = session->get_type();
+        // if (session_type_quic == type || session_type_quic2 == type) {
+        //     set_cipher_suite(0x1301);
+        // }
+    }
+}
 
 }  // namespace net
 }  // namespace hotplace
