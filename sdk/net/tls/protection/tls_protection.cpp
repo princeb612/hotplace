@@ -15,18 +15,19 @@
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
-// debug
-#include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {
 namespace net {
 
+// comments
+//
+// {
+//     crypto_advisor::get_instance();
+//     \-- linux crash
+// }
+
 tls_protection::tls_protection()
-    : _session(nullptr), _flow(tls_flow_1rtt), _ciphersuite(0), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {
-    // crypto_advisor::get_instance();
-    // \-- linux crash
-}
+    : _session(nullptr), _flow(tls_flow_1rtt), _ciphersuite(0), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
 
 tls_protection::~tls_protection() {
     if (_transcript_hash) {
@@ -38,14 +39,7 @@ tls_flow_t tls_protection::get_flow() { return _flow; }
 
 void tls_protection::set_flow(tls_flow_t flow) { _flow = flow; }
 
-uint16 tls_protection::get_cipher_suite() {
-    auto type = _session->get_type();
-    if (session_type_quic == type || session_type_quic2 == type) {
-        return (0x1301);
-    } else {
-        return _ciphersuite;
-    }
-}
+uint16 tls_protection::get_cipher_suite() { return _ciphersuite; }
 
 void tls_protection::set_cipher_suite(uint16 ciphersuite) {
     _ciphersuite = ciphersuite;
@@ -167,13 +161,6 @@ return_t tls_protection::negotiate(tls_session *client_session, tls_session *ser
 void tls_protection::set_session(tls_session *session) {
     if (session) {
         _session = session;
-
-        // segfault in linux
-
-        // auto type = session->get_type();
-        // if (session_type_quic == type || session_type_quic2 == type) {
-        //     set_cipher_suite(0x1301);
-        // }
     }
 }
 

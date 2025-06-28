@@ -240,7 +240,6 @@ void test_rfc_9001_send_initial(testvector_initial_packet* item, tls_session* se
 
     // read
     {
-        // [test vector] set record no
         session->set_recordno(dir, pn, protection_initial);
 
         quic_packet_initial initial(session);

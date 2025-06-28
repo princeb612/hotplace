@@ -61,7 +61,6 @@ class protection_context {
 
     return_t select_from(const protection_context& rhs, tls_session* session);
 
-    const tls_cipher_suite_t* get_cipher_suite_hint();
     void set_cipher_suite(uint16 cs);
     uint16 get_cipher_suite(uint16 cs);
 
@@ -78,7 +77,6 @@ class protection_context {
     std::list<uint16> _supported_groups;      // tls_extension_supported_groups
     std::list<uint16> _supported_versions;    // tls_extension_client_supported_versions
     std::list<uint8> _ec_point_formats;       // tls_extension_ec_point_formats
-    const tls_cipher_suite_t* _cipher_suite_hint;
     uint16 _cipher_suite;
 };
 

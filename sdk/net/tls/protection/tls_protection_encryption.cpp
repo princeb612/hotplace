@@ -374,7 +374,16 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         size_t content_header_size = 0;
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
-        auto cs = get_cipher_suite();
+        uint16 cs = 0;
+        switch (level) {
+            case protection_initial:
+                // AEAD_AES_128_GCM, SHA256
+                cs = 0x1301;
+                break;
+            default:
+                cs = get_cipher_suite();
+                break;
+        }
         auto hint_cipher = tlsadvisor->hintof_cipher(cs);
 
         crypt_context_t *handle = nullptr;
@@ -672,7 +681,16 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
         auto session_type = session->get_type();
         auto record_version = get_lagacy_version();
-        auto cs = get_cipher_suite();
+        uint16 cs = 0;
+        switch (level) {
+            case protection_initial:
+                // AEAD_AES_128_GCM, SHA256
+                cs = 0x1301;
+                break;
+            default:
+                cs = get_cipher_suite();
+                break;
+        }
         auto hint_cipher = tlsadvisor->hintof_cipher(cs);
         encrypt_option_t options[] = {{crypt_ctrl_nsize, hint_cipher->nsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
 

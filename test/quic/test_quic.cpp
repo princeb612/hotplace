@@ -12,12 +12,21 @@
 
 #include "sample.hpp"
 
-static tls_session server_session(session_type_quic);
-
 void test_quic_xargs_org() {
     _test_case.begin("https://quic.xargs.org/");
 
     return_t ret = errorcode_t::success;
+    tls_session server_session(session_type_quic);
+
+    // QUIC initial packet number
+    //   https://quic.xargs.org
+    //     client 0
+    //     server 0
+    //   RFC 9001, RFC 9369
+    //     client 0
+    //     server 1 (convention)
+
+    server_session.get_session_info(from_server).set_recordno(0, protection_initial);
     tls_protection& protection = server_session.get_tls_protection();
 
     tls_advisor* tlsadvisor = tls_advisor::get_instance();

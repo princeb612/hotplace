@@ -1,3 +1,13 @@
+#### memo
+
+* QUIC initial packet number
+  * https://quic.xargs.org
+    * client 0
+    * server 0
+  * RFC 9001, RFC 9369
+    * client 0
+    * server 1
+
 #### RFC 9000
 
 ```

@@ -7,6 +7,8 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
+  * Revision 805-
+    * QUIC, HTTP/3
   * Revision 777-804 (Tag 1.35, Revision.804)
     * server - TLS, HTTP/1.1, HTTP/2 (trial)
   * Revision 682-776
@@ -25,7 +27,7 @@
     * CBOR
 
 * details
-  * Revision 808
+  * Revision 809
   * Revision 804
     * [tested] HTTP/2 feat. curl (MINGW64, linux environment)
   * Revision 803

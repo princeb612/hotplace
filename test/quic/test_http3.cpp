@@ -12,9 +12,6 @@
 void test_http3() {
     _test_case.begin("HTTP/3");
 
-    // - FAILURE
-    //   - server initial
-
     tls_session tlssession(session_type_tls);
     tls_session quicsession(session_type_quic);
 
@@ -42,11 +39,12 @@ void test_http3() {
             uint8 type = 0;
             ret = quic_read_packet(type, &quicsession, item->dir, bin_frame);
         } else if (prot_tls13 == prot) {
-            //
+            tls_records records;
+            ret = records.read(&tlssession, item->dir, bin_frame);
         } else if (prot_http3 == prot) {
             //
         }
 
-        // _test_case.test(ret, __FUNCTION__, "%s", item->desc);
+        _test_case.test(ret, __FUNCTION__, "%s", item->desc);
     }
 }

@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/string/string.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
@@ -412,8 +413,8 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
             binary_append(bin_protected_pn, &bin_payload[0], pn_length);
             uint32 protected_pn = t_binary_to_integer<uint32>(bin_protected_pn);
 
-            dbs.println(" > protected   packet number 0x%02x", protected_pn);
-            dbs.println(" > unprotected packet number 0x%02x", pn);
+            dbs.println(" > protected   packet number 0x%08x", protected_pn);
+            dbs.println(" > unprotected packet number 0x%08x", pn);
 
             trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
         }
