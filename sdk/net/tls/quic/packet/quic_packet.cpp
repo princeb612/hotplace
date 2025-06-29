@@ -421,6 +421,8 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
 #endif
 
         bin_payload.erase(bin_payload.begin(), bin_payload.begin() + pn_length);
+
+        session->get_session_info(dir).set_recordno(pn, level);
     }
     __finally2 {
         // do nothing

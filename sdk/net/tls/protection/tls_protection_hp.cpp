@@ -97,11 +97,21 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
             __leave2;
         }
 
-        auto &protection = session->get_tls_protection();
-
         crypto_advisor *advisor = crypto_advisor::get_instance();
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
-        auto hint = advisor->hintof_blockcipher(aes128);
+
+        auto alg = aes128;
+        auto &protection = session->get_tls_protection();
+
+        // QUIC
+        if (level == protection_handshake || level == protection_application) {
+            auto cs = get_cipher_suite();
+            auto hint_cs = tlsadvisor->hintof_cipher_suite(cs);
+            auto hint_cipher = advisor->hintof_blockcipher(hint_cs->scheme);
+            alg = hint_cipher->algorithm;
+        }
+
+        auto hint = advisor->hintof_blockcipher(alg);
         uint16 blocksize = sizeof_block(hint);
         if (masklen > blocksize) {
             ret = errorcode_t::invalid_parameter;
@@ -118,7 +128,7 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
             get_protection_mask_key(session, dir, level, secret_key);
 
             cipher_encrypt_builder builder;
-            cipher = builder.set(aes128, ecb).build();
+            cipher = builder.set(alg, ecb).build();
             if (cipher) {
                 auto const &key = get_item(secret_key);
                 auto samplesize = (size > blocksize) ? blocksize : size;

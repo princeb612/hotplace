@@ -70,7 +70,6 @@ void tls_session::set_type(session_type_t type) {
     _tls_protection.set_session(this);
     if (session_type_quic == type || session_type_quic2 == type) {
         _tls_protection.set_cipher_suite(0x1301);
-        get_session_info(from_server).set_recordno(1, protection_initial);
     }
 }
 

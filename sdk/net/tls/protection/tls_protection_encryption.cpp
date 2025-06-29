@@ -726,8 +726,8 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
                  *       is sending).
                  */
 
-                // binary_t temp;
-                // openssl_chacha20_iv(temp, 0, &iv[0], iv.size());  // little_endian_uint32(0) || iv(8)
+                // TODO
+
                 build_iv(session, nonce, iv, record_no);
             } else if (ccm == mode || gcm == mode) {
                 /**
