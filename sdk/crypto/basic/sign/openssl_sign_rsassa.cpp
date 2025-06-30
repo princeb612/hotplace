@@ -17,15 +17,15 @@
 namespace hotplace {
 namespace crypto {
 
-return_t openssl_sign::sign_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature) {
-    return sign_digest(pkey, alg, &input[0], input.size(), signature);
+return_t openssl_sign::sign_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature, uint32 flags) {
+    return sign_digest(pkey, alg, &input[0], input.size(), signature, flags);
 }
 
-return_t openssl_sign::sign_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature) {
-    return sign_digest(pkey, alg, stream, size, signature);
+return_t openssl_sign::sign_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
+    return sign_digest(pkey, alg, stream, size, signature, flags);
 }
 
-return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature) {
+return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature, uint32 flags) {
     return sign_rsassa_pss(pkey, alg, &input[0], input.size(), signature, -1);
 }
 
@@ -33,7 +33,7 @@ return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t al
     return sign_rsassa_pss(pkey, alg, &input[0], input.size(), signature, saltlen);
 }
 
-return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature) {
+return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
     return sign_rsassa_pss(pkey, alg, stream, size, signature, -1);
 }
 
@@ -91,15 +91,16 @@ return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t al
     return ret;
 }
 
-return_t openssl_sign::verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature) {
-    return verify_digest(pkey, alg, &input[0], input.size(), signature);
+return_t openssl_sign::verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature, uint32 flags) {
+    return verify_digest(pkey, alg, &input[0], input.size(), signature, flags);
 }
 
-return_t openssl_sign::verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature) {
-    return verify_digest(pkey, alg, stream, size, signature);
+return_t openssl_sign::verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature,
+                                            uint32 flags) {
+    return verify_digest(pkey, alg, stream, size, signature, flags);
 }
 
-return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature) {
+return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature, uint32 flags) {
     return verify_rsassa_pss(pkey, alg, &input[0], input.size(), signature, -1);
 }
 
@@ -107,7 +108,8 @@ return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t 
     return verify_rsassa_pss(pkey, alg, &input[0], input.size(), signature, saltlen);
 }
 
-return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature) {
+return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature,
+                                         uint32 flags) {
     return verify_rsassa_pss(pkey, alg, stream, size, signature, -1);
 }
 

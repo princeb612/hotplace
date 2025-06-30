@@ -75,7 +75,7 @@ return_t tls_extension_supported_groups::do_read_body(tls_direction_t dir, const
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.println("   > %s %i", constexpr_curves, curves);
+            dbs.println("   > %s (%i ent.)", constexpr_curves, curves);
             int i = 0;
             for (auto curve : _supported_groups) {
                 dbs.println("     [%i] 0x%04x(%i) %s", i++, curve, curve, tlsadvisor->supported_group_name(curve).c_str());

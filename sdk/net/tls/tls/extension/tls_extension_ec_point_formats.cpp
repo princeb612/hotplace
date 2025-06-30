@@ -75,7 +75,7 @@ return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.println("   > %s %i", constexpr_formats, len);
+            dbs.println("   > %s (%i ent.)", constexpr_formats, len);
             uint8 i = 0;
             for (auto fmt : _ec_point_formats) {
                 dbs.println("     [%i] 0x%02x(%i) %s", i++, fmt, fmt, tlsadvisor->ec_point_format_name(fmt).c_str());

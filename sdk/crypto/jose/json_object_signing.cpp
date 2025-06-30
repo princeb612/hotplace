@@ -212,8 +212,8 @@ return_t json_object_signing::verify(jose_context_t* handle, const std::string& 
     return ret;
 }
 
-typedef return_t (openssl_sign::*sign_function_t)(const EVP_PKEY* pkey, hash_algorithm_t sig, const binary_t& input, binary_t& output);
-typedef return_t (openssl_sign::*verify_function_t)(const EVP_PKEY* pkey, hash_algorithm_t sig, const binary_t& input, const binary_t& output);
+typedef return_t (openssl_sign::*sign_function_t)(const EVP_PKEY* pkey, hash_algorithm_t sig, const binary_t& input, binary_t& output, uint32 flags);
+typedef return_t (openssl_sign::*verify_function_t)(const EVP_PKEY* pkey, hash_algorithm_t sig, const binary_t& input, const binary_t& output, uint32 flags);
 
 return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
@@ -303,7 +303,7 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t&
         hash_algorithm_t alg = advisor->get_algorithm(sig);
         openssl_sign signprocessor;
 
-        ret = (signprocessor.*signer)(pkey, alg, input, output);
+        ret = (signprocessor.*signer)(pkey, alg, input, output, 0);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -400,7 +400,7 @@ return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t s
         hash_algorithm_t alg = advisor->get_algorithm(sig);
         openssl_sign signprocessor;
 
-        ret = (signprocessor.*verifier)(pkey, alg, input, output);
+        ret = (signprocessor.*verifier)(pkey, alg, input, output, 0);
         if (errorcode_t::success == ret) {
             result = true;
         }

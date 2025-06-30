@@ -10,7 +10,7 @@
   * Revision 805-
     * QUIC, HTTP/3
   * Revision 777-804 (Tag 1.35, Revision.804)
-    * server - TLS, HTTP/1.1, HTTP/2 (trial)
+    * server - TLS, HTTP/1.1, HTTP/2
   * Revision 682-776
     * client - TLS, DTLS
   * Revision 673-680 (Tag 0.97, Revision.684)
@@ -27,7 +27,7 @@
     * CBOR
 
 * details
-  * Revision 810
+  * Revision 811
   * Revision 804
     * [tested] HTTP/2 feat. curl (MINGW64, linux environment)
   * Revision 803

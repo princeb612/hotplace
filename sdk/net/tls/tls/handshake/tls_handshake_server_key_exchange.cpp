@@ -157,23 +157,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 crypto_sign_builder builder;
                 auto sign = builder.set_tls_sign_scheme(sigalg).build();
                 if (sign) {
-                    auto hint = tlsadvisor->hintof_signature_scheme(sigalg);
-                    auto kty = hint->kty;
-                    switch (kty) {
-                        case kty_ec: {
-                            crypto_advisor *advisor = crypto_advisor::get_instance();
-                            uint16 unitsize = advisor->sizeof_ecdsa(hint->sig) >> 1;
-
-                            // DER -> R || S
-                            binary_t rs;
-                            der2sig(sig, unitsize, rs);
-
-                            ret = sign->verify(pkey, message, rs);
-                        } break;
-                        default: {
-                            ret = sign->verify(pkey, message, sig);
-                        } break;
-                    }
+                    ret = sign->verify(pkey, message, sig, sign_flag_format_der);
                     sign->release();
                 } else {
                     ret = errorcode_t::not_supported;
@@ -290,16 +274,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
         crypto_sign_builder builder;
         auto sign = builder.set_tls_sign_scheme(sigalg).build();
         if (sign) {
-            switch (kty_cert) {
-                case kty_ec: {
-                    binary_t rs;
-                    ret = sign->sign(pkey_cert, message, rs);
-                    sig2der(rs, sig);
-                } break;
-                default: {
-                    ret = sign->sign(pkey_cert, message, sig);
-                } break;
-            }
+            ret = sign->sign(pkey_cert, message, sig, sign_flag_format_der);
             sign->release();
         } else {
             ret = errorcode_t::not_supported;

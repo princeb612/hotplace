@@ -40,7 +40,7 @@ const testvector_http3_t pcap_http3[] = {
         //         [Padding Length: 878]
         from_client,
         prot_quic,
-        "WIRESHARK#1 QUIC Initial CH, padding",
+        "WIRESHARK#1 QUIC CH, PADDING",
         "c4 00 00 00 01 08 bd 21 df 6a 65 e7 6e 9e 00 00"
         "44 9e bc 72 3e 7a c5 67 fb 41 d7 d1 8c 63 93 2d"
         "ed 1e ec ff 46 95 3d cf 65 f2 37 28 94 d3 23 29"
@@ -152,7 +152,7 @@ const testvector_http3_t pcap_http3[] = {
         //         [Padding Length: 1066]
         from_server,
         prot_quic,
-        "WIRESHARK#3 QUIC Initial ack, SH, padding",
+        "WIRESHARK#3 QUIC ACK, SH, PADDING",
         "ca 00 00 00 01 00 08 fd 21 df 6a 65 e7 6e 9e 00"
         "44 9e 4d fc 5a cb 03 85 3b f2 1d cd 09 30 b6 49"
         "39 25 7f 26 2c 36 87 fe 2d e0 5c ad 19 f9 85 1e"
@@ -257,7 +257,7 @@ const testvector_http3_t pcap_http3[] = {
         //         [Padding Length: 1157]
         from_client,
         prot_quic,
-        "WIRESHARK#4 QUIC Initial ack, padding",
+        "WIRESHARK#4 QUIC ACK, PADDING",
         "cb 00 00 00 01 08 fd 21 df 6a 65 e7 6e 9e 00 00"
         "44 9e 16 24 a8 37 8f 2e a7 dc 3b f7 cf c9 8b af"
         "db d7 51 a1 ec 3a 56 9f 84 14 39 1c d9 4d c8 24"
@@ -335,6 +335,36 @@ const testvector_http3_t pcap_http3[] = {
         "bc 99 f0 ac 4c 91 3e 04 33 54 fd c2 97 dc ee 80",
     },
     {
+        // TLSv1.3 Record Layer: Handshake Protocol: Client Hello
+        //     Content Type: Handshake (22)
+        //     Version: TLS 1.0 (0x0301)
+        //     Length: 512
+        //     Handshake Protocol: Client Hello
+        //         Handshake Type: Client Hello (1)
+        //         Length: 508
+        //         Version: TLS 1.2 (0x0303)
+        //         Random: 95bed2d24d72386f90f77864e5fdfa4ba00357955d70957456e3743e00fe6b8c
+        //         Session ID Length: 32
+        //         Session ID: 47a70c71a5e58dd33112e0eb8ff4497807690138585d881b62e0c73130ec140f
+        //         Cipher Suites Length: 60
+        //         Cipher Suites (30 suites)
+        //         Compression Methods Length: 1
+        //         Compression Methods (1 method)
+        //         Extensions Length: 375
+        //         Extension: renegotiation_info (len=1)
+        //         Extension: server_name (len=19) name=www.google.com
+        //         Extension: ec_point_formats (len=4)
+        //         Extension: supported_groups (len=22)
+        //         Extension: application_layer_protocol_negotiation (len=14)
+        //         Extension: encrypt_then_mac (len=0)
+        //         Extension: extended_master_secret (len=0)
+        //         Extension: post_handshake_auth (len=0)
+        //         Extension: signature_algorithms (len=48)
+        //         Extension: supported_versions (len=5) TLS 1.3, TLS 1.2
+        //         Extension: psk_key_exchange_modes (len=2)
+        //         Extension: key_share (len=38) x25519
+        //         Extension: compress_certificate (len=3)
+        //         Extension: padding (len=163)
         from_client,
         prot_tls13,
         "WIRESHARK#7 TLS 1.3 CH",
@@ -373,6 +403,36 @@ const testvector_http3_t pcap_http3[] = {
         "00 00 00 00 00",
     },
     {
+        // QUIC IETF
+        //     QUIC Connection information
+        //     [Packet Length: 1200]
+        //     1... .... = Header Form: Long Header (1)
+        //     .1.. .... = Fixed Bit: True
+        //     ..10 .... = Packet Type: Handshake (2)
+        //     [.... 00.. = Reserved: 0]
+        //     [.... ..00 = Packet Number Length: 1 bytes (0)]
+        //     Version: 1 (0x00000001)
+        //     Destination Connection ID Length: 0
+        //     Source Connection ID Length: 8
+        //     Source Connection ID: fd21df6a65e76e9e
+        //     Length: 1183
+        //     [Packet Number: 2]
+        //     Payload […]: ...
+        //     CRYPTO
+        //         Frame Type: CRYPTO (0x0000000000000006)
+        //         Offset: 0
+        //         Length: 1162
+        //         Crypto Data
+        //         TLSv1.3 Record Layer: Handshake Protocol: Multiple Handshake Messages
+        //             Handshake Protocol: Encrypted Extensions
+        //                 Handshake Type: Encrypted Extensions (8)
+        //                 Length: 161
+        //                 Extensions Length: 159
+        //                 Extension: server_name (len=0)
+        //                 Extension: application_layer_protocol_negotiation (len=5)
+        //                 Extension: quic_transport_parameters (len=142)
+        //             Handshake Protocol: Certificate (fragment)
+        //             Reassembled Handshake Message in frame: 14
         from_server,
         prot_quic,
         "WIRESHARK#8 QUIC EE, CERT(fragment)",
@@ -453,6 +513,29 @@ const testvector_http3_t pcap_http3[] = {
         "b2 8c d5 ec e4 c6 1f fd 62 f2 e5 8d 74 15 21 0f",
     },
     {
+        // QUIC IETF
+        //     QUIC Connection information
+        //     [Packet Length: 1200]
+        //     1... .... = Header Form: Long Header (1)
+        //     .1.. .... = Fixed Bit: True
+        //     ..10 .... = Packet Type: Handshake (2)
+        //     [.... 00.. = Reserved: 0]
+        //     [.... ..00 = Packet Number Length: 1 bytes (0)]
+        //     Version: 1 (0x00000001)
+        //     Destination Connection ID Length: 0
+        //     Source Connection ID Length: 8
+        //     Source Connection ID: fd21df6a65e76e9e
+        //     Length: 1183
+        //     [Packet Number: 3]
+        //     Payload […]: ...
+        //     CRYPTO
+        //         Frame Type: CRYPTO (0x0000000000000006)
+        //         Offset: 1162
+        //         Length: 1161
+        //         Crypto Data
+        //         TLSv1.3 Record Layer: Handshake Protocol: Certificate (fragment)
+        //             Handshake Protocol: Certificate (fragment)
+        //             Reassembled Handshake Message in frame: 14
         from_server,
         prot_quic,
         "WIRESHARK#9 QUIC CERT(fragment)",
@@ -533,22 +616,87 @@ const testvector_http3_t pcap_http3[] = {
         "e2 3a 12 17 37 ac 23 d5 fc 18 8d 21 01 ac 16 da",
     },
     {
+        // QUIC IETF
+        //     QUIC Connection information
+        //     [Packet Length: 41]
+        //     1... .... = Header Form: Long Header (1)
+        //     .1.. .... = Fixed Bit: True
+        //     ..10 .... = Packet Type: Handshake (2)
+        //     [.... 00.. = Reserved: 0]
+        //     [.... ..11 = Packet Number Length: 4 bytes (3)]
+        //     Version: 1 (0x00000001)
+        //     Destination Connection ID Length: 8
+        //     Destination Connection ID: fd21df6a65e76e9e
+        //     Source Connection ID Length: 0
+        //     Length: 25
+        //     [Packet Number: 0]
+        //     Payload: a5bce07e6181113a1a6a557d5053c4d006c4573571
+        //     ACK
+        //         Frame Type: ACK (0x0000000000000002)
+        //         Largest Acknowledged: 2
+        //         ACK Delay: 0
+        //         ACK Range Count: 0
+        //         First ACK Range: 0
         from_client,
         prot_quic,
-        "WIRESHARK#10 QUIC ack",
+        "WIRESHARK#10 QUIC ACK",
         "e8 00 00 00 01 08 fd 21 df 6a 65 e7 6e 9e 00 19"
         "1f 67 b2 f4 a5 bc e0 7e 61 81 11 3a 1a 6a 55 7d"
         "50 53 c4 d0 06 c4 57 35 71",
     },
     {
+        // QUIC IETF
+        //     QUIC Connection information
+        //     [Packet Length: 41]
+        //     1... .... = Header Form: Long Header (1)
+        //     .1.. .... = Fixed Bit: True
+        //     ..10 .... = Packet Type: Handshake (2)
+        //     [.... 00.. = Reserved: 0]
+        //     [.... ..11 = Packet Number Length: 4 bytes (3)]
+        //     Version: 1 (0x00000001)
+        //     Destination Connection ID Length: 8
+        //     Destination Connection ID: fd21df6a65e76e9e
+        //     Source Connection ID Length: 0
+        //     Length: 25
+        //     [Packet Number: 1]
+        //     Payload: 933dc2377ba4f3f1090bad64f4676f98fcc3482d58
+        //     ACK
+        //         Frame Type: ACK (0x0000000000000002)
+        //         Largest Acknowledged: 3
+        //         ACK Delay: 0
+        //         ACK Range Count: 0
+        //         First ACK Range: 1
         from_client,
         prot_quic,
-        "WIRESHARK#11 QUIC ack",
+        "WIRESHARK#11 QUIC ACK",
         "ee 00 00 00 01 08 fd 21 df 6a 65 e7 6e 9e 00 19"
         "26 93 37 a7 93 3d c2 37 7b a4 f3 f1 09 0b ad 64"
         "f4 67 6f 98 fc c3 48 2d 58",
     },
     {
+        // QUIC IETF
+        //     QUIC Connection information
+        //     [Packet Length: 1200]
+        //     1... .... = Header Form: Long Header (1)
+        //     .1.. .... = Fixed Bit: True
+        //     ..10 .... = Packet Type: Handshake (2)
+        //     [.... 00.. = Reserved: 0]
+        //     [.... ..00 = Packet Number Length: 1 bytes (0)]
+        //     Version: 1 (0x00000001)
+        //     Destination Connection ID Length: 0
+        //     Source Connection ID Length: 8
+        //     Source Connection ID: fd21df6a65e76e9e
+        //     Length: 1183
+        //     [Packet Number: 4]
+        //     Payload […]: ...
+        //     CRYPTO
+        //         Frame Type: CRYPTO (0x0000000000000006)
+        //         Offset: 2323
+        //         Length: 1161
+        //         Crypto Data
+        //         TLSv1.3 Record Layer: Handshake Protocol: Certificate (fragment)
+        //             Handshake Protocol: Certificate (fragment)
+        //             Reassembled Handshake Message in frame: 14
         from_server,
         prot_quic,
         "WIRESHARK#12 QUIC CERT(fragment)",
@@ -629,6 +777,29 @@ const testvector_http3_t pcap_http3[] = {
         "de 37 ea 27 1f 3a c9 12 b6 e5 5a a5 61 ea 75 6b",
     },
     {
+        // QUIC IETF
+        //     QUIC Connection information
+        //     [Packet Length: 1200]
+        //     1... .... = Header Form: Long Header (1)
+        //     .1.. .... = Fixed Bit: True
+        //     ..10 .... = Packet Type: Handshake (2)
+        //     [.... 00.. = Reserved: 0]
+        //     [.... ..00 = Packet Number Length: 1 bytes (0)]
+        //     Version: 1 (0x00000001)
+        //     Destination Connection ID Length: 0
+        //     Source Connection ID Length: 8
+        //     Source Connection ID: fd21df6a65e76e9e
+        //     Length: 1183
+        //     [Packet Number: 5]
+        //     Payload […]: ...
+        //     CRYPTO
+        //         Frame Type: CRYPTO (0x0000000000000006)
+        //         Offset: 3484
+        //         Length: 1161
+        //         Crypto Data
+        //         TLSv1.3 Record Layer: Handshake Protocol: Certificate (fragment)
+        //             Handshake Protocol: Certificate (fragment)
+        //             Reassembled Handshake Message in frame: 14
         from_server,
         prot_quic,
         "WIRESHARK#13 QUIC CERT(fragment)",
@@ -708,52 +879,95 @@ const testvector_http3_t pcap_http3[] = {
         "fa 40 01 29 a2 dd fa 71 32 b4 6e 66 f8 6d ed ec"
         "d4 2b 44 ff 94 dd ba 25 80 b7 8d 5e ef b8 ce de",
     },
-    {from_server, prot_quic, "WIRESHARK#14 QUIC CERT, CV, FIN",
-     "e9 00 00 00 01 00 08 fd 21 df 6a 65 e7 6e 9e 42"
-     "c0 21 9f 0f e1 66 ee 02 6c 48 60 7c 3f ba 6e 88"
-     "3f d8 03 21 6a d9 fa 34 13 a9 e3 2b e0 35 4f 48"
-     "3e 8f 8d 5f 98 5c 4f 7f 6b 44 81 ed 68 28 61 08"
-     "3e f7 83 c6 dc 9a c1 8a 46 21 a6 e0 2e c8 cc 4d"
-     "e2 43 9c 18 a0 45 18 39 93 02 03 dc 75 3b ab e6"
-     "ca 0c 89 2a cd c2 c1 31 49 a9 ff d9 46 18 32 22"
-     "1b 47 c7 64 5b b2 71 5d 48 f7 8e 88 b9 97 40 52"
-     "69 b8 47 52 72 75 3f a7 ef f8 9e 0c 5a 83 47 e0"
-     "2f 08 79 ed 3e ee c0 4f 67 01 72 bb 13 99 a5 e6"
-     "d8 16 46 ea 50 92 96 15 91 3d 5b b0 51 e3 21 f9"
-     "45 36 0f fe d7 19 1f 9b 16 a3 45 2c 46 bc 08 11"
-     "ad 34 42 63 80 f5 d9 2d 8b 35 35 55 9a b8 b4 03"
-     "5d ed 5d 7c 74 51 9f 50 ae 9d 72 0e 79 ec 23 66"
-     "b7 49 02 65 cc 3e 00 a5 30 57 4f fd 25 55 69 e7"
-     "c6 7e 72 58 2a 26 b3 89 a7 a2 5e d5 8e 11 96 42"
-     "d3 b5 92 c9 16 ea 20 00 da 06 a0 13 eb 87 e8 a8"
-     "8a a9 e5 13 ea af d5 de 0f 4b 9e 67 d3 0b a6 8f"
-     "06 49 e4 1e 87 ee aa d6 a9 3a 83 b7 29 a4 a6 30"
-     "e2 66 c7 e7 5d ce b4 0c 94 c8 0f 82 ca 9e 72 8b"
-     "75 48 b6 45 57 ac a9 c2 2f 56 a7 f7 71 f4 79 bd"
-     "0f 2b 2a d8 64 7d 81 7e 3a 70 63 d4 5d a8 12 bc"
-     "45 3f a2 24 cf 7a 80 a1 07 83 b4 eb c4 10 e0 9d"
-     "50 f1 fc b5 59 52 cf 5d a3 4a af 52 74 2e 42 a8"
-     "b9 aa 4c 56 5a f7 2d 97 9d 49 4a 2e e9 1f f6 74"
-     "88 bd 3c 0e e2 2f 84 3d 46 40 bb 5b cd 45 4f 91"
-     "fd 60 9a ec dd dc 0d 69 b7 43 fe b8 84 46 2d 1e"
-     "c3 01 4c 21 6f a9 15 7f a3 a3 e1 c6 76 28 f1 f0"
-     "a7 cd 06 49 8b 99 8d 05 cb 85 0b 78 bb 99 50 4d"
-     "94 ae 81 6d 51 98 fe 93 e6 e7 c9 3d e4 d2 21 95"
-     "56 0c 81 12 fa e3 27 f2 81 ed d7 1d b9 09 43 94"
-     "68 7d b9 83 84 fb 12 c6 14 59 8e 51 2f db 78 2c"
-     "e5 92 24 63 f7 09 e4 8a c1 a9 91 8e 92 8d 45 b7"
-     "c0 37 ae 87 f6 5d 7f 31 23 f1 5d 60 40 8b 06 3e"
-     "b3 88 93 ea 91 c2 63 0d 13 c4 2f f2 c5 26 6f 42"
-     "96 f1 79 2f 5e af 10 53 b1 27 7a 93 2b 63 65 2b"
-     "28 ac 83 c1 ce 54 d5 b2 0c 61 3a 0a e3 31 05 a1"
-     "14 1c fe 4f af a4 6d f3 4b 96 90 15 09 6f 9c 9f"
-     "3f 07 37 e2 ea ec 47 75 96 63 6e fe 2e c3 c8 bc"
-     "cc 77 6b bb 20 2f f0 9c 8f e3 11 9c 12 a7 0b 7a"
-     "b0 dd 8a fe 5d a3 5b 40 c6 b7 fe 70 f6 dd 5c 89"
-     "7a 02 90 80 7a 15 f6 25 47 94 10 eb 2b 55 10 71"
-     "ad 59 8b 77 cb 74 35 a6 b5 18 bd 0c 84 1d 23 6c"
-     "4f 24 37 7b a8 07 30 bc 45 39 4e ea 72 8f be 1f"
-     "a2 62 53 63 f8 40 5f 24 32 5d c4 d2 6c 4e e0 ac"
-     "06"},
+    {
+        from_server,
+        prot_quic,
+        // QUIC IETF
+        //     QUIC Connection information
+        //     [Packet Length: 721]
+        //     1... .... = Header Form: Long Header (1)
+        //     .1.. .... = Fixed Bit: True
+        //     ..10 .... = Packet Type: Handshake (2)
+        //     [.... 00.. = Reserved: 0]
+        //     [.... ..00 = Packet Number Length: 1 bytes (0)]
+        //     Version: 1 (0x00000001)
+        //     Destination Connection ID Length: 0
+        //     Source Connection ID Length: 8
+        //     Source Connection ID: fd21df6a65e76e9e
+        //     Length: 704
+        //     [Packet Number: 6]
+        //     Payload […]: ...
+        //     CRYPTO
+        //         Frame Type: CRYPTO (0x0000000000000006)
+        //         Offset: 4645
+        //         Length: 682
+        //         Crypto Data
+        //         TLSv1.3 Record Layer: Handshake Protocol: Multiple Handshake Messages
+        //             Handshake Protocol: Certificate (last fragment)
+        //             [5 Reassembled Handshake Fragments (5031 bytes): #8(997), #9(1161), #12(1161), #13(1161), #14(551)]
+        //             Handshake Protocol: Certificate
+        //                 Handshake Type: Certificate (11)
+        //                 Length: 5027
+        //                 Certificate Request Context Length: 0
+        //                 Certificates Length: 5023
+        //                 Certificates (5023 bytes)
+        //             Handshake Protocol: Certificate Verify
+        //                 Handshake Type: Certificate Verify (15)
+        //                 Length: 75
+        //                 Signature Algorithm: ecdsa_secp256r1_sha256 (0x0403)
+        //                 Signature length: 71
+        //                 Signature: ...
+        //             Handshake Protocol: Finished
+        //                 Handshake Type: Finished (20)
+        //                 Length: 48
+        //                 Verify Data
+        "WIRESHARK#14 QUIC CERT, CV, FIN",
+        "e9 00 00 00 01 00 08 fd 21 df 6a 65 e7 6e 9e 42"
+        "c0 21 9f 0f e1 66 ee 02 6c 48 60 7c 3f ba 6e 88"
+        "3f d8 03 21 6a d9 fa 34 13 a9 e3 2b e0 35 4f 48"
+        "3e 8f 8d 5f 98 5c 4f 7f 6b 44 81 ed 68 28 61 08"
+        "3e f7 83 c6 dc 9a c1 8a 46 21 a6 e0 2e c8 cc 4d"
+        "e2 43 9c 18 a0 45 18 39 93 02 03 dc 75 3b ab e6"
+        "ca 0c 89 2a cd c2 c1 31 49 a9 ff d9 46 18 32 22"
+        "1b 47 c7 64 5b b2 71 5d 48 f7 8e 88 b9 97 40 52"
+        "69 b8 47 52 72 75 3f a7 ef f8 9e 0c 5a 83 47 e0"
+        "2f 08 79 ed 3e ee c0 4f 67 01 72 bb 13 99 a5 e6"
+        "d8 16 46 ea 50 92 96 15 91 3d 5b b0 51 e3 21 f9"
+        "45 36 0f fe d7 19 1f 9b 16 a3 45 2c 46 bc 08 11"
+        "ad 34 42 63 80 f5 d9 2d 8b 35 35 55 9a b8 b4 03"
+        "5d ed 5d 7c 74 51 9f 50 ae 9d 72 0e 79 ec 23 66"
+        "b7 49 02 65 cc 3e 00 a5 30 57 4f fd 25 55 69 e7"
+        "c6 7e 72 58 2a 26 b3 89 a7 a2 5e d5 8e 11 96 42"
+        "d3 b5 92 c9 16 ea 20 00 da 06 a0 13 eb 87 e8 a8"
+        "8a a9 e5 13 ea af d5 de 0f 4b 9e 67 d3 0b a6 8f"
+        "06 49 e4 1e 87 ee aa d6 a9 3a 83 b7 29 a4 a6 30"
+        "e2 66 c7 e7 5d ce b4 0c 94 c8 0f 82 ca 9e 72 8b"
+        "75 48 b6 45 57 ac a9 c2 2f 56 a7 f7 71 f4 79 bd"
+        "0f 2b 2a d8 64 7d 81 7e 3a 70 63 d4 5d a8 12 bc"
+        "45 3f a2 24 cf 7a 80 a1 07 83 b4 eb c4 10 e0 9d"
+        "50 f1 fc b5 59 52 cf 5d a3 4a af 52 74 2e 42 a8"
+        "b9 aa 4c 56 5a f7 2d 97 9d 49 4a 2e e9 1f f6 74"
+        "88 bd 3c 0e e2 2f 84 3d 46 40 bb 5b cd 45 4f 91"
+        "fd 60 9a ec dd dc 0d 69 b7 43 fe b8 84 46 2d 1e"
+        "c3 01 4c 21 6f a9 15 7f a3 a3 e1 c6 76 28 f1 f0"
+        "a7 cd 06 49 8b 99 8d 05 cb 85 0b 78 bb 99 50 4d"
+        "94 ae 81 6d 51 98 fe 93 e6 e7 c9 3d e4 d2 21 95"
+        "56 0c 81 12 fa e3 27 f2 81 ed d7 1d b9 09 43 94"
+        "68 7d b9 83 84 fb 12 c6 14 59 8e 51 2f db 78 2c"
+        "e5 92 24 63 f7 09 e4 8a c1 a9 91 8e 92 8d 45 b7"
+        "c0 37 ae 87 f6 5d 7f 31 23 f1 5d 60 40 8b 06 3e"
+        "b3 88 93 ea 91 c2 63 0d 13 c4 2f f2 c5 26 6f 42"
+        "96 f1 79 2f 5e af 10 53 b1 27 7a 93 2b 63 65 2b"
+        "28 ac 83 c1 ce 54 d5 b2 0c 61 3a 0a e3 31 05 a1"
+        "14 1c fe 4f af a4 6d f3 4b 96 90 15 09 6f 9c 9f"
+        "3f 07 37 e2 ea ec 47 75 96 63 6e fe 2e c3 c8 bc"
+        "cc 77 6b bb 20 2f f0 9c 8f e3 11 9c 12 a7 0b 7a"
+        "b0 dd 8a fe 5d a3 5b 40 c6 b7 fe 70 f6 dd 5c 89"
+        "7a 02 90 80 7a 15 f6 25 47 94 10 eb 2b 55 10 71"
+        "ad 59 8b 77 cb 74 35 a6 b5 18 bd 0c 84 1d 23 6c"
+        "4f 24 37 7b a8 07 30 bc 45 39 4e ea 72 8f be 1f"
+        "a2 62 53 63 f8 40 5f 24 32 5d c4 d2 6c 4e e0 ac"
+        "06",
+    },
 };
 const size_t sizeof_pcap_http3 = RTL_NUMBER_OF(pcap_http3);

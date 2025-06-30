@@ -15,6 +15,7 @@
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshakes.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_session.hpp>

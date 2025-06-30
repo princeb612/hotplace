@@ -23,11 +23,11 @@ openssl_sign::~openssl_sign() {
     // do nothing
 }
 
-return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t sig, const binary_t& input, binary_t& signature) {
-    return sign(pkey, sig, &input[0], input.size(), signature);
+return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t sig, const binary_t& input, binary_t& signature, uint32 flags) {
+    return sign(pkey, sig, &input[0], input.size(), signature, flags);
 }
 
-return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t sig, const byte_t* stream, size_t size, binary_t& signature) {
+return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t sig, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -69,7 +69,7 @@ return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t sig, const byte_t*
                 }
                 break;
             case EVP_PKEY_EC:
-                ret = sign_ecdsa(pkey, hash_alg, stream, size, signature);
+                ret = sign_ecdsa(pkey, hash_alg, stream, size, signature, flags);
                 break;
             case EVP_PKEY_ED25519:
             case EVP_PKEY_ED448:
@@ -87,11 +87,11 @@ return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t sig, const byte_t*
     return ret;
 }
 
-return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t sig, const binary_t& input, const binary_t& signature) {
-    return verify(pkey, sig, &input[0], input.size(), signature);
+return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t sig, const binary_t& input, const binary_t& signature, uint32 flags) {
+    return verify(pkey, sig, &input[0], input.size(), signature, flags);
 }
 
-return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t sig, const byte_t* stream, size_t size, const binary_t& signature) {
+return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t sig, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -133,7 +133,7 @@ return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t sig, const byte_
                 }
                 break;
             case EVP_PKEY_EC:
-                ret = verify_ecdsa(pkey, hash_alg, stream, size, signature);
+                ret = verify_ecdsa(pkey, hash_alg, stream, size, signature, flags);
                 break;
             case EVP_PKEY_ED25519:
             case EVP_PKEY_ED448:

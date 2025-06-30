@@ -16,11 +16,11 @@
 namespace hotplace {
 namespace crypto {
 
-return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature) {
-    return sign_digest(pkey, alg, &input[0], input.size(), signature);
+return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature, uint32 flags) {
+    return sign_digest(pkey, alg, &input[0], input.size(), signature, flags);
 }
 
-return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature) {
+return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     EVP_MD_CTX* md_context = nullptr;
@@ -74,11 +74,11 @@ return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, c
     return ret;
 }
 
-return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature) {
-    return verify_digest(pkey, alg, &input[0], input.size(), signature);
+return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature, uint32 flags) {
+    return verify_digest(pkey, alg, &input[0], input.size(), signature, flags);
 }
 
-return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature) {
+return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     EVP_MD_CTX* md_context = nullptr;

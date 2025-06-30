@@ -65,7 +65,7 @@ return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t d
                     case quic_param_initial_source_connection_id:
                     case quic_param_retry_source_connection_id:
                         dbs.println("    > %I64i (%s) %s", param_id, tlsadvisor->quic_param_string(param_id).c_str(), base16_encode(param).c_str());
-                        dump_memory(param, &dbs, 16, 9, 0, dump_notrunc);
+                        // dump_memory(param, &dbs, 16, 9, 0, dump_notrunc);
                         break;
                     default: {
                         size_t epos = 0;

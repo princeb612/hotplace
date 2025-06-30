@@ -17,11 +17,11 @@
 namespace hotplace {
 namespace crypto {
 
-return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature) {
-    return sign_ecdsa(pkey, alg, &input[0], input.size(), signature);
+return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature, uint32 flags) {
+    return sign_ecdsa(pkey, alg, &input[0], input.size(), signature, flags);
 }
 
-return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature) {
+return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_hash hash;
@@ -58,29 +58,7 @@ return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, co
         // NID_secp521r1
         // EC_KEY_free (ec);
 
-        switch (alg) {
-            case hash_algorithm_t::sha1:
-                unitsize = 20;
-                break;
-            case hash_algorithm_t::sha2_224:
-                unitsize = 28;
-                break;
-            case hash_algorithm_t::sha2_256:
-                unitsize = 32;
-                break;
-            case hash_algorithm_t::sha2_384:
-                unitsize = 48;
-                break;
-            case hash_algorithm_t::sha2_512:
-                unitsize = 66;
-                break;
-            case hash_algorithm_t::sha2_512_224:
-                unitsize = 28;
-                break;
-            case hash_algorithm_t::sha2_512_256:
-                unitsize = 32;
-                break;
-        }
+        unitsize = advisor->unitsizeof_ecdsa(alg);
 
         signature.resize(unitsize * 2);
 
@@ -117,6 +95,12 @@ return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, co
          */
         BN_bn2bin(bn_r, &signature[unitsize - rlen]);
         BN_bn2bin(bn_s, &signature[unitsize + (unitsize - slen)]);
+
+        if (sign_flag_format_der & flags) {
+            binary_t temp;
+            sig2der(signature, temp);
+            signature = std::move(temp);
+        }
     }
     __finally2 {
         if (nullptr != ecdsa_sig) {
@@ -126,11 +110,11 @@ return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, co
     return ret;
 }
 
-return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature) {
-    return verify_ecdsa(pkey, alg, &input[0], input.size(), signature);
+return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature, uint32 flags) {
+    return verify_ecdsa(pkey, alg, &input[0], input.size(), signature, flags);
 }
 
-return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature) {
+return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_hash hash;
@@ -140,6 +124,8 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, 
     int ret_openssl = 1;
 
     __try2 {
+        ret = errorcode_t::error_verify;
+
         if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -153,8 +139,6 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, 
 
         EC_KEY* ec_key = (EC_KEY*)EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey);
 
-        ret = errorcode_t::error_verify;
-
         hash.open(&hash_handle, alg);
         hash.hash(hash_handle, stream, size, hash_value);
         hash.close(hash_handle);
@@ -165,14 +149,23 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, 
             __leave2;
         }
 
-        size_t signature_size = signature.size();
-
         /* RFC 7515 A.3.1.  Encoding */
         /* NIST CAVP (cryptographic-algorithm-validation-program) test vector - PASSED */
         BIGNUM* bn_r = nullptr;
         BIGNUM* bn_s = nullptr;
-        bn_r = BN_bin2bn(&signature[0], signature_size / 2, nullptr);
-        bn_s = BN_bin2bn(&signature[signature_size / 2], signature_size / 2, nullptr);
+
+        if (sign_flag_format_der & flags) {
+            binary_t temp;
+            auto unitsize = advisor->unitsizeof_ecdsa(alg);
+            der2sig(signature, unitsize, temp);
+            size_t signature_size = temp.size();
+            bn_r = BN_bin2bn(&temp[0], signature_size / 2, nullptr);
+            bn_s = BN_bin2bn(&temp[signature_size / 2], signature_size / 2, nullptr);
+        } else {
+            size_t signature_size = signature.size();
+            bn_r = BN_bin2bn(&signature[0], signature_size / 2, nullptr);
+            bn_s = BN_bin2bn(&signature[signature_size / 2], signature_size / 2, nullptr);
+        }
 
         ECDSA_SIG_set0(ecdsa_sig, bn_r, bn_s);
 

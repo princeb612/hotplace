@@ -35,7 +35,7 @@ class tls_handshake_certificate_verify : public tls_handshake {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
     return_t sign_certverify(const EVP_PKEY* pkey, tls_direction_t dir, uint16& scheme, binary_t& signature);
-    return_t verify_certverify(const EVP_PKEY* pkey, tls_direction_t dir, uint16 scheme, binary_t& signature);
+    return_t verify_certverify(const EVP_PKEY* pkey, tls_direction_t dir, uint16 scheme, const binary_t& signature);
 };
 
 }  // namespace net

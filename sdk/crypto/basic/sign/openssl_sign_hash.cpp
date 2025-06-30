@@ -16,19 +16,19 @@
 namespace hotplace {
 namespace crypto {
 
-return_t openssl_sign::sign_hash(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature) {
-    return sign_digest(pkey, alg, &input[0], input.size(), signature);
+return_t openssl_sign::sign_hash(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature, uint32 flags) {
+    return sign_digest(pkey, alg, &input[0], input.size(), signature, flags);
 }
 
-return_t openssl_sign::sign_hash(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature) {
-    return sign_digest(pkey, alg, stream, size, signature);
+return_t openssl_sign::sign_hash(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
+    return sign_digest(pkey, alg, stream, size, signature, flags);
 }
 
-return_t openssl_sign::verify_hash(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature) {
-    return verify_hash(pkey, alg, &input[0], input.size(), signature);
+return_t openssl_sign::verify_hash(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature, uint32 flags) {
+    return verify_hash(pkey, alg, &input[0], input.size(), signature, flags);
 }
 
-return_t openssl_sign::verify_hash(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature) {
+return_t openssl_sign::verify_hash(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -37,7 +37,7 @@ return_t openssl_sign::verify_hash(const EVP_PKEY* pkey, hash_algorithm_t alg, c
             __leave2;
         }
         binary_t result;
-        ret = sign_digest(pkey, alg, stream, size, result);
+        ret = sign_digest(pkey, alg, stream, size, result, flags);
         if (result != signature) {
             ret = errorcode_t::error_verify;
         }

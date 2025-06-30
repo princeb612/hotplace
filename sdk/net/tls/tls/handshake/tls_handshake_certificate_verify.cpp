@@ -100,19 +100,7 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
             basic_stream tosign;
             construct_certificate_verify_message(session, dir, tosign);
 
-            ret = sign->sign(pkey, tosign.data(), tosign.size(), signature);
-
-            auto kty = typeof_crypto_key(pkey);
-            switch (kty) {
-                case kty_rsa:
-                case kty_okp: {
-                } break;
-                case kty_ec: {
-                    // reform R || S to ASN.1 DER
-                    binary_t ecdsa_sig = std::move(signature);
-                    sig2der(ecdsa_sig, signature);
-                } break;
-            }
+            ret = sign->sign(pkey, tosign.data(), tosign.size(), signature, sign_flag_format_der);
 
             sign->release();
         } else {
@@ -124,7 +112,7 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
     return ret;
 }
 
-return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pkey, tls_direction_t dir, uint16 scheme, binary_t& signature) {
+return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pkey, tls_direction_t dir, uint16 scheme, const binary_t& signature) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -135,54 +123,6 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
 
         auto session = get_session();
         tls_protection& protection = session->get_tls_protection();
-
-        /**
-         * RSASSA-PSS     | RSA     |
-         * ECDSA          | ECDSA   | ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
-         * EdDSA          | Ed25519 | 64 bytes
-         * EdDSA          | Ed448   | 114 bytes
-         * RSA-PCKS1 v1.5 | RSA     |
-         *
-         * ECDSA signature
-         * hash     | R  | S  | R||S
-         * sha2-256 | 32 | 32 | 64
-         * sha2-384 | 48 | 48 | 96
-         * sha2-512 | 66 | 66 | 132
-         */
-        auto kty = typeof_crypto_key(pkey);
-        switch (kty) {
-            case kty_rsa:
-            case kty_okp: {
-            } break;
-            case kty_ec: {
-                crypto_advisor* advisor = crypto_advisor::get_instance();
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                auto hint = tlsadvisor->hintof_signature_scheme(scheme);
-                auto sig = hint->sig;
-                uint32 unitsize = 0;
-
-                // B-163, B-233, B-283, B-409, B-571
-                // K-163, K-233, B-283, K-409, K-571
-                // P-192, P-224, P-256, K-384, K-521
-                // secp160r1, secp256k1
-                unitsize = advisor->sizeof_ecdsa(sig) >> 1;
-
-                /**
-                 * RFC 3279 2.2.3 ECDSA Signature Algorithm
-                 * When signing, the ECDSA algorithm generates two values.  These values
-                 * are commonly referred to as r and s.  To easily transfer these two
-                 * values as one signature, they MUST be ASN.1 encoded using the
-                 * following ASN.1 structure:
-                 *
-                 *    Ecdsa-Sig-Value  ::=  SEQUENCE  {
-                 *         r     INTEGER,
-                 *         s     INTEGER  }
-                 */
-                binary_t ecdsa_sig;
-                der2sig(signature, unitsize, ecdsa_sig);  // ASN.1 DER to familiar R || S
-                signature = std::move(ecdsa_sig);
-            } break;
-        }
 
         crypto_sign_builder builder;
         auto sign = builder.set_tls_sign_scheme(scheme).build();
@@ -201,7 +141,31 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
             basic_stream tosign;
             construct_certificate_verify_message(session, dir, tosign);
 
-            ret = sign->verify(pkey, tosign.data(), tosign.size(), signature);
+            /**
+             * RSASSA-PSS     | RSA     |
+             * ECDSA          | ECDSA   | ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
+             * EdDSA          | Ed25519 | 64 bytes
+             * EdDSA          | Ed448   | 114 bytes
+             * RSA-PCKS1 v1.5 | RSA     |
+             *
+             * ECDSA signature
+             * hash     | R  | S  | R||S
+             * sha2-256 | 32 | 32 | 64
+             * sha2-384 | 48 | 48 | 96
+             * sha2-512 | 66 | 66 | 132
+             *
+             * RFC 3279 2.2.3 ECDSA Signature Algorithm
+             *   When signing, the ECDSA algorithm generates two values.  These values
+             *   are commonly referred to as r and s.  To easily transfer these two
+             *   values as one signature, they MUST be ASN.1 encoded using the
+             *   following ASN.1 structure:
+             *
+             *      Ecdsa-Sig-Value  ::=  SEQUENCE  {
+             *           r     INTEGER,
+             *           s     INTEGER  }
+             */
+
+            ret = sign->verify(pkey, tosign.data(), tosign.size(), signature, sign_flag_format_der);
 
             sign->release();
         } else {

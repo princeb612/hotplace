@@ -15,7 +15,7 @@ namespace crypto {
 
 crypto_sign_rsa_pkcs1::crypto_sign_rsa_pkcs1(hash_algorithm_t hashalg) : crypto_sign(hashalg) {}
 
-return_t crypto_sign_rsa_pkcs1::sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature) {
+return_t crypto_sign_rsa_pkcs1::sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
@@ -23,7 +23,7 @@ return_t crypto_sign_rsa_pkcs1::sign(const EVP_PKEY* pkey, const byte_t* stream,
             __leave2;
         }
         openssl_sign s;
-        ret = s.sign_rsassa_pkcs15(pkey, get_digest(), stream, size, signature);
+        ret = s.sign_rsassa_pkcs15(pkey, get_digest(), stream, size, signature, flags);
     }
     __finally2 {
         // do nothing
@@ -31,7 +31,7 @@ return_t crypto_sign_rsa_pkcs1::sign(const EVP_PKEY* pkey, const byte_t* stream,
     return ret;
 }
 
-return_t crypto_sign_rsa_pkcs1::verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature) {
+return_t crypto_sign_rsa_pkcs1::verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
@@ -39,7 +39,7 @@ return_t crypto_sign_rsa_pkcs1::verify(const EVP_PKEY* pkey, const byte_t* strea
             __leave2;
         }
         openssl_sign s;
-        ret = s.verify_rsassa_pkcs15(pkey, get_digest(), stream, size, signature);
+        ret = s.verify_rsassa_pkcs15(pkey, get_digest(), stream, size, signature, flags);
     }
     __finally2 {
         // do nothing
@@ -47,7 +47,7 @@ return_t crypto_sign_rsa_pkcs1::verify(const EVP_PKEY* pkey, const byte_t* strea
     return ret;
 }
 
-return_t crypto_sign_rsa_pkcs1::sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature) {
+return_t crypto_sign_rsa_pkcs1::sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey) {
@@ -55,7 +55,7 @@ return_t crypto_sign_rsa_pkcs1::sign(const EVP_PKEY* pkey, const binary_t& input
             __leave2;
         }
         openssl_sign s;
-        ret = s.sign_rsassa_pkcs15(pkey, get_digest(), input, signature);
+        ret = s.sign_rsassa_pkcs15(pkey, get_digest(), input, signature, flags);
     }
     __finally2 {
         // do nothing
@@ -63,7 +63,7 @@ return_t crypto_sign_rsa_pkcs1::sign(const EVP_PKEY* pkey, const binary_t& input
     return ret;
 }
 
-return_t crypto_sign_rsa_pkcs1::verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature) {
+return_t crypto_sign_rsa_pkcs1::verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey) {
@@ -71,7 +71,7 @@ return_t crypto_sign_rsa_pkcs1::verify(const EVP_PKEY* pkey, const binary_t& inp
             __leave2;
         }
         openssl_sign s;
-        ret = s.verify_rsassa_pkcs15(pkey, get_digest(), input, signature);
+        ret = s.verify_rsassa_pkcs15(pkey, get_digest(), input, signature, flags);
     }
     __finally2 {
         // do nothing

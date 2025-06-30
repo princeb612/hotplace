@@ -192,6 +192,10 @@ return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, 
             __leave2;
         }
 
+        // #if defined DEBUG
+        // X509_print_fp(stdout, x509);
+        // #endif
+
         crypto_key_object key(pkey, x509, desc);
         cryptokey->add(key);
 

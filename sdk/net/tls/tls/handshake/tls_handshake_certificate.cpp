@@ -122,17 +122,14 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         binary_t certificates;
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)                // TLS 1.3
-               << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)                  // TLS 1.3
-               << new payload_member(uint24_t(0), constexpr_certificates_len)                                       //
-               << new payload_member(binary_t(), constexpr_certificates)                                            //
-               << new payload_member(uint16(0), true, constexpr_certificate_extensions_len, constexpr_group_tls13)  //
-               << new payload_member(binary_t(), constexpr_certificate_extensions, constexpr_group_tls13);          //
-
+            pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)  // TLS 1.3
+               << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)    // TLS 1.3
+               << new payload_member(uint24_t(0), constexpr_certificates_len)                         //
+               << new payload_member(binary_t(), constexpr_certificates);                             //
+            pl.set_group(constexpr_group_tls13, is_tls13);
             pl.set_reference_value(constexpr_request_context, constexpr_request_context_len);
             pl.set_reference_value(constexpr_certificates, constexpr_certificates_len);
             pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
-            pl.set_group(constexpr_group_tls13, is_tls13);  // tls1_ext_supported_versions 0x002b server_hello
             pl.read(stream, size, pos);
 
             request_context_len = pl.t_value_of<uint8>(constexpr_request_context_len);
@@ -162,36 +159,62 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
         uint16 idx = 0;
         size_t cpos = 0;
-        /* while (cpos + 3 < certificates_len) */ {
-            // [0] server certificate
-            // [1] intermediate certificate authority
-            // [2] root certificate authority
+        while (cpos + 3 < certificates_len) {
+            // [0] server certificate                 ex. Issuer: C=US, O=Google Trust Services, CN=WE2
+            // [1] intermediate certificate authority ex. Issuer: C=US, O=Google Trust Services LLC, CN=GTS Root R4
+            // [2] root certificate authority         ex. Issuer: C=BE, O=GlobalSign nv-sa, OU=Root CA, CN=GlobalSign Root CA
 
             payload pl;
-            pl << new payload_member(uint24_t(0), constexpr_certificate_len)  //
-               << new payload_member(binary_t(), constexpr_certificate);      //
-
+            pl << new payload_member(uint24_t(0), constexpr_certificate_len)                                        //
+               << new payload_member(binary_t(), constexpr_certificate)                                             //
+               << new payload_member(uint16(0), true, constexpr_certificate_extensions_len, constexpr_group_tls13)  //
+               << new payload_member(binary_t(), constexpr_certificate_extensions, constexpr_group_tls13);          //
+            pl.set_group(constexpr_group_tls13, is_tls13);
             pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
+            pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
 
             pl.read(&certificates[0], certificates.size(), cpos);
 
             binary_t cert;
-            binary_t cert_extensions;
 
             uint32 certificate_len = pl.t_value_of<uint32>(constexpr_certificate_len);
             pl.get_binary(constexpr_certificate, cert);
+
+            uint16 extensions_len = 0;
+            binary_t cert_extensions;
+
+            if (is_tls13) {
+                extensions_len = pl.t_value_of<uint16>(constexpr_certificate_extensions_len);
+                pl.get_binary(constexpr_certificate_extensions, cert_extensions);
+            }
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 basic_stream dbs;
                 dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_len, idx, certificate_len, certificate_len);
+                if (is_tls13) {
+                    dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_extensions_len, idx, extensions_len, extensions_len);
+                }
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
 
-            /* if (0 == idx) */ { keychain.load_der(&servercert, &cert[0], cert.size(), desc); }
+            if (0 == idx) {
+                keychain.load_der(&servercert, &cert[0], cert.size(), desc);
+            }
+            // #if defined DEBUG
+            // else {
+            //     crypto_key temp;
+            //     keychain.load_der(&temp, &cert[0], cert.size(), desc);
+            // }
+            // #endif
 
-            // idx++;
+            if (is_tls13 && (false == cert_extensions.empty())) {
+                tls_extensions extensions;
+                extensions.read(session, dir, cert_extensions);
+            }
+
+            idx++;
         }
 
 #if defined DEBUG

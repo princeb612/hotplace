@@ -83,28 +83,37 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, crypt_sig_t sig) {
     return test;
 }
 
-uint16 crypto_advisor::sizeof_ecdsa(hash_algorithm_t alg) {
+uint16 crypto_advisor::unitsizeof_ecdsa(hash_algorithm_t alg) {
     uint16 ret_value = 0;
     switch (alg) {
-        case sha1:
-            ret_value = 20 << 1;
+        case hash_algorithm_t::sha1:
+            ret_value = 20;
             break;
-        case sha2_224:
-            ret_value = 28 << 1;
+        case hash_algorithm_t::sha2_224:
+            ret_value = 28;
             break;
-        case sha2_256:
-            ret_value = 32 << 1;
+        case hash_algorithm_t::sha2_256:
+            ret_value = 32;
             break;
-        case sha2_384:
-            ret_value = 48 << 1;
+        case hash_algorithm_t::sha2_384:
+            ret_value = 48;
             break;
-        case sha2_512:
-            ret_value = 66 << 1;
+        case hash_algorithm_t::sha2_512:
+            ret_value = 66;
+            break;
+        case hash_algorithm_t::sha2_512_224:
+            ret_value = 28;
+            break;
+        case hash_algorithm_t::sha2_512_256:
+            ret_value = 32;
+            break;
+        default:
             break;
     }
-
     return ret_value;
 }
+
+uint16 crypto_advisor::sizeof_ecdsa(hash_algorithm_t alg) { return unitsizeof_ecdsa(alg) << 1; }
 
 uint16 crypto_advisor::sizeof_ecdsa(crypt_sig_t sig) {
     uint16 ret_value = 0;
@@ -125,7 +134,6 @@ uint16 crypto_advisor::sizeof_ecdsa(crypt_sig_t sig) {
             ret_value = 66 << 1;
             break;
     }
-
     return ret_value;
 }
 

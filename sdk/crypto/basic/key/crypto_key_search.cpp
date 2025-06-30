@@ -20,6 +20,7 @@ enum {
     SEARCH_KTY = 0x2,
     SEARCH_ALG = 0x4,
     SEARCH_ALT = 0x8,
+    SEARCH_X509 = 0x10,
 };
 
 template <typename ALGORITHM>
@@ -35,6 +36,11 @@ bool find_discriminant(crypto_key_object item, const char* kid, ALGORITHM alg, c
         cond_use = (item.get_desc().get_use() & use);
         if (false == cond_use) {
             __leave2;
+        }
+        if (SEARCH_X509 & flags) {
+            if (nullptr == item.get_x509()) {
+                __leave2;
+            }
         }
         if (SEARCH_KID & flags) {
             cond_kid = (kid && (0 == strcmp(item.get_desc().get_kid_cstr(), kid)));
@@ -763,7 +769,7 @@ const X509* crypto_key::select_x509(crypto_use_t use, bool up_ref) {
     __try2 {
         for (auto& pair : _key_map) {
             crypto_key_object& keyobj = pair.second;
-            bool test = find_discriminant(keyobj, nullptr, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, 0);
+            bool test = find_discriminant(keyobj, nullptr, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, SEARCH_X509);
             if (test) {
                 ret_value = keyobj.get_x509();
                 break;
@@ -790,7 +796,7 @@ const X509* crypto_key::find_x509(const char* kid, crypto_kty_t kty, crypto_use_
         if (kid) {
             k = kid;
 
-            uint32 flags = SEARCH_KID;
+            uint32 flags = SEARCH_X509 | SEARCH_KID;
             if (kty_unknown != kty) {
                 flags |= SEARCH_KTY;
             }

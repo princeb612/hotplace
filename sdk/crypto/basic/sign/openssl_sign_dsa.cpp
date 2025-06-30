@@ -106,13 +106,13 @@ return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg
     return ret;
 }
 
-return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature) {
+return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
-    ret = sign_dsa(pkey, hashalg, &input[0], input.size(), signature);
+    ret = sign_dsa(pkey, hashalg, &input[0], input.size(), signature, flags);
     return ret;
 }
 
-return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature) {
+return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
@@ -131,31 +131,24 @@ return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, 
         auto hint = advisor->hintof_digest(hashalg);
         uint16 dlen = sizeof_digest(hint);
 
-        ret = rs2sig(r, s, dlen, signature);
+        if (sign_flag_format_der & flags) {
+            binary_t temp;
+            ret = rs2der(r, s, signature);
+        } else {
+            ret = rs2sig(r, s, dlen, signature);
+        }
     }
     __finally2 {}
     return ret;
 }
 
-return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature) {
+return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
-    ret = verify_dsa(pkey, hashalg, &input[0], input.size(), signature);
+    ret = verify_dsa(pkey, hashalg, &input[0], input.size(), signature, flags);
     return ret;
 }
 
-return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature) {
-    return_t ret = errorcode_t::success;
-    // TODO
-    return ret;
-}
-
-return_t openssl_sign::sign_dsa_asn1(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature) {
-    return_t ret = errorcode_t::success;
-    ret = sign_dsa_asn1(pkey, hashalg, &input[0], input.size(), signature);
-    return ret;
-}
-
-return_t openssl_sign::sign_dsa_asn1(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature) {
+return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
@@ -165,44 +158,17 @@ return_t openssl_sign::sign_dsa_asn1(const EVP_PKEY* pkey, hash_algorithm_t hash
 
         binary_t bin_r;
         binary_t bin_s;
-
-        ret = sign_dsa(pkey, hashalg, stream, size, bin_r, bin_s);
+        if (sign_flag_format_der & flags) {
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            auto unitsize = advisor->unitsizeof_ecdsa(hashalg);
+            ret = der2rs(signature, unitsize, bin_r, bin_s);
+        } else {
+            ret = sig2rs(signature, bin_r, bin_s);
+        }
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = rs2der(bin_r, bin_s, signature);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t openssl_sign::verify_dsa_asn1(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature) {
-    return_t ret = errorcode_t::success;
-    ret = verify_dsa_asn1(pkey, hashalg, &input[0], input.size(), signature);
-    return ret;
-}
-
-return_t openssl_sign::verify_dsa_asn1(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == pkey || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        auto hint = advisor->hintof_digest(hashalg);
-        uint16 dlen = sizeof_digest(hint);
-
-        binary_t bin_rs;
-        ret = der2sig(signature, dlen, bin_rs);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        ret = verify_dsa(pkey, hashalg, stream, size, bin_rs);
+        ret = verify_dsa(pkey, hashalg, stream, size, bin_r, bin_s);
     }
     __finally2 {}
     return ret;

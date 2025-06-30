@@ -255,6 +255,7 @@ class crypto_advisor {
      */
     bool is_kindof(const EVP_PKEY* pkey, crypt_sig_t sig);
 
+    uint16 unitsizeof_ecdsa(hash_algorithm_t alg);
     uint16 sizeof_ecdsa(hash_algorithm_t alg);
     uint16 sizeof_ecdsa(crypt_sig_t sig);
 

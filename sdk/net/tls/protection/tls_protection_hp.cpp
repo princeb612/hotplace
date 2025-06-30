@@ -100,10 +100,10 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
         crypto_advisor *advisor = crypto_advisor::get_instance();
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
-        auto alg = aes128;
+        auto alg = aes128;  // DTLS, QUIC initial
         auto &protection = session->get_tls_protection();
 
-        // QUIC
+        // QUIC handshake, application
         if (level == protection_handshake || level == protection_application) {
             auto cs = get_cipher_suite();
             auto hint_cs = tlsadvisor->hintof_cipher_suite(cs);
