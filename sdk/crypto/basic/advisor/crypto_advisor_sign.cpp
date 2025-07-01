@@ -60,7 +60,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, crypt_sig_t sig) {
         nidof_evp_pkey(pkey, nid);
 
         const hint_signature_t* hint = hintof_signature(sig);
-        bool cond1 = (hint->sig_type == sig);
+        bool cond1 = (hint->sig == sig);
         if (false == cond1) {
             __leave2;
         }

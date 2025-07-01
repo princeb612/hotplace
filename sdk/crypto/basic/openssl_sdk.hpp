@@ -159,6 +159,13 @@ return_t ossl_set_unitsize(uint32 bytes);
  */
 uint32 ossl_get_unitsize();
 
+/**
+ * @brief BIO to stream
+ * @param stream_t* stream [out]
+ * @param BIO* bio [in]
+ */
+return_t read_bio(stream_t* stream, BIO* bio);
+
 }  // namespace crypto
 }  // namespace hotplace
 

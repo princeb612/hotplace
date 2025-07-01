@@ -72,6 +72,14 @@ class crypto_sign_builder {
      *          auto sign = builder.tls_sign_scheme(0x0804).build();
      */
     crypto_sign_builder& set_tls_sign_scheme(uint16 scheme);
+    /**
+     * @sample
+     *          auto sign = builder.set_scheme(jws_es256).build();
+     *          auto sign = builder.set_scheme(jws_hs256).build();
+     *          auto sign = builder.set_scheme(jws_ps256).build();
+     *          auto sign = builder.set_scheme(jws_rs256).build();
+     */
+    crypto_sign_builder& set_scheme(jws_t type);
 
    protected:
    private:
@@ -106,6 +114,26 @@ class crypto_sign {
     crypt_sig_type_t _scheme;
     hash_algorithm_t _hashalg;
     int _saltlen;
+};
+
+class crypto_sign_digest : public crypto_sign {
+   public:
+    crypto_sign_digest(hash_algorithm_t hashalg);
+
+    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
+    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
+    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
+    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+};
+
+class crypto_sign_hmac : public crypto_sign {
+   public:
+    crypto_sign_hmac(hash_algorithm_t hashalg);
+
+    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
+    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
+    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
+    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
 };
 
 class crypto_sign_rsa_pkcs1 : public crypto_sign {

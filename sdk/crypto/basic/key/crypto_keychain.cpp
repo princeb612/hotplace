@@ -11,6 +11,7 @@
 #include <fstream>
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
@@ -192,9 +193,17 @@ return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, 
             __leave2;
         }
 
-        // #if defined DEBUG
-        // X509_print_fp(stdout, x509);
-        // #endif
+#if defined DEBUG
+        if (istraceable(trace_category_internal, loglevel_debug)) {
+            // X509_print_fp(stdout, x509);
+            basic_stream dbs;
+            auto dbio = BIO_new(BIO_s_mem());
+            X509_print(dbio, x509);  // x509 -> dbio
+            read_bio(&dbs, dbio);    // dbio -> dbs
+            BIO_free(dbio);
+            trace_debug_event(trace_category_internal, trace_event_internal, &dbs);
+        }
+#endif
 
         crypto_key_object key(pkey, x509, desc);
         cryptokey->add(key);

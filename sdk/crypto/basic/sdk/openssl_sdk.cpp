@@ -222,5 +222,28 @@ void openssl_thread_end(void) {
 #endif
 }
 
+return_t read_bio(stream_t *stream, BIO *bio) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == stream || nullptr == bio) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        binary_t buf;
+        buf.resize(64);
+        int len = 0;
+        while (1) {
+            len = BIO_read(bio, &buf[0], buf.size());
+            if (0 >= len) {
+                break;
+            }
+            stream->write(&buf[0], len);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

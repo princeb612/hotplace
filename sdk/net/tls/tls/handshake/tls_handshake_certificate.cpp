@@ -201,13 +201,14 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
             if (0 == idx) {
                 keychain.load_der(&servercert, &cert[0], cert.size(), desc);
+            } else {
+#if defined DEBUG
+                if (istraceable(trace_category_net, loglevel_debug)) {
+                    crypto_key temp;
+                    keychain.load_der(&temp, &cert[0], cert.size(), desc);
+                }
+#endif
             }
-            // #if defined DEBUG
-            // else {
-            //     crypto_key temp;
-            //     keychain.load_der(&temp, &cert[0], cert.size(), desc);
-            // }
-            // #endif
 
             if (is_tls13 && (false == cert_extensions.empty())) {
                 tls_extensions extensions;

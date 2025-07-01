@@ -41,16 +41,16 @@ cd module
   - [x] RFC 7541
 - [x] httpaltsvc
 - [x] httpauth
-- [ ] httpserver1
-  - [ ] integration
+- [x] httpserver1
+  - [x] integration
     - [x] network_server
     - [x] libssl
-    - [ ] trial
-- [ ] httpserver2
-  - [ ] integration
+    - [x] trial
+- [x] httpserver2
+  - [x] integration
     - [x] network_server
     - [x] libssl
-    - [ ] trial
+    - [x] trial
 - [x] httptest
 - [x] ieee754
 - [x] ipaddr
@@ -92,9 +92,9 @@ cd module
 - [x] tcpserver1
 - [x] tcpserver2
 - [x] thread
-- [ ] tls
+- [x] tls
   - [x] RFC 8448
-  - [ ] see [README.md](tls/README.md)
+  - [README.md](tls/README.md)
 - [x] tlsserver
   - [x] integration
     - [x] network_server

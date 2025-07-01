@@ -165,7 +165,9 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
              *           s     INTEGER  }
              */
 
-            ret = sign->verify(pkey, tosign.data(), tosign.size(), signature, sign_flag_format_der);
+            auto msgdata = tosign.data();
+            auto msgsize = tosign.size();
+            ret = sign->verify(pkey, msgdata, msgsize, signature, sign_flag_format_der);
 
             sign->release();
         } else {

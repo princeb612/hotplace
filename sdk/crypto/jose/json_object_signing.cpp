@@ -10,6 +10,7 @@
  */
 
 #include <sdk/crypto/basic/crypto_advisor.hpp>
+#include <sdk/crypto/basic/crypto_sign.hpp>
 #include <sdk/crypto/basic/openssl_hash.hpp>
 #include <sdk/crypto/basic/openssl_sdk.hpp>
 #include <sdk/crypto/basic/openssl_sign.hpp>
@@ -212,9 +213,6 @@ return_t json_object_signing::verify(jose_context_t* handle, const std::string& 
     return ret;
 }
 
-typedef return_t (openssl_sign::*sign_function_t)(const EVP_PKEY* pkey, hash_algorithm_t sig, const binary_t& input, binary_t& output, uint32 flags);
-typedef return_t (openssl_sign::*verify_function_t)(const EVP_PKEY* pkey, hash_algorithm_t sig, const binary_t& input, const binary_t& output, uint32 flags);
-
 return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     std::string kid;
@@ -233,60 +231,6 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t&
             __leave2;
         }
 
-        typedef struct _SIGN_TABLE {
-            int group;
-            sign_function_t signer;
-        } SIGN_TABLE;
-
-        SIGN_TABLE sign_table[] = {
-            // RFC 7515 A.1.  Example JWS Using HMAC SHA-256
-            // RFC 7520 4.4.  HMAC-SHA2 Integrity Protection
-            {
-                jws_group_t::jws_group_hmac,
-                &openssl_sign::sign_hash,
-            },
-            // RFC 7515 A.2.  Example JWS Using RSASSA-PKCS1-v1_5 SHA-256
-            // RFC 7520 4.1.  RSA v1.5 Signature
-            {
-                jws_group_t::jws_group_rsassa_pkcs15,
-                &openssl_sign::sign_rsassa_pkcs15,
-            },
-            // RFC 7515 A.3.  Example JWS Using ECDSA P-256 SHA-256
-            // RFC 7515 A.4.  Example JWS Using ECDSA P-521 SHA-512
-            // RFC 7520 4.3.  ECDSA Signature
-            {
-                jws_group_t::jws_group_ecdsa,
-                &openssl_sign::sign_ecdsa,
-            },
-            // RFC 7520 4.2.  RSA-PSS Signature
-            {
-                jws_group_t::jws_group_rsassa_pss,
-                &openssl_sign::sign_rsassa_pss,
-            },
-            // RFC 8037 A.4.  Ed25519 Signing
-            // RFC 8037 A.5.  Ed25519 Validation
-            {
-                jws_group_t::jws_group_eddsa,
-                &openssl_sign::sign_eddsa,
-            },
-        };
-
-        sign_function_t signer = nullptr;
-        const hint_signature_t* hint = advisor->hintof_jose_signature(sig);
-        if (nullptr == hint) {
-            ret = errorcode_t::bad_request;
-            __leave2;
-        }
-        int group = hint->group;
-
-        const SIGN_TABLE* item = std::find_if(std::begin(sign_table), std::end(sign_table), [group](const SIGN_TABLE& item) { return item.group == group; });
-        if (std::end(sign_table) != item) {
-            signer = item->signer;
-        } else {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
         const EVP_PKEY* pkey = nullptr;
         pkey = key->select(kid, sig, crypto_use_t::use_sig);
         if (nullptr == pkey) {
@@ -299,11 +243,33 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t&
             __leave2;
         }
 
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        hash_algorithm_t alg = advisor->get_algorithm(sig);
-        openssl_sign signprocessor;
+        // RFC 7515 A.1.  Example JWS Using HMAC SHA-256
+        // RFC 7520 4.4.  HMAC-SHA2 Integrity Protection
+        // jws_group_t::jws_group_hmac,
 
-        ret = (signprocessor.*signer)(pkey, alg, input, output, 0);
+        // RFC 7515 A.2.  Example JWS Using RSASSA-PKCS1-v1_5 SHA-256
+        // RFC 7520 4.1.  RSA v1.5 Signature
+        // jws_group_t::jws_group_rsassa_pkcs15,
+
+        // RFC 7515 A.3.  Example JWS Using ECDSA P-256 SHA-256
+        // RFC 7515 A.4.  Example JWS Using ECDSA P-521 SHA-512
+        // RFC 7520 4.3.  ECDSA Signature
+        // jws_group_t::jws_group_ecdsa,
+
+        // RFC 7520 4.2.  RSA-PSS Signature
+        // jws_group_t::jws_group_rsassa_pss,
+
+        // RFC 8037 A.4.  Ed25519 Signing
+        // RFC 8037 A.5.  Ed25519 Validation
+        // jws_group_t::jws_group_eddsa,
+
+        crypto_sign_builder builder;
+        auto sign = builder.set_scheme(sig).build();
+        if (sign) {
+            ret = sign->sign(pkey, input, output);
+            sign->release();
+        }
+
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -330,60 +296,6 @@ return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t s
             __leave2;
         }
 
-        typedef struct _SIGN_TABLE {
-            int group;
-            verify_function_t verifier;
-        } SIGN_TABLE;
-
-        SIGN_TABLE sign_table[] = {
-            // RFC 7515 A.1.  Example JWS Using HMAC SHA-256
-            // RFC 7520 4.4.  HMAC-SHA2 Integrity Protection
-            {
-                jws_group_t::jws_group_hmac,
-                &openssl_sign::verify_hash,
-            },
-            // RFC 7515 A.2.  Example JWS Using RSASSA-PKCS1-v1_5 SHA-256
-            // RFC 7520 4.1.  RSA v1.5 Signature
-            {
-                jws_group_t::jws_group_rsassa_pkcs15,
-                &openssl_sign::verify_digest,
-            },
-            // RFC 7515 A.3.  Example JWS Using ECDSA P-256 SHA-256
-            // RFC 7515 A.4.  Example JWS Using ECDSA P-521 SHA-512
-            // RFC 7520 4.3.  ECDSA Signature
-            {
-                jws_group_t::jws_group_ecdsa,
-                &openssl_sign::verify_ecdsa,
-            },
-            // RFC 7520 4.2.  RSA-PSS Signature
-            {
-                jws_group_t::jws_group_rsassa_pss,
-                &openssl_sign::verify_rsassa_pss,
-            },
-            // RFC 8037 A.4.  Ed25519 Signing
-            // RFC 8037 A.5.  Ed25519 Validation
-            {
-                jws_group_t::jws_group_eddsa,
-                &openssl_sign::verify_eddsa,
-            },
-        };
-
-        verify_function_t verifier = nullptr;
-        const hint_signature_t* hint = advisor->hintof_jose_signature(sig);
-        if (nullptr == hint) {
-            ret = errorcode_t::bad_request;
-            __leave2;
-        }
-        int group = hint->group;
-
-        const SIGN_TABLE* item = std::find_if(std::begin(sign_table), std::end(sign_table), [group](const SIGN_TABLE& item) { return item.group == group; });
-        if (std::end(sign_table) != item) {
-            verifier = item->verifier;
-        } else {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
         const EVP_PKEY* pkey = nullptr;
         pkey = key->find(kid, sig, crypto_use_t::use_sig);
         if (nullptr == pkey) {
@@ -396,11 +308,33 @@ return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t s
             __leave2;
         }
 
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        hash_algorithm_t alg = advisor->get_algorithm(sig);
-        openssl_sign signprocessor;
+        // RFC 7515 A.1.  Example JWS Using HMAC SHA-256
+        // RFC 7520 4.4.  HMAC-SHA2 Integrity Protection
+        // jws_group_t::jws_group_hmac,
 
-        ret = (signprocessor.*verifier)(pkey, alg, input, output, 0);
+        // RFC 7515 A.2.  Example JWS Using RSASSA-PKCS1-v1_5 SHA-256
+        // RFC 7520 4.1.  RSA v1.5 Signature
+        // jws_group_t::jws_group_rsassa_pkcs15,
+
+        // RFC 7515 A.3.  Example JWS Using ECDSA P-256 SHA-256
+        // RFC 7515 A.4.  Example JWS Using ECDSA P-521 SHA-512
+        // RFC 7520 4.3.  ECDSA Signature
+        // jws_group_t::jws_group_ecdsa,
+
+        // RFC 7520 4.2.  RSA-PSS Signature
+        // jws_group_t::jws_group_rsassa_pss,
+
+        // RFC 8037 A.4.  Ed25519 Signing
+        // RFC 8037 A.5.  Ed25519 Validation
+        // jws_group_t::jws_group_eddsa,
+
+        crypto_sign_builder builder;
+        auto sign = builder.set_scheme(sig).build();
+        if (sign) {
+            ret = sign->verify(pkey, input, output);
+            sign->release();
+        }
+
         if (errorcode_t::success == ret) {
             result = true;
         }

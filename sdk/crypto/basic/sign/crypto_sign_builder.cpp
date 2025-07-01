@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/crypto_sign.hpp>
 
 namespace hotplace {
@@ -18,6 +19,12 @@ crypto_sign_builder::crypto_sign_builder() : _scheme(crypt_sig_dgst), _hashalg(0
 crypto_sign* crypto_sign_builder::build() {
     crypto_sign* obj = nullptr;
     switch (get_scheme()) {
+        case crypt_sig_dgst: {
+            obj = new crypto_sign_digest(get_digest());
+        } break;
+        case crypt_sig_hmac: {
+            obj = new crypto_sign_hmac(get_digest());
+        } break;
         case crypt_sig_rsassa_pkcs15: {
             obj = new crypto_sign_rsa_pkcs1(get_digest());
         } break;
@@ -105,6 +112,17 @@ hash_algorithm_t crypto_sign_builder::get_digest() { return (hash_algorithm_t)_h
 
 crypto_sign_builder& crypto_sign_builder::set_digest(hash_algorithm_t hashalg) {
     _hashalg = hashalg;
+    return *this;
+}
+
+crypto_sign_builder& crypto_sign_builder::set_scheme(jws_t type) {
+    // jws_t jws_hs256, ...
+    // crypt_sig_t sig_hs256
+    auto advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_jose_signature(type);
+    if (hint) {
+        set_scheme(hint->sty).set_digest(hint->alg);
+    }
     return *this;
 }
 

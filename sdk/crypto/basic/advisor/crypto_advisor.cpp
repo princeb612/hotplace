@@ -166,13 +166,13 @@ return_t crypto_advisor::build() {
     }
     for (i = 0; i < sizeof_hint_signatures; i++) {
         const hint_signature_t* item = hint_signatures + i;
-        _crypt_sig_map.insert(std::make_pair(item->sig_type, item));
+        _crypt_sig_map.insert(std::make_pair(item->sig, item));
         if (item->jws_name) {
             _sig_byname_map.insert(std::make_pair(item->jws_name, item));
         }
         if (item->jws_type) {
             _jose_sig_map.insert(std::make_pair(item->jws_type, item));
-            _sig2jws_map.insert(std::make_pair(item->sig_type, item->jws_type));
+            _sig2jws_map.insert(std::make_pair(item->sig, item->jws_type));
         }
 
         set_feature(item->jws_name, advisor_feature_jws);

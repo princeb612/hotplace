@@ -160,8 +160,9 @@ return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg
         binary_t bin_s;
         if (sign_flag_format_der & flags) {
             crypto_advisor* advisor = crypto_advisor::get_instance();
-            auto unitsize = advisor->unitsizeof_ecdsa(hashalg);
-            ret = der2rs(signature, unitsize, bin_r, bin_s);
+            auto hint = advisor->hintof_digest(hashalg);
+            uint16 dlen = sizeof_digest(hint);
+            ret = der2rs(signature, dlen, bin_r, bin_s);
         } else {
             ret = sig2rs(signature, bin_r, bin_s);
         }

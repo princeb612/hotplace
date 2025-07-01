@@ -101,7 +101,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto hstype = get_type();
             dbs.printf("\e[1;36m");
-            dbs.println("# read %p handshake type 0x%02x(%i) (%s)", session, hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+            dbs.println("# read handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
             dbs.printf("\e[0m");
             trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
         }

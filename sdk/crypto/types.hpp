@@ -23,6 +23,12 @@ namespace hotplace {
 using namespace io;
 namespace crypto {
 
+#define CRYPTO_SCHEME_CATEGORY_CBCHMAC 0x01000000
+#define CRYPTO_SCHEME_CATEGORY_TLS 0x02000000
+#define CRYPTO_SCHEME_HINT_CCM8 0x00010000
+#define CRYPTO_SCHEME16(c, m) ((c << 8) | (m & 0xff))
+#define CRYPTO_SCHEME32(d, c, m) ((d & 0xffff0000) | (c << 8) | (m & 0xff))
+
 ///////////////////////////////////////////////////////////////////////////
 // crypt
 ///////////////////////////////////////////////////////////////////////////
@@ -140,7 +146,7 @@ enum crypt_enc_t {
 ///////////////////////////////////////////////////////////////////////////
 // digest
 ///////////////////////////////////////////////////////////////////////////
-enum hash_algorithm_t {
+enum hash_algorithm_t : uint8 {
     hash_alg_unknown = 0,
 
     md4 = 1,
@@ -176,48 +182,48 @@ enum hash_algorithm_t {
 // sign
 ///////////////////////////////////////////////////////////////////////////
 enum crypt_sig_type_t : uint8 {
-    crypt_sig_unknown = 255,
-    crypt_sig_dgst = 0,           //
-    crypt_sig_hmac = 1,           // HMAC (kty_oct)
-    crypt_sig_rsassa_pkcs15 = 2,  // PKCS#1 Ver1.5 (kty_rsa)
-    crypt_sig_ecdsa = 3,          // Elliptic Curve Digital Signature Algorithm (ECDSA)
-    crypt_sig_rsassa_pss = 4,     // PKCS#1 RSASSA-PSS (kty_rsa, kty_rsapss)
-    crypt_sig_eddsa = 5,          // Edwards-Curve Digital Signature Algorithms (EdDSAs)
-    crypt_sig_dsa = 6,            // DSA
-    crypt_sig_rsassa_x931 = 7,    // FIPS186-3, X9.31
+    crypt_sig_unknown = 0,
+    crypt_sig_dgst = 1,           //
+    crypt_sig_hmac = 2,           // HMAC (kty_oct)
+    crypt_sig_rsassa_pkcs15 = 3,  // PKCS#1 Ver1.5 (kty_rsa)
+    crypt_sig_ecdsa = 4,          // Elliptic Curve Digital Signature Algorithm (ECDSA)
+    crypt_sig_rsassa_pss = 5,     // PKCS#1 RSASSA-PSS (kty_rsa, kty_rsapss)
+    crypt_sig_eddsa = 6,          // Edwards-Curve Digital Signature Algorithms (EdDSAs)
+    crypt_sig_dsa = 7,            // DSA
+    crypt_sig_rsassa_x931 = 8,    // FIPS186-3, X9.31
 };
 
 enum crypt_sig_t : uint16 {
     sig_unknown = 0,
 
-    sig_hs256 = 1,
-    sig_hs384 = 2,
-    sig_hs512 = 3,
+    sig_hs256 = CRYPTO_SCHEME16(crypt_sig_hmac, sha2_256),
+    sig_hs384 = CRYPTO_SCHEME16(crypt_sig_hmac, sha2_384),
+    sig_hs512 = CRYPTO_SCHEME16(crypt_sig_hmac, sha2_512),
 
-    sig_rs256 = 4,
-    sig_rs384 = 5,
-    sig_rs512 = 6,
-    sig_rs1 = 7,
+    sig_rs256 = CRYPTO_SCHEME16(crypt_sig_rsassa_pkcs15, sha2_256),
+    sig_rs384 = CRYPTO_SCHEME16(crypt_sig_rsassa_pkcs15, sha2_384),
+    sig_rs512 = CRYPTO_SCHEME16(crypt_sig_rsassa_pkcs15, sha2_512),
+    sig_rs1 = CRYPTO_SCHEME16(crypt_sig_rsassa_pkcs15, sha1),
 
-    sig_es256 = 9,
-    sig_es384 = 10,
-    sig_es512 = 11,
+    sig_es256 = CRYPTO_SCHEME16(crypt_sig_ecdsa, sha2_256),
+    sig_es384 = CRYPTO_SCHEME16(crypt_sig_ecdsa, sha2_384),
+    sig_es512 = CRYPTO_SCHEME16(crypt_sig_ecdsa, sha2_512),
 
-    sig_ps256 = 12,
-    sig_ps384 = 13,
-    sig_ps512 = 14,
+    sig_ps256 = CRYPTO_SCHEME16(crypt_sig_rsassa_pss, sha2_256),
+    sig_ps384 = CRYPTO_SCHEME16(crypt_sig_rsassa_pss, sha2_384),
+    sig_ps512 = CRYPTO_SCHEME16(crypt_sig_rsassa_pss, sha2_512),
 
-    sig_eddsa = 15,
+    sig_eddsa = CRYPTO_SCHEME16(crypt_sig_eddsa, 0),
 
-    sig_sha1 = 16,
-    sig_sha224 = 23,
-    sig_sha256 = 17,
-    sig_sha384 = 18,
-    sig_sha512 = 19,
-    sig_shake128 = 20,
-    sig_shake256 = 21,
+    sig_sha1 = CRYPTO_SCHEME16(0, sha1),
+    sig_sha224 = CRYPTO_SCHEME16(0, sha2_224),
+    sig_sha256 = CRYPTO_SCHEME16(0, sha2_256),
+    sig_sha384 = CRYPTO_SCHEME16(0, sha2_384),
+    sig_sha512 = CRYPTO_SCHEME16(0, sha2_512),
+    sig_shake128 = CRYPTO_SCHEME16(0, shake128),
+    sig_shake256 = CRYPTO_SCHEME16(0, shake256),
 
-    sig_es256k = 22,
+    sig_es256k = CRYPTO_SCHEME16(crypt_sig_ecdsa, sha2_256),  // ES256K, NID_secp256k1
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -496,13 +502,13 @@ enum jwe_t {
     jwe_a256gcm = 6,        // A256GCM
 };
 
-enum jws_group_t {
-    jws_group_unknown = 0,
-    jws_group_hmac = 1,           // HS256, HS384, HS512
-    jws_group_rsassa_pkcs15 = 2,  // RS256, RS384, RS512
-    jws_group_ecdsa = 3,          // ES256, ES384, ES512
-    jws_group_rsassa_pss = 4,     // PS256, PS384, PS512
-    jws_group_eddsa = 5,          // EdDSA
+enum jws_group_t : uint8 {
+    jws_group_unknown = crypt_sig_unknown,
+    jws_group_hmac = crypt_sig_hmac,                    // HS256, HS384, HS512
+    jws_group_rsassa_pkcs15 = crypt_sig_rsassa_pkcs15,  // RS256, RS384, RS512
+    jws_group_ecdsa = crypt_sig_ecdsa,                  // ES256, ES384, ES512
+    jws_group_rsassa_pss = crypt_sig_rsassa_pss,        // PS256, PS384, PS512
+    jws_group_eddsa = crypt_sig_eddsa,                  // EdDSA
 };
 
 /**
@@ -510,21 +516,21 @@ enum jws_group_t {
  * RFC 7515 JSON Web Signature (JWS)
  * RFC 8037 CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures in JSON Object Signing and Encryption (JOSE)
  */
-enum jws_t {
-    jws_unknown = 0,
-    jws_hs256 = 1,
-    jws_hs384 = 2,
-    jws_hs512 = 3,
-    jws_rs256 = 4,
-    jws_rs384 = 5,
-    jws_rs512 = 6,
-    jws_es256 = 7,
-    jws_es384 = 8,
-    jws_es512 = 9,
-    jws_ps256 = 10,
-    jws_ps384 = 11,
-    jws_ps512 = 12,
-    jws_eddsa = 13,
+enum jws_t : uint16 {
+    jws_unknown = sig_unknown,
+    jws_hs256 = sig_hs256,
+    jws_hs384 = sig_hs384,
+    jws_hs512 = sig_hs512,
+    jws_rs256 = sig_rs256,
+    jws_rs384 = sig_rs384,
+    jws_rs512 = sig_rs512,
+    jws_es256 = sig_es256,
+    jws_es384 = sig_es384,
+    jws_es512 = sig_es512,
+    jws_ps256 = sig_ps256,
+    jws_ps384 = sig_ps384,
+    jws_ps512 = sig_ps512,
+    jws_eddsa = sig_eddsa,
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -919,12 +925,6 @@ enum cose_hint_flag_t {
  *    \ \--- hint
  *     \---- category
  */
-#define CRYPTO_SCHEME_CATEGORY_CBCHMAC 0x01000000
-#define CRYPTO_SCHEME_CATEGORY_TLS 0x02000000
-#define CRYPTO_SCHEME_HINT_CCM8 0x00010000
-#define CRYPTO_SCHEME16(c, m) ((c << 8) | (m & 0xff))
-#define CRYPTO_SCHEME32(d, c, m) ((d & 0xffff0000) | (c << 8) | (m & 0xff))
-
 enum crypto_scheme_t : uint32 {
     crypto_scheme_unknown = 0,
 
@@ -1129,9 +1129,10 @@ typedef struct _otp_context_t otp_context_t;
 // sign
 ///////////////////////////////////////////////////////////////////////////
 typedef struct _hint_signature_t {
-    crypt_sig_t sig_type;  // ex. sig_eddsa
+    crypt_sig_t sig;       // ex. sig_eddsa
     jws_t jws_type;        // ex. jws_eddsa
     jws_group_t group;     // ex. jws_group_eddsa
+    crypt_sig_type_t sty;  // ex. crypt_sig_eddsa
     crypto_kty_t kty;      // ex. kty_okp
     const char* jws_name;  // ex. "EdDSA"
     hash_algorithm_t alg;  // ex. hash_alg_unknown
