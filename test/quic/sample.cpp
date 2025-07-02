@@ -318,6 +318,7 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, char* param) -> void { o.trace_level = 2; }).optional()
                 << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.keylog = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-n", "encode number", [](OPTION& o, char* param) -> void { o.set(mode_encnum, param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-e", "encode base16", [](OPTION& o, char* param) -> void { o.set(mode_encode, param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-b", "decode base16", [](OPTION& o, char* param) -> void { o.set(mode_decode, param); }).optional().preced()
@@ -342,6 +343,11 @@ int main(int argc, char** argv) {
         set_trace_debug(lambda_tracedebug);
         set_trace_option(trace_bt | trace_except | trace_debug);
         set_trace_level(option.trace_level);
+    }
+    if (option.keylog) {
+        auto lambda = [&](const char* line) -> void { _logger->writeln(line); };
+        auto sslkeylog = sslkeylog_exporter::get_instance();
+        sslkeylog->set(lambda);
     }
 
     _logger->setcolor(bold, magenta);

@@ -24,6 +24,7 @@ typedef struct _OPTION {
     int time;
     int mode;
     int flags;
+    int keylog;
     std::string content;
 
     _OPTION() : verbose(0), debug(0), trace_level(0), log(0), time(0), mode(0), flags(0) {

@@ -79,13 +79,13 @@ void test_hash_hmac_sign() {
         openssl_sign sign;
         binary_t signature;
         auto pkey = key.any();
-        ret = sign.sign_hash(pkey, hash_algorithm_t::sha2_256, bin_in, signature);
+        ret = sign.sign_hmac(pkey, hash_algorithm_t::sha2_256, bin_in, signature);
         if (option.verbose) {
             _logger->hdump("Sign", signature);
         }
         _test_case.test(ret, __FUNCTION__, "sign");
 
-        ret = sign.verify_hash(pkey, hash_algorithm_t::sha2_256, bin_in, signature);
+        ret = sign.verify_hmac(pkey, hash_algorithm_t::sha2_256, bin_in, signature);
         _test_case.test(ret, __FUNCTION__, "verify");
     }
 

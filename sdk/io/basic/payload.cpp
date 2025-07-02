@@ -132,7 +132,15 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
                 }
             } else {
                 space = item->get_space();
-                if (0 == space) {
+                if (space || (payload_member_reserve_is_set & item->get_flags())) {
+                    if (try_read) {
+                        lambda_readitem(item, base, size, offset, &size_item);
+                        offset += size_item;
+                        set_once_read.insert(item);
+                    } else {
+                        offset += space;
+                    }
+                } else {
                     auto ref = item->get_reference_of();
                     if (ref) {
                         space = ref->get_reference_value();
@@ -142,14 +150,6 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
                         set_once_read.insert(item);
                     } else {
                         list_size_unknown.push_back(item);
-                    }
-                } else {
-                    if (try_read) {
-                        lambda_readitem(item, base, size, offset, &size_item);
-                        offset += size_item;
-                        set_once_read.insert(item);
-                    } else {
-                        offset += space;
                     }
                 }
             }

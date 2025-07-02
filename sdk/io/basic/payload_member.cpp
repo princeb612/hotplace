@@ -14,13 +14,14 @@
 namespace hotplace {
 namespace io {
 
-payload_member::payload_member(uint8 value, const char* name, const char* group) : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+payload_member::payload_member(uint8 value, const char* name, const char* group)
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
     get_variant().set_uint8(value);
 }
 
 payload_member::payload_member(uint8 value, uint16 repeat, const char* name, const char* group)
-    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(repeat) {
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(repeat), _flags(0) {
     set_name(name).set_group(group);
     binary_t bin;
     uint16 temp = repeat;
@@ -31,63 +32,63 @@ payload_member::payload_member(uint8 value, uint16 repeat, const char* name, con
 }
 
 payload_member::payload_member(uint16 value, bool bigendian, const char* name, const char* group)
-    : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
     get_variant().set_uint16(value);
 }
 
 payload_member::payload_member(const uint24_t& value, const char* name, const char* group)
-    : _bigendian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
     get_variant().set_uint24(value);
 }
 
 payload_member::payload_member(uint32 value, bool bigendian, const char* name, const char* group)
-    : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
     get_variant().set_uint32(value);
 }
 
 payload_member::payload_member(const uint48_t& value, const char* name, const char* group)
-    : _bigendian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(true), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
     get_variant().set_uint48(value);
 }
 
 payload_member::payload_member(uint64 value, bool bigendian, const char* name, const char* group)
-    : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
     get_variant().set_uint64(value);
 }
 
 #if defined __SIZEOF_INT128__
 payload_member::payload_member(uint128 value, bool bigendian, const char* name, const char* group)
-    : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
     get_variant().set_uint128(value);
 }
 #endif
 
 payload_member::payload_member(const binary_t& value, const char* name, const char* group)
-    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
     get_variant().set_binary_new(value);
 }
 
 payload_member::payload_member(const std::string& value, const char* name, const char* group)
-    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
     get_variant().set_str_new(value);
 }
 
 payload_member::payload_member(const stream_t* value, const char* name, const char* group)
-    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0) {
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
     get_variant().set_bstr_new(value);
 }
 
 payload_member::payload_member(payload_encoded* value, const char* name, const char* group)
-    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(value), _reserve(0) {
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(value), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
 }
 
@@ -130,7 +131,7 @@ size_t payload_member::get_space() {
     size_t space = 0;
     if (encoded()) {
         space = get_payload_encoded()->lsize();
-    } else if (_reserve) {
+    } else if (payload_member_reserve_is_set & get_flags()) {
         space = _reserve;
     } else if (variant_flag_t::flag_int == get_variant().flag()) {
         space = get_variant().size();
@@ -144,7 +145,7 @@ size_t payload_member::get_capacity() {
     size_t space = 0;
     if (encoded()) {
         space = get_payload_encoded()->lsize();
-    } else if (_reserve) {
+    } else if (payload_member_reserve_is_set & get_flags()) {
         space = _reserve;
     } else if (_ref) {
         space = t_to_int<size_t>(_ref->get_variant()) * _refmulti;
@@ -158,7 +159,7 @@ size_t payload_member::get_reference_value() {
     size_t size = 0;
     if (encoded()) {
         size = get_payload_encoded()->value();
-    } else if (_reserve) {
+    } else if (payload_member_reserve_is_set & get_flags()) {
         size = _reserve;
     } else if (_ref) {
         size = t_to_int<size_t>(_ref->get_variant()) * _refmulti;
@@ -286,7 +287,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
         } else {
             size_t size = 0;
             payload_member* ref = get_reference_of();
-            if (_reserve) {
+            if (payload_member_reserve_is_set & get_flags()) {
                 size = _reserve;
             } else if (ref) {
                 auto encoded = ref->get_payload_encoded();
@@ -369,10 +370,13 @@ payload_member& payload_member::read(const byte_t* ptr, size_t size_ptr, size_t 
 
 payload_member& payload_member::reserve(uint16 size) {
     _reserve = size;
+    _flags |= payload_member_reserve_is_set;
     return *this;
 }
 
 payload_encoded* payload_member::get_payload_encoded() { return _vl; }
+
+uint8 payload_member::get_flags() { return _flags; }
 
 }  // namespace io
 }  // namespace hotplace

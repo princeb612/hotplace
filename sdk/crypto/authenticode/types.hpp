@@ -34,7 +34,6 @@ enum authenticode_verify_t {
     verify_ok = 0,
     verify_unknown = 1,
     verify_fail = 2,
-    verify_hash = 3,  // hash mismatch
 };
 
 struct authenticode_context_t;

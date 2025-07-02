@@ -68,6 +68,7 @@
 #### digest
 
 | algorithm    | bits | dlen |
+| --           | --   | --   |
 | md5          |  128 |   16 |
 | sha1         |  160 |   20 |
 | sha2_224     |  224 |   28 |

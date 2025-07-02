@@ -26,6 +26,14 @@
 namespace hotplace {
 namespace io {
 
+enum payload_member_flag_t : uint8 {
+    /**
+     * determine following case
+     *   pl.reserve("member", 0);
+     */
+    payload_member_reserve_is_set = 1,
+};
+
 /**
  * @brief   payload
  * @sample
@@ -125,6 +133,8 @@ class payload_member {
 
     payload_encoded* get_payload_encoded();
 
+    uint8 get_flags();
+
    protected:
     return_t doread(const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read);
     return_t doread_encoded(const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read);
@@ -139,6 +149,7 @@ class payload_member {
     uint8 _refmulti;
     payload_encoded* _vl;
     uint16 _reserve;
+    uint8 _flags;
 };
 
 /**
@@ -313,8 +324,8 @@ class payload {
      *              // \ \_ groupB
      *              // \___ groupA
      *              auto val = pl->t_value_of<uint8>(item);
-     *              pl->set_group_condition("groupA", (val & 0x80));
-     *              pl->set_group_condition("groupB", (val & 0x40));
+     *              pl->set_group("groupA", (val & 0x80));
+     *              pl->set_group("groupB", (val & 0x40));
      *          });
      *          pl.read(stream, size, pos);
      */

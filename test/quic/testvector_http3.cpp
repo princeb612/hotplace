@@ -975,6 +975,7 @@ const testvector_http3_t pcap_http3[] = {
         //         Frame Type: STREAM (0x0000000000000008)
         //         Stream ID: 3
         //         Stream Data: 00041d0180010000068001000007406408013301c0000002704300eeb363d586c0000000b862e78100
+        // short header, DCID omitted
         "4c f2 63 73 39 4a 31 5a dc c7 07 55 45 fc 67 15"
         "5d 91 95 03 a0 4b 64 84 d8 9c 4e cc 6b c6 dd cb"
         "bf fd d2 db f3 1e e1 e0 5c 79 18 51 a7 6b 1b 88"

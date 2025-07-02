@@ -64,6 +64,7 @@ class quic_frame {
     t_shared_reference<quic_frame> _shared;
 };
 
+// RFC 9000 19.1.  PADDING Frames
 class quic_frame_padding : public quic_frame {
    public:
     quic_frame_padding(tls_session* session);
@@ -73,6 +74,7 @@ class quic_frame_padding : public quic_frame {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 };
 
+// RFC 9000 19.2.  PING Frames
 class quic_frame_ping : public quic_frame {
    public:
     quic_frame_ping(tls_session* session);
@@ -83,6 +85,7 @@ class quic_frame_ping : public quic_frame {
 };
 
 // RFC 9000 13.2.6.  ACK Frames and Packet Protection
+// RFC 9000 19.3.  ACK Frames
 class quic_frame_ack : public quic_frame {
    public:
     quic_frame_ack(tls_session* session);
@@ -93,6 +96,7 @@ class quic_frame_ack : public quic_frame {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 };
 
+// RFC 9000 19.4.  RESET_STREAM Frames
 class quic_frame_reset_stream : public quic_frame {
    public:
     quic_frame_reset_stream(tls_session* session);
@@ -102,6 +106,7 @@ class quic_frame_reset_stream : public quic_frame {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 };
 
+// RFC 9000 19.5.  STOP_SENDING Frames
 class quic_frame_stop_sending : public quic_frame {
    public:
     quic_frame_stop_sending(tls_session* session);
@@ -111,6 +116,7 @@ class quic_frame_stop_sending : public quic_frame {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 };
 
+// RFC 9000 19.6.  CRYPTO Frames
 class quic_frame_crypto : public quic_frame {
    public:
     quic_frame_crypto(tls_session* session);
@@ -120,6 +126,7 @@ class quic_frame_crypto : public quic_frame {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 };
 
+// RFC 9000 19.7.  NEW_TOKEN Frames
 class quic_frame_new_token : public quic_frame {
    public:
     quic_frame_new_token(tls_session* session);
@@ -128,6 +135,27 @@ class quic_frame_new_token : public quic_frame {
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 };
+
+// RFC 9000 19.8.  STREAM Frames
+class quic_frame_stream : public quic_frame {
+   public:
+    quic_frame_stream(tls_session* session);
+
+   protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+};
+
+// RFC 9000 19.9.  MAX_DATA Frames
+// RFC 9000 19.10. MAX_STREAM_DATA Frames
+// RFC 9000 19.11. MAX_STREAMS Frames
+// RFC 9000 19.12. DATA_BLOCKED Frames
+// RFC 9000 19.13. STREAM_DATA_BLOCKED Frames
+// RFC 9000 19.14. STREAMS_BLOCKED Frames
+// RFC 9000 19.15. NEW_CONNECTION_ID Frames
+// RFC 9000 19.16. RETIRE_CONNECTION_ID Frames
+// RFC 9000 19.17. PATH_CHALLENGE Frames
+// RFC 9000 19.18. PATH_RESPONSE Frames
 
 // RFC 9000 19.19.  CONNECTION_CLOSE Frames
 class quic_frame_connection_close : public quic_frame {

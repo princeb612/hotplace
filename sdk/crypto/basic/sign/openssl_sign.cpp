@@ -51,7 +51,7 @@ return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t sig, const byte_t*
                         ret = sign_digest(pkey, hash_alg, stream, size, signature);
                         break;
                     case crypt_sig_type_t::crypt_sig_hmac:
-                        ret = sign_hash(pkey, hash_alg, stream, size, signature);
+                        ret = sign_hmac(pkey, hash_alg, stream, size, signature);
                         break;
                 }
                 break;
@@ -115,7 +115,7 @@ return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t sig, const byte_
                         ret = verify_digest(pkey, hash_alg, stream, size, signature);
                         break;
                     case crypt_sig_type_t::crypt_sig_hmac:
-                        ret = verify_hash(pkey, hash_alg, stream, size, signature);
+                        ret = verify_hmac(pkey, hash_alg, stream, size, signature);
                         break;
                 }
                 break;

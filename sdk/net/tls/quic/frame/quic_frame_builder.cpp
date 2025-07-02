@@ -72,6 +72,7 @@ quic_frame* quic_frame_builder::build() {
         case quic_frame_type_stream + 6:
         case quic_frame_type_stream + 7: {
             // 19.8.  STREAM Frames
+            __try_new_catch_only(frame, new quic_frame_stream(session));
         } break;
         case quic_frame_type_max_data:
             // Figure 33: MAX_DATA Frame Format
