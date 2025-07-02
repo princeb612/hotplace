@@ -12,6 +12,65 @@
 
 #include "sample.hpp"
 
+/**
+ * #client-initial-packet
+ *   PKN 0
+ *   DCID 0001020304050607
+ *   SCID 635f636964 "c_cid"
+ *   Initial[CRYPTO(CH)]
+ *                                #server-initial-packet
+ *                                  PKN 0
+ *                                  DCID 635f636964 "c_cid"
+ *                                  SCID 735f636964 "s_cid"
+ *                                  Initial[ACK, CRYPTO(SH)]
+ *                                #server-handshake-packet
+ *                                  PKN 0
+ *                                  DCID 635f636964 "c_cid"
+ *                                  SCID 735f636964 "s_cid"
+ *                                  Handshake[CRYPTO(EE, CERT, CV(fragment)]
+ *                                #server-handshake-packet-2
+ *                                  PKN 1
+ *                                  DCID 635f636964 "c_cid"
+ *                                  SCID 735f636964 "s_cid"
+ *                                  Handshake[CRYPTO(CV(fragment), FIN)]
+ * #client-initial-packet-2
+ *   PKN 1
+ *   DCID 735f636964 "s_cid"
+ *   SCID 635f636964 "c_cid"
+ *   Initial[ACK]
+ * #client-handshake-packet
+ *   PKN 0
+ *   DCID 735f636964 "s_cid"
+ *   SCID 635f636964 "c_cid"
+ *   Handshake[ACK]
+ * #client-handshake-packet-2
+ *   PKN 1
+ *   DCID 735f636964 "s_cid"
+ *   SCID 635f636964 "c_cid"
+ *   Handshake[ACK, CRYPTO(FIN)]
+ * #client-application-packet-2
+ *   PKN 0
+ *   DCID 735f636964 "s_cid"
+ *   Application["ping"]
+ *                                #server-handshake-packet-3
+ *                                  PKN 2
+ *                                  DCID 635f636964 "c_cid"
+ *                                  SCID 735f636964 "s_cid"
+ *                                  Handshake[ACK]
+ *                                #server-application-packet
+ *                                  PKN 0
+ *                                  DCID 635f636964 "c_cid"
+ *                                  Application["pong"], ACK, HANDSHAKE_DONE
+ * #client-application-packet-2
+ *   PKN 1
+ *   DCID 735f636964 "s_cid"
+ *   Application[ACK]
+ *                                #server-application-packet-2
+ *                                  PKN 1
+ *                                  DCID 635f636964 "c_cid"
+ *                                  Application[CONNCTION_CLOSE]
+ */
+
 void test_quic_xargs_org() {
     _test_case.begin("https://quic.xargs.org/");
 

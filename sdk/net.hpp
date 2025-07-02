@@ -119,6 +119,7 @@
 /* tls/quic/packet */
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet_builder.hpp>
+#include <sdk/net/tls/quic/packet/quic_packets.hpp>
 
 /* tls/quic/frame */
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>

@@ -23,7 +23,7 @@ namespace crypto {
  *
  *          if (sign_flag_format_der & flags) { ... }
  *              // handle DER
- *           } else {
+ *          } else {
  *              // sign_flag_format_der is not set
  *              // handle R || S
  *          }

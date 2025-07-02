@@ -321,7 +321,8 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-n", "encode number", [](OPTION& o, char* param) -> void { o.set(mode_encnum, param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-e", "encode base16", [](OPTION& o, char* param) -> void { o.set(mode_encode, param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-b", "decode base16", [](OPTION& o, char* param) -> void { o.set(mode_decode, param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-q", "quic.xargs.org only", [](OPTION& o, char* param) -> void { o.quic = 1; }).optional();
+                << t_cmdarg_t<OPTION>("--q", "test quic.xargs.org", [](OPTION& o, char* param) -> void { o.flags |= test_flag_quic; }).optional()
+                << t_cmdarg_t<OPTION>("--pcap", "test pcap", [](OPTION& o, char* param) -> void { o.flags |= test_flag_pcap; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -347,9 +348,11 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
-    test_quic_xargs_org();
+    if ((test_flag_quic & option.flags) || (0 == option.flags)) {
+        test_quic_xargs_org();
+    }
 
-    if (0 == option.quic) {
+    if (0 == option.flags) {
         // RFC 9000
         test_rfc_9000_a1();
         test_rfc_9000_a2();
@@ -369,7 +372,9 @@ int main(int argc, char** argv) {
         test_rfc_9369_a3();
         test_rfc_9369_a4();
         test_rfc_9369_a5();
+    }
 
+    if ((test_flag_pcap & option.flags) || (0 == option.flags)) {
         // http3.pcapng
         test_http3();
     }

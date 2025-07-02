@@ -40,7 +40,7 @@ const testvector_http3_t pcap_http3[] = {
         //         [Padding Length: 878]
         from_client,
         prot_quic,
-        "WIRESHARK#1 QUIC CH, PADDING",
+        "WIRESHARK#1 QUIC CRYPTO[CH], PADDING",
         "c4 00 00 00 01 08 bd 21 df 6a 65 e7 6e 9e 00 00"
         "44 9e bc 72 3e 7a c5 67 fb 41 d7 d1 8c 63 93 2d"
         "ed 1e ec ff 46 95 3d cf 65 f2 37 28 94 d3 23 29"
@@ -152,7 +152,7 @@ const testvector_http3_t pcap_http3[] = {
         //         [Padding Length: 1066]
         from_server,
         prot_quic,
-        "WIRESHARK#3 QUIC ACK, SH, PADDING",
+        "WIRESHARK#3 QUIC ACK, CRYPTO[SH], PADDING",
         "ca 00 00 00 01 00 08 fd 21 df 6a 65 e7 6e 9e 00"
         "44 9e 4d fc 5a cb 03 85 3b f2 1d cd 09 30 b6 49"
         "39 25 7f 26 2c 36 87 fe 2d e0 5c ad 19 f9 85 1e"
@@ -435,7 +435,7 @@ const testvector_http3_t pcap_http3[] = {
         //             Reassembled Handshake Message in frame: 14
         from_server,
         prot_quic,
-        "WIRESHARK#8 QUIC EE, CERT(fragment)",
+        "WIRESHARK#8 QUIC CRYPTO[EE, CERT(fragment)]",
         "ec 00 00 00 01 00 08 fd 21 df 6a 65 e7 6e 9e 44"
         "9f da d0 8a 68 fd 69 54 a5 63 f8 ad 34 58 b5 e5"
         "62 2f 9b e4 00 d2 c8 a8 08 4c fe 0a 98 5c cf 2e"
@@ -538,7 +538,7 @@ const testvector_http3_t pcap_http3[] = {
         //             Reassembled Handshake Message in frame: 14
         from_server,
         prot_quic,
-        "WIRESHARK#9 QUIC CERT(fragment)",
+        "WIRESHARK#9 QUIC CRYPTO[CERT(fragment)]",
         "e0 00 00 00 01 00 08 fd 21 df 6a 65 e7 6e 9e 44"
         "9f 0d ae 55 61 ed 12 ff 4b b6 4d 95 91 a2 61 08"
         "00 36 fa b4 6a 5a cf 3e 25 84 a9 8a f3 75 31 e8"
@@ -699,7 +699,7 @@ const testvector_http3_t pcap_http3[] = {
         //             Reassembled Handshake Message in frame: 14
         from_server,
         prot_quic,
-        "WIRESHARK#12 QUIC CERT(fragment)",
+        "WIRESHARK#12 QUIC CRYPTO[CERT(fragment)]",
         "e5 00 00 00 01 00 08 fd 21 df 6a 65 e7 6e 9e 44"
         "9f 31 04 22 72 ad db fb ad 4c 97 2b 5e 9a a8 40"
         "38 14 8f 23 dd da 2a 9e 17 d8 5c 7b 1f 5b db 99"
@@ -802,7 +802,7 @@ const testvector_http3_t pcap_http3[] = {
         //             Reassembled Handshake Message in frame: 14
         from_server,
         prot_quic,
-        "WIRESHARK#13 QUIC CERT(fragment)",
+        "WIRESHARK#13 QUIC CRYPTO[CERT(fragment)]",
         "ec 00 00 00 01 00 08 fd 21 df 6a 65 e7 6e 9e 44"
         "9f bf 12 99 14 ad 16 e2 72 3e fa 7d 03 2f da 9a"
         "78 af 39 2f 2c 30 53 ab 4a 16 56 10 f4 99 c7 57"
@@ -921,7 +921,7 @@ const testvector_http3_t pcap_http3[] = {
         //                 Handshake Type: Finished (20)
         //                 Length: 48
         //                 Verify Data
-        "WIRESHARK#14 QUIC CERT, CV, FIN",
+        "WIRESHARK#14 QUIC CRYPTO[CERT(fragment), CV, FIN], STREAM",
         "e9 00 00 00 01 00 08 fd 21 df 6a 65 e7 6e 9e 42"
         "c0 21 9f 0f e1 66 ee 02 6c 48 60 7c 3f ba 6e 88"
         "3f d8 03 21 6a d9 fa 34 13 a9 e3 2b e0 35 4f 48"
@@ -967,7 +967,19 @@ const testvector_http3_t pcap_http3[] = {
         "ad 59 8b 77 cb 74 35 a6 b5 18 bd 0c 84 1d 23 6c"
         "4f 24 37 7b a8 07 30 bc 45 39 4e ea 72 8f be 1f"
         "a2 62 53 63 f8 40 5f 24 32 5d c4 d2 6c 4e e0 ac"
-        "06",
+        "06"
+        // QUIC IETF
+        //     [Packet Length: 62]
+        //     QUIC Short Header PKN=7
+        //     STREAM id=3 fin=0 off=0 len=41 dir=Unidirectional origin=Server-initiated
+        //         Frame Type: STREAM (0x0000000000000008)
+        //         Stream ID: 3
+        //         Stream Data: 00041d0180010000068001000007406408013301c0000002704300eeb363d586c0000000b862e78100
+        "4c f2 63 73 39 4a 31 5a dc c7 07 55 45 fc 67 15"
+        "5d 91 95 03 a0 4b 64 84 d8 9c 4e cc 6b c6 dd cb"
+        "bf fd d2 db f3 1e e1 e0 5c 79 18 51 a7 6b 1b 88"
+        "b4 d5 7a 8e 4e 89 5b 10 63 db b2 24 df 57",
+        1,
     },
 };
 const size_t sizeof_pcap_http3 = RTL_NUMBER_OF(pcap_http3);

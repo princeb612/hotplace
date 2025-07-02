@@ -37,8 +37,8 @@ transcript_hash *tls_protection::get_transcript_hash() {
             _transcript_hash = builder.set(hashalg).build();
 
 #if defined DEBUG
-            if (istraceable(trace_category_net, loglevel_debug)) {
-                constexpr char constexpr_transcript_hash[] = "starting transcript_hash";
+            if (istraceable(trace_category_net)) {
+                constexpr char constexpr_transcript_hash[] = "\e[1;33mstarting transcript_hash\e[0m";
                 constexpr char constexpr_cipher_suite[] = "cipher suite";
                 crypto_advisor *advisor = crypto_advisor::get_instance();
                 tls_advisor *tlsadvisor = tls_advisor::get_instance();

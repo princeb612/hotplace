@@ -157,8 +157,13 @@ return_t quic_packet::read_common_header(tls_direction_t dir, const byte_t* stre
             pl.set_reference_value(constexpr_dcid, constexpr_dcid_len);
             pl.set_reference_value(constexpr_scid, constexpr_scid_len);
         } else {
-            const binary_t& context_dcid = protection.get_item(tls_context_quic_dcid);
-            auto size_dcid = context_dcid.size();
+            // short header, dcid_len not specified
+            auto size_dcid = 0;
+            if (from_client == dir) {
+                size_dcid = protection.get_item(tls_context_server_cid).size();
+            } else if (from_server == dir) {
+                size_dcid = protection.get_item(tls_context_client_cid).size();
+            }
             pl.reserve(constexpr_dcid, size_dcid);
         }
         pl.set_group(constexpr_longheader, is_longheader);  // see get_type

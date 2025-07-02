@@ -121,13 +121,22 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             _kv[sec] = prk;
         };
 
+        bool cond_trhash = true;
+        if (tls_hs_client_hello == type) {
+            if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
+                cond_trhash = false;
+            }
+        }
+
         binary_t context_hash;
         // transcript hash
-        auto tshash = get_transcript_hash();
-        if (tshash) {
-            tshash->digest(context_hash);
-            tshash->release();
-            _kv[tls_context_transcript_hash] = context_hash;
+        if (cond_trhash) {
+            auto tshash = get_transcript_hash();
+            if (tshash) {
+                tshash->digest(context_hash);
+                tshash->release();
+                _kv[tls_context_transcript_hash] = context_hash;
+            }
         }
 
         auto flow = get_flow();

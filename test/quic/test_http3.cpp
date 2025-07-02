@@ -33,18 +33,26 @@ void test_http3() {
     return_t ret = errorcode_t::success;
     for (auto i = 0; i < sizeof_pcap_http3; i++) {
         auto item = pcap_http3 + i;
-        binary_t bin_frame = std::move(base16_decode_rfc(item->frame));
         auto prot = item->prot;
+        auto dir = item->dir;
+        binary_t bin_frame = std::move(base16_decode_rfc(item->frame));
+
+        if (item->debug) {
+            int breakpoint_here = 1;
+        }
         if (prot_quic == prot) {
-            uint8 type = 0;
-            ret = quic_read_packet(type, &quicsession, item->dir, bin_frame);
+            // WIRESHARK#14 contains 2 PACKETs
+            quic_packets packets;
+            packets.read(&quicsession, dir, bin_frame);
+            // uint8 type = 0;
+            // ret = quic_read_packet(type, &quicsession, item->dir, bin_frame);
         } else if (prot_tls13 == prot) {
             tls_records records;
-            ret = records.read(&tlssession, item->dir, bin_frame);
+            ret = records.read(&tlssession, dir, bin_frame);
         } else if (prot_http3 == prot) {
             //
         }
 
-        // _test_case.test(ret, __FUNCTION__, "%s", item->desc);
+        _test_case.test(ret, __FUNCTION__, "%s", item->desc);
     }
 }

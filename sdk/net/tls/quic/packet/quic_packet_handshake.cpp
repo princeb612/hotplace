@@ -76,7 +76,7 @@ return_t quic_packet_handshake::read(tls_direction_t dir, const byte_t* stream, 
 
         size_t ppos = pos;
         size_t offset_pnpayload = 0;
-        byte_t ht = stream[0];
+        byte_t ht = stream[pos];
 
         {
             constexpr char constexpr_len[] = "len";
@@ -88,6 +88,11 @@ return_t quic_packet_handshake::read(tls_direction_t dir, const byte_t* stream, 
                << new payload_member(binary_t(), constexpr_payload)               //
                << new payload_member(binary_t(), constexpr_tag);
             pl.reserve(constexpr_tag, tagsize);
+            pl.set_condition(constexpr_len, [&](payload* pl, payload_member* item) -> void {
+                auto len = pl->t_value_of<uint64>(constexpr_len);
+                auto payload_size = len - tagsize;
+                pl->reserve(constexpr_payload, payload_size);
+            });
             pl.read(stream, size, pos);
 
             _length = pl.t_value_of<uint64>(constexpr_len);
@@ -111,7 +116,6 @@ return_t quic_packet_handshake::read(tls_direction_t dir, const byte_t* stream, 
             binary_t bin_plaintext;
             {
                 auto& protection = session->get_tls_protection();
-                protection.set_item(tls_context_quic_dcid, get_dcid());
 
                 size_t pos = 0;
                 ret =

@@ -35,11 +35,6 @@ return_t quic_frames::read(tls_session* session, tls_direction_t dir, const byte
         }
 
         while (pos < size) {
-            if (pos >= size) {
-                ret = errorcode_t::no_more;
-                break;
-            }
-
             uint64 value = 0;
             auto tpos = pos;
             ret = quic_read_vle_int(stream, size, tpos, value);

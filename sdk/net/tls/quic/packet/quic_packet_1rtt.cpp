@@ -48,7 +48,7 @@ return_t quic_packet_1rtt::read(tls_direction_t dir, const byte_t* stream, size_
 
         size_t ppos = pos;
         size_t offset_pnpayload = 0;
-        byte_t ht = stream[0];
+        byte_t ht = stream[pos];
 
         {
             constexpr char constexpr_payload[] = "pn + payload";
@@ -79,7 +79,6 @@ return_t quic_packet_1rtt::read(tls_direction_t dir, const byte_t* stream, size_
             binary_t bin_plaintext;
             {
                 auto& protection = session->get_tls_protection();
-                protection.set_item(tls_context_quic_dcid, get_dcid());
 
                 size_t pos = 0;
                 ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_plaintext, bin_unprotected_header, bin_tag,

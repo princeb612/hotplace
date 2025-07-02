@@ -11,6 +11,11 @@ using namespace hotplace::crypto;
 using namespace hotplace::io;
 using namespace hotplace::net;
 
+enum test_flag_t {
+    test_flag_quic = 1,
+    test_flag_pcap = 2,
+};
+
 typedef struct _OPTION {
     int verbose;
     int debug;
@@ -18,10 +23,10 @@ typedef struct _OPTION {
     int log;
     int time;
     int mode;
-    int quic;
+    int flags;
     std::string content;
 
-    _OPTION() : verbose(0), debug(0), trace_level(0), log(0), time(0), mode(0), quic(0) {
+    _OPTION() : verbose(0), debug(0), trace_level(0), log(0), time(0), mode(0), flags(0) {
         // do nothing
     }
     void set(int m, const char* param) {
@@ -83,6 +88,7 @@ struct testvector_http3_t {
     prot_t prot;
     const char* desc;
     const char* frame;
+    int debug;
 };
 
 extern const testvector_http3_t pcap_http3[];

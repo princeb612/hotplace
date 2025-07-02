@@ -98,46 +98,60 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
             _sizeof_length = pl.get_space(constexpr_len);  // support longer size
         }
 
-        if (from_any != dir) {
+        if (from_any == dir) {
+            __leave2;
+        }
+
+        if (from_client == dir) {
             if (protection.get_item(tls_secret_initial_quic_client_hp).empty()) {
                 protection.set_item(tls_context_quic_dcid, get_dcid());
                 protection.calc(session, tls_hs_client_hello, dir);  // calc initial keys
-            }
-
-            ret = header_unprotect(dir, stream + (ppos + offset_pnpayload + 4), 16, protection_initial, _ht, _pn, _payload);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-
-            // aad
-            write_header(bin_unprotected_header);
-
-            // decrypt
-            binary_t bin_plaintext;
-            {
-                size_t pos = 0;
-                ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_plaintext, bin_unprotected_header, bin_tag, protection_initial);
-                if (errorcode_t::success == ret) {
-                    _payload = std::move(bin_plaintext);
-                } else {
-                    _payload.clear();
+            } else {
+                if (false == get_dcid().empty()) {
+                    protection.set_item(tls_context_server_cid, get_dcid());
                 }
             }
-
-            dump();
-
-            {
-                size_t pos = 0;
-                quic_frames frames;
-                frames.read(session, dir, &_payload[0], _payload.size(), pos);
-                auto lambda_foreach = [&](quic_frame* frame) -> void {
-                    auto type = frame->get_type();
-                    if (quic_frame_type_ack == type) {
-                        session->reset_recordno(dir);
-                    }
-                };
-                frames.for_each(lambda_foreach);
+        } else if (from_server == dir) {
+            if (false == get_dcid().empty()) {
+                if (protection.get_item(tls_context_client_cid).empty()) {
+                    protection.set_item(tls_context_client_cid, get_dcid());
+                }
             }
+        }
+
+        ret = header_unprotect(dir, stream + (ppos + offset_pnpayload + 4), 16, protection_initial, _ht, _pn, _payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // aad
+        write_header(bin_unprotected_header);
+
+        // decrypt
+        binary_t bin_plaintext;
+        {
+            size_t pos = 0;
+            ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_plaintext, bin_unprotected_header, bin_tag, protection_initial);
+            if (errorcode_t::success == ret) {
+                _payload = std::move(bin_plaintext);
+            } else {
+                _payload.clear();
+            }
+        }
+
+        dump();
+
+        {
+            size_t pos = 0;
+            quic_frames frames;
+            frames.read(session, dir, &_payload[0], _payload.size(), pos);
+            auto lambda_foreach = [&](quic_frame* frame) -> void {
+                auto type = frame->get_type();
+                if (quic_frame_type_ack == type) {
+                    session->reset_recordno(dir);
+                }
+            };
+            frames.for_each(lambda_foreach);
         }
     }
     __finally2 {

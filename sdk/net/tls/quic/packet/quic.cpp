@@ -116,12 +116,17 @@ return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir
     __try2 {
         type = 0;
 
+        if (pos > size) {
+            ret = errorcode_t::no_more;
+            __leave2;
+        }
+
         if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        auto msb = stream[0];
+        auto msb = stream[pos];
 
         quic_packet_builder builder;
         auto packet = builder.set_msb(msb).set_session(session).build();

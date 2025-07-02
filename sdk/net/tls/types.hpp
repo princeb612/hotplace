@@ -541,7 +541,6 @@ enum tls_secret_t : uint16 {
     tls_context_session_id = (TLS_SECRET_USERCONTEXT | 0x0d),               //
     tls_context_cookie = (TLS_SECRET_USERCONTEXT | 0x0e),                   //
     tls_context_nonce_explicit = (TLS_SECRET_USERCONTEXT | 0x0f),           //
-    tls_context_quic_dcid = (TLS_SECRET_USERCONTEXT | 0x11),                //
     tls_context_client_verifydata = (TLS_SECRET_USERCONTEXT | 0x12),        //
     tls_context_server_verifydata = (TLS_SECRET_USERCONTEXT | 0x13),        //
     tls_context_fragment = (TLS_SECRET_USERCONTEXT | 0x1b),                 // DTLS, QUIC
@@ -550,6 +549,9 @@ enum tls_secret_t : uint16 {
     tls_context_resumption_finished_key = (TLS_SECRET_USERCONTEXT | 0x22),  // CH 0-RTT
     tls_context_resumption_finished = (TLS_SECRET_USERCONTEXT | 0x23),      // CH 0-RTT
     tls_context_resumption_binder_hash = (TLS_SECRET_USERCONTEXT | 0x24),   // CH 0-RTT
+    tls_context_quic_dcid = (TLS_SECRET_USERCONTEXT | 0x31),                //
+    tls_context_client_cid = (TLS_SECRET_USERCONTEXT | 0x32),               //
+    tls_context_server_cid = (TLS_SECRET_USERCONTEXT | 0x33),               //
 };
 
 enum tls_direction_t {
