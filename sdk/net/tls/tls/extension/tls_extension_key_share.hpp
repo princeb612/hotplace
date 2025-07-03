@@ -27,7 +27,7 @@ class tls_extension_key_share : public tls_extension {
     virtual void clear();
 
    protected:
-    tls_extension_key_share(tls_session* session);
+    tls_extension_key_share(tls_handshake* handshake);
     virtual std::string get_kid();
 
     return_t add(uint16 group, tls_direction_t dir);
@@ -37,7 +37,7 @@ class tls_extension_key_share : public tls_extension {
 
 class tls_extension_client_key_share : public tls_extension_key_share {
    public:
-    tls_extension_client_key_share(tls_session* session);
+    tls_extension_client_key_share(tls_handshake* handshake);
 
     virtual return_t add(uint16 group);
     virtual return_t add(const std::string& group);
@@ -53,7 +53,7 @@ class tls_extension_client_key_share : public tls_extension_key_share {
 
 class tls_extension_server_key_share : public tls_extension_key_share {
    public:
-    tls_extension_server_key_share(tls_session* session);
+    tls_extension_server_key_share(tls_handshake* handshake);
 
     /**
      * RFC 8446 2.  Protocol Overview

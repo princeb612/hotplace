@@ -22,13 +22,13 @@ namespace net {
 constexpr char constexpr_versions[] = "supported versions";
 constexpr char constexpr_version[] = "version";
 
-tls_extension_supported_versions::tls_extension_supported_versions(tls_session* session) : tls_extension(tls_ext_supported_versions, session) {}
+tls_extension_supported_versions::tls_extension_supported_versions(tls_handshake* handshake) : tls_extension(tls_ext_supported_versions, handshake) {}
 
-tls_extension_client_supported_versions::tls_extension_client_supported_versions(tls_session* session) : tls_extension_supported_versions(session) {}
+tls_extension_client_supported_versions::tls_extension_client_supported_versions(tls_handshake* handshake) : tls_extension_supported_versions(handshake) {}
 
 return_t tls_extension_client_supported_versions::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
-    auto session = get_session();
+    auto session = get_handshake()->get_session();
     auto& protection = session->get_tls_protection();
     auto& protection_context = protection.get_protection_context();
     protection_context.clear_supported_versions();
@@ -41,7 +41,7 @@ return_t tls_extension_client_supported_versions::do_postprocess(tls_direction_t
 return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
 
         uint16 count = 0;
@@ -85,7 +85,7 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
 return_t tls_extension_client_supported_versions::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
 
         uint8 cbsize_versions = 0;
@@ -117,12 +117,12 @@ tls_extension_client_supported_versions& tls_extension_client_supported_versions
 
 const std::list<uint16>& tls_extension_client_supported_versions::get_versions() { return _versions; }
 
-tls_extension_server_supported_versions::tls_extension_server_supported_versions(tls_session* session) : tls_extension_supported_versions(session) {}
+tls_extension_server_supported_versions::tls_extension_server_supported_versions(tls_handshake* handshake) : tls_extension_supported_versions(handshake) {}
 
 return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
 
         uint16 version = 0;
 
@@ -159,7 +159,7 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
 return_t tls_extension_server_supported_versions::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
 
         payload pl;
         pl << new payload_member(uint16(get_version()), true, constexpr_version);
@@ -171,7 +171,7 @@ return_t tls_extension_server_supported_versions::do_write_body(tls_direction_t 
 
 uint16 tls_extension_server_supported_versions::get_version() {
     uint16 version = 0;
-    auto session = get_session();
+    auto session = get_handshake()->get_session();
     if (session) {
         auto& protection = session->get_tls_protection();
         version = protection.get_tls_version();
@@ -180,7 +180,7 @@ uint16 tls_extension_server_supported_versions::get_version() {
 }
 
 tls_extension_server_supported_versions& tls_extension_server_supported_versions::set(uint16 code) {
-    auto session = get_session();
+    auto session = get_handshake()->get_session();
     if (session) {
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 

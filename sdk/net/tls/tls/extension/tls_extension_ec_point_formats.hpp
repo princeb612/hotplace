@@ -23,7 +23,7 @@ namespace net {
  */
 class tls_extension_ec_point_formats : public tls_extension {
    public:
-    tls_extension_ec_point_formats(tls_session* session);
+    tls_extension_ec_point_formats(tls_handshake* handshake);
 
     /**
      *  add("x25519") or add(0x001d)

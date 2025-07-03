@@ -130,11 +130,18 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             dbs.println(" > %s %s", constexpr_ticket_nonce, base16_encode(ticket_nonce).c_str());
             dbs.println(" > %s", constexpr_session_ticket);
             dump_memory(session_ticket, &dbs, 16, 3, 0x0, dump_notrunc);
+            dbs.println(" > %s 0x%zx (%zi)", constexpr_ticket_extensions, ticket_extensions.size(), ticket_extensions.size());
+            dump_memory(ticket_extensions, &dbs, 16, 3, 0x0, dump_notrunc);
             dbs.autoindent(0);
 
             trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
         }
 #endif
+
+        if (false == ticket_extensions.empty()) {
+            tls_extensions extensions;
+            extensions.read(this, dir, ticket_extensions);
+        }
     }
     __finally2 {
         // do nothing

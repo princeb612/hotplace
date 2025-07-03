@@ -22,12 +22,12 @@ namespace net {
 constexpr char constexpr_alpn_len[] = "alpn len";
 constexpr char constexpr_protocol[] = "alpn protocol";
 
-tls_extension_alpn::tls_extension_alpn(tls_session* session) : tls_extension(tls_ext_application_layer_protocol_negotiation, session) {}
+tls_extension_alpn::tls_extension_alpn(tls_handshake* handshake) : tls_extension(tls_ext_application_layer_protocol_negotiation, handshake) {}
 
 return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
 
         uint16 alpn_len = 0;
@@ -46,7 +46,7 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
 
         {
             auto tlsadvisor = tls_advisor::get_instance();
-            tlsadvisor->negotiate_alpn(session, &protocols[0], protocols.size());
+            tlsadvisor->negotiate_alpn(get_handshake(), &protocols[0], protocols.size());
         }
 
 #if defined DEBUG

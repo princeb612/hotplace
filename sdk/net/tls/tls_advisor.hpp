@@ -16,6 +16,7 @@
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/types.hpp>
+#include <sdk/net/tls/tls/types.hpp>
 #include <sdk/net/tls/types.hpp>
 #include <set>
 
@@ -247,7 +248,7 @@ class tls_advisor {
      * @remarks multi-thread unsafe
      */
     return_t enable_alpn(const char* prot);
-    return_t negotiate_alpn(tls_session* session, const byte_t* alpn, size_t size);
+    return_t negotiate_alpn(tls_handshake* handshake, const byte_t* alpn, size_t size);
 
    protected:
     tls_advisor();

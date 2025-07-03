@@ -23,12 +23,12 @@ namespace net {
 constexpr char constexpr_renegotiation_info_length[] = "renegotiation_info len";
 constexpr char constexpr_renegotiation_info[] = "renegotiation_info";
 
-tls_extension_renegotiation_info::tls_extension_renegotiation_info(tls_session* session) : tls_extension(tls_ext_renegotiation_info, session) {}
+tls_extension_renegotiation_info::tls_extension_renegotiation_info(tls_handshake* handshake) : tls_extension(tls_ext_renegotiation_info, handshake) {}
 
 return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
 
         payload pl;
@@ -97,7 +97,7 @@ return_t tls_extension_renegotiation_info::do_write_body(tls_direction_t dir, bi
     __try2 {
         binary_t renegotiation_info;
 
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
         auto flow = protection.get_flow();
         if (tls_flow_renegotiation == flow) {

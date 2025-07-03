@@ -112,6 +112,15 @@ void sslkeylog_importer::session_status_changed(tls_session* session, uint32 sta
 #if defined DEBUG
         auto client_random_b16 = base16_encode(client_random);
 #endif
+#if defined DEBUG
+        if (false == secret_map.empty()) {
+            if (istraceable(trace_category_net)) {
+                basic_stream dbs;
+                dbs.println("# import SSLKEYLOGFILE");
+                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            }
+        }
+#endif
         for (const auto& item : secret_map) {
             auto secret = item.first;
             const binary_t& value = item.second;

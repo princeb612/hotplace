@@ -19,8 +19,8 @@ class tls_extensions {
     tls_extensions();
     ~tls_extensions();
 
-    return_t read(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);
-    return_t read(tls_session *session, tls_direction_t dir, const binary_t &bin);
+    return_t read(tls_handshake *handshake, tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);
+    return_t read(tls_handshake *handshake, tls_direction_t dir, const binary_t &bin);
 
     return_t write(tls_direction_t dir, binary_t &bin);
 

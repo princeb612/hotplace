@@ -198,7 +198,9 @@ flowchart LR
 ## TODO
 
 - [ ] HTTP/3
-- [ ] QUIC
+  - [ ] http3.pcapng
+    - [x] pcap
+    - [ ] HTTP/3
 - [x] QPACK
   - [x] encoder
   - [x] static table
@@ -238,6 +240,7 @@ flowchart LR
     - [x] encrypt
     - [x] decrypt
   - [ ] TLS 1.2 chacha20-poly1305
+  - [ ] TLS segment data (http3.pcapng #25)
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)
   - [x] integration - network_server

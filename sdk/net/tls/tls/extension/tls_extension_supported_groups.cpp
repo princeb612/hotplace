@@ -22,12 +22,12 @@ namespace net {
 constexpr char constexpr_curves[] = "curves";
 constexpr char constexpr_curve[] = "curve";
 
-tls_extension_supported_groups::tls_extension_supported_groups(tls_session* session) : tls_extension(tls_ext_supported_groups, session) {}
+tls_extension_supported_groups::tls_extension_supported_groups(tls_handshake* handshake) : tls_extension(tls_ext_supported_groups, handshake) {}
 
 return_t tls_extension_supported_groups::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     auto tlsadvisor = tls_advisor::get_instance();
-    auto session = get_session();
+    auto session = get_handshake()->get_session();
     auto& protection = session->get_tls_protection();
     auto& protection_context = protection.get_protection_context();
 
@@ -44,7 +44,7 @@ return_t tls_extension_supported_groups::do_postprocess(tls_direction_t dir) {
 return_t tls_extension_supported_groups::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
 
         binary_t supported_groups;
@@ -95,7 +95,7 @@ return_t tls_extension_supported_groups::do_write_body(tls_direction_t dir, bina
     return_t ret = errorcode_t::success;
     __try2 {
         auto tlsadvisor = tls_advisor::get_instance();
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
 
         uint16 cbsize_supported_groups = 0;

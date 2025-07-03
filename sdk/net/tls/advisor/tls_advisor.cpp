@@ -726,9 +726,13 @@ return_t tls_advisor::enable_alpn(const char* prot) {
     return ret;
 }
 
-return_t tls_advisor::negotiate_alpn(tls_session* session, const byte_t* alpn, size_t size) {
+return_t tls_advisor::negotiate_alpn(tls_handshake* handshake, const byte_t* alpn, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if (nullptr == handshake) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
         if (_prot.empty()) {
             __leave2;
         }
@@ -750,9 +754,9 @@ return_t tls_advisor::negotiate_alpn(tls_session* session, const byte_t* alpn, s
         auto select = [&](unsigned patid) -> void {
             auto iter = rearranged.lower_bound(patid);
             if (rearranged.end() != iter) {
-                auto ext = new tls_extension_alpn(session);
+                auto ext = new tls_extension_alpn(handshake);
                 ext->set_protocols(_prot);
-                session->schedule_extension(ext);
+                handshake->get_session()->schedule_extension(ext);
                 ext->release();
             }
         };

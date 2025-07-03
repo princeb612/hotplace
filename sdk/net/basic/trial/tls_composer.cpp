@@ -360,7 +360,7 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
             // encrypt_then_mac
             if (tls_12 == _minspec) {
                 if (session->get_keyvalue().get(session_conf_enable_encrypt_then_mac)) {
-                    ch->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
+                    ch->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, ch));
                 }
             }
         }
@@ -369,20 +369,20 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
             // RFC 9325 4.2.1
             // Note that [RFC8422] deprecates all but the uncompressed point format.
             // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-            auto ec_point_formats = new tls_extension_ec_point_formats(session);
+            auto ec_point_formats = new tls_extension_ec_point_formats(ch);
             (*ec_point_formats).add("uncompressed");
             ch->get_extensions().add(ec_point_formats);
         }
         {
             // supported_groups
             // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-            auto supported_groups = new tls_extension_supported_groups(session);
+            auto supported_groups = new tls_extension_supported_groups(ch);
             (*supported_groups).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
             ch->get_extensions().add(supported_groups);
         }
         {
             // signature_algorithms
-            auto signature_algorithms = new tls_extension_signature_algorithms(session);
+            auto signature_algorithms = new tls_extension_signature_algorithms(ch);
             (*signature_algorithms)
                 .add("ecdsa_secp256r1_sha256")
                 .add("ecdsa_secp384r1_sha384")
@@ -405,7 +405,7 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
             // TLS 1.3
             {
                 // supported_versions
-                auto supported_versions = new tls_extension_client_supported_versions(session);
+                auto supported_versions = new tls_extension_client_supported_versions(ch);
                 if (tls_13 == _maxspec) {
                     (*supported_versions).add(is_dtls ? dtls_13 : tls_13);
                 }
@@ -416,13 +416,13 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
             }
             {
                 // psk_key_exchange_modes
-                auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(session);
+                auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(ch);
                 (*psk_key_exchange_modes).add("psk_dhe_ke");
                 ch->get_extensions().add(psk_key_exchange_modes);
             }
             {
                 // key_share
-                auto key_share = new tls_extension_client_key_share(session);
+                auto key_share = new tls_extension_client_key_share(ch);
                 if (tls_flow_hello_retry_request != protection.get_flow()) {
                     (*key_share).add("x25519");
                 }
@@ -432,11 +432,11 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
 
         {
             // session_ticket
-            ch->get_extensions().add(new tls_extension_unknown(tls_ext_session_ticket, session));
+            ch->get_extensions().add(new tls_extension_unknown(tls_ext_session_ticket, ch));
             // renegotiation_info
-            ch->get_extensions().add(new tls_extension_renegotiation_info(session));
+            ch->get_extensions().add(new tls_extension_renegotiation_info(ch));
             // master_secret
-            ch->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, session));
+            ch->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, ch));
         }
 
         {
@@ -487,13 +487,13 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
 
             if (tlsadvisor->is_kindof_tls13(tlsver)) {
                 {
-                    auto supported_versions = new tls_extension_server_supported_versions(session);
+                    auto supported_versions = new tls_extension_server_supported_versions(hs);
                     (*supported_versions).set(tlsver);
                     hs->get_extensions().add(supported_versions);
                 }
 
                 {
-                    auto key_share = new tls_extension_server_key_share(session);
+                    auto key_share = new tls_extension_server_key_share(hs);
                     key_share->clear();
                     key_share->add_keyshare();
                     hs->get_extensions().add(key_share);

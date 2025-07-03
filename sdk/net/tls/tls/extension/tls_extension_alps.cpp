@@ -23,7 +23,7 @@ constexpr char constexpr_alps_len[] = "alps len";
 constexpr char constexpr_alpn_len[] = "alpn len";
 constexpr char constexpr_alpn[] = "alpn";
 
-tls_extension_alps::tls_extension_alps(tls_session* session) : tls_extension(tls_ext_application_layer_protocol_settings, session), _alps_len(0) {}
+tls_extension_alps::tls_extension_alps(tls_handshake* handshake) : tls_extension(tls_ext_application_layer_protocol_settings, handshake), _alps_len(0) {}
 
 return_t tls_extension_alps::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -33,7 +33,8 @@ return_t tls_extension_alps::do_read_body(tls_direction_t dir, const byte_t* str
         binary_t alpn;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_alps_len) << new payload_member(binary_t(), constexpr_alpn);
+            pl << new payload_member(uint16(0), true, constexpr_alps_len)  //
+               << new payload_member(binary_t(), constexpr_alpn);
             pl.set_reference_value(constexpr_alpn, constexpr_alps_len);
             pl.read(stream, endpos_extension(), pos);
 

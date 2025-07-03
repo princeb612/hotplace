@@ -23,7 +23,7 @@ namespace net {
  */
 class tls_extension_sni : public tls_extension {
    public:
-    tls_extension_sni(tls_session* session);
+    tls_extension_sni(tls_handshake* handshake);
 
     uint8 get_nametype();
     binary& get_hostname();

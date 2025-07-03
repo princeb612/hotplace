@@ -277,6 +277,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         }
 
         if (size - pos < len) {
+            // fragment
             ret = errorcode_t::bad_data;
             __leave2;
         } else if (len > 16384 + 2048) {

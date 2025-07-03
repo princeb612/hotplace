@@ -27,17 +27,17 @@ namespace net {
  */
 class tls_extension {
    public:
-    tls_extension(tls_session* session);
+    tls_extension(tls_handshake* hs);
     tls_extension(const tls_extension& rhs);
-    tls_extension(uint16 type, tls_session* session);
+    tls_extension(uint16 type, tls_handshake* hs);
     virtual ~tls_extension();
 
-    static tls_extension* read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    static tls_extension* read(tls_handshake* handshake, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& bin);
 
-    tls_session* get_session();
+    tls_handshake* get_handshake();
     void set_type(uint16 type);
     uint16 get_type();
     const range_t& get_header_range();
@@ -61,7 +61,7 @@ class tls_extension {
    private:
     t_shared_reference<tls_extension> _shared;
 
-    tls_session* _session;
+    tls_handshake* _hs;
     uint16 _type;
     range_t _header_range;  // range(header)
     uint16 _bodysize;       // size(payload)

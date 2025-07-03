@@ -18,7 +18,9 @@ namespace net {
 std::string tls_advisor::quic_param_string(uint64 code) {
     std::string value;
     auto iter = _quic_trans_param_codes.find(code);
-    if (_quic_trans_param_codes.end() != iter) {
+    if (_quic_trans_param_codes.end() == iter) {
+        value = "undocumented";
+    } else {
         auto item = iter->second;
         value = item->desc;
     }

@@ -28,28 +28,28 @@ constexpr char constexpr_extension[] = "extension";
 constexpr char constexpr_ext_len[] = "extension len";
 constexpr char constexpr_extension_type[] = "extension type";
 
-tls_extension::tls_extension(tls_session* session) : _session(session), _type(0), _bodysize(0), _size(0) {
-    if (session) {
-        session->addref();
+tls_extension::tls_extension(tls_handshake* hs) : _hs(hs), _type(0), _bodysize(0), _size(0) {
+    if (hs) {
+        hs->addref();
     } else {
         throw exception(errorcode_t::no_session);
     }
     _shared.make_share(this);
 }
 
-tls_extension::tls_extension(const tls_extension& rhs) : _session(rhs._session), _type(rhs._type), _bodysize(rhs._bodysize) {
-    auto session = get_session();
-    if (session) {
-        _session->addref();
+tls_extension::tls_extension(const tls_extension& rhs) : _hs(rhs._hs), _type(rhs._type), _bodysize(rhs._bodysize) {
+    auto hs = get_handshake();
+    if (hs) {
+        hs->addref();
     } else {
         throw exception(errorcode_t::no_session);
     }
     _shared.make_share(this);
 }
 
-tls_extension::tls_extension(uint16 type, tls_session* session) : _session(session), _type(type), _bodysize(0) {
-    if (session) {
-        _session->addref();
+tls_extension::tls_extension(uint16 type, tls_handshake* hs) : _hs(hs), _type(type), _bodysize(0) {
+    if (hs) {
+        hs->addref();
     } else {
         throw exception(errorcode_t::no_session);
     }
@@ -57,17 +57,17 @@ tls_extension::tls_extension(uint16 type, tls_session* session) : _session(sessi
 }
 
 tls_extension::~tls_extension() {
-    auto session = get_session();
-    if (session) {
-        session->release();
+    auto hs = get_handshake();
+    if (hs) {
+        hs->release();
     }
 }
 
-tls_extension* tls_extension::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
+tls_extension* tls_extension::read(tls_handshake* handshake, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     tls_extension* obj = nullptr;
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == stream) {
+        if (nullptr == handshake || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -83,7 +83,7 @@ tls_extension* tls_extension::read(tls_session* session, tls_direction_t dir, co
         {
             auto extension_type = ntoh16(*(uint16*)(stream + pos));
             tls_extension_builder builder;
-            auto extension = builder.set(session).set(dir).set(extension_type).build();
+            auto extension = builder.set(handshake).set(dir).set(extension_type).build();
             if (extension) {
                 ret = extension->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {
@@ -107,8 +107,6 @@ return_t tls_extension::read(tls_direction_t dir, const byte_t* stream, size_t s
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        auto session = get_session();
 
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
@@ -256,7 +254,7 @@ return_t tls_extension::do_write_header(tls_direction_t dir, binary_t& bin, cons
 
 return_t tls_extension::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
 
-tls_session* tls_extension::get_session() { return _session; }
+tls_handshake* tls_extension::get_handshake() { return _hs; }
 
 void tls_extension::set_type(uint16 type) { _type = type; }
 

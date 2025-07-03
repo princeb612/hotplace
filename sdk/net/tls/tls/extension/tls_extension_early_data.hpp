@@ -23,16 +23,11 @@ namespace net {
  */
 class tls_extension_early_data : public tls_extension {
    public:
-    tls_extension_early_data(tls_session* session, tls_hs_type_t hs);
-
-    tls_hs_type_t get_handshake_type();
+    tls_extension_early_data(tls_handshake* handshake);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
-
-   private:
-    tls_hs_type_t _hs;
 };
 
 }  // namespace net

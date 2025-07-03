@@ -212,7 +212,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
             if (is_tls13 && (false == cert_extensions.empty())) {
                 tls_extensions extensions;
-                extensions.read(session, dir, cert_extensions);
+                extensions.read(this, dir, cert_extensions);
             }
 
             idx++;

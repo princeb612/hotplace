@@ -385,7 +385,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             __leave2;
         }
 
-        ret = get_extensions().read(session, dir, stream, pos + extension_len, pos);
+        ret = get_extensions().read(this, dir, stream, pos + extension_len, pos);
         if (errorcode_t::success != ret) {
             __leave2;
         }

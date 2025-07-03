@@ -64,13 +64,13 @@ quic_frame* quic_frame_builder::build() {
             __try_new_catch_only(frame, new quic_frame_new_token(session));
         } break;
         case quic_frame_type_stream:
-        case quic_frame_type_stream + 1:
-        case quic_frame_type_stream + 2:
-        case quic_frame_type_stream + 3:
-        case quic_frame_type_stream + 4:
-        case quic_frame_type_stream + 5:
-        case quic_frame_type_stream + 6:
-        case quic_frame_type_stream + 7: {
+        case quic_frame_type_stream1:
+        case quic_frame_type_stream2:
+        case quic_frame_type_stream3:
+        case quic_frame_type_stream4:
+        case quic_frame_type_stream5:
+        case quic_frame_type_stream6:
+        case quic_frame_type_stream7: {
             // 19.8.  STREAM Frames
             __try_new_catch_only(frame, new quic_frame_stream(session));
         } break;
@@ -94,6 +94,7 @@ quic_frame* quic_frame_builder::build() {
             break;
         case quic_frame_type_new_connection_id:
             // Figure 39: NEW_CONNECTION_ID Frame Format
+            __try_new_catch_only(frame, new quic_frame_new_connection_id(session));
             break;
         case quic_frame_type_retire_connection_id:
             // Figure 40: RETIRE_CONNECTION_ID Frame Format
@@ -105,6 +106,7 @@ quic_frame* quic_frame_builder::build() {
             // Figure 42: PATH_RESPONSE Frame Format
             break;
         case quic_frame_type_connection_close:
+        case quic_frame_type_connection_close1:
             // Figure 43: CONNECTION_CLOSE Frame Format
             __try_new_catch_only(frame, new quic_frame_connection_close(session));
             break;
@@ -114,6 +116,9 @@ quic_frame* quic_frame_builder::build() {
             break;
         default: {
         } break;
+    }
+    if (frame) {
+        frame->set_type(type);  // quic_frame_type_stream + 1, ...
     }
     return frame;
 }

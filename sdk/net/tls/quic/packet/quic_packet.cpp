@@ -420,7 +420,7 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
             uint32 protected_pn = t_binary_to_integer<uint32>(bin_protected_pn);
 
             dbs.println(" > protected   packet number 0x%08x", protected_pn);
-            dbs.println(" > unprotected packet number 0x%08x", pn);
+            dbs.println(" > unprotected packet number 0x%08x (%08i)", pn, pn);
 
             trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
         }

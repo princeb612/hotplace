@@ -49,13 +49,13 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
             // RFC 9325 4.2.1
             // Note that [RFC8422] deprecates all but the uncompressed point format.
             // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-            auto ec_point_formats = new tls_extension_ec_point_formats(session);
+            auto ec_point_formats = new tls_extension_ec_point_formats(handshake);
             (*ec_point_formats).add("uncompressed");
             handshake->get_extensions().add(ec_point_formats);
         }
         {
             // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-            auto supported_groups = new tls_extension_supported_groups(session);
+            auto supported_groups = new tls_extension_supported_groups(handshake);
             (*supported_groups)
                 .add("x25519")
                 .add("secp256r1")
@@ -70,11 +70,11 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
             handshake->get_extensions().add(supported_groups);
         }
         {
-            auto extension = new tls_extension_unknown(tls_ext_encrypt_then_mac, session);
+            auto extension = new tls_extension_unknown(tls_ext_encrypt_then_mac, handshake);
             handshake->get_extensions().add(extension);
         }
         {
-            auto signature_algorithms = new tls_extension_signature_algorithms(session);
+            auto signature_algorithms = new tls_extension_signature_algorithms(handshake);
             (*signature_algorithms)
                 .add("ecdsa_secp256r1_sha256")
                 .add("ecdsa_secp384r1_sha384")
@@ -93,17 +93,17 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
             handshake->get_extensions().add(signature_algorithms);
         }
         {
-            auto supported_versions = new tls_extension_client_supported_versions(session);
+            auto supported_versions = new tls_extension_client_supported_versions(handshake);
             (*supported_versions).add(tls_13);
             handshake->get_extensions().add(supported_versions);
         }
         {
-            auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(session);
+            auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(handshake);
             (*psk_key_exchange_modes).add("psk_dhe_ke");
             handshake->get_extensions().add(psk_key_exchange_modes);
         }
         {
-            auto key_share = new tls_extension_client_key_share(session);
+            auto key_share = new tls_extension_client_key_share(handshake);
             key_share->clear();
             key_share->add(group);
             handshake->get_extensions().add(key_share);
@@ -175,12 +175,12 @@ static return_t do_test_construct_server_hello(tls_session* session, tls_session
         }
 
         {
-            auto supported_versions = new tls_extension_server_supported_versions(session);
+            auto supported_versions = new tls_extension_server_supported_versions(handshake);
             (*supported_versions).set(server_version);
             handshake->get_extensions().add(supported_versions);
         }
         {
-            auto key_share = new tls_extension_server_key_share(session);
+            auto key_share = new tls_extension_server_key_share(handshake);
             key_share->clear();
             key_share->add_keyshare();
             handshake->get_extensions().add(key_share);

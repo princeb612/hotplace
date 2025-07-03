@@ -25,7 +25,7 @@ namespace net {
 const char constexpr_max_early_data_size[] = "max early data size";
 const char constexpr_new_session_ticket[] = "new session ticket";
 
-tls_extension_early_data::tls_extension_early_data(tls_session* session, tls_hs_type_t hs) : tls_extension(tls_ext_early_data, session), _hs(hs) {}
+tls_extension_early_data::tls_extension_early_data(tls_handshake* handshake) : tls_extension(tls_ext_early_data, handshake) {}
 
 return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -39,7 +39,7 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
         //     };
         // } EarlyDataIndication;
 
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
 
         // RFC 8446 Early data is not permitted after a HelloRetryRequest
@@ -48,17 +48,18 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
         }
 
         {
-            bool is_new_session_ticket = (tls_hs_new_session_ticket == get_handshake_type());
             uint32 max_early_data_size = 0;
 
             payload pl;
             pl << new payload_member(uint32(0), true, constexpr_max_early_data_size, constexpr_new_session_ticket);
 
-            pl.set_group(constexpr_new_session_ticket, is_new_session_ticket);
+            auto is_nst = false;
+            is_nst = (tls_hs_new_session_ticket == get_handshake()->get_type());
+            pl.set_group(constexpr_new_session_ticket, is_nst);
 
             pl.read(stream, size, pos);
 
-            if (is_new_session_ticket) {
+            if (is_nst) {
                 max_early_data_size = pl.t_value_of<uint32>(constexpr_max_early_data_size);
 #if defined DEBUG
                 if (istraceable(trace_category_net)) {
@@ -80,8 +81,6 @@ return_t tls_extension_early_data::do_write_body(tls_direction_t dir, binary_t& 
     return_t ret = errorcode_t::success;
     return ret;
 }
-
-tls_hs_type_t tls_extension_early_data::get_handshake_type() { return _hs; }
 
 }  // namespace net
 }  // namespace hotplace

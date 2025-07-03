@@ -65,12 +65,12 @@ return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, c
             if (protection.is_kindof_tls()) {
                 uint16 len = ntoh16(*(uint16*)(stream + pos));
                 pos += 2;
-                ret = get_extensions().read(session, dir, stream, pos + sizeof(uint16) + len, pos);
+                ret = get_extensions().read(this, dir, stream, pos + sizeof(uint16) + len, pos);
             } else if (protection.is_kindof_dtls() || (tls_flow_0rtt == protection.get_flow())) {
                 // DTLS 1.3 ciphertext
                 //
                 pos += 2;  // len
-                ret = get_extensions().read(session, dir, stream, size, pos);
+                ret = get_extensions().read(this, dir, stream, size, pos);
             }
         }
     }

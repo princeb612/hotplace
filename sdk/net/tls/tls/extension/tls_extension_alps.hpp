@@ -22,7 +22,7 @@ namespace net {
  */
 class tls_extension_alps : public tls_extension {
    public:
-    tls_extension_alps(tls_session* session);
+    tls_extension_alps(tls_handshake* handshake);
 
     const binary_t& get_alpn();
 

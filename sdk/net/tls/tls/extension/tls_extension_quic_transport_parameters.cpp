@@ -25,8 +25,8 @@ namespace net {
 constexpr char constexpr_param_id[] = "param id";
 constexpr char constexpr_param[] = "param";
 
-tls_extension_quic_transport_parameters::tls_extension_quic_transport_parameters(tls_session* session)
-    : tls_extension(tls_ext_quic_transport_parameters, session) {}
+tls_extension_quic_transport_parameters::tls_extension_quic_transport_parameters(tls_handshake* handshake)
+    : tls_extension(tls_ext_quic_transport_parameters, handshake) {}
 
 return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -61,12 +61,16 @@ return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t d
                 const binary_t& param = iter->second;
 
                 switch (param_id) {
+                    case quic_param_stateless_reset_token:
                     case quic_param_original_destination_connection_id:
                     case quic_param_initial_source_connection_id:
                     case quic_param_retry_source_connection_id:
+                    case 17:                   // version_information
+                    case 18258:                // google_version
+                    case 2792906686339107538:  // undocumented
+                    {
                         dbs.println("    > %I64i (%s) %s", param_id, tlsadvisor->quic_param_string(param_id).c_str(), base16_encode(param).c_str());
-                        // dump_memory(param, &dbs, 16, 9, 0, dump_notrunc);
-                        break;
+                    } break;
                     default: {
                         size_t epos = 0;
                         uint64 value = 0;

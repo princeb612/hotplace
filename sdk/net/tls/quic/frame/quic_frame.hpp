@@ -153,6 +153,15 @@ class quic_frame_stream : public quic_frame {
 // RFC 9000 19.13. STREAM_DATA_BLOCKED Frames
 // RFC 9000 19.14. STREAMS_BLOCKED Frames
 // RFC 9000 19.15. NEW_CONNECTION_ID Frames
+class quic_frame_new_connection_id : public quic_frame {
+   public:
+    quic_frame_new_connection_id(tls_session* session);
+
+   protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+};
+
 // RFC 9000 19.16. RETIRE_CONNECTION_ID Frames
 // RFC 9000 19.17. PATH_CHALLENGE Frames
 // RFC 9000 19.18. PATH_RESPONSE Frames

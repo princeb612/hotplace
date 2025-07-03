@@ -26,9 +26,14 @@ quic_frame_stream::quic_frame_stream(tls_session* session) : quic_frame(quic_fra
 return_t quic_frame_stream::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        bool offbit = get_type() & 0x04;
-        bool lenbit = get_type() & 0x02;
-        bool finbit = get_type() & 0x01;
+        auto type = get_type();
+        bool offbit = (type & 0x04) ? true : false;
+        bool lenbit = (type & 0x02) ? true : false;
+        bool finbit = (type & 0x01) ? true : false;
+
+        constexpr char constexpr_off_bit[] = "OFF bit (0x04)";
+        constexpr char constexpr_len_bit[] = "LEN bit (0x02)";
+        constexpr char constexpr_fin_bit[] = "FIN bit (0x01)";
 
         constexpr char constexpr_stream_id[] = "stream id";
         constexpr char constexpr_offset[] = "offset";
@@ -38,29 +43,52 @@ return_t quic_frame_stream::do_read_body(tls_direction_t dir, const byte_t* stre
         constexpr char constexpr_stream_data[] = "stream data";
 
         payload pl;
-        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_stream_id)                      //
+        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_stream_id)                       //
            << new payload_member(new quic_encoded(uint64(0)), constexpr_offset, constexpr_group_offset)  //
            << new payload_member(new quic_encoded(uint64(0)), constexpr_length, constexpr_group_length)  //
            << new payload_member(binary_t(), constexpr_stream_data);
-        pl.set_condition(constexpr_stream_id, [&](payload* pl, payload_member* item) -> void {
-            pl->set_group(constexpr_group_offset, offbit);
-            pl->set_group(constexpr_group_length, lenbit);
-        });
+        pl.set_group(constexpr_group_offset, offbit);
+        pl.set_group(constexpr_group_length, lenbit);
+        if (lenbit) {
+            pl.set_reference_value(constexpr_stream_data, constexpr_length);
+        }
         pl.read(stream, size, pos);
 
-        uint64 stream_id = pl.t_value_of<uint64>(constexpr_stream_id);
+        uint64 stream_id = 0;
+        uint64 off = 0;
+        uint64 len = 0;
+        uint64 fin = 0;
         binary_t stream_data;
-        pl.get_binary(constexpr_stream_data, stream_data);
+
+        {
+            stream_id = pl.t_value_of<uint64>(constexpr_stream_id);
+            if (offbit) {
+                off = pl.t_value_of<uint64>(constexpr_offset);
+            }
+            if (lenbit) {
+                len = pl.t_value_of<uint64>(constexpr_length);
+            }
+            pl.get_binary(constexpr_stream_data, stream_data);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("   > %s 0x%I64x", constexpr_stream_id, stream_id);
-            dbs.println("   > %s 0x%zx", constexpr_stream_data, stream_data.size());
-            dump_memory(stream_data, &dbs, 16, 5, 0x0, dump_notrunc);
-            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
-        }
+            if (istraceable(trace_category_net)) {
+                basic_stream dbs;
+                dbs.println("   > %s %i", constexpr_off_bit, offbit);
+                if (offbit) {
+                    dbs.println("     > 0x%I64x (%I64i)", off, off);
+                }
+                dbs.println("   > %s %i", constexpr_len_bit, lenbit);
+                if (lenbit) {
+                    dbs.println("     > 0x%I64x (%I64i)", len, len);
+                }
+                dbs.println("   > %s %i", constexpr_fin_bit, finbit);
+                dbs.println("   > %s 0x%I64x (%I64i)", constexpr_stream_id, stream_id, stream_id);
+                dbs.println("   > %s 0x%zx (%zi)", constexpr_stream_data, stream_data.size(), stream_data.size());
+                dump_memory(stream_data, &dbs, 16, 5, 0x0, dump_notrunc);
+                trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
+            }
 #endif
+        }
     }
     __finally2 {}
     return ret;

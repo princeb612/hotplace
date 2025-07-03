@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace net {
 
-tls_extension_unknown::tls_extension_unknown(uint16 type, tls_session* session) : tls_extension(type, session) {}
+tls_extension_unknown::tls_extension_unknown(uint16 type, tls_handshake* handshake) : tls_extension(type, handshake) {}
 
 return_t tls_extension_unknown::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

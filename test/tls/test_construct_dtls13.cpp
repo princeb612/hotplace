@@ -45,12 +45,12 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
         }
 
         {
-            auto ec_point_formats = new tls_extension_ec_point_formats(session);
+            auto ec_point_formats = new tls_extension_ec_point_formats(handshake);
             (*ec_point_formats).add("uncompressed");
             handshake->get_extensions().add(ec_point_formats);
         }
         {
-            auto supported_groups = new tls_extension_supported_groups(session);
+            auto supported_groups = new tls_extension_supported_groups(handshake);
             (*supported_groups)
                 .add("x25519")
                 .add("secp256r1")
@@ -65,7 +65,7 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
             handshake->get_extensions().add(supported_groups);
         }
         {
-            auto signature_algorithms = new tls_extension_signature_algorithms(session);
+            auto signature_algorithms = new tls_extension_signature_algorithms(handshake);
             (*signature_algorithms)
                 .add("ecdsa_secp256r1_sha256")
                 .add("ecdsa_secp384r1_sha384")
@@ -84,7 +84,7 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
             handshake->get_extensions().add(signature_algorithms);
         }
         {
-            auto supported_versions = new tls_extension_client_supported_versions(session);
+            auto supported_versions = new tls_extension_client_supported_versions(handshake);
             if (tlsadvisor->is_kindof(tls_13, option.version)) {
                 (*supported_versions).add(dtls_13);
             } else {
@@ -94,13 +94,13 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
         }
         if (tlsadvisor->is_kindof(tls_13, option.version)) {
             {
-                auto key_share = new tls_extension_client_key_share(session);
+                auto key_share = new tls_extension_client_key_share(handshake);
                 key_share->clear();
                 key_share->add("x25519");
                 handshake->get_extensions().add(key_share);
             }
             {
-                auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(session);
+                auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(handshake);
                 (*psk_key_exchange_modes).add("psk_dhe_ke");
                 handshake->get_extensions().add(psk_key_exchange_modes);
             }
@@ -160,12 +160,12 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
             handshake->set_cipher_suite(server_cs);
         }
         {
-            auto supported_versions = new tls_extension_server_supported_versions(session);
+            auto supported_versions = new tls_extension_server_supported_versions(handshake);
             (*supported_versions).set(server_version);
             handshake->get_extensions().add(supported_versions);
         }
         {
-            auto key_share = new tls_extension_server_key_share(session);
+            auto key_share = new tls_extension_server_key_share(handshake);
             key_share->clear();
             key_share->add_keyshare();  // the same group as one of the client's shares
             handshake->get_extensions().add(key_share);
@@ -207,7 +207,7 @@ static return_t do_test_construct_encrypted_extensions(tls_session* session, tls
         auto handshake = new tls_handshake_encrypted_extensions(session);
 
         {
-            auto supported_groups = new tls_extension_supported_groups(session);
+            auto supported_groups = new tls_extension_supported_groups(handshake);
             (*supported_groups).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
             handshake->get_extensions().add(supported_groups);
         }

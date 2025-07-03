@@ -22,7 +22,7 @@ namespace net {
  */
 class tls_extension_signature_algorithms : public tls_extension {
    public:
-    tls_extension_signature_algorithms(tls_session* session);
+    tls_extension_signature_algorithms(tls_handshake* handshake);
 
     tls_extension_signature_algorithms& add(uint16 code);
     tls_extension_signature_algorithms& add(const std::string& name);

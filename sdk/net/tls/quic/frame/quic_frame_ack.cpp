@@ -79,7 +79,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
         if (istraceable(trace_category_net)) {
             dbs.println("   > %s %I64i", constexpr_largest_ack, largest_ack);
-            dbs.println("   > %s %I64i (%I64i microseconds)", constexpr_ack_delay, ack_delay, ack_delay << 3);
+            dbs.println("   > %s %I64i", constexpr_ack_delay, ack_delay);
             dbs.println("   > %s %I64i", constexpr_ack_range_count, ack_range_count);
             dbs.println("   > %s %I64i", constexpr_first_ack_range, first_ack_range);
         }
@@ -106,7 +106,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                dbs.println("   > %s", constexpr_ack_ranges);
+                dbs.println("   > %s[%I64i]", constexpr_ack_ranges, i);
                 dbs.println("    > %s %I64i", constexpr_gap, gap);
                 dbs.println("    > %s %I64i", constexpr_range_length, range_length);
             }

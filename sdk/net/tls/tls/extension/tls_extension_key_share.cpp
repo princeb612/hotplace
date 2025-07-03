@@ -28,7 +28,7 @@ constexpr char constexpr_group[] = "group";
 constexpr char constexpr_pubkey_len[] = "public key len";
 constexpr char constexpr_pubkey[] = "public key";
 
-tls_extension_key_share::tls_extension_key_share(tls_session* session) : tls_extension(tls_ext_key_share, session) {}
+tls_extension_key_share::tls_extension_key_share(tls_handshake* handshake) : tls_extension(tls_ext_key_share, handshake) {}
 
 return_t tls_extension_key_share::add(uint16 group) { return errorcode_t::success; }
 
@@ -37,7 +37,7 @@ return_t tls_extension_key_share::add(const std::string& group) { return errorco
 return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
 
         std::string privkid;
         std::string pubkid;
@@ -96,7 +96,7 @@ return_t tls_extension_key_share::add(const std::string& group, tls_direction_t 
 return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubkey, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         if (nullptr == session) {
             ret = errorcode_t::invalid_context;
             __leave2;
@@ -138,14 +138,14 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
 
 std::string tls_extension_key_share::get_kid() { return ""; }
 
-tls_extension_client_key_share::tls_extension_client_key_share(tls_session* session) : tls_extension_key_share(session) {}
+tls_extension_client_key_share::tls_extension_client_key_share(tls_handshake* handshake) : tls_extension_key_share(handshake) {}
 
 return_t tls_extension_client_key_share::add(uint16 group) { return tls_extension_key_share::add(group, from_client); }
 
 return_t tls_extension_client_key_share::add(const std::string& group) { return tls_extension_key_share::add(group, from_client); }
 
 void tls_extension_client_key_share::clear() {
-    auto session = get_session();
+    auto session = get_handshake()->get_session();
     auto& protection = session->get_tls_protection();
     auto& keyshare = protection.get_keyexchange();
 
@@ -198,7 +198,7 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
                 basic_stream dbs;
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                auto session = get_session();
+                auto session = get_handshake()->get_session();
                 auto& protection = session->get_tls_protection();
                 auto& keyexchange = protection.get_keyexchange();
                 auto hint_group = tlsadvisor->hintof_tls_group(group);
@@ -225,7 +225,7 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
     return_t ret = errorcode_t::success;
     __try2 {
         crypto_advisor* advisor = crypto_advisor::get_instance();
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
 
         if (tls_flow_hello_retry_request == protection.get_flow()) {
@@ -281,14 +281,14 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
 
 std::string tls_extension_client_key_share::get_kid() { return KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC; }
 
-tls_extension_server_key_share::tls_extension_server_key_share(tls_session* session) : tls_extension_key_share(session) {}
+tls_extension_server_key_share::tls_extension_server_key_share(tls_handshake* handshake) : tls_extension_key_share(handshake) {}
 
 return_t tls_extension_server_key_share::add(uint16 group) { return tls_extension_key_share::add(group, from_server); }
 
 return_t tls_extension_server_key_share::add(const std::string& group) { return tls_extension_key_share::add(group, from_server); }
 
 void tls_extension_server_key_share::clear() {
-    auto session = get_session();
+    auto session = get_handshake()->get_session();
     auto& protection = session->get_tls_protection();
     auto& keyshare = protection.get_keyexchange();
 
@@ -299,7 +299,7 @@ void tls_extension_server_key_share::clear() {
 return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         uint16 group = 0;
         binary_t pubkey;
         uint16 pubkeylen = 0;
@@ -359,7 +359,7 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
     return_t ret = errorcode_t::success;
     __try2 {
         crypto_advisor* advisor = crypto_advisor::get_instance();
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
         auto& keyexchange = protection.get_keyexchange();
         auto pkey = keyexchange.find(get_kid().c_str());
@@ -438,7 +438,7 @@ std::string tls_extension_server_key_share::get_kid() { return KID_TLS_SERVERHEL
 return_t tls_extension_server_key_share::add_keyshare() {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto advisor = crypto_advisor::get_instance();
         auto tlsadvisor = tls_advisor::get_instance();
         auto& protection = session->get_tls_protection();

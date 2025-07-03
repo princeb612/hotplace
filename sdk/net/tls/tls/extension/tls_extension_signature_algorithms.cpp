@@ -22,11 +22,11 @@ namespace net {
 constexpr char constexpr_algorithms[] = "algorithms";
 constexpr char constexpr_algorithm[] = "algorithm";
 
-tls_extension_signature_algorithms::tls_extension_signature_algorithms(tls_session* session) : tls_extension(tls_ext_signature_algorithms, session) {}
+tls_extension_signature_algorithms::tls_extension_signature_algorithms(tls_handshake* handshake) : tls_extension(tls_ext_signature_algorithms, handshake) {}
 
 return_t tls_extension_signature_algorithms::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
-    auto session = get_session();
+    auto session = get_handshake()->get_session();
     auto& protection = session->get_tls_protection();
     auto& protection_context = protection.get_protection_context();
     protection_context.clear_signature_algorithms();
@@ -39,7 +39,7 @@ return_t tls_extension_signature_algorithms::do_postprocess(tls_direction_t dir)
 return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
 
         // RFC 8446 4.2.3.  Signature Algorithms
@@ -86,7 +86,7 @@ return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, c
 return_t tls_extension_signature_algorithms::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
 
         uint16 cbsize_algorithms = 0;

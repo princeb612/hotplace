@@ -97,6 +97,7 @@ enum quic_frame_t : uint64 {
     quic_frame_type_path_challenge = 0x1a,        // RFC 9000 19.17 __01
     quic_frame_type_path_response = 0x1b,         // RFC 9000 19.18 ___1
     quic_frame_type_connection_close = 0x1c,      // RFC 9000 19.19 ih01 0x1c-0x1d
+    quic_frame_type_connection_close1 = 0x1d,     //
     quic_frame_type_handshake_done = 0x1e,        // RFC 9000 19.20 ___1
 };
 

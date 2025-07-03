@@ -66,7 +66,11 @@ return_t quic_packet_1rtt::read(tls_direction_t dir, const byte_t* stream, size_
             offset_pnpayload = pl.offset_of(constexpr_payload);
         }
 
-        if (from_any != dir) {
+        if (from_any == dir) {
+            __leave2;
+        }
+
+        {
             ret = header_unprotect(dir, stream + (ppos + offset_pnpayload + 4), 16, protection_application, _ht, _pn, _payload);
             if (errorcode_t::success != ret) {
                 __leave2;

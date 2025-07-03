@@ -79,7 +79,7 @@ define_tls_variable(quic_frame_type_code) = {
     {0x1a, "PATH_CHALLENGE"},
     {0x1b, "PATH_RESPONSE"},
     {0x1c, "CONNECTION_CLOSE"},
-    {0x1d, "CONNECTION_CLOSE+1"},
+    {0x1d, "CONNECTION_CLOSE+1 (Application)"},
     {0x1e, "HANDSHAKE_DONE"},
     {0x1f, "IMMEDIATE_ACK"},
     {0x30, "DATAGRAM"},

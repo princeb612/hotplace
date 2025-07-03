@@ -24,7 +24,7 @@
 namespace hotplace {
 namespace net {
 
-quic_frame_handshake_done::quic_frame_handshake_done(tls_session* session) : quic_frame(quic_frame_type_ping, session) {}
+quic_frame_handshake_done::quic_frame_handshake_done(tls_session* session) : quic_frame(quic_frame_type_handshake_done, session) {}
 
 }  // namespace net
 }  // namespace hotplace

@@ -22,7 +22,7 @@ namespace net {
 constexpr char constexpr_algorithm_len[] = "algorithm len";
 constexpr char constexpr_algorithm[] = "algorithm";
 
-tls_extension_compress_certificate::tls_extension_compress_certificate(tls_session* session) : tls_extension(tls_ext_compress_certificate, session) {}
+tls_extension_compress_certificate::tls_extension_compress_certificate(tls_handshake* handshake) : tls_extension(tls_ext_compress_certificate, handshake) {}
 
 return_t tls_extension_compress_certificate::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

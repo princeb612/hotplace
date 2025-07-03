@@ -47,16 +47,16 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
         }
 
         {
-            auto renegotiation_info = new tls_extension_renegotiation_info(session);
+            auto renegotiation_info = new tls_extension_renegotiation_info(handshake);
             handshake->get_extensions().add(renegotiation_info);
         }
         {
-            auto ec_point_formats = new tls_extension_ec_point_formats(session);
+            auto ec_point_formats = new tls_extension_ec_point_formats(handshake);
             (*ec_point_formats).add("uncompressed");
             handshake->get_extensions().add(ec_point_formats);
         }
         {
-            auto supported_groups = new tls_extension_supported_groups(session);
+            auto supported_groups = new tls_extension_supported_groups(handshake);
             (*supported_groups)
                 .add("x25519")
                 .add("secp256r1")
@@ -72,10 +72,10 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
         }
         {
             // encrypt_then_mac
-            handshake->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
+            handshake->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, handshake));
         }
         {
-            auto signature_algorithms = new tls_extension_signature_algorithms(session);
+            auto signature_algorithms = new tls_extension_signature_algorithms(handshake);
             (*signature_algorithms)
                 .add("ecdsa_secp256r1_sha256")
                 .add("ecdsa_secp384r1_sha384")
@@ -94,7 +94,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
             handshake->get_extensions().add(signature_algorithms);
         }
         {
-            auto supported_versions = new tls_extension_client_supported_versions(session);
+            auto supported_versions = new tls_extension_client_supported_versions(handshake);
             (*supported_versions).add(dtls_12);
             handshake->get_extensions().add(supported_versions);
         }
@@ -176,22 +176,22 @@ static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_ses
             }
 
             {
-                auto renegotiation_info = new tls_extension_renegotiation_info(session);
+                auto renegotiation_info = new tls_extension_renegotiation_info(handshake);
                 handshake->get_extensions().add(renegotiation_info);
             }
             {
-                auto ec_point_formats = new tls_extension_ec_point_formats(session);
+                auto ec_point_formats = new tls_extension_ec_point_formats(handshake);
                 (*ec_point_formats).add("uncompressed");
                 handshake->get_extensions().add(ec_point_formats);
             }
             {
-                auto supported_groups = new tls_extension_supported_groups(session);
+                auto supported_groups = new tls_extension_supported_groups(handshake);
                 (*supported_groups).add("x25519");
                 handshake->get_extensions().add(supported_groups);
             }
             {
                 // encrypt_then_mac
-                handshake->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, session));
+                handshake->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, handshake));
             }
 
             record << handshake;
