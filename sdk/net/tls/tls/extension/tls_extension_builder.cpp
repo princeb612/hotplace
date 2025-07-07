@@ -11,7 +11,6 @@
  * Date         Name                Description
  */
 
-// #include <sdk/base/basic/types.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_alps.hpp>

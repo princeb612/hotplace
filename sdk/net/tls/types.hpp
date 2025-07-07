@@ -541,6 +541,7 @@ enum tls_secret_t : uint16 {
     tls_context_session_id = (TLS_SECRET_USERCONTEXT | 0x0d),               //
     tls_context_cookie = (TLS_SECRET_USERCONTEXT | 0x0e),                   //
     tls_context_nonce_explicit = (TLS_SECRET_USERCONTEXT | 0x0f),           //
+    tls_context_alpn = (TLS_SECRET_USERCONTEXT | 0x11),                     //
     tls_context_client_verifydata = (TLS_SECRET_USERCONTEXT | 0x12),        //
     tls_context_server_verifydata = (TLS_SECRET_USERCONTEXT | 0x13),        //
     tls_context_fragment = (TLS_SECRET_USERCONTEXT | 0x1b),                 // DTLS, QUIC
@@ -610,6 +611,7 @@ enum tls_internal_flag_t : uint32 {
 
 class dtls_record_publisher;
 class dtls_record_arrange;
+class quic_stream_tracer;
 class tls_protection;
 class tls_session;
 class tls_advisor;

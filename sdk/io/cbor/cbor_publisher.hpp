@@ -15,11 +15,6 @@
 #define __HOTPLACE_SDK_IO_CBOR_CBORPUBLISHER__
 
 #include <deque>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/stream.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
 #include <sdk/io/cbor/cbor_object.hpp>
 #include <sdk/io/cbor/cbor_reader.hpp>
 

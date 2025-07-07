@@ -19,8 +19,6 @@
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/types.hpp>
-#include <sdk/net/tls/dtls_record_arrange.hpp>
-#include <sdk/net/tls/dtls_record_publisher.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 
 namespace hotplace {
@@ -41,7 +39,7 @@ enum session_alert_flag_t : uint8 {
  *   tls_session session;
  *   session.get_keyvalue().set(key, value);
  */
-enum session_conf_t {
+enum sessioninfo_conf_t : uint8 {
     // uint64, session->get_session_info(dir).get_keyvalue()
     session_dtls_epoch = 1,        // record epoch
     session_dtls_seq = 2,          // record sequence
@@ -50,7 +48,8 @@ enum session_conf_t {
     session_ticket_age_add = 5,    // RFC 8446 4.6.1. uint32
     session_ticket_timestamp = 6,  // RFC 8446 4.2.11. see obfuscated_ticket_age
     session_key_share_group = 7,   // HRR, uint16
-
+};
+enum session_conf_t : uint16 {
     // uint16, session->get_keyvalue()
     // config
     session_conf_enable_encrypt_then_mac = 0x1001,        // TLS 1.2 EtM
@@ -134,7 +133,7 @@ class tls_session {
 
         critical_section _info_lock;
         std::list<alert> _alerts;
-        t_key_value<uint8, uint64> _kv;  // DTLS epoch, sequence
+        t_key_value<uint8, uint64> _kv;  // sessioninfo_conf_t
     };
 
     session_info& get_session_info(tls_direction_t dir);
@@ -181,6 +180,8 @@ class tls_session {
     void get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags = 0);
     bool has_alert(tls_direction_t dir, uint8 level = tls_alertlevel_fatal);
 
+    quic_stream_tracer& get_quic_stream_tracer();
+
    private:
     critical_section _lock;
     t_shared_reference<tls_session> _shared;
@@ -193,15 +194,19 @@ class tls_session {
     uint32 _status;
     semaphore _sem;  // _status related
 
-    t_key_value<uint16, uint16> _kv;
+    t_key_value<uint16, uint16> _kv;  // session_conf_t
 
     std::function<void(tls_session*, uint32)> _change_status_hook;
     void* _hook_param;
 
-    // session_type_dtls
+    /**
+     * session_type_dtls
+     * unnecessary if session_type is TLS
+     */
     critical_section _dtls_lock;
     dtls_record_publisher* _dtls_record_publisher;
     dtls_record_arrange* _dtls_record_arrange;
+    quic_stream_tracer* _quic_stream_tracer;
 };
 
 }  // namespace net

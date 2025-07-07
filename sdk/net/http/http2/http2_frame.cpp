@@ -183,7 +183,7 @@ return_t http2_frame::write(binary_t& frame) {
 void http2_frame::dump(stream_t* s) {
     if (s) {
         http_resource* resource = http_resource::get_instance();
-        std::string frame_name = resource->get_frame_name(get_type());
+        std::string frame_name = resource->get_h2_frame_name(get_type());
 
         s->printf("- http/2 frame type %d %s\n", get_type(), frame_name.c_str());
         s->printf(" > ");
@@ -195,7 +195,7 @@ void http2_frame::dump(stream_t* s) {
         s->printf(" > %s [ ", constexpr_frame_flags);
 
         auto lambda = [&](uint8 flag, const std::string& name) -> void { s->printf("%s ", name.c_str()); };
-        resource->for_each_frame_flag_names(get_type(), get_flags(), lambda);
+        resource->for_each_h2_frame_flag_names(get_type(), get_flags(), lambda);
 
         s->printf("]\n");
     }

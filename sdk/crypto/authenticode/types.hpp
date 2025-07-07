@@ -11,12 +11,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_TYPES__
 #define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_TYPES__
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
 #include <sdk/crypto/basic/types.hpp>
-#include <sdk/crypto/types.hpp>
 #include <sdk/io/stream/types.hpp>
 #include <set>
 #include <string>

@@ -103,7 +103,11 @@ return_t quic_packet_handshake::read(tls_direction_t dir, const byte_t* stream, 
             _sizeof_length = pl.get_space(constexpr_len);  // support longer size
         }
 
-        if (from_any != dir) {
+        if (from_any == dir) {
+            __leave2;
+        }
+
+        {
             ret = header_unprotect(dir, stream + (ppos + offset_pnpayload + 4), 16, protection_handshake, _ht, _pn, _payload);
             if (errorcode_t::success != ret) {
                 __leave2;

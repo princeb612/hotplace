@@ -102,6 +102,24 @@ enum quic_frame_t : uint64 {
 };
 
 /**
+ * RFC 9000 Table 1: Stream ID Types
+ *
+ * ---- --11
+ *        \ \_ initiated, 0 client  1 server
+ *         \__ direction, 0 bidi    1 uni
+ */
+enum quic_stream_id_t : uint8 {
+    quic_stream_client_initiated = 0x00,
+    quic_stream_server_initiated = 0x01,
+    quic_stream_bidirectional = 0x00,
+    quic_stream_unidirectional = 0x02,
+    quic_stream_client_bidi = (quic_stream_client_initiated | quic_stream_bidirectional),
+    quic_stream_server_bidi = (quic_stream_server_initiated | quic_stream_bidirectional),
+    quic_stream_client_uni = (quic_stream_client_initiated | quic_stream_unidirectional),
+    quic_stream_server_uni = (quic_stream_server_initiated | quic_stream_unidirectional),
+};
+
+/**
  * RFC 9000 18.  Transport Parameter Encoding
  */
 enum quic_param_t {
@@ -127,25 +145,25 @@ enum quic_param_t {
 /**
  * RFC 9000 20.  Error Codes
  */
-enum h3_errorcodes_t {
-    h3_no_error = 0x00,
-    h3_internal_error = 0x01,
-    h3_connection_refused = 0x02,
-    h3_flow_control_error = 0x03,
-    h3_stream_limit_error = 0x04,
-    h3_stream_state_error = 0x05,
-    h3_final_size_error = 0x06,
-    h3_frame_encoding_error = 0x07,
-    h3_transport_parameter_error = 0x08,
-    h3_connection_id_limit_error = 0x09,
-    h3_protocol_violation = 0x0a,
-    h3_invalid_token = 0x0b,
-    h3_application_error = 0x0c,
-    h3_crypto_buffer_exceeded = 0x0d,
-    h3_key_update_error = 0x0e,
-    h3_aead_limit_reached = 0x0f,
-    h3_no_viable_path = 0x10,
-    h3_crypto_error = 0x0100,  // 0x0100-0x01ff
+enum quic_errorcodes_t {
+    quic_no_error = 0x00,
+    quic_internal_error = 0x01,
+    quic_connection_refused = 0x02,
+    quic_flow_control_error = 0x03,
+    quic_stream_limit_error = 0x04,
+    quic_stream_state_error = 0x05,
+    quic_final_size_error = 0x06,
+    quic_frame_encoding_error = 0x07,
+    quic_transport_parameter_error = 0x08,
+    quic_connection_id_limit_error = 0x09,
+    quic_protocol_violation = 0x0a,
+    quic_invalid_token = 0x0b,
+    quic_application_error = 0x0c,
+    quic_crypto_buffer_exceeded = 0x0d,
+    quic_key_update_error = 0x0e,
+    quic_aead_limit_reached = 0x0f,
+    quic_no_viable_path = 0x10,
+    quic_crypto_error = 0x0100,  // 0x0100-0x01ff
 };
 
 class quic_frame;

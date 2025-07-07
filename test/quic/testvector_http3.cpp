@@ -9,7 +9,69 @@
 
 #include "sample.hpp"
 
-// http3.pcapng
+/**
+ * http3.pcapng wireshark
+ *
+ * #01 C->S      I PKN 0  CRYPTO[CH], PADDING
+ * #03      S->C I PKN 1  ACK(0, FAR:0), CRYPTO[SH], PADDING           <- ACK I 0
+ * #04 C->S      I PKN 1  ACK(1, FAR:0), PADDING                       -> ACK I 1
+ * #08      S->C H PKN 2  CRYPTO[EE, CERT(fragment)]
+ * #09      S->C H PKN 3  CRYPTO[CERT(fragment)]
+ * #10 C->S      H PKN 0  ACK(2, FAR:0)                                -> ACK H 2
+ * #11 C->S      H PKN 1  ACK(3, FAR:1)                                -> ACK H 2..3
+ * #12      S->C H PKN 4  CRYPTO[CERT(fragment)]
+ * #13      S->C H PKN 5  CRYPTO[CERT(fragment)]
+ * #14      S->C H PKN 6  CRYPTO[CERT(fragment), CV, FIN]
+ * #14      S->C A PKN 7  STREAM(3)
+ * #15 C->S      H PKN 2  ACK(4, FAR:2)                                -> ACK H 2..4
+ * #16 C->S      H PKN 3  ACK(5, FAR:3)                                -> ACK H 2..5
+ * #17 C->S      H PKN 4  ACK(6, FAR:4), CRYPTO[FIN]                   -> ACK H 2..6
+ * #17 C->S      A PKN 0  ACK(7, FAR:0)                                -> ACK A 7
+ * #20 C->S      A PKN 1  STREAM(2)
+ * #21 C->S      A PKN 2  STREAM(10)
+ * #22 C->S      A PKN 3  STREAM(6)
+ * #23 C->S      A PKN 4  STREAM(6)
+ * #24 C->S      A PKN 5  STREAM(0)
+ * #28      S->C A PKN 8  CRYPTO(NST, NST)
+ * #29      S->C A PKN 9  HANDSHAKE_DONE, NEW_TOKEN, NEW_CONNECTION_ID
+ * #30 C->S      A PKN 6  ACK(9, FAR:2)                                -> ACK A 7..9
+ * #31      S->C A PKN 10 ACK(2, FAR:2)                                <- ACK A 0..2
+ * #33      S->C A PKN 11 ACK(4, FAR:4)                                <- ACK A 0..4
+ * #34      S->C A PKN 12 ACK(6, FAR:6), STREAM(7)                     <- ACK A 0..6
+ * #35 C->S      A PKN 7  ACK(12, FAR:5)                               -> ACK A 7..12
+ * #36      S->C A PKN 14 STREAM(7)
+ * #37 C->S      A PKN 8  ACK(14, FAR:0, [0]G:0,R:5)                   -> ACK A 14, [0]13..9 -> ACK A 9..14
+ * #38      S->C A PKN 15 STREAM(11), STREAM(0)
+ * #39      S->C A PKN 16 STREAM(0)
+ * #40      S->C A PKN 17 STREAM(0)
+ * #41      S->C A PKN 18 STREAM(0)
+ * #42      S->C A PKN 21 STREAM(0)
+ * #43      S->C A PKN 19 STREAM(0)
+ * #44      S->C A PKN 22 STREAM(0)
+ * #45      S->C A PKN 20 STREAM(0)
+ * #46 C->S      A PKN 9  ACK(16, FAR:2, [0]G:0,R:5)                   -> ACK A 16..14, [0]13..9 -> ACK A 9..16
+ * #47 C->S      A PKN 10 ACK(18, FAR:4, [0]G:0,R:5)                   -> ACK A 18..14, [0]13..9 -> ACK A 9..18
+ * #48 C->S      A PKN 11 ACK(21, FAR:0, [0]G:1,R:4, [1]G:0,R:5)       -> ACK A 21, [0]19..16, [1]15..11 -> ACK A 11..19, 21
+ * #49 C->S      A PKN 12 ACK(21, FAR:0, [0]G:0,R:5, [1]G:0,R:5)       -> ACK A 21, [0]20..16, [1]15..11 -> ACK A 11..21
+ * #50 C->S      A PKN 13 ACK(22, FAR:8, [0]G:0,R:5)                   -> ACK A 22..14, [0]13..9 -> ACK A 9..22
+ * #51      S->C A PKN 23 STREAM(0)
+ * #52      S->C A PKN 24 STREAM(0)
+ * #53      S->C A PKN 25 STREAM(0)
+ * #54      S->C A PKN 26 STREAM(0)
+ * #55      S->C A PKN 27 STREAM(0)
+ * #56      S->C A PKN 28 STREAM(0)
+ * #57      S->C A PKN 29 STREAM(0)
+ * #58      S->C A PKN 30 STREAM(0)
+ * #59      S->C A PKN 31 STREAM(0)
+ * #60      S->C A PKN 32 STREAM(0)
+ * #61      S->C A PKN 33 PADDING, STREAM(0, FIN)
+ * #62 C->S      A PKN 14 ACK(24, FAR:10, [0]G:0,R:5)                  -> ACK A 24..14, [0]13..9 -> ACK A 9..24
+ * #63 C->S      A PKN 15 ACK(26, FAR:12, [0]G:0,R:5)                  -> ACK A 26..14, [0]13..9 -> ACK A 9..26
+ * #64 C->S      A PKN 16 ACK(28, FAR:14, [0]G:0,R:5)                  -> ACK A 28..14, [0]13..9 -> ACK A 9..28
+ * #65 C->S      A PKN 17 ACK(30, FAR:16, [0]G:0,R:5)                  -> ACK A 30..14, [0]13..9 -> ACK A 9..30
+ * #66 C->S      A PKN 18 ACK(32, FAR:18, [0]G:0,R:5)                  -> ACK A 32..14, [0]13..9 -> ACK A 9..32
+ * #67 C->S      A PKN 19 CONNECTION_CLOSE
+ */
 const testvector_http3_t pcap_http3[] = {
     {
         // QUIC IETF
@@ -975,7 +1037,6 @@ const testvector_http3_t pcap_http3[] = {
         //         Frame Type: STREAM (0x0000000000000008)
         //         Stream ID: 3
         //         Stream Data: ...
-        // short header, DCID omitted
         "4c f2 63 73 39 4a 31 5a dc c7 07 55 45 fc 67 15"
         "5d 91 95 03 a0 4b 64 84 d8 9c 4e cc 6b c6 dd cb"
         "bf fd d2 db f3 1e e1 e0 5c 79 18 51 a7 6b 1b 88"

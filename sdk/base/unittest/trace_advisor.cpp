@@ -69,6 +69,7 @@ void trace_advisor::load() {
                 e.event_map.insert({trace_event_tls_extension, "TLS extension"});
                 e.event_map.insert({trace_event_quic_packet, "QUIC packet"});
                 e.event_map.insert({trace_event_quic_frame, "QUIC frame"});
+                e.event_map.insert({trace_event_http3, "HTTP/3"});
                 _resource_map.insert({trace_category_net, e});
             }
         }

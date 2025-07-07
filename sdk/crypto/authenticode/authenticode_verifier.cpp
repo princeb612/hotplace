@@ -804,11 +804,12 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
         // PKCS7_verify use it's own X509_STORE_CTX
         // X509_STORE_CTX_set_ex_data(store_context, 0, handle);
 
+        X509_STORE_set_flags(store, X509_V_FLAG_CRL_CHECK);
+
         for (auto& pair : crl_map) {
             X509_CRL* crl = pair.second;
             if (crl) {
                 X509_STORE_add_crl(store, crl);
-                X509_STORE_set_flags(store, X509_V_FLAG_CRL_CHECK);
             }
         }
 

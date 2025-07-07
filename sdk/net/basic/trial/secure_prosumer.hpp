@@ -11,7 +11,6 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_SECUREPROSUMER__
 #define __HOTPLACE_SDK_NET_BASIC_TRIAL_SECUREPROSUMER__
 
-#include <sdk/base/basic/types.hpp>
 #include <sdk/base/system/semaphore.hpp>
 #include <sdk/net/basic/trial/types.hpp>
 #include <sdk/net/tls/tls/types.hpp>

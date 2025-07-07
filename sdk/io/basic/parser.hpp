@@ -13,14 +13,10 @@
 #define __HOTPLACE_SDK_IO_BASIC_PARSER__
 
 #include <sdk/base/basic/keyvalue.hpp>
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
 #include <sdk/base/pattern/aho_corasick.hpp>
 #include <sdk/base/pattern/trie.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
+#include <sdk/io/types.hpp>
 
 namespace hotplace {
 namespace io {

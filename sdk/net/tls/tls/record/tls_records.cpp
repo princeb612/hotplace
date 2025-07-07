@@ -7,6 +7,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/net/tls/dtls_record_publisher.hpp>
 #include <sdk/net/tls/tls/record/tls_record_builder.hpp>
 #include <sdk/net/tls/tls/record/tls_records.hpp>
 #include <sdk/net/tls/tls_session.hpp>

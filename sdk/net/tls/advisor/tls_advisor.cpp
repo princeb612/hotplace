@@ -15,7 +15,9 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/crypto_advisor.hpp>
 #include <sdk/crypto/basic/evp_key.hpp>
+#include <sdk/net/tls/quic/types.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -270,6 +272,11 @@ void tls_advisor::load_etc() {
     _secret_names.insert({tls_context_resumption_finished_key, "context_resumption_finished_key"});
     _secret_names.insert({tls_context_resumption_finished, "context_resumption_finished"});
     _secret_names.insert({tls_context_resumption_binder_hash, "context_resumption_binder_hash"});
+
+    _quic_streamid_types.insert({quic_stream_client_bidi, "Client-Initiated, Bidirectional"});
+    _quic_streamid_types.insert({quic_stream_server_bidi, "Server-Initiated, Bidirectional"});
+    _quic_streamid_types.insert({quic_stream_client_uni, "Client-Initiated, Unidirectional"});
+    _quic_streamid_types.insert({quic_stream_server_uni, "Server-Initiated, Unidirectional"});
 }
 
 const tls_cipher_suite_t* tls_advisor::hintof_cipher_suite(uint16 code) {
@@ -474,6 +481,16 @@ std::string tls_advisor::nameof_secret(tls_secret_t secret) {
     std::string value;
     auto iter = _secret_names.find(secret);
     if (_secret_names.end() != iter) {
+        value = iter->second;
+    }
+    return value;
+}
+
+std::string tls_advisor::quic_streamid_type_string(uint64 streamid) {
+    std::string value;
+    uint8 mask = streamid & 0x3;
+    auto iter = _quic_streamid_types.find(mask);
+    if (_quic_streamid_types.end() != iter) {
         value = iter->second;
     }
     return value;

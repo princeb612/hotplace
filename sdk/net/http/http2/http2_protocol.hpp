@@ -11,12 +11,6 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2PROTOCOL__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2PROTOCOL__
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/net/http/types.hpp>
 #include <sdk/net/server/network_protocol.hpp>  // network_protocol
 
 namespace hotplace {

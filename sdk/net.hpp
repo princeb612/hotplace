@@ -91,7 +91,9 @@
 #include <sdk/net/http/http2/http_header_compression.hpp>
 
 /* http/http3 */
+#include <sdk/net/http/http3/http3_frame.hpp>
 #include <sdk/net/http/http3/qpack.hpp>
+#include <sdk/net/http/http3/types.hpp>
 
 /* server */
 #include <sdk/net/server/network_protocol.hpp>
@@ -103,6 +105,7 @@
 /* tls */
 #include <sdk/net/tls/dtls_record_arrange.hpp>
 #include <sdk/net/tls/dtls_record_publisher.hpp>
+#include <sdk/net/tls/quic_stream_tracer.hpp>
 #include <sdk/net/tls/sdk.hpp>
 #include <sdk/net/tls/sslkeylog_exporter.hpp>
 #include <sdk/net/tls/sslkeylog_importer.hpp>

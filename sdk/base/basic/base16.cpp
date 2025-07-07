@@ -13,7 +13,6 @@
 #include <string.h>
 
 #include <sdk/base/basic/base16.hpp>
-#include <sdk/base/basic/types.hpp>
 #include <sdk/base/string/string.hpp>
 
 namespace hotplace {

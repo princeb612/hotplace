@@ -37,6 +37,8 @@ void test_http3() {
         auto dir = item->dir;
         binary_t bin_frame = std::move(base16_decode_rfc(item->frame));
 
+        _logger->colorln(item->desc);
+
         if (item->debug) {
             int breakpoint_here = 1;
         }

@@ -13,6 +13,9 @@
 
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/net/tls/dtls_record_arrange.hpp>
+#include <sdk/net/tls/dtls_record_publisher.hpp>
+#include <sdk/net/tls/quic_stream_tracer.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
@@ -22,12 +25,14 @@
 namespace hotplace {
 namespace net {
 
-tls_session::tls_session() : _type(session_type_tls), _status(0), _hook_param(nullptr), _dtls_record_publisher(nullptr), _dtls_record_arrange(nullptr) {
+tls_session::tls_session()
+    : _type(session_type_tls), _status(0), _hook_param(nullptr), _dtls_record_publisher(nullptr), _dtls_record_arrange(nullptr), _quic_stream_tracer(nullptr) {
     _shared.make_share(this);
     _tls_protection.set_session(this);
 }
 
-tls_session::tls_session(session_type_t type) : _type(type), _status(0), _hook_param(nullptr), _dtls_record_publisher(nullptr), _dtls_record_arrange(nullptr) {
+tls_session::tls_session(session_type_t type)
+    : _type(type), _status(0), _hook_param(nullptr), _dtls_record_publisher(nullptr), _dtls_record_arrange(nullptr), _quic_stream_tracer(nullptr) {
     _shared.make_share(this);
     set_type(type);
 }
@@ -292,6 +297,16 @@ void tls_session::push_alert(tls_direction_t dir, uint8 level, uint8 desc) { get
 void tls_session::get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags) { get_session_info(dir).get_alert(func, flags); }
 
 bool tls_session::has_alert(tls_direction_t dir, uint8 level) { return get_session_info(dir).has_alert(level); }
+
+quic_stream_tracer& tls_session::get_quic_stream_tracer() {
+    if (nullptr == _quic_stream_tracer) {
+        critical_section_guard guard(_dtls_lock);
+        if (nullptr == _quic_stream_tracer) {
+            _quic_stream_tracer = new quic_stream_tracer;
+        }
+    }
+    return *_quic_stream_tracer;
+}
 
 }  // namespace net
 }  // namespace hotplace

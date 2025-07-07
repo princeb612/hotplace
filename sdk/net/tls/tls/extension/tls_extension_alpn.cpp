@@ -12,6 +12,7 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -62,6 +63,10 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
         {
             //
             _protocols = std::move(protocols);
+        }
+
+        if (from_server == dir) {
+            protection.set_item(tls_context_alpn, _protocols);
         }
     }
     __finally2 {

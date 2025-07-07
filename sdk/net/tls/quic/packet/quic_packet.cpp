@@ -135,6 +135,14 @@ return_t quic_packet::read_common_header(tls_direction_t dir, const byte_t* stre
             __leave2;
         }
 
+#if defined DEBUG
+        if (istraceable(trace_category_net)) {
+            basic_stream dbs;
+            dbs.println("# QUIC packet (size %zi)", size);
+            trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+        }
+#endif
+
         auto session = get_session();
         auto& protection = session->get_tls_protection();
 

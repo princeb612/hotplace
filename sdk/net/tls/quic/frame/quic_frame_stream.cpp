@@ -12,11 +12,14 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/http/http3/http3_frame.hpp>
+#include <sdk/net/http/http3/http3_stream.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
+#include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
@@ -26,6 +29,7 @@ quic_frame_stream::quic_frame_stream(tls_session* session) : quic_frame(quic_fra
 return_t quic_frame_stream::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto tlsadvisor = tls_advisor::get_instance();
         auto type = get_type();
         bool offbit = (type & 0x04) ? true : false;
         bool lenbit = (type & 0x02) ? true : false;
@@ -55,39 +59,56 @@ return_t quic_frame_stream::do_read_body(tls_direction_t dir, const byte_t* stre
         pl.read(stream, size, pos);
 
         uint64 stream_id = 0;
-        uint64 off = 0;
-        uint64 len = 0;
         uint64 fin = 0;
+        uint64 len = 0;
+        uint64 off = 0;
         binary_t stream_data;
 
         {
             stream_id = pl.t_value_of<uint64>(constexpr_stream_id);
-            if (offbit) {
-                off = pl.t_value_of<uint64>(constexpr_offset);
-            }
             if (lenbit) {
                 len = pl.t_value_of<uint64>(constexpr_length);
+            }
+            if (offbit) {
+                off = pl.t_value_of<uint64>(constexpr_offset);
             }
             pl.get_binary(constexpr_stream_data, stream_data);
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 basic_stream dbs;
-                dbs.println("   > %s %i", constexpr_off_bit, offbit);
-                if (offbit) {
-                    dbs.println("     > 0x%I64x (%I64i)", off, off);
-                }
+                dbs.println("   > %s %i", constexpr_fin_bit, finbit);
                 dbs.println("   > %s %i", constexpr_len_bit, lenbit);
                 if (lenbit) {
                     dbs.println("     > 0x%I64x (%I64i)", len, len);
                 }
-                dbs.println("   > %s %i", constexpr_fin_bit, finbit);
-                dbs.println("   > %s 0x%I64x (%I64i)", constexpr_stream_id, stream_id, stream_id);
+                dbs.println("   > %s %i", constexpr_off_bit, offbit);
+                if (offbit) {
+                    dbs.println("     > 0x%I64x (%I64i)", off, off);
+                }
+                dbs.println("   > %s 0x%I64x (%I64i) %s", constexpr_stream_id, stream_id, stream_id, tlsadvisor->quic_streamid_type_string(stream_id).c_str());
                 dbs.println("   > %s 0x%zx (%zi)", constexpr_stream_data, stream_data.size(), stream_data.size());
                 dump_memory(stream_data, &dbs, 16, 5, 0x0, dump_notrunc);
                 trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
             }
 #endif
+
+            auto session = get_session();
+            auto& protection = session->get_tls_protection();
+            const binary_t& alpn = protection.get_item(tls_context_alpn);
+
+            auto bin = std::move(stream_data);
+            const byte_t alpn_h3[3] = {0x2, 'h', '3'};  // HTTP/3
+            size_t fpos = 0;
+            if (0 == memcmp(alpn_h3, &alpn[0], 3)) {
+                if (stream_id & quic_stream_unidirectional) {
+                    http3_stream h3stream;
+                    ret = h3stream.read(&bin[0], bin.size(), fpos);
+                } else {
+                    http3_frames frames;
+                    ret = frames.read(&bin[0], bin.size(), fpos);
+                }
+            }
         }
     }
     __finally2 {}

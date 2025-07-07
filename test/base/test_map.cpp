@@ -16,6 +16,7 @@ void test_maphint() {
 
     std::map<int, std::string> source;
     t_maphint<int, std::string> hint(source);
+
     source[1] = "one";
     source[2] = "two";
     source[3] = "three";

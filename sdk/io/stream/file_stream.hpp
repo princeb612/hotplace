@@ -14,10 +14,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
 #include <sdk/io/stream/stream.hpp>
 #if defined __linux__
 #include <sys/file.h>  // flock

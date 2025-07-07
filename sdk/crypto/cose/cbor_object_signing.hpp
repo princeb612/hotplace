@@ -12,11 +12,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTSIGNING__
 #define __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTSIGNING__
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
 #include <sdk/crypto/cose/types.hpp>
+#include <sdk/crypto/types.hpp>
 
 namespace hotplace {
 namespace crypto {

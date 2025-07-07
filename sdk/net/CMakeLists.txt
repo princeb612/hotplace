@@ -39,6 +39,7 @@ file (GLOB FILEGROUP_SDK_SOURCE_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/http/auth/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/http2/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/http3/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/resource/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/server/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/advisor/*.cpp

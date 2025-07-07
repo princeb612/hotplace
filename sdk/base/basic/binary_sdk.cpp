@@ -14,7 +14,6 @@
 #include <ostream>
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/ieee754.hpp>  // binary32_from_fp32, binary64_from_fp64
-#include <sdk/base/basic/types.hpp>
 
 namespace hotplace {
 

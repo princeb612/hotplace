@@ -9,7 +9,6 @@
  */
 
 #include <sdk/base/basic/binary.hpp>
-#include <sdk/base/basic/types.hpp>
 #include <sdk/base/basic/valist.hpp>
 #include <sdk/base/pattern/aho_corasick.hpp>
 #include <sdk/base/stream/basic_stream.hpp>

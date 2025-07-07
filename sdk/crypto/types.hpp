@@ -15,6 +15,7 @@
 #include <map>
 #include <sdk/base/basic/base16.hpp>
 #include <sdk/base/basic/base64.hpp>
+#include <sdk/base/basic/types.hpp>
 #include <sdk/base/basic/variant.hpp>
 #include <sdk/base/system/endian.hpp>
 #include <sdk/io/types.hpp>

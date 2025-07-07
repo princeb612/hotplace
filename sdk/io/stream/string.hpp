@@ -12,10 +12,6 @@
 #define __HOTPLACE_SDK_IO_STREAM_STRING__
 
 #include <ostream>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
 #include <sdk/io/stream/stream.hpp>
 
 namespace hotplace {
