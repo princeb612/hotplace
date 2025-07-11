@@ -31,7 +31,7 @@ namespace hotplace {
 namespace net {
 
 constexpr char constexpr_error_code[] = "error code";
-constexpr char constexpr_frame_type[] = "frame type";
+constexpr char constexpr_frametype[] = "frame type";
 constexpr char constexpr_reason_phase_len[] = "reason phase len";
 constexpr char constexpr_reason_phase[] = "reason phase";
 
@@ -48,16 +48,16 @@ return_t quic_frame_connection_close::do_read_body(tls_direction_t dir, const by
 
         {
             payload pl;
-            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code)                        //
-               << new payload_member(new quic_encoded(uint64(0)), constexpr_frame_type, constexpr_frame_type)  //
+            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code)                      //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_frametype, constexpr_frametype)  //
                << new payload_member(new quic_encoded(binary_t()), constexpr_reason_phase);
             pl.set_reference_value(constexpr_reason_phase, constexpr_reason_phase_len);
-            pl.set_group(constexpr_frame_type, is_0x1c);
+            pl.set_group(constexpr_frametype, is_0x1c);
             pl.read(stream, size, pos);
 
             error_code = pl.t_value_of<uint64>(constexpr_error_code);
             if (is_0x1c) {
-                frame_type = pl.t_value_of<uint64>(constexpr_frame_type);
+                frame_type = pl.t_value_of<uint64>(constexpr_frametype);
             }
             pl.get_binary(constexpr_reason_phase, reason_phase);
         }
@@ -68,7 +68,7 @@ return_t quic_frame_connection_close::do_read_body(tls_direction_t dir, const by
             basic_stream dbs;
             dbs.println("   > %s %I64i %s", constexpr_error_code, error_code, tlsadvisor->quic_error_string(error_code).c_str());
             if (is_0x1c) {
-                dbs.println("   > %s %I64i", constexpr_frame_type, frame_type);
+                dbs.println("   > %s %I64i", constexpr_frametype, frame_type);
             }
             dbs.println("   > %s (%zi)", constexpr_reason_phase, reason_phase.size());
             dump_memory(reason_phase, &dbs, 16, 5, 0x0, dump_notrunc);
