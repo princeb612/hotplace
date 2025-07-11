@@ -60,7 +60,7 @@ return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& p
                << new payload_member(new quic_encoded(uint64(0)), constexpr_length)  //
                << new payload_member(binary_t(), constexpr_payload);
             pl.set_reference_value(constexpr_payload, constexpr_length);
-            pl.read(stream, size, pos);
+            ret = pl.read(stream, size, pos);
 
             type = pl.t_value_of<uint64>(constexpr_type);
             length = pl.t_value_of<uint64>(constexpr_length);
@@ -71,7 +71,7 @@ return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& p
         {
             http_resource* resource = http_resource::get_instance();
             basic_stream dbs;
-            dbs.println("# %s %I64i (%s)", constexpr_type, type, resource->get_h3_frame_name(type).c_str());
+            dbs.println("# %s %I64i (%s) %s", constexpr_type, type, resource->get_h3_frame_name(type).c_str(), (fragmented == ret) ? "fragmented" : "");
             dbs.println(" > %s 0x%I64x (%I64i)", constexpr_length, length, length);
             dump_memory(frame_payload, &dbs, 16, 3, 0, dump_notrunc);
             trace_debug_event(trace_category_net, trace_event_http3, &dbs);

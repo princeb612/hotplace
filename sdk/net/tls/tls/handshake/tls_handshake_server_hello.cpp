@@ -148,6 +148,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
     __try2 {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
         auto& kv = session->get_keyvalue();
         auto session_type = session->get_type();
         auto hspos = offsetof_header();
@@ -172,7 +173,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                 case tls_flow_1rtt: {
                     protection.reset_transcript_hash(session);
 
-                    const binary_t& client_hello = protection.get_item(tls_context_client_hello);
+                    const binary_t& client_hello = secrets.get(tls_context_client_hello);
                     protection.update_transcript_hash(session, &client_hello[0], client_hello.size());  // client_hello
                 } break;
                 case tls_flow_0rtt:
@@ -235,7 +236,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                 protection.reset_transcript_hash(session);
 
                 // client_hello
-                const binary_t& client_hello = protection.get_item(tls_context_client_hello);
+                const binary_t& client_hello = secrets.get(tls_context_client_hello);
                 protection.calc_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);
 
                 // uint8(FE) || uint24(hash.size) || hash
@@ -250,7 +251,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                 // server_hello
                 protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);
 
-                protection.clear_item(tls_context_client_hello);
+                secrets.erase(tls_context_client_hello);
             } else {
                 ret = test;
             }
@@ -282,6 +283,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto session = get_session();
             auto& protection = session->get_tls_protection();
+            auto& secrets = protection.get_secrets();
             auto& kv = session->get_keyvalue();
             uint16 legacy_version = protection.get_lagacy_version();
             uint16 version = 0;
@@ -395,7 +397,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             set_cipher_suite(cipher_suite);
 
             // server_key_update
-            protection.set_item(tls_context_server_hello_random, random);
+            secrets.assign(tls_context_server_hello_random, random);
 
             _version = version;
         }
@@ -412,6 +414,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
     __try2 {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
         auto& kv = session->get_keyvalue();
         auto legacy_version = protection.get_lagacy_version();
         auto cs = get_cipher_suite();
@@ -494,7 +497,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
 
             _random = std::move(random);
 
-            _session_id = protection.get_item(tls_context_session_id);  // avoid routines:tls_process_server_hello:invalid session id
+            _session_id = secrets.get(tls_context_session_id);  // avoid routines:tls_process_server_hello:invalid session id
         }
 
         {
@@ -511,7 +514,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             pl.write(bin);
         }
 
-        protection.set_item(tls_context_server_hello_random, _random);
+        secrets.assign(tls_context_server_hello_random, _random);
 
         binary_append(bin, extensions);
 

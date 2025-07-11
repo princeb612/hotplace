@@ -12,24 +12,26 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
-#include <sdk/net/tls/tls_session.hpp>
+#include <sdk/net/tls/tls_advisor.hpp>
 
 namespace hotplace {
 namespace net {
 
-quic_frame::quic_frame(quic_frame_t type, tls_session* session) : _type(type), _session(session) {
-    if (session) {
-        session->addref();
+quic_frame::quic_frame(quic_frame_t type, quic_packet* packet) : _type(type), _packet(packet) {
+    if (packet) {
+        packet->addref();
+    } else {
+        throw exception(not_specified);
     }
     _shared.make_share(this);
 }
 
 quic_frame::~quic_frame() {
-    auto session = get_session();
-    if (session) {
-        session->release();
+    if (_packet) {
+        _packet->release();
     }
 }
 
@@ -124,7 +126,7 @@ quic_frame_t quic_frame::get_type() { return _type; }
 
 void quic_frame::set_type(uint64 type) { _type = (quic_frame_t)type; }
 
-tls_session* quic_frame::get_session() { return _session; }
+quic_packet* quic_frame::get_packet() { return _packet; }
 
 void quic_frame::addref() { _shared.addref(); }
 

@@ -149,18 +149,18 @@ void print_pair(const container_t& c, stream_type& s, std::function<void(typenam
  *          moi.clear().add(9, 10, 3).add(6, 8, 2).add(1, 3, 0).add(2, 4, 1).add(1, 8, 4);
  *          res = moi.merge(); // {1, 8, 4}, {9, 10, 3}
  */
-template <typename T>
+template <typename T, typename TAGTYPE = char>
 class t_merge_ovl_intervals {
    public:
     struct interval {
-        int s;
-        int e;
-        T t;  // tag
+        T s;
+        T e;
+        TAGTYPE t;  // tag
 
-        interval() : s(0), e(0), t(T()) {}
-        interval(int s, int e) : s(s), e(e), t(T()) {}
-        interval(int s, int e, const T& t) : s(s), e(e), t(t) {}
-        interval(int s, int e, T&& t) : s(s), e(e), t(std::move(t)) {}
+        interval() : s(0), e(0), t(TAGTYPE()) {}
+        interval(T start, T end) : s(start), e(end), t(TAGTYPE()) {}
+        interval(T start, T end, const TAGTYPE& tag) : s(start), e(end), t(tag) {}
+        interval(T start, T end, TAGTYPE&& tag) : s(start), e(end), t(std::move(tag)) {}
         interval(const interval& rhs) : s(rhs.s), e(rhs.e), t(rhs.t) {}
         interval(interval&& rhs) : s(rhs.s), e(rhs.e), t(std::move(rhs.t)) {}
         interval& operator=(const interval& rhs) {
@@ -190,15 +190,15 @@ class t_merge_ovl_intervals {
         _arr.push_back(std::move(t));
         return *this;
     }
-    t_merge_ovl_intervals& add(int start, int end) {
+    t_merge_ovl_intervals& add(T start, T end) {
         _arr.push_back(interval(start, end));
         return *this;
     }
-    t_merge_ovl_intervals& add(int start, int end, const T& t) {
+    t_merge_ovl_intervals& add(T start, T end, const TAGTYPE& t) {
         _arr.push_back(interval(start, end, t));
         return *this;
     }
-    t_merge_ovl_intervals& add(const range_t& range, const T& t) {
+    t_merge_ovl_intervals& add(const range_t& range, const TAGTYPE& t) {
         _arr.push_back(interval(range.begin, range.end, t));
         return *this;
     }
@@ -208,12 +208,33 @@ class t_merge_ovl_intervals {
         return *this;
     }
 
+    t_merge_ovl_intervals& subtract(T start, T end) {
+        t_merge_ovl_intervals<T, TAGTYPE> temp;
+        temp._arr = std::move(_arr);
+        temp.merge();
+        for (auto item : temp._arr) {
+            if (item.e < start) {
+                add(std::move(item));
+            } else if (end < item.s) {
+                add(std::move(item));
+            } else {
+                if ((item.s < start) && (start < item.e)) {
+                    add(item.s, start - 1);
+                }
+                if ((item.s < end) && (end < item.e)) {
+                    add(end + 1, item.e);
+                }
+            }
+        }
+        return *this;
+    }
+
     std::vector<interval> merge() {
-        int index = 0;                                 // stores index of last element in output array (modified _arr[])
+        size_t index = 0;                              // stores index of last element in output array (modified _arr[])
         std::sort(_arr.begin(), _arr.end(), compare);  // sort intervals in increasing order of start time
 
         // traverse all input intervals
-        for (int i = 1; i < _arr.size(); i++) {
+        for (size_t i = 1; i < _arr.size(); i++) {
             // if this is not first interval and overlaps with the previous one
             if (_arr[index].e >= _arr[i].s) {
                 // merge previous and current intervals

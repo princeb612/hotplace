@@ -21,7 +21,7 @@
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/dtls_record_arrange.hpp>
 #include <sdk/net/tls/dtls_record_publisher.hpp>
-#include <sdk/net/tls/quic_stream_tracer.hpp>
+#include <sdk/net/tls/quic_streams.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -399,8 +399,8 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         uint64 record_no = 0;
         record_no = session->get_recordno(dir, true, level);
 
-        auto const &key = get_item(secret_key);
-        auto const &iv = get_item(secret_iv);
+        auto const &key = get_secrets().get(secret_key);
+        auto const &iv = get_secrets().get(secret_iv);
         binary_t nonce;
         encrypt_option_t options[] = {{crypt_ctrl_nsize, hint_cipher->nsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
         binary_t tls12_aad;
@@ -408,7 +408,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         auto alg = typeof_alg(hint_cipher);
         auto mode = typeof_mode(hint_cipher);
         if (is_kindof_tls12()) {
-            const binary_t &nonce_explicit = get_item(tls_context_nonce_explicit);
+            const binary_t &nonce_explicit = get_secrets().get(tls_context_nonce_explicit);
             binary_append(nonce, iv);
             binary_append(nonce, nonce_explicit);
             ret = crypt.encrypt(alg, mode, key, nonce, plaintext, ciphertext, aad, tag, options);
@@ -478,10 +478,10 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
         uint64 record_no = 0;
 
-        const binary_t &enckey = get_item(secret_key);
+        const binary_t &enckey = get_secrets().get(secret_key);
         auto enc_alg = typeof_alg(hint_cipher);
         auto hmac_alg = hint->mac;  // do not promote insecure algorithm
-        const binary_t &mackey = get_item(secret_mac_key);
+        const binary_t &mackey = get_secrets().get(secret_mac_key);
 
         bool etm = session->get_keyvalue().get(session_encrypt_then_mac);
         uint16 flag = etm ? tls_encrypt_then_mac : tls_mac_then_encrypt;
@@ -489,9 +489,9 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         binary_t iv;
         if (etm) {
             if (from_client == dir) {
-                iv = get_item(tls_secret_client_iv);
+                iv = get_secrets().get(tls_secret_client_iv);
             } else if (from_server == dir) {
-                iv = get_item(tls_secret_server_iv);
+                iv = get_secrets().get(tls_secret_server_iv);
             }
         } else {
             auto ivsize = sizeof_iv(hint_cipher);
@@ -705,8 +705,8 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 
         uint64 record_no = session->get_recordno(dir, true, level);
 
-        const binary_t &key = get_item(secret_key);
-        const binary_t &iv = get_item(secret_iv);
+        const binary_t &key = get_secrets().get(secret_key);
+        const binary_t &iv = get_secrets().get(secret_iv);
         binary_t tls12_aad;
         binary_t nonce;
         auto alg = typeof_alg(hint_cipher);
@@ -831,10 +831,10 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
         uint64 record_no = 0;
 
-        const binary_t &enckey = get_item(secret_key);
+        const binary_t &enckey = get_secrets().get(secret_key);
         auto enc_alg = hint_cipher->algorithm;
         auto hmac_alg = hint->mac;  // do not promote insecure algorithm
-        const binary_t &mackey = get_item(secret_mac_key);
+        const binary_t &mackey = get_secrets().get(secret_mac_key);
 
         bool etm = session->get_keyvalue().get(session_encrypt_then_mac);
         uint16 flag = etm ? tls_encrypt_then_mac : tls_mac_then_encrypt;
@@ -868,9 +868,9 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
             ciphertext = stream + pos + bpos;
             ciphersize = size - pos - bpos;
             if (from_client == dir) {
-                iv = get_item(tls_secret_client_iv);
+                iv = get_secrets().get(tls_secret_client_iv);
             } else if (from_server == dir) {
-                iv = get_item(tls_secret_server_iv);
+                iv = get_secrets().get(tls_secret_server_iv);
             }
         } else {
             bpos = content_header_size + ivsize;

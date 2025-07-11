@@ -35,7 +35,7 @@ constexpr char constexpr_frame_type[] = "frame type";
 constexpr char constexpr_reason_phase_len[] = "reason phase len";
 constexpr char constexpr_reason_phase[] = "reason phase";
 
-quic_frame_connection_close::quic_frame_connection_close(tls_session* session) : quic_frame(quic_frame_type_connection_close, session) {}
+quic_frame_connection_close::quic_frame_connection_close(quic_packet* packet) : quic_frame(quic_frame_type_connection_close, packet) {}
 
 return_t quic_frame_connection_close::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

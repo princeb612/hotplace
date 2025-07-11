@@ -22,13 +22,15 @@ void test_rfc_9369_prepare_a1() {
 
     {
         auto& protection = server_session.get_tls_protection();
-        protection.set_item(tls_context_quic_dcid, bin_dcid);
+        auto& secrets = protection.get_secrets();
+        secrets.assign(tls_context_quic_dcid, bin_dcid);
         protection.calc(&server_session, tls_hs_client_hello, from_client);
     }
 
     {
         auto& protection = client_session.get_tls_protection();
-        protection.set_item(tls_context_quic_dcid, bin_dcid);
+        auto& secrets = protection.get_secrets();
+        secrets.assign(tls_context_quic_dcid, bin_dcid);
         protection.calc(&server_session, tls_hs_client_hello, from_client);
     }
 
@@ -42,6 +44,7 @@ void test_rfc_9369_a1() {
 
     {
         auto& protection = server_session.get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
         auto lambda_test = [&](const char* func, const char* text, const binary_t& bin_expect_result, const binary_t& bin_expect) -> void {
             _logger->writeln("> %s : %s", text, base16_encode(bin_expect_result).c_str());
@@ -51,31 +54,31 @@ void test_rfc_9369_a1() {
         binary_t bin_expect;
 
         bin_expect = std::move(base16_decode("2062e8b3cd8d52092614b8071d0aa1fb7c2e3ac193f78b280e72d8f5751f6aba"));
-        lambda_test(__FUNCTION__, "tls_secret_initial_quic", protection.get_item(tls_secret_initial_quic), bin_expect);
+        lambda_test(__FUNCTION__, "tls_secret_initial_quic", secrets.get(tls_secret_initial_quic), bin_expect);
 
         bin_expect = std::move(base16_decode("14ec9d6eb9fd7af83bf5a668bc17a7e283766aade7ecd0891f70f9ff7f4bf47b"));
-        lambda_test(__FUNCTION__, "client_initial_secret", protection.get_item(tls_secret_initial_quic_client), bin_expect);
+        lambda_test(__FUNCTION__, "client_initial_secret", secrets.get(tls_secret_initial_quic_client), bin_expect);
 
         bin_expect = std::move(base16_decode("8b1a0bc121284290a29e0971b5cd045d"));
-        lambda_test(__FUNCTION__, "client key", protection.get_item(tls_secret_initial_quic_client_key), bin_expect);
+        lambda_test(__FUNCTION__, "client key", secrets.get(tls_secret_initial_quic_client_key), bin_expect);
 
         bin_expect = std::move(base16_decode("91f73e2351d8fa91660e909f"));
-        lambda_test(__FUNCTION__, "client iv", protection.get_item(tls_secret_initial_quic_client_iv), bin_expect);
+        lambda_test(__FUNCTION__, "client iv", secrets.get(tls_secret_initial_quic_client_iv), bin_expect);
 
         bin_expect = std::move(base16_decode("45b95e15235d6f45a6b19cbcb0294ba9"));
-        lambda_test(__FUNCTION__, "client hp", protection.get_item(tls_secret_initial_quic_client_hp), bin_expect);
+        lambda_test(__FUNCTION__, "client hp", secrets.get(tls_secret_initial_quic_client_hp), bin_expect);
 
         bin_expect = std::move(base16_decode("0263db1782731bf4588e7e4d93b7463907cb8cd8200b5da55a8bd488eafc37c1"));
-        lambda_test(__FUNCTION__, "server_initial_secret", protection.get_item(tls_secret_initial_quic_server), bin_expect);
+        lambda_test(__FUNCTION__, "server_initial_secret", secrets.get(tls_secret_initial_quic_server), bin_expect);
 
         bin_expect = std::move(base16_decode("82db637861d55e1d011f19ea71d5d2a7"));
-        lambda_test(__FUNCTION__, "server key", protection.get_item(tls_secret_initial_quic_server_key), bin_expect);
+        lambda_test(__FUNCTION__, "server key", secrets.get(tls_secret_initial_quic_server_key), bin_expect);
 
         bin_expect = std::move(base16_decode("dd13c276499c0249d3310652"));
-        lambda_test(__FUNCTION__, "server iv", protection.get_item(tls_secret_initial_quic_server_iv), bin_expect);
+        lambda_test(__FUNCTION__, "server iv", secrets.get(tls_secret_initial_quic_server_iv), bin_expect);
 
         bin_expect = std::move(base16_decode("edf6d05c83121201b436e16877593c3a"));
-        lambda_test(__FUNCTION__, "server hp", protection.get_item(tls_secret_initial_quic_server_hp), bin_expect);
+        lambda_test(__FUNCTION__, "server hp", secrets.get(tls_secret_initial_quic_server_hp), bin_expect);
     }
 }
 

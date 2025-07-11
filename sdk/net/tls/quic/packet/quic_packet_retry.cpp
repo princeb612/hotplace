@@ -146,6 +146,7 @@ return_t quic_packet_retry::retry_integrity_tag(const quic_packet_retry& retry_p
         }
 
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
         auto session_type = session->get_type();
 
         // RFC 9001 5.8.  Retry Packet Integrity
@@ -168,7 +169,7 @@ return_t quic_packet_retry::retry_integrity_tag(const quic_packet_retry& retry_p
         binary_t bin_nonce = std::move(base16_decode_rfc(nonce));
         binary_t bin_plaintext;
         binary_t bin_ciphertext;
-        const binary_t& bin_dcid = protection.get_item(tls_context_quic_dcid);
+        const binary_t& bin_dcid = secrets.get(tls_context_quic_dcid);
 
         // ODCID Length (8)
         binary_append(bin_retry_pseudo_packet, (uint8)bin_dcid.size());

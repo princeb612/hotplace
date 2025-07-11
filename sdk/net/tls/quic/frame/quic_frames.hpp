@@ -35,13 +35,13 @@ namespace net {
 
 class quic_frames {
    public:
-    quic_frames();
+    quic_frames(quic_packet* packet);
     ~quic_frames();
 
-    return_t read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
-    return_t read(tls_session* session, tls_direction_t dir, const binary_t& bin);
+    return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    return_t read(tls_direction_t dir, const binary_t& bin);
 
-    return_t write(tls_session* session, tls_direction_t dir, binary_t& bin);
+    return_t write(tls_direction_t dir, binary_t& bin);
 
     return_t add(quic_frame* handshake, bool upref = false);
     quic_frames& operator<<(quic_frame* handshake);
@@ -55,8 +55,11 @@ class quic_frames {
 
     void clear();
 
+    quic_packet* get_packet();
+
    protected:
    private:
+    quic_packet* _packet;
     critical_section _lock;
     std::map<uint8, quic_frame*> _dictionary;  // tls_hs_type_t
     std::vector<quic_frame*> _frames;          // ordered

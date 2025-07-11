@@ -338,7 +338,7 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
         {
             session_status = session->get_session_status();
             if (session_status_hello_verify_request & session_status) {
-                const auto& cookie = session->get_tls_protection().get_item(tls_context_cookie);
+                const auto& cookie = protection.get_secrets().get(tls_context_cookie);
                 if (false == cookie.empty()) {
                     ch->set_cookie(cookie);
                 }

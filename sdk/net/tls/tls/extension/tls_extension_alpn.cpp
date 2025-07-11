@@ -30,6 +30,7 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
     __try2 {
         auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
         uint16 alpn_len = 0;
         binary_t protocols;
@@ -66,7 +67,7 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
         }
 
         if (from_server == dir) {
-            protection.set_item(tls_context_alpn, _protocols);
+            secrets.assign(tls_context_alpn, _protocols);
         }
     }
     __finally2 {

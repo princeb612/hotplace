@@ -17,20 +17,14 @@
 #include <sdk/net/tls/quic/quic_encoded.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
-#include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-quic_frame_ack::quic_frame_ack(tls_session* session) : quic_frame(quic_frame_type_ack, session) {}
+quic_frame_ack::quic_frame_ack(quic_packet* packet) : quic_frame(quic_frame_type_ack, packet) {}
 
 return_t quic_frame_ack::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
-
-    auto session = get_session();
-
-    // if initial
-    //     session->reset_recordno(dir);
 
     return ret;
 }

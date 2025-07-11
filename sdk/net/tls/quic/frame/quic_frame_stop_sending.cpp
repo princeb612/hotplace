@@ -24,7 +24,7 @@ namespace net {
 constexpr char constexpr_stream_id[] = "stream id";
 constexpr char constexpr_error_code[] = "error code";
 
-quic_frame_stop_sending::quic_frame_stop_sending(tls_session* session) : quic_frame(quic_frame_type_stop_sending, session) {}
+quic_frame_stop_sending::quic_frame_stop_sending(quic_packet* packet) : quic_frame(quic_frame_type_stop_sending, packet) {}
 
 return_t quic_frame_stop_sending::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

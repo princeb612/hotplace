@@ -611,7 +611,7 @@ enum tls_internal_flag_t : uint32 {
 
 class dtls_record_publisher;
 class dtls_record_arrange;
-class quic_stream_tracer;
+class quic_streams;
 class tls_protection;
 class tls_session;
 class tls_advisor;

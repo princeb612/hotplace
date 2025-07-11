@@ -133,19 +133,20 @@ void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_sessio
     }
 
     auto& protection = session->get_tls_protection();
+    auto& secrets = protection.get_secrets();
 
     auto lambda_dump = [&](const char* text, const binary_t& bin) -> void { _logger->writeln("> %-21s : %s", text, base16_encode(bin).c_str()); };
 
     {
-        lambda_dump("initial secret", protection.get_item(tls_secret_initial_quic));
-        lambda_dump("client initial secret", protection.get_item(tls_secret_initial_quic_client));
-        lambda_dump("client key", protection.get_item(tls_secret_initial_quic_client_key));
-        lambda_dump("client iv", protection.get_item(tls_secret_initial_quic_client_iv));
-        lambda_dump("client hp", protection.get_item(tls_secret_initial_quic_client_hp));
-        lambda_dump("server initial secret", protection.get_item(tls_secret_initial_quic_server));
-        lambda_dump("server key", protection.get_item(tls_secret_initial_quic_server_key));
-        lambda_dump("server iv", protection.get_item(tls_secret_initial_quic_server_iv));
-        lambda_dump("server hp", protection.get_item(tls_secret_initial_quic_server_hp));
+        lambda_dump("initial secret", secrets.get(tls_secret_initial_quic));
+        lambda_dump("client initial secret", secrets.get(tls_secret_initial_quic_client));
+        lambda_dump("client key", secrets.get(tls_secret_initial_quic_client_key));
+        lambda_dump("client iv", secrets.get(tls_secret_initial_quic_client_iv));
+        lambda_dump("client hp", secrets.get(tls_secret_initial_quic_client_hp));
+        lambda_dump("server initial secret", secrets.get(tls_secret_initial_quic_server));
+        lambda_dump("server key", secrets.get(tls_secret_initial_quic_server_key));
+        lambda_dump("server iv", secrets.get(tls_secret_initial_quic_server_iv));
+        lambda_dump("server hp", secrets.get(tls_secret_initial_quic_server_hp));
     }
 
     // write

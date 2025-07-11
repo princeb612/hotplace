@@ -220,8 +220,6 @@ std::string http_resource::get_h3_settings_name(uint64 id) {
     auto iter = _h3_frame_settings.find(id);
     if (_h3_frame_settings.end() != iter) {
         ret_value = iter->second;
-    } else {
-        ret_value = "draft";
     }
     return ret_value;
 }

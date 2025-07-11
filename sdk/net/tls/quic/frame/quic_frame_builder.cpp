@@ -10,58 +10,61 @@
 
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_builder.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
+#include <sdk/net/tls/quic_streams.hpp>
+#include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-quic_frame_builder::quic_frame_builder() : _type(quic_frame_type_padding), _session(nullptr) {}
+quic_frame_builder::quic_frame_builder() : _type(quic_frame_type_padding), _packet(nullptr) {}
 
 quic_frame_builder& quic_frame_builder::set(quic_frame_t type) {
     _type = type;
     return *this;
 }
 
-quic_frame_builder& quic_frame_builder::set(tls_session* session) {
-    _session = session;
+quic_frame_builder& quic_frame_builder::set(quic_packet* packet) {
+    _packet = packet;
     return *this;
 }
 
 quic_frame* quic_frame_builder::build() {
     quic_frame* frame = nullptr;
     uint64 type = get_type();
-    auto session = get_session();
+    auto packet = get_packet();
     switch (type) {
         case quic_frame_type_padding: {
             // RFC 9001 19.1.  PADDING Frames
-            __try_new_catch_only(frame, new quic_frame_padding(session));
+            __try_new_catch_only(frame, new quic_frame_padding(packet));
         } break;
         case quic_frame_type_ping: {
             // RFC 9001 19.2.  PING Frames
-            __try_new_catch_only(frame, new quic_frame_ping(session));
+            __try_new_catch_only(frame, new quic_frame_ping(packet));
         } break;
         case quic_frame_type_ack:
         case quic_frame_type_ack + 1: {
             // RFC 9001 19.3.  ACK Frames
-            __try_new_catch_only(frame, new quic_frame_ack(session));
+            __try_new_catch_only(frame, new quic_frame_ack(packet));
             frame->set_type(type);
         } break;
         case quic_frame_type_reset_stream: {
             // 19.4.  RESET_STREAM Frames
-            __try_new_catch_only(frame, new quic_frame_reset_stream(session));
+            __try_new_catch_only(frame, new quic_frame_reset_stream(packet));
         } break;
         case quic_frame_type_stop_sending: {
             // 19.5.  STOP_SENDING Frames
-            __try_new_catch_only(frame, new quic_frame_stop_sending(session));
+            __try_new_catch_only(frame, new quic_frame_stop_sending(packet));
         } break;
         case quic_frame_type_crypto: {
             // 19.6.  CRYPTO Frames
-            __try_new_catch_only(frame, new quic_frame_crypto(session));
+            __try_new_catch_only(frame, new quic_frame_crypto(packet));
         } break;
         case quic_frame_type_new_token: {
             // 19.7.  NEW_TOKEN Frames
-            __try_new_catch_only(frame, new quic_frame_new_token(session));
+            __try_new_catch_only(frame, new quic_frame_new_token(packet));
         } break;
         case quic_frame_type_stream:
         case quic_frame_type_stream1:
@@ -72,7 +75,8 @@ quic_frame* quic_frame_builder::build() {
         case quic_frame_type_stream6:
         case quic_frame_type_stream7: {
             // 19.8.  STREAM Frames
-            __try_new_catch_only(frame, new quic_frame_stream(session));
+            __try_new_catch_only(frame, new quic_frame_stream(packet));
+            frame->set_type(type);
         } break;
         case quic_frame_type_max_data:
             // Figure 33: MAX_DATA Frame Format
@@ -94,7 +98,7 @@ quic_frame* quic_frame_builder::build() {
             break;
         case quic_frame_type_new_connection_id:
             // Figure 39: NEW_CONNECTION_ID Frame Format
-            __try_new_catch_only(frame, new quic_frame_new_connection_id(session));
+            __try_new_catch_only(frame, new quic_frame_new_connection_id(packet));
             break;
         case quic_frame_type_retire_connection_id:
             // Figure 40: RETIRE_CONNECTION_ID Frame Format
@@ -108,11 +112,11 @@ quic_frame* quic_frame_builder::build() {
         case quic_frame_type_connection_close:
         case quic_frame_type_connection_close1:
             // Figure 43: CONNECTION_CLOSE Frame Format
-            __try_new_catch_only(frame, new quic_frame_connection_close(session));
+            __try_new_catch_only(frame, new quic_frame_connection_close(packet));
             break;
         case quic_frame_type_handshake_done:
             // Figure 44: HANDSHAKE_DONE Frame Format
-            __try_new_catch_only(frame, new quic_frame_handshake_done(session));
+            __try_new_catch_only(frame, new quic_frame_handshake_done(packet));
             break;
         default: {
         } break;
@@ -125,7 +129,7 @@ quic_frame* quic_frame_builder::build() {
 
 quic_frame_t quic_frame_builder::get_type() { return _type; }
 
-tls_session* quic_frame_builder::get_session() { return _session; }
+quic_packet* quic_frame_builder::get_packet() { return _packet; }
 
 }  // namespace net
 }  // namespace hotplace

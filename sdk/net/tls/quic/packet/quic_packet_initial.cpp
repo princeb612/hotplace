@@ -60,6 +60,7 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
         }
 
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
         auto tagsize = protection.get_tag_size();
 
         byte_t ht = stream[pos];
@@ -103,18 +104,18 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
         }
 
         if (from_client == dir) {
-            if (protection.get_item(tls_secret_initial_quic_client_hp).empty()) {
-                protection.set_item(tls_context_quic_dcid, get_dcid());
+            if (secrets.get(tls_secret_initial_quic_client_hp).empty()) {
+                secrets.assign(tls_context_quic_dcid, get_dcid());
                 protection.calc(session, tls_hs_client_hello, dir);  // calc initial keys
             } else {
                 if (false == get_dcid().empty()) {
-                    protection.set_item(tls_context_server_cid, get_dcid());
+                    secrets.assign(tls_context_server_cid, get_dcid());
                 }
             }
         } else if (from_server == dir) {
             if (false == get_dcid().empty()) {
-                if (protection.get_item(tls_context_client_cid).empty()) {
-                    protection.set_item(tls_context_client_cid, get_dcid());
+                if (secrets.get(tls_context_client_cid).empty()) {
+                    secrets.assign(tls_context_client_cid, get_dcid());
                 }
             }
         }
@@ -143,8 +144,8 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
 
         {
             size_t pos = 0;
-            quic_frames frames;
-            frames.read(session, dir, &_payload[0], _payload.size(), pos);
+            quic_frames frames(this);
+            frames.read(dir, &_payload[0], _payload.size(), pos);
             auto lambda_foreach = [&](quic_frame* frame) -> void {
                 auto type = frame->get_type();
                 if (quic_frame_type_ack == type) {
@@ -246,8 +247,8 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
                 dump();
 
                 size_t pos = 0;
-                quic_frames frames;
-                frames.read(session, dir, &_payload[0], _payload.size(), pos);
+                quic_frames frames(this);
+                frames.read(dir, &_payload[0], _payload.size(), pos);
                 auto lambda_foreach = [&](quic_frame* frame) -> void {
                     auto type = frame->get_type();
                     if (quic_frame_type_ack == type) {

@@ -551,6 +551,7 @@ return_t tls_record::write_aad(tls_session* session, tls_direction_t dir, binary
         }
 
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
         auto content_type = get_type();
         auto record_version = protection.get_lagacy_version();
@@ -574,7 +575,7 @@ return_t tls_record::write_aad(tls_session* session, tls_direction_t dir, binary
         uint16 len = 0;
         bool set_nonce_explicit = false;
 
-        protection.clear_item(tls_context_nonce_explicit);
+        secrets.erase(tls_context_nonce_explicit);
 
         if (is_tls12) {
             // TLS 1.2, DTLS 1.2
@@ -600,7 +601,7 @@ return_t tls_record::write_aad(tls_session* session, tls_direction_t dir, binary
                 openssl_prng prng;
                 binary_t temp;
                 prng.random(temp, 8);
-                protection.set_item(tls_context_nonce_explicit, temp);
+                secrets.assign(tls_context_nonce_explicit, temp);
             } else if (mode_poly1305) {
                 len = bodysize + tagsize;
             }

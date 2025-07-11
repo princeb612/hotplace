@@ -89,6 +89,13 @@ class network_protocol {
      * @brief   id
      */
     virtual const char* protocol_id() = 0;
+    /**
+     *  bool is_h3 = false;
+     *  if (protocol->use_alpn()) {
+     *      is_h3 = protocol->is_kind_of(stream, size);  // compare [0x2, 'h', '3']
+     *  }
+     */
+    virtual bool use_alpn() { return false; }
 
     int addref() { return _shared.addref(); }
     int release() { return _shared.delref(); }

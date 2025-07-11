@@ -78,11 +78,12 @@ void test_quic_xargs_org() {
     tls_session server_session(session_type_quic);
 
     tls_protection& protection = server_session.get_tls_protection();
+    auto& secrets = protection.get_secrets();
 
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
     auto lambda_test_secret = [&](tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect) -> void {
-        secret = protection.get_item(tls_secret);
+        secret = secrets.get(tls_secret);
         _logger->writeln("> %s : %s", text, base16_encode(secret).c_str());
         _test_case.assert(secret == base16_decode(expect), __FUNCTION__, text);
     };
@@ -122,22 +123,20 @@ void test_quic_xargs_org() {
     binary_t bin_dcid = std::move(base16_decode_rfc(dcid));
     binary_t bin_scid = std::move(base16_decode_rfc(scid));
 
-    protection.set_item(tls_context_quic_dcid, bin_dcid);
+    secrets.assign(tls_context_quic_dcid, bin_dcid);
     protection.calc(&server_session, tls_hs_client_hello, from_client);
 
     {
         _logger->colorln("client-initial-keys-calc");
-        _test_case.assert(protection.get_item(tls_secret_initial_quic_client_key) == base16_decode_rfc("b14b918124fda5c8d79847602fa3520b"), __FUNCTION__,
+        _test_case.assert(secrets.get(tls_secret_initial_quic_client_key) == base16_decode_rfc("b14b918124fda5c8d79847602fa3520b"), __FUNCTION__,
                           "server initial key");
-        _test_case.assert(protection.get_item(tls_secret_initial_quic_client_iv) == base16_decode_rfc("ddbc15dea80925a55686a7df"), __FUNCTION__,
-                          "server initial iv");
-        _test_case.assert(protection.get_item(tls_secret_initial_quic_client_hp) == base16_decode_rfc("6df4e9d737cdf714711d7c617ee82981"), __FUNCTION__,
+        _test_case.assert(secrets.get(tls_secret_initial_quic_client_iv) == base16_decode_rfc("ddbc15dea80925a55686a7df"), __FUNCTION__, "server initial iv");
+        _test_case.assert(secrets.get(tls_secret_initial_quic_client_hp) == base16_decode_rfc("6df4e9d737cdf714711d7c617ee82981"), __FUNCTION__,
                           "server initial hp");
-        _test_case.assert(protection.get_item(tls_secret_initial_quic_server_key) == base16_decode_rfc("d77fc4056fcfa32bd1302469ee6ebf90"), __FUNCTION__,
+        _test_case.assert(secrets.get(tls_secret_initial_quic_server_key) == base16_decode_rfc("d77fc4056fcfa32bd1302469ee6ebf90"), __FUNCTION__,
                           "server initial key");
-        _test_case.assert(protection.get_item(tls_secret_initial_quic_server_iv) == base16_decode_rfc("fcb748e37ff79860faa07477"), __FUNCTION__,
-                          "server initial iv");
-        _test_case.assert(protection.get_item(tls_secret_initial_quic_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__,
+        _test_case.assert(secrets.get(tls_secret_initial_quic_server_iv) == base16_decode_rfc("fcb748e37ff79860faa07477"), __FUNCTION__, "server initial iv");
+        _test_case.assert(secrets.get(tls_secret_initial_quic_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__,
                           "server initial hp");
     }
 

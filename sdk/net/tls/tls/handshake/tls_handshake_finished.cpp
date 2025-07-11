@@ -100,6 +100,7 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
         auto session = get_session();
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
         {
             protection.update_transcript_hash(session, stream + hspos, get_size());
@@ -108,15 +109,15 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
             // from_client : resumption related
             protection.calc(session, tls_hs_finished, dir);
 
-            protection.clear_item(tls_context_client_hello_random);
-            protection.clear_item(tls_context_server_hello_random);
+            secrets.erase(tls_context_client_hello_random);
+            secrets.erase(tls_context_server_hello_random);
 
             session->get_keyvalue().set(session_handshake_finished, 1);
 
             if (from_client == dir) {
-                protection.set_item(tls_context_client_verifydata, _verify_data);
+                secrets.assign(tls_context_client_verifydata, _verify_data);
             } else if (from_server == dir) {
-                protection.set_item(tls_context_server_verifydata, _verify_data);
+                secrets.assign(tls_context_server_verifydata, _verify_data);
             }
 
             if (from_server == dir) {
@@ -151,6 +152,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
         auto tlsversion = protection.get_tls_version();
         uint16 dlen = 0;
         hash_algorithm_t hmacalg;
@@ -197,7 +199,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 dbs.autoindent(1);
                 dbs.println("> %s \e[1;33m%s\e[0m", constexpr_verify_data, (errorcode_t::success == ret) ? "true" : "false");
                 dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
-                const binary_t ht_secret = protection.get_item(typeof_secret);
+                const binary_t ht_secret = secrets.get(typeof_secret);
                 dbs.println("  > secret [0x%08x] %s (%s)", typeof_secret, base16_encode(ht_secret).c_str(), tlsadvisor->nameof_secret(typeof_secret).c_str());
                 dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
                 dbs.println("  > verify data %s", base16_encode(verify_data).c_str());
@@ -226,6 +228,7 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
     __try2 {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -261,7 +264,7 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
             basic_stream dbs;
             dbs.println("> %s", constexpr_verify_data);
             dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
-            const binary_t ht_secret = protection.get_item(typeof_secret);
+            const binary_t ht_secret = secrets.get(typeof_secret);
             dbs.println("  > secret [0x%08x] %s (%s)", typeof_secret, base16_encode(ht_secret).c_str(), tlsadvisor->nameof_secret(typeof_secret).c_str());
             dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
             dbs.println("  > verify data %s", base16_encode(verify_data).c_str());

@@ -37,15 +37,15 @@ class quic_frame_builder {
     quic_frame_builder();
 
     quic_frame_builder& set(quic_frame_t type);
-    quic_frame_builder& set(tls_session* session);
+    quic_frame_builder& set(quic_packet* packet);
     quic_frame* build();
 
     quic_frame_t get_type();
-    tls_session* get_session();
+    quic_packet* get_packet();
 
    private:
     quic_frame_t _type;
-    tls_session* _session;
+    quic_packet* _packet;
 };
 
 }  // namespace net

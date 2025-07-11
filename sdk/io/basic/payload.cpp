@@ -133,6 +133,10 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
             } else {
                 space = item->get_space();
                 if (space || (payload_member_reserve_is_set & item->get_flags())) {
+                    if (space + offset > size) {
+                        ret = errorcode_t::fragmented;
+                        break;
+                    }
                     if (try_read) {
                         lambda_readitem(item, base, size, offset, &size_item);
                         offset += size_item;
@@ -144,6 +148,10 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
                     auto ref = item->get_reference_of();
                     if (ref) {
                         space = ref->get_reference_value();
+                        if (space + offset > size) {
+                            ret = errorcode_t::fragmented;
+                            break;
+                        }
                         item->reserve(space);
                         lambda_readitem(item, base, size, offset, &size_item);
                         offset += size_item;

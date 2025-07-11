@@ -106,7 +106,8 @@ return_t sslkeylog_importer::add(const std::string& secret) {
 void sslkeylog_importer::session_status_changed(tls_session* session, uint32 status) {
     if (session_status_client_hello == status) {
         auto& protection = session->get_tls_protection();
-        const binary_t& client_random = protection.get_item(tls_context_client_hello_random);
+        auto& secrets = protection.get_secrets();
+        const binary_t& client_random = secrets.get(tls_context_client_hello_random);
         auto instance = sslkeylog_importer::get_instance();
         auto& secret_map = instance->_keylogs[client_random];
 #if defined DEBUG
@@ -124,7 +125,7 @@ void sslkeylog_importer::session_status_changed(tls_session* session, uint32 sta
         for (const auto& item : secret_map) {
             auto secret = item.first;
             const binary_t& value = item.second;
-            protection.set_item(secret, value);
+            secrets.assign(secret, value);
 
 #if defined DEBUG
             tls_advisor* tlsadvisor = tls_advisor::get_instance();

@@ -145,6 +145,7 @@ return_t quic_packet::read_common_header(tls_direction_t dir, const byte_t* stre
 
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
         byte_t hdr = stream[pos];
         bool is_longheader = true;
@@ -169,9 +170,9 @@ return_t quic_packet::read_common_header(tls_direction_t dir, const byte_t* stre
             // Packets with short headers (Section 17.3) only include the Destination Connection ID and omit the explicit length.
             auto size_dcid = 0;
             if (from_client == dir) {
-                size_dcid = protection.get_item(tls_context_server_cid).size();
+                size_dcid = secrets.get(tls_context_server_cid).size();
             } else if (from_server == dir) {
-                size_dcid = protection.get_item(tls_context_client_cid).size();
+                size_dcid = secrets.get(tls_context_client_cid).size();
             }
             pl.reserve(constexpr_dcid, size_dcid);
         }

@@ -28,7 +28,7 @@ static return_t do_test_construct_client_hello(const char* ciphersuite, tls_sess
         {
             // client_hello generate random member
 
-            const auto& cookie = session->get_tls_protection().get_item(tls_context_cookie);
+            const auto& cookie = session->get_tls_protection().get_secrets().get(tls_context_cookie);
             if (false == cookie.empty()) {
                 handshake->set_cookie(cookie);
             }

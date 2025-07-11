@@ -36,14 +36,14 @@ class quic_frame {
     friend class quic_frame_builder;
 
    public:
-    quic_frame(quic_frame_t type, tls_session* session);
+    quic_frame(quic_frame_t type, quic_packet* packet);
     virtual ~quic_frame();
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& bin);
 
     quic_frame_t get_type();
-    tls_session* get_session();
+    quic_packet* get_packet();
 
     void addref();
     void release();
@@ -60,14 +60,14 @@ class quic_frame {
     void set_type(uint64 type);
 
     quic_frame_t _type;
-    tls_session* _session;
+    quic_packet* _packet;
     t_shared_reference<quic_frame> _shared;
 };
 
 // RFC 9000 19.1.  PADDING Frames
 class quic_frame_padding : public quic_frame {
    public:
-    quic_frame_padding(tls_session* session);
+    quic_frame_padding(quic_packet* packet);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -77,7 +77,7 @@ class quic_frame_padding : public quic_frame {
 // RFC 9000 19.2.  PING Frames
 class quic_frame_ping : public quic_frame {
    public:
-    quic_frame_ping(tls_session* session);
+    quic_frame_ping(quic_packet* packet);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -88,7 +88,7 @@ class quic_frame_ping : public quic_frame {
 // RFC 9000 19.3.  ACK Frames
 class quic_frame_ack : public quic_frame {
    public:
-    quic_frame_ack(tls_session* session);
+    quic_frame_ack(quic_packet* packet);
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir);
@@ -99,7 +99,7 @@ class quic_frame_ack : public quic_frame {
 // RFC 9000 19.4.  RESET_STREAM Frames
 class quic_frame_reset_stream : public quic_frame {
    public:
-    quic_frame_reset_stream(tls_session* session);
+    quic_frame_reset_stream(quic_packet* packet);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -109,7 +109,7 @@ class quic_frame_reset_stream : public quic_frame {
 // RFC 9000 19.5.  STOP_SENDING Frames
 class quic_frame_stop_sending : public quic_frame {
    public:
-    quic_frame_stop_sending(tls_session* session);
+    quic_frame_stop_sending(quic_packet* packet);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -119,7 +119,7 @@ class quic_frame_stop_sending : public quic_frame {
 // RFC 9000 19.6.  CRYPTO Frames
 class quic_frame_crypto : public quic_frame {
    public:
-    quic_frame_crypto(tls_session* session);
+    quic_frame_crypto(quic_packet* packet);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -129,7 +129,7 @@ class quic_frame_crypto : public quic_frame {
 // RFC 9000 19.7.  NEW_TOKEN Frames
 class quic_frame_new_token : public quic_frame {
    public:
-    quic_frame_new_token(tls_session* session);
+    quic_frame_new_token(quic_packet* packet);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -139,11 +139,28 @@ class quic_frame_new_token : public quic_frame {
 // RFC 9000 19.8.  STREAM Frames
 class quic_frame_stream : public quic_frame {
    public:
-    quic_frame_stream(tls_session* session);
+    quic_frame_stream(quic_packet* packet);
+
+    enum quic_frame_stream_flag_t : uint8 {
+        quic_frame_stream_off = 0x04,
+        quic_frame_stream_len = 0x02,
+        quic_frame_stream_fin = 0x01,
+        quic_frame_stream_mask = (quic_frame_stream_off | quic_frame_stream_len | quic_frame_stream_fin),
+    };
+
+    uint8 get_flags();
+    uint64 get_streamid();
+    uint64 get_offset();
+    binary_t& get_streamdata();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+
+   private:
+    uint64 _streamid;
+    uint64 _offset;
+    binary_t _streamdata;
 };
 
 // RFC 9000 19.9.  MAX_DATA Frames
@@ -155,7 +172,7 @@ class quic_frame_stream : public quic_frame {
 // RFC 9000 19.15. NEW_CONNECTION_ID Frames
 class quic_frame_new_connection_id : public quic_frame {
    public:
-    quic_frame_new_connection_id(tls_session* session);
+    quic_frame_new_connection_id(quic_packet* packet);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -169,7 +186,7 @@ class quic_frame_new_connection_id : public quic_frame {
 // RFC 9000 19.19.  CONNECTION_CLOSE Frames
 class quic_frame_connection_close : public quic_frame {
    public:
-    quic_frame_connection_close(tls_session* session);
+    quic_frame_connection_close(quic_packet* packet);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -179,20 +196,20 @@ class quic_frame_connection_close : public quic_frame {
 // RFC 9000 19.20.  HANDSHAKE_DONE Frames
 class quic_frame_handshake_done : public quic_frame {
    public:
-    quic_frame_handshake_done(tls_session* session);
+    quic_frame_handshake_done(quic_packet* packet);
 
    protected:
 };
 
 /**
  * @brief   read
- * @param   tls_session* session [in]
+ * @param   quic_packet* packet [in]
  * @param   const byte_t** stream [in]
  * @param   size_t size [in]
  * @param   size_t& pos [inout]
  */
-return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
-return_t quic_dump_frame(tls_session* session, const binary_t frame, size_t& pos, tls_direction_t dir = from_server);
+return_t quic_dump_frame(quic_packet* packet, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
+return_t quic_dump_frame(quic_packet* packet, const binary_t frame, size_t& pos, tls_direction_t dir = from_server);
 
 }  // namespace net
 }  // namespace hotplace

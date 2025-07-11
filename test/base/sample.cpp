@@ -72,6 +72,7 @@ int main(int argc, char **argv) {
     test_loglevel();
     test_nostd();
     test_range();
+    test_merge();
 
     _logger->flush();
 

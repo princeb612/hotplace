@@ -13,6 +13,7 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshakes.hpp>
@@ -23,13 +24,14 @@
 namespace hotplace {
 namespace net {
 
-quic_frame_crypto::quic_frame_crypto(tls_session* session) : quic_frame(quic_frame_type_crypto, session) {}
+quic_frame_crypto::quic_frame_crypto(quic_packet* packet) : quic_frame(quic_frame_type_crypto, packet) {}
 
 return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        auto session = get_packet()->get_session();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
         // 19.6.  CRYPTO Frames
 
@@ -80,7 +82,7 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
 
         if (offset) {
             binary_t defragment;
-            protection.consume_item(tls_context_fragment, defragment);
+            secrets.consume(tls_context_fragment, defragment);
             binary_append(defragment, crypto_data);
             crypto_data = std::move(defragment);
         }

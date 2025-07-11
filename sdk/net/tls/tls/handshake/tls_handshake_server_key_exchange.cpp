@@ -86,6 +86,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
         {
             auto session = get_session();
             auto &protection = session->get_tls_protection();
+            auto &secrets = protection.get_secrets();
             auto &keyexchange = protection.get_keyexchange();
             crypto_advisor *advisor = crypto_advisor::get_instance();
             tls_advisor *tlsadvisor = tls_advisor::get_instance();
@@ -148,8 +149,8 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             {
                 // hash(client_hello_random + server_hello_random + curve_info + public_key)
                 binary_t message;
-                binary_append(message, protection.get_item(tls_context_client_hello_random));
-                binary_append(message, protection.get_item(tls_context_server_hello_random));
+                binary_append(message, secrets.get(tls_context_client_hello_random));
+                binary_append(message, secrets.get(tls_context_server_hello_random));
                 binary_append(message, stream + hspos, 3);
                 binary_append(message, pubkey_len);
                 binary_append(message, pubkey);
@@ -198,6 +199,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     return_t ret = errorcode_t::success;
     auto session = get_session();
     auto &protection = session->get_tls_protection();
+    auto &secrets = protection.get_secrets();
     auto &keyexchange = protection.get_keyexchange();
     auto &protection_context = protection.get_protection_context();
     auto advisor = crypto_advisor::get_instance();
@@ -264,8 +266,8 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     {
         // sign(client_hello_random + server_hello_random + curve_info + public_key)
         binary_t message;
-        binary_append(message, protection.get_item(tls_context_client_hello_random));
-        binary_append(message, protection.get_item(tls_context_server_hello_random));
+        binary_append(message, secrets.get(tls_context_client_hello_random));
+        binary_append(message, secrets.get(tls_context_server_hello_random));
         binary_append(message, uint8(curve_info));
         binary_append(message, uint16(curve), hton16);
         binary_append(message, uint8(pubkey.size()));

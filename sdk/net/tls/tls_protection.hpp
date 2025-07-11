@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLSPROTECTION__
 #define __HOTPLACE_SDK_NET_TLS_TLSPROTECTION__
 
+#include <sdk/base/basic/binary_data.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
@@ -117,29 +118,7 @@ class tls_protection {
     void use_pre_master_secret(bool use);
     bool use_pre_master_secret();
 
-    /**
-     * @param   tls_secret_t type [in]
-     * @param   binary_t& item [out]
-     */
-    void consume_item(tls_secret_t type, binary_t& item);
-
-    const binary_t& get_item(tls_secret_t type);
-    void set_item(tls_secret_t type, const binary_t& item);
-    void set_item(tls_secret_t type, const byte_t* stream, size_t size);
-    /**
-     * @brief append
-     * @param tls_secret_t type [in] tls_context_fragment
-     * @param const binary_t& item [in]
-     */
-    void append_item(tls_secret_t type, const binary_t& item);
-    /**
-     * @brief append
-     * @param tls_secret_t type [in] tls_context_fragment
-     * @param const byte_t* stream [in]
-     * @param size_t size [in]
-     */
-    void append_item(tls_secret_t type, const byte_t* stream, size_t size);
-    void clear_item(tls_secret_t type);
+    t_binary_data<tls_secret_t>& get_secrets();
 
     size_t get_header_size();
     static return_t negotiate(tls_session* client_session, tls_session* server_session, uint16& ciphersuite, uint16& tlsversion);
@@ -310,7 +289,7 @@ class tls_protection {
     transcript_hash* _transcript_hash;     // transcript hash
     critical_section _lock;                // lock
     crypto_key _keyexchange;               // key
-    std::map<tls_secret_t, binary_t> _kv;  // secrets
+    t_binary_data<tls_secret_t> _secrets;  // secrets
     bool _use_pre_master_secret;           // test
 
     uint8 _key_exchange_mode;               // psk_ke, psk_dhe_ke

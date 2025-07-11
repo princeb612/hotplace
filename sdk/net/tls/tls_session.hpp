@@ -180,7 +180,7 @@ class tls_session {
     void get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags = 0);
     bool has_alert(tls_direction_t dir, uint8 level = tls_alertlevel_fatal);
 
-    quic_stream_tracer& get_quic_stream_tracer();
+    quic_streams& get_quic_streams();
 
    private:
     critical_section _lock;
@@ -206,7 +206,7 @@ class tls_session {
     critical_section _dtls_lock;
     dtls_record_publisher* _dtls_record_publisher;
     dtls_record_arrange* _dtls_record_arrange;
-    quic_stream_tracer* _quic_stream_tracer;
+    quic_streams* _quic_streams;
 };
 
 }  // namespace net

@@ -21,5 +21,16 @@ namespace net {
 
 http3_frame_data::http3_frame_data() : http3_frame(h3_frame_data) {}
 
+return_t http3_frame_data::do_read_payload(const byte_t* stream, size_t size, size_t& pos) {
+    return_t ret = errorcode_t::success;
+
+    return ret;
+}
+
+return_t http3_frame_data::do_write(binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
+
 }  // namespace net
 }  // namespace hotplace

@@ -15,6 +15,7 @@
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_builder.hpp>
 #include <sdk/net/tls/quic/frame/quic_frames.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
@@ -22,17 +23,27 @@
 namespace hotplace {
 namespace net {
 
-quic_frames::quic_frames() {}
+quic_frames::quic_frames(quic_packet* packet) : _packet(packet) {
+    if (nullptr == packet) {
+        throw exception(not_specified);
+    }
+    packet->addref();
+}
 
-quic_frames::~quic_frames() { clear(); }
+quic_frames::~quic_frames() {
+    clear();
+    get_packet()->release();
+}
 
-return_t quic_frames::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
+return_t quic_frames::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == session || nullptr == stream) {
+        if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
+        auto packet = get_packet();
 
         while (pos < size) {
             uint64 value = 0;
@@ -44,7 +55,7 @@ return_t quic_frames::read(tls_session* session, tls_direction_t dir, const byte
 
             quic_frame_t type = (quic_frame_t)value;
             quic_frame_builder builder;
-            auto frame = builder.set(type).set(session).build();
+            auto frame = builder.set(type).set(packet).build();
             if (frame) {
                 ret = frame->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {
@@ -64,31 +75,21 @@ return_t quic_frames::read(tls_session* session, tls_direction_t dir, const byte
     return ret;
 }
 
-return_t quic_frames::read(tls_session* session, tls_direction_t dir, const binary_t& bin) {
+return_t quic_frames::read(tls_direction_t dir, const binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
         const byte_t* stream = &bin[0];
         size_t size = bin.size();
         size_t pos = 0;
-        auto ret = read(session, dir, stream, size, pos);
+        auto ret = read(dir, stream, size, pos);
     }
     __finally2 {}
     return ret;
 }
 
-return_t quic_frames::write(tls_session* session, tls_direction_t dir, binary_t& bin) {
+return_t quic_frames::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
         auto lambda = [&](quic_frame* frame) -> void { frame->write(dir, bin); };
         for_each(lambda);
     }
@@ -164,6 +165,8 @@ void quic_frames::clear() {
     _frames.clear();
     _dictionary.clear();
 }
+
+quic_packet* quic_frames::get_packet() { return _packet; }
 
 }  // namespace net
 }  // namespace hotplace

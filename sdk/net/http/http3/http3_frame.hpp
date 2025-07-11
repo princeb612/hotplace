@@ -46,6 +46,10 @@ class http3_frame {
 class http3_frame_data : public http3_frame {
    public:
     http3_frame_data();
+
+   protected:
+    virtual return_t do_read_payload(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write(binary_t& bin);
 };
 
 class http3_frame_headers : public http3_frame {
@@ -65,6 +69,36 @@ class http3_frame_settings : public http3_frame {
    protected:
     virtual return_t do_read_payload(const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write(binary_t& bin);
+};
+
+class http3_frame_push_promise : public http3_frame {
+   public:
+    http3_frame_push_promise();
+};
+
+class http3_frame_goaway : public http3_frame {
+   public:
+    http3_frame_goaway();
+};
+
+class http3_frame_origin : public http3_frame {
+   public:
+    http3_frame_origin();
+};
+
+class http3_frame_max_push_id : public http3_frame {
+   public:
+    http3_frame_max_push_id();
+};
+
+class http3_frame_metadata : public http3_frame {
+   public:
+    http3_frame_metadata();
+};
+
+class http3_frame_priority_update : public http3_frame {
+   public:
+    http3_frame_priority_update(h3_frame_t type);
 };
 
 class http3_frame_unknown : public http3_frame {

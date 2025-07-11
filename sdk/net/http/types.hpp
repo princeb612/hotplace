@@ -71,6 +71,21 @@ class http2_session;
 class qpack_encoder;
 class qpack_dynamic_table;
 class qpack_static_table;
+class http3_frame;
+class http3_frame_builder;
+class http3_frame_data;
+class http3_frame_headers;
+class http3_frame_cancel_push;
+class http3_frame_settings;
+class http3_frame_push_promise;
+class http3_frame_goaway;
+class http3_frame_origin;
+class http3_frame_max_push_id;
+class http3_frame_metadata;
+class http3_frame_priority_pdate;
+class http3_frame_unknown;
+class http3_frames;
+class http3_stream;
 
 // hpack_strea, qpack_stream
 template <typename DYNAMIC_T, typename ENCODER_T>

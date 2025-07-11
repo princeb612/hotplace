@@ -90,6 +90,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
     __try2 {
         auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
         uint16 psk_identities_len = 0;
         uint16 psk_identity_len = 0;
@@ -123,7 +124,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
 
         {
             auto& kv = session->get_session_info(from_server).get_keyvalue();
-            const binary_t& ticket = protection.get_item(tls_context_new_session_ticket);
+            const binary_t& ticket = secrets.get(tls_context_new_session_ticket);
             if (psk_identity != ticket) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
                 session->reset_session_status();

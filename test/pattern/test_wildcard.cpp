@@ -157,8 +157,8 @@ void test_wildcards2() {
  */
 void test_merge_ovl_intervals() {
     _test_case.begin("merge overlapping intervals");
-    t_merge_ovl_intervals<int> moi;
-    typedef t_merge_ovl_intervals<int>::interval interval;
+    t_merge_ovl_intervals<int, int> moi;
+    typedef t_merge_ovl_intervals<int, int>::interval interval;
     typedef std::vector<interval> result;
     result res;
     result expect;

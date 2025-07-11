@@ -125,10 +125,11 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
         // RFC 9147 5.5.  Handshake Message Fragmentation and Reassembly
         if (reassemble == test) {
             auto& protection = session->get_tls_protection();
+            auto& secrets = protection.get_secrets();
 
             size_t tpos = 0;
             binary_t assemble;
-            protection.consume_item(tls_context_fragment, assemble);  // consume _bodysize
+            secrets.consume(tls_context_fragment, assemble);  // consume _bodysize
 
 #if defined DEBUG
             if (istraceable(trace_category_net, loglevel_debug)) {
@@ -265,6 +266,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
         size_t hspos = pos;
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
         auto type = session->get_type();
 
         tls_hs_type_t hstype;
@@ -348,10 +350,10 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             if (cond_dtls) {
                 if (fragment_len < length) {
                     if (0 == fragment_offset) {
-                        protection.clear_item(tls_context_fragment);
+                        secrets.erase(tls_context_fragment);
                     }
 
-                    protection.append_item(tls_context_fragment, stream + pos, fragment_len);
+                    secrets.append(tls_context_fragment, stream + pos, fragment_len);
 
 #if defined DEBUG
                     if (istraceable(trace_category_net, loglevel_debug)) {
@@ -364,7 +366,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                     }
 #endif
 
-                    if (length <= protection.get_item(tls_context_fragment).size()) {
+                    if (length <= secrets.get(tls_context_fragment).size()) {
                         pos += _fragment_len;
                         ret = errorcode_t::reassemble;
                     } else {
@@ -381,7 +383,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
 
             if (hspos + length > size) {
                 ret = errorcode_t::fragmented;
-                protection.append_item(tls_context_fragment, stream + hspos, size - hspos);
+                secrets.append(tls_context_fragment, stream + hspos, size - hspos);
 #if defined DEBUG
                 if (istraceable(trace_category_net, loglevel_debug)) {
                     basic_stream dbs;

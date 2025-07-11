@@ -72,6 +72,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
         /**
          * RFC 8446 4.6.1.  New Session Ticket Message
@@ -116,7 +117,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             auto& kv = session->get_session_info(from_server).get_keyvalue();
             kv.set(session_ticket_lifetime, ticket_lifetime);
             kv.set(session_ticket_age_add, ticket_age_add);
-            protection.set_item(tls_context_new_session_ticket, session_ticket);
+            secrets.assign(tls_context_new_session_ticket, session_ticket);
 
             kv.set(session_ticket_timestamp, time(nullptr));
         }
@@ -154,6 +155,7 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
     __try2 {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
         uint32 ticket_lifetime = 0;
         uint32 ticket_age_add = 0;
         binary_t ticket_nonce;
@@ -170,7 +172,7 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
             auto& kv = session->get_session_info(from_server).get_keyvalue();
             kv.set(session_ticket_lifetime, ticket_lifetime);
             kv.set(session_ticket_age_add, ticket_age_add);
-            protection.set_item(tls_context_new_session_ticket, session_ticket);
+            secrets.assign(tls_context_new_session_ticket, session_ticket);
         }
         {
             payload pl;

@@ -56,7 +56,7 @@ void test_tls12_aead_aes128gcm() {
         // > secret_server_iv[0000010c] dc3e240a
 
         auto lambda_test_secret = [&](tls_secret_t secret, const char* value) -> return_t {
-            const binary_t& bin_secret = protection.get_item(secret);
+            const binary_t& bin_secret = protection.get_secrets().get(secret);
             binary_t bin_value = std::move(base16_decode(value));
             return (bin_secret == bin_value) ? success : mismatch;
         };
@@ -101,7 +101,7 @@ void test_tls12_aead_chacha20poly1305() {
         ret = protection.calc_keyblock(sha2_256, secret_master, client_hello_random, server_hello_random, cs);
 
         auto lambda_test_secret = [&](tls_secret_t secret, const char* value) -> return_t {
-            const binary_t& bin_secret = protection.get_item(secret);
+            const binary_t& bin_secret = protection.get_secrets().get(secret);
             binary_t bin_value = std::move(base16_decode(value));
             return (bin_secret == bin_value) ? success : mismatch;
         };

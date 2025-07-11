@@ -98,8 +98,8 @@ return_t quic_packet_1rtt::read(tls_direction_t dir, const byte_t* stream, size_
 
             {
                 size_t pos = 0;
-                quic_frames frames;
-                frames.read(session, dir, &_payload[0], _payload.size(), pos);
+                quic_frames frames(this);
+                frames.read(dir, &_payload[0], _payload.size(), pos);
             }
         }
     }
@@ -191,8 +191,8 @@ return_t quic_packet_1rtt::write(tls_direction_t dir, binary_t& header, binary_t
 
                 auto session = get_session();
                 size_t pos = 0;
-                quic_frames frames;
-                frames.read(session, dir, &_payload[0], _payload.size(), pos);
+                quic_frames frames(this);
+                frames.read(dir, &_payload[0], _payload.size(), pos);
             }
         } else {
             header = std::move(bin_unprotected_header);

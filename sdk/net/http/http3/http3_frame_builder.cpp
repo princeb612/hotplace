@@ -41,18 +41,26 @@ http3_frame* http3_frame_builder::build() {
             __try_new_catch_only(frame, new http3_frame_settings);
         } break;
         case h3_frame_push_promise: {
+            __try_new_catch_only(frame, new http3_frame_push_promise);
         } break;
         case h3_frame_goaway: {
+            __try_new_catch_only(frame, new http3_frame_goaway);
         } break;
         case h3_frame_origin: {
+            __try_new_catch_only(frame, new http3_frame_origin);
         } break;
         case h3_frame_max_push_id: {
+            __try_new_catch_only(frame, new http3_frame_max_push_id);
         } break;
         case h3_frame_metadata: {
+            __try_new_catch_only(frame, new http3_frame_metadata);
         } break;
-        case h3_frame_priority_update: {
-        } break;
+        case h3_frame_priority_update:
         case h3_frame_priority_update1: {
+            __try_new_catch_only(frame, new http3_frame_priority_update((h3_frame_t)_type));
+        } break;
+        default: {
+            __try_new_catch_only(frame, new http3_frame_unknown(_type));
         } break;
     }
     return frame;

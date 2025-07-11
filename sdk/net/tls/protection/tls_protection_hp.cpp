@@ -101,7 +101,6 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
         auto alg = aes128;  // DTLS, QUIC initial
-        auto &protection = session->get_tls_protection();
 
         // QUIC handshake, application
         if (level == protection_handshake || level == protection_application) {
@@ -130,7 +129,7 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
             cipher_encrypt_builder builder;
             cipher = builder.set(alg, ecb).build();
             if (cipher) {
-                auto const &key = get_item(secret_key);
+                auto const &key = get_secrets().get(secret_key);
                 auto samplesize = (size > blocksize) ? blocksize : size;
                 ret = cipher->encrypt(key, binary_t(), stream, samplesize, mask);
 

@@ -15,8 +15,10 @@
 #include <sdk/net/http/http3/http3_frame.hpp>
 #include <sdk/net/http/http3/http3_stream.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
+#include <sdk/net/tls/quic_streams.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -24,16 +26,16 @@
 namespace hotplace {
 namespace net {
 
-quic_frame_stream::quic_frame_stream(tls_session* session) : quic_frame(quic_frame_type_stream, session) {}
+quic_frame_stream::quic_frame_stream(quic_packet* packet) : quic_frame(quic_frame_type_stream, packet), _streamid(0) {}
 
 return_t quic_frame_stream::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto tlsadvisor = tls_advisor::get_instance();
         auto type = get_type();
-        bool offbit = (type & 0x04) ? true : false;
-        bool lenbit = (type & 0x02) ? true : false;
-        bool finbit = (type & 0x01) ? true : false;
+        bool offbit = (type & quic_frame_stream_off) ? true : false;
+        bool lenbit = (type & quic_frame_stream_len) ? true : false;
+        bool finbit = (type & quic_frame_stream_fin) ? true : false;
 
         constexpr char constexpr_off_bit[] = "OFF bit (0x04)";
         constexpr char constexpr_len_bit[] = "LEN bit (0x02)";
@@ -93,23 +95,12 @@ return_t quic_frame_stream::do_read_body(tls_direction_t dir, const byte_t* stre
             }
 #endif
 
-            auto session = get_session();
-            auto& protection = session->get_tls_protection();
-            const binary_t& alpn = protection.get_item(tls_context_alpn);
-
-            auto bin = std::move(stream_data);
-            const byte_t alpn_h3[3] = {0x2, 'h', '3'};  // HTTP/3
-            size_t fpos = 0;
-            if (0 == memcmp(alpn_h3, &alpn[0], 3)) {
-                if (stream_id & quic_stream_unidirectional) {
-                    http3_stream h3stream;
-                    ret = h3stream.read(&bin[0], bin.size(), fpos);
-                } else {
-                    http3_frames frames;
-                    ret = frames.read(&bin[0], bin.size(), fpos);
-                }
-            }
+            _streamid = stream_id;
+            _offset = off;
+            _streamdata = std::move(stream_data);
         }
+
+        get_packet()->get_session()->get_quic_streams() << this;
     }
     __finally2 {}
     return ret;
@@ -121,6 +112,14 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, binary_t& bin) {
     __finally2 {}
     return ret;
 }
+
+uint8 quic_frame_stream::get_flags() { return (quic_frame_stream_mask & get_type()); }
+
+uint64 quic_frame_stream::get_streamid() { return _streamid; }
+
+uint64 quic_frame_stream::get_offset() { return _offset; }
+
+binary_t& quic_frame_stream::get_streamdata() { return _streamdata; }
 
 }  // namespace net
 }  // namespace hotplace

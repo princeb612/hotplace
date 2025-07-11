@@ -405,7 +405,7 @@ std::multimap<range_t, unsigned> parser::context::psearchex(parser* obj) const {
         ac->build();
         auto acres = ac->search(&_tokens[0], _tokens.size());
 
-        t_merge_ovl_intervals<int> moi;
+        t_merge_ovl_intervals<unsigned int, int> moi;  // unsigned int pos, int patternid
         search_result r;
 
         for (const auto& pair : acres) {
