@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLSPROTECTION__
 #define __HOTPLACE_SDK_NET_TLS_TLSPROTECTION__
 
-#include <sdk/base/basic/binary_data.hpp>
+#include <sdk/base/basic/binaries.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
@@ -118,7 +118,7 @@ class tls_protection {
     void use_pre_master_secret(bool use);
     bool use_pre_master_secret();
 
-    t_binary_data<tls_secret_t>& get_secrets();
+    t_binaries<tls_secret_t>& get_secrets();
 
     size_t get_header_size();
     static return_t negotiate(tls_session* client_session, tls_session* server_session, uint16& ciphersuite, uint16& tlsversion);
@@ -282,15 +282,15 @@ class tls_protection {
     void set_session(tls_session* session);
 
    private:
-    tls_session* _session;                 //
-    tls_flow_t _flow;                      // TLS flow
-    uint16 _ciphersuite;                   // cipher suite negotiated
-    uint16 _version;                       // negotiated version
-    transcript_hash* _transcript_hash;     // transcript hash
-    critical_section _lock;                // lock
-    crypto_key _keyexchange;               // key
-    t_binary_data<tls_secret_t> _secrets;  // secrets
-    bool _use_pre_master_secret;           // test
+    tls_session* _session;              //
+    tls_flow_t _flow;                   // TLS flow
+    uint16 _ciphersuite;                // cipher suite negotiated
+    uint16 _version;                    // negotiated version
+    transcript_hash* _transcript_hash;  // transcript hash
+    critical_section _lock;             // lock
+    crypto_key _keyexchange;            // key
+    t_binaries<tls_secret_t> _secrets;  // secrets
+    bool _use_pre_master_secret;        // test
 
     uint8 _key_exchange_mode;               // psk_ke, psk_dhe_ke
     protection_context _handshake_context;  // context

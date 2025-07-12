@@ -14,6 +14,19 @@ void test_merge() {
     _test_case.begin("merge");
 
     {
+        t_merge_ovl_intervals<size_t> moi;
+        moi.add(0, 1).add(1, 31);
+        auto res = moi.merge();
+        for (auto item : res) {
+            _logger->writeln("%i %i", item.s, item.e);
+        }
+        _test_case.assert(1 == res.size(), __FUNCTION__, "res");
+        _test_case.assert(res[0] == t_merge_ovl_intervals<size_t>::interval(0, 31), __FUNCTION__, "res[0]");
+    }
+
+    _test_case.begin("merge (subtract)");
+
+    {
         t_merge_ovl_intervals<uint8> moi;
         moi.add(1, 4).add(6, 10).subtract(3, 7);
         auto res = moi.merge();

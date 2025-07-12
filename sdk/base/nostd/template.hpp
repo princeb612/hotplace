@@ -253,6 +253,7 @@ class t_merge_ovl_intervals {
         }
         return _arr;
     }
+    size_t size() { return _arr.size(); }
 
    private:
     std::vector<interval> _arr;

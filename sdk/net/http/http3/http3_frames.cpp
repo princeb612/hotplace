@@ -24,14 +24,24 @@ return_t http3_frames::read(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         while (pos < size) {
-            uint64 value = 0;
+            uint64 frmtype = 0;
+            uint64 frmlen = 0;
             auto tpos = pos;
-            ret = quic_read_vle_int(stream, size, tpos, value);
+            ret = quic_read_vle_int(stream, size, tpos, frmtype);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+            ret = quic_read_vle_int(stream, size, tpos, frmlen);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
 
-            h3_frame_t type = (h3_frame_t)value;
+            if (tpos + frmlen > size) {
+                ret = errorcode_t::fragmented;
+                break;
+            }
+
+            h3_frame_t type = (h3_frame_t)frmtype;
             http3_frame_builder builder;
             auto frame = builder.set(type).build();
             if (frame) {

@@ -39,17 +39,19 @@ quic_streams& quic_streams::add(quic_frame_stream* stream) {
 
         auto streamid = stream->get_streamid();
         auto flags = stream->get_flags();
+        uint32 finmask = 0;
+
+        if (quic_frame_stream::quic_frame_stream_fin & flags) {
+            finmask = bin_check_fin;
+        }
 
         if (quic_frame_stream::quic_frame_stream_off & flags) {
-            _streams.write(streamid, stream->get_offset(), stream->get_streamdata());
+            _streams.write(streamid, stream->get_offset(), stream->get_streamdata(), bin_wait_fin | finmask);
         } else {
             _streams.assign(streamid, stream->get_streamdata());
         }
 
-        // if (quic_frame_stream::quic_frame_stream_fin & flags) {
-        // }
-
-        if (_streams.isfragmented(streamid)) {
+        if (_streams.isfragmented(streamid, finmask)) {
             __leave2;
         }
 
@@ -66,25 +68,31 @@ return_t quic_streams::consume(quic_frame_stream* stream) {
     __try2 {
         auto streamid = stream->get_streamid();
 
-        auto packet = stream->get_packet();
-        auto session = packet->get_session();
-        auto& protection = session->get_tls_protection();
+        auto lambda = [&](quic_frame_stream* stream, const binary_t& bin, size_t& pos) -> return_t {
+            return_t ret = errorcode_t::success;
 
-        const binary_t& alpn = protection.get_secrets().get(tls_context_alpn);
+            auto packet = stream->get_packet();
+            auto session = packet->get_session();
+            auto& protection = session->get_tls_protection();
+            const binary_t& alpn = protection.get_secrets().get(tls_context_alpn);
 
-        const binary_t& bin = _streams.get(streamid);
-
-        constexpr byte_t alpn_h3[3] = {0x2, 'h', '3'};  // HTTP/3
-        if (0 == memcmp(alpn_h3, &alpn[0], 3)) {
-            size_t fpos = 0;
-            if (streamid & quic_stream_unidirectional) {
-                http3_stream h3stream;
-                ret = h3stream.read(&bin[0], bin.size(), fpos);
-            } else {
-                http3_frames frames;
-                ret = frames.read(&bin[0], bin.size(), fpos);
+            constexpr byte_t alpn_h3[3] = {0x2, 'h', '3'};              // HTTP/3
+            constexpr byte_t alpn_ping[5] = {0x4, 'p', 'i', 'n', 'g'};  // ping
+            if (0 == memcmp(alpn_h3, &alpn[0], sizeof(alpn_h3))) {
+                if (streamid & quic_stream_unidirectional) {
+                    http3_stream h3stream;
+                    ret = h3stream.read(&bin[0], bin.size(), pos);
+                } else {
+                    http3_frames frames;
+                    ret = frames.read(&bin[0], bin.size(), pos);
+                }
+            } else if (0 == memcmp(alpn_ping, &alpn[0], sizeof(alpn_ping))) {
+                // TODO
             }
-        }
+
+            return ret;
+        };
+        _streams.consume(streamid, stream, lambda);
     }
     __finally2 {}
     return ret;

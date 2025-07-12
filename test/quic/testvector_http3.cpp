@@ -2656,6 +2656,7 @@ const testvector_http3_t pcap_http3[] = {
         "37 6e 4d 46 28 c6 24 55 27 bf 00 e4 61 ba 24 00"
         "cd 99 5b bc f7 16 7a 4c ce 60 d0 2e 5d 53 c8 61"
         "27 b3 6d e2 45 66 dd 42 28 03 bb f5 1d 5e e5 cf",
+        1,
     },
     {
         // QUIC IETF
@@ -2838,6 +2839,7 @@ const testvector_http3_t pcap_http3[] = {
         "24 cb 32 c6 19 4c 4a 39 60 d5 9e 1c f4 6a 23 1e"
         "05 49 96 b1 33 3c 25 ff bc 3c 3f e7 7f 9a 22 ea"
         "47 05",
+        1,
     },
     {
         // QUIC IETF
@@ -3804,6 +3806,7 @@ const testvector_http3_t pcap_http3[] = {
         "3c 64 e4 de 53 14 67 d7 4f cc 59 47 13 51 39 df"
         "3e 2d 75 c8 c5 68 e3 b9 f1 2f d4 c3 62 43 0b 85"
         "2f 3d b3 4a 2c f9 81 ed 82 14 b9 a6 02 97",
+        1,
     },
     {
         // QUIC IETF
@@ -3974,7 +3977,6 @@ const testvector_http3_t pcap_http3[] = {
         "WIRESHARK#67 CONNECTION_CLOSE",
         "58 fe 21 df 6a 65 e7 6e 9e c5 e0 38 6d e7 2a 7b"
         "01 89 39 c3 ce 57 41 a3 40 7f 8c 60 41 7e 1f 87",
-        1,
     },
 };
 const size_t sizeof_pcap_http3 = RTL_NUMBER_OF(pcap_http3);

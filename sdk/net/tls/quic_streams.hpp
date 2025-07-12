@@ -13,7 +13,7 @@
 #define __HOTPLACE_SDK_NET_TLS_QUICSTREAMS__
 
 #include <queue>
-#include <sdk/base/basic/binary_data.hpp>
+#include <sdk/base/basic/binaries.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <sdk/net/tls/quic/types.hpp>
@@ -43,7 +43,7 @@ class quic_streams {
     void clear(uint64 streamid);
 
    private:
-    t_binary_data<uint64> _streams;  // pair(streamid, binary_t)
+    t_fragmented_binaries<uint64, quic_frame_stream> _streams;
 };
 
 }  // namespace net

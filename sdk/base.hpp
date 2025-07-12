@@ -26,6 +26,7 @@
 /* basic */
 #include <sdk/base/basic/base16.hpp>
 #include <sdk/base/basic/base64.hpp>
+#include <sdk/base/basic/binaries.hpp>
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/cmdline.hpp>
 #include <sdk/base/basic/console_color.hpp>

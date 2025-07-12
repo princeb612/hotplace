@@ -19,13 +19,6 @@
 namespace hotplace {
 namespace net {
 
-// comments
-//
-// {
-//     crypto_advisor::get_instance();
-//     \-- linux crash
-// }
-
 tls_protection::tls_protection()
     : _session(nullptr), _flow(tls_flow_1rtt), _ciphersuite(0), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
 
@@ -80,7 +73,7 @@ void tls_protection::use_pre_master_secret(bool use) { _use_pre_master_secret = 
 
 bool tls_protection::use_pre_master_secret() { return _use_pre_master_secret; }
 
-t_binary_data<tls_secret_t> &tls_protection::get_secrets() { return _secrets; }
+t_binaries<tls_secret_t> &tls_protection::get_secrets() { return _secrets; }
 
 size_t tls_protection::get_header_size() {
     size_t ret_value = 0;
