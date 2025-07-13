@@ -41,4 +41,6 @@ void test_zero_capacity();
 void test_tiny_capacity();
 void test_small_capacity();
 
+void test_qpack_stream();
+
 #endif

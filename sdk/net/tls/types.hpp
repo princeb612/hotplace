@@ -609,12 +609,14 @@ enum tls_internal_flag_t : uint32 {
     dont_control_dtls_handshake_sequence = (1 << 1),
 };
 
-class dtls_record_publisher;
 class dtls_record_arrange;
+class dtls_record_publisher;
 class quic_streams;
+class sslkeylog_exporter;
+class sslkeylog_importer;
+class tls_advisor;
 class tls_protection;
 class tls_session;
-class tls_advisor;
 
 }  // namespace net
 }  // namespace hotplace

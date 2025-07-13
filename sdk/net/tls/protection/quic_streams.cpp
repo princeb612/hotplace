@@ -42,11 +42,11 @@ quic_streams& quic_streams::add(quic_frame_stream* stream) {
         uint32 finmask = 0;
 
         if (quic_frame_stream::quic_frame_stream_fin & flags) {
-            finmask = bin_check_fin;
+            finmask = bin_wait_fin;
         }
 
         if (quic_frame_stream::quic_frame_stream_off & flags) {
-            _streams.write(streamid, stream->get_offset(), stream->get_streamdata(), bin_wait_fin | finmask);
+            _streams.write(streamid, stream->get_offset(), stream->get_streamdata(), bin_check_fin | finmask);
         } else {
             _streams.assign(streamid, stream->get_streamdata());
         }

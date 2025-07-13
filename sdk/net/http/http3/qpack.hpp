@@ -81,6 +81,15 @@ class qpack_encoder : public http_header_compression {
      */
     virtual return_t decode(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
                             uint32 flags = 0);
+    return_t decode(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::list<std::pair<std::string, std::string>>& kv,
+                    uint32 flags = 0);
+    /**
+     * @brief   RFC 9204 4.3.1.  Set Dynamic Table Capacity
+     * @param   http_dynamic_table* dyntable [in]
+     * @param   binary_t& target [out]
+     * @param   uint64 capacity [in]
+     */
+    return_t encode_dyntable_capacity(http_dynamic_table* dyntable, binary_t& target, uint64 capacity);
     /**
      * @brief   encode (qpack_indexing flag)
      * @param   http_dynamic_table* session [in]

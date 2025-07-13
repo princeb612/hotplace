@@ -190,7 +190,7 @@ class t_fragmented_binaries {
             if (flags) {
                 if (bin_check_fin & flags) {
                     entry.finsize = offset + size;
-                    entry.flags |= bin_wait_fin;
+                    entry.flags |= (bin_wait_fin | bin_check_fin);
                 } else {
                     entry.flags |= (bin_wait_fin & flags);
                 }
@@ -223,7 +223,8 @@ class t_fragmented_binaries {
             } else if (1 == res.size()) {
                 bool check = ((0 == res[0].s) && (entry.bin.size() == res[0].e));
 
-                if ((bin_check_fin & flags) && (bin_wait_fin & entry.flags)) {
+                uint32 mask = bin_wait_fin | bin_check_fin;
+                if (mask == (mask & entry.flags)) {
                     check = (check && (entry.bin.size() == entry.finsize));
                 }
 
@@ -319,7 +320,7 @@ class t_fragmented_binaries {
         t_merge_ovl_intervals<size_t> part;
         binary_t bin;
 
-        entry_t() : flags(0), finsize(0) {}
+        entry_t() : flags(0), finsize(0), pos(0) {}
         void clear() {
             flags = 0;
             finsize = 0;

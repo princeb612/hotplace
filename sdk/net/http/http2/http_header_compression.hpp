@@ -58,10 +58,10 @@ enum http_header_compression_flag_t {
     qpack_layout_index = (1 << 4),           // RFC 9204 4.5.2.  Indexed Field Line
     qpack_layout_name_reference = (1 << 5),  // RFC 9204 4.5.4.  Literal Field Line with Name Reference
     qpack_layout_name_value = (1 << 6),      // RFC 9204 4.5.6.  Literal Field Line with Literal Name
-    qpack_layout_duplicate = (1 << 11),
-    qpack_layout_ack = (1 << 12),
-    qpack_layout_cancel = (1 << 13),
-    qpack_layout_inc = (1 << 14),
+    qpack_layout_duplicate = (1 << 11),      // RFC 9204 4.3.4.  Duplicate
+    qpack_layout_ack = (1 << 12),            // RFC 9204 4.4.1.  Section Acknowledgment
+    qpack_layout_cancel = (1 << 13),         // RFC 9204 4.4.2.  Stream Cancellation
+    qpack_layout_inc = (1 << 14),            // RFC 9204 4.4.3.  Insert Count Increment
 
     qpack_quic_stream_encoder = (1 << 15),  // RFC 9204 4.3.  Encoder Instructions
     qpack_quic_stream_decoder = (1 << 16),  // RFC 9204 4.4.  Decoder Instructions

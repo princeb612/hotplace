@@ -152,6 +152,33 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
     return ret;
 }
 
+return_t qpack_encoder::decode(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::list<std::pair<std::string, std::string>>& kv,
+                               uint32 flags) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || nullptr == source) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        kv.clear();
+
+        std::string name;
+        std::string value;
+        size_t pos = 0;
+        while (pos < size) {
+            decode(session, source, size, pos, name, value, flags);
+            session->commit();
+            if (name.empty() && value.empty()) {
+            } else {
+                kv.push_back({name, value});
+            }
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
 return_t qpack_encoder::decode_encoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
                                               std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
@@ -394,6 +421,32 @@ return_t qpack_encoder::decode_http_stream(http_dynamic_table* dyntable, const b
     __finally2 {
         // do nothing
     }
+    return ret;
+}
+
+return_t qpack_encoder::encode_dyntable_capacity(http_dynamic_table* dyntable, binary_t& target, uint64 capacity) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == dyntable) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // RFC 9204 4.3.1.  Set Dynamic Table Capacity
+        //
+        //     0   1   2   3   4   5   6   7
+        //   +---+---+---+---+---+---+---+---+
+        //   | 0 | 0 | 1 |   Capacity (5+)   |
+        //   +---+---+---+-------------------+
+        //
+        //    Figure 5: Set Dynamic Table Capacity
+        uint8 mask = 0x20;
+        uint8 prefix = 5;
+        encode_int(target, mask, prefix, capacity);
+
+        dyntable->set_capacity(capacity);
+    }
+    __finally2 {}
     return ret;
 }
 

@@ -139,7 +139,9 @@ int main(int argc, char** argv) {
     constexpr char constexpr_helpmsg_rfc[] = R"(encode base16 from rfc style expression ex. "[1,2,3,4,5]" or "01:02:03:04:05" or "01 02 03 04 05")";
 
     (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+#if defined DEBUG
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+#endif
                 << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-b64u", "decode base64url", [](OPTION& o, char* param) -> void { o.set(decode_b64u, param); }).preced().optional()

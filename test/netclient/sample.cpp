@@ -55,10 +55,12 @@ int main(int argc, char** argv) {
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
     (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+#if defined DEBUG
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, char* param) -> void { o.trace_level = atoi(param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, char* param) -> void { o.trace_level = 0; }).optional()
                 << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, char* param) -> void { o.trace_level = 2; }).optional()
+#endif
                 << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()

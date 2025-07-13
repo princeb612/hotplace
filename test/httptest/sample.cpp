@@ -31,7 +31,9 @@ int main(int argc, char **argv) {
      *      and then  : httptest -c
      */
     (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.verbose = 1; }).optional()
+#if defined DEBUG
                 << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION &o, char *param) -> void { o.debug = 1; }).optional()
+#endif
                 << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION &o, char *param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-c", "connect", [](OPTION &o, char *param) -> void { o.connect = 1; }).optional()

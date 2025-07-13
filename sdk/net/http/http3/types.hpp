@@ -20,10 +20,10 @@ namespace net {
  * RFC 9114 6.  Stream Mapping and Usage
  */
 enum h3_stream_t : uint8 {
-    h3_control_stream = 0x00,  // RFC 9114 6.2.1.  Control Streams
-    h3_push_stream = 0x01,     // RFC 9114 6.2.2.  Push Streams
-    h3_qpack_encoder_stream = 0x02,
-    h3_qpack_decoder_stream = 0x03,
+    h3_control_stream = 0x00,        // RFC 9114 6.2.1.  Control Streams
+    h3_push_stream = 0x01,           // RFC 9114 6.2.2.  Push Streams
+    h3_qpack_encoder_stream = 0x02,  // RFC 9204 4.2.  Encoder and Decoder Streams
+    h3_qpack_decoder_stream = 0x03,  // RFC 9204 4.2.  Encoder and Decoder Streams
 };
 
 /**
