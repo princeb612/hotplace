@@ -15,6 +15,7 @@
 #include <queue>
 #include <sdk/base/basic/binaries.hpp>
 #include <sdk/base/system/critical_section.hpp>
+#include <sdk/net/http/http3/qpack.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <sdk/net/tls/quic/types.hpp>
 #include <sdk/net/tls/types.hpp>
@@ -44,6 +45,8 @@ class quic_streams {
 
    private:
     t_fragmented_binaries<uint64, quic_frame_stream> _streams;
+    std::map<uint64, uint64> _encoders;
+    qpack_dynamic_table _qpack_dyntable;
 };
 
 }  // namespace net

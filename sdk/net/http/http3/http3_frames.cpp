@@ -20,7 +20,7 @@ namespace net {
 
 http3_frames::http3_frames() {}
 
-return_t http3_frames::read(const byte_t* stream, size_t size, size_t& pos) {
+return_t http3_frames::read(qpack_dynamic_table* dyntable, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         while (pos < size) {
@@ -43,7 +43,7 @@ return_t http3_frames::read(const byte_t* stream, size_t size, size_t& pos) {
 
             h3_frame_t type = (h3_frame_t)frmtype;
             http3_frame_builder builder;
-            auto frame = builder.set(type).build();
+            auto frame = builder.set(type).set(dyntable).build();
             if (frame) {
                 ret = frame->read(stream, size, pos);
                 frame->release();
@@ -60,7 +60,7 @@ return_t http3_frames::read(const byte_t* stream, size_t size, size_t& pos) {
     return ret;
 }
 
-return_t http3_frames::write(const byte_t* stream, size_t size) {
+return_t http3_frames::write(qpack_dynamic_table* dyntable, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
 
     return ret;

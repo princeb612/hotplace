@@ -85,7 +85,6 @@ class http3_frame_metadata;
 class http3_frame_priority_pdate;
 class http3_frame_unknown;
 class http3_frames;
-class http3_stream;
 
 // hpack_strea, qpack_stream
 template <typename DYNAMIC_T, typename ENCODER_T>

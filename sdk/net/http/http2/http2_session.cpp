@@ -299,7 +299,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
     return ret;
 }
 
-hpack_dynamic_table& http2_session::get_hpack_session() { return _hpack_session; }
+hpack_dynamic_table& http2_session::get_hpack_session() { return _hpack_dyntable; }
 
 http2_session& http2_session::enable_push(bool enable) {
     _enable_push = enable;

@@ -45,9 +45,9 @@ CONSTEXPR char constexpr_frame_origin_len[] = "origin-len";
 CONSTEXPR char constexpr_frame_origin[] = "origin";
 CONSTEXPR char constexpr_frame_alt_svc_field_value[] = "alt-svc-field-value";
 
-http2_frame::http2_frame() : _payload_size(0), _type(0), _flags(0), _stream_id(0), _hpack_session(nullptr) {}
+http2_frame::http2_frame() : _payload_size(0), _type(0), _flags(0), _stream_id(0), _hpack_dyntable(nullptr) {}
 
-http2_frame::http2_frame(h2_frame_t type) : _payload_size(0), _type(type), _flags(0), _stream_id(0), _hpack_session(nullptr) {}
+http2_frame::http2_frame(h2_frame_t type) : _payload_size(0), _type(type), _flags(0), _stream_id(0), _hpack_dyntable(nullptr) {}
 
 http2_frame::http2_frame(const http2_frame_header_t& header) { read(&header, sizeof(http2_frame_header_t)); }
 
@@ -56,7 +56,7 @@ http2_frame::http2_frame(const http2_frame& rhs) {
     _type = rhs._type;
     _flags = rhs._flags;
     _stream_id = rhs._stream_id;
-    _hpack_session = rhs._hpack_session;
+    _hpack_dyntable = rhs._hpack_dyntable;
 }
 
 uint32 http2_frame::get_frame_size() { return sizeof(http2_frame_header_t) + get_payload_size(); }
@@ -127,16 +127,16 @@ http2_frame& http2_frame::set_stream_id(uint32 id) {
 }
 
 http2_frame& http2_frame::load_hpack(hpack_stream& hp) {
-    _hpack_session = hp.get_session();
+    _hpack_dyntable = hp.get_session();
     return *this;
 }
 
 http2_frame& http2_frame::set_hpack_session(hpack_dynamic_table* session) {
-    _hpack_session = session;
+    _hpack_dyntable = session;
     return *this;
 }
 
-hpack_dynamic_table* http2_frame::get_hpack_session() { return _hpack_session; }
+hpack_dynamic_table* http2_frame::get_hpack_session() { return _hpack_dyntable; }
 
 return_t http2_frame::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;

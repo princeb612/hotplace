@@ -156,6 +156,7 @@ class quic_frame_stream : public quic_frame {
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+    virtual return_t do_postprocess(tls_direction_t dir);
 
    private:
     uint64 _streamid;

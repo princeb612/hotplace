@@ -15,9 +15,9 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/http/http3/http3_frame.hpp>
-#include <sdk/net/http/http3/http3_stream.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
+#include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic_streams.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
@@ -46,7 +46,7 @@ quic_streams& quic_streams::add(quic_frame_stream* stream) {
         }
 
         if (quic_frame_stream::quic_frame_stream_off & flags) {
-            _streams.write(streamid, stream->get_offset(), stream->get_streamdata(), bin_check_fin | finmask);
+            _streams.write(streamid, stream->get_offset(), stream->get_streamdata(), finmask);
         } else {
             _streams.assign(streamid, stream->get_streamdata());
         }
@@ -66,33 +66,64 @@ quic_streams& quic_streams::operator<<(quic_frame_stream* stream) { return add(s
 return_t quic_streams::consume(quic_frame_stream* stream) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto streamid = stream->get_streamid();
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
-        auto lambda = [&](quic_frame_stream* stream, const binary_t& bin, size_t& pos) -> return_t {
+        auto lambda_h3 = [&](quic_frame_stream* stream, const binary_t& bin, size_t& pos) -> return_t {
             return_t ret = errorcode_t::success;
-
-            auto packet = stream->get_packet();
-            auto session = packet->get_session();
-            auto& protection = session->get_tls_protection();
-            const binary_t& alpn = protection.get_secrets().get(tls_context_alpn);
-
-            constexpr byte_t alpn_h3[3] = {0x2, 'h', '3'};              // HTTP/3
-            constexpr byte_t alpn_ping[5] = {0x4, 'p', 'i', 'n', 'g'};  // ping
-            if (0 == memcmp(alpn_h3, &alpn[0], sizeof(alpn_h3))) {
-                if (streamid & quic_stream_unidirectional) {
-                    http3_stream h3stream;
-                    ret = h3stream.read(&bin[0], bin.size(), pos);
+            auto streamid = stream->get_streamid();
+            if (streamid & quic_stream_unidirectional) {
+                auto iter = _encoders.find(streamid);
+                if (_encoders.end() != iter) {
+                    auto unistreamtype = iter->second;
+                    switch (unistreamtype) {
+                        case h3_qpack_decoder_stream: {
+                            // TODO
+                        } break;
+                        case h3_qpack_encoder_stream: {
+                            qpack_encoder encoder;
+                            std::list<std::pair<std::string, std::string>> kv;
+                            encoder.decode(&_qpack_dyntable, &bin[0], bin.size(), pos, kv, qpack_quic_stream_encoder);
+                        } break;
+                    }
                 } else {
-                    http3_frames frames;
-                    ret = frames.read(&bin[0], bin.size(), pos);
+                    uint64 unistreamtype = 0;
+                    ret = quic_read_vle_int(&bin[0], bin.size(), pos, unistreamtype);
+                    if (errorcode_t::success == ret) {
+                        switch (unistreamtype) {
+                            case h3_qpack_decoder_stream:
+                            case h3_qpack_encoder_stream: {
+                                _encoders.insert({streamid, unistreamtype});
+                            } break;
+                            case h3_push_stream: {
+                            } break;
+                            case h3_control_stream: {
+                                http3_frames frames;
+                                ret = frames.read(&_qpack_dyntable, &bin[0], bin.size(), pos);
+                            } break;
+                        }
+                    }
                 }
-            } else if (0 == memcmp(alpn_ping, &alpn[0], sizeof(alpn_ping))) {
-                // TODO
+
+            } else {
+                http3_frames frames;
+                ret = frames.read(&_qpack_dyntable, &bin[0], bin.size(), pos);
             }
 
             return ret;
         };
-        _streams.consume(streamid, stream, lambda);
+
+        constexpr byte_t alpn_h3[3] = {0x2, 'h', '3'};              // HTTP/3
+        constexpr byte_t alpn_ping[5] = {0x4, 'p', 'i', 'n', 'g'};  // ping
+
+        const binary_t& alpn = stream->get_packet()->get_session()->get_tls_protection().get_secrets().get(tls_context_alpn);
+        if (0 == memcmp(alpn_h3, &alpn[0], sizeof(alpn_h3))) {
+            ret = _streams.consume(stream->get_streamid(), stream, lambda_h3);
+        } else if (0 == memcmp(alpn_ping, &alpn[0], sizeof(alpn_ping))) {
+            //
+        }
     }
     __finally2 {}
     return ret;

@@ -19,29 +19,8 @@ namespace hotplace {
 namespace net {
 
 /**
- * @brief   Field Section Prefix
- * @param   size_t capacity [in]
- * @param   size_t ric [in]
- * @param   size_t base [in]
- * @param   size_t& eic [out]
- * @param   bool& sign [out]
- * @param   size_t& deltabase [out]
- * @return  error code (see error.hpp)
+ * RFC 9204 QPACK: Field Compression for HTTP/3
  */
-return_t qpack_ric2eic(size_t capacity, size_t ric, size_t base, size_t& eic, bool& sign, size_t& deltabase);
-/**
- * @brief   Field Section Prefix (reconstruct)
- * @param   size_t capacity [in]
- * @param   size_t tni [in] total number of inserts
- * @param   size_t eic [in]
- * @param   bool sign [in]
- * @param   size_t deltabase [in]
- * @param   size_t& ric [out]
- * @param   size_t& base [out]
- * @return  error code (see error.hpp)
- */
-return_t qpack_eic2ric(size_t capacity, size_t tni, size_t eic, bool sign, size_t deltabase, size_t& ric, size_t& base);
-
 class qpack_encoder : public http_header_compression {
    public:
     qpack_encoder();
@@ -236,6 +215,30 @@ class qpack_dynamic_table : public http_dynamic_table {
      */
     virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
 };
+
+/**
+ * @brief   Field Section Prefix
+ * @param   size_t capacity [in]
+ * @param   size_t ric [in]
+ * @param   size_t base [in]
+ * @param   size_t& eic [out]
+ * @param   bool& sign [out]
+ * @param   size_t& deltabase [out]
+ * @return  error code (see error.hpp)
+ */
+return_t qpack_ric2eic(size_t capacity, size_t ric, size_t base, size_t& eic, bool& sign, size_t& deltabase);
+/**
+ * @brief   Field Section Prefix (reconstruct)
+ * @param   size_t capacity [in]
+ * @param   size_t tni [in] total number of inserts
+ * @param   size_t eic [in]
+ * @param   bool sign [in]
+ * @param   size_t deltabase [in]
+ * @param   size_t& ric [out]
+ * @param   size_t& base [out]
+ * @return  error code (see error.hpp)
+ */
+return_t qpack_eic2ric(size_t capacity, size_t tni, size_t eic, bool sign, size_t deltabase, size_t& ric, size_t& base);
 
 }  // namespace net
 }  // namespace hotplace

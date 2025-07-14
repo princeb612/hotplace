@@ -18,10 +18,15 @@
 namespace hotplace {
 namespace net {
 
-http3_frame_builder::http3_frame_builder() : _type(h3_frame_data) {}
+http3_frame_builder::http3_frame_builder() : _type(h3_frame_data), _dyntable(nullptr) {}
 
 http3_frame_builder& http3_frame_builder::set(h3_frame_t type) {
     _type = type;
+    return *this;
+}
+
+http3_frame_builder& http3_frame_builder::set(qpack_dynamic_table* dyntable) {
+    _dyntable = dyntable;
     return *this;
 }
 
@@ -32,7 +37,7 @@ http3_frame* http3_frame_builder::build() {
             __try_new_catch_only(frame, new http3_frame_data);
         } break;
         case h3_frame_headers: {
-            __try_new_catch_only(frame, new http3_frame_headers);
+            __try_new_catch_only(frame, new http3_frame_headers(_dyntable));
         } break;
         case h3_frame_cancel_push: {
             __try_new_catch_only(frame, new http3_frame_cancel_push);

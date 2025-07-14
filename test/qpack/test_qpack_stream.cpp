@@ -66,12 +66,12 @@ void test_qpack_stream() {
 
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
-    qpack_dynamic_table qpack_session;
+    qpack_dynamic_table qpack_dyntable;
     for (auto item : tv) {
         auto bin = base16_decode_rfc(item.stream);
         size_t pos = 0;
         std::list<std::pair<std::string, std::string>> kv;
-        ret = enc.decode(&qpack_session, &bin[0], bin.size(), pos, kv, item.type);
+        ret = enc.decode(&qpack_dyntable, &bin[0], bin.size(), pos, kv, item.type);
         for (auto kvitem : kv) {
             _logger->writeln("%s: %s", kvitem.first.c_str(), kvitem.second.c_str());
         }

@@ -77,9 +77,9 @@ void test_rfc7541_c_2() {
     // C.2.1.  Literal Header Field with Indexing
     // "custom-key: custom-header"
     {
-        hpack_dynamic_table session;  // dynamic table
+        hpack_dynamic_table hpack_dyntable;  // dynamic table
         bin.clear();
-        encoder->encode_header(&session, bin, "custom-key", "custom-header", hpack_indexing);
+        encoder->encode_header(&hpack_dyntable, bin, "custom-key", "custom-header", hpack_indexing);
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
             _logger->hdump("encode", bin, 16, 2);
@@ -94,20 +94,20 @@ void test_rfc7541_c_2() {
         _test_case.assert(bin == base16_decode_rfc(expect1), __FUNCTION__, "%s #encode", text1);
 
         pos = 0;
-        encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
+        encoder->decode_header(&hpack_dyntable, &bin[0], bin.size(), pos, name, value);
 
-        session.dump("dynamic table", dump_hpack_session_routine);
-        _test_case.assert(1 == session.get_entries(), __FUNCTION__, "%s #entry size", text1);
-        _test_case.assert(55 == session.get_tablesize(), __FUNCTION__, "%s #table size", text1);
+        hpack_dyntable.dump("dynamic table", dump_hpack_session_routine);
+        _test_case.assert(1 == hpack_dyntable.get_entries(), __FUNCTION__, "%s #entry size", text1);
+        _test_case.assert(55 == hpack_dyntable.get_tablesize(), __FUNCTION__, "%s #table size", text1);
         _test_case.assert(("custom-key" == name) && ("custom-header" == value), __FUNCTION__, "%s #decode", text1);
     }
 
     // C.2.2.  Literal Header Field without Indexing
     // :path: /sample/path
     {
-        hpack_dynamic_table session;  // dynamic table
+        hpack_dynamic_table hpack_dyntable;  // dynamic table
         bin.clear();
-        encoder->encode_header(&session, bin, ":path", "/sample/path", hpack_wo_indexing);
+        encoder->encode_header(&hpack_dyntable, bin, ":path", "/sample/path", hpack_wo_indexing);
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
             _logger->hdump("encode", bin, 16, 2);
@@ -119,20 +119,20 @@ void test_rfc7541_c_2() {
         _test_case.assert(bin == base16_decode_rfc(expect2), __FUNCTION__, "%s #encode", text2);
 
         pos = 0;
-        encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
+        encoder->decode_header(&hpack_dyntable, &bin[0], bin.size(), pos, name, value);
 
-        session.dump("dynamic table", dump_hpack_session_routine);
-        _test_case.assert(0 == session.get_entries(), __FUNCTION__, "%s #entry size", text2);
-        _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s #table size", text2);
+        hpack_dyntable.dump("dynamic table", dump_hpack_session_routine);
+        _test_case.assert(0 == hpack_dyntable.get_entries(), __FUNCTION__, "%s #entry size", text2);
+        _test_case.assert(0 == hpack_dyntable.get_tablesize(), __FUNCTION__, "%s #table size", text2);
         _test_case.assert((":path" == name) && ("/sample/path" == value), __FUNCTION__, "%s #decode", text2);
     }
 
     // C.2.3.  Literal Header Field Never Indexed
     // password: secret
     {
-        hpack_dynamic_table session;  // dynamic table
+        hpack_dynamic_table hpack_dyntable;  // dynamic table
         bin.clear();
-        encoder->encode_header(&session, bin, "password", "secret", hpack_never_indexed);
+        encoder->encode_header(&hpack_dyntable, bin, "password", "secret", hpack_never_indexed);
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
             dump_memory(bin, &bs, 16, 2);
@@ -147,21 +147,21 @@ void test_rfc7541_c_2() {
         // 00000010 : 74 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- | t
         _test_case.assert(bin == base16_decode_rfc(expect3), __FUNCTION__, "%s #encode", text3);
 
-        session.dump("dynamic table", dump_hpack_session_routine);
-        _test_case.assert(0 == session.get_entries(), __FUNCTION__, "%s #entry size", text3);
-        _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s #table size", text3);
+        hpack_dyntable.dump("dynamic table", dump_hpack_session_routine);
+        _test_case.assert(0 == hpack_dyntable.get_entries(), __FUNCTION__, "%s #entry size", text3);
+        _test_case.assert(0 == hpack_dyntable.get_tablesize(), __FUNCTION__, "%s #table size", text3);
 
         pos = 0;
-        encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
+        encoder->decode_header(&hpack_dyntable, &bin[0], bin.size(), pos, name, value);
 
         _test_case.assert(("password" == name) && ("secret" == value), __FUNCTION__, "%s #decode", text3);
     }
 
     // C.2.4.  Indexed Header Field
     {
-        hpack_dynamic_table session;  // dynamic table
+        hpack_dynamic_table hpack_dyntable;  // dynamic table
         bin.clear();
-        encoder->encode_header(&session, bin, ":method", "GET");
+        encoder->encode_header(&hpack_dyntable, bin, ":method", "GET");
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
             _logger->hdump("encode", bin, 16, 2);
@@ -172,18 +172,18 @@ void test_rfc7541_c_2() {
         // 00000000 : 82 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- | .
         _test_case.assert(bin == base16_decode_rfc(expect4), __FUNCTION__, "%s #encode", text4);
 
-        session.dump("dynamic table", dump_hpack_session_routine);
-        _test_case.assert(0 == session.get_entries(), __FUNCTION__, "%s #entry size", text4);
-        _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "%s #table size", text4);
+        hpack_dyntable.dump("dynamic table", dump_hpack_session_routine);
+        _test_case.assert(0 == hpack_dyntable.get_entries(), __FUNCTION__, "%s #entry size", text4);
+        _test_case.assert(0 == hpack_dyntable.get_tablesize(), __FUNCTION__, "%s #table size", text4);
 
         pos = 0;
-        encoder->decode_header(&session, &bin[0], bin.size(), pos, name, value);
+        encoder->decode_header(&hpack_dyntable, &bin[0], bin.size(), pos, name, value);
 
         _test_case.assert((":method" == name) && ("GET" == value), __FUNCTION__, "%s #decode", text4);
     }
 }
 
-void do_decode(const binary_t& bin, hpack_dynamic_table* session, hpack_dynamic_table* session2) {
+void do_decode(const binary_t& bin, hpack_dynamic_table* hpack_dyntable, hpack_dynamic_table* session2) {
     const OPTION& option = _cmdline->value();
 
     hpack_stream hp;
@@ -195,7 +195,7 @@ void do_decode(const binary_t& bin, hpack_dynamic_table* session, hpack_dynamic_
         _logger->writeln("> decode");
     }
 
-    hp.set_session(session);
+    hp.set_session(hpack_dyntable);
     while (pos < bin.size()) {
         hp.decode_header(&bin[0], bin.size(), pos, name, value);
         if (option.verbose) {
@@ -206,7 +206,7 @@ void do_decode(const binary_t& bin, hpack_dynamic_table* session, hpack_dynamic_
     hp.commit();
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
-        session->dump("dynamic table (receiver)", dump_hpack_session_routine);
+        hpack_dyntable->dump("dynamic table (receiver)", dump_hpack_session_routine);
         session2->dump("dynamic table (sender)", dump_hpack_session_routine);
         fflush(stdout);
     }

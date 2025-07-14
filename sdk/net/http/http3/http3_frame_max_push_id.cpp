@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace net {
 
-http3_frame_max_push_id::http3_frame_max_push_id() : http3_frame(h3_frame_headers) {}
+http3_frame_max_push_id::http3_frame_max_push_id() : http3_frame(h3_frame_max_push_id) {}
 
 }  // namespace net
 }  // namespace hotplace

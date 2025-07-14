@@ -187,13 +187,9 @@ class t_fragmented_binaries {
                 entry.bin.resize(offset + size);
             }
             memcpy(&entry.bin[offset], stream, size);
-            if (flags) {
-                if (bin_check_fin & flags) {
-                    entry.finsize = offset + size;
-                    entry.flags |= (bin_wait_fin | bin_check_fin);
-                } else {
-                    entry.flags |= (bin_wait_fin & flags);
-                }
+            if (bin_wait_fin & flags) {
+                entry.finsize = offset + size;
+                entry.flags |= (bin_wait_fin | bin_check_fin);
             }
         } else {
             ret = errorcode_t::invalid_parameter;
@@ -295,13 +291,11 @@ class t_fragmented_binaries {
                 auto& entry = iter->second;
                 ret = func(frag, entry.bin, entry.pos);
                 if (errorcode_t::success == ret) {
-                    if (entry.bin.size() == entry.pos) {
-                        if (bin_wait_fin & entry.flags) {
+                    if (bin_wait_fin & entry.flags) {
+                        if (entry.bin.size() == entry.pos) {
                             if (entry.bin.size() == entry.finsize) {
                                 _map.erase(iter);
                             }
-                        } else {
-                            _map.erase(iter);
                         }
                     }
                 }

@@ -56,7 +56,7 @@ void test_h2_header_frame() {
         }
     };
 
-    hpack_dynamic_table session;
+    hpack_dynamic_table hpack_dyntable;
 
     // HEADERS[1]: GET /
     // HyperText Transfer Protocol 2
@@ -145,7 +145,7 @@ void test_h2_header_frame() {
         {"priority", "u=0, i"},
     };
 
-    lambda_test("GET /", &session, sample1, tv1, RTL_NUMBER_OF(tv1));
+    lambda_test("GET /", &hpack_dyntable, sample1, tv1, RTL_NUMBER_OF(tv1));
 
     // HEADERS[3]: GET /favicon.ico
     // HyperText Transfer Protocol 2
@@ -209,7 +209,7 @@ void test_h2_header_frame() {
         {"priority", "u=1, i"},
     };
 
-    lambda_test("GET /favicon.ico", &session, sample2, tv2, RTL_NUMBER_OF(tv2));
+    lambda_test("GET /favicon.ico", &hpack_dyntable, sample2, tv2, RTL_NUMBER_OF(tv2));
 
     // HyperText Transfer Protocol 2
     //     Stream: HEADERS, Stream ID: 1, Length 502, GET /api/html
@@ -301,5 +301,5 @@ void test_h2_header_frame() {
         {"priority", "u=0, i"},
     };
 
-    lambda_test("GET /api/html", &session, sample3, tv3, RTL_NUMBER_OF(tv3));
+    lambda_test("GET /api/html", &hpack_dyntable, sample3, tv3, RTL_NUMBER_OF(tv3));
 }

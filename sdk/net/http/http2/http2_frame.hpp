@@ -72,7 +72,7 @@ class http2_frame {
     uint8 _flags;
     uint32 _stream_id;
 
-    hpack_dynamic_table* _hpack_session;
+    hpack_dynamic_table* _hpack_dyntable;
 };
 
 /**

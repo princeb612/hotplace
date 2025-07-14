@@ -13,7 +13,6 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/http/http3/http3_frame.hpp>
-#include <sdk/net/http/http3/http3_stream.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
@@ -99,8 +98,6 @@ return_t quic_frame_stream::do_read_body(tls_direction_t dir, const byte_t* stre
             _offset = off;
             _streamdata = std::move(stream_data);
         }
-
-        get_packet()->get_session()->get_quic_streams() << this;
     }
     __finally2 {}
     return ret;
@@ -110,6 +107,12 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {}
     __finally2 {}
+    return ret;
+}
+
+return_t quic_frame_stream::do_postprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+    get_packet()->get_session()->get_quic_streams() << this;
     return ret;
 }
 

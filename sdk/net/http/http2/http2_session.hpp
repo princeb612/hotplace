@@ -55,7 +55,7 @@ class http2_session {
     typedef std::pair<headers_t::iterator, bool> headers_pib_t;
     flags_t _flags;
     headers_t _headers;  // map<stream_identifier, http_request>
-    hpack_dynamic_table _hpack_session;
+    hpack_dynamic_table _hpack_dyntable;
     bool _enable_push;
 };
 

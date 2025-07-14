@@ -17,10 +17,8 @@
 namespace hotplace {
 namespace net {
 
-// RFC 7541 HPACK: Header Compression for HTTP/2
-
 /**
- * @brief   RFC 7541 HPACK
+ * @brief   RFC 7541 HPACK: Header Compression for HTTP/2
  */
 class hpack_encoder : public http_header_compression {
    public:

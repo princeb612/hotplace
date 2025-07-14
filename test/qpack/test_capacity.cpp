@@ -19,7 +19,7 @@ void test_zero_capacity() {
 
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
-    qpack_dynamic_table session;
+    qpack_dynamic_table qpack_dyntable;
     binary_t bin;
     uint32 flags = 0;
 
@@ -28,12 +28,12 @@ void test_zero_capacity() {
     //    SETTINGS_QPACK_MAX_TABLE_CAPACITY (0x01):  The default value is zero.
 
     // debug
-    session.set_debug_hook(debug_qpack_encoder);
+    qpack_dyntable.set_debug_hook(debug_qpack_encoder);
 
     flags = qpack_intermediary | qpack_name_reference;
-    enc.insert(&session, bin, ":authority", "www.example.com", flags);
-    enc.insert(&session, bin, ":path", "/sample/path", flags);
-    enc.insert(&session, bin, "custom-key", "custom-value", flags);
+    enc.insert(&qpack_dyntable, bin, ":authority", "www.example.com", flags);
+    enc.insert(&qpack_dyntable, bin, ":path", "/sample/path", flags);
+    enc.insert(&qpack_dyntable, bin, "custom-key", "custom-value", flags);
     test_dump(bin, nullptr);
     bin.clear();
 
@@ -42,12 +42,12 @@ void test_zero_capacity() {
         "74 6F 6D 2D 76 61 6C 75 65 32 -- -- -- -- -- --"  // | tom-value2
         ;
 
-    enc.insert(&session, bin, "custom-key", "custom-value2", flags);
+    enc.insert(&qpack_dyntable, bin, "custom-key", "custom-value2", flags);
     test_expect(bin, expect, nullptr);
-    _test_case.assert(0 == session.get_capacity(), __FUNCTION__, "#capacity %zi", session.get_capacity());
-    _test_case.assert(0 == session.get_entries(), __FUNCTION__, "#entries %zi", session.get_entries());
+    _test_case.assert(0 == qpack_dyntable.get_capacity(), __FUNCTION__, "#capacity %zi", qpack_dyntable.get_capacity());
+    _test_case.assert(0 == qpack_dyntable.get_entries(), __FUNCTION__, "#entries %zi", qpack_dyntable.get_entries());
     _test_case.assert(0 == count_evict_encoder, __FUNCTION__, "#eviction check %u", count_evict_encoder);
-    _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "#table size %zi", session.get_tablesize());
+    _test_case.assert(0 == qpack_dyntable.get_tablesize(), __FUNCTION__, "#table size %zi", qpack_dyntable.get_tablesize());
     bin.clear();
 }
 
@@ -57,27 +57,27 @@ void test_tiny_capacity() {
 
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
-    qpack_dynamic_table session;
+    qpack_dynamic_table qpack_dyntable;
     binary_t bin;
     uint32 flags = 0;
 
-    // case sizeof_entry(name, value) < session->get_capacity()
+    // case sizeof_entry(name, value) < qpack_dyntable->get_capacity()
     // insertion impossible
-    session.set_capacity(32);
+    qpack_dyntable.set_capacity(32);
 
     // debug
-    session.set_debug_hook(debug_qpack_encoder);
+    qpack_dyntable.set_debug_hook(debug_qpack_encoder);
 
     flags = qpack_intermediary | qpack_name_reference;
-    enc.insert(&session, bin, ":authority", "www.example.com", flags);
-    enc.insert(&session, bin, ":path", "/sample/path", flags);
-    enc.insert(&session, bin, "custom-key", "custom-value", flags);
-    enc.insert(&session, bin, "custom-key", "custom-value2", flags);
+    enc.insert(&qpack_dyntable, bin, ":authority", "www.example.com", flags);
+    enc.insert(&qpack_dyntable, bin, ":path", "/sample/path", flags);
+    enc.insert(&qpack_dyntable, bin, "custom-key", "custom-value", flags);
+    enc.insert(&qpack_dyntable, bin, "custom-key", "custom-value2", flags);
 
-    _test_case.assert(32 == session.get_capacity(), __FUNCTION__, "#capacity %zi", session.get_capacity());
-    _test_case.assert(0 == session.get_entries(), __FUNCTION__, "#entries %zi", session.get_entries());
+    _test_case.assert(32 == qpack_dyntable.get_capacity(), __FUNCTION__, "#capacity %zi", qpack_dyntable.get_capacity());
+    _test_case.assert(0 == qpack_dyntable.get_entries(), __FUNCTION__, "#entries %zi", qpack_dyntable.get_entries());
     _test_case.assert(0 == count_evict_encoder, __FUNCTION__, "#eviction check %u", count_evict_encoder);
-    _test_case.assert(0 == session.get_tablesize(), __FUNCTION__, "#table size %zi", session.get_tablesize());
+    _test_case.assert(0 == qpack_dyntable.get_tablesize(), __FUNCTION__, "#table size %zi", qpack_dyntable.get_tablesize());
     _logger->dump(bin);
 }
 
@@ -87,22 +87,22 @@ void test_small_capacity() {
 
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
-    qpack_dynamic_table session;
+    qpack_dynamic_table qpack_dyntable;
     binary_t bin;
     uint32 flags = qpack_intermediary | qpack_name_reference;
 
     // assumption - just 1 entry available space
     // always evict older entry while insertion
-    session.set_capacity(80);
+    qpack_dyntable.set_capacity(80);
 
     // debug
-    session.set_debug_hook(debug_qpack_encoder);
+    qpack_dyntable.set_debug_hook(debug_qpack_encoder);
 
     auto test = [&](const std::string& name, const std::string& value, unsigned int evict_expect, const char* expect = nullptr) -> void {
-        enc.insert(&session, bin, name, value, flags);
-        _test_case.assert(1 == session.get_entries(), __FUNCTION__, "#entries %zi", session.get_entries());
+        enc.insert(&qpack_dyntable, bin, name, value, flags);
+        _test_case.assert(1 == qpack_dyntable.get_entries(), __FUNCTION__, "#entries %zi", qpack_dyntable.get_entries());
         _test_case.assert(evict_expect == count_evict_encoder, __FUNCTION__, "#eviction check %u", count_evict_encoder);
-        _test_case.assert((name.size() + value.size() + 32) == session.get_tablesize(), __FUNCTION__, "#table size %zi", session.get_tablesize());
+        _test_case.assert((name.size() + value.size() + 32) == qpack_dyntable.get_tablesize(), __FUNCTION__, "#table size %zi", qpack_dyntable.get_tablesize());
         if (expect) {
             _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "#expect");
         }
@@ -122,6 +122,6 @@ void test_small_capacity() {
     //     ;
     test("custom-key", "custom-value2", 3);
 
-    _test_case.assert(80 == session.get_capacity(), __FUNCTION__, "#capacity %zi", session.get_capacity());
+    _test_case.assert(80 == qpack_dyntable.get_capacity(), __FUNCTION__, "#capacity %zi", qpack_dyntable.get_capacity());
     _logger->dump(bin);
 }

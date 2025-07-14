@@ -47,12 +47,12 @@ enum h3_frame_t : uint64 {
  * RFC 9114 7.2.4.1.  Defined SETTINGS Parameters
  */
 enum h3_settings_param_t : uint16 {
-    h3_settings_qpack_max_table_capacity = 0x1,
-    h3_settings_max_field_section_size = 0x6,
-    h3_settings_qpack_blocked_streams = 0x7,
-    h3_settings_enable_connect_protocol = 0x8,
-    h3_settings_h3_datagram = 0x33,
-    h3_settings_enable_metadata = 0x4d44,
+    h3_settings_qpack_max_table_capacity = 0x1,  // RFC 9204
+    h3_settings_max_field_section_size = 0x6,    // RFC 9114
+    h3_settings_qpack_blocked_streams = 0x7,     // RFC 9204
+    h3_settings_enable_connect_protocol = 0x8,   // RFC 9220
+    h3_settings_h3_datagram = 0x33,              // RFC 9297
+    h3_settings_enable_metadata = 0x4d44,        // draft
 };
 
 /**
