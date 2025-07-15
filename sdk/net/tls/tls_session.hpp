@@ -14,6 +14,7 @@
 
 #include <queue>
 #include <sdk/base/basic/keyvalue.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/base/system/semaphore.hpp>
 #include <sdk/base/system/types.hpp>
@@ -180,6 +181,7 @@ class tls_session {
     void get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags = 0);
     bool has_alert(tls_direction_t dir, uint8 level = tls_alertlevel_fatal);
 
+    basic_stream& get_stream();
     quic_streams& get_quic_streams();
 
    private:

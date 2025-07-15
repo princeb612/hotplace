@@ -277,8 +277,11 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         }
 
         if (size - pos < len) {
-            // fragment
-            ret = errorcode_t::bad_data;
+            // condition TCP segmentation
+            auto& secrets = session->get_tls_protection().get_secrets();
+            secrets.assign(tls_context_segment, stream + recpos, size - recpos);
+            ret = errorcode_t::block_segmented;
+            pos += (size - pos);
             __leave2;
         } else if (len > 16384 + 2048) {
             // more than 2^14+2048 bytes
@@ -304,7 +307,11 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto const& range = get_header_range();
 
-            dbs.println("# record %s [size 0x%x pos 0x%x]", (from_server == dir) ? "(server)" : (from_client == dir) ? "(client)" : "", size, recpos);
+            dbs.println("# record %s [size 0x%zx(%zi) pos 0x%x]",
+                        (from_server == dir)   ? "(server)"
+                        : (from_client == dir) ? "(client)"
+                                               : "",
+                        size, size, recpos);
             uint16 content_header_size = 0;
             if (tlsadvisor->is_kindof_tls(record_version)) {
                 content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
@@ -333,7 +340,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         }
     }
     __finally2 {
-        if (errorcode_t::success != ret) {
+        if ((errorcode_t::success != ret) && (errorcode_t::block_segmented != ret)) {
             pos = recpos;  // rollback
         }
     }

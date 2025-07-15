@@ -544,7 +544,8 @@ enum tls_secret_t : uint16 {
     tls_context_alpn = (TLS_SECRET_USERCONTEXT | 0x11),                     //
     tls_context_client_verifydata = (TLS_SECRET_USERCONTEXT | 0x12),        //
     tls_context_server_verifydata = (TLS_SECRET_USERCONTEXT | 0x13),        //
-    tls_context_fragment = (TLS_SECRET_USERCONTEXT | 0x1b),                 // DTLS, QUIC
+    tls_context_segment = (TLS_SECRET_USERCONTEXT | 0x1a),                  //
+    tls_context_fragment = (TLS_SECRET_USERCONTEXT | 0x1b),                 // DTLS Handshake, QUIC FRAME CRYPTO
     tls_context_new_session_ticket = (TLS_SECRET_USERCONTEXT | 0x1d),       // RFC 8446 4.6.1. ticket
     tls_context_resumption_binder_key = (TLS_SECRET_USERCONTEXT | 0x21),    // CH 0-RTT
     tls_context_resumption_finished_key = (TLS_SECRET_USERCONTEXT | 0x22),  // CH 0-RTT

@@ -19,6 +19,8 @@ void test_http3() {
     sslkeylog->attach(&tlssession);
     sslkeylog->attach(&quicsession);
 
+    // QUIC client_random 48124abae04c7ad67bd69bb976916edf349a0b296c884ba22f546faed8c8ce90
+    // TLS client_random 95bed2d24d72386f90f77864e5fdfa4ba00357955d70957456e3743e00fe6b8c
     *sslkeylog << "SERVER_HANDSHAKE_TRAFFIC_SECRET 48124abae04c7ad67bd69bb976916edf349a0b296c884ba22f546faed8c8ce90 "
                   "617086660ff9b9b9ef915feec02c039b651732233d0b71dc8b6b18eb75c983f09f7ddb3a39c1490e41c1356112a984ef";
     *sslkeylog << "CLIENT_HANDSHAKE_TRAFFIC_SECRET 48124abae04c7ad67bd69bb976916edf349a0b296c884ba22f546faed8c8ce90 "
@@ -45,14 +47,12 @@ void test_http3() {
         if (prot_quic == prot) {
             // WIRESHARK#14 contains 2 PACKETs
             quic_packets packets;
-            packets.read(&quicsession, dir, bin_frame);
+            ret = packets.read(&quicsession, dir, bin_frame);
             // uint8 type = 0;
             // ret = quic_read_packet(type, &quicsession, item->dir, bin_frame);
         } else if (prot_tls13 == prot) {
             tls_records records;
             ret = records.read(&tlssession, dir, bin_frame);
-        } else if (prot_http3 == prot) {
-            //
         }
 
         _test_case.test(ret, __FUNCTION__, "%s", item->desc);
