@@ -22,15 +22,15 @@ namespace net {
  * RFC 9204 QPACK: Field Compression for HTTP/3
  */
 enum qpack_decode_flag_t {
-    qpack_decode_capacity = 1 << 0,              // capacity
-    qpack_decode_field_section_prefix = 1 << 1,  // ric, base
-    qpack_decode_index = 1 << 2,                 // index, name, value
-    qpack_decode_nameref = 1 << 3,               // index, name, value
-    qpack_decode_namevalue = 1 << 4,             // name, value
-    qpack_decode_ack = 1 << 5,                   // streamid
-    qpack_decode_cancel = 1 << 6,                // streamid
-    qpack_decode_dup = 1 << 7,                   // index, name, value
-    qpack_decode_inc = 1 << 8,                   // inc
+    qpack_decode_capacity = 1 << 0,              // 0x00000001 capacity
+    qpack_decode_field_section_prefix = 1 << 1,  // 0x00000002 ric, base
+    qpack_decode_index = 1 << 2,                 // 0x00000004 index, name, value
+    qpack_decode_nameref = 1 << 3,               // 0x00000008 index, name, value
+    qpack_decode_namevalue = 1 << 4,             // 0x00000010 name, value
+    qpack_decode_ack = 1 << 5,                   // 0x00000020 streamid
+    qpack_decode_cancel = 1 << 6,                // 0x00000040 streamid
+    qpack_decode_dup = 1 << 7,                   // 0x00000080 index, name, value
+    qpack_decode_inc = 1 << 8,                   // 0x00000100 inc
 };
 struct qpack_decode_t {
     // qpack_decode_flag_t
@@ -50,9 +50,10 @@ struct qpack_decode_t {
     // inc
     size_t inc;
 
-    qpack_decode_t() : flags(0), ric(0), base(0), index(0), streamid(0), inc(0) {}
+    qpack_decode_t() : flags(0), capacity(0), ric(0), base(0), index(0), streamid(0), inc(0) {}
     void clear() {
         flags = 0;
+        capacity = 0;
         ric = 0;
         base = 0;
         index = 0;

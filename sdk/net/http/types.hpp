@@ -72,9 +72,9 @@ enum http_header_compression_flag_t : uint32 {
     qpack_layout_inc = (1 << 14),            // 0x00004000
     qpack_field_section_prefix = (1 << 18),  // 0x00040000
 
-    qpack_quic_stream_encoder = (1 << 15),  // 0x000008000
-    qpack_quic_stream_decoder = (1 << 16),  // 0x000010000
-    qpack_quic_stream_header = (1 << 17),   // 0x000020000
+    qpack_quic_stream_encoder = (1 << 15),  // 0x00008000
+    qpack_quic_stream_decoder = (1 << 16),  // 0x00010000
+    qpack_quic_stream_header = (1 << 17),   // 0x00020000
 };
 
 // net/http

@@ -361,7 +361,6 @@ return_t qpack_encoder::decode_http3_header(http_dynamic_table* dyntable, const 
             if (errorcode_t::success != ret) {
                 __leave2;
             }
-            item.flags |= qpack_decode_field_section_prefix;
         } else {
             byte_t b = source[pos];
             uint8 mask = 0;
@@ -430,8 +429,7 @@ return_t qpack_encoder::decode_http3_header(http_dynamic_table* dyntable, const 
                 item.flags |= qpack_decode_nameref;
                 item.index = i;
             } else if (qpack_layout_name_value & flags) {
-                pos++;
-                decode_string(source, pos, flags, item.name);
+                decode_name_reference(source, pos, flags, mask, prefix, item.name);
                 decode_string(source, pos, flags, item.value);
 
                 item.flags |= qpack_decode_namevalue;

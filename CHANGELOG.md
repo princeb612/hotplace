@@ -27,6 +27,8 @@
     * CBOR
 
 * details
+  * Revision 824
+    * [fixed] QPACK
   * Revision 823
     * [tested] RFC 9204
   * Revision 804

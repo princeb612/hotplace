@@ -134,6 +134,9 @@ return_t hpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
             selectall(statable, dyntable, flags, i, name, value);
             decode_string(source, pos, flags, value);
         } else if (hpack_layout_name_value & flags) {
+            // RFC 7541 Figure 7: Literal Header Field with Incremental Indexing -- New Name
+            // RFC 7541 Figure 9: Literal Header Field without Indexing -- New Name
+            // RFC 7541 Figure 11: Literal Header Field Never Indexed -- New Name
             pos++;
             decode_string(source, pos, flags, name);
             decode_string(source, pos, flags, value);

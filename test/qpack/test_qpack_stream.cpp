@@ -53,11 +53,14 @@ struct testvector_qpack {
         // [Full request URI: https://www.google.com/]
         "03 81 d1 d7 10 c1 11 dd",
     },
-#if 0
     {
         from_server,
         qpack_quic_stream_encoder,
         "#38 DTable cap=0",
+        // QPACK encoder stream; 0 opcodes (0 total)
+        //     QPACK encoder opcode: Set DTable Cap=0
+        //     [QPACK encoder instruction count increment: 0]
+        //     [QPACK encoder instruction count: 0]
         "20",
     },
     {
@@ -131,7 +134,6 @@ struct testvector_qpack {
         "11 83 a8 f5 17 5f 2c 8b 84 84 2d 69 5b 05 44 3c"
         "86 aa 6f",
     },
-#endif
 };
 
 void test_qpack_stream() {
