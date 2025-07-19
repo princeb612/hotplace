@@ -20,54 +20,6 @@
 namespace hotplace {
 namespace net {
 
-// RFC 7541 HPACK: Header Compression for HTTP/2
-
-enum match_result_t {
-    not_matched = 0,
-    /* HPACK, QPACK(static table) */
-    key_matched = 1,
-    all_matched = 2,
-    /* QPACK(dynamic table) */
-    key_matched_dynamic = 5,
-    all_matched_dynamic = 6,
-};
-
-enum http_header_compression_flag_t {
-    // encoding/decoding
-    hpack_huffman = (1 << 0),        // RFC 7541 5.2.  String Literal Representation
-    hpack_indexing = (1 << 1),       // RFC 7541 6.2.1.  Literal Header Field with Incremental Indexing
-    hpack_wo_indexing = (1 << 2),    // RFC 7541 6.2.2.  Literal Header Field without Indexing
-    hpack_never_indexed = (1 << 3),  // RFC 7541 6.2.3.  Literal Header Field Never Indexed
-
-    // encoding/decoding
-    qpack_huffman = hpack_huffman,
-    qpack_indexing = hpack_indexing,
-    qpack_static = (1 << 7),        // RFC 9204 4.5.4.  Literal Field Line with Name Reference
-    qpack_intermediary = (1 << 8),  // RFC 9204 4.5.4.  Literal Field Line with Name Reference
-    qpack_postbase_index = (1 << 9),
-    qpack_name_reference = (1 << 5),
-
-    // analysis layout while decoding
-    hpack_layout_index = (1 << 4),         // RFC 7541 6.1.  Indexed Header Field Representation
-    hpack_layout_indexed_name = (1 << 5),  // RFC 7541 6.2.  Literal Header Field Representation
-    hpack_layout_name_value = (1 << 6),    // RFC 7541 6.2.  Literal Header Field Representation
-    hpack_layout_capacity = (1 << 10),     // RFC 7541 6.3.  Dynamic Table Size Update
-
-    // analysis layout while decoding
-    qpack_layout_capacity = (1 << 10),       // RFC 9204 4.3.1.  Set Dynamic Table Capacity
-    qpack_layout_index = (1 << 4),           // RFC 9204 4.5.2.  Indexed Field Line
-    qpack_layout_name_reference = (1 << 5),  // RFC 9204 4.5.4.  Literal Field Line with Name Reference
-    qpack_layout_name_value = (1 << 6),      // RFC 9204 4.5.6.  Literal Field Line with Literal Name
-    qpack_layout_duplicate = (1 << 11),      // RFC 9204 4.3.4.  Duplicate
-    qpack_layout_ack = (1 << 12),            // RFC 9204 4.4.1.  Section Acknowledgment
-    qpack_layout_cancel = (1 << 13),         // RFC 9204 4.4.2.  Stream Cancellation
-    qpack_layout_inc = (1 << 14),            // RFC 9204 4.4.3.  Insert Count Increment
-
-    qpack_quic_stream_encoder = (1 << 15),  // RFC 9204 4.3.  Encoder Instructions
-    qpack_quic_stream_decoder = (1 << 16),  // RFC 9204 4.4.  Decoder Instructions
-    qpack_quic_stream_header = (1 << 17),   // RFC 9204 4.5.  Field Line Representations
-};
-
 /**
  * @brief   HTTP header compression (HPACK, QPACK)
  * @sa      hpack_encoder
@@ -100,7 +52,7 @@ class http_header_compression {
     virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
                             uint32 flags = 0);
     /**
-     * @brief   synchronize
+     * @brief   Field Section Prefix
      * @param   http_dynamic_table* dyntable [in] dynamic table
      * @param   binary_t& target [out]
      * @param   uint32 flags [inopt]
@@ -109,9 +61,9 @@ class http_header_compression {
      *          // sketch
      *          qpackenc.encode
      *          qpackenc.encode
-     *          qpackenc.sync -> generate the QPACK field section prefix
+     *          qpackenc.pack -> generate the QPACK field section prefix
      */
-    virtual return_t sync(http_dynamic_table* dyntable, binary_t& target, uint32 flags = 0);
+    virtual return_t pack(http_dynamic_table* dyntable, binary_t& target, uint32 flags = 0);
 
     /**
      * @brief   Integer Representation
@@ -389,6 +341,7 @@ class http_dynamic_table {
 
     void ack();
     void cancel();
+    void increment(size_t inc);
 
    protected:
     http_dynamic_table();
@@ -405,7 +358,7 @@ class http_dynamic_table {
 
     typedef std::pair<std::string, size_t> table_entry_t;
     typedef std::multimap<std::string, table_entry_t> dynamic_map_t;  // table_entry_t(value, entry)
-    typedef std::map<size_t, table_entry_t> dynamic_reversemap_t;     // table_entry_t(name, entry size)
+    typedef std::map<size_t, table_entry_t> dynamic_reversemap_t;     // pair(entry, table_entry_t(name, entry size))
     struct commit_pair {
         std::string name;
         std::string value;

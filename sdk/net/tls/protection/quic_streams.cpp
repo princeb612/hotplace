@@ -75,17 +75,21 @@ return_t quic_streams::consume(quic_frame_stream* stream) {
             return_t ret = errorcode_t::success;
             auto streamid = stream->get_streamid();
             if (streamid & quic_stream_unidirectional) {
+                auto lambda_decode = [&](const binary_t& tbin, size_t& tpos, uint32 flag) -> return_t {
+                    qpack_encoder encoder;
+                    std::list<qpack_decode_t> kv;
+                    return encoder.decode(&_qpack_dyntable, &tbin[0], tbin.size(), tpos, kv, flag);
+                };
+
                 auto iter = _encoders.find(streamid);
                 if (_encoders.end() != iter) {
                     auto unistreamtype = iter->second;
                     switch (unistreamtype) {
                         case h3_qpack_decoder_stream: {
-                            // TODO
+                            lambda_decode(bin, pos, qpack_quic_stream_decoder);
                         } break;
                         case h3_qpack_encoder_stream: {
-                            qpack_encoder encoder;
-                            std::list<std::pair<std::string, std::string>> kv;
-                            encoder.decode(&_qpack_dyntable, &bin[0], bin.size(), pos, kv, qpack_quic_stream_encoder);
+                            lambda_decode(bin, pos, qpack_quic_stream_encoder);
                         } break;
                     }
                 } else {
@@ -93,9 +97,13 @@ return_t quic_streams::consume(quic_frame_stream* stream) {
                     ret = quic_read_vle_int(&bin[0], bin.size(), pos, unistreamtype);
                     if (errorcode_t::success == ret) {
                         switch (unistreamtype) {
-                            case h3_qpack_decoder_stream:
+                            case h3_qpack_decoder_stream: {
+                                _encoders.insert({streamid, unistreamtype});
+                                lambda_decode(bin, pos, qpack_quic_stream_decoder);
+                            } break;
                             case h3_qpack_encoder_stream: {
                                 _encoders.insert({streamid, unistreamtype});
+                                lambda_decode(bin, pos, qpack_quic_stream_encoder);
                             } break;
                             case h3_push_stream: {
                             } break;

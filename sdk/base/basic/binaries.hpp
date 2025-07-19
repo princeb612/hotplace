@@ -15,7 +15,7 @@
 
 #include <functional>
 #include <sdk/base/basic/binary.hpp>
-#include <sdk/base/nostd/template.hpp>
+#include <sdk/base/nostd/ovl.hpp>
 
 namespace hotplace {
 
@@ -133,6 +133,27 @@ class t_binaries {
             } else {
                 bin = std::move(iter->second.bin);
                 _map.erase(iter);
+            }
+        }
+        __finally2 {}
+        return ret;
+    }
+    return_t consume(T type, size_t size) {
+        return_t ret = errorcode_t::success;
+        __try2 {
+            critical_section_guard guard(_lock);
+            auto iter = _map.find(type);
+            if (_map.end() == iter) {
+                ret = errorcode_t::not_found;
+                __leave2;
+            } else {
+                auto& bin = iter->second.bin;
+                if (size > bin.size()) {
+                    ret = errorcode_t::out_of_range;
+                    __leave2;
+                } else {
+                    bin.erase(bin.begin(), bin.begin() + size);
+                }
             }
         }
         __finally2 {}

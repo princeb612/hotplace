@@ -13,6 +13,20 @@
 
 #include "sample.hpp"
 
+unsigned int count_evict_encoder = 0;
+unsigned int count_evict_decoder = 0;
+
+void debug_qpack_encoder(trace_category_t, uint32 event) {
+    if (trace_event_header_compression_evict == event) {
+        count_evict_encoder++;
+    }
+}
+void debug_qpack_decoder(trace_category_t, uint32 event) {
+    if (trace_event_header_compression_evict == event) {
+        count_evict_decoder++;
+    }
+}
+
 void test_zero_capacity() {
     _test_case.begin("no dynamic table");
     count_evict_encoder = 0;
@@ -43,7 +57,7 @@ void test_zero_capacity() {
         ;
 
     enc.insert(&qpack_dyntable, bin, "custom-key", "custom-value2", flags);
-    test_expect(bin, expect, nullptr);
+    test_expect(bin, expect, __FUNCTION__, nullptr);
     _test_case.assert(0 == qpack_dyntable.get_capacity(), __FUNCTION__, "#capacity %zi", qpack_dyntable.get_capacity());
     _test_case.assert(0 == qpack_dyntable.get_entries(), __FUNCTION__, "#entries %zi", qpack_dyntable.get_entries());
     _test_case.assert(0 == count_evict_encoder, __FUNCTION__, "#eviction check %u", count_evict_encoder);

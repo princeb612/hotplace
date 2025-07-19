@@ -27,7 +27,8 @@
     * CBOR
 
 * details
-  * Revision 822
+  * Revision 823
+    * [tested] RFC 9204
   * Revision 804
     * [tested] HTTP/2 feat. curl (MINGW64, linux environment)
   * Revision 803

@@ -48,6 +48,7 @@
 /* nostd */
 #include <sdk/base/nostd/exception.hpp>
 #include <sdk/base/nostd/list.hpp>
+#include <sdk/base/nostd/ovl.hpp>
 #include <sdk/base/nostd/pq.hpp>
 #include <sdk/base/nostd/template.hpp>
 #include <sdk/base/nostd/tree.hpp>

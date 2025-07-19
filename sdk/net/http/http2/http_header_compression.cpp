@@ -17,17 +17,15 @@ namespace net {
 http_header_compression::http_header_compression() : _safe_mask(false) {}
 
 return_t http_header_compression::encode(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
-    return_t ret = errorcode_t::success;
-    return ret;
+    return errorcode_t::success;
 }
 
 return_t http_header_compression::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
                                          uint32 flags) {
-    return_t ret = errorcode_t::success;
-    return ret;
+    return errorcode_t::success;
 }
 
-return_t http_header_compression::sync(http_dynamic_table* dyntable, binary_t& target, uint32 flags) { return errorcode_t::success; }
+return_t http_header_compression::pack(http_dynamic_table* dyntable, binary_t& target, uint32 flags) { return errorcode_t::success; }
 
 return_t http_header_compression::encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t value) {
     return_t ret = errorcode_t::success;

@@ -26,15 +26,11 @@ extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
-extern unsigned int count_evict_encoder;
-extern unsigned int count_evict_decoder;
-
 void dump_qpack_session_routine(const char* stream, size_t size);
 
-void test_expect(binary_t& bin, const char* expect, const char* text, ...);
+void test_expect(binary_t& bin, const char* expect, const char* func, const char* text, ...);
 void test_dump(binary_t& bin, const char* text, ...);
-void debug_qpack_encoder(trace_category_t, uint32 event);
-void debug_qpack_decoder(trace_category_t, uint32 event);
+void dump(const qpack_decode_t& item);
 
 void test_rfc9204_b();
 void test_zero_capacity();

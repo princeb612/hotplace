@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-http_dynamic_table::http_dynamic_table() : _type(header_compression_hpack), _inserted(0), _dropped(0), _ack(0), _capacity(0), _tablesize(0) {}
+http_dynamic_table::http_dynamic_table() : _type(header_compression_hpack), _tablesize(0), _capacity(0), _inserted(0), _dropped(0), _ack(0) {}
 
 void http_dynamic_table::pick(size_t entry, const std::string& name, std::string& value) {
     critical_section_guard guard(_lock);
@@ -139,7 +139,7 @@ return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& nam
              * index = _inserted - v.second - 1
              * v.second = _inserted - index - 1
              */
-            const auto& t = _inserted - index - 1;
+            size_t t = _inserted - index - 1;
             auto riter = _dynamic_reversemap.find(t);
             if (_dynamic_reversemap.end() != riter) {
                 const auto& pne = riter->second;  // pair(name, entry size)
@@ -217,7 +217,7 @@ return_t http_dynamic_table::commit() {
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 basic_stream bs;
-                bs.printf("insert entry[%zi] %s=%s\n", _inserted, name.c_str(), value.c_str());
+                bs.printf("+ insert entry[%zi] %s=%s\n", _inserted, name.c_str(), value.c_str());
                 trace_debug_event(trace_category_net, trace_event_header_compression_insert, &bs);
             }
 #endif
@@ -266,7 +266,7 @@ return_t http_dynamic_table::evict() {
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
                         basic_stream bs;
-                        bs.printf("evict  entry[%zi] %s=%s\n", entry, name.c_str(), val.c_str());
+                        bs.printf("- evict  entry[%zi] %s=%s\n", entry, name.c_str(), val.c_str());
                         trace_debug_event(trace_category_net, trace_event_header_compression_evict, &bs);
                     }
 #endif
@@ -298,17 +298,25 @@ void http_dynamic_table::set_capacity(uint32 capacity) {
      *    > identifier 2 value 0 (0x00000000)
      *    > identifier 4 value 6291456 (0x00600000)
      */
-    if (capacity) {
-        _capacity = capacity;
+    _capacity = capacity;
 
-        // RFC 7541 4.3.  Entry Eviction When Dynamic Table Size Changes
-        evict();
+#if defined DEBUG
+    if (istraceable(trace_category_net)) {
+        basic_stream bs;
+        bs.printf("> set capacity %zi\n", capacity);
+        trace_debug_event(trace_category_net, trace_event_header_compression_evict, &bs);
     }
+#endif
+
+    // RFC 7541 4.3.  Entry Eviction When Dynamic Table Size Changes
+    evict();
 }
 
 void http_dynamic_table::ack() { _ack = _inserted; }
 
 void http_dynamic_table::cancel() {}
+
+void http_dynamic_table::increment(size_t inc) { _ack += inc; }
 
 size_t http_dynamic_table::get_capacity() { return _capacity; }
 

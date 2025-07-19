@@ -26,17 +26,17 @@ class hpack_encoder : public http_header_compression {
 
     /**
      * @brief   encode (header compression)
-     * @param   http_dynamic_table* session [in] dynamic table
+     * @param   http_dynamic_table* dyntable [in] dynamic table
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   uint32 flags [inopt] see http_header_compression_flag_t
      * @return  error code (see error.hpp)
      */
-    virtual return_t encode(http_dynamic_table* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
+    virtual return_t encode(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   decode (header compression)
-     * @param   http_dynamic_table* session [in] dynamic table
+     * @param   http_dynamic_table* dyntable [in] dynamic table
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
@@ -46,33 +46,33 @@ class hpack_encoder : public http_header_compression {
      * @sample
      *          pos = 0;
      *          while (pos < streamsize) {
-     *              encoder.decode(session, stream, streamsize, pos, name, value, flags);
+     *              encoder.decode(dyntable, stream, streamsize, pos, name, value, flags);
      *          }
      *          // keep the index until the decoder process is finished
      *          // insert into dynamic table
-     *          session.commit();
+     *          dyntable->commit();
      */
-    virtual return_t decode(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
 
     /**
      * @brief   encode (header compression)
-     * @param   http_dynamic_table* session [in] dynamic table
+     * @param   http_dynamic_table* dyntable [in] dynamic table
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   uint32 flags [inopt] see http_header_compression_flag_t
      */
-    hpack_encoder& encode_header(http_dynamic_table* session, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
+    hpack_encoder& encode_header(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   decode (header compression)
-     * @param   http_dynamic_table* session [in] dynamic table
+     * @param   http_dynamic_table* dyntable [in] dynamic table
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
      * @param   std::string& name [in]
      * @param   std::string& value [in]
      */
-    hpack_encoder& decode_header(http_dynamic_table* session, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    hpack_encoder& decode_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
 
     /**
      * @brief   index
@@ -146,7 +146,7 @@ class hpack_static_table : public http_static_table {
 };
 
 /**
- * @brief   separate dynamic table per session
+ * @brief   separate dynamic table per dyntable
  * @sa      hpack_encoder
  */
 class hpack_dynamic_table : public http_dynamic_table {

@@ -168,19 +168,6 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
     __finally2 {
         if (errorcode_t::success != ret) {
             bin.resize(snapshot);  // rollback
-#if 0
-            tls_record_builder builder;
-            auto lambda = [&](uint8 level, uint8 desc) -> void {
-                auto record = builder.set(session).set(tls_content_type_alert).construct().build();
-                if (record) {
-                    tls_record_alert* alert_casted = (tls_record_alert*)record;
-                    alert_casted->set(level, desc);
-                    record->write(dir, bin);
-                    record->release();
-                }
-            };
-            session->get_alert(dir, lambda);
-#endif
         }
     }
     return ret;

@@ -1426,6 +1426,7 @@ const testvector_http3_t pcap_http3[] = {
         "66 f0 12 4b",
     },
 #if 0
+    // no TLS SSLKEYLOG
     // condition TCP segmentation
     {
         // Transport Layer Security

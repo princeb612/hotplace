@@ -64,14 +64,15 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte
                 if (necessary) {
                     secrets.append(tls_context_segment, stream + spos, avail);
 
-                    bool reassembled = (avail >= necessary) ? true : false;
-                    if (false == reassembled) {
+                    if (avail < necessary) {
                         break;  // do not read
                     }
                 }
 
                 size_t tpos = 0;
                 auto test = lambda(this, session, dir, &segment[0], segment.size(), tpos);
+
+                secrets.consume(tls_context_segment, reassemblesize);
             } else {
                 auto test = lambda(this, session, dir, stream, size, pos);
                 if (errorcode_t::success == test) {
