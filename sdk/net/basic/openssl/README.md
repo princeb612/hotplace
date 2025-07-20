@@ -1,11 +1,14 @@
 ### self-signed certificate
 
+see test/cert/make.sh
+
 ```
 #!/bin/bash
 
-# root.key (RSA, ECDSA)
+# root.key (RSA)
 openssl genrsa -aes256 -out root.key 2048
-openssl ecparam -name prime256v1 -genkey -noout -out root.key
+# root.key (ECDSA)
+openssl ecparam -name prime256v1 -genkey -out root.key
 
 # root.csr
 openssl req -new -key root.key -out root.csr -subj '/C=KR/ST=GG/L=YI/O=Test/OU=Test/CN=Test Root'

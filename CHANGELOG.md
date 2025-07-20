@@ -9,7 +9,7 @@
 * understanding
   * Revision 805-
     * QUIC, HTTP/3
-  * Revision 777-804 (Tag 1.35, Revision.804)
+  * Revision 777-804
     * server - TLS, HTTP/1.1, HTTP/2
   * Revision 682-776
     * client - TLS, DTLS
@@ -27,6 +27,8 @@
     * CBOR
 
 * details
+  * Revision 825
+    * [tested] TLS 1.2 chacha20-poly1305
   * Revision 824
     * [fixed] QPACK
   * Revision 823

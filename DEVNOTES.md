@@ -242,8 +242,9 @@ flowchart LR
   - [x] encrypt_then_mac (rev.752)
     - [x] encrypt
     - [x] decrypt
-  - [ ] TLS 1.2 chacha20-poly1305
-  - [ ] TLS segment data (http3.pcapng #25)
+  - [x] TLS 1.2 chacha20-poly1305
+  - [x] TCP segmentation
+  - [ ] DTLS 1.2 AEAD
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)
   - [x] integration - network_server

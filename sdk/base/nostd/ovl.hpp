@@ -29,6 +29,8 @@ namespace hotplace {
  *
  *          moi.clear().add(9, 10, 3).add(6, 8, 2).add(1, 3, 0).add(2, 4, 1).add(1, 8, 4);
  *          res = moi.merge(); // {1, 8, 4}, {9, 10, 3}
+ *
+ * @sa      t_fragmented_binaries, parser
  */
 template <typename T, typename TAGTYPE = char>
 class t_merge_ovl_intervals {
@@ -140,6 +142,17 @@ class t_merge_ovl_intervals {
     std::vector<interval> _arr;
 };
 
+/**
+ * @sample
+ *          t_ovl_points<uint64> part;
+ *          part.add(7).add(8).add(9).add(10).add(11).add(12).add(14).add(15, 16).add(17, 18).add(21);
+ *          auto res = part.merge();
+ *
+ *          // (gdb) p res
+ *          // $1 = std::vector of length 3, capacity 3 = {{s = 7, e = 12}, {s = 14, e = 18}, {s = 21, e = 21}}
+ *
+ * @sa      quic_frame_ack, ack_t
+ */
 template <typename T>
 class t_ovl_points {
    public:

@@ -17,7 +17,7 @@ void test_tls12_aead_aes128gcm() {
 
     // see also
     //   test_tls12_aead
-    //   capture_tls12_aes128gcm_sha256
+    //   pcap_tls12_aes128gcm_sha256
 
     // tls12_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256.pcapng
     // client finished
@@ -84,10 +84,12 @@ void test_tls12_aead_aes128gcm() {
 void test_tls12_aead_chacha20poly1305() {
     _test_case.begin("TLS 1.2 chacha20-poly1305");
 
+    // tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256.pcapng
+    // see also test_pcap_tls12()
+
     return_t ret = errorcode_t::success;
     tls_session session;
     uint16 cs = 0xcca9;  // TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
-    auto dir = from_client;
 
     auto& protection = session.get_tls_protection();
     protection.set_cipher_suite(cs);
@@ -108,27 +110,46 @@ void test_tls12_aead_chacha20poly1305() {
 
         ret = lambda_test_secret(tls_secret_client_key, "4b403a5ecddb11ca66b808b90086a530ca1b0137a37db67b432dbf83e335f28a");
         _test_case.test(ret, __FUNCTION__, "secret_client_key");
-        ret = lambda_test_secret(tls_secret_client_iv, "6918cfa52543e1f8");
+        ret = lambda_test_secret(tls_secret_client_iv, "6918cfa52543e1f89455ca42");
         _test_case.test(ret, __FUNCTION__, "secret_client_iv");
     }
 
-    // 0x16    0x03    0x03    0x00    0x20
-    // 0xbe    0xf5    0x78    0xab    0xc8    0x59    0x33    0x50
-    // 0x3c    0xcf    0x80    0x07    0x91    0xfe    0x3c    0x78
-    // 0xe2    0xaf    0x2c    0x60    0xe7    0xf4    0x4b    0xc7
-    // 0xea    0x33    0x21    0xc5    0x9d    0xf9    0x02    0x36
+    // decrypt finished messages
+
+    // #8 encrypted handshake message
+    // 0000   16 03 03 00 20 be f5 78 ab c8 59 33 50 3c cf 80
+    // 0010   07 91 fe 3c 78 e2 af 2c 60 e7 f4 4b c7 ea 33 21
+    // 0020   c5 9d f9 02 36
+
+    // content type (uint8) || version (uint16) || len[ciphertext + mac] (uint16) || ciphertext || mac (16)
 
     {
         binary_t ciphertext = std::move(base16_decode("1603030020bef578abc85933503ccf800791fe3c78e2af2c60e7f44bc7ea3321c59df90236"));
         binary_t plaintext;
 
-        ret = protection.decrypt(&session, dir, &ciphertext[0], ciphertext.size(), 0, plaintext);
+        ret = protection.decrypt(&session, from_client, &ciphertext[0], ciphertext.size(), 0, plaintext);
 
-        _test_case.test(ret, __FUNCTION__, "decrypt");
+        constexpr char expect[] = "1400000c06d57e2441096bd4dd68343f";
+        _test_case.assert(base16_decode_rfc(expect) == plaintext, __FUNCTION__, "client_finished");
+    }
+
+    // #10 encrypted handshake message
+    // 0000   16 03 03 00 20 fc 96 42 59 c2 1b ce 2a 85 75 b5
+    // 0010   a8 ce a0 c5 71 ec 99 dd 73 47 b4 15 2a 1c 2e f7
+    // 0020   c3 7d 34 5e 64
+
+    {
+        binary_t ciphertext = std::move(base16_decode("1603030020fc964259c21bce2a8575b5a8cea0c571ec99dd7347b4152a1c2ef7c37d345e64"));
+        binary_t plaintext;
+
+        ret = protection.decrypt(&session, from_server, &ciphertext[0], ciphertext.size(), 0, plaintext);
+
+        constexpr char expect[] = "1400000c1416a0981f02d6cd6b0b84b1";
+        _test_case.assert(base16_decode_rfc(expect) == plaintext, __FUNCTION__, "server_finished");
     }
 }
 
 void test_tls12_aead() {
     test_tls12_aead_aes128gcm();
-    // test_tls12_aead_chacha20poly1305();
+    test_tls12_aead_chacha20poly1305();
 }

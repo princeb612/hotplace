@@ -59,4 +59,17 @@ void test_pcap_dtls12() {
 
         play_pcap(&session, pcap_dtls12_aes128gcm, sizeof_pcap_dtls12_aes128gcm);
     }
+
+    {
+        _test_case.begin("DTLS dtls12_TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256.pcapng");
+        tls_session session(session_type_dtls);
+
+        auto sslkeylog = sslkeylog_importer::get_instance();
+        sslkeylog->attach(&session);
+
+        (*sslkeylog) << "CLIENT_RANDOM c6cea2e6fc92a678d435a489b5dc6cf9f7d015b61858f508fb0f3280a67b8b2d "
+                        "1eb34b0f5c69986261e862d9d13b04c1b5a6cfd2be8a708d59da78862fc67c7bc5c25193556460f217472867629bfe17";
+
+        play_pcap(&session, pcap_dtls12_chacha20_poly1305, sizeof_pcap_dtls12_chacha20_poly1305);
+    }
 }

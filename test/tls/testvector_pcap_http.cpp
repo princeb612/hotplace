@@ -1772,3 +1772,170 @@ const pcap_testvector pcap_curl_http1_tls12[] = {
     },
 };
 const size_t sizeof_pcap_curl_http1_tls12 = RTL_NUMBER_OF(pcap_curl_http1_tls12);
+
+const pcap_testvector pcap_curl_http1_tls12_chacha20_poly1305[] = {
+    {
+        from_client,
+        "#4 client_hello",
+        "16 03 01 00 a9 01 00 00 a5 03 03 1d ee 55 49 1b"
+        "2f ab f3 cc b9 7a fe a8 ec e2 ae 24 6b 50 77 37"
+        "a8 39 bb d8 12 3e 38 ad 76 42 df 00 00 02 cc a8"
+        "01 00 00 7a ff 01 00 01 00 00 00 00 0e 00 0c 00"
+        "00 09 6c 6f 63 61 6c 68 6f 73 74 00 0b 00 04 03"
+        "00 01 02 00 0a 00 0c 00 0a 00 1d 00 17 00 1e 00"
+        "19 00 18 00 10 00 0b 00 09 08 68 74 74 70 2f 31"
+        "2e 31 00 16 00 00 00 17 00 00 00 0d 00 30 00 2e"
+        "04 03 05 03 06 03 08 07 08 08 08 1a 08 1b 08 1c"
+        "08 09 08 0a 08 0b 08 04 08 05 08 06 04 01 05 01"
+        "06 01 03 03 03 01 03 02 04 02 05 02 06 02",
+    },
+    {
+        from_server,
+        "#6 server_hello, certificate, server_key_exchange, server_hello_done",
+        "16 03 03 00 44 02 00 00 40 03 03 68 7c 8f d7 5c"
+        "12 70 52 d0 43 9f 6a 20 5c 7b 42 78 37 be f5 92"
+        "b0 05 b5 51 5a 2e c2 7e 48 3d 1d 00 cc a8 00 00"
+        "18 00 17 00 00 ff 01 00 01 00 00 10 00 0b 00 09"
+        "08 68 74 74 70 2f 31 2e 31 16 03 03 03 6a 0b 00"
+        "03 66 00 03 63 00 03 60 30 82 03 5c 30 82 02 44"
+        "a0 03 02 01 02 02 14 63 a6 71 10 79 d6 a6 48 59"
+        "da 67 a9 04 e8 e3 5f e2 03 a3 26 30 0d 06 09 2a"
+        "86 48 86 f7 0d 01 01 0b 05 00 30 59 31 0b 30 09"
+        "06 03 55 04 06 13 02 4b 52 31 0b 30 09 06 03 55"
+        "04 08 0c 02 47 47 31 0b 30 09 06 03 55 04 07 0c"
+        "02 59 49 31 0d 30 0b 06 03 55 04 0a 0c 04 54 65"
+        "73 74 31 0d 30 0b 06 03 55 04 0b 0c 04 54 65 73"
+        "74 31 12 30 10 06 03 55 04 03 0c 09 54 65 73 74"
+        "20 52 6f 6f 74 30 1e 17 0d 32 34 30 38 32 39 30"
+        "36 32 37 31 37 5a 17 0d 32 35 30 38 32 39 30 36"
+        "32 37 31 37 5a 30 54 31 0b 30 09 06 03 55 04 06"
+        "13 02 4b 52 31 0b 30 09 06 03 55 04 08 0c 02 47"
+        "47 31 0b 30 09 06 03 55 04 07 0c 02 59 49 31 0d"
+        "30 0b 06 03 55 04 0a 0c 04 54 65 73 74 31 0d 30"
+        "0b 06 03 55 04 0b 0c 04 54 65 73 74 31 0d 30 0b"
+        "06 03 55 04 03 0c 04 54 65 73 74 30 82 01 22 30"
+        "0d 06 09 2a 86 48 86 f7 0d 01 01 01 05 00 03 82"
+        "01 0f 00 30 82 01 0a 02 82 01 01 00 ad 9a 29 67"
+        "5f f3 a4 79 b4 c6 e6 32 73 d8 d7 ed 88 94 15 83"
+        "e4 31 00 04 6c b5 8c ac 87 ab 74 44 13 76 ca 0b"
+        "74 29 40 9e 97 2a 01 d7 8b 46 26 6e 19 35 4d c0"
+        "d3 b5 ea 0e 93 3a 06 e8 e5 85 b5 27 05 63 db 28"
+        "b8 92 da 5a 14 39 0f da 68 6d 6f 0a fb 52 dc 08"
+        "0f 54 d3 e4 a2 28 9d a0 71 50 82 e0 db ca d1 94"
+        "dd 42 98 3a 09 33 a8 d9 ef fb d2 35 43 b1 22 a2"
+        "be 41 6d ba 91 dc 0b 31 4e 88 f9 4d 9c 61 2d ec"
+        "b2 13 0a c2 91 8e a2 d6 e9 40 b9 32 b9 80 8f b3"
+        "18 a3 33 13 23 d5 d0 7e d9 d0 7f 93 e0 2d 4d 90"
+        "c5 58 24 56 d5 c9 10 13 4a b2 99 23 7d 34 b9 8e"
+        "97 19 69 6f ce c6 3f d6 17 a7 d2 43 e0 36 cb 51"
+        "7b 2f 18 8b c2 33 f8 57 cf d1 61 0b 7c ed 37 35"
+        "e3 13 7a 24 2e 77 08 c2 e3 d9 e6 17 d3 a5 c6 34"
+        "5a da 86 a7 f8 02 36 1d 66 63 cf e9 c0 3d 82 fb"
+        "39 a2 8d 92 01 4a 83 cf e2 76 3d 87 02 03 01 00"
+        "01 a3 21 30 1f 30 1d 06 03 55 1d 11 04 16 30 14"
+        "82 12 74 65 73 74 2e 70 72 69 6e 63 65 62 36 31"
+        "32 2e 70 65 30 0d 06 09 2a 86 48 86 f7 0d 01 01"
+        "0b 05 00 03 82 01 01 00 00 a5 f5 54 18 ab ad 36"
+        "38 c8 fc 0b 66 60 dd 9f 75 9d 86 5b 79 2f ee 57"
+        "f1 79 1c 15 a1 34 23 d0 1c a9 58 51 a4 d0 08 f5"
+        "d8 f7 49 e9 c5 b5 65 91 51 2d 6d e4 3b 0e 77 02"
+        "1f 45 8e 34 e5 bb eb f6 9d df 4a 40 60 21 b3 8e"
+        "16 33 3f f4 b6 90 d3 3c 34 ce e6 d9 47 07 a7 57"
+        "14 0c f9 78 0b 36 72 a9 88 07 07 93 b4 d7 fe 29"
+        "5e e8 41 37 20 a5 03 c7 97 cb 82 ca db 14 e5 8b"
+        "96 1f a9 e9 20 3d 6b 25 ae f4 89 4c 60 8d e9 14"
+        "33 47 4b 88 54 a2 47 19 81 c8 7b 0e 32 52 2b 91"
+        "88 ad 0f 6d 73 30 8c 00 af d5 fc 46 46 af 3a c2"
+        "17 89 ec c8 83 ae da e6 69 63 e0 9c 84 22 c5 7a"
+        "de e8 23 6b 53 9d 6f 94 d2 7f 5c be 1d 0c de 0e"
+        "07 0d 52 a5 43 8c e8 05 ef c0 ff f0 73 fa dc 5a"
+        "51 4c 24 09 65 45 7d ab 52 8b 7e 5d f0 fb de a7"
+        "3d 43 c5 af 76 e3 6e f9 a1 dc 78 a2 bd 54 41 04"
+        "99 e5 56 32 ba 02 fd 72 16 03 03 01 2c 0c 00 01"
+        "28 03 00 1d 20 ba f5 64 6d 8c 3f 23 e8 ca 1d db"
+        "16 b6 9b f7 11 26 c6 59 8a 9e 83 bf 40 74 dd fd"
+        "f1 75 d0 02 26 08 04 01 00 98 64 df f0 dc 3b dc"
+        "38 8d 44 ec 22 ce 39 9a 2c e5 b6 7d 74 d3 8b 45"
+        "a1 2d 4a 4f 38 b5 48 bf 6d e0 1f b7 72 4c 0f d9"
+        "cd dd 31 26 9c 11 f8 f1 6d 21 7d 5e d5 09 bb e2"
+        "50 65 88 aa eb 9d 7b 9f 64 77 45 33 41 57 d7 0b"
+        "63 8d e7 07 4b 6a ae 94 cc c1 5d de d6 04 d3 ee"
+        "f5 75 fb ef b7 f1 37 d4 4b 61 f3 79 1f 91 3d 0c"
+        "04 8b 98 2a 45 54 2a 25 bf 0d f1 c7 74 86 f6 52"
+        "70 5c 03 ef 3a a9 71 af c4 ce 4c de 62 8d 3b e2"
+        "dd 42 26 2b 3b 59 3c 7a dc f9 11 5e 1f 61 f0 e1"
+        "b4 7e 91 9c 5f c5 9a 62 63 c4 1d 8f fd 59 4b e4"
+        "2f 49 43 da 81 2d 0f 7e 3e e3 18 82 f4 19 8c ca"
+        "8d da 01 ff 4e 9b c0 59 4c af 9b 2b 79 6a 79 d3"
+        "cd 6c ad a3 91 c9 27 11 0d d5 17 6b 10 09 97 4d"
+        "22 ee c4 1d d5 d1 9f 1f 0d fa 84 fa 38 32 8f ea"
+        "3c d6 87 4e 24 60 33 cb 9c 6a d3 6e 34 c4 33 34"
+        "e3 4f fb b9 dd 1f ef 83 fd 16 03 03 00 04 0e 00"
+        "00 00",
+    },
+    {
+        from_client,
+        "#8 client_key_exchange, change_cipher_spec, finished",
+        "16 03 03 00 25 10 00 00 21 20 e0 40 63 1d 31 20"
+        "5f 58 02 6e ee be a2 71 83 d8 35 db 3d 9a ec 3b"
+        "45 c4 2c d1 2b 5e b1 f9 eb 41 14 03 03 00 01 01"
+        "16 03 03 00 20 93 0c e7 e3 f2 a8 1f 03 fa c3 f5"
+        "20 5a e6 19 82 c7 9c 31 ba 5a 84 4c 1a 1d 19 aa"
+        "4f 96 13 84 45",
+    },
+    {
+        from_server,
+        "#10 change_cipher_spec, finished",
+        "14 03 03 00 01 01 16 03 03 00 20 42 a6 8c 8e 54"
+        "c6 10 46 89 64 5a ec eb 43 5c 4d e2 ff ee a0 9c"
+        "66 57 b2 88 e4 51 93 be 47 8d e9",
+    },
+    {
+        from_client,
+        "#12 application_data",
+        "17 03 03 00 5e 20 ba 48 2d 79 8b f4 6b ba 96 f9"
+        "e4 9f b1 fd 50 5f b6 ee 33 04 fd 50 aa 41 5d 11"
+        "5e 29 12 54 f9 2b fc 55 0c 35 d0 f6 5b ae 46 ed"
+        "ec 24 15 89 85 49 9d 10 8a 0a fe 47 af 6e 20 c2"
+        "b2 e7 7c cd bd 7b 56 1c c0 d3 1c cf ea 57 31 45"
+        "0b 9a 13 08 25 7a 8f 90 12 72 de 6b 90 ec a8 86"
+        "1a 23 1a",
+    },
+    {
+        from_server,
+        "#14 application_data",
+        "17 03 03 01 8c 32 e7 ae 52 cf 00 99 4a e1 de 7d"
+        "3a e4 3f e7 99 f9 89 e4 5a bc 8d b7 20 d7 39 88"
+        "dc 6d 60 00 85 81 0c b2 90 3f 29 a5 05 ac 4b a3"
+        "3d ca f2 65 0e fd 6c 7e 21 2d b1 7f 3d 20 3c 00"
+        "6f 51 34 d2 5e 26 15 e3 a3 e5 cd f2 e0 a1 ad f3"
+        "e0 ab 43 64 e7 7c 4b 70 24 f7 15 e1 04 12 a9 98"
+        "30 83 3d 81 f0 c3 70 32 8a 04 2a db d1 d5 6a c2"
+        "70 d2 5c a3 57 18 85 dc 50 be 37 18 37 75 7c d8"
+        "6b 14 fd 86 0e a3 ea 4e 17 ee 7e d2 93 7b b4 c9"
+        "3f f1 62 0b 2a d4 c0 fd 14 3e 26 c6 78 81 e0 85"
+        "ee 36 80 1c 36 a6 9d 49 05 a4 ac 4f fe 75 ff b5"
+        "88 7f 2d 13 90 d3 4e 3f 50 42 ff 33 0b c8 ed b9"
+        "f0 fe 92 1d 8f c8 ed 19 d4 c0 34 a6 a6 d8 f1 c0"
+        "9f 29 f5 70 41 03 23 93 36 2e 2d 70 c7 e6 54 55"
+        "51 88 76 80 3b c3 1b 47 d4 aa e8 df 0b 3c 8b 57"
+        "d3 aa 25 e4 d2 11 a6 82 1a 35 6b 39 f7 71 fc 1e"
+        "2d 65 d7 8a ee 12 10 70 34 02 36 60 a2 fc af fc"
+        "9a 8d 7a 16 d2 c6 16 3d e6 13 15 fd 15 69 b5 ab"
+        "9f 86 e4 fa f9 4d 62 86 14 e1 cf 96 3a bc 3d db"
+        "0f c1 9e 49 f0 09 50 cf 1e b9 75 5e b0 e8 c9 ce"
+        "7e d2 75 f7 44 a4 85 35 47 f5 f0 ca ed 61 53 b2"
+        "13 45 89 ce 10 da 07 5b 24 75 d0 bf e7 d3 16 4e"
+        "a8 9b d1 89 e6 db b1 7d 47 69 0f fa 6c 4c 8a 5f"
+        "6c cd 93 8c ed be 27 4b ac 27 f4 e3 ee 0c 24 77"
+        "8b 1f e5 00 4c db ab f7 18 77 5c 9f 83 5c 0d 8a"
+        "4f",
+    },
+    {
+        from_client,
+        "#16 encrypted_alert",
+        "15 03 03 00 12 27 b7 9e 02 37 1a 66 83 67 ff 72"
+        "01 76 0d 18 bf 89 43",
+    },
+};
+const size_t sizeof_pcap_curl_http1_tls12_chacha20_poly1305 = RTL_NUMBER_OF(pcap_curl_http1_tls12_chacha20_poly1305);

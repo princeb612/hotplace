@@ -364,21 +364,27 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
                 __leave2;
             }
 
-            write_aad(session, dir, additional, body.size());
+            uint64 record_no = 0;
+            uint16 keyepoch = 0;
+            uint64 dtlsrecordseq = 0;
+            if (tlsadvisor->is_kindof_tls(record_version)) {
+                record_no = session->get_recordno(dir, false);
+            } else {
+                keyepoch = get_key_epoch();
+                dtlsrecordseq = get_dtls_record_seq();
+            }
+            protection.write_aad(session, dir, additional, get_type(), record_version, record_no, keyepoch, dtlsrecordseq, body.size());
+
+            ret = protection.encrypt(session, dir, body, ciphertext, additional, tag);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
 
             bool is_cbc = tlsadvisor->is_kindof_cbc(cs);
             if (is_cbc) {
                 // nested tag
-                ret = protection.encrypt(session, dir, body, ciphertext, additional, tag);
-                if (errorcode_t::success != ret) {
-                    __leave2;
-                }
             } else {
                 // concatenated tag
-                ret = protection.encrypt(session, dir, body, ciphertext, additional, tag);
-                if (errorcode_t::success != ret) {
-                    __leave2;
-                }
                 binary_append(ciphertext, tag);
             }
 
@@ -526,117 +532,6 @@ void tls_record::change_epoch_seq(tls_direction_t dir) {
     } else {
         kv.inc(session_dtls_seq);
     }
-}
-
-return_t tls_record::read_aad(tls_session* session, binary_t& aad, const binary_t& record_header, uint64 record_no) {
-    return_t ret = errorcode_t::success;
-    // see also tls_protection::build_tls12_aad_from_record
-    return ret;
-}
-
-return_t tls_record::write_aad(tls_session* session, tls_direction_t dir, binary_t& aad, uint16 bodysize) {
-    return_t ret = errorcode_t::success;
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
-    __try2 {
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        auto& protection = session->get_tls_protection();
-        auto& secrets = protection.get_secrets();
-
-        auto content_type = get_type();
-        auto record_version = protection.get_lagacy_version();
-        auto tagsize = protection.get_tag_size();
-        auto cs = protection.get_cipher_suite();
-        auto hint_blockcipher = tlsadvisor->hintof_blockcipher(cs);
-        if (nullptr == hint_blockcipher) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        auto ivsize = sizeof_iv(hint_blockcipher);
-        auto hint_cipher = tlsadvisor->hintof_cipher(cs);
-        auto mode = typeof_mode(hint_cipher);
-        auto is_tls = protection.is_kindof_tls();
-        auto is_tls12 = protection.is_kindof_tls12();
-        auto is_cbc = false;
-        bool etm = false;
-        uint16 key_epoch = 0;
-        uint64 dtls_record_seq = 0;
-        uint16 len = 0;
-        bool set_nonce_explicit = false;
-
-        secrets.erase(tls_context_nonce_explicit);
-
-        if (is_tls12) {
-            // TLS 1.2, DTLS 1.2
-            is_cbc = tlsadvisor->is_kindof_cbc(cs);
-            etm = session->get_keyvalue().get(session_encrypt_then_mac);
-            if (is_cbc) {
-                // CBC
-                if (etm) {
-                    // Encrypt-then-Mac
-                    len = bodysize + tagsize;
-                } else {
-                    // Mac-then-Encrypt
-                    len = bodysize + tagsize + ivsize;
-                }
-            } else if (ccm == mode || gcm == mode) {
-                set_nonce_explicit = true;
-
-                // CCM, GCM
-                len = bodysize;
-
-                // sketch ...
-                // tls_context_nonce_explicit 12-octet
-                openssl_prng prng;
-                binary_t temp;
-                prng.random(temp, 8);
-                secrets.assign(tls_context_nonce_explicit, temp);
-            } else if (mode_poly1305) {
-                len = bodysize + tagsize;
-            }
-        } else {
-            // TLS 1.3, DTLS 1.3
-            len = bodysize + tagsize;
-        }
-
-        payload pl;
-        if (set_nonce_explicit) {
-            uint64 record_no = session->get_recordno(dir, false);
-            ;
-            pl << new payload_member(uint64(record_no), true, constexpr_dtls_epoch, constexpr_group_tls)          // tls
-               << new payload_member(uint16(key_epoch), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
-               << new payload_member(uint48_t(dtls_record_seq), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
-               << new payload_member(uint8(content_type), constexpr_content_type)                                 // tls, dtls
-               << new payload_member(uint16(record_version), true, constexpr_record_version)                      // tls, dtls
-               << new payload_member(uint16(len), true, constexpr_len);                                           // tls, dtls
-
-            pl.set_group(constexpr_group_tls, (true == is_tls));
-            pl.set_group(constexpr_group_dtls, (false == is_tls));
-        } else {
-            /**
-             * AAD
-             *   CBC  uint8(type) || uint16(version)
-             *   AEAD uint8(type) || uint16(version) || uint16(len)
-             */
-            pl << new payload_member(uint8(content_type), constexpr_content_type)                                 // tls, dtls
-               << new payload_member(uint16(record_version), true, constexpr_record_version)                      // tls, dtls
-               << new payload_member(uint16(key_epoch), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
-               << new payload_member(uint48_t(dtls_record_seq), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
-               << new payload_member(uint16(len), true, constexpr_len);                                           // tls, dtls
-
-            pl.set_group(constexpr_group_dtls, false == is_tls);
-        }
-
-        pl.write(aad);
-    }
-    __finally2 {}
-
-    return ret;
 }
 
 }  // namespace net

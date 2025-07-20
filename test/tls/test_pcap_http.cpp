@@ -132,4 +132,18 @@ void test_pcap_tls13_http1() {
 
         play_pcap(&session, pcap_curl_http1_tls12, sizeof_pcap_curl_http1_tls12);
     }
+
+    {
+        _test_case.begin("TLS 1.2 curl_http1_TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256.pcapng");
+
+        tls_session session(session_type_tls);
+
+        auto sslkeylog = sslkeylog_importer::get_instance();
+        sslkeylog->attach(&session);
+
+        (*sslkeylog) << "CLIENT_RANDOM 1dee55491b2fabf3ccb97afea8ece2ae246b507737a839bbd8123e38ad7642df "
+                        "2f602a623a2a9b7e692daa27afc835818fd3b139b7fe1343d23d7846b2e3e37463b8f9d50b24bae38ec3f60299cdf1c9";
+
+        play_pcap(&session, pcap_curl_http1_tls12_chacha20_poly1305, sizeof_pcap_curl_http1_tls12_chacha20_poly1305);
+    }
 }

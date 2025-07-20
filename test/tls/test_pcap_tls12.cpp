@@ -51,10 +51,9 @@ void test_pcap_tls12() {
         (*sslkeylog) << "CLIENT_RANDOM 8d4e72acf55111544eadc50e5e9e0c3015648025881194328bce1573dec89ed6 "
                         "20c27d23fd3f64170b2b63917ccfe7251b792ea9492fa52b59c6adccc71095102e72ad1b08880a78f3f8316c1234a89b";
 
-        play_pcap(&session, capture_tls12_aes128gcm_sha256, sizeof_capture_tls12_aes128gcm_sha256);
+        play_pcap(&session, pcap_tls12_aes128gcm_sha256, sizeof_pcap_tls12_aes128gcm_sha256);
     }
 
-#if 0
     _test_case.begin("tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256.pcapng");
     {
         tls_session session(session_type_tls);
@@ -65,7 +64,6 @@ void test_pcap_tls12() {
         (*sslkeylog) << "CLIENT_RANDOM 19587698676b7fe86d78564051c0c44d0d8123939567dafbc01bbf8f78b323c0 "
                         "6525943d87978a14a4553a956b6f71501d0cbfd97aa856ce69b9aca4a7b5c1209d663b389778393170e9e4c068e51843";
 
-        play_pcap(&session, capture_tls12_chacha20poly1305_sha256, sizeof_capture_tls12_chacha20poly1305_sha256);
+        play_pcap(&session, pcap_tls12_chacha20poly1305_sha256, sizeof_pcap_tls12_chacha20poly1305_sha256);
     }
-#endif
 }

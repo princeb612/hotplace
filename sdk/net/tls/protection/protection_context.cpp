@@ -172,12 +172,6 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                                 }
                             } break;
                         }
-
-                        auto hint_cipher = advisor->hintof_cipher(hint->scheme);
-                        if (mode_poly1305 == hint_cipher->mode) {
-                            // understanding
-                            continue;
-                        }
                     }
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {

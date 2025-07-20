@@ -172,7 +172,11 @@ class tls_protection {
      *
      * uint16(epoch) || uint48(seq_num) || uint8(type) || uint16(version) || uint16(cipertext_wo_tag.size)
      */
-    return_t build_tls12_aad_from_record(tls_session* session, binary_t& aad, const binary_t& record_header, uint64 record_no);
+    // decrypt_aead TLS 1.2 AAD
+    return_t build_tls12_aad_from_record(tls_session* session, binary_t& aad, const binary_t& record_header, uint64 record_no, uint8 size_nonce_explicit);
+    // tls_record::do_write_header
+    return_t write_aad(tls_session* session, tls_direction_t dir, binary_t& aad, uint8 content_type, uint32 version, uint64 recno, uint16 epoch, uint64 dtlsseq,
+                       uint16 bodysize);
 
     ///////////////////////////////////////////////////////////////////////////
     // encryption

@@ -66,31 +66,6 @@ class tls_record {
 
     void change_epoch_seq(tls_direction_t dir);
 
-    /**
-     * RFC 5246 6.2.3.3.  AEAD Ciphers
-     *   additional_data = seq_num + TLSCompressed.type +
-     *                     TLSCompressed.version + TLSCompressed.length;
-     *   AEADEncrypted = AEAD-Encrypt(write_key, nonce, plaintext,
-     *                                additional_data)
-     *   TLSCompressed.fragment = AEAD-Decrypt(write_key, nonce,
-     *                                         AEADEncrypted,
-     *                                         additional_data)
-     *
-     * uint64(seq_num) || uint8(type) || uint16(version) || uint16(cipertext_wo_tag.size)
-     *
-     * RFC 6347 4.1.2.1.  MAC
-     *   The DTLS MAC is the same as that of TLS 1.2. However, rather than
-     *   using TLS's implicit sequence number, the sequence number used to
-     *   compute the MAC is the 64-bit value formed by concatenating the epoch
-     *   and the sequence number in the order they appear on the wire.  Note
-     *   that the DTLS epoch + sequence number is the same length as the TLS
-     *   sequence number.
-     *
-     * uint16(epoch) || uint48(seq_num) || uint8(type) || uint16(version) || uint16(cipertext_wo_tag.size)
-     */
-    return_t read_aad(tls_session* session, binary_t& aad, const binary_t& record_header, uint64 record_no);
-    return_t write_aad(tls_session* session, tls_direction_t dir, binary_t& aad, uint16 bodysize);
-
    private:
     uint8 _content_type;
     bool _cond_dtls;

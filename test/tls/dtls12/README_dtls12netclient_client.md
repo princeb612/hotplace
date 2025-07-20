@@ -1,7 +1,7 @@
 #### dtls12netclient.pcapng - client
 
 ````
-$ ./test-netclient.exe -v -d -P dtls -T -D 2
+$ ./test-netclient.exe -v -d -P dtls -T --debug
 socket 484 created family 2(AF_INET) type 2(SOCK_DGRAM) protocol 17(IPPROTO_UDP)
 iocp handle 000000d8 created
 iocp handle 000000d8 bind 484

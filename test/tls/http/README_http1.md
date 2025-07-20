@@ -1,6 +1,6 @@
 #### HTTP/1.1
 
-$ ./test-httpserver1.exe -v -d -r -D 2&
+$ ./test-httpserver1.exe -v -d -r --debug &
 
 ````
 [test case] http/1.1 powered by http_server

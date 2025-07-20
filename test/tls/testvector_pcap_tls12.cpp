@@ -344,7 +344,7 @@ const size_t sizeof_pcap_tls12mte_aes128cbc_sha256 = RTL_NUMBER_OF(pcap_tls12mte
 
 // tls12_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256.pcapng
 // 20c27d23fd3f64170b2b63917ccfe7251b792ea9492fa52b59c6adccc71095102e72ad1b08880a78f3f8316c1234a89b
-const pcap_testvector capture_tls12_aes128gcm_sha256[] = {
+const pcap_testvector pcap_tls12_aes128gcm_sha256[] = {
     {
         from_client,
         "client_hello",
@@ -465,7 +465,7 @@ const pcap_testvector capture_tls12_aes128gcm_sha256[] = {
         "9e 34 20 56 86 ca a8 df f0 d2 6b 74 40 3a 07",
     },
 };
-const size_t sizeof_capture_tls12_aes128gcm_sha256 = RTL_NUMBER_OF(capture_tls12_aes128gcm_sha256);
+const size_t sizeof_pcap_tls12_aes128gcm_sha256 = RTL_NUMBER_OF(pcap_tls12_aes128gcm_sha256);
 
 const pcap_testvector pcap_tls12_chacha20poly1305_sha256[] = {
     {

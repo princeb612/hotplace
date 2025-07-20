@@ -5,14 +5,14 @@
   * MINGW64
   * chrome
 * httpserver2
-  * -v   : verbose (console log)
-  * -d   : debug libhotplace-sdk inside
-  * -k   : keylog
-  * -D 2 : trace level to debug
-  * -T   : use trial instead of libssl
+  * -v      : verbose (console log)
+  * -d      : debug libhotplace-sdk inside
+  * -k      : keylog
+  * --debug : trace level to debug
+  * -T      : use trial instead of libssl
 
 ````
-$ ./test-httpserver2.exe -v -d -r -D 2 -T -k &
+$ ./test-httpserver2.exe -v -d -r --debug -T -k &
 
 # [test case] HTTP/2 powered by http_server
 socket 472 created family 2(AF_INET) type 1(SOCK_STREAM) protocol 6(IPPROTO_TCP)

@@ -1,0 +1,294 @@
+#### dtls12_TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256.pcapng - client
+
+````
+$ openssl s_client -connect localhost:9000 -state -debug -keylogfile sslkeylog -dtls1_2 -ciphersuites TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+Connecting to ::1
+CONNECTED(000001E0)
+SSL_connect:before SSL initialization
+write to 0x2d7fac80d30 [0x2d7fb0d55b0] (208 bytes => 208 (0xD0))
+0000 - 16 fe ff 00 00 00 00 00-00 00 00 00 c3 01 00 00   ................
+0010 - bf 00 00 00 00 00 00 00-b7 fe fd c6 ce a2 e6 fc   ................
+0020 - 92 a6 78 d4 35 a4 89 b5-dc 6c f9 f7 d0 15 b6 18   ..x.5....l......
+0030 - 58 f5 08 fb 0f 32 80 a6-7b 8b 2d 00 00 00 38 cc   X....2..{.-...8.
+0040 - a8 c0 2c c0 30 00 9f cc-a9 cc a8 cc aa c0 2b c0   ..,.0.........+.
+0050 - 2f 00 9e c0 24 c0 28 00-6b c0 23 c0 27 00 67 c0   /...$.(.k.#.'.g.
+0060 - 0a c0 14 00 39 c0 09 c0-13 00 33 00 9d 00 9c 00   ....9.....3.....
+0070 - 3d 00 3c 00 35 00 2f 01-00 00 5d ff 01 00 01 00   =.<.5./...].....
+0080 - 00 0b 00 04 03 00 01 02-00 0a 00 0c 00 0a 00 1d   ................
+0090 - 00 17 00 1e 00 19 00 18-00 23 00 00 00 16 00 00   .........#......
+00a0 - 00 17 00 00 00 0d 00 30-00 2e 04 03 05 03 06 03   .......0........
+00b0 - 08 07 08 08 08 1a 08 1b-08 1c 08 09 08 0a 08 0b   ................
+00c0 - 08 04 08 05 08 06 04 01-05 01 06 01 03 03 03 01   ................
+write to 0x2d7fac80d30 [0x2d7fb0d55b0] (33 bytes => 33 (0x21))
+0000 - 16 fe ff 00 00 00 00 00-00 00 01 00 14 01 00 00   ................
+0010 - bf 00 00 00 00 b7 00 00-08 03 02 04 02 05 02 06   ................
+0020 - 02                                                .
+SSL_connect:SSLv3/TLS write client hello
+read from 0x2d7fac80d30 [0x2d7fb0da6a3] (16717 bytes => 48 (0x30))
+0000 - 16 fe ff 00 00 00 00 00-00 00 00 00 23 03 00 00   ............#...
+0010 - 17 00 00 00 00 00 00 00-17 fe ff 14 cf 0f 87 bc   ................
+0020 - a1 87 44 49 d0 a5 9a 1b-d8 cb 65 cf 1c fc 76 c5   ..DI......e...v.
+SSL_connect:SSLv3/TLS write client hello
+SSL_connect:DTLS1 read hello verify request
+write to 0x2d7fac80d30 [0x2d7fb0d55b0] (208 bytes => 208 (0xD0))
+0000 - 16 fe ff 00 00 00 00 00-00 00 02 00 c3 01 00 00   ................
+0010 - d3 00 01 00 00 00 00 00-b7 fe fd c6 ce a2 e6 fc   ................
+0020 - 92 a6 78 d4 35 a4 89 b5-dc 6c f9 f7 d0 15 b6 18   ..x.5....l......
+0030 - 58 f5 08 fb 0f 32 80 a6-7b 8b 2d 00 14 cf 0f 87   X....2..{.-.....
+0040 - bc a1 87 44 49 d0 a5 9a-1b d8 cb 65 cf 1c fc 76   ...DI......e...v
+0050 - c5 00 38 cc a8 c0 2c c0-30 00 9f cc a9 cc a8 cc   ..8...,.0.......
+0060 - aa c0 2b c0 2f 00 9e c0-24 c0 28 00 6b c0 23 c0   ..+./...$.(.k.#.
+0070 - 27 00 67 c0 0a c0 14 00-39 c0 09 c0 13 00 33 00   '.g.....9.....3.
+0080 - 9d 00 9c 00 3d 00 3c 00-35 00 2f 01 00 00 5d ff   ....=.<.5./...].
+0090 - 01 00 01 00 00 0b 00 04-03 00 01 02 00 0a 00 0c   ................
+00a0 - 00 0a 00 1d 00 17 00 1e-00 19 00 18 00 23 00 00   .............#..
+00b0 - 00 16 00 00 00 17 00 00-00 0d 00 30 00 2e 04 03   ...........0....
+00c0 - 05 03 06 03 08 07 08 08-08 1a 08 1b 08 1c 08 09   ................
+write to 0x2d7fac80d30 [0x2d7fb0d55b0] (53 bytes => 53 (0x35))
+0000 - 16 fe ff 00 00 00 00 00-00 00 03 00 28 01 00 00   ............(...
+0010 - d3 00 01 00 00 b7 00 00-1c 08 0a 08 0b 08 04 08   ................
+0020 - 05 08 06 04 01 05 01 06-01 03 03 03 01 03 02 04   ................
+0030 - 02 05 02 06 02                                    .....
+SSL_connect:SSLv3/TLS write client hello
+read from 0x2d7fac80d30 [0x2d7fb0da6a3] (16717 bytes => 208 (0xD0))
+0000 - 16 fe fd 00 00 00 00 00-00 00 01 00 49 02 00 00   ............I...
+0010 - 3d 00 01 00 00 00 00 00-3d fe fd 06 56 73 da c6   =.......=...Vs..
+0020 - df de 89 6f 1e b9 63 2c-fa 98 da 44 4e e9 42 e0   ...o..c,...DN.B.
+0030 - bf cf 81 cf 41 b0 4f 54-00 8c 38 00 cc a8 00 00   ....A.OT..8.....
+0040 - 15 ff 01 00 01 00 00 0b-00 04 03 00 01 02 00 23   ...............#
+0050 - 00 00 00 17 00 00 16 fe-fd 00 00 00 00 00 00 00   ................
+0060 - 02 00 6d 0b 00 03 66 00-02 00 00 00 00 00 61 00   ..m...f.......a.
+0070 - 03 63 00 03 60 30 82 03-5c 30 82 02 44 a0 03 02   .c..`0..\0..D...
+0080 - 01 02 02 14 63 a6 71 10-79 d6 a6 48 59 da 67 a9   ....c.q.y..HY.g.
+0090 - 04 e8 e3 5f e2 03 a3 26-30 0d 06 09 2a 86 48 86   ..._...&0...*.H.
+00a0 - f7 0d 01 01 0b 05 00 30-59 31 0b 30 09 06 03 55   .......0Y1.0...U
+00b0 - 04 06 13 02 4b 52 31 0b-30 09 06 03 55 04 08 0c   ....KR1.0...U...
+00c0 - 02 47 47 31 0b 30 09 06-03 55 04 07 0c 02 59 49   .GG1.0...U....YI
+SSL_connect:SSLv3/TLS write client hello
+Can't use SSL_get_servername
+read from 0x2d7fac80d30 [0x2d7fb0da6a3] (16717 bytes => 208 (0xD0))
+0000 - 16 fe fd 00 00 00 00 00-00 00 03 00 c3 0b 00 03   ................
+0010 - 66 00 02 00 00 61 00 00-b7 31 0d 30 0b 06 03 55   f....a...1.0...U
+0020 - 04 0a 0c 04 54 65 73 74-31 0d 30 0b 06 03 55 04   ....Test1.0...U.
+0030 - 0b 0c 04 54 65 73 74 31-12 30 10 06 03 55 04 03   ...Test1.0...U..
+0040 - 0c 09 54 65 73 74 20 52-6f 6f 74 30 1e 17 0d 32   ..Test Root0...2
+0050 - 34 30 38 32 39 30 36 32-37 31 37 5a 17 0d 32 35   40829062717Z..25
+0060 - 30 38 32 39 30 36 32 37-31 37 5a 30 54 31 0b 30   0829062717Z0T1.0
+0070 - 09 06 03 55 04 06 13 02-4b 52 31 0b 30 09 06 03   ...U....KR1.0...
+0080 - 55 04 08 0c 02 47 47 31-0b 30 09 06 03 55 04 07   U....GG1.0...U..
+0090 - 0c 02 59 49 31 0d 30 0b-06 03 55 04 0a 0c 04 54   ..YI1.0...U....T
+00a0 - 65 73 74 31 0d 30 0b 06-03 55 04 0b 0c 04 54 65   est1.0...U....Te
+00b0 - 73 74 31 0d 30 0b 06 03-55 04 03 0c 04 54 65 73   st1.0...U....Tes
+00c0 - 74 30 82 01 22 30 0d 06-09 2a 86 48 86 f7 0d 01   t0.."0...*.H....
+read from 0x2d7fac80d30 [0x2d7fb0da6a3] (16717 bytes => 208 (0xD0))
+0000 - 16 fe fd 00 00 00 00 00-00 00 04 00 c3 0b 00 03   ................
+0010 - 66 00 02 00 01 18 00 00-b7 01 01 05 00 03 82 01   f...............
+0020 - 0f 00 30 82 01 0a 02 82-01 01 00 ad 9a 29 67 5f   ..0..........)g_
+0030 - f3 a4 79 b4 c6 e6 32 73-d8 d7 ed 88 94 15 83 e4   ..y...2s........
+0040 - 31 00 04 6c b5 8c ac 87-ab 74 44 13 76 ca 0b 74   1..l.....tD.v..t
+0050 - 29 40 9e 97 2a 01 d7 8b-46 26 6e 19 35 4d c0 d3   )@..*...F&n.5M..
+0060 - b5 ea 0e 93 3a 06 e8 e5-85 b5 27 05 63 db 28 b8   ....:.....'.c.(.
+0070 - 92 da 5a 14 39 0f da 68-6d 6f 0a fb 52 dc 08 0f   ..Z.9..hmo..R...
+0080 - 54 d3 e4 a2 28 9d a0 71-50 82 e0 db ca d1 94 dd   T...(..qP.......
+0090 - 42 98 3a 09 33 a8 d9 ef-fb d2 35 43 b1 22 a2 be   B.:.3.....5C."..
+00a0 - 41 6d ba 91 dc 0b 31 4e-88 f9 4d 9c 61 2d ec b2   Am....1N..M.a-..
+00b0 - 13 0a c2 91 8e a2 d6 e9-40 b9 32 b9 80 8f b3 18   ........@.2.....
+00c0 - a3 33 13 23 d5 d0 7e d9-d0 7f 93 e0 2d 4d 90 c5   .3.#..~.....-M..
+read from 0x2d7fac80d30 [0x2d7fb0da6a3] (16717 bytes => 208 (0xD0))
+0000 - 16 fe fd 00 00 00 00 00-00 00 05 00 c3 0b 00 03   ................
+0010 - 66 00 02 00 01 cf 00 00-b7 58 24 56 d5 c9 10 13   f........X$V....
+0020 - 4a b2 99 23 7d 34 b9 8e-97 19 69 6f ce c6 3f d6   J..#}4....io..?.
+0030 - 17 a7 d2 43 e0 36 cb 51-7b 2f 18 8b c2 33 f8 57   ...C.6.Q{/...3.W
+0040 - cf d1 61 0b 7c ed 37 35-e3 13 7a 24 2e 77 08 c2   ..a.|.75..z$.w..
+0050 - e3 d9 e6 17 d3 a5 c6 34-5a da 86 a7 f8 02 36 1d   .......4Z.....6.
+0060 - 66 63 cf e9 c0 3d 82 fb-39 a2 8d 92 01 4a 83 cf   fc...=..9....J..
+0070 - e2 76 3d 87 02 03 01 00-01 a3 21 30 1f 30 1d 06   .v=.......!0.0..
+0080 - 03 55 1d 11 04 16 30 14-82 12 74 65 73 74 2e 70   .U....0...test.p
+0090 - 72 69 6e 63 65 62 36 31-32 2e 70 65 30 0d 06 09   rinceb612.pe0...
+00a0 - 2a 86 48 86 f7 0d 01 01-0b 05 00 03 82 01 01 00   *.H.............
+00b0 - 00 a5 f5 54 18 ab ad 36-38 c8 fc 0b 66 60 dd 9f   ...T...68...f`..
+00c0 - 75 9d 86 5b 79 2f ee 57-f1 79 1c 15 a1 34 23 d0   u..[y/.W.y...4#.
+read from 0x2d7fac80d30 [0x2d7fb0da6a3] (16717 bytes => 208 (0xD0))
+0000 - 16 fe fd 00 00 00 00 00-00 00 06 00 c3 0b 00 03   ................
+0010 - 66 00 02 00 02 86 00 00-b7 1c a9 58 51 a4 d0 08   f..........XQ...
+0020 - f5 d8 f7 49 e9 c5 b5 65-91 51 2d 6d e4 3b 0e 77   ...I...e.Q-m.;.w
+0030 - 02 1f 45 8e 34 e5 bb eb-f6 9d df 4a 40 60 21 b3   ..E.4......J@`!.
+0040 - 8e 16 33 3f f4 b6 90 d3-3c 34 ce e6 d9 47 07 a7   ..3?....<4...G..
+0050 - 57 14 0c f9 78 0b 36 72-a9 88 07 07 93 b4 d7 fe   W...x.6r........
+0060 - 29 5e e8 41 37 20 a5 03-c7 97 cb 82 ca db 14 e5   )^.A7 ..........
+0070 - 8b 96 1f a9 e9 20 3d 6b-25 ae f4 89 4c 60 8d e9   ..... =k%...L`..
+0080 - 14 33 47 4b 88 54 a2 47-19 81 c8 7b 0e 32 52 2b   .3GK.T.G...{.2R+
+0090 - 91 88 ad 0f 6d 73 30 8c-00 af d5 fc 46 46 af 3a   ....ms0.....FF.:
+00a0 - c2 17 89 ec c8 83 ae da-e6 69 63 e0 9c 84 22 c5   .........ic...".
+00b0 - 7a de e8 23 6b 53 9d 6f-94 d2 7f 5c be 1d 0c de   z..#kS.o...\....
+00c0 - 0e 07 0d 52 a5 43 8c e8-05 ef c0 ff f0 73 fa dc   ...R.C.......s..
+read from 0x2d7fac80d30 [0x2d7fb0da6a3] (16717 bytes => 208 (0xD0))
+0000 - 16 fe fd 00 00 00 00 00-00 00 07 00 35 0b 00 03   ............5...
+0010 - 66 00 02 00 03 3d 00 00-29 5a 51 4c 24 09 65 45   f....=..)ZQL$.eE
+0020 - 7d ab 52 8b 7e 5d f0 fb-de a7 3d 43 c5 af 76 e3   }.R.~]....=C..v.
+0030 - 6e f9 a1 dc 78 a2 bd 54-41 04 99 e5 56 32 ba 02   n...x..TA...V2..
+0040 - fd 72 16 fe fd 00 00 00-00 00 00 00 08 00 81 0c   .r..............
+0050 - 00 01 28 00 03 00 00 00-00 00 75 03 00 1d 20 a8   ..(.......u... .
+0060 - 6a 97 21 2b d4 43 c9 56-01 1d 1c 61 fc a5 be 4b   j.!+.C.V...a...K
+0070 - 00 01 46 7f 62 9a d9 00-08 df 55 49 33 bf 2a 08   ..F.b.....UI3.*.
+0080 - 04 01 00 17 18 6a 34 63-f5 fd b0 bf 72 75 df a2   .....j4c....ru..
+0090 - 26 e6 32 ef bf 48 79 f5-0f 29 8d 89 7a a6 99 32   &.2..Hy..)..z..2
+00a0 - bb 9e e8 fb 06 c1 2d d2-88 28 ce 45 0c 42 00 8d   ......-..(.E.B..
+00b0 - 6c e0 e3 ea 98 2e c1 7a-89 98 41 dd 0c b6 b5 f3   l......z..A.....
+00c0 - 9b e0 51 7c 71 0f 18 28-b5 85 c7 38 6c 58 33 de   ..Q|q..(...8lX3.
+SSL_connect:SSLv3/TLS read server hello
+depth=0 C=KR, ST=GG, L=YI, O=Test, OU=Test, CN=Test
+verify error:num=20:unable to get local issuer certificate
+verify return:1
+depth=0 C=KR, ST=GG, L=YI, O=Test, OU=Test, CN=Test
+verify error:num=21:unable to verify the first certificate
+verify return:1
+depth=0 C=KR, ST=GG, L=YI, O=Test, OU=Test, CN=Test
+verify return:1
+read from 0x2d7fac80d30 [0x2d7fb0da6a3] (16717 bytes => 204 (0xCC))
+0000 - 16 fe fd 00 00 00 00 00-00 00 09 00 bf 0c 00 01   ................
+0010 - 28 00 03 00 00 75 00 00-b3 bb ef 6d e1 65 7e f5   (....u.....m.e~.
+0020 - 2e 5f df 58 52 e3 b1 ab-8b b1 68 e3 3c 64 5c 55   ._.XR.....h.<d\U
+0030 - 34 1e 50 5a 7e 4b 0e 44-a7 59 55 af a2 9b 95 ca   4.PZ~K.D.YU.....
+0040 - 25 59 c3 c6 f1 8e 07 04-c5 cb 76 f4 41 5b 79 89   %Y........v.A[y.
+0050 - cd b1 3a 70 9f e6 0e 72-e6 d7 fa ba 79 59 be 8a   ..:p...r....yY..
+0060 - 11 04 de aa f3 b6 4c cc-49 19 09 da ca 51 b9 dc   ......L.I....Q..
+0070 - 5a 98 db 1c 23 2e d2 01-6f 5f 71 5f 7e 3c 98 19   Z...#...o_q_~<..
+0080 - 05 81 3e e0 0a ab b2 ec-31 53 3a e7 8a 65 62 f5   ..>.....1S:..eb.
+0090 - 74 d5 13 0e 93 c4 b7 29-b8 7f 48 09 e7 4c b3 fc   t......)..H..L..
+00a0 - 2e af 2d 74 70 74 0c d8-d6 b8 e6 c9 7a e7 ae 53   ..-tpt......z..S
+00b0 - 4c 5d 45 6b 39 7e 02 0f-34 6b 0c 9f 42 b1 79 bd   L]Ek9~..4k..B.y.
+00c0 - 74 2b 89 0e 1b 44 4a 43-ff 31 93 f6               t+...DJC.1..
+SSL_connect:SSLv3/TLS read server certificate
+read from 0x2d7fac80d30 [0x2d7fb0da6a3] (16717 bytes => 25 (0x19))
+0000 - 16 fe fd 00 00 00 00 00-00 00 0a 00 0c 0e 00 00   ................
+0010 - 00 00 04 00 00 00 00 00-00                        .........
+SSL_connect:SSLv3/TLS read server key exchange
+SSL_connect:SSLv3/TLS read server done
+SSL_connect:SSLv3/TLS write client key exchange
+SSL_connect:SSLv3/TLS write change cipher spec
+write to 0x2d7fac80d30 [0x2d7fb0d55b0] (125 bytes => 125 (0x7D))
+0000 - 16 fe fd 00 00 00 00 00-00 00 04 00 2d 10 00 00   ............-...
+0010 - 21 00 02 00 00 00 00 00-21 20 12 75 fa 28 de d4   !.......! .u.(..
+0020 - e6 a6 36 67 cd 61 33 ac-81 3d bd 56 c0 99 4e 55   ..6g.a3..=.V..NU
+0030 - e3 97 c8 e5 75 25 72 0c-9c 02 14 fe fd 00 00 00   ....u%r.........
+0040 - 00 00 00 00 05 00 01 01-16 fe fd 00 01 00 00 00   ................
+0050 - 00 00 00 00 28 82 ef dd-17 de 02 dc cf d1 91 a4   ....(...........
+0060 - e8 2c 74 80 0b e8 4a 41-2c d9 a2 d7 45 cc 3c 03   .,t...JA,...E.<.
+0070 - f6 2e 7c 84 92 38 92 0e-69 68 d9 a6 85            ..|..8..ih...
+SSL_connect:SSLv3/TLS write finished
+read from 0x2d7fac80d30 [0x2d7fb0da6a3] (16717 bytes => 207 (0xCF))
+0000 - 16 fe fd 00 00 00 00 00-00 00 0b 00 c2 04 00 00   ................
+0010 - b6 00 05 00 00 00 00 00-b6 00 00 1c 20 00 b0 88   ............ ...
+0020 - 73 8b b2 77 4a 52 d6 cc-91 b8 9a 10 f3 33 d9 ee   s..wJR.......3..
+0030 - 0f 54 7a d4 ff ac 4e 73-f8 7d f9 33 bc 4b 03 f3   .Tz...Ns.}.3.K..
+0040 - 69 19 bd 53 f0 95 c8 12-35 35 27 37 fd b6 37 98   i..S....55'7..7.
+0050 - 8a 78 8c d7 00 73 aa f8-01 59 c8 87 87 f6 af 8a   .x...s...Y......
+0060 - d2 57 5d 36 e7 92 10 ba-0a 3e 06 d1 06 ff 40 e7   .W]6.....>....@.
+0070 - 05 d9 6e 58 15 b3 50 14-41 b4 5e c4 27 71 85 2e   ..nX..P.A.^.'q..
+0080 - c2 0a e6 69 37 98 6f a7-da 8f 7e 6d a7 dd 2e 54   ...i7.o...~m...T
+0090 - ec 57 71 a5 0c 86 6b 22-e3 53 ca 55 58 b5 db 20   .Wq...k".S.UX..
+00a0 - e7 0e 4b 22 9b f2 a5 92-88 be d8 c9 5f 71 8f 8c   ..K"........_q..
+00b0 - 9c f2 a5 e5 46 75 32 20-96 bb 30 a9 81 61 23 eb   ....Fu2 ..0..a#.
+00c0 - ba ab 78 c3 36 be dd a3-c4 71 91 88 15 19 db      ..x.6....q.....
+SSL_connect:SSLv3/TLS write finished
+read from 0x2d7fac80d30 [0x2d7fb0da6a3] (16717 bytes => 67 (0x43))
+0000 - 14 fe fd 00 00 00 00 00-00 00 0c 00 01 01 16 fe   ................
+0010 - fd 00 01 00 00 00 00 00-00 00 28 4e 59 02 4b f1   ..........(NY.K.
+0020 - 36 c9 af 57 53 dc 99 ea-1b ca 5c 0b fd 59 3b fa   6..WS.....\..Y;.
+0030 - d6 e5 2d da c9 f6 20 e1-b6 35 91 40 b1 fa a7 bc   ..-... ..5.@....
+0040 - 9b 7c 92                                          .|.
+SSL_connect:SSLv3/TLS read server session ticket
+SSL_connect:SSLv3/TLS read change cipher spec
+SSL_connect:SSLv3/TLS read finished
+---
+Certificate chain
+ 0 s:C=KR, ST=GG, L=YI, O=Test, OU=Test, CN=Test
+   i:C=KR, ST=GG, L=YI, O=Test, OU=Test, CN=Test Root
+   a:PKEY: rsaEncryption, 2048 (bit); sigalg: RSA-SHA256
+   v:NotBefore: Aug 29 06:27:17 2024 GMT; NotAfter: Aug 29 06:27:17 2025 GMT
+---
+Server certificate
+-----BEGIN CERTIFICATE-----
+MIIDXDCCAkSgAwIBAgIUY6ZxEHnWpkhZ2mepBOjjX+IDoyYwDQYJKoZIhvcNAQEL
+BQAwWTELMAkGA1UEBhMCS1IxCzAJBgNVBAgMAkdHMQswCQYDVQQHDAJZSTENMAsG
+A1UECgwEVGVzdDENMAsGA1UECwwEVGVzdDESMBAGA1UEAwwJVGVzdCBSb290MB4X
+DTI0MDgyOTA2MjcxN1oXDTI1MDgyOTA2MjcxN1owVDELMAkGA1UEBhMCS1IxCzAJ
+BgNVBAgMAkdHMQswCQYDVQQHDAJZSTENMAsGA1UECgwEVGVzdDENMAsGA1UECwwE
+VGVzdDENMAsGA1UEAwwEVGVzdDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBAK2aKWdf86R5tMbmMnPY1+2IlBWD5DEABGy1jKyHq3REE3bKC3QpQJ6XKgHX
+i0Ymbhk1TcDTteoOkzoG6OWFtScFY9souJLaWhQ5D9pobW8K+1LcCA9U0+SiKJ2g
+cVCC4NvK0ZTdQpg6CTOo2e/70jVDsSKivkFtupHcCzFOiPlNnGEt7LITCsKRjqLW
+6UC5MrmAj7MYozMTI9XQftnQf5PgLU2QxVgkVtXJEBNKspkjfTS5jpcZaW/Oxj/W
+F6fSQ+A2y1F7LxiLwjP4V8/RYQt87Tc14xN6JC53CMLj2eYX06XGNFrahqf4AjYd
+ZmPP6cA9gvs5oo2SAUqDz+J2PYcCAwEAAaMhMB8wHQYDVR0RBBYwFIISdGVzdC5w
+cmluY2ViNjEyLnBlMA0GCSqGSIb3DQEBCwUAA4IBAQAApfVUGKutNjjI/AtmYN2f
+dZ2GW3kv7lfxeRwVoTQj0BypWFGk0Aj12PdJ6cW1ZZFRLW3kOw53Ah9FjjTlu+v2
+nd9KQGAhs44WMz/0tpDTPDTO5tlHB6dXFAz5eAs2cqmIBweTtNf+KV7oQTcgpQPH
+l8uCytsU5YuWH6npID1rJa70iUxgjekUM0dLiFSiRxmByHsOMlIrkYitD21zMIwA
+r9X8RkavOsIXiezIg67a5mlj4JyEIsV63ugja1Odb5TSf1y+HQzeDgcNUqVDjOgF
+78D/8HP63FpRTCQJZUV9q1KLfl3w+96nPUPFr3bjbvmh3HiivVRBBJnlVjK6Av1y
+-----END CERTIFICATE-----
+subject=C=KR, ST=GG, L=YI, O=Test, OU=Test, CN=Test
+issuer=C=KR, ST=GG, L=YI, O=Test, OU=Test, CN=Test Root
+---
+No client certificate CA names sent
+Peer signing digest: SHA256
+Peer signature type: RSA-PSS
+Server Temp Key: X25519, 253 bits
+---
+SSL handshake has read 1799 bytes and written 627 bytes
+Verification error: unable to verify the first certificate
+---
+New, TLSv1.2, Cipher is ECDHE-RSA-CHACHA20-POLY1305
+Protocol: DTLSv1.2
+Server public key is 2048 bit
+Secure Renegotiation IS supported
+Compression: NONE
+Expansion: NONE
+No ALPN negotiated
+SSL-Session:
+    Protocol  : DTLSv1.2
+    Cipher    : ECDHE-RSA-CHACHA20-POLY1305
+    Session-ID: 90EAA6FDEF2591E7E151E796AF7D751ADD3931A94D12FDB803792A0FD5A44E4F
+    Session-ID-ctx:
+    Master-Key: 1EB34B0F5C69986261E862D9D13B04C1B5A6CFD2BE8A708D59DA78862FC67C7BC5C25193556460F217472867629BFE17
+    PSK identity: None
+    PSK identity hint: None
+    SRP username: None
+    TLS session ticket lifetime hint: 7200 (seconds)
+    TLS session ticket:
+    0000 - 88 73 8b b2 77 4a 52 d6-cc 91 b8 9a 10 f3 33 d9   .s..wJR.......3.
+    0010 - ee 0f 54 7a d4 ff ac 4e-73 f8 7d f9 33 bc 4b 03   ..Tz...Ns.}.3.K.
+    0020 - f3 69 19 bd 53 f0 95 c8-12 35 35 27 37 fd b6 37   .i..S....55'7..7
+    0030 - 98 8a 78 8c d7 00 73 aa-f8 01 59 c8 87 87 f6 af   ..x...s...Y.....
+    0040 - 8a d2 57 5d 36 e7 92 10-ba 0a 3e 06 d1 06 ff 40   ..W]6.....>....@
+    0050 - e7 05 d9 6e 58 15 b3 50-14 41 b4 5e c4 27 71 85   ...nX..P.A.^.'q.
+    0060 - 2e c2 0a e6 69 37 98 6f-a7 da 8f 7e 6d a7 dd 2e   ....i7.o...~m...
+    0070 - 54 ec 57 71 a5 0c 86 6b-22 e3 53 ca 55 58 b5 db   T.Wq...k".S.UX..
+    0080 - 20 e7 0e 4b 22 9b f2 a5-92 88 be d8 c9 5f 71 8f    ..K"........_q.
+    0090 - 8c 9c f2 a5 e5 46 75 32-20 96 bb 30 a9 81 61 23   .....Fu2 ..0..a#
+    00a0 - eb ba ab 78 c3 36 be dd-a3 c4 71 91 88 15 19 db   ...x.6....q.....
+
+    Start Time: 1752985694
+    Timeout   : 7200 (sec)
+    Verify return code: 21 (unable to verify the first certificate)
+    Extended master secret: yes
+---
+test
+write to 0x2d7fac80d30 [0x2d7fb0eafe3] (35 bytes => 35 (0x23))
+0000 - 17 fe fd 00 01 00 00 00-00 00 01 00 16 7e 03 42   .............~.B
+0010 - 42 15 c2 b4 96 ef 60 11-55 e7 b3 6b 19 4f 34 51   B.....`.U..k.O4Q
+0020 - 10 30 73                                          .0s
+Q
+DONE
+write to 0x2d7fac80d30 [0x2d7fb0eafe3] (31 bytes => 31 (0x1F))
+0000 - 15 fe fd 00 01 00 00 00-00 00 02 00 12 f4 a1 e7   ................
+0010 - ad e2 ef 22 e3 3f b8 6a-7c 68 ce a2 cf 6f 88      ...".?.j|h...o.
+SSL3 alert write:warning:close notify
+read from 0x2d7fac80d30 [0x2d7fabc7fe0] (16384 bytes => 31 (0x1F))
+0000 - 15 fe fd 00 01 00 00 00-00 00 01 00 12 59 bb 38   .............Y.8
+0010 - 96 48 3c b1 b9 e2 29 e8-ee ca 2b d5 81 85 80      .H<...)...+....
+````
+
+[TOC](README.md)
