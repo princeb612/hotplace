@@ -358,26 +358,21 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
 
     auto lambda_test_next_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_next_rcseq,
                                     uint16 expect_next_hsseq) -> void {
-#if 0
         uint16 rcepoch = session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch);
         uint64 next_rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
         uint16 next_hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
         bool test = (expect_epoch == rcepoch) && (expect_next_hsseq == next_hsseq) && (expect_next_hsseq == next_hsseq);
-        _test_case.assert(
-            test, func, "#%i %s record (epoch %i next sequence %I64i <- expected %i %I64i) handshake (next sequence %i <- expected %i)", idx++,
-            tlsadvisor->nameof_direction(dir).c_str(), rcepoch, next_rcseq, expect_epoch, expect_next_hsseq, next_hsseq, expect_next_hsseq);
-#endif
+        _test_case.assert(test, func, "#%i %s record (epoch %i next sequence %I64i <- expected %i %I64i) handshake (next sequence %i <- expected %i)", idx++,
+                          tlsadvisor->nameof_direction(dir).c_str(), rcepoch, next_rcseq, expect_epoch, expect_next_hsseq, next_hsseq, expect_next_hsseq);
     };
     auto lambda_test_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_rcseq,
                                uint16 expect_hsseq) -> void {
-#if 0
         uint16 rcepoch = session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch);
         uint64 rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
         uint16 hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
         bool test = (expect_epoch == rcepoch) && (expect_hsseq == hsseq) && (expect_hsseq == hsseq);
         _test_case.assert(test, func, "#%i %s record (epoch %i sequence %I64i <- expected %i %I64i) handshake (sequence %i <- expected %i)", idx++,
                           tlsadvisor->nameof_direction(dir).c_str(), rcepoch, rcseq, expect_epoch, expect_rcseq, hsseq, expect_hsseq);
-#endif
     };
 
     return_t ret = errorcode_t::success;
@@ -568,14 +563,10 @@ void test_construct_dtls12_1() {
     do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256");
     do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384");
 
-#if 0
-    // TODO
-
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256");
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384");
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256");
     do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256");
-#endif
 
 #if 0
     // no test vector

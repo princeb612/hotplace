@@ -27,6 +27,8 @@
     * CBOR
 
 * details
+  * Revision 826
+    * [tested] DTLS 1.2 AES-GCM, chacha20-poly1305
   * Revision 825
     * [tested] TLS 1.2 chacha20-poly1305
   * Revision 824

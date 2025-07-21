@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_RANGE__
-#define __HOTPLACE_SDK_BASE_BASIC_RANGE__
+#ifndef __HOTPLACE_SDK_BASE_NOSTD_RANGE__
+#define __HOTPLACE_SDK_BASE_NOSTD_RANGE__
 
 #include <sdk/base/error.hpp>
 #include <sdk/base/syntax.hpp>

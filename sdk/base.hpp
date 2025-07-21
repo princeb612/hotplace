@@ -36,8 +36,6 @@
 #include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/base/basic/obfuscate_string.hpp>
-#include <sdk/base/basic/range.hpp>
-#include <sdk/base/basic/template.hpp>
 #include <sdk/base/basic/types.hpp>
 #include <sdk/base/basic/valist.hpp>
 #include <sdk/base/basic/variant.hpp>
@@ -47,9 +45,11 @@
 
 /* nostd */
 #include <sdk/base/nostd/exception.hpp>
+#include <sdk/base/nostd/integer.hpp>
 #include <sdk/base/nostd/list.hpp>
 #include <sdk/base/nostd/ovl.hpp>
 #include <sdk/base/nostd/pq.hpp>
+#include <sdk/base/nostd/range.hpp>
 #include <sdk/base/nostd/template.hpp>
 #include <sdk/base/nostd/tree.hpp>
 #include <sdk/base/nostd/vector.hpp>

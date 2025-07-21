@@ -13,6 +13,7 @@
 #define __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICK__
 
 #include <sdk/base/basic/types.hpp>
+#include <sdk/base/nostd/range.hpp>
 #include <sdk/base/pattern/pattern.hpp>
 
 namespace hotplace {

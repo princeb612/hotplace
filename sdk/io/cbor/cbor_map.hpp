@@ -16,7 +16,7 @@
 
 #include <deque>
 #include <map>
-#include <sdk/base/basic/template.hpp>
+#include <sdk/base/nostd/integer.hpp>
 #include <sdk/io/cbor/cbor_object.hpp>  // cbor_object
 
 namespace hotplace {

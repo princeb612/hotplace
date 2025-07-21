@@ -22,7 +22,9 @@ void test_dtls_record_arrange() {
     uint64 seq = 0;
     binary_t packet;
 
-    // S->C, epoch 0 seq 0 - hello_verify_request
+    // dtls12.pcapng
+
+    // #3 S->C, epoch 0 seq 0 - hello_verify_request
     {
         const char* record =
             "16 fe ff 00 00 00 00 00 00 00 00 00 23 03 00 00"
@@ -34,7 +36,7 @@ void test_dtls_record_arrange() {
         arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (0 == seq), __FUNCTION__, "expect epoch 0 seq 0");
     }
-    // S->C, epoch 0 seq 3 - certificate (fragment)
+    // #7 S->C, epoch 0 seq 3 - certificate (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 03 00 c3 0b 00 03"
@@ -56,8 +58,8 @@ void test_dtls_record_arrange() {
         ret = arrange.consume(epoch, seq, packet);
         _test_case.assert(errorcode_t::not_ready == ret, __FUNCTION__, "expect not_ready");
     }
-    // S->C, epoch 0 seq 1 - server_hello
-    // S->C, epoch 0 seq 2 - certificate (fragment)
+    // #6 S->C, epoch 0 seq 1 - server_hello
+    // #6 S->C, epoch 0 seq 2 - certificate (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 01 00 4d 02 00 00"
@@ -85,7 +87,7 @@ void test_dtls_record_arrange() {
         ret = arrange.consume(epoch, seq, packet);
         _test_case.assert(errorcode_t::empty == ret, __FUNCTION__, "expect empty");
     }
-    // S->C, epoch 0 seq 5 - certificate (fragment)
+    // #9 S->C, epoch 0 seq 5 - certificate (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 05 00 c3 0b 00 03"
@@ -104,7 +106,7 @@ void test_dtls_record_arrange() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         arrange.produce(&bin_record[0], bin_record.size());
     }
-    // S->C, epoch 0 seq 4 - certificate (fragment)
+    // #8 S->C, epoch 0 seq 4 - certificate (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 04 00 c3 0b 00 03"
@@ -128,8 +130,8 @@ void test_dtls_record_arrange() {
         arrange.consume(epoch, seq, packet);
         _test_case.assert((0 == epoch) && (5 == seq), __FUNCTION__, "expect epoch 0 seq 5");
     }
-    // S->C, epoch 0 seq 7 - certificate (fragment)
-    // S->C, epoch 0 seq 8 - server_key_exchange (fragment)
+    // #11 S->C, epoch 0 seq 7 - certificate (fragment)
+    // #11 S->C, epoch 0 seq 8 - server_key_exchange (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 07 00 39 0b 00 03"
@@ -148,7 +150,7 @@ void test_dtls_record_arrange() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         arrange.produce(&bin_record[0], bin_record.size());
     }
-    // S->C, epoch 0 seq 6 - certificate (fragment)
+    // #10 S->C, epoch 0 seq 6 - certificate (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 06 00 c3 0b 00 03"
@@ -182,7 +184,7 @@ void test_dtls_record_arrange() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         arrange.produce(&bin_record[0], bin_record.size());
     }
-    // S->C, epoch 0 seq 9 - server_key_exchange (fragment)
+    // #12 S->C, epoch 0 seq 9 - server_key_exchange (fragment)
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 09 00 c3 0c 00 01"
@@ -201,7 +203,7 @@ void test_dtls_record_arrange() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         arrange.produce(&bin_record[0], bin_record.size());
     }
-    // S->C, epoch 1 seq 1 - encrypted alert
+    // #19 S->C, epoch 1 seq 1 - encrypted alert
     {
         const char* record =
             "15 fe fd 00 01 00 00 00 00 00 01 00 40 1c 80 74"
@@ -212,8 +214,8 @@ void test_dtls_record_arrange() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         arrange.produce(&bin_record[0], bin_record.size());
     }
-    // S->C, epoch 0 seq 12 - change_cipher_spec
-    // S->C, epoch 1 seq 0 - encrypted_handshake message
+    // #16 S->C, epoch 0 seq 12 - change_cipher_spec
+    // #16 S->C, epoch 1 seq 0 - encrypted_handshake message
     {
         const char* record =
             "14 fe fd 00 00 00 00 00 00 00 0c 00 01 01 16 fe"
@@ -226,7 +228,7 @@ void test_dtls_record_arrange() {
         binary_t bin_record = std::move(base16_decode_rfc(record));
         arrange.produce(&bin_record[0], bin_record.size());
     }
-    // S->C, epoch 0 seq 11 - new_session_ticket
+    // #15 S->C, epoch 0 seq 11 - new_session_ticket
     {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 0b 00 c2 04 00 00"

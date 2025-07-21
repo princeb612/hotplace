@@ -8,7 +8,6 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/template.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/string/string.hpp>
 #include <sdk/io/basic/oid.hpp>

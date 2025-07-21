@@ -14,8 +14,8 @@
 #include <sdk/base/basic/base16.hpp>
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/ieee754.hpp>
-#include <sdk/base/basic/template.hpp>
 #include <sdk/base/basic/variant.hpp>
+#include <sdk/base/nostd/integer.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/string/string.hpp>
 #include <sdk/base/system/endian.hpp>

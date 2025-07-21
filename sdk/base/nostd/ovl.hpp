@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <functional>
 #include <sdk/base/basic/types.hpp>
+#include <sdk/base/nostd/range.hpp>
 #include <set>
 
 namespace hotplace {

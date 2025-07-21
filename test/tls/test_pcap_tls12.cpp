@@ -54,7 +54,7 @@ void test_pcap_tls12() {
         play_pcap(&session, pcap_tls12_aes128gcm_sha256, sizeof_pcap_tls12_aes128gcm_sha256);
     }
 
-    _test_case.begin("tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256.pcapng");
+    _test_case.begin("TLS 1.2 tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256.pcapng");
     {
         tls_session session(session_type_tls);
 

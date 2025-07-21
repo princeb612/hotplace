@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_TEMPLATE__
-#define __HOTPLACE_SDK_BASE_BASIC_TEMPLATE__
+#ifndef __HOTPLACE_SDK_BASE_NOSTD_INTEGER__
+#define __HOTPLACE_SDK_BASE_NOSTD_INTEGER__
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/basic/types.hpp>

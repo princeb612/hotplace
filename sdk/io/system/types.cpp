@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/template.hpp>
+#include <sdk/base/nostd/integer.hpp>
 #include <sdk/base/template.hpp>
 #include <sdk/io/system/types.hpp>
 #if defined __linux__
