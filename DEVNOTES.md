@@ -244,7 +244,7 @@ flowchart LR
     - [x] decrypt
   - [x] TLS 1.2 chacha20-poly1305
   - [x] TCP segmentation
-  - [ ] DTLS 1.2 AEAD
+  - [x] DTLS 1.2 AEAD (CCM not tested - no test vector)
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)
   - [x] integration - network_server

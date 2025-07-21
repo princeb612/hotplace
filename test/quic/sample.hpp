@@ -123,6 +123,10 @@ void test_rfc_9369_a4();
 void test_rfc_9369_a5();
 
 // pcap
-void test_http3();
+void test_pcap_quic();
+// QUIC Frame
+void test_quic_frame();
+// construct
+void test_construct_quic();
 
 #endif

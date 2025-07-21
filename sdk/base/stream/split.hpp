@@ -58,13 +58,13 @@ return_t split(const byte_t* stream, size_t size, size_t fragment_size, size_t p
  *      //   group stream3 size 30
  *      //   segment size 80
  *      // output
- *      //   segment #0 group #0 "group1" fragment offset 0 fragment size 80
- *      //   segment #1 group #0 "group1" fragment offset 80 fragment size 20
- *      //   segment #1 group #1 "group2" fragment offset 0 fragment size 60
- *      //   segment #2 group #1 "group2" fragment offset 60 fragment size 80
+ *      //   segment #0 group #0 "group1" fragment offset   0 fragment size 80
+ *      //   segment #1 group #0 "group1" fragment offset  80 fragment size 20
+ *      //   segment #1 group #1 "group2" fragment offset   0 fragment size 60
+ *      //   segment #2 group #1 "group2" fragment offset  60 fragment size 80
  *      //   segment #3 group #1 "group2" fragment offset 140 fragment size 70
- *      //   segment #3 group #2 "group3" fragment offset 0 fragment size 10
- *      //   segment #4 group #2 "group3" fragment offset 10 fragment size 20
+ *      //   segment #3 group #2 "group3" fragment offset   0 fragment size 10
+ *      //   segment #4 group #2 "group3" fragment offset  10 fragment size 20
  *      splitter<std::string> spl;
  *      spl.set_segment_size(80);
  *      spl.add(std::move(stream1), std::move(std::string("group1")));
@@ -79,7 +79,7 @@ return_t split(const byte_t* stream, size_t size, size_t fragment_size, size_t p
  *          if (splitter_flag_t::splitter_new_group & flags) {
  *              ++group;
  *          }
- *          _logger->writeln(R"(segment #%i group #%i "%s" fragment offset %zi fragment size %zi)", segment, group, desc.c_str(), fragoffset, fragsize);
+ *          _logger->writeln(R"(segment #%i group #%i "%s" fragment offset %3zi fragment size %zi)", segment, group, desc.c_str(), fragoffset, fragsize);
  *      };
  *      spl.run(lambda);
  */
@@ -119,7 +119,7 @@ class splitter {
      *              size_t fragment_offset
      *              size_t fragment_size
      *              const DESCRIPTOR_T& desc
-     */
+     */
     return_t run(std::function<void(uint32, const byte_t*, size_t, size_t, size_t, const DESCRIPTOR_T& desc)> func);
 
    protected:

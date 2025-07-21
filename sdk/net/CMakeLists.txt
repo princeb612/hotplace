@@ -19,6 +19,7 @@ file (GLOB FILEGROUP_SDK_HEADER_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/advisor/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/protection/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls/session/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/tls/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/tls/extension/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/tls/handshake/*.hpp
@@ -44,6 +45,7 @@ file (GLOB FILEGROUP_SDK_SOURCE_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/advisor/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/protection/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls/session/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/tls/extension/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/tls/handshake/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/tls/record/*.cpp

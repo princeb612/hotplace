@@ -27,6 +27,7 @@
     * CBOR
 
 * details
+  * Revision 827
   * Revision 826
     * [tested] DTLS 1.2 AES-GCM, chacha20-poly1305
   * Revision 825
@@ -93,7 +94,7 @@
     * [tested] https://quic.xargs.org/
   * Revision 702
     * [tested] DSA
-  * Revision 684 (Tag 0.97) - Release
+  * Revision 684 (Tag 0.97)
   * Revision 679
     * [tested] RFC 8448 6.  Client Authentication
     * [tested] RFC 8448 7.  Compatibility Mode

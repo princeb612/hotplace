@@ -385,7 +385,12 @@ int main(int argc, char** argv) {
 
     if ((test_flag_pcap & option.flags) || (0 == option.flags)) {
         // http3.pcapng
-        test_http3();
+        test_pcap_quic();
+    }
+
+    if (0 == option.flags) {
+        test_quic_frame();
+        test_construct_quic();
     }
 
     openssl_cleanup();

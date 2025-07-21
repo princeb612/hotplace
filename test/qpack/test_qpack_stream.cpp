@@ -20,7 +20,7 @@ struct testvector_qpack {
     uint32 type;
     const char* desc;
     const char* stream;
-} tv[] = {
+} testvector_qpack_stream[] = {
     {
         from_client,
         qpack_quic_stream_encoder,
@@ -142,7 +142,7 @@ void test_qpack_stream() {
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
     qpack_dynamic_table qpack_dyntable;
-    for (auto item : tv) {
+    for (auto item : testvector_qpack_stream) {
         auto bin = base16_decode_rfc(item.stream);
         size_t pos = 0;
         std::list<qpack_decode_t> kv;
