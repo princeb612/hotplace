@@ -26,6 +26,7 @@
 #define __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKET__
 
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls/quic/frame/quic_frames.hpp>
 #include <sdk/net/tls/quic/types.hpp>
 #include <sdk/net/tls/tls/types.hpp>
 
@@ -135,9 +136,12 @@ class quic_packet {
     uint8 get_pn_length();
     uint8 get_pn_length(uint8 ht);
     uint32 get_pn();
+
+    quic_frames& get_quic_frames();
+    quic_packet& operator<<(quic_frame* frame);
+
     /**
-     * @remarks payload
-     *          Initial, 1-RTT, Handshake, 0-RTT
+     * @remarks for a test
      */
     quic_packet& set_payload(const binary_t& payload);
     quic_packet& set_payload(const byte_t* stream, size_t size);
@@ -195,6 +199,7 @@ class quic_packet {
     binary_t _dcid;         // destination
     binary_t _scid;         // source
     binary_t _payload;
+    quic_frames* _frames;
 };
 
 /**

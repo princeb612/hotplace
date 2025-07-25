@@ -9,62 +9,74 @@
 
 #include "sample.hpp"
 
-// http3.pcapng
-// - sketch
-//   - #1~#14
-// - [ ] prep
-//   - [ ] quic_packet_publisher (generate fragmented CRYPTO) cf. dtls_record_publisher
-//   - [ ] PKNs informations in tls_session
-//   - [ ] padding (randomize and align the packet size)
-//   - [ ] ...
+// - TODO
+//   - [ ] fragmentation
 
 void construct_quic_initial_client_hello(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
-#if 0
     bin.clear();
 
     quic_packet_builder packet_builder;
     auto initial = packet_builder.set(quic_packet_type_initial).set_session(session).build();
     quic_frame_builder frame_builder;
 
-    {
-        auto crypto = frame_builder.set(quic_frame_type_crypto).set(initial).build();
+    auto lambda = [](tls_handshake* handshake, tls_direction_t dir) -> return_t {
+        return_t ret = errorcode_t::success;
+        {
+            auto quic_params = new tls_extension_quic_transport_parameters(handshake);
+            (*quic_params)
+                .set(quic_param_disable_active_migration, binary_t())
+                .set(quic_param_initial_source_connection_id, binary_t())
+                .set(quic_param_max_idle_timeout, 120000)
+                .set(quic_param_max_udp_payload_size, 1200)
+                .set(quic_param_active_connection_id_limit, 2)
+                .set(quic_param_initial_max_data, 0xc0000)
+                .set(quic_param_initial_max_stream_data_bidi_local, 0x80000)
+                .set(quic_param_initial_max_stream_data_bidi_remote, 0x80000)
+                .set(quic_param_initial_max_stream_data_uni, 0x80000)
+                .set(quic_param_initial_max_streams_bidi, 100)
+                .set(quic_param_initial_max_streams_uni, 100);
+            handshake->get_extensions().add(quic_params);
+        }
+        {
+            auto sni = new tls_extension_sni(handshake);
+            auto& hostname = sni->get_hostname();
+            hostname = "test.server.com";
+            handshake->get_extensions().add(sni);
+        }
+        {
+            auto extension = new tls_extension_alpn(handshake);
+            binary_t protocols;
+            binary_append(protocols, uint8(2));
+            binary_append(protocols, "h3");
+            extension->set_protocols(protocols);
+            handshake->get_extensions().add(extension);
+        }
+        return ret;
+    };
 
-        auto handshake = new tls_handshake_client_hello(session);
-        // do something
-        // handshake->add_ciphersuites(...);
-        // handshake->get_extensions(new tls_extension_xxx(handshake));
-        //                               tls_extension_quic_transport_parameters
-        //                               tls_extension_sni
-        //                               tls_extension_ec_point_formats
-        //                               tls_extension_supported_groups
-        //                               tls_extension_alpn
-        //                               tls_extension_unknown(tls_ext_encrypt_then_mac, handshake);
-        //                               tls_extension_unknown(tls_ext_extended_master_secret, handshake);
-        //                               tls_extension_signature_algorithms
-        //                               tls_extension_client_supported_versions
-        //                               tls_extension_psk_key_exchange_modes
-        //                               tls_extension_client_key_share
+    {
+        auto crypto = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(initial).build();
+
+        tls_handshake* handshake = nullptr;
+        tls_composer::construct_client_hello(&handshake, session, lambda, tls_13, tls_13);
 
         *crypto << handshake;
         *initial << crypto;
     }
     {
-        auto padding = frame_builder.set(quic_frame_type_padding).set(initial).build();
-        // bin -> crypto || padding
-        // range.minimum < bin (randomized size) < range.maximum
-        // true == (0 = (bin.size() % 0x10))
-        padding->guide(range_padded, 0x10);
+        // quic_param_max_udp_payload_size
+        auto padding = (quic_frame_padding*)frame_builder.set(quic_frame_type_padding).set(initial).build();
+        padding->pad(1182);  // TODO
         *initial << padding;
     }
 
     initial->write(from_client, bin);
     initial->release();
-#endif
+
     _test_case.assert(true, __FUNCTION__, "%s", message);
 }
 
-void construct_quic_initial_server_hello(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
-#if 0
+void construct_quic_initial_server_hello(tls_session* client_session, tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     bin.clear();
 
     quic_packet_builder packet_builder;
@@ -77,33 +89,26 @@ void construct_quic_initial_server_hello(tls_session* session, tls_direction_t d
         *initial << ack;
     }
     {
-        auto crypto = frame_builder.set(quic_frame_type_crypto).set(initial).build();
+        auto crypto = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(initial).build();
 
-        auto handshake = new tls_handshake_server_hello(session);
-
-        // handshake->set_ciphersuite("TLS_AES_256_GCM_SHA384");
-        // handshake->get_extensions(new new tls_extension_server_key_share(handshake));
-        // handshake->get_extensions(new new tls_extension_server_supported_versions(handshake));
+        tls_handshake* handshake = nullptr;
+        tls_composer::construct_server_hello(&handshake, session, nullptr, tls_13, tls_13);
 
         *crypto << handshake;
         *initial << crypto;
     }
     {
         auto padding = frame_builder.set(quic_frame_type_padding).set(initial).build();
-        // bin -> crypto || padding
-        // range.minimum < bin (randomized size) < range.maximum
-        // true == (0 = (bin.size() % 0x10))
-        padding->guide(range_padded, 0x10);
         *initial << padding;
     }
 
     initial->write(from_server, bin);
     initial->release();
-#endif
+
+    _test_case.assert(true, __FUNCTION__, "%s", message);
 }
 
-void construct_ack(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
-#if 0
+void construct_quic_initial_ack(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     bin.clear();
 
     quic_packet_builder packet_builder;
@@ -115,27 +120,18 @@ void construct_ack(tls_session* session, tls_direction_t dir, binary_t& bin, con
         // read PKNs from session
         *initial << ack;
     }
-    {
-        auto padding = frame_builder.set(quic_frame_type_padding).set(initial).build();
-        // bin -> crypto || padding
-        // range.minimum < bin (randomized size) < range.maximum
-        // true == (0 = (bin.size() % 0x10))
-        padding->guide(range_padded, 0x10);
-        *initial << padding;
-    }
 
     initial->write(from_server, bin);
     initial->release();
-#endif
+
     _test_case.assert(true, __FUNCTION__, "%s", message);
 }
 
 void construct_quic_handshake(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
-#if 0
     bin.clear();
 
-    //
-#endif
+    // auto handshake = new tls_handshake_certificate(session);
+
     _test_case.assert(true, __FUNCTION__, "%s", message);
 }
 
@@ -156,10 +152,10 @@ void test_construct_quic() {
     construct_quic_initial_client_hello(&session_client, from_client, bin, "{C...} initial [CRYPTO(CH), PADDING]");
     send_packet(&session_server, from_client, bin, "{C->S} initial [CRYPTO(CH), PADDING]");
     // S->C
-    construct_quic_initial_server_hello(&session_server, from_server, bin, "{S...} initial [ACK, CRYPTO(SH), PADDING]");
+    construct_quic_initial_server_hello(&session_client, &session_server, from_server, bin, "{S...} initial [ACK, CRYPTO(SH), PADDING]");
     send_packet(&session_client, from_server, bin, "{S->C} initial [ACK, CRYPTO(SH), PADDING]");
     //
-    construct_ack(&session_client, from_client, bin, "{C...} initial [ACK, PADDING]");
+    construct_quic_initial_ack(&session_client, from_client, bin, "{C...} initial [ACK, PADDING]");
     send_packet(&session_server, from_client, bin, "{S->C} initial [ACK, PADDING]");
     // S->C
     construct_quic_handshake(&session_server, from_server, bin, "{S...} handshake [CRYPTO(EE, CERT, CV, FIN)], short [STREAM(HTTP3 SETTINGS)]");

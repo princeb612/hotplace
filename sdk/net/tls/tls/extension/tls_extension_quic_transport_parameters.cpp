@@ -32,6 +32,8 @@ tls_extension_quic_transport_parameters::tls_extension_quic_transport_parameters
 return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        critical_section_guard guard(_lock);
+
         auto tpos = offsetof_header();
         auto ext_len = get_body_size();
 
@@ -47,19 +49,16 @@ return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t d
             uint64 param_id = pl.t_value_of<uint64>(constexpr_param_id);
             pl.get_binary(constexpr_param, param);
 
-            _keys.push_back(param_id);
-            _params.insert({param_id, std::move(param)});
+            _params.push_back({param_id, std::move(param)});
         }
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            for (auto item : _keys) {
-                auto iter = _params.find(item);
-
-                auto param_id = item;
-                const binary_t& param = iter->second;
+            for (auto item : _params) {
+                auto param_id = item.first;
+                const binary_t& param = item.second;
 
                 switch (param_id) {
                     case quic_param_stateless_reset_token:
@@ -91,7 +90,47 @@ return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t d
     return ret;
 }
 
-return_t tls_extension_quic_transport_parameters::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
+return_t tls_extension_quic_transport_parameters::do_write_body(tls_direction_t dir, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    critical_section_guard guard(_lock);
+    for (auto item : _params) {
+        auto param_id = item.first;
+        const binary_t& param = item.second;
+
+        payload pl;
+        pl << new payload_member(new quic_encoded(uint64(param_id)), constexpr_param_id)  //
+           << new payload_member(new quic_encoded(param), constexpr_param);               //
+    }
+    return ret;
+}
+
+tls_extension_quic_transport_parameters& tls_extension_quic_transport_parameters::set(uint64 id, uint64 value) {
+    critical_section_guard guard(_lock);
+    switch (id) {
+        case quic_param_stateless_reset_token:
+        case quic_param_original_destination_connection_id:
+        case quic_param_initial_source_connection_id:
+        case quic_param_retry_source_connection_id:
+        case 17:                   // version_information
+        case 18258:                // google_version
+        case 2792906686339107538:  // undocumented
+        {
+            //
+        } break;
+        default: {
+            binary_t bin;
+            binary_append(bin, value, hton64);
+            _params.push_back({id, bin});
+        } break;
+    }
+    return *this;
+}
+
+tls_extension_quic_transport_parameters& tls_extension_quic_transport_parameters::set(uint64 id, const binary_t& value) {
+    critical_section_guard guard(_lock);
+    _params.push_back({id, value});
+    return *this;
+}
 
 }  // namespace net
 }  // namespace hotplace

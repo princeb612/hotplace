@@ -21,7 +21,7 @@
 namespace hotplace {
 namespace net {
 
-quic_frame_padding::quic_frame_padding(quic_packet* packet) : quic_frame(quic_frame_type_padding, packet) {}
+quic_frame_padding::quic_frame_padding(quic_packet* packet) : quic_frame(quic_frame_type_padding, packet), _len(0) {}
 
 return_t quic_frame_padding::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -46,8 +46,11 @@ return_t quic_frame_padding::do_read_body(tls_direction_t dir, const byte_t* str
 
 return_t quic_frame_padding::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
+    bin.resize(bin.size() + _len);
     return ret;
 }
+
+void quic_frame_padding::pad(uint16 len) { _len = len; }
 
 }  // namespace net
 }  // namespace hotplace

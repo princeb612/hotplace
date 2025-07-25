@@ -292,7 +292,7 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
     return_t ret = errorcode_t::success;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     tls_record* record = nullptr;
-    tls_handshake_client_hello* ch = nullptr;
+    tls_handshake* ch = nullptr;
     tls_direction_t dir = from_client;
     __try2 {
         if (nullptr == func) {
@@ -318,132 +318,14 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
             __leave2;
         }
 
-        __try_new_catch(ch, new tls_handshake_client_hello(session), ret, __leave2);
-
-        // random
-        {
-            openssl_prng prng;
-
-            binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
-            time_t gmt_unix_time = time(nullptr);
-            binary_append(random, gmt_unix_time, hton32);
-            random.resize(sizeof(uint32));
-            binary_t temp;
-            prng.random(temp, 28);
-            binary_append(random, temp);
-            ch->set_random(random);
+        ret = construct_client_hello(&ch, session, nullptr, _minspec, _maxspec);
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
 
-        // cookie
-        {
-            session_status = session->get_session_status();
-            if (session_status_hello_verify_request & session_status) {
-                const auto& cookie = protection.get_secrets().get(tls_context_cookie);
-                if (false == cookie.empty()) {
-                    ch->set_cookie(cookie);
-                }
-            }
-        }
+        (*record) << ch;
 
-        {
-            // cipher suites
-            uint8 mask = tls_flag_secure | tls_flag_support;
-            auto lambda_cs = [&](const tls_cipher_suite_t* cs) -> void {
-                if ((mask & cs->flags) && (cs->version <= _maxspec)) {
-                    ch->add_ciphersuite(cs->code);
-                }
-            };
-            tlsadvisor->enum_cipher_suites(lambda_cs);
-        }
-
-        {
-            // encrypt_then_mac
-            if (tls_12 == _minspec) {
-                if (session->get_keyvalue().get(session_conf_enable_encrypt_then_mac)) {
-                    ch->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, ch));
-                }
-            }
-        }
-        {
-            // ec_point_formats
-            // RFC 9325 4.2.1
-            // Note that [RFC8422] deprecates all but the uncompressed point format.
-            // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-            auto ec_point_formats = new tls_extension_ec_point_formats(ch);
-            (*ec_point_formats).add("uncompressed");
-            ch->get_extensions().add(ec_point_formats);
-        }
-        {
-            // supported_groups
-            // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-            auto supported_groups = new tls_extension_supported_groups(ch);
-            (*supported_groups).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
-            ch->get_extensions().add(supported_groups);
-        }
-        {
-            // signature_algorithms
-            auto signature_algorithms = new tls_extension_signature_algorithms(ch);
-            (*signature_algorithms)
-                .add("ecdsa_secp256r1_sha256")
-                .add("ecdsa_secp384r1_sha384")
-                .add("ecdsa_secp521r1_sha512")
-                .add("ed25519")
-                .add("ed448")
-                .add("rsa_pkcs1_sha256")
-                .add("rsa_pkcs1_sha384")
-                .add("rsa_pkcs1_sha512")
-                .add("rsa_pss_pss_sha256")
-                .add("rsa_pss_pss_sha384")
-                .add("rsa_pss_pss_sha512")
-                .add("rsa_pss_rsae_sha256")
-                .add("rsa_pss_rsae_sha384")
-                .add("rsa_pss_rsae_sha512");
-            ch->get_extensions().add(signature_algorithms);
-        }
-
-        if (tls_13 == _maxspec) {
-            // TLS 1.3
-            {
-                // supported_versions
-                auto supported_versions = new tls_extension_client_supported_versions(ch);
-                if (tls_13 == _maxspec) {
-                    (*supported_versions).add(is_dtls ? dtls_13 : tls_13);
-                }
-                if (tls_12 == _minspec) {
-                    (*supported_versions).add(is_dtls ? dtls_12 : tls_12);
-                }
-                ch->get_extensions().add(supported_versions);
-            }
-            {
-                // psk_key_exchange_modes
-                auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(ch);
-                (*psk_key_exchange_modes).add("psk_dhe_ke");
-                ch->get_extensions().add(psk_key_exchange_modes);
-            }
-            {
-                // key_share
-                auto key_share = new tls_extension_client_key_share(ch);
-                if (tls_flow_hello_retry_request != protection.get_flow()) {
-                    (*key_share).add("x25519");
-                }
-                ch->get_extensions().add(key_share);
-            }
-        }
-
-        {
-            // session_ticket
-            ch->get_extensions().add(new tls_extension_unknown(tls_ext_session_ticket, ch));
-            // renegotiation_info
-            ch->get_extensions().add(new tls_extension_renegotiation_info(ch));
-            // master_secret
-            ch->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, ch));
-        }
-
-        {
-            (*record) << ch;
-
-            do_compose(record, dir, func);
-        }
+        do_compose(record, dir, func);
     }
     __finally2 {
         if (record) {
@@ -462,18 +344,11 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
     __try2 {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
-        auto& prot_context = protection.get_protection_context();
-        auto nego_context = protection.get_protection_context();  // copy
-
-        prot_context.select_from(nego_context, session);
-
-        auto cs = prot_context.get0_cipher_suite();
-        auto tlsver = prot_context.get0_supported_version();
 
         // server_hello
         {
             tls_record* record = nullptr;
-            tls_handshake_server_hello* hs = nullptr;
+            tls_handshake* hs = nullptr;
 
             record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
             if (nullptr == record) {
@@ -481,35 +356,16 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
                 __leave2;
             }
 
-            __try_new_catch(hs, new tls_handshake_server_hello(session), ret, __leave2);
-
-            hs->set_cipher_suite(cs);
-
-            if (tlsadvisor->is_kindof_tls13(tlsver)) {
-                {
-                    auto supported_versions = new tls_extension_server_supported_versions(hs);
-                    (*supported_versions).set(tlsver);
-                    hs->get_extensions().add(supported_versions);
-                }
-
-                {
-                    auto key_share = new tls_extension_server_key_share(hs);
-                    key_share->clear();
-                    key_share->add_keyshare();
-                    hs->get_extensions().add(key_share);
-                }
-            } else {
-                {
-                    // session_conf_enable_encrypt_then_mac
-                    // session_conf_enable_extended_master_secret
-                }
+            ret = construct_server_hello(&hs, session, nullptr, _minspec, _maxspec);
+            if (errorcode_t::success != ret) {
+                __leave2;
             }
 
             *record << hs;
 
             records << record;
         }
-
+        auto tlsver = protection.get_protection_context().get0_supported_version();
         if (tlsadvisor->is_kindof_tls13(tlsver)) {
             {
                 // change_cipher_spec
@@ -614,6 +470,208 @@ void tls_composer::set_maxver(tls_version_t version) {
 uint16 tls_composer::get_minver() { return _minspec; }
 
 uint16 tls_composer::get_maxver() { return _maxspec; }
+
+return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_session* session, std::function<return_t(tls_handshake*, tls_direction_t)> hook,
+                                              uint16 minspec, uint16 maxspec) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == handshake || nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        uint32 session_status = 0;
+        auto session_type = session->get_type();
+        auto& protection = session->get_tls_protection();
+        bool is_dtls = (session_type_dtls == session_type);
+        tls_handshake_client_hello* hs = nullptr;
+
+        __try_new_catch(hs, new tls_handshake_client_hello(session), ret, __leave2);
+
+        // random
+        {
+            openssl_prng prng;
+
+            binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
+            time_t gmt_unix_time = time(nullptr);
+            binary_append(random, gmt_unix_time, hton32);
+            random.resize(sizeof(uint32));
+            binary_t temp;
+            prng.random(temp, 28);
+            binary_append(random, temp);
+            hs->set_random(random);
+        }
+
+        // cookie
+        {
+            session_status = session->get_session_status();
+            if (session_status_hello_verify_request & session_status) {
+                const auto& cookie = protection.get_secrets().get(tls_context_cookie);
+                if (false == cookie.empty()) {
+                    hs->set_cookie(cookie);
+                }
+            }
+        }
+
+        {
+            // cipher suites
+            uint8 mask = tls_flag_secure | tls_flag_support;
+            auto lambda_cs = [&](const tls_cipher_suite_t* cs) -> void {
+                if ((mask & cs->flags) && (cs->version <= maxspec)) {
+                    hs->add_ciphersuite(cs->code);
+                }
+            };
+            tlsadvisor->enum_cipher_suites(lambda_cs);
+        }
+
+        {
+            // encrypt_then_mac
+            if (tls_12 == minspec) {
+                if (session->get_keyvalue().get(session_conf_enable_encrypt_then_mac)) {
+                    hs->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, hs));
+                }
+            }
+        }
+
+        {
+            // ec_point_formats
+            // RFC 9325 4.2.1
+            // Note that [RFC8422] deprecates all but the uncompressed point format.
+            // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
+            auto ec_point_formats = new tls_extension_ec_point_formats(hs);
+            (*ec_point_formats).add("uncompressed");
+            hs->get_extensions().add(ec_point_formats);
+        }
+        {
+            // supported_groups
+            // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
+            auto supported_groups = new tls_extension_supported_groups(hs);
+            (*supported_groups).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
+            hs->get_extensions().add(supported_groups);
+        }
+        {
+            // signature_algorithms
+            auto signature_algorithms = new tls_extension_signature_algorithms(hs);
+            (*signature_algorithms)
+                .add("ecdsa_secp256r1_sha256")
+                .add("ecdsa_secp384r1_sha384")
+                .add("ecdsa_secp521r1_sha512")
+                .add("ed25519")
+                .add("ed448")
+                .add("rsa_pkcs1_sha256")
+                .add("rsa_pkcs1_sha384")
+                .add("rsa_pkcs1_sha512")
+                .add("rsa_pss_pss_sha256")
+                .add("rsa_pss_pss_sha384")
+                .add("rsa_pss_pss_sha512")
+                .add("rsa_pss_rsae_sha256")
+                .add("rsa_pss_rsae_sha384")
+                .add("rsa_pss_rsae_sha512");
+            hs->get_extensions().add(signature_algorithms);
+        }
+
+        if (tls_13 == maxspec) {
+            // TLS 1.3
+            {
+                // supported_versions
+                auto supported_versions = new tls_extension_client_supported_versions(hs);
+                if (tls_13 == maxspec) {
+                    (*supported_versions).add(is_dtls ? dtls_13 : tls_13);
+                }
+                if (tls_12 == minspec) {
+                    (*supported_versions).add(is_dtls ? dtls_12 : tls_12);
+                }
+                hs->get_extensions().add(supported_versions);
+            }
+            {
+                // psk_key_exchange_modes
+                auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(hs);
+                (*psk_key_exchange_modes).add("psk_dhe_ke");
+                hs->get_extensions().add(psk_key_exchange_modes);
+            }
+            {
+                // key_share
+                auto key_share = new tls_extension_client_key_share(hs);
+                if (tls_flow_hello_retry_request != protection.get_flow()) {
+                    (*key_share).add("x25519");
+                }
+                hs->get_extensions().add(key_share);
+            }
+        }
+
+        {
+            // session_ticket
+            hs->get_extensions().add(new tls_extension_unknown(tls_ext_session_ticket, hs));
+            // renegotiation_info
+            hs->get_extensions().add(new tls_extension_renegotiation_info(hs));
+            // master_secret
+            hs->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, hs));
+        }
+
+        if (hook) {
+            hook(hs, from_client);
+        }
+
+        *handshake = hs;
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_session* session, std::function<return_t(tls_handshake*, tls_direction_t)> hook,
+                                              uint16 minspec, uint16 maxspec) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == handshake || nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto& protection = session->get_tls_protection();
+        auto& prot_context = protection.get_protection_context();
+        auto nego_context = protection.get_protection_context();  // copy
+
+        prot_context.select_from(nego_context, session);
+
+        auto cs = prot_context.get0_cipher_suite();
+        auto tlsver = prot_context.get0_supported_version();
+        tls_handshake_server_hello* hs = nullptr;
+
+        __try_new_catch(hs, new tls_handshake_server_hello(session), ret, __leave2);
+
+        hs->set_cipher_suite(cs);
+
+        if (tlsadvisor->is_kindof_tls13(tlsver)) {
+            {
+                auto supported_versions = new tls_extension_server_supported_versions(hs);
+                (*supported_versions).set(tlsver);
+                hs->get_extensions().add(supported_versions);
+            }
+
+            {
+                auto key_share = new tls_extension_server_key_share(hs);
+                key_share->clear();
+                key_share->add_keyshare();
+                hs->get_extensions().add(key_share);
+            }
+        } else {
+            {
+                // session_conf_enable_encrypt_then_mac
+                // session_conf_enable_extended_master_secret
+            }
+        }
+
+        if (hook) {
+            hook(hs, from_server);
+        }
+
+        *handshake = hs;
+    }
+    __finally2 {}
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

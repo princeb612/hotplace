@@ -38,6 +38,11 @@ class tls_composer {
     uint16 get_minver();
     uint16 get_maxver();
 
+    static return_t construct_client_hello(tls_handshake** handshake, tls_session* session, std::function<return_t(tls_handshake*, tls_direction_t)> hook,
+                                           uint16 minspec = tls_12, uint16 maxspec = tls_13);
+    static return_t construct_server_hello(tls_handshake** handshake, tls_session* session, std::function<return_t(tls_handshake*, tls_direction_t)> hook,
+                                           uint16 minspec = tls_12, uint16 maxspec = tls_13);
+
    protected:
     return_t do_client_hello(std::function<void(tls_session*, binary_t&)> func);
     return_t do_client_handshake(tls_direction_t dir, unsigned wto, std::function<void(tls_session*, binary_t&)> func);

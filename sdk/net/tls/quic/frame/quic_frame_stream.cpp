@@ -17,7 +17,7 @@
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
-#include <sdk/net/tls/quic_streams.hpp>
+#include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -112,7 +112,7 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, binary_t& bin) {
 
 return_t quic_frame_stream::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
-    get_packet()->get_session()->get_quic_streams() << this;
+    get_packet()->get_session()->get_quic_session().get_quic_streams() << this;
     return ret;
 }
 

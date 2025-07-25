@@ -58,12 +58,12 @@ enum quic_packet_field_t : uint8 {
  * RFC 9369 3.2.  Long Header Packet Types
  */
 enum quic_packet_t : uint8 {
-    quic_packet_type_initial = 0,
-    quic_packet_type_0_rtt = 1,
-    quic_packet_type_handshake = 2,
-    quic_packet_type_retry = 3,
-    quic_packet_type_version_negotiation = 4,
-    quic_packet_type_1_rtt = 5,
+    quic_packet_type_initial = 1,
+    quic_packet_type_0_rtt = 2,
+    quic_packet_type_handshake = 3,
+    quic_packet_type_retry = 4,
+    quic_packet_type_version_negotiation = 5,
+    quic_packet_type_1_rtt = 6,
 };
 
 /*
@@ -190,11 +190,12 @@ class quic_frame_stop_sending;
 class quic_frames;
 
 class quic_packet;
-class quic_packet_version_negotiation;
+class quic_packet_publisher;
 class quic_packet_initial;
 class quic_packet_0rtt;
 class quic_packet_handshake;
 class quic_packet_retry;
+class quic_packet_version_negotiation;
 class quic_packet_1rtt;
 class quic_encoded;
 

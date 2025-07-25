@@ -13,7 +13,7 @@
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
-#include <sdk/net/tls/quic_streams.hpp>
+#include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {

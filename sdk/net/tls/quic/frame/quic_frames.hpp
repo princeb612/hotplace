@@ -43,8 +43,8 @@ class quic_frames {
 
     return_t write(tls_direction_t dir, binary_t& bin);
 
-    return_t add(quic_frame* handshake, bool upref = false);
-    quic_frames& operator<<(quic_frame* handshake);
+    return_t add(quic_frame* frame, bool upref = false);
+    quic_frames& operator<<(quic_frame* frame);
 
     void for_each(std::function<void(quic_frame*)> func);
 

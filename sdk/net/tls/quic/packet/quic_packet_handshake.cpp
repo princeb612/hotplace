@@ -135,8 +135,7 @@ return_t quic_packet_handshake::read(tls_direction_t dir, const byte_t* stream, 
 
             {
                 size_t pos = 0;
-                quic_frames frames(this);
-                frames.read(dir, &_payload[0], _payload.size(), pos);
+                get_quic_frames().read(dir, &_payload[0], _payload.size(), pos);
             }
         }
     }
@@ -232,8 +231,7 @@ return_t quic_packet_handshake::write(tls_direction_t dir, binary_t& header, bin
 
                 auto session = get_session();
                 size_t pos = 0;
-                quic_frames frames(this);
-                frames.read(dir, &_payload[0], _payload.size(), pos);
+                get_quic_frames().read(dir, &_payload[0], _payload.size(), pos);
             }
 #endif
         } else {

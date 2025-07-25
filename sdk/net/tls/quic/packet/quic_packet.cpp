@@ -29,28 +29,36 @@ constexpr char constexpr_scid[] = "scid";
 constexpr char constexpr_dcid_len[] = "dcid len";
 constexpr char constexpr_scid_len[] = "scid len";
 
-quic_packet::quic_packet(tls_session* session) : _type(0), _session(nullptr), _ht(0), _version(1), _pn(0) {
+quic_packet::quic_packet(tls_session* session) : _type(0), _session(nullptr), _ht(0), _version(1), _pn(0), _frames(nullptr) {
     set_session(session);
     set_version();
     _shared.make_share(this);
+
+    _frames = new quic_frames(this);
 }
 
-quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _session(nullptr), _ht(0), _version(1), _pn(0) {
+quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _session(nullptr), _ht(0), _version(1), _pn(0), _frames(nullptr) {
     bool is_longheader = true;
     set_session(session);
     set_version();
     set_type(type, _ht, is_longheader);
     _shared.make_share(this);
+
+    _frames = new quic_frames(this);
 }
 
 quic_packet::quic_packet(const quic_packet& rhs)
-    : _type(rhs._type), _session(nullptr), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _pn(rhs._pn) {
+    : _type(rhs._type), _session(nullptr), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _pn(rhs._pn), _frames(nullptr) {
     set_session(rhs._session);
     set_version();
     _shared.make_share(this);
+
+    _frames = new quic_frames(this);
 }
 
 quic_packet::~quic_packet() {
+    delete _frames;
+
     if (_session) {
         _session->release();
     }
@@ -268,76 +276,6 @@ void quic_packet::dump() {
 #endif
 }
 
-void quic_packet::set_pn(uint32 pn, uint8 len) {
-    switch (get_type()) {
-        case quic_packet_type_initial:
-        case quic_packet_type_0_rtt:
-        case quic_packet_type_handshake:
-        case quic_packet_type_1_rtt: {
-            uint8 elen = (len > 4) ? 4 : len;
-            uint8 mlen = 1;
-            if (pn > 0x00ffffff) {
-                mlen = 4;
-            } else if (pn > 0x0000ffff) {
-                mlen = 3;
-            } else if (pn > 0x000000ff) {
-                mlen = 2;
-            }
-            if (elen > mlen) {
-                mlen = elen;
-            }
-            uint8 l = (mlen - 1) & 0x03;
-            _ht = (_ht & 0xfc) | l;
-            _pn = pn;
-        } break;
-        default:
-            break;
-    }
-}
-
-uint8 quic_packet::get_pn_length() { return get_pn_length(_ht); }
-
-uint8 quic_packet::get_pn_length(uint8 ht) {
-    // RFC 9001 5.4.1.  Header Protection Application
-    uint8 len = 0;
-    switch (get_type()) {
-        case quic_packet_type_initial:
-        case quic_packet_type_0_rtt:
-        case quic_packet_type_handshake:
-        case quic_packet_type_1_rtt:
-            len = (ht & 0x03) + 1;
-            break;
-        default:
-            break;
-    }
-    return len;
-}
-
-uint32 quic_packet::get_pn() { return _pn; }
-
-quic_packet& quic_packet::set_payload(const binary_t& payload) {
-    _payload = payload;
-    return *this;
-}
-
-quic_packet& quic_packet::set_payload(const byte_t* stream, size_t size) {
-    _payload.clear();
-    binary_append(_payload, stream, size);
-    return *this;
-}
-
-const binary_t& quic_packet::get_payload() { return _payload; }
-
-tls_session* quic_packet::get_session() { return _session; }
-
-void quic_packet::set_session(tls_session* session) {
-    if (session) {
-        session->addref();
-
-        _session = session;
-    }
-}
-
 return_t quic_packet::header_protect(tls_direction_t dir, const binary_t& bin_ciphertext, protection_level_t level, uint8 hdr, uint8 pn_length,
                                      binary_t& bin_pn, binary_t& bin_protected_header) {
     return_t ret = errorcode_t::success;
@@ -443,6 +381,83 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
         // do nothing
     }
     return ret;
+}
+
+void quic_packet::set_pn(uint32 pn, uint8 len) {
+    switch (get_type()) {
+        case quic_packet_type_initial:
+        case quic_packet_type_0_rtt:
+        case quic_packet_type_handshake:
+        case quic_packet_type_1_rtt: {
+            uint8 elen = (len > 4) ? 4 : len;
+            uint8 mlen = 1;
+            if (pn > 0x00ffffff) {
+                mlen = 4;
+            } else if (pn > 0x0000ffff) {
+                mlen = 3;
+            } else if (pn > 0x000000ff) {
+                mlen = 2;
+            }
+            if (elen > mlen) {
+                mlen = elen;
+            }
+            uint8 l = (mlen - 1) & 0x03;
+            _ht = (_ht & 0xfc) | l;
+            _pn = pn;
+        } break;
+        default:
+            break;
+    }
+}
+
+uint8 quic_packet::get_pn_length() { return get_pn_length(_ht); }
+
+uint8 quic_packet::get_pn_length(uint8 ht) {
+    // RFC 9001 5.4.1.  Header Protection Application
+    uint8 len = 0;
+    switch (get_type()) {
+        case quic_packet_type_initial:
+        case quic_packet_type_0_rtt:
+        case quic_packet_type_handshake:
+        case quic_packet_type_1_rtt:
+            len = (ht & 0x03) + 1;
+            break;
+        default:
+            break;
+    }
+    return len;
+}
+
+uint32 quic_packet::get_pn() { return _pn; }
+
+quic_frames& quic_packet::get_quic_frames() { return *_frames; }
+
+quic_packet& quic_packet::operator<<(quic_frame* frame) {
+    get_quic_frames() << frame;
+    return *this;
+}
+
+quic_packet& quic_packet::set_payload(const binary_t& payload) {
+    _payload = payload;
+    return *this;
+}
+
+quic_packet& quic_packet::set_payload(const byte_t* stream, size_t size) {
+    _payload.clear();
+    binary_append(_payload, stream, size);
+    return *this;
+}
+
+const binary_t& quic_packet::get_payload() { return _payload; }
+
+tls_session* quic_packet::get_session() { return _session; }
+
+void quic_packet::set_session(tls_session* session) {
+    if (session) {
+        session->addref();
+
+        _session = session;
+    }
 }
 
 void quic_packet::addref() { _shared.addref(); }

@@ -24,6 +24,11 @@
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_type[] = "type";
+constexpr char constexpr_length[] = "length";
+constexpr char constexpr_offset[] = "offset";
+constexpr char constexpr_crypto_data[] = "crypto data";
+
 quic_frame_crypto::quic_frame_crypto(quic_packet* packet) : quic_frame(quic_frame_type_crypto, packet) {}
 
 return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
@@ -52,10 +57,6 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
         //   packet frame crypto
         //     - offset 1023, length 185 ... expected offset 1023, defragment
         //       - certificate_verify    ... ok
-
-        constexpr char constexpr_length[] = "length";
-        constexpr char constexpr_offset[] = "offset";
-        constexpr char constexpr_crypto_data[] = "crypto data";
 
         payload pl;
         pl << new payload_member(new quic_encoded(uint64(0)), constexpr_offset)  //
@@ -97,8 +98,27 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
 
 return_t quic_frame_crypto::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
+    auto session = get_packet()->get_session();
+
+    binary_t crypto_data;
+    get_handshakes().write(session, dir, crypto_data);
+
+    payload pl;
+    pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)             //
+       << new payload_member(new quic_encoded(uint64(0)), constexpr_offset)                   //
+       << new payload_member(new quic_encoded(uint64(crypto_data.size())), constexpr_length)  //
+       << new payload_member(crypto_data, constexpr_crypto_data);
+    pl.write(bin);
+
     return ret;
 }
+
+quic_frame_crypto& quic_frame_crypto::operator<<(tls_handshake* handshake) {
+    get_handshakes() << handshake;
+    return *this;
+}
+
+tls_handshakes& quic_frame_crypto::get_handshakes() { return _handshakes; }
 
 }  // namespace net
 }  // namespace hotplace

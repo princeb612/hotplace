@@ -97,6 +97,16 @@ tls_extensions& tls_extensions::operator<<(tls_extension* extension) {
     return *this;
 }
 
+tls_extensions& tls_extensions::operator<<(tls_extensions* extensions) {
+    if (extensions) {
+        auto lambda = [&](tls_extension* ext) -> return_t { return add(ext, true); };
+
+        critical_section_guard guard(_lock);
+        extensions->for_each(lambda);
+    }
+    return *this;
+}
+
 return_t tls_extensions::for_each(std::function<return_t(tls_extension*)> func) {
     return_t ret = errorcode_t::success;
     if (func) {

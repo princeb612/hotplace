@@ -24,13 +24,16 @@ class tls_extension_quic_transport_parameters : public tls_extension {
    public:
     tls_extension_quic_transport_parameters(tls_handshake* handshake);
 
+    tls_extension_quic_transport_parameters& set(uint64 id, uint64 value);
+    tls_extension_quic_transport_parameters& set(uint64 id, const binary_t& value);
+
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
-    std::list<uint64> _keys;
-    std::map<uint64, binary_t> _params;
+    critical_section _lock;
+    std::list<std::pair<uint64, binary_t>> _params;
 };
 
 }  // namespace net

@@ -144,15 +144,7 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
 
         {
             size_t pos = 0;
-            quic_frames frames(this);
-            frames.read(dir, &_payload[0], _payload.size(), pos);
-            auto lambda_foreach = [&](quic_frame* frame) -> void {
-                auto type = frame->get_type();
-                if (quic_frame_type_ack == type) {
-                    session->reset_recordno(dir);
-                }
-            };
-            frames.for_each(lambda_foreach);
+            get_quic_frames().read(dir, &_payload[0], _payload.size(), pos);
         }
     }
     __finally2 {
@@ -169,6 +161,8 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
             ret = errorcode_t::invalid_context;
             __leave2;
         }
+
+        get_quic_frames().write(dir, _payload);
 
         auto& protection = session->get_tls_protection();
         auto tagsize = protection.get_tag_size();
@@ -242,21 +236,6 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
             header = std::move(bin_protected_header);
             ciphertext = std::move(bin_ciphertext);
             tag = std::move(bin_tag);
-
-            if (0) {
-                dump();
-
-                size_t pos = 0;
-                quic_frames frames(this);
-                frames.read(dir, &_payload[0], _payload.size(), pos);
-                auto lambda_foreach = [&](quic_frame* frame) -> void {
-                    auto type = frame->get_type();
-                    if (quic_frame_type_ack == type) {
-                        session->reset_recordno(dir);
-                    }
-                };
-                frames.for_each(lambda_foreach);
-            }
         } else {
             header = std::move(bin_unprotected_header);
         }

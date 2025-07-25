@@ -23,6 +23,7 @@ class quic_packet_builder {
    public:
     quic_packet_builder();
 
+    quic_packet_builder& set(quic_packet_t type);
     quic_packet_builder& set_msb(uint8 msb);
     quic_packet_builder& set_session(tls_session* session);
 
@@ -33,6 +34,7 @@ class quic_packet_builder {
     tls_session* get_session();
 
    private:
+    uint8 _type;
     uint8 _msb;
     tls_session* _session;
 };

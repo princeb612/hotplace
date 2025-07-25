@@ -26,6 +26,7 @@ class tls_extensions {
 
     return_t add(tls_extension *extension, bool upref = false);
     tls_extensions &operator<<(tls_extension *extension);
+    tls_extensions &operator<<(tls_extensions *extensions);
 
     /**
      * do { } while (success == returnof_func);

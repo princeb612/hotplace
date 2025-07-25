@@ -84,6 +84,8 @@ class tls_session {
     tls_protection& get_tls_protection();
     dtls_record_publisher& get_dtls_record_publisher();
     dtls_record_arrange& get_dtls_record_arrange();
+    quic_session& get_quic_session();
+
     void set_type(session_type_t type);
     session_type_t get_type();
 
@@ -181,9 +183,6 @@ class tls_session {
     void get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags = 0);
     bool has_alert(tls_direction_t dir, uint8 level = tls_alertlevel_fatal);
 
-    basic_stream& get_stream();
-    quic_streams& get_quic_streams();
-
    private:
     critical_section _lock;
     t_shared_reference<tls_session> _shared;
@@ -208,7 +207,7 @@ class tls_session {
     critical_section _dtls_lock;
     dtls_record_publisher* _dtls_record_publisher;
     dtls_record_arrange* _dtls_record_arrange;
-    quic_streams* _quic_streams;
+    quic_session* _quic_session;
 };
 
 }  // namespace net

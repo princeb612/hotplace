@@ -122,6 +122,13 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
     __try2 {
         clear();
 
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto session_type = session->get_type();
+
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
@@ -208,14 +215,16 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
 
             bool test = false;
             test = lambda(tls_13);
-            if (false == test) {
-                test = lambda(tls_12);
-            }
-            if (false == test) {
-                test = lambda(tls_11);
-            }
-            if (false == test) {
-                test = lambda(tls_10);
+            if ((session_type_tls == session_type) || (session_type_dtls == session_type)) {
+                if (false == test) {
+                    test = lambda(tls_12);
+                }
+                if (false == test) {
+                    test = lambda(tls_11);
+                }
+                if (false == test) {
+                    test = lambda(tls_10);
+                }
             }
 
             if (false == test) {

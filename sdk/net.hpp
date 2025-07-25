@@ -105,7 +105,8 @@
 /* tls */
 #include <sdk/net/tls/dtls_record_arrange.hpp>
 #include <sdk/net/tls/dtls_record_publisher.hpp>
-#include <sdk/net/tls/quic_streams.hpp>
+#include <sdk/net/tls/quic_packet_publisher.hpp>
+#include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/sdk.hpp>
 #include <sdk/net/tls/sslkeylog_exporter.hpp>
 #include <sdk/net/tls/sslkeylog_importer.hpp>

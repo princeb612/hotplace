@@ -612,6 +612,7 @@ enum tls_internal_flag_t : uint32 {
 
 class dtls_record_arrange;
 class dtls_record_publisher;
+class quic_session;
 class quic_streams;
 class sslkeylog_exporter;
 class sslkeylog_importer;

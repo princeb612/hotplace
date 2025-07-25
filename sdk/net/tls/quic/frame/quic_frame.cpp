@@ -56,10 +56,6 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
         }
 #endif
 
-        ret = do_read_header(dir, stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
         ret = do_read_body(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -95,10 +91,7 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
 return_t quic_frame::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        binary_t body;
-        ret = do_write_body(dir, body);
-
-        ret = do_write_header(dir, bin, body);
+        ret = do_write_body(dir, bin);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -114,11 +107,7 @@ return_t quic_frame::do_preprocess(tls_direction_t dir) { return errorcode_t::su
 
 return_t quic_frame::do_postprocess(tls_direction_t dir) { return errorcode_t::success; }
 
-return_t quic_frame::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::success; }
-
 return_t quic_frame::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::success; }
-
-return_t quic_frame::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) { return errorcode_t::success; }
 
 return_t quic_frame::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
 

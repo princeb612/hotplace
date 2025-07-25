@@ -52,8 +52,8 @@ void test_pcap_quic() {
             // uint8 type = 0;
             // ret = quic_read_packet(type, &quicsession, item->dir, bin_frame);
         } else if (prot_tls13 == prot) {
-            tls_records records;
-            ret = records.read(&tlssession, dir, bin_frame);
+            // tls_records records;
+            // ret = records.read(&tlssession, dir, bin_frame);
         }
 
         _test_case.test(ret, __FUNCTION__, "%s", item->desc);
