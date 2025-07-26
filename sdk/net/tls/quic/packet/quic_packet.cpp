@@ -453,9 +453,12 @@ const binary_t& quic_packet::get_payload() { return _payload; }
 tls_session* quic_packet::get_session() { return _session; }
 
 void quic_packet::set_session(tls_session* session) {
+    if (_session) {
+        _session->release();
+        _session = nullptr;
+    }
     if (session) {
         session->addref();
-
         _session = session;
     }
 }

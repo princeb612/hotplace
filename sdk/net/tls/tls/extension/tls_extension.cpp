@@ -30,9 +30,7 @@ constexpr char constexpr_ext_len[] = "extension len";
 constexpr char constexpr_extension_type[] = "extension type";
 
 tls_extension::tls_extension(tls_handshake* hs) : _hs(hs), _type(0), _bodysize(0), _size(0) {
-    if (hs) {
-        hs->addref();
-    } else {
+    if (nullptr == hs) {
         throw exception(errorcode_t::no_session);
     }
     _shared.make_share(this);
@@ -40,29 +38,20 @@ tls_extension::tls_extension(tls_handshake* hs) : _hs(hs), _type(0), _bodysize(0
 
 tls_extension::tls_extension(const tls_extension& rhs) : _hs(rhs._hs), _type(rhs._type), _bodysize(rhs._bodysize) {
     auto hs = get_handshake();
-    if (hs) {
-        hs->addref();
-    } else {
+    if (nullptr == hs) {
         throw exception(errorcode_t::no_session);
     }
     _shared.make_share(this);
 }
 
 tls_extension::tls_extension(uint16 type, tls_handshake* hs) : _hs(hs), _type(type), _bodysize(0) {
-    if (hs) {
-        hs->addref();
-    } else {
+    if (nullptr == hs) {
         throw exception(errorcode_t::no_session);
     }
     _shared.make_share(this);
 }
 
-tls_extension::~tls_extension() {
-    auto hs = get_handshake();
-    if (hs) {
-        hs->release();
-    }
-}
+tls_extension::~tls_extension() {}
 
 tls_extension* tls_extension::read(tls_handshake* handshake, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     tls_extension* obj = nullptr;

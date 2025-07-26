@@ -21,19 +21,13 @@ namespace hotplace {
 namespace net {
 
 quic_frame::quic_frame(quic_frame_t type, quic_packet* packet) : _type(type), _packet(packet) {
-    if (packet) {
-        packet->addref();
-    } else {
+    if (nullptr == packet) {
         throw exception(not_specified);
     }
     _shared.make_share(this);
 }
 
-quic_frame::~quic_frame() {
-    if (_packet) {
-        _packet->release();
-    }
-}
+quic_frame::~quic_frame() {}
 
 return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

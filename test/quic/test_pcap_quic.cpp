@@ -49,8 +49,6 @@ void test_pcap_quic() {
             // WIRESHARK#14 contains 2 PACKETs
             quic_packets packets;
             ret = packets.read(&quicsession, dir, bin_frame);
-            // uint8 type = 0;
-            // ret = quic_read_packet(type, &quicsession, item->dir, bin_frame);
         } else if (prot_tls13 == prot) {
             // tls_records records;
             // ret = records.read(&tlssession, dir, bin_frame);

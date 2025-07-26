@@ -27,12 +27,10 @@ quic_frames::quic_frames(quic_packet* packet) : _packet(packet) {
     if (nullptr == packet) {
         throw exception(not_specified);
     }
-    packet->addref();
 }
 
 quic_frames::~quic_frames() {
     clear();
-    get_packet()->release();
 }
 
 return_t quic_frames::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {

@@ -27,7 +27,6 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte
             __leave2;
         }
 
-#if 1
         while (pos < size) {
             uint8 content_type = stream[pos];
             tls_record_builder builder;
@@ -42,65 +41,6 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte
                 }
             }
         }
-#else
-        auto lambda = [](tls_records* records, tls_session* sess, tls_direction_t sdir, const byte_t* sstream, size_t ssize, size_t& spos) -> return_t {
-            return_t ret = errorcode_t::success;
-            uint8 content_type = sstream[spos];
-            tls_record_builder builder;
-            auto record = builder.set(sess).set(content_type).build();
-            if (record) {
-                ret = record->read(sdir, sstream, ssize, spos);
-                if (errorcode_t::success == ret) {
-                    records->add(record);
-                } else {
-                    record->release();
-                }
-            } else {
-                ret = errorcode_t::internal_error;
-            }
-            return ret;
-        };
-
-        while (pos < size) {
-            // condition TCP segmentation
-            auto& secrets = session->get_tls_protection().get_secrets();
-            const binary_t& segment = secrets.get(tls_context_segment);
-            auto segmentsize = segment.size();
-            if (segmentsize) {
-                // reassemble
-                tls_header* header = (tls_header*)(&segment[0]);
-                uint16 len = ntoh16(header->length);
-                auto reassemblesize = sizeof(tls_header) + len;
-
-                size_t spos = pos;
-                auto avail = size - pos;
-                auto necessary = reassemblesize - segmentsize;
-                pos += avail;
-
-                if (necessary) {
-                    secrets.append(tls_context_segment, stream + spos, avail);
-
-                    if (avail < necessary) {
-                        break;  // do not read
-                    }
-                }
-
-                size_t tpos = 0;
-                auto test = lambda(this, session, dir, &segment[0], segment.size(), tpos);
-
-                secrets.consume(tls_context_segment, reassemblesize);
-            } else {
-                auto test = lambda(this, session, dir, stream, size, pos);
-                if (errorcode_t::success == test) {
-                } else if (errorcode_t::block_segmented == test) {
-                    continue;
-                } else {
-                    ret = test;
-                    break;
-                }
-            }
-        }
-#endif
     }
     __finally2 {
         // do nothing
