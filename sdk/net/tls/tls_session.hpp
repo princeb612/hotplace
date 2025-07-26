@@ -20,6 +20,7 @@
 #include <sdk/base/system/types.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/types.hpp>
+#include <sdk/net/basic/trial/secure_prosumer.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 
 namespace hotplace {
@@ -183,6 +184,8 @@ class tls_session {
     void get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags = 0);
     bool has_alert(tls_direction_t dir, uint8 level = tls_alertlevel_fatal);
 
+    secure_prosumer* get_secure_prosumer();
+
    private:
     critical_section _lock;
     t_shared_reference<tls_session> _shared;
@@ -208,6 +211,7 @@ class tls_session {
     dtls_record_publisher* _dtls_record_publisher;
     dtls_record_arrange* _dtls_record_arrange;
     quic_session* _quic_session;
+    secure_prosumer _prosumer;
 };
 
 }  // namespace net

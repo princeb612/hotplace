@@ -88,6 +88,8 @@ return_t trial_tls_server_socket::read(socket_context_t *handle, int mode, char 
             }
         }
 
+        auto session = handle->handle.session;
+
         size_t ptr_size = 0;
 #if defined __linux__
         ptr_size = *cbread;
@@ -96,11 +98,11 @@ return_t trial_tls_server_socket::read(socket_context_t *handle, int mode, char 
 #endif
         if (read_bio_write & mode) {
             // iocp & epoll, handshake, alert
-            ret = get_secure_prosumer()->produce(handle->handle.session, from_client, (byte_t *)ptr_data, ptr_size);
+            ret = session->get_secure_prosumer()->produce(session, from_client, (byte_t *)ptr_data, ptr_size);
         }
         if (read_ssl_read & mode) {
             // iocp & epoll, application_data
-            ret = get_secure_prosumer()->consume(socket_type(), 0, ptr_data, size_data, cbread, nullptr, 0);
+            ret = session->get_secure_prosumer()->consume(socket_type(), 0, ptr_data, size_data, cbread, nullptr, 0);
         }
     }
     __finally2 {}
@@ -131,8 +133,6 @@ return_t trial_tls_server_socket::send(socket_context_t *handle, const char *ptr
 }
 
 bool trial_tls_server_socket::support_tls() { return true; }
-
-secure_prosumer *trial_tls_server_socket::get_secure_prosumer() { return &_secure; }
 
 }  // namespace net
 }  // namespace hotplace

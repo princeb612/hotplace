@@ -272,10 +272,10 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
 
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
-                        basic_stream bs;
-                        bs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
-                        dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                        trace_debug_event(trace_category_net, trace_event_net_produce, &bs);
+                        basic_stream dbs;
+                        dbs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
+                        dump_memory(buf_read, cbread, &dbs, 16, 2, 0, dump_notrunc);
+                        trace_debug_event(trace_category_net, trace_event_net_produce, &dbs);
                     }
 #endif
                 } else {
@@ -303,10 +303,10 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
 
 #if defined DEBUG
             if (istraceable(trace_category_net) && (errorcode_t::success == ret)) {
-                basic_stream bs;
-                bs << "[ns] read " << _session.netsock.get_event_socket() << "\n";
-                dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                trace_debug_event(trace_category_net, trace_event_net_produce, &bs);
+                basic_stream dbs;
+                dbs << "[ns] read " << _session.netsock.get_event_socket() << "\n";
+                dump_memory(buf_read, cbread, &dbs, 16, 2, 0, dump_notrunc);
+                trace_debug_event(trace_category_net, trace_event_net_produce, &dbs);
             }
 #endif
         }
@@ -362,10 +362,10 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
-                        basic_stream bs;
-                        bs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
-                        dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                        trace_debug_event(trace_category_net, trace_event_net_produce, &bs);
+                        basic_stream dbs;
+                        dbs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
+                        dump_memory(buf_read, cbread, &dbs, 16, 2, 0, dump_notrunc);
+                        trace_debug_event(trace_category_net, trace_event_net_produce, &dbs);
                     }
 #endif
                 }
@@ -396,10 +396,10 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 
 #if defined DEBUG
             if (istraceable(trace_category_net) && (errorcode_t::success == ret)) {
-                basic_stream bs;
-                bs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
-                dump_memory(buf_read, cbread, &bs, 16, 2, 0, dump_notrunc);
-                trace_debug_event(trace_category_net, trace_event_net_produce, &bs);
+                basic_stream dbs;
+                dbs << "[ns] read " << (socket_t)_session.netsock.get_event_socket() << "\n";
+                dump_memory(buf_read, cbread, &dbs, 16, 2, 0, dump_notrunc);
+                trace_debug_event(trace_category_net, trace_event_net_produce, &dbs);
             }
 #endif
         }

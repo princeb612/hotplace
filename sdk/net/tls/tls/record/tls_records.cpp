@@ -27,6 +27,22 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte
             __leave2;
         }
 
+#if 1
+        while (pos < size) {
+            uint8 content_type = stream[pos];
+            tls_record_builder builder;
+            auto record = builder.set(session).set(content_type).build();
+            if (record) {
+                ret = record->read(dir, stream, size, pos);
+                if (errorcode_t::success == ret) {
+                    add(record);
+                } else {
+                    record->release();
+                    break;
+                }
+            }
+        }
+#else
         auto lambda = [](tls_records* records, tls_session* sess, tls_direction_t sdir, const byte_t* sstream, size_t ssize, size_t& spos) -> return_t {
             return_t ret = errorcode_t::success;
             uint8 content_type = sstream[spos];
@@ -84,6 +100,7 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte
                 }
             }
         }
+#endif
     }
     __finally2 {
         // do nothing

@@ -240,6 +240,8 @@ bool tls_session::session_info::has_alert(uint8 level) {
     return ret;
 }
 
+secure_prosumer* tls_session::get_secure_prosumer() { return &_prosumer; }
+
 t_key_value<uint8, uint64>& tls_session::session_info::get_keyvalue() { return _kv; }
 
 void tls_session::schedule(tls_handshake* handshake) {
