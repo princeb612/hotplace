@@ -368,19 +368,29 @@ int main(int argc, char** argv) {
         test_rfc_9000_a3();
 
         // RFC 9001
-        test_rfc_9001_section4();
-        test_rfc_9001_a1();
-        test_rfc_9001_a2();
-        test_rfc_9001_a3();
-        test_rfc_9001_a4();
-        test_rfc_9001_a5();
+        {
+            tls_session server_session(session_type_quic);
+            tls_session client_session(session_type_quic);
+
+            test_rfc_9001_section4();
+            test_rfc_9001_a1(&client_session, &server_session);
+            test_rfc_9001_a2(&client_session, &server_session);
+            test_rfc_9001_a3(&client_session, &server_session);
+            test_rfc_9001_a4(&client_session, &server_session);
+            test_rfc_9001_a5();
+        }
 
         // RFC 9369
-        test_rfc_9369_a1();
-        test_rfc_9369_a2();
-        test_rfc_9369_a3();
-        test_rfc_9369_a4();
-        test_rfc_9369_a5();
+        {
+            tls_session server_session(session_type_quic2);
+            tls_session client_session(session_type_quic2);
+
+            test_rfc_9369_a1(&client_session, &server_session);
+            test_rfc_9369_a2(&client_session, &server_session);
+            test_rfc_9369_a3(&client_session, &server_session);
+            test_rfc_9369_a4(&client_session, &server_session);
+            test_rfc_9369_a5();
+        }
     }
 
     if ((test_flag_pcap & option.flags) || (0 == option.flags)) {

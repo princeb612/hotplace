@@ -27,7 +27,8 @@
     * CBOR
 
 * details
-  * Revision 829
+  * Revision 830
+    * [tested] ubuntu
   * Revision 826
     * [tested] DTLS 1.2 AES-GCM, chacha20-poly1305
   * Revision 825

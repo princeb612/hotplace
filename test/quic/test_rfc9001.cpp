@@ -12,43 +12,40 @@
 
 #include "sample.hpp"
 
-static tls_session server_session(session_type_quic);
-static tls_session client_session(session_type_quic);
-
 void test_rfc_9001_section4() {
     _test_case.begin("RFC 9001 4.  Carrying TLS Messages");
     // studying ...
 }
 
-void test_rfc_9001_prepare_a1() {
+void test_rfc_9001_prepare_a1(tls_session* client_session, tls_session* server_session) {
     // Destination Connection ID of 0x8394c8f03e515708
     const char* dcid = "0x8394c8f03e515708";
     binary_t bin_dcid = std::move(base16_decode_rfc(dcid));
 
     {
-        auto& protection = server_session.get_tls_protection();
+        auto& protection = server_session->get_tls_protection();
         auto& secrets = protection.get_secrets();
         secrets.assign(tls_context_quic_dcid, bin_dcid);
-        protection.calc(&server_session, tls_hs_client_hello, from_client);
+        protection.calc(server_session, tls_hs_client_hello, from_client);
     }
 
     {
-        auto& protection = client_session.get_tls_protection();
+        auto& protection = client_session->get_tls_protection();
         auto& secrets = protection.get_secrets();
         secrets.assign(tls_context_quic_dcid, bin_dcid);
-        protection.calc(&server_session, tls_hs_client_hello, from_client);
+        protection.calc(server_session, tls_hs_client_hello, from_client);
     }
 
     _logger->hdump("> DCID", bin_dcid, 16, 3);
 }
 
-void test_rfc_9001_a1() {
+void test_rfc_9001_a1(tls_session* client_session, tls_session* server_session) {
     _test_case.begin("RFC 9001 A.1.  Keys");
 
-    test_rfc_9001_prepare_a1();
+    test_rfc_9001_prepare_a1(client_session, server_session);
 
     {
-        auto& protection = server_session.get_tls_protection();
+        auto& protection = server_session->get_tls_protection();
         auto& secrets = protection.get_secrets();
 
         auto lambda_test = [&](const char* func, const char* text, const binary_t& bin_expect_result, const binary_t& bin_expect) -> void {
@@ -88,7 +85,7 @@ void test_rfc_9001_a1() {
     }
 }
 
-void test_rfc_9001_a2() {
+void test_rfc_9001_a2(tls_session* client_session, tls_session* server_session) {
     _test_case.begin("RFC 9001 A.2.  Client Initial");
 
     testvector_initial_packet test;
@@ -196,17 +193,17 @@ void test_rfc_9001_a2() {
     {
         // to avoid internal error related to key calcurations
         crypto_keychain keychain;
-        auto& keyexchange = client_session.get_tls_protection().get_keyexchange();
+        auto& keyexchange = client_session->get_tls_protection().get_keyexchange();
         keychain.add_ec(&keyexchange, NID_X25519, keydesc(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE));
     }
 
-    test_rfc_9001_construct_initial(&test, &client_session);
-    client_session.update_session_status(session_status_client_hello);
+    test_rfc_9001_construct_initial(&test, client_session);
+    client_session->update_session_status(session_status_client_hello);
 
-    test_rfc_9001_send_initial(&test, &server_session);
+    test_rfc_9001_send_initial(&test, server_session);
 }
 
-void test_rfc_9001_a3() {
+void test_rfc_9001_a3(tls_session* client_session, tls_session* server_session) {
     _test_case.begin("RFC 9001 A.3.  Server Initial");
 
     testvector_initial_packet test;
@@ -266,15 +263,15 @@ void test_rfc_9001_a3() {
     {
         // to avoid internal error related to key calcurations
         crypto_keychain keychain;
-        auto& keyexchange = server_session.get_tls_protection().get_keyexchange();
+        auto& keyexchange = server_session->get_tls_protection().get_keyexchange();
         keychain.add_ec(&keyexchange, NID_X25519, keydesc(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE));
     }
 
-    test_rfc_9001_construct_initial(&test, &server_session);
-    test_rfc_9001_send_initial(&test, &client_session);
+    test_rfc_9001_construct_initial(&test, server_session);
+    test_rfc_9001_send_initial(&test, client_session);
 }
 
-void test_rfc_9001_a4() {
+void test_rfc_9001_a4(tls_session* client_session, tls_session* server_session) {
     _test_case.begin("RFC 9001 A.4.  Retry");
 
     testvector_retry_packet test;
@@ -290,7 +287,7 @@ void test_rfc_9001_a4() {
     test.expect_tag = "04a265ba2eff4d829058fb3f0f2496ba";
     test.dir = from_server;
 
-    test_rfc_9001_retry(&test, &server_session);
+    test_rfc_9001_retry(&test, server_session);
 }
 
 void test_rfc_9001_a5() {

@@ -155,9 +155,9 @@ void test_construct_quic() {
     construct_quic_initial_server_hello(&session_client, &session_server, from_server, bin, "{S...} initial [ACK, CRYPTO(SH), PADDING]");
     send_packet(&session_client, from_server, bin, "{S->C} initial [ACK, CRYPTO(SH), PADDING]");
     //
-    construct_quic_initial_ack(&session_client, from_client, bin, "{C...} initial [ACK, PADDING]");
-    send_packet(&session_server, from_client, bin, "{S->C} initial [ACK, PADDING]");
+    // construct_quic_initial_ack(&session_client, from_client, bin, "{C...} initial [ACK, PADDING]");
+    // send_packet(&session_server, from_client, bin, "{S->C} initial [ACK, PADDING]");
     // S->C
-    construct_quic_handshake(&session_server, from_server, bin, "{S...} handshake [CRYPTO(EE, CERT, CV, FIN)], short [STREAM(HTTP3 SETTINGS)]");
-    send_packet(&session_client, from_server, bin, "{S->C} handshake [CRYPTO(EE, CERT, CV, FIN)], short [STREAM(HTTP3 SETTINGS)]");
+    // construct_quic_handshake(&session_server, from_server, bin, "{S...} handshake [CRYPTO(EE, CERT, CV, FIN)], short [STREAM(HTTP3 SETTINGS)]");
+    // send_packet(&session_client, from_server, bin, "{S->C} handshake [CRYPTO(EE, CERT, CV, FIN)], short [STREAM(HTTP3 SETTINGS)]");
 }

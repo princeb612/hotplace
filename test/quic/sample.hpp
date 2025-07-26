@@ -107,19 +107,19 @@ void test_rfc_9001_send_initial(testvector_initial_packet* item, tls_session* se
 void test_rfc_9001_retry(testvector_retry_packet* item, tls_session* session);
 
 void test_rfc_9001_section4();
-void test_rfc_9001_a1();
-void test_rfc_9001_a2();
-void test_rfc_9001_a3();
-void test_rfc_9001_a4();
+void test_rfc_9001_a1(tls_session* client_session, tls_session* server_session);
+void test_rfc_9001_a2(tls_session* client_session, tls_session* server_session);
+void test_rfc_9001_a3(tls_session* client_session, tls_session* server_session);
+void test_rfc_9001_a4(tls_session* client_session, tls_session* server_session);
 void test_rfc_9001_a5();
 
 void test_quic_xargs_org();
 
 // QUIC Version 2
-void test_rfc_9369_a1();
-void test_rfc_9369_a2();
-void test_rfc_9369_a3();
-void test_rfc_9369_a4();
+void test_rfc_9369_a1(tls_session* client_session, tls_session* server_session);
+void test_rfc_9369_a2(tls_session* client_session, tls_session* server_session);
+void test_rfc_9369_a3(tls_session* client_session, tls_session* server_session);
+void test_rfc_9369_a4(tls_session* client_session, tls_session* server_session);
 void test_rfc_9369_a5();
 
 // pcap

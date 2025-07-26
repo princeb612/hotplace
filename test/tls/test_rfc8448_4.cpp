@@ -22,13 +22,13 @@
 
 // RFC 8448 4.  Resumed 0-RTT Handshake
 // This handshake resumes from the handshake in Section 3.
-void test_rfc8448_4() {
+void test_rfc8448_4(tls_session* rfc8448_session) {
     _test_case.begin("RFC 8448 4.  Resumed 0-RTT Handshake");
     return_t ret = errorcode_t::success;
     basic_stream bs;
     size_t pos = 0;
     crypto_keychain keychain;
-    auto& protection = rfc8448_session.get_tls_protection();
+    auto& protection = rfc8448_session->get_tls_protection();
     binary_t bin;
 
     // {client}  create an ephemeral x25519 key pair:
@@ -82,36 +82,36 @@ void test_rfc8448_4() {
             "9d";
         // verify PSK binder == finished
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("client_hello", &rfc8448_session, from_client, bin_record);
+        dump_record("client_hello", rfc8448_session, from_client, bin_record);
     }
     {
         openssl_kdf kdf;
         binary_t context;
 
         binary_t bin;
-        test_keycalc(&rfc8448_session, tls_secret_res_master, bin, "secret_resumption_master",
+        test_keycalc(rfc8448_session, tls_secret_res_master, bin, "secret_resumption_master",
                      "7df235f2031d2a051287d02b0241b0bfdaf86cc856231f2d5aba46c434ec196c");
-        test_keycalc(&rfc8448_session, tls_secret_resumption, bin, "secret_resumption", "4ecd0eb6ec3b4d87f5d6028f922ca4c5851a277fd41311c9e62d2c9492e1c4f3");
-        test_keycalc(&rfc8448_session, tls_secret_resumption_early, bin, "secret_resumption_early",
+        test_keycalc(rfc8448_session, tls_secret_resumption, bin, "secret_resumption", "4ecd0eb6ec3b4d87f5d6028f922ca4c5851a277fd41311c9e62d2c9492e1c4f3");
+        test_keycalc(rfc8448_session, tls_secret_resumption_early, bin, "secret_resumption_early",
                      "9b2188e9b2fc6d64d71dc329900e20bb41915000f678aa839cbb797cb7d8332c");
 
         // tls_extension_pre_shared_key
-        test_keycalc(&rfc8448_session, tls_context_resumption_binder_hash, bin, "binder_hash",
+        test_keycalc(rfc8448_session, tls_context_resumption_binder_hash, bin, "binder_hash",
                      "63224b2e4573f2d3454ca84b9d009a04f6be9e05711a8396473aefa01e924a14");
-        test_keycalc(&rfc8448_session, tls_context_resumption_binder_key, bin, "binder key (PRK)",
+        test_keycalc(rfc8448_session, tls_context_resumption_binder_key, bin, "binder key (PRK)",
                      "69fe131a3bbad5d63c64eebcc30e395b9d8107726a13d074e389dbc8a4e47256");
-        test_keycalc(&rfc8448_session, tls_context_resumption_finished_key, bin, "finished key (expanded)",
+        test_keycalc(rfc8448_session, tls_context_resumption_finished_key, bin, "finished key (expanded)",
                      "5588673e72cb59c87d220caffe94f2dea9a3b1609f7d50e90a48227db9ed7eaa");
-        test_keycalc(&rfc8448_session, tls_context_resumption_finished, bin, "finished (PSK binder)",
+        test_keycalc(rfc8448_session, tls_context_resumption_finished, bin, "finished (PSK binder)",
                      "3add4fb2d8fdf822a0ca3cf7678ef5e88dae990141c5924d57bb6fa31b9e5f9d");
 
         // {client}  derive secret "tls13 c e traffic"
-        test_keycalc(&rfc8448_session, tls_secret_c_e_traffic, bin, "c e traffic", "3fbbe6a60deb66c30a32795aba0eff7eaa10105586e7be5c09678d63b6caab62");
+        test_keycalc(rfc8448_session, tls_secret_c_e_traffic, bin, "c e traffic", "3fbbe6a60deb66c30a32795aba0eff7eaa10105586e7be5c09678d63b6caab62");
         // {client}  derive secret "tls13 e exp master"
-        test_keycalc(&rfc8448_session, tls_secret_e_exp_master, bin, "e exp master", "b2026866610937d7423e5be90862ccf24c0e6091186d34f812089ff5be2ef7df");
+        test_keycalc(rfc8448_session, tls_secret_e_exp_master, bin, "e exp master", "b2026866610937d7423e5be90862ccf24c0e6091186d34f812089ff5be2ef7df");
         // {client}  derive write traffic keys for early application data
-        test_keycalc(&rfc8448_session, tls_secret_c_e_traffic_key, bin, "secret_c_e_traffic_key", "920205a5b7bf2115e6fc5c2942834f54");
-        test_keycalc(&rfc8448_session, tls_secret_c_e_traffic_iv, bin, "secret_c_e_traffic_iv", "6d475f0993c8e564610db2b9");
+        test_keycalc(rfc8448_session, tls_secret_c_e_traffic_key, bin, "secret_c_e_traffic_key", "920205a5b7bf2115e6fc5c2942834f54");
+        test_keycalc(rfc8448_session, tls_secret_c_e_traffic_iv, bin, "secret_c_e_traffic_iv", "6d475f0993c8e564610db2b9");
     }
     {
         // {client}  send application_data record
@@ -120,7 +120,7 @@ void test_rfc8448_4() {
             "7a 7c c5 d2 84 4f 76 d5 ae e4 b4 ed bf 04 9b e0";
         // application_data after CH (decryption)
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("application_data", &rfc8448_session, from_client, bin_record);
+        dump_record("application_data", rfc8448_session, from_client, bin_record);
     }
     {
         // {server}  create an ephemeral x25519 key pair
@@ -151,20 +151,20 @@ void test_rfc8448_4() {
             "dd 57 c2 05 3c d9 45 12 ab 47 f1 15 e8 6e ff 50 94 2c ea 31 00"
             "2b 00 02 03 04";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("server_hello", &rfc8448_session, from_server, bin_record);
+        dump_record("server_hello", rfc8448_session, from_server, bin_record);
     }
     {
         // {server}  derive secret for handshake "tls13 derived"
-        test_keycalc(&rfc8448_session, tls_secret_handshake_derived, bin, "derived", "5f1790bbd82c5e7d376ed2e1e52f8e6038c9346db61b43be9a52f77ef3998e80");
+        test_keycalc(rfc8448_session, tls_secret_handshake_derived, bin, "derived", "5f1790bbd82c5e7d376ed2e1e52f8e6038c9346db61b43be9a52f77ef3998e80");
         // {server}  extract secret "handshake"
-        test_keycalc(&rfc8448_session, tls_secret_handshake, bin, "secret", "005cb112fd8eb4ccc623bb88a07c64b3ede1605363fc7d0df8c7ce4ff0fb4ae6");
+        test_keycalc(rfc8448_session, tls_secret_handshake, bin, "secret", "005cb112fd8eb4ccc623bb88a07c64b3ede1605363fc7d0df8c7ce4ff0fb4ae6");
         // {server}  derive secret "tls13 c hs traffic"
-        test_keycalc(&rfc8448_session, tls_secret_c_hs_traffic, bin, "c hs traffic", "2faac08f851d35fea3604fcb4de82dc62c9b164a70974d0462e27f1ab278700f");
+        test_keycalc(rfc8448_session, tls_secret_c_hs_traffic, bin, "c hs traffic", "2faac08f851d35fea3604fcb4de82dc62c9b164a70974d0462e27f1ab278700f");
         // {server}  derive secret "tls13 s hs traffic"
-        test_keycalc(&rfc8448_session, tls_secret_s_hs_traffic, bin, "s hs traffic", "fe927ae271312e8bf0275b581c54eef020450dc4ecffaa05a1a35d27518e7803");
+        test_keycalc(rfc8448_session, tls_secret_s_hs_traffic, bin, "s hs traffic", "fe927ae271312e8bf0275b581c54eef020450dc4ecffaa05a1a35d27518e7803");
         // {server}  derive write traffic keys for handshake data
-        test_keycalc(&rfc8448_session, tls_secret_handshake_server_key, bin, "secret_handshake_server_key", "27c6bdc0a3dcea39a47326d79bc9e4ee");
-        test_keycalc(&rfc8448_session, tls_secret_handshake_server_iv, bin, "secret_handshake_server_iv", "9569ecdd4d0536705e9ef725");
+        test_keycalc(rfc8448_session, tls_secret_handshake_server_key, bin, "secret_handshake_server_key", "27c6bdc0a3dcea39a47326d79bc9e4ee");
+        test_keycalc(rfc8448_session, tls_secret_handshake_server_iv, bin, "secret_handshake_server_iv", "9569ecdd4d0536705e9ef725");
     }
     {
         // construct an EncryptedExtensions handshake message
@@ -178,21 +178,21 @@ void test_rfc8448_4() {
             "48 6b fd 08 43 b8 70 24 86 5c a3 5c c4 1c 4e 51 5c 64 dc b1 36"
             "9f 98 63 5b c7 a5";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("encrypted_extensions .. finished", &rfc8448_session, from_server, bin_record);
+        dump_record("encrypted_extensions .. finished", rfc8448_session, from_server, bin_record);
     }
     {
         // {server}  derive secret "tls13 c ap traffic"
-        test_keycalc(&rfc8448_session, tls_secret_application_client, bin, "secret_application_client",
+        test_keycalc(rfc8448_session, tls_secret_application_client, bin, "secret_application_client",
                      "2abbf2b8e381d23dbebe1dd2a7d16a8bf484cb4950d23fb7fb7fa8547062d9a1");
         // {server}  derive secret "tls13 s ap traffic"
-        test_keycalc(&rfc8448_session, tls_secret_application_server, bin, "secret_application_server",
+        test_keycalc(rfc8448_session, tls_secret_application_server, bin, "secret_application_server",
                      "cc21f1bf8feb7dd5fa505bd9c4b468a9984d554a993dc49e6d285598fb672691");
         // {server}  derive secret "tls13 exp master"
-        test_keycalc(&rfc8448_session, tls_secret_exporter_master, bin, "secret_exporter_master",
+        test_keycalc(rfc8448_session, tls_secret_exporter_master, bin, "secret_exporter_master",
                      "3fd93d4ffddc98e64b14dd107aedf8ee4add23f4510f58a4592d0b201bee56b4");
         // {server}  derive write traffic keys for application data
-        test_keycalc(&rfc8448_session, tls_secret_application_server_key, bin, "secret_application_server_key", "e857c690a34c5a9129d833619684f95e");
-        test_keycalc(&rfc8448_session, tls_secret_application_server_iv, bin, "secret_application_server_iv", "0685d6b561aab9ef1013faf9");
+        test_keycalc(rfc8448_session, tls_secret_application_server_key, bin, "secret_application_server_key", "e857c690a34c5a9129d833619684f95e");
+        test_keycalc(rfc8448_session, tls_secret_application_server_iv, bin, "secret_application_server_iv", "0685d6b561aab9ef1013faf9");
     }
     // {client}  construct an EndOfEarlyData handshake message
     // {client}  send handshake record
@@ -201,12 +201,12 @@ void test_rfc8448_4() {
             "17 03 03 00 15 ac a6 fc 94 48 41 29"
             "8d f9 95 93 72 5f 9b f9 75 44 29 b1 2f 09";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("end_of_early_data", &rfc8448_session, from_client, bin_record);
+        dump_record("end_of_early_data", rfc8448_session, from_client, bin_record);
     }
     {
         // {client}  derive write traffic keys for handshake data
-        test_keycalc(&rfc8448_session, tls_secret_handshake_client_key, bin, "secret_handshake_client_key", "b1530806f4adfeac83f1413032bbfa82");
-        test_keycalc(&rfc8448_session, tls_secret_handshake_client_iv, bin, "secret_handshake_client_iv", "eb50c16be7654abf99dd06d9");
+        test_keycalc(rfc8448_session, tls_secret_handshake_client_key, bin, "secret_handshake_client_key", "b1530806f4adfeac83f1413032bbfa82");
+        test_keycalc(rfc8448_session, tls_secret_handshake_client_iv, bin, "secret_handshake_client_iv", "eb50c16be7654abf99dd06d9");
     }
     {
         // {client}  construct a Finished handshake message
@@ -217,12 +217,12 @@ void test_rfc8448_4() {
             "ea fb b7 00 09 96 47 16 d8 34 fb 70 c3 d2 a5 6c 5b 1f 5f 6b db"
             "a6 c3 33 cf";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("finished", &rfc8448_session, from_client, bin_record);
+        dump_record("finished", rfc8448_session, from_client, bin_record);
     }
     {
-        test_keycalc(&rfc8448_session, tls_secret_application_client_key, bin, "secret_application_client_key", "3cf122f301c6358ca7989553250efd72");
-        test_keycalc(&rfc8448_session, tls_secret_application_client_iv, bin, "secret_application_client_iv", "ab1aec26aa78b8fc1176b9ac");
-        test_keycalc(&rfc8448_session, tls_secret_res_master, bin, "secret_res_master", "5e95bdf1f89005ea2e9aa0ba85e728e3c19c5fe0c699e3f5bee59faebd0b5406");
+        test_keycalc(rfc8448_session, tls_secret_application_client_key, bin, "secret_application_client_key", "3cf122f301c6358ca7989553250efd72");
+        test_keycalc(rfc8448_session, tls_secret_application_client_iv, bin, "secret_application_client_iv", "ab1aec26aa78b8fc1176b9ac");
+        test_keycalc(rfc8448_session, tls_secret_res_master, bin, "secret_res_master", "5e95bdf1f89005ea2e9aa0ba85e728e3c19c5fe0c699e3f5bee59faebd0b5406");
     }
     {
         // {client}  send application_data record
@@ -232,7 +232,7 @@ void test_rfc8448_4() {
             "41 aa 03 1d 7a 74 d4 91 c9 9b 9d 4e 23 2b 74 20 6b c6 fb aa 04"
             "fe 78 be 44 a9 b4 f5 43 20 a1 7e b7 69 92 af ac 31 03";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("application_data", &rfc8448_session, from_client, bin_record);
+        dump_record("application_data", rfc8448_session, from_client, bin_record);
     }
     {
         // {server}  send application_data record
@@ -242,7 +242,7 @@ void test_rfc8448_4() {
             "40 b5 a8 3f 46 2a 09 54 c3 58 13 93 a2 03 a2 5a 7d d1 41 41 ef"
             "1a 37 90 0c db 62 ff 62 de e1 ba 39 ab 25 90 cb f1 94";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("application_data", &rfc8448_session, from_server, bin_record);
+        dump_record("application_data", rfc8448_session, from_server, bin_record);
     }
     {
         // {client}  send alert record
@@ -250,7 +250,7 @@ void test_rfc8448_4() {
             "17 03 03 00 13 0f ac ce 32 46 bd fc"
             "63 69 83 8d 6a 82 ae 6d e5 d4 22 dc";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("alert", &rfc8448_session, from_client, bin_record);
+        dump_record("alert", rfc8448_session, from_client, bin_record);
     }
     {
         // {server}  send alert record
@@ -258,6 +258,6 @@ void test_rfc8448_4() {
             "17 03 03 00 13 5b 18 af 44 4e 8e 1e"
             "ec 71 58 fb 62 d8 f2 57 7d 37 ba 5d";
         binary_t bin_record = std::move(base16_decode_rfc(record));
-        dump_record("alert", &rfc8448_session, from_server, bin_record);
+        dump_record("alert", rfc8448_session, from_server, bin_record);
     }
 }

@@ -38,9 +38,6 @@ extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
-extern tls_session rfc8448_session;
-extern tls_session rfc8448_session2;
-
 return_t dump_record(const char* text, tls_session* session, tls_direction_t dir, const binary_t& bin, bool expect = true);
 return_t dump_handshake(const char* text, tls_session* session, tls_direction_t dir, const binary_t& bin);
 void test_keycalc(tls_session* session, tls_secret_t tls_secret, binary_t& secret, const char* text, const char* expect);
@@ -98,8 +95,8 @@ extern const size_t sizeof_pcap_curl_http1_tls12_chacha20_poly1305;
 
 // RFC
 void test_rfc8448_2();
-void test_rfc8448_3();
-void test_rfc8448_4();
+void test_rfc8448_3(tls_session* rfc8448_session);
+void test_rfc8448_4(tls_session* rfc8448_session);
 void test_rfc8448_5();
 void test_rfc8448_6();
 void test_rfc8448_7();

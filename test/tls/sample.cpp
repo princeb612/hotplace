@@ -186,9 +186,6 @@ return_t construct_record_fragmented(tls_records* records, tls_direction_t dir, 
     return ret;
 }
 
-tls_session rfc8448_session;
-tls_session rfc8448_session2;
-
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
@@ -266,9 +263,12 @@ int main(int argc, char** argv) {
 
             // RFC 8448 Example Handshake Traces for TLS 1.3
             test_rfc8448_2();
-            test_rfc8448_3();
 
-            test_rfc8448_4();
+            tls_session rfc8448_session;
+
+            test_rfc8448_3(&rfc8448_session);
+
+            test_rfc8448_4(&rfc8448_session);
             test_rfc8448_5();
             test_rfc8448_6();
             test_rfc8448_7();
