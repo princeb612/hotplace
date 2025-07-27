@@ -1,44 +1,26 @@
 #ifndef __HOTPLACE_TEST_QUIC__
 #define __HOTPLACE_TEST_QUIC__
 
-#include <stdio.h>
-
-#include <iostream>
 #include <sdk/sdk.hpp>
-
-using namespace hotplace;
-using namespace hotplace::crypto;
-using namespace hotplace::io;
-using namespace hotplace::net;
+#include <test/test.hpp>
 
 enum test_flag_t {
     test_flag_quic = 1,
     test_flag_pcap = 2,
 };
 
-typedef struct _OPTION {
-    int verbose;
-    int debug;
-    int trace_level;
-    int log;
-    int time;
+struct OPTION : public CMDLINEOPTION {
     int mode;
     int flags;
     int keylog;
     std::string content;
 
-    _OPTION() : verbose(0), debug(0), trace_level(0), log(0), time(0), mode(0), flags(0) {
-        // do nothing
-    }
+    OPTION() : CMDLINEOPTION(), mode(0), flags(0) {}
     void set(int m, const char* param) {
         mode = m;
         content = param;
     }
-    void enable_debug() {
-        verbose = 1;
-        debug = 1;
-    }
-} OPTION;
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

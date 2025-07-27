@@ -29,9 +29,7 @@ quic_frames::quic_frames(quic_packet* packet) : _packet(packet) {
     }
 }
 
-quic_frames::~quic_frames() {
-    clear();
-}
+quic_frames::~quic_frames() { clear(); }
 
 return_t quic_frames::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

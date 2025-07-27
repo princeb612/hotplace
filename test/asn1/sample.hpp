@@ -3,16 +3,8 @@
 
 #include <stdio.h>
 
-#include <algorithm>
-#include <functional>
-#include <iostream>
 #include <sdk/sdk.hpp>
-#include <string>
-
-using namespace hotplace;
-using namespace hotplace::crypto;
-using namespace hotplace::io;
-using namespace hotplace::net;
+#include <test/test.hpp>
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

@@ -1,25 +1,14 @@
 #ifndef __HOTPLACE_TEST_KDF__
 #define __HOTPLACE_TEST_KDF__
 
-#include <stdio.h>
-
-#include <iostream>
 #include <sdk/sdk.hpp>
+#include <test/test.hpp>
 
-using namespace hotplace;
-using namespace hotplace::crypto;
-using namespace hotplace::io;
-using namespace hotplace::net;
-
-typedef struct _OPTION {
-    int verbose;
-    int debug;
-    int log;
-    int time;
+struct OPTION : public CMDLINEOPTION {
     bool test_slow_kdf;
 
-    _OPTION() : verbose(0), debug(0), log(0), time(0), test_slow_kdf(false) {}
-} OPTION;
+    OPTION() : CMDLINEOPTION(), test_slow_kdf(false) {}
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

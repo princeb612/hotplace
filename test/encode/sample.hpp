@@ -1,16 +1,8 @@
 #ifndef __HOTPLACE_TEST_ENCODE__
 #define __HOTPLACE_TEST_ENCODE__
 
-#include <stdio.h>
-
-#include <fstream>
-#include <iostream>
 #include <sdk/sdk.hpp>
-
-using namespace hotplace;
-using namespace hotplace::crypto;
-using namespace hotplace::io;
-using namespace hotplace::net;
+#include <test/test.hpp>
 
 enum {
     decode_b64u = 1,
@@ -19,17 +11,13 @@ enum {
     encode_plaintext = 4,
     encode_b16_rfc = 5,
 };
-typedef struct _OPTION {
-    int verbose;
-    int debug;
-    int log;
-    int time;
-
+struct OPTION : public CMDLINEOPTION {
     int mode;
     std::string content;
     std::string filename;
 
-    _OPTION() : verbose(0), debug(0), log(0), time(0), mode(0) {}
+    OPTION() : CMDLINEOPTION(), mode(0) {}
+
     void set(int m, char* param) {
         mode = m;
         if (param) {
@@ -41,7 +29,7 @@ typedef struct _OPTION {
             filename = param;
         }
     }
-} OPTION;
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

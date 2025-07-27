@@ -1,28 +1,14 @@
 #ifndef __HOTPLACE_TEST_JOSE__
 #define __HOTPLACE_TEST_JOSE__
 
-#include <stdio.h>
-
-#include <iostream>
 #include <sdk/sdk.hpp>
+#include <test/test.hpp>
 
-using namespace hotplace;
-using namespace hotplace::crypto;
-using namespace hotplace::io;
-using namespace hotplace::net;
-
-typedef struct _OPTION {
-    bool verbose;
-    bool debug;
-    int log;
-    int time;
-
+struct OPTION : public CMDLINEOPTION {
     bool dump_keys;
 
-    _OPTION() : verbose(false), debug(false), log(0), time(0), dump_keys(false) {
-        // do nothing
-    }
-} OPTION;
+    OPTION() : CMDLINEOPTION(), dump_keys(false) {}
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

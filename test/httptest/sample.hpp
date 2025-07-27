@@ -1,28 +1,16 @@
 #ifndef __HOTPLACE_TEST_HTTPTEST__
 #define __HOTPLACE_TEST_HTTPTEST__
 
-#include <signal.h>
-#include <stdio.h>
-
-#include <iostream>
 #include <sdk/sdk.hpp>
+#include <test/test.hpp>
 
-using namespace hotplace;
-using namespace hotplace::crypto;
-using namespace hotplace::io;
-using namespace hotplace::net;
-
-typedef struct _OPTION {
+struct OPTION : public CMDLINEOPTION {
     std::string url;
     int mode;
     int connect;
-    int verbose;
-    int debug;
-    int log;
-    int time;
 
-    _OPTION() : url("https://localhost:9000/"), mode(0), connect(0), verbose(0), debug(0), log(0), time(0) {}
-} OPTION;
+    OPTION() : CMDLINEOPTION(), url("https://localhost:9000/"), mode(0), connect(0) {}
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

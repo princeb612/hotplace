@@ -1,32 +1,14 @@
 #ifndef __HOTPLACE_TEST_TLS__
 #define __HOTPLACE_TEST_TLS__
 
-#include <stdio.h>
-
-#include <iostream>
 #include <sdk/sdk.hpp>
+#include <test/test.hpp>
 
-using namespace hotplace;
-using namespace hotplace::crypto;
-using namespace hotplace::io;
-using namespace hotplace::net;
-
-struct OPTION {
-    int verbose;
-    int debug;
-    int trace_level;
+struct OPTION : public CMDLINEOPTION {
     int keylog;
-    int log;
-    int time;
     binary_t clienthello;
 
-    OPTION() : verbose(0), debug(0), trace_level(0), keylog(0), log(0), time(0) {
-        // do nothing
-    }
-    void enable_debug() {
-        verbose = 1;
-        debug = 1;
-    }
+    OPTION() : CMDLINEOPTION(), keylog(0) {}
 };
 
 struct TLS_OPTION {

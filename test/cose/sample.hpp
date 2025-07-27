@@ -1,31 +1,18 @@
 #ifndef __HOTPLACE_TEST_COSE__
 #define __HOTPLACE_TEST_COSE__
 
-#include <stdio.h>
-
-#include <iostream>
 #include <sdk/sdk.hpp>
+#include <test/test.hpp>
 
-using namespace hotplace;
-using namespace hotplace::io;
-using namespace hotplace::crypto;
-
-typedef struct _OPTION {
-    bool verbose;
-    bool debug;
-    int log;
-    int time;
+struct OPTION : public CMDLINEOPTION {
     bool dump_keys;
     bool dump_diagnostic;
     bool skip_cbor_basic;
     bool skip_validate;
     bool skip_gen;
 
-    _OPTION()
-        : verbose(false), log(0), debug(0), time(0), dump_keys(false), dump_diagnostic(false), skip_cbor_basic(false), skip_validate(false), skip_gen(false) {
-        // do nothing
-    }
-} OPTION;
+    OPTION() : CMDLINEOPTION(), dump_keys(false), dump_diagnostic(false), skip_cbor_basic(false), skip_validate(false), skip_gen(false) {}
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

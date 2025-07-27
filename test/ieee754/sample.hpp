@@ -1,29 +1,15 @@
 #ifndef __HOTPLACE_TEST_IEEE754__
 #define __HOTPLACE_TEST_IEEE754__
 
-#include <math.h>
-#include <stdio.h>
-
-#include <functional>
-#include <iostream>
 #include <sdk/sdk.hpp>
-#include <string>
+#include <test/test.hpp>
 
 using namespace hotplace;
 using namespace hotplace::crypto;
 using namespace hotplace::io;
 using namespace hotplace::net;
 
-typedef struct _OPTION {
-    int verbose;
-    int debug;
-    int log;
-    int time;
-
-    _OPTION() : verbose(0), debug(0), log(0), time(0) {
-        // do nothing
-    }
-} OPTION;
+struct OPTION : public CMDLINEOPTION {};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

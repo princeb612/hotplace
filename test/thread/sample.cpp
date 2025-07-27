@@ -8,31 +8,17 @@
  * Date         Name                Description
  */
 
-#include <stdio.h>
-
-#include <iostream>
 #include <sdk/sdk.hpp>
+#include <test/test.hpp>
 
-using namespace hotplace;
-using namespace hotplace::io;
+struct OPTION : public CMDLINEOPTION {};
 
 test_case _test_case;
 t_shared_instance<semaphore> _mutex;
 t_shared_instance<logger> _logger;
-
-typedef struct _OPTION {
-    int verbose;
-    int debug;
-    int log;
-    int time;
-
-    _OPTION() : verbose(0), debug(0), log(0), time(0) {
-        // do nothing
-    }
-} OPTION;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
-return_t thread_routine(void* param) {
+return_t thread_routine(void *param) {
     t_shared_instance<semaphore> mtx(_mutex);
 
     _logger->writeln("thread started");
@@ -44,7 +30,7 @@ return_t thread_routine(void* param) {
     return errorcode_t::success;
 }
 
-return_t thread_signal(void* param) {
+return_t thread_signal(void *param) {
     t_shared_instance<semaphore> mtx(_mutex);
 
     mtx->signal();
@@ -82,21 +68,24 @@ void test_signalwait_threads() {
     _test_case.assert(0 == threads.running(), __FUNCTION__, "all thread terminated");
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.enable_verbose(); }).optional()
 #if defined DEBUG
-                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.debug = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION &o, char *param) -> void { o.enable_debug(); }).optional()
+                << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION &o, char *param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
+                << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION &o, char *param) -> void { o.enable_trace(loglevel_trace); }).optional()
+                << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION &o, char *param) -> void { o.enable_trace(loglevel_debug); }).optional()
 #endif
-                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
+                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION &o, char *param) -> void { o.log = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional();
     _cmdline->parse(argc, argv);
 
-    const OPTION& option = _cmdline->value();
+    const OPTION &option = _cmdline->value();
 
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose);
@@ -109,7 +98,7 @@ int main(int argc, char** argv) {
     _logger.make_share(builder.build());
 
     if (option.debug) {
-        auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void { _logger->write(s); };
+        auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t *s) -> void { _logger->write(s); };
         set_trace_debug(lambda_tracedebug);
         set_trace_option(trace_bt | trace_except | trace_debug);
     }

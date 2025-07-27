@@ -8,27 +8,13 @@
  * Date         Name                Description
  */
 
-#include <stdio.h>
-
-#include <iostream>
 #include <sdk/sdk.hpp>
-
-using namespace hotplace;
-using namespace hotplace::io;
+#include <test/test.hpp>
 
 test_case _test_case;
 t_shared_instance<logger> _logger;
 
-typedef struct _OPTION {
-    int verbose;
-    int debug;
-    int log;
-    int time;
-
-    _OPTION() : verbose(0), debug(0), log(0), time(0) {
-        // do nothing
-    }
-} OPTION;
+struct OPTION : public CMDLINEOPTION {};
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 void test_trace() {

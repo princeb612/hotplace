@@ -1,23 +1,10 @@
 #ifndef __HOTPLACE_TEST_CRYPTO__
 #define __HOTPLACE_TEST_CRYPTO__
 
-#include <stdio.h>
-
-#include <iostream>
 #include <sdk/sdk.hpp>
+#include <test/test.hpp>
 
-using namespace hotplace;
-using namespace hotplace::io;
-using namespace hotplace::crypto;
-
-typedef struct _OPTION {
-    int verbose;
-    int debug;
-    int log;
-    int time;
-
-    _OPTION() : verbose(0), debug(0), log(0), time(0) {}
-} OPTION;
+struct OPTION : public CMDLINEOPTION {};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

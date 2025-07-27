@@ -1,30 +1,16 @@
 #ifndef __HOTPLACE_TEST_CBOR__
 #define __HOTPLACE_TEST_CBOR__
 
-#include <math.h>
-#include <stdio.h>
-
-#include <deque>
-#include <iostream>
 #include <sdk/sdk.hpp>
+#include <test/test.hpp>
 
-using namespace hotplace;
-using namespace hotplace::crypto;
-using namespace hotplace::io;
-using namespace hotplace::net;
-
-typedef struct _OPTION {
-    int verbose;
-    int debug;
-    int log;
-    int time;
-
+struct OPTION : public CMDLINEOPTION {
     std::string content;
 
-    _OPTION() : verbose(0), debug(0), log(0), time(0) {
+    OPTION() : CMDLINEOPTION() {
         // do nothing
     }
-} OPTION;
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

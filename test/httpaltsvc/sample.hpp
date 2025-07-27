@@ -1,30 +1,18 @@
 #ifndef __HOTPLACE_TEST_HTTPALTSVC__
 #define __HOTPLACE_TEST_HTTPALTSVC__
 
-#include <signal.h>
-#include <stdio.h>
-
-#include <iostream>
 #include <sdk/sdk.hpp>
+#include <test/test.hpp>
 
-using namespace hotplace;
-using namespace hotplace::crypto;
-using namespace hotplace::io;
-using namespace hotplace::net;
-
-typedef struct _OPTION {
+struct OPTION : public CMDLINEOPTION {
     int run;
     int port_h1;
     int port_h2;
     int port_h3;
     int packetsize;
-    int verbose;
-    int debug;
-    int log;
-    int time;
 
-    _OPTION() : run(0), port_h1(9000), port_h2(9001), port_h3(9002), packetsize(1 << 16), verbose(0), debug(0), log(0), time(0) {}
-} OPTION;
+    OPTION() : CMDLINEOPTION(), run(0), port_h1(9000), port_h2(9001), port_h3(9002), packetsize(1 << 16) {}
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

@@ -1,28 +1,16 @@
 #ifndef __HOTPLACE_TEST_CMDLINE__
 #define __HOTPLACE_TEST_CMDLINE__
 
-#include <stdio.h>
-
-#include <iostream>
 #include <sdk/sdk.hpp>
+#include <test/test.hpp>
 
-using namespace hotplace;
-using namespace hotplace::crypto;
-using namespace hotplace::io;
-using namespace hotplace::net;
-
-typedef struct _OPTION {
-    int verbose;
-    int debug;
-    int log;
-    int time;
-
+struct OPTION : public CMDLINEOPTION {
     std::string infile;
     std::string outfile;
     bool keygen;
 
-    _OPTION() : verbose(0), debug(0), log(0), time(0), keygen(false){};
-} OPTION;
+    OPTION() : CMDLINEOPTION(), keygen(false){};
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
