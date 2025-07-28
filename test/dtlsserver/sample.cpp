@@ -32,7 +32,11 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-r", "run server", [](OPTION& o, char* param) -> void { o.run = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced();
+                << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
+                << t_cmdarg_t<OPTION>("-tls13", "allow TLS 1.3", [](OPTION& o, char* param) -> void { o.flags |= option_flag_allow_tls13; }).optional()
+                << t_cmdarg_t<OPTION>("-tls12", "allow TLS 1.2", [](OPTION& o, char* param) -> void { o.flags |= option_flag_allow_tls12; }).optional()
+                << t_cmdarg_t<OPTION>("-T", "use trial adapter", [](OPTION& o, char* param) -> void { o.flags |= option_flag_trial; }).optional()
+                << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.flags |= option_flag_keylog; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -51,6 +55,12 @@ int main(int argc, char** argv) {
         auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void { _logger->write(s); };
         set_trace_debug(lambda_tracedebug);
         set_trace_option(trace_bt | trace_except | trace_debug);
+    }
+
+    auto lambda = [&](const char* line) -> void { _logger->writeln(line); };
+    if (option_flag_keylog & option.flags) {
+        auto sslkeylog = sslkeylog_exporter::get_instance();
+        sslkeylog->set(lambda);
     }
 
     if (option.run) {

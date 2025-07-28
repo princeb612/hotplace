@@ -50,6 +50,8 @@ quic_packet_initial::quic_packet_initial(tls_session* session) : quic_packet(qui
 quic_packet_initial::quic_packet_initial(const quic_packet_initial& rhs)
     : quic_packet(rhs), _token(rhs._token), _length(rhs._length), _sizeof_length(rhs._sizeof_length) {}
 
+quic_packet_initial::~quic_packet_initial() {}
+
 return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

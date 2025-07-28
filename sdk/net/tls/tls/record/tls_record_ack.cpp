@@ -24,6 +24,8 @@ constexpr char constexpr_ack[] = "record ack";
 
 tls_record_ack::tls_record_ack(tls_session* session) : tls_record(tls_content_type_ack, session) {}
 
+tls_record_ack::~tls_record_ack() {}
+
 return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

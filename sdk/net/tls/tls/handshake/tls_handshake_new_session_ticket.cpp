@@ -32,6 +32,8 @@ constexpr char constexpr_ticket_extensions[] = "ticket extensions";
 
 tls_handshake_new_session_ticket::tls_handshake_new_session_ticket(tls_session* session) : tls_handshake(tls_hs_new_session_ticket, session) {}
 
+tls_handshake_new_session_ticket::~tls_handshake_new_session_ticket() {}
+
 return_t tls_handshake_new_session_ticket::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {

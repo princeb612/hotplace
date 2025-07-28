@@ -23,6 +23,8 @@ http2_frame_goaway::http2_frame_goaway(const http2_frame_goaway& rhs) : http2_fr
     _debug = rhs._debug;
 }
 
+http2_frame_goaway::~http2_frame_goaway() {}
+
 return_t http2_frame_goaway::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {

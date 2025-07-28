@@ -23,6 +23,7 @@ namespace net {
 class naive_tcp_server_socket : public server_socket {
    public:
     naive_tcp_server_socket();
+    virtual ~naive_tcp_server_socket();
 
     /**
      * @brief   listen

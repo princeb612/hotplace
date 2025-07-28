@@ -21,6 +21,8 @@ http2_frame_continuation::http2_frame_continuation() : http2_frame(h2_frame_t::h
 
 http2_frame_continuation::http2_frame_continuation(const http2_frame_continuation& rhs) : http2_frame(rhs) { _fragment = rhs._fragment; }
 
+http2_frame_continuation::~http2_frame_continuation() {}
+
 return_t http2_frame_continuation::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {

@@ -20,6 +20,8 @@ http2_frame_settings::http2_frame_settings() : http2_frame(h2_frame_t::h2_frame_
 
 http2_frame_settings::http2_frame_settings(const http2_frame_settings& rhs) : http2_frame(rhs) { _settings = rhs._settings; }
 
+http2_frame_settings::~http2_frame_settings() {}
+
 http2_frame_settings& http2_frame_settings::add(uint16 id, uint32 value) {
     h2_setting_map_pib_t pib = _settings.insert(std::make_pair(id, value));
     if (false == pib.second) {

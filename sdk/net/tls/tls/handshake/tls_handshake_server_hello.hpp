@@ -57,6 +57,7 @@ namespace net {
 class tls_handshake_server_hello : public tls_handshake {
    public:
     tls_handshake_server_hello(tls_session* session);
+    virtual ~tls_handshake_server_hello();
 
     void set_version(uint16 version);
     void set_random(const binary_t& value);

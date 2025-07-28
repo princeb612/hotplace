@@ -35,6 +35,8 @@ constexpr char constexpr_record_type[] = "record type";
 
 tls_handshake_certificate::tls_handshake_certificate(tls_session* session) : tls_handshake(tls_hs_certificate, session) {}
 
+tls_handshake_certificate::~tls_handshake_certificate() {}
+
 return_t tls_handshake_certificate::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {

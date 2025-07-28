@@ -17,6 +17,7 @@ namespace net {
 class tls_handshake_unknown : public tls_handshake {
    public:
     tls_handshake_unknown(tls_hs_type_t type, tls_session* session);
+    virtual ~tls_handshake_unknown();
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);

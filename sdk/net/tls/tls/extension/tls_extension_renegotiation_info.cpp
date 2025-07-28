@@ -26,6 +26,8 @@ constexpr char constexpr_renegotiation_info[] = "renegotiation_info";
 
 tls_extension_renegotiation_info::tls_extension_renegotiation_info(tls_handshake* handshake) : tls_extension(tls_ext_renegotiation_info, handshake) {}
 
+tls_extension_renegotiation_info::~tls_extension_renegotiation_info() {}
+
 return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

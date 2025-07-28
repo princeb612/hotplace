@@ -22,6 +22,8 @@ qpack_dynamic_table::qpack_dynamic_table() : http_dynamic_table() {
     _capacity = 0;
 }
 
+qpack_dynamic_table::~qpack_dynamic_table() {}
+
 void qpack_dynamic_table::for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) {
     if (f) {
         critical_section_guard guard(_lock);

@@ -29,6 +29,8 @@ constexpr char constexpr_request_ext_info[] = "request extension information";
 
 tls_extension_status_request::tls_extension_status_request(tls_handshake* handshake) : tls_extension(tls_ext_status_request, handshake) {}
 
+tls_extension_status_request::~tls_extension_status_request() {}
+
 return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

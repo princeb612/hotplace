@@ -19,6 +19,7 @@ class tls_record_ack : public tls_record {
 
    public:
     tls_record_ack(tls_session* session);
+    virtual ~tls_record_ack();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

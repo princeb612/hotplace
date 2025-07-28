@@ -40,6 +40,7 @@ namespace net {
 class naive_udp_client_socket : public client_socket {
    public:
     naive_udp_client_socket();
+    virtual ~naive_udp_client_socket();
 
     virtual return_t open(sockaddr_storage_t* sa, const char* address, uint16 port);
     virtual return_t close();

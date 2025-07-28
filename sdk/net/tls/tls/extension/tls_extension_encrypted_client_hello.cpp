@@ -32,6 +32,8 @@ constexpr char constexpr_payload[] = "payload";
 tls_extension_encrypted_client_hello::tls_extension_encrypted_client_hello(tls_handshake* handshake)
     : tls_extension(tls_ext_encrypted_client_hello, handshake), _client_hello_type(0), _kdf(0), _aead(0), _config_id(0), _enc_len(0), _enc_payload_len(0) {}
 
+tls_extension_encrypted_client_hello::~tls_extension_encrypted_client_hello() {}
+
 return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

@@ -21,6 +21,8 @@ http2_frame_priority::http2_frame_priority() : http2_frame(h2_frame_t::h2_frame_
 http2_frame_priority::http2_frame_priority(const http2_frame_priority& rhs)
     : http2_frame(rhs), _exclusive(rhs._exclusive), _dependency(rhs._dependency), _weight(rhs._weight) {}
 
+http2_frame_priority::~http2_frame_priority() {}
+
 return_t http2_frame_priority::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
 

@@ -219,6 +219,7 @@ class openssl_hash : public hash_t {
 class openssl_digest : public openssl_hash {
    public:
     openssl_digest();
+    virtual ~openssl_digest();
 
     return_t digest(const char* alg, const binary_t& input, binary_t& output);
     return_t digest(hash_algorithm_t alg, const binary_t& input, binary_t& output);

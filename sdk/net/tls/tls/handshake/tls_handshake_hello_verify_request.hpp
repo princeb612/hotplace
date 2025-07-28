@@ -17,6 +17,7 @@ namespace net {
 class tls_handshake_hello_verify_request : public tls_handshake {
    public:
     tls_handshake_hello_verify_request(tls_session* session);
+    virtual ~tls_handshake_hello_verify_request();
 
     void set_cookie(const binary_t& cookie);
     void set_cookie(binary_t&& cookie);

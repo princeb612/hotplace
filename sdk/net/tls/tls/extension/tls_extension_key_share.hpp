@@ -22,6 +22,8 @@ namespace net {
  */
 class tls_extension_key_share : public tls_extension {
    public:
+    virtual ~tls_extension_key_share();
+
     virtual return_t add(uint16 group);
     virtual return_t add(const std::string& group);
     virtual void clear();
@@ -38,6 +40,7 @@ class tls_extension_key_share : public tls_extension {
 class tls_extension_client_key_share : public tls_extension_key_share {
    public:
     tls_extension_client_key_share(tls_handshake* handshake);
+    virtual ~tls_extension_client_key_share();
 
     virtual return_t add(uint16 group);
     virtual return_t add(const std::string& group);
@@ -54,6 +57,7 @@ class tls_extension_client_key_share : public tls_extension_key_share {
 class tls_extension_server_key_share : public tls_extension_key_share {
    public:
     tls_extension_server_key_share(tls_handshake* handshake);
+    virtual ~tls_extension_server_key_share();
 
     /**
      * RFC 8446 2.  Protocol Overview

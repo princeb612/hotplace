@@ -17,6 +17,8 @@ namespace crypto {
 
 openssl_digest::openssl_digest() : openssl_hash() {}
 
+openssl_digest::~openssl_digest() {}
+
 return_t openssl_digest::digest(const char* alg, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     hash_context_t* handle = nullptr;

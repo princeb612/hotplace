@@ -25,6 +25,8 @@ constexpr char constexpr_algorithm[] = "algorithm";
 
 tls_extension_signature_algorithms::tls_extension_signature_algorithms(tls_handshake* handshake) : tls_extension(tls_ext_signature_algorithms, handshake) {}
 
+tls_extension_signature_algorithms::~tls_extension_signature_algorithms() {}
+
 return_t tls_extension_signature_algorithms::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     auto session = get_handshake()->get_session();

@@ -18,6 +18,8 @@ namespace net {
 
 trial_server_socket_adapter::trial_server_socket_adapter() : server_socket_adapter(), _tls_server_socket(nullptr) {}
 
+trial_server_socket_adapter::~trial_server_socket_adapter() {}
+
 return_t trial_server_socket_adapter::startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list,
                                                   int verify_peer) {
     return_t ret = errorcode_t::success;

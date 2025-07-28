@@ -20,6 +20,8 @@ namespace net {
 
 tls_record_change_cipher_spec::tls_record_change_cipher_spec(tls_session* session) : tls_record(tls_content_type_change_cipher_spec, session) {}
 
+tls_record_change_cipher_spec::~tls_record_change_cipher_spec() {}
+
 return_t tls_record_change_cipher_spec::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     auto session = get_session();

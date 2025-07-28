@@ -25,6 +25,8 @@ constexpr char constexpr_curve[] = "curve";
 
 tls_extension_supported_groups::tls_extension_supported_groups(tls_handshake* handshake) : tls_extension(tls_ext_supported_groups, handshake) {}
 
+tls_extension_supported_groups::~tls_extension_supported_groups() {}
+
 return_t tls_extension_supported_groups::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     auto tlsadvisor = tls_advisor::get_instance();

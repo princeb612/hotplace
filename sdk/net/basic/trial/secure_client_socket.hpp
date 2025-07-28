@@ -26,6 +26,8 @@ namespace net {
  */
 class secure_client_socket : public client_socket_prosumer {
    public:
+    virtual ~secure_client_socket();
+
     tls_session* get_session();
     tls_version_t get_version();
     virtual bool support_tls();

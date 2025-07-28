@@ -15,6 +15,8 @@ namespace net {
 
 naive_tcp_client_socket::naive_tcp_client_socket() : client_socket(), _fd(INVALID_SOCKET) {}
 
+naive_tcp_client_socket::~naive_tcp_client_socket() {}
+
 return_t naive_tcp_client_socket::connect(const char* address, uint16 port, uint32 timeout) {
     return_t ret = errorcode_t::success;
     __try2 {

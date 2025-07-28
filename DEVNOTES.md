@@ -245,9 +245,17 @@ flowchart LR
   - [x] TLS 1.2 chacha20-poly1305
   - [x] TCP segmentation
   - [x] DTLS 1.2 AEAD (CCM not tested - no test vector)
+  - [ ] extensions
+    - [ ] encrypted_client_hello
+    - [ ] compress_certificate
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)
   - [x] integration - network_server
+    - [x] trial_tls_server_socket
+    - [ ] trial_dtls_server_socket
+  - [x] integration - netclient
+    - [x] trial_tls_client_socket
+    - [x] trial_dtls_client_socket
 - [x] HTTP/2
   - [x] integration - http_server
   - [x] Server Push

@@ -20,6 +20,8 @@ namespace net {
 
 tls_handshake_unknown::tls_handshake_unknown(tls_hs_type_t type, tls_session* session) : tls_handshake(type, session) {}
 
+tls_handshake_unknown::~tls_handshake_unknown() {}
+
 return_t tls_handshake_unknown::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {

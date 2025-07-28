@@ -27,6 +27,8 @@ trial_dtls_client_socket::trial_dtls_client_socket(tls_version_t version) : secu
     session->set_type(session_type_dtls);
 }
 
+trial_dtls_client_socket::~trial_dtls_client_socket() {}
+
 return_t trial_dtls_client_socket::sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {

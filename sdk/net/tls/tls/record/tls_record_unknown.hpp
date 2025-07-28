@@ -17,6 +17,7 @@ namespace net {
 class tls_record_unknown : public tls_record {
    public:
     tls_record_unknown(uint8 type, tls_session* session);
+    virtual ~tls_record_unknown();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

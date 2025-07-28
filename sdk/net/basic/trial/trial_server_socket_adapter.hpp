@@ -25,6 +25,7 @@ namespace net {
 class trial_server_socket_adapter : public server_socket_adapter {
    public:
     trial_server_socket_adapter();
+    virtual ~trial_server_socket_adapter();
 
     virtual return_t startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
     virtual return_t startup_dtls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);

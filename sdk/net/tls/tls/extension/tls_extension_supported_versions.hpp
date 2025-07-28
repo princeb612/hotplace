@@ -23,11 +23,13 @@ namespace net {
 class tls_extension_supported_versions : public tls_extension {
    protected:
     tls_extension_supported_versions(tls_handshake* handshake);
+    virtual ~tls_extension_supported_versions();
 };
 
 class tls_extension_client_supported_versions : public tls_extension_supported_versions {
    public:
     tls_extension_client_supported_versions(tls_handshake* handshake);
+    virtual ~tls_extension_client_supported_versions();
 
     tls_extension_client_supported_versions& add(uint16 code);
     const std::list<uint16>& get_versions();
@@ -44,6 +46,7 @@ class tls_extension_client_supported_versions : public tls_extension_supported_v
 class tls_extension_server_supported_versions : public tls_extension_supported_versions {
    public:
     tls_extension_server_supported_versions(tls_handshake* handshake);
+    virtual ~tls_extension_server_supported_versions();
 
     uint16 get_version();
     tls_extension_server_supported_versions& set(uint16 code);

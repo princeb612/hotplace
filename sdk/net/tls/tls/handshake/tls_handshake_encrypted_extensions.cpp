@@ -21,6 +21,8 @@ namespace net {
 
 tls_handshake_encrypted_extensions::tls_handshake_encrypted_extensions(tls_session* session) : tls_handshake(tls_hs_encrypted_extensions, session) {}
 
+tls_handshake_encrypted_extensions::~tls_handshake_encrypted_extensions() {}
+
 return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {

@@ -20,6 +20,8 @@ http2_frame_rst_stream::http2_frame_rst_stream() : http2_frame(h2_frame_t::h2_fr
 
 http2_frame_rst_stream::http2_frame_rst_stream(const http2_frame_rst_stream& rhs) : http2_frame(rhs), _errorcode(rhs._errorcode) {}
 
+http2_frame_rst_stream::~http2_frame_rst_stream() {}
+
 return_t http2_frame_rst_stream::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
 

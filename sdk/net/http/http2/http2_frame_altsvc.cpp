@@ -24,6 +24,8 @@ http2_frame_alt_svc::http2_frame_alt_svc(const http2_frame_alt_svc& rhs) : http2
     _altsvc = rhs._altsvc;
 }
 
+http2_frame_alt_svc::~http2_frame_alt_svc() {}
+
 return_t http2_frame_alt_svc::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {

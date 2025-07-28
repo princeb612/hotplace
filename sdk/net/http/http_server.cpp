@@ -86,7 +86,7 @@ return_t http_server::shutdown_tls() {
             ret = errorcode_t::not_specified;
             __leave2;
         }
-        ret = adapter->shutdown_dtls();
+        ret = adapter->shutdown_tls();
     }
     __finally2 {
         // do nothing

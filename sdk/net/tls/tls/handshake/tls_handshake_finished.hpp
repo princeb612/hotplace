@@ -27,6 +27,7 @@ namespace net {
 class tls_handshake_finished : public tls_handshake {
    public:
     tls_handshake_finished(tls_session* session);
+    virtual ~tls_handshake_finished();
 
     virtual void run_scheduled(tls_direction_t dir);
 

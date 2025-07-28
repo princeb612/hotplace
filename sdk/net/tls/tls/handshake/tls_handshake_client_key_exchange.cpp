@@ -27,6 +27,8 @@ constexpr char constexpr_pubkey[] = "public key";
 
 tls_handshake_client_key_exchange::tls_handshake_client_key_exchange(tls_session* session) : tls_handshake(tls_hs_client_key_exchange, session) {}
 
+tls_handshake_client_key_exchange::~tls_handshake_client_key_exchange() {}
+
 return_t tls_handshake_client_key_exchange::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {

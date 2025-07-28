@@ -36,6 +36,8 @@ constexpr char constexpr_cookie[] = "cookie";
 
 tls_handshake_server_hello_done::tls_handshake_server_hello_done(tls_session* session) : tls_handshake(tls_hs_server_hello_done, session) {}
 
+tls_handshake_server_hello_done::~tls_handshake_server_hello_done() {}
+
 return_t tls_handshake_server_hello_done::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {

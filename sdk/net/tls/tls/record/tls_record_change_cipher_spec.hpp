@@ -23,6 +23,7 @@ namespace net {
 class tls_record_change_cipher_spec : public tls_record {
    public:
     tls_record_change_cipher_spec(tls_session* session);
+    virtual ~tls_record_change_cipher_spec();
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir);

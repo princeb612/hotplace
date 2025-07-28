@@ -71,6 +71,7 @@ namespace net {
 class tls_handshake_client_hello : public tls_handshake {
    public:
     tls_handshake_client_hello(tls_session* session);
+    virtual ~tls_handshake_client_hello();
 
     void set_random(const binary_t& value);
     void set_session_id(const binary_t& value);

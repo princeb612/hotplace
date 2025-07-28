@@ -27,6 +27,8 @@
     * CBOR
 
 * details
+  * Revision 833
+    * [tested] shared build
   * Revision 831
     * [tested] valgrind
   * Revision 826

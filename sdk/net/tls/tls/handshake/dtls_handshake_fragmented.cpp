@@ -24,6 +24,8 @@ dtls_handshake_fragmented::dtls_handshake_fragmented(tls_hs_type_t type, tls_ses
     set_flags(dont_control_dtls_handshake_sequence);
 }
 
+dtls_handshake_fragmented::~dtls_handshake_fragmented() {}
+
 return_t dtls_handshake_fragmented::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     do_write_header(dir, bin, _fragmented);

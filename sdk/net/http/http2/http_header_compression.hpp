@@ -259,6 +259,7 @@ class http_static_table {
  */
 class http_dynamic_table {
    public:
+    virtual ~http_dynamic_table();
     /**
      * @brief   for_each
      * @sample

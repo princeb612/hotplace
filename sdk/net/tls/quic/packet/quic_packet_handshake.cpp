@@ -53,6 +53,8 @@ quic_packet_handshake::quic_packet_handshake(tls_session* session) : quic_packet
 
 quic_packet_handshake::quic_packet_handshake(const quic_packet_handshake& rhs) : quic_packet(rhs), _length(rhs._length), _sizeof_length(rhs._sizeof_length) {}
 
+quic_packet_handshake::~quic_packet_handshake() {}
+
 return_t quic_packet_handshake::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

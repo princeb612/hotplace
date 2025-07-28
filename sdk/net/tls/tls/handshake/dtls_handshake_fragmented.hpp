@@ -18,6 +18,8 @@ class dtls_handshake_fragmented : public tls_handshake {
     friend class dtls_record_publisher;
 
    public:
+    virtual ~dtls_handshake_fragmented();
+
     virtual return_t write(tls_direction_t dir, binary_t& bin);
 
     void set_fragment(const binary_t& frag);

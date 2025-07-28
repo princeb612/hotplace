@@ -21,6 +21,8 @@ http2_frame_data::http2_frame_data() : http2_frame(h2_frame_t::h2_frame_data), _
 
 http2_frame_data::http2_frame_data(const http2_frame_data& rhs) : http2_frame(rhs), _padlen(rhs._padlen) { _data = rhs._data; }
 
+http2_frame_data::~http2_frame_data() {}
+
 return_t http2_frame_data::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
 

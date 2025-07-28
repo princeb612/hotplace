@@ -30,6 +30,8 @@ constexpr char constexpr_hostname[] = "hostname";
 
 tls_extension_sni::tls_extension_sni(tls_handshake* handshake) : tls_extension(tls_ext_server_name, handshake), _nametype(0) {}
 
+tls_extension_sni::~tls_extension_sni() {}
+
 return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

@@ -23,11 +23,13 @@ namespace net {
 class tls_extension_psk : public tls_extension {
    protected:
     tls_extension_psk(tls_handshake* handshake);
+    virtual ~tls_extension_psk();
 };
 
 class tls_extension_client_psk : public tls_extension_psk {
    public:
     tls_extension_client_psk(tls_handshake* handshake);
+    virtual ~tls_extension_client_psk();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -45,6 +47,7 @@ class tls_extension_client_psk : public tls_extension_psk {
 class tls_extension_server_psk : public tls_extension_psk {
    public:
     tls_extension_server_psk(tls_handshake* handshake);
+    virtual ~tls_extension_server_psk();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

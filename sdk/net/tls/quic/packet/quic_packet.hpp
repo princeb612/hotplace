@@ -209,6 +209,7 @@ class quic_packet_version_negotiation : public quic_packet {
    public:
     quic_packet_version_negotiation(tls_session* session);
     quic_packet_version_negotiation(const quic_packet_version_negotiation& rhs);
+    virtual ~quic_packet_version_negotiation();
 
    protected:
    private:
@@ -226,6 +227,7 @@ class quic_packet_initial : public quic_packet {
    public:
     quic_packet_initial(tls_session* session);
     quic_packet_initial(const quic_packet_initial& rhs);
+    virtual ~quic_packet_initial();
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
@@ -258,6 +260,7 @@ class quic_packet_0rtt : public quic_packet {
    public:
     quic_packet_0rtt(tls_session* session);
     quic_packet_0rtt(const quic_packet_0rtt& rhs);
+    virtual ~quic_packet_0rtt();
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
@@ -281,6 +284,7 @@ class quic_packet_handshake : public quic_packet {
    public:
     quic_packet_handshake(tls_session* session);
     quic_packet_handshake(const quic_packet_handshake& rhs);
+    virtual ~quic_packet_handshake();
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
@@ -308,6 +312,7 @@ class quic_packet_retry : public quic_packet {
    public:
     quic_packet_retry(tls_session* session);
     quic_packet_retry(const quic_packet_retry& rhs);
+    virtual ~quic_packet_retry();
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& packet);
@@ -349,6 +354,7 @@ class quic_packet_1rtt : public quic_packet {
    public:
     quic_packet_1rtt(tls_session* session);
     quic_packet_1rtt(const quic_packet_1rtt& rhs);
+    virtual ~quic_packet_1rtt();
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);

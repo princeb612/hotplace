@@ -15,6 +15,8 @@ namespace net {
 
 trial_udp_client_socket::trial_udp_client_socket() : client_socket_prosumer() {}
 
+trial_udp_client_socket::~trial_udp_client_socket() {}
+
 int trial_udp_client_socket::socket_type() { return SOCK_DGRAM; }
 
 }  // namespace net

@@ -31,6 +31,8 @@ constexpr char constexpr_pubkey[] = "public key";
 
 tls_extension_key_share::tls_extension_key_share(tls_handshake* handshake) : tls_extension(tls_ext_key_share, handshake) {}
 
+tls_extension_key_share::~tls_extension_key_share() {}
+
 return_t tls_extension_key_share::add(uint16 group) { return errorcode_t::success; }
 
 return_t tls_extension_key_share::add(const std::string& group) { return errorcode_t::success; }
@@ -140,6 +142,8 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
 std::string tls_extension_key_share::get_kid() { return ""; }
 
 tls_extension_client_key_share::tls_extension_client_key_share(tls_handshake* handshake) : tls_extension_key_share(handshake) {}
+
+tls_extension_client_key_share::~tls_extension_client_key_share() {}
 
 return_t tls_extension_client_key_share::add(uint16 group) { return tls_extension_key_share::add(group, from_client); }
 
@@ -283,6 +287,8 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
 std::string tls_extension_client_key_share::get_kid() { return KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC; }
 
 tls_extension_server_key_share::tls_extension_server_key_share(tls_handshake* handshake) : tls_extension_key_share(handshake) {}
+
+tls_extension_server_key_share::~tls_extension_server_key_share() {}
 
 return_t tls_extension_server_key_share::add(uint16 group) { return tls_extension_key_share::add(group, from_server); }
 

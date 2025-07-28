@@ -32,6 +32,8 @@ static return_t construct_certificate_verify_message(tls_session* session, tls_d
 
 tls_handshake_certificate_verify::tls_handshake_certificate_verify(tls_session* session) : tls_handshake(tls_hs_certificate_verify, session) {}
 
+tls_handshake_certificate_verify::~tls_handshake_certificate_verify() {}
+
 return_t tls_handshake_certificate_verify::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {

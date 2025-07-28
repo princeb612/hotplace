@@ -24,6 +24,8 @@ http2_frame_headers::http2_frame_headers(const http2_frame_headers& rhs)
     _fragment = rhs._fragment;
 }
 
+http2_frame_headers::~http2_frame_headers() {}
+
 return_t http2_frame_headers::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {

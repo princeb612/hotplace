@@ -15,6 +15,8 @@ namespace net {
 
 naive_tcp_server_socket::naive_tcp_server_socket() : server_socket() {}
 
+naive_tcp_server_socket::~naive_tcp_server_socket() {}
+
 return_t naive_tcp_server_socket::open(socket_context_t** handle, unsigned int family, uint16 port) {
     return_t ret = errorcode_t::success;
     socket_context_t* context = nullptr;

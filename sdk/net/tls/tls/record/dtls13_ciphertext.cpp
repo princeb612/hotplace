@@ -43,6 +43,8 @@ constexpr char constexpr_recno[] = "record no";
 
 dtls13_ciphertext::dtls13_ciphertext(uint8 type, tls_session* session) : tls_record(type, session), _sequence(0), _sequence_len(0), _offset_encdata(0) {}
 
+dtls13_ciphertext::~dtls13_ciphertext() {}
+
 tls_handshakes& dtls13_ciphertext::get_handshakes() { return _handshakes; }
 
 tls_records& dtls13_ciphertext::get_records() { return _records; }

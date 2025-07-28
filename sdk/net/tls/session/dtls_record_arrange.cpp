@@ -3,9 +3,6 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *          RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
- *          RFC 6066 Transport Layer Security (TLS) Extensions: Extension Definitions
- *          RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
  *
  * Revision History
  * Date         Name                Description

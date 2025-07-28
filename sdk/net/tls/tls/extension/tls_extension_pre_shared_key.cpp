@@ -82,8 +82,12 @@ constexpr char constexpr_selected_identity[] = "selected identity";
 
 tls_extension_psk::tls_extension_psk(tls_handshake* handshake) : tls_extension(tls_ext_pre_shared_key, handshake) {}
 
+tls_extension_psk::~tls_extension_psk() {}
+
 tls_extension_client_psk::tls_extension_client_psk(tls_handshake* handshake)
     : tls_extension_psk(handshake), _psk_identities_len(0), _obfuscated_ticket_age(0), _psk_binders_len(0) {}
+
+tls_extension_client_psk::~tls_extension_client_psk() {}
 
 return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -197,6 +201,8 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
 return_t tls_extension_client_psk::do_write_body(tls_direction_t dir, binary_t& bin) { return not_supported; }
 
 tls_extension_server_psk::tls_extension_server_psk(tls_handshake* handshake) : tls_extension_psk(handshake), _selected_identity(0) {}
+
+tls_extension_server_psk::~tls_extension_server_psk() {}
 
 return_t tls_extension_server_psk::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

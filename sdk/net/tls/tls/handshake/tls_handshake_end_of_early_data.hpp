@@ -17,6 +17,7 @@ namespace net {
 class tls_handshake_end_of_early_data : public tls_handshake {
    public:
     tls_handshake_end_of_early_data(tls_session* session);
+    virtual ~tls_handshake_end_of_early_data();
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);

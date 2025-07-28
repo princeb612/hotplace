@@ -23,6 +23,7 @@ namespace net {
 class tls_extension_compress_certificate : public tls_extension {
    public:
     tls_extension_compress_certificate(tls_handshake* handshake);
+    virtual ~tls_extension_compress_certificate();
 
     tls_extension_compress_certificate& add(uint16 code);
     tls_extension_compress_certificate& add(const std::string& name);

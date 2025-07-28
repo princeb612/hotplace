@@ -15,6 +15,8 @@ namespace net {
 
 naive_udp_client_socket::naive_udp_client_socket() : client_socket(), _fd(INVALID_SOCKET) {}
 
+naive_udp_client_socket::~naive_udp_client_socket() {}
+
 return_t naive_udp_client_socket::open(sockaddr_storage_t* sa, const char* address, uint16 port) {
     return_t ret = errorcode_t::success;
     __try2 {

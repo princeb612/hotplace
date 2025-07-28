@@ -18,6 +18,7 @@ namespace net {
 class tls_handshake_server_hello_done : public tls_handshake {
    public:
     tls_handshake_server_hello_done(tls_session* session);
+    virtual ~tls_handshake_server_hello_done();
 
    protected:
     virtual return_t do_preprocess(tls_direction_t dir);

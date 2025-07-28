@@ -20,6 +20,8 @@ http2_frame_window_update::http2_frame_window_update() : http2_frame(h2_frame_t:
 
 http2_frame_window_update::http2_frame_window_update(const http2_frame_window_update& rhs) : http2_frame(rhs), _increment(rhs._increment) {}
 
+http2_frame_window_update::~http2_frame_window_update() {}
+
 return_t http2_frame_window_update::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
 

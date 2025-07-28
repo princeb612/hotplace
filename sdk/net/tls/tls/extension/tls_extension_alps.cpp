@@ -25,6 +25,8 @@ constexpr char constexpr_alpn[] = "alpn";
 
 tls_extension_alps::tls_extension_alps(tls_handshake* handshake) : tls_extension(tls_ext_application_layer_protocol_settings, handshake), _alps_len(0) {}
 
+tls_extension_alps::~tls_extension_alps() {}
+
 return_t tls_extension_alps::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

@@ -27,6 +27,8 @@ tls_record_alert::tls_record_alert(tls_session* session) : tls_record(tls_conten
 
 tls_record_alert::tls_record_alert(tls_session* session, uint8 level, uint8 desc) : tls_record(tls_content_type_alert, session), _level(level), _desc(desc) {}
 
+tls_record_alert::~tls_record_alert() {}
+
 return_t tls_record_alert::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     return ret;

@@ -25,6 +25,8 @@ constexpr char constexpr_formats[] = "formats";
 
 tls_extension_ec_point_formats::tls_extension_ec_point_formats(tls_handshake* handshake) : tls_extension(tls_ext_ec_point_formats, handshake) {}
 
+tls_extension_ec_point_formats::~tls_extension_ec_point_formats() {}
+
 return_t tls_extension_ec_point_formats::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     auto session = get_handshake()->get_session();

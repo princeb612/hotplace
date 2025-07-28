@@ -237,6 +237,7 @@ class qpack_static_table : public http_static_table {
 class qpack_dynamic_table : public http_dynamic_table {
    public:
     qpack_dynamic_table();
+    virtual ~qpack_dynamic_table();
 
     virtual void for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f);
     virtual void dump(const std::string& desc, std::function<void(const char*, size_t)> f);

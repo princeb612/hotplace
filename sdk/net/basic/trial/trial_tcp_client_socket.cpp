@@ -15,6 +15,8 @@ namespace net {
 
 trial_tcp_client_socket::trial_tcp_client_socket() : client_socket_prosumer() {}
 
+trial_tcp_client_socket::~trial_tcp_client_socket() {}
+
 int trial_tcp_client_socket::socket_type() { return SOCK_STREAM; }
 
 }  // namespace net

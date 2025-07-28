@@ -23,6 +23,8 @@ trial_tls_client_socket::trial_tls_client_socket(tls_version_t version) : secure
     session->set_type(session_type_tls);
 }
 
+trial_tls_client_socket::~trial_tls_client_socket() {}
+
 return_t trial_tls_client_socket::send(const char* ptr_data, size_t size_data, size_t* cbsent) {
     return_t ret = errorcode_t::success;
     __try2 {

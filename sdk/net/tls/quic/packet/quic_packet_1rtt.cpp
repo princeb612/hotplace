@@ -25,6 +25,8 @@ quic_packet_1rtt::quic_packet_1rtt(tls_session* session) : quic_packet(quic_pack
 
 quic_packet_1rtt::quic_packet_1rtt(const quic_packet_1rtt& rhs) : quic_packet(rhs) {}
 
+quic_packet_1rtt::~quic_packet_1rtt() {}
+
 return_t quic_packet_1rtt::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

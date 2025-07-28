@@ -33,6 +33,8 @@ constexpr char constexpr_verify_data[] = "verify data";
 
 tls_handshake_finished::tls_handshake_finished(tls_session* session) : tls_handshake(tls_hs_finished, session) {}
 
+tls_handshake_finished::~tls_handshake_finished() {}
+
 void tls_handshake_finished::run_scheduled(tls_direction_t dir) {
     auto session = get_session();
     auto& session_info = session->get_session_info(dir);

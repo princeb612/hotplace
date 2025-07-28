@@ -18,6 +18,8 @@ namespace net {
 
 tls_record_unknown::tls_record_unknown(uint8 type, tls_session* session) : tls_record(type, session) {}
 
+tls_record_unknown::~tls_record_unknown() {}
+
 return_t tls_record_unknown::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

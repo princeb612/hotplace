@@ -45,6 +45,7 @@
 #include <sdk/net/basic/trial/client_socket_prosumer.hpp>
 #include <sdk/net/basic/trial/tls_composer.hpp>
 #include <sdk/net/basic/trial/trial_dtls_client_socket.hpp>
+#include <sdk/net/basic/trial/trial_dtls_server_socket.hpp>
 #include <sdk/net/basic/trial/trial_server_socket_adapter.hpp>
 #include <sdk/net/basic/trial/trial_tcp_client_socket.hpp>
 #include <sdk/net/basic/trial/trial_tls_client_socket.hpp>

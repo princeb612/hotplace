@@ -26,6 +26,8 @@ constexpr char constexpr_mode[] = "mode";
 tls_extension_psk_key_exchange_modes::tls_extension_psk_key_exchange_modes(tls_handshake* handshake)
     : tls_extension(tls_ext_psk_key_exchange_modes, handshake), _modes(0) {}
 
+tls_extension_psk_key_exchange_modes::~tls_extension_psk_key_exchange_modes() {}
+
 return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

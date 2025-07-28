@@ -24,6 +24,7 @@ class http2_frame {
     http2_frame(h2_frame_t type);
     http2_frame(const http2_frame_header_t& header);
     http2_frame(const http2_frame& rhs);
+    virtual ~http2_frame();
 
     uint32 get_frame_size();
     uint32 get_payload_size();
@@ -85,6 +86,7 @@ class http2_frame_data : public http2_frame {
    public:
     http2_frame_data();
     http2_frame_data(const http2_frame_data& rhs);
+    virtual ~http2_frame_data();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -108,6 +110,7 @@ class http2_frame_headers : public http2_frame {
    public:
     http2_frame_headers();
     http2_frame_headers(const http2_frame_headers& rhs);
+    virtual ~http2_frame_headers();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -134,6 +137,7 @@ class http2_frame_priority : public http2_frame {
    public:
     http2_frame_priority();
     http2_frame_priority(const http2_frame_priority& rhs);
+    virtual ~http2_frame_priority();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -155,6 +159,7 @@ class http2_frame_rst_stream : public http2_frame {
    public:
     http2_frame_rst_stream();
     http2_frame_rst_stream(const http2_frame_rst_stream& rhs);
+    virtual ~http2_frame_rst_stream();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -173,6 +178,7 @@ class http2_frame_settings : public http2_frame {
    public:
     http2_frame_settings();
     http2_frame_settings(const http2_frame_settings& rhs);
+    virtual ~http2_frame_settings();
 
     http2_frame_settings& add(uint16 id, uint32 value);
     return_t find(uint16 id, uint32& value);
@@ -196,6 +202,7 @@ class http2_frame_push_promise : public http2_frame {
    public:
     http2_frame_push_promise();
     http2_frame_push_promise(const http2_frame_push_promise& rhs);
+    virtual ~http2_frame_push_promise();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -219,6 +226,7 @@ class http2_frame_ping : public http2_frame {
    public:
     http2_frame_ping();
     http2_frame_ping(const http2_frame_ping& rhs);
+    virtual ~http2_frame_ping();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -237,6 +245,7 @@ class http2_frame_goaway : public http2_frame {
    public:
     http2_frame_goaway();
     http2_frame_goaway(const http2_frame_goaway& rhs);
+    virtual ~http2_frame_goaway();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -266,6 +275,7 @@ class http2_frame_window_update : public http2_frame {
    public:
     http2_frame_window_update();
     http2_frame_window_update(const http2_frame_window_update& rhs);
+    virtual ~http2_frame_window_update();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -284,6 +294,7 @@ class http2_frame_continuation : public http2_frame {
    public:
     http2_frame_continuation();
     http2_frame_continuation(const http2_frame_continuation& rhs);
+    virtual ~http2_frame_continuation();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);
@@ -305,6 +316,7 @@ class http2_frame_alt_svc : public http2_frame {
    public:
     http2_frame_alt_svc();
     http2_frame_alt_svc(const http2_frame_alt_svc& rhs);
+    virtual ~http2_frame_alt_svc();
 
     virtual return_t read(http2_frame_header_t const* header, size_t size);
     virtual return_t write(binary_t& frame);

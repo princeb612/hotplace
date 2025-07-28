@@ -8,30 +8,35 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_BASIC_NAIVE_NAIVEUDPSERVERSOCKET__
-#define __HOTPLACE_SDK_NET_BASIC_NAIVE_NAIVEUDPSERVERSOCKET__
+#ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALDTLSSERVERSOCKET__
+#define __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALDTLSSERVERSOCKET__
 
-#include <sdk/net/basic/server_socket.hpp>
+#include <sdk/net/basic/naive/naive_udp_server_socket.hpp>  // naive_udp_server_socket
 
 namespace hotplace {
 namespace net {
 
 /**
- * @brief   UDP server socket
- * @sa      openssl_dtls_server_socket
+ * @brief   DTLS server socket
  */
-class naive_udp_server_socket : public server_socket {
+class trial_dtls_server_socket : public naive_udp_server_socket {
    public:
-    naive_udp_server_socket();
-    virtual ~naive_udp_server_socket();
+    trial_dtls_server_socket();
+    virtual ~trial_dtls_server_socket();
 
     /**
-     * @brief   listen
+     * @brief   DTLS session
      * @param   socket_context_t** handle [out]
-     * @param   unsigned int family [in]
-     * @param   uint16 port [in]
+     * @param   socket_t listen_sock [in]
      */
-    virtual return_t open(socket_context_t** handle, unsigned int family, uint16 port);
+    virtual return_t dtls_open(socket_context_t** handle, socket_t listen_sock);
+    /**
+     * @brief   DTLS handshake
+     * @param   socket_context_t* handle
+     * @param   sockaddr* addr
+     * @param   socklen_t addrlen [in]
+     */
+    virtual return_t dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen);
     /**
      * @brief   recvfrom
      * @param   socket_context_t* handle [in]
@@ -56,9 +61,12 @@ class naive_udp_server_socket : public server_socket {
 
     /**
      * @override
-     * @return  return SOCK_DGRAM
+     * @return  return true
      */
-    virtual int socket_type();
+    virtual bool support_tls();
+
+   protected:
+   private:
 };
 
 }  // namespace net

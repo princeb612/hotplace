@@ -44,6 +44,7 @@ namespace net {
 class naive_tcp_client_socket : public client_socket {
    public:
     naive_tcp_client_socket();
+    virtual ~naive_tcp_client_socket();
 
     /**
      * connect

@@ -29,6 +29,8 @@ constexpr char constexpr_param[] = "param";
 tls_extension_quic_transport_parameters::tls_extension_quic_transport_parameters(tls_handshake* handshake)
     : tls_extension(tls_ext_quic_transport_parameters, handshake) {}
 
+tls_extension_quic_transport_parameters::~tls_extension_quic_transport_parameters() {}
+
 return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

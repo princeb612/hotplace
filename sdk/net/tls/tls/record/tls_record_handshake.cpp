@@ -31,6 +31,8 @@ constexpr char constexpr_dtls_record_seq[] = "dtls record sequence number";
 
 tls_record_handshake::tls_record_handshake(tls_session* session) : tls_record(tls_content_type_handshake, session) {}
 
+tls_record_handshake::~tls_record_handshake() {}
+
 tls_handshakes& tls_record_handshake::get_handshakes() { return _handshakes; }
 
 return_t tls_record_handshake::do_preprocess(tls_direction_t dir) {

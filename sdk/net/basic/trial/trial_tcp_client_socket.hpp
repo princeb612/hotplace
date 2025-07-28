@@ -22,6 +22,8 @@ namespace net {
 class trial_tcp_client_socket : public client_socket_prosumer {
    public:
     trial_tcp_client_socket();
+    virtual ~trial_tcp_client_socket();
+
     virtual int socket_type();
 };
 

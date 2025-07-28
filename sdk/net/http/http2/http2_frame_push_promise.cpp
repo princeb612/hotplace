@@ -24,6 +24,8 @@ http2_frame_push_promise::http2_frame_push_promise(const http2_frame_push_promis
     _fragment = rhs._fragment;
 }
 
+http2_frame_push_promise::~http2_frame_push_promise() {}
+
 return_t http2_frame_push_promise::read(http2_frame_header_t const* header, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {

@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
                        .preced()
                 << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.flags |= option_flag_keylog; }).optional()
-                << t_cmdarg_t<OPTION>("-T", "use trial", [](OPTION& o, char* param) -> void { o.flags |= option_flag_debug_tls_inside; }).optional()
+                // << t_cmdarg_t<OPTION>("-T", "use trial", [](OPTION& o, char* param) -> void { o.flags |= option_flag_debug_tls_inside; }).optional()
                 << t_cmdarg_t<OPTION>("-h", "HTTP/1.1",
                                       [](OPTION& o, char* param) -> void {
                                           o.flags |= option_flag_http;

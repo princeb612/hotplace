@@ -21,5 +21,7 @@ quic_packet_version_negotiation::quic_packet_version_negotiation(tls_session* se
 
 quic_packet_version_negotiation::quic_packet_version_negotiation(const quic_packet_version_negotiation& rhs) : quic_packet(rhs) {}
 
+quic_packet_version_negotiation::~quic_packet_version_negotiation() {}
+
 }  // namespace net
 }  // namespace hotplace

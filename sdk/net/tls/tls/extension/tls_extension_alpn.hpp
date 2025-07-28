@@ -23,6 +23,7 @@ namespace net {
 class tls_extension_alpn : public tls_extension {
    public:
     tls_extension_alpn(tls_handshake* handshake);
+    virtual ~tls_extension_alpn();
 
     const binary_t& get_protocols();
     void set_protocols(const binary_t& protocols);

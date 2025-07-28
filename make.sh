@@ -17,20 +17,36 @@
 COMMENTS
 
 :<< HELP
-    cf       - clang-format
-    cmake    - makefile only
-    ctest    - build and run ctest
-    debug    - debug build
-    format   - clang-format (syn. cf)
-    leaks    - gdb 
-    opt      - optimize
-    pch      - precompiled header
-    prof     - gprof
-    odbc     - ODBC feature
-    redist   - redistribute MSYS2(MINGW) binaries
-    shared   -
-    test     - run examples
-    ex) ./make.sh format debug pch
+    cf             - clang-format
+    cmake          - makefile only
+    ctest          - build and run ctest
+    debug          - debug build
+    format         - clang-format (syn. cf)
+    leaks          - gdb 
+    opt            - optimize
+    pch            - precompiled header
+    prof           - gprof
+    odbc           - ODBC feature
+    redist         - redistribute MSYS2(MINGW) binaries
+    shared         - shared build
+    disable_static - disable static build
+    verbose        - CMAKE_VERBOSE_MAKEFILE ON
+    test           - run examples
+
+    static build example
+      mingw64
+        source env.ubuntu && install_packages
+        ./make.sh debug pch
+      ubuntu
+        source env.mingw64 && install_packages
+        ./make.sh debug pch
+    shared build examples
+      mingw64
+        source env.ubuntu && install_packages && export_path
+        ./make.sh debug pch disable_static shared
+      ubuntu
+        source env.mingw64 && install_packages && export_path
+        ./make.sh debug pch disable_static shared
 HELP
 
 :<< SWITCHES
@@ -86,6 +102,8 @@ if [ ${#args[@]} -ne 0 ]; then
             CXXFLAGS="${CXXFLAGS} -pg"
         elif [ $arg = 'redist' ]; then
             do_redist=1
+        elif [ $arg = 'disable_static' ]; then
+            export SUPPORT_STATIC=0
         elif [ $arg = 'shared' ]; then
             export SUPPORT_SHARED=1
         elif [ $arg = 'test' ]; then
@@ -97,6 +115,8 @@ if [ ${#args[@]} -ne 0 ]; then
             export LD_LIBRARY_PATH=${toolchain_dir}/lib:${LD_LIBRARY_PATH}
             export PATH=${thirdparty_dir}/bin:${toolchain_dir}/bin:$PATH
             export CMAKE_CXX_COMPILER=${toolchain_dir}/bin/c++
+        elif [ $arg = 'verbose' ]; then
+            export CMAKE_VERBOSE_MAKEFILE=ON
         fi
     done
 fi

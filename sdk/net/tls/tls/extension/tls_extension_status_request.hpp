@@ -23,6 +23,7 @@ namespace net {
 class tls_extension_status_request : public tls_extension {
    public:
     tls_extension_status_request(tls_handshake* handshake);
+    virtual ~tls_extension_status_request();
 
     uint8 get_cert_status_type();
     void set_responderid_info(const binary_t& info);

@@ -23,6 +23,7 @@ namespace net {
 class tls_extension_psk_key_exchange_modes : public tls_extension {
    public:
     tls_extension_psk_key_exchange_modes(tls_handshake* handshake);
+    virtual ~tls_extension_psk_key_exchange_modes();
 
     tls_extension_psk_key_exchange_modes& add(uint8 code);
     tls_extension_psk_key_exchange_modes& add(const std::string& name);

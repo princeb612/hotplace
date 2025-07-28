@@ -53,36 +53,39 @@ return_t echo_server(void*) {
 
     SSL_CTX* sslctx = nullptr;
     openssl_tls* tls = nullptr;
-    openssl_dtls_server_socket* tls_socket = nullptr;
-    // DTLS handshake and thread-model
-    //          single      multi
-    // epoll    passed      N/A
-    // IOCP     passed      passed
+    server_socket* dtls_socket = nullptr;
     uint16 nproc_threads = 1;
 #if defined __linux__
-    // [epoll] DTLS handshake only support single-thread model
 #elif defined _WIN32 || defined _WIN64
-    // [IOCP] GetQueuedCompletionStatus only catches information directly related to overlapped
-    //        and is not interested in DTLS handshakes that do not use overlapped
-    nproc_threads = 2;  // it works
+    nproc_threads = 2;
 #endif
 
     __try2 {
-        // part of ssl certificate
-        ret = openssl_tls_context_open(&sslctx, tlscontext_flag_dtls, "server.crt", "server.key");
+        if (option_flag_trial & option.flags) {
+            // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
+            load_certificate("rsa.crt", "rsa.key", nullptr);
+            // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
+            load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
 
-        // https://docs.openssl.org/1.1.1/man1/ciphers/
-        // TLS 1.2
-        SSL_CTX_set_cipher_list(
-            sslctx,
-            "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-"
-            "RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-"
-            "AES256-SHA384:DHE-RSA-AES256-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-"
-            "AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA");
-        SSL_CTX_set_verify(sslctx, 0, nullptr);
+            __try_new_catch(dtls_socket, new trial_dtls_server_socket, ret, __leave2);
+        } else {
+            // part of ssl certificate
+            ret = openssl_tls_context_open(&sslctx, tlscontext_flag_dtls, "server.crt", "server.key");
 
-        __try_new_catch(tls, new openssl_tls(sslctx), ret, __leave2);
-        __try_new_catch(tls_socket, new openssl_dtls_server_socket(tls), ret, __leave2);
+            // https://docs.openssl.org/1.1.1/man1/ciphers/
+            // TLS 1.2
+            SSL_CTX_set_cipher_list(
+                sslctx,
+                "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:"
+                "DHE-"
+                "RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-"
+                "AES256-SHA384:DHE-RSA-AES256-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-"
+                "AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA");
+            SSL_CTX_set_verify(sslctx, 0, nullptr);
+
+            __try_new_catch(tls, new openssl_tls(sslctx), ret, __leave2);
+            __try_new_catch(dtls_socket, new openssl_dtls_server_socket(tls), ret, __leave2);
+        }
 
         server_conf conf;
         conf.set(netserver_config_t::serverconf_concurrent_event, 1024)  // concurrent (linux epoll concerns, windows ignore)
@@ -91,8 +94,8 @@ return_t echo_server(void*) {
             .set(netserver_config_t::serverconf_concurrent_consume, 2);
 
         // start server
-        netserver.open(&handle_ipv4, AF_INET, port, tls_socket, &conf, consumer_routine, nullptr);
-        netserver.open(&handle_ipv6, AF_INET6, port, tls_socket, &conf, consumer_routine, nullptr);
+        netserver.open(&handle_ipv4, AF_INET, port, dtls_socket, &conf, consumer_routine, nullptr);
+        netserver.open(&handle_ipv6, AF_INET6, port, dtls_socket, &conf, consumer_routine, nullptr);
 
         netserver.consumer_loop_run(handle_ipv4, 2);
         netserver.consumer_loop_run(handle_ipv6, 2);
@@ -124,9 +127,12 @@ return_t echo_server(void*) {
         netserver.close(handle_ipv4);
         netserver.close(handle_ipv6);
 
-        tls_socket->release();
-        tls->release();
-        SSL_CTX_free(sslctx);
+        dtls_socket->release();
+        if (option_flag_trial & option.flags) {
+        } else {
+            tls->release();
+            SSL_CTX_free(sslctx);
+        }
     }
 
     return ret;

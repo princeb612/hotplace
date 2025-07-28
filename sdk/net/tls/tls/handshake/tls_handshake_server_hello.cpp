@@ -41,6 +41,8 @@ constexpr char constexpr_cookie[] = "cookie";
 tls_handshake_server_hello::tls_handshake_server_hello(tls_session* session)
     : tls_handshake(tls_hs_server_hello, session), _version(0), _compression_method(0) {}
 
+tls_handshake_server_hello::~tls_handshake_server_hello() {}
+
 void tls_handshake_server_hello::set_version(uint16 version) { _version = version; }
 
 void tls_handshake_server_hello::set_random(const binary_t& value) { _random = value; }

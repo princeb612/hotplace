@@ -33,6 +33,7 @@ namespace net {
 class tls_handshake_encrypted_extensions : public tls_handshake {
    public:
     tls_handshake_encrypted_extensions(tls_session* session);
+    virtual ~tls_handshake_encrypted_extensions();
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size);

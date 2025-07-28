@@ -17,6 +17,8 @@ namespace net {
 
 http_dynamic_table::http_dynamic_table() : _type(header_compression_hpack), _tablesize(0), _capacity(0), _inserted(0), _dropped(0), _ack(0) {}
 
+http_dynamic_table::~http_dynamic_table() {}
+
 void http_dynamic_table::pick(size_t entry, const std::string& name, std::string& value) {
     critical_section_guard guard(_lock);
     auto iter = _dynamic_reversemap.find(entry);

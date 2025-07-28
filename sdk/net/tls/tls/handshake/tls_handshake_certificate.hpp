@@ -29,6 +29,7 @@ namespace net {
 class tls_handshake_certificate : public tls_handshake {
    public:
     tls_handshake_certificate(tls_session* session);
+    virtual ~tls_handshake_certificate();
 
    protected:
     virtual return_t do_preprocess(tls_direction_t dir);

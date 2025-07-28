@@ -20,6 +20,7 @@ namespace net {
 class tls_extension_unknown : public tls_extension {
    public:
     tls_extension_unknown(uint16 type, tls_handshake* handshake);
+    virtual ~tls_extension_unknown();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

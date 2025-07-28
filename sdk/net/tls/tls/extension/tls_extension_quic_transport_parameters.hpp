@@ -23,6 +23,7 @@ namespace net {
 class tls_extension_quic_transport_parameters : public tls_extension {
    public:
     tls_extension_quic_transport_parameters(tls_handshake* handshake);
+    virtual ~tls_extension_quic_transport_parameters();
 
     tls_extension_quic_transport_parameters& set(uint64 id, uint64 value);
     tls_extension_quic_transport_parameters& set(uint64 id, const binary_t& value);

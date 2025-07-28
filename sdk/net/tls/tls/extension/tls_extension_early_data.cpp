@@ -28,6 +28,8 @@ const char constexpr_new_session_ticket[] = "new session ticket";
 
 tls_extension_early_data::tls_extension_early_data(tls_handshake* handshake) : tls_extension(tls_ext_early_data, handshake) {}
 
+tls_extension_early_data::~tls_extension_early_data() {}
+
 return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

@@ -25,7 +25,11 @@ constexpr char constexpr_version[] = "version";
 
 tls_extension_supported_versions::tls_extension_supported_versions(tls_handshake* handshake) : tls_extension(tls_ext_supported_versions, handshake) {}
 
+tls_extension_supported_versions::~tls_extension_supported_versions() {}
+
 tls_extension_client_supported_versions::tls_extension_client_supported_versions(tls_handshake* handshake) : tls_extension_supported_versions(handshake) {}
+
+tls_extension_client_supported_versions::~tls_extension_client_supported_versions() {}
 
 return_t tls_extension_client_supported_versions::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
@@ -119,6 +123,8 @@ tls_extension_client_supported_versions& tls_extension_client_supported_versions
 const std::list<uint16>& tls_extension_client_supported_versions::get_versions() { return _versions; }
 
 tls_extension_server_supported_versions::tls_extension_server_supported_versions(tls_handshake* handshake) : tls_extension_supported_versions(handshake) {}
+
+tls_extension_server_supported_versions::~tls_extension_server_supported_versions() {}
 
 return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

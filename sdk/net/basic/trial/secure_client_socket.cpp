@@ -20,6 +20,8 @@ namespace net {
 
 secure_client_socket::secure_client_socket(tls_version_t version) : client_socket_prosumer(), _version(version) {}
 
+secure_client_socket::~secure_client_socket() {}
+
 return_t secure_client_socket::do_handshake() {
     return_t ret = errorcode_t::success;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();

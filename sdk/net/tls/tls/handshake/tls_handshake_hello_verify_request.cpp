@@ -25,6 +25,8 @@ constexpr char constexpr_cookie[] = "cookie";
 
 tls_handshake_hello_verify_request::tls_handshake_hello_verify_request(tls_session* session) : tls_handshake(tls_hs_hello_verify_request, session) {}
 
+tls_handshake_hello_verify_request::~tls_handshake_hello_verify_request() {}
+
 return_t tls_handshake_hello_verify_request::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {

@@ -18,6 +18,7 @@ namespace net {
 class tls_handshake_new_session_ticket : public tls_handshake {
    public:
     tls_handshake_new_session_ticket(tls_session* session);
+    virtual ~tls_handshake_new_session_ticket();
 
    protected:
     virtual return_t do_preprocess(tls_direction_t dir);

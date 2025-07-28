@@ -59,6 +59,8 @@ http2_frame::http2_frame(const http2_frame& rhs) {
     _hpack_dyntable = rhs._hpack_dyntable;
 }
 
+http2_frame::~http2_frame() {}
+
 uint32 http2_frame::get_frame_size() { return sizeof(http2_frame_header_t) + get_payload_size(); }
 
 uint32 http2_frame::get_payload_size() { return _payload_size; }

@@ -4,11 +4,18 @@
 #include <sdk/sdk.hpp>
 #include <test/test.hpp>
 
+enum option_flag_t {
+    option_flag_allow_tls13 = (1 << 0),
+    option_flag_allow_tls12 = (1 << 1),
+    option_flag_trial = (1 << 2),
+    option_flag_keylog = (1 << 3),
+};
 struct OPTION : public CMDLINEOPTION {
     int run;
     uint16 port;
+    uint32 flags;
 
-    OPTION() : CMDLINEOPTION(), run(0), port(9000) {}
+    OPTION() : CMDLINEOPTION(), run(0), port(9000), flags(0) {}
 };
 
 extern test_case _test_case;

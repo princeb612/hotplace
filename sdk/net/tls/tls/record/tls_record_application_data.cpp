@@ -48,6 +48,8 @@ tls_record_application_data::tls_record_application_data(tls_session* session, c
     binary_append(_bin, data, size);
 }
 
+tls_record_application_data::~tls_record_application_data() {}
+
 tls_handshakes& tls_record_application_data::get_handshakes() { return _handshakes; }
 
 tls_records& tls_record_application_data::get_records() { return _records; }

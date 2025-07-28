@@ -55,6 +55,8 @@ quic_packet_retry::quic_packet_retry(tls_session* session) : quic_packet(quic_pa
 quic_packet_retry::quic_packet_retry(const quic_packet_retry& rhs)
     : quic_packet(rhs), _retry_token(rhs._retry_token), _retry_integrity_tag(rhs._retry_integrity_tag) {}
 
+quic_packet_retry::~quic_packet_retry() {}
+
 return_t quic_packet_retry::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
