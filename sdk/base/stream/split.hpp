@@ -17,9 +17,10 @@ namespace hotplace {
 namespace io {
 
 enum splitter_flag_t : uint32 {
-    splitter_noalloc = 1 << 0,      // splitter add
-    splitter_new_segment = 1 << 7,  // splitter run
-    splitter_new_group = 1 << 8,    // split    run
+    splitter_noalloc = 1 << 0,      // splitter::add
+    splitter_new_segment = 1 << 7,  // splitter::run
+    splitter_new_group = 1 << 8,    // splitter::run
+    splitter_notempty = 1 << 9,     // splitter::run
 };
 
 /**
@@ -199,7 +200,7 @@ return_t splitter<DESCRIPTOR_T>::run(std::function<void(uint32, const byte_t*, s
             blockstream = item.stream;
             blocksize = item.size;
         } else {
-            blockstream = &item.bin[0];
+            blockstream = item.bin.empty() ? nullptr : &item.bin[0];
             blocksize = item.bin.size();
         }
         auto lambda = [&](const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize) -> void {
@@ -210,7 +211,13 @@ return_t splitter<DESCRIPTOR_T>::run(std::function<void(uint32, const byte_t*, s
             if (0 == fragoffset) {
                 flags |= splitter_new_group;
             }
-            func(flags, stream, size, fragoffset, fragsize, item.desc);
+            if (splitter_notempty & item.flags) {
+                if (fragsize) {
+                    func(flags, stream, size, fragoffset, fragsize, item.desc);
+                }
+            } else {
+                func(flags, stream, size, fragoffset, fragsize, item.desc);
+            }
             pre += fragsize;
             pre %= get_segment_size();
         };

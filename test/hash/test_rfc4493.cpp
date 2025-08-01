@@ -18,11 +18,11 @@ void do_test_aes128cbc_mac_routine(const binary_t& key, const binary_t& message,
     hash_context_t* handle = nullptr;
     binary_t result;
 
-    ret = hash.open(&handle, crypt_algorithm_t::aes128, crypt_mode_t::cbc, &key[0], key.size());
+    ret = hash.open(&handle, crypt_algorithm_t::aes128, crypt_mode_t::cbc, key.empty() ? nullptr : &key[0], key.size());
     if (errorcode_t::success == ret) {
         // Figure 2.3.  Algorithm AES-CMAC
         hash.init(handle);
-        hash.update(handle, &message[0], message.size());
+        hash.update(handle, message.empty() ? nullptr : &message[0], message.size());
         hash.finalize(handle, result);
         hash.close(handle);
 

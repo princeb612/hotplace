@@ -85,6 +85,14 @@ return_t openssl_tls::tls_open(socket_context_t** handle, socket_t fd, uint32 fl
             set_sock_nbio(fd, 1);
         }
 
+#if defined DEBUG
+        if (istraceable(trace_category_crypto, loglevel_debug)) {
+            basic_stream dbs;
+            dbs.println("- SSL_new %p", ssl);
+            trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
+        }
+#endif
+
         *handle = context;
     }
     __finally2 {
@@ -125,6 +133,14 @@ return_t openssl_tls::dtls_open(socket_context_t** handle, socket_t fd, uint32 f
             SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
             set_sock_nbio(fd, 1);
         }
+
+#if defined DEBUG
+        if (istraceable(trace_category_crypto, loglevel_debug)) {
+            basic_stream dbs;
+            dbs.println("- SSL_new %p", ssl);
+            trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
+        }
+#endif
 
         *handle = context;
     }

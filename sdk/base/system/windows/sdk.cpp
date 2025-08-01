@@ -20,7 +20,7 @@ namespace hotplace {
 return_t com_runtime_startup(uint32 init) {
     return_t ret = errorcode_t::success;
 
-#if (_WIN32_WINNT >= 0x0400) || defined(_WIN32_DCOM)  // DCOM
+#if (_WIN32_WINNT >= 0x0400) || defined(_WIN32_DCOM)                                                        // DCOM
     ret = CoInitializeEx(0, COINIT_MULTITHREADED /*| COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE*/);  // HRESULT
 #else
     ret = CoInitialize(0);

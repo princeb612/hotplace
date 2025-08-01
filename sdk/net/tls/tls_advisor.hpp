@@ -87,6 +87,13 @@ enum tls_version_hint_flag_t : uint8 {
 };
 struct tls_version_hint_t {
     uint16 code;
+    /**
+     * The DTLS protocol is based on the Transport Layer Security (TLS) protocol and provides equivalent security guarantees.
+     * Datagram semantics of the underlying transport are preserved by the DTLS protocol.
+     *
+     *  tls_13  -> tls_13
+     *  dtls_13 -> tls_13
+     */
     uint16 spec;
     uint8 support;
     uint8 flags;

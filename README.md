@@ -7,7 +7,8 @@
   * ![jansson](https://img.shields.io/badge/jansson-2.14-green)
   * ![zlib](https://img.shields.io/badge/zlb-1.3.1-green)
 * language
-  * ![gcc](https://img.shields.io/badge/gcc-c++11-green)
+  * ![c++](https://img.shields.io/badge/c++-c++11-green)
+  * ![gcc](https://img.shields.io/badge/gcc->=4.7-green)
   * ![cmake](https://img.shields.io/badge/cmake->=2.6-green)
 * platform
   * ![mingw64](https://img.shields.io/badge/mingw64-green)

@@ -19,7 +19,7 @@ namespace hotplace {
 namespace io {
 
 return_t split(const binary_t& stream, size_t fragment_size, std::function<void(const byte_t*, size_t, size_t, size_t)> fn) {
-    return split(&stream[0], stream.size(), fragment_size, 0, fn);
+    return split(stream.empty() ? nullptr : &stream[0], stream.size(), fragment_size, 0, fn);
 }
 
 return_t split(const byte_t* stream, size_t size, size_t fragment_size, std::function<void(const byte_t*, size_t, size_t, size_t)> fn) {
@@ -27,7 +27,7 @@ return_t split(const byte_t* stream, size_t size, size_t fragment_size, std::fun
 }
 
 return_t split(const binary_t& stream, size_t fragment_size, size_t pre, std::function<void(const byte_t*, size_t, size_t, size_t)> fn) {
-    return split(&stream[0], stream.size(), fragment_size, pre, fn);
+    return split(stream.empty() ? nullptr : &stream[0], stream.size(), fragment_size, pre, fn);
 }
 
 return_t split(const byte_t* stream, size_t size, size_t fragment_size, size_t pre, std::function<void(const byte_t*, size_t, size_t, size_t)> fn) {

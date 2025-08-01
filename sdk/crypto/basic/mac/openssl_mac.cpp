@@ -35,7 +35,7 @@ return_t openssl_mac::hmac(const char* alg, const binary_t& key, const byte_t* s
             __leave2;
         }
 
-        ret = hash.open(&handle, alg, &key[0], key.size());
+        ret = hash.open(&handle, alg, key.empty() ? nullptr : &key[0], key.size());
         if (errorcode_t::success == ret) {
             ret = hash.hash(handle, stream, size, output);
         }

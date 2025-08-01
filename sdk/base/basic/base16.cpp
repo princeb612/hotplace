@@ -21,7 +21,11 @@ return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buf
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == source || nullptr == buflen) {
+        if (nullptr == source) {
+            ret = errorcode_t::no_data;
+            __leave2;
+        }
+        if (nullptr == buflen) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -64,7 +68,7 @@ return_t base16_encode(const byte_t* source, size_t size, std::string& outpart, 
         }
 
         if (nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
+            ret = errorcode_t::no_data;
             __leave2;
         }
 
@@ -115,18 +119,25 @@ return_t base16_encode(const byte_t* source, size_t size, stream_t* stream, uint
     return ret;
 }
 
-return_t base16_encode(const binary_t& source, char* buf, size_t* buflen) { return base16_encode(&source[0], source.size(), buf, buflen); }
+return_t base16_encode(const binary_t& source, char* buf, size_t* buflen) {
+    return_t ret = errorcode_t::success;
+    ret = base16_encode(source.empty() ? nullptr : &source[0], source.size(), buf, buflen);
+    return ret;
+}
 
-return_t base16_encode(const binary_t& source, std::string& outpart, uint32 flags) { return base16_encode(&source[0], source.size(), outpart, flags); }
+return_t base16_encode(const binary_t& source, std::string& outpart, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    ret = base16_encode(source.empty() ? nullptr : &source[0], source.size(), outpart, flags);
+    return ret;
+}
 
 std::string base16_encode(const binary_t& source) {
     std::string outpart;
-
     base16_encode(source, outpart);
     return outpart;
 }
 
-return_t base16_encode(const binary_t& source, stream_t* stream) { return base16_encode(&source[0], source.size(), stream); }
+return_t base16_encode(const binary_t& source, stream_t* stream) { return base16_encode(source.empty() ? nullptr : &source[0], source.size(), stream); }
 
 std::string base16_encode(const char* source) {
     std::string outpart;

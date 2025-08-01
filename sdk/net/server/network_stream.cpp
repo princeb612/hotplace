@@ -133,8 +133,7 @@ return_t network_stream::write(network_protocol_group* protocol_group, network_s
                  * to resolve
                  *      check more_data
                  */
-                while (errorcode_t::more_data == do_writep(protocol_group, target))
-                    ;
+                while (errorcode_t::more_data == do_writep(protocol_group, target));
             }
         }
     }

@@ -28,7 +28,7 @@ class openssl_dtls_server_socket : public naive_udp_server_socket {
 
     /**
      * @brief   DTLS session
-     * @param   socket_context_t** handle [out]
+     * @param   sokcet_context_t** handle [out]
      * @param   socket_t listen_sock [in]
      */
     virtual return_t dtls_open(socket_context_t** handle, socket_t listen_sock);

@@ -60,7 +60,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
  * @param   socket_t*   socket  [out]
  * @param   const char* address [in]
  * @param   uint16      port    [in]
- * @param   uint32      timeout [in]
+ * @param   uint32      timeout [in] second
  * @error   error code (see error.hpp)
  */
 return_t connect_socket(socket_t* socket, const char* address, uint16 port, uint32 timeout);

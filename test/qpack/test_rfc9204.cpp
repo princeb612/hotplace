@@ -291,7 +291,7 @@ void test_rfc9204_b2_decoder_stream(const char* text2, binary_t& bin, qpack_dyna
     {
         flags = qpack_quic_stream_decoder;
         pos = 0;
-        ret = enc.decode(&dyntable, &bin[0], bin.size(), pos, item, flags);
+        ret = enc.decode(&dyntable, bin.empty() ? nullptr : &bin[0], bin.size(), pos, item, flags);
         dump(item);
 
         dyntable.dump("RFC 9204 B.2. Stream: Decoder #after", dump_qpack_session_routine);

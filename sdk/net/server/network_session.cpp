@@ -15,17 +15,25 @@
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/server/network_server.hpp>
 #include <sdk/net/server/network_session.hpp>
+#include <sdk/net/tls/tls_protection.hpp>
+#include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-network_session::network_session(server_socket* serversocket) {
+network_session::network_session(server_socket* serversocket, const sockaddr_storage_t* addr) : _http2_session(nullptr) {
     _shared.make_share(this);
+    if (addr) {
+        memcpy(&_session.netsock.cli_addr, addr, sizeof(sockaddr_storage_t));
+    }
     serversocket->addref();
     _session.svr_socket = serversocket;
 }
 
 network_session::~network_session() {
+    if (_http2_session) {
+        delete _http2_session;
+    }
     get_server_socket()->close(_session.netsock.event_handle);
     get_server_socket()->release();
 }
@@ -49,7 +57,7 @@ return_t network_session::udp_session_open(handle_t listen_sock) {
 return_t network_session::dtls_session_open(handle_t listen_sock) {
     return_t ret = errorcode_t::success;
 
-    memset(&(_session.netsock.cli_addr), 0, sizeof(sockaddr_storage_t));
+    // memset(&(_session.netsock.cli_addr), 0, sizeof(sockaddr_storage_t));
 
     auto& event_handle = _session.netsock.event_handle;
     if (event_handle) {
@@ -62,9 +70,24 @@ return_t network_session::dtls_session_open(handle_t listen_sock) {
     return ret;
 }
 
+return_t network_session::dtls_session_open(handle_t listen_sock, const binary_t& cookie) {
+    return_t ret = errorcode_t::success;
+
+    ret = dtls_session_open(listen_sock);
+
+    auto& event_handle = _session.netsock.event_handle;
+    if (0 == (tls_using_openssl & event_handle->flags)) {
+        // DTLS cookie (see tls_handshake_hello_verify_request)
+        auto session = event_handle->handle.session;
+        session->get_tls_protection().get_secrets().assign(tls_context_dtls_cookie, cookie);
+    }
+
+    return ret;
+}
+
 return_t network_session::dtls_session_handshake() {
     return_t ret = errorcode_t::success;
-    get_server_socket()->dtls_handshake(_session.netsock.event_handle, (sockaddr*)&(_session.netsock.cli_addr), sizeof(sockaddr_storage_t));
+    get_server_socket()->dtls_handshake(&_session);
     return ret;
 }
 
@@ -85,6 +108,18 @@ return_t network_session::ready_to_read() {
     } else if (SOCK_DGRAM == type) {
         uint32 flags = 0;
         if (get_server_socket()->support_tls()) {
+            /**
+             * MSG_PEEK to get the peer address
+             * - design OVERLAPPED structure ex. { OVERLAPPED, socket address, ...}
+             * - call WSARecvFrom using MSG_PEEK, OVERLAPPED structure
+             * - GetQueuedCompletionStatus
+             *
+             * cookie = HMAC(key, address, port)
+             * - manage DTLS session by cookie
+             * - copy the peer address into DTLS session
+             * - set cookie of hello_verify_request
+             */
+
             /**
              *  DTLS IOCP (blocking io, no SO_RCVTIMEO)
              *  1. recvfrom, flag = 0
@@ -337,6 +372,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 #elif defined _WIN32 || defined _WIN64
         // buf_read, size_buf_read transmitted
 #endif
+        auto event_handle = _session.netsock.event_handle;
 
         return_t result = errorcode_t::success;
 
@@ -344,7 +380,6 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
             __try2 {
                 size_t cbread = 0;
                 bool data_ready = false;
-                int mode = tls_io_flag_t::read_ssl_read;
 
                 sockaddr* sa = nullptr;
                 socklen_t salen = sizeof(sockaddr_storage_t);
@@ -354,7 +389,16 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 #elif defined _WIN32 || defined _WIN64
                 sa = (sockaddr*)addr;
 #endif
-                result = get_server_socket()->recvfrom(_session.netsock.event_handle, mode, (char*)buf_read, size_buf_read, &cbread, sa, &salen); /*SSL_read */
+
+                int mode = 0;
+                if (tls_using_openssl & event_handle->flags) {
+                    // openssl_dtls_server_socket
+                    mode = tls_io_flag_t::read_ssl_read;
+                } else {
+                    // trial_dtls_server_socket
+                    mode = tls_io_flag_t::read_bio_write | tls_io_flag_t::read_socket_recv;  // tls_io_flag_t::read_epoll
+                }
+                result = get_server_socket()->recvfrom(event_handle, mode, (char*)buf_read, size_buf_read, &cbread, sa, &salen);
                 if (errorcode_t::success == result || errorcode_t::more_data == result) {
                     getstream()->produce(buf_read, cbread, addr);
 
@@ -382,7 +426,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 #if defined __linux__
             sockaddr_storage_t sa;
             socklen_t sa_size = sizeof(sa);
-            ret = get_server_socket()->recvfrom(_session.netsock.event_handle, 0, (char*)buf_read, size_buf_read, &cbread, (sockaddr*)&sa, &sa_size);
+            ret = get_server_socket()->recvfrom(event_handle, 0, (char*)buf_read, size_buf_read, &cbread, (sockaddr*)&sa, &sa_size);
             if (errorcode_t::success == ret) {
                 getstream()->produce(buf_read, cbread, &sa);
                 q->push(get_priority(), this);
@@ -422,7 +466,15 @@ server_socket* network_session::get_server_socket() { return _session.svr_socket
 
 network_session_data* network_session::get_session_data() { return &_session_data; }
 
-http2_session& network_session::get_http2_session() { return _http2_session; }
+http2_session* network_session::get_http2_session() {
+    if (nullptr == _http2_session) {
+        critical_section_guard guard(_lock);
+        if (nullptr == _http2_session) {
+            _http2_session = new http2_session;
+        }
+    }
+    return _http2_session;
+}
 
 return_t network_session::dgram_get_sockaddr(sockaddr_storage_t* addr) {
     return_t ret = errorcode_t::success;

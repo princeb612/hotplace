@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SDK_SHLWAPI__
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SDK_SHLWAPI__
 
-//#include <shlwapi.h>
+// #include <shlwapi.h>
 
 /* "SHLoadIndirectString" */
 #define DECLARE_NAMEOF_API_SHLOADINDIRECTSTRING                                                                \
@@ -140,18 +140,15 @@ typedef const QITAB* LPCQITAB;
 
 #ifdef __cplusplus
 
-#define QITABENTMULTI(Cthis, Ifoo, Iimpl) \
-    { &__uuidof(Ifoo), OFFSETOFCLASS(Iimpl, Cthis) }
+#define QITABENTMULTI(Cthis, Ifoo, Iimpl) {&__uuidof(Ifoo), OFFSETOFCLASS(Iimpl, Cthis)}
 
 #else
 
-#define QITABENTMULTI(Cthis, Ifoo, Iimpl) \
-    { (IID*)&IID_##Ifoo, OFFSETOFCLASS(Iimpl, Cthis) }
+#define QITABENTMULTI(Cthis, Ifoo, Iimpl) {(IID*)&IID_##Ifoo, OFFSETOFCLASS(Iimpl, Cthis)}
 
 #endif  // __cplusplus
 
-#define QITABENTMULTI2(Cthis, Ifoo, Iimpl) \
-    { (IID*)&Ifoo, OFFSETOFCLASS(Iimpl, Cthis) }
+#define QITABENTMULTI2(Cthis, Ifoo, Iimpl) {(IID*)&Ifoo, OFFSETOFCLASS(Iimpl, Cthis)}
 
 #define QITABENT(Cthis, Ifoo) QITABENTMULTI(Cthis, Ifoo, Ifoo)
 

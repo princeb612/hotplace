@@ -13,7 +13,7 @@
 
 /* wininet */
 
-//#include <wininet.h>
+// #include <wininet.h>
 typedef LPVOID HINTERNET;
 typedef WORD INTERNET_PORT;
 

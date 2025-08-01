@@ -41,6 +41,21 @@ return_t server_socket::dtls_open(socket_context_t** handle, socket_t listen_soc
 
 return_t server_socket::dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen) { return errorcode_t::do_nothing; }
 
+return_t server_socket::dtls_handshake(netsession_t* sess) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == sess) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        auto event_handle = sess->netsock.event_handle;
+        auto& addr = sess->netsock.cli_addr;
+        ret = dtls_handshake(event_handle, (sockaddr*)&addr, sizeof(addr));
+    }
+    __finally2 {}
+    return ret;
+}
+
 return_t server_socket::tls_accept(socket_context_t** handle, socket_t listen_socket) { return errorcode_t::do_nothing; }
 
 return_t server_socket::tls_stop_accept() { return errorcode_t::do_nothing; }

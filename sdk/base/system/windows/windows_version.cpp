@@ -323,10 +323,10 @@ return_t windows_version::detect_version() {
                             case WINDOWSMINORVERSION_ME:
                                 version_code = WINDOWSVERSION_WINDOWSME;
                                 break;
-                        }      /*end of switch(osvi_ptr->dwMinorVersion)*/
+                        } /*end of switch(osvi_ptr->dwMinorVersion)*/
                         break; /*end of case 4:*/
-                }              /*end of switch(osvi_ptr->dwMajorVersion)*/
-                break;         /*end of case VER_PLATFORM_WIN32_WINDOWS:*/
+                } /*end of switch(osvi_ptr->dwMajorVersion)*/
+                break; /*end of case VER_PLATFORM_WIN32_WINDOWS:*/
 
             case VER_PLATFORM_WIN32_NT:
                 switch (osvi_ptr->dwMajorVersion) {
@@ -361,8 +361,8 @@ return_t windows_version::detect_version() {
                                     default:
                                         version_code = (windowsversion_t)(WINDOWSVERSION_WINDOWS2008 + product_type);
                                         break; /*end of default:*/
-                                }              /*end of switch(osvi_ptr->wProductType)*/
-                                break;         /*end of case 0:*/
+                                } /*end of switch(osvi_ptr->wProductType)*/
+                                break; /*end of case 0:*/
 
                             case 1:
                                 /*case WINDOWSMINORVERSION_7:*/
@@ -375,8 +375,8 @@ return_t windows_version::detect_version() {
                                     default:
                                         version_code = (windowsversion_t)(WINDOWSVERSION_WINDOWS2008_R2 + product_type);
                                         break; /*end of default:*/
-                                }              /*end of switch(osvi_ptr->wProductType)*/
-                                break;         /*end of case 1:*/
+                                } /*end of switch(osvi_ptr->wProductType)*/
+                                break; /*end of case 1:*/
 
                             case 2:
                                 /*case WINDOWSMINORVERSION_8:*/
@@ -388,8 +388,8 @@ return_t windows_version::detect_version() {
                                     default:
                                         version_code = (windowsversion_t)(WINDOWSVERSION_WINDOWS2012 + product_type);
                                         break; /*end of default:*/
-                                }              /*end of switch(osvi_ptr->wProductType)*/
-                                break;         /*end of case 2:*/
+                                } /*end of switch(osvi_ptr->wProductType)*/
+                                break; /*end of case 2:*/
 
                             case 3:
                                 /*case WINDOWSMINORVERSION_8_1:*/
@@ -401,10 +401,10 @@ return_t windows_version::detect_version() {
                                     default:
                                         version_code = (windowsversion_t)(WINDOWSVERSION_WINDOWS2012R2 + product_type);
                                         break; /*end of default:*/
-                                }              /*end of switch(osvi_ptr->wProductType)*/
-                                break;         /*end of case 2:*/
-                        }                      /*end of switch(osvi_ptr->dwMinorVersion)*/
-                        break;                 /*end of case 6:*/
+                                } /*end of switch(osvi_ptr->wProductType)*/
+                                break; /*end of case 2:*/
+                        } /*end of switch(osvi_ptr->dwMinorVersion)*/
+                        break; /*end of case 6:*/
 
                     case 5:
                         /*case WINDOWSMAJORVERSION_2000:*/
@@ -460,10 +460,10 @@ return_t windows_version::detect_version() {
                                                     version_code = WINDOWSVERSION_WINDOWS2003_STANDARD;
                                                 }
                                                 break;
-                                        }      /*end of switch(_sysinfo.wProcessorArchitecture)*/
+                                        } /*end of switch(_sysinfo.wProcessorArchitecture)*/
                                         break; /*end of default:*/
-                                }              /*end of switch(osvi_ptr->wProductType)*/
-                                break;         /*end of case WINDOWSMINORVERSION_2003:*/
+                                } /*end of switch(osvi_ptr->wProductType)*/
+                                break; /*end of case WINDOWSMINORVERSION_2003:*/
 
                             case WINDOWSMINORVERSION_XP:
                                 version_code = WINDOWSVERSION_WINDOWSXP;
@@ -505,8 +505,8 @@ return_t windows_version::detect_version() {
                                         break;
                                 }
                                 break; /*end of case WINDOWSMINORVERSION_2000:*/
-                        }              /*end of switch(osvi_ptr->dwMinorVersion)*/
-                        break;         /*end of case 5:*/
+                        } /*end of switch(osvi_ptr->dwMinorVersion)*/
+                        break; /*end of case 5:*/
 
                     case 4:
                         /*case WINDOWSMAJORVERSION_NT4:*/
@@ -532,11 +532,12 @@ return_t windows_version::detect_version() {
                             }
                         }
                         // else    /* SP5 and earlier */
-                        {}
+                        {
+                        }
                         break; /*end of case 4:*/
-                }              /*end of switch(osvi_ptr->dwMajorVersion)*/
-                break;         /*end of case VER_PLATFORM_WIN32_NT:*/
-        }                      /*end of switch(osvi_ptr->dwPlatformId)*/
+                } /*end of switch(osvi_ptr->dwMajorVersion)*/
+                break; /*end of case VER_PLATFORM_WIN32_NT:*/
+        } /*end of switch(osvi_ptr->dwPlatformId)*/
 
         if (WINDOWSVERSION_UNKNOWN != version_code) {
             _version = version_code;

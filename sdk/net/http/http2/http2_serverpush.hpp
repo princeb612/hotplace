@@ -54,7 +54,7 @@ namespace net {
  *          sketch
  *              server_push.add("/index.html", "/style.css").add("/index.html", "/blah.js");
  *
- *              if (session->get_http2_session().is_push_enabled()) {
+ *              if (session->get_http2_session()->is_push_enabled()) {
  *                  if (server_push.is_promised(request)) {
  *                      // request for /index.html (stream 1)
  *                      // send  PUSH_PROMISE frame (stream 2, stream 3)

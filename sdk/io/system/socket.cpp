@@ -10,6 +10,7 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/string/string.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/system/socket.hpp>
 
@@ -126,8 +127,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
                         socket_advisor* advisor = socket_advisor::get_instance();
                         basic_stream dbs;
                         dbs.println("socket %d created family %i(%s) type %i(%s) protocol %i(%s)",  //
-                                    s,                                                              //
-                                    family, advisor->nameof_family(family).c_str(),                 //
+                                    s, family, advisor->nameof_family(family).c_str(),              //
                                     socktype, advisor->nameof_type(socktype).c_str(),               //
                                     protocol, advisor->nameof_protocol(protocol).c_str());          //
                         trace_debug_event(trace_category_internal, trace_event_socket, &dbs);
@@ -257,8 +257,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
                             socket_advisor* advisor = socket_advisor::get_instance();
                             basic_stream dbs;
                             dbs.println("socket %d created family %i(%s) type %i(%s) protocol %i(%s)",  //
-                                        sock,                                                           //
-                                        family, advisor->nameof_family(family).c_str(),                 //
+                                        sock, family, advisor->nameof_family(family).c_str(),           //
                                         socktype, advisor->nameof_type(socktype).c_str(),               //
                                         protocol, advisor->nameof_protocol(protocol).c_str());          //
                             trace_debug_event(trace_category_internal, trace_event_socket, &dbs);
@@ -579,17 +578,20 @@ void sockaddr_string(const sockaddr_storage_t& addr, std::string& address) {
 
         const char* ret = nullptr;
         char buf[INET6_ADDRSTRLEN] = {0};  // 45 + 1
+        uint16 port = 0;
 
         auto family = addr.ss_family;
         if (AF_INET == family) {
             struct sockaddr_in* ipv4 = (struct sockaddr_in*)&addr;
             ret = inet_ntop(family, &ipv4->sin_addr, buf, sizeof(buf));
+            port = ntohs(ipv4->sin_port);
         } else if (AF_INET6 == family) {
             struct sockaddr_in6* ipv6 = (struct sockaddr_in6*)&addr;
             ret = inet_ntop(family, &ipv6->sin6_addr, buf, sizeof(buf));
+            port = ntohs(ipv6->sin6_port);
         }
         if (ret) {
-            address = buf;
+            address = format("%s:%i", buf, port);
         }
     }
     __finally2 {}

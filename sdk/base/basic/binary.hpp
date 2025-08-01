@@ -268,20 +268,22 @@ return_t t_binary_load(binary_t& target, uint32 bnlen, T value, std::function<T(
     return_t ret = errorcode_t::success;
     target.clear();
     target.resize(bnlen);
-    uint32 tsize = sizeof(T);
-    size_t toffset = 0;
-    if (func) {
-        T temp = value;
-        value = func(temp);
-    }
-    if (bnlen >= tsize) {
-        //
-    } else {
-        toffset = tsize - bnlen;
-        tsize = bnlen;
-    }
+    if (bnlen) {
+        uint32 tsize = sizeof(T);
+        size_t toffset = 0;
+        if (func) {
+            T temp = value;
+            value = func(temp);
+        }
+        if (bnlen >= tsize) {
+            //
+        } else {
+            toffset = tsize - bnlen;
+            tsize = bnlen;
+        }
 
-    memcpy(&target[0] + (bnlen - tsize), (byte_t*)&value + toffset, tsize);
+        memcpy(&target[0] + (bnlen - tsize), (byte_t*)&value + toffset, tsize);
+    }
     return ret;
 }
 
@@ -335,8 +337,9 @@ static inline binary_t& operator<<(binary_t& lhs, const binary_t& rhs) {
  */
 static inline std::string bin2str(const binary_t& bin) {
     std::string result;
-
-    result.assign((char*)&bin[0], bin.size());
+    if (bin.size()) {
+        result.assign((char*)&bin[0], bin.size());
+    }
     return result;
 }
 
@@ -400,7 +403,7 @@ T t_binary_to_integer(const byte_t* bstr, size_t size) {
 
 template <typename T>
 T t_binary_to_integer(const binary_t& bin, return_t& errorcode) {
-    return t_binary_to_integer<T>(&bin[0], bin.size(), errorcode);
+    return t_binary_to_integer<T>(bin.empty() ? nullptr : &bin[0], bin.size(), errorcode);
 }
 
 template <typename T>

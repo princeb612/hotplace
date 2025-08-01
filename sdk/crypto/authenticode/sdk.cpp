@@ -212,11 +212,11 @@ return_t X509_NAME_to_string(X509_NAME *name, std::string &data) {
 
         c = s;
         for (;;) {
-            //#ifndef CHARSET_EBCDIC
+            // #ifndef CHARSET_EBCDIC
             if (((*s == '/') && ((s[1] >= 'A') && (s[1] <= 'Z') && ((s[2] == '=') || ((s[2] >= 'A') && (s[2] <= 'Z') && (s[3] == '='))))) || (*s == '\0')) {
-                //#else
-                // if (((*s == '/') && (isupper(s[1]) && ((s[2] == '=') || (isupper(s[2]) && (s[3] == '='))))) || (*s == '\0'))
-                //#endif
+                // #else
+                //  if (((*s == '/') && (isupper(s[1]) && ((s[2] == '=') || (isupper(s[2]) && (s[3] == '='))))) || (*s == '\0'))
+                // #endif
                 i = s - c;
                 data.append(c, i);
                 c = s + 1; /* skip following slash */

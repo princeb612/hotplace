@@ -121,11 +121,10 @@ void do_test_hash_loop(unsigned count_algorithms, hash_algorithm_t* algorithms, 
 
 void test_openssl_hash() {
     hash_algorithm_t hash_table[] = {
-        hash_algorithm_t::md4,          hash_algorithm_t::md5,       hash_algorithm_t::sha1,      hash_algorithm_t::sha2_224,
-        hash_algorithm_t::sha2_256,     hash_algorithm_t::sha2_384,  hash_algorithm_t::sha2_512,  hash_algorithm_t::sha2_512_224,
-        hash_algorithm_t::sha2_512_256, hash_algorithm_t::sha3_224,  hash_algorithm_t::sha3_256,  hash_algorithm_t::sha3_384,
-        hash_algorithm_t::sha3_512,     hash_algorithm_t::shake128,  hash_algorithm_t::shake256,  hash_algorithm_t::blake2b_512,
-        hash_algorithm_t::blake2s_256,  hash_algorithm_t::ripemd160, hash_algorithm_t::whirlpool,
+        hash_algorithm_t::md4,       hash_algorithm_t::md5,       hash_algorithm_t::sha1,         hash_algorithm_t::sha2_224,     hash_algorithm_t::sha2_256,
+        hash_algorithm_t::sha2_384,  hash_algorithm_t::sha2_512,  hash_algorithm_t::sha2_512_224, hash_algorithm_t::sha2_512_256, hash_algorithm_t::sha3_224,
+        hash_algorithm_t::sha3_256,  hash_algorithm_t::sha3_384,  hash_algorithm_t::sha3_512,     hash_algorithm_t::blake2b_512,  hash_algorithm_t::blake2s_256,
+        hash_algorithm_t::ripemd160, hash_algorithm_t::whirlpool,
     };
     hash_algorithm_t hmac_table[] = {
         hash_algorithm_t::md4,

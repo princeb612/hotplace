@@ -76,7 +76,7 @@ return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t d
                     default: {
                         size_t epos = 0;
                         uint64 value = 0;
-                        quic_read_vle_int(&param[0], param.size(), epos, value);
+                        quic_read_vle_int(param.empty() ? nullptr : &param[0], param.size(), epos, value);
                         dbs.println("    > %I64i (%s) 0x%I64x (%I64i)", param_id, tlsadvisor->quic_param_string(param_id).c_str(), value, value);
                     } break;
                 }

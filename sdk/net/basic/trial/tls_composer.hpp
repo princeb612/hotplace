@@ -49,6 +49,12 @@ class tls_composer {
     return_t do_server_handshake_phase1(std::function<void(tls_session*, binary_t&)> func);
     return_t do_server_handshake_phase2(std::function<void(tls_session*, binary_t&)> func);
 
+    /**
+     * TLS
+     *  generate TLS record(s) and then call func (something like send)
+     * DTLS
+     *  generate fragmented DTLS record(s) and then call func (something like sendto)
+     */
     return_t do_compose(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
     return_t do_compose(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
 

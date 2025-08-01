@@ -363,7 +363,7 @@ return_t network_server::event_loop_run(network_multiplexer_context_t* handle, u
             handle->session_manager.get_dgram_session(&dgram_session, (handle_t)listen_sock, handle->svr_socket, nullptr);
             if (dgram_session) {
                 mplexer.bind(handle->mplexer_handle, (handle_t)listen_sock, dgram_session);
-                dgram_session->ready_to_read();
+                dgram_session->ready_to_read();  // MSG_PEEK
                 dgram_session->release();
             }
         }
@@ -852,12 +852,14 @@ return_t network_server::producer_routine(uint32 type, uint32 data_count, void* 
     } else if (multiplexer_event_type_t::mux_disconnect == type) {
         svr.session_closed(context, (handle_t)session_object->socket_info()->event_handle->fd);
     } else if (multiplexer_event_type_t::mux_dgram) {
+        // dgram_session is bound to listenfd
         network_session* dgram_session = nullptr;
         context->session_manager.get_dgram_session(&dgram_session, (handle_t)context->listen_handle->fd, context->svr_socket, nullptr);
         if (dgram_session) {
             byte_t* buffer = (byte_t*)&dgram_session->get_buffer()->bin[0];
-            sockaddr_storage_t* addr = &dgram_session->socket_info()->cli_addr;
+            sockaddr_storage_t* addr = &dgram_session->socket_info()->cli_addr;  // the address space is bound to dgram_session
             if (context->svr_socket->support_tls()) {
+                // dtls_session is bound to addr
                 network_session* dtls_session = nullptr;
                 context->session_manager.get_dgram_cookie_session(&dtls_session, (handle_t)context->listen_handle->fd, addr, context->svr_socket, nullptr);
                 if (dtls_session) {
@@ -867,7 +869,7 @@ return_t network_server::producer_routine(uint32 type, uint32 data_count, void* 
             } else {
                 dgram_session->produce(&context->event_queue, buffer, transferred, addr);
             }
-            dgram_session->ready_to_read();
+            dgram_session->ready_to_read();  // MSG_PEEK
             dgram_session->release();
         }
     }

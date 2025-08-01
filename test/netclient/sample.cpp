@@ -54,34 +54,36 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.enable_verbose(); }).optional()
+    (*_cmdline)
+        << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.enable_verbose(); }).optional()
 #if defined DEBUG
-                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.enable_debug(); }).optional()
-                << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, char* param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
-                << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_trace); }).optional()
-                << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
+        << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.enable_debug(); }).optional()
+        << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, char* param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
+        << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_trace); }).optional()
+        << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
 #endif
-                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
-                << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-P", "protocol tcp|udp|tls|tls13|tls12|dtls (1 tcp, 2 udp, 3 tls, 4 dtls)",
-                                      [](OPTION& o, char* param) -> void { o.prot = toprot(o, param); })
-                       .preced()
-                << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.flags |= option_flag_keylog; }).optional()
-                // << t_cmdarg_t<OPTION>("-T", "use trial", [](OPTION& o, char* param) -> void { o.flags |= option_flag_debug_tls_inside; }).optional()
-                << t_cmdarg_t<OPTION>("-h", "HTTP/1.1",
-                                      [](OPTION& o, char* param) -> void {
-                                          o.flags |= option_flag_http;
-                                          o.message = "GET / HTTP/1.1\r\n\r\n";
-                                      })
-                       .optional()
-                << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced()
-                << t_cmdarg_t<OPTION>("-etm", "TLS 1.2 EtM (trial_tls_client_socket)", [](OPTION& o, char* param) -> void {
-                       o.flags |= option_flag_enable_etm;
-                   }).optional();
+        << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
+        << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
+        << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
+        << t_cmdarg_t<OPTION>("-P", "protocol tcp|udp|tls|tls13|tls12|dtls (1 tcp, 2 udp, 3 tls, 4 dtls)",
+                              [](OPTION& o, char* param) -> void { o.prot = toprot(o, param); })
+               .preced()
+        << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
+        << t_cmdarg_t<OPTION>("-wto", "wait time out (1000 milli-seconds)", [](OPTION& o, char* param) -> void { o.wto = atoi(param); }).optional().preced()
+        << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.flags |= option_flag_keylog; }).optional()
+        << t_cmdarg_t<OPTION>("-T", "use trial", [](OPTION& o, char* param) -> void { o.flags |= option_flag_debug_tls_inside; }).optional()
+        << t_cmdarg_t<OPTION>("-h", "HTTP/1.1",
+                              [](OPTION& o, char* param) -> void {
+                                  o.flags |= option_flag_http;
+                                  o.message = "GET / HTTP/1.1\r\n\r\n";
+                              })
+               .optional()
+        << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced()
+        << t_cmdarg_t<OPTION>("-etm", "TLS 1.2 EtM (trial_tls_client_socket)", [](OPTION& o, char* param) -> void {
+               o.flags |= option_flag_enable_etm;
+           }).optional();
     ret = _cmdline->parse(argc, argv);
     if (errorcode_t::success == ret) {
         const OPTION& option = _cmdline->value();

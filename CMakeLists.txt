@@ -18,7 +18,7 @@ set (SUPPORT_STATIC 1) # 1 if not set disable_static
 set (SUPPORT_SHARED 0) # set 1 in mingw, ubuntu, custom build
 set (SUPPORT_ODBC 0)   # 
 set (SUPPORT_PCH 0)    # cmake 2.x
-set (SET_STDCPP c++14)
+set (SET_STDCPP c++11)
 
 if (NOT "$ENV{CMAKE_VERBOSE_MAKEFILE}" STREQUAL "")
     set (CMAKE_VERBOSE_MAKEFILE "$ENV{CMAKE_VERBOSE_MAKEFILE}")
@@ -31,7 +31,7 @@ if (NOT "$ENV{CMAKE_CXX_COMPILER}" STREQUAL "")
     set (CMAKE_CXX_COMPILER "$ENV{CMAKE_CXX_COMPILER}")
 endif ()
 if (NOT "$ENV{CMAKE_CXX_FLAGS}" STREQUAL "")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{CMAKE_CXX_FLAGS}")
+    set (CMAKE_CXX_FLAGS "$ENV{CMAKE_CXX_FLAGS}")
 endif ()
 if (NOT "$ENV{SUPPORT_STATIC}" STREQUAL "")
     set (SUPPORT_STATIC $ENV{SUPPORT_STATIC})
@@ -49,15 +49,27 @@ if(CMAKE_VERSION VERSION_GREATER 3.8)
         set (SUPPORT_PCH 1)
     endif ()
 endif ()
+
+# -std=c++11
+# -Wl,-z,noexecstack
+if (UNIX)
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-z,noexecstack")
+elseif (WIN32)
+set (SET_STDCPP c++14)
+endif ()
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${SET_STDCPP} -Wl,--as-needed -Wl,--version-script=${PROJECT_SOURCE_DIR}/sdk/version.script")
+
 if (NOT "$ENV{SET_STDCPP}" STREQUAL "")
     set (SET_STDCPP $ENV{SET_STDCPP})
 endif ()
-if (UNIX)
-# -std=c++11
-# -Wl,-z,noexecstack
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${SET_STDCPP} -Wl,-z,noexecstack -Wl,--as-needed -Wl,--version-script=${PROJECT_SOURCE_DIR}/sdk/version.script")
-else (1)
-endif ()
+
+set (PROJECT_SDK_USE_STD_REGEX 1)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    message(STATUS "GCC version " ${CMAKE_CXX_COMPILER_VERSION})
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
+        set (PROJECT_SDK_USE_STD_REGEX 0)
+    endif()
+endif()
 
 # verbose
 message (STATUS "CMAKE_VERBOSE_MAKEFILE $ENV{CMAKE_VERBOSE_MAKEFILE}")
@@ -91,6 +103,10 @@ set (PROJECT_SDK_PLATFORM_DEPENDENCIES dl pthread crypto ssl jansson z)
 elseif (WIN32)
 set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson z)
 endif ()
+if (PROJECT_SDK_USE_STD_REGEX EQUAL 0)
+set (PROJECT_SDK_PLATFORM_DEPENDENCIES ${PROJECT_SDK_PLATFORM_DEPENDENCIES} pcre)
+endif ()
+
 if (SUPPORT_ODBC)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSUPPORT_FEATURE_ODBC")
 # yum install unixodbc-devel
@@ -98,15 +114,6 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSUPPORT_FEATURE_ODBC")
 # or custom build
 set (PROJECT_SDK_PLATFORM_DEPENDENCIES ${PROJECT_SDK_PLATFORM_DEPENDENCIES} odbc)
 endif ()
-
-set (PROJECT_SDK_USE_STD_REGEX 1)
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    message(STATUS "GCC version " ${CMAKE_CXX_COMPILER_VERSION})
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
-        set (PROJECT_SDK_PLATFORM_DEPENDENCIES ${PROJECT_SDK_PLATFORM_DEPENDENCIES} pcre)
-        set (PROJECT_SDK_USE_STD_REGEX 0)
-    endif()
-endif()
 
 # copy header files to destination
 function(copy_headers_with_hierarchy SOURCE_DIR DESTINATION_DIR)

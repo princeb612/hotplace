@@ -29,7 +29,7 @@ return_t openssl_digest::digest(const char* alg, const binary_t& input, binary_t
             __leave2;
         }
         init(handle);
-        update(handle, &input[0], input.size());
+        update(handle, input.empty() ? nullptr : &input[0], input.size());
         finalize(handle, output);
     }
     __finally2 { close(handle); }
@@ -47,7 +47,7 @@ return_t openssl_digest::digest(hash_algorithm_t alg, const binary_t& input, bin
             __leave2;
         }
         init(handle);
-        update(handle, &input[0], input.size());
+        update(handle, input.empty() ? nullptr : &input[0], input.size());
         finalize(handle, output);
     }
     __finally2 { close(handle); }

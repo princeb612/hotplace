@@ -102,7 +102,7 @@ return_t dump_memory(const std::string& data, stream_t* stream_object, unsigned 
 }
 
 return_t dump_memory(const binary_t& data, stream_t* stream_object, unsigned hex_part, unsigned indent, size_t rebase, int flags) {
-    return dump_memory(&data[0], data.size(), stream_object, hex_part, indent, rebase, flags);
+    return dump_memory(data.empty() ? nullptr : &data[0], data.size(), stream_object, hex_part, indent, rebase, flags);
 }
 
 return_t dump_memory(const basic_stream& data, stream_t* stream_object, unsigned hex_part, unsigned indent, size_t rebase, int flags) {

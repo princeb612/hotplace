@@ -119,7 +119,7 @@ void test_constexpr_obf() {
     printf("c++11\n");
 #elif __cplusplus >= 199711L  // c++98
     printf("c++98\n");
-#else  // pre c++98
+#else                         // pre c++98
     printf("pre c++98\n");
 #endif
 
@@ -162,7 +162,7 @@ void test_obfuscate_string() {
         _logger->dump(bin);
     }
 
-    _test_case.assert((0 == memcmp(helloworld, &bin[0], bin.size())), __FUNCTION__, "binary_t << obfuscate");
+    _test_case.assert((0 == memcmp(helloworld, bin.empty() ? nullptr : &bin[0], bin.size())), __FUNCTION__, "binary_t << obfuscate");
 
     str << obf;
 
@@ -277,7 +277,7 @@ void test_split() {
     binary_t data;
     for (size_t i = 0; i < count; i++) {
         split_get(handle, i, data);
-        printf("[%zi] (%zi) %.*s\n", i, data.size(), (unsigned)data.size(), &data[0]);
+        printf("[%zi] (%zi) %.*s\n", i, data.size(), (unsigned)data.size(), data.empty() ? nullptr : &data[0]);
     }
     split_end(handle);
 

@@ -554,6 +554,7 @@ enum tls_secret_t : uint16 {
     tls_context_quic_dcid = (TLS_SECRET_USERCONTEXT | 0x31),                //
     tls_context_client_cid = (TLS_SECRET_USERCONTEXT | 0x32),               //
     tls_context_server_cid = (TLS_SECRET_USERCONTEXT | 0x33),               //
+    tls_context_dtls_cookie = (TLS_SECRET_USERCONTEXT | 0x34),              // network_session level
 };
 
 enum tls_direction_t {

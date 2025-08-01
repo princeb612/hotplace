@@ -1,7 +1,7 @@
 #### test
 
 * DTLS 1.2
-  * ./test-tlsserver.exe -v -d -r &
+  * ./test-tlsserver.exe -r -k --trace &
 
 * stop server
   * rm .run

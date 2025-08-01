@@ -120,8 +120,8 @@ return_t debug_trace_openssl(stream_t* stream);
 #define X509_LOOKUP_get_store(ctx) ((ctx)->store_ctx)
 #else
 
-//#define EVP_CIPHER_CTX_init(x) EVP_CIPHER_CTX_reset(x)
-//#define EVP_CIPHER_CTX_cleanup(x) EVP_CIPHER_CTX_reset(x)
+// #define EVP_CIPHER_CTX_init(x) EVP_CIPHER_CTX_reset(x)
+// #define EVP_CIPHER_CTX_cleanup(x) EVP_CIPHER_CTX_reset(x)
 
 #endif
 

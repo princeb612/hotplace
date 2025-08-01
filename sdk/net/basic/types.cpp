@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/basic/types.hpp>
 #include <sdk/net/tls/tls_session.hpp>
 
@@ -41,6 +43,14 @@ socket_context_t::~socket_context_t() {
             }
 
             SSL_free(ssl);
+
+#if defined DEBUG
+            if (istraceable(trace_category_crypto, loglevel_debug)) {
+                basic_stream dbs;
+                dbs.println("- SSL_free %p", ssl);
+                trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
+            }
+#endif
         }
     } else {
         auto session = handle.session;
@@ -52,6 +62,9 @@ socket_context_t::~socket_context_t() {
     if (closesocket_ondestroy & flags) {
         close_socket(fd, true, 0);
     }
+
+    handle.ssl = nullptr;
+    fd = INVALID_SOCKET;
 }
 
 }  // namespace net

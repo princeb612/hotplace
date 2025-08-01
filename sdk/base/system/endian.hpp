@@ -121,8 +121,8 @@ static_inline_convert_endian(int128);
 
 #elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 
-static inline uint16 convert_endian(uint16 value) { return (((((uint16)(value)&0xFF)) << 8) | (((uint16)(value)&0xFF00) >> 8)); }
-static inline uint16 convert_endian(int16 value) { return (((((int16)(value)&0xFF)) << 8) | (((int16)(value)&0xFF00) >> 8)); }
+static inline uint16 convert_endian(uint16 value) { return (((((uint16)(value) & 0xFF)) << 8) | (((uint16)(value) & 0xFF00) >> 8)); }
+static inline uint16 convert_endian(int16 value) { return (((((int16)(value) & 0xFF)) << 8) | (((int16)(value) & 0xFF00) >> 8)); }
 
 #define static_inline_convert_endian(T1, T2)    \
     static inline T1 convert_endian(T1 value) { \

@@ -29,7 +29,7 @@ return_t http3_frame::read(const byte_t* stream, size_t size, size_t& pos) {
             __leave2;
         }
         size_t ppos = 0;
-        ret = do_read_payload(&_payload[0], _payload.size(), ppos);
+        ret = do_read_payload(_payload.empty() ? nullptr : &_payload[0], _payload.size(), ppos);
     }
     __finally2 {}
     return ret;

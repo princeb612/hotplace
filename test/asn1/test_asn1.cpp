@@ -11,12 +11,9 @@
 
 #include "sample.hpp"
 
-#define TESTVECTOR_ENTRY(e1, e2) \
-    { e1, e2 }
-#define TESTVECTOR_ENTRY3(e1, e2, e3) \
-    { e1, e2, e3 }
-#define TESTVECTOR_ENTRY4(e1, e2, e3, e4) \
-    { e1, e2, e3, e4 }
+#define TESTVECTOR_ENTRY(e1, e2) {e1, e2}
+#define TESTVECTOR_ENTRY3(e1, e2, e3) {e1, e2, e3}
+#define TESTVECTOR_ENTRY4(e1, e2, e3, e4) {e1, e2, e3, e4}
 
 // X.690 8.1.3 Length octets
 void test_x690_8_1_3_length_octets() {

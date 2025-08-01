@@ -83,11 +83,11 @@ cose_data& cose_data::add(int key, std::string& value) { return add(key, (unsign
 
 cose_data& cose_data::add(int key, const std::string& value) { return add(key, (unsigned char*)value.c_str(), value.size()); }
 
-cose_data& cose_data::add(int key, binary_t& value) { return add(key, &value[0], value.size()); }
+cose_data& cose_data::add(int key, binary_t& value) { return add(key, value.empty() ? nullptr : &value[0], value.size()); }
 
-cose_data& cose_data::add(int key, const binary_t& value) { return add(key, &value[0], value.size()); }
+cose_data& cose_data::add(int key, const binary_t& value) { return add(key, value.empty() ? nullptr : &value[0], value.size()); }
 
-cose_data& cose_data::replace(int key, const binary_t& value) { return replace(key, &value[0], value.size()); }
+cose_data& cose_data::replace(int key, const binary_t& value) { return replace(key, value.empty() ? nullptr : &value[0], value.size()); }
 
 cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary_t& y) {
     cose_key* k = nullptr;

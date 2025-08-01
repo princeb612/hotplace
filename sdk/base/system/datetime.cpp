@@ -599,7 +599,7 @@ void system_gettime(int clockid, struct timespec& ts) {
 #if defined __linux__
 // to support a minimal platform
 #define DLSYMAPI(handle, nameof_api, func_ptr) *(void**)(&func_ptr) = dlsym(handle, nameof_api)
-    typedef int (*clock_gettime_t)(clockid_t clockid, struct timespec * tp);
+    typedef int (*clock_gettime_t)(clockid_t clockid, struct timespec* tp);
     clock_gettime_t clock_gettime_ptr = nullptr;
     DLSYMAPI(RTLD_DEFAULT, "clock_gettime", clock_gettime_ptr);
     if (clock_gettime_ptr) {

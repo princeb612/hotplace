@@ -32,6 +32,8 @@ return_t secure_client_socket::do_handshake() {
         composer.set_maxver(_version);
 
         auto lambda = [&](tls_session*, binary_t& bin) -> void { do_send(bin); };
+        // TLS  client_hello,                                             server_hello, ...
+        // DTLS client_hello, hello_verify_request, client_hello(cookie), server_hello, ...
         ret = composer.handshake(from_client, get_wto(), lambda);
     }
     __finally2 {}
@@ -53,22 +55,8 @@ return_t secure_client_socket::do_secure() {
     auto session = get_session();
     ret = get_secure_prosumer()->produce(session, from_server, [&](basic_stream& s) -> void { do_consume(s); });
 
-#if 0
     // RFC 2246 7.2.2. Error alerts
     // RFC 8448 6.2.  Error Alerts
-    {
-        binary_t bin;
-
-        auto lambda = [&](uint8 level, uint8 desc) -> void {
-            tls_record_application_data record(session);
-            record.get_records().add(new tls_record_alert(session, level, desc));
-            record.write(dir, bin);
-        };
-        session->get_alert(dir, lambda);
-
-        do_send(bin);
-    }
-#endif
 
     return ret;
 }

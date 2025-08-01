@@ -619,12 +619,12 @@ class crypto_advisor {
 
     /**
      * @brief   cookie secret
-     * @param   uint8 key [in]
+     * @param   uint8 key [in] 0 reserved (for DTLS cookie)
      * @param   size_t secret_size [in]
      * @param   binary_t& secret [out]
      * @example
-     *          advisor->get_cookie_secret(0, 16, secret); // generate 16 bytes
-     *          advisor->get_cookie_secret(0, 16, secret); // read generated secret, secret_size ignored
+     *          advisor->get_cookie_secret(1, 16, secret); // generate 16 bytes
+     *          advisor->get_cookie_secret(1, 16, secret); // read generated secret, secret_size ignored
      */
     void get_cookie_secret(uint8 key, size_t secret_size, binary_t& secret);
 

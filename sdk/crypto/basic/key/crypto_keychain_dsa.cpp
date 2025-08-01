@@ -98,8 +98,12 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const binar
         }
         BIGNUM* bn_pub = nullptr;
         BIGNUM* bn_priv = nullptr;
-        bn_pub = BN_bin2bn(&pub[0], pub.size(), nullptr);
-        bn_priv = BN_bin2bn(&priv[0], priv.size(), nullptr);
+        if (pub.size()) {
+            bn_pub = BN_bin2bn(&pub[0], pub.size(), nullptr);
+        }
+        if (priv.size()) {
+            bn_priv = BN_bin2bn(&priv[0], priv.size(), nullptr);
+        }
         ret_openssl = DSA_set0_key(dsa, bn_pub, bn_priv);
         if (ret_openssl < 0) {
             ret = errorcode_t::internal_error;

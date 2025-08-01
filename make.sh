@@ -146,7 +146,7 @@ fi
 mkdir -p ${builddir}
 cd ${builddir}
 export MAKEFLAGS='-j 4'
-cmake -G 'Unix Makefiles' ..
+cmake -G 'Unix Makefiles' -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ..
 if [ $do_makefile = 1 ]; then
     exit
 fi

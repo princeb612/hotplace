@@ -79,7 +79,7 @@
         'I', 's', 'P', 'w', 'r', 'S', 'h', 'u', 't', 'd', 'o', 'w', 'n', 'A', 'l', 'l', 'o', 'w', 'e', 'd', 0, \
     };
 /* "IsAdminOverrideActive" */
-//#define DECLARE_NAMEOF_API_ISADMINOVERRIDEACTIVE char NAMEOF_API_ISADMINOVERRIDEACTIVE[] = { 'I', 's', 'A', 'd', 'm', 'i', 'n', 'O', 'v', 'e', 'r', 'r', 'i',
+// #define DECLARE_NAMEOF_API_ISADMINOVERRIDEACTIVE char NAMEOF_API_ISADMINOVERRIDEACTIVE[] = { 'I', 's', 'A', 'd', 'm', 'i', 'n', 'O', 'v', 'e', 'r', 'r', 'i',
 //'d', 'e', 'A', 'c', 't', 'i', 'v', 'e', 0, };
 /* "SetSuspendState" */
 #define DECLARE_NAMEOF_API_SETSUSPENDSTATE                                            \
@@ -107,7 +107,7 @@
         'W', 'r', 'i', 't', 'e', 'P', 'r', 'o', 'c', 'e', 's', 's', 'o', 'r', 'P', 'w', 'r', 'S', 'c', 'h', 'e', 'm', 'e', 0, \
     };
 /* "ValidatePowerPolicies" */
-//#define DECLARE_NAMEOF_API_VALIDATEPOWERPOLICIES char NAMEOF_API_VALIDATEPOWERPOLICIES[] = { 'V', 'a', 'l', 'i', 'd', 'a', 't', 'e', 'P', 'o', 'w', 'e', 'r',
+// #define DECLARE_NAMEOF_API_VALIDATEPOWERPOLICIES char NAMEOF_API_VALIDATEPOWERPOLICIES[] = { 'V', 'a', 'l', 'i', 'd', 'a', 't', 'e', 'P', 'o', 'w', 'e', 'r',
 //'P', 'o', 'l', 'i', 'c', 'i', 'e', 's', 0, };
 
 /* @brief

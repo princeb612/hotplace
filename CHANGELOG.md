@@ -27,8 +27,12 @@
     * CBOR
 
 * details
+  * Revision 834
+    * [tested] gcc 15
+      * [__glibcxx_requires_subscript assertion](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111250)
   * Revision 833
     * [tested] shared build
+    * [tested] gcc < 4.9
   * Revision 831
     * [tested] valgrind
   * Revision 826
@@ -56,7 +60,7 @@
   * Revision 785
   * Revision 784
     * [tested] CCM_8
-      * no s_server/s_client test vector
+      * no test vector (s_server/s_client)
   * Revision 783
     * [fixed] AEAD_AES_128_CCM, AEAD_AES_256_CCM
   * Revision 781

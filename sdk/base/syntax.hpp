@@ -17,9 +17,7 @@
 #include <sdk/base/types.hpp>
 
 #define __try2 do
-#define __finally2 \
-    while (0)      \
-        ;
+#define __finally2 while (0);
 #define __leave2 break
 
 #if defined DEBUG

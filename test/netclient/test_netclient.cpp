@@ -24,7 +24,9 @@ void tcp_client() {
     basic_stream bs;
 
     __try2 {
-        ret = cli->connect(option.address.c_str(), option.port, 1);
+        cli->set_wto(option.wto);
+
+        ret = cli->connect(option.address.c_str(), option.port, option.wto / 1000);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -74,6 +76,8 @@ void udp_client() {
     socklen_t addrlen = sizeof(addr);
 
     __try2 {
+        cli->set_wto(option.wto);
+
         ret = cli->open(&addr, option.address.c_str(), option.port);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -125,7 +129,9 @@ void tls_client() {
     __try2 {
         openssl_startup();
 
-        ret = cli.connect(option.address.c_str(), option.port, 1);
+        cli.set_wto(option.wto);
+
+        ret = cli.connect(option.address.c_str(), option.port, option.wto / 1000);
         _test_case.test(ret, __FUNCTION__, "connect");
         if (errorcode_t::success != ret) {
             __leave2;
@@ -178,7 +184,9 @@ void tls_client2() {
     __try2 {
         openssl_startup();
 
-        ret = cli.connect(option.address.c_str(), option.port, 1);
+        cli.set_wto(option.wto);
+
+        ret = cli.connect(option.address.c_str(), option.port, option.wto / 1000);
         _test_case.test(ret, __FUNCTION__, "connect");
         if (errorcode_t::success != ret) {
             __leave2;
@@ -278,6 +286,8 @@ void dtls_client2() {
 
     __try2 {
         openssl_startup();
+
+        cli.set_wto(option.wto);
 
         ret = cli.open(&sa, option.address.c_str(), option.port);
         _test_case.test(ret, __FUNCTION__, "open");

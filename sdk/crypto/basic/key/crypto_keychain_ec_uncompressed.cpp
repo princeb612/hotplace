@@ -39,8 +39,10 @@ return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid,
             __leave2;
         }
 
-        auto p = &pubkey[0];
-        o2i_ECPublicKey(&eckey, &p, pubkey.size());
+        if (pubkey.size()) {
+            auto p = &pubkey[0];
+            o2i_ECPublicKey(&eckey, &p, pubkey.size());
+        }
 
         if (privkey.size()) {
             bn_priv = BN_bin2bn(&privkey[0], privkey.size(), nullptr);

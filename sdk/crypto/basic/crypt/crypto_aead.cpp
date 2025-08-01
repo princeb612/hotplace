@@ -23,7 +23,7 @@ void crypto_aead::addref() { _shared.addref(); }
 void crypto_aead::release() { _shared.delref(); }
 
 return_t crypto_aead::encrypt(const binary_t& key, const binary_t& iv, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag) {
-    return encrypt(key, iv, &plaintext[0], plaintext.size(), ciphertext, aad, tag);
+    return encrypt(key, iv, plaintext.empty() ? nullptr : &plaintext[0], plaintext.size(), ciphertext, aad, tag);
 }
 
 return_t crypto_aead::encrypt(const binary_t& key, const binary_t& iv, const unsigned char* stream, size_t size, binary_t& ciphertext, const binary_t& aad,
@@ -51,7 +51,7 @@ return_t crypto_aead::encrypt(const binary_t& key, const binary_t& iv, const uns
 
 return_t crypto_aead::decrypt(const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext, const binary_t& aad,
                               const binary_t& tag) {
-    return decrypt(key, iv, &ciphertext[0], ciphertext.size(), plaintext, aad, tag);
+    return decrypt(key, iv, ciphertext.empty() ? nullptr : &ciphertext[0], ciphertext.size(), plaintext, aad, tag);
 }
 
 return_t crypto_aead::decrypt(const binary_t& key, const binary_t& iv, const unsigned char* stream, size_t size, binary_t& plaintext, const binary_t& aad,

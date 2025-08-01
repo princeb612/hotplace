@@ -30,11 +30,11 @@
 
 * openssl libssl client
   * TLS 1.2
-    * ./test-netclient -v -d -P tls12
+    * ./test-netclient -P tls12 -k --trace
   * TLS 1.3
-    * ./test-netclient -v -d -P tls13
+    * ./test-netclient -P tls13 -k --trace
 * trial TLS over TCP client
   * TLS 1.2
-    * ./test-netclient -v -d -P tls12 -T
+    * ./test-netclient -P tls12 -T -k --trace
   * TLS 1.3
-    * ./test-netclient -v -d -P tls13 -T
+    * ./test-netclient -P tls13 -T -k --trace

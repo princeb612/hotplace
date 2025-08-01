@@ -32,15 +32,15 @@ class trial_dtls_server_socket : public naive_udp_server_socket {
     virtual return_t dtls_open(socket_context_t** handle, socket_t listen_sock);
     /**
      * @brief   DTLS handshake
-     * @param   socket_context_t* handle
-     * @param   sockaddr* addr
-     * @param   socklen_t addrlen [in]
+     * @param   netsession_t* sess [in]
      */
-    virtual return_t dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen);
+    virtual return_t dtls_handshake(netsession_t* sess);
+
     /**
      * @brief   recvfrom
      * @param   socket_context_t* handle [in]
      * @param   int mode [in]
+     *                  mode read_socket_recv - obtain the peer address
      * @param   char* ptr_data [out]
      * @param   size_t size_data [in]
      * @param   size_t* cbread [out]

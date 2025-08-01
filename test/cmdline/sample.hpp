@@ -9,7 +9,7 @@ struct OPTION : public CMDLINEOPTION {
     std::string outfile;
     bool keygen;
 
-    OPTION() : CMDLINEOPTION(), keygen(false){};
+    OPTION() : CMDLINEOPTION(), keygen(false) {};
 };
 
 extern test_case _test_case;

@@ -10,7 +10,7 @@
 
 #include <sdk/io/system/windows/windows_registry.hpp>
 // strsafe.h after tchar.h
-//#include <strsafe.h>
+// #include <strsafe.h>
 
 namespace hotplace {
 namespace io {

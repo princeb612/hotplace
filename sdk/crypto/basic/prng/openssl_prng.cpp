@@ -54,9 +54,12 @@ return_t openssl_prng::random(unsigned char* buf, size_t size) {
 
 return_t openssl_prng::random(binary_t& buffer, size_t size) {
     return_t ret = errorcode_t::success;
-
-    buffer.resize(size);
-    RAND_bytes(&buffer[0], buffer.size());
+    if (0 == size) {
+        ret = errorcode_t::do_nothing;
+    } else {
+        buffer.resize(size);
+        RAND_bytes(&buffer[0], buffer.size());
+    }
     return ret;
 }
 

@@ -38,7 +38,7 @@ class t_binaries {
             entry.bin.insert(entry.bin.end(), stream, stream + size);
         }
     }
-    void assign(T type, const binary_t& bin) { assign(type, &bin[0], bin.size()); }
+    void assign(T type, const binary_t& bin) { assign(type, bin.empty() ? nullptr : &bin[0], bin.size()); }
     void append(T type, const byte_t* stream, size_t size) {
         if (stream) {
             critical_section_guard guard(_lock);
@@ -47,7 +47,7 @@ class t_binaries {
             entry.bin.insert(entry.bin.end(), stream, stream + size);
         }
     }
-    void append(T type, const binary_t& bin) { append(type, &bin[0], bin.size()); }
+    void append(T type, const binary_t& bin) { append(type, bin.empty() ? nullptr : &bin[0], bin.size()); }
     return_t write(T type, size_t offset, const byte_t* stream, size_t size) {
         return_t ret = errorcode_t::success;
         if (stream) {
@@ -63,7 +63,7 @@ class t_binaries {
         }
         return ret;
     }
-    return_t write(T type, size_t offset, const binary_t& bin) { return write(type, offset, &bin[0], bin.size()); }
+    return_t write(T type, size_t offset, const binary_t& bin) { return write(type, offset, bin.empty() ? nullptr : &bin[0], bin.size()); }
     const binary_t& get(T type) { return _map[type].bin; }
     void erase(T type) {
         critical_section_guard guard(_lock);
@@ -116,7 +116,7 @@ class t_binaries {
      * @param   size_t offset [in]
      * @param   const binary_t& bin [in]
      */
-    return_t produce(T type, size_t offset, const binary_t& bin) { return write(type, offset, &bin[0], bin.size()); }
+    return_t produce(T type, size_t offset, const binary_t& bin) { return write(type, offset, bin.empty() ? nullptr : &bin[0], bin.size()); }
 
     /**
      * @param   T type [in]
@@ -186,7 +186,7 @@ class t_fragmented_binaries {
             entry.bin.insert(entry.bin.end(), stream, stream + size);
         }
     }
-    void assign(T type, const binary_t& bin) { assign(type, &bin[0], bin.size()); }
+    void assign(T type, const binary_t& bin) { assign(type, bin.empty() ? nullptr : &bin[0], bin.size()); }
     void append(T type, const byte_t* stream, size_t size) {
         if (stream) {
             critical_section_guard guard(_lock);
@@ -196,7 +196,7 @@ class t_fragmented_binaries {
             entry.bin.insert(entry.bin.end(), stream, stream + size);
         }
     }
-    void append(T type, const binary_t& bin) { append(type, &bin[0], bin.size()); }
+    void append(T type, const binary_t& bin) { append(type, bin.empty() ? nullptr : &bin[0], bin.size()); }
     return_t write(T type, size_t offset, const byte_t* stream, size_t size, uint32 flags = 0) {
         return_t ret = errorcode_t::success;
         if (stream) {
@@ -217,7 +217,9 @@ class t_fragmented_binaries {
         }
         return ret;
     }
-    return_t write(T type, size_t offset, const binary_t& bin, uint32 flags = 0) { return write(type, offset, &bin[0], bin.size(), flags); }
+    return_t write(T type, size_t offset, const binary_t& bin, uint32 flags = 0) {
+        return write(type, offset, bin.empty() ? nullptr : &bin[0], bin.size(), flags);
+    }
     const binary_t& get(T type) { return _map[type].bin; }
     void erase(T type) {
         critical_section_guard guard(_lock);
@@ -293,7 +295,7 @@ class t_fragmented_binaries {
      * @param   size_t offset [in]
      * @param   const binary_t& bin [in]
      */
-    return_t produce(T type, size_t offset, const binary_t& bin) { return write(type, offset, &bin[0], bin.size()); }
+    return_t produce(T type, size_t offset, const binary_t& bin) { return write(type, offset, bin.empty() ? nullptr : &bin[0], bin.size()); }
 
     /**
      * @param   T type [in]

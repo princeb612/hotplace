@@ -2,7 +2,7 @@
 
 ```
 # run
-./test-httpserver2 -v -d -r &
+./test-httpserver2 -r -k --trace &
 
 # chrome
 # https://localhost:9000/

@@ -305,13 +305,21 @@ return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* ce
         {
             ssl = SSL_new(ssl_ctx);
             if (nullptr == ssl) {
-                ret = errorcode_t::internal_error_5;
+                ret = errorcode_t::error_openssl_inside;
                 __leave2;
             }
 
+#if defined DEBUG
+            if (istraceable(trace_category_crypto, loglevel_debug)) {
+                basic_stream dbs;
+                dbs.println("- SSL_new %p", ssl);
+                trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
+            }
+#endif
+
             X509* x509 = SSL_get_certificate(ssl);
             if (nullptr == x509) {
-                ret = errorcode_t::internal_error_6;
+                ret = errorcode_t::error_certificate;
                 __leave2;
             }
 
@@ -348,6 +356,13 @@ return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* ce
     __finally2 {
         if (ssl) {
             SSL_free(ssl);
+#if defined DEBUG
+            if (istraceable(trace_category_crypto, loglevel_debug)) {
+                basic_stream dbs;
+                dbs.println("- SSL_free %p", ssl);
+                trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
+            }
+#endif
         }
         switch (ret) {
             case errorcode_t::success:

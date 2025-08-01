@@ -193,8 +193,7 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t *handle, handle_
                 } else if (errorcode_t::success == ret) { /* mingw environments */
                     continue;
                 } else {
-                    break;  // GLE - Windows 2003 returns 87, Windows 7 returns
-                            // 735(ERROR_ABANDONED_WAIT_0)
+                    break;  // GLE - Windows 2003 returns 87, Windows 7 returns 735(ERROR_ABANDONED_WAIT_0)
                 }
             }
             if (0 == completion_key) {

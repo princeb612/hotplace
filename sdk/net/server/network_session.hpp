@@ -20,19 +20,6 @@
 namespace hotplace {
 namespace net {
 
-struct netsession_t {
-    netsocket_t netsock;
-    netbuffer_t buf;
-
-    void* mplexer_handle;
-    server_socket* svr_socket;
-    int priority;
-
-    netsession_t() : mplexer_handle(nullptr), svr_socket(nullptr), priority(0) {}
-    netsocket_t* socket_info() { return &netsock; }
-    netbuffer_t& get_buffer() { return buf; }
-};
-
 /**
  * @brief session data
  */
@@ -49,7 +36,19 @@ class network_session {
     friend class network_server;
 
    public:
-    network_session(server_socket* svr_socket);
+    /**
+     * @brief   constructor
+     * @param   server_socket* svr_socket [in]
+     * @param   const sockaddr_storage_t* addr [inopt]
+     * @remarks
+     *          // dgram_session is bound to listenfd
+     *          session_manager.get_dgram_session(&dgram_session, listenfd, ...);
+     *          const auto& addr = dgram_session->socket_info()->cli_addr;
+     *
+     *          // dtls_session is bound to addr
+     *          session_manager.get_dgram_cookie_session(&dtls_session, listenfd, &addr, ...);
+     */
+    network_session(server_socket* svr_socket, const sockaddr_storage_t* addr = nullptr);
     virtual ~network_session();
 
     /**
@@ -69,6 +68,7 @@ class network_session {
      * @brief   dtls
      */
     return_t dtls_session_open(handle_t listen_sock);
+    return_t dtls_session_open(handle_t listen_sock, const binary_t& cookie);
     /**
      * @brief   dtls
      */
@@ -144,7 +144,7 @@ class network_session {
 
     server_socket* get_server_socket();
     network_session_data* get_session_data();
-    http2_session& get_http2_session();
+    http2_session* get_http2_session();
 
     return_t dgram_get_sockaddr(sockaddr_storage_t* addr);
 
@@ -158,7 +158,7 @@ class network_session {
     network_stream _request;
     network_session_data _session_data;
 
-    http2_session _http2_session;
+    http2_session* _http2_session;
 
     t_shared_reference<network_session> _shared;
     critical_section _lock;

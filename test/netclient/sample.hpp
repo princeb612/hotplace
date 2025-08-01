@@ -19,10 +19,11 @@ struct OPTION : public CMDLINEOPTION {
     uint16 port;
     uint16 prot;
     uint16 count;
+    uint16 wto;
     uint16 flags;
     std::string message;
 
-    OPTION() : CMDLINEOPTION(), bufsize(1500), port(9000), prot(0), count(1), flags(0) {
+    OPTION() : CMDLINEOPTION(), bufsize(1500), port(9000), prot(0), count(1), wto(1000), flags(0) {
         address = "127.0.0.1";
         message = "hello";
     }

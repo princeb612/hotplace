@@ -60,6 +60,7 @@ class server_socket : public basic_socket {
      * @param   socklen_t addrlen [in]
      */
     virtual return_t dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen);
+    virtual return_t dtls_handshake(netsession_t* sess);
     /**
      * @brief   tls accept
      * @param   socket_context_t** handle [out]

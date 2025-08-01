@@ -72,7 +72,7 @@ typedef struct _UNICODE_STRING {
     USHORT MaximumLength;
 #ifdef MIDL_PASS
     [ size_is(MaximumLength / 2), length_is((Length) / 2) ] USHORT *Buffer;
-#else  // MIDL_PASS
+#else   // MIDL_PASS
     PWSTR Buffer;
 #endif  // MIDL_PASS
 } UNICODE_STRING, *PUNICODE_STRING;

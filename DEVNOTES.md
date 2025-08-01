@@ -178,6 +178,13 @@ flowchart LR
 
 ## Memo
 
+### MSYS2
+
+- debug build not work (gcc >= 15.0)
+  - [__glibcxx_requires_subscript assertion](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111250)
+  - debugging in the gdb
+    - b abort
+
 ### openssl
 
 - execution failure cause of DLL binding error

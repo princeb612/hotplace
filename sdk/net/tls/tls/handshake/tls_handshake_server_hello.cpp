@@ -176,7 +176,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                     protection.reset_transcript_hash(session);
 
                     const binary_t& client_hello = secrets.get(tls_context_client_hello);
-                    protection.update_transcript_hash(session, &client_hello[0], client_hello.size());  // client_hello
+                    protection.update_transcript_hash(session, client_hello.empty() ? nullptr : &client_hello[0], client_hello.size());  // client_hello
                 } break;
                 case tls_flow_0rtt:
                 case tls_flow_hello_retry_request: {

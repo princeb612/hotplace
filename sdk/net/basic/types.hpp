@@ -95,9 +95,22 @@ struct netsocket_t {
     operator handle_t() { return (handle_t)get_event_socket(); }
 };
 
+class server_socket;
+struct netsession_t {
+    netbuffer_t buf;      // socket buffer (OVERLAPPED in windows)
+    netsocket_t netsock;  // contains socket_context_t, sockaddr_storage_t
+
+    void* mplexer_handle;
+    server_socket* svr_socket;
+    int priority;
+
+    netsession_t() : mplexer_handle(nullptr), svr_socket(nullptr), priority(0) {}
+    netsocket_t* socket_info() { return &netsock; }
+    netbuffer_t& get_buffer() { return buf; }
+};
+
 class client_socket;
 class ipaddr_acl;
-class server_socket;
 
 class naive_tcp_client_socket;
 class naive_tcp_server_socket;

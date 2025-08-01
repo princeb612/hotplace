@@ -8,7 +8,9 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/types.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/basic/openssl/sdk.hpp>
 #include <sdk/net/basic/server_socket.hpp>
 #include <sdk/net/server/network_server.hpp>
@@ -213,6 +215,16 @@ return_t network_session_manager::get_dgram_cookie_session(network_session** ptr
             session_object->dtls_session_handshake();
             *ptr_session_object = session_object;
         }
+
+#if defined DEBUG
+        if (istraceable(trace_category_net, loglevel_debug)) {
+            basic_stream dbs;
+            std::string address;
+            sockaddr_string(*addr, address);
+            dbs.println("> session %p address %s cookie %s", session_object, address.c_str(), base16_encode(cookie).c_str());
+            trace_debug_event(trace_category_net, trace_event_net_produce, &dbs);
+        }
+#endif
 
         if (session_object) {
             session_object->addref();

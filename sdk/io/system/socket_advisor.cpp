@@ -26,8 +26,7 @@ struct socket_resource {
     int code;
     const char* desc;
 };
-#define DEFINE_ENTRY(x) \
-    { x, #x }
+#define DEFINE_ENTRY(x) {x, #x}
 
 const socket_resource socket_resource_family[] = {
     DEFINE_ENTRY(AF_UNSPEC),     // 0

@@ -374,7 +374,8 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
                     }
                 }
 
-                ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, &(*aad)[0], (*aad).size());
+                const auto &a = *aad;
+                ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, a.empty() ? nullptr : &a[0], a.size());
                 if (ret_cipher < 1) {
                     ret = errorcode_t::error_cipher;
                     break;
@@ -550,7 +551,8 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                     }
                 }
 
-                ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, &(*aad)[0], (*aad).size());
+                const auto &a = *aad;
+                ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, a.empty() ? (byte_t *)"" : &a[0], a.size());
                 if (ret_cipher < 1) {
                     ret = errorcode_t::error_cipher;
                     break;

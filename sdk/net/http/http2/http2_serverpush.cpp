@@ -174,7 +174,7 @@ return_t http2_serverpush::do_push_promise(const std::string &promise, uint32 st
         ret = htmldocs.loadable(promise, content_type);  // do not load contents
         if (errorcode_t::success == ret) {
             auto &reqheader = request->get_http_header();
-            auto &hpsess = session->get_http2_session().get_hpack_session();
+            auto &hpsess = session->get_http2_session()->get_hpack_session();
             http_header header;
             auto method = reqheader.get(":method");
             auto scheme = reqheader.get(":scheme");
@@ -213,7 +213,7 @@ return_t http2_serverpush::do_push(const std::string &promise, uint32 streamid, 
 
         auto &htmldocs = server->get_http_router().get_html_documents();
         auto &reqheader = request->get_http_header();
-        auto &hpsess = session->get_http2_session().get_hpack_session();
+        auto &hpsess = session->get_http2_session()->get_hpack_session();
 
         std::string content_type;
         binary_t content;

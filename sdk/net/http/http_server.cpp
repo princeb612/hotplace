@@ -242,7 +242,7 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
         } else if (get_server_conf().get(netserver_config_t::serverconf_enable_h2)) {
             network_session* session = (network_session*)data_array[3];
             if (session) {
-                session->get_http2_session().consume(type, data_count, data_array, this, &h2request);
+                session->get_http2_session()->consume(type, data_count, data_array, this, &h2request);
             }
             dispatch_data[4] = h2request;
         }

@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SDK_WS2_32__
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SDK_WS2_32__
 
-//#include <winsock2.h>
+// #include <winsock2.h>
 
 #if defined _WINSOCK2API_
 

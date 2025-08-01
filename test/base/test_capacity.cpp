@@ -10,8 +10,7 @@
 
 #include "sample.hpp"
 
-#define TESTVECTOR_ENTRY(e1, e2) \
-    { e1, e2 }
+#define TESTVECTOR_ENTRY(e1, e2) {e1, e2}
 
 void test_byte_capacity_unsigned() {
     _test_case.begin("byte capacity");

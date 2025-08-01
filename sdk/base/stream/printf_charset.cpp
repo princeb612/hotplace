@@ -45,12 +45,12 @@
 
 namespace hotplace {
 
-#define LONGINT 0x01 /* long integer */
-#define LONGDBL 0x02 /* long double; unimplemented */
-#define SHORTINT 0x04 /* short integer */
-#define ALT 0x08 /* alternate form */
-#define LADJUST 0x10 /* left adjustment */
-#define ZEROPAD 0x20 /* zero (as opposed to blank) pad */
+#define LONGINT 0x01   /* long integer */
+#define LONGDBL 0x02   /* long double; unimplemented */
+#define SHORTINT 0x04  /* short integer */
+#define ALT 0x08       /* alternate form */
+#define LADJUST 0x10   /* left adjustment */
+#define ZEROPAD 0x20   /* zero (as opposed to blank) pad */
 #define HEXPREFIX 0x40 /* add 0x or 0X prefix */
 
 #define BUF (MAXEXP + MAXFRACT + 1) /* + decimal point */

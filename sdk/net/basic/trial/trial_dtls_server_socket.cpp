@@ -55,31 +55,36 @@ return_t trial_dtls_server_socket::dtls_open(socket_context_t** handle, socket_t
     return ret;
 }
 
-return_t trial_dtls_server_socket::dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen) {
+return_t trial_dtls_server_socket::dtls_handshake(netsession_t* sess) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        auto lambda_send = [&](tls_session* sess, binary_t& bin) -> void {
-            socket_context_t* ctx = (socket_context_t*)(sess->get_hook_param());
+        auto lambda_send = [&](tls_session* session, binary_t& bin) -> void {
+            netsession_t* nsess = (netsession_t*)(session->get_hook_param());
+            const auto& sa = nsess->netsock.cli_addr;
+            auto ctx = nsess->netsock.event_handle;
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 basic_stream dbs;
-                dbs.println("send %p %i", ctx, ctx->fd);
+                std::string address;
+                sockaddr_string(sa, address);
+                dbs.println("send %i %s", ctx->fd, address.c_str());
                 dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
             }
 #endif
             size_t sent = 0;
-            naive_udp_server_socket::sendto(ctx, (char*)&bin[0], bin.size(), &sent, addr, addrlen);
+            naive_udp_server_socket::sendto(ctx, (char*)&bin[0], bin.size(), &sent, (sockaddr*)&sa, sizeof(sa));
         };
-        auto lambda = [&](tls_session* sess, uint32 status) -> void {
-            tls_composer composer(sess);
+        auto lambda = [&](tls_session* session, uint32 status) -> void {
+            tls_composer composer(session);
             composer.session_status_changed(status, from_server, 1000, lambda_send);
         };
 
+        auto handle = sess->netsock.event_handle;
         auto session = handle->handle.session;
         session->set_hook_change_session_status(lambda);
-        session->set_hook_param(handle);
+        session->set_hook_param(sess);
     }
     __finally2 {
         // do nothing

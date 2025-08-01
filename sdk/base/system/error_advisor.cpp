@@ -13,7 +13,11 @@
 namespace hotplace {
 
 #define errordef(e, msg) \
-    { errorcode_t::e, #e, msg, }
+    {                    \
+        errorcode_t::e,  \
+        #e,              \
+        msg,             \
+    }
 
 // errno    strerror(errno)
 // EAI_     gai_strerror(ret)

@@ -85,6 +85,8 @@ file (COPY ${SERVERCERT_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/build/test/tls/
 file (GLOB ECDSACERT_FILES cert/ecdsa.crt cert/ecdsa.key)
 file (COPY ${ECDSACERT_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/build/test/tls/)
 file (COPY ${ECDSACERT_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/build/test/tlsserver/)
+file (COPY ${ECDSACERT_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/build/test/dtlsserver/)
 file (GLOB RSACERT_FILES cert/rsa.crt cert/rsa.key)
 file (COPY ${RSACERT_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/build/test/tls/)
 file (COPY ${RSACERT_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/build/test/tlsserver/)
+file (COPY ${RSACERT_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/build/test/dtlsserver/)

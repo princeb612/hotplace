@@ -57,7 +57,7 @@ return_t echo_server(void*) {
     uint16 nproc_threads = 1;
 #if defined __linux__
 #elif defined _WIN32 || defined _WIN64
-    nproc_threads = 2;
+    // nproc_threads = 2;
 #endif
 
     __try2 {

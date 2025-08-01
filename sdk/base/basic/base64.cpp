@@ -88,11 +88,14 @@ return_t base64_encode(const byte_t* source, size_t source_size, byte_t* buffer,
     base64_conv_t temp;
 
     __try2 {
-        if (nullptr == source || nullptr == buffer_size) {
+        if (nullptr == buffer_size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
         if (0 == source_size) {
+            ret = errorcode_t::no_data;
+            __leave2;
+        } else if (nullptr == source) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -175,7 +178,14 @@ return_t base64_decode(const byte_t* source, size_t source_size, byte_t* buffer,
     base64_conv_t temp;
 
     __try2 {
-        if (nullptr == source || nullptr == buffer_size) {
+        if (nullptr == buffer_size) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (0 == source_size) {
+            ret = errorcode_t::no_data;
+            __leave2;
+        } else if (nullptr == source) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -256,10 +266,12 @@ return_t base64_encode(const byte_t* source, size_t source_size, binary_t& encod
 
     size_t size = 0;
 
-    base64_encode(source, source_size, &encoded[0], &size, encoding);
-    encoded.resize(size);
-    ret = base64_encode(source, source_size, &encoded[0], &size, encoding);
-    encoded.resize(size);
+    ret = base64_encode(source, source_size, nullptr, &size, encoding);
+    if (errorcode_t::insufficient_buffer == ret) {
+        encoded.resize(size);
+        ret = base64_encode(source, source_size, &encoded[0], &size, encoding);
+        encoded.resize(size);
+    }
 
     return ret;
 }
@@ -269,10 +281,12 @@ return_t base64_encode(const byte_t* source, size_t source_size, std::string& en
 
     size_t size = 0;
 
-    base64_encode(source, source_size, (byte_t*)&encoded[0], &size, encoding);
-    encoded.resize(size);
-    base64_encode(source, source_size, (byte_t*)&encoded[0], &size, encoding);
-    encoded.resize(size);
+    ret = base64_encode(source, source_size, nullptr, &size, encoding);
+    if (errorcode_t::insufficient_buffer == ret) {
+        encoded.resize(size);
+        ret = base64_encode(source, source_size, (byte_t*)&encoded[0], &size, encoding);
+        encoded.resize(size);
+    }
 
     return ret;
 }
@@ -282,14 +296,16 @@ std::string base64_encode(const byte_t* source, size_t source_size, int encoding
 
     size_t size = 0;
 
-    base64_encode(source, source_size, (byte_t*)&encoded[0], &size, encoding);
-    encoded.resize(size);
-    base64_encode(source, source_size, (byte_t*)&encoded[0], &size, encoding);
-    encoded.resize(size);
+    auto ret = base64_encode(source, source_size, nullptr, &size, encoding);
+    if (errorcode_t::insufficient_buffer == ret) {
+        encoded.resize(size);
+        ret = base64_encode(source, source_size, (byte_t*)&encoded[0], &size, encoding);
+        encoded.resize(size);
+    }
     return encoded;
 }
 
-std::string base64_encode(const binary_t& source, int encoding) { return base64_encode(&source[0], source.size(), encoding); }
+std::string base64_encode(const binary_t& source, int encoding) { return base64_encode(source.empty() ? nullptr : &source[0], source.size(), encoding); }
 
 std::string base64_encode(const std::string& source, int encoding) { return base64_encode((byte_t*)source.c_str(), source.size(), encoding); }
 
@@ -298,10 +314,12 @@ return_t base64_decode(const char* source, size_t source_size, binary_t& decoded
 
     size_t size = 0;
 
-    base64_decode((byte_t*)source, source_size, &decoded[0], &size, encoding);
-    decoded.resize(size);
-    base64_decode((byte_t*)source, source_size, &decoded[0], &size, encoding);
-    decoded.resize(size);
+    ret = base64_decode((byte_t*)source, source_size, nullptr, &size, encoding);
+    if (errorcode_t::insufficient_buffer == ret) {
+        decoded.resize(size);
+        ret = base64_decode((byte_t*)source, source_size, &decoded[0], &size, encoding);
+        decoded.resize(size);
+    }
 
     return ret;
 }
@@ -311,10 +329,12 @@ return_t base64_decode(const std::string& source, binary_t& decoded, int encodin
 
     size_t size = 0;
 
-    base64_decode((byte_t*)source.c_str(), source.size(), &decoded[0], &size, encoding);
-    decoded.resize(size);
-    base64_decode((byte_t*)source.c_str(), source.size(), &decoded[0], &size, encoding);
-    decoded.resize(size);
+    ret = base64_decode((byte_t*)source.c_str(), source.size(), nullptr, &size, encoding);
+    if (errorcode_t::insufficient_buffer == ret) {
+        decoded.resize(size);
+        ret = base64_decode((byte_t*)source.c_str(), source.size(), &decoded[0], &size, encoding);
+        decoded.resize(size);
+    }
 
     return ret;
 }
@@ -326,7 +346,7 @@ binary_t base64_decode(const char* source, size_t source_size, int encoding) {
     return decoded;
 }
 
-binary_t base64_decode(const binary_t& source, int encoding) { return base64_decode((char*)&source[0], source.size(), encoding); }
+binary_t base64_decode(const binary_t& source, int encoding) { return base64_decode(source.empty() ? nullptr : (char*)&source[0], source.size(), encoding); }
 
 binary_t base64_decode(const std::string& source, int encoding) { return base64_decode(source.c_str(), source.size(), encoding); }
 
@@ -336,10 +356,12 @@ std::string base64_decode_careful(const char* source, size_t source_size, int en
     std::string decoded;
     size_t size = 0;
 
-    base64_decode((byte_t*)source, source_size, (byte_t*)&decoded[0], &size, encoding);
-    decoded.resize(size);
-    base64_decode((byte_t*)source, source_size, (byte_t*)&decoded[0], &size, encoding);
-    decoded.resize(size);
+    auto ret = base64_decode((byte_t*)source, source_size, nullptr, &size, encoding);
+    if (errorcode_t::insufficient_buffer == ret) {
+        decoded.resize(size);
+        ret = base64_decode((byte_t*)source, source_size, (byte_t*)&decoded[0], &size, encoding);
+        decoded.resize(size);
+    }
     return decoded;
 }
 

@@ -3,7 +3,7 @@
 run debug
 ```
 cd module
-./test-module -v -d
+./test-module --trace
 ```
 
 ### tasks

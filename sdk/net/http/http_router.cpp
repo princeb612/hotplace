@@ -141,7 +141,7 @@ return_t http_router::route(network_session* session, http_request* request, htt
                     auto server = get_http_server();
                     // RFC 7540 6.5.2.  Defined SETTINGS Parameters
                     // SETTINGS_ENABLE_PUSH (0x2)
-                    if (session->get_http2_session().is_push_enabled()) {
+                    if (session->get_http2_session()->is_push_enabled()) {
                         if (get_http2_serverpush().is_promised(request, server)) {
                             get_http2_serverpush().push_promise(request, server, session);
                             get_http2_serverpush().push(request, server, session);

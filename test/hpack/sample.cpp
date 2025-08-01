@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
         auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void { _logger->write(s); };
         set_trace_debug(lambda_tracedebug);
         set_trace_option(trace_bt | trace_except | trace_debug);
+        set_trace_level(option.trace_level);
     }
 
     openssl_startup();

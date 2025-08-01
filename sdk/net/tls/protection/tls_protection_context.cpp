@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace net {
 
-protection_context::protection_context() {}
+protection_context::protection_context() : _cipher_suite(0) {}
 
 protection_context::protection_context(const protection_context& rhs) {
     _cipher_suites = rhs._cipher_suites;
@@ -28,6 +28,7 @@ protection_context::protection_context(const protection_context& rhs) {
     _supported_groups = rhs._supported_groups;
     _supported_versions = rhs._supported_versions;
     _ec_point_formats = rhs._ec_point_formats;
+    _cipher_suite = rhs._cipher_suite;
 }
 
 protection_context::protection_context(protection_context&& rhs) {
@@ -37,6 +38,7 @@ protection_context::protection_context(protection_context&& rhs) {
     _supported_groups = std::move(rhs._supported_groups);
     _supported_versions = std::move(rhs._supported_versions);
     _ec_point_formats = std::move(rhs._ec_point_formats);
+    _cipher_suite = rhs._cipher_suite;
 }
 
 void protection_context::add_cipher_suite(uint16 cs) { _cipher_suites.push_back(cs); }
@@ -163,6 +165,10 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                     }
 
                     if (tls_13 != hint->version) {
+                        if (ktypes_set.empty()) {
+                            ret = error_certificate;
+                            break;
+                        }
                         switch (hint->auth) {
                             case auth_rsa: {
                                 // allow TLS_ECDHE_RSA if RSA certificate exist
@@ -191,6 +197,9 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                 }
             }
         }
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         {
             auto lambda = [&](tls_version_t ver) -> bool {
@@ -215,7 +224,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
 
             bool test = false;
             test = lambda(tls_13);
-            if ((session_type_tls == session_type) || (session_type_dtls == session_type)) {
+            if ((session_type_tls == session_type) || (session_type_dtls == session_type)) {  // not QUIC, QUIC2
                 if (false == test) {
                     test = lambda(tls_12);
                 }
