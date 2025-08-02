@@ -9,7 +9,6 @@ enum {
     option_flag_http = 1 << 1,
     option_flag_allow_tls12 = 1 << 2,
     option_flag_allow_tls13 = 1 << 3,
-    option_flag_enable_etm = 1 << 4,
     option_flag_keylog = 1 << 5,
 };
 

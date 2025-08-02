@@ -32,6 +32,12 @@ namespace net {
  *              };
  *          } ServerHello;
  * @example
+ *          // load certificate(s) before the server_hello
+ *          // cf. TLS 1.2 ciphersuite TLS_ECDHE_RSA_... possible
+ *          load_certificate("rsa.crt", "rsa.key", nullptr);
+ *          // cf. TLS 1.2 ciphersuite TLS_ECDHE_RCDSA_... possible
+ *          load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
+ *
  *          tls_record_handshake record(session);
  *          auto handshake = new tls_handshake_server_hello(session);
  *          openssl_prng prng;

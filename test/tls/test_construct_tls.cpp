@@ -157,15 +157,14 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
     return ret;
 }
 
-static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_session* session, tls_session* client_session, tls_direction_t dir, binary_t& bin,
-                                               const char* message) {
+static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
 
     auto& protection = session->get_tls_protection();
 
     uint16 server_cs = 0;
     uint16 server_version = 0;
-    protection.negotiate(client_session, session, server_cs, server_version);
+    protection.negotiate(session, server_cs, server_version);
 
     tls_handshake_server_hello* handshake = nullptr;
 
@@ -627,7 +626,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
 
         // S -> C SH
         binary_t bin_server_hello;
-        ret = do_test_construct_server_hello(option, &server_session, &client_session, from_server, bin_server_hello, "construct server hello");
+        ret = do_test_construct_server_hello(option, &server_session, from_server, bin_server_hello, "construct server hello");
         if (errorcode_t::success != ret) {
             __leave2;
         }

@@ -144,6 +144,9 @@ void send_packet(tls_session* session, tls_direction_t dir, const binary_t& bin,
 void test_construct_quic() {
     _test_case.begin("construct (sketch version)");
 
+    load_certificate("rsa.crt", "rsa.key", nullptr);
+    load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
+
     binary_t bin;
     tls_session session_client(session_type_quic);
     tls_session session_server(session_type_quic);

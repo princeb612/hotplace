@@ -135,7 +135,7 @@ static return_t do_test_construct_server_hello(tls_session* session, tls_session
 
     uint16 server_cs = 0;
     uint16 server_version = 0;
-    protection.negotiate(client_session, session, server_cs, server_version);
+    protection.negotiate(session, server_cs, server_version);
 
     tls_handshake_server_hello* handshake = nullptr;
 

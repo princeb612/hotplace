@@ -80,10 +80,7 @@ int main(int argc, char** argv) {
                                   o.message = "GET / HTTP/1.1\r\n\r\n";
                               })
                .optional()
-        << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced()
-        << t_cmdarg_t<OPTION>("-etm", "TLS 1.2 EtM (trial_tls_client_socket)", [](OPTION& o, char* param) -> void {
-               o.flags |= option_flag_enable_etm;
-           }).optional();
+        << t_cmdarg_t<OPTION>("-m", "message", [](OPTION& o, char* param) -> void { o.message = param; }).optional().preced();
     ret = _cmdline->parse(argc, argv);
     if (errorcode_t::success == ret) {
         const OPTION& option = _cmdline->value();

@@ -49,6 +49,10 @@ tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(t
     } else {
         throw exception(errorcode_t::no_session);
     }
+
+    auto& publisher = session->get_dtls_record_publisher();
+    publisher.set_fragment_size(512);
+    publisher.set_flags(dtls_record_publisher_multi_handshakes);
 }
 
 tls_composer::~tls_composer() {
@@ -644,14 +648,14 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        uint16 cs = 0;
+        uint16 tlsver = 0;
         auto& protection = session->get_tls_protection();
-        auto& prot_context = protection.get_protection_context();
-        auto nego_context = protection.get_protection_context();  // copy
+        ret = protection.negotiate(session, cs, tlsver);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
-        prot_context.select_from(nego_context, session);
-
-        auto cs = prot_context.get0_cipher_suite();
-        auto tlsver = prot_context.get0_supported_version();
         tls_handshake_server_hello* hs = nullptr;
 
         __try_new_catch(hs, new tls_handshake_server_hello(session), ret, __leave2);
@@ -673,8 +677,22 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
             }
         } else {
             {
-                // session_conf_enable_encrypt_then_mac
-                // session_conf_enable_extended_master_secret
+                auto renegotiation_info = new tls_extension_renegotiation_info(hs);
+                hs->get_extensions().add(renegotiation_info);
+            }
+            {
+                auto ec_point_formats = new tls_extension_ec_point_formats(hs);
+                (*ec_point_formats).add("uncompressed");
+                hs->get_extensions().add(ec_point_formats);
+            }
+            {
+                auto supported_groups = new tls_extension_supported_groups(hs);
+                (*supported_groups).add("x25519");
+                hs->get_extensions().add(supported_groups);
+            }
+            {
+                hs->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, hs));
+                hs->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, hs));
             }
         }
 

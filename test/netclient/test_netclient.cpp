@@ -174,10 +174,6 @@ void tls_client2() {
     auto minver = (option.flags & option_flag_allow_tls12) ? tls_12 : tls_13;
     trial_tls_client_socket cli(minver);
 
-    if (option.flags & option_flag_enable_etm) {
-        cli.get_session()->get_keyvalue().set(session_conf_enable_encrypt_then_mac, 1);
-    }
-
     char buffer[option.bufsize];
     basic_stream bs;
 
@@ -278,7 +274,8 @@ void dtls_client2() {
 
     return_t ret = errorcode_t::success;
     trial_dtls_client_socket cli(dtls_12);
-    cli.get_session()->get_dtls_record_publisher().set_fragment_size(256);
+    cli.get_session()->get_dtls_record_publisher().set_fragment_size(512);
+    cli.get_session()->get_dtls_record_publisher().set_flags(dtls_record_publisher_multi_handshakes);
 
     char buffer[option.bufsize];
     basic_stream bs;

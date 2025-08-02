@@ -91,25 +91,8 @@ size_t tls_protection::get_header_size() {
 
 protection_context &tls_protection::get_protection_context() { return _handshake_context; }
 
-return_t tls_protection::negotiate(tls_session *client_session, tls_session *server_session, uint16 &ciphersuite, uint16 &tlsversion) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ciphersuite = 0;
-        tlsversion = 0;
-
-        if (nullptr == client_session || nullptr == server_session) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        auto &client_handshake_context = client_session->get_tls_protection().get_protection_context();
-        auto &server_handshake_context = server_session->get_tls_protection().get_protection_context();
-        server_handshake_context.select_from(client_handshake_context, server_session);
-        ciphersuite = server_handshake_context.get0_cipher_suite();
-        tlsversion = server_handshake_context.get0_supported_version();
-    }
-    __finally2 {}
-    return ret;
+return_t tls_protection::negotiate(tls_session *session, uint16 &ciphersuite, uint16 &tlsversion) {
+    return session->get_tls_protection().get_protection_context().negotiate(session, ciphersuite, tlsversion);
 }
 
 void tls_protection::set_session(tls_session *session) {

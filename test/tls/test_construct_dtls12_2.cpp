@@ -138,8 +138,7 @@ static return_t do_test_construct_hello_verify_request(tls_session* session, tls
     return ret;
 }
 
-static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_session* session, tls_session* client_session, tls_direction_t dir,
-                                                                         const char* message) {
+static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_session* session, tls_direction_t dir, const char* message) {
     return_t ret = errorcode_t::success;
     auto& protection = session->get_tls_protection();
     protection.set_tls_version(dtls_12);
@@ -148,7 +147,7 @@ static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_ses
 
     uint16 server_cs = 0;
     uint16 server_version = 0;
-    protection.negotiate(client_session, session, server_cs, server_version);
+    protection.negotiate(session, server_cs, server_version);
 
     tls_handshake_server_hello* handshake = nullptr;
 
@@ -420,7 +419,7 @@ void do_test_construct_dtls12_2(uint32 flags) {
         //   -> tls_record_handshake (epoch 0, sequence 1) contains server_hello and certificate (handshake sequences in order 1, 2)
         //   -> tls_record_handshake (epoch 0, sequence 8) contains certificate and server_key_exchange (handshake sequences in order 2, 3)
         //   -> tls_record_handshake (epoch 0, sequence 10) contains server_key_exchange and server_hello_done (handshake sequences in order 3, 4)
-        ret = do_test_construct_from_server_hello_to_server_hello_done(&session_server, &session_client, from_server,
+        ret = do_test_construct_from_server_hello_to_server_hello_done(&session_server, from_server,
                                                                        "server hello, certificate, server key exchange, server hello done");
         if (errorcode_t::success != ret) {
             __leave2;

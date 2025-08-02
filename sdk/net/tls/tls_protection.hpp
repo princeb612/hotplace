@@ -42,6 +42,8 @@ class protection_context {
     protection_context(const protection_context& rhs);
     protection_context(protection_context&& rhs);
 
+    return_t negotiate(tls_session* session, uint16& cs, uint16& tlsver);
+
     void add_cipher_suite(uint16 cs);
     void add_signature_algorithm(uint16 sa);
     void add_supported_group(uint16 sg);
@@ -121,7 +123,7 @@ class tls_protection {
     t_binaries<tls_secret_t>& get_secrets();
 
     size_t get_header_size();
-    static return_t negotiate(tls_session* client_session, tls_session* server_session, uint16& ciphersuite, uint16& tlsversion);
+    static return_t negotiate(tls_session* session, uint16& ciphersuite, uint16& tlsversion);
 
     ///////////////////////////////////////////////////////////////////////////
     // hash

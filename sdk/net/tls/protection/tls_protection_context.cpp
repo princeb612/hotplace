@@ -41,6 +41,27 @@ protection_context::protection_context(protection_context&& rhs) {
     _cipher_suite = rhs._cipher_suite;
 }
 
+return_t protection_context::negotiate(tls_session* session, uint16& cs, uint16& tlsver) {
+    return_t ret = errorcode_t::success;
+    if (session) {
+        cs = 0;
+        tlsver = 0;
+
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto& protection = session->get_tls_protection();
+        auto& prot_context = protection.get_protection_context();
+        auto nego_context = protection.get_protection_context();  // copy
+
+        ret = prot_context.select_from(nego_context, session);
+
+        cs = prot_context.get0_cipher_suite();
+        tlsver = prot_context.get0_supported_version();
+    } else {
+        ret = errorcode_t::invalid_parameter;
+    }
+    return ret;
+}
+
 void protection_context::add_cipher_suite(uint16 cs) { _cipher_suites.push_back(cs); }
 
 void protection_context::add_signature_algorithm(uint16 sa) { _signature_algorithms.push_back(sa); }
@@ -166,8 +187,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
 
                     if (tls_13 != hint->version) {
                         if (ktypes_set.empty()) {
-                            ret = error_certificate;
-                            break;
+                            continue;
                         }
                         switch (hint->auth) {
                             case auth_rsa: {
@@ -197,12 +217,9 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                 }
             }
         }
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
 
         {
-            auto lambda = [&](tls_version_t ver) -> bool {
+            auto lambda_select_cs = [&](tls_version_t ver) -> bool {
                 bool ret_value = false;
                 for (auto cs : cs_map[ver]) {
                     add_supported_version(ver);
@@ -223,16 +240,16 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
             };
 
             bool test = false;
-            test = lambda(tls_13);
+            test = lambda_select_cs(tls_13);
             if ((session_type_tls == session_type) || (session_type_dtls == session_type)) {  // not QUIC, QUIC2
                 if (false == test) {
-                    test = lambda(tls_12);
+                    test = lambda_select_cs(tls_12);
                 }
                 if (false == test) {
-                    test = lambda(tls_11);
+                    test = lambda_select_cs(tls_11);
                 }
                 if (false == test) {
-                    test = lambda(tls_10);
+                    test = lambda_select_cs(tls_10);
                 }
             }
 

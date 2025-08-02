@@ -129,14 +129,14 @@ static return_t do_test_construct_hello_verify_request(tls_session* session, tls
     return ret;
 }
 
-static return_t do_test_construct_server_hello(tls_session* session, tls_session* client_session, tls_direction_t dir, const char* message) {
+static return_t do_test_construct_server_hello(tls_session* session, tls_direction_t dir, const char* message) {
     return_t ret = errorcode_t::success;
     auto& protection = session->get_tls_protection();
     protection.set_tls_version(dtls_12);
 
     uint16 server_cs = 0;
     uint16 server_version = 0;
-    protection.negotiate(client_session, session, server_cs, server_version);
+    protection.negotiate(session, server_cs, server_version);
 
     tls_handshake_server_hello* handshake = nullptr;
 
@@ -415,7 +415,7 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 3, 1);
 
         // S->C, record epoch 0, sequence 1, handshake sequence 1
-        ret = do_test_construct_server_hello(&session_server, &session_client, from_server, "server hello");
+        ret = do_test_construct_server_hello(&session_server, from_server, "server hello");
         if (errorcode_t::success != ret) {
             __leave2;
         }
