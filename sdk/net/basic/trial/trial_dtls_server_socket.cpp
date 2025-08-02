@@ -125,11 +125,12 @@ return_t trial_dtls_server_socket::recvfrom(socket_context_t* handle, int mode, 
 #endif
         if (read_bio_write & mode) {
             // iocp & epoll, handshake, alert
-            ret = session->get_secure_prosumer()->produce(session, from_client, (byte_t*)ptr_data, ptr_size);
+            ret = session->get_secure_prosumer()->produce(session, from_client, (byte_t*)ptr_data, ptr_size, addr, addrlen);
         }
         if (read_ssl_read & mode) {
             // iocp & epoll, application_data
-            ret = session->get_secure_prosumer()->consume(socket_type(), 0, ptr_data, size_data, cbread, nullptr, 0);
+            size_t len = sizeof(sockaddr_storage_t);
+            ret = session->get_secure_prosumer()->consume(socket_type(), 0, ptr_data, size_data, cbread, addr, addrlen);
         }
     }
     __finally2 {}
@@ -158,8 +159,12 @@ return_t trial_dtls_server_socket::sendto(socket_context_t* handle, const char* 
             record.write(dir, bin);
         }
 
-        size_t sent = 0;
-        naive_udp_server_socket::sendto(handle, (char*)&bin[0], bin.size(), &sent, addr, addrlen);
+        if (bin.empty()) {
+            int debug = 1;
+        } else {
+            size_t sent = 0;
+            naive_udp_server_socket::sendto(handle, (char*)&bin[0], bin.size(), &sent, addr, addrlen);
+        }
     }
     __finally2 {
         // do nothing

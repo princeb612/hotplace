@@ -37,7 +37,8 @@ return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, std
     return ret;
 }
 
-return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, const byte_t* ptr_data, size_t size_data) {
+return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, const byte_t* ptr_data, size_t size_data, struct sockaddr* addr,
+                                  socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == ptr_data) {
@@ -47,13 +48,13 @@ return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, con
 
         _mbs.write((byte_t*)ptr_data, size_data);
 
-        ret = do_produce(session, dir);
+        ret = do_produce(session, dir, addr, addrlen);
     }
     __finally2 {}
     return ret;
 }
 
-return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir) {
+return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -79,6 +80,9 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir) 
                         if (false == bin.empty()) {
                             socket_buffer_t item;
                             item.buffer << bin;
+                            if (addr) {
+                                memcpy(&item.addr, addr, sizeof(sockaddr_storage_t));
+                            }
 
                             critical_section_guard guard(_mlock);
                             _mq.push(std::move(item));

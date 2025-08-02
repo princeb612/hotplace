@@ -90,7 +90,7 @@ struct netsocket_t {
     socket_context_t* event_handle;
     sockaddr_storage_t cli_addr;  // both ipv4 and ipv6
 
-    netsocket_t() : event_handle(nullptr) {}
+    netsocket_t() : event_handle(nullptr) { memset(&cli_addr, 0, sizeof(cli_addr)); }
     socket_t get_event_socket() { return event_handle->fd; }
     operator handle_t() { return (handle_t)get_event_socket(); }
 };

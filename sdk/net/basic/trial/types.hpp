@@ -19,11 +19,12 @@
 namespace hotplace {
 namespace net {
 
-struct socket_buffer {
+struct socket_buffer_t {
     basic_stream buffer;
     sockaddr_storage_t addr;  // UDP
+
+    socket_buffer_t() { memset(&addr, 0, sizeof(addr)); }
 };
-typedef struct socket_buffer socket_buffer_t;
 
 }  // namespace net
 }  // namespace hotplace

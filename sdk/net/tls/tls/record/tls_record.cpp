@@ -136,25 +136,7 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
             }
             dbs.println("# record constructed");
             dbs.printf("\e[0m");
-            if (check_trace_level(loglevel_debug)) {
-                size_t dpos = 0;
-                size_t rsize = 0;
-                size_t hsize = 0;
-                if (is_dtls) {
-                    rsize = RTL_FIELD_SIZE(tls_content_t, dtls);
-                    hsize = sizeof(dtls_handshake_t);
-                } else {
-                    rsize = RTL_FIELD_SIZE(tls_content_t, tls);
-                    hsize = sizeof(tls_handshake_t);
-                }
-                dump_memory(&bin[dpos], rsize, &dbs, 16, 3, 0, dump_notrunc);
-                dpos += rsize;
-                dump_memory(&bin[dpos], hsize, &dbs, 16, 3, 0, dump_notrunc);
-                dpos += hsize;
-                dump_memory(&bin[dpos], bin.size() - dpos, &dbs, 16, 3, 0, dump_notrunc);
-            } else {
-                dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
-            }
+            dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
             trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
         }
 #endif

@@ -20,7 +20,6 @@ enum splitter_flag_t : uint32 {
     splitter_noalloc = 1 << 0,      // splitter::add
     splitter_new_segment = 1 << 7,  // splitter::run
     splitter_new_group = 1 << 8,    // splitter::run
-    splitter_notempty = 1 << 9,     // splitter::run
 };
 
 /**
@@ -93,8 +92,9 @@ class splitter {
      * @brief add
      * @param binary_t&& stream [in]
      * @param DESCRIPTOR_T&& desc [in]
+     * @param uint32 flags [inopt] see splitter_flag_t
      */
-    void add(binary_t&& stream, DESCRIPTOR_T&& desc);
+    void add(binary_t&& stream, DESCRIPTOR_T&& desc, uint32 flags = 0);
     /**
      * @brief add
      * @param const byte_t* stream [in]
@@ -142,10 +142,11 @@ template <typename DESCRIPTOR_T>
 splitter<DESCRIPTOR_T>::splitter() : _segment_size(128) {}
 
 template <typename DESCRIPTOR_T>
-void splitter<DESCRIPTOR_T>::add(binary_t&& stream, DESCRIPTOR_T&& desc) {
+void splitter<DESCRIPTOR_T>::add(binary_t&& stream, DESCRIPTOR_T&& desc, uint32 flags) {
     item_t item;
     item.bin = std::move(stream);
     item.desc = std::move(desc);
+    item.flags = flags;
 
     critical_section_guard guard(_lock);
     _list.push_back(std::move(item));
@@ -211,13 +212,8 @@ return_t splitter<DESCRIPTOR_T>::run(std::function<void(uint32, const byte_t*, s
             if (0 == fragoffset) {
                 flags |= splitter_new_group;
             }
-            if (splitter_notempty & item.flags) {
-                if (fragsize) {
-                    func(flags, stream, size, fragoffset, fragsize, item.desc);
-                }
-            } else {
-                func(flags, stream, size, fragoffset, fragsize, item.desc);
-            }
+            func(flags, stream, size, fragoffset, fragsize, item.desc);
+
             pre += fragsize;
             pre %= get_segment_size();
         };

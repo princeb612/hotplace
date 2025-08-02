@@ -22,16 +22,13 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
     network_session* session = (network_session*)data_array[3];
     sockaddr_storage_t* addr = (sockaddr_storage_t*)data_array[5];
 
-    basic_stream bs;
-    std::string message;
     std::string address;
 
     switch (type) {
         case mux_dgram:
             sockaddr_string(*addr, address);
             _logger->writeln("read %d [%s] msg [%.*s]", session_socket->get_event_socket(), address.c_str(), (unsigned)bufsize, buf);
-            // dump_memory (buf, bufsize, &bs, 16, 4);
-            // std::cout << bs << std::endl;
+            _logger->dump(buf, bufsize, 16, 4);
             session->sendto(buf, bufsize, addr);
             break;
     }

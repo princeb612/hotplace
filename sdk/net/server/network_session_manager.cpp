@@ -200,14 +200,14 @@ return_t network_session_manager::get_dgram_cookie_session(network_session** ptr
 
         pairib = _dgram_map.insert(std::make_pair(cookie, (network_session*)nullptr));
         if (true == pairib.second) {
-            session_object = new network_session(svr_socket);
+            session_object = new network_session(svr_socket, addr);
             server_conf* conf = get_server_conf();
             if (conf) {
                 uint16 udp_bufsize = conf->get(netserver_config_t::serverconf_udp_bufsize);
                 session_object->get_buffer()->set_bufsize(udp_bufsize);  // 0 for default buffer size
             }
             pairib.first->second = session_object;
-            session_object->dtls_session_open(listen_sock);
+            session_object->dtls_session_open(listen_sock, cookie);
             session_object->dtls_session_handshake();
             *ptr_session_object = session_object;
         } else {

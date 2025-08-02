@@ -396,7 +396,11 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                     mode = tls_io_flag_t::read_ssl_read;
                 } else {
                     // trial_dtls_server_socket
-                    mode = tls_io_flag_t::read_bio_write | tls_io_flag_t::read_socket_recv;  // tls_io_flag_t::read_epoll
+#if defined __linux__
+                    mode = tls_io_flag_t::read_epoll;
+#elif defined _WIN32 || defined _WIN64
+                    mode = read_iocp | tls_io_flag_t::read_ssl_read | tls_io_flag_t::read_socket_recv;
+#endif
                 }
                 result = get_server_socket()->recvfrom(event_handle, mode, (char*)buf_read, size_buf_read, &cbread, sa, &salen);
                 if (errorcode_t::success == result || errorcode_t::more_data == result) {
