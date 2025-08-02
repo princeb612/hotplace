@@ -108,8 +108,7 @@ return_t trial_dtls_server_socket::recvfrom(socket_context_t* handle, int mode, 
 #endif
 
         if (read_socket_recv & mode) {
-            // epoll
-            ret = naive_udp_server_socket::recvfrom(handle, 0, ptr_data, size_data, cbread, addr, addrlen);
+            ret = naive_udp_server_socket::recvfrom(handle, mode, ptr_data, size_data, cbread, addr, addrlen);
             if (errorcode_t::success != ret) {
                 __leave2;
             }

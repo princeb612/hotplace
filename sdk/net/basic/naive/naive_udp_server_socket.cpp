@@ -54,10 +54,14 @@ return_t naive_udp_server_socket::recvfrom(socket_context_t* handle, int mode, c
 
         auto sock = handle->fd;
 
+        uint32 flags = 0;
+        if (peek_msg & mode) {
+            flags |= MSG_PEEK;
+        }
 #if defined __linux__
-        int ret_recv = ::recvfrom(sock, ptr_data, size_data, 0, addr, addrlen);
+        int ret_recv = ::recvfrom(sock, ptr_data, size_data, flags, addr, addrlen);
 #elif defined _WIN32 || defined _WIN64
-        int ret_recv = ::recvfrom(sock, ptr_data, (int)size_data, 0, addr, addrlen);
+        int ret_recv = ::recvfrom(sock, ptr_data, (int)size_data, flags, addr, addrlen);
 #endif
         if (-1 == ret_recv) {
             ret = get_lasterror(ret_recv);

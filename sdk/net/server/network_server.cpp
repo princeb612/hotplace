@@ -828,7 +828,7 @@ return_t network_server::producer_routine(uint32 type, uint32 data_count, void* 
                 network_session* dtls_session = nullptr;
                 context->session_manager.get_dgram_cookie_session(&dtls_session, (handle_t)context->listen_handle->fd, addr, context->svr_socket, nullptr);
                 if (dtls_session) {
-                    dtls_session->produce(&context->event_queue, nullptr, 0);
+                    dtls_session->produce(&context->event_queue, nullptr, 0, addr);
                     dtls_session->release();
                 }
             } else {

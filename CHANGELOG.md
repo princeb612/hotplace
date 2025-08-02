@@ -27,11 +27,12 @@
     * CBOR
 
 * details
+  * Revision 836
+    * [tested] DTLS 1.2 server (linux)
   * Revision 835
     * [tested] DTLS 1.2 server (mingw64)
   * Revision 834
-    * [tested] gcc 15
-      * [__glibcxx_requires_subscript assertion](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111250)
+    * [tested] [gcc 15 __glibcxx_requires_subscript assertion](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111250)
   * Revision 833
     * [tested] shared build
     * [tested] gcc < 4.9

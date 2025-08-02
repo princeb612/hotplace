@@ -383,12 +383,12 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 
                 sockaddr* sa = nullptr;
                 socklen_t salen = sizeof(sockaddr_storage_t);
-#if defined __linux__
-                sockaddr_storage_t sockstorage;
-                sa = (sockaddr*)&sockstorage;
-#elif defined _WIN32 || defined _WIN64
-                sa = (sockaddr*)addr;
-#endif
+                // #if defined __linux__
+                //                 sockaddr_storage_t sockstorage;
+                //                 sa = (sockaddr*)&sockstorage;
+                // #elif defined _WIN32 || defined _WIN64
+                sa = (sockaddr*)addr;  // ready_to_read MSG_PEEK
+                                       // #endif
 
                 int mode = 0;
                 if (tls_using_openssl & event_handle->flags) {
@@ -396,11 +396,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
                     mode = tls_io_flag_t::read_ssl_read;
                 } else {
                     // trial_dtls_server_socket
-#if defined __linux__
-                    mode = tls_io_flag_t::read_epoll;
-#elif defined _WIN32 || defined _WIN64
-                    mode = read_iocp | tls_io_flag_t::read_ssl_read | tls_io_flag_t::read_socket_recv;
-#endif
+                    mode = read_bio_write | read_ssl_read | read_socket_recv;
                 }
                 result = get_server_socket()->recvfrom(event_handle, mode, (char*)buf_read, size_buf_read, &cbread, sa, &salen);
                 if (errorcode_t::success == result || errorcode_t::more_data == result) {
@@ -488,11 +484,11 @@ return_t network_session::dgram_get_sockaddr(sockaddr_storage_t* addr) {
             __leave2;
         }
 
-        socklen_t sa_size = sizeof(sockaddr_storage_t);
+        socklen_t addrlen = sizeof(sockaddr_storage_t);
         size_t cbread = _session.buf.bin.size();
         int mode = read_socket_recv | peek_msg;
         ret = get_server_socket()->recvfrom(_session.netsock.event_handle, mode, &_session.buf.bin[0], _session.buf.bin.size(), &cbread, (sockaddr*)addr,
-                                            &sa_size);
+                                            &addrlen);
     }
     __finally2 {
         // do nothing
