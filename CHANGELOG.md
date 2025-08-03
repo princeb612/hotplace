@@ -27,7 +27,7 @@
     * CBOR
 
 * details
-  * Revision 837
+  * Revision 838
   * Revision 836
     * [tested] DTLS 1.2 server (linux)
   * Revision 835

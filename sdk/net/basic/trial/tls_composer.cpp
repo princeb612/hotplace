@@ -50,9 +50,11 @@ tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(t
         throw exception(errorcode_t::no_session);
     }
 
-    auto& publisher = session->get_dtls_record_publisher();
-    publisher.set_fragment_size(512);
-    publisher.set_flags(dtls_record_publisher_multi_handshakes);
+    if (session_type_dtls == session->get_type()) {
+        auto& publisher = session->get_dtls_record_publisher();
+        publisher.set_fragment_size(512);
+        publisher.set_flags(dtls_record_publisher_multi_handshakes);
+    }
 }
 
 tls_composer::~tls_composer() {
@@ -691,8 +693,8 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
                 hs->get_extensions().add(supported_groups);
             }
             {
-                hs->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, hs));
-                hs->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, hs));
+                // hs->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, hs));
+                // hs->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, hs));
             }
         }
 

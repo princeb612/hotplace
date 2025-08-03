@@ -11,8 +11,8 @@
   * ![gcc](https://img.shields.io/badge/gcc->=4.7-green)
   * ![cmake](https://img.shields.io/badge/cmake->=2.6-green)
 * platform
-  * ![MSYS2](https://img.shields.io/badge/mingw64-green)
-  * ![UBUNTU](https://img.shields.io/badge/ubuntu-green)
+  * ![MSYS2](https://img.shields.io/badge/MSYS2-MINGW64-green)
+  * ![UBUNTU](https://img.shields.io/badge/UBUNTU-green)
   * ![RHEL](https://img.shields.io/badge/RHEL-green)
 * status
   * JOSE ![implemented](https://img.shields.io/badge/implemented+SDK-green)

@@ -24,11 +24,11 @@ cd module
   - [x] RFC 7516
   - [x] RFC 7539
 - [x] datetime
-- [ ] dtlsserver
-  - [ ] integration
+- [x] dtlsserver
+  - [x] integration
     - [x] network_server
     - [x] libssl
-    - [ ] trial
+    - [x] trial
 - [x] encode
 - [x] etc
 - [x] graph
