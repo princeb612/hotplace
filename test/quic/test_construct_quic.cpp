@@ -9,9 +9,6 @@
 
 #include "sample.hpp"
 
-// - TODO
-//   - [ ] fragmentation
-
 void construct_quic_initial_client_hello(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     bin.clear();
 

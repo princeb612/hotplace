@@ -35,7 +35,7 @@ variant::variant(const unsigned char *value, size_t n) { set_bstr_new(value, n);
 
 variant::variant(const std::string &rhs) { set_strn_new(rhs.c_str(), rhs.size()); }
 
-variant::variant(const binary_t &rhs) { set_bstr_new(&rhs[0], rhs.size()); }
+variant::variant(const binary_t &rhs) { set_bstr_new(rhs.empty() ? nullptr : &rhs[0], rhs.size()); }
 
 variant::variant(const stream_t *rhs) { set_bstr_new(rhs); }
 

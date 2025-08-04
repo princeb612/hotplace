@@ -22,5 +22,6 @@ void test_vtprintf();
 void test_autoindent();
 void test_split();
 void test_split2();
+void test_split3();
 
 #endif

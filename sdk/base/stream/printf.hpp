@@ -191,6 +191,7 @@ return_t vprintf(stream_t *stream, const char *fmt, Args... args) {
 enum vtprintf_style_t {
     vtprintf_style_normal = 0,
     vtprintf_style_cbor = 1,
+    vtprintf_style_base16 = 2,
 };
 return_t vtprintf(stream_t *stream, const variant_t &vt, vtprintf_style_t style = vtprintf_style_normal);
 return_t vtprintf(stream_t *stream, const variant &vt, vtprintf_style_t style = vtprintf_style_normal);

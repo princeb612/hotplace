@@ -29,7 +29,7 @@
 namespace hotplace {
 namespace net {
 
-dtls_record_publisher::dtls_record_publisher() : _session(nullptr), _fragment_size(1024), _flags(0) {}
+dtls_record_publisher::dtls_record_publisher() : _session(nullptr), _fragment_size(1024), _max_size(1200 - 30), _flags(0) {}
 
 void dtls_record_publisher::set_fragment_size(uint16 size) {
     const uint16 minsize = 1 << 7;
@@ -40,10 +40,14 @@ void dtls_record_publisher::set_fragment_size(uint16 size) {
 
 uint16 dtls_record_publisher::get_fragment_size() { return _fragment_size; }
 
-return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
+void dtls_record_publisher::set_max_size(uint16 size) { _max_size = size; }
+
+uint16 dtls_record_publisher::get_max_size() { return _max_size; }
+
+return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir, std::list<binary_t>& container) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == record || nullptr == func) {
+        if (nullptr == record) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -161,14 +165,13 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     for (auto item : records) {
                         binary_t bin;
                         item->write(dir, bin);
-                        func(session, bin);
+                        container.push_back(bin);
                         item->release();
                     }
                 } else {
                     binary_t bin;
                     ret = record->write(dir, bin);
-
-                    func(session, bin);
+                    container.push_back(bin);
                 }
             }
         }
@@ -180,16 +183,69 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
     return ret;
 }
 
-return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
+return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == records) {
+        if (nullptr == record || nullptr == func) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        auto lambda = [&](tls_record* record) -> return_t { return publish(record, dir, func); };
+        std::list<binary_t> container;
+        ret = publish(record, dir, container);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        for (auto& item : container) {
+            func(get_session(), item);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == records || nullptr == func) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        std::list<binary_t> container;
+        std::list<std::queue<binary_t>> temp;
+        std::queue<binary_t> q;
+        size_t size = 0;
+        auto lambda = [&](tls_record* record) -> return_t { return publish(record, dir, container); };
         ret = records->for_each(lambda);
+        for (auto& item : container) {
+            auto isize = item.size();
+            if (size + isize > get_max_size()) {
+                temp.push_back(std::move(q));
+                size = 0;
+            }
+            q.push(std::move(item));
+            size += isize;
+        }
+        if (false == q.empty()) {
+            temp.push_back(std::move(q));
+        }
+
+        for (auto& qitem : temp) {
+            auto qsize = qitem.size();
+            if (1 == qsize) {
+                auto& item = qitem.front();
+                func(get_session(), item);
+                qitem.pop();
+            } else {
+                binary_t bin;
+                for (; false == qitem.empty(); qitem.pop()) {
+                    auto& item = qitem.front();
+                    binary_append(bin, qitem.front());
+                }
+                func(get_session(), bin);
+            }
+        }
     }
     __finally2 {
         // do nothing

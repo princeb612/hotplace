@@ -27,7 +27,8 @@
     * CBOR
 
 * details
-  * Revision 838
+  * Revision 839
+    * [tested] DTLS records
   * Revision 836
     * [tested] DTLS 1.2 server (linux)
   * Revision 835

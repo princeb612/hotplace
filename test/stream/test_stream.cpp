@@ -399,7 +399,7 @@ void test_split() {
     auto lambda1 = [&](const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize) -> void {
         table1.insert({fragoffset, fragsize});
         _logger->writeln("split @0x%03zx [0x%zx]", fragoffset, fragsize);
-        _logger->dump(stream + fragoffset, fragsize, 16, 3);
+        // _logger->dump(stream + fragoffset, fragsize, 16, 3);
     };
     split(block, testfragsize, lambda1);
     _test_case.assert(table1 == expect1, __FUNCTION__, "split");
@@ -409,13 +409,15 @@ void test_split() {
     auto lambda2 = [&](const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize) -> void {
         table2.insert({fragoffset, fragsize});
         _logger->writeln("split @0x%03zx [0x%zx]", fragoffset, fragsize);
-        _logger->dump(stream + fragoffset, fragsize, 16, 3);
+        // _logger->dump(stream + fragoffset, fragsize, 16, 3);
     };
     split(block, testfragsize, 0x10, lambda2);
     _test_case.assert(table2 == expect2, __FUNCTION__, "split");
 }
 
 void test_split2() {
+    _test_case.begin("split");
+
     /**
      * input
      *   group #0 "group0" size 100
@@ -448,15 +450,9 @@ void test_split2() {
     binary_t group1;
     binary_t group2;
     binary_t group3;
-    for (auto i = 0; i < 100; i++) {
-        group0.push_back((byte_t)(i % 0x100));
-    }
-    for (auto i = 0; i < 210; i++) {
-        group1.push_back((byte_t)(i % 0x100));
-    }
-    for (auto i = 0; i < 30; i++) {
-        group2.push_back((byte_t)(i % 0x100));
-    }
+    group0.resize(100);
+    group1.resize(210);
+    group2.resize(30);
 
     splitter<std::string> spl;
     spl.set_segment_size(80);
@@ -491,4 +487,54 @@ void test_split2() {
         // dump if necessary
     };
     spl.run(lambda);
+}
+
+void test_split3() {
+    _test_case.begin("split");
+
+    // sketch dtls_record_publisher::publish(tls_records*, ...)
+
+    uint16 maxsize = 500;
+    std::list<uint16> temp;
+
+    // push_back(N) N must less than or equal maxsize
+
+    temp.push_back(200);
+    temp.push_back(300);
+
+    temp.push_back(400);
+
+    temp.push_back(400);
+    temp.push_back(50);
+
+    size_t size = 0;
+    std::list<std::queue<uint16>> container;
+    std::queue<uint16> q;
+    for (auto item : temp) {
+        if (size + item > maxsize) {
+            container.push_back(std::move(q));
+            size = 0;
+        }
+
+        q.push(item);
+        size += item;
+    }
+    if (false == q.empty()) {
+        container.push_back(std::move(q));
+    }
+
+    std::list<std::queue<uint16>> expect;
+    {
+        // {{200, 300}, {400}, {400, 50}};
+        std::queue<uint16> qitem;
+        qitem.push(200);
+        qitem.push(300);
+        expect.push_back(std::move(qitem));
+        qitem.push(400);
+        expect.push_back(std::move(qitem));
+        qitem.push(400);
+        qitem.push(50);
+        expect.push_back(std::move(qitem));
+    }
+    _test_case.assert(container == expect, __FUNCTION__, "dtls_record_publisher::publish underlying logic");
 }

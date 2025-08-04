@@ -62,6 +62,7 @@ int main(int argc, char **argv) {
     test_autoindent();
     test_split();
     test_split2();
+    test_split3();
 
     _logger->flush();
 

@@ -236,6 +236,9 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                     case vtprintf_style_t::vtprintf_style_cbor:
                         stream->printf("\"%s\"", vt.data.str);
                         break;
+                    case vtprintf_style_t::vtprintf_style_base16:
+                        stream->printf("%s", base16_encode(vt.data.str).c_str());
+                        break;
                     case vtprintf_style_t::vtprintf_style_normal:
                     default:
                         stream->printf("%s", vt.data.str);
@@ -246,6 +249,9 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 switch (style) {
                     case vtprintf_style_t::vtprintf_style_cbor:
                         stream->printf("\"%.*s\"", vt.size, vt.data.str);
+                        break;
+                    case vtprintf_style_t::vtprintf_style_base16:
+                        stream->printf("%s", base16_encode((byte_t*)vt.data.str, vt.size).c_str());
                         break;
                     case vtprintf_style_t::vtprintf_style_normal:
                     default:
@@ -259,6 +265,9 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 switch (style) {
                     case vtprintf_style_t::vtprintf_style_cbor:
                         stream->printf("h'%s'", temp.c_str());
+                        break;
+                    case vtprintf_style_t::vtprintf_style_base16:
+                        stream->printf("%s", base16_encode(vt.data.bstr, vt.size).c_str());
                         break;
                     case vtprintf_style_t::vtprintf_style_normal:
                     default:

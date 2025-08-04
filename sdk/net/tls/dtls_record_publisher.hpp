@@ -38,12 +38,16 @@ class dtls_record_publisher {
     void set_fragment_size(uint16 size);
     uint16 get_fragment_size();
 
+    void set_max_size(uint16 size);
+    uint16 get_max_size();
+
     /**
      * @brief publish
      * @param tls_record_handshake* record [in]
      * @param tls_direction_t dir [in]
      * @param std::function<void (tls_session*, binary_t&)> func [in]
      */
+    return_t publish(tls_record* record, tls_direction_t dir, std::list<binary_t>& container);
     return_t publish(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
     return_t publish(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
 
@@ -57,6 +61,7 @@ class dtls_record_publisher {
    private:
     tls_session* _session;
     uint16 _fragment_size;
+    uint16 _max_size;
     uint32 _flags;
 };
 
