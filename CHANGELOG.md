@@ -27,7 +27,7 @@
     * CBOR
 
 * details
-  * Revision 840
+  * Revision 841
   * Revision 839
     * [tested] DTLS records
   * Revision 836
