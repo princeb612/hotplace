@@ -26,8 +26,6 @@ namespace net {
 
 quic_session::quic_session() {}
 
-quic_packet_publisher& quic_session::get_quic_packet_publisher() { return _publisher; }
-
 quic_streams& quic_session::get_quic_streams() { return _streams; }
 
 }  // namespace net

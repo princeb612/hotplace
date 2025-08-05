@@ -540,7 +540,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
             // cipher suites
             uint8 mask = tls_flag_secure | tls_flag_support;
             auto lambda_cs = [&](const tls_cipher_suite_t* cs) -> void {
-                if ((mask & cs->flags) && (cs->version <= maxspec)) {
+                if ((mask & cs->flags) && (cs->version >= minspec) && (cs->version <= maxspec)) {
                     hs->add_ciphersuite(cs->code);
                 }
             };

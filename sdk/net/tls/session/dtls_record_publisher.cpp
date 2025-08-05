@@ -218,6 +218,7 @@ return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t di
         size_t size = 0;
         auto lambda = [&](tls_record* record) -> return_t { return publish(record, dir, container); };
         ret = records->for_each(lambda);
+
         for (auto& item : container) {
             auto isize = item.size();
             if (size + isize > get_max_size()) {
@@ -234,13 +235,11 @@ return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t di
         for (auto& qitem : temp) {
             auto qsize = qitem.size();
             if (1 == qsize) {
-                auto& item = qitem.front();
-                func(get_session(), item);
+                func(get_session(), qitem.front());
                 qitem.pop();
             } else {
                 binary_t bin;
                 for (; false == qitem.empty(); qitem.pop()) {
-                    auto& item = qitem.front();
                     binary_append(bin, qitem.front());
                 }
                 func(get_session(), bin);

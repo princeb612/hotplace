@@ -16,7 +16,6 @@
 #include <sdk/base/basic/binaries.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/net/tls/quic/types.hpp>
-#include <sdk/net/tls/quic_packet_publisher.hpp>
 #include <sdk/net/tls/quic_streams.hpp>
 #include <sdk/net/tls/types.hpp>
 
@@ -27,11 +26,9 @@ class quic_session {
    public:
     quic_session();
 
-    quic_packet_publisher& get_quic_packet_publisher();
     quic_streams& get_quic_streams();
 
    private:
-    quic_packet_publisher _publisher;
     quic_streams _streams;
 };
 

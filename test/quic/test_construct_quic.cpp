@@ -95,7 +95,8 @@ void construct_quic_initial_server_hello(tls_session* client_session, tls_sessio
         *initial << crypto;
     }
     {
-        auto padding = frame_builder.set(quic_frame_type_padding).set(initial).build();
+        auto padding = (quic_frame_padding*)frame_builder.set(quic_frame_type_padding).set(initial).build();
+        padding->pad(1182);  // TODO
         *initial << padding;
     }
 

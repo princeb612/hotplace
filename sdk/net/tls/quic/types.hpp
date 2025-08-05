@@ -190,7 +190,6 @@ class quic_frame_stop_sending;
 class quic_frames;
 
 class quic_packet;
-class quic_packet_publisher;
 class quic_packet_initial;
 class quic_packet_0rtt;
 class quic_packet_handshake;
