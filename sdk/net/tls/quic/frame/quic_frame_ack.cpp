@@ -13,15 +13,41 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
+#include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
+#include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-quic_frame_ack::quic_frame_ack(quic_packet* packet) : quic_frame(quic_frame_type_ack, packet) {}
+constexpr char constexpr_type[] = "type";
+
+constexpr char constexpr_largest_ack[] = "largest ack";
+constexpr char constexpr_ack_delay[] = "ack delay";
+constexpr char constexpr_ack_range_count[] = "ack range count";
+constexpr char constexpr_first_ack_range[] = "first ack range";
+
+constexpr char constexpr_ack_ranges[] = "ack ranges";
+constexpr char constexpr_gap[] = "gap";
+constexpr char constexpr_range_length[] = "range length";
+
+constexpr char constexpr_ecn_counts[] = "ECN Counts";
+constexpr char constexpr_ect0_count[] = "ect0 count";
+constexpr char constexpr_ect1_count[] = "ect1 count";
+constexpr char constexpr_ectce_count[] = "ect-ce count";
+
+quic_frame_ack::quic_frame_ack(quic_packet* packet) : quic_frame(quic_frame_type_ack, packet), _level(protection_default) {}
+
+quic_frame_ack& quic_frame_ack::set_protection_level(protection_level_t level) {
+    _level = level;
+    return *this;
+}
+
+protection_level_t quic_frame_ack::get_protection_level() { return _level; }
 
 return_t quic_frame_ack::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
@@ -46,16 +72,6 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
         // }
         // Figure 25: ACK Frame Format
 
-        constexpr char constexpr_largest_ack[] = "largest ack";
-        constexpr char constexpr_ack_delay[] = "ack delay";
-        constexpr char constexpr_ack_range_count[] = "ack range count";
-        constexpr char constexpr_first_ack_range[] = "first ack range";
-
-        constexpr char constexpr_ecn_counts[] = "ECN Counts";
-        constexpr char constexpr_ect0_count[] = "ect0 count";
-        constexpr char constexpr_ect1_count[] = "ect1 count";
-        constexpr char constexpr_ectce_count[] = "ect-ce count";
-
         payload pl;
         pl << new payload_member(new quic_encoded(uint64(0)), constexpr_largest_ack)      //
            << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)        //
@@ -78,10 +94,6 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             dbs.println("   > %s %I64i", constexpr_first_ack_range, first_ack_range);
         }
 #endif
-
-        constexpr char constexpr_ack_ranges[] = "ack ranges";
-        constexpr char constexpr_gap[] = "gap";
-        constexpr char constexpr_range_length[] = "range length";
 
         // RFC 9001 19.3.1.  ACK Ranges
         for (uint64 i = 0; i < ack_range_count; i++) {
@@ -147,6 +159,34 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
 return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_packet()->get_session();
+        auto level = get_protection_level();
+
+        if (protection_default == level) {
+            ret = errorcode_t::not_ready;
+            __leave2;
+        }
+
+        ack_t ack;
+        ack << session->get_quic_session().get_pkns(_level);
+
+        payload pl;
+        pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)                         //
+           << new payload_member(new quic_encoded(uint64(ack.largest_ack)), constexpr_largest_ack)            //
+           << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)                            //
+           << new payload_member(new quic_encoded(uint64(ack.ack_ranges.size())), constexpr_ack_range_count)  //
+           << new payload_member(new quic_encoded(uint64(ack.first_ack_range)), constexpr_first_ack_range);
+        pl.write(bin);
+
+        for (auto& item : ack.ack_ranges) {
+            payload ack_ranges;
+            ack_ranges << new payload_member(new quic_encoded(uint64(item.gap)), constexpr_gap)
+                       << new payload_member(new quic_encoded(uint64(item.ack_range_length)), constexpr_range_length);
+            ack_ranges.write(bin);
+        }
+    }
+    __finally2 {}
     return ret;
 }
 

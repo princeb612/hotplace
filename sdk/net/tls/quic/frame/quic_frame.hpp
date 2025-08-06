@@ -93,17 +93,17 @@ class quic_frame_ping : public quic_frame {
 // RFC 9000 19.3.  ACK Frames
 
 struct ack_range_t {
-    uint64 gap;
-    uint64 ack_range_length;
+    uint32 gap;
+    uint32 ack_range_length;
 
     ack_range_t() : gap(0), ack_range_length(0) {}
-    ack_range_t(uint64 g, uint64 l) : gap(g), ack_range_length(l) {}
+    ack_range_t(uint32 g, uint32 l) : gap(g), ack_range_length(l) {}
     bool operator==(const ack_range_t& rhs) const { return (gap == rhs.gap) && (ack_range_length == rhs.ack_range_length); }
 };
 /**
  * @example
  *          ack_t ack;
- *          t_ovl_points<uint64> part;
+ *          t_ovl_points<uint32> part;
  *          // ACK(21, FAR:0, [0]G:1,R:4, [1]G:0,R:5)
  *          part.add(7, 12).add(14, 18).add(21);
  *          ack << part;
@@ -116,12 +116,12 @@ struct ack_range_t {
  *          //      ack_ranges = std::vector of length 2, capacity 2 = {{gap = 1, ack_range_length = 4}, {gap = 0, ack_range_length = 5}}}
  */
 struct ack_t {
-    uint64 largest_ack;
-    uint64 first_ack_range;
+    uint32 largest_ack;
+    uint32 first_ack_range;
     std::vector<ack_range_t> ack_ranges;
 
     ack_t() : largest_ack(0), first_ack_range(0) {}
-    ack_t(uint64 l, uint64 f) : largest_ack(l), first_ack_range(f) {}
+    ack_t(uint32 l, uint32 f) : largest_ack(l), first_ack_range(f) {}
     void clear() {
         largest_ack = 0;
         first_ack_range = 0;
@@ -131,14 +131,14 @@ struct ack_t {
         return ((largest_ack == rhs.largest_ack) && (first_ack_range == rhs.first_ack_range) && (ack_ranges == rhs.ack_ranges));
     }
 
-    friend ack_t& operator<<(ack_t& ack, t_ovl_points<uint64>& part) {
+    friend ack_t& operator<<(ack_t& ack, t_ovl_points<uint32>& part) {
         ack.clear();
 
         auto res = part.merge();
         auto size = res.size();
         if (0 == size) {
         } else if (1 <= size) {
-            uint64 smallest = 0;
+            uint32 smallest = 0;
             {
                 const auto& ent = res[size - 1];
                 ack.largest_ack = ent.e;
@@ -156,7 +156,7 @@ struct ack_t {
 
         return ack;
     }
-    friend t_ovl_points<uint64>& operator>>(const ack_t& ack, t_ovl_points<uint64>& part) {
+    friend t_ovl_points<uint32>& operator>>(const ack_t& ack, t_ovl_points<uint32>& part) {
         part.clear();
         auto smallest = ack.largest_ack - ack.first_ack_range;
         part.add(smallest, ack.largest_ack);
@@ -175,10 +175,16 @@ class quic_frame_ack : public quic_frame {
    public:
     quic_frame_ack(quic_packet* packet);
 
+    quic_frame_ack& set_protection_level(protection_level_t level);
+    protection_level_t get_protection_level();
+
    protected:
     virtual return_t do_postprocess(tls_direction_t dir);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+
+   private:
+    protection_level_t _level;
 };
 
 // RFC 9000 19.4.  RESET_STREAM Frames

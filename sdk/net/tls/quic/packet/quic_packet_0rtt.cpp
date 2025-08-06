@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace net {
 
-quic_packet_0rtt::quic_packet_0rtt(tls_session* session) : quic_packet(quic_packet_type_1_rtt, session) {}
+quic_packet_0rtt::quic_packet_0rtt(tls_session* session) : quic_packet(quic_packet_type_0_rtt, session) {}
 
 quic_packet_0rtt::quic_packet_0rtt(const quic_packet_0rtt& rhs) : quic_packet(rhs) {}
 

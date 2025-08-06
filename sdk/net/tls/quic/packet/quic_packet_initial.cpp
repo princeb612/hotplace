@@ -39,6 +39,7 @@
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
+#include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/tls_session.hpp>
 #include <sdk/net/tls/types.hpp>
 
@@ -146,8 +147,13 @@ return_t quic_packet_initial::read(tls_direction_t dir, const byte_t* stream, si
 
         {
             size_t pos = 0;
-            get_quic_frames().read(dir, &_payload[0], _payload.size(), pos);
+            ret = get_quic_frames().read(dir, &_payload[0], _payload.size(), pos);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
+
+        session->get_quic_session().get_pkns(protection_initial).add(get_pn());
     }
     __finally2 {
         // do nothing
@@ -206,7 +212,7 @@ return_t quic_packet_initial::write(tls_direction_t dir, binary_t& header, binar
          *  in sampling header ciphertext for header protection, the Packet Number field is
          *  assumed to be 4 bytes long (its maximum possible encoded length).
          */
-        if ((from_any != dir) && (get_payload().size() >= 0x10)) {
+        if ((from_any != dir) && (get_payload().size() > 0)) {
             binary_t bin_ciphertext;
             binary_t bin_tag;
             binary_t bin_mask;

@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet_builder.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
@@ -16,7 +17,7 @@
 namespace hotplace {
 namespace net {
 
-quic_packet_builder::quic_packet_builder() : _type(0), _msb(0), _session(nullptr) {}
+quic_packet_builder::quic_packet_builder() : _type(0), _msb(0), _session(nullptr), _dir(from_any), _construct(false) {}
 
 quic_packet_builder& quic_packet_builder::set(quic_packet_t type) {
     _type = type;
@@ -32,6 +33,20 @@ quic_packet_builder& quic_packet_builder::set_session(tls_session* session) {
     _session = session;
     return *this;
 }
+
+quic_packet_builder& quic_packet_builder::set(tls_direction_t dir) {
+    _dir = dir;
+    return *this;
+}
+
+tls_direction_t quic_packet_builder::get_direction() { return _dir; }
+
+quic_packet_builder& quic_packet_builder::construct() {
+    _construct = true;
+    return *this;
+}
+
+bool quic_packet_builder::is_construct() { return _construct; }
 
 quic_packet* quic_packet_builder::build() {
     quic_packet* packet = nullptr;
@@ -55,18 +70,36 @@ quic_packet* quic_packet_builder::build() {
             } break;
             case quic_packet_type_initial: {
                 __try_new_catch_only(packet, new quic_packet_initial(session));
+                if (is_construct() && (from_any != get_direction())) {
+                    openssl_prng prng;
+                    auto pn = session->get_recordno(get_direction(), false, protection_initial);
+                    auto pnl = (prng.rand32() % 4) + 1;
+                    packet->set_pn(pn, pnl);
+                }
             } break;
             case quic_packet_type_0_rtt: {
                 __try_new_catch_only(packet, new quic_packet_0rtt(session));
             } break;
             case quic_packet_type_handshake: {
                 __try_new_catch_only(packet, new quic_packet_handshake(session));
+                if (is_construct() && (from_any != get_direction())) {
+                    openssl_prng prng;
+                    auto pn = session->get_recordno(get_direction(), false, protection_handshake);
+                    auto pnl = (prng.rand32() % 4) + 1;
+                    packet->set_pn(pn, pnl);
+                }
             } break;
             case quic_packet_type_retry: {
                 __try_new_catch_only(packet, new quic_packet_retry(session));
             } break;
             case quic_packet_type_1_rtt: {
                 __try_new_catch_only(packet, new quic_packet_1rtt(session));
+                if (is_construct() && (from_any != get_direction())) {
+                    openssl_prng prng;
+                    auto pn = session->get_recordno(get_direction(), false, protection_application);
+                    auto pnl = (prng.rand32() % 4) + 1;
+                    packet->set_pn(pn, pnl);
+                }
             } break;
         }
     }

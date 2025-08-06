@@ -16,6 +16,7 @@
 #include <sdk/net/tls/quic/frame/quic_frames.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
+#include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
@@ -72,37 +73,39 @@ return_t quic_packet_1rtt::read(tls_direction_t dir, const byte_t* stream, size_
             __leave2;
         }
 
+        ret = header_unprotect(dir, stream + (ppos + offset_pnpayload + 4), 16, protection_application, _ht, _pn, _payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // aad
+        write_header(bin_unprotected_header);
+
+        // AEAD
+        binary_t bin_plaintext;
         {
-            ret = header_unprotect(dir, stream + (ppos + offset_pnpayload + 4), 16, protection_application, _ht, _pn, _payload);
+            auto& protection = session->get_tls_protection();
+
+            size_t pos = 0;
+            ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_plaintext, bin_unprotected_header, bin_tag, protection_application);
+            if (errorcode_t::success == ret) {
+                _payload = std::move(bin_plaintext);
+            } else {
+                _payload.clear();
+            }
+        }
+
+        dump();
+
+        {
+            size_t pos = 0;
+            ret = get_quic_frames().read(dir, &_payload[0], _payload.size(), pos);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
-
-            // aad
-            write_header(bin_unprotected_header);
-
-            // AEAD
-            binary_t bin_plaintext;
-            {
-                auto& protection = session->get_tls_protection();
-
-                size_t pos = 0;
-                ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_plaintext, bin_unprotected_header, bin_tag,
-                                         protection_application);
-                if (errorcode_t::success == ret) {
-                    _payload = std::move(bin_plaintext);
-                } else {
-                    _payload.clear();
-                }
-            }
-
-            dump();
-
-            {
-                size_t pos = 0;
-                get_quic_frames().read(dir, &_payload[0], _payload.size(), pos);
-            }
         }
+
+        session->get_quic_session().get_pkns(protection_application).add(get_pn());
     }
     __finally2 {
         // do nothing
@@ -186,14 +189,6 @@ return_t quic_packet_1rtt::write(tls_direction_t dir, binary_t& header, binary_t
             header = std::move(bin_protected_header);
             ciphertext = std::move(bin_ciphertext);
             tag = std::move(bin_tag);
-
-            if (0) {
-                dump();
-
-                auto session = get_session();
-                size_t pos = 0;
-                get_quic_frames().read(dir, &_payload[0], _payload.size(), pos);
-            }
         } else {
             header = std::move(bin_unprotected_header);
         }

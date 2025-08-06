@@ -140,6 +140,21 @@ enum quic_param_t {
     quic_param_active_connection_id_limit = 0x0e,
     quic_param_initial_source_connection_id = 0x0f,
     quic_param_retry_source_connection_id = 0x10,
+    quic_param_version_information = 0x11,
+    quic_param_max_datagram_frame_size = 0x20,
+    quic_param_discard = 0x173e,
+    quic_param_google_handshake_message = 0x26ab,
+    quic_param_grease_quic_bit = 0x2ab2,
+    quic_param_initial_rtt = 0x3127,
+    quic_param_google_connection_options = 0x3128,
+    quic_param_user_agent = 0x3129,
+    quic_param_google_version = 0x4752,
+    quic_param_version_information_draft = 0xff73db,
+    quic_param_min_ack_delay = 0xff04de1b,
+    quic_param_enable_multipath = 0x0f739bbc1b666d05,
+    quic_param_enable_multipath_06 = 0x0f739bbc1b666d06,
+    quic_param_initial_max_path_id = 0x0f739bbc1b666d0d,
+    quic_param_bdp_frame = 0x4143414213370002,
 };
 
 /**

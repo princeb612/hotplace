@@ -16,6 +16,7 @@
 #include <functional>
 #include <sdk/base/basic/types.hpp>
 #include <sdk/base/nostd/range.hpp>
+#include <sdk/base/system/critical_section.hpp>
 #include <set>
 
 namespace hotplace {
@@ -67,32 +68,40 @@ class t_merge_ovl_intervals {
     t_merge_ovl_intervals() {}
 
     t_merge_ovl_intervals& add(const interval& t) {
+        critical_section_guard guard(_lock);
         _arr.push_back(t);
         return *this;
     }
     t_merge_ovl_intervals& add(interval&& t) {
+        critical_section_guard guard(_lock);
         _arr.push_back(std::move(t));
         return *this;
     }
     t_merge_ovl_intervals& add(T start, T end) {
+        critical_section_guard guard(_lock);
         _arr.push_back(interval(start, end));
         return *this;
     }
     t_merge_ovl_intervals& add(T start, T end, const TAGTYPE& t) {
+        critical_section_guard guard(_lock);
         _arr.push_back(interval(start, end, t));
         return *this;
     }
     t_merge_ovl_intervals& add(const range_t& range, const TAGTYPE& t) {
+        critical_section_guard guard(_lock);
         _arr.push_back(interval(range.begin, range.end, t));
         return *this;
     }
 
     t_merge_ovl_intervals& clear() {
+        critical_section_guard guard(_lock);
         _arr.clear();
         return *this;
     }
 
     t_merge_ovl_intervals& subtract(T start, T end) {
+        critical_section_guard guard(_lock);
+
         t_merge_ovl_intervals<T, TAGTYPE> temp;
         temp._arr = std::move(_arr);
         temp.merge();
@@ -114,6 +123,8 @@ class t_merge_ovl_intervals {
     }
 
     std::vector<interval> merge() {
+        critical_section_guard guard(_lock);
+
         size_t index = 0;                              // stores index of last element in output array (modified _arr[])
         std::sort(_arr.begin(), _arr.end(), compare);  // sort intervals in increasing order of start time
 
@@ -140,6 +151,7 @@ class t_merge_ovl_intervals {
     size_t size() { return _arr.size(); }
 
    private:
+    critical_section _lock;
     std::vector<interval> _arr;
 };
 
@@ -184,24 +196,30 @@ class t_ovl_points {
     t_ovl_points() {}
 
     t_ovl_points& add(T p) {
+        critical_section_guard guard(_lock);
         _arr.push_back(interval(p, p));
         return *this;
     }
     t_ovl_points& add(T start, T end) {
+        critical_section_guard guard(_lock);
         _arr.push_back(interval(start, end));
         return *this;
     }
     t_ovl_points& add(const range_t& range) {
+        critical_section_guard guard(_lock);
         _arr.push_back(interval(range.begin, range.end));
         return *this;
     }
 
     t_ovl_points& clear() {
+        critical_section_guard guard(_lock);
         _arr.clear();
         return *this;
     }
 
     std::vector<interval> merge() {
+        critical_section_guard guard(_lock);
+
         size_t index = 0;                              // stores index of last element in output array (modified _arr[])
         std::sort(_arr.begin(), _arr.end(), compare);  // sort intervals in increasing order of start time
 
@@ -227,12 +245,16 @@ class t_ovl_points {
     size_t size() { return _arr.size(); }
 
     bool operator==(t_ovl_points<T>& rhs) {
+        critical_section_guard guard(_lock);
+        critical_section_guard guard_rhs(rhs._lock);
+
         auto lres = merge();
         auto rres = rhs.merge();
         return lres == rres;
     }
 
    private:
+    critical_section _lock;
     std::vector<interval> _arr;
 };
 

@@ -27,9 +27,11 @@ class quic_session {
     quic_session();
 
     quic_streams& get_quic_streams();
+    t_ovl_points<uint32>& get_pkns(protection_level_t level);
 
    private:
     quic_streams _streams;
+    std::map<protection_level_t, t_ovl_points<uint32>> _pkn;
 };
 
 }  // namespace net

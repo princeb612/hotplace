@@ -268,7 +268,7 @@ void quic_packet::dump() {
             case quic_packet_type_0_rtt:
             case quic_packet_type_handshake:
             case quic_packet_type_1_rtt:
-                dbs.println(" > packet length %i", get_pn_length());
+                dbs.println(" > packet number length %i", get_pn_length());
                 break;
         }
         trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
@@ -280,6 +280,15 @@ return_t quic_packet::header_protect(tls_direction_t dir, const binary_t& bin_ci
                                      binary_t& bin_pn, binary_t& bin_protected_header) {
     return_t ret = errorcode_t::success;
     __try2 {
+#if defined DEBUG
+        if (istraceable(trace_category_net)) {
+            basic_stream dbs;
+            dbs.println(" > packet number %s", base16_encode(bin_pn).c_str());
+            dbs.println(" > packet number length %i", pn_length);
+            trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+        }
+#endif
+
         auto session = get_session();
         auto& protection = session->get_tls_protection();
 

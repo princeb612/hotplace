@@ -8,6 +8,7 @@
 
 * understanding
   * Revision 805-
+    * server - DTLS
     * QUIC, HTTP/3
   * Revision 777-804
     * server - TLS, HTTP/1.1, HTTP/2
@@ -27,7 +28,7 @@
     * CBOR
 
 * details
-  * Revision 841
+  * Revision 842
   * Revision 839
     * [tested] DTLS records
   * Revision 836

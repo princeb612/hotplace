@@ -28,5 +28,7 @@ quic_session::quic_session() {}
 
 quic_streams& quic_session::get_quic_streams() { return _streams; }
 
+t_ovl_points<uint32>& quic_session::get_pkns(protection_level_t level) { return _pkn[level]; }
+
 }  // namespace net
 }  // namespace hotplace

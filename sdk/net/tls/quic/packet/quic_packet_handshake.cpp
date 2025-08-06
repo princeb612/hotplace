@@ -42,6 +42,7 @@
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
+#include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshakes.hpp>
 #include <sdk/net/tls/tls_session.hpp>
 #include <sdk/net/tls/types.hpp>
@@ -49,7 +50,7 @@
 namespace hotplace {
 namespace net {
 
-quic_packet_handshake::quic_packet_handshake(tls_session* session) : quic_packet(quic_packet_type_initial, session), _length(0), _sizeof_length(0) {}
+quic_packet_handshake::quic_packet_handshake(tls_session* session) : quic_packet(quic_packet_type_handshake, session), _length(0), _sizeof_length(0) {}
 
 quic_packet_handshake::quic_packet_handshake(const quic_packet_handshake& rhs) : quic_packet(rhs), _length(rhs._length), _sizeof_length(rhs._sizeof_length) {}
 
@@ -109,37 +110,39 @@ return_t quic_packet_handshake::read(tls_direction_t dir, const byte_t* stream, 
             __leave2;
         }
 
+        ret = header_unprotect(dir, stream + (ppos + offset_pnpayload + 4), 16, protection_handshake, _ht, _pn, _payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // aad
+        write_header(bin_unprotected_header);
+
+        // AEAD
+        binary_t bin_plaintext;
         {
-            ret = header_unprotect(dir, stream + (ppos + offset_pnpayload + 4), 16, protection_handshake, _ht, _pn, _payload);
+            auto& protection = session->get_tls_protection();
+
+            size_t pos = 0;
+            ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_plaintext, bin_unprotected_header, bin_tag, protection_handshake);
+            if (errorcode_t::success == ret) {
+                _payload = std::move(bin_plaintext);
+            } else {
+                _payload.clear();
+            }
+        }
+
+        dump();
+
+        {
+            size_t pos = 0;
+            ret = get_quic_frames().read(dir, &_payload[0], _payload.size(), pos);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
-
-            // aad
-            write_header(bin_unprotected_header);
-
-            // AEAD
-            binary_t bin_plaintext;
-            {
-                auto& protection = session->get_tls_protection();
-
-                size_t pos = 0;
-                ret =
-                    protection.decrypt(session, dir, &_payload[0], _payload.size(), pos, bin_plaintext, bin_unprotected_header, bin_tag, protection_handshake);
-                if (errorcode_t::success == ret) {
-                    _payload = std::move(bin_plaintext);
-                } else {
-                    _payload.clear();
-                }
-            }
-
-            dump();
-
-            {
-                size_t pos = 0;
-                get_quic_frames().read(dir, &_payload[0], _payload.size(), pos);
-            }
         }
+
+        session->get_quic_session().get_pkns(protection_handshake).add(get_pn());
     }
     __finally2 {
         // do nothing
@@ -155,6 +158,8 @@ return_t quic_packet_handshake::write(tls_direction_t dir, binary_t& header, bin
             ret = errorcode_t::invalid_context;
             __leave2;
         }
+
+        get_quic_frames().write(dir, _payload);
 
         auto& protection = session->get_tls_protection();
         auto tagsize = protection.get_tag_size();
@@ -195,7 +200,7 @@ return_t quic_packet_handshake::write(tls_direction_t dir, binary_t& header, bin
          *  in sampling header ciphertext for header protection, the Packet Number field is
          *  assumed to be 4 bytes long (its maximum possible encoded length).
          */
-        if ((from_any != dir) && (get_payload().size() >= 0x10)) {
+        if ((from_any != dir) && (get_payload().size() > 0)) {
             binary_t bin_ciphertext;
             binary_t bin_tag;
             binary_t bin_mask;
@@ -226,16 +231,6 @@ return_t quic_packet_handshake::write(tls_direction_t dir, binary_t& header, bin
             header = std::move(bin_protected_header);
             ciphertext = std::move(bin_ciphertext);
             tag = std::move(bin_tag);
-
-#if defined DEBUG
-            if (0) {
-                dump();
-
-                auto session = get_session();
-                size_t pos = 0;
-                get_quic_frames().read(dir, &_payload[0], _payload.size(), pos);
-            }
-#endif
         } else {
             header = std::move(bin_unprotected_header);
         }
