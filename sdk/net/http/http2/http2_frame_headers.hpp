@@ -1,0 +1,48 @@
+/* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
+/**
+ * @file {file}
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @desc
+ *
+ * Revision History
+ * Date         Name                Description
+ */
+
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2FRAMEHEADERS__
+#define __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2FRAMEHEADERS__
+
+#include <sdk/net/http/http2/http2_frame.hpp>
+
+namespace hotplace {
+namespace net {
+
+/**
+ * @brief   headers frame
+ * @see
+ *          RFC 7540 6.2 HEADERS
+ */
+class http2_frame_headers : public http2_frame {
+   public:
+    http2_frame_headers();
+    http2_frame_headers(const http2_frame_headers& rhs);
+    virtual ~http2_frame_headers();
+
+    virtual return_t read(http2_frame_header_t const* header, size_t size);
+    virtual return_t write(binary_t& frame);
+    virtual void dump(stream_t* s);
+
+    void set_fragment(const binary_t& fragment);
+    const binary_t& get_fragment();
+
+   private:
+    uint8 _padlen;
+    bool _exclusive;
+    uint32 _dependency;
+    uint8 _weight;
+    binary_t _fragment;
+};
+
+}  // namespace net
+}  // namespace hotplace
+
+#endif

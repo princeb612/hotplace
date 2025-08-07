@@ -16,7 +16,9 @@
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
-#include <sdk/net/http/http2/http2_frame.hpp>
+#include <sdk/net/http/http2/http2_frame_alt_svc.hpp>
+#include <sdk/net/http/http2/http2_frame_data.hpp>
+#include <sdk/net/http/http2/http2_frame_headers.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/http/http_response.hpp>

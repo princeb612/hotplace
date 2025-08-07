@@ -17,6 +17,17 @@
 #include <sdk/io/system/types.hpp>
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
+#include <sdk/net/http/http2/http2_frame_alt_svc.hpp>
+#include <sdk/net/http/http2/http2_frame_continuation.hpp>
+#include <sdk/net/http/http2/http2_frame_data.hpp>
+#include <sdk/net/http/http2/http2_frame_goaway.hpp>
+#include <sdk/net/http/http2/http2_frame_headers.hpp>
+#include <sdk/net/http/http2/http2_frame_ping.hpp>
+#include <sdk/net/http/http2/http2_frame_priority.hpp>
+#include <sdk/net/http/http2/http2_frame_push_promise.hpp>
+#include <sdk/net/http/http2/http2_frame_rst_stream.hpp>
+#include <sdk/net/http/http2/http2_frame_settings.hpp>
+#include <sdk/net/http/http2/http2_frame_window_update.hpp>
 #include <sdk/net/http/http2/http2_serverpush.hpp>
 #include <sdk/net/http/http2/http2_session.hpp>
 #include <sdk/net/http/http_request.hpp>
@@ -103,9 +114,9 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 
         http2_frame_header_t* hdr = (http2_frame_header_t*)(buf + pos_frame);
         size_t frame_size = bufsize - pos_frame;
-        uint24_t i32_24((byte_t*)hdr, frame_size);
-        uint32 payload_size = i32_24;
-        uint32 packet_size = sizeof(http2_frame_header_t) + payload_size;
+        // uint24_t i32_24((byte_t*)hdr, frame_size);
+        // uint32 payload_size = i32_24;
+        // uint32 packet_size = sizeof(http2_frame_header_t) + payload_size;
         uint8 flags = hdr->flags;
         uint32 stream_id = ntoh32(hdr->stream_id);
         uint32 mask = (h2_flag_end_stream | h2_flag_end_headers);

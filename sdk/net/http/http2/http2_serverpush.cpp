@@ -12,6 +12,8 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/http/html_documents.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
+#include <sdk/net/http/http2/http2_frame_continuation.hpp>
+#include <sdk/net/http/http2/http2_frame_push_promise.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http2/http2_serverpush.hpp>
 #include <sdk/net/http/http_request.hpp>

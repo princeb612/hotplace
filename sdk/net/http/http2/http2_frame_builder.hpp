@@ -1,0 +1,37 @@
+/* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
+/**
+ * @file {file}
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @desc
+ *
+ * Revision History
+ * Date         Name                Description
+ */
+
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2FRAMEBUILDER__
+#define __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2FRAMEBUILDER__
+
+#include <sdk/net/http/http2/http2_frame.hpp>
+
+namespace hotplace {
+namespace net {
+
+class http2_frame_builder {
+   public:
+    http2_frame_builder();
+
+    http2_frame_builder& set(h2_frame_t type);
+    http2_frame_builder& set(uint8 type);
+    http2_frame* build();
+
+   protected:
+    uint8 get_type();
+
+   private:
+    uint8 _type;
+};
+
+}  // namespace net
+}  // namespace hotplace
+
+#endif

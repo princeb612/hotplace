@@ -356,23 +356,24 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     uint32 idx = 0;
 
+    // cover both cases (1..1, 1..*), so do not test the exact rcseq
     auto lambda_test_next_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_next_rcseq,
                                     uint16 expect_next_hsseq) -> void {
         uint16 rcepoch = session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch);
         uint64 next_rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
         uint16 next_hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
-        bool test = (expect_epoch == rcepoch) && (expect_next_hsseq == next_hsseq) && (expect_next_hsseq == next_hsseq);
-        _test_case.assert(test, func, "#%i %s record (epoch %i next sequence %I64i <- expected %i %I64i) handshake (next sequence %i <- expected %i)", idx++,
-                          tlsadvisor->nameof_direction(dir).c_str(), rcepoch, next_rcseq, expect_epoch, expect_next_hsseq, next_hsseq, expect_next_hsseq);
+        bool test = (expect_epoch == rcepoch) && (expect_next_rcseq >= next_rcseq) && (expect_next_hsseq == next_hsseq);
+        _test_case.assert(test, func, "#%i %s record (epoch %i next sequence %I64i) handshake (next sequence %i)", idx++,
+                          tlsadvisor->nameof_direction(dir).c_str(), rcepoch, next_rcseq, next_hsseq);
     };
     auto lambda_test_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_rcseq,
                                uint16 expect_hsseq) -> void {
         uint16 rcepoch = session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch);
         uint64 rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
         uint16 hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
-        bool test = (expect_epoch == rcepoch) && (expect_hsseq == hsseq) && (expect_hsseq == hsseq);
-        _test_case.assert(test, func, "#%i %s record (epoch %i sequence %I64i <- expected %i %I64i) handshake (sequence %i <- expected %i)", idx++,
-                          tlsadvisor->nameof_direction(dir).c_str(), rcepoch, rcseq, expect_epoch, expect_rcseq, hsseq, expect_hsseq);
+        bool test = (expect_epoch == rcepoch) && (expect_rcseq >= rcseq) && (expect_hsseq == hsseq);
+        _test_case.assert(test, func, "#%i %s record (epoch %i sequence %I64i) handshake (sequence %i)", idx++,
+                          tlsadvisor->nameof_direction(dir).c_str(), rcepoch, rcseq, hsseq);
     };
 
     return_t ret = errorcode_t::success;

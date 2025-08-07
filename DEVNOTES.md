@@ -140,22 +140,19 @@ flowchart LR
 
   DB1[TLS.openssl];
   DB2[DTLS.openssl];
-  DB3[QUIC.implement];
-  DB4[TLS.implement];
-  DB5[DTLS.implement];
+  DB4[TLS.trial];
+  DB5[DTLS.trial];
   DB --> DB1;
   DB --> DB2;
-  DB -.-> DB3;
-  DB -.-> DB4;
-  DB -.-> DB5;
+  DB --> DB4;
+  DB --> DB5;
   DA1 --> DC;
   DA2 --> DC;
   DA3 -.-> DC;
   DB1 --> DC;
   DB2 --> DC;
-  DB3 -.-> DC;
-  DB4 -.-> DC;
-  DB5 -.-> DC;
+  DB4 --> DC;
+  DB5 --> DC;
 
   DC[network server];
   DC1[HTTP/1.1];

@@ -23,7 +23,7 @@ namespace net {
  *          RFC 7540 4. HTTP Frames
  *          RFC 7540 11.2. Frame Type Registry
  */
-enum h2_frame_t {
+enum h2_frame_t : uint8 {
     h2_frame_data = 0x0,           // RFC 7540 6.1. DATA
     h2_frame_headers = 0x1,        // RFC 7540 6.2. HEADERS
     h2_frame_priority = 0x2,       // RFC 7540 6.3. PRIORITY

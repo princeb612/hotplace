@@ -10,7 +10,7 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/net/http/http2/http2_frame.hpp>
+#include <sdk/net/http/http2/http2_frame_push_promise.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
