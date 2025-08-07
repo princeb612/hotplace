@@ -86,6 +86,18 @@
 /* http/http2 */
 #include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
+#include <sdk/net/http/http2/http2_frame_alt_svc.hpp>
+#include <sdk/net/http/http2/http2_frame_builder.hpp>
+#include <sdk/net/http/http2/http2_frame_continuation.hpp>
+#include <sdk/net/http/http2/http2_frame_data.hpp>
+#include <sdk/net/http/http2/http2_frame_goaway.hpp>
+#include <sdk/net/http/http2/http2_frame_headers.hpp>
+#include <sdk/net/http/http2/http2_frame_ping.hpp>
+#include <sdk/net/http/http2/http2_frame_priority.hpp>
+#include <sdk/net/http/http2/http2_frame_push_promise.hpp>
+#include <sdk/net/http/http2/http2_frame_rst_stream.hpp>
+#include <sdk/net/http/http2/http2_frame_settings.hpp>
+#include <sdk/net/http/http2/http2_frame_window_update.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http2/http2_serverpush.hpp>
 #include <sdk/net/http/http2/http2_session.hpp>

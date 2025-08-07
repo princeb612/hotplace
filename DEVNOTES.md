@@ -213,7 +213,7 @@ flowchart LR
 - [x] QPACK
   - [x] encoder
   - [x] static table
-  - [x] dynamic table
+  - [x] dynamic table (rev. 824)
 - [x] HPACK
   - [x] huffman coding
   - [x] encoder

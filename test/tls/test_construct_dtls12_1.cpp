@@ -372,8 +372,8 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         uint64 rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
         uint16 hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
         bool test = (expect_epoch == rcepoch) && (expect_rcseq >= rcseq) && (expect_hsseq == hsseq);
-        _test_case.assert(test, func, "#%i %s record (epoch %i sequence %I64i) handshake (sequence %i)", idx++,
-                          tlsadvisor->nameof_direction(dir).c_str(), rcepoch, rcseq, hsseq);
+        _test_case.assert(test, func, "#%i %s record (epoch %i sequence %I64i) handshake (sequence %i)", idx++, tlsadvisor->nameof_direction(dir).c_str(),
+                          rcepoch, rcseq, hsseq);
     };
 
     return_t ret = errorcode_t::success;
