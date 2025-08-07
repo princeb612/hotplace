@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/http2/hpack.hpp>
+#include <sdk/net/http/http2/hpack_static_table.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
@@ -21,7 +21,7 @@ hpack_static_table* hpack_static_table::get_instance() {
     return &_instance;
 }
 
-hpack_static_table::hpack_static_table() : http_static_table() {}
+hpack_static_table::hpack_static_table() : http2_static_table() {}
 
 void hpack_static_table::load() {
     if (_static_table.empty()) {

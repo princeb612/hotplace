@@ -21,7 +21,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/net/tls/quic/frame/quic_frame.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_connection_close.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
 #include <sdk/net/tls/tls/tls.hpp>

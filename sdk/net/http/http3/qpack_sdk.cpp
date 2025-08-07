@@ -10,7 +10,7 @@
 
 #include <math.h>
 
-#include <sdk/net/http/http3/qpack.hpp>
+#include <sdk/net/http/http3/qpack_encoder.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {

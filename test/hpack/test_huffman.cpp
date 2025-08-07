@@ -19,7 +19,7 @@ void do_test_huffman_codes_routine(const char* sample, const char* expect) {
         basic_stream bs;
         binary_t bin;
 
-        auto huffcode = http_huffman_coding::get_instance();
+        auto huffcode = http2_huffman_coding::get_instance();
 
         huffcode->encode(&bs, (byte_t*)sample, strlen(sample));
         if (option.verbose) {

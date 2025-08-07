@@ -8,18 +8,19 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/unittest/trace.hpp>
-#include <sdk/net/http/http2/http_header_compression.hpp>
+#include <sdk/net/http/http2/http2_dynamic_table.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {
 
-http_dynamic_table::http_dynamic_table() : _type(header_compression_hpack), _tablesize(0), _capacity(0), _inserted(0), _dropped(0), _ack(0) {}
+http2_dynamic_table::http2_dynamic_table() : _type(header_compression_hpack), _tablesize(0), _capacity(0), _inserted(0), _dropped(0), _ack(0) {}
 
-http_dynamic_table::~http_dynamic_table() {}
+http2_dynamic_table::~http2_dynamic_table() {}
 
-void http_dynamic_table::pick(size_t entry, const std::string& name, std::string& value) {
+void http2_dynamic_table::pick(size_t entry, const std::string& name, std::string& value) {
     critical_section_guard guard(_lock);
     auto iter = _dynamic_reversemap.find(entry);
     if (_dynamic_reversemap.end() != iter) {
@@ -35,15 +36,15 @@ void http_dynamic_table::pick(size_t entry, const std::string& name, std::string
     }
 }
 
-void http_dynamic_table::for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) {}
+void http2_dynamic_table::for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) {}
 
-void http_dynamic_table::dump(const std::string& desc, std::function<void(const char*, size_t)> f) {}
+void http2_dynamic_table::dump(const std::string& desc, std::function<void(const char*, size_t)> f) {}
 
-bool http_dynamic_table::operator==(const http_dynamic_table& rhs) { return (_type == rhs._type) && (_dynamic_map == rhs._dynamic_map); }
+bool http2_dynamic_table::operator==(const http2_dynamic_table& rhs) { return (_type == rhs._type) && (_dynamic_map == rhs._dynamic_map); }
 
-bool http_dynamic_table::operator!=(const http_dynamic_table& rhs) { return (_type != rhs._type) || (_dynamic_map != rhs._dynamic_map); }
+bool http2_dynamic_table::operator!=(const http2_dynamic_table& rhs) { return (_type != rhs._type) || (_dynamic_map != rhs._dynamic_map); }
 
-match_result_t http_dynamic_table::match(uint32 flags, const std::string& name, const std::string& value, size_t& index) {
+match_result_t http2_dynamic_table::match(uint32 flags, const std::string& name, const std::string& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;
 
     critical_section_guard guard(_lock);
@@ -116,7 +117,7 @@ match_result_t http_dynamic_table::match(uint32 flags, const std::string& name, 
     return state;
 }
 
-return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& name, std::string& value) {
+return_t http2_dynamic_table::select(uint32 flags, size_t index, std::string& name, std::string& value) {
     return_t ret = errorcode_t::not_found;
 
     __try2 {
@@ -175,7 +176,7 @@ return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& nam
     return ret;
 }
 
-return_t http_dynamic_table::insert(const std::string& name, const std::string& value) {
+return_t http2_dynamic_table::insert(const std::string& name, const std::string& value) {
     return_t ret = errorcode_t::success;
 
     critical_section_guard guard(_lock);
@@ -188,7 +189,7 @@ return_t http_dynamic_table::insert(const std::string& name, const std::string& 
     return ret;
 }
 
-return_t http_dynamic_table::commit() {
+return_t http2_dynamic_table::commit() {
     return_t ret = errorcode_t::success;
 
     critical_section_guard guard(_lock);
@@ -233,7 +234,7 @@ return_t http_dynamic_table::commit() {
     return ret;
 }
 
-return_t http_dynamic_table::evict() {
+return_t http2_dynamic_table::evict() {
     return_t ret = errorcode_t::success;
 
     critical_section_guard guard(_lock);
@@ -285,7 +286,7 @@ return_t http_dynamic_table::evict() {
     return ret;
 }
 
-void http_dynamic_table::set_capacity(uint32 capacity) {
+void http2_dynamic_table::set_capacity(uint32 capacity) {
     /**
      * RFC 9113 6.5.2.  Defined Settings
      *  SETTINGS_HEADER_TABLE_SIZE (0x01)
@@ -314,27 +315,27 @@ void http_dynamic_table::set_capacity(uint32 capacity) {
     evict();
 }
 
-void http_dynamic_table::ack() { _ack = _inserted; }
+void http2_dynamic_table::ack() { _ack = _inserted; }
 
-void http_dynamic_table::cancel() {}
+void http2_dynamic_table::cancel() {}
 
-void http_dynamic_table::increment(size_t inc) { _ack += inc; }
+void http2_dynamic_table::increment(size_t inc) { _ack += inc; }
 
-size_t http_dynamic_table::get_capacity() { return _capacity; }
+size_t http2_dynamic_table::get_capacity() { return _capacity; }
 
-size_t http_dynamic_table::get_tablesize() { return _tablesize; }
+size_t http2_dynamic_table::get_tablesize() { return _tablesize; }
 
-size_t http_dynamic_table::get_entries() { return _inserted - _dropped; }
+size_t http2_dynamic_table::get_entries() { return _inserted - _dropped; }
 
-return_t http_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) { return errorcode_t::success; }
+return_t http2_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) { return errorcode_t::success; }
 
-uint8 http_dynamic_table::get_type() { return _type; }
+uint8 http2_dynamic_table::get_type() { return _type; }
 
-void http_dynamic_table::set_type(uint8 type) { _type = type; }
+void http2_dynamic_table::set_type(uint8 type) { _type = type; }
 
-size_t http_dynamic_table::dynamic_map_size() { return _dynamic_map.size(); }
+size_t http2_dynamic_table::dynamic_map_size() { return _dynamic_map.size(); }
 
-void http_dynamic_table::set_debug_hook(std::function<void(trace_category_t, uint32 event)> fn) { _hook = fn; }
+void http2_dynamic_table::set_debug_hook(std::function<void(trace_category_t, uint32 event)> fn) { _hook = fn; }
 
 }  // namespace net
 }  // namespace hotplace

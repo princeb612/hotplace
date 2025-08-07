@@ -8,13 +8,14 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/http2/hpack.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/net/http/http2/hpack_dynamic_table.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {
 
-hpack_dynamic_table::hpack_dynamic_table() : http_dynamic_table() {
+hpack_dynamic_table::hpack_dynamic_table() : http2_dynamic_table() {
     // _type = header_compression_hpack;
 
     // RFC 7540 6.5.2.  Defined SETTINGS Parameters

@@ -12,7 +12,7 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/http/http3/http3_frame_headers.hpp>
-#include <sdk/net/http/http3/qpack.hpp>
+#include <sdk/net/http/http_header_compression_stream.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>

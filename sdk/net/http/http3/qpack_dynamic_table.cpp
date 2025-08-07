@@ -8,13 +8,14 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/http3/qpack.hpp>
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/net/http/http3/qpack_dynamic_table.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {
 
-qpack_dynamic_table::qpack_dynamic_table() : http_dynamic_table() {
+qpack_dynamic_table::qpack_dynamic_table() : http2_dynamic_table() {
     set_type(header_compression_qpack);
 
     // RFC 9204 5.  Configuration

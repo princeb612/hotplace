@@ -97,9 +97,9 @@ class hpack_encoder;
 class hpack_dynamic_table;
 class hpack_static_table;
 class http_header_compression;
-class http_static_table;
-class http_dynamic_table;
-class http_huffman_coding;
+class http2_static_table;
+class http2_dynamic_table;
+class http2_huffman_coding;
 class http2_frame;
 class http2_frame_builder;
 class http2_frame_alt_svc;
@@ -140,9 +140,6 @@ class http3_frames;
 // hpack_strea, qpack_stream
 template <typename DYNAMIC_T, typename ENCODER_T>
 class http_header_compression_stream;
-
-typedef http_header_compression_stream<hpack_dynamic_table, hpack_encoder> hpack_stream;
-typedef http_header_compression_stream<qpack_dynamic_table, qpack_encoder> qpack_stream;
 
 }  // namespace net
 }  // namespace hotplace

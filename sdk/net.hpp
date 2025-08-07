@@ -61,6 +61,7 @@
 #include <sdk/net/http/http_authentication_resolver.hpp>
 #include <sdk/net/http/http_client.hpp>
 #include <sdk/net/http/http_header.hpp>
+#include <sdk/net/http/http_header_compression_stream.hpp>
 #include <sdk/net/http/http_protocol.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_resource.hpp>
@@ -84,7 +85,10 @@
 #include <sdk/net/http/auth/rfc2617_digest.hpp>
 
 /* http/http2 */
-#include <sdk/net/http/http2/hpack.hpp>
+#include <sdk/net/http/http2/hpack_dynamic_table.hpp>
+#include <sdk/net/http/http2/hpack_encoder.hpp>
+#include <sdk/net/http/http2/hpack_static_table.hpp>
+#include <sdk/net/http/http2/http2_dynamic_table.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_frame_alt_svc.hpp>
 #include <sdk/net/http/http2/http2_frame_builder.hpp>
@@ -98,9 +102,12 @@
 #include <sdk/net/http/http2/http2_frame_rst_stream.hpp>
 #include <sdk/net/http/http2/http2_frame_settings.hpp>
 #include <sdk/net/http/http2/http2_frame_window_update.hpp>
+#include <sdk/net/http/http2/http2_huffman_codes.hpp>
+#include <sdk/net/http/http2/http2_huffman_coding.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http2/http2_serverpush.hpp>
 #include <sdk/net/http/http2/http2_session.hpp>
+#include <sdk/net/http/http2/http2_static_table.hpp>
 #include <sdk/net/http/http2/http_header_compression.hpp>
 
 /* http/http3 */
@@ -118,7 +125,9 @@
 #include <sdk/net/http/http3/http3_frame_settings.hpp>
 #include <sdk/net/http/http3/http3_frame_unknown.hpp>
 #include <sdk/net/http/http3/http3_frames.hpp>
-#include <sdk/net/http/http3/qpack.hpp>
+#include <sdk/net/http/http3/qpack_dynamic_table.hpp>
+#include <sdk/net/http/http3/qpack_encoder.hpp>
+#include <sdk/net/http/http3/qpack_static_table.hpp>
 #include <sdk/net/http/http3/types.hpp>
 
 /* server */
@@ -152,7 +161,18 @@
 
 /* tls/quic/frame */
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_ack.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_builder.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_connection_close.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_crypto.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_handshake_done.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_new_connection_id.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_new_token.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_padding.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_ping.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_reset_stream.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_stop_sending.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_stream.hpp>
 #include <sdk/net/tls/quic/frame/quic_frames.hpp>
 
 /* tls/tls */

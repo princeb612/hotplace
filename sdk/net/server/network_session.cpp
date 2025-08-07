@@ -12,7 +12,6 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/basic/openssl/types.hpp>
 #include <sdk/net/basic/server_socket.hpp>
-#include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/server/network_server.hpp>
 #include <sdk/net/server/network_session.hpp>
 #include <sdk/net/tls/tls_protection.hpp>

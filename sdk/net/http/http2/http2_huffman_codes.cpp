@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/http2/http_header_compression.hpp>
+#include <sdk/net/http/http2/http2_huffman_codes.hpp>
 
 namespace hotplace {
 namespace net {

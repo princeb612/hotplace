@@ -15,7 +15,8 @@
 #include <queue>
 #include <sdk/base/basic/binaries.hpp>
 #include <sdk/base/system/critical_section.hpp>
-#include <sdk/net/http/http3/qpack.hpp>
+#include <sdk/net/http/http3/qpack_dynamic_table.hpp>
+#include <sdk/net/http/http3/qpack_encoder.hpp>
 #include <sdk/net/tls/quic/types.hpp>
 #include <sdk/net/tls/types.hpp>
 

@@ -8,6 +8,9 @@
  * Date         Name                Description
  */
 
+#include <sdk/net/http/http2/http2_dynamic_table.hpp>
+#include <sdk/net/http/http2/http2_huffman_coding.hpp>
+#include <sdk/net/http/http2/http2_static_table.hpp>
 #include <sdk/net/http/http2/http_header_compression.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
@@ -16,16 +19,16 @@ namespace net {
 
 http_header_compression::http_header_compression() : _safe_mask(false) {}
 
-return_t http_header_compression::encode(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
+return_t http_header_compression::encode(http2_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
     return errorcode_t::success;
 }
 
-return_t http_header_compression::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
+return_t http_header_compression::decode(http2_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
                                          uint32 flags) {
     return errorcode_t::success;
 }
 
-return_t http_header_compression::pack(http_dynamic_table* dyntable, binary_t& target, uint32 flags) { return errorcode_t::success; }
+return_t http_header_compression::pack(http2_dynamic_table* dyntable, binary_t& target, uint32 flags) { return errorcode_t::success; }
 
 return_t http_header_compression::encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t value) {
     return_t ret = errorcode_t::success;
@@ -151,7 +154,7 @@ return_t http_header_compression::encode_string(binary_t& target, uint32 flags, 
          *
          * RFC 9204 4.1.2.  String Literals
          */
-        auto huffcode = http_huffman_coding::get_instance();
+        auto huffcode = http2_huffman_coding::get_instance();
         if (hpack_huffman & flags) {
             size_t size_expected = 0;
             huffcode->expect(value, size, size_expected);
@@ -188,7 +191,7 @@ return_t http_header_compression::decode_string(const byte_t* p, size_t& pos, ui
             // huffman
             decode_int(p, pos, 0x80, 7, len);
             basic_stream bs;
-            auto huffcode = http_huffman_coding::get_instance();
+            auto huffcode = http2_huffman_coding::get_instance();
             huffcode->decode(&bs, p + pos, len);
             value = bs.c_str();
         } else {
@@ -215,7 +218,7 @@ return_t http_header_compression::decode_name_reference(const byte_t* p, size_t&
         decode_int(p, pos, mask, prefix, namelen);
         if (qpack_huffman & flags) {
             basic_stream bs;
-            auto huffcode = http_huffman_coding::get_instance();
+            auto huffcode = http2_huffman_coding::get_instance();
             huffcode->decode(&bs, p + pos, namelen);
             name = bs.c_str();
         } else {
@@ -229,7 +232,7 @@ return_t http_header_compression::decode_name_reference(const byte_t* p, size_t&
     return ret;
 }
 
-return_t http_header_compression::set_capacity(http_dynamic_table* dyntable, binary_t& target, uint8 maxsize) {
+return_t http_header_compression::set_capacity(http2_dynamic_table* dyntable, binary_t& target, uint8 maxsize) {
     /**
      * RFC 7541 Figure 12: Maximum Dynamic Table Size Change
      *   0   1   2   3   4   5   6   7
@@ -267,7 +270,7 @@ return_t http_header_compression::sizeof_entry(const std::string& name, const st
 
 void http_header_compression::safe_mask(bool enable) { _safe_mask = enable; }
 
-match_result_t http_header_compression::matchall(http_static_table* statable, http_dynamic_table* dyntable, uint32 flags, const std::string& name,
+match_result_t http_header_compression::matchall(http2_static_table* statable, http2_dynamic_table* dyntable, uint32 flags, const std::string& name,
                                                  const std::string& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;
     index = 0;
@@ -294,7 +297,7 @@ match_result_t http_header_compression::matchall(http_static_table* statable, ht
     return state;
 }
 
-return_t http_header_compression::selectall(http_static_table* statable, http_dynamic_table* dyntable, uint32 flags, size_t index, std::string& name,
+return_t http_header_compression::selectall(http2_static_table* statable, http2_dynamic_table* dyntable, uint32 flags, size_t index, std::string& name,
                                             std::string& value) {
     return_t ret = errorcode_t::not_found;
     name.clear();

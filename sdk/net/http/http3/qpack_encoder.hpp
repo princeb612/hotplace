@@ -8,10 +8,12 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP3_QPACK__
-#define __HOTPLACE_SDK_NET_HTTP_HTTP3_QPACK__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP3_QPACKENCODER__
+#define __HOTPLACE_SDK_NET_HTTP_HTTP3_QPACKENCODER__
 
-#include <sdk/net/http/http2/hpack.hpp>
+#include <sdk/net/http/http2/hpack_dynamic_table.hpp>
+#include <sdk/net/http/http2/hpack_encoder.hpp>
+#include <sdk/net/http/http2/hpack_static_table.hpp>
 #include <sdk/net/http/http2/http_header_compression.hpp>  // http_header_compression
 #include <sdk/net/http/types.hpp>
 
@@ -70,7 +72,7 @@ class qpack_encoder : public http_header_compression {
 
     /**
      * @brief   encode (header compression)
-     * @param   http_dynamic_table* dyntable [in] dynamic table
+     * @param   http2_dynamic_table* dyntable [in] dynamic table
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
@@ -81,10 +83,10 @@ class qpack_encoder : public http_header_compression {
      *          RFC 9204 4.3.2.  Insert with Name Reference
      *          RFC 9204 4.3.3.  Insert with Literal Name
      */
-    virtual return_t encode(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
+    virtual return_t encode(http2_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   decode (header compression)
-     * @param   http_dynamic_table* dyntable [in] dynamic table
+     * @param   http2_dynamic_table* dyntable [in] dynamic table
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
@@ -97,28 +99,28 @@ class qpack_encoder : public http_header_compression {
      *              encoder.decode(dyntable, stream, streamsize, pos, item, flags);
      *          }
      */
-    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item, uint32 flags = 0);
-    return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::list<qpack_decode_t>& kv, uint32 flags = 0);
+    virtual return_t decode(http2_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item, uint32 flags = 0);
+    return_t decode(http2_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::list<qpack_decode_t>& kv, uint32 flags = 0);
     /**
      * @brief   RFC 9204 4.3.1.  Set Dynamic Table Capacity
-     * @param   http_dynamic_table* dyntable [in]
+     * @param   http2_dynamic_table* dyntable [in]
      * @param   binary_t& target [out]
      * @param   uint64 capacity [in]
      */
-    return_t encode_dyntable_capacity(http_dynamic_table* dyntable, binary_t& target, uint64 capacity);
+    return_t encode_dyntable_capacity(http2_dynamic_table* dyntable, binary_t& target, uint64 capacity);
     /**
      * @brief   encode (qpack_indexing flag)
-     * @param   http_dynamic_table* dyntable [in]
+     * @param   http2_dynamic_table* dyntable [in]
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [int]
      * @param   uint32 flags [inopt]
      * @return  error code (see error.hpp)
      */
-    return_t insert(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
+    return_t insert(http2_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   Field Section Prefix
-     * @param   http_dynamic_table* dyntable [in] dynamic table
+     * @param   http2_dynamic_table* dyntable [in] dynamic table
      * @param   binary_t& target [out]
      * @param   uint32 flags [inopt]
      * @return  error code (see error.hpp)
@@ -128,26 +130,26 @@ class qpack_encoder : public http_header_compression {
      *          qpackenc.encode
      *          qpackenc.pack -> generate the QPACK field section prefix
      */
-    virtual return_t pack(http_dynamic_table* dyntable, binary_t& target, uint32 flags = 0);
+    virtual return_t pack(http2_dynamic_table* dyntable, binary_t& target, uint32 flags = 0);
 
     /**
      * @brief   encode (header compression)
-     * @param   http_dynamic_table* dyntable [in] dynamic table
+     * @param   http2_dynamic_table* dyntable [in] dynamic table
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   uint32 flags [inopt] see http_header_compression_flag_t
      */
-    qpack_encoder& encode_header(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
+    qpack_encoder& encode_header(http2_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   decode (header compression)
-     * @param   http_dynamic_table* dyntable [in] dynamic table
+     * @param   http2_dynamic_table* dyntable [in] dynamic table
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
      * @param   qpack_decode_t& item [out]
      */
-    qpack_encoder& decode_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item);
+    qpack_encoder& decode_header(http2_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item);
 
     /**
      * @brief   index
@@ -158,22 +160,22 @@ class qpack_encoder : public http_header_compression {
     qpack_encoder& encode_index(binary_t& target, uint32 flags, size_t index);
     /**
      * @breif   name reference
-     * @param   http_dynamic_table* dyntable [in]
+     * @param   http2_dynamic_table* dyntable [in]
      * @param   binary_t& target [out]
      * @param   uint32 flags [in] see http_header_compression_flag_t
      * @param   size_t index [in]
      * @param   const std::string& value [in]
      */
-    qpack_encoder& encode_name_reference(http_dynamic_table* dyntable, binary_t& target, uint32 flags, size_t index, const std::string& value);
+    qpack_encoder& encode_name_reference(http2_dynamic_table* dyntable, binary_t& target, uint32 flags, size_t index, const std::string& value);
     /**
      * @breif   name reference
-     * @param   http_dynamic_table* dyntable [in]
+     * @param   http2_dynamic_table* dyntable [in]
      * @param   binary_t& target [out]
      * @param   uint32 flags [in] see http_header_compression_flag_t
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      */
-    qpack_encoder& encode_name_value(http_dynamic_table* dyntable, binary_t& target, uint32 flags, const std::string& name, const std::string& value);
+    qpack_encoder& encode_name_value(http2_dynamic_table* dyntable, binary_t& target, uint32 flags, const std::string& name, const std::string& value);
     /**
      * @breif   duplicate
      * @param   binary_t& target [out]
@@ -182,7 +184,7 @@ class qpack_encoder : public http_header_compression {
      *          RFC 9204 4.3.  Encoder Instructions
      *          RFC 9204 4.3.4.  Duplicate
      */
-    qpack_encoder& duplicate(http_dynamic_table* dyntable, binary_t& target, size_t index);
+    qpack_encoder& duplicate(http2_dynamic_table* dyntable, binary_t& target, size_t index);
     /**
      * @breif   ack
      * @param   binary_t& target [out]
@@ -191,7 +193,7 @@ class qpack_encoder : public http_header_compression {
      *          RFC 9204 4.4.  Decoder Instructions
      *          RFC 9204 4.4.1.  Section Acknowledgment
      */
-    qpack_encoder& ack(http_dynamic_table* dyntable, binary_t& target, uint32 streamid);
+    qpack_encoder& ack(http2_dynamic_table* dyntable, binary_t& target, uint32 streamid);
     /**
      * @breif   cancel
      * @param   binary_t& target [out]
@@ -200,7 +202,7 @@ class qpack_encoder : public http_header_compression {
      *          RFC 9204 4.4.  Decoder Instructions
      *          RFC 9204 4.4.2.  Stream Cancellation
      */
-    qpack_encoder& cancel(http_dynamic_table* dyntable, binary_t& target, uint32 streamid);
+    qpack_encoder& cancel(http2_dynamic_table* dyntable, binary_t& target, uint32 streamid);
     /**
      * @breif   increment
      * @param   binary_t& target [out]
@@ -210,48 +212,16 @@ class qpack_encoder : public http_header_compression {
      *          RFC 9204 4.4.  Decoder Instructions
      *          RFC 9204 4.4.3.  Insert Count Increment
      */
-    qpack_encoder& increment(http_dynamic_table* dyntable, binary_t& target, size_t inc);
+    qpack_encoder& increment(http2_dynamic_table* dyntable, binary_t& target, size_t inc);
 
-    return_t decode_section_prefix(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item);
-
-   protected:
-    virtual return_t decode_encoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item,
-                                           uint32 flags = 0);
-    virtual return_t decode_decoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item,
-                                           uint32 flags = 0);
-    virtual return_t decode_http3_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item, uint32 flags = 0);
-};
-
-class qpack_static_table : public http_static_table {
-   public:
-    static qpack_static_table* get_instance();
+    return_t decode_section_prefix(http2_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item);
 
    protected:
-    qpack_static_table();
-    virtual void load();
-
-   private:
-    static qpack_static_table _instance;
-};
-
-class qpack_dynamic_table : public http_dynamic_table {
-   public:
-    qpack_dynamic_table();
-    virtual ~qpack_dynamic_table();
-
-    virtual void for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f);
-    virtual void dump(const std::string& desc, std::function<void(const char*, size_t)> f);
-
-    /**
-     * @brief   QPACK query function
-     * @param   int cmd [in] see header_compression_cmd_t
-     * @param   void* req [in]
-     * @param   size_t reqsize [in]
-     * @param   void* resp [out]
-     * @param   size_t& respsize [inout]
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
+    virtual return_t decode_encoder_stream(http2_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item,
+                                           uint32 flags = 0);
+    virtual return_t decode_decoder_stream(http2_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item,
+                                           uint32 flags = 0);
+    virtual return_t decode_http3_header(http2_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item, uint32 flags = 0);
 };
 
 /**

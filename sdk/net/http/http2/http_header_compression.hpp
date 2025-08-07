@@ -13,8 +13,6 @@
 
 #include <functional>
 #include <queue>
-#include <sdk/base/basic/huffman_coding.hpp>  // huffman_coding
-#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {
@@ -30,17 +28,17 @@ class http_header_compression {
 
     /**
      * @brief   encode (header compression)
-     * @param   http_dynamic_table* dyntable [in] dynamic table
+     * @param   http2_dynamic_table* dyntable [in] dynamic table
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   uint32 flags [inopt] see http_header_compression_flag_t
      * @return  error code (see error.hpp)
      */
-    virtual return_t encode(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
+    virtual return_t encode(http2_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   decode (header compression)
-     * @param   http_dynamic_table* dyntable [in] dynamic table
+     * @param   http2_dynamic_table* dyntable [in] dynamic table
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
@@ -49,11 +47,11 @@ class http_header_compression {
      * @param   uint32 flags [inopt]
      * @return  error code (see error.hpp)
      */
-    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
+    virtual return_t decode(http2_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
                             uint32 flags = 0);
     /**
      * @brief   Field Section Prefix
-     * @param   http_dynamic_table* dyntable [in] dynamic table
+     * @param   http2_dynamic_table* dyntable [in] dynamic table
      * @param   binary_t& target [out]
      * @param   uint32 flags [inopt]
      * @return  error code (see error.hpp)
@@ -63,7 +61,7 @@ class http_header_compression {
      *          qpackenc.encode
      *          qpackenc.pack -> generate the QPACK field section prefix
      */
-    virtual return_t pack(http_dynamic_table* dyntable, binary_t& target, uint32 flags = 0);
+    virtual return_t pack(http2_dynamic_table* dyntable, binary_t& target, uint32 flags = 0);
 
     /**
      * @brief   Integer Representation
@@ -132,7 +130,7 @@ class http_header_compression {
 
     /**
      * @brief   dynamic table size
-     * @param   http_dynamic_table* dyntable [in]
+     * @param   http2_dynamic_table* dyntable [in]
      * @param   binary_t& target
      * @param   uint8 maxsize
      * @return  error code (see error.hpp)
@@ -140,7 +138,7 @@ class http_header_compression {
      *          RFC 7541 6.3.  Dynamic Table Size Update
      *          RFC 9204 4.3.1.  Set Dynamic Table Capacity
      */
-    return_t set_capacity(http_dynamic_table* dyntable, binary_t& target, uint8 maxsize);
+    return_t set_capacity(http2_dynamic_table* dyntable, binary_t& target, uint8 maxsize);
     /**
      * @brief   size of entry
      * @param   const std::string& name [in]
@@ -166,8 +164,8 @@ class http_header_compression {
 
     /**
      * @brief   match
-     * @param   http_static_table* static_table [in]
-     * @param   http_dynamic_table* dyntable [in]
+     * @param   http2_static_table* static_table [in]
+     * @param   http2_dynamic_table* dyntable [in]
      * @param   uint32 flags [in]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
@@ -175,12 +173,12 @@ class http_header_compression {
      * @return  match_result_t
      * @remarks select index from table where name = arg(name) and value = arg(value)
      */
-    match_result_t matchall(http_static_table* static_table, http_dynamic_table* dyntable, uint32 flags, const std::string& name, const std::string& value,
+    match_result_t matchall(http2_static_table* static_table, http2_dynamic_table* dyntable, uint32 flags, const std::string& name, const std::string& value,
                             size_t& index);
     /**
      * @brief   select
-     * @param   http_static_table* static_table [in]
-     * @param   http_dynamic_table* dyntable [in]
+     * @param   http2_static_table* static_table [in]
+     * @param   http2_dynamic_table* dyntable [in]
      * @param   uint32 flags [in]
      * @param   size_t index [in]
      * @param   std::string& name [out]
@@ -188,7 +186,7 @@ class http_header_compression {
      * @return  error code (see error.hpp)
      * @remarks select name, value from table where index = arg(index)
      */
-    return_t selectall(http_static_table* static_table, http_dynamic_table* dyntable, uint32 flags, size_t index, std::string& name, std::string& value);
+    return_t selectall(http2_static_table* static_table, http2_dynamic_table* dyntable, uint32 flags, size_t index, std::string& name, std::string& value);
 
    protected:
    private:
@@ -206,361 +204,6 @@ enum header_compression_cmd_t {
     hpack_cmd_dropped = 2,
     qpack_cmd_dropped = 2,
     qpack_cmd_postbase_index = 3,
-};
-
-/**
- * @brief   static table
- * @remarks cannot access directly, use hpack_static_table or qpack_static_table instead
- */
-class http_static_table {
-   public:
-    /**
-     * @brief   match
-     * @param   uint32 flags [in]
-     * @param   const std::string& name [in]
-     * @param   const std::string& value [in]
-     * @param   size_t& index [out]
-     * @return  error code (see error.hpp)
-     */
-    virtual match_result_t match(uint32 flags, const std::string& name, const std::string& value, size_t& index);
-    /**
-     * @brief   select
-     * @param   uint32 flags [in]
-     * @param   size_t index [in]
-     * @param   std::string& name [out]
-     * @param   std::string& value [out]
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t select(uint32 flags, size_t index, std::string& name, std::string& value);
-    /**
-     * @brief   size
-     * @return  size of static table
-     */
-    virtual size_t size();
-
-   protected:
-    http_static_table();
-
-    virtual void load();
-
-   protected:
-    typedef std::pair<std::string, size_t> table_entry_t;
-    typedef std::multimap<std::string, table_entry_t> static_table_t;
-    typedef std::map<size_t, std::pair<std::string, std::string>> static_table_index_t;
-
-    critical_section _lock;
-    static_table_t _static_table;
-    static_table_index_t _static_table_index;
-};
-
-/**
- * @brief   dynamic table
- * @sa      hpack_dynamic_table, qpack_dynamic_table
- */
-class http_dynamic_table {
-   public:
-    virtual ~http_dynamic_table();
-    /**
-     * @brief   for_each
-     * @sample
-     *          auto lambda = [&](size_t entno, size_t entsize, const std::string& name, const std::string& value) -> void {
-     *              _logger->writeln("  - [%3zi](s = %zi) %s: %s", entno, entsize, name.c_str(), value.c_str());
-     *          };
-     *
-     */
-    virtual void for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f);
-    virtual void dump(const std::string& desc, std::function<void(const char*, size_t)> f);
-    /**
-     * @brief   compare
-     */
-    bool operator==(const http_dynamic_table& rhs);
-    bool operator!=(const http_dynamic_table& rhs);
-    /**
-     * @brief   match
-     * @param   uint32 flags [in]
-     * @param   const std::string& name [in]
-     * @param   const std::string& value [in]
-     * @param   size_t& index [out]
-     * @return  match_result_t
-     */
-    virtual match_result_t match(uint32 flags, const std::string& name, const std::string& value, size_t& index);
-    /**
-     * @brief   select
-     * @param   uint32 flags [in]
-     * @param   size_t index [in]
-     * @param   std::string& name [out]
-     * @param   std::string& value [out]
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t select(uint32 flags, size_t index, std::string& name, std::string& value);
-    /**
-     * @brief   insert into queue
-     * @param   const std::string& name [in]
-     * @param   const std::string& value [in]
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t insert(const std::string& name, const std::string& value);
-    /**
-     * @brief   commit queue
-     */
-    virtual return_t commit();
-    /**
-     * @brief   evict
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t evict();
-    /**
-     * @brief   capacity (SETTINGS_QPACK_MAX_TABLE_CAPACITY)
-     */
-    void set_capacity(uint32 capacity);
-    size_t get_capacity();
-    /**
-     * @brief   table size
-     */
-    size_t get_tablesize();
-    /**
-     * @brief   entries
-     */
-    size_t get_entries();
-    /**
-     * @brief   HPACK/QPACK query function
-     * @param   int cmd [in] see header_compression_cmd_t
-     * @param   void* req [in]
-     * @param   size_t reqsize [in]
-     * @param   void* resp [out]
-     * @param   size_t& respsize [inout]
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
-    /**
-     * @brief   type
-     * @return  see header_compression_type_t
-     */
-    uint8 get_type();
-
-    void set_debug_hook(std::function<void(trace_category_t, uint32 event)> fn);
-
-    void ack();
-    void cancel();
-    void increment(size_t inc);
-
-   protected:
-    http_dynamic_table();
-
-    void set_type(uint8 type);
-    size_t dynamic_map_size();
-    void pick(size_t entry, const std::string& name, std::string& value);
-
-    critical_section _lock;
-    uint32 _capacity;
-    size_t _inserted;
-    size_t _dropped;
-    size_t _ack;  // qpack
-
-    typedef std::pair<std::string, size_t> table_entry_t;
-    typedef std::multimap<std::string, table_entry_t> dynamic_map_t;  // table_entry_t(value, entry)
-    typedef std::map<size_t, table_entry_t> dynamic_reversemap_t;     // pair(entry, table_entry_t(name, entry size))
-    struct commit_pair {
-        std::string name;
-        std::string value;
-    };
-    typedef std::queue<commit_pair> commit_queue_t;
-
-    dynamic_map_t _dynamic_map;
-    dynamic_reversemap_t _dynamic_reversemap;
-    commit_queue_t _commit_queue;
-
-   private:
-    uint8 _type;  // see header_compression_type_t
-    size_t _tablesize;
-
-    std::function<void(trace_category_t, uint32 event)> _hook;
-};
-
-/*
- * @brief   RFC 7541 Appendix B. Huffman Code
- * @sample
- *          huffman_coding huff;
- *          huff.imports(_h2hcodes);
- */
-extern const huffman_coding::hc_code_t _h2hcodes[];
-class http_huffman_coding : public huffman_coding {
-   public:
-    static http_huffman_coding* get_instance();
-
-   protected:
-    http_huffman_coding();
-
-    virtual void load();
-
-   private:
-    critical_section _lock;
-    static http_huffman_coding _instance;
-};
-
-/**
- * @brief   HPACK/QPACK encoding/decoding
- * @sample
- *          // HPACK encoding
- *          {
- *              hpack_stream hp;
- *              hpack_dynamic_table session_encoder;
- *              hp
- *                  .set_session(&session_encoder)
- *                  .set_encode_flags(hpack_indexing | hpack_huffman)
- *                  .begin()
- *                  .encode_header(name1, value1)
- *                  .encode_header(name2, value2);
- *              _logger->dump(hp.get_binary());
- *          }
- *          // QPACK encoding
- *          {
- *              qpack_stream qp;
- *              qpack_dynamic_table session_encoder;
- *              qp
- *                  .set_session(&session_encoder)
- *                  .set_encode_flags(qpack_indexing | qpack_huffman)
- *                  .begin()
- *                  .encode_header(name1, value1)
- *                  .encode_header(name2, value2);
- *              _logger->dump(hp.get_binary());
- *          }
- *          // HPACK decoding
- *          {
- *              hpack_stream hp;
- *              hpack_dynamic_table session_decoder;
- *              size_t pos = 0;
- *              hp.set_session(session_decoder);
- *              while (pos < streamsize) {
- *                  hp.decode_header(stream, streamsize, pos, name, value);
- *                  // do something
- *              }
- *              // keep the index until the decoder process is finished
- *              // insert into dynamic table
- *              hp.commit();
- *          }
- *          // QPACK decoding
- *          {
- *              qpack_stream qp;
- *              qpack_dynamic_table session_decoder;
- *              size_t pos = 0;
- *              qp.set_session(session_decoder);
- *              while (pos < streamsize) {
- *                  qp.decode_header(stream, streamsize, pos, name, value);
- *                  // do something
- *              }
- *              // keep the index until the decoder process is finished
- *              // insert into dynamic table
- *              qp.commit();
- *          }
- */
-template <typename DYNAMIC_T, typename ENCODER_T>
-class http_header_compression_stream {
-   public:
-    http_header_compression_stream() : _session(nullptr), _flags(hpack_indexing | hpack_huffman), _autocommit(false) {}
-    ~http_header_compression_stream() {}
-
-    /**
-     * @brief   set
-     * @param   DYNAMIC_T* session [in]
-     * @remarks reduce repetition of the following values : session, binary, flags
-     */
-    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& set_session(DYNAMIC_T* session) {
-        _session = session;
-        return *this;
-    }
-
-    /**
-     * @brief   get
-     * @param   uint32 flags [in]
-     */
-    DYNAMIC_T* get_session() { return _session; }
-
-    /**
-     * @brief   set flags for encoding
-     */
-    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& set_encode_flags(uint32 flags) {
-        _flags = flags;
-        return *this;
-    }
-    /**
-     * @brief   encode
-     * @param   const std::string& name [in]
-     * @param   const std::string& value [in]
-     * @param   uint32 flags [inopt] if zero, follows set_encode_flags
-     * @sample
-     *          hpack_stream hp;
-     *          hpack_dynamic_table session;
-     *          hp
-     *              .set_session(&session)
-     *              .set_encode_flags(hpack_indexing | hpack_huffman)
-     *              .encode_header(name1, value1)
-     *              .encode_header(name2, value2);
-     *              .encode_header("content-length", "123", hpack_wo_indexing | hpack_huffman);
-     */
-    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& encode_header(const std::string& name, const std::string& value, uint32 flags = 0) {
-        if (_session) {
-            ENCODER_T encoder;
-            encoder.encode_header(_session, _bin, name, value, flags ? flags : _flags);
-        }
-        return *this;
-    }
-
-    /**
-     * @brief   decode
-     * @param   const byte_t* source [in]
-     * @param   size_t size [in]
-     * @param   size_t& pos [inout]
-     * @param   std::string& name [out]
-     * @param   std::string& value [out]
-     * @sample
-     *          pos = 0;
-     *          hp.set_session(session);
-     *          while (pos < bin.size()) {
-     *              hp.decode_header(stream, streamsize, pos, name, value);
-     *              // do something
-     *          }
-     *          // keep the index until the decoder process is finished
-     *          // insert into dynamic table
-     *          hp.commit();
-     */
-    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& decode_header(const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
-        if (_session) {
-            ENCODER_T encoder;
-            encoder.decode_header(_session, source, size, pos, name, value);
-            if (_autocommit) {
-                commit();
-            }
-        }
-        return *this;
-    }
-
-    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& autocommit(bool enable = true) {
-        _autocommit = enable;
-        return *this;
-    }
-
-    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& begin() {
-        _bin.clear();
-        return *this;
-    }
-    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& commit() {
-        if (_session) {
-            _session->commit();
-        }
-        return *this;
-    }
-
-    /**
-     * @brief   encoded data
-     */
-    binary_t& get_binary() { return _bin; }
-
-   private:
-    DYNAMIC_T* _session;
-    uint32 _flags;
-    binary_t _bin;
-    bool _autocommit;
 };
 
 }  // namespace net

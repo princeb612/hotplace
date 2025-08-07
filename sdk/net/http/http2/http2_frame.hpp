@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2FRAME__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2FRAME__
 
-#include <sdk/net/http/http2/hpack.hpp>  // hpack_stream
 #include <sdk/net/http/http2/types.hpp>
+#include <sdk/net/http/http_header_compression_stream.hpp>
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {

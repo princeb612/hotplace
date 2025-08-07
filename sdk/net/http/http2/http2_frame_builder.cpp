@@ -9,7 +9,6 @@
  */
 
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/net/http/http2/hpack.hpp>
 #include <sdk/net/http/http2/http2_frame_alt_svc.hpp>
 #include <sdk/net/http/http2/http2_frame_builder.hpp>
 #include <sdk/net/http/http2/http2_frame_continuation.hpp>

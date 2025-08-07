@@ -54,11 +54,10 @@ COSE
 ### Plan
 
 - in progress
-  - TLS
   - QUIC
   - HTTP/3
 - holding
-  - asn1
+  - ASN.1
 - flowchart
   - line : implemented
   - dot-line : not implemented yet

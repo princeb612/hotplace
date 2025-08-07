@@ -8,22 +8,23 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/http2/http_header_compression.hpp>
+#include <sdk/net/http/http2/http2_huffman_codes.hpp>
+#include <sdk/net/http/http2/http2_huffman_coding.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {
 
-http_huffman_coding http_huffman_coding::_instance;
+http2_huffman_coding http2_huffman_coding::_instance;
 
-http_huffman_coding* http_huffman_coding::get_instance() {
+http2_huffman_coding* http2_huffman_coding::get_instance() {
     _instance.load();
     return &_instance;
 }
 
-http_huffman_coding::http_huffman_coding() : huffman_coding() {}
+http2_huffman_coding::http2_huffman_coding() : huffman_coding() {}
 
-void http_huffman_coding::load() {
+void http2_huffman_coding::load() {
     if (0 == sizeof_codetable()) {
         critical_section_guard guard(_lock);
         if (0 == sizeof_codetable()) {

@@ -8,11 +8,10 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HPACK__
-#define __HOTPLACE_SDK_NET_HTTP_HTTP2_HPACK__
+#ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HPACKENCODER__
+#define __HOTPLACE_SDK_NET_HTTP_HTTP2_HPACKENCODER__
 
-#include <sdk/net/http/http2/http_header_compression.hpp>  // http_header_compression
-#include <sdk/net/http/types.hpp>
+#include <sdk/net/http/http2/http_header_compression.hpp>
 
 namespace hotplace {
 namespace net {
@@ -26,17 +25,17 @@ class hpack_encoder : public http_header_compression {
 
     /**
      * @brief   encode (header compression)
-     * @param   http_dynamic_table* dyntable [in] dynamic table
+     * @param   http2_dynamic_table* dyntable [in] dynamic table
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   uint32 flags [inopt] see http_header_compression_flag_t
      * @return  error code (see error.hpp)
      */
-    virtual return_t encode(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
+    virtual return_t encode(http2_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   decode (header compression)
-     * @param   http_dynamic_table* dyntable [in] dynamic table
+     * @param   http2_dynamic_table* dyntable [in] dynamic table
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
@@ -52,27 +51,27 @@ class hpack_encoder : public http_header_compression {
      *          // insert into dynamic table
      *          dyntable->commit();
      */
-    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    virtual return_t decode(http2_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
 
     /**
      * @brief   encode (header compression)
-     * @param   http_dynamic_table* dyntable [in] dynamic table
+     * @param   http2_dynamic_table* dyntable [in] dynamic table
      * @param   binary_t& target [out]
      * @param   const std::string& name [in]
      * @param   const std::string& value [in]
      * @param   uint32 flags [inopt] see http_header_compression_flag_t
      */
-    hpack_encoder& encode_header(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
+    hpack_encoder& encode_header(http2_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags = 0);
     /**
      * @brief   decode (header compression)
-     * @param   http_dynamic_table* dyntable [in] dynamic table
+     * @param   http2_dynamic_table* dyntable [in] dynamic table
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
      * @param   std::string& name [in]
      * @param   std::string& value [in]
      */
-    hpack_encoder& decode_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    hpack_encoder& decode_header(http2_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
 
     /**
      * @brief   index
@@ -131,42 +130,6 @@ class hpack_encoder : public http_header_compression {
      * @param   const std::string& value [in]
      */
     hpack_encoder& encode_name_value(binary_t& target, uint32 flags, const std::string& name, const std::string& value);
-};
-
-class hpack_static_table : public http_static_table {
-   public:
-    static hpack_static_table* get_instance();
-
-   protected:
-    hpack_static_table();
-    virtual void load();
-
-   private:
-    static hpack_static_table _instance;
-};
-
-/**
- * @brief   separate dynamic table per dyntable
- * @sa      hpack_encoder
- */
-class hpack_dynamic_table : public http_dynamic_table {
-   public:
-    hpack_dynamic_table();
-    virtual ~hpack_dynamic_table();
-
-    virtual void for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f);
-    virtual void dump(const std::string& desc, std::function<void(const char*, size_t)> f);
-
-    /**
-     * @brief   HPACK query function
-     * @param   int cmd [in] see header_compression_cmd_t
-     * @param   void* req [in]
-     * @param   size_t reqsize [in]
-     * @param   void* resp [out]
-     * @param   size_t& respsize [inout]
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
 };
 
 }  // namespace net

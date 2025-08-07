@@ -8,15 +8,15 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/http2/http_header_compression.hpp>
+#include <sdk/net/http/http2/http2_static_table.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {
 
-http_static_table::http_static_table() {}
+http2_static_table::http2_static_table() {}
 
-match_result_t http_static_table::match(uint32 flags, const std::string& name, const std::string& value, size_t& index) {
+match_result_t http2_static_table::match(uint32 flags, const std::string& name, const std::string& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;
     index = 0;
 
@@ -42,7 +42,7 @@ match_result_t http_static_table::match(uint32 flags, const std::string& name, c
     return state;
 }
 
-return_t http_static_table::select(uint32 flags, size_t index, std::string& name, std::string& value) {
+return_t http2_static_table::select(uint32 flags, size_t index, std::string& name, std::string& value) {
     return_t ret = errorcode_t::not_found;
     __try2 {
         static_table_index_t::iterator iter = _static_table_index.find(index);
@@ -63,9 +63,9 @@ return_t http_static_table::select(uint32 flags, size_t index, std::string& name
     return ret;
 }
 
-size_t http_static_table::size() { return _static_table.size(); }
+size_t http2_static_table::size() { return _static_table.size(); }
 
-void http_static_table::load() {}
+void http2_static_table::load() {}
 
 }  // namespace net
 }  // namespace hotplace

@@ -12,7 +12,7 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/http/http3/http3_frames.hpp>
-#include <sdk/net/tls/quic/frame/quic_frame.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_stream.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic_session.hpp>

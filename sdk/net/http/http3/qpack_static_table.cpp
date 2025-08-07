@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/http3/qpack.hpp>
+#include <sdk/net/http/http3/qpack_static_table.hpp>
 #include <sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
@@ -21,7 +21,7 @@ qpack_static_table* qpack_static_table::get_instance() {
     return &_instance;
 }
 
-qpack_static_table::qpack_static_table() : http_static_table() {}
+qpack_static_table::qpack_static_table() : http2_static_table() {}
 
 void qpack_static_table::load() {
     if (_static_table.empty()) {
