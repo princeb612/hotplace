@@ -163,25 +163,25 @@ class quic_packet {
      * @brief   protect
      * @param   tls_direction_t dir [in]
      * @param   const binary_t& bin_ciphertext [in]
-     * @param   protection_level_t level [in]
+     * @param   protection_space_t space [in]
      * @param   uint8 hdr [in]
      * @param   uint8 pn_length [in]
      * @param   binary_t& bin_pn [inout]
      * @param   binary_t& bin_protected_header [inout]
      */
-    return_t header_protect(tls_direction_t dir, const binary_t& bin_ciphertext, protection_level_t level, uint8 hdr, uint8 pn_length, binary_t& bin_pn,
+    return_t header_protect(tls_direction_t dir, const binary_t& bin_ciphertext, protection_space_t space, uint8 hdr, uint8 pn_length, binary_t& bin_pn,
                             binary_t& bin_protected_header);
     /**
      * @brief   unprotect
      * @param   tls_direction_t dir [in]
      * @param   const byte_t* stream [in] packet number ...
      * @param   size_t size [in]
-     * @param   protection_level_t level [in]
+     * @param   protection_space_t space [in]
      * @param   uint8& hdr [inout]
      * @param   uint32& pn [out]
      * @param   binary_t& bin_payload [inout]
      */
-    return_t header_unprotect(tls_direction_t dir, const byte_t* stream, size_t size, protection_level_t level, uint8& hdr, uint32& pn, binary_t& bin_payload);
+    return_t header_unprotect(tls_direction_t dir, const byte_t* stream, size_t size, protection_space_t space, uint8& hdr, uint32& pn, binary_t& bin_payload);
 
     t_shared_reference<quic_packet> _shared;
 

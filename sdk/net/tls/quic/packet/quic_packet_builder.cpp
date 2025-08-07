@@ -70,7 +70,7 @@ quic_packet* quic_packet_builder::build() {
             } break;
             case quic_packet_type_initial: {
                 __try_new_catch_only(packet, new quic_packet_initial(session));
-                if (is_construct() && (from_any != get_direction())) {
+                if (is_construct() && (is_unidirection(get_direction()))) {
                     openssl_prng prng;
                     auto pn = session->get_recordno(get_direction(), false, protection_initial);
                     auto pnl = (prng.rand32() % 4) + 1;
@@ -82,7 +82,7 @@ quic_packet* quic_packet_builder::build() {
             } break;
             case quic_packet_type_handshake: {
                 __try_new_catch_only(packet, new quic_packet_handshake(session));
-                if (is_construct() && (from_any != get_direction())) {
+                if (is_construct() && (is_unidirection(get_direction()))) {
                     openssl_prng prng;
                     auto pn = session->get_recordno(get_direction(), false, protection_handshake);
                     auto pnl = (prng.rand32() % 4) + 1;
@@ -94,7 +94,7 @@ quic_packet* quic_packet_builder::build() {
             } break;
             case quic_packet_type_1_rtt: {
                 __try_new_catch_only(packet, new quic_packet_1rtt(session));
-                if (is_construct() && (from_any != get_direction())) {
+                if (is_construct() && (is_unidirection(get_direction()))) {
                     openssl_prng prng;
                     auto pn = session->get_recordno(get_direction(), false, protection_application);
                     auto pnl = (prng.rand32() % 4) + 1;

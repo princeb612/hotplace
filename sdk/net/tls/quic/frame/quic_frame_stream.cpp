@@ -112,7 +112,7 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, binary_t& bin) {
 
 return_t quic_frame_stream::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
-    get_packet()->get_session()->get_quic_session().get_quic_streams() << this;
+    get_packet()->get_session()->get_quic_session() << this;
     return ret;
 }
 

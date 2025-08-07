@@ -114,10 +114,10 @@ class tls_session {
         void set_status(tls_hs_type_t type);
         tls_hs_type_t get_status();
 
-        uint64 get_recordno(bool inc = false, protection_level_t level = protection_default);
-        void inc_recordno(protection_level_t level = protection_default);
-        void reset_recordno(protection_level_t level = protection_default);
-        void set_recordno(uint64 recordno, protection_level_t level = protection_default);  // for test vector
+        uint64 get_recordno(bool inc = false, protection_space_t space = protection_default);
+        void inc_recordno(protection_space_t space = protection_default);
+        void reset_recordno(protection_space_t space = protection_default);
+        void set_recordno(uint64 recordno, protection_space_t space = protection_default);  // for test vector
 
         void begin_protection();
         bool apply_protection();
@@ -133,7 +133,7 @@ class tls_session {
         tls_hs_type_t _hstype;
         bool _protection;
         // RFC 9000 12.3.  Packet Numbers
-        std::map<protection_level_t, uint64> _recordno_spaces;
+        std::map<protection_space_t, uint64> _recordno_spaces;
 
         critical_section _info_lock;
         std::list<alert> _alerts;
@@ -141,13 +141,13 @@ class tls_session {
     };
 
     session_info& get_session_info(tls_direction_t dir);
-    uint64 get_recordno(tls_direction_t dir, bool inc = false, protection_level_t level = protection_default);
-    void reset_recordno(tls_direction_t dir, protection_level_t level = protection_default);
+    uint64 get_recordno(tls_direction_t dir, bool inc = false, protection_space_t space = protection_default);
+    void reset_recordno(tls_direction_t dir, protection_space_t space = protection_default);
 
     /*
      * set test vector
      */
-    void set_recordno(tls_direction_t dir, uint64 recno, protection_level_t level = protection_default);
+    void set_recordno(tls_direction_t dir, uint64 recno, protection_space_t space = protection_default);
 
     void addref();
     void release();

@@ -559,9 +559,16 @@ enum tls_secret_t : uint16 {
 
 enum tls_direction_t {
     from_any = 0,
-    from_client = 1,  // client -> server
-    from_server = 2,  // server -> client
+    from_client = 1,                     // client-initiated, uni-directional (client -> server)
+    from_server = 2,                     // server-initiated, uni-directional (server -> client)
+    client_initiated_uni = from_client,  // RFC 9000 2.1.
+    server_initiated_uni = from_server,  // RFC 9000 2.1.
+    client_initiated_bidi = 3,           // RFC 9000 2.1. client-initiated, bi-directional
+    server_initiated_bidi = 4,           // RFC 9000 2.1. server-initiated, bi-directional
 };
+
+bool is_unidirection(tls_direction_t dir);
+bool is_bidirection(tls_direction_t dir);
 
 enum tls_flow_t {
     tls_flow_1rtt = 0,
@@ -575,13 +582,13 @@ enum tls_flow_t {
  * @remarks
  *          TLS, DTLS
  *          RFC 9000 12.3.  Packet Numbers
- *          |           | space                  | cryptographic separation | level                  |
+ *          |           | space                  | cryptographic separation | protection space                  |
  *          | TLS, DTLS | N/A                    | N/A                      | protection_default     |
  *          | QUIC      | initial space          | initial packets          | protection_initial     |
  *          | QUIC      | handshake space        | handshake packets        | protection_handshake   |
  *          | QUIC      | application data space | 0-RTT and 1-RTT packets  | protection_application |
  */
-enum protection_level_t : uint8 {
+enum protection_space_t : uint8 {
     protection_default = 0,
     protection_initial = 1,
     protection_handshake = 2,

@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace net {
 
-quic_frame_builder::quic_frame_builder() : _type(quic_frame_type_padding), _packet(nullptr) {}
+quic_frame_builder::quic_frame_builder() : _type(quic_frame_type_padding), _packet(nullptr), _dir(from_any), _construct(false) {}
 
 quic_frame_builder& quic_frame_builder::set(quic_frame_t type) {
     _type = type;
@@ -30,6 +30,20 @@ quic_frame_builder& quic_frame_builder::set(quic_packet* packet) {
     _packet = packet;
     return *this;
 }
+
+quic_frame_builder& quic_frame_builder::set(tls_direction_t dir) {
+    _dir = dir;
+    return *this;
+}
+
+quic_frame_builder& quic_frame_builder::construct() {
+    _construct = true;
+    return *this;
+}
+
+tls_direction_t quic_frame_builder::get_direction() { return _dir; }
+
+bool quic_frame_builder::is_construct() { return _construct; }
 
 quic_frame* quic_frame_builder::build() {
     quic_frame* frame = nullptr;

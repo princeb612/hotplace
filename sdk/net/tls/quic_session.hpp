@@ -15,8 +15,8 @@
 #include <queue>
 #include <sdk/base/basic/binaries.hpp>
 #include <sdk/base/system/critical_section.hpp>
+#include <sdk/net/http/http3/qpack.hpp>
 #include <sdk/net/tls/quic/types.hpp>
-#include <sdk/net/tls/quic_streams.hpp>
 #include <sdk/net/tls/types.hpp>
 
 namespace hotplace {
@@ -25,13 +25,30 @@ namespace net {
 class quic_session {
    public:
     quic_session();
+    ~quic_session();
 
-    quic_streams& get_quic_streams();
-    t_ovl_points<uint32>& get_pkns(protection_level_t level);
+    // settings, headers
+    qpack_dynamic_table& get_dynamic_table();
+    // ack
+    t_ovl_points<uint32>& get_pkns(protection_space_t space);
+    // stream
+    quic_session& add(quic_frame_stream* stream);
+    quic_session& operator<<(quic_frame_stream* stream);
+
+   protected:
+    return_t consume(quic_frame_stream* stream);
+
+    void clear();
+    void clear(uint64 streamid);
 
    private:
-    quic_streams _streams;
-    std::map<protection_level_t, t_ovl_points<uint32>> _pkn;
+    // settings, headers
+    qpack_dynamic_table _qpack_dyntable;
+    // ack
+    std::map<protection_space_t, t_ovl_points<uint32>> _pkn;
+    // stream
+    t_fragmented_binaries<uint64, quic_frame_stream> _streams;
+    std::map<uint64, uint64> _encoders;
 };
 
 }  // namespace net

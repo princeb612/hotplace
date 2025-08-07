@@ -231,12 +231,14 @@ class tls_advisor {
     std::string session_status_string(uint32 status);
     void enum_session_status_string(uint32 status, std::function<void(const char*)> func);
     /**
-     * nameof_direction(from_client);        // "client"
-     * nameof_direction(from_client, true);  // "client->server"
-     * nameof_direction(from_server);        // "server"
-     * nameof_direction(from_server, true);  // "server->client"
+     * nameof_direction(from_client);     // "client"
+     * nameof_direction(from_client, 1);  // "client->server"
+     * nameof_direction(from_client, 2);  // "client-initiated (uni-directional)"
+     * nameof_direction(from_server);     // "server"
+     * nameof_direction(from_server, 1);  // "server->client"
+     * nameof_direction(from_server, 2);  // "server-initiated (uni-directional)"
      */
-    std::string nameof_direction(tls_direction_t dir, bool longname = false);
+    std::string nameof_direction(tls_direction_t dir, uint32 flag = 0);
 
     crypto_key& get_keys();
 

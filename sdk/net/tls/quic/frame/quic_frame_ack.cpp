@@ -40,14 +40,14 @@ constexpr char constexpr_ect0_count[] = "ect0 count";
 constexpr char constexpr_ect1_count[] = "ect1 count";
 constexpr char constexpr_ectce_count[] = "ect-ce count";
 
-quic_frame_ack::quic_frame_ack(quic_packet* packet) : quic_frame(quic_frame_type_ack, packet), _level(protection_default) {}
+quic_frame_ack::quic_frame_ack(quic_packet* packet) : quic_frame(quic_frame_type_ack, packet), _space(protection_default) {}
 
-quic_frame_ack& quic_frame_ack::set_protection_level(protection_level_t level) {
-    _level = level;
+quic_frame_ack& quic_frame_ack::set_protection_level(protection_space_t space) {
+    _space = space;
     return *this;
 }
 
-protection_level_t quic_frame_ack::get_protection_level() { return _level; }
+protection_space_t quic_frame_ack::get_protection_space() { return _space; }
 
 return_t quic_frame_ack::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
@@ -161,15 +161,15 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_packet()->get_session();
-        auto level = get_protection_level();
+        auto space = get_protection_space();
 
-        if (protection_default == level) {
+        if (protection_default == space) {
             ret = errorcode_t::not_ready;
             __leave2;
         }
 
         ack_t ack;
-        ack << session->get_quic_session().get_pkns(_level);
+        ack << session->get_quic_session().get_pkns(_space);
 
         payload pl;
         pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)                         //

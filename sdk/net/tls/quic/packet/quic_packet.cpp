@@ -276,7 +276,7 @@ void quic_packet::dump() {
 #endif
 }
 
-return_t quic_packet::header_protect(tls_direction_t dir, const binary_t& bin_ciphertext, protection_level_t level, uint8 hdr, uint8 pn_length,
+return_t quic_packet::header_protect(tls_direction_t dir, const binary_t& bin_ciphertext, protection_space_t space, uint8 hdr, uint8 pn_length,
                                      binary_t& bin_pn, binary_t& bin_protected_header) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -302,7 +302,7 @@ return_t quic_packet::header_protect(tls_direction_t dir, const binary_t& bin_ci
 
         // calcurate mask
         binary_t bin_mask;
-        ret = protection.protection_mask(session, dir, &bin_ciphertext[adj], bin_ciphertext.size(), bin_mask, 5, level);
+        ret = protection.protection_mask(session, dir, &bin_ciphertext[adj], bin_ciphertext.size(), bin_mask, 5, space);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -324,7 +324,7 @@ return_t quic_packet::header_protect(tls_direction_t dir, const binary_t& bin_ci
     return ret;
 }
 
-return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream, size_t size, protection_level_t level, uint8& hdr, uint32& pn,
+return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream, size_t size, protection_space_t space, uint8& hdr, uint32& pn,
                                        binary_t& bin_payload) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -333,7 +333,7 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
 
         // protection mask
         binary_t bin_mask;
-        ret = protection.protection_mask(session, dir, stream, size, bin_mask, 5, level);
+        ret = protection.protection_mask(session, dir, stream, size, bin_mask, 5, space);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -384,7 +384,7 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
 
         bin_payload.erase(bin_payload.begin(), bin_payload.begin() + pn_length);
 
-        session->get_session_info(dir).set_recordno(pn, level);
+        session->get_session_info(dir).set_recordno(pn, space);
     }
     __finally2 {
         // do nothing

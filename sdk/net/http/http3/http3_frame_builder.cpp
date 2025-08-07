@@ -11,7 +11,18 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/net/http/http3/http3_frame.hpp>
+#include <sdk/net/http/http3/http3_frame_builder.hpp>
+#include <sdk/net/http/http3/http3_frame_cancel_push.hpp>
+#include <sdk/net/http/http3/http3_frame_data.hpp>
+#include <sdk/net/http/http3/http3_frame_goaway.hpp>
+#include <sdk/net/http/http3/http3_frame_headers.hpp>
+#include <sdk/net/http/http3/http3_frame_max_push_id.hpp>
+#include <sdk/net/http/http3/http3_frame_metadata.hpp>
+#include <sdk/net/http/http3/http3_frame_origin.hpp>
+#include <sdk/net/http/http3/http3_frame_priority_update.hpp>
+#include <sdk/net/http/http3/http3_frame_push_promise.hpp>
+#include <sdk/net/http/http3/http3_frame_settings.hpp>
+#include <sdk/net/http/http3/http3_frame_unknown.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 

@@ -11,7 +11,8 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/net/http/http3/http3_frame.hpp>
+#include <sdk/net/http/http3/http3_frame_cancel_push.hpp>
+#include <sdk/net/http/http3/qpack.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>

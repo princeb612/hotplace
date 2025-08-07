@@ -159,21 +159,23 @@ flowchart LR
 
   DC[network server];
   DC1[HTTP/1.1];
-  DC2[HPACK];
-  DC3[HTTP/2];
-  DC4[QPACK];
-  DC5[HTTP/3];
+  DC2[HTTP/2];
+  DC3[HPACK];
+  DC4[HTTP/3];
+  DC5[QUIC];
+  DC6[QPACK];
 
   DC --> DC1;
   DC --> DC2;
   DC2 --> DC3;
-  DC --> DC4;
+  DC -.-> DC4;
   DC4 -.-> DC5;
+  DC5 -.-> DC6;
 
   DD[http_server];
-  DC1 --> DD;
-  DC3 --> DD;
-  DC5 -.-> DD;
+  DC1 ----> DD;
+  DC3 ---> DD;
+  DC6 -.-> DD;
 ```
 
 ## Memo
@@ -259,7 +261,7 @@ flowchart LR
   - [x] integration - multiplexer (epoll, IOCP)
   - [x] integration - network_server
     - [x] trial_tls_server_socket
-    - [ ] trial_dtls_server_socket
+    - [x] trial_dtls_server_socket
   - [x] integration - netclient
     - [x] trial_tls_client_socket
     - [x] trial_dtls_client_socket

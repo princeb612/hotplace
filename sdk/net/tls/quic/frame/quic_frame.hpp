@@ -175,8 +175,8 @@ class quic_frame_ack : public quic_frame {
    public:
     quic_frame_ack(quic_packet* packet);
 
-    quic_frame_ack& set_protection_level(protection_level_t level);
-    protection_level_t get_protection_level();
+    quic_frame_ack& set_protection_level(protection_space_t space);
+    protection_space_t get_protection_space();
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir);
@@ -184,7 +184,7 @@ class quic_frame_ack : public quic_frame {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
-    protection_level_t _level;
+    protection_space_t _space;
 };
 
 // RFC 9000 19.4.  RESET_STREAM Frames

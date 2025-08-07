@@ -28,7 +28,7 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_protection::get_protection_mask_key(tls_session *session, tls_direction_t dir, protection_level_t level, tls_secret_t &secret_key) {
+return_t tls_protection::get_protection_mask_key(tls_session *session, tls_direction_t dir, protection_space_t space, tls_secret_t &secret_key) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session_type = session->get_type();
@@ -55,19 +55,19 @@ return_t tls_protection::get_protection_mask_key(tls_session *session, tls_direc
             } break;
             case session_type_quic:
             case session_type_quic2: {
-                if (protection_initial == level) {
+                if (protection_initial == space) {
                     if (from_server == dir) {
                         secret_key = tls_secret_initial_quic_server_hp;
                     } else {
                         secret_key = tls_secret_initial_quic_client_hp;
                     }
-                } else if (protection_handshake == level) {
+                } else if (protection_handshake == space) {
                     if (from_server == dir) {
                         secret_key = tls_secret_handshake_quic_server_hp;
                     } else {
                         secret_key = tls_secret_handshake_quic_client_hp;
                     }
-                } else if (protection_application == level) {
+                } else if (protection_application == space) {
                     if (from_server == dir) {
                         secret_key = tls_secret_application_quic_server_hp;
                     } else {
@@ -87,7 +87,7 @@ return_t tls_protection::get_protection_mask_key(tls_session *session, tls_direc
 }
 
 return_t tls_protection::protection_mask(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, binary_t &mask, size_t masklen,
-                                         protection_level_t level) {
+                                         protection_space_t space) {
     return_t ret = errorcode_t::success;
     cipher_encrypt *cipher = nullptr;
 
@@ -103,7 +103,7 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
         auto alg = aes128;  // DTLS, QUIC initial
 
         // QUIC handshake, application
-        if (level == protection_handshake || level == protection_application) {
+        if (space == protection_handshake || space == protection_application) {
             auto cs = get_cipher_suite();
             auto hint_cs = tlsadvisor->hintof_cipher_suite(cs);
             auto hint_cipher = advisor->hintof_blockcipher(hint_cs->scheme);
@@ -124,7 +124,7 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
         tls_secret_t secret_key;
 
         {
-            get_protection_mask_key(session, dir, level, secret_key);
+            get_protection_mask_key(session, dir, space, secret_key);
 
             cipher_encrypt_builder builder;
             cipher = builder.set(alg, ecb).build();

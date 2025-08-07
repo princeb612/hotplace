@@ -52,5 +52,31 @@ void set_tls_keylog_callback(std::function<void(const char*)> func) {
     sslkeylog->set(func);
 }
 
+bool is_unidirection(tls_direction_t dir) {
+    bool ret = false;
+    switch (dir) {
+        case client_initiated_uni:
+        case server_initiated_uni: {
+            ret = true;
+        } break;
+        default: {
+        } break;
+    }
+    return ret;
+}
+
+bool is_bidirection(tls_direction_t dir) {
+    bool ret = false;
+    switch (dir) {
+        case client_initiated_bidi:
+        case server_initiated_bidi: {
+            ret = true;
+        } break;
+        default: {
+        } break;
+    }
+    return ret;
+}
+
 }  // namespace net
 }  // namespace hotplace

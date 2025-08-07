@@ -333,7 +333,7 @@ uint8 tls_protection::get_tag_size() {
     return ret_value;
 }
 
-return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir, tls_secret_t &secret_key, tls_secret_t &secret_iv, protection_level_t level) {
+return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir, tls_secret_t &secret_key, tls_secret_t &secret_iv, protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -408,26 +408,26 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
             case session_type_quic2: {
                 // QUIC
                 if (from_client == dir) {
-                    if (protection_initial == level) {
+                    if (protection_initial == space) {
                         secret_key = tls_secret_initial_quic_client_key;
                         secret_iv = tls_secret_initial_quic_client_iv;
-                    } else if (protection_handshake == level) {
+                    } else if (protection_handshake == space) {
                         secret_key = tls_secret_handshake_quic_client_key;
                         secret_iv = tls_secret_handshake_quic_client_iv;
-                    } else if (protection_application == level) {
+                    } else if (protection_application == space) {
                         secret_key = tls_secret_application_quic_client_key;
                         secret_iv = tls_secret_application_quic_client_iv;
                     } else {
                         ret = errorcode_t::invalid_parameter;
                     }
                 } else if (from_server == dir) {
-                    if (protection_initial == level) {
+                    if (protection_initial == space) {
                         secret_key = tls_secret_initial_quic_server_key;
                         secret_iv = tls_secret_initial_quic_server_iv;
-                    } else if (protection_handshake == level) {
+                    } else if (protection_handshake == space) {
                         secret_key = tls_secret_handshake_quic_server_key;
                         secret_iv = tls_secret_handshake_quic_server_iv;
-                    } else if (protection_application == level) {
+                    } else if (protection_application == space) {
                         secret_key = tls_secret_application_quic_server_key;
                         secret_iv = tls_secret_application_quic_server_iv;
                     } else {
@@ -465,7 +465,7 @@ return_t tls_protection::get_cbc_hmac_key(tls_session *session, tls_direction_t 
 #define TLS_CIPHERTEXT_MAXSIZE ((2 << 14) + 2048)
 
 return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &additional,
-                                 binary_t &tag, protection_level_t level) {
+                                 binary_t &tag, protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -490,7 +490,7 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
         if (is_cbc) {
             ret = encrypt_cbc_hmac(session, dir, plaintext, ciphertext, additional, tag);
         } else {
-            ret = encrypt_aead(session, dir, plaintext, ciphertext, additional, tag, level);
+            ret = encrypt_aead(session, dir, plaintext, ciphertext, additional, tag, space);
         }
         if (errorcode_t::success != ret) {
             __leave2;
@@ -505,7 +505,7 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
 }
 
 return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &aad,
-                                      binary_t &tag, protection_level_t level) {
+                                      binary_t &tag, protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -518,7 +518,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
         uint16 cs = 0;
-        switch (level) {
+        switch (space) {
             case protection_initial:
                 // AEAD_AES_128_GCM, SHA256
                 cs = 0x1301;
@@ -534,10 +534,10 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
 
         tls_secret_t secret_key;
         tls_secret_t secret_iv;
-        get_aead_key(session, dir, secret_key, secret_iv, level);
+        get_aead_key(session, dir, secret_key, secret_iv, space);
 
         uint64 record_no = 0;
-        record_no = session->get_recordno(dir, true, level);
+        record_no = session->get_recordno(dir, true, space);
 
         auto const &key = get_secrets().get(secret_key);
         auto const &iv = get_secrets().get(secret_iv);
@@ -576,7 +576,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
             dbs.println("> encrypt");
             dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
             dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());
-            dbs.println(" > record no %i (space %i)", record_no, level);
+            dbs.println(" > record no %i (space %i)", record_no, space);
             dbs.println(" > nonce %s", base16_encode(nonce).c_str());
             dbs.println(" > aad %s", base16_encode(aad).c_str());
             dbs.println(" > tag %s", base16_encode(tag).c_str());
@@ -705,7 +705,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 }
 
 return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext,
-                                 protection_level_t level) {
+                                 protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -722,7 +722,7 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
         if (is_kindof_cbc) {
             ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
         } else {
-            ret = decrypt_aead(session, dir, stream, size, pos, plaintext, level);
+            ret = decrypt_aead(session, dir, stream, size, pos, plaintext, space);
         }
         if (errorcode_t::success != ret) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
@@ -733,7 +733,7 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
 }
 
 return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext, binary_t &aad,
-                                 protection_level_t level) {
+                                 protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -756,7 +756,7 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
                     // ... aad(aadlen) encdata tag(tagsize)
                     //     \_ pos
                     binary_append(tag, stream + size - tagsize, tagsize);
-                    ret = decrypt_aead(session, dir, stream, size - tagsize, pos + aadlen, plaintext, aad, tag, level);
+                    ret = decrypt_aead(session, dir, stream, size - tagsize, pos + aadlen, plaintext, aad, tag, space);
                 }
                 if (errorcode_t::success != ret) {
                     session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
@@ -773,7 +773,7 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
 }
 
 return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext,
-                                 const binary_t &aad, const binary_t &tag, protection_level_t level) {
+                                 const binary_t &aad, const binary_t &tag, protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -787,7 +787,7 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
         if (is_kindof_cbc) {
             ret = errorcode_t::not_supported;
         } else {
-            ret = decrypt_aead(session, dir, stream, size, pos, plaintext, aad, tag, level);
+            ret = decrypt_aead(session, dir, stream, size, pos, plaintext, aad, tag, space);
             if (errorcode_t::success != ret) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
             }
@@ -798,7 +798,7 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
 }
 
 return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext,
-                                      protection_level_t level) {
+                                      protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -818,7 +818,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         uint8 tagsize = get_tag_size();
         binary_append(tag, stream + size - tagsize, tagsize);
 
-        ret = decrypt_aead(session, dir, stream, size - tagsize, pos, plaintext, aad, tag, level);
+        ret = decrypt_aead(session, dir, stream, size - tagsize, pos, plaintext, aad, tag, space);
     }
     __finally2 {
         // do nothing
@@ -827,7 +827,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 }
 
 return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext,
-                                      const binary_t &aad, const binary_t &tag, protection_level_t level) {
+                                      const binary_t &aad, const binary_t &tag, protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -839,7 +839,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         auto session_type = session->get_type();
         auto record_version = get_lagacy_version();
         uint16 cs = 0;
-        switch (level) {
+        switch (space) {
             case protection_initial:
                 // AEAD_AES_128_GCM, SHA256
                 cs = 0x1301;
@@ -855,9 +855,9 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 
         tls_secret_t secret_key;
         tls_secret_t secret_iv;
-        get_aead_key(session, dir, secret_key, secret_iv, level);
+        get_aead_key(session, dir, secret_key, secret_iv, space);
 
-        uint64 record_no = session->get_recordno(dir, true, level);
+        uint64 record_no = session->get_recordno(dir, true, space);
 
         const binary_t &key = get_secrets().get(secret_key);
         const binary_t &iv = get_secrets().get(secret_iv);
@@ -937,7 +937,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
             dbs.println("> decrypt");
             dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
             dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());
-            dbs.println(" > record no %i (space %i)", record_no, level);
+            dbs.println(" > record no %i (space %i)", record_no, space);
             dbs.println(" > nonce %s", base16_encode(nonce).c_str());
             if (is_kindof_tls12()) {
                 dbs.println(" > aad %s", base16_encode(tls12_aad).c_str());

@@ -162,16 +162,16 @@ tls_session::session_info& tls_session::get_session_info(tls_direction_t dir) {
     return _direction[dir];
 }
 
-uint64 tls_session::get_recordno(tls_direction_t dir, bool inc, protection_level_t level) { return get_session_info(dir).get_recordno(inc, level); }
+uint64 tls_session::get_recordno(tls_direction_t dir, bool inc, protection_space_t space) { return get_session_info(dir).get_recordno(inc, space); }
 
-void tls_session::reset_recordno(tls_direction_t dir, protection_level_t level) {
+void tls_session::reset_recordno(tls_direction_t dir, protection_space_t space) {
     auto ver = get_tls_protection().get_tls_version();
     if ((tls_13 == ver) || (dtls_13 == ver)) {
-        get_session_info(dir).reset_recordno(level);
+        get_session_info(dir).reset_recordno(space);
     }
 }
 
-void tls_session::set_recordno(tls_direction_t dir, uint64 recno, protection_level_t level) { get_session_info(dir).set_recordno(recno, level); }
+void tls_session::set_recordno(tls_direction_t dir, uint64 recno, protection_space_t space) { get_session_info(dir).set_recordno(recno, space); }
 
 void tls_session::addref() { _shared.addref(); }
 
@@ -189,16 +189,16 @@ bool tls_session::session_info::apply_protection() { return _protection; }
 
 void tls_session::session_info::reset_protection() { _protection = false; }
 
-uint64 tls_session::session_info::get_recordno(bool inc, protection_level_t level) {
-    auto& recordno = _recordno_spaces[level];
+uint64 tls_session::session_info::get_recordno(bool inc, protection_space_t space) {
+    auto& recordno = _recordno_spaces[space];
     return inc ? recordno++ : recordno;
 }
 
-void tls_session::session_info::inc_recordno(protection_level_t level) { ++_recordno_spaces[level]; }
+void tls_session::session_info::inc_recordno(protection_space_t space) { ++_recordno_spaces[space]; }
 
-void tls_session::session_info::reset_recordno(protection_level_t level) { _recordno_spaces[level] = 0; }
+void tls_session::session_info::reset_recordno(protection_space_t space) { _recordno_spaces[space] = 0; }
 
-void tls_session::session_info::set_recordno(uint64 recordno, protection_level_t level) { _recordno_spaces[level] = recordno; }
+void tls_session::session_info::set_recordno(uint64 recordno, protection_space_t space) { _recordno_spaces[space] = recordno; }
 
 void tls_session::session_info::push_alert(uint8 level, uint8 desc) {
     critical_section_guard guard(_info_lock);

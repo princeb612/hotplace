@@ -44,6 +44,7 @@ return_t quic_packets::read(tls_session* session, tls_direction_t dir, const byt
                     add(packet);
                 } else {
                     packet->release();
+                    break;
                 }
             } else {
                 ret = errorcode_t::not_supported;

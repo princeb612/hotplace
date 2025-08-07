@@ -199,22 +199,57 @@ void construct_quic_handshake_cv_fin(tls_session* session, tls_direction_t dir, 
     bin.clear();
 
     quic_packet_builder packet_builder;
-    auto packet = packet_builder.set(quic_packet_type_handshake).set_session(session).set(dir).construct().build();
     quic_frame_builder frame_builder;
+    http3_frame_builder h3frame_builder;
 
     {
-        auto crypto = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
-        // CV
-        *crypto << new tls_handshake_certificate_verify(session);
-        // FIN
-        *crypto << new tls_handshake_finished(session);
+        auto packet = packet_builder.set(quic_packet_type_handshake).set_session(session).set(dir).construct().build();
 
-        *packet << crypto;
+        {
+            auto crypto = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
+            // CV
+            *crypto << new tls_handshake_certificate_verify(session);
+            // FIN
+            *crypto << new tls_handshake_finished(session);
+
+            *packet << crypto;
+        }
+
+        packet->write(dir, bin);
+
+        packet->release();
     }
 
-    packet->write(dir, bin);
+    _test_case.assert(true, __FUNCTION__, "%s", message);
+}
 
-    packet->release();
+void construct_quic_handshake_fin(tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
+    bin.clear();
+
+    quic_packet_builder packet_builder;
+    quic_frame_builder frame_builder;
+    http3_frame_builder h3frame_builder;
+
+    {
+        auto packet = packet_builder.set(quic_packet_type_handshake).set_session(session).set(dir).construct().build();
+
+        {
+            auto ack = (quic_frame_ack*)frame_builder.set(quic_frame_type_ack).set(packet).build();
+            ack->set_protection_level(protection_handshake);
+            *packet << ack;
+        }
+        {
+            auto crypto = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
+            // FIN
+            *crypto << new tls_handshake_finished(session);
+
+            *packet << crypto;
+        }
+
+        packet->write(dir, bin);
+
+        packet->release();
+    }
 
     _test_case.assert(true, __FUNCTION__, "%s", message);
 }
@@ -276,8 +311,8 @@ void test_construct_quic() {
         tls_session session_client(session_type_quic);
         tls_session session_server(session_type_quic);
 
-        auto lambda = [](tls_session* session, tls_direction_t dir, protection_level_t level, uint32 pkn_expect) -> void {
-            uint32 pkn = session->get_recordno(dir, false, level);
+        auto lambda = [](tls_session* session, tls_direction_t dir, protection_space_t space, uint32 pkn_expect) -> void {
+            uint32 pkn = session->get_recordno(dir, false, space);
             _test_case.assert(pkn_expect == pkn, __FUNCTION__, "PKN %i", pkn);
         };
 
@@ -314,7 +349,6 @@ void test_construct_quic() {
         // handshake
         {
             // S->C
-
             lambda(&session_server, from_server, protection_handshake, 0);
             construct_quic_handshake_ee_cert(&session_server, from_server, bin, "{S...} handshake [CRYPTO(EE, CERT)]");
             lambda(&session_client, from_server, protection_handshake, 0);
@@ -323,6 +357,16 @@ void test_construct_quic() {
                 __leave2;
             }
 
+            // C->S
+            lambda(&session_client, from_client, protection_handshake, 0);
+            construct_quic_handshake_ack(&session_client, from_client, bin, "{C...} packet [ACK]");
+            lambda(&session_server, from_client, protection_handshake, 0);
+            ret = send_packet(&session_server, from_client, bin, "{C->S} packet [ACK]");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+
+            // S->C
             lambda(&session_server, from_server, protection_handshake, 1);
             construct_quic_handshake_cv_fin(&session_server, from_server, bin, "{S...} handshake [CRYPTO(CV, FIN)]");
             lambda(&session_client, from_server, protection_handshake, 1);
@@ -332,10 +376,13 @@ void test_construct_quic() {
             }
 
             // C->S
-            lambda(&session_client, from_client, protection_handshake, 0);
-            construct_quic_handshake_ack(&session_client, from_client, bin, "{C...} packet [ACK]");
-            lambda(&session_server, from_client, protection_handshake, 0);
-            send_packet(&session_server, from_client, bin, "{C->S} packet [ACK]");
+            lambda(&session_client, from_client, protection_handshake, 1);
+            construct_quic_handshake_fin(&session_client, from_client, bin, "{C...} packet [CRYPTO(FIN)]");
+            lambda(&session_server, from_client, protection_handshake, 1);
+            ret = send_packet(&session_server, from_client, bin, "{C->S} packet [CRYPTO(FIN)]");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
     }
     __finally2 {}

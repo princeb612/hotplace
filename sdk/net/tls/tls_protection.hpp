@@ -208,7 +208,7 @@ class tls_protection {
     return_t build_iv(tls_session* session, binary_t& nonce, const binary_t& iv, uint64 recordno);
     uint8 get_tag_size();
 
-    return_t get_aead_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& iv, protection_level_t level = protection_default);
+    return_t get_aead_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& iv, protection_space_t space = protection_default);
     return_t get_cbc_hmac_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& mackey);
     /**
      * @brief encrypt
@@ -223,16 +223,16 @@ class tls_protection {
      *          RFC 5246 6.2.3.3.  AEAD Ciphers
      */
     return_t encrypt(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& additional, binary_t& tag,
-                     protection_level_t level = protection_default);
+                     protection_space_t space = protection_default);
 
     // stream include a tag
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                     protection_level_t level = protection_default);
+                     protection_space_t space = protection_default);
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& aad,
-                     protection_level_t level = protection_default);
+                     protection_space_t space = protection_default);
     // stream do not include a tag
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
-                     const binary_t& tag, protection_level_t level = protection_default);
+                     const binary_t& tag, protection_space_t space = protection_default);
 
     ///////////////////////////////////////////////////////////////////////////
     // calc
@@ -251,13 +251,13 @@ class tls_protection {
     ///////////////////////////////////////////////////////////////////////////
     // mask for DTLS 1.3/QUIC header protection (aes-128-ecb)
     ///////////////////////////////////////////////////////////////////////////
-    return_t get_protection_mask_key(tls_session* session, tls_direction_t dir, protection_level_t level, tls_secret_t& secret);
+    return_t get_protection_mask_key(tls_session* session, tls_direction_t dir, protection_space_t space, tls_secret_t& secret);
     return_t protection_mask(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, binary_t& mask, size_t masklen,
-                             protection_level_t level = protection_default);
+                             protection_space_t space = protection_default);
 
    protected:
     return_t encrypt_aead(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag,
-                          protection_level_t level = protection_default);
+                          protection_space_t space = protection_default);
     return_t encrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& iv, binary_t& maced);
     /**
      * @brief   TLS 1.3 decrypt
@@ -273,13 +273,13 @@ class tls_protection {
      *          stream include a tag
      */
     return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                          protection_level_t level = protection_default);
+                          protection_space_t space = protection_default);
     /**
      * @brief   decrypt
      * @remarks stream do not include a tag
      */
     return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
-                          const binary_t& tag, protection_level_t level = protection_default);
+                          const binary_t& tag, protection_space_t space = protection_default);
     /**
      * @brief   TLS 1 decrypt
      */

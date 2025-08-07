@@ -575,21 +575,43 @@ void tls_advisor::enum_session_status_string(uint32 status, std::function<void(c
     }
 }
 
-std::string tls_advisor::nameof_direction(tls_direction_t dir, bool longname) {
+std::string tls_advisor::nameof_direction(tls_direction_t dir, uint32 flag) {
     std::string value;
     switch (dir) {
         case from_client: {
-            if (longname) {
+            if (0 == flag) {
+                value = "client";
+            } else if (1 == flag) {
                 value = "client->server";
             } else {
-                value = "client";
+                value = "client-initiated (uni-directional)";
             }
         } break;
         case from_server: {
-            if (longname) {
+            if (0 == flag) {
+                value = "server";
+            } else if (1 == flag) {
                 value = "server->client";
             } else {
-                value = "server";
+                value = "server-initiated (uni-directional)";
+            }
+        } break;
+        case client_initiated_bidi: {
+            if (0 == flag) {
+                value = "client<->server";
+            } else if (1 == flag) {
+                value = "client<->server";
+            } else {
+                value = "client-initiated (bi-directional)";
+            }
+        } break;
+        case server_initiated_bidi: {
+            if (0 == flag) {
+                value = "server<->client";
+            } else if (1 == flag) {
+                value = "server<->client";
+            } else {
+                value = "server-initiated (bi-directional)";
             }
         } break;
         case from_any: {

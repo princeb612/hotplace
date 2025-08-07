@@ -19,6 +19,10 @@
 namespace hotplace {
 namespace net {
 
+constexpr char constexpr_type[] = "HTTP/3 frame type";
+constexpr char constexpr_length[] = "length";
+constexpr char constexpr_payload[] = "payload";
+
 http3_frame::http3_frame(h3_frame_t type) : _type(type) { _shared.make_share(this); }
 
 return_t http3_frame::read(const byte_t* stream, size_t size, size_t& pos) {
@@ -50,9 +54,6 @@ return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& p
         uint64 length = 0;
         binary_t frame_payload;
 
-        constexpr char constexpr_type[] = "HTTP/3 frame type";
-        constexpr char constexpr_length[] = "length";
-        constexpr char constexpr_payload[] = "payload";
         {
             // RFC 9114 7.1.  Frame Layout
             payload pl;

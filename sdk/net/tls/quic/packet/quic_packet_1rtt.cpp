@@ -159,7 +159,7 @@ return_t quic_packet_1rtt::write(tls_direction_t dir, binary_t& header, binary_t
          *  in sampling header ciphertext for header protection, the Packet Number field is
          *  assumed to be 4 bytes long (its maximum possible encoded length).
          */
-        if ((from_any != dir) && (get_payload().size() >= 0x10)) {
+        if (is_unidirection(dir) && (get_payload().size() > 0)) {
             binary_t bin_ciphertext;
             binary_t bin_tag;
             binary_t bin_mask;

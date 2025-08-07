@@ -106,7 +106,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                             basic_stream dbs;
                             dbs.printf("\e[1;36m");
                             dbs.println("# publish %s %i %s", tlsadvisor->handshake_type_string(hstype).c_str(), hsseq,
-                                        tlsadvisor->nameof_direction(dir, true).c_str());
+                                        tlsadvisor->nameof_direction(dir, 1).c_str());
                             dbs.printf("\e[0m");
                             dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
                             trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
@@ -126,7 +126,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                         basic_stream dbs;
                         dbs.printf("\e[1;36m");
                         dbs.println("# split %s %i %s", tlsadvisor->handshake_type_string(desc.hstype).c_str(), desc.hsseq,
-                                    tlsadvisor->nameof_direction(dir, true).c_str());
+                                    tlsadvisor->nameof_direction(dir, 1).c_str());
                         dbs.printf("\e[0m");
                         dump_memory(stream + fragoffset, fragsize, &dbs, 16, 3, 0, dump_notrunc);
                         trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);

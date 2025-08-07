@@ -38,14 +38,23 @@ class quic_frame_builder {
 
     quic_frame_builder& set(quic_frame_t type);
     quic_frame_builder& set(quic_packet* packet);
+    quic_frame_builder& set(tls_direction_t dir);
+    quic_frame_builder& construct();
     quic_frame* build();
 
     quic_frame_t get_type();
     quic_packet* get_packet();
 
+   protected:
+    tls_direction_t get_direction();
+
+    bool is_construct();
+
    private:
     quic_frame_t _type;
     quic_packet* _packet;
+    tls_direction_t _dir;
+    bool _construct;
 };
 
 }  // namespace net
