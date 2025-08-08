@@ -11,6 +11,7 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
+#include <sdk/io/cbor/cbor_bstrings.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/cbor/cbor_encode.hpp>
 

@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2SESSION__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2SESSION__
 
-#include <sdk/net/http/http2/hpack_dynamic_table.hpp>
+#include <sdk/net/http/hpack/hpack_dynamic_table.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/types.hpp>
 

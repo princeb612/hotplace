@@ -54,7 +54,16 @@
 #include <sdk/crypto/cose/cbor_object_signing.hpp>
 #include <sdk/crypto/cose/cbor_object_signing_encryption.hpp>
 #include <sdk/crypto/cose/cbor_web_key.hpp>
+#include <sdk/crypto/cose/cose_binary.hpp>
 #include <sdk/crypto/cose/cose_composer.hpp>
+#include <sdk/crypto/cose/cose_countersign.hpp>
+#include <sdk/crypto/cose/cose_countersigns.hpp>
+#include <sdk/crypto/cose/cose_data.hpp>
+#include <sdk/crypto/cose/cose_protected.hpp>
+#include <sdk/crypto/cose/cose_recipient.hpp>
+#include <sdk/crypto/cose/cose_recipients.hpp>
+#include <sdk/crypto/cose/cose_unprotected.hpp>
+#include <sdk/crypto/cose/cose_unsent.hpp>
 #include <sdk/crypto/cose/types.hpp>
 
 /* JOSE */

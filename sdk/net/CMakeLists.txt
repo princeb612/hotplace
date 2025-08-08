@@ -13,8 +13,11 @@ file (GLOB FILEGROUP_SDK_HEADER_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/basic/util/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/auth/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/compression/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/http2/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/http3/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/hpack/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/qpack/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/server/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/advisor/*.hpp
@@ -38,8 +41,11 @@ file (GLOB FILEGROUP_SDK_SOURCE_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/basic/util/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/auth/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/compression/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/http2/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/http3/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/hpack/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/qpack/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/resource/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/server/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/*.cpp

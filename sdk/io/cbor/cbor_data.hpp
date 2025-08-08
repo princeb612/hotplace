@@ -14,9 +14,8 @@
 #ifndef __HOTPLACE_SDK_IO_CBOR_CBORDATA__
 #define __HOTPLACE_SDK_IO_CBOR_CBORDATA__
 
-#include <deque>
 #include <sdk/base/basic/ieee754.hpp>
-#include <sdk/io/cbor/cbor_object.hpp>  // cbor_object
+#include <sdk/io/cbor/cbor_object.hpp>
 
 namespace hotplace {
 namespace io {
@@ -61,103 +60,6 @@ class cbor_data : public cbor_object {
    private:
     variant _vt;
 };
-
-class cbor_bstrings : public cbor_object {
-    friend class cbor_concise_visitor;
-    friend class cbor_diagnostic_visitor;
-
-   public:
-    cbor_bstrings();
-    virtual ~cbor_bstrings();
-
-    /*
-     * @brief   add
-     * @param   cbor_object* object [in]
-     * @param   cbor_object* extra [inopt] ignored
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t join(cbor_object* object, cbor_object* extra = nullptr);
-    cbor_bstrings& add(cbor_object* object, cbor_object* extra = nullptr);
-    cbor_bstrings& add(const byte_t* bstr, size_t size);
-    cbor_bstrings& operator<<(binary_t bin);
-
-    virtual size_t size();
-
-    virtual int addref();
-    virtual int release();
-
-   protected:
-    virtual void represent(stream_t* s);
-    virtual void represent(binary_t* b);
-
-   private:
-    std::list<cbor_data*> _array;
-};
-
-class cbor_tstrings : public cbor_object {
-    friend class cbor_concise_visitor;
-    friend class cbor_diagnostic_visitor;
-
-   public:
-    cbor_tstrings();
-    virtual ~cbor_tstrings();
-
-    /*
-     * @brief   add
-     * @param   cbor_object* object [in]
-     * @param   cbor_object* extra [inopt] ignored
-     * @return  error code (see error.hpp)
-     */
-    virtual return_t join(cbor_object* object, cbor_object* extra = nullptr);
-    cbor_tstrings& add(cbor_object* object, cbor_object* extra = nullptr);
-    cbor_tstrings& add(const char* str);
-    cbor_tstrings& operator<<(const char* str);
-
-    virtual size_t size();
-
-    virtual int addref();
-    virtual int release();
-
-   protected:
-    virtual void represent(stream_t* s);
-    virtual void represent(binary_t* b);
-
-   private:
-    std::list<cbor_data*> _array;
-};
-
-/**
- * @brief   cbor_simple
- */
-class cbor_simple : public cbor_object {
-   public:
-    cbor_simple(uint8 value);
-
-    cbor_simple_t simple_type();
-    static cbor_simple_t is_kind_of(uint8 first);
-    static cbor_simple_t is_kind_of_value(uint8 value);
-
-   protected:
-    virtual void represent(stream_t* s);
-    virtual void represent(binary_t* b);
-
-   private:
-    cbor_simple_t _type;
-    uint8 _value;
-};
-
-#if defined __SIZEOF_INT128__
-class cbor_bignum_int128 {
-   public:
-    cbor_bignum_int128();
-
-    cbor_bignum_int128& load(byte_t* data, uint32 len);
-    int128 value();
-
-   private:
-    binary_t _bn;
-};
-#endif
 
 }  // namespace io
 }  // namespace hotplace

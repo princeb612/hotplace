@@ -10,7 +10,7 @@
  */
 
 #include <sdk/base/basic/binary.hpp>
-#include <sdk/io/cbor/cbor_data.hpp>
+#include <sdk/io/cbor/cbor_bignum.hpp>
 #include <sdk/io/system/types.hpp>
 #include <sdk/io/types.hpp>
 

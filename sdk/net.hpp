@@ -61,7 +61,6 @@
 #include <sdk/net/http/http_authentication_resolver.hpp>
 #include <sdk/net/http/http_client.hpp>
 #include <sdk/net/http/http_header.hpp>
-#include <sdk/net/http/http_header_compression_stream.hpp>
 #include <sdk/net/http/http_protocol.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_resource.hpp>
@@ -71,6 +70,14 @@
 #include <sdk/net/http/http_server_builder.hpp>
 #include <sdk/net/http/http_uri.hpp>
 #include <sdk/net/http/types.hpp>
+
+/* http/compression */
+#include <sdk/net/http/compression/http_dynamic_table.hpp>
+#include <sdk/net/http/compression/http_header_compression.hpp>
+#include <sdk/net/http/compression/http_header_compression_stream.hpp>
+#include <sdk/net/http/compression/http_huffman_codes.hpp>
+#include <sdk/net/http/compression/http_huffman_coding.hpp>
+#include <sdk/net/http/compression/http_static_table.hpp>
 
 /* http/auth */
 #include <sdk/net/http/auth/basic_authentication_provider.hpp>
@@ -85,10 +92,6 @@
 #include <sdk/net/http/auth/rfc2617_digest.hpp>
 
 /* http/http2 */
-#include <sdk/net/http/http2/hpack_dynamic_table.hpp>
-#include <sdk/net/http/http2/hpack_encoder.hpp>
-#include <sdk/net/http/http2/hpack_static_table.hpp>
-#include <sdk/net/http/http2/http2_dynamic_table.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_frame_alt_svc.hpp>
 #include <sdk/net/http/http2/http2_frame_builder.hpp>
@@ -102,13 +105,9 @@
 #include <sdk/net/http/http2/http2_frame_rst_stream.hpp>
 #include <sdk/net/http/http2/http2_frame_settings.hpp>
 #include <sdk/net/http/http2/http2_frame_window_update.hpp>
-#include <sdk/net/http/http2/http2_huffman_codes.hpp>
-#include <sdk/net/http/http2/http2_huffman_coding.hpp>
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http2/http2_serverpush.hpp>
 #include <sdk/net/http/http2/http2_session.hpp>
-#include <sdk/net/http/http2/http2_static_table.hpp>
-#include <sdk/net/http/http2/http_header_compression.hpp>
 
 /* http/http3 */
 #include <sdk/net/http/http3/http3_frame.hpp>
@@ -125,10 +124,17 @@
 #include <sdk/net/http/http3/http3_frame_settings.hpp>
 #include <sdk/net/http/http3/http3_frame_unknown.hpp>
 #include <sdk/net/http/http3/http3_frames.hpp>
-#include <sdk/net/http/http3/qpack_dynamic_table.hpp>
-#include <sdk/net/http/http3/qpack_encoder.hpp>
-#include <sdk/net/http/http3/qpack_static_table.hpp>
 #include <sdk/net/http/http3/types.hpp>
+
+/* http/hpack */
+#include <sdk/net/http/hpack/hpack_dynamic_table.hpp>
+#include <sdk/net/http/hpack/hpack_encoder.hpp>
+#include <sdk/net/http/hpack/hpack_static_table.hpp>
+
+/* http/qpack */
+#include <sdk/net/http/qpack/qpack_dynamic_table.hpp>
+#include <sdk/net/http/qpack/qpack_encoder.hpp>
+#include <sdk/net/http/qpack/qpack_static_table.hpp>
 
 /* server */
 #include <sdk/net/server/network_protocol.hpp>

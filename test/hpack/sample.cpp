@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     _test_case.reset_time();
 
     // RFC 7541 Appendix B. Huffman Code
-    auto huffcode = http2_huffman_coding::get_instance();
+    auto huffcode = http_huffman_coding::get_instance();
     _test_case.assert(true, __FUNCTION__, "check loading time of HPACK Huffman Code");
 
     // RFC 7541 Appendix B. Huffman Code

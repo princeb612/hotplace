@@ -27,12 +27,17 @@
 /* CBOR */
 #include <sdk/io/cbor/cbor.hpp>
 #include <sdk/io/cbor/cbor_array.hpp>
+#include <sdk/io/cbor/cbor_bignum.hpp>
+#include <sdk/io/cbor/cbor_bstrings.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/cbor/cbor_encode.hpp>
 #include <sdk/io/cbor/cbor_map.hpp>
 #include <sdk/io/cbor/cbor_object.hpp>
+#include <sdk/io/cbor/cbor_pair.hpp>
 #include <sdk/io/cbor/cbor_publisher.hpp>
 #include <sdk/io/cbor/cbor_reader.hpp>
+#include <sdk/io/cbor/cbor_simple.hpp>
+#include <sdk/io/cbor/cbor_tstrings.hpp>
 #include <sdk/io/cbor/cbor_visitor.hpp>
 
 /* stream */

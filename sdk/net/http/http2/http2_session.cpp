@@ -15,7 +15,7 @@
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/system/types.hpp>
-#include <sdk/net/http/http2/hpack_dynamic_table.hpp>
+#include <sdk/net/http/hpack/hpack_dynamic_table.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_frame_alt_svc.hpp>
 #include <sdk/net/http/http2/http2_frame_continuation.hpp>

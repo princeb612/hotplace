@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_TYPES__
 #define __HOTPLACE_SDK_CRYPTO_COSE_TYPES__
 
+#include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/types.hpp>
 #include <sdk/io/cbor/cbor.hpp>
@@ -98,6 +99,25 @@ struct _cose_context_t {
     void clear() {
         // do nothing
     }
+};
+
+enum cose_message_type_t {
+    cose_message_unknown = 0,
+    cose_message_protected = 1,
+    cose_message_unprotected = 2,
+    cose_message_payload = 3,
+    cose_message_singleitem = 4,
+    cose_message_layered = 5,  // recipients, signatures
+};
+
+enum cose_scope {
+    cose_scope_protected = (1 << 0),
+    cose_scope_unprotected = (1 << 1),
+    cose_scope_unsent = (1 << 2),
+    cose_scope_params = (1 << 3),
+    cose_scope_layer = 0x1111,
+    cose_scope_children = (1 << 4),
+    cose_scope_all = 0x11111111,
 };
 
 class cbor_object_encryption;

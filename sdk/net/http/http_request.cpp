@@ -11,7 +11,7 @@
  */
 
 #include <sdk/io/string/string.hpp>
-#include <sdk/net/http/http2/hpack_dynamic_table.hpp>
+#include <sdk/net/http/hpack/hpack_dynamic_table.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http_request.hpp>
 #include <sdk/net/http/http_resource.hpp>

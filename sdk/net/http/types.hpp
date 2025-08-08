@@ -92,14 +92,16 @@ class http_server;
 class http_server_builder;
 class http_uri;
 
+// net/http/compression
+class http_header_compression;
+class http_huffman_coding;
+
 // net/http/http2
 class hpack_encoder;
 class hpack_dynamic_table;
 class hpack_static_table;
-class http_header_compression;
-class http2_static_table;
-class http2_dynamic_table;
-class http2_huffman_coding;
+class http_static_table;
+class http_dynamic_table;
 class http2_frame;
 class http2_frame_builder;
 class http2_frame_alt_svc;

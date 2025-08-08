@@ -13,10 +13,13 @@
 
 #include <sdk/base/basic/base16.hpp>
 #include <sdk/io/cbor/cbor_array.hpp>
+#include <sdk/io/cbor/cbor_bstrings.hpp>
 #include <sdk/io/cbor/cbor_data.hpp>
 #include <sdk/io/cbor/cbor_map.hpp>
 #include <sdk/io/cbor/cbor_publisher.hpp>
 #include <sdk/io/cbor/cbor_reader.hpp>
+#include <sdk/io/cbor/cbor_simple.hpp>
+#include <sdk/io/cbor/cbor_tstrings.hpp>
 #include <sdk/io/stream/stream.hpp>
 #include <sdk/io/system/types.hpp>
 

@@ -26,6 +26,7 @@
 #include <sdk/crypto/cose/cbor_object_signing.hpp>
 #include <sdk/crypto/cose/cbor_object_signing_encryption.hpp>
 #include <sdk/crypto/cose/cose_composer.hpp>
+#include <sdk/crypto/cose/cose_countersigns.hpp>
 #include <set>
 
 namespace hotplace {

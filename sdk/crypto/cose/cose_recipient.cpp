@@ -17,6 +17,8 @@
 #include <sdk/crypto/basic/openssl_sign.hpp>
 #include <sdk/crypto/cose/cbor_object_signing.hpp>
 #include <sdk/crypto/cose/cose_composer.hpp>
+#include <sdk/crypto/cose/cose_countersigns.hpp>
+#include <sdk/crypto/cose/cose_recipient.hpp>
 
 namespace hotplace {
 namespace crypto {

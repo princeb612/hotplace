@@ -15,7 +15,7 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/zlib.hpp>
 #include <sdk/io/string/string.hpp>
-#include <sdk/net/http/http2/hpack_dynamic_table.hpp>
+#include <sdk/net/http/hpack/hpack_dynamic_table.hpp>
 #include <sdk/net/http/http2/http2_frame_alt_svc.hpp>
 #include <sdk/net/http/http2/http2_frame_data.hpp>
 #include <sdk/net/http/http2/http2_frame_headers.hpp>
