@@ -64,6 +64,14 @@
 
 /* asn.1 */
 #include <sdk/io/asn.1/asn1.hpp>
+#include <sdk/io/asn.1/asn1_composite.hpp>
+#include <sdk/io/asn.1/asn1_container.hpp>
+#include <sdk/io/asn.1/asn1_encode.hpp>
+#include <sdk/io/asn.1/asn1_object.hpp>
+#include <sdk/io/asn.1/asn1_resource.hpp>
+#include <sdk/io/asn.1/asn1_sequence.hpp>
+#include <sdk/io/asn.1/asn1_set.hpp>
+#include <sdk/io/asn.1/asn1_tag.hpp>
 #include <sdk/io/asn.1/asn1_visitor.hpp>
 #include <sdk/io/asn.1/template.hpp>
 #include <sdk/io/asn.1/types.hpp>
