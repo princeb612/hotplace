@@ -41,7 +41,6 @@
 #include <sdk/io/cbor/cbor_visitor.hpp>
 
 /* stream */
-#include <sdk/base/stream/split.hpp>
 #include <sdk/io/stream/file_stream.hpp>
 #include <sdk/io/stream/stream.hpp>
 #include <sdk/io/stream/string.hpp>

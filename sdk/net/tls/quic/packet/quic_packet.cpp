@@ -12,6 +12,7 @@
 #include <sdk/base/string/string.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls/quic/frame/quic_frames.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet_builder.hpp>
 #include <sdk/net/tls/quic/quic.hpp>

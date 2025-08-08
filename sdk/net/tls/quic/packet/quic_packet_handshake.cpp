@@ -39,7 +39,7 @@
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <sdk/net/tls/quic/frame/quic_frames.hpp>
-#include <sdk/net/tls/quic/packet/quic_packet.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_handshake.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
 #include <sdk/net/tls/quic_session.hpp>

@@ -43,6 +43,8 @@
 
 /* basic/trial */
 #include <sdk/net/basic/trial/client_socket_prosumer.hpp>
+#include <sdk/net/basic/trial/secure_client_socket.hpp>
+#include <sdk/net/basic/trial/secure_prosumer.hpp>
 #include <sdk/net/basic/trial/tls_composer.hpp>
 #include <sdk/net/basic/trial/trial_dtls_client_socket.hpp>
 #include <sdk/net/basic/trial/trial_dtls_server_socket.hpp>
@@ -51,6 +53,7 @@
 #include <sdk/net/basic/trial/trial_tls_client_socket.hpp>
 #include <sdk/net/basic/trial/trial_tls_server_socket.hpp>
 #include <sdk/net/basic/trial/trial_udp_client_socket.hpp>
+#include <sdk/net/basic/trial/types.hpp>
 
 // basic/util
 #include <sdk/net/basic/util/ipaddr_acl.hpp>
@@ -71,14 +74,6 @@
 #include <sdk/net/http/http_uri.hpp>
 #include <sdk/net/http/types.hpp>
 
-/* http/compression */
-#include <sdk/net/http/compression/http_dynamic_table.hpp>
-#include <sdk/net/http/compression/http_header_compression.hpp>
-#include <sdk/net/http/compression/http_header_compression_stream.hpp>
-#include <sdk/net/http/compression/http_huffman_codes.hpp>
-#include <sdk/net/http/compression/http_huffman_coding.hpp>
-#include <sdk/net/http/compression/http_static_table.hpp>
-
 /* http/auth */
 #include <sdk/net/http/auth/basic_authentication_provider.hpp>
 #include <sdk/net/http/auth/basic_credentials.hpp>
@@ -90,6 +85,15 @@
 #include <sdk/net/http/auth/oauth2.hpp>
 #include <sdk/net/http/auth/oauth2_credentials.hpp>
 #include <sdk/net/http/auth/rfc2617_digest.hpp>
+
+/* http/compression */
+#include <sdk/net/http/compression/http_dynamic_table.hpp>
+#include <sdk/net/http/compression/http_header_compression.hpp>
+#include <sdk/net/http/compression/http_header_compression_stream.hpp>
+#include <sdk/net/http/compression/http_huffman_codes.hpp>
+#include <sdk/net/http/compression/http_huffman_coding.hpp>
+#include <sdk/net/http/compression/http_static_table.hpp>
+#include <sdk/net/http/compression/types.hpp>
 
 /* http/http2 */
 #include <sdk/net/http/http2/http2_frame.hpp>
@@ -108,6 +112,7 @@
 #include <sdk/net/http/http2/http2_protocol.hpp>
 #include <sdk/net/http/http2/http2_serverpush.hpp>
 #include <sdk/net/http/http2/http2_session.hpp>
+#include <sdk/net/http/http2/types.hpp>
 
 /* http/http3 */
 #include <sdk/net/http/http3/http3_frame.hpp>
@@ -162,7 +167,13 @@
 
 /* tls/quic/packet */
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_0rtt.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_1rtt.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet_builder.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_handshake.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_initial.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_retry.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_version_negotiation.hpp>
 #include <sdk/net/tls/quic/packet/quic_packets.hpp>
 
 /* tls/quic/frame */
@@ -222,6 +233,7 @@
 #include <sdk/net/tls/tls/extension/tls_extension_alps.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_builder.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_compress_certificate.hpp>
+#include <sdk/net/tls/tls/extension/tls_extension_early_data.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_ec_point_formats.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_encrypted_client_hello.hpp>
 #include <sdk/net/tls/tls/extension/tls_extension_key_share.hpp>

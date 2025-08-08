@@ -9,7 +9,7 @@
  */
 
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/net/tls/quic/packet/quic_packet.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_version_negotiation.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 
 namespace hotplace {

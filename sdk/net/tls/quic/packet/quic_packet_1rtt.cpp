@@ -14,7 +14,7 @@
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/frame/quic_frames.hpp>
-#include <sdk/net/tls/quic/packet/quic_packet.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_1rtt.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/tls_session.hpp>

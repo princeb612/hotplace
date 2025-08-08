@@ -10,7 +10,13 @@
 
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_0rtt.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_1rtt.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet_builder.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_handshake.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_initial.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_retry.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_version_negotiation.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/tls_session.hpp>
 

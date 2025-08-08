@@ -39,7 +39,7 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/io/basic/payload.hpp>
-#include <sdk/net/tls/quic/packet/quic_packet.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet_retry.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/types.hpp>
 #include <sdk/net/tls/tls_session.hpp>
