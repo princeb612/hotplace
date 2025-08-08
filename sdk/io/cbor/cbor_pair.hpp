@@ -14,10 +14,7 @@
 #ifndef __HOTPLACE_SDK_IO_CBOR_CBORPAIR__
 #define __HOTPLACE_SDK_IO_CBOR_CBORPAIR__
 
-#include <deque>
-#include <map>
-#include <sdk/base/nostd/integer.hpp>
-#include <sdk/io/cbor/cbor_object.hpp>  // cbor_object
+#include <sdk/io/cbor/cbor_object.hpp>
 
 namespace hotplace {
 namespace io {

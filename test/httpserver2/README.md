@@ -1,11 +1,17 @@
 #### HTTP/2 simple server
 
 ```
-# run
+# run (libssl)
 ./test-httpserver2 -r -k --trace &
+# run (trial)
+./test-httpserver2 -r -k --trace -T &
 
-# chrome
-# https://localhost:9000/
+# chrome or edge
+#   https://localhost:9000/
+#   https://[::1]:9000/
+# curl
+#   curl https://localhost:9000/ -v -s -k -http2
+#   curl https://[::1]:9000/ -v -s -k -http2
 
 # stop
 rm .run

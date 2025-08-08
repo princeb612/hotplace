@@ -15,6 +15,7 @@
 
 #include <math.h>
 
+#include <sdk/base/basic/ieee754.hpp>
 #include <sdk/base/inline.hpp>
 #include <sdk/base/template.hpp>
 #include <sdk/io/asn.1/asn1.hpp>

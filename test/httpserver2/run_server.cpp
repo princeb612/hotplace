@@ -89,7 +89,7 @@ return_t simple_http2_server(void*) {
             .set_tls_certificate("server.crt", "server.key")  // RSA certificate
             .set_tls_verify_peer(0)                           // self-signed certificate
             .enable_ipv4(true)                                // enable IPv4
-            .enable_ipv6(false)                               // disable IPv6
+            .enable_ipv6(true)                                // enable IPv6
             .enable_h2(true)                                  // enable HTTP/2
             .set_handler(consumer_routine);
         if (option.trial) {

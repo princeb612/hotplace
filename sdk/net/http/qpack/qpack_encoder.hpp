@@ -11,10 +11,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_QPACK_QPACKENCODER__
 #define __HOTPLACE_SDK_NET_HTTP_QPACK_QPACKENCODER__
 
+#include <sdk/net/http/compression/http_dynamic_table.hpp>
 #include <sdk/net/http/compression/http_header_compression.hpp>
-#include <sdk/net/http/hpack/hpack_dynamic_table.hpp>
-#include <sdk/net/http/hpack/hpack_encoder.hpp>
-#include <sdk/net/http/hpack/hpack_static_table.hpp>
 #include <sdk/net/http/types.hpp>
 
 namespace hotplace {

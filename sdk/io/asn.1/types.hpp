@@ -142,6 +142,20 @@ enum asn1_tagtype_t {
     asn1_optional = 4,
 };
 
+class asn1_composite;
+class asn1_container;
+class asn1_encode;
+class asn1_object;
+class asn1_resource;
+class asn1_sequence;
+class asn1_sequence_of;
+class asn1_set;
+class asn1_set_of;
+class asn1_tag;
+class asn1_visitor;
+class asn1_basic_encoding_visitor;
+class asn1_notation_visitor;
+
 }  // namespace io
 }  // namespace hotplace
 

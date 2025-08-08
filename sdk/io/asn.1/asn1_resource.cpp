@@ -11,7 +11,7 @@
  *
  */
 
-#include <sdk/io/asn.1/asn1.hpp>
+#include <sdk/io/asn.1/asn1_resource.hpp>
 
 namespace hotplace {
 namespace io {

@@ -14,9 +14,7 @@
 #ifndef __HOTPLACE_SDK_IO_CBOR_CBORARRAY__
 #define __HOTPLACE_SDK_IO_CBOR_CBORARRAY__
 
-#include <deque>
-#include <sdk/io/cbor/cbor_object.hpp>  // cbor_object
-#include <sdk/io/types.hpp>
+#include <sdk/io/cbor/cbor_object.hpp>
 
 namespace hotplace {
 namespace io {

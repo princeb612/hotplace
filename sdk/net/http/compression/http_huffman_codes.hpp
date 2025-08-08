@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_COMPRESSION_HTTP2HUFFMANCODES__
-#define __HOTPLACE_SDK_NET_HTTP_COMPRESSION_HTTP2HUFFMANCODES__
+#ifndef __HOTPLACE_SDK_NET_HTTP_COMPRESSION_HTTPHUFFMANCODES__
+#define __HOTPLACE_SDK_NET_HTTP_COMPRESSION_HTTPHUFFMANCODES__
 
 #include <sdk/base/basic/huffman_coding.hpp>
 #include <sdk/net/http/compression/http_header_compression.hpp>

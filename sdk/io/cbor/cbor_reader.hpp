@@ -14,7 +14,6 @@
 #ifndef __HOTPLACE_SDK_IO_CBOR_CBORREADER__
 #define __HOTPLACE_SDK_IO_CBOR_CBORREADER__
 
-#include <deque>
 #include <sdk/io/cbor/cbor.hpp>
 
 namespace hotplace {
