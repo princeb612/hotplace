@@ -24,8 +24,6 @@ namespace net {
 
 quic_packets::quic_packets() {}
 
-quic_packets::~quic_packets() { clear(); }
-
 return_t quic_packets::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -83,59 +81,27 @@ return_t quic_packets::write(tls_session* session, tls_direction_t dir, binary_t
             __leave2;
         }
 
-        auto lambda = [&](quic_packet* packet) -> void { packet->write(dir, bin); };
+        auto lambda = [&](quic_packet* packet) -> return_t { return packet->write(dir, bin); };
         for_each(lambda);
     }
     __finally2 {}
     return ret;
 }
 
-return_t quic_packets::add(quic_packet* packet, bool upref) {
-    return_t ret = errorcode_t::success;
-    if (packet) {
-        if (upref) {
-            packet->addref();
-        }
-
-        critical_section_guard guard(_lock);
-
-        _packets.push_back(packet);
-    }
-    return ret;
-}
+return_t quic_packets::add(quic_packet* packet, bool upref) { return _packets.add(packet, upref); }
 
 quic_packets& quic_packets::operator<<(quic_packet* packet) {
     add(packet);
     return *this;
 }
 
-void quic_packets::for_each(std::function<void(quic_packet*)> func) {
-    if (func) {
-        critical_section_guard guard(_lock);
-        for (auto item : _packets) {
-            func(item);
-        }
-    }
-}
+return_t quic_packets::for_each(std::function<return_t(quic_packet*)> func) { return _packets.for_each(func); }
 
-quic_packet* quic_packets::getat(size_t index, bool upref) {
-    quic_packet* obj = nullptr;
-    critical_section_guard guard(_lock);
-    if (index < _packets.size()) {
-        obj = _packets[index];
-    }
-    return obj;
-}
+quic_packet* quic_packets::getat(size_t index, bool upref) { return _packets.getat(index, upref); }
 
 size_t quic_packets::size() { return _packets.size(); }
 
-void quic_packets::clear() {
-    critical_section_guard guard(_lock);
-    for (auto item : _packets) {
-        item->release();
-    }
-    _packets.clear();
-}
+void quic_packets::clear() { _packets.clear(); }
 
 }  // namespace net
 }  // namespace hotplace

@@ -10,6 +10,7 @@
 #define __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDS__
 
 #include <sdk/net/tls/tls/record/tls_record.hpp>
+#include <sdk/net/tls/tls_container.hpp>
 
 namespace hotplace {
 namespace net {
@@ -17,7 +18,6 @@ namespace net {
 class tls_records {
    public:
     tls_records();
-    ~tls_records();
 
     return_t read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     return_t read(tls_session* session, tls_direction_t dir, const binary_t& bin);
@@ -25,22 +25,14 @@ class tls_records {
 
     return_t add(tls_record* record, bool upref = false);
     tls_records& operator<<(tls_record* record);
-
-    /**
-     * do { } while (success == returnof_func);
-     */
     return_t for_each(std::function<return_t(tls_record*)> func);
-
-    tls_record* getat(size_t index, bool upref = false) const;
-
+    tls_record* getat(size_t index, bool upref = false);
     size_t size();
-
     void clear();
 
    protected:
    private:
-    critical_section _lock;
-    std::vector<tls_record*> _records;
+    t_tls_container<tls_record*, uint8> _records;  // tls_content_type_t
 };
 
 }  // namespace net

@@ -16,8 +16,6 @@ namespace net {
 
 tls_extensions::tls_extensions() {}
 
-tls_extensions::~tls_extensions() { clear(); }
-
 return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -70,27 +68,7 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
     return ret;
 }
 
-return_t tls_extensions::add(tls_extension* extension, bool upref) {
-    return_t ret = errorcode_t::success;
-    if (extension) {
-        if (upref) {
-            extension->addref();
-        }
-
-        critical_section_guard guard(_lock);
-
-        auto type = extension->get_type();
-        auto iter = _dictionary.find(type);
-        if (_dictionary.end() != iter) {
-            auto older = iter->second;
-            older->release();
-            _dictionary.erase(iter);
-        }
-        _dictionary.insert({type, extension});
-        _extensions.push_back(extension);
-    }
-    return ret;
-}
+return_t tls_extensions::add(tls_extension* extension, bool upref) { return _extensions.add(extension, upref); }
 
 tls_extensions& tls_extensions::operator<<(tls_extension* extension) {
     add(extension);
@@ -107,52 +85,15 @@ tls_extensions& tls_extensions::operator<<(tls_extensions* extensions) {
     return *this;
 }
 
-return_t tls_extensions::for_each(std::function<return_t(tls_extension*)> func) {
-    return_t ret = errorcode_t::success;
-    if (func) {
-        critical_section_guard guard(_lock);
-        for (auto item : _extensions) {
-            ret = func(item);
-            if (errorcode_t::success != ret) {
-                break;
-            }
-        }
-    }
-    return ret;
-}
+return_t tls_extensions::for_each(std::function<return_t(tls_extension*)> func) { return _extensions.for_each(func); }
 
-tls_extension* tls_extensions::get(uint16 type, bool upref) {
-    tls_extension* obj = nullptr;
-    critical_section_guard guard(_lock);
-    auto iter = _dictionary.find(type);
-    if (_dictionary.end() != iter) {
-        obj = iter->second;
-        if (upref) {
-            obj->addref();
-        }
-    }
-    return obj;
-}
+tls_extension* tls_extensions::get(uint16 type, bool upref) { return _extensions.get(type, upref); }
 
-tls_extension* tls_extensions::getat(size_t index, bool upref) {
-    tls_extension* obj = nullptr;
-    critical_section_guard guard(_lock);
-    if (index < _extensions.size()) {
-        obj = _extensions[index];
-    }
-    return obj;
-}
+tls_extension* tls_extensions::getat(size_t index, bool upref) { return _extensions.getat(index, upref); }
 
 size_t tls_extensions::size() { return _extensions.size(); }
 
-void tls_extensions::clear() {
-    critical_section_guard guard(_lock);
-    for (auto item : _extensions) {
-        item->release();
-    }
-    _extensions.clear();
-    _dictionary.clear();
-}
+void tls_extensions::clear() { _extensions.clear(); }
 
 }  // namespace net
 }  // namespace hotplace

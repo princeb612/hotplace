@@ -17,8 +17,6 @@ namespace net {
 
 tls_handshakes::tls_handshakes() : _dtls_seq(0) {}
 
-tls_handshakes::~tls_handshakes() { clear(); }
-
 return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -95,79 +93,22 @@ return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary
     return ret;
 }
 
-return_t tls_handshakes::add(tls_handshake* handshake, bool upref) {
-    return_t ret = errorcode_t::success;
-    if (handshake) {
-        if (upref) {
-            handshake->addref();
-        }
-
-        critical_section_guard guard(_lock);
-
-        auto type = handshake->get_type();
-        auto iter = _dictionary.find(type);
-        if (_dictionary.end() != iter) {
-            auto older = iter->second;
-            older->release();
-            _dictionary.erase(iter);
-        }
-        _dictionary.insert({type, handshake});
-        _handshakes.push_back(handshake);
-    }
-    return ret;
-}
+return_t tls_handshakes::add(tls_handshake* handshake, bool upref) { return _handshakes.add(handshake, upref); }
 
 tls_handshakes& tls_handshakes::operator<<(tls_handshake* handshake) {
     add(handshake);
     return *this;
 }
 
-return_t tls_handshakes::for_each(std::function<return_t(tls_handshake*)> func) {
-    return_t ret = errorcode_t::success;
-    if (func) {
-        critical_section_guard guard(_lock);
-        for (auto item : _handshakes) {
-            ret = func(item);
-            if (errorcode_t::success != ret) {
-                break;
-            }
-        }
-    }
-    return ret;
-}
+return_t tls_handshakes::for_each(std::function<return_t(tls_handshake*)> func) { return _handshakes.for_each(func); }
 
-tls_handshake* tls_handshakes::get(uint8 type, bool upref) {
-    tls_handshake* obj = nullptr;
-    critical_section_guard guard(_lock);
-    auto iter = _dictionary.find(type);
-    if (_dictionary.end() != iter) {
-        obj = iter->second;
-        if (upref) {
-            obj->addref();
-        }
-    }
-    return obj;
-}
+tls_handshake* tls_handshakes::get(uint8 type, bool upref) { return _handshakes.get(type, upref); }
 
-tls_handshake* tls_handshakes::getat(size_t index, bool upref) {
-    tls_handshake* obj = nullptr;
-    critical_section_guard guard(_lock);
-    if (index < _handshakes.size()) {
-        obj = _handshakes[index];
-    }
-    return obj;
-}
+tls_handshake* tls_handshakes::getat(size_t index, bool upref) { return _handshakes.getat(index, upref); }
 
 size_t tls_handshakes::size() { return _handshakes.size(); }
 
-void tls_handshakes::clear() {
-    critical_section_guard guard(_lock);
-    for (auto item : _handshakes) {
-        item->release();
-    }
-    _handshakes.clear();
-    _dictionary.clear();
-}
+void tls_handshakes::clear() { _handshakes.clear(); }
 
 void tls_handshakes::set_dtls_seq(uint16 seq) { _dtls_seq = seq; }
 

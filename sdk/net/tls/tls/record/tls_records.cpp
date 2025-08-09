@@ -17,8 +17,6 @@ namespace net {
 
 tls_records::tls_records() {}
 
-tls_records::~tls_records() { clear(); }
-
 return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -63,7 +61,6 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
             __leave2;
         }
 
-        critical_section_guard guard(_lock);
         if (session_type_dtls == session->get_type()) {
             // fragmentation
             session->get_dtls_record_publisher().publish(this, dir, func);
@@ -80,57 +77,20 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
     return ret;
 }
 
-return_t tls_records::add(tls_record* record, bool upref) {
-    return_t ret = errorcode_t::success;
-    if (record) {
-        if (upref) {
-            record->addref();
-        }
-
-        critical_section_guard guard(_lock);
-
-        auto type = record->get_type();
-        _records.push_back(record);
-    }
-    return ret;
-}
+return_t tls_records::add(tls_record* record, bool upref) { return _records.add(record, upref); }
 
 tls_records& tls_records::operator<<(tls_record* record) {
     add(record);
     return *this;
 }
 
-return_t tls_records::for_each(std::function<return_t(tls_record*)> func) {
-    return_t ret = errorcode_t::success;
-    if (func) {
-        critical_section_guard guard(_lock);
-        for (auto item : _records) {
-            ret = func(item);
-            if (errorcode_t::success != ret) {
-                break;
-            }
-        }
-    }
-    return ret;
-}
+return_t tls_records::for_each(std::function<return_t(tls_record*)> func) { return _records.for_each(func); }
 
-tls_record* tls_records::getat(size_t index, bool upref) const {
-    tls_record* obj = nullptr;
-    if (index < _records.size()) {
-        obj = _records[index];
-    }
-    return obj;
-}
+tls_record* tls_records::getat(size_t index, bool upref) { return _records.getat(index, upref); }
 
 size_t tls_records::size() { return _records.size(); }
 
-void tls_records::clear() {
-    critical_section_guard guard(_lock);
-    for (auto record : _records) {
-        record->release();
-    }
-    _records.clear();
-}
+void tls_records::clear() { _records.clear(); }
 
 }  // namespace net
 }  // namespace hotplace

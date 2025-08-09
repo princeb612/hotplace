@@ -10,6 +10,7 @@
 #define __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKES__
 
 #include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
+#include <sdk/net/tls/tls_container.hpp>
 
 namespace hotplace {
 namespace net {
@@ -17,26 +18,17 @@ namespace net {
 class tls_handshakes {
    public:
     tls_handshakes();
-    ~tls_handshakes();
 
     return_t read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     return_t read(tls_session* session, tls_direction_t dir, const binary_t& bin);
-
     return_t write(tls_session* session, tls_direction_t dir, binary_t& bin);
 
     return_t add(tls_handshake* handshake, bool upref = false);
     tls_handshakes& operator<<(tls_handshake* handshake);
-
-    /**
-     * do { } while (success == returnof_func);
-     */
     return_t for_each(std::function<return_t(tls_handshake*)> func);
-
     tls_handshake* get(uint8 type, bool upref = false);
     tls_handshake* getat(size_t index, bool upref = false);
-
     size_t size();
-
     void clear();
 
     void set_dtls_seq(uint16 seq);
@@ -45,9 +37,7 @@ class tls_handshakes {
    protected:
    private:
     uint16 _dtls_seq;
-    critical_section _lock;
-    std::map<uint8, tls_handshake*> _dictionary;  // tls_hs_type_t
-    std::vector<tls_handshake*> _handshakes;      // ordered
+    t_tls_distinct_container<tls_handshake*, uint8> _handshakes;  // tls_hs_type_t
 };
 
 }  // namespace net

@@ -40,8 +40,6 @@ quic_frames::quic_frames(quic_packet* packet) : _packet(packet) {
     }
 }
 
-quic_frames::~quic_frames() { clear(); }
-
 return_t quic_frames::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -97,81 +95,29 @@ return_t quic_frames::read(tls_direction_t dir, const binary_t& bin) {
 return_t quic_frames::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto lambda = [&](quic_frame* frame) -> void { frame->write(dir, bin); };
+        auto lambda = [&](quic_frame* frame) -> return_t { return frame->write(dir, bin); };
         for_each(lambda);
     }
     __finally2 {}
     return ret;
 }
 
-return_t quic_frames::add(quic_frame* frame, bool upref) {
-    return_t ret = errorcode_t::success;
-    if (frame) {
-        if (upref) {
-            frame->addref();
-        }
-
-        critical_section_guard guard(_lock);
-
-        auto type = frame->get_type();
-        auto iter = _dictionary.find(type);
-        if (_dictionary.end() == iter) {
-            _dictionary.insert({type, frame});
-            _frames.push_back(frame);
-        } else {
-            frame->release();
-            ret = errorcode_t::already_exist;
-        }
-    }
-    return ret;
-}
+return_t quic_frames::add(quic_frame* frame, bool upref) { return _frames.add(frame, upref); }
 
 quic_frames& quic_frames::operator<<(quic_frame* frame) {
     add(frame);
     return *this;
 }
 
-void quic_frames::for_each(std::function<void(quic_frame*)> func) {
-    if (func) {
-        critical_section_guard guard(_lock);
-        for (auto item : _frames) {
-            func(item);
-        }
-    }
-}
+return_t quic_frames::for_each(std::function<return_t(quic_frame*)> func) { return _frames.for_each(func); }
 
-quic_frame* quic_frames::get(uint8 type, bool upref) {
-    quic_frame* obj = nullptr;
-    critical_section_guard guard(_lock);
-    auto iter = _dictionary.find(type);
-    if (_dictionary.end() != iter) {
-        obj = iter->second;
-        if (upref) {
-            obj->addref();
-        }
-    }
-    return obj;
-}
+quic_frame* quic_frames::get(uint8 type, bool upref) { return _frames.get(type, upref); }
 
-quic_frame* quic_frames::getat(size_t index, bool upref) {
-    quic_frame* obj = nullptr;
-    critical_section_guard guard(_lock);
-    if (index < _frames.size()) {
-        obj = _frames[index];
-    }
-    return obj;
-}
+quic_frame* quic_frames::getat(size_t index, bool upref) { return _frames.getat(index, upref); }
 
 size_t quic_frames::size() { return _frames.size(); }
 
-void quic_frames::clear() {
-    critical_section_guard guard(_lock);
-    for (auto item : _frames) {
-        item->release();
-    }
-    _frames.clear();
-    _dictionary.clear();
-}
+void quic_frames::clear() { return _frames.clear(); }
 
 quic_packet* quic_frames::get_packet() { return _packet; }
 

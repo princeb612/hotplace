@@ -156,6 +156,7 @@
 #include <sdk/net/tls/sslkeylog_exporter.hpp>
 #include <sdk/net/tls/sslkeylog_importer.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
+#include <sdk/net/tls/tls_container.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
 #include <sdk/net/tls/types.hpp>

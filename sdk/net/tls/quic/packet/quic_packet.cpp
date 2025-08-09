@@ -12,6 +12,7 @@
 #include <sdk/base/string/string.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <sdk/net/tls/quic/frame/quic_frames.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet_builder.hpp>
@@ -476,6 +477,8 @@ void quic_packet::set_session(tls_session* session) {
 void quic_packet::addref() { _shared.addref(); }
 
 void quic_packet::release() { _shared.delref(); }
+
+uint32 quic_packet::get_flags() { return 0; }
 
 }  // namespace net
 }  // namespace hotplace

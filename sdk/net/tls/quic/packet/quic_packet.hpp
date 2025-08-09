@@ -152,6 +152,7 @@ class quic_packet {
 
     void addref();
     void release();
+    uint32 get_flags();
 
    protected:
     /**
