@@ -44,11 +44,9 @@ CONSTEXPR char constexpr_frame_origin_len[] = "origin-len";
 CONSTEXPR char constexpr_frame_origin[] = "origin";
 CONSTEXPR char constexpr_frame_alt_svc_field_value[] = "alt-svc-field-value";
 
-http2_frame::http2_frame() : _payload_size(0), _type(0), _flags(0), _stream_id(0), _hpack_dyntable(nullptr) {}
+http2_frame::http2_frame() : _payload_size(0), _type(0), _flags(0), _stream_id(0), _hpack_dyntable(nullptr) { _shared.make_share(this); }
 
-http2_frame::http2_frame(h2_frame_t type) : _payload_size(0), _type(type), _flags(0), _stream_id(0), _hpack_dyntable(nullptr) {}
-
-http2_frame::http2_frame(const http2_frame_header_t& header) { read(&header, sizeof(http2_frame_header_t)); }
+http2_frame::http2_frame(h2_frame_t type) : _payload_size(0), _type(type), _flags(0), _stream_id(0), _hpack_dyntable(nullptr) { _shared.make_share(this); }
 
 http2_frame::http2_frame(const http2_frame& rhs) {
     _payload_size = rhs._payload_size;
@@ -56,6 +54,7 @@ http2_frame::http2_frame(const http2_frame& rhs) {
     _flags = rhs._flags;
     _stream_id = rhs._stream_id;
     _hpack_dyntable = rhs._hpack_dyntable;
+    _shared.make_share(this);
 }
 
 http2_frame::~http2_frame() {}
@@ -69,22 +68,6 @@ uint8 http2_frame::get_type() { return _type; }
 uint8 http2_frame::get_flags() { return _flags; }
 
 uint32 http2_frame::get_stream_id() { return _stream_id; }
-
-return_t http2_frame::get_payload(http2_frame_header_t const* header, size_t size, byte_t** payload) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == header || nullptr == payload) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        *payload = (byte_t*)header + sizeof(http2_frame_header_t);
-    }
-    __finally2 {
-        // do nothing
-    }
-    return ret;
-}
 
 return_t http2_frame::set_payload_size(uint32 size) {
     return_t ret = errorcode_t::success;
@@ -139,29 +122,57 @@ http2_frame& http2_frame::set_hpack_session(hpack_dynamic_table* session) {
 
 hpack_dynamic_table* http2_frame::get_hpack_session() { return _hpack_dyntable; }
 
-return_t http2_frame::read(http2_frame_header_t const* header, size_t size) {
+return_t http2_frame::read(const byte_t* stream, size_t size, size_t& pos) {
+    return_t ret = errorcode_t::success;
+    auto frpos = pos;
+    __try2 {
+        ret = read_header(stream, size, pos);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = read_body(stream, size, pos);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+    }
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            pos = frpos;
+        }
+    }
+    return ret;
+}
+
+return_t http2_frame::read_header(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == header) {
+        if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        if (size < sizeof(http2_frame_header_t)) {
+        if (size < pos + sizeof(http2_frame_header_t)) {
             ret = errorcode_t::bad_data;
             __leave2;
         }
 
         payload pl;
-        pl << new payload_member(uint24_t(0), constexpr_frame_length) << new payload_member((uint8)0, constexpr_frame_type)
-           << new payload_member((uint8)0, constexpr_frame_flags) << new payload_member((uint32)0, true, constexpr_frame_stream_identifier);
+        pl << new payload_member(uint24_t(0), constexpr_frame_length)  //
+           << new payload_member((uint8)0, constexpr_frame_type)       //
+           << new payload_member((uint8)0, constexpr_frame_flags)      //
+           << new payload_member((uint32)0, true, constexpr_frame_stream_identifier);
 
-        pl.read((byte_t*)header, size);
+        pl.read(stream, size, pos);
 
         _payload_size = pl.t_value_of<uint32>(constexpr_frame_length);
         _type = pl.t_value_of<uint8>(constexpr_frame_type);
         _flags = pl.t_value_of<uint8>(constexpr_frame_flags);
         _stream_id = pl.t_value_of<uint32>(constexpr_frame_stream_identifier);
+
+        if (_payload_size + pos < size) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
     }
     __finally2 {
         // do nothing
@@ -169,15 +180,53 @@ return_t http2_frame::read(http2_frame_header_t const* header, size_t size) {
     return ret;
 }
 
+return_t http2_frame::read_body(const byte_t* stream, size_t size, size_t& pos) {
+    return_t ret = errorcode_t::success;
+    // override
+    return ret;
+}
+
 return_t http2_frame::write(binary_t& frame) {
+    return_t ret = errorcode_t::success;
+    auto snapshot = frame.size();
+    __try2 {
+        binary_t body;
+        ret = write_body(body);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = write_header(frame, body);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+    }
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            frame.resize(snapshot);  // rollback
+        }
+    }
+    return ret;
+}
+
+return_t http2_frame::write_header(binary_t& frame, const binary_t& body) {
     return_t ret = errorcode_t::success;
 
     payload pl;
-    pl << new payload_member(uint24_t(_payload_size), constexpr_frame_length) << new payload_member((uint8)_type, constexpr_frame_type)
-       << new payload_member((uint8)_flags, constexpr_frame_flags) << new payload_member((uint32)_stream_id, true, constexpr_frame_stream_identifier);
-
+    pl << new payload_member(uint24_t(body.size()), constexpr_frame_length)  //
+       << new payload_member((uint8)_type, constexpr_frame_type)             //
+       << new payload_member((uint8)_flags, constexpr_frame_flags)           //
+       << new payload_member((uint32)_stream_id, true, constexpr_frame_stream_identifier);
     pl.write(frame);
 
+    binary_append(frame, body);
+
+    return ret;
+}
+
+return_t http2_frame::write_body(binary_t& frame) {
+    return_t ret = errorcode_t::success;
+    // override
     return ret;
 }
 
@@ -260,6 +309,10 @@ return_t http2_frame::write_compressed_header(http_header* header, binary_t& fra
     }
     return ret;
 }
+
+void http2_frame::addref() { _shared.addref(); }
+
+void http2_frame::release() { _shared.delref(); }
 
 }  // namespace net
 }  // namespace hotplace

@@ -18,6 +18,7 @@
 #include <sdk/net/http/hpack/hpack_dynamic_table.hpp>
 #include <sdk/net/http/http2/http2_frame.hpp>
 #include <sdk/net/http/http2/http2_frame_alt_svc.hpp>
+#include <sdk/net/http/http2/http2_frame_builder.hpp>
 #include <sdk/net/http/http2/http2_frame_continuation.hpp>
 #include <sdk/net/http/http2/http2_frame_data.hpp>
 #include <sdk/net/http/http2/http2_frame_goaway.hpp>
@@ -104,7 +105,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
         constexpr char preface[] = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
         const uint16 sizeof_preface = 24;
         bool stage_preface = false;
-        uint32 pos_frame = 0;
+        size_t pos_frame = 0;
         if (bufsize > sizeof_preface) {
             if (0 == strncmp((char*)buf, preface, sizeof_preface)) {
                 stage_preface = true;
@@ -113,17 +114,11 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
         }
 
         http2_frame_header_t* hdr = (http2_frame_header_t*)(buf + pos_frame);
-        size_t frame_size = bufsize - pos_frame;
-        // uint24_t i32_24((byte_t*)hdr, frame_size);
-        // uint32 payload_size = i32_24;
-        // uint32 packet_size = sizeof(http2_frame_header_t) + payload_size;
+        auto type = hdr->type;
         uint8 flags = hdr->flags;
         uint32 stream_id = ntoh32(hdr->stream_id);
         uint32 mask = (h2_flag_end_stream | h2_flag_end_headers);
         http_request* req = nullptr;
-#if defined DEBUG
-        basic_stream dbs;
-#endif
 
         uint8 f = 0;
         flags_pib_t flags_pib = _flags.insert(std::make_pair(stream_id, flags));
@@ -136,162 +131,97 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             req = &iter->second;
         } else {
             req = &_headers[stream_id];  // insert
-            (*req).set_hpack_session(&get_hpack_session()).set_stream_id(stream_id).set_version(2);
+            (*req).set_hpack_session(&_hpack_dyntable).set_stream_id(stream_id).set_version(2);
         }
 
         bool completion = (mask == (mask & flags)) ? true : false;
         bool reset = false;
 
-        if (h2_frame_t::h2_frame_data == hdr->type) {
-            http2_frame_data frame;
-            frame.read(hdr, frame_size);
-#if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                frame.dump(&dbs);
-                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
-            }
-#endif
+        auto lambda_postread = [&](http2_frame* frame) -> void {
+            if (h2_frame_t::h2_frame_data == type) {
+                http2_frame_data* frame_data = (http2_frame_data*)frame;
+                req->add_content(frame_data->get_data());
 
-            req->add_content(frame.get_data());
-
-            if (req->get_http_header().contains("Content-Type", "application/x-www-form-urlencoded")) {
-                auto const& content = req->get_content();
-                req->get_http_uri().set_query(content);
-            }
-        } else if (h2_frame_t::h2_frame_headers == hdr->type) {
-            http2_frame_headers frame;
-            frame.read(hdr, frame_size);
-            frame.set_hpack_session(&get_hpack_session());
-#if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                frame.dump(&dbs);
-                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
-            }
-#endif
-
-            auto lambda = [&](const std::string& name, const std::string& value) -> void {
-                if (":path" == name) {
-                    req->get_http_uri().open(value);
+                if (req->get_http_header().contains("Content-Type", "application/x-www-form-urlencoded")) {
+                    auto const& content = req->get_content();
+                    req->get_http_uri().set_query(content);
                 }
-                req->get_http_header().add(name, value);
-            };
-            frame.read_compressed_header(frame.get_fragment(), lambda);
-        } else if (h2_frame_t::h2_frame_priority == hdr->type) {
-            http2_frame_priority frame;
-            frame.read(hdr, frame_size);
-#if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                frame.dump(&dbs);
-                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
-            }
-#endif
-        } else if (h2_frame_t::h2_frame_rst_stream == hdr->type) {
-            http2_frame_rst_stream frame;
-            frame.read(hdr, frame_size);
-#if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                frame.dump(&dbs);
-                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
-            }
-#endif
-            reset = true;
-        } else if (h2_frame_t::h2_frame_settings == hdr->type) {
-            http2_frame_settings frame;
-            frame.read(hdr, frame_size);
-#if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                frame.dump(&dbs);
-                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
-            }
-#endif
+            } else if (h2_frame_t::h2_frame_headers == type) {
+                http2_frame_headers* frame_headers = (http2_frame_headers*)frame;
+                auto lambda = [&](const std::string& name, const std::string& value) -> void {
+                    if (":path" == name) {
+                        req->get_http_uri().open(value);
+                    }
+                    req->get_http_header().add(name, value);
+                };
+                frame_headers->read_compressed_header(frame_headers->get_fragment(), lambda);
+            } else if (h2_frame_t::h2_frame_priority == type) {
+            } else if (h2_frame_t::h2_frame_rst_stream == type) {
+                reset = true;
+            } else if (h2_frame_t::h2_frame_settings == type) {
+                http2_frame_settings* frame_settings = (http2_frame_settings*)frame;
 
-            // RFC 7541 6.5.2.  Defined SETTINGS Parameters
-            // RFC 9113 6.5.2.  Defined Settings
-            //                  SETTINGS_HEADER_TABLE_SIZE (0x01)
-            //
-            //  - http/2 frame type 4 SETTINGS
-            //  > length 0x18(24) type 4 flags 00 stream identifier 00000000
-            //  > flags [ ]
-            //  > identifier 1 value 65536 (0x00010000)
-            //  > identifier 2 value 0 (0x00000000)
-            //  > identifier 4 value 6291456 (0x00600000)
-            //  > identifier 6 value 262144 (0x00040000)
+                // RFC 7541 6.5.2.  Defined SETTINGS Parameters
+                // RFC 9113 6.5.2.  Defined Settings
+                //                  SETTINGS_HEADER_TABLE_SIZE (0x01)
+                //
+                //  - http/2 frame type 4 SETTINGS
+                //  > length 0x18(24) type 4 flags 00 stream identifier 00000000
+                //  > flags [ ]
+                //  > identifier 1 value 65536 (0x00010000)
+                //  > identifier 2 value 0 (0x00000000)
+                //  > identifier 4 value 6291456 (0x00600000)
+                //  > identifier 6 value 262144 (0x00040000)
 
-            uint32 table_size = 0;
-            if (errorcode_t::success == frame.find(0x1, table_size)) {
-                get_hpack_session().set_capacity(table_size);
+                uint32 table_size = 0;
+                if (errorcode_t::success == frame_settings->find(0x1, table_size)) {
+                    get_hpack_session().set_capacity(table_size);
+                }
+                uint32 push = 0;
+                if (errorcode_t::success == frame_settings->find(0x2, push)) {
+                    // RFC 7540 6.5.2.  Defined SETTINGS Parameters
+                    // SETTINGS_ENABLE_PUSH (0x2)
+                    enable_push(push ? true : false);
+                }
+
+                http2_frame_settings resp_settings;
+
+                if (frame->get_flags()) {
+                    resp_settings.set_flags(h2_flag_ack);
+                } else {
+                    resp_settings.add(h2_settings_enable_push, 0).add(h2_settings_max_concurrent_streams, 100).add(h2_settings_initial_window_size, 0xa00000);
+                }
+
+                resp_settings.write(bin_resp);
+            } else if (h2_frame_t::h2_frame_push_promise == type) {
+                http2_frame_push_promise* frame_push_promise = (http2_frame_push_promise*)frame;
+                auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
+                frame_push_promise->read_compressed_header(frame_push_promise->get_fragment(), lambda);
+            } else if (h2_frame_t::h2_frame_ping == type) {
+                frame->set_flags(h2_flag_ack);
+                frame->write(bin_resp);
+            } else if (h2_frame_t::h2_frame_goaway == type) {
+            } else if (h2_frame_t::h2_frame_window_update == type) {
+            } else if (h2_frame_t::h2_frame_continuation == type) {
+                http2_frame_continuation* frame_continuation = (http2_frame_continuation*)frame;
+                auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
+                frame_continuation->read_compressed_header(frame_continuation->get_fragment(), lambda);
             }
-            uint32 push = 0;
-            if (errorcode_t::success == frame.find(0x2, push)) {
-                // RFC 7540 6.5.2.  Defined SETTINGS Parameters
-                // SETTINGS_ENABLE_PUSH (0x2)
-                enable_push(push ? true : false);
-            }
+        };
 
-            http2_frame_settings resp_settings;
-
-            if (frame.get_flags()) {
-                resp_settings.set_flags(h2_flag_ack);
-            } else {
-                resp_settings.add(h2_settings_enable_push, 0).add(h2_settings_max_concurrent_streams, 100).add(h2_settings_initial_window_size, 0xa00000);
-            }
-
-            resp_settings.write(bin_resp);
-        } else if (h2_frame_t::h2_frame_push_promise == hdr->type) {
-            http2_frame_push_promise frame;
-            frame.read(hdr, frame_size);
-            frame.set_hpack_session(&get_hpack_session());
+        http2_frame_builder builder;
+        auto frame = builder.set(type).set(&_hpack_dyntable).build();
+        if (frame) {
+            frame->read(buf, bufsize, pos_frame);
+            lambda_postread(frame);
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                frame.dump(&dbs);
+                basic_stream dbs;
+                frame->dump(&dbs);
                 trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
             }
 #endif
-
-            auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
-            frame.read_compressed_header(frame.get_fragment(), lambda);
-        } else if (h2_frame_t::h2_frame_ping == hdr->type) {
-            http2_frame_ping frame;
-            frame.read(hdr, frame_size);
-#if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                frame.dump(&dbs);
-                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
-            }
-#endif
-            frame.set_flags(h2_flag_ack);
-            frame.write(bin_resp);
-        } else if (h2_frame_t::h2_frame_goaway == hdr->type) {
-            http2_frame_goaway frame;
-            frame.read(hdr, frame_size);
-#if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                frame.dump(&dbs);
-                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
-            }
-#endif
-        } else if (h2_frame_t::h2_frame_window_update == hdr->type) {
-            http2_frame_window_update frame;
-            frame.read(hdr, frame_size);
-#if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                frame.dump(&dbs);
-                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
-            }
-#endif
-        } else if (h2_frame_t::h2_frame_continuation == hdr->type) {
-            http2_frame_continuation frame;
-            frame.read(hdr, frame_size);
-            frame.set_hpack_session(&get_hpack_session());
-#if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                frame.dump(&dbs);
-                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
-            }
-#endif
-
-            auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
-            frame.read_compressed_header(frame.get_fragment(), lambda);
+            frame->release();
         }
 
         /**

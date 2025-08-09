@@ -25,31 +25,20 @@ http2_frame_goaway::http2_frame_goaway(const http2_frame_goaway& rhs) : http2_fr
 
 http2_frame_goaway::~http2_frame_goaway() {}
 
-return_t http2_frame_goaway::read(http2_frame_header_t const* header, size_t size) {
+return_t http2_frame_goaway::read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == header) {
+        if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        // check size and then read header
-        ret = http2_frame::read(header, size);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        byte_t* ptr_payload = nullptr;
-        ret = get_payload(header, size, &ptr_payload);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         payload pl;
-        pl << new payload_member((uint32)0, true, constexpr_frame_last_stream_id) << new payload_member((uint32)0, true, constexpr_frame_error_code)
+        pl << new payload_member((uint32)0, true, constexpr_frame_last_stream_id)  //
+           << new payload_member((uint32)0, true, constexpr_frame_error_code)      //
            << new payload_member(binary_t(), constexpr_frame_debug_data);
 
-        pl.read(ptr_payload, get_payload_size());
+        pl.read(stream, size, pos);
 
         _last_id = pl.t_value_of<uint32>(constexpr_frame_last_stream_id);
         _errorcode = pl.t_value_of<uint32>(constexpr_frame_error_code);
@@ -61,20 +50,16 @@ return_t http2_frame_goaway::read(http2_frame_header_t const* header, size_t siz
     return ret;
 }
 
-return_t http2_frame_goaway::write(binary_t& frame) {
+return_t http2_frame_goaway::write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     payload pl;
-    pl << new payload_member(_last_id, true, constexpr_frame_last_stream_id) << new payload_member(_errorcode, true, constexpr_frame_error_code)
+    pl << new payload_member(_last_id, true, constexpr_frame_last_stream_id)  //
+       << new payload_member(_errorcode, true, constexpr_frame_error_code)    //
        << new payload_member(_debug, constexpr_frame_debug_data);
+    pl.write(body);
 
-    binary_t bin_payload;
-    pl.write(bin_payload);
-
-    set_payload_size(bin_payload.size());
-
-    http2_frame::write(frame);
-    frame.insert(frame.end(), bin_payload.begin(), bin_payload.end());
+    ret = set_payload_size(body.size());
 
     return ret;
 }

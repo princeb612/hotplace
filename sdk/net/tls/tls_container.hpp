@@ -28,14 +28,14 @@ namespace net {
  *   tls_extensions
  *   quic_packets
  *   quic_frames
- * REFS_PTR
+ * TYPE_PTR
  *   tls_record*
  *   tls_handshake*
  *   tls_extension*
  *   quic_packet*
  *   quic_frame*
  * public member methods
- *   REFS_TYPE get_type()
+ *   ENTITY_TYPE get_type()
  *   addref()
  *   release()
  * distinct_type_in_container
@@ -48,13 +48,13 @@ namespace net {
 enum tls_container_flag_t {
     distinct_type_in_container = (1 << 0),
 };
-template <typename REFS_PTR, typename REFS_TYPE>
+template <typename TYPE_PTR, typename ENTITY_TYPE>
 class t_tls_container {
    public:
     t_tls_container(uint32 flags = 0) : _flags(flags) {}
     virtual ~t_tls_container() { clear(); }
 
-    return_t add(REFS_PTR item, bool upref = false) {
+    return_t add(TYPE_PTR item, bool upref = false) {
         return_t ret = errorcode_t::success;
         if (item) {
             if (upref) {
@@ -92,11 +92,11 @@ class t_tls_container {
         }
         return ret;
     }
-    return_t operator<<(REFS_PTR item) { return add(item); }
+    return_t operator<<(TYPE_PTR item) { return add(item); }
     /**
      * do { } while (success == returnof_func);
      */
-    return_t for_each(std::function<return_t(REFS_PTR)> func) {
+    return_t for_each(std::function<return_t(TYPE_PTR)> func) {
         return_t ret = errorcode_t::success;
         if (func) {
             critical_section_guard guard(_lock);
@@ -112,9 +112,9 @@ class t_tls_container {
     /**
      * tls_handshake, tls_extension
      */
-    REFS_PTR get(uint8 type, bool upref) {
+    TYPE_PTR get(uint8 type, bool upref) {
         critical_section_guard guard(_lock);
-        REFS_PTR obj = nullptr;
+        TYPE_PTR obj = nullptr;
         auto iter = _dictionary.find(type);
         if (_dictionary.end() != iter) {
             obj = iter->second;
@@ -124,9 +124,9 @@ class t_tls_container {
         }
         return obj;
     }
-    REFS_PTR getat(size_t index, bool upref = false) {
+    TYPE_PTR getat(size_t index, bool upref = false) {
         critical_section_guard guard(_lock);
-        REFS_PTR obj = nullptr;
+        TYPE_PTR obj = nullptr;
         if (index < _members.size()) {
             obj = _members[index];
             if (upref) {
@@ -148,18 +148,17 @@ class t_tls_container {
     uint32 get_flags() { return _flags; }
 
    protected:
-
    private:
     uint32 _flags;
     critical_section _lock;
-    std::map<REFS_TYPE, REFS_PTR> _dictionary;
-    std::vector<REFS_PTR> _members;
+    std::map<ENTITY_TYPE, TYPE_PTR> _dictionary;
+    std::vector<TYPE_PTR> _members;
 };
 
-template <typename REFS_PTR, typename REFS_TYPE>
-class t_tls_distinct_container : public t_tls_container<REFS_PTR, REFS_TYPE> {
+template <typename TYPE_PTR, typename ENTITY_TYPE>
+class t_tls_distinct_container : public t_tls_container<TYPE_PTR, ENTITY_TYPE> {
    public:
-    t_tls_distinct_container() : t_tls_container<REFS_PTR, REFS_TYPE>(distinct_type_in_container) {}
+    t_tls_distinct_container() : t_tls_container<TYPE_PTR, ENTITY_TYPE>(distinct_type_in_container) {}
     virtual ~t_tls_distinct_container() {}
 };
 

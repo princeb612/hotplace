@@ -27,8 +27,6 @@ class http2_frame_goaway : public http2_frame {
     http2_frame_goaway(const http2_frame_goaway& rhs);
     virtual ~http2_frame_goaway();
 
-    virtual return_t read(http2_frame_header_t const* header, size_t size);
-    virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
     /**
@@ -39,6 +37,10 @@ class http2_frame_goaway : public http2_frame {
 
     void set_debug(const binary_t& debug);
     const binary_t& get_debug();
+
+   protected:
+    virtual return_t read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write_body(binary_t& body);
 
    private:
     uint32 _last_id;

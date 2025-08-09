@@ -22,13 +22,16 @@ class http2_frame_builder {
 
     http2_frame_builder& set(h2_frame_t type);
     http2_frame_builder& set(uint8 type);
+    http2_frame_builder& set(hpack_dynamic_table* table);
     http2_frame* build();
 
    protected:
     uint8 get_type();
+    hpack_dynamic_table* get_hpack_dynamic_table();
 
    private:
     uint8 _type;
+    hpack_dynamic_table* _table;
 };
 
 }  // namespace net

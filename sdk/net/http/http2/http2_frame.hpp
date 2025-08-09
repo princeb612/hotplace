@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2FRAME__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2FRAME__
 
+#include <sdk/base/system/shared_instance.hpp>
 #include <sdk/net/http/compression/http_header_compression_stream.hpp>
 #include <sdk/net/http/http2/types.hpp>
 #include <sdk/net/http/types.hpp>
@@ -22,7 +23,6 @@ class http2_frame {
    public:
     http2_frame();
     http2_frame(h2_frame_t type);
-    http2_frame(const http2_frame_header_t& header);
     http2_frame(const http2_frame& rhs);
     virtual ~http2_frame();
 
@@ -31,7 +31,6 @@ class http2_frame {
     uint8 get_type();
     uint8 get_flags();
     uint32 get_stream_id();
-    return_t get_payload(http2_frame_header_t const* header, size_t size, byte_t** payload);
 
     http2_frame& set_type(h2_frame_t type);
     http2_frame& set_flags(uint8 flags);
@@ -41,7 +40,7 @@ class http2_frame {
     http2_frame& set_hpack_session(hpack_dynamic_table* session);
     hpack_dynamic_table* get_hpack_session();
 
-    virtual return_t read(http2_frame_header_t const* header, size_t size);
+    virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
     /**
@@ -64,7 +63,14 @@ class http2_frame {
     virtual return_t write_compressed_header(binary_t& frag, const std::string& name, const std::string& value, uint32 flags = hpack_indexing | hpack_huffman);
     virtual return_t write_compressed_header(http_header* header, binary_t& frag, uint32 flags = hpack_indexing | hpack_huffman);
 
+    void addref();
+    void release();
+
    protected:
+    virtual return_t read_header(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write_header(binary_t& frame, const binary_t& body);
+    virtual return_t write_body(binary_t& frame);
     return_t set_payload_size(uint32 size);
 
    private:
@@ -74,6 +80,7 @@ class http2_frame {
     uint32 _stream_id;
 
     hpack_dynamic_table* _hpack_dyntable;
+    t_shared_reference<http2_frame> _shared;
 };
 
 extern const char constexpr_frame_length[];

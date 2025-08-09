@@ -29,7 +29,8 @@ void do_test_http2_frame(http2_frame* frame1, http2_frame* frame2, const char* t
     _test_case.assert(bin_f1 == bin_expect, __FUNCTION__, "%s #compose", text);
 
     // read from bytestream
-    frame2->read((http2_frame_header_t*)&bin_expect[0], bin_expect.size());
+    size_t pos = 0;
+    frame2->read(&bin_expect[0], bin_expect.size(), pos);
     frame2->write(bin_f2);
 
     _logger->hdump("dump", bin_f2, 16, 3);

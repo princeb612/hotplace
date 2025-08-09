@@ -30,9 +30,11 @@ class http2_frame_settings : public http2_frame {
     http2_frame_settings& add(uint16 id, uint32 value);
     return_t find(uint16 id, uint32& value);
 
-    virtual return_t read(http2_frame_header_t const* header, size_t size);
-    virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
+
+   protected:
+    virtual return_t read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write_body(binary_t& body);
 
    private:
     typedef std::map<uint16, uint32> h2_setting_map_t;

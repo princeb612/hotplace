@@ -26,35 +26,24 @@ http2_frame_alt_svc::http2_frame_alt_svc(const http2_frame_alt_svc& rhs) : http2
 
 http2_frame_alt_svc::~http2_frame_alt_svc() {}
 
-return_t http2_frame_alt_svc::read(http2_frame_header_t const* header, size_t size) {
+return_t http2_frame_alt_svc::read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == header) {
+        if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        // check size and then read header
-        ret = http2_frame::read(header, size);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        byte_t* ptr_payload = nullptr;
-        ret = get_payload(header, size, &ptr_payload);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         payload pl;
-        pl << new payload_member((uint16)0, true, constexpr_frame_origin_len) << new payload_member(binary_t(), constexpr_frame_origin)
+        pl << new payload_member((uint16)0, true, constexpr_frame_origin_len)  //
+           << new payload_member(binary_t(), constexpr_frame_origin)           //
            << new payload_member(binary_t(), constexpr_frame_alt_svc_field_value);
 
         // size(origin) = value(origin len)
         // size(altsvc) = _payload_size - sizeof(uint16) - value(origin len)
         pl.set_reference_value(constexpr_frame_origin, constexpr_frame_origin_len);
 
-        pl.read(ptr_payload, get_payload_size());
+        pl.read(stream, size, pos);
 
         pl.get_binary(constexpr_frame_origin, _origin);
         pl.get_binary(constexpr_frame_alt_svc_field_value, _altsvc);
@@ -65,20 +54,16 @@ return_t http2_frame_alt_svc::read(http2_frame_header_t const* header, size_t si
     return ret;
 }
 
-return_t http2_frame_alt_svc::write(binary_t& frame) {
+return_t http2_frame_alt_svc::write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     payload pl;
-    pl << new payload_member((uint16)_origin.size(), true, constexpr_frame_origin_len) << new payload_member(_origin, constexpr_frame_origin)
+    pl << new payload_member((uint16)_origin.size(), true, constexpr_frame_origin_len)  //
+       << new payload_member(_origin, constexpr_frame_origin)                           //
        << new payload_member(_altsvc, constexpr_frame_alt_svc_field_value);
+    pl.write(body);
 
-    binary_t bin_payload;
-    pl.write(bin_payload);
-
-    set_payload_size(bin_payload.size());
-
-    http2_frame::write(frame);
-    frame.insert(frame.end(), bin_payload.begin(), bin_payload.end());
+    ret = set_payload_size(body.size());
 
     return ret;
 }

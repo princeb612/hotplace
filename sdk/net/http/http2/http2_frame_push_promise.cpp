@@ -26,35 +26,24 @@ http2_frame_push_promise::http2_frame_push_promise(const http2_frame_push_promis
 
 http2_frame_push_promise::~http2_frame_push_promise() {}
 
-return_t http2_frame_push_promise::read(http2_frame_header_t const* header, size_t size) {
+return_t http2_frame_push_promise::read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == header) {
+        if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        // check size and then read header
-        ret = http2_frame::read(header, size);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        byte_t* ptr_payload = nullptr;
-        ret = get_payload(header, size, &ptr_payload);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         payload pl;
-        pl << new payload_member((uint8)0, constexpr_frame_pad_length, constexpr_frame_padding)
-           << new payload_member((uint32)0, true, constexpr_frame_promised_stream_id) << new payload_member(binary_t(), constexpr_frame_fragment)
+        pl << new payload_member((uint8)0, constexpr_frame_pad_length, constexpr_frame_padding)  //
+           << new payload_member((uint32)0, true, constexpr_frame_promised_stream_id)            //
+           << new payload_member(binary_t(), constexpr_frame_fragment)                           //
            << new payload_member(binary_t(), constexpr_frame_padding, constexpr_frame_padding);
 
-        pl.set_group(constexpr_frame_padding, (get_flags() & h2_flag_t::h2_flag_padded) ? true : false)
-            .set_reference_value(constexpr_frame_padding, constexpr_frame_pad_length);
+        auto dopad = (get_flags() & h2_flag_t::h2_flag_padded) ? true : false;
+        pl.set_group(constexpr_frame_padding, dopad).set_reference_value(constexpr_frame_padding, constexpr_frame_pad_length);
 
-        pl.read(ptr_payload, get_payload_size());
+        pl.read(stream, size, pos);
 
         if (get_flags() & h2_flag_t::h2_flag_padded) {
             _padlen = pl.t_value_of<uint8>(constexpr_frame_pad_length);
@@ -69,18 +58,18 @@ return_t http2_frame_push_promise::read(http2_frame_header_t const* header, size
     return ret;
 }
 
-return_t http2_frame_push_promise::write(binary_t& frame) {
+return_t http2_frame_push_promise::write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     payload pl;
-    pl << new payload_member(_padlen, constexpr_frame_pad_length, constexpr_frame_padding)
-       << new payload_member(_promised_id, true, constexpr_frame_promised_stream_id) << new payload_member(_fragment, constexpr_frame_fragment)
+    pl << new payload_member(_padlen, constexpr_frame_pad_length, constexpr_frame_padding)  //
+       << new payload_member(_promised_id, true, constexpr_frame_promised_stream_id)        //
+       << new payload_member(_fragment, constexpr_frame_fragment)                           //
        << new payload_member(uint8(0), _padlen, constexpr_frame_padding, constexpr_frame_padding);
+    auto dopad = (get_flags() & h2_flag_t::h2_flag_padded) ? true : false;
+    pl.set_group(constexpr_frame_padding, dopad);
 
-    pl.set_group(constexpr_frame_padding, (get_flags() & h2_flag_t::h2_flag_padded) ? true : false);
-
-    binary_t bin_payload;
-    pl.write(bin_payload);
+    pl.write(body);
 
     uint8 flags = get_flags();
     if (_padlen) {
@@ -89,10 +78,8 @@ return_t http2_frame_push_promise::write(binary_t& frame) {
         flags &= ~h2_flag_t::h2_flag_padded;
     }
     set_flags(flags);
-    set_payload_size(bin_payload.size());
 
-    http2_frame::write(frame);
-    frame.insert(frame.end(), bin_payload.begin(), bin_payload.end());
+    ret = set_payload_size(body.size());
 
     return ret;
 }

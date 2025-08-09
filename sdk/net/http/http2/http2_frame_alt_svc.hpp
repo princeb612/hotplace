@@ -27,14 +27,16 @@ class http2_frame_alt_svc : public http2_frame {
     http2_frame_alt_svc(const http2_frame_alt_svc& rhs);
     virtual ~http2_frame_alt_svc();
 
-    virtual return_t read(http2_frame_header_t const* header, size_t size);
-    virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
     void set_origin(const binary_t& origin);
     void set_altsvc(const binary_t& altsvc);
     const binary_t& get_origin();
     const binary_t& get_altsvc();
+
+   protected:
+    virtual return_t read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write_body(binary_t& body);
 
    private:
     binary_t _origin;  // Origin

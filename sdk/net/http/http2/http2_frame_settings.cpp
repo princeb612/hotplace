@@ -42,34 +42,16 @@ return_t http2_frame_settings::find(uint16 id, uint32& value) {
     return ret;
 }
 
-return_t http2_frame_settings::read(http2_frame_header_t const* header, size_t size) {
+return_t http2_frame_settings::read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == header) {
+        if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        ret = http2_frame::read(header, size);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        uint32 len = get_payload_size();
-        if ((size < get_frame_size()) || (len % sizeof(http2_setting_t))) {
-            ret = errorcode_t::bad_data;
-            __leave2;
-        }
-
-        byte_t* payload = nullptr;
-        ret = get_payload(header, size, &payload);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        uint32 pos = 0;
-        while (pos < len) {
-            http2_setting_t* setting = (http2_setting_t*)(payload + pos);
+        while (pos < size) {
+            http2_setting_t* setting = (http2_setting_t*)(stream + pos);
 
             uint16 id = ntoh16(setting->id);
             uint32 value = ntoh32(setting->value);
@@ -84,21 +66,19 @@ return_t http2_frame_settings::read(http2_frame_header_t const* header, size_t s
     return ret;
 }
 
-return_t http2_frame_settings::write(binary_t& frame) {
+return_t http2_frame_settings::write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     uint32 len = _settings.size() * sizeof(http2_setting_t);
     ret = set_payload_size(len);
 
     if (errorcode_t::success == ret) {
-        http2_frame::write(frame);
-
         // RFC 7540 Figure 10: Setting Format
         for (const auto& pair : _settings) {
             const auto& k = pair.first;
             const auto& v = pair.second;
-            binary_append(frame, k, hton16);
-            binary_append(frame, v, hton32);
+            binary_append(body, k, hton16);
+            binary_append(body, v, hton32);
         }
     }
 

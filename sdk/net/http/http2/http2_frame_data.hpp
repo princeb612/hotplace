@@ -28,13 +28,15 @@ class http2_frame_data : public http2_frame {
     http2_frame_data(const http2_frame_data& rhs);
     virtual ~http2_frame_data();
 
-    virtual return_t read(http2_frame_header_t const* header, size_t size);
-    virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
     void set_data(const binary_t& data);
     void set_data(const char* data, size_t size);
     const binary_t& get_data();
+
+   protected:
+    virtual return_t read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write_body(binary_t& body);
 
    private:
     uint8 _padlen;

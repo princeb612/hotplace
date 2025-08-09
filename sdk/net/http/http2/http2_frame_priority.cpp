@@ -23,33 +23,21 @@ http2_frame_priority::http2_frame_priority(const http2_frame_priority& rhs)
 
 http2_frame_priority::~http2_frame_priority() {}
 
-return_t http2_frame_priority::read(http2_frame_header_t const* header, size_t size) {
+return_t http2_frame_priority::read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == header) {
+        if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        // check size and then read header
-        ret = http2_frame::read(header, size);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        byte_t* ptr_payload = nullptr;
-        ret = get_payload(header, size, &ptr_payload);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         payload pl;
-        pl << new payload_member((uint32)0, true, constexpr_frame_stream_dependency) << new payload_member((uint8)0, constexpr_frame_weight);
+        pl << new payload_member((uint32)0, true, constexpr_frame_stream_dependency)  //
+           << new payload_member((uint8)0, constexpr_frame_weight);
 
         pl.set_reference_value(constexpr_frame_padding, constexpr_frame_pad_length);
-
-        pl.read(ptr_payload, get_payload_size());
+        pl.read(stream, size, pos);
 
         uint32 temp = pl.t_value_of<uint32>(constexpr_frame_stream_dependency);
         _exclusive = (temp & 0x80000000) ? true : false;
@@ -62,7 +50,7 @@ return_t http2_frame_priority::read(http2_frame_header_t const* header, size_t s
     return ret;
 }
 
-return_t http2_frame_priority::write(binary_t& frame) {
+return_t http2_frame_priority::write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     uint32 dependency = _dependency;
@@ -71,15 +59,11 @@ return_t http2_frame_priority::write(binary_t& frame) {
     }
 
     payload pl;
-    pl << new payload_member(dependency, true, constexpr_frame_stream_dependency) << new payload_member(_weight, constexpr_frame_weight);
+    pl << new payload_member(dependency, true, constexpr_frame_stream_dependency)  //
+       << new payload_member(_weight, constexpr_frame_weight);
+    pl.write(body);
 
-    binary_t bin_payload;
-    pl.write(bin_payload);
-
-    set_payload_size(bin_payload.size());
-
-    http2_frame::write(frame);
-    frame.insert(frame.end(), bin_payload.begin(), bin_payload.end());
+    ret = set_payload_size(body.size());
 
     return ret;
 }

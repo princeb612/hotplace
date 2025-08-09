@@ -27,9 +27,11 @@ class http2_frame_ping : public http2_frame {
     http2_frame_ping(const http2_frame_ping& rhs);
     virtual ~http2_frame_ping();
 
-    virtual return_t read(http2_frame_header_t const* header, size_t size);
-    virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
+
+   protected:
+    virtual return_t read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write_body(binary_t& body);
 
    private:
     uint64 _opaque;

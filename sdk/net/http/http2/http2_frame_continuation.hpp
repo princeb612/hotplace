@@ -27,12 +27,14 @@ class http2_frame_continuation : public http2_frame {
     http2_frame_continuation(const http2_frame_continuation& rhs);
     virtual ~http2_frame_continuation();
 
-    virtual return_t read(http2_frame_header_t const* header, size_t size);
-    virtual return_t write(binary_t& frame);
     virtual void dump(stream_t* s);
 
     void set_fragment(const binary_t& fragment);
     const binary_t& get_fragment();
+
+   protected:
+    virtual return_t read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t write_body(binary_t& body);
 
    private:
     binary_t _fragment;

@@ -28,7 +28,7 @@
 namespace hotplace {
 namespace net {
 
-http2_frame_builder::http2_frame_builder() : _type(h2_frame_data) {}
+http2_frame_builder::http2_frame_builder() : _type(h2_frame_data), _table(nullptr) {}
 
 http2_frame_builder& http2_frame_builder::set(h2_frame_t type) {
     _type = type;
@@ -40,7 +40,14 @@ http2_frame_builder& http2_frame_builder::set(uint8 type) {
     return *this;
 }
 
+http2_frame_builder& http2_frame_builder::set(hpack_dynamic_table* table) {
+    _table = table;
+    return *this;
+}
+
 uint8 http2_frame_builder::get_type() { return _type; }
+
+hpack_dynamic_table* http2_frame_builder::get_hpack_dynamic_table() { return _table; }
 
 http2_frame* http2_frame_builder::build() {
     http2_frame* frame = nullptr;
@@ -78,6 +85,9 @@ http2_frame* http2_frame_builder::build() {
         case h2_frame_altsvc: {
             __try_new_catch_only(frame, new http2_frame_alt_svc);
         } break;
+    }
+    if (frame) {
+        frame->set_hpack_session(get_hpack_dynamic_table());
     }
     return frame;
 }
