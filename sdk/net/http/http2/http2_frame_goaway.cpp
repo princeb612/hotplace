@@ -25,7 +25,7 @@ http2_frame_goaway::http2_frame_goaway(const http2_frame_goaway& rhs) : http2_fr
 
 http2_frame_goaway::~http2_frame_goaway() {}
 
-return_t http2_frame_goaway::read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t http2_frame_goaway::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -50,7 +50,7 @@ return_t http2_frame_goaway::read_body(const byte_t* stream, size_t size, size_t
     return ret;
 }
 
-return_t http2_frame_goaway::write_body(binary_t& body) {
+return_t http2_frame_goaway::do_write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     payload pl;

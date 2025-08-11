@@ -158,7 +158,7 @@ void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_sessio
         initial.set_pn(pn, pn_length);
 
         // unprotected header
-        initial.write_header(bin_unprotected_header);
+        initial.write_unprotected_header(bin_unprotected_header);
 
         {
             // [test vector] set record no

@@ -42,7 +42,7 @@ return_t http2_frame_settings::find(uint16 id, uint32& value) {
     return ret;
 }
 
-return_t http2_frame_settings::read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t http2_frame_settings::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -66,7 +66,7 @@ return_t http2_frame_settings::read_body(const byte_t* stream, size_t size, size
     return ret;
 }
 
-return_t http2_frame_settings::write_body(binary_t& body) {
+return_t http2_frame_settings::do_write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     uint32 len = _settings.size() * sizeof(http2_setting_t);

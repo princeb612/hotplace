@@ -101,7 +101,26 @@ const binary_t& quic_packet::get_dcid() { return _dcid; }
 
 const binary_t& quic_packet::get_scid() { return _scid; }
 
-return_t quic_packet::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::success; }
+return_t quic_packet::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        ret = do_read_header(dir, stream, size, pos);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        size_t size_unprotect = 0;
+        ret = do_read_body(dir, stream, size, pos, size_unprotect);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_read(dir, stream, size, pos, size_unprotect);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
 
 return_t quic_packet::read(tls_direction_t dir, const binary_t& bin, size_t& pos) { return read(dir, &bin[0], bin.size(), pos); }
 
@@ -129,11 +148,24 @@ return_t quic_packet::write(tls_direction_t dir, binary_t& packet) {
     return ret;
 }
 
-return_t quic_packet::write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) { return errorcode_t::success; }
+return_t quic_packet::write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) {
+    return_t ret = errorcode_t::success;
+    do_write_header(header);                 // unprotected header
+    do_write_body(dir, _payload);            // payload
+    do_write(dir, header, ciphertext, tag);  // header, CT, TAG
+    return ret;
+}
 
-return_t quic_packet::write_header(binary_t& header) { return write(from_any, header); }
+return_t quic_packet::write_unprotected_header(binary_t& header) {
+    return_t ret = errorcode_t::success;
+    binary_t ciphertext;
+    binary_t tag;
+    do_write_header(header);
+    do_write(from_any, header, ciphertext, tag);
+    return ret;
+}
 
-return_t quic_packet::read_common_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
+return_t quic_packet::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -201,7 +233,48 @@ return_t quic_packet::read_common_header(tls_direction_t dir, const byte_t* stre
     return ret;
 }
 
-return_t quic_packet::write_common_header(binary_t& header) {
+return_t quic_packet::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
+
+return_t quic_packet::do_unprotect(tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, protection_space_t space) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+
+        ret = header_unprotect(dir, stream + pos, 16, space, _ht, _pn, _payload);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // aad
+        binary_t bin_unprotected_header;
+        write_unprotected_header(bin_unprotected_header);
+
+        // decrypt
+        binary_t bin_plaintext;
+        {
+            size_t tpos = 0;
+            ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), tpos, bin_plaintext, bin_unprotected_header, _tag, space);
+            if (errorcode_t::success == ret) {
+                _payload = std::move(bin_plaintext);
+            } else {
+                _payload.clear();
+            }
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t quic_packet::do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t pos_unprotect) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
+
+return_t quic_packet::do_write_header(binary_t& header, const binary_t& body) {
     return_t ret = errorcode_t::success;
 
     uint8 hdr = 0;
@@ -237,6 +310,16 @@ return_t quic_packet::write_common_header(binary_t& header) {
     pl.set_group(constexpr_longheader, is_longheader);
     pl.write(header);
 
+    return ret;
+}
+
+return_t quic_packet::do_write_body(tls_direction_t dir, binary_t& body) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
+
+return_t quic_packet::do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) {
+    return_t ret = errorcode_t::success;
     return ret;
 }
 

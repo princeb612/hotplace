@@ -67,10 +67,10 @@ class http2_frame {
     void release();
 
    protected:
-    virtual return_t read_header(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t read_body(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write_header(binary_t& frame, const binary_t& body);
-    virtual return_t write_body(binary_t& frame);
+    virtual return_t do_read_header(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_header(binary_t& frame, const binary_t& body);
+    virtual return_t do_write_body(binary_t& frame);
     return_t set_payload_size(uint32 size);
 
    private:

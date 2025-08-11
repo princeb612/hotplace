@@ -22,7 +22,7 @@ http2_frame_ping::http2_frame_ping(const http2_frame_ping& rhs) : http2_frame(rh
 
 http2_frame_ping::~http2_frame_ping() {}
 
-return_t http2_frame_ping::read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t http2_frame_ping::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -43,7 +43,7 @@ return_t http2_frame_ping::read_body(const byte_t* stream, size_t size, size_t& 
     return ret;
 }
 
-return_t http2_frame_ping::write_body(binary_t& body) {
+return_t http2_frame_ping::do_write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     payload pl;

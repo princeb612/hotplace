@@ -30,8 +30,8 @@ class http2_frame_window_update : public http2_frame {
     virtual void dump(stream_t* s);
 
    protected:
-    virtual return_t read_body(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write_body(binary_t& body);
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(binary_t& body);
 
    private:
     uint32 _increment;

@@ -126,11 +126,11 @@ return_t http2_frame::read(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     auto frpos = pos;
     __try2 {
-        ret = read_header(stream, size, pos);
+        ret = do_read_header(stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = read_body(stream, size, pos);
+        ret = do_read_body(stream, size, pos);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -143,7 +143,7 @@ return_t http2_frame::read(const byte_t* stream, size_t size, size_t& pos) {
     return ret;
 }
 
-return_t http2_frame::read_header(const byte_t* stream, size_t size, size_t& pos) {
+return_t http2_frame::do_read_header(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -180,7 +180,7 @@ return_t http2_frame::read_header(const byte_t* stream, size_t size, size_t& pos
     return ret;
 }
 
-return_t http2_frame::read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t http2_frame::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     // override
     return ret;
@@ -191,12 +191,12 @@ return_t http2_frame::write(binary_t& frame) {
     auto snapshot = frame.size();
     __try2 {
         binary_t body;
-        ret = write_body(body);
+        ret = do_write_body(body);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        ret = write_header(frame, body);
+        ret = do_write_header(frame, body);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -209,7 +209,7 @@ return_t http2_frame::write(binary_t& frame) {
     return ret;
 }
 
-return_t http2_frame::write_header(binary_t& frame, const binary_t& body) {
+return_t http2_frame::do_write_header(binary_t& frame, const binary_t& body) {
     return_t ret = errorcode_t::success;
 
     payload pl;
@@ -224,7 +224,7 @@ return_t http2_frame::write_header(binary_t& frame, const binary_t& body) {
     return ret;
 }
 
-return_t http2_frame::write_body(binary_t& frame) {
+return_t http2_frame::do_write_body(binary_t& frame) {
     return_t ret = errorcode_t::success;
     // override
     return ret;

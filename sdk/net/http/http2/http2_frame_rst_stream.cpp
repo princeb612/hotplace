@@ -22,7 +22,7 @@ http2_frame_rst_stream::http2_frame_rst_stream(const http2_frame_rst_stream& rhs
 
 http2_frame_rst_stream::~http2_frame_rst_stream() {}
 
-return_t http2_frame_rst_stream::read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t http2_frame_rst_stream::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -44,7 +44,7 @@ return_t http2_frame_rst_stream::read_body(const byte_t* stream, size_t size, si
     return ret;
 }
 
-return_t http2_frame_rst_stream::write_body(binary_t& body) {
+return_t http2_frame_rst_stream::do_write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     payload pl;

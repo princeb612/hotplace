@@ -26,7 +26,7 @@ http2_frame_alt_svc::http2_frame_alt_svc(const http2_frame_alt_svc& rhs) : http2
 
 http2_frame_alt_svc::~http2_frame_alt_svc() {}
 
-return_t http2_frame_alt_svc::read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t http2_frame_alt_svc::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -54,7 +54,7 @@ return_t http2_frame_alt_svc::read_body(const byte_t* stream, size_t size, size_
     return ret;
 }
 
-return_t http2_frame_alt_svc::write_body(binary_t& body) {
+return_t http2_frame_alt_svc::do_write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     payload pl;

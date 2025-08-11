@@ -57,14 +57,9 @@ quic_packet_retry::quic_packet_retry(const quic_packet_retry& rhs)
 
 quic_packet_retry::~quic_packet_retry() {}
 
-return_t quic_packet_retry::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
+return_t quic_packet_retry::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect) {
     return_t ret = errorcode_t::success;
     __try2 {
-        ret = read_common_header(dir, stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
         {
             payload pl;
             pl << new payload_member(binary_t(), constexpr_retry_token) << new payload_member(binary_t(), constexpr_retry_integrity_tag);
@@ -86,7 +81,7 @@ return_t quic_packet_retry::read(tls_direction_t dir, const byte_t* stream, size
 return_t quic_packet_retry::write(tls_direction_t dir, binary_t& packet) {
     return_t ret = errorcode_t::success;
 
-    ret = write_common_header(packet);
+    ret = do_write_header(packet);
 
     binary_t bin_integrity_tag;
 

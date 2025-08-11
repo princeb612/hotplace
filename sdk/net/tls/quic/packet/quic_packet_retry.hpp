@@ -26,7 +26,6 @@ class quic_packet_retry : public quic_packet {
     quic_packet_retry(const quic_packet_retry& rhs);
     virtual ~quic_packet_retry();
 
-    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& packet);
 
     quic_packet_retry& set_retry_token(const binary_t& token);
@@ -36,6 +35,8 @@ class quic_packet_retry : public quic_packet {
     const binary_t& get_integrity_tag();
 
    protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect);
+
     virtual void dump();
 
     /**

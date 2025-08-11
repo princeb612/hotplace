@@ -108,6 +108,7 @@ int main(int argc, char **argv) {
         test_bearer_token();
     }
 
+    test_http2_frame();
     test_http2();
 
     openssl_cleanup();

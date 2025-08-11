@@ -26,7 +26,7 @@ http2_frame_push_promise::http2_frame_push_promise(const http2_frame_push_promis
 
 http2_frame_push_promise::~http2_frame_push_promise() {}
 
-return_t http2_frame_push_promise::read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t http2_frame_push_promise::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -58,7 +58,7 @@ return_t http2_frame_push_promise::read_body(const byte_t* stream, size_t size, 
     return ret;
 }
 
-return_t http2_frame_push_promise::write_body(binary_t& body) {
+return_t http2_frame_push_promise::do_write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     payload pl;

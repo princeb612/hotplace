@@ -23,7 +23,7 @@ http2_frame_continuation::http2_frame_continuation(const http2_frame_continuatio
 
 http2_frame_continuation::~http2_frame_continuation() {}
 
-return_t http2_frame_continuation::read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t http2_frame_continuation::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -43,7 +43,7 @@ return_t http2_frame_continuation::read_body(const byte_t* stream, size_t size, 
     return ret;
 }
 
-return_t http2_frame_continuation::write_body(binary_t& body) {
+return_t http2_frame_continuation::do_write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     payload pl;

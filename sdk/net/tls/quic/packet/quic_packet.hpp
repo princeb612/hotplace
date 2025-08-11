@@ -110,10 +110,7 @@ class quic_packet {
      */
     virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
 
-    virtual return_t write_header(binary_t& packet);
-
-    return_t read_common_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
-    return_t write_common_header(binary_t& packet);
+    virtual return_t write_unprotected_header(binary_t& packet);
 
     /*
      * @brief   set packet number
@@ -155,6 +152,14 @@ class quic_packet {
     uint32 get_flags();
 
    protected:
+    virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect);
+    virtual return_t do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t pos_unprotect);
+    return_t do_unprotect(tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, protection_space_t space);
+    virtual return_t do_write_header(binary_t& packet, const binary_t& body = binary_t());
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& body);
+    virtual return_t do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
+
     /**
      * @brief   dump
      */
@@ -200,6 +205,7 @@ class quic_packet {
     binary_t _dcid;         // destination
     binary_t _scid;         // source
     binary_t _payload;
+    binary_t _tag;
     quic_frames* _frames;
 };
 

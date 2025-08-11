@@ -22,7 +22,7 @@ http2_frame_window_update::http2_frame_window_update(const http2_frame_window_up
 
 http2_frame_window_update::~http2_frame_window_update() {}
 
-return_t http2_frame_window_update::read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t http2_frame_window_update::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -44,7 +44,7 @@ return_t http2_frame_window_update::read_body(const byte_t* stream, size_t size,
     return ret;
 }
 
-return_t http2_frame_window_update::write_body(binary_t& body) {
+return_t http2_frame_window_update::do_write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     payload pl;

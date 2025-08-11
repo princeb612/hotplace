@@ -26,7 +26,7 @@ http2_frame_headers::http2_frame_headers(const http2_frame_headers& rhs)
 
 http2_frame_headers::~http2_frame_headers() {}
 
-return_t http2_frame_headers::read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t http2_frame_headers::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -66,7 +66,7 @@ return_t http2_frame_headers::read_body(const byte_t* stream, size_t size, size_
     return ret;
 }
 
-return_t http2_frame_headers::write_body(binary_t& body) {
+return_t http2_frame_headers::do_write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     uint32 dependency = _dependency;

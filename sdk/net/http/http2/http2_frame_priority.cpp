@@ -23,7 +23,7 @@ http2_frame_priority::http2_frame_priority(const http2_frame_priority& rhs)
 
 http2_frame_priority::~http2_frame_priority() {}
 
-return_t http2_frame_priority::read_body(const byte_t* stream, size_t size, size_t& pos) {
+return_t http2_frame_priority::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -50,7 +50,7 @@ return_t http2_frame_priority::read_body(const byte_t* stream, size_t size, size
     return ret;
 }
 
-return_t http2_frame_priority::write_body(binary_t& body) {
+return_t http2_frame_priority::do_write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
     uint32 dependency = _dependency;

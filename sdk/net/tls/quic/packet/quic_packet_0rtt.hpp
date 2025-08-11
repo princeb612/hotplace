@@ -26,10 +26,11 @@ class quic_packet_0rtt : public quic_packet {
     quic_packet_0rtt(const quic_packet_0rtt& rhs);
     virtual ~quic_packet_0rtt();
 
-    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
 
    protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+
    private:
     /**
      * Figure 16: 0-RTT Packet

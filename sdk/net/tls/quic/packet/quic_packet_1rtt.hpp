@@ -30,8 +30,11 @@ class quic_packet_1rtt : public quic_packet {
     quic_packet_1rtt(const quic_packet_1rtt& rhs);
     virtual ~quic_packet_1rtt();
 
-    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
+   protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect);
+    virtual return_t do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t pos_unprotect);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& body);
+    virtual return_t do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
 };
 
 }  // namespace net

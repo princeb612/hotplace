@@ -174,11 +174,11 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
                 //  > identifier 6 value 262144 (0x00040000)
 
                 uint32 table_size = 0;
-                if (errorcode_t::success == frame_settings->find(0x1, table_size)) {
+                if (errorcode_t::success == frame_settings->find(h2_settings_header_table_size, table_size)) {
                     get_hpack_session().set_capacity(table_size);
                 }
                 uint32 push = 0;
-                if (errorcode_t::success == frame_settings->find(0x2, push)) {
+                if (errorcode_t::success == frame_settings->find(h2_settings_enable_push, push)) {
                     // RFC 7540 6.5.2.  Defined SETTINGS Parameters
                     // SETTINGS_ENABLE_PUSH (0x2)
                     enable_push(push ? true : false);

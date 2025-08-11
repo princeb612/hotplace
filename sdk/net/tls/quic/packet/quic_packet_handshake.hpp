@@ -26,12 +26,13 @@ class quic_packet_handshake : public quic_packet {
     quic_packet_handshake(const quic_packet_handshake& rhs);
     virtual ~quic_packet_handshake();
 
-    virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
-
     uint64 get_length();
 
    protected:
+    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect);
+    virtual return_t do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t pos_unprotect);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& body);
+    virtual return_t do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
     virtual void dump();
 
    private:

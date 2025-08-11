@@ -33,8 +33,8 @@ class http2_frame_push_promise : public http2_frame {
     const binary_t& get_fragment();
 
    protected:
-    virtual return_t read_body(const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t write_body(binary_t& body);
+    virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(binary_t& body);
 
    private:
     uint8 _padlen;

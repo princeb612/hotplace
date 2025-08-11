@@ -39,6 +39,7 @@ void test_documents();
 void test_get_tlsclient();
 void test_get_httpclient();
 void test_bearer_token();
+void test_http2_frame();
 void test_http2();
 
 #endif
