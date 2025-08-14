@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_NET_HTTP_HTTP3_HTTP3FRAMES__
 
 #include <sdk/net/http/http3/http3_frame.hpp>
+#include <sdk/net/tls/tls_container.hpp>
 
 namespace hotplace {
 namespace net {
@@ -21,7 +22,18 @@ class http3_frames {
     http3_frames();
 
     return_t read(qpack_dynamic_table* dyntable, const byte_t* stream, size_t size, size_t& pos);
-    return_t write(qpack_dynamic_table* dyntable, const byte_t* stream, size_t size);
+    return_t write(qpack_dynamic_table* dyntable, binary_t& bin);
+
+    return_t add(http3_frame* frame, bool upref = false);
+    http3_frames& operator<<(http3_frame* frame);
+    return_t for_each(std::function<return_t(http3_frame*)> func);
+    http3_frame* getat(size_t index, bool upref = false);
+    bool empty();
+    size_t size();
+    void clear();
+
+   protected:
+    t_tls_container<http3_frame*, uint8> _frames;
 };
 
 }  // namespace net

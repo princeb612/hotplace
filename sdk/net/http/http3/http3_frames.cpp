@@ -61,11 +61,29 @@ return_t http3_frames::read(qpack_dynamic_table* dyntable, const byte_t* stream,
     return ret;
 }
 
-return_t http3_frames::write(qpack_dynamic_table* dyntable, const byte_t* stream, size_t size) {
+return_t http3_frames::write(qpack_dynamic_table* dyntable, binary_t& bin) {
     return_t ret = errorcode_t::success;
-
+    auto lambda = [&](http3_frame* frame) -> return_t { return frame->write(bin); };
+    ret = for_each(lambda);
     return ret;
 }
+
+return_t http3_frames::add(http3_frame* frame, bool upref) { return _frames.add(frame, upref); }
+
+http3_frames& http3_frames::operator<<(http3_frame* frame) {
+    _frames.add(frame);
+    return *this;
+}
+
+return_t http3_frames::for_each(std::function<return_t(http3_frame*)> func) { return _frames.for_each(func); }
+
+http3_frame* http3_frames::getat(size_t index, bool upref) { return _frames.getat(index, upref); }
+
+bool http3_frames::empty() { return _frames.empty(); }
+
+size_t http3_frames::size() { return _frames.size(); }
+
+void http3_frames::clear() { _frames.clear(); }
 
 }  // namespace net
 }  // namespace hotplace

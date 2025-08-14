@@ -108,9 +108,12 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
         size_t offset_psk_binders_len = 0;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_psk_identities_len) << new payload_member(uint16(0), true, constexpr_psk_identity_len)
-               << new payload_member(binary_t(), constexpr_psk_identity) << new payload_member(uint32(0), true, constexpr_obfuscated_ticket_age)
-               << new payload_member(uint16(0), true, constexpr_psk_binders_len) << new payload_member(uint8(0), constexpr_psk_binder_len)
+            pl << new payload_member(uint16(0), true, constexpr_psk_identities_len)     //
+               << new payload_member(uint16(0), true, constexpr_psk_identity_len)       //
+               << new payload_member(binary_t(), constexpr_psk_identity)                //
+               << new payload_member(uint32(0), true, constexpr_obfuscated_ticket_age)  //
+               << new payload_member(uint16(0), true, constexpr_psk_binders_len)        //
+               << new payload_member(uint8(0), constexpr_psk_binder_len)                //
                << new payload_member(binary_t(), constexpr_psk_binder);
             pl.set_reference_value(constexpr_psk_identity, constexpr_psk_identity_len);
             pl.set_reference_value(constexpr_psk_binder, constexpr_psk_binder_len);

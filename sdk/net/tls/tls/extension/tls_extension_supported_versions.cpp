@@ -53,7 +53,8 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
         binary_t versions;
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_versions) << new payload_member(binary_t(), constexpr_version);
+            pl << new payload_member(uint8(0), constexpr_versions)  //
+               << new payload_member(binary_t(), constexpr_version);
             pl.set_reference_value(constexpr_version, constexpr_versions);
             pl.read(stream, endpos_extension(), pos);
 
@@ -103,7 +104,8 @@ return_t tls_extension_client_supported_versions::do_write_body(tls_direction_t 
         }
         {
             payload pl;
-            pl << new payload_member(cbsize_versions, constexpr_versions) << new payload_member(bin_versions, constexpr_version);
+            pl << new payload_member(cbsize_versions, constexpr_versions)  //
+               << new payload_member(bin_versions, constexpr_version);
             pl.write(bin);
         }
     }

@@ -205,7 +205,8 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
         binary_t signature;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_signature_alg) << new payload_member(uint16(0), true, constexpr_len)
+            pl << new payload_member(uint16(0), true, constexpr_signature_alg)  //
+               << new payload_member(uint16(0), true, constexpr_len)            //
                << new payload_member(binary_t(), constexpr_signature);
             pl.set_reference_value(constexpr_signature, constexpr_len);
             pl.read(stream, size, pos);

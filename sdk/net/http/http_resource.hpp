@@ -70,6 +70,8 @@ class http_resource {
     void for_each_qpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func);
     size_t sizeof_qpack_static_table_entries();
 
+    std::string get_h2_error_string(uint16 code);
+
     std::string get_h3_stream_name(uint8 type);
     std::string get_h3_frame_name(uint64 type);
     std::string get_h3_error_string(uint16 code);
@@ -94,6 +96,7 @@ class http_resource {
     std::map<uint8, std::string> _h3_stream_names;
     std::map<uint16, std::string> _h2_frame_settings;
     std::map<uint64, std::string> _h3_frame_names;
+    std::map<uint32, std::string> _h2_error_codes;
     std::map<uint16, std::string> _h3_error_codes;
     std::map<uint64, std::string> _h3_frame_settings;
 };

@@ -43,7 +43,7 @@ class dtls_record_publisher {
 
     /**
      * @brief publish
-     * @param tls_record_handshake* record [in]
+     * @param tls_record* record [in]
      * @param tls_direction_t dir [in]
      * @param std::function<void (tls_session*, binary_t&)> func [in]
      */

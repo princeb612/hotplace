@@ -174,7 +174,8 @@ return_t tls_extension::do_read_header(tls_direction_t dir, const byte_t* stream
         uint16 ext_len = 0;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_extension_type) << new payload_member(uint16(0), true, constexpr_ext_len);
+            pl << new payload_member(uint16(0), true, constexpr_extension_type)  //
+               << new payload_member(uint16(0), true, constexpr_ext_len);
             ret = pl.read(stream, size, pos);
             if (errorcode_t::success != ret) {
                 __leave2;

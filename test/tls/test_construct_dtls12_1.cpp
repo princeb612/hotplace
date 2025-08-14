@@ -571,7 +571,6 @@ void test_construct_dtls12_1() {
 
 #if 1
     // no test vector
-
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256");
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384");
 

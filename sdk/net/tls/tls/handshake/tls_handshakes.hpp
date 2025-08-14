@@ -28,6 +28,7 @@ class tls_handshakes {
     return_t for_each(std::function<return_t(tls_handshake*)> func);
     tls_handshake* get(uint8 type, bool upref = false);
     tls_handshake* getat(size_t index, bool upref = false);
+    bool empty();
     size_t size();
     void clear();
 

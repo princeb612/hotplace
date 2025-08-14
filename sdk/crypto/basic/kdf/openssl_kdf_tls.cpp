@@ -135,8 +135,12 @@ return_t openssl_kdf::hkdf_label(binary_t& hkdflabel, uint16 length, const binar
         uint8 opaque_len_context = context.size();
 #if 0  // tested
         payload pl;
-        pl << new payload_member(length, true) << new payload_member(opaque_len_label) << new payload_member(prefix) << new payload_member(label)
-           << new payload_member(opaque_len_context) << new payload_member(context);
+        pl << new payload_member(length, true) //
+           << new payload_member(opaque_len_label) //
+           << new payload_member(prefix) //
+           << new payload_member(label) //
+           << new payload_member(opaque_len_context) //
+           << new payload_member(context);
         pl.write(hkdflabel);
 #else
         binary_append(hkdflabel, length, hton16);

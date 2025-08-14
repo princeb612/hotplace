@@ -42,7 +42,7 @@ class quic_frame_stream : public quic_frame {
    private:
     uint64 _streamid;
     uint64 _offset;
-    binary_t _streamdata;
+    binary_t _streamdata;  // fragment
 };
 
 }  // namespace net

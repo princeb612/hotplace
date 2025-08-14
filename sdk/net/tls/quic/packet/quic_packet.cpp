@@ -31,36 +31,31 @@ constexpr char constexpr_scid[] = "scid";
 constexpr char constexpr_dcid_len[] = "dcid len";
 constexpr char constexpr_scid_len[] = "scid len";
 
-quic_packet::quic_packet(tls_session* session) : _type(0), _session(nullptr), _ht(0), _version(1), _pn(0), _frames(nullptr) {
+quic_packet::quic_packet(tls_session* session) : _type(0), _session(nullptr), _ht(0), _version(1), _pn(0) {
     set_session(session);
     set_version();
+    _frames.set_packet(this);
     _shared.make_share(this);
-
-    _frames = new quic_frames(this);
 }
 
-quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _session(nullptr), _ht(0), _version(1), _pn(0), _frames(nullptr) {
+quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _session(nullptr), _ht(0), _version(1), _pn(0) {
     bool is_longheader = true;
     set_session(session);
     set_version();
     set_type(type, _ht, is_longheader);
+    _frames.set_packet(this);
     _shared.make_share(this);
-
-    _frames = new quic_frames(this);
 }
 
 quic_packet::quic_packet(const quic_packet& rhs)
-    : _type(rhs._type), _session(nullptr), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _pn(rhs._pn), _frames(nullptr) {
+    : _type(rhs._type), _session(nullptr), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _pn(rhs._pn) {
     set_session(rhs._session);
     set_version();
+    _frames.set_packet(this);
     _shared.make_share(this);
-
-    _frames = new quic_frames(this);
 }
 
 quic_packet::~quic_packet() {
-    delete _frames;
-
     if (_session) {
         _session->release();
     }
@@ -126,6 +121,7 @@ return_t quic_packet::read(tls_direction_t dir, const binary_t& bin, size_t& pos
 
 return_t quic_packet::write(tls_direction_t dir, binary_t& packet) {
     return_t ret = errorcode_t::success;
+    auto snapshot = packet.size();
     __try2 {
         binary_t header;
         binary_t ciphertext;
@@ -143,16 +139,32 @@ return_t quic_packet::write(tls_direction_t dir, binary_t& packet) {
         binary_append(packet, tag);
     }
     __finally2 {
-        // do nothing
+        if (errorcode_t::success != ret) {
+            packet.resize(snapshot);  // rollback
+        }
     }
     return ret;
 }
 
 return_t quic_packet::write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) {
     return_t ret = errorcode_t::success;
-    do_write_header(header);                 // unprotected header
-    do_write_body(dir, _payload);            // payload
-    do_write(dir, header, ciphertext, tag);  // header, CT, TAG
+    __try2 {
+        ret = do_write_header(header);  // unprotected header
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_write_body(dir, _payload);  // payload
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_write(dir, header, ciphertext, tag);  // header, CT, TAG
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+    }
+    __finally2 {
+        // do nothing
+    }
     return ret;
 }
 
@@ -524,7 +536,7 @@ uint8 quic_packet::get_pn_length(uint8 ht) {
 
 uint32 quic_packet::get_pn() { return _pn; }
 
-quic_frames& quic_packet::get_quic_frames() { return *_frames; }
+quic_frames& quic_packet::get_quic_frames() { return _frames; }
 
 quic_packet& quic_packet::operator<<(quic_frame* frame) {
     get_quic_frames() << frame;

@@ -168,8 +168,11 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
             __leave2;
         }
 
+        auto& pkns = session->get_quic_session().get_pkns(_space);
+        critical_section_guard guard(pkns.get_lock());
         ack_t ack;
-        ack << session->get_quic_session().get_pkns(_space);
+        ack << pkns;
+        pkns.set_status(0);
 
         payload pl;
         pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)                         //

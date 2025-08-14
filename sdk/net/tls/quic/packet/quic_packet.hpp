@@ -27,6 +27,7 @@
 
 #include <sdk/base/basic/binary.hpp>
 #include <sdk/base/system/shared_instance.hpp>
+#include <sdk/net/tls/quic/frame/quic_frames.hpp>
 #include <sdk/net/tls/quic/types.hpp>
 #include <sdk/net/tls/tls/types.hpp>
 
@@ -206,7 +207,7 @@ class quic_packet {
     binary_t _scid;         // source
     binary_t _payload;
     binary_t _tag;
-    quic_frames* _frames;
+    quic_frames _frames;
 };
 
 /**

@@ -22,7 +22,14 @@ class quic_frame_padding : public quic_frame {
    public:
     quic_frame_padding(quic_packet* packet);
 
-    void pad(uint16 len);
+    /**
+     * @param   uint16 len [in]
+     * @param   uint32 flags [inopt] see quic_packet_flag_t
+     * @desc
+     *          pad(300);               // add a frame 300 bytes
+     *          pad(1200, pad_packet);  // make a packet 1200 bytes
+     */
+    void pad(uint16 len, uint32 flags = 0);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -30,6 +37,7 @@ class quic_frame_padding : public quic_frame {
 
    private:
     uint16 _len;
+    uint32 _flags;
 };
 
 }  // namespace net

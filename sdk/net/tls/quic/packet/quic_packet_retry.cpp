@@ -62,7 +62,8 @@ return_t quic_packet_retry::do_read_body(tls_direction_t dir, const byte_t* stre
     __try2 {
         {
             payload pl;
-            pl << new payload_member(binary_t(), constexpr_retry_token) << new payload_member(binary_t(), constexpr_retry_integrity_tag);
+            pl << new payload_member(binary_t(), constexpr_retry_token)  //
+               << new payload_member(binary_t(), constexpr_retry_integrity_tag);
             pl.reserve(constexpr_retry_integrity_tag, 128 >> 3);
             pl.read(stream, size, pos);
 
@@ -94,7 +95,8 @@ return_t quic_packet_retry::write(tls_direction_t dir, binary_t& packet) {
 
     {
         payload pl;
-        pl << new payload_member(_retry_token) << new payload_member(_retry_integrity_tag);
+        pl << new payload_member(_retry_token)  //
+           << new payload_member(_retry_integrity_tag);
         pl.write(packet);
     }
 

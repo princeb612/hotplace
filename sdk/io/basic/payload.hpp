@@ -235,7 +235,9 @@ class payload {
      *          payload pl;
      *          binary_t data;
      *          binary_t pad;
-     *          pl << new payload_member((uint8)0, "padlen", "pad") << new payload_member(data, "data") << new payload_member((uint32)0, true, "value")
+     *          pl << new payload_member((uint8)0, "padlen", "pad")
+     *             << new payload_member(data, "data")
+     *             << new payload_member((uint32)0, true, "value")
      *             << new payload_member(pad, "pad", "pad");
      *          binary_t decoded = std::move(base16_decode("036461746100001000706164"));
      *          pl.set_reference_value("pad", "padlen"); // padlen=03, so length of pad 3 bytes
@@ -246,7 +248,8 @@ class payload {
      *           //        uint8 len;
      *           //        uint8 data[];
      *           pos = 0;
-     *           pl << new payload_member(uint8(0), "len") << new payload_member(binary_t(), "data");
+     *           pl << new payload_member(uint8(0), "len")
+     *              << new payload_member(binary_t(), "data");
      *           pl.set_reference_value("data", "len");
      *           pl.read(stream, 6, pos);
      *
@@ -254,7 +257,8 @@ class payload {
      *           // stream 05 00 01 00 02 00 03 00 04 00 05
      *           //        uint8 len;
      *           //        uint16 data[];
-     *           pl << new payload_member(uint8(0), "len") << new payload_member(binary_t(), "data");
+     *           pl << new payload_member(uint8(0), "len")
+     *              << new payload_member(binary_t(), "data");
      *           pl.set_reference_value("data", "len", sizeof(uint16));
      *           pos = 0;
      *           pl.read(stream, 11, pos);
@@ -263,7 +267,8 @@ class payload {
      *           // stream 00 05 00 01 00 02 00 03 00 04 00 05
      *           //        uint16 len;
      *           //        uint16 data[];
-     *           pl << new payload_member(uint16(0), true, "len") << new payload_member(binary_t(), "data");
+     *           pl << new payload_member(uint16(0), true, "len")
+     *              << new payload_member(binary_t(), "data");
      *           pl.set_reference_value("data", "len", sizeof(uint16));
      *           pos = 0;
      *           pl.read(stream, 12, pos);
@@ -364,7 +369,8 @@ class payload {
 
     /**
      * @sample
-     *          pl << new payload_member(uint8(), "len") << new payload_member(binary_t(), "data");
+     *          pl << new payload_member(uint8(), "len")
+     *             << new payload_member(binary_t(), "data");
      *          pl.read(stream, size, pos);
      *          auto len = pl.t_value_of<uint8>("len");
      *          auto data = pl.to_bin("data");

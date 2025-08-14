@@ -215,6 +215,7 @@ class tls_advisor {
     std::string quic_packet_type_string(uint8 code);
     std::string nameof_secret(tls_secret_t secret);
     std::string quic_streamid_type_string(uint64 streamid);
+    std::string protection_space_string(protection_space_t space);
 
     bool is_kindof_tls13(uint16 ver);
     bool is_kindof_tls12(uint16 ver);
@@ -317,6 +318,7 @@ class tls_advisor {
     std::map<uint8, std::string> _quic_streamid_types;
 
     std::map<uint32, const tls_session_status_code_t*> _session_status_codes;
+    std::map<protection_space_t, std::string> _protection_space_names;
 
     std::set<uint16> _ciphersuites;
     binary_t _prot;

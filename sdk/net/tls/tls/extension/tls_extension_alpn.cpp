@@ -40,7 +40,8 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
             // RFC 7301
 
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_alpn_len) << new payload_member(binary_t(0), constexpr_protocol);
+            pl << new payload_member(uint16(0), true, constexpr_alpn_len)  //
+               << new payload_member(binary_t(0), constexpr_protocol);
             pl.set_reference_value(constexpr_protocol, constexpr_alpn_len);
             pl.read(stream, endpos_extension(), pos);
 

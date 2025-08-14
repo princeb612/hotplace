@@ -58,8 +58,10 @@ return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stre
              *  } ServerNameList;
              */
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_entry_len) << new payload_member(uint8(0), constexpr_name_type)
-               << new payload_member(uint16(0), true, constexpr_hostname_len) << new payload_member(binary_t(), constexpr_hostname);
+            pl << new payload_member(uint16(0), true, constexpr_entry_len)     //
+               << new payload_member(uint8(0), constexpr_name_type)            //
+               << new payload_member(uint16(0), true, constexpr_hostname_len)  //
+               << new payload_member(binary_t(), constexpr_hostname);
             pl.set_reference_value(constexpr_hostname, constexpr_hostname_len);
             pl.read(stream, endpos_extension(), pos);
 
@@ -100,8 +102,10 @@ return_t tls_extension_sni::do_write_body(tls_direction_t dir, binary_t& bin) {
         uint16 entry_len = 1 + hostname.size();
 
         payload pl;
-        pl << new payload_member(uint16(entry_len), true, constexpr_entry_len) << new payload_member(uint8(type), constexpr_name_type)
-           << new payload_member(uint16(hostname.size()), true, constexpr_hostname_len) << new payload_member(hostname, constexpr_hostname);
+        pl << new payload_member(uint16(entry_len), true, constexpr_entry_len)           //
+           << new payload_member(uint8(type), constexpr_name_type)                       //
+           << new payload_member(uint16(hostname.size()), true, constexpr_hostname_len)  //
+           << new payload_member(hostname, constexpr_hostname);
         pl.write(bin);
     }
 

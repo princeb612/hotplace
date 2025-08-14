@@ -135,6 +135,7 @@ class t_tls_container {
         }
         return obj;
     }
+    bool empty() { return _members.empty(); }
     size_t size() { return _members.size(); }
     void clear() {
         critical_section_guard guard(_lock);

@@ -193,27 +193,31 @@ class t_ovl_points {
 
     static bool compare(const interval& lhs, const interval& rhs) { return lhs.s < rhs.s; }
 
-    t_ovl_points() {}
+    t_ovl_points() : _status(0) {}
 
     t_ovl_points& add(T p) {
         critical_section_guard guard(_lock);
         _arr.push_back(interval(p, p));
+        set_modified();
         return *this;
     }
     t_ovl_points& add(T start, T end) {
         critical_section_guard guard(_lock);
         _arr.push_back(interval(start, end));
+        set_modified();
         return *this;
     }
     t_ovl_points& add(const range_t& range) {
         critical_section_guard guard(_lock);
         _arr.push_back(interval(range.begin, range.end));
+        set_modified();
         return *this;
     }
 
     t_ovl_points& clear() {
         critical_section_guard guard(_lock);
         _arr.clear();
+        set_status(0);
         return *this;
     }
 
@@ -253,9 +257,28 @@ class t_ovl_points {
         return lres == rres;
     }
 
+    /**
+     *  // sketch
+     *  critical_section_guard guard(ovl.get_lock());
+     *  if (ovl.is_modified()) {
+     *    // do something
+     *    ovl.set_status(0);
+     *  }
+     */
+    critical_section& get_lock() { return _lock; }
+
+    enum flag_t {
+        modified = (1 << 0),
+    };
+    void set_modified() { _status |= modified; }
+    bool is_modified() { return _status & modified; }
+    void set_status(uint8 status) { _status = status; }
+    uint8 get_status() { return _status; }
+
    private:
     critical_section _lock;
     std::vector<interval> _arr;
+    uint8 _status;
 };
 
 }  // namespace hotplace

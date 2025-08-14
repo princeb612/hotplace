@@ -85,7 +85,8 @@ return_t tls_handshake_hello_verify_request::do_read_body(tls_direction_t dir, c
          */
 
         payload pl;
-        pl << new payload_member(uint16(0), true, constexpr_version) << new payload_member(uint8(0), constexpr_cookie_len)
+        pl << new payload_member(uint16(0), true, constexpr_version)  //
+           << new payload_member(uint8(0), constexpr_cookie_len)      //
            << new payload_member(binary_t(), constexpr_cookie);
         pl.set_reference_value(constexpr_cookie, constexpr_cookie_len);
         pl.read(stream, size, pos);
@@ -109,7 +110,8 @@ return_t tls_handshake_hello_verify_request::do_write_body(tls_direction_t dir, 
     __try2 {
         auto version = get_session()->get_tls_protection().get_lagacy_version();
         payload pl;
-        pl << new payload_member(uint16(0), true, constexpr_version) << new payload_member(uint8(_cookie.size()), constexpr_cookie_len)
+        pl << new payload_member(uint16(0), true, constexpr_version)           //
+           << new payload_member(uint8(_cookie.size()), constexpr_cookie_len)  //
            << new payload_member(_cookie, constexpr_cookie);
         pl.write(bin);
     }

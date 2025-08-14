@@ -277,6 +277,11 @@ void tls_advisor::load_etc() {
     _quic_streamid_types.insert({quic_stream_server_bidi, "Server-Initiated, Bidirectional"});
     _quic_streamid_types.insert({quic_stream_client_uni, "Client-Initiated, Unidirectional"});
     _quic_streamid_types.insert({quic_stream_server_uni, "Server-Initiated, Unidirectional"});
+
+    _protection_space_names.insert({protection_default, "default"});
+    _protection_space_names.insert({protection_initial, "initial"});
+    _protection_space_names.insert({protection_handshake, "handshake"});
+    _protection_space_names.insert({protection_application, "application"});
 }
 
 const tls_cipher_suite_t* tls_advisor::hintof_cipher_suite(uint16 code) {
@@ -816,6 +821,8 @@ return_t tls_advisor::negotiate_alpn(tls_handshake* handshake, const byte_t* alp
     __finally2 {}
     return ret;
 }
+
+std::string tls_advisor::protection_space_string(protection_space_t space) { return _protection_space_names[space]; }
 
 }  // namespace net
 }  // namespace hotplace

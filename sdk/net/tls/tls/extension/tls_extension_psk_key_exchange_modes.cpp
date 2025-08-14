@@ -41,7 +41,8 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
         binary_t mode;
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_modes) << new payload_member(binary_t(), constexpr_mode);
+            pl << new payload_member(uint8(0), constexpr_modes)  //
+               << new payload_member(binary_t(), constexpr_mode);
             pl.set_reference_value(constexpr_mode, constexpr_modes);
             pl.read(stream, endpos_extension(), pos);
 
@@ -86,7 +87,8 @@ return_t tls_extension_psk_key_exchange_modes::do_write_body(tls_direction_t dir
     }
     {
         payload pl;
-        pl << new payload_member(cbsize_modes, constexpr_modes) << new payload_member(bin_modes, constexpr_mode);
+        pl << new payload_member(cbsize_modes, constexpr_modes)  //
+           << new payload_member(bin_modes, constexpr_mode);
         pl.write(bin);
     }
     return ret;

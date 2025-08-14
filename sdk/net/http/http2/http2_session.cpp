@@ -184,15 +184,30 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
                     enable_push(push ? true : false);
                 }
 
-                http2_frame_settings resp_settings;
-
-                if (frame->get_flags()) {
-                    resp_settings.set_flags(h2_flag_ack);
-                } else {
-                    resp_settings.add(h2_settings_enable_push, 0).add(h2_settings_max_concurrent_streams, 100).add(h2_settings_initial_window_size, 0xa00000);
+                uint32 errorcode = 0;
+                if (push > 1) {
+                    // any value other than 0 or 1
+                    errorcode = h2_protocol_error;
                 }
 
-                resp_settings.write(bin_resp);
+                if (errorcode) {
+                    http2_frame_goaway goaway;
+                    goaway.set_stream_id(stream_id);
+                    goaway.set_errorcode(errorcode);
+                    goaway.write(bin_resp);
+                } else {
+                    http2_frame_settings resp_settings;
+
+                    if (frame->get_flags()) {
+                        resp_settings.set_flags(h2_flag_ack);
+                    } else {
+                        resp_settings.add(h2_settings_enable_push, push ? 1 : 0)
+                            .add(h2_settings_max_concurrent_streams, 100)
+                            .add(h2_settings_initial_window_size, 0xa00000);
+                    }
+
+                    resp_settings.write(bin_resp);
+                }
             } else if (h2_frame_t::h2_frame_push_promise == type) {
                 http2_frame_push_promise* frame_push_promise = (http2_frame_push_promise*)frame;
                 auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };

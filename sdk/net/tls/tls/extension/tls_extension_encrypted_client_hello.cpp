@@ -48,10 +48,14 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
 
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_client_hello_type) << new payload_member(uint16(0), true, constexpr_kdf)
-               << new payload_member(uint16(0), true, constexpr_aead) << new payload_member(uint8(0), constexpr_config_id)
-               << new payload_member(uint16(0), true, constexpr_enc_len) << new payload_member(binary_t(), constexpr_enc)
-               << new payload_member(uint16(0), true, constexpr_payload_len) << new payload_member(binary_t(), constexpr_payload);
+            pl << new payload_member(uint8(0), constexpr_client_hello_type)   //
+               << new payload_member(uint16(0), true, constexpr_kdf)          //
+               << new payload_member(uint16(0), true, constexpr_aead)         //
+               << new payload_member(uint8(0), constexpr_config_id)           //
+               << new payload_member(uint16(0), true, constexpr_enc_len)      //
+               << new payload_member(binary_t(), constexpr_enc)               //
+               << new payload_member(uint16(0), true, constexpr_payload_len)  //
+               << new payload_member(binary_t(), constexpr_payload);
             pl.set_reference_value(constexpr_enc, constexpr_enc_len);
             pl.set_reference_value(constexpr_payload, constexpr_payload_len);
             pl.read(stream, endpos_extension(), pos);

@@ -89,7 +89,9 @@ return_t quic_packet_1rtt::do_read(tls_direction_t dir, const byte_t* stream, si
             __leave2;
         }
 
-        session->get_quic_session().get_pkns(protection_application).add(get_pn());
+        if (get_quic_frames().is_significant()) {
+            session->get_quic_session().get_pkns(protection_application).add(get_pn());
+        }
     }
     __finally2 {}
     return ret;

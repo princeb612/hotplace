@@ -36,21 +36,38 @@ namespace net {
 
 class quic_frames {
    public:
+    /**
+     * @constructor
+     * @desc    MUST set_packet before read/write method
+     */
+    quic_frames();
+    /**
+     * @constructor
+     */
     quic_frames(quic_packet* packet);
 
     return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     return_t read(tls_direction_t dir, const binary_t& bin);
     return_t write(tls_direction_t dir, binary_t& bin);
 
+    /**
+     * t_tls_distinct_container
+     */
     return_t add(quic_frame* frame, bool upref = false);
     quic_frames& operator<<(quic_frame* frame);
     return_t for_each(std::function<return_t(quic_frame*)> func);
     quic_frame* get(uint8 type, bool upref = false);
     quic_frame* getat(size_t index, bool upref = false);
+    bool empty();
     size_t size();
     void clear();
 
     quic_packet* get_packet();
+    void set_packet(quic_packet* packet);
+    /**
+     * return true if there is any frame other than ACK, PADDING
+     */
+    bool is_significant();
 
    protected:
    private:

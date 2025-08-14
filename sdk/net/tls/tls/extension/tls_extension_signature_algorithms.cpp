@@ -52,7 +52,8 @@ return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, c
 
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_algorithms) << new payload_member(binary_t(), constexpr_algorithm);
+            pl << new payload_member(uint16(0), true, constexpr_algorithms)  //
+               << new payload_member(binary_t(), constexpr_algorithm);
             pl.set_reference_value(constexpr_algorithm, constexpr_algorithms);
             pl.read(stream, endpos_extension(), pos);
 
@@ -102,7 +103,8 @@ return_t tls_extension_signature_algorithms::do_write_body(tls_direction_t dir, 
         }
         {
             payload pl;
-            pl << new payload_member(cbsize_algorithms, true, constexpr_algorithms) << new payload_member(bin_algorithms, constexpr_algorithm);
+            pl << new payload_member(cbsize_algorithms, true, constexpr_algorithms)  //
+               << new payload_member(bin_algorithms, constexpr_algorithm);
             pl.write(bin);
         }
     }

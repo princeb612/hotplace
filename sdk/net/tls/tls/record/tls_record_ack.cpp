@@ -40,7 +40,8 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
         binary_t ack;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_ack_len) << new payload_member(binary_t(), constexpr_ack);
+            pl << new payload_member(uint16(0), true, constexpr_ack_len)  //
+               << new payload_member(binary_t(), constexpr_ack);
             pl.set_reference_value(constexpr_ack, constexpr_ack_len);
             pl.read(stream, size, pos);
 

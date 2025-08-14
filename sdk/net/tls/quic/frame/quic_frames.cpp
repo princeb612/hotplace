@@ -34,21 +34,22 @@
 namespace hotplace {
 namespace net {
 
-quic_frames::quic_frames(quic_packet* packet) : _packet(packet) {
-    if (nullptr == packet) {
-        throw exception(not_specified);
-    }
-}
+quic_frames::quic_frames() : _packet(nullptr) {}
+
+quic_frames::quic_frames(quic_packet* packet) : _packet(packet) {}
 
 return_t quic_frames::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto packet = get_packet();
+        if (nullptr == packet) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        auto packet = get_packet();
 
         while (pos < size) {
             uint64 value = 0;
@@ -95,6 +96,11 @@ return_t quic_frames::read(tls_direction_t dir, const binary_t& bin) {
 return_t quic_frames::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if (nullptr == get_packet()) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
         auto lambda = [&](quic_frame* frame) -> return_t { return frame->write(dir, bin); };
         for_each(lambda);
     }
@@ -115,11 +121,33 @@ quic_frame* quic_frames::get(uint8 type, bool upref) { return _frames.get(type, 
 
 quic_frame* quic_frames::getat(size_t index, bool upref) { return _frames.getat(index, upref); }
 
+bool quic_frames::empty() { return _frames.empty(); }
+
 size_t quic_frames::size() { return _frames.size(); }
 
 void quic_frames::clear() { return _frames.clear(); }
 
 quic_packet* quic_frames::get_packet() { return _packet; }
+
+void quic_frames::set_packet(quic_packet* packet) { _packet = packet; }
+
+bool quic_frames::is_significant() {
+    bool ret = false;
+    auto lambda = [&](quic_frame* frame) -> return_t {
+        auto type = frame->get_type();
+        switch (type) {
+            case quic_frame_type_padding:
+            case quic_frame_type_ack: {
+            } break;
+            default: {
+                ret = true;
+            } break;
+        }
+        return success;
+    };
+    for_each(lambda);
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

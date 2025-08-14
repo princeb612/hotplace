@@ -99,6 +99,8 @@ return_t quic_packets::for_each(std::function<return_t(quic_packet*)> func) { re
 
 quic_packet* quic_packets::getat(size_t index, bool upref) { return _packets.getat(index, upref); }
 
+bool quic_packets::empty() { return _packets.empty(); }
+
 size_t quic_packets::size() { return _packets.size(); }
 
 void quic_packets::clear() { _packets.clear(); }

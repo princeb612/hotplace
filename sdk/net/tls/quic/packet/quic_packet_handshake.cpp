@@ -123,7 +123,9 @@ return_t quic_packet_handshake::do_read(tls_direction_t dir, const byte_t* strea
             __leave2;
         }
 
-        session->get_quic_session().get_pkns(protection_handshake).add(get_pn());
+        if (get_quic_frames().is_significant()) {
+            session->get_quic_session().get_pkns(protection_handshake).add(get_pn());
+        }
     }
     __finally2 {}
     return ret;
@@ -234,7 +236,7 @@ void quic_packet_handshake::dump() {
         auto len = get_length();
         dbs.println(" > length %I64i", len);
         // packet number
-        dbs.println(" > packet number %08x", get_pn());
+        dbs.println(" > packet number 0x%08x (%i)", get_pn(), get_pn());
         // payload
         dbs.println(" > payload (len %zi)", _payload.size());
         dump_memory(_payload, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);

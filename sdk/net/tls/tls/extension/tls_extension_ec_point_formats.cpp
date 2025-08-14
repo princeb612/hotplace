@@ -59,7 +59,8 @@ return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const
 
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_len) << new payload_member(binary_t(0), constexpr_formats);
+            pl << new payload_member(uint8(0), constexpr_len)  //
+               << new payload_member(binary_t(0), constexpr_formats);
             pl.set_reference_value(constexpr_formats, constexpr_len);
             pl.read(stream, endpos_extension(), pos);
 
@@ -115,7 +116,8 @@ return_t tls_extension_ec_point_formats::do_write_body(tls_direction_t dir, bina
         }
         {
             payload pl;
-            pl << new payload_member(uint8(cbsize_formats), constexpr_len) << new payload_member(bin_formats, constexpr_formats);
+            pl << new payload_member(uint8(cbsize_formats), constexpr_len)  //
+               << new payload_member(bin_formats, constexpr_formats);
             pl.write(bin);
         }
     }

@@ -29,10 +29,11 @@ class quic_packets {
     return_t read(tls_session* session, tls_direction_t dir, const binary_t& bin);
     return_t write(tls_session* session, tls_direction_t dir, binary_t& bin);
 
-    return_t add(quic_packet* handshake, bool upref = false);
-    quic_packets& operator<<(quic_packet* handshake);
+    return_t add(quic_packet* packet, bool upref = false);
+    quic_packets& operator<<(quic_packet* packet);
     return_t for_each(std::function<return_t(quic_packet*)> func);
     quic_packet* getat(size_t index, bool upref = false);
+    bool empty();
     size_t size();
     void clear();
 

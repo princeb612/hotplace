@@ -60,7 +60,8 @@ return_t tls_extension_supported_groups::do_read_body(tls_direction_t dir, const
             //  } NamedCurveList;
 
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_curves) << new payload_member(binary_t(0), constexpr_curve);
+            pl << new payload_member(uint16(0), true, constexpr_curves)  //
+               << new payload_member(binary_t(0), constexpr_curve);
             pl.set_reference_value(constexpr_curve, constexpr_curves);
             pl.read(stream, endpos_extension(), pos);
 
@@ -114,7 +115,8 @@ return_t tls_extension_supported_groups::do_write_body(tls_direction_t dir, bina
         }
         {
             payload pl;
-            pl << new payload_member(uint16(cbsize_supported_groups), true, constexpr_curves) << new payload_member(bin_supported_groups, constexpr_curve);
+            pl << new payload_member(uint16(cbsize_supported_groups), true, constexpr_curves)  //
+               << new payload_member(bin_supported_groups, constexpr_curve);
             pl.write(bin);
         }
     }

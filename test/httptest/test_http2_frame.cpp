@@ -125,17 +125,18 @@ void test_http2_frame() {
 
     // GOAWAY
 
-    http2_frame_headers frame_goaway;
+    http2_frame_goaway frame_goaway;
     frame_goaway.set_stream_id(1);
-    frame_goaway.set_fragment(str2bin("protocol error cause of .... blah blah ..."));
+    frame_goaway.set_errorcode(h2_protocol_error);
+    frame_goaway.set_debug(str2bin("protocol error cause of .... blah blah ..."));
 
     // test
     {
         const char* expect_goaway =
-            "00 00 2A 01 00 00 00 00 01 70 72 6F 74 6F 63 6F "
-            "6C 20 65 72 72 6F 72 20 63 61 75 73 65 20 6F 66 "
-            "20 2E 2E 2E 2E 20 62 6C 61 68 20 62 6C 61 68 20 "
-            "2E 2E 2E -- -- -- -- -- -- -- -- -- -- -- -- -- ";
+            "00 00 32 07 00 00 00 00 01 00 00 00 00 00 00 00"   // ..2.............
+            "01 70 72 6F 74 6F 63 6F 6C 20 65 72 72 6F 72 20"   // .protocol error
+            "63 61 75 73 65 20 6F 66 20 2E 2E 2E 2E 20 62 6C"   // cause of .... bl
+            "61 68 20 62 6C 61 68 20 2E 2E 2E -- -- -- -- --";  // ah blah ...
 
         http2_frame_headers frame;
         do_test_http2_frame(&frame_goaway, &frame, "GOAWAY Frame", expect_goaway);

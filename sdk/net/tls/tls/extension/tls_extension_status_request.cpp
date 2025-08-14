@@ -41,8 +41,10 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
         binary_t request_ext_info;
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_cert_status_type) << new payload_member(uint16(), true, constexpr_responderid_info_len)
-               << new payload_member(binary_t(), constexpr_responderid_info) << new payload_member(uint16(0), true, constexpr_request_ext_info_len)
+            pl << new payload_member(uint8(0), constexpr_cert_status_type)             //
+               << new payload_member(uint16(), true, constexpr_responderid_info_len)   //
+               << new payload_member(binary_t(), constexpr_responderid_info)           //
+               << new payload_member(uint16(0), true, constexpr_request_ext_info_len)  //
                << new payload_member(binary_t(), constexpr_request_ext_info);
             pl.set_reference_value(constexpr_responderid_info, constexpr_responderid_info_len);
             pl.set_reference_value(constexpr_request_ext_info, constexpr_request_ext_info_len);

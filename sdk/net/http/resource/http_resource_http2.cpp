@@ -48,6 +48,22 @@ void http_resource::doload_resources_h2() {
         _h2_frame_settings.insert({h2_settings_max_frame_size, "SETTINGS_MAX_FRAME_SIZE"});
         _h2_frame_settings.insert({h2_settings_max_header_list_size, "SETTINGS_MAX_HEADER_LIST_SIZE"});
     }
+    if (_h2_error_codes.empty()) {
+        _h2_error_codes.insert({h2_no_error, "no error"});
+        _h2_error_codes.insert({h2_protocol_error, "protocol error detected"});
+        _h2_error_codes.insert({h2_internal_error, "internal error"});
+        _h2_error_codes.insert({h2_flow_control_error, "flow-control limits exceeded"});
+        _h2_error_codes.insert({h2_settings_timeout, "settings not acknowledged"});
+        _h2_error_codes.insert({h2_stream_closed, "frame received for closed stream"});
+        _h2_error_codes.insert({h2_frame_size_error, "frame size incorrect"});
+        _h2_error_codes.insert({h2_refused_stream, "stream not processed"});
+        _h2_error_codes.insert({h2_cancel, "stream cancelled"});
+        _h2_error_codes.insert({h2_compression_error, "compression state not updated"});
+        _h2_error_codes.insert({h2_connect_error, "TCP connection error for CONNECT method"});
+        _h2_error_codes.insert({h2_enhance_your_calm, "processing capacity exceeded"});
+        _h2_error_codes.insert({h2_inadequate_security, "negotiated TLS parameters not acceptable"});
+        _h2_error_codes.insert({h2_http_1_1_required, "use HTTP/1.1 for the request"});
+    }
 }
 
 std::string http_resource::get_h2_frame_name(uint8 type) {
@@ -93,6 +109,15 @@ std::string http_resource::get_h2_settings_name(uint16 type) {
     t_maphint<uint16, std::string> hint(_h2_frame_settings);
     hint.find(type, &name);
     return name;
+}
+
+std::string http_resource::get_h2_error_string(uint16 code) {
+    std::string ret_value;
+    auto iter = _h2_error_codes.find(code);
+    if (_h2_error_codes.end() != iter) {
+        ret_value = iter->second;
+    }
+    return ret_value;
 }
 
 http_static_table_entry h2_static_entries[] = {

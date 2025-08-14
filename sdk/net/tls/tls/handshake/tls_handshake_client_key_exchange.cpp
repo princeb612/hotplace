@@ -89,7 +89,8 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
             binary_t pubkey;
             {
                 payload pl;
-                pl << new payload_member(uint8(0), constexpr_pubkey_len) << new payload_member(binary_t(), constexpr_pubkey);
+                pl << new payload_member(uint8(0), constexpr_pubkey_len)  //
+                   << new payload_member(binary_t(), constexpr_pubkey);
                 pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
                 pl.read(stream, size, pos);
 
@@ -187,7 +188,8 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
 
         {
             payload pl;
-            pl << new payload_member(uint8(pubkey.size()), constexpr_pubkey_len) << new payload_member(pubkey, constexpr_pubkey);
+            pl << new payload_member(uint8(pubkey.size()), constexpr_pubkey_len)  //
+               << new payload_member(pubkey, constexpr_pubkey);
             pl.write(bin);
         }
 

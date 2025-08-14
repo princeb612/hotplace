@@ -29,7 +29,7 @@ constexpr char constexpr_length[] = "length";
 constexpr char constexpr_offset[] = "offset";
 constexpr char constexpr_crypto_data[] = "crypto data";
 
-quic_frame_crypto::quic_frame_crypto(quic_packet* packet) : quic_frame(quic_frame_type_crypto, packet) {}
+quic_frame_crypto::quic_frame_crypto(quic_packet* packet) : quic_frame(quic_frame_type_crypto, packet), _offset(0), _len(0) {}
 
 return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -90,6 +90,12 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
 
         size_t hpos = 0;
         while (errorcode_t::success == tls_dump_handshake(session, dir, &crypto_data[0], crypto_data.size(), hpos)) {
+            /**
+             * about refeeding the tls_context_fragment
+             *   see tls_handshake errorcode_t::fragmented
+             *   sample scenario.
+             *     EE CERT(fragment) CV FIN -> CERT(fragment) CV FIN
+             */
         }
     }
     __finally2 {}
@@ -100,25 +106,24 @@ return_t quic_frame_crypto::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     auto session = get_packet()->get_session();
 
-    binary_t crypto_data;
-    get_handshakes().write(session, dir, crypto_data);
+    // auto payload_size = bin.size();
 
     payload pl;
-    pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)             //
-       << new payload_member(new quic_encoded(uint64(0)), constexpr_offset)                   //
-       << new payload_member(new quic_encoded(uint64(crypto_data.size())), constexpr_length)  //
-       << new payload_member(crypto_data, constexpr_crypto_data);
+    pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)  //
+       << new payload_member(new quic_encoded(_offset), constexpr_offset)          //
+       << new payload_member(new quic_encoded(uint64(_len)), constexpr_length)     //
+       << new payload_member(_crypto_data, constexpr_crypto_data);
     pl.write(bin);
 
     return ret;
 }
 
-quic_frame_crypto& quic_frame_crypto::operator<<(tls_handshake* handshake) {
-    get_handshakes() << handshake;
+quic_frame_crypto& quic_frame_crypto::set(binary_t& fragment, uint64 offset) {
+    _offset = offset;
+    _len = fragment.size();
+    _crypto_data = fragment;
     return *this;
 }
-
-tls_handshakes& quic_frame_crypto::get_handshakes() { return _handshakes; }
 
 }  // namespace net
 }  // namespace hotplace

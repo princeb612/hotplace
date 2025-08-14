@@ -45,7 +45,7 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
-            dbs.println("  > frame %s 0x%x(%i) (size %zi) @0x%zx", tlsadvisor->quic_frame_type_string(type).c_str(), type, type, size, begin);
+            dbs.println("  > frame %s 0x%x(%i) @0x%zx", tlsadvisor->quic_frame_type_string(type).c_str(), type, type, begin);
             trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif
@@ -84,6 +84,7 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
 
 return_t quic_frame::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
+    auto snapshot = bin.size();
     __try2 {
         ret = do_write_body(dir, bin);
         if (errorcode_t::success != ret) {
@@ -92,7 +93,9 @@ return_t quic_frame::write(tls_direction_t dir, binary_t& bin) {
         ret = do_postprocess(dir);
     }
     __finally2 {
-        // do nothing
+        if (errorcode_t::success != ret) {
+            bin.resize(snapshot);  // rollback
+        }
     }
     return ret;
 }

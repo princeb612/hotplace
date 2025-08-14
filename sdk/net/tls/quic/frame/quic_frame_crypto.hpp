@@ -22,27 +22,16 @@ class quic_frame_crypto : public quic_frame {
    public:
     quic_frame_crypto(quic_packet* packet);
 
-    /**
-     * CRYPTO
-     *     Frame Type: CRYPTO (0x0000000000000006)
-     *     Offset: 4645
-     *     Length: 682
-     *     Crypto Data
-     *     TLSv1.3 Record Layer: Handshake Protocol: Multiple Handshake Messages
-     *         Handshake Protocol: Certificate (last fragment)
-     *         Handshake Protocol: Certificate
-     *         Handshake Protocol: Certificate Verify
-     *         Handshake Protocol: Finished
-     */
-    quic_frame_crypto& operator<<(tls_handshake* handshake);
-
-    tls_handshakes& get_handshakes();
+    quic_frame_crypto& set(binary_t& fragment, uint64 offset);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
-    tls_handshakes _handshakes;
+   private:
+    uint64 _offset;
+    uint64 _len;
+    binary_t _crypto_data;
 };
 
 }  // namespace net
