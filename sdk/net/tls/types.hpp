@@ -582,7 +582,7 @@ enum tls_flow_t {
  * @remarks
  *          TLS, DTLS
  *          RFC 9000 12.3.  Packet Numbers
- *          |           | space                  | cryptographic separation | protection space                  |
+ *          |           | space                  | cryptographic separation | protection space       |
  *          | TLS, DTLS | N/A                    | N/A                      | protection_default     |
  *          | QUIC      | initial space          | initial packets          | protection_initial     |
  *          | QUIC      | handshake space        | handshake packets        | protection_handshake   |

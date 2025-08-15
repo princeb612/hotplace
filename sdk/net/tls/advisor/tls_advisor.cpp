@@ -191,97 +191,20 @@ void tls_advisor::load_etc() {
         _session_status_codes.insert({item->code, item});
     }
 
-    _secret_names.insert({tls_secret_early_secret, "secret_early_secret"});
-    _secret_names.insert({tls_secret_master, "secret_master"});
-    _secret_names.insert({tls_secret_client_mac_key, "secret_client_mac_key"});
-    _secret_names.insert({tls_secret_server_mac_key, "secret_server_mac_key"});
-    _secret_names.insert({tls_secret_client_key, "secret_client_key"});
-    _secret_names.insert({tls_secret_client_iv, "secret_client_iv"});
-    _secret_names.insert({tls_secret_server_key, "secret_server_key"});
-    _secret_names.insert({tls_secret_server_iv, "secret_server_iv"});
-    _secret_names.insert({tls_secret_initial_quic, "secret_initial_quic"});
-    _secret_names.insert({tls_secret_initial_quic_client, "secret_initial_quic_client"});
-    _secret_names.insert({tls_secret_initial_quic_server, "secret_initial_quic_server"});
-    _secret_names.insert({tls_secret_initial_quic_client_key, "secret_initial_quic_client_key"});
-    _secret_names.insert({tls_secret_initial_quic_server_key, "secret_initial_quic_server_key"});
-    _secret_names.insert({tls_secret_initial_quic_client_iv, "secret_initial_quic_client_iv"});
-    _secret_names.insert({tls_secret_initial_quic_server_iv, "secret_initial_quic_server_iv"});
-    _secret_names.insert({tls_secret_initial_quic_client_hp, "secret_initial_quic_client_hp"});
-    _secret_names.insert({tls_secret_initial_quic_server_hp, "secret_initial_quic_server_hp"});
-    _secret_names.insert({tls_secret_handshake_derived, "secret_handshake_derived"});
-    _secret_names.insert({tls_secret_handshake, "secret_handshake"});
-    _secret_names.insert({tls_secret_c_hs_traffic, "secret_c_hs_traffic"});
-    _secret_names.insert({tls_secret_s_hs_traffic, "secret_s_hs_traffic"});
-    _secret_names.insert({tls_secret_handshake_client_key, "secret_handshake_client_key"});
-    _secret_names.insert({tls_secret_handshake_server_key, "secret_handshake_server_key"});
-    _secret_names.insert({tls_secret_handshake_client_iv, "secret_handshake_client_iv"});
-    _secret_names.insert({tls_secret_handshake_server_iv, "secret_handshake_server_iv"});
-    _secret_names.insert({tls_secret_handshake_client_sn_key, "secret_handshake_client_sn_key"});
-    _secret_names.insert({tls_secret_handshake_server_sn_key, "secret_handshake_server_sn_key"});
-    _secret_names.insert({tls_secret_handshake_quic_client_key, "secret_handshake_quic_client_key"});
-    _secret_names.insert({tls_secret_handshake_quic_server_key, "secret_handshake_quic_server_key"});
-    _secret_names.insert({tls_secret_handshake_quic_client_iv, "secret_handshake_quic_client_iv"});
-    _secret_names.insert({tls_secret_handshake_quic_server_iv, "secret_handshake_quic_server_iv"});
-    _secret_names.insert({tls_secret_handshake_quic_client_hp, "secret_handshake_quic_client_hp"});
-    _secret_names.insert({tls_secret_handshake_quic_server_hp, "secret_handshake_quic_server_hp"});
-    _secret_names.insert({tls_secret_c_e_traffic, "secret_c_e_traffic"});
-    _secret_names.insert({tls_secret_c_e_traffic_key, "secret_c_e_traffic_key"});
-    _secret_names.insert({tls_secret_c_e_traffic_iv, "secret_c_e_traffic_iv"});
-    _secret_names.insert({tls_secret_application_derived, "secret_application_derived"});
-    _secret_names.insert({tls_secret_application, "secret_application"});
-    _secret_names.insert({tls_secret_c_ap_traffic, "secret_c_ap_traffic"});
-    _secret_names.insert({tls_secret_s_ap_traffic, "secret_s_ap_traffic"});
-    _secret_names.insert({tls_secret_application_client_key, "secret_application_client_key"});
-    _secret_names.insert({tls_secret_application_server_key, "secret_application_server_key"});
-    _secret_names.insert({tls_secret_application_client_iv, "secret_application_client_iv"});
-    _secret_names.insert({tls_secret_application_server_iv, "secret_application_server_iv"});
-    _secret_names.insert({tls_secret_application_client_sn_key, "secret_application_client_sn_key"});
-    _secret_names.insert({tls_secret_application_server_sn_key, "secret_application_server_sn_key"});
-    _secret_names.insert({tls_secret_application_quic_client_key, "secret_application_quic_client_key"});
-    _secret_names.insert({tls_secret_application_quic_server_key, "secret_application_quic_server_key"});
-    _secret_names.insert({tls_secret_application_quic_client_iv, "secret_application_quic_client_iv"});
-    _secret_names.insert({tls_secret_application_quic_server_iv, "secret_application_quic_server_iv"});
-    _secret_names.insert({tls_secret_application_quic_client_hp, "secret_application_quic_client_hp"});
-    _secret_names.insert({tls_secret_application_quic_server_hp, "secret_application_quic_server_hp"});
-    _secret_names.insert({tls_secret_exp_master, "secret_exp_master"});
-    _secret_names.insert({tls_secret_e_exp_master, "secret_e_exp_master"});
-    _secret_names.insert({tls_secret_res_master, "secret_res_master"});
-    _secret_names.insert({tls_secret_resumption_master, "secret_resumption_master"});
-    _secret_names.insert({tls_secret_resumption, "secret_resumption"});
-    _secret_names.insert({tls_secret_resumption_early, "secret_resumption_early"});
-    _secret_names.insert({tls_context_shared_secret, "context_shared_secret"});
-    _secret_names.insert({tls_context_transcript_hash, "context_transcript_hash"});
-    _secret_names.insert({tls_context_empty_hash, "context_empty_hash"});
-    _secret_names.insert({tls_context_client_hello, "context_client_hello"});
-    _secret_names.insert({tls_context_server_hello, "context_server_hello"});
-    _secret_names.insert({tls_context_server_finished, "context_server_finished"});
-    _secret_names.insert({tls_context_client_finished, "context_client_finished"});
-    _secret_names.insert({tls_context_client_hello_random, "context_client_hello_random"});
-    _secret_names.insert({tls_context_server_hello_random, "context_server_hello_random"});
-    _secret_names.insert({tls_context_server_key_exchange, "context_server_key_exchange"});
-    _secret_names.insert({tls_context_client_key_exchange, "context_client_key_exchange"});
-    _secret_names.insert({tls_context_session_id, "context_session_id"});
-    _secret_names.insert({tls_context_cookie, "context_cookie"});
-    _secret_names.insert({tls_context_nonce_explicit, "context_nonce_explicit"});
-    _secret_names.insert({tls_context_quic_dcid, "context_quic_dcid"});
-    _secret_names.insert({tls_context_client_verifydata, "context_client_verifydata"});
-    _secret_names.insert({tls_context_server_verifydata, "context_server_verifydata"});
-    _secret_names.insert({tls_context_fragment, "context_fragment"});
-    _secret_names.insert({tls_context_new_session_ticket, "context_new_session_ticket"});
-    _secret_names.insert({tls_context_resumption_binder_key, "context_resumption_binder_key"});
-    _secret_names.insert({tls_context_resumption_finished_key, "context_resumption_finished_key"});
-    _secret_names.insert({tls_context_resumption_finished, "context_resumption_finished"});
-    _secret_names.insert({tls_context_resumption_binder_hash, "context_resumption_binder_hash"});
+    for (auto i = 0; i < sizeof_tls_secret_codes; i++) {
+        auto item = tls_secret_codes + i;
+        _secret_codes.insert({item->code, item});
+    }
 
-    _quic_streamid_types.insert({quic_stream_client_bidi, "Client-Initiated, Bidirectional"});
-    _quic_streamid_types.insert({quic_stream_server_bidi, "Server-Initiated, Bidirectional"});
-    _quic_streamid_types.insert({quic_stream_client_uni, "Client-Initiated, Unidirectional"});
-    _quic_streamid_types.insert({quic_stream_server_uni, "Server-Initiated, Unidirectional"});
+    for (auto i = 0; i < sizeof_tls_quic_stream_id_codes; i++) {
+        auto item = tls_quic_stream_id_codes + i;
+        _quic_stream_id_codes.insert({item->code, item});
+    }
 
-    _protection_space_names.insert({protection_default, "default"});
-    _protection_space_names.insert({protection_initial, "initial"});
-    _protection_space_names.insert({protection_handshake, "handshake"});
-    _protection_space_names.insert({protection_application, "application"});
+    for (auto i = 0; i < sizeof_tls_protection_space_codes; i++) {
+        auto item = tls_protection_space_codes + i;
+        _protection_space_codes.insert({item->code, item});
+    }
 }
 
 const tls_cipher_suite_t* tls_advisor::hintof_cipher_suite(uint16 code) {
@@ -484,9 +407,10 @@ std::string tls_advisor::quic_packet_type_string(uint8 code) {
 
 std::string tls_advisor::nameof_secret(tls_secret_t secret) {
     std::string value;
-    auto iter = _secret_names.find(secret);
-    if (_secret_names.end() != iter) {
-        value = iter->second;
+    auto iter = _secret_codes.find(secret);
+    if (_secret_codes.end() != iter) {
+        auto item = iter->second;
+        value = item->desc;
     }
     return value;
 }
@@ -494,9 +418,20 @@ std::string tls_advisor::nameof_secret(tls_secret_t secret) {
 std::string tls_advisor::quic_streamid_type_string(uint64 streamid) {
     std::string value;
     uint8 mask = streamid & 0x3;
-    auto iter = _quic_streamid_types.find(mask);
-    if (_quic_streamid_types.end() != iter) {
-        value = iter->second;
+    auto iter = _quic_stream_id_codes.find(mask);
+    if (_quic_stream_id_codes.end() != iter) {
+        auto item = iter->second;
+        value = item->desc;
+    }
+    return value;
+}
+
+std::string tls_advisor::protection_space_string(protection_space_t code) {
+    std::string value;
+    auto iter = _protection_space_codes.find(code);
+    if (_protection_space_codes.end() != iter) {
+        auto item = iter->second;
+        value = item->desc;
     }
     return value;
 }
@@ -821,8 +756,6 @@ return_t tls_advisor::negotiate_alpn(tls_handshake* handshake, const byte_t* alp
     __finally2 {}
     return ret;
 }
-
-std::string tls_advisor::protection_space_string(protection_space_t space) { return _protection_space_names[space]; }
 
 }  // namespace net
 }  // namespace hotplace

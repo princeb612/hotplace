@@ -9,10 +9,12 @@
 
 #include "sample.hpp"
 
+static int max_udp_payload_size = 1200;
+
 void construct_quic_initial_client_hello(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
-    auto lambda = [](tls_handshake* handshake, tls_direction_t dir) -> return_t {
+    auto lambda = [&](tls_handshake* handshake, tls_direction_t dir) -> return_t {
         return_t ret = errorcode_t::success;
         __try2 {
             if (nullptr == handshake) {
@@ -21,12 +23,14 @@ void construct_quic_initial_client_hello(tls_session* session, tls_direction_t d
             }
 
             {
+                auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+
                 auto quic_params = new tls_extension_quic_transport_parameters(handshake);
                 (*quic_params)
                     .set(quic_param_disable_active_migration, binary_t())
                     .set(quic_param_initial_source_connection_id, binary_t())
                     .set(quic_param_max_idle_timeout, 120000)
-                    .set(quic_param_max_udp_payload_size, 1200)
+                    .set(quic_param_max_udp_payload_size, max_payload_size)
                     .set(quic_param_active_connection_id_limit, 2)
                     .set(quic_param_initial_max_data, 0xc0000)
                     .set(quic_param_initial_max_stream_data_bidi_local, 0x80000)
@@ -60,13 +64,17 @@ void construct_quic_initial_client_hello(tls_session* session, tls_direction_t d
 
     tls_composer::construct_client_hello(&handshake, session, lambda, tls_13, tls_13);
 
-    publisher.set_session(session)
-        .set_payload_size(1200)
-        .set_flags(quic_packet_flag_t::quic_pad_packet)  // add a padding frame and make a packet 1200 bytes
-        .add(handshake)
-        .publish(dir, [&](tls_session* session, binary_t& packet) -> void { bins.push_back(packet); });
+    auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
 
-    _test_case.assert(true, __FUNCTION__, "%s", message);
+    // CRYPTO[CH], PADDING
+    publisher.set_session(session)
+        .set_payload_size(max_payload_size)
+        .set_flags(quic_packet_flag_t::quic_pad_packet)  // add a padding frame and make a packet max_udp_payload_size
+        .add(handshake)
+        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+            bins.push_back(packet);
+            _test_case.assert(true, __FUNCTION__, "[%zi] %s", packet.size(), message);
+        });
 }
 
 void construct_quic_initial_server_hello(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
@@ -77,13 +85,17 @@ void construct_quic_initial_server_hello(tls_session* session, tls_direction_t d
 
     tls_composer::construct_server_hello(&handshake, session, nullptr, tls_13, tls_13);
 
+    auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+
+    // ACK, CRYPTO[SH], PADDING
     publisher.set_session(session)
-        .set_payload_size(1200)
+        .set_payload_size(max_payload_size)
         .set_flags(quic_ack_packet | quic_pad_packet)
         .add(handshake)
-        .publish(dir, [&](tls_session* session, binary_t& packet) -> void { bins.push_back(packet); });
-
-    _test_case.assert(true, __FUNCTION__, "%s", message);
+        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+            bins.push_back(packet);
+            _test_case.assert(true, __FUNCTION__, "[%zi] %s", packet.size(), message);
+        });
 }
 
 void construct_quic_handshake_ee_cert_cv_fin(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
@@ -91,7 +103,9 @@ void construct_quic_handshake_ee_cert_cv_fin(tls_session* session, tls_direction
 
     quic_packet_publisher publisher;
 
-    publisher.set_session(session).set_payload_size(1200).set_flags(quic_ack_packet | quic_pad_packet);
+    auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+
+    publisher.set_session(session).set_payload_size(max_payload_size).set_flags(quic_ack_packet | quic_pad_packet);
 
     {
         // EE
@@ -152,9 +166,14 @@ void construct_quic_handshake_ee_cert_cv_fin(tls_session* session, tls_direction
         }
     }
 
-    publisher.publish(dir, [&](tls_session* session, binary_t& packet) -> void { bins.push_back(packet); });
-
-    _test_case.assert(true, __FUNCTION__, "%s", message);
+    // CRYPTO[EE, CERT]
+    // CRYPTO[CERT]
+    // ...
+    // CRYPTO[CERT, CV, FIN]
+    publisher.publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+        bins.push_back(packet);
+        _test_case.assert(true, __FUNCTION__, "[%zi] %s", packet.size(), message);
+    });
 }
 
 void construct_quic_handshake_fin(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
@@ -162,13 +181,17 @@ void construct_quic_handshake_fin(tls_session* session, tls_direction_t dir, std
 
     quic_packet_publisher publisher;
 
+    auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+
+    // ACK, CRYPTO[FIN], PADDING
     publisher.set_session(session)
-        .set_payload_size(1200)
+        .set_payload_size(max_payload_size)
         .set_flags(quic_ack_packet | quic_pad_packet)
         .add(new tls_handshake_finished(session))
-        .publish(dir, [&](tls_session* session, binary_t& packet) -> void { bins.push_back(packet); });
-
-    _test_case.assert(true, __FUNCTION__, "%s", message);
+        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+            bins.push_back(packet);
+            _test_case.assert(true, __FUNCTION__, "[%zi] %s", packet.size(), message);
+        });
 }
 
 void construct_quic_ack(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
@@ -176,12 +199,16 @@ void construct_quic_ack(tls_session* session, tls_direction_t dir, std::list<bin
 
     quic_packet_publisher publisher;
 
-    publisher.set_session(session)
-        .set_payload_size(1200)
-        .set_flags(quic_ack_packet | quic_pad_packet)
-        .publish(dir, [&](tls_session* session, binary_t& packet) -> void { bins.push_back(packet); });
+    auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
 
-    _test_case.assert(true, __FUNCTION__, "%s", message);
+    // ACK, PADDING
+    publisher.set_session(session)
+        .set_payload_size(max_payload_size)
+        .set_flags(quic_ack_packet | quic_pad_packet)
+        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+            bins.push_back(packet);
+            _test_case.assert(true, __FUNCTION__, "[%zi] %s", packet.size(), message);
+        });
 }
 
 return_t send_packet(tls_session* session, tls_direction_t dir, const std::list<binary_t>& bins, const char* message) {
@@ -189,8 +216,10 @@ return_t send_packet(tls_session* session, tls_direction_t dir, const std::list<
     for (auto item : bins) {
         quic_packets packets;
         ret = packets.read(session, dir, item);
+        // TODO
+        // goal condition (item.size() <= max_udp_payload_size)
+        _test_case.assert(true, __FUNCTION__, "[%zi] %s", item.size(), message);
     }
-    _test_case.assert(true, __FUNCTION__, "%s", message);
     return ret;
 }
 
@@ -217,6 +246,9 @@ void test_construct_quic() {
         std::list<binary_t> bins;
         tls_session session_client(session_type_quic);
         tls_session session_server(session_type_quic);
+
+        session_client.get_quic_session().get_setting().set(quic_param_max_udp_payload_size, max_udp_payload_size);
+        session_server.get_quic_session().get_setting().set(quic_param_max_udp_payload_size, max_udp_payload_size);
 
         // set PKN for a test
         session_client.set_recordno(from_client, 10, protection_initial);

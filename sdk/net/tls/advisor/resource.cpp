@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/net/tls/quic/types.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 
@@ -41,6 +42,112 @@ define_tls_variable(session_status_code) = {
     {session_status_server_close_notified, "server_close_notify"},
 };
 define_tls_sizeof_variable(session_status_code);
+
+define_tls_variable(secret_code) = {
+    {tls_secret_early_secret, "secret_early_secret"},
+    {tls_secret_master, "secret_master"},
+    {tls_secret_client_mac_key, "secret_client_mac_key"},
+    {tls_secret_server_mac_key, "secret_server_mac_key"},
+    {tls_secret_client_key, "secret_client_key"},
+    {tls_secret_client_iv, "secret_client_iv"},
+    {tls_secret_server_key, "secret_server_key"},
+    {tls_secret_server_iv, "secret_server_iv"},
+    {tls_secret_initial_quic, "secret_initial_quic"},
+    {tls_secret_initial_quic_client, "secret_initial_quic_client"},
+    {tls_secret_initial_quic_server, "secret_initial_quic_server"},
+    {tls_secret_initial_quic_client_key, "secret_initial_quic_client_key"},
+    {tls_secret_initial_quic_server_key, "secret_initial_quic_server_key"},
+    {tls_secret_initial_quic_client_iv, "secret_initial_quic_client_iv"},
+    {tls_secret_initial_quic_server_iv, "secret_initial_quic_server_iv"},
+    {tls_secret_initial_quic_client_hp, "secret_initial_quic_client_hp"},
+    {tls_secret_initial_quic_server_hp, "secret_initial_quic_server_hp"},
+    {tls_secret_handshake_derived, "secret_handshake_derived"},
+    {tls_secret_handshake, "secret_handshake"},
+    {tls_secret_c_hs_traffic, "secret_c_hs_traffic"},
+    {tls_secret_s_hs_traffic, "secret_s_hs_traffic"},
+    {tls_secret_handshake_client_key, "secret_handshake_client_key"},
+    {tls_secret_handshake_server_key, "secret_handshake_server_key"},
+    {tls_secret_handshake_client_iv, "secret_handshake_client_iv"},
+    {tls_secret_handshake_server_iv, "secret_handshake_server_iv"},
+    {tls_secret_handshake_client_sn_key, "secret_handshake_client_sn_key"},
+    {tls_secret_handshake_server_sn_key, "secret_handshake_server_sn_key"},
+    {tls_secret_handshake_quic_client_key, "secret_handshake_quic_client_key"},
+    {tls_secret_handshake_quic_server_key, "secret_handshake_quic_server_key"},
+    {tls_secret_handshake_quic_client_iv, "secret_handshake_quic_client_iv"},
+    {tls_secret_handshake_quic_server_iv, "secret_handshake_quic_server_iv"},
+    {tls_secret_handshake_quic_client_hp, "secret_handshake_quic_client_hp"},
+    {tls_secret_handshake_quic_server_hp, "secret_handshake_quic_server_hp"},
+    {tls_secret_c_e_traffic, "secret_c_e_traffic"},
+    {tls_secret_c_e_traffic_key, "secret_c_e_traffic_key"},
+    {tls_secret_c_e_traffic_iv, "secret_c_e_traffic_iv"},
+    {tls_secret_application_derived, "secret_application_derived"},
+    {tls_secret_application, "secret_application"},
+    {tls_secret_c_ap_traffic, "secret_c_ap_traffic"},
+    {tls_secret_s_ap_traffic, "secret_s_ap_traffic"},
+    {tls_secret_application_client_key, "secret_application_client_key"},
+    {tls_secret_application_server_key, "secret_application_server_key"},
+    {tls_secret_application_client_iv, "secret_application_client_iv"},
+    {tls_secret_application_server_iv, "secret_application_server_iv"},
+    {tls_secret_application_client_sn_key, "secret_application_client_sn_key"},
+    {tls_secret_application_server_sn_key, "secret_application_server_sn_key"},
+    {tls_secret_application_quic_client_key, "secret_application_quic_client_key"},
+    {tls_secret_application_quic_server_key, "secret_application_quic_server_key"},
+    {tls_secret_application_quic_client_iv, "secret_application_quic_client_iv"},
+    {tls_secret_application_quic_server_iv, "secret_application_quic_server_iv"},
+    {tls_secret_application_quic_client_hp, "secret_application_quic_client_hp"},
+    {tls_secret_application_quic_server_hp, "secret_application_quic_server_hp"},
+    {tls_secret_exp_master, "secret_exp_master"},
+    {tls_secret_e_exp_master, "secret_e_exp_master"},
+    {tls_secret_res_master, "secret_res_master"},
+    {tls_secret_resumption_master, "secret_resumption_master"},
+    {tls_secret_resumption, "secret_resumption"},
+    {tls_secret_resumption_early, "secret_resumption_early"},
+    {tls_context_shared_secret, "context_shared_secret"},
+    {tls_context_transcript_hash, "context_transcript_hash"},
+    {tls_context_empty_hash, "context_empty_hash"},
+    {tls_context_client_hello, "context_client_hello"},
+    {tls_context_server_hello, "context_server_hello"},
+    {tls_context_server_finished, "context_server_finished"},
+    {tls_context_client_finished, "context_client_finished"},
+    {tls_context_client_hello_random, "context_client_hello_random"},
+    {tls_context_server_hello_random, "context_server_hello_random"},
+    {tls_context_server_key_exchange, "context_server_key_exchange"},
+    {tls_context_client_key_exchange, "context_client_key_exchange"},
+    {tls_context_session_id, "context_session_id"},
+    {tls_context_cookie, "context_cookie"},
+    {tls_context_nonce_explicit, "context_nonce_explicit"},
+    {tls_context_alpn, "context_alpn"},
+    {tls_context_client_verifydata, "context_client_verifydata"},
+    {tls_context_server_verifydata, "context_server_verifydata"},
+    {tls_context_segment, "context_segment"},
+    {tls_context_fragment, "context_fragment"},
+    {tls_context_new_session_ticket, "context_new_session_ticket"},
+    {tls_context_resumption_binder_key, "context_resumption_binder_key"},
+    {tls_context_resumption_finished_key, "context_resumption_finished_key"},
+    {tls_context_resumption_finished, "context_resumption_finished"},
+    {tls_context_resumption_binder_hash, "context_resumption_binder_hash"},
+    {tls_context_quic_dcid, "context_quic_dcid"},
+    {tls_context_client_cid, "context_client_cid"},
+    {tls_context_server_cid, "context_server_cid"},
+    {tls_context_dtls_cookie, "context_dtls_cookie"},
+};
+define_tls_sizeof_variable(secret_code);
+
+define_tls_variable(quic_stream_id_code) = {
+    {quic_stream_client_bidi, "Client-Initiated, Bidirectional"},
+    {quic_stream_server_bidi, "Server-Initiated, Bidirectional"},
+    {quic_stream_client_uni, "Client-Initiated, Unidirectional"},
+    {quic_stream_server_uni, "Server-Initiated, Unidirectional"},
+};
+define_tls_sizeof_variable(quic_stream_id_code);
+
+define_tls_variable(protection_space_code) = {
+    {protection_default, "default"},
+    {protection_initial, "initial"},
+    {protection_handshake, "handshake"},
+    {protection_application, "application"},
+};
+define_tls_sizeof_variable(protection_space_code);
 
 #if 0
 

@@ -14,6 +14,7 @@
 
 #include <queue>
 #include <sdk/base/basic/binaries.hpp>
+#include <sdk/base/basic/keyvalue.hpp>
 #include <sdk/base/system/critical_section.hpp>
 #include <sdk/net/http/qpack/qpack_dynamic_table.hpp>
 #include <sdk/net/http/qpack/qpack_encoder.hpp>
@@ -28,6 +29,8 @@ class quic_session {
     quic_session();
     ~quic_session();
 
+    // setting
+    t_key_value<uint64, uint64>& get_setting();
     // settings, headers
     qpack_dynamic_table& get_dynamic_table();
     // ack
@@ -43,6 +46,8 @@ class quic_session {
     void clear(uint64 streamid);
 
    private:
+    // setting
+    t_key_value<uint64, uint64> _setting;
     // settings, headers
     qpack_dynamic_table _qpack_dyntable;
     // ack

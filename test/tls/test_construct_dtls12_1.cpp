@@ -560,22 +560,32 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
 
 void test_construct_dtls12_1() {
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256");
-    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384");
-    do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256");
-    do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384");
-
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384");
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384");
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256");
+    do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256");
+    do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256");
+    do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384");
+    do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384");
+    do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256");
+    do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384");
     do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256");
 
-#if 1
-    // no test vector
-    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256");
-    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384");
+    // indirectly tested
+    // TLS 1.2, httpserver1, curl
 
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_128_CCM");
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_256_CCM");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256");
+    do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384");
+    do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256");
+    do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384");
+
+#if 1
+    // curl - no ciphers available
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8");
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8");
 #endif

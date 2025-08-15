@@ -97,29 +97,17 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
         // ack
         if (quic_ack_packet & get_flags()) {
             auto lambda_ack = [&](tls_session* session, protection_space_t space) -> return_t {
-                return_t test = success;
                 auto& pkns = session->get_quic_session().get_pkns(space);
                 critical_section_guard guard(pkns.get_lock());
-                if (false == pkns.is_modified()) {
-                    test = do_nothing;
-                } else {
+                if (pkns.is_modified()) {
                     spaces.insert(space);
                 }
-                return test;
+                return success;
             };
 
-            ret = lambda_ack(get_session(), protection_initial);
-            if (errorcode_t::success == ret) {
-                __leave2;
-            }
-            ret = lambda_ack(get_session(), protection_handshake);
-            if (errorcode_t::success == ret) {
-                __leave2;
-            }
-            ret = lambda_ack(get_session(), protection_application);
-            if (errorcode_t::success == ret) {
-                __leave2;
-            }
+            lambda_ack(get_session(), protection_initial);
+            lambda_ack(get_session(), protection_handshake);
+            lambda_ack(get_session(), protection_application);
         }
     }
     __finally2 {}
@@ -129,14 +117,6 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
 return_t quic_packet_publisher::publish_space(protection_space_t space, tls_direction_t dir, std::list<binary_t>& container) {
     return_t ret = errorcode_t::success;
     __try2 {
-#if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("publish QUIC");
-            trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
-        }
-#endif
-
         auto session = get_session();
         auto tlsadvisor = tls_advisor::get_instance();
         quic_packet_t type = quic_packet_type_initial;
@@ -155,72 +135,49 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
         quic_packet_builder packet_builder;
         quic_frame_builder frame_builder;
 
-        auto packet = packet_builder.set(type).set_session(session).set(dir).construct().build();
-        if (packet) {
-            // ack
-            if (quic_ack_packet & get_flags()) {
-                auto& pkns = session->get_quic_session().get_pkns(space);
-                critical_section_guard guard(pkns.get_lock());
-                if (pkns.is_modified()) {
-                    auto frame = (quic_frame_ack*)frame_builder.set(quic_frame_type_ack).set(packet).build();
-                    frame->set_protection_level(space);
-                    *packet << frame;
-#if defined DEBUG
-                    if (istraceable(trace_category_net)) {
-                        basic_stream dbs;
-                        dbs.println("+ ACK");
-                        trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
-                    }
-#endif
-                }
-            }
-
-            // TODO
-            // - split
-            {
-                if (false == get_handshakes().empty()) {
-                    binary_t bin;
-                    ret = get_handshakes().for_each([&](tls_handshake* handshake) -> return_t {
-                        handshake->write(dir, bin);
-#if defined DEBUG
-                        if (istraceable(trace_category_net)) {
-                            basic_stream dbs;
-                            dbs.println("+ CRYPTO %s", tlsadvisor->handshake_type_string(handshake->get_type()).c_str());
-                            trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
-                        }
-#endif
-                        return success;
-                    });
-
-                    auto frame = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
-                    if (frame) {
-                        frame->set(bin, 0);
-                    }
-                    *packet << frame;
-                }
-            }
-
-            // padding
-            if (get_flags() & quic_pad_packet) {
-                // if max_size is set, fill 0 upto max_size
-                auto frame = (quic_frame_padding*)frame_builder.set(quic_frame_type_padding).set(packet).build();
-                frame->pad(get_payload_size(), quic_pad_packet);
-                *packet << frame;
-#if defined DEBUG
-                if (istraceable(trace_category_net)) {
-                    basic_stream dbs;
-                    dbs.println("+ PADDING");
-                    trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
-                }
-#endif
-            }
-
-            binary_t bin;
-            packet->write(dir, bin);
-            container.push_back(bin);
-
-            packet->release();
+        binary_t crypto_data;
+        size_t offset = 0;
+        external_crypto_data extcd;
+        if (false == get_handshakes().empty()) {
+            get_handshakes().for_each([&](tls_handshake* handshake) -> return_t { return handshake->write(dir, crypto_data); });
+            extcd.set(&crypto_data[0], crypto_data.size(), offset);
         }
+
+        do {
+            auto packet = packet_builder.set(type).set_session(session).set(dir).construct().build();
+            if (packet) {
+                // ack
+                if (quic_ack_packet & get_flags()) {
+                    auto& pkns = session->get_quic_session().get_pkns(space);
+                    critical_section_guard guard(pkns.get_lock());
+                    if (pkns.is_modified()) {
+                        auto frame = (quic_frame_ack*)frame_builder.set(quic_frame_type_ack).set(packet).build();
+                        frame->set_protection_level(space);
+                        *packet << frame;
+                    }
+                }
+
+                if (false == crypto_data.empty()) {
+                    auto frame = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
+                    frame->refer(&extcd);
+                    *packet << frame;
+                }
+
+                // padding
+                if (get_flags() & quic_pad_packet) {
+                    // if max_size is set, fill 0 upto max_size
+                    auto frame = (quic_frame_padding*)frame_builder.set(quic_frame_type_padding).set(packet).build();
+                    frame->pad(get_payload_size(), quic_pad_packet);
+                    *packet << frame;
+                }
+
+                binary_t bin;
+                packet->write(dir, bin);
+                container.push_back(bin);
+
+                packet->release();
+            }
+        } while (extcd.pos < extcd.size);
     }
     __finally2 {}
     return ret;

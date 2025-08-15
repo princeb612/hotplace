@@ -81,6 +81,9 @@ declare_tls_resource(aead_alg_code, uint16);
 
 // etc.
 declare_tls_resource(session_status_code, uint32);
+declare_tls_resource(secret_code, tls_secret_t);
+declare_tls_resource(quic_stream_id_code, uint8);  // quic_stream_id_t
+declare_tls_resource(protection_space_code, protection_space_t);
 
 enum tls_version_hint_flag_t : uint8 {
     flag_kindof_tls = (1 << 0),
@@ -215,7 +218,7 @@ class tls_advisor {
     std::string quic_packet_type_string(uint8 code);
     std::string nameof_secret(tls_secret_t secret);
     std::string quic_streamid_type_string(uint64 streamid);
-    std::string protection_space_string(protection_space_t space);
+    std::string protection_space_string(protection_space_t code);
 
     bool is_kindof_tls13(uint16 ver);
     bool is_kindof_tls12(uint16 ver);
@@ -314,11 +317,10 @@ class tls_advisor {
     std::map<uint16, const tls_version_hint_t*> _tls_version;
     std::map<uint8, std::string> _cert_status_types;
     std::map<uint8, const tls_quic_packet_type_code_t*> _quic_packet_type_codes;
-    std::map<tls_secret_t, std::string> _secret_names;
-    std::map<uint8, std::string> _quic_streamid_types;
-
+    std::map<tls_secret_t, const tls_secret_code_t*> _secret_codes;
+    std::map<uint8, const tls_quic_stream_id_code_t*> _quic_stream_id_codes;  // quic_stream_id_t
+    std::map<protection_space_t, const tls_protection_space_code_t*> _protection_space_codes;
     std::map<uint32, const tls_session_status_code_t*> _session_status_codes;
-    std::map<protection_space_t, std::string> _protection_space_names;
 
     std::set<uint16> _ciphersuites;
     binary_t _prot;

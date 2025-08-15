@@ -72,6 +72,12 @@ int main(int argc, char** argv) {
         auto sslkeylog = sslkeylog_exporter::get_instance();
         sslkeylog->set(lambda);
     }
+    if (option.trial) {
+        // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
+        load_certificate("rsa.crt", "rsa.key", nullptr);
+        // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
+        load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
+    }
 
     if (option.run) {
 #if defined _WIN32 || defined _WIN64

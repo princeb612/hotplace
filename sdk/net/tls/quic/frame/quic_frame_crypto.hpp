@@ -17,21 +17,35 @@
 namespace hotplace {
 namespace net {
 
+struct external_crypto_data {
+    const byte_t* stream;
+    size_t size;
+    size_t pos;
+
+    external_crypto_data() : stream(nullptr), size(0), pos(0) {}
+    external_crypto_data(const byte_t* s, size_t z, size_t p) : stream(s), size(z), pos(p) {}
+    void set(const byte_t* s, size_t z, size_t p) {
+        stream = s;
+        size = z;
+        pos = p;
+    }
+    void setpos(size_t p) { pos = p; }
+};
+
 // RFC 9000 19.6.  CRYPTO Frames
 class quic_frame_crypto : public quic_frame {
    public:
     quic_frame_crypto(quic_packet* packet);
 
-    quic_frame_crypto& set(binary_t& fragment, uint64 offset);
+    return_t refer(external_crypto_data* data);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
+    virtual return_t do_write_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, binary_t& bin);
 
    private:
-    uint64 _offset;
-    uint64 _len;
-    binary_t _crypto_data;
+    external_crypto_data* _extcd;
 };
 
 }  // namespace net

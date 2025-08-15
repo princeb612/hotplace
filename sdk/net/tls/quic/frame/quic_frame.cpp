@@ -100,6 +100,24 @@ return_t quic_frame::write(tls_direction_t dir, binary_t& bin) {
     return ret;
 }
 
+return_t quic_frame::write(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    auto snapshot = bin.size();
+    __try2 {
+        ret = do_write_body(dir, stream, size, pos, bin);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = do_postprocess(dir);
+    }
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            bin.resize(snapshot);  // rollback
+        }
+    }
+    return ret;
+}
+
 return_t quic_frame::do_preprocess(tls_direction_t dir) { return errorcode_t::success; }
 
 return_t quic_frame::do_postprocess(tls_direction_t dir) { return errorcode_t::success; }
@@ -107,6 +125,8 @@ return_t quic_frame::do_postprocess(tls_direction_t dir) { return errorcode_t::s
 return_t quic_frame::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::success; }
 
 return_t quic_frame::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
+
+return_t quic_frame::do_write_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, binary_t& bin) { return errorcode_t::success; }
 
 quic_frame_t quic_frame::get_type() { return _type; }
 

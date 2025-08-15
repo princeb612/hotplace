@@ -106,6 +106,7 @@ class payload_member {
     payload_member(uint128 value, bool bigendian, const char* name = nullptr, const char* group = nullptr);
 #endif
     payload_member(const binary_t& value, const char* name = nullptr, const char* group = nullptr);
+    payload_member(const byte_t* stream, size_t size, bool alloc, const char* name = nullptr, const char* group = nullptr);
     payload_member(const std::string& value, const char* name = nullptr, const char* group = nullptr);
     payload_member(const stream_t* value, const char* name = nullptr, const char* group = nullptr);
     payload_member(payload_encoded* value, const char* name = nullptr, const char* group = nullptr);

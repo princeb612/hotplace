@@ -123,7 +123,7 @@ return_t simple_http_server(void *) {
             .set_port_http(option.port)
             .enable_https(true)
             .set_port_https(option.port_tls)
-            .set_tls_certificate("server.crt", "server.key")
+            .set_tls_certificate("ecdsa.crt", "ecdsa.key")
             .set_tls_verify_peer(0)
             .enable_ipv4(true)
             .enable_ipv6(true)

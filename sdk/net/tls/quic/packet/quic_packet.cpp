@@ -380,7 +380,7 @@ return_t quic_packet::header_protect(tls_direction_t dir, const binary_t& bin_ci
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
-            dbs.println(" > packet number %s", base16_encode(bin_pn).c_str());
+            dbs.println(" > packet number 0x%s", base16_encode(bin_pn).c_str());
             dbs.println(" > packet number length %i", pn_length);
             trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
         }

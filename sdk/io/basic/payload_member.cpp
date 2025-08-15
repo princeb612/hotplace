@@ -75,6 +75,16 @@ payload_member::payload_member(const binary_t& value, const char* name, const ch
     get_variant().set_binary_new(value);
 }
 
+payload_member::payload_member(const byte_t* stream, size_t size, bool alloc, const char* name, const char* group)
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
+    set_name(name).set_group(group);
+    if (alloc) {
+        get_variant().set_bstr_new(stream, size);
+    } else {
+        get_variant().set_bstr(stream, size);
+    }
+}
+
 payload_member::payload_member(const std::string& value, const char* name, const char* group)
     : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
