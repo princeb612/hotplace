@@ -33,6 +33,7 @@ class quic_packet_1rtt : public quic_packet {
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect);
     virtual return_t do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t pos_unprotect);
+    virtual return_t do_estimate();
     virtual return_t do_write_body(tls_direction_t dir, binary_t& body);
     virtual return_t do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
 };

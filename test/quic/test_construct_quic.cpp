@@ -73,7 +73,9 @@ void construct_quic_initial_client_hello(tls_session* session, tls_direction_t d
         .add(handshake)
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
             bins.push_back(packet);
-            _test_case.assert(true, __FUNCTION__, "[%zi] %s", packet.size(), message);
+            auto tlsadvisor = tls_advisor::get_instance();
+            auto test = max_udp_payload_size == packet.size();
+            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
         });
 }
 
@@ -94,7 +96,9 @@ void construct_quic_initial_server_hello(tls_session* session, tls_direction_t d
         .add(handshake)
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
             bins.push_back(packet);
-            _test_case.assert(true, __FUNCTION__, "[%zi] %s", packet.size(), message);
+            auto tlsadvisor = tls_advisor::get_instance();
+            auto test = max_udp_payload_size == packet.size();
+            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
         });
 }
 
@@ -172,7 +176,9 @@ void construct_quic_handshake_ee_cert_cv_fin(tls_session* session, tls_direction
     // CRYPTO[CERT, CV, FIN]
     publisher.publish(dir, [&](tls_session* session, binary_t& packet) -> void {
         bins.push_back(packet);
-        _test_case.assert(true, __FUNCTION__, "[%zi] %s", packet.size(), message);
+        auto tlsadvisor = tls_advisor::get_instance();
+        auto test = max_udp_payload_size == packet.size();
+        _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
     });
 }
 
@@ -190,7 +196,9 @@ void construct_quic_handshake_fin(tls_session* session, tls_direction_t dir, std
         .add(new tls_handshake_finished(session))
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
             bins.push_back(packet);
-            _test_case.assert(true, __FUNCTION__, "[%zi] %s", packet.size(), message);
+            auto tlsadvisor = tls_advisor::get_instance();
+            auto test = max_udp_payload_size == packet.size();
+            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
         });
 }
 
@@ -207,7 +215,9 @@ void construct_quic_ack(tls_session* session, tls_direction_t dir, std::list<bin
         .set_flags(quic_ack_packet | quic_pad_packet)
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
             bins.push_back(packet);
-            _test_case.assert(true, __FUNCTION__, "[%zi] %s", packet.size(), message);
+            auto tlsadvisor = tls_advisor::get_instance();
+            auto test = max_udp_payload_size == packet.size();
+            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
         });
 }
 
@@ -216,9 +226,9 @@ return_t send_packet(tls_session* session, tls_direction_t dir, const std::list<
     for (auto item : bins) {
         quic_packets packets;
         ret = packets.read(session, dir, item);
-        // TODO
-        // goal condition (item.size() <= max_udp_payload_size)
-        _test_case.assert(true, __FUNCTION__, "[%zi] %s", item.size(), message);
+        auto tlsadvisor = tls_advisor::get_instance();
+        auto test = max_udp_payload_size == item.size();
+        _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", item.size(), tlsadvisor->nameof_direction(dir, 1).c_str(), message);
     }
     return ret;
 }
@@ -232,7 +242,6 @@ void test_construct_quic() {
     // test 10...I  20...H    30...A
 
     // TODO
-    // - certificate fragmentation
     // - case payload.size < 16
 
     _test_case.begin("construct");
@@ -258,50 +267,95 @@ void test_construct_quic() {
         session_server.set_recordno(from_server, 20, protection_handshake);
         session_server.set_recordno(from_server, 30, protection_application);
 
+        auto lambda = [](tls_session* session, tls_direction_t dir, protection_space_t space, uint32 pkn_expect) -> void {
+            uint32 pkn = session->get_recordno(dir, false, space);
+            _test_case.assert(pkn_expect == pkn, __FUNCTION__, "PKN %i", pkn);
+        };
+
         // initial
         {
             // C->S PKN#10
-            construct_quic_initial_client_hello(&session_client, from_client, bins, "{C...} initial [CRYPTO(CH), PADDING]");
-            ret = send_packet(&session_server, from_client, bins, "{C->S} initial [CRYPTO(CH), PADDING]");
+            lambda(&session_client, from_client, protection_initial, 10);
+            construct_quic_initial_client_hello(&session_client, from_client, bins, "initial [CRYPTO(CH), PADDING]");
+            ret = send_packet(&session_server, from_client, bins, "initial [CRYPTO(CH), PADDING]");
             if (errorcode_t::success != ret) {
                 __leave2;
             }
 
             // S->C PKN#10 (ACK 10)
-            construct_quic_initial_server_hello(&session_server, from_server, bins, "{S...} initial [ACK, CRYPTO(SH), PADDING]");
-            ret = send_packet(&session_client, from_server, bins, "{S->C} initial [ACK, CRYPTO(SH), PADDING]");
+            lambda(&session_server, from_server, protection_initial, 10);
+            construct_quic_initial_server_hello(&session_server, from_server, bins, "initial [ACK, CRYPTO(SH), PADDING]");
+            ret = send_packet(&session_client, from_server, bins, "initial [ACK, CRYPTO(SH), PADDING]");
             if (errorcode_t::success != ret) {
                 __leave2;
             }
 
+            {
+                auto& pkns = session_server.get_quic_session().get_pkns(protection_initial);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(10, 0);
+                _test_case.assert(ack == expect, __FUNCTION__, "ack");
+            }
+
             // C->S PKN#11 (ACK 10)
-            construct_quic_ack(&session_client, from_client, bins, "{C...} initial [ACK]");
-            ret = send_packet(&session_server, from_client, bins, "{C->S} initial [ACK]");
+            lambda(&session_client, from_client, protection_initial, 11);
+            construct_quic_ack(&session_client, from_client, bins, "initial [ACK]");
+            ret = send_packet(&session_server, from_client, bins, "initial [ACK]");
             if (errorcode_t::success != ret) {
                 __leave2;
+            }
+
+            {
+                auto& pkns = session_server.get_quic_session().get_pkns(protection_initial);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(10, 0);
+                _test_case.assert(ack == expect, __FUNCTION__, "ack");
             }
         }
 
         // handshake
         {
-            // S->C PKN#20
-            construct_quic_handshake_ee_cert_cv_fin(&session_server, from_server, bins, "{S...} handshake [CRYPTO(EE, CERT, CV, FIN)]");
-            ret = send_packet(&session_client, from_server, bins, "{S->C} handshake [CRYPTO(EE, CERT, CV, FIN)]");
+            // S->C PKN#20, 21
+            // 2 fragments
+            lambda(&session_server, from_server, protection_handshake, 20);
+            construct_quic_handshake_ee_cert_cv_fin(&session_server, from_server, bins, "handshake [CRYPTO(EE, CERT, CV, FIN)]");
+            ret = send_packet(&session_client, from_server, bins, "handshake [CRYPTO(EE, CERT, CV, FIN)]");
             if (errorcode_t::success != ret) {
                 __leave2;
             }
 
-            // C->S PKN#20 (ACK 20)
-            construct_quic_handshake_fin(&session_client, from_client, bins, "{C...} handshake ACK, [CRYPTO(FIN)]");
-            ret = send_packet(&session_server, from_client, bins, "{C->S} handshake ACK, [CRYPTO(FIN)]");
+            // C->S PKN#20 (ACK 20, 21)
+            lambda(&session_client, from_client, protection_handshake, 20);
+            construct_quic_handshake_fin(&session_client, from_client, bins, "handshake ACK, [CRYPTO(FIN)]");
+            ret = send_packet(&session_server, from_client, bins, "handshake ACK, [CRYPTO(FIN)]");
             if (errorcode_t::success != ret) {
                 __leave2;
             }
-            // S->C PKN#21 (ACK 20)
-            construct_quic_ack(&session_server, from_server, bins, "{S...} handshake [ACK]");
-            ret = send_packet(&session_client, from_server, bins, "{S->C} handshake [ACK]");
+
+            {
+                auto& pkns = session_client.get_quic_session().get_pkns(protection_handshake);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(21, 1);
+                _test_case.assert(ack == expect, __FUNCTION__, "ack");
+            }
+
+            // S->C PKN#22 (ACK 20)
+            lambda(&session_server, from_server, protection_handshake, 22);
+            construct_quic_ack(&session_server, from_server, bins, "handshake [ACK]");
+            ret = send_packet(&session_client, from_server, bins, "handshake [ACK]");
             if (errorcode_t::success != ret) {
                 __leave2;
+            }
+
+            {
+                auto& pkns = session_server.get_quic_session().get_pkns(protection_handshake);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(20, 0);
+                _test_case.assert(ack == expect, __FUNCTION__, "ack");
             }
         }
     }

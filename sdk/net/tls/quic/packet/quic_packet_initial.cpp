@@ -154,6 +154,17 @@ return_t quic_packet_initial::do_write_body(tls_direction_t dir, binary_t& body)
     return ret;
 }
 
+return_t quic_packet_initial::do_estimate() {
+    return_t ret = errorcode_t::success;
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto tagsize = protection.get_tag_size();
+    auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+    auto estimate = estimate_quic_packet_size(get_type(), _dcid.size(), _scid.size(), _token.size(), get_pn_length(), _payload.size(), tagsize);
+    _est_headertag_size = estimate - _payload.size();
+    return ret;
+}
+
 return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) {
     return_t ret = errorcode_t::success;
     __try2 {

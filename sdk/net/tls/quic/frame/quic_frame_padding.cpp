@@ -13,11 +13,14 @@
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_padding.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
 #include <sdk/net/tls/quic_packet_publisher.hpp>
+#include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
+#include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
@@ -40,8 +43,14 @@ return_t quic_frame_padding::do_write_body(tls_direction_t dir, binary_t& bin) {
     // Figure 23: PADDING Frame Format
     if (quic_pad_packet & _flags) {
         // packet mode - make a packet padded
-        if (bin.size() < _len) {
-            bin.resize(_len);
+        auto session = get_packet()->get_session();
+        // auto payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size) - get_packet()->get_est_headertag_size();
+
+        auto estsize = get_packet()->get_est_headertag_size();
+        auto l = _len > estsize ? _len - estsize - 1 : _len;
+
+        if (bin.size() < l) {
+            bin.resize(l);
         }
     } else {
         // frame mode - add a frame

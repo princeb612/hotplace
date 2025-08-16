@@ -135,11 +135,28 @@ return_t quic_frame_crypto::do_write_body(tls_direction_t dir, const byte_t* str
             __leave2;
         }
 
-        auto session = get_packet()->get_session();
-        auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+        // sketch
+        //   layout
+        //     packet header payload tag
+        //     frame  header fragment
+        //   calc
+        //     exclude packet.header, packet.tag, frame.header
 
+        auto session = get_packet()->get_session();
+        auto udp_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+        auto estsize = get_packet()->get_est_headertag_size();
+        auto est_crypto_header_size = 0;
+        {
+            binary_t temp;
+            quic_write_vle_int(get_type(), temp);
+            quic_write_vle_int(pos, temp);
+            quic_write_vle_int(udp_payload_size, temp);
+            est_crypto_header_size = temp.size();
+        }
+        auto payload_size = udp_payload_size - estsize - est_crypto_header_size - 1;
         uint64 offset = pos;
-        uint64 len = (size - pos >= max_payload_size) ? max_payload_size : size - pos;
+        uint64 len = (size - pos >= payload_size) ? payload_size : size - pos;
+        auto hdrsize = 0;
 
         payload pl;
         pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)  //

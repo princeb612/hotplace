@@ -146,6 +146,14 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
         do {
             auto packet = packet_builder.set(type).set_session(session).set(dir).construct().build();
             if (packet) {
+#if defined DEBUG
+                if (istraceable(trace_category_net, loglevel_debug)) {
+                    basic_stream dbs;
+                    dbs.println("\e[1;32mPKN %i length %i\e[0m", packet->get_pn(), packet->get_pn_length());
+                    trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+                }
+#endif
+
                 // ack
                 if (quic_ack_packet & get_flags()) {
                     auto& pkns = session->get_quic_session().get_pkns(space);

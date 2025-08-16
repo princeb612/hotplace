@@ -152,12 +152,16 @@ class quic_packet {
     void release();
     uint32 get_flags();
 
+    // consider udp_max_payload_size
+    uint16 get_est_headertag_size();
+
    protected:
     virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect);
     virtual return_t do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t pos_unprotect);
     return_t do_unprotect(tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, protection_space_t space);
     virtual return_t do_write_header(binary_t& packet, const binary_t& body = binary_t());
+    virtual return_t do_estimate();
     virtual return_t do_write_body(tls_direction_t dir, binary_t& body);
     virtual return_t do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
 
@@ -208,6 +212,9 @@ class quic_packet {
     binary_t _payload;
     binary_t _tag;
     quic_frames _frames;
+
+    // consider udp_max_payload_size
+    uint16 _est_headertag_size;
 };
 
 /**
@@ -229,6 +236,14 @@ void quic_packet_set_type(uint32 version, uint8 type, uint8& hdr, bool& is_longh
 
 return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
 return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir, const binary_t& packet);
+
+/**
+ *                              TYPE VERSION len(DCID) DCID len(SCID) SCID TOKEN PN
+ *  quic_packet_type_initial      O     O       O        O       O      O     O   O
+ *  quic_packet_type_handshake    O     O       O        O       O      O         O
+ *  quic_packet_type_1_rtt        O                      O                        O
+ */
+uint32 estimate_quic_packet_size(uint8 type, uint8 dcidlen, uint8 scidlen, uint8 tokenlen, uint8 pnl, uint16 payload, uint8 taglen);
 
 }  // namespace net
 }  // namespace hotplace
