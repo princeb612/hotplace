@@ -219,7 +219,9 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
                 basic_stream dbs;
                 dbs.autoindent(3);
                 dbs.println(" > %s", constexpr_application_data);  // data
-                dump_memory(_bin, &dbs, 16, 3, 0x0, dump_notrunc);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(_bin, &dbs, 16, 3, 0x0, dump_notrunc);
+                }
                 dbs.autoindent(0);
 
                 trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);

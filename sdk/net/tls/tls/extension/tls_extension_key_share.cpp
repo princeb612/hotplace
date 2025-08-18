@@ -212,7 +212,9 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
                 dbs.println("    > %s", constexpr_key_share_entry);
                 dbs.println("     > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->supported_group_name(group).c_str());
                 dbs.println("     > %s %04x(%i)", constexpr_pubkey_len, pubkey.size(), pubkey.size());
-                dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
+                }
                 dbs.println("       %s", base16_encode(pubkey).c_str());
 
                 trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
@@ -343,7 +345,9 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
             dbs.println("   > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->supported_group_name(group).c_str());
             if (pubkeylen) {
                 dbs.println("   > %s %i", constexpr_pubkey_len, pubkeylen);
-                dump_memory(pubkey, &dbs, 16, 5, 0x0, dump_notrunc);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(pubkey, &dbs, 16, 5, 0x0, dump_notrunc);
+                }
                 dbs.println("     %s", base16_encode(pubkey).c_str());
             }
 

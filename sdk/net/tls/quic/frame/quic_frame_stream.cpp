@@ -89,7 +89,9 @@ return_t quic_frame_stream::do_read_body(tls_direction_t dir, const byte_t* stre
                 }
                 dbs.println("   > %s 0x%I64x (%I64i) %s", constexpr_stream_id, stream_id, stream_id, tlsadvisor->quic_streamid_type_string(stream_id).c_str());
                 dbs.println("   > %s 0x%zx (%zi)", constexpr_stream_data, stream_data.size(), stream_data.size());
-                dump_memory(stream_data, &dbs, 16, 5, 0x0, dump_notrunc);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(stream_data, &dbs, 16, 5, 0x0, dump_notrunc);
+                }
                 trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
             }
 #endif

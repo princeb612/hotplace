@@ -127,7 +127,7 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
         ret = do_write_header(dir, bin, body);  // encryption
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_net, loglevel_debug)) {
             basic_stream dbs;
             if (get_flags()) {
                 dbs.printf("\e[0;36m");
@@ -282,13 +282,16 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
                         : (from_client == dir) ? "(client)"
                                                : "",
                         size, size, recpos);
-            uint16 content_header_size = 0;
-            if (tlsadvisor->is_kindof_tls(record_version)) {
-                content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
-            } else {
-                content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
+
+            if (check_trace_level(loglevel_debug)) {
+                uint16 content_header_size = 0;
+                if (tlsadvisor->is_kindof_tls(record_version)) {
+                    content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
+                } else {
+                    content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
+                }
+                dump_memory(stream + recpos, content_header_size + len, &dbs, 16, 3, 0, dump_notrunc);
             }
-            dump_memory(stream + recpos, content_header_size + len, &dbs, 16, 3, 0, dump_notrunc);
 
             dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
             dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->tls_version_string(record_version).c_str());

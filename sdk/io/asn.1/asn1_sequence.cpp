@@ -11,8 +11,9 @@
  *
  */
 
-#include <sdk/io/asn.1/asn1_sequence.hpp>
 #include <stdarg.h>
+
+#include <sdk/io/asn.1/asn1_sequence.hpp>
 
 namespace hotplace {
 namespace io {

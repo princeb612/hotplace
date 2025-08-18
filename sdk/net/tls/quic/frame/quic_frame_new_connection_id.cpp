@@ -55,9 +55,13 @@ return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const b
             dbs.println("   > %s 0x%I64x (%I64i)", constexpr_sequence_number, sequence_number, sequence_number);
             dbs.println("   > %s 0x%I64x (%I64i)", constexpr_retire_prior_to, retire_prior_to, retire_prior_to);
             dbs.println("   > %s 0x%zx (%zi)", constexpr_connection_id, connection_id.size(), connection_id.size());
-            dump_memory(connection_id, &dbs, 16, 5, 0x0, dump_notrunc);
+            if (check_trace_level(loglevel_debug)) {
+                dump_memory(connection_id, &dbs, 16, 5, 0x0, dump_notrunc);
+            }
             dbs.println("   > %s 0x%zx (%zi)", constexpr_stateless_reset_token, stateless_reset_token.size(), stateless_reset_token.size());
-            dump_memory(stateless_reset_token, &dbs, 16, 5, 0x0, dump_notrunc);
+            if (check_trace_level(loglevel_debug)) {
+                dump_memory(stateless_reset_token, &dbs, 16, 5, 0x0, dump_notrunc);
+            }
             trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif

@@ -133,7 +133,7 @@ size_t fragmentation::available() {
     if (segment) {
         auto segsize = segment->get_segment_size();
         if (segsize > _used) {
-            ret_value = segsize - _used - 1;
+            ret_value = segsize - _used;
         }
     }
     return ret_value;

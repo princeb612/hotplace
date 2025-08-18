@@ -743,7 +743,7 @@ return_t tls_advisor::negotiate_alpn(tls_handshake* handshake, const byte_t* alp
         select(0);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_net, loglevel_debug)) {
             basic_stream dbs;
             dbs.println("> protocols");
             dump_memory(alpn, size, &dbs, 16, 3, 0, dump_notrunc);

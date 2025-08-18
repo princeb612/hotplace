@@ -324,7 +324,7 @@ void client_socket_prosumer::enqueue(socket_buffer_t& item, const char* buf, siz
         _rq.push(item);
     }
 #if defined DEBUG
-    if (istraceable(trace_category_net)) {
+    if (istraceable(trace_category_net, loglevel_debug)) {
         basic_stream dbs;
         dbs.println("[ns] read size 0x%x", size);
         dump_memory((byte_t*)buf, size, &dbs, 16, 3, 0, dump_notrunc);

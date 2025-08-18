@@ -338,7 +338,7 @@ http_response& http_response::get_response(basic_stream& bs) {
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_net, loglevel_debug)) {
             basic_stream dbs;
             dump_memory(bs.data(), bs.size(), &dbs, 16, 2, 0, dump_notrunc);
 

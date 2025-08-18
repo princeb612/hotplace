@@ -161,9 +161,10 @@ return_t quic_packet_initial::do_estimate() {
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     auto tagsize = protection.get_tag_size();
-    auto estimate = estimate_quic_packet_size(get_type(), _dcid.size(), _scid.size(), _token.size(), get_pn_length(), _payload.size(), tagsize);
+    auto size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+    auto estimate = estimate_quic_packet_size(get_type(), _dcid.size(), _scid.size(), _token.size(), get_pn_length(), size, tagsize);
 
-    get_fragment().use(estimate - _payload.size());
+    get_fragment().use(estimate - size);  // quic packet header + tag
 
     return ret;
 }
@@ -270,7 +271,9 @@ void quic_packet_initial::dump() {
 
         // token
         dbs.println(" > token (len %zi)", _token.size());
-        dump_memory(_token, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+        if (check_trace_level(loglevel_debug)) {
+            dump_memory(_token, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+        }
         // length = packet number + payload
         auto len = get_length();
         dbs.println(" > length %I64i", len);
@@ -278,7 +281,9 @@ void quic_packet_initial::dump() {
         dbs.println(" > packet number 0x%08x (%i)", get_pn(), get_pn());
         // payload
         dbs.println(" > payload (len %zi)", _payload.size());
-        dump_memory(_payload, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+        if (check_trace_level(loglevel_debug)) {
+            dump_memory(_payload, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+        }
 
         trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
     }

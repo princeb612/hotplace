@@ -221,7 +221,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_net, loglevel_debug)) {
             basic_stream dbs;
             dbs.autoindent(1);
             auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
@@ -272,7 +272,9 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
             basic_stream dbs;
             dbs.autoindent(1);
             dbs.println("> %s", constexpr_certificate);
-            dump_memory(certificate, &dbs, 16, 3, 0x0, dump_notrunc);
+            if (check_trace_level(loglevel_debug)) {
+                dump_memory(certificate, &dbs, 16, 3, 0x0, dump_notrunc);
+            }
             dbs.autoindent(0);
 
             trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);

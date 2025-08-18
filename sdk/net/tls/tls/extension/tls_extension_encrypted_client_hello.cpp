@@ -80,9 +80,13 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
             dbs.println("   > %s %i %s", constexpr_aead, aead, tlsadvisor->aead_alg_string(aead).c_str());
             dbs.println("   > %s %i", constexpr_config_id, config_id);
             dbs.println("   > %s %i", constexpr_enc_len, enc_len);
-            dump_memory(enc, &dbs, 16, 4, 0x0, dump_notrunc);
+            if (check_trace_level(loglevel_debug)) {
+                dump_memory(enc, &dbs, 16, 4, 0x0, dump_notrunc);
+            }
             dbs.println("   > %s %i", constexpr_payload_len, enc_payload_len);
-            dump_memory(enc_payload, &dbs, 16, 4, 0x0, dump_notrunc);
+            if (check_trace_level(loglevel_debug)) {
+                dump_memory(enc_payload, &dbs, 16, 4, 0x0, dump_notrunc);
+            }
 
             trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
         }

@@ -36,12 +36,8 @@ return_t dtls_handshake_fragmented::write(tls_direction_t dir, binary_t& bin) {
         dbs.printf("\e[1;36m");
         dbs.println("# generate %s seq %i", tlsadvisor->handshake_type_string(get_type()).c_str(), get_dtls_seq());
         dbs.printf("\e[0m");
-        if (check_trace_level(loglevel_debug)) {
-            dump_memory(&bin[0], sizeof(dtls_handshake_t), &dbs, 16, 3, 0, dump_notrunc);
-            dump_memory(_fragmented, &dbs, 16, 3, 0, dump_notrunc);
-        } else {
-            dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
-        }
+        dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
+
         trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
     }
 #endif

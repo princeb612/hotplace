@@ -64,7 +64,7 @@ return_t trial_dtls_server_socket::dtls_handshake(netsession_t* sess) {
             const auto& sa = nsess->netsock.cli_addr;
             auto ctx = nsess->netsock.event_handle;
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
+            if (istraceable(trace_category_net, loglevel_debug)) {
                 basic_stream dbs;
                 std::string address;
                 sockaddr_string(sa, address);

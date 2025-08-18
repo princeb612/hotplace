@@ -121,10 +121,10 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
                 dbs.println(" > %s %s", constexpr_connection_id, base16_encode(connection_id).c_str());
             }
 
+            dbs.println(" > %s %04x", constexpr_sequence, sequence);
+            dbs.println(" > %s %04x", constexpr_len, len);
+            dbs.println(" > %s", constexpr_encdata);
             if (check_trace_level(loglevel_debug)) {
-                dbs.println(" > %s %04x", constexpr_sequence, sequence);
-                dbs.println(" > %s %04x", constexpr_len, len);
-                dbs.println(" > %s", constexpr_encdata);
                 dump_memory(encdata, &dbs, 16, 3, 0x0, dump_notrunc);
             }
 
@@ -233,10 +233,12 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
                 dbs.println("> content type 0x%02x(%i) %s", type, type, tlsadvisor->content_type_string(type).c_str());
 
-                switch (type) {
-                    case tls_content_type_application_data: {
-                        dump_memory(&plaintext[0], plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
-                    } break;
+                if (check_trace_level(loglevel_debug)) {
+                    switch (type) {
+                        case tls_content_type_application_data: {
+                            dump_memory(&plaintext[0], plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
+                        } break;
+                    }
                 }
 
                 trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);

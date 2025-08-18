@@ -47,7 +47,9 @@ return_t quic_frame_new_token::do_read_body(tls_direction_t dir, const byte_t* s
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("   > %s (%zi)", constexpr_token, token.size());
-            dump_memory(token, &dbs, 16, 5, 0x0, dump_notrunc);
+            if (check_trace_level(loglevel_debug)) {
+                dump_memory(token, &dbs, 16, 5, 0x0, dump_notrunc);
+            }
             trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif

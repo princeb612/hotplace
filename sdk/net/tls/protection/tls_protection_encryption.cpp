@@ -571,7 +571,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_net, loglevel_debug)) {
             basic_stream dbs;
             dbs.println("> encrypt");
             dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
@@ -679,7 +679,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_net, loglevel_debug)) {
             basic_stream dbs;
             dbs.println("> encrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
             dbs.println(" > aad %s", base16_encode(aad).c_str());
@@ -932,7 +932,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_net, loglevel_debug)) {
             basic_stream dbs;
             dbs.println("> decrypt");
             dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
@@ -1063,7 +1063,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_net, loglevel_debug)) {
             basic_stream dbs;
             dbs.println("> decrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
             dbs.println(" > aad %s", base16_encode(aad).c_str());

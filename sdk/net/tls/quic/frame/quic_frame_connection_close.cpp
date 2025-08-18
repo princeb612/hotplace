@@ -71,7 +71,9 @@ return_t quic_frame_connection_close::do_read_body(tls_direction_t dir, const by
                 dbs.println("   > %s %I64i", constexpr_frametype, frame_type);
             }
             dbs.println("   > %s (%zi)", constexpr_reason_phase, reason_phase.size());
-            dump_memory(reason_phase, &dbs, 16, 5, 0x0, dump_notrunc);
+            if (check_trace_level(loglevel_debug)) {
+                dump_memory(reason_phase, &dbs, 16, 5, 0x0, dump_notrunc);
+            }
             trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif

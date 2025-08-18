@@ -69,12 +69,14 @@ return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& p
         }
 
 #if defined DEBUG
-        {
+        if (istraceable(trace_category_net)) {
             http_resource* resource = http_resource::get_instance();
             basic_stream dbs;
             dbs.println("# %s %I64i (%s) %s", constexpr_type, type, resource->get_h3_frame_name(type).c_str(), (fragmented == ret) ? "fragmented" : "");
             dbs.println(" > %s 0x%I64x (%I64i)", constexpr_length, length, length);
-            dump_memory(frame_payload, &dbs, 16, 3, 0, dump_notrunc);
+            if (check_trace_level(loglevel_debug)) {
+                dump_memory(frame_payload, &dbs, 16, 3, 0, dump_notrunc);
+            }
             trace_debug_event(trace_category_net, trace_event_http3, &dbs);
         }
 #endif

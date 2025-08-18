@@ -176,7 +176,9 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("   > %s 0x%04x(%i)", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
-            dump_memory(psk_identity, &dbs, 16, 4, 0x0, dump_notrunc);
+            if (check_trace_level(loglevel_debug)) {
+                dump_memory(psk_identity, &dbs, 16, 4, 0x0, dump_notrunc);
+            }
             dbs.println("   > %s 0x%08x", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
             dbs.println("   > %s 0x%04x(%i)", constexpr_psk_binders_len, psk_binders_len, psk_binders_len);
             dbs.println("   > %s 0x%04x(%i)", constexpr_psk_binder_len, psk_binder_len, psk_binder_len);

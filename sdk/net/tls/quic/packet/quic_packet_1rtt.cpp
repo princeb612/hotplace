@@ -104,9 +104,10 @@ return_t quic_packet_1rtt::do_estimate() {
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     auto tagsize = protection.get_tag_size();
-    auto estimate = estimate_quic_packet_size(get_type(), _dcid.size(), 0, 0, get_pn_length(), _payload.size(), tagsize);
+    auto size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+    auto estimate = estimate_quic_packet_size(get_type(), _dcid.size(), 0, 0, get_pn_length(), size, tagsize);
 
-    get_fragment().use(estimate - _payload.size());
+    get_fragment().use(estimate - size);  // quic packet header + tag
 
     return ret;
 }

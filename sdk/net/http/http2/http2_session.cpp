@@ -51,7 +51,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_net, loglevel_debug)) {
             netsocket_t* session_socket = (netsocket_t*)data_array[0];
             basic_stream dbs;
 
