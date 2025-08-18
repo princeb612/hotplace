@@ -98,7 +98,7 @@ return_t segmentation::isready(uint32 type) {
     return ret;
 }
 
-fragmentation::fragmentation() : _used(0) {}
+fragmentation::fragmentation() : _segment(nullptr), _used(0) {}
 
 return_t fragmentation::set(segmentation* segment) {
     return_t ret = errorcode_t::success;
