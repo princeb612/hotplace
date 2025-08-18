@@ -52,8 +52,8 @@ tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(t
 
     if (session_type_dtls == session->get_type()) {
         auto& publisher = session->get_dtls_record_publisher();
-        publisher.set_fragment_size(512);
-        publisher.set_max_size(1200 - 30);
+        publisher.set_fragment_size(1024);
+        publisher.set_segment_size(1024);
         publisher.set_flags(dtls_record_publisher_multi_handshakes);
     }
 }

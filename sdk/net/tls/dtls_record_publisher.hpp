@@ -38,7 +38,12 @@ class dtls_record_publisher {
     void set_fragment_size(uint16 size);
     uint16 get_fragment_size();
 
-    void set_max_size(uint16 size);
+    /**
+     * @comments
+     *      not the exact boundary size
+     *      cf. quic_packet_publisher::set_payload_size
+     */
+    void set_segment_size(uint16 size);
     uint16 get_max_size();
 
     /**
@@ -61,7 +66,7 @@ class dtls_record_publisher {
    private:
     tls_session* _session;
     uint16 _fragment_size;
-    uint16 _max_size;
+    uint16 _segment_size;
     uint32 _flags;
 };
 

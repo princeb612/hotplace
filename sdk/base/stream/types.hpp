@@ -24,6 +24,9 @@ class bufferio;
 class wide_string;
 #endif
 
+class fragmentation;
+class segmentation;
+
 }  // namespace hotplace
 
 #endif

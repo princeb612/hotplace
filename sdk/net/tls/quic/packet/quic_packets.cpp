@@ -35,7 +35,7 @@ return_t quic_packets::read(tls_session* session, tls_direction_t dir, const byt
         while (pos < size) {
             auto msb = stream[pos];
             quic_packet_builder builder;
-            auto packet = builder.set_msb(msb).set_session(session).build();
+            auto packet = builder.set_msb(msb).set(session).build();
             if (packet) {
                 ret = packet->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {

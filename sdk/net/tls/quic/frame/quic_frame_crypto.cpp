@@ -10,6 +10,7 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_crypto.hpp>
@@ -30,7 +31,7 @@ constexpr char constexpr_length[] = "length";
 constexpr char constexpr_offset[] = "offset";
 constexpr char constexpr_crypto_data[] = "crypto data";
 
-quic_frame_crypto::quic_frame_crypto(quic_packet* packet) : quic_frame(quic_frame_type_crypto, packet), _extcd(nullptr) {}
+quic_frame_crypto::quic_frame_crypto(quic_packet* packet) : quic_frame(quic_frame_type_crypto, packet) {}
 
 return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -103,30 +104,33 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
     return ret;
 }
 
-return_t quic_frame_crypto::refer(external_crypto_data* data) {
-    return_t ret = errorcode_t::success;
-    if (nullptr == data) {
-        ret = errorcode_t::invalid_parameter;
-    } else {
-        _extcd = data;
-    }
-    return ret;
-}
-
 return_t quic_frame_crypto::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == _extcd) {
-            ret = errorcode_t::do_nothing;
-            __leave2;
+        auto segment = get_packet()->get_fragment().get_segment();
+        if (segment) {
+            size_t bumper = 0;
+            segment->peek(quic_frame_type_crypto, [&](const fragment_context& context) -> return_t {
+                binary_t temp;
+                quic_write_vle_int(get_type(), temp);
+                quic_write_vle_int(context.pos, temp);
+                quic_write_vle_int(context.ssize, temp);
+                bumper = temp.size();
+                return success;
+            });
+            auto lambda = [&](const byte_t* stream, size_t size, size_t pos, size_t len) -> return_t {
+                return_t ret = errorcode_t::success;
+                ret = do_write_body(dir, stream, size, pos, len, bin);
+                return ret;
+            };
+            ret = get_packet()->get_fragment().consume(quic_frame_type_crypto, bumper, lambda);
         }
-        ret = do_write_body(dir, _extcd->stream, _extcd->size, _extcd->pos, bin);
     }
     __finally2 {}
     return ret;
 }
 
-return_t quic_frame_crypto::do_write_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, binary_t& bin) {
+return_t quic_frame_crypto::do_write_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, size_t len, binary_t& bin) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -143,36 +147,20 @@ return_t quic_frame_crypto::do_write_body(tls_direction_t dir, const byte_t* str
         //     exclude packet.header, packet.tag, frame.header
 
         auto session = get_packet()->get_session();
-        auto udp_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
-        auto estsize = get_packet()->get_est_headertag_size();
-        auto est_crypto_header_size = 0;
-        {
-            binary_t temp;
-            quic_write_vle_int(get_type(), temp);
-            quic_write_vle_int(pos, temp);
-            quic_write_vle_int(udp_payload_size, temp);
-            est_crypto_header_size = temp.size();
-        }
-        auto payload_size = udp_payload_size - estsize - est_crypto_header_size - 1;
-        uint64 offset = pos;
-        uint64 len = (size - pos >= payload_size) ? payload_size : size - pos;
-        auto hdrsize = 0;
 
         payload pl;
         pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)  //
-           << new payload_member(new quic_encoded(offset), constexpr_offset)           //
+           << new payload_member(new quic_encoded(pos), constexpr_offset)              //
            << new payload_member(new quic_encoded(len), constexpr_length)              //
-           << new payload_member(stream + offset, len, false, constexpr_crypto_data);
+           << new payload_member(stream + pos, len, false, constexpr_crypto_data);
         pl.write(bin);
-
-        pos += len;
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("\e[1;33m + CRYPTO");
-            dbs.println("   > %s 0x%I64x (%I64i)", constexpr_offset, offset, offset);
-            dbs.println("   > %s 0x%I64x (%I64i)\e[0m", constexpr_length, len, len);
+            dbs.println("   > %s 0x%zx (%zi)", constexpr_offset, pos, pos);
+            dbs.println("   > %s 0x%zx (%zi)\e[0m", constexpr_length, len, len);
             trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif

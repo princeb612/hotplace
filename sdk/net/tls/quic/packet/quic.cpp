@@ -130,7 +130,7 @@ return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir
         auto msb = stream[pos];
 
         quic_packet_builder builder;
-        auto packet = builder.set_msb(msb).set_session(session).build();
+        auto packet = builder.set_msb(msb).set(session).build();
         if (packet) {
             ret = packet->read(dir, stream, size, pos);
             type = packet->get_type();

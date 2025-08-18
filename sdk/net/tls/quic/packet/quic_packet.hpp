@@ -26,6 +26,7 @@
 #define __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKET__
 
 #include <sdk/base/basic/binary.hpp>
+#include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/net/tls/quic/frame/quic_frames.hpp>
 #include <sdk/net/tls/quic/types.hpp>
@@ -153,7 +154,7 @@ class quic_packet {
     uint32 get_flags();
 
     // consider udp_max_payload_size
-    uint16 get_est_headertag_size();
+    fragmentation& get_fragment();
 
    protected:
     virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -214,7 +215,7 @@ class quic_packet {
     quic_frames _frames;
 
     // consider udp_max_payload_size
-    uint16 _est_headertag_size;
+    fragmentation _fragment;
 };
 
 /**

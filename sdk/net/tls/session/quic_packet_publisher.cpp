@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_ack.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_builder.hpp>
@@ -135,16 +136,16 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
         quic_packet_builder packet_builder;
         quic_frame_builder frame_builder;
 
+        segmentation segment(get_payload_size());
         binary_t crypto_data;
         size_t offset = 0;
-        external_crypto_data extcd;
         if (false == get_handshakes().empty()) {
             get_handshakes().for_each([&](tls_handshake* handshake) -> return_t { return handshake->write(dir, crypto_data); });
-            extcd.set(&crypto_data[0], crypto_data.size(), offset);
+            segment.assign(quic_frame_type_crypto, crypto_data.empty() ? nullptr : &crypto_data[0], crypto_data.size());
         }
 
         do {
-            auto packet = packet_builder.set(type).set_session(session).set(dir).construct().build();
+            auto packet = packet_builder.set(type).set(session).set(&segment).set(dir).construct().build();
             if (packet) {
 #if defined DEBUG
                 if (istraceable(trace_category_net, loglevel_debug)) {
@@ -167,7 +168,6 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
 
                 if (false == crypto_data.empty()) {
                     auto frame = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
-                    frame->refer(&extcd);
                     *packet << frame;
                 }
 
@@ -185,7 +185,7 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
 
                 packet->release();
             }
-        } while (extcd.pos < extcd.size);
+        } while (success == segment.isready(quic_frame_type_crypto));
     }
     __finally2 {}
     return ret;

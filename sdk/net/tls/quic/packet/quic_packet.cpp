@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
+#include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/string/string.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
@@ -31,14 +32,14 @@ constexpr char constexpr_scid[] = "scid";
 constexpr char constexpr_dcid_len[] = "dcid len";
 constexpr char constexpr_scid_len[] = "scid len";
 
-quic_packet::quic_packet(tls_session* session) : _type(0), _session(nullptr), _ht(0), _version(1), _pn(0), _est_headertag_size(0) {
+quic_packet::quic_packet(tls_session* session) : _type(0), _session(nullptr), _ht(0), _version(1), _pn(0) {
     set_session(session);
     set_version();
     _frames.set_packet(this);
     _shared.make_share(this);
 }
 
-quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _session(nullptr), _ht(0), _version(1), _pn(0), _est_headertag_size(0) {
+quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _session(nullptr), _ht(0), _version(1), _pn(0) {
     bool is_longheader = true;
     set_session(session);
     set_version();
@@ -48,7 +49,7 @@ quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type)
 }
 
 quic_packet::quic_packet(const quic_packet& rhs)
-    : _type(rhs._type), _session(nullptr), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _pn(rhs._pn), _est_headertag_size(0) {
+    : _type(rhs._type), _session(nullptr), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _pn(rhs._pn) {
     set_session(rhs._session);
     set_version();
     _frames.set_packet(this);
@@ -153,7 +154,9 @@ return_t quic_packet::write(tls_direction_t dir, binary_t& header, binary_t& cip
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        do_estimate();
+
+        do_estimate();  // segmentation
+
         ret = do_write_body(dir, _payload);  // payload
         if (errorcode_t::success != ret) {
             __leave2;
@@ -566,7 +569,7 @@ void quic_packet::release() { _shared.delref(); }
 
 uint32 quic_packet::get_flags() { return 0; }
 
-uint16 quic_packet::get_est_headertag_size() { return _est_headertag_size; }
+fragmentation& quic_packet::get_fragment() { return _fragment; }
 
 }  // namespace net
 }  // namespace hotplace

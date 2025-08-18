@@ -147,7 +147,7 @@ void construct_quic_handshake_ee_cert_cv_fin(tls_session* session, tls_direction
                     .set(quic_param_initial_max_stream_data_bidi_remote, 0x20000)
                     .set(quic_param_google_version, binary_t())
                     .set(quic_param_max_datagram_frame_size, 0x10000)
-                    .set(quic_param_max_udp_payload_size, 1472)
+                    .set(quic_param_max_udp_payload_size, max_udp_payload_size)
                     .set(quic_param_initial_max_streams_bidi, 100);
                 handshake->get_extensions().add(quic_params);
             }
@@ -173,7 +173,7 @@ void construct_quic_handshake_ee_cert_cv_fin(tls_session* session, tls_direction
     // CRYPTO[EE, CERT]
     // CRYPTO[CERT]
     // ...
-    // CRYPTO[CERT, CV, FIN]
+    // CRYPTO[CERT, CV, FIN], PADDING
     publisher.publish(dir, [&](tls_session* session, binary_t& packet) -> void {
         bins.push_back(packet);
         auto tlsadvisor = tls_advisor::get_instance();

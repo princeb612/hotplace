@@ -494,10 +494,10 @@ void test_split3() {
 
     // sketch dtls_record_publisher::publish(tls_records*, ...)
 
-    uint16 maxsize = 500;
+    uint16 segment_size = 500;
     std::list<uint16> temp;
 
-    // push_back(N) N must less than or equal maxsize
+    // push_back(N) N must less than or equal segment_size
 
     temp.push_back(200);
     temp.push_back(300);
@@ -511,7 +511,7 @@ void test_split3() {
     std::list<std::queue<uint16>> container;
     std::queue<uint16> q;
     for (auto item : temp) {
-        if (size + item > maxsize) {
+        if (size + item > segment_size) {
             container.push_back(std::move(q));
             size = 0;
         }
@@ -536,5 +536,5 @@ void test_split3() {
         qitem.push(50);
         expect.push_back(std::move(qitem));
     }
-    _test_case.assert(container == expect, __FUNCTION__, "dtls_record_publisher::publish underlying logic");
+    _test_case.assert(container == expect, __FUNCTION__, "segmentation");
 }

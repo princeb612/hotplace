@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/segmentation.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet_0rtt.hpp>
@@ -23,7 +24,7 @@
 namespace hotplace {
 namespace net {
 
-quic_packet_builder::quic_packet_builder() : _type(0), _msb(0), _session(nullptr), _dir(from_any), _construct(false) {}
+quic_packet_builder::quic_packet_builder() : _type(0), _msb(0), _session(nullptr), _segment(nullptr), _dir(from_any), _construct(false) {}
 
 quic_packet_builder& quic_packet_builder::set(quic_packet_t type) {
     _type = type;
@@ -35,8 +36,13 @@ quic_packet_builder& quic_packet_builder::set_msb(uint8 msb) {
     return *this;
 }
 
-quic_packet_builder& quic_packet_builder::set_session(tls_session* session) {
+quic_packet_builder& quic_packet_builder::set(tls_session* session) {
     _session = session;
+    return *this;
+}
+
+quic_packet_builder& quic_packet_builder::set(segmentation* segment) {
+    _segment = segment;
     return *this;
 }
 
@@ -81,6 +87,7 @@ quic_packet* quic_packet_builder::build() {
                     auto pn = session->get_recordno(get_direction(), false, protection_initial);
                     auto pnl = (prng.rand32() % 4) + 1;
                     packet->set_pn(pn, pnl);
+                    packet->get_fragment().set(_segment);
                 }
             } break;
             case quic_packet_type_0_rtt: {
@@ -93,6 +100,7 @@ quic_packet* quic_packet_builder::build() {
                     auto pn = session->get_recordno(get_direction(), false, protection_handshake);
                     auto pnl = (prng.rand32() % 4) + 1;
                     packet->set_pn(pn, pnl);
+                    packet->get_fragment().set(_segment);
                 }
             } break;
             case quic_packet_type_retry: {
@@ -105,6 +113,7 @@ quic_packet* quic_packet_builder::build() {
                     auto pn = session->get_recordno(get_direction(), false, protection_application);
                     auto pnl = (prng.rand32() % 4) + 1;
                     packet->set_pn(pn, pnl);
+                    packet->get_fragment().set(_segment);
                 }
             } break;
         }

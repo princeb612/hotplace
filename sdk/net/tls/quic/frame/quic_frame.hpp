@@ -26,6 +26,7 @@
 #define __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_QUICFRAME__
 
 #include <sdk/base/nostd/ovl.hpp>
+#include <sdk/base/stream/segmentation.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/types.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshakes.hpp>
@@ -43,7 +44,6 @@ class quic_frame {
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& bin);
-    virtual return_t write(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, binary_t& bin);
 
     quic_frame_t get_type();
     quic_packet* get_packet();
@@ -56,7 +56,6 @@ class quic_frame {
     virtual return_t do_postprocess(tls_direction_t dir);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
-    virtual return_t do_write_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, binary_t& bin);
 
    private:
     void set_type(uint64 type);

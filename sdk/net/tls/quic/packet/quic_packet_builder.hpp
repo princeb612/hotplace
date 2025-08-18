@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKETBUILDER__
 #define __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKETBUILDER__
 
+#include <sdk/base/stream/types.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/types.hpp>
 #include <sdk/net/tls/types.hpp>
@@ -25,8 +26,9 @@ class quic_packet_builder {
 
     quic_packet_builder& set(quic_packet_t type);
     quic_packet_builder& set_msb(uint8 msb);
-    quic_packet_builder& set_session(tls_session* session);
+    quic_packet_builder& set(tls_session* session);
     quic_packet_builder& set(tls_direction_t dir);
+    quic_packet_builder& set(segmentation* segment);
     quic_packet_builder& construct();
 
     quic_packet* build();
@@ -42,8 +44,9 @@ class quic_packet_builder {
     uint8 _type;
     uint8 _msb;
     tls_session* _session;
-    bool _construct;
     tls_direction_t _dir;
+    segmentation* _segment;
+    bool _construct;
 };
 
 }  // namespace net

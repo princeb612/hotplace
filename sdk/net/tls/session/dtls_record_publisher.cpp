@@ -29,7 +29,7 @@
 namespace hotplace {
 namespace net {
 
-dtls_record_publisher::dtls_record_publisher() : _session(nullptr), _fragment_size(1024), _max_size(1200 - 30), _flags(0) {}
+dtls_record_publisher::dtls_record_publisher() : _session(nullptr), _fragment_size(1024), _segment_size(1200), _flags(0) {}
 
 void dtls_record_publisher::set_fragment_size(uint16 size) {
     const uint16 minsize = 1 << 7;
@@ -40,9 +40,9 @@ void dtls_record_publisher::set_fragment_size(uint16 size) {
 
 uint16 dtls_record_publisher::get_fragment_size() { return _fragment_size; }
 
-void dtls_record_publisher::set_max_size(uint16 size) { _max_size = size; }
+void dtls_record_publisher::set_segment_size(uint16 size) { _segment_size = size; }
 
-uint16 dtls_record_publisher::get_max_size() { return _max_size; }
+uint16 dtls_record_publisher::get_max_size() { return _segment_size; }
 
 return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir, std::list<binary_t>& container) {
     return_t ret = errorcode_t::success;
