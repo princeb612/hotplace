@@ -50,6 +50,21 @@ enum quic_packet_flag_t {
  *                   .set_payload_size(1200)
  *                   .set_flags(quic_pad_packet | quic_ack_packet)
  *                   .publish(from_server, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
+ *
+ *          // case CRYPTO[CERT, CV, FIN], SETTINGS, PADDING
+ *          // ex.
+ *          //      PKN4 CRYPTO [CERT.fragment]
+ *          //      PKN5 CRYPTO [CERT.fragment]
+ *          //      PKN6 CRYPTO [CERT.fragment, CV, FIN] + PKN7 SETTINGS, PADDING
+ *          publisher.set_session(session)
+ *                   .set_payload_size(max_payload_size)
+ *                   .set_flags(quic_ack_packet | quic_pad_packet)
+ *                   .add(new tls_handshake_certificate(session))
+ *                   .add(new tls_handshake_certificate_verify(session))
+ *                   .add(new tls_handshake_finished(session))
+ *                   .add(settings)
+ *                   .set_streaminfo(0x3, h3_control_stream)
+ *                   .publish(from_server, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
  */
 class quic_packet_publisher {
    public:
@@ -61,10 +76,17 @@ class quic_packet_publisher {
      * @param uint32 flags [in] see quic_packet_flag_t
      */
     quic_packet_publisher& set_flags(uint32 flags);
+    /**
+     * @param uint64 streamid
+     * @param uint8 unitype [inopt]
+     *                              if bi-directional, ignored
+     */
+    quic_packet_publisher& set_streaminfo(uint64 streamid, uint8 unitype = 0);
 
     tls_session* get_session();
     uint16 get_payload_size();
     uint32 get_flags();
+    uint64 get_streamid();
 
     quic_packet_publisher& add(tls_handshake* handshake, bool upref = false);
     quic_packet_publisher& add(http3_frame* frame, bool upref = false);
@@ -75,7 +97,7 @@ class quic_packet_publisher {
 
    protected:
     return_t probe_spaces(std::set<protection_space_t>& spaces);
-    return_t publish_space(protection_space_t space, tls_direction_t dir, std::list<binary_t>& container);
+    return_t publish_space(protection_space_t space, tls_direction_t dir, uint32 flags, std::list<binary_t>& container);
 
     bool is_kindof_initial(tls_handshake* handshake);
     bool is_kindof_handshake(tls_handshake* handshake);
@@ -87,6 +109,8 @@ class quic_packet_publisher {
     tls_session* _session;
     uint16 _payload_size;
     uint32 _flags;
+    uint64 _streamid;
+    uint8 _unitype;
 
     tls_handshakes _handshakes;
     http3_frames _frames;

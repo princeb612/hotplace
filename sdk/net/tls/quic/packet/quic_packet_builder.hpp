@@ -28,16 +28,15 @@ class quic_packet_builder {
     quic_packet_builder& set_msb(uint8 msb);
     quic_packet_builder& set(tls_session* session);
     quic_packet_builder& set(tls_direction_t dir);
-    quic_packet_builder& set(segmentation* segment);
+    quic_packet_builder& set(segmentation* segment, size_t concat = 0);
     quic_packet_builder& construct();
 
     quic_packet* build();
 
    protected:
+    tls_direction_t get_direction();
     uint8 get_msb();
     tls_session* get_session();
-
-    tls_direction_t get_direction();
     bool is_construct();
 
    private:
@@ -46,6 +45,7 @@ class quic_packet_builder {
     tls_session* _session;
     tls_direction_t _dir;
     segmentation* _segment;
+    size_t _concat;
     bool _construct;
 };
 

@@ -9,6 +9,7 @@
  */
 
 #include <sdk/base/stream/segmentation.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet_0rtt.hpp>
@@ -24,7 +25,7 @@
 namespace hotplace {
 namespace net {
 
-quic_packet_builder::quic_packet_builder() : _type(0), _msb(0), _session(nullptr), _segment(nullptr), _dir(from_any), _construct(false) {}
+quic_packet_builder::quic_packet_builder() : _type(0), _msb(0), _session(nullptr), _segment(nullptr), _dir(from_any), _concat(0), _construct(false) {}
 
 quic_packet_builder& quic_packet_builder::set(quic_packet_t type) {
     _type = type;
@@ -41,8 +42,9 @@ quic_packet_builder& quic_packet_builder::set(tls_session* session) {
     return *this;
 }
 
-quic_packet_builder& quic_packet_builder::set(segmentation* segment) {
+quic_packet_builder& quic_packet_builder::set(segmentation* segment, size_t concat) {
     _segment = segment;
+    _concat = concat;
     return *this;
 }
 
@@ -50,6 +52,10 @@ quic_packet_builder& quic_packet_builder::set(tls_direction_t dir) {
     _dir = dir;
     return *this;
 }
+
+uint8 quic_packet_builder::get_msb() { return _msb; }
+
+tls_session* quic_packet_builder::get_session() { return _session; }
 
 tls_direction_t quic_packet_builder::get_direction() { return _dir; }
 
@@ -87,7 +93,7 @@ quic_packet* quic_packet_builder::build() {
                     auto pn = session->get_recordno(get_direction(), false, protection_initial);
                     auto pnl = (prng.rand32() % 4) + 1;
                     packet->set_pn(pn, pnl);
-                    packet->get_fragment().set(_segment);
+                    packet->get_fragment().set(_segment, _concat);
                 }
             } break;
             case quic_packet_type_0_rtt: {
@@ -100,7 +106,7 @@ quic_packet* quic_packet_builder::build() {
                     auto pn = session->get_recordno(get_direction(), false, protection_handshake);
                     auto pnl = (prng.rand32() % 4) + 1;
                     packet->set_pn(pn, pnl);
-                    packet->get_fragment().set(_segment);
+                    packet->get_fragment().set(_segment, _concat);
                 }
             } break;
             case quic_packet_type_retry: {
@@ -108,24 +114,30 @@ quic_packet* quic_packet_builder::build() {
             } break;
             case quic_packet_type_1_rtt: {
                 __try_new_catch_only(packet, new quic_packet_1rtt(session));
-                if (is_construct() && (is_unidirection(get_direction()))) {
+                if (is_construct()) {
                     openssl_prng prng;
                     auto pn = session->get_recordno(get_direction(), false, protection_application);
                     auto pnl = (prng.rand32() % 4) + 1;
                     packet->set_pn(pn, pnl);
-                    packet->get_fragment().set(_segment);
+                    packet->get_fragment().set(_segment, _concat);
                 }
             } break;
         }
+#if defined DEBUG
+        if (packet && is_construct()) {
+            auto tlsadvisor = tls_advisor::get_instance();
+            if (istraceable(trace_category_net)) {
+                basic_stream dbs;
+                dbs.println("\e[1;33m+ quic packet %s\e[0m", tlsadvisor->quic_packet_type_string(type).c_str());
+                trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+            }
+        }
+#endif
     }
     __finally2 {}
 
     return packet;
 }
-
-uint8 quic_packet_builder::get_msb() { return _msb; }
-
-tls_session* quic_packet_builder::get_session() { return _session; }
 
 }  // namespace net
 }  // namespace hotplace

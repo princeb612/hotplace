@@ -408,7 +408,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             const binary_t &secret_s_hs_traffic = get_secrets().get(tls_secret_s_hs_traffic);
             lambda_expand_label(tls_secret_handshake_server_key, okm, hashalg, keysize, secret_s_hs_traffic, "key", empty);
             lambda_expand_label(tls_secret_handshake_server_iv, okm, hashalg, 12, secret_s_hs_traffic, "iv", empty);
-        } else if ((tls_hs_finished == type) && (from_server == dir)) {
+        } else if ((tls_hs_finished == type) && is_serverinitiated(dir)) {
             /**
              *   0 -> HKDF-Extract = Master Secret
              *             |
@@ -472,7 +472,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 lambda_expand_label(tls_secret_application_quic_server_iv, okm, hashalg, 12, secret_application_server, label_quic_iv, empty);
                 lambda_expand_label(tls_secret_application_quic_server_hp, okm, hashalg, keysize, secret_application_server, label_quic_hp, empty);
             }
-        } else if ((tls_hs_finished == type) && (from_client == dir)) {
+        } else if ((tls_hs_finished == type) && is_clientinitiated(dir)) {
             /**
              *   0 -> HKDF-Extract = Master Secret
              *             |
@@ -856,9 +856,9 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
 
         binary_t fin_key;
         if (is_kindof_tls13()) {
-            if (from_server == dir) {
+            if (is_serverinitiated(dir)) {
                 typeof_secret = tls_secret_s_hs_traffic;
-            } else {
+            } else if (is_clientinitiated(dir)) {
                 typeof_secret = tls_secret_c_hs_traffic;
             }
             const binary_t &ht_secret = get_secrets().get(typeof_secret);
@@ -888,9 +888,9 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
 #endif
         } else {
             binary_t seed;
-            if (from_client == dir) {
+            if (is_clientinitiated(dir)) {
                 binary_append(seed, "client finished");
-            } else {
+            } else if (is_serverinitiated(dir)) {
                 binary_append(seed, "server finished");
             }
             binary_append(seed, fin_hash);

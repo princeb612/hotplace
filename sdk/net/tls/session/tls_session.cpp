@@ -159,7 +159,13 @@ t_key_value<uint16, uint16>& tls_session::get_keyvalue() { return _kv; }
 
 tls_session::session_info& tls_session::get_session_info(tls_direction_t dir) {
     // critical_section_guard guard(_lock);
-    return _direction[dir];
+    tls_direction_t d = dir;
+    if (client_initiated_bidi == dir) {
+        d = from_client;
+    } else if (server_initiated_bidi == dir) {
+        d = from_server;
+    }
+    return _direction[d];
 }
 
 uint64 tls_session::get_recordno(tls_direction_t dir, bool inc, protection_space_t space) { return get_session_info(dir).get_recordno(inc, space); }

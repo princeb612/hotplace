@@ -44,11 +44,11 @@ quic_session& quic_session::add(quic_frame_stream* stream) {
         auto flags = stream->get_flags();
         uint32 finmask = 0;
 
-        if (quic_frame_stream::quic_frame_stream_fin & flags) {
+        if (quic_frame_stream_fin & flags) {
             finmask = bin_wait_fin;
         }
 
-        if (quic_frame_stream::quic_frame_stream_off & flags) {
+        if (quic_frame_stream_off & flags) {
             _streams.write(streamid, stream->get_offset(), stream->get_streamdata(), finmask);
         } else {
             _streams.assign(streamid, stream->get_streamdata());
@@ -77,7 +77,7 @@ return_t quic_session::consume(quic_frame_stream* stream) {
         auto lambda_h3 = [&](quic_frame_stream* stream, const binary_t& bin, size_t& pos) -> return_t {
             return_t ret = errorcode_t::success;
             auto streamid = stream->get_streamid();
-            if (streamid & quic_stream_unidirectional) {
+            if (quic_stream_unidirectional == (streamid & quic_stream_unidirectional)) {
                 auto lambda_decode = [&](const binary_t& tbin, size_t& tpos, uint32 flag) -> return_t {
                     qpack_encoder encoder;
                     std::list<qpack_decode_t> kv;
@@ -130,10 +130,12 @@ return_t quic_session::consume(quic_frame_stream* stream) {
         constexpr byte_t alpn_ping[5] = {0x4, 'p', 'i', 'n', 'g'};  // ping
 
         const binary_t& alpn = stream->get_packet()->get_session()->get_tls_protection().get_secrets().get(tls_context_alpn);
-        if (0 == memcmp(alpn_h3, &alpn[0], sizeof(alpn_h3))) {
-            ret = _streams.consume(stream->get_streamid(), stream, lambda_h3);
-        } else if (0 == memcmp(alpn_ping, &alpn[0], sizeof(alpn_ping))) {
-            //
+        if (false == alpn.empty()) {
+            if (0 == memcmp(alpn_h3, &alpn[0], sizeof(alpn_h3))) {
+                ret = _streams.consume(stream->get_streamid(), stream, lambda_h3);
+            } else if (0 == memcmp(alpn_ping, &alpn[0], sizeof(alpn_ping))) {
+                //
+            }
         }
     }
     __finally2 {}

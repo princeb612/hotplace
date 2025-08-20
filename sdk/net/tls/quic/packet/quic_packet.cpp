@@ -128,8 +128,6 @@ return_t quic_packet::write(tls_direction_t dir, binary_t& packet) {
         binary_t ciphertext;
         binary_t tag;
 
-        packet.clear();
-
         ret = write(dir, header, ciphertext, tag);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -227,9 +225,9 @@ return_t quic_packet::do_read_header(tls_direction_t dir, const byte_t* stream, 
             // RFC 9000 5.1.  Connection ID
             // Packets with short headers (Section 17.3) only include the Destination Connection ID and omit the explicit length.
             auto size_dcid = 0;
-            if (from_client == dir) {
+            if (is_clientinitiated(dir)) {
                 size_dcid = secrets.get(tls_context_server_cid).size();
-            } else if (from_server == dir) {
+            } else if (is_serverinitiated(dir)) {
                 size_dcid = secrets.get(tls_context_client_cid).size();
             }
             pl.reserve(constexpr_dcid, size_dcid);
@@ -374,7 +372,7 @@ return_t quic_packet::header_protect(tls_direction_t dir, const binary_t& bin_ci
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
-            dbs.println(" > packet number 0x%s", base16_encode(bin_pn).c_str());
+            dbs.println(" > packet number 0x%s (%i)", base16_encode(bin_pn).c_str(), _pn);
             dbs.println(" > packet number length %i", pn_length);
             trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
         }

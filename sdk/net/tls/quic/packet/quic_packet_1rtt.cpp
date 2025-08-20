@@ -36,7 +36,7 @@ return_t quic_packet_1rtt::do_read_body(tls_direction_t dir, const byte_t* strea
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        if ((nullptr == session) || (false == is_unidirection(dir))) {
+        if ((nullptr == session) || is_anydirection(dir)) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
@@ -49,11 +49,10 @@ return_t quic_packet_1rtt::do_read_body(tls_direction_t dir, const byte_t* strea
 
         size_t ppos = pos;
         size_t offset_pnpayload = 0;
-        // byte_t ht = stream[pos];
 
         {
             payload pl;
-            pl << new payload_member(binary_t(), constexpr_payload)  //
+            pl << new payload_member(binary_t(), constexpr_payload)  // PN + payload
                << new payload_member(binary_t(), constexpr_tag);
             pl.reserve(constexpr_tag, tagsize);
             pl.read(stream, size, pos);
@@ -105,8 +104,8 @@ return_t quic_packet_1rtt::do_estimate() {
     auto& protection = session->get_tls_protection();
     auto tagsize = protection.get_tag_size();
     auto size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+    auto type = get_type();
     auto estimate = estimate_quic_packet_size(get_type(), _dcid.size(), 0, 0, get_pn_length(), size, tagsize);
-
     get_fragment().use(estimate - size);  // quic packet header + tag
 
     return ret;
@@ -162,7 +161,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
          *  in sampling header ciphertext for header protection, the Packet Number field is
          *  assumed to be 4 bytes long (its maximum possible encoded length).
          */
-        if (is_unidirection(dir) && (get_payload().size() > 0)) {
+        if ((false == is_anydirection(dir)) && (get_payload().size() > 0)) {
             binary_t bin_ciphertext;
             binary_t bin_tag;
             binary_t bin_mask;

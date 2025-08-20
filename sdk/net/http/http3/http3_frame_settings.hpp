@@ -23,8 +23,16 @@ class http3_frame_settings : public http3_frame {
    public:
     http3_frame_settings();
 
-    void set(uint16 id, uint64 value);
-    void set(uint16 id, const binary_t& value);
+    /**
+     * @param uint16 id [in] see h3_settings_param_t
+     * @param uint64 value [in]
+     */
+    http3_frame_settings& set(uint16 id, uint64 value);
+    /**
+     * @param uint16 id [in] see h3_settings_param_t
+     * @param const binary_t& [in]
+     */
+    http3_frame_settings& set(uint16 id, const binary_t& value);
 
    protected:
     virtual return_t do_read_payload(const byte_t* stream, size_t size, size_t& pos);

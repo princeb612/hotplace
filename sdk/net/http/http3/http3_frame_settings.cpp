@@ -52,6 +52,7 @@ return_t http3_frame_settings::do_read_payload(const byte_t* stream, size_t size
 
 return_t http3_frame_settings::do_write(binary_t& bin) {
     return_t ret = errorcode_t::success;
+    binary_t temp;
     for (auto& item : _params) {
         auto id = item.first;
         auto& value = item.second;
@@ -63,11 +64,10 @@ return_t http3_frame_settings::do_write(binary_t& bin) {
                    << new payload_member(new quic_encoded(uint64(0)), constexpr_value);
             } break;
             case TYPE_UINT64: {
-                binary_t temp;
-                quic_write_vle_int(value.content().data.ui64, temp);
+                auto v = value.content().data.ui64;
 
                 pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
-                   << new payload_member(new quic_encoded(temp), constexpr_value);
+                   << new payload_member(new quic_encoded(v), constexpr_value);
             } break;
             case TYPE_BINARY: {
                 pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
@@ -78,22 +78,24 @@ return_t http3_frame_settings::do_write(binary_t& bin) {
     }
 
     payload pl;
-    pl << new payload_member(new quic_encoded(uint64(0)))                //
-       << new payload_member(new quic_encoded(uint64(_payload.size())))  //
+    pl << new payload_member(new quic_encoded(uint64(h3_frame_settings)))  //
+       << new payload_member(new quic_encoded(uint64(_payload.size())))    //
        << new payload_member(_payload);
     pl.write(bin);
 
     return ret;
 }
 
-void http3_frame_settings::set(uint16 id, uint64 value) {
+http3_frame_settings& http3_frame_settings::set(uint16 id, uint64 value) {
     critical_section_guard guard(_lock);
     _params.push_back({id, variant(value)});
+    return *this;
 }
 
-void http3_frame_settings::set(uint16 id, const binary_t& value) {
+http3_frame_settings& http3_frame_settings::set(uint16 id, const binary_t& value) {
     critical_section_guard guard(_lock);
     _params.push_back({id, variant(value)});
+    return *this;
 }
 
 }  // namespace net

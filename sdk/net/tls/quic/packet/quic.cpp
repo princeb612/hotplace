@@ -153,19 +153,20 @@ uint32 estimate_quic_packet_size(uint8 type, uint8 dcidlen, uint8 scidlen, uint8
     uint32 ret_value = 0;
     switch (type) {
         case quic_packet_type_initial: {
+            // RFC 9000 17.2.2.  Initial Packet
             binary_t temp;
             quic_write_vle_int(payload, temp);
             ret_value = sizeof(uint8) + sizeof(uint32) + 1 + dcidlen + 1 + scidlen + 1 + tokenlen + temp.size() + pnl + payload + taglen;
         } break;
         case quic_packet_type_handshake: {
+            // RFC 9000 17.2.4.  Handshake Packet
             binary_t temp;
             quic_write_vle_int(payload, temp);
             ret_value = sizeof(uint8) + sizeof(uint32) + 1 + dcidlen + 1 + scidlen + temp.size() + pnl + payload + taglen;
         } break;
         case quic_packet_type_1_rtt: {
-            binary_t temp;
-            quic_write_vle_int(payload, temp);
-            ret_value = sizeof(uint8) + dcidlen + temp.size() + pnl + payload + taglen;
+            // RFC 9000 17.3.1.  1-RTT Packet
+            ret_value = sizeof(uint8) + dcidlen + pnl + payload + taglen;
         } break;
     }
     return ret_value;

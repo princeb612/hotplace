@@ -18,14 +18,21 @@ size_t segmentation::get_segment_size() { return _segment_size; }
 
 return_t segmentation::assign(uint32 type, const byte_t* stream, size_t size, uint32 flag) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == stream || 0 == size) {
+            ret = do_nothing;
+            __leave2;
+        }
 
-    critical_section_guard guard(_lock);
-    auto iter = _contexts.find(type);
-    if (_contexts.end() == iter) {
-        _contexts.insert({type, std::move(fragment_context(type, get_segment_size(), stream, size, flag))});
-    } else {
-        ret = errorcode_t::already_exist;
+        critical_section_guard guard(_lock);
+        auto iter = _contexts.find(type);
+        if (_contexts.end() == iter) {
+            _contexts.insert({type, std::move(fragment_context(type, get_segment_size(), stream, size, flag))});
+        } else {
+            ret = errorcode_t::already_exist;
+        }
     }
+    __finally2 {}
     return ret;
 }
 
@@ -50,7 +57,7 @@ return_t segmentation::peek(uint32 type, std::function<return_t(const fragment_c
     return ret;
 }
 
-return_t segmentation::consume(uint32 type, size_t avail, size_t bumper, std::function<return_t(const byte_t*, size_t, size_t&, size_t)> func) {
+return_t segmentation::consume(uint32 type, size_t avail, size_t bumper, std::function<return_t(const byte_t*, size_t, size_t, size_t)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == func) || (avail < bumper)) {
@@ -73,6 +80,10 @@ return_t segmentation::consume(uint32 type, size_t avail, size_t bumper, std::fu
             ret = func(context.stream, context.size, context.pos, len);
 
             context.pos += len;
+
+            if (context.size == context.pos) {
+                _contexts.erase(iter);
+            }
         }
     }
     __finally2 {}
@@ -98,25 +109,46 @@ return_t segmentation::isready(uint32 type) {
     return ret;
 }
 
-fragmentation::fragmentation() : _segment(nullptr), _used(0) {}
+return_t segmentation::isready() {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        critical_section_guard guard(_lock);
+        if (_contexts.empty()) {
+            ret = errorcode_t::not_ready;
+            __leave2;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
 
-return_t fragmentation::set(segmentation* segment) {
+fragmentation::fragmentation() : _segment(nullptr), _fragment_size(0), _used(0) {}
+
+return_t fragmentation::set(segmentation* segment, size_t concat) {
     return_t ret = errorcode_t::success;
     if (nullptr == segment) {
         ret = errorcode_t::invalid_parameter;
     } else {
         _segment = segment;
+        auto fragsize = segment->get_segment_size();
+        if (fragsize > concat) {
+            _fragment_size = fragsize - concat;
+        } else {
+            ret = errorcode_t::exceed;
+        }
     }
     return ret;
 }
 
 segmentation* fragmentation::get_segment() { return _segment; }
 
+size_t fragmentation::get_fragment_size() { return _fragment_size; }
+
 return_t fragmentation::use(size_t size) {
     return_t ret = errorcode_t::success;
     auto segment = get_segment();
     if (segment) {
-        if (size + _used > segment->get_segment_size()) {
+        if (size + _used > get_fragment_size()) {
             ret = errorcode_t::exceed;
         } else {
             _used = size;
@@ -131,15 +163,15 @@ size_t fragmentation::available() {
     size_t ret_value = 0;
     auto segment = get_segment();
     if (segment) {
-        auto segsize = segment->get_segment_size();
-        if (segsize > _used) {
-            ret_value = segsize - _used;
+        auto fragsize = get_fragment_size();
+        if (fragsize > _used) {
+            ret_value = fragsize - _used;
         }
     }
     return ret_value;
 }
 
-return_t fragmentation::consume(uint32 type, size_t bumper, std::function<return_t(const byte_t*, size_t, size_t&, size_t)> func) {
+return_t fragmentation::consume(uint32 type, size_t bumper, std::function<return_t(const byte_t*, size_t, size_t, size_t)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto segment = get_segment();

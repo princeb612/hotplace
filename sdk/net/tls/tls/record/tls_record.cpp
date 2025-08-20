@@ -277,11 +277,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto const& range = get_header_range();
 
-            dbs.println("# record %s [size 0x%zx(%zi) pos 0x%x]",
-                        (from_server == dir)   ? "(server)"
-                        : (from_client == dir) ? "(client)"
-                                               : "",
-                        size, size, recpos);
+            dbs.println("# record (%s) [size 0x%zx(%zi) pos 0x%x]", tlsadvisor->nameof_direction(dir).c_str(), size, size, recpos);
 
             if (check_trace_level(loglevel_debug)) {
                 uint16 content_header_size = 0;

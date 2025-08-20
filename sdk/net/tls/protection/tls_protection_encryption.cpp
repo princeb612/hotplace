@@ -349,7 +349,7 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
             case session_type_dtls: {
                 if (is_kindof_tls13()) {
                     // TLS 1.3
-                    if (from_client == dir) {
+                    if (is_clientinitiated(dir)) {
                         // TLS, DTLS
                         auto flow = get_flow();
                         if (tls_flow_1rtt == flow || tls_flow_hello_retry_request == flow) {
@@ -383,7 +383,7 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
                                 } break;
                             }
                         }
-                    } else if (from_server == dir) {
+                    } else if (is_serverinitiated(dir)) {
                         // from_server
                         if (tls_hs_finished == hsstatus) {
                             secret_key = tls_secret_application_server_key;
@@ -395,10 +395,10 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
                     }
                 } else {
                     // TLS 1.2
-                    if (from_client == dir) {
+                    if (is_clientinitiated(dir)) {
                         secret_key = tls_secret_client_key;
                         secret_iv = tls_secret_client_iv;
-                    } else if (from_server == dir) {
+                    } else if (is_serverinitiated(dir)) {
                         secret_key = tls_secret_server_key;
                         secret_iv = tls_secret_server_iv;
                     }
@@ -407,7 +407,7 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
             case session_type_quic:
             case session_type_quic2: {
                 // QUIC
-                if (from_client == dir) {
+                if (is_clientinitiated(dir)) {
                     if (protection_initial == space) {
                         secret_key = tls_secret_initial_quic_client_key;
                         secret_iv = tls_secret_initial_quic_client_iv;
@@ -420,7 +420,7 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
                     } else {
                         ret = errorcode_t::invalid_parameter;
                     }
-                } else if (from_server == dir) {
+                } else if (is_serverinitiated(dir)) {
                     if (protection_initial == space) {
                         secret_key = tls_secret_initial_quic_server_key;
                         secret_iv = tls_secret_initial_quic_server_iv;
@@ -446,10 +446,10 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
 return_t tls_protection::get_cbc_hmac_key(tls_session *session, tls_direction_t dir, tls_secret_t &secret_key, tls_secret_t &secret_mac_key) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (from_client == dir) {
+        if (is_clientinitiated(dir)) {
             secret_key = tls_secret_client_key;
             secret_mac_key = tls_secret_client_mac_key;
-        } else if (from_server == dir) {
+        } else if (is_serverinitiated(dir)) {
             secret_key = tls_secret_server_key;
             secret_mac_key = tls_secret_server_mac_key;
         }
@@ -640,9 +640,9 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
         binary_t iv;
         if (etm) {
-            if (from_client == dir) {
+            if (is_clientinitiated(dir)) {
                 iv = get_secrets().get(tls_secret_client_iv);
-            } else if (from_server == dir) {
+            } else if (is_serverinitiated(dir)) {
                 iv = get_secrets().get(tls_secret_server_iv);
             }
         } else {
@@ -1036,9 +1036,9 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
             bpos = content_header_size;
             ciphertext = stream + pos + bpos;
             ciphersize = size - pos - bpos;
-            if (from_client == dir) {
+            if (is_clientinitiated(dir)) {
                 iv = get_secrets().get(tls_secret_client_iv);
-            } else if (from_server == dir) {
+            } else if (is_serverinitiated(dir)) {
                 iv = get_secrets().get(tls_secret_server_iv);
             }
         } else {

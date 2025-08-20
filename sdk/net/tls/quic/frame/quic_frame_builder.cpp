@@ -30,7 +30,7 @@
 namespace hotplace {
 namespace net {
 
-quic_frame_builder::quic_frame_builder() : _type(quic_frame_type_padding), _packet(nullptr), _dir(from_any), _construct(false) {}
+quic_frame_builder::quic_frame_builder() : _type(quic_frame_type_padding), _packet(nullptr), _dir(from_any), _streamid(0), _unitype(0), _construct(false) {}
 
 quic_frame_builder& quic_frame_builder::set(quic_frame_t type) {
     _type = type;
@@ -47,12 +47,24 @@ quic_frame_builder& quic_frame_builder::set(tls_direction_t dir) {
     return *this;
 }
 
+quic_frame_builder& quic_frame_builder::set_streaminfo(uint64 streamid, uint8 unitype) {
+    _streamid = streamid;
+    _unitype = unitype;
+    return *this;
+}
+
 quic_frame_builder& quic_frame_builder::construct() {
     _construct = true;
     return *this;
 }
 
+quic_frame_t quic_frame_builder::get_type() { return _type; }
+
+quic_packet* quic_frame_builder::get_packet() { return _packet; }
+
 tls_direction_t quic_frame_builder::get_direction() { return _dir; }
+
+uint64 quic_frame_builder::get_streamid() { return _streamid; }
 
 bool quic_frame_builder::is_construct() { return _construct; }
 
@@ -102,6 +114,8 @@ quic_frame* quic_frame_builder::build() {
             // 19.8.  STREAM Frames
             __try_new_catch_only(frame, new quic_frame_stream(packet));
             frame->set_type(type);
+            quic_frame_stream* stream = (quic_frame_stream*)frame;
+            stream->set_streaminfo(get_streamid(), _unitype);
         } break;
         case quic_frame_type_max_data:
             // Figure 33: MAX_DATA Frame Format
@@ -151,10 +165,6 @@ quic_frame* quic_frame_builder::build() {
     }
     return frame;
 }
-
-quic_frame_t quic_frame_builder::get_type() { return _type; }
-
-quic_packet* quic_frame_builder::get_packet() { return _packet; }
 
 }  // namespace net
 }  // namespace hotplace

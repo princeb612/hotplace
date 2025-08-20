@@ -38,13 +38,13 @@ return_t tls_protection::get_protection_mask_key(tls_session *session, tls_direc
             case session_type_tls:
             case session_type_dtls: {
                 if (is_kindof_dtls()) {
-                    if (from_server == dir) {
+                    if (is_serverinitiated(dir)) {
                         if (tls_hs_finished == hsstatus) {
                             secret_key = tls_secret_application_server_sn_key;
                         } else {
                             secret_key = tls_secret_handshake_server_sn_key;
                         }
-                    } else {
+                    } else if (is_clientinitiated(dir)) {
                         if (tls_hs_finished == hsstatus) {
                             secret_key = tls_secret_application_client_sn_key;
                         } else {
@@ -56,21 +56,21 @@ return_t tls_protection::get_protection_mask_key(tls_session *session, tls_direc
             case session_type_quic:
             case session_type_quic2: {
                 if (protection_initial == space) {
-                    if (from_server == dir) {
+                    if (is_serverinitiated(dir)) {
                         secret_key = tls_secret_initial_quic_server_hp;
-                    } else {
+                    } else if (is_clientinitiated(dir)) {
                         secret_key = tls_secret_initial_quic_client_hp;
                     }
                 } else if (protection_handshake == space) {
-                    if (from_server == dir) {
+                    if (is_serverinitiated(dir)) {
                         secret_key = tls_secret_handshake_quic_server_hp;
-                    } else {
+                    } else if (is_clientinitiated(dir)) {
                         secret_key = tls_secret_handshake_quic_client_hp;
                     }
                 } else if (protection_application == space) {
-                    if (from_server == dir) {
+                    if (is_serverinitiated(dir)) {
                         secret_key = tls_secret_application_quic_server_hp;
-                    } else {
+                    } else if (is_clientinitiated(dir)) {
                         secret_key = tls_secret_application_quic_client_hp;
                     }
                 } else {

@@ -95,9 +95,10 @@ class segmentation {
     return_t assign(uint32 type, const byte_t* stream, size_t size, uint32 flag = 0);
     return_t peek(uint32 type, std::function<return_t(const fragment_context& context)> func);
     return_t isready(uint32 type);
+    return_t isready();
 
    protected:
-    return_t consume(uint32 type, size_t avail, size_t bumper, std::function<return_t(const byte_t*, size_t, size_t&, size_t)> func);
+    return_t consume(uint32 type, size_t avail, size_t bumper, std::function<return_t(const byte_t*, size_t, size_t, size_t)> func);
 
    private:
     critical_section _lock;
@@ -112,10 +113,11 @@ class fragmentation {
    public:
     fragmentation();
 
-    return_t set(segmentation* segment);
-    return_t consume(uint32 type, size_t bumper, std::function<return_t(const byte_t*, size_t, size_t&, size_t)> func);
+    return_t consume(uint32 type, size_t bumper, std::function<return_t(const byte_t*, size_t, size_t, size_t)> func);
 
+    return_t set(segmentation* segment, size_t concat = 0);
     segmentation* get_segment();
+    size_t get_fragment_size();
 
     return_t use(size_t size);
     size_t used();
@@ -124,6 +126,7 @@ class fragmentation {
    protected:
    private:
     segmentation* _segment;
+    size_t _fragment_size;
     size_t _used;
 };
 

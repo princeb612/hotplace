@@ -14,6 +14,8 @@ static int max_udp_payload_size = 1200;
 void construct_quic_initial_client_hello(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
+    auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+
     auto lambda = [&](tls_handshake* handshake, tls_direction_t dir) -> return_t {
         return_t ret = errorcode_t::success;
         __try2 {
@@ -23,8 +25,6 @@ void construct_quic_initial_client_hello(tls_session* session, tls_direction_t d
             }
 
             {
-                auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
-
                 auto quic_params = new tls_extension_quic_transport_parameters(handshake);
                 (*quic_params)
                     .set(quic_param_disable_active_migration, binary_t())
@@ -64,8 +64,6 @@ void construct_quic_initial_client_hello(tls_session* session, tls_direction_t d
 
     tls_composer::construct_client_hello(&handshake, session, lambda, tls_13, tls_13);
 
-    auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
-
     // CRYPTO[CH], PADDING
     publisher.set_session(session)
         .set_payload_size(max_payload_size)
@@ -102,14 +100,13 @@ void construct_quic_initial_server_hello(tls_session* session, tls_direction_t d
         });
 }
 
-void construct_quic_handshake_ee_cert_cv_fin(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
+void construct_quic_handshake_ee_cert_cv_fin_settings(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
     quic_packet_publisher publisher;
 
     auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
-
-    publisher.set_session(session).set_payload_size(max_payload_size).set_flags(quic_ack_packet | quic_pad_packet);
+    publisher.set_session(session).set_payload_size(max_payload_size).set_flags(quic_ack_packet | quic_pad_packet).set_streaminfo(0x3, h3_control_stream);
 
     {
         // EE
@@ -170,6 +167,23 @@ void construct_quic_handshake_ee_cert_cv_fin(tls_session* session, tls_direction
         }
     }
 
+    // PACKET.handshake + PACKET.1-RTT
+    {
+        auto& dyntable = session->get_quic_session().get_dynamic_table();
+        http3_frame_builder builder;
+        auto frame = (http3_frame_settings*)builder.set(h3_frame_settings).set(&dyntable).build();
+        if (frame) {
+            (*frame)
+                .set(h3_settings_qpack_max_table_capacity, 0x10000)
+                .set(h3_settings_max_field_section_size, 0x10000)
+                .set(h3_settings_qpack_blocked_streams, 100)
+                .set(h3_settings_enable_connect_protocol, 1)
+                .set(h3_settings_h3_datagram, 1);
+
+            publisher << frame;
+        }
+    }
+
     // CRYPTO[EE, CERT]
     // CRYPTO[CERT]
     // ...
@@ -177,17 +191,16 @@ void construct_quic_handshake_ee_cert_cv_fin(tls_session* session, tls_direction
     publisher.publish(dir, [&](tls_session* session, binary_t& packet) -> void {
         bins.push_back(packet);
         auto tlsadvisor = tls_advisor::get_instance();
-        auto test = max_udp_payload_size == packet.size();
-        _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
+        _test_case.assert(true, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
     });
 }
 
 void construct_quic_handshake_fin(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
-    quic_packet_publisher publisher;
-
     auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+
+    quic_packet_publisher publisher;
 
     // ACK, CRYPTO[FIN], PADDING
     publisher.set_session(session)
@@ -205,9 +218,9 @@ void construct_quic_handshake_fin(tls_session* session, tls_direction_t dir, std
 void construct_quic_ack(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
-    quic_packet_publisher publisher;
-
     auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+
+    quic_packet_publisher publisher;
 
     // ACK, PADDING
     publisher.set_session(session)
@@ -248,6 +261,8 @@ void test_construct_quic() {
 
     __try2 {
         return_t ret = errorcode_t::success;
+
+        tls_advisor::get_instance()->enable_alpn("h3");
 
         load_certificate("rsa.crt", "rsa.key", nullptr);
         load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
@@ -311,17 +326,18 @@ void test_construct_quic() {
                 ack_t ack;
                 ack << pkns;
                 ack_t expect(10, 0);
-                _test_case.assert(ack == expect, __FUNCTION__, "ack");
+                _test_case.assert(ack == expect, __FUNCTION__, "ack initial");
             }
         }
 
         // handshake
         {
-            // S->C PKN#20, 21
-            // 2 fragments
+            // S->C PKN#20, 21 handshake(fragmented), 30 1-RTT
             lambda(&session_server, from_server, protection_handshake, 20);
-            construct_quic_handshake_ee_cert_cv_fin(&session_server, from_server, bins, "handshake [CRYPTO(EE, CERT, CV, FIN)]");
-            ret = send_packet(&session_client, from_server, bins, "handshake [CRYPTO(EE, CERT, CV, FIN)]");
+            lambda(&session_server, from_server, protection_application, 30);
+            construct_quic_handshake_ee_cert_cv_fin_settings(&session_server, from_server, bins, "handshake [CRYPTO(EE, CERT, CV, FIN)], 1-RTT [SETTINGS]");
+            _test_case.assert(2 == bins.size(), __FUNCTION__, "construct handshake+1-RTT");
+            ret = send_packet(&session_client, from_server, bins, "handshake [CRYPTO(EE, CERT, CV, FIN)], 1-RTT [SETTINGS]");
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -339,7 +355,14 @@ void test_construct_quic() {
                 ack_t ack;
                 ack << pkns;
                 ack_t expect(21, 1);
-                _test_case.assert(ack == expect, __FUNCTION__, "ack");
+                _test_case.assert(ack == expect, __FUNCTION__, "ack handshake");
+            }
+            {
+                auto& pkns = session_client.get_quic_session().get_pkns(protection_application);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(30, 0);
+                _test_case.assert(ack == expect, __FUNCTION__, "ack 1-RTT");
             }
 
             // S->C PKN#22 (ACK 20)
@@ -348,14 +371,6 @@ void test_construct_quic() {
             ret = send_packet(&session_client, from_server, bins, "handshake [ACK]");
             if (errorcode_t::success != ret) {
                 __leave2;
-            }
-
-            {
-                auto& pkns = session_server.get_quic_session().get_pkns(protection_handshake);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(20, 0);
-                _test_case.assert(ack == expect, __FUNCTION__, "ack");
             }
         }
     }

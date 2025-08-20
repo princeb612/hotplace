@@ -11,6 +11,8 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/net/http/http3/http3_frame_builder.hpp>
+#include <sdk/net/http/http3/types.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_ack.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_builder.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_crypto.hpp>
@@ -27,7 +29,7 @@
 namespace hotplace {
 namespace net {
 
-quic_packet_publisher::quic_packet_publisher() : _session(nullptr), _payload_size(0), _flags(0) {}
+quic_packet_publisher::quic_packet_publisher() : _session(nullptr), _payload_size(0), _flags(0), _streamid(0), _unitype(0) {}
 
 quic_packet_publisher& quic_packet_publisher::set_session(tls_session* session) {
     _session = session;
@@ -44,11 +46,19 @@ quic_packet_publisher& quic_packet_publisher::set_flags(uint32 flags) {
     return *this;
 }
 
+quic_packet_publisher& quic_packet_publisher::set_streaminfo(uint64 streamid, uint8 unitype) {
+    _streamid = streamid;
+    _unitype = unitype;
+    return *this;
+}
+
 tls_session* quic_packet_publisher::get_session() { return _session; }
 
 uint16 quic_packet_publisher::get_payload_size() { return _payload_size; }
 
 uint32 quic_packet_publisher::get_flags() { return _flags; }
+
+uint64 quic_packet_publisher::get_streamid() { return _streamid; }
 
 tls_handshakes& quic_packet_publisher::get_handshakes() { return _handshakes; }
 
@@ -115,7 +125,7 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
     return ret;
 }
 
-return_t quic_packet_publisher::publish_space(protection_space_t space, tls_direction_t dir, std::list<binary_t>& container) {
+return_t quic_packet_publisher::publish_space(protection_space_t space, tls_direction_t dir, uint32 flags, std::list<binary_t>& container) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -137,15 +147,34 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
         quic_frame_builder frame_builder;
 
         segmentation segment(get_payload_size());
-        binary_t crypto_data;
-        size_t offset = 0;
-        if (false == get_handshakes().empty()) {
-            get_handshakes().for_each([&](tls_handshake* handshake) -> return_t { return handshake->write(dir, crypto_data); });
-            segment.assign(quic_frame_type_crypto, crypto_data.empty() ? nullptr : &crypto_data[0], crypto_data.size());
+        binary_t unfragmented;
+        if (protection_application == space) {
+            if (false == get_frames().empty()) {
+                get_frames().for_each([&](http3_frame* frame) -> return_t { return frame->write(unfragmented); });
+                segment.assign(quic_frame_type_stream, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size());
+            }
+        } else {
+            if (false == get_handshakes().empty()) {
+                get_handshakes().for_each([&](tls_handshake* handshake) -> return_t { return handshake->write(dir, unfragmented); });
+                segment.assign(quic_frame_type_crypto, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size());
+            }
+        }
+
+        binary_t bin;
+        size_t concat = 0;
+
+        if (false == container.empty()) {
+            auto iter = container.begin();
+            std::advance(iter, container.size() - 1);
+            if (get_payload_size() != (*iter).size()) {
+                bin = std::move(*iter);
+                concat = bin.size();
+                container.erase(iter);
+            }
         }
 
         do {
-            auto packet = packet_builder.set(type).set(session).set(&segment).set(dir).construct().build();
+            auto packet = packet_builder.set(type).set(session).set(&segment, concat).set(dir).construct().build();
             if (packet) {
 #if defined DEBUG
                 if (istraceable(trace_category_net, loglevel_debug)) {
@@ -156,7 +185,7 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
 #endif
 
                 // ack
-                if (quic_ack_packet & get_flags()) {
+                if (quic_ack_packet & flags) {
                     auto& pkns = session->get_quic_session().get_pkns(space);
                     critical_section_guard guard(pkns.get_lock());
                     if (pkns.is_modified()) {
@@ -166,26 +195,30 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
                     }
                 }
 
-                if (false == crypto_data.empty()) {
-                    auto frame = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
-                    *packet << frame;
+                if (false == unfragmented.empty()) {
+                    if (protection_application == space) {
+                        auto frame = (quic_frame_stream*)frame_builder.set(quic_frame_type_stream).set(packet).set_streaminfo(_streamid, _unitype).build();
+                        *packet << frame;
+                    } else {
+                        auto frame = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
+                        *packet << frame;
+                    }
                 }
 
                 // padding
-                if (get_flags() & quic_pad_packet) {
+                if (flags & quic_pad_packet) {
                     // if max_size is set, fill 0 upto max_size
                     auto frame = (quic_frame_padding*)frame_builder.set(quic_frame_type_padding).set(packet).build();
                     frame->pad(get_payload_size(), quic_pad_packet);
                     *packet << frame;
                 }
 
-                binary_t bin;
                 packet->write(dir, bin);
-                container.push_back(bin);
+                container.push_back(std::move(bin));
 
                 packet->release();
             }
-        } while (success == segment.isready(quic_frame_type_crypto));
+        } while (success == segment.isready());
     }
     __finally2 {}
     return ret;
@@ -207,15 +240,21 @@ return_t quic_packet_publisher::publish(tls_direction_t dir, std::function<void(
             __leave2;
         }
 
+        std::list<binary_t> container;
         for (auto space : spaces) {
-            std::list<binary_t> container;
-            ret = publish_space(space, dir, container);
+            uint32 flags = get_flags();
+            if (spaces.size() > 1) {
+                if (*spaces.rbegin() != space) {
+                    flags &= ~quic_pad_packet;
+                }
+            }
+            ret = publish_space(space, dir, flags, container);
             if (errorcode_t::success != ret) {
                 break;
             }
-            for (auto& item : container) {
-                func(get_session(), item);
-            }
+        }
+        for (auto& item : container) {
+            func(get_session(), item);
         }
     }
     __finally2 {}

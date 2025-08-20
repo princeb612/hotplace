@@ -32,6 +32,15 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * @brief   quic_frame_builder
+ * @remarks
+ *          quic_frame_builder builder;
+ *          auto frame = builder.set(type).set(packet).build();
+ *          if (frame) {
+ *              frame->release();
+ *          }
+ */
 class quic_frame_builder {
    public:
     quic_frame_builder();
@@ -39,21 +48,24 @@ class quic_frame_builder {
     quic_frame_builder& set(quic_frame_t type);
     quic_frame_builder& set(quic_packet* packet);
     quic_frame_builder& set(tls_direction_t dir);
+    quic_frame_builder& set_streaminfo(uint64 streamid, uint8 unitype);
     quic_frame_builder& construct();
+
     quic_frame* build();
 
+   protected:
     quic_frame_t get_type();
     quic_packet* get_packet();
-
-   protected:
     tls_direction_t get_direction();
-
+    uint64 get_streamid();
     bool is_construct();
 
    private:
     quic_frame_t _type;
     quic_packet* _packet;
     tls_direction_t _dir;
+    uint64 _streamid;
+    uint8 _unitype;
     bool _construct;
 };
 

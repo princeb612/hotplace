@@ -557,18 +557,30 @@ enum tls_secret_t : uint16 {
     tls_context_dtls_cookie = (TLS_SECRET_USERCONTEXT | 0x34),              // network_session level
 };
 
+/**
+ * @brief direction
+ * @remarks
+ *          | tls_direction_t       | quic_stream_id_t        |
+ *          | client_initiated_bidi | quic_stream_client_bidi |
+ *          | server_initiated_bidi | quic_stream_server_bidi |
+ *          | client_initiated_uni  | quic_stream_client_uni  |
+ *          | server_initiated_uni  | quic_stream_server_uni  |
+ */
 enum tls_direction_t {
     from_any = 0,
     from_client = 1,                     // client-initiated, uni-directional (client -> server)
     from_server = 2,                     // server-initiated, uni-directional (server -> client)
-    client_initiated_uni = from_client,  // RFC 9000 2.1.
-    server_initiated_uni = from_server,  // RFC 9000 2.1.
-    client_initiated_bidi = 3,           // RFC 9000 2.1. client-initiated, bi-directional
-    server_initiated_bidi = 4,           // RFC 9000 2.1. server-initiated, bi-directional
+    client_initiated_uni = from_client,  // RFC 9000 2.1. 0x00
+    server_initiated_uni = from_server,  // RFC 9000 2.1. 0x01
+    client_initiated_bidi = 3,           // RFC 9000 2.1. client-initiated, bi-directional 0x02
+    server_initiated_bidi = 4,           // RFC 9000 2.1. server-initiated, bi-directional 0x03
 };
 
+bool is_anydirection(tls_direction_t dir);
 bool is_unidirection(tls_direction_t dir);
 bool is_bidirection(tls_direction_t dir);
+bool is_clientinitiated(tls_direction_t dir);
+bool is_serverinitiated(tls_direction_t dir);
 
 enum tls_flow_t {
     tls_flow_1rtt = 0,

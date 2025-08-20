@@ -181,6 +181,13 @@ enum quic_errorcodes_t {
     quic_crypto_error = 0x0100,  // 0x0100-0x01ff
 };
 
+enum quic_frame_stream_flag_t : uint8 {
+    quic_frame_stream_off = 0x04,
+    quic_frame_stream_len = 0x02,
+    quic_frame_stream_fin = 0x01,
+    quic_frame_stream_mask = (quic_frame_stream_off | quic_frame_stream_len | quic_frame_stream_fin),
+};
+
 class quic_frame;
 class quic_frame_ack;
 class quic_frame_builder;
