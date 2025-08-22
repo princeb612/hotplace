@@ -14,6 +14,7 @@
 
 #include <sdk/net/http/http3/http3_frames.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_stream_handler.hpp>
 
 namespace hotplace {
 namespace net {
@@ -21,14 +22,12 @@ namespace net {
 // RFC 9000 19.8.  STREAM Frames
 class quic_frame_stream : public quic_frame {
    public:
-    quic_frame_stream(quic_packet* packet);
+    quic_frame_stream(quic_packet* packet, uint8 type = quic_frame_type_stream);
 
     uint8 get_flags();
     uint64 get_streamid();
-    uint64 get_offset();
-    binary_t& get_streamdata();
 
-    quic_frame_stream& set_streaminfo(uint64 streamid, uint8 unitype);
+    quic_frame_stream& set_streaminfo(uint64 stream_id, uint8 unitype);
     http3_frames get_frames();
 
    protected:
@@ -37,11 +36,13 @@ class quic_frame_stream : public quic_frame {
     virtual return_t do_write_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, size_t len, binary_t& bin);
     virtual return_t do_postprocess(tls_direction_t dir);
 
+    void set_streamid(uint64 stream_id);
+    bool is_beginof_unistream(uint64 stream_id);
+    bool is_beginof_unistream(tls_session* session, uint64 stream_id);
+
    private:
-    uint64 _streamid;
+    uint64 _stream_id;
     uint8 _unitype;
-    uint64 _offset;
-    binary_t _streamdata;  // fragment
     http3_frames _frames;
 };
 

@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_NET_HTTP_HTTP3_HTTP3FRAMEBUILDER__
 
 #include <sdk/net/http/http3/http3_frame.hpp>
+#include <sdk/net/tls/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -21,14 +22,14 @@ class http3_frame_builder {
     http3_frame_builder();
 
     http3_frame_builder& set(h3_frame_t type);
-    http3_frame_builder& set(qpack_dynamic_table* dyntable);
+    http3_frame_builder& set(tls_session* session);
     http3_frame* build();
 
     h3_frame_t get_type();
 
    private:
     h3_frame_t _type;
-    qpack_dynamic_table* _dyntable;
+    tls_session* _session;
 };
 
 }  // namespace net

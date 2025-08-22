@@ -36,8 +36,6 @@ namespace hotplace {
 namespace net {
 
 class quic_frame {
-    friend class quic_frame_builder;
-
    public:
     quic_frame(quic_frame_t type, quic_packet* packet);
     virtual ~quic_frame();
@@ -57,9 +55,9 @@ class quic_frame {
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
-   private:
     void set_type(uint64 type);
 
+   private:
     quic_frame_t _type;
     quic_packet* _packet;
     t_shared_reference<quic_frame> _shared;

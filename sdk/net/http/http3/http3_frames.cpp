@@ -21,9 +21,14 @@ namespace net {
 
 http3_frames::http3_frames() {}
 
-return_t http3_frames::read(qpack_dynamic_table* dyntable, const byte_t* stream, size_t size, size_t& pos) {
+return_t http3_frames::read(tls_session* session, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         while (pos < size) {
             uint64 frmtype = 0;
             uint64 frmlen = 0;
@@ -44,7 +49,7 @@ return_t http3_frames::read(qpack_dynamic_table* dyntable, const byte_t* stream,
 
             h3_frame_t type = (h3_frame_t)frmtype;
             http3_frame_builder builder;
-            auto frame = builder.set(type).set(dyntable).build();
+            auto frame = builder.set(type).set(session).build();
             if (frame) {
                 ret = frame->read(stream, size, pos);
                 frame->release();
@@ -61,7 +66,7 @@ return_t http3_frames::read(qpack_dynamic_table* dyntable, const byte_t* stream,
     return ret;
 }
 
-return_t http3_frames::write(qpack_dynamic_table* dyntable, binary_t& bin) {
+return_t http3_frames::write(tls_session* session, binary_t& bin) {
     return_t ret = errorcode_t::success;
     auto lambda = [&](http3_frame* frame) -> return_t { return frame->write(bin); };
     ret = for_each(lambda);

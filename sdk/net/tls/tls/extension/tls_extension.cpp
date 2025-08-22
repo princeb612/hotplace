@@ -36,7 +36,7 @@ tls_extension::tls_extension(tls_handshake* hs) : _hs(hs), _type(0), _bodysize(0
     _shared.make_share(this);
 }
 
-tls_extension::tls_extension(const tls_extension& rhs) : _hs(rhs._hs), _type(rhs._type), _bodysize(rhs._bodysize) {
+tls_extension::tls_extension(const tls_extension& rhs) : _hs(rhs._hs), _type(rhs._type), _bodysize(rhs._bodysize), _size(rhs._size) {
     auto hs = get_handshake();
     if (nullptr == hs) {
         throw exception(errorcode_t::no_session);
@@ -44,7 +44,7 @@ tls_extension::tls_extension(const tls_extension& rhs) : _hs(rhs._hs), _type(rhs
     _shared.make_share(this);
 }
 
-tls_extension::tls_extension(uint16 type, tls_handshake* hs) : _hs(hs), _type(type), _bodysize(0) {
+tls_extension::tls_extension(uint16 type, tls_handshake* hs) : _hs(hs), _type(type), _bodysize(0), _size(0) {
     if (nullptr == hs) {
         throw exception(errorcode_t::no_session);
     }

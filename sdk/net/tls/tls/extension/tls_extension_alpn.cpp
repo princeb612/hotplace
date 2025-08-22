@@ -89,6 +89,9 @@ return_t tls_extension_alpn::do_write_body(tls_direction_t dir, binary_t& bin) {
            << new payload_member(_protocols, constexpr_protocol);                      //
         pl.write(bin);
     }
+    if (from_server == dir) {
+        get_handshake()->get_session()->get_tls_protection().get_secrets().assign(tls_context_alpn, _protocols);
+    }
     return ret;
 }
 

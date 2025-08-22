@@ -85,6 +85,9 @@ class t_shared_reference {
         return _counter;
     }
     int delref() {
+        if (0 == _counter) {
+            throw exception(errorcode_t::bad_request);
+        }
         atomic_decrement(&_counter);
         int ret = _counter;
         if (0 == _counter) {

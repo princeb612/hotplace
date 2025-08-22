@@ -25,6 +25,21 @@ enum binary_flag_t {
     bin_check_fin = 4,  // check fin
 };
 
+/**
+ * @remarks
+ *          t_binaries<tls_secret_t> secrets;
+ *          // assign
+ *          openssl_digest dgst;
+ *          binary_t empty_hash;
+ *          dgst.digest(hashalg, empty, empty_hash);
+ *          secrets.assign(tls_context_empty_hash, empty_hash);
+ *          // get
+ *          empty_hash = get_secrets().get(tls_context_empty_hash);
+ *          // append
+ *          secrets.append(tls_context_fragment, stream + pos, fragment_len);
+ *          // erase
+ *          secrets.erase(tls_context_fragment);
+ */
 template <typename T>
 class t_binaries {
    public:
@@ -172,25 +187,59 @@ class t_binaries {
     std::map<T, entry_t> _map;
 };
 
-template <typename T, typename FRAGTYPE>
+/**
+ * QUIC FRAME STREAM specific implementation
+ */
+template <typename T, typename TAG>
 class t_fragmented_binaries {
    public:
     t_fragmented_binaries() {}
 
+    bool exist(T type) {
+        bool ret = false;
+        critical_section_guard guard(_lock);
+        auto iter = _map.find(type);
+        if (_map.end() != iter) {
+            ret = true;
+        }
+        return ret;
+    }
+    return_t settag(T type, const TAG& tag) {
+        return_t ret = errorcode_t::success;
+        critical_section_guard guard(_lock);
+        auto iter = _map.find(type);
+        if (_map.end() == iter) {
+            ret = errorcode_t::not_found;
+        } else {
+            iter->second.tag = tag;
+        }
+        return ret;
+    }
+    return_t gettag(T type, TAG& tag) {
+        return_t ret = errorcode_t::success;
+        critical_section_guard guard(_lock);
+        auto iter = _map.find(type);
+        if (_map.end() == iter) {
+            ret = errorcode_t::not_found;
+        } else {
+            tag = iter->second.tag;
+        }
+        return ret;
+    }
     void assign(T type, const byte_t* stream, size_t size) {
         critical_section_guard guard(_lock);
         auto& entry = _map[type];
         entry.clear();
-        if (stream) {
+        if (stream && size) {
             entry.part.add(0, size);
             entry.bin.insert(entry.bin.end(), stream, stream + size);
         }
     }
     void assign(T type, const binary_t& bin) { assign(type, bin.empty() ? nullptr : &bin[0], bin.size()); }
     void append(T type, const byte_t* stream, size_t size) {
-        if (stream) {
-            critical_section_guard guard(_lock);
-            auto& entry = _map[type];
+        critical_section_guard guard(_lock);
+        auto& entry = _map[type];
+        if (stream && size) {
             auto binsize = entry.bin.size();
             entry.part.add(binsize, binsize + size);
             entry.bin.insert(entry.bin.end(), stream, stream + size);
@@ -199,9 +248,9 @@ class t_fragmented_binaries {
     void append(T type, const binary_t& bin) { append(type, bin.empty() ? nullptr : &bin[0], bin.size()); }
     return_t write(T type, size_t offset, const byte_t* stream, size_t size, uint32 flags = 0) {
         return_t ret = errorcode_t::success;
-        if (stream) {
-            critical_section_guard guard(_lock);
-            auto& entry = _map[type];
+        critical_section_guard guard(_lock);
+        auto& entry = _map[type];
+        if (stream && size) {
             entry.part.add(offset, offset + size);
             auto binsize = entry.bin.size();
             if (binsize < (offset + size)) {
@@ -212,8 +261,6 @@ class t_fragmented_binaries {
                 entry.finsize = offset + size;
                 entry.flags |= (bin_wait_fin | bin_check_fin);
             }
-        } else {
-            ret = errorcode_t::invalid_parameter;
         }
         return ret;
     }
@@ -229,7 +276,7 @@ class t_fragmented_binaries {
         }
     }
     void clear() { _map.clear(); }
-    bool isfragmented(T type, uint32 flags = 0) {
+    bool is_fragmented(T type, uint32 flags = 0) {
         bool ret = false;
         critical_section_guard guard(_lock);
         auto iter = _map.find(type);
@@ -299,10 +346,8 @@ class t_fragmented_binaries {
 
     /**
      * @param   T type [in]
-     * @param   FRAGTYPE* frag [in]
-     * @param   std::function<return_t (FRAGTYPE*, const binary_t&, size_t&)> func [in]
      */
-    return_t consume(T type, FRAGTYPE* frag, std::function<return_t(FRAGTYPE*, const binary_t&, size_t&)> func) {
+    return_t consume(T type, std::function<return_t(const binary_t&, size_t&)> func) {
         return_t ret = errorcode_t::success;
         __try2 {
             critical_section_guard guard(_lock);
@@ -312,13 +357,14 @@ class t_fragmented_binaries {
                 __leave2;
             } else {
                 auto& entry = iter->second;
-                ret = func(frag, entry.bin, entry.pos);
+                ret = func(entry.bin, entry.pos);
                 if (errorcode_t::success == ret) {
                     if (bin_wait_fin & entry.flags) {
-                        if (entry.bin.size() == entry.pos) {
-                            if (entry.bin.size() == entry.finsize) {
-                                _map.erase(iter);
-                            }
+                        // keep entry
+                        auto binsize = entry.bin.size();
+                        if ((binsize == entry.pos) && (binsize == entry.finsize)) {
+                            entry.bin.clear();
+                            entry.pos = 0;
                         }
                     }
                 }
@@ -331,14 +377,16 @@ class t_fragmented_binaries {
    protected:
    private:
     struct entry_t {
+        TAG tag;
         uint32 flags;
         size_t finsize;
         size_t pos;
         t_merge_ovl_intervals<size_t> part;
         binary_t bin;
 
-        entry_t() : flags(0), finsize(0), pos(0) {}
+        entry_t() : tag(TAG()), flags(0), finsize(0), pos(0) {}
         void clear() {
+            tag = TAG();
             flags = 0;
             finsize = 0;
             pos = 0;

@@ -32,7 +32,7 @@ namespace hotplace {
  *          moi.clear().add(9, 10, 3).add(6, 8, 2).add(1, 3, 0).add(2, 4, 1).add(1, 8, 4);
  *          res = moi.merge(); // {1, 8, 4}, {9, 10, 3}
  *
- * @sa      t_fragmented_binaries, parser
+ * @sa      parser
  */
 template <typename T, typename TAGTYPE = char>
 class t_merge_ovl_intervals {

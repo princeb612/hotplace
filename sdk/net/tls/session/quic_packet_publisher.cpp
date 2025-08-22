@@ -31,8 +31,13 @@ namespace net {
 
 quic_packet_publisher::quic_packet_publisher() : _session(nullptr), _payload_size(0), _flags(0), _streamid(0), _unitype(0) {}
 
+quic_packet_publisher::~quic_packet_publisher() {}
+
 quic_packet_publisher& quic_packet_publisher::set_session(tls_session* session) {
     _session = session;
+    if (session) {
+        set_payload_size(session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size));
+    }
     return *this;
 }
 

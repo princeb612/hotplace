@@ -192,6 +192,8 @@
 #include <sdk/net/tls/quic/frame/quic_frame_reset_stream.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_stop_sending.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_stream.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_stream_h3_handler.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_stream_handler.hpp>
 #include <sdk/net/tls/quic/frame/quic_frames.hpp>
 
 /* tls/tls */

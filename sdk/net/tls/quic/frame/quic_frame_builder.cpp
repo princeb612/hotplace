@@ -21,6 +21,7 @@
 #include <sdk/net/tls/quic/frame/quic_frame_reset_stream.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_stop_sending.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_stream.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_stream_handler.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
@@ -84,8 +85,7 @@ quic_frame* quic_frame_builder::build() {
         case quic_frame_type_ack:
         case quic_frame_type_ack + 1: {
             // RFC 9001 19.3.  ACK Frames
-            __try_new_catch_only(frame, new quic_frame_ack(packet));
-            frame->set_type(type);
+            __try_new_catch_only(frame, new quic_frame_ack(packet, type));
         } break;
         case quic_frame_type_reset_stream: {
             // 19.4.  RESET_STREAM Frames
@@ -112,8 +112,7 @@ quic_frame* quic_frame_builder::build() {
         case quic_frame_type_stream6:
         case quic_frame_type_stream7: {
             // 19.8.  STREAM Frames
-            __try_new_catch_only(frame, new quic_frame_stream(packet));
-            frame->set_type(type);
+            __try_new_catch_only(frame, new quic_frame_stream(packet, type));
             quic_frame_stream* stream = (quic_frame_stream*)frame;
             stream->set_streaminfo(get_streamid(), _unitype);
         } break;
@@ -159,9 +158,6 @@ quic_frame* quic_frame_builder::build() {
             break;
         default: {
         } break;
-    }
-    if (frame) {
-        frame->set_type(type);  // quic_frame_type_stream + 1, ...
     }
     return frame;
 }

@@ -154,6 +154,7 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
 
 return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::list<qpack_decode_t>& kv, uint32 flags) {
     return_t ret = errorcode_t::success;
+    size_t cursor = pos;
     __try2 {
         if (nullptr == dyntable || nullptr == source) {
             ret = errorcode_t::invalid_parameter;
@@ -166,6 +167,7 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
             qpack_decode_t item;
             ret = decode_section_prefix(dyntable, source, size, pos, item);
             if (errorcode_t::success != ret) {
+                pos = cursor;  // rollback
                 __leave2;
             }
             kv.push_back(item);
@@ -175,9 +177,11 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
             qpack_decode_t item;
             ret = decode(dyntable, source, size, pos, item, flags);
             if (errorcode_t::success != ret) {
+                pos = cursor;  // rollback
                 break;
             }
             kv.push_back(item);
+            cursor = pos;
         }
     }
     __finally2 {}

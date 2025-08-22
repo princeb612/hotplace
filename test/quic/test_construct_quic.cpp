@@ -66,7 +66,6 @@ void construct_quic_initial_client_hello(tls_session* session, tls_direction_t d
 
     // CRYPTO[CH], PADDING
     publisher.set_session(session)
-        .set_payload_size(max_payload_size)
         .set_flags(quic_packet_flag_t::quic_pad_packet)  // add a padding frame and make a packet max_udp_payload_size
         .add(handshake)
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
@@ -85,11 +84,8 @@ void construct_quic_initial_server_hello(tls_session* session, tls_direction_t d
 
     tls_composer::construct_server_hello(&handshake, session, nullptr, tls_13, tls_13);
 
-    auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
-
     // ACK, CRYPTO[SH], PADDING
     publisher.set_session(session)
-        .set_payload_size(max_payload_size)
         .set_flags(quic_ack_packet | quic_pad_packet)
         .add(handshake)
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
@@ -105,8 +101,7 @@ void construct_quic_handshake_ee_cert_cv_fin_settings(tls_session* session, tls_
 
     quic_packet_publisher publisher;
 
-    auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
-    publisher.set_session(session).set_payload_size(max_payload_size).set_flags(quic_ack_packet | quic_pad_packet).set_streaminfo(0x3, h3_control_stream);
+    publisher.set_session(session).set_flags(quic_ack_packet | quic_pad_packet).set_streaminfo(quic_stream_server_uni, h3_control_stream);
 
     {
         // EE
@@ -169,9 +164,8 @@ void construct_quic_handshake_ee_cert_cv_fin_settings(tls_session* session, tls_
 
     // PACKET.handshake + PACKET.1-RTT
     {
-        auto& dyntable = session->get_quic_session().get_dynamic_table();
         http3_frame_builder builder;
-        auto frame = (http3_frame_settings*)builder.set(h3_frame_settings).set(&dyntable).build();
+        auto frame = (http3_frame_settings*)builder.set(h3_frame_settings).set(session).build();
         if (frame) {
             (*frame)
                 .set(h3_settings_qpack_max_table_capacity, 0x10000)
@@ -198,15 +192,38 @@ void construct_quic_handshake_ee_cert_cv_fin_settings(tls_session* session, tls_
 void construct_quic_handshake_fin(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
-    auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
-
     quic_packet_publisher publisher;
 
     // ACK, CRYPTO[FIN], PADDING
     publisher.set_session(session)
-        .set_payload_size(max_payload_size)
         .set_flags(quic_ack_packet | quic_pad_packet)
         .add(new tls_handshake_finished(session))
+        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+            bins.push_back(packet);
+            auto tlsadvisor = tls_advisor::get_instance();
+            auto test = max_udp_payload_size == packet.size();
+            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
+        });
+}
+
+void construct_quic_settings(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
+    bins.clear();
+
+    quic_packet_publisher publisher;
+    http3_frame_builder builder;
+
+    auto frame = (http3_frame_settings*)builder.set(h3_frame_settings).set(session).build();
+    if (frame) {
+        (*frame)
+            .set(h3_settings_max_field_section_size, 4611686018427387903)
+            .set(h3_settings_qpack_max_table_capacity, 0)
+            .set(h3_settings_qpack_blocked_streams, 100);
+    }
+
+    publisher.set_session(session)
+        .set_flags(quic_ack_packet | quic_pad_packet)
+        .add(frame)
+        .set_streaminfo(quic_stream_client_uni, h3_control_stream)
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
             bins.push_back(packet);
             auto tlsadvisor = tls_advisor::get_instance();
@@ -218,20 +235,15 @@ void construct_quic_handshake_fin(tls_session* session, tls_direction_t dir, std
 void construct_quic_ack(tls_session* session, tls_direction_t dir, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
-    auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
-
     quic_packet_publisher publisher;
 
     // ACK, PADDING
-    publisher.set_session(session)
-        .set_payload_size(max_payload_size)
-        .set_flags(quic_ack_packet | quic_pad_packet)
-        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
-            bins.push_back(packet);
-            auto tlsadvisor = tls_advisor::get_instance();
-            auto test = max_udp_payload_size == packet.size();
-            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
-        });
+    publisher.set_session(session).set_flags(quic_ack_packet | quic_pad_packet).publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+        bins.push_back(packet);
+        auto tlsadvisor = tls_advisor::get_instance();
+        auto test = max_udp_payload_size == packet.size();
+        _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
+    });
 }
 
 return_t send_packet(tls_session* session, tls_direction_t dir, const std::list<binary_t>& bins, const char* message) {
@@ -330,7 +342,7 @@ void test_construct_quic() {
             }
         }
 
-        // handshake
+        // handshake, 1-RTT
         {
             // S->C PKN#20, 21 handshake(fragmented), 30 1-RTT
             lambda(&session_server, from_server, protection_handshake, 20);
@@ -342,10 +354,20 @@ void test_construct_quic() {
                 __leave2;
             }
 
-            // C->S PKN#20 (ACK 20, 21)
+            // EE
+            auto lambda_alpn = [&](tls_session* session, const char* text) -> void {
+                auto& alpn = session->get_tls_protection().get_secrets().get(tls_context_alpn);
+                auto test = alpn.empty() ? false : (0 == memcmp(&alpn[0], "\x2h3", 3));
+                _test_case.assert(test, __FUNCTION__, text);
+            };
+            lambda_alpn(&session_client, "ALPN of session client");
+            lambda_alpn(&session_server, "ALPN of session server");
+
+            // C->S PKN#20 (ACK 20, 21), PKN#30 (ACK 30)
             lambda(&session_client, from_client, protection_handshake, 20);
-            construct_quic_handshake_fin(&session_client, from_client, bins, "handshake ACK, [CRYPTO(FIN)]");
-            ret = send_packet(&session_server, from_client, bins, "handshake ACK, [CRYPTO(FIN)]");
+            lambda(&session_client, from_client, protection_application, 30);
+            construct_quic_handshake_fin(&session_client, from_client, bins, "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK]");
+            ret = send_packet(&session_server, from_client, bins, "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK]");
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -354,21 +376,31 @@ void test_construct_quic() {
                 auto& pkns = session_client.get_quic_session().get_pkns(protection_handshake);
                 ack_t ack;
                 ack << pkns;
-                ack_t expect(21, 1);
-                _test_case.assert(ack == expect, __FUNCTION__, "ack handshake");
+                ack_t expect(21, 1);  // CRYPTO(FIN)
+                _test_case.assert(ack == expect, __FUNCTION__, "ack handshake [CRYPTO(FIN)]");
             }
             {
                 auto& pkns = session_client.get_quic_session().get_pkns(protection_application);
                 ack_t ack;
                 ack << pkns;
-                ack_t expect(30, 0);
-                _test_case.assert(ack == expect, __FUNCTION__, "ack 1-RTT");
+                ack_t expect(30, 0);  // SETTINGS
+                _test_case.assert(ack == expect, __FUNCTION__, "ack 1-RTT [SETTINGS]");
             }
 
             // S->C PKN#22 (ACK 20)
             lambda(&session_server, from_server, protection_handshake, 22);
             construct_quic_ack(&session_server, from_server, bins, "handshake [ACK]");
             ret = send_packet(&session_client, from_server, bins, "handshake [ACK]");
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+        }
+
+        // 1-RTT
+        {
+            // C->S
+            construct_quic_settings(&session_client, from_client, bins, "1-RTT [SETTINGS]");
+            ret = send_packet(&session_server, from_client, bins, "1-RTT [SETTINGS]");
             if (errorcode_t::success != ret) {
                 __leave2;
             }

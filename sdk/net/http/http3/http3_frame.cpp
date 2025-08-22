@@ -32,8 +32,6 @@ return_t http3_frame::read(const byte_t* stream, size_t size, size_t& pos) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        size_t ppos = 0;
-        ret = do_read_payload(_payload.empty() ? nullptr : &_payload[0], _payload.size(), ppos);
     }
     __finally2 {}
     return ret;
@@ -81,7 +79,8 @@ return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& p
         }
 #endif
 
-        _payload = std::move(frame_payload);
+        size_t ppos = 0;
+        ret = do_read_payload(frame_payload.empty() ? nullptr : &frame_payload[0], frame_payload.size(), ppos);
     }
     __finally2 {
         if (errorcode_t::success != ret) {

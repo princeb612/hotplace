@@ -25,19 +25,21 @@
 #include <sdk/net/http/http3/http3_frame_unknown.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
+#include <sdk/net/tls/quic_session.hpp>
+#include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-http3_frame_builder::http3_frame_builder() : _type(h3_frame_data), _dyntable(nullptr) {}
+http3_frame_builder::http3_frame_builder() : _type(h3_frame_data), _session(nullptr) {}
 
 http3_frame_builder& http3_frame_builder::set(h3_frame_t type) {
     _type = type;
     return *this;
 }
 
-http3_frame_builder& http3_frame_builder::set(qpack_dynamic_table* dyntable) {
-    _dyntable = dyntable;
+http3_frame_builder& http3_frame_builder::set(tls_session* session) {
+    _session = session;
     return *this;
 }
 
@@ -48,7 +50,10 @@ http3_frame* http3_frame_builder::build() {
             __try_new_catch_only(frame, new http3_frame_data);
         } break;
         case h3_frame_headers: {
-            __try_new_catch_only(frame, new http3_frame_headers(_dyntable));
+            if (_session) {
+                auto& dyntable = _session->get_quic_session().get_dynamic_table();
+                __try_new_catch_only(frame, new http3_frame_headers(&dyntable));
+            }
         } break;
         case h3_frame_cancel_push: {
             __try_new_catch_only(frame, new http3_frame_cancel_push);

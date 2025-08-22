@@ -70,22 +70,22 @@ enum quic_packet_t : uint8 {
  * RFC 9000 12.4.  Frames and Frame Types
  */
 enum quic_frame_t : uint64 {
-    quic_frame_type_padding = 0,  // RFC 9000 19.1  IH01
-    quic_frame_type_ping = 1,     // RFC 9000 19.2  IH01
-    quic_frame_type_ack = 2,      // RFC 9000 19.3  IH_1 0x02-0x03
-    quic_frame_type_ack1 = 3,
-    quic_frame_type_reset_stream = 4,  // RFC 9000 19.4  __01
-    quic_frame_type_stop_sending = 5,  // RFC 9000 19.5  __01
-    quic_frame_type_crypto = 6,        // RFC 9000 19.6  IH_1
-    quic_frame_type_new_token = 7,     // RFC 9000 19.7  ___1
-    quic_frame_type_stream = 8,        // RFC 9000 19.8  __01 0x08-0x0f
-    quic_frame_type_stream1 = 9,
-    quic_frame_type_stream2 = 0xa,
-    quic_frame_type_stream3 = 0xb,
-    quic_frame_type_stream4 = 0xc,
-    quic_frame_type_stream5 = 0xd,
-    quic_frame_type_stream6 = 0xe,
-    quic_frame_type_stream7 = 0xf,
+    quic_frame_type_padding = 0,                  // RFC 9000 19.1  IH01
+    quic_frame_type_ping = 1,                     // RFC 9000 19.2  IH01
+    quic_frame_type_ack = 2,                      // RFC 9000 19.3  IH_1 0x02-0x03
+    quic_frame_type_ack1 = 3,                     //
+    quic_frame_type_reset_stream = 4,             // RFC 9000 19.4  __01
+    quic_frame_type_stop_sending = 5,             // RFC 9000 19.5  __01
+    quic_frame_type_crypto = 6,                   // RFC 9000 19.6  IH_1
+    quic_frame_type_new_token = 7,                // RFC 9000 19.7  ___1
+    quic_frame_type_stream = 8,                   // RFC 9000 19.8  __01 0x08-0x0f
+    quic_frame_type_stream1 = 9,                  // quic_frame_stream_fin
+    quic_frame_type_stream2 = 0xa,                // quic_frame_stream_len
+    quic_frame_type_stream3 = 0xb,                // quic_frame_stream_fin | quic_frame_stream_len
+    quic_frame_type_stream4 = 0xc,                // quic_frame_stream_off
+    quic_frame_type_stream5 = 0xd,                // quic_frame_stream_off | quic_frame_stream_fin
+    quic_frame_type_stream6 = 0xe,                // quic_frame_stream_off | quic_frame_stream_len
+    quic_frame_type_stream7 = 0xf,                // quic_frame_stream_off | quic_frame_stream_fin | quic_frame_stream_len
     quic_frame_type_max_data = 0x10,              // RFC 9000 19.9  __01
     quic_frame_type_max_stream_data = 0x11,       // RFC 9000 19.10 __01
     quic_frame_type_max_streams = 0x12,           // RFC 9000 19.11 __01 0x12-0x13
@@ -210,6 +210,10 @@ class quic_frame_stream_blocked;
 class quic_frame_stream_data_blocked;
 class quic_frame_stop_sending;
 class quic_frames;
+
+class quic_frame_stream_handler;
+class quic_frame_stream_h3_handler;
+class quic_frame_stream_ping_handler;
 
 class quic_packet;
 class quic_packet_initial;

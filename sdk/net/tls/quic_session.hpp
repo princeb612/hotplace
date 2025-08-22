@@ -36,15 +36,9 @@ class quic_session {
     // ack
     t_ovl_points<uint32>& get_pkns(protection_space_t space);
     // stream
-    quic_session& add(quic_frame_stream* stream);
-    quic_session& operator<<(quic_frame_stream* stream);
+    t_fragmented_binaries<uint64, uint8>& get_streams();
 
    protected:
-    return_t consume(quic_frame_stream* stream);
-
-    void clear();
-    void clear(uint64 streamid);
-
    private:
     // setting
     t_key_value<uint64, uint64> _setting;
@@ -53,8 +47,8 @@ class quic_session {
     // ack
     std::map<protection_space_t, t_ovl_points<uint32>> _pkn;
     // stream
-    t_fragmented_binaries<uint64, quic_frame_stream> _streams;
-    std::map<uint64, uint64> _encoders;
+    critical_section _lock;
+    t_fragmented_binaries<uint64, uint8> _streams;
 };
 
 }  // namespace net

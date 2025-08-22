@@ -69,6 +69,7 @@ enum quic_packet_flag_t {
 class quic_packet_publisher {
    public:
     quic_packet_publisher();
+    ~quic_packet_publisher();
 
     quic_packet_publisher& set_session(tls_session* session);
     quic_packet_publisher& set_payload_size(uint16 size);
@@ -77,11 +78,11 @@ class quic_packet_publisher {
      */
     quic_packet_publisher& set_flags(uint32 flags);
     /**
-     * @param uint64 streamid
-     * @param uint8 unitype [inopt]
-     *                              if bi-directional, ignored
+     * @param uint64 streamid [in]
+     * @param uint8 unitype [in] if bi-directional, ignored
+     * @param quic_frame_stream_handler* handler [in]
      */
-    quic_packet_publisher& set_streaminfo(uint64 streamid, uint8 unitype = 0);
+    quic_packet_publisher& set_streaminfo(uint64 streamid, uint8 unitype);
 
     tls_session* get_session();
     uint16 get_payload_size();

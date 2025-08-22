@@ -40,7 +40,12 @@ constexpr char constexpr_ect0_count[] = "ect0 count";
 constexpr char constexpr_ect1_count[] = "ect1 count";
 constexpr char constexpr_ectce_count[] = "ect-ce count";
 
-quic_frame_ack::quic_frame_ack(quic_packet* packet) : quic_frame(quic_frame_type_ack, packet), _space(protection_default) {}
+quic_frame_ack::quic_frame_ack(quic_packet* packet, uint8 type) : quic_frame((quic_frame_t)type, packet), _space(protection_default) {
+    if ((quic_frame_type_ack == type) || (quic_frame_type_ack1 == type)) {
+    } else {
+        throw exception(bad_request);
+    }
+}
 
 quic_frame_ack& quic_frame_ack::set_protection_level(protection_space_t space) {
     _space = space;

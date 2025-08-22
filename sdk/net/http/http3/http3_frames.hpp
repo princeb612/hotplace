@@ -21,8 +21,8 @@ class http3_frames {
    public:
     http3_frames();
 
-    return_t read(qpack_dynamic_table* dyntable, const byte_t* stream, size_t size, size_t& pos);
-    return_t write(qpack_dynamic_table* dyntable, binary_t& bin);
+    return_t read(tls_session* session, const byte_t* stream, size_t size, size_t& pos);
+    return_t write(tls_session* session, binary_t& bin);
 
     return_t add(http3_frame* frame, bool upref = false);
     http3_frames& operator<<(http3_frame* frame);

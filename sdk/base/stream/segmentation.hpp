@@ -6,6 +6,16 @@
  * Revision History
  * Date         Name                Description
  *
+ * sketch 1 applied
+ *
+ * sketch 1 (2 phases)
+ *      // calc bumper (the size of the fragment header)
+ *      // then fragmentation (both pos and len as in parameter)
+ *      return_t consume(uint32 type, size_t bumper, std::function<return_t(const byte_t*, size_t, size_t, size_t)> func);
+ *
+ * sketch 2 (1 phase)
+ *      // calc bumper (the size of the fragment header) while fragmentation
+ *      // bumper as out parameter in consume method
  */
 
 #ifndef __HOTPLACE_SDK_BASE_STREAM_SEGMENTATION__

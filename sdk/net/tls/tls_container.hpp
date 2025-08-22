@@ -68,22 +68,12 @@ class t_tls_container {
                 auto type = item->get_type();
                 auto iter = _dictionary.find(type);
                 if (_dictionary.end() != iter) {
-                    auto older = iter->second;
-
-                    auto idx = 0;
-                    for (auto entry : _members) {
-                        if (entry->get_type() == type) {
-                            _members.erase(_members.begin() + idx);
-                            break;
-                        }
-                        idx++;
-                    }
-
-                    older->release();
-                    _dictionary.erase(iter);
+                    // keep the older
+                    item->release();
+                } else {
+                    _dictionary.insert({type, item});
+                    _members.push_back(item);
                 }
-                _dictionary.insert({type, item});
-                _members.push_back(item);
             } else {
                 // tls_record
                 auto type = item->get_type();
