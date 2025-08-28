@@ -161,7 +161,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
          *  in sampling header ciphertext for header protection, the Packet Number field is
          *  assumed to be 4 bytes long (its maximum possible encoded length).
          */
-        if ((false == is_anydirection(dir)) && (get_payload().size() > 0)) {
+        if ((false == is_anydirection(dir)) && (get_payload().size() >= 4)) {
             binary_t bin_ciphertext;
             binary_t bin_tag;
             binary_t bin_mask;
@@ -175,7 +175,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
             // Header Protection
             {
                 uint8 ht = _ht;
-                ret = header_protect(dir, bin_ciphertext, protection_application, ht, pn_length, bin_pn, bin_protected_header);
+                ret = header_protect(dir, protection_application, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }

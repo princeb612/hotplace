@@ -14,6 +14,7 @@
 
 #include <queue>
 #include <sdk/base/system/critical_section.hpp>
+#include <sdk/net/http/compression/http_header_compression_stream.hpp>
 #include <sdk/net/http/http3/http3_frames.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_stream.hpp>
 #include <sdk/net/tls/quic/packet/quic_packets.hpp>
@@ -78,21 +79,34 @@ class quic_packet_publisher {
      */
     quic_packet_publisher& set_flags(uint32 flags);
     /**
-     * @param uint64 streamid [in]
+     * @param uint64 stream_id [in]
      * @param uint8 unitype [in] if bi-directional, ignored
      * @param quic_frame_stream_handler* handler [in]
      */
-    quic_packet_publisher& set_streaminfo(uint64 streamid, uint8 unitype);
+    quic_packet_publisher& set_streaminfo(uint64 stream_id, uint8 unitype);
 
     tls_session* get_session();
     uint16 get_payload_size();
     uint32 get_flags();
     uint64 get_streamid();
 
+    /**
+     * initial, handshake
+     */
     quic_packet_publisher& add(tls_handshake* handshake, bool upref = false);
+    /**
+     * 1-RTT (constrol stream)
+     */
     quic_packet_publisher& add(http3_frame* frame, bool upref = false);
+
     quic_packet_publisher& operator<<(tls_handshake* handshake);
     quic_packet_publisher& operator<<(http3_frame* frame);
+
+    /**
+     * QPACK encoder, decoder stream
+     *  publisher.set_session(session).get_qpack_stream().encode_header(":path", "/");
+     */
+    qpack_stream& get_qpack_stream();
 
     return_t publish(tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
 
@@ -110,11 +124,12 @@ class quic_packet_publisher {
     tls_session* _session;
     uint16 _payload_size;
     uint32 _flags;
-    uint64 _streamid;
+    uint64 _stream_id;
     uint8 _unitype;
 
     tls_handshakes _handshakes;
     http3_frames _frames;
+    qpack_stream _qpack;
 };
 
 }  // namespace net

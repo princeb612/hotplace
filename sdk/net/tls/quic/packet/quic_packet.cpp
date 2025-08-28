@@ -365,7 +365,7 @@ void quic_packet::dump() {
 #endif
 }
 
-return_t quic_packet::header_protect(tls_direction_t dir, const binary_t& bin_ciphertext, protection_space_t space, uint8 hdr, uint8 pn_length,
+return_t quic_packet::header_protect(tls_direction_t dir, protection_space_t space, const binary_t& bin_ciphertext, uint8 hdr, uint8 pn_length,
                                      binary_t& bin_pn, binary_t& bin_protected_header) {
     return_t ret = errorcode_t::success;
     __try2 {

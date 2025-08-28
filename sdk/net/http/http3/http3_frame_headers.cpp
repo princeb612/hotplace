@@ -29,7 +29,14 @@ http3_frame_headers::http3_frame_headers(qpack_dynamic_table* dyntable) : http3_
 return_t http3_frame_headers::do_read_payload(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        // CHECK HERE
+        /**
+         *  RFC 9114 7.2.2.  HEADERS
+         *  HEADERS Frame {
+         *    Type (i) = 0x01,
+         *    Length (i),
+         *    Encoded Field Section (..),
+         *  }
+         */
         qpack_encoder encoder;
         std::list<qpack_decode_t> kv;
         ret = encoder.decode(_dyntable, stream, size, pos, kv, qpack_quic_stream_header);

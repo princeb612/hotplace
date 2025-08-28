@@ -29,7 +29,7 @@
 namespace hotplace {
 namespace net {
 
-quic_packet_publisher::quic_packet_publisher() : _session(nullptr), _payload_size(0), _flags(0), _streamid(0), _unitype(0) {}
+quic_packet_publisher::quic_packet_publisher() : _session(nullptr), _payload_size(0), _flags(0), _stream_id(0), _unitype(0) {}
 
 quic_packet_publisher::~quic_packet_publisher() {}
 
@@ -37,6 +37,8 @@ quic_packet_publisher& quic_packet_publisher::set_session(tls_session* session) 
     _session = session;
     if (session) {
         set_payload_size(session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size));
+        auto& dyntable = session->get_quic_session().get_dynamic_table();
+        _qpack.set_session(&dyntable);
     }
     return *this;
 }
@@ -51,8 +53,10 @@ quic_packet_publisher& quic_packet_publisher::set_flags(uint32 flags) {
     return *this;
 }
 
-quic_packet_publisher& quic_packet_publisher::set_streaminfo(uint64 streamid, uint8 unitype) {
-    _streamid = streamid;
+quic_packet_publisher& quic_packet_publisher::set_streaminfo(uint64 stream_id, uint8 unitype) {
+    // if (quic_stream_unidirectional & stream_id) {
+    // }
+    _stream_id = stream_id;
     _unitype = unitype;
     return *this;
 }
@@ -63,7 +67,7 @@ uint16 quic_packet_publisher::get_payload_size() { return _payload_size; }
 
 uint32 quic_packet_publisher::get_flags() { return _flags; }
 
-uint64 quic_packet_publisher::get_streamid() { return _streamid; }
+uint64 quic_packet_publisher::get_streamid() { return _stream_id; }
 
 tls_handshakes& quic_packet_publisher::get_handshakes() { return _handshakes; }
 
@@ -89,6 +93,8 @@ quic_packet_publisher& quic_packet_publisher::operator<<(http3_frame* frame) {
     return *this;
 }
 
+qpack_stream& quic_packet_publisher::get_qpack_stream() { return _qpack; }
+
 return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& spaces) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -107,6 +113,13 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
         }
         if (false == get_frames().empty()) {
             // application (1-RTT)
+            // h3_control_stream (0)
+            spaces.insert(protection_application);
+        }
+        if (_unitype) {
+            // h3_push_stream (1)
+            // h3_qpack_encoder_stream (2)
+            // h3_qpack_decoder_stream (3)
             spaces.insert(protection_application);
         }
 
@@ -154,10 +167,14 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
         segmentation segment(get_payload_size());
         binary_t unfragmented;
         if (protection_application == space) {
+            uint32 flags = 0;
             if (false == get_frames().empty()) {
                 get_frames().for_each([&](http3_frame* frame) -> return_t { return frame->write(unfragmented); });
-                segment.assign(quic_frame_type_stream, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size());
+            } else if (_unitype) {
+                unfragmented = std::move(get_qpack_stream().get_binary());
+                flags = fragment_context_forced;
             }
+            segment.assign(quic_frame_type_stream, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size(), flags);
         } else {
             if (false == get_handshakes().empty()) {
                 get_handshakes().for_each([&](tls_handshake* handshake) -> return_t { return handshake->write(dir, unfragmented); });
@@ -200,9 +217,9 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
                     }
                 }
 
-                if (false == unfragmented.empty()) {
+                if (_unitype || (false == unfragmented.empty())) {
                     if (protection_application == space) {
-                        auto frame = (quic_frame_stream*)frame_builder.set(quic_frame_type_stream).set(packet).set_streaminfo(_streamid, _unitype).build();
+                        auto frame = (quic_frame_stream*)frame_builder.set(quic_frame_type_stream).set(packet).set_streaminfo(_stream_id, _unitype).build();
                         *packet << frame;
                     } else {
                         auto frame = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(packet).build();

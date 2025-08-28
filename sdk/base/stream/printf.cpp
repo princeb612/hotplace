@@ -184,35 +184,105 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 stream->printf("%s", vt.data.b ? constexpr_true : constexpr_false);
                 break;
             case TYPE_INT8:
-                stream->printf("%i", vt.data.i8);
+                switch (style) {
+                    case vtprintf_style_debugmode:
+                        stream->printf("0x%02x (%i)", vt.data.i8, vt.data.i8);
+                        break;
+                    default:
+                        stream->printf("%i", vt.data.i8);
+                        break;
+                }
                 break;
             case TYPE_UINT8:
-                stream->printf("%u", vt.data.ui8);
+                switch (style) {
+                    case vtprintf_style_debugmode:
+                        stream->printf("0x%02x (%u)", vt.data.ui8, vt.data.ui8);
+                        break;
+                    default:
+                        stream->printf("%u", vt.data.ui8);
+                        break;
+                }
                 break;
             case TYPE_INT16:
-                stream->printf("%i", vt.data.i16);
+                switch (style) {
+                    case vtprintf_style_debugmode:
+                        stream->printf("0x%04x (%i)", vt.data.i16, vt.data.i16);
+                        break;
+                    default:
+                        stream->printf("%i", vt.data.i16);
+                        break;
+                }
                 break;
             case TYPE_UINT16:
-                stream->printf("%u", vt.data.ui16);
+                switch (style) {
+                    case vtprintf_style_debugmode:
+                        stream->printf("0x%04x (%u)", vt.data.ui16, vt.data.ui16);
+                        break;
+                    default:
+                        stream->printf("%u", vt.data.ui16);
+                        break;
+                }
                 break;
             case TYPE_INT32:
-                stream->printf("%i", vt.data.i32);
+                switch (style) {
+                    case vtprintf_style_debugmode:
+                        stream->printf("0x%08x (%i)", vt.data.i32, vt.data.i32);
+                        break;
+                    default:
+                        stream->printf("%i", vt.data.i32);
+                        break;
+                }
                 break;
             case TYPE_UINT32:
-                stream->printf("%u", vt.data.ui32);
+                switch (style) {
+                    case vtprintf_style_debugmode:
+                        stream->printf("0x%08x (%u)", vt.data.ui32, vt.data.ui32);
+                        break;
+                    default:
+                        stream->printf("%u", vt.data.ui32);
+                        break;
+                }
                 break;
             case TYPE_INT64:
-                stream->printf("%I64i", vt.data.i64);
+                switch (style) {
+                    case vtprintf_style_debugmode:
+                        stream->printf("0x%0I64x (%I64i)", vt.data.i64, vt.data.i64);
+                        break;
+                    default:
+                        stream->printf("%I64i", vt.data.i64);
+                        break;
+                }
                 break;
             case TYPE_UINT64:
-                stream->printf("%I64u", vt.data.ui64);
+                switch (style) {
+                    case vtprintf_style_debugmode:
+                        stream->printf("0x%0I64x (%I64u)", vt.data.ui64, vt.data.ui64);
+                        break;
+                    default:
+                        stream->printf("%I64u", vt.data.ui64);
+                        break;
+                }
                 break;
 #if defined __SIZEOF_INT128__
             case TYPE_INT128:
-                stream->printf("%I128i", vt.data.i128);
+                switch (style) {
+                    case vtprintf_style_debugmode:
+                        stream->printf("0x%0I128x (%I128i)", vt.data.i128, vt.data.i128);
+                        break;
+                    default:
+                        stream->printf("%I128i", vt.data.i128);
+                        break;
+                }
                 break;
             case TYPE_UINT128:
-                stream->printf("%I128u", vt.data.ui128);
+                switch (style) {
+                    case vtprintf_style_debugmode:
+                        stream->printf("0x%0I128x (%I128u)", vt.data.ui128, vt.data.ui128);
+                        break;
+                    default:
+                        stream->printf("%I128u", vt.data.ui128);
+                        break;
+                }
                 break;
 #endif
             case TYPE_FP16:
@@ -233,13 +303,13 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 break;
             case TYPE_STRING:
                 switch (style) {
-                    case vtprintf_style_t::vtprintf_style_cbor:
+                    case vtprintf_style_cbor:
                         stream->printf("\"%s\"", vt.data.str);
                         break;
-                    case vtprintf_style_t::vtprintf_style_base16:
+                    case vtprintf_style_base16:
                         stream->printf("%s", base16_encode(vt.data.str).c_str());
                         break;
-                    case vtprintf_style_t::vtprintf_style_normal:
+                    case vtprintf_style_normal:
                     default:
                         stream->printf("%s", vt.data.str);
                         break;
@@ -247,13 +317,13 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 break;
             case TYPE_NSTRING:
                 switch (style) {
-                    case vtprintf_style_t::vtprintf_style_cbor:
+                    case vtprintf_style_cbor:
                         stream->printf("\"%.*s\"", vt.size, vt.data.str);
                         break;
-                    case vtprintf_style_t::vtprintf_style_base16:
+                    case vtprintf_style_base16:
                         stream->printf("%s", base16_encode((byte_t*)vt.data.str, vt.size).c_str());
                         break;
-                    case vtprintf_style_t::vtprintf_style_normal:
+                    case vtprintf_style_normal:
                     default:
                         stream->printf("%.*s", vt.size, vt.data.str);
                         break;
@@ -263,13 +333,14 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 std::string temp;
                 base16_encode(vt.data.bstr, vt.size, temp);
                 switch (style) {
-                    case vtprintf_style_t::vtprintf_style_cbor:
+                    case vtprintf_style_cbor:
                         stream->printf("h'%s'", temp.c_str());
                         break;
-                    case vtprintf_style_t::vtprintf_style_base16:
+                    case vtprintf_style_base16:
+                    case vtprintf_style_debugmode:
                         stream->printf("%s", base16_encode(vt.data.bstr, vt.size).c_str());
                         break;
-                    case vtprintf_style_t::vtprintf_style_normal:
+                    case vtprintf_style_normal:
                     default:
                         stream->printf("%s", temp.c_str());
                         break;

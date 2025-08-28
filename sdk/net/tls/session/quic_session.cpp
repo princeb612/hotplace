@@ -34,7 +34,7 @@ qpack_dynamic_table& quic_session::get_dynamic_table() { return _qpack_dyntable;
 
 t_ovl_points<uint32>& quic_session::get_pkns(protection_space_t space) { return _pkn[space]; }
 
-t_fragmented_binaries<uint64, uint8>& quic_session::get_streams() { return _streams; }
+t_quic_streams<uint64, uint8>& quic_session::get_streams() { return _streams; }
 
 }  // namespace net
 }  // namespace hotplace

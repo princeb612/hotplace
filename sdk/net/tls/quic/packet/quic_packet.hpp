@@ -26,6 +26,7 @@
 #define __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKET__
 
 #include <sdk/base/basic/binary.hpp>
+#include <sdk/base/stream/fragmentation.hpp>
 #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/system/shared_instance.hpp>
 #include <sdk/net/tls/quic/frame/quic_frames.hpp>
@@ -174,14 +175,14 @@ class quic_packet {
     /**
      * @brief   protect
      * @param   tls_direction_t dir [in]
-     * @param   const binary_t& bin_ciphertext [in]
      * @param   protection_space_t space [in]
+     * @param   const binary_t& bin_ciphertext [in]
      * @param   uint8 hdr [in]
      * @param   uint8 pn_length [in]
      * @param   binary_t& bin_pn [inout]
      * @param   binary_t& bin_protected_header [inout]
      */
-    return_t header_protect(tls_direction_t dir, const binary_t& bin_ciphertext, protection_space_t space, uint8 hdr, uint8 pn_length, binary_t& bin_pn,
+    return_t header_protect(tls_direction_t dir, protection_space_t space, const binary_t& bin_ciphertext, uint8 hdr, uint8 pn_length, binary_t& bin_pn,
                             binary_t& bin_protected_header);
     /**
      * @brief   unprotect

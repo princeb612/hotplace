@@ -333,7 +333,7 @@ uint8 tls_protection::get_tag_size() {
     return ret_value;
 }
 
-return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir, tls_secret_t &secret_key, tls_secret_t &secret_iv, protection_space_t space) {
+return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir, protection_space_t space, tls_secret_t &secret_key, tls_secret_t &secret_iv) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -472,6 +472,10 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        if (plaintext.size() > TLS_CIPHERTEXT_MAXSIZE) {
+            ret = errorcode_t::exceed;
+            __leave2;
+        }
 
         auto record_version = get_lagacy_version();
         size_t content_header_size = 0;
@@ -493,10 +497,6 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
             ret = encrypt_aead(session, dir, plaintext, ciphertext, additional, tag, space);
         }
         if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        if (ciphertext.size() > TLS_CIPHERTEXT_MAXSIZE) {
-            ret = errorcode_t::exceed;
             __leave2;
         }
     }
@@ -534,7 +534,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
 
         tls_secret_t secret_key;
         tls_secret_t secret_iv;
-        get_aead_key(session, dir, secret_key, secret_iv, space);
+        get_aead_key(session, dir, space, secret_key, secret_iv);
 
         uint64 record_no = 0;
         record_no = session->get_recordno(dir, true, space);
@@ -855,7 +855,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 
         tls_secret_t secret_key;
         tls_secret_t secret_iv;
-        get_aead_key(session, dir, secret_key, secret_iv, space);
+        get_aead_key(session, dir, space, secret_key, secret_iv);
 
         uint64 record_no = session->get_recordno(dir, true, space);
 

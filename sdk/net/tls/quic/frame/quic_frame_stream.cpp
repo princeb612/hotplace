@@ -162,7 +162,7 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, binary_t& bin) {
                     quic_write_vle_int(context.pos, temp);
                 }
                 auto len = context.size - context.pos;
-                quic_write_vle_int(len > context.ssize ? context.ssize : len, temp);
+                quic_write_vle_int(len > context.limit ? context.limit : len, temp);
                 bumper = temp.size();
                 auto is_begin = is_beginof_unistream(_stream_id);
                 if (is_begin) {
@@ -187,7 +187,7 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, const byte_t* str
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == stream) {
+        if (size && (nullptr == stream)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -195,7 +195,8 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, const byte_t* str
         size_t snapshot = bin.size();
         auto session = get_packet()->get_session();
 
-        uint8 type = get_type() | quic_frame_stream_len;
+        uint8 type = quic_frame_type_stream;
+        type |= quic_frame_stream_len;
         if (pos) {
             type |= quic_frame_stream_off;
         }

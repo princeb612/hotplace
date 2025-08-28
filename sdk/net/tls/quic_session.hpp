@@ -19,6 +19,7 @@
 #include <sdk/net/http/qpack/qpack_dynamic_table.hpp>
 #include <sdk/net/http/qpack/qpack_encoder.hpp>
 #include <sdk/net/tls/quic/types.hpp>
+#include <sdk/net/tls/quic_streams.hpp>
 #include <sdk/net/tls/types.hpp>
 
 namespace hotplace {
@@ -36,7 +37,7 @@ class quic_session {
     // ack
     t_ovl_points<uint32>& get_pkns(protection_space_t space);
     // stream
-    t_fragmented_binaries<uint64, uint8>& get_streams();
+    t_quic_streams<uint64, uint8>& get_streams();
 
    protected:
    private:
@@ -48,7 +49,7 @@ class quic_session {
     std::map<protection_space_t, t_ovl_points<uint32>> _pkn;
     // stream
     critical_section _lock;
-    t_fragmented_binaries<uint64, uint8> _streams;
+    t_quic_streams<uint64, uint8> _streams;
 };
 
 }  // namespace net

@@ -171,6 +171,10 @@ class http_header_compression_stream {
         }
         return *this;
     }
+    http_header_compression_stream<DYNAMIC_T, ENCODER_T>& clear() {
+        _bin.clear();
+        return *this;
+    }
 
     /**
      * @brief   encoded data

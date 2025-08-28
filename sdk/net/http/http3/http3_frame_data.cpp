@@ -24,6 +24,24 @@ http3_frame_data::http3_frame_data() : http3_frame(h3_frame_data) {}
 
 return_t http3_frame_data::do_read_payload(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        /**
+         *  RFC 9114 7.2.1.  DATA
+         *  DATA Frame {
+         *    Type (i) = 0x00,
+         *    Length (i),
+         *    Data (..),
+         *  }
+         */
+#if defined DEBUG
+        if (istraceable(trace_category_net)) {
+            basic_stream dbs;
+            dbs.println("%.*s", (unsigned)size, (char*)stream);
+            trace_debug_event(trace_category_net, trace_event_http3, &dbs);
+        }
+#endif
+    }
+    __finally2 {}
     return ret;
 }
 

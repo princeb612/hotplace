@@ -115,6 +115,7 @@ class basic_stream : public stream_t {
 #endif
     basic_stream& operator<<(float value);
     basic_stream& operator<<(double value);
+    basic_stream& operator<<(const variant& value);  // using vtprintf_style_debugmode
     basic_stream& operator<<(const basic_stream& value);
     basic_stream& operator<<(const std::string& value);
     basic_stream& operator<<(const binary_t& value);

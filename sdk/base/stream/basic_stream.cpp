@@ -11,6 +11,7 @@
 #include <ctype.h>
 
 #include <sdk/base/basic/valist.hpp>
+#include <sdk/base/basic/variant.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/stream/printf.hpp>
 
@@ -260,6 +261,11 @@ basic_stream& basic_stream::operator<<(float value) {
 
 basic_stream& basic_stream::operator<<(double value) {
     printf("%lf", value);
+    return *this;
+}
+
+basic_stream& basic_stream::operator<<(const variant& value) {
+    vtprintf(this, value, vtprintf_style_debugmode);
     return *this;
 }
 

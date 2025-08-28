@@ -16,18 +16,20 @@ segmentation::segmentation(size_t size) : _segment_size(size) {}
 
 size_t segmentation::get_segment_size() { return _segment_size; }
 
-return_t segmentation::assign(uint32 type, const byte_t* stream, size_t size, uint32 flag) {
+return_t segmentation::assign(uint32 type, const byte_t* stream, size_t size, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == stream || 0 == size) {
-            ret = do_nothing;
-            __leave2;
+        if (0 == (fragment_context_forced & flags)) {
+            if (nullptr == stream || 0 == size) {
+                ret = do_nothing;
+                __leave2;
+            }
         }
 
         critical_section_guard guard(_lock);
         auto iter = _contexts.find(type);
         if (_contexts.end() == iter) {
-            _contexts.insert({type, std::move(fragment_context(type, get_segment_size(), stream, size, flag))});
+            _contexts.insert({type, std::move(fragment_context(type, get_segment_size(), stream, size, flags))});
         } else {
             ret = errorcode_t::already_exist;
         }
@@ -82,7 +84,12 @@ return_t segmentation::consume(uint32 type, size_t avail, size_t bumper, std::fu
             context.pos += len;
 
             if (context.size == context.pos) {
-                _contexts.erase(iter);
+                if (fragment_context_forced & context.flags) {
+                    context.clear();
+                    context.flags = fragment_context_forced;
+                } else {
+                    _contexts.erase(iter);
+                }
             }
         }
     }
@@ -116,67 +123,14 @@ return_t segmentation::isready() {
         if (_contexts.empty()) {
             ret = errorcode_t::not_ready;
             __leave2;
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
-fragmentation::fragmentation() : _segment(nullptr), _fragment_size(0), _used(0) {}
-
-return_t fragmentation::set(segmentation* segment, size_t concat) {
-    return_t ret = errorcode_t::success;
-    if (nullptr == segment) {
-        ret = errorcode_t::invalid_parameter;
-    } else {
-        _segment = segment;
-        auto fragsize = segment->get_segment_size();
-        if (fragsize > concat) {
-            _fragment_size = fragsize - concat;
         } else {
-            ret = errorcode_t::exceed;
-        }
-    }
-    return ret;
-}
-
-segmentation* fragmentation::get_segment() { return _segment; }
-
-size_t fragmentation::get_fragment_size() { return _fragment_size; }
-
-return_t fragmentation::use(size_t size) {
-    return_t ret = errorcode_t::success;
-    auto segment = get_segment();
-    if (segment) {
-        if (size + _used > get_fragment_size()) {
-            ret = errorcode_t::exceed;
-        } else {
-            _used = size;
-        }
-    }
-    return ret;
-}
-
-size_t fragmentation::used() { return _used; }
-
-size_t fragmentation::available() {
-    size_t ret_value = 0;
-    auto segment = get_segment();
-    if (segment) {
-        auto fragsize = get_fragment_size();
-        if (fragsize > _used) {
-            ret_value = fragsize - _used;
-        }
-    }
-    return ret_value;
-}
-
-return_t fragmentation::consume(uint32 type, size_t bumper, std::function<return_t(const byte_t*, size_t, size_t, size_t)> func) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto segment = get_segment();
-        if (segment) {
-            ret = segment->consume(type, available(), bumper, func);
+            for (auto& item : _contexts) {
+                auto& context = item.second;
+                if (context.pos >= context.size) {
+                    ret = errorcode_t::no_more;
+                    break;
+                }
+            }
         }
     }
     __finally2 {}

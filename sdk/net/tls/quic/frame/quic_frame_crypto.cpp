@@ -116,7 +116,7 @@ return_t quic_frame_crypto::do_write_body(tls_direction_t dir, binary_t& bin) {
                 binary_t temp;
                 quic_write_vle_int(get_type(), temp);
                 quic_write_vle_int(context.pos, temp);
-                quic_write_vle_int(context.ssize, temp);
+                quic_write_vle_int(context.limit, temp);
                 bumper = temp.size();
                 return success;
             });

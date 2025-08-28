@@ -208,7 +208,7 @@ class tls_protection {
     return_t build_iv(tls_session* session, binary_t& nonce, const binary_t& iv, uint64 recordno);
     uint8 get_tag_size();
 
-    return_t get_aead_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& iv, protection_space_t space = protection_default);
+    return_t get_aead_key(tls_session* session, tls_direction_t dir, protection_space_t space, tls_secret_t& key, tls_secret_t& iv);
     return_t get_cbc_hmac_key(tls_session* session, tls_direction_t dir, tls_secret_t& key, tls_secret_t& mackey);
     /**
      * @brief encrypt

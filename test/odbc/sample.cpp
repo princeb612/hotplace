@@ -10,6 +10,7 @@
 
 #include <sdk/sdk.hpp>
 #include <test/test.hpp>
+using namespace hotplace::odbc;
 
 test_case _test_case;
 t_shared_instance<logger> _logger;

@@ -42,7 +42,7 @@ return_t http3_frame_settings::do_read_payload(const byte_t* stream, size_t size
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
-            dbs.println("  > %I64i (%s) 0x%I64x (%I64i)", id, resource->get_h3_settings_name(id).c_str(), value, value);
+            dbs.println("  > %I64i (%s) 0x%0I64x (%I64i)", id, resource->get_h3_settings_name(id).c_str(), value, value);
             trace_debug_event(trace_category_net, trace_event_http3, &dbs);
         }
 #endif
@@ -54,6 +54,7 @@ return_t http3_frame_settings::do_write(binary_t& bin) {
     return_t ret = errorcode_t::success;
     auto resource = http_resource::get_instance();
     binary_t temp;
+
     for (auto& item : _params) {
         auto id = item.first;
         auto& value = item.second;
@@ -61,7 +62,7 @@ return_t http3_frame_settings::do_write(binary_t& bin) {
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
-            dbs.println("  > %I64i (%s) 0x%I64x (%I64i)", id, resource->get_h3_settings_name(id).c_str(), value, value);
+            dbs << "  > " << id << " (" << resource->get_h3_settings_name(id) << ") " << value << "\n";
             trace_debug_event(trace_category_net, trace_event_http3, &dbs);
         }
 #endif

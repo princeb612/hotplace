@@ -233,7 +233,7 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
             // Header Protection
             {
                 uint8 ht = _ht;
-                ret = header_protect(dir, bin_ciphertext, protection_initial, ht, pn_length, bin_pn, bin_protected_header);
+                ret = header_protect(dir, protection_initial, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }

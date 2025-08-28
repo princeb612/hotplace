@@ -39,6 +39,16 @@ return_t http3_frame::read(const byte_t* stream, size_t size, size_t& pos) {
 
 return_t http3_frame::write(binary_t& bin) {
     return_t ret = errorcode_t::success;
+
+#if defined DEBUG
+    if (istraceable(trace_category_net)) {
+        basic_stream dbs;
+        auto resource = http_resource::get_instance();
+        dbs.println("+ %s %I64i (%s)", constexpr_type, get_type(), resource->get_h3_frame_name(get_type()).c_str());
+        trace_debug_event(trace_category_net, trace_event_http3, &dbs);
+    }
+#endif
+
     ret = do_write(bin);
     return ret;
 }
