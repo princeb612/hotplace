@@ -15,6 +15,8 @@
 #include <sdk/crypto.hpp>
 #include <sdk/io.hpp>
 #include <sdk/net.hpp>
+#if defined SUPPORT_FEATURE_ODBC
 #include <sdk/odbc.hpp>
+#endif
 
 #endif

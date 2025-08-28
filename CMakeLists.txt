@@ -108,6 +108,7 @@ set (PROJECT_SDK_PLATFORM_DEPENDENCIES ${PROJECT_SDK_PLATFORM_DEPENDENCIES} pcre
 endif ()
 
 if (SUPPORT_ODBC)
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSUPPORT_FEATURE_ODBC")
 # yum install unixodbc-devel
 # pacman -S mingw64/mingw-w64-x86_64-unixodbc-dev
 # or custom build
