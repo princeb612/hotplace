@@ -61,9 +61,7 @@ return_t tls_extension_alps::do_read_body(tls_direction_t dir, const byte_t* str
             _alpn = std::move(alpn);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

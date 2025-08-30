@@ -176,9 +176,7 @@ return_t network_session::send(const char* data_ptr, size_t size_data) {
         size_t cbsent = 0;
         ret = get_server_socket()->send(_session.netsock.event_handle, data_ptr, size_data, &cbsent);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -195,9 +193,7 @@ return_t network_session::sendto(const char* data_ptr, size_t size_data, sockadd
         size_t cbsent = 0;
         ret = get_server_socket()->sendto(_session.netsock.event_handle, data_ptr, size_data, &cbsent, (sockaddr*)addr, sizeof(sockaddr_storage_t));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -252,9 +248,7 @@ return_t network_session::produce(t_mlfq<network_session>* q, byte_t* buf_read, 
             ret = produce_dgram(q, buf_read, size_buf_read, addr);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -345,9 +339,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
 #endif
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -447,9 +439,7 @@ return_t network_session::produce_dgram(t_mlfq<network_session>* q, byte_t* buf_
 #endif
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -489,9 +479,7 @@ return_t network_session::dgram_get_sockaddr(sockaddr_storage_t* addr) {
         ret = get_server_socket()->recvfrom(_session.netsock.event_handle, mode, &_session.buf.bin[0], _session.buf.bin.size(), &cbread, (sockaddr*)addr,
                                             &addrlen);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

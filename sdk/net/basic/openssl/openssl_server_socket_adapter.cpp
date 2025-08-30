@@ -37,9 +37,7 @@ return_t openssl_server_socket_adapter::startup_tls(const std::string& server_ce
 
         _tlscert->set_cipher_list(cipher_list.c_str());
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -51,9 +49,7 @@ return_t openssl_server_socket_adapter::startup_dtls(const std::string& server_c
         __try_new_catch(_dtls, new openssl_tls(_dtlscert->get_ctx()), ret, __leave2);
         __try_new_catch(_dtls_server_socket, new openssl_dtls_server_socket(_dtls), ret, __leave2);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -73,9 +69,7 @@ return_t openssl_server_socket_adapter::shutdown_tls() {
             _tlscert = nullptr;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -95,9 +89,7 @@ return_t openssl_server_socket_adapter::shutdown_dtls() {
             _dtlscert = nullptr;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

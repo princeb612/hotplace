@@ -197,4 +197,3 @@ add_subdirectory (sdk)
 # test
 enable_testing ()
 add_subdirectory (test)
-

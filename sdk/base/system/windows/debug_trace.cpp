@@ -92,13 +92,9 @@ typedef struct _backtrace_context_t : debug_trace_context_t {
     }
 } backtrace_context_t;
 
-debug_trace::debug_trace() {
-    // do nothing
-}
+debug_trace::debug_trace() {}
 
-debug_trace::~debug_trace() {
-    // do nothing
-}
+debug_trace::~debug_trace() {}
 
 return_t enum_modules_handler(uint32 type, uint32 count, void* data[], CALLBACK_CONTROL* control, void* parameter) {
     return_t ret = errorcode_t::success;
@@ -140,9 +136,7 @@ return_t enum_modules_handler(uint32 type, uint32 count, void* data[], CALLBACK_
 
                 context->mssdk.lpfnSymLoadModule(process_handle, 0, buffer_image, buffer_module, (arch_t)module_info->lpBaseOfDll, module_info->SizeOfImage);
             }
-            __finally2 {
-                // do nothing
-            }
+            __finally2 {}
         } break;
     }
 
@@ -282,9 +276,7 @@ return_t debug_trace::close(debug_trace_context_t* handle) {
 
         delete context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -315,9 +307,7 @@ return_t debug_trace::capture(CONTEXT* rtlcontext) {
             lpfnRtlCaptureContext(rtlcontext);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -444,10 +434,6 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
         if (nullptr != symbol) {
             free(symbol);
         }
-
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
     }
 
     return ret;
@@ -494,10 +480,6 @@ return_t debug_trace::trace(debug_trace_context_t* handle, EXCEPTION_POINTERS* e
     __finally2 {
         if (nullptr != pSymbol) {
             free(pSymbol);
-        }
-
-        if (errorcode_t::success != ret) {
-            // do nothing
         }
     }
 

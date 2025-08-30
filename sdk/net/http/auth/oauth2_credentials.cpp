@@ -67,9 +67,7 @@ return_t oauth2_credentials::add(std::string& client_id, std::string& client_sec
 
         ret = insert(client_id, client_secret, userid, appname, redirect_uri, scope);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -90,9 +88,7 @@ return_t oauth2_credentials::insert(const std::string& client_id, const std::str
         _user_clientid.insert(std::make_pair(userid, client_id));
         _webapps.insert(std::make_pair(client_id, webapp));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -124,9 +120,7 @@ return_t oauth2_credentials::remove(const std::string& client_id) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -151,9 +145,7 @@ return_t oauth2_credentials::check(const std::string& client_id, const std::stri
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -173,9 +165,7 @@ return_t oauth2_credentials::list(const std::string& userid, std::list<std::stri
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -266,9 +256,7 @@ return_t oauth2_credentials::grant(std::string& access_token, std::string& refre
         access_token = atoken;
         refresh_token = rtoken;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -297,9 +285,7 @@ return_t oauth2_credentials::revoke(const std::string& access_token) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -331,9 +317,7 @@ return_t oauth2_credentials::isvalid(const std::string& access_token) {
 
         ret = errorcode_t::success;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -355,9 +339,7 @@ return_t oauth2_credentials::refresh(std::string& next_access_token, std::string
         revoke(access_token);
         ret = grant(next_access_token, next_refresh_token, clientid, expire);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

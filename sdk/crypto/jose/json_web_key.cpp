@@ -23,13 +23,9 @@
 namespace hotplace {
 namespace crypto {
 
-json_web_key::json_web_key() : crypto_keychain() {
-    // do nothing
-}
+json_web_key::json_web_key() : crypto_keychain() {}
 
-json_web_key::~json_web_key() {
-    // do nothing
-}
+json_web_key::~json_web_key() {}
 
 return_t json_web_key::load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc, int flag) {
     return_t ret = errorcode_t::success;
@@ -155,14 +151,10 @@ return_t json_web_key::read_json_keynode(crypto_key* cryptokey, json_t* json) {
                 json_unpack(temp, "{s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "d", &d_value);
 
                 add_ec_b64u(cryptokey, crv_value, x_value, nullptr, d_value, desc);
-            } else {
-                // do nothing
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -289,9 +281,7 @@ return_t jwk_serialize_t(json_mapper_t mapper, void (*callback)(char* data, TYPE
             json_decref(json_root);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -318,10 +308,7 @@ static void json_writer(crypto_key_object* key, void* param) {
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
-    // do not return
+    __finally2 {}
 }
 
 return_t json_web_key::write(crypto_key* cryptokey, std::string& buf, int flag) {
@@ -343,9 +330,7 @@ return_t json_web_key::write(crypto_key* cryptokey, std::string& buf, int flag) 
         auto lambda = [](char* data, std::string& buffer) -> void { buffer = data; };
         jwk_serialize_t<std::string>(mapper, lambda, buf);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -368,9 +353,7 @@ return_t json_web_key::write(crypto_key* cryptokey, stream_t* buf, int flag) {
         auto lambda = [](char* data, stream_t*& stream) -> void { stream->printf("%s", data); };
         jwk_serialize_t<stream_t*>(mapper, lambda, buf);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

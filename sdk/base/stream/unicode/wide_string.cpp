@@ -213,9 +213,7 @@ return_t wide_string::getline(size_t pos, size_t* brk, wide_string& line) {
         }
         _bio.unlock(_handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

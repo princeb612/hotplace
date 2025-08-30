@@ -27,9 +27,7 @@ return_t crypto_advisor::nameof_kty(crypto_kty_t kty, std::string& name) {
             name = item->name;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -37,7 +35,7 @@ const char* crypto_advisor::nameof_kty(crypto_kty_t kty) {
     const char* value = "";
     auto iter = _kty_names.find(kty);
     if (_kty_names.end() != iter) {
-        auto const* item = iter->second;
+        const auto* item = iter->second;
         value = item->name;
     }
     return value;

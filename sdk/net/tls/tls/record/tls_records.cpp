@@ -40,9 +40,7 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -71,9 +69,7 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
             func(session, bin);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

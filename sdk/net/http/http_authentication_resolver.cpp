@@ -48,9 +48,7 @@ bool http_authentication_resolver::basic_authenticate(http_authentication_provid
             ret_value = get_basic_credentials(provider->get_realm()).verify(provider, credential);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -85,9 +83,7 @@ bool http_authentication_resolver::digest_authenticate(http_authentication_provi
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 

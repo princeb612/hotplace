@@ -113,9 +113,7 @@ int main(int argc, char** argv) {
 
         test1();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     openssl_cleanup();
 

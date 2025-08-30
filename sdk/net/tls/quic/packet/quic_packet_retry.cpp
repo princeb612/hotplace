@@ -73,9 +73,7 @@ return_t quic_packet_retry::do_read_body(tls_direction_t dir, const byte_t* stre
 
         dump();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

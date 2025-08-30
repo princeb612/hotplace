@@ -55,9 +55,7 @@ return_t hpack_encoder::encode(http_dynamic_table* dyntable, binary_t& target, c
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -158,9 +156,7 @@ return_t hpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -235,9 +231,7 @@ hpack_encoder& hpack_encoder::encode_indexed_name(binary_t& target, uint32 flags
         //   +-------------------------------+
         encode_string(target, flags, value, size);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 
@@ -299,9 +293,7 @@ hpack_encoder& hpack_encoder::encode_name_value(binary_t& target, uint32 flags, 
         encode_string(target, flags, name, namelen);
         encode_string(target, flags, value, valuelen);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 

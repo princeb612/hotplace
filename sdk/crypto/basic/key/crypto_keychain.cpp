@@ -20,13 +20,9 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_keychain::crypto_keychain() {
-    // do nothing
-}
+crypto_keychain::crypto_keychain() {}
 
-crypto_keychain::~crypto_keychain() {
-    // do nothing
-}
+crypto_keychain::~crypto_keychain() {}
 
 return_t crypto_keychain::load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc, int flags) {
     return_t ret = errorcode_t::success;
@@ -51,9 +47,7 @@ return_t crypto_keychain::load(crypto_key* cryptokey, keyflag_t mode, const char
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -243,9 +237,7 @@ return_t crypto_keychain::write(crypto_key* cryptokey, keyflag_t mode, stream_t*
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -357,9 +349,7 @@ return_t crypto_keychain::load_file(crypto_key* cryptokey, keyflag_t mode, const
             fs.close();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -381,9 +371,7 @@ return_t crypto_keychain::write_file(crypto_key* cryptokey, keyflag_t mode, cons
         file.write(bs.c_str(), bs.size());
         file.close();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

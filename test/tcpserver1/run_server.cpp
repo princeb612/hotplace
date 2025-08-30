@@ -198,9 +198,7 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
 #endif
 
@@ -344,9 +342,7 @@ return_t echo_server(void* param) {
         mplexer.close(handle_ipv4);
         mplexer.close(handle_ipv6);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

@@ -51,9 +51,7 @@ return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, soc
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -107,9 +105,7 @@ return_t generate_cookie_sockaddr(binary_t& cookie, const sockaddr* addr, sockle
         hash.finalize(handle, cookie);
         hash.close(handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -128,9 +124,7 @@ return_t dtls_cookie_dgram_peer_sockaddr(binary_t& cookie, SSL* ssl) {
         }
         ret = generate_cookie_sockaddr(cookie, (sockaddr*)&addr, (socklen_t)sizeof(addr));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

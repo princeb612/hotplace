@@ -177,9 +177,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
         }
         __finally2 { record->release(); }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -246,9 +244,7 @@ return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t di
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

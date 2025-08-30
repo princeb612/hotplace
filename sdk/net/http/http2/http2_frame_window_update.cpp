@@ -38,9 +38,7 @@ return_t http2_frame_window_update::do_read_body(const byte_t* stream, size_t si
 
         _increment = pl.t_value_of<uint32>(constexpr_frame_window_size_increment);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

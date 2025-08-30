@@ -82,9 +82,7 @@ return_t crypto_advisor::nidof_ec_curve(const char* curve, uint32& nid) {
             ret = errorcode_t::not_found;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -104,9 +102,7 @@ return_t crypto_advisor::ktyof_ec_curve(const char* curve, uint32& kty) {
             kty = item->kty;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -131,9 +127,7 @@ return_t crypto_advisor::ktyof_ec_curve(const EVP_PKEY* pkey, std::string& kty) 
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

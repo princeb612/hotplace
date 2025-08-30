@@ -64,9 +64,7 @@ return_t is_windows64(BOOL* result) {
 
         *result = ret_result;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -150,10 +148,6 @@ static return_t enum_modules_toolhelp(HANDLE process_handle, TYPE_CALLBACK_HANDL
 
             CloseHandle(hToken);
         }
-
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
     }
 
     return ret;
@@ -214,11 +208,7 @@ static return_t enum_modules_psapi(HANDLE process_handle, TYPE_CALLBACK_HANDLERE
             }
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -259,9 +249,6 @@ return_t enum_modules(HANDLE process_handle, TYPE_CALLBACK_HANDLEREXV callback_h
         }
     }
     __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
         if (psapi_handle) {
             FreeLibrary(psapi_handle);
         }
@@ -301,9 +288,6 @@ return_t is_process_wow64(HANDLE hprocess, BOOL* result) {
     __finally2 {
         if (nullptr != result) {
             *result = ret_result;
-        }
-        if (errorcode_t::success != ret) {
-            // do nothing
         }
     }
 

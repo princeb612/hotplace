@@ -78,9 +78,7 @@ class t_cmdarg_t {
 
 template <typename T>
 t_cmdarg_t<T>::t_cmdarg_t(const std::string& token, const std::string& desc, std::function<void(T&, char*)> f)
-    : _token(token), _desc(desc), _func(f), _flag(0) {
-    // do nothing
-}
+    : _token(token), _desc(desc), _func(f), _flag(0) {}
 
 template <typename T>
 t_cmdarg_t<T>::t_cmdarg_t(const t_cmdarg_t& rhs) : _token(rhs._token), _desc(rhs._desc), _func(rhs._func), _flag(rhs._flag) {}
@@ -89,9 +87,7 @@ template <typename T>
 t_cmdarg_t<T>::t_cmdarg_t(t_cmdarg_t&& rhs) : _token(std::move(rhs._token)), _desc(std::move(rhs._desc)), _func(std::move(rhs._func)), _flag(rhs._flag) {}
 
 template <typename T>
-t_cmdarg_t<T>::~t_cmdarg_t() {
-    // do nothing
-}
+t_cmdarg_t<T>::~t_cmdarg_t() {}
 
 template <typename T>
 t_cmdarg_t<T>& t_cmdarg_t<T>::preced() {
@@ -192,14 +188,10 @@ class t_cmdline_t {
 };
 
 template <typename T>
-t_cmdline_t<T>::t_cmdline_t() {
-    // do nothing
-}
+t_cmdline_t<T>::t_cmdline_t() {}
 
 template <typename T>
-t_cmdline_t<T>::~t_cmdline_t() {
-    // do nothing
-}
+t_cmdline_t<T>::~t_cmdline_t() {}
 
 template <typename T>
 t_cmdline_t<T>& t_cmdline_t<T>::operator<<(const t_cmdarg_t<T>& cmd) {
@@ -319,7 +311,7 @@ void t_cmdline_t<T>::help() {
 
         constexpr char preced[] = "arg";
         constexpr char nopreced[] = "   ";
-        std::string expr_arg = format("%s %s", item.token(), cmdline_flag_t::cmdline_preced & flag ? preced : nopreced);
+        std::string expr_arg = format("%s %s", item.token(), (cmdline_flag_t::cmdline_preced & flag) ? preced : nopreced);
 
         printf(fmt.c_str(), color, expr_arg.c_str(), f, item.desc());
     }

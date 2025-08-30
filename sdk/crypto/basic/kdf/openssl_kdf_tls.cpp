@@ -43,9 +43,7 @@ return_t openssl_kdf::hkdf_tls13_label(binary_t& hkdflabel, uint16 length, const
 
         ret = hkdf_label(hkdflabel, length, str2bin(constexpr_tls13), str2bin(label), context);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -66,9 +64,7 @@ return_t openssl_kdf::hkdf_dtls13_label(binary_t& hkdflabel, uint16 length, cons
 
         ret = hkdf_label(hkdflabel, length, str2bin(constexpr_dtls13), str2bin(label), context);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -151,9 +147,7 @@ return_t openssl_kdf::hkdf_label(binary_t& hkdflabel, uint16 length, const binar
         binary_append(hkdflabel, context);
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -167,9 +161,7 @@ return_t openssl_kdf::hkdf_expand_label(binary_t& okm, const char* alg, uint16 l
         }
         ret = hkdf_expand_label(okm, alg, length, secret, str2bin(prefix), str2bin(label), context);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -183,9 +175,7 @@ return_t openssl_kdf::hkdf_expand_label(binary_t& okm, hash_algorithm_t alg, uin
         }
         ret = hkdf_expand_label(okm, alg, length, secret, str2bin(prefix), str2bin(label), context);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -217,9 +207,7 @@ return_t openssl_kdf::hkdf_expand_label(binary_t& okm, const char* alg, uint16 l
         openssl_kdf kdf;
         ret = kdf.hkdf_expand(okm, alg, length, secret, bin_hkdflabel);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

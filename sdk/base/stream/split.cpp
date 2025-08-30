@@ -53,9 +53,7 @@ return_t split(const byte_t* stream, size_t size, size_t fragment_size, size_t p
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

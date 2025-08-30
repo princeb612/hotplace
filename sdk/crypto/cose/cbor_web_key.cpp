@@ -23,13 +23,9 @@
 namespace hotplace {
 namespace crypto {
 
-cbor_web_key::cbor_web_key() : crypto_keychain() {
-    // do nothing
-}
+cbor_web_key::cbor_web_key() : crypto_keychain() {}
 
-cbor_web_key::~cbor_web_key() {
-    // do nothing
-}
+cbor_web_key::~cbor_web_key() {}
 
 return_t cbor_web_key::load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc, int flag) {
     return_t ret = errorcode_t::success;
@@ -46,9 +42,7 @@ return_t cbor_web_key::load(crypto_key* cryptokey, keyflag_t mode, const char* b
             ret = crypto_keychain::load(cryptokey, mode, buffer, size, desc, flag);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -65,9 +59,7 @@ return_t cbor_web_key::load_b16(crypto_key* cryptokey, const char* buffer, size_
         binary_t bin = std::move(base16_decode(buffer, size));
         ret = load(cryptokey, &bin[0], bin.size(), flag);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -77,9 +69,7 @@ typedef struct _cose_object_key {
     std::string kid;
     std::map<int, binary_t> attrib;
 
-    _cose_object_key() : type(0), curve(0) {
-        // do nothing
-    }
+    _cose_object_key() : type(0), curve(0) {}
 } cose_key_object;
 
 return_t cbor_web_key::load(crypto_key* cryptokey, const byte_t* buffer, size_t size, int flag) {
@@ -104,9 +94,7 @@ return_t cbor_web_key::load(crypto_key* cryptokey, const byte_t* buffer, size_t 
 
         root->release();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -121,9 +109,7 @@ return_t cbor_web_key::load(crypto_key* cryptokey, const binary_t& buffer, int f
 
         ret = load(cryptokey, &buffer[0], buffer.size(), flag);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -146,9 +132,7 @@ return_t cbor_web_key::load(crypto_key* key, cbor_object* root, int flag) {
             do_load(key, root, flag);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -219,9 +203,7 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -239,9 +221,7 @@ return_t cbor_web_key::write(crypto_key* cryptokey, keyflag_t mode, stream_t* st
             ret = crypto_keychain::write(cryptokey, mode, stream, flag);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -262,18 +242,14 @@ return_t cbor_web_key::write(crypto_key* cryptokey, stream_t* stream, int flag) 
 
         stream->write(&cbor[0], cbor.size());  // binary
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
 typedef struct _cose_mapper_t {
     cbor_array* root;
 
-    _cose_mapper_t() : root(nullptr) {
-        // do nothing
-    }
+    _cose_mapper_t() : root(nullptr) {}
 } cose_mapper_t;
 
 void cwk_writer(crypto_key_object* key, void* param) {
@@ -370,9 +346,7 @@ void cwk_writer(crypto_key_object* key, void* param) {
 
         *root << keynode;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 return_t cbor_web_key::write(crypto_key* cryptokey, std::string& buf, int flag) {
@@ -386,9 +360,7 @@ return_t cbor_web_key::write(crypto_key* cryptokey, std::string& buf, int flag) 
         }
         base16_encode(cbor, buf);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -437,9 +409,7 @@ return_t cbor_web_key::write(crypto_key* cryptokey, cbor_object** root, int flag
 
         *root = cbor_root;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

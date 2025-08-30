@@ -52,10 +52,7 @@ struct mlfq_shared_binder {
 
 template <typename TYPENAME_T>
 struct mlfq_nonshared_binder {
-    int binder(int mode, TYPENAME_T* source, void* param) {
-        // do nothing
-        return 0;
-    }
+    int binder(int mode, TYPENAME_T* source, void* param) { return 0; }
 };
 
 /**
@@ -188,9 +185,7 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::post(int pri, TYPENAME_T* source, void* p
         _workingset.insert(source);
         _semaphore.signal();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -249,9 +244,7 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::get(int* pri, TYPENAME_T** source, uint32
             ret = errorcode_t::not_ready;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

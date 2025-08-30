@@ -17,13 +17,9 @@
 namespace hotplace {
 namespace crypto {
 
-authenticode_plugin_pe::authenticode_plugin_pe() : authenticode_plugin() {
-    // do nothing
-}
+authenticode_plugin_pe::authenticode_plugin_pe() : authenticode_plugin() {}
 
-authenticode_plugin_pe::~authenticode_plugin_pe() {
-    // do nothing
-}
+authenticode_plugin_pe::~authenticode_plugin_pe() {}
 
 bool authenticode_plugin_pe::is_kind_of(file_stream* filestream) {
     return_t ret = errorcode_t::success;
@@ -69,9 +65,7 @@ bool authenticode_plugin_pe::is_kind_of(file_stream* filestream) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -163,9 +157,7 @@ return_t authenticode_plugin_pe::read_authenticode(file_stream* filestream, size
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -210,9 +202,7 @@ return_t authenticode_plugin_pe::read_authenticode(file_stream* filestream, bina
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -308,9 +298,7 @@ return_t authenticode_plugin_pe::write_authenticode(file_stream* filestream, bin
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -499,9 +487,7 @@ return_t authenticode_plugin_pe::read_checksum(file_stream* filestream, uint32* 
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -571,9 +557,7 @@ return_t authenticode_plugin_pe::calc_checksum(file_stream* filestream, uint32* 
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -643,9 +627,7 @@ return_t authenticode_plugin_pe::update_checksum(file_stream* filestream, uint32
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

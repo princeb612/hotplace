@@ -43,9 +43,7 @@ return_t crypto_aead::encrypt(const binary_t& key, const binary_t& iv, const uns
 
         ret = crypt.encrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, iv, stream, size, ciphertext, aad, tag, options);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -71,9 +69,7 @@ return_t crypto_aead::decrypt(const binary_t& key, const binary_t& iv, const uns
 
         ret = crypt.decrypt(typeof_alg(hint_cipher), typeof_mode(hint_cipher), key, iv, stream, size, plaintext, aad, tag, options);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

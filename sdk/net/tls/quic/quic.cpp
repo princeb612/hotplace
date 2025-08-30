@@ -41,9 +41,7 @@ return_t quic_read_vle_int(const byte_t* stream, size_t size, size_t& pos, uint6
             value = (value << 8) + stream[pos++];
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -71,9 +69,7 @@ return_t quic_write_vle_int(uint64 value, binary_t& bin) {
         begin[0] |= v;
         bin.insert(bin.end(), begin, begin + length);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -107,9 +103,7 @@ return_t quic_write_vle_int(uint64 value, uint8 prefix, binary_t& bin) {
         begin[0] |= v;
         bin.insert(bin.end(), begin, begin + length);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -131,9 +125,7 @@ return_t quic_length_vle_int(uint64 value, uint8& length) {
         }
         length = 1 << prefix;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -163,9 +155,7 @@ return_t encode_packet_number(uint64 full_pn, uint64 largest_acked, uint64& repr
         represent = num_unacked << 1;
         nbits = (log(represent) / log(2)) + 1;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -186,9 +176,7 @@ return_t decode_packet_number(uint64 largest_pn, uint64 truncated_pn, uint8 pn_n
             value = candidate_pn;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

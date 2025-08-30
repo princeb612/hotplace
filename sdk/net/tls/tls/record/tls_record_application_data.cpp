@@ -165,9 +165,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

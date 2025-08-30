@@ -236,9 +236,7 @@ class t_graph {
                 }
             }
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return *this;
     }
     t_graph& add_edge(edge&& e) {

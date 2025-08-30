@@ -143,9 +143,7 @@ class test_case {
         std::string _message;
         struct timespec _time;
 
-        _unittest_item_t() : _result(0) {
-            // do nothing
-        }
+        _unittest_item_t() : _result(0) {}
     } unittest_item_t;
     typedef std::list<unittest_item_t> unittest_list_t;
     typedef struct _test_stat_t {
@@ -155,17 +153,13 @@ class test_case {
         uint32 _count_low_security;
         uint32 _count_trivial;
         uint32 _count_expect_failure;
-        _test_stat_t() : _count_success(0), _count_fail(0), _count_not_supported(0), _count_low_security(0), _count_trivial(0), _count_expect_failure(0) {
-            // do nothing
-        }
+        _test_stat_t() : _count_success(0), _count_fail(0), _count_not_supported(0), _count_low_security(0), _count_trivial(0), _count_expect_failure(0) {}
     } test_stat_t;
     typedef struct _test_status_t {
         unittest_list_t _test_list;
         test_stat_t _test_stat;
 
-        _test_status_t() {
-            // do nothing
-        }
+        _test_status_t() {}
     } test_status_t;
 
     typedef std::list<std::string> unittest_index_t;             /* ordered test cases */

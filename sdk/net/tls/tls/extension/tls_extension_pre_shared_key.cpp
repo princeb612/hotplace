@@ -197,9 +197,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
             _psk_binder = std::move(psk_binder);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -235,9 +233,7 @@ return_t tls_extension_server_psk::do_read_body(tls_direction_t dir, const byte_
             _selected_identity = selected_identity;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

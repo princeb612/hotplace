@@ -74,9 +74,7 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -54,9 +54,7 @@ void test_hash_routine(hash_algorithm_t algorithm, const byte_t* key_data, unsig
                 dgst.close(hash_handle);
             }
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
     }
     __finally2 {
         const char* alg = advisor->nameof_md(algorithm);

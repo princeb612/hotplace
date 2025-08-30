@@ -375,9 +375,7 @@ oauth2_provider& oauth2_provider::add(oauth2_grant_provider* provider) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 
@@ -459,9 +457,7 @@ return_t oauth2_provider::choose(oauth2_grant_provider_ref_map_t& object, const 
 
         *provider_upref = provider;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

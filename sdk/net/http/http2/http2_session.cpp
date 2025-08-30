@@ -88,9 +88,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
             session->send(&bin_resp[0], bin_resp.size());
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 

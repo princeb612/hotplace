@@ -36,9 +36,7 @@ match_result_t http_static_table::match(uint32 flags, const std::string& name, c
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return state;
 }
 
@@ -57,9 +55,7 @@ return_t http_static_table::select(uint32 flags, size_t index, std::string& name
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

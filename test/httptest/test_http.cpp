@@ -418,9 +418,7 @@ return_t do_calc_digest_digest_access(http_authentication_provider *provider, ne
             _logger->writeln("- resp %s -> %s", dgst_sequence.get_sequence().c_str(), digest_response.c_str());
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -805,9 +803,7 @@ void test_get_tlsclient() {
 
         SSL_CTX_free(sslctx);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     _test_case.assert(true, __FUNCTION__, "openssl_tls_client_socket");
 }
 

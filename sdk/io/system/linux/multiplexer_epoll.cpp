@@ -39,13 +39,9 @@ typedef struct _multiplexer_epoll_context_t : public multiplexer_context_t {
     multiplexer_controller_context_t* handle_controller;
 } multiplexer_epoll_context_t;
 
-multiplexer_epoll::multiplexer_epoll() {
-    // do nothing
-}
+multiplexer_epoll::multiplexer_epoll() {}
 
-multiplexer_epoll::~multiplexer_epoll() {
-    // do nothing
-}
+multiplexer_epoll::~multiplexer_epoll() {}
 
 return_t multiplexer_epoll::open(multiplexer_context_t** handle, size_t concurrent) {
     return_t ret = errorcode_t::success;
@@ -133,9 +129,7 @@ return_t multiplexer_epoll::close(multiplexer_context_t* handle) {
         context->signature = 0;
         delete context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -172,9 +166,7 @@ return_t multiplexer_epoll::bind(multiplexer_context_t* handle, handle_t eventso
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -209,9 +201,7 @@ return_t multiplexer_epoll::unbind(multiplexer_context_t* handle, handle_t event
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -289,9 +279,7 @@ return_t multiplexer_epoll::event_loop_run(multiplexer_context_t* handle, handle
 
         controller.event_loop_close(context->handle_controller, token_handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -314,9 +302,7 @@ return_t multiplexer_epoll::event_loop_break(multiplexer_context_t* handle, arch
         /* signal */
         ret = controller.event_loop_break(context->handle_controller, token_handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -339,9 +325,7 @@ return_t multiplexer_epoll::event_loop_break_concurrent(multiplexer_context_t* h
         /* signal */
         ret = controller.event_loop_break_concurrent(context->handle_controller, concurrent);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

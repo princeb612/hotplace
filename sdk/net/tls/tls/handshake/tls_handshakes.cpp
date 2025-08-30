@@ -50,9 +50,7 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

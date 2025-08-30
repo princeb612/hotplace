@@ -72,9 +72,7 @@ return_t http_server::startup_tls(const std::string& server_cert, const std::str
         }
         ret = adapter->startup_tls(server_cert, server_key, cipher_list, verify_peer);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -88,9 +86,7 @@ return_t http_server::shutdown_tls() {
         }
         ret = adapter->shutdown_tls();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -104,9 +100,7 @@ return_t http_server::startup_dtls(const std::string& server_cert, const std::st
         }
         ret = adapter->startup_dtls(server_cert, server_key, cipher_list, verify_peer);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -120,9 +114,7 @@ return_t http_server::shutdown_dtls() {
         }
         ret = adapter->shutdown_dtls();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -171,9 +163,7 @@ return_t http_server::startup_server(http_service_t service, uint16 family, uint
 
         _http_handles.push_back(handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -175,9 +175,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             session->run_scheduled(dir);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -216,9 +214,7 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -244,9 +240,7 @@ return_t tls_handshake::prepare_fragment(const byte_t* stream, uint32 size, uint
         _fragment_offset = fragment_offset;
         _fragment_len = fragment_length;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -414,9 +408,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

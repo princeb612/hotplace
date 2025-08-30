@@ -36,9 +36,7 @@ namespace hotplace {
 template <typename STREAM_T, typename BINDER>
 class t_stream_binder {
    public:
-    t_stream_binder(STREAM_T& stream) : _stream(stream) {
-        // do nothing
-    }
+    t_stream_binder(STREAM_T& stream) : _stream(stream) {}
     t_stream_binder<STREAM_T, BINDER>& operator<<(const char* rvalue) {
         if (rvalue) {
             _stream.printf("%s", rvalue);

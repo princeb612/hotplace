@@ -58,9 +58,7 @@ return_t tls_handshake_server_hello_done::do_preprocess(tls_direction_t dir) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -76,9 +74,7 @@ return_t tls_handshake_server_hello_done::do_postprocess(tls_direction_t dir, co
             session->update_session_status(session_status_server_hello_done);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

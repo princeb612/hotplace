@@ -93,9 +93,7 @@ return_t dump_pem(const EVP_PKEY* pkey, BIO* out) {
             PEM_write_bio_Parameters(out, (EVP_PKEY*)pkey);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

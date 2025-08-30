@@ -27,9 +27,7 @@ file_stream::file_stream()
       _filepos_low(0),
       _filepos_high(0),
       _mapping_size(0),
-      _stream_type(stream_type_t::file) {
-    // do nothing
-}
+      _stream_type(stream_type_t::file) {}
 
 file_stream::~file_stream() { close(); }
 
@@ -112,9 +110,7 @@ return_t file_stream::open(const char* file_name, uint32 flag) {
         _flags = flag;
         _filesize_low = sb.st_size;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -317,9 +313,7 @@ return_t file_stream::read(void* data, uint32 buffer, uint32* size_read) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -370,13 +364,7 @@ return_t file_stream::printf(const char* fmt, ...) {
 
         write(data, size_data);
     }
-    __finally2 {
-        io.close(handle);
-
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 { io.close(handle); }
 
     return ret;
 }
@@ -404,13 +392,7 @@ return_t file_stream::vprintf(const char* fmt, va_list ap) {
 
         write(data, size_data);
     }
-    __finally2 {
-        io.close(handle);
-
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 { io.close(handle); }
 
     return ret;
 }

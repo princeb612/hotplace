@@ -214,9 +214,7 @@ return_t openssl_crypt::close(crypt_context_t *handle) {
 
         delete context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -249,9 +247,7 @@ return_t openssl_crypt::set(crypt_context_t *handle, crypt_ctrl_t id, uint16 par
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -674,9 +670,7 @@ return_t openssl_crypt::query(crypt_context_t *handle, size_t cmd, size_t &value
             ret = errorcode_t::bad_request;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -50,9 +50,7 @@ datetime::datetime(const filetime_t& ft) { filetime_to_timespec(ft, _timespec); 
 
 datetime::datetime(const systemtime_t& st) { systemtime_to_timespec(st, _timespec); }
 
-datetime::~datetime() {
-    // do nothing
-}
+datetime::~datetime() {}
 
 void datetime::update() { system_gettime(CLOCK_REALTIME, _timespec); }
 
@@ -95,9 +93,7 @@ return_t datetime::gettimespec(struct timespec* ts) {
         }
         memcpy(ts, &_timespec, sizeof(struct timespec));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -146,9 +142,7 @@ return_t datetime::getgmtime(stream_t* stream) {
         getgmtime(&dt);
         printf("%04d-%02d-%02dT%02d:%02d:%02dZ", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -165,9 +159,7 @@ return_t datetime::getfiletime(filetime_t* ft) {
         ft->low = (uint32)ll;
         ft->high = ((uint64)11 >> 32);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -342,9 +334,7 @@ return_t datetime::timespec_to_tm(int mode, const struct timespec& ts, struct tm
             *nsec = ts.tv_nsec;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -379,9 +369,7 @@ return_t datetime::timespec_to_datetime(int mode, const struct timespec& ts, dat
             *nsec = ts.tv_nsec;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -412,9 +400,7 @@ return_t datetime::timespec_to_systemtime(int mode, const struct timespec& ts, s
         st->second = tm.tm_sec;
         st->milliseconds = ts.tv_nsec / EXP6;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -570,9 +556,7 @@ return_t time_diff(struct timespec& ts, struct timespec begin, struct timespec e
             ts.tv_sec = end.tv_sec - begin.tv_sec - 1;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

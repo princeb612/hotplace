@@ -42,9 +42,7 @@ return_t openssl_sign::verify_hmac(const EVP_PKEY* pkey, hash_algorithm_t alg, c
             ret = errorcode_t::error_verify;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -69,9 +69,7 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

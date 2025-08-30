@@ -60,9 +60,7 @@ return_t http2_frame_settings::do_read_body(const byte_t* stream, size_t size, s
             pos += sizeof(http2_setting_t);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

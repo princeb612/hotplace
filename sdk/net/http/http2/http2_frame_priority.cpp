@@ -44,9 +44,7 @@ return_t http2_frame_priority::do_read_body(const byte_t* stream, size_t size, s
         _dependency = (temp & 0x7fffffff);
         _weight = pl.t_value_of<uint8>(constexpr_frame_weight);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

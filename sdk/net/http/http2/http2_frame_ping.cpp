@@ -37,9 +37,7 @@ return_t http2_frame_ping::do_read_body(const byte_t* stream, size_t size, size_
 
         _opaque = pl.t_value_of<uint32>(constexpr_frame_opaque);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

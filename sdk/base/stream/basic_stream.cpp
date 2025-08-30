@@ -114,9 +114,7 @@ return_t basic_stream::printf(const char* buf, ...) {
         ret = _bio.vprintf(_handle, buf, ap);
         va_end(ap);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -137,9 +135,7 @@ return_t basic_stream::printf(const wchar_t* buf, ...) {
         ret = _bio.vprintf(_handle, buf, ap);
         va_end(ap);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -162,9 +158,7 @@ return_t basic_stream::println(const char* buf, ...) {
 
         _bio.printf(_handle, "\n");
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

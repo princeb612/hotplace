@@ -125,9 +125,7 @@ return_t http_header_compression::decode_int(const byte_t* p, size_t& pos, uint8
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -163,9 +161,7 @@ return_t http_header_compression::encode_string(binary_t& target, uint32 flags, 
             target.insert(target.end(), value, value + size);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -199,9 +195,7 @@ return_t http_header_compression::decode_string(const byte_t* p, size_t& pos, ui
         }
         pos += len;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -224,9 +218,7 @@ return_t http_header_compression::decode_name_reference(const byte_t* p, size_t&
         }
         pos += namelen;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -259,9 +251,7 @@ match_result_t http_header_compression::matchall(http_static_table* statable, ht
             state = statable->match(flags, name, value, index);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return state;
 }
 
@@ -298,9 +288,7 @@ return_t http_header_compression::selectall(http_static_table* statable, http_dy
             ret = statable->select(flags, index, name, value);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -102,9 +102,7 @@ class t_stringkey_value {
                 _reverse_order_map.insert({name, _order});
             }
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return ret;
     }
     /**
@@ -141,9 +139,7 @@ class t_stringkey_value {
             _order_map.erase(reverse_order_iter->second);
             _reverse_order_map.erase(reverse_order_iter);
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return ret;
     }
     /**
@@ -160,9 +156,7 @@ class t_stringkey_value {
             _order_map.clear();
             _reverse_order_map.clear();
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return ret;
     }
     /**
@@ -187,9 +181,7 @@ class t_stringkey_value {
                 ret_value = true;
             }
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return ret_value;
     }
     /**
@@ -215,9 +207,7 @@ class t_stringkey_value {
                 ret_value = iter->second.c_str();
             }
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return ret_value;
     }
     /**
@@ -247,9 +237,7 @@ class t_stringkey_value {
                 ret = errorcode_t::not_found;
             }
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return ret;
     }
     value_t get(const std::string &name) {

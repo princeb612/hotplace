@@ -144,9 +144,7 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
             root->release();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 static void dump_key_openssl(const EVP_PKEY* pkey, stream_t* stream, uint8 indent) {
@@ -179,9 +177,7 @@ static void dump_key_openssl(const EVP_PKEY* pkey, stream_t* stream, uint8 inden
             BIO_free(bio);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 /*
@@ -597,9 +593,7 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
 
         // dump_key_openssl (pkey, stream, 0);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

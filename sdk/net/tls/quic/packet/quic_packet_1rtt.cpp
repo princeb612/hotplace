@@ -65,9 +65,7 @@ return_t quic_packet_1rtt::do_read_body(tls_direction_t dir, const byte_t* strea
             pos_unprotect = (ppos + offset_pnpayload + 4);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -195,9 +193,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
             header = std::move(bin_unprotected_header);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

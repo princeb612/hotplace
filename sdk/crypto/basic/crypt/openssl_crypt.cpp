@@ -14,13 +14,9 @@
 namespace hotplace {
 namespace crypto {
 
-openssl_crypt::openssl_crypt() {
-    // do nothing
-}
+openssl_crypt::openssl_crypt() {}
 
-openssl_crypt::~openssl_crypt() {
-    // do nothing
-}
+openssl_crypt::~openssl_crypt() {}
 
 return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t &key, const binary_t &iv) {
     return open(handle, algorithm, mode, key.empty() ? nullptr : &key[0], key.size(), iv.empty() ? nullptr : &iv[0], iv.size());
@@ -38,9 +34,7 @@ return_t openssl_crypt::open(crypt_context_t **handle, const char *cipher, const
             ret = open(handle, typeof_alg(hint), typeof_mode(hint), key, size_key, iv, size_iv);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -56,9 +50,7 @@ return_t openssl_crypt::open(crypt_context_t **handle, const char *cipher, const
             ret = open(handle, typeof_alg(hint), typeof_mode(hint), key, iv);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -250,9 +242,7 @@ return_t openssl_crypt::free_data(unsigned char *data) {
         }
         delete[] (data);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

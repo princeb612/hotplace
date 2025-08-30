@@ -7,9 +7,7 @@
 struct OPTION : public CMDLINEOPTION {
     std::string content;
 
-    OPTION() : CMDLINEOPTION() {
-        // do nothing
-    }
+    OPTION() : CMDLINEOPTION() {}
 };
 
 extern test_case _test_case;

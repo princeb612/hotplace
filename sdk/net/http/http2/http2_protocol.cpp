@@ -66,9 +66,7 @@ return_t http2_protocol::is_kind_of(void* stream, size_t stream_size) {
             ret = errorcode_t::more_data;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -144,9 +142,7 @@ return_t http2_protocol::read_stream(basic_stream* stream, size_t* request_size,
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

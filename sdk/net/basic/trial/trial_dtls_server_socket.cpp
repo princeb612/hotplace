@@ -86,9 +86,7 @@ return_t trial_dtls_server_socket::dtls_handshake(netsession_t* sess) {
         session->set_hook_change_session_status(lambda);
         session->set_hook_param(sess);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -165,9 +163,7 @@ return_t trial_dtls_server_socket::sendto(socket_context_t* handle, const char* 
             naive_udp_server_socket::sendto(handle, (char*)&bin[0], bin.size(), &sent, addr, addrlen);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

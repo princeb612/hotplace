@@ -62,9 +62,7 @@ return_t tls_extension_compress_certificate::do_read_body(tls_direction_t dir, c
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

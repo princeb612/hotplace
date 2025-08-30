@@ -94,9 +94,7 @@ struct keydesc {
 
 class crypto_key_object {
    public:
-    crypto_key_object() : _pkey(nullptr), _x509(nullptr) {
-        // do nothing
-    }
+    crypto_key_object() : _pkey(nullptr), _x509(nullptr) {}
     crypto_key_object(const EVP_PKEY* key, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) : _pkey(key), _x509(nullptr) {
         _desc.set_kid(kid).set_alg(alg).set_use(use);
     }

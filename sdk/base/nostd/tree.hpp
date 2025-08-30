@@ -166,9 +166,7 @@ class t_btree {
                 ret = true;
             }
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return ret;
     }
     void clear(node_t *&t) {
@@ -358,9 +356,7 @@ class t_avltree {
                 ret = true;
             }
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return ret;
     }
     void clear(node_t *&t) {

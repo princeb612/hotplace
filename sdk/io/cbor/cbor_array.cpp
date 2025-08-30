@@ -20,17 +20,11 @@
 namespace hotplace {
 namespace io {
 
-cbor_array::cbor_array() : cbor_object(cbor_type_t::cbor_type_array) {
-    // do nothing
-}
+cbor_array::cbor_array() : cbor_object(cbor_type_t::cbor_type_array) {}
 
-cbor_array::cbor_array(uint32 flags) : cbor_object(cbor_type_t::cbor_type_array, flags) {
-    // do nothing
-}
+cbor_array::cbor_array(uint32 flags) : cbor_object(cbor_type_t::cbor_type_array, flags) {}
 
-cbor_array::~cbor_array() {
-    // do nothing
-}
+cbor_array::~cbor_array() {}
 
 return_t cbor_array::join(cbor_object* object, cbor_object* extra) {
     return_t ret = errorcode_t::success;
@@ -53,9 +47,7 @@ return_t cbor_array::join(cbor_object* object, cbor_object* extra) {
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -84,9 +84,7 @@ tls_extension* tls_extension::read(tls_handshake* handshake, tls_direction_t dir
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return obj;
 }
 
@@ -147,9 +145,7 @@ return_t tls_extension::write(tls_direction_t dir, binary_t& bin) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -213,9 +209,7 @@ return_t tls_extension::do_read_header(tls_direction_t dir, const byte_t* stream
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

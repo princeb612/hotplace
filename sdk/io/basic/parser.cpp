@@ -259,9 +259,7 @@ bool parser::lookup(const char* p, size_t size, std::string& token_name, uint32&
             ret = true;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

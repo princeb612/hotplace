@@ -19,19 +19,13 @@
 namespace hotplace {
 namespace io {
 
-cbor_map::cbor_map() : cbor_object(cbor_type_t::cbor_type_map) {
-    // do nothing
-}
+cbor_map::cbor_map() : cbor_object(cbor_type_t::cbor_type_map) {}
 
-cbor_map::cbor_map(uint32 flags) : cbor_object(cbor_type_t::cbor_type_map, flags) {
-    // do nothing
-}
+cbor_map::cbor_map(uint32 flags) : cbor_object(cbor_type_t::cbor_type_map, flags) {}
 
 cbor_map::cbor_map(cbor_pair* object, uint32 flags) : cbor_object(cbor_type_t::cbor_type_map, flags) { *this << object; }
 
-cbor_map::~cbor_map() {
-    // do nothing
-}
+cbor_map::~cbor_map() {}
 
 return_t cbor_map::join(cbor_object* object, cbor_object* extra) {
     return_t ret = errorcode_t::success;
@@ -99,9 +93,7 @@ return_t cbor_map::join(cbor_object* object, cbor_object* extra) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

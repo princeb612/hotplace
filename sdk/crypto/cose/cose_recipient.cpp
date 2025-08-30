@@ -114,9 +114,7 @@ return_t cose_recipient::finditem(int key, int& value, int scope) {
             ret = get_recipients().finditem(key, value, scope);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -148,9 +146,7 @@ return_t cose_recipient::finditem(int key, std::string& value, int scope) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -185,9 +181,7 @@ return_t cose_recipient::finditem(int key, binary_t& value, int scope) {
             ret = get_recipients().finditem(key, value, scope);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -206,9 +200,7 @@ return_t cose_recipient::setparam(cose_param_t id, const binary_t& bin) {
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -227,9 +219,7 @@ return_t cose_recipient::getparam(cose_param_t id, binary_t& bin) {
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -256,11 +246,7 @@ return_t cose_recipient::parse(cbor_array* root) {
             __leave2;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -296,9 +282,7 @@ return_t cose_recipient::parse_header(cbor_array* root) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -337,9 +321,7 @@ return_t cose_recipient::parse_message(cbor_array* root) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -360,9 +342,7 @@ return_t cose_recipient::parse_protected(cbor_object* object) {
 
         ret = get_protected().set(cbor_protected);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -382,9 +362,7 @@ return_t cose_recipient::parse_unprotected(cbor_object* object) {
 
         ret = get_unprotected().set(cbor_unprotected);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -405,9 +383,7 @@ return_t cose_recipient::parse_payload(cbor_object* object) {
 
         ret = get_payload().set(cbor_payload);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -428,9 +404,7 @@ return_t cose_recipient::parse_singleitem(cbor_object* object) {
 
         ret = get_singleitem().set(cbor_singleitem);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

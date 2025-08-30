@@ -165,9 +165,7 @@ return_t openssl_tls::close(socket_context_t* handle) {
 
         delete handle;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -241,9 +239,7 @@ return_t openssl_tls::connectto(socket_context_t** handle, socket_t fd, const ch
 
         ret = connectto(handle, fd, (sockaddr*)&addr, sizeof(addr), wto);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -372,9 +368,7 @@ return_t openssl_tls::dtls_handshake(socket_context_t* handle, sockaddr* addr, s
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -454,9 +448,7 @@ return_t openssl_tls::do_connect(socket_context_t* handle, uint32 wto) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -589,9 +581,7 @@ return_t openssl_tls::do_accept(socket_context_t* handle) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -628,9 +618,7 @@ return_t openssl_tls::set_tls_io(socket_context_t* handle, int type) {
             SSL_set_options(ssl, SSL_OP_COOKIE_EXCHANGE);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -708,9 +696,7 @@ return_t openssl_tls::read(socket_context_t* handle, int mode, void* buffer, siz
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -785,9 +771,7 @@ return_t openssl_tls::recvfrom(socket_context_t* handle, int mode, void* buffer,
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -838,9 +822,7 @@ return_t openssl_tls::send(socket_context_t* handle, int mode, const char* data,
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -890,9 +872,7 @@ return_t openssl_tls::sendto(socket_context_t* handle, int mode, const char* dat
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

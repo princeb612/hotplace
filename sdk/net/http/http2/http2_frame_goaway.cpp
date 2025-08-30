@@ -44,9 +44,7 @@ return_t http2_frame_goaway::do_read_body(const byte_t* stream, size_t size, siz
         _errorcode = pl.t_value_of<uint32>(constexpr_frame_error_code);
         pl.get_binary(constexpr_frame_debug_data, _debug);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

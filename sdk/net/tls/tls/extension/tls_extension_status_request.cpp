@@ -82,9 +82,7 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
             _request_ext_info = std::move(request_ext_info);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

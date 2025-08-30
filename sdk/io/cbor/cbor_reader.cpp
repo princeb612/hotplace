@@ -43,9 +43,7 @@ typedef struct _cbor_reader_context_t {
     cbor_reader_context_temp_t temp;
 } cbor_reader_context_t;
 
-cbor_reader::cbor_reader() {
-    // do nothing
-}
+cbor_reader::cbor_reader() {}
 
 return_t cbor_reader::open(cbor_reader_context_t** handle) {
     return_t ret = errorcode_t::success;
@@ -60,9 +58,7 @@ return_t cbor_reader::open(cbor_reader_context_t** handle) {
         __try_new_catch(context, new cbor_reader_context_t, ret, __leave2);
         *handle = context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -79,9 +75,7 @@ return_t cbor_reader::close(cbor_reader_context_t* handle) {
 
         delete handle;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -101,9 +95,7 @@ return_t cbor_reader::clear(cbor_reader_context_t* handle) {
         handle->temp.parents.clear();
         handle->temp.items.clear();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -121,9 +113,7 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const char* expr) {
         bin = std::move(base16_decode(expr));
         ret = parse(handle, bin);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -227,9 +217,7 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
             handle->temp.tag_value = cbor_tag_t::cbor_tag_unknown;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -244,9 +232,7 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const binary_t& expre
 
         ret = parse(handle, &expression[0], expression.size());
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -297,9 +283,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, int64 data
             insert(handle, temp);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -325,9 +309,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, const char
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -353,9 +335,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, const byte
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -375,9 +355,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, float data
             insert(handle, temp);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -397,9 +375,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, double dat
             insert(handle, temp);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -452,9 +428,7 @@ return_t cbor_reader::insert(cbor_reader_context_t* handle, cbor_object* object)
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -477,9 +451,7 @@ return_t cbor_reader::pop(cbor_reader_context_t* handle, cbor_object* object) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -514,9 +486,7 @@ return_t cbor_reader::publish(cbor_reader_context_t* handle, stream_t* stream) {
 
         publisher.publish(handle, stream);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -533,9 +503,7 @@ return_t cbor_reader::publish(cbor_reader_context_t* handle, binary_t* bin) {
 
         publisher.publish(handle, bin);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -556,9 +524,7 @@ return_t cbor_reader::publish(cbor_reader_context_t* handle, cbor_object** root)
             ret = errorcode_t::no_data;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -578,9 +544,7 @@ return_t cbor_foreach_t(cbor_reader_context_t* handle, void (*function)(unsigned
             idx++;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

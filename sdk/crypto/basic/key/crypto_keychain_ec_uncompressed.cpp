@@ -101,9 +101,7 @@ return_t crypto_keychain::add_ec_uncompressed_b64(crypto_key* cryptokey, uint32 
 
         ret = add_ec_uncompressed(cryptokey, nid, bin_pub, bin_priv, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -129,9 +127,7 @@ return_t crypto_keychain::add_ec_uncompressed_b64u(crypto_key* cryptokey, uint32
 
         ret = add_ec_uncompressed(cryptokey, nid, bin_pub, bin_priv, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -157,9 +153,7 @@ return_t crypto_keychain::add_ec_uncompressed_b16(crypto_key* cryptokey, uint32 
 
         ret = add_ec_uncompressed(cryptokey, nid, bin_pub, bin_priv, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -185,9 +179,7 @@ return_t crypto_keychain::add_ec_uncompressed_b16rfc(crypto_key* cryptokey, uint
 
         ret = add_ec_uncompressed(cryptokey, nid, bin_pub, bin_priv, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -208,9 +200,7 @@ return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, const char*
 
         ret = add_ec_uncompressed(cryptokey, nid, pubkey, privkey, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -231,9 +221,7 @@ return_t crypto_keychain::add_ec_uncompressed_b64(crypto_key* cryptokey, const c
 
         ret = add_ec_uncompressed_b64(cryptokey, nid, pubkey, privkey, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -254,9 +242,7 @@ return_t crypto_keychain::add_ec_uncompressed_b64u(crypto_key* cryptokey, const 
 
         ret = add_ec_uncompressed_b64u(cryptokey, nid, pubkey, privkey, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -277,9 +263,7 @@ return_t crypto_keychain::add_ec_uncompressed_b16(crypto_key* cryptokey, const c
 
         ret = add_ec_uncompressed_b16(cryptokey, nid, pubkey, privkey, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -300,9 +284,7 @@ return_t crypto_keychain::add_ec_uncompressed_b16rfc(crypto_key* cryptokey, cons
 
         ret = add_ec_uncompressed_b16rfc(cryptokey, nid, pubkey, privkey, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

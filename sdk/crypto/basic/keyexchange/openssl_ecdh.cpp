@@ -37,9 +37,7 @@ const EVP_PKEY* get_peer_key(const EVP_PKEY* pkey) {
             OPENSSL_free(buf);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return peer;
 }
@@ -99,7 +97,6 @@ return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* peer, binary_t& 
         if (nullptr != pkey_context) {
             EVP_PKEY_CTX_free(pkey_context);
         }
-        // do nothing
     }
     return ret;
 }
@@ -156,9 +153,7 @@ return_t ecdh_es(const EVP_PKEY* pkey, const EVP_PKEY* peer, const char* algid, 
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

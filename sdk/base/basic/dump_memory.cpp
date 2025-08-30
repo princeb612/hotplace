@@ -83,9 +83,7 @@ return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* str
         }
         stream->printf("\n");
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -129,9 +127,7 @@ return_t dump_memory(bufferio_context_t* handle, stream_t* stream_object, unsign
 
         ret = dump_memory(src, size, stream_object, hex_part, indent, rebase, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

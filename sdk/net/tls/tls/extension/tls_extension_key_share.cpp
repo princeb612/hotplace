@@ -133,9 +133,7 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
             } break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -222,9 +220,7 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
 #endif
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -360,9 +356,7 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
             // _pubkey = std::move(pubkey);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

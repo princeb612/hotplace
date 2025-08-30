@@ -63,9 +63,7 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
         pos += len;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

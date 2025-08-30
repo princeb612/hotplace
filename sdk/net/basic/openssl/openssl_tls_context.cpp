@@ -92,9 +92,7 @@ static void set_info_callback_routine(const SSL* ssl, int where, int ret) {
         }
         trace_debug_event(trace_category_net, trace_event_openssl_tls_state, &bs);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 static int set_cookie_generate_callback_routine(SSL* ssl, unsigned char* cookie, unsigned int* cookie_len) {
@@ -230,9 +228,7 @@ return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {
 
         *context = ssl_ctx;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -346,7 +342,6 @@ return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* ce
                     // do nothing
                 } else {
                     ret = errorcode_t::expired;
-                    // __leave2;
                 }
             }
         }

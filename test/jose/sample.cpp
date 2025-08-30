@@ -154,9 +154,7 @@ return_t hash_stream(const char* algorithm, byte_t* stream, size_t size, binary_
             openssl.close(handle);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

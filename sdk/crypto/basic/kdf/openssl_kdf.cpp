@@ -104,9 +104,7 @@ return_t openssl_kdf::hmac_kdf(binary_t& derived, const char* alg, size_t dlen, 
 
         ret = hmac_kdf(derived, typeof_alg(hint), dlen, key, salt, info);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -145,9 +143,7 @@ return_t openssl_kdf::hmac_kdf_extract(binary_t& prk, const char* alg, const bin
             ret = mac.hmac(alg, salt, ikm, prk);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -164,9 +160,7 @@ return_t openssl_kdf::hmac_kdf_extract(binary_t& prk, hash_algorithm_t alg, cons
 
         ret = hmac_kdf_extract(prk, nameof_alg(hint), salt, ikm);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -213,9 +207,7 @@ return_t openssl_kdf::hkdf_expand(binary_t& okm, const char* alg, size_t dlen, c
         }
         okm.resize(dlen);  // OKM = first L octets of T
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -240,9 +232,7 @@ return_t openssl_kdf::cmac_kdf(binary_t& okm, crypt_algorithm_t alg, size_t dlen
         }
         ret = cmac_kdf_expand(okm, alg, dlen, prk, info);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -288,9 +278,7 @@ return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, con
         hash.hash(mac_handle, ikm.empty() ? nullptr : &ikm[0], ikm.size(), prk);
         hash.close(mac_handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -329,9 +317,7 @@ return_t openssl_kdf::cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size
         }
         okm.resize(dlen);  // OKM = first L octets of T
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

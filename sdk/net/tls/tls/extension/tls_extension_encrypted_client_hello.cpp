@@ -103,9 +103,7 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
             _enc_payload = std::move(enc_payload);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

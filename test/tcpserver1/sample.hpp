@@ -8,9 +8,7 @@ struct OPTION : public CMDLINEOPTION {
     int run;
     uint16 port;
 
-    OPTION() : CMDLINEOPTION(), run(0), port(9000) {
-        // do nothing
-    }
+    OPTION() : CMDLINEOPTION(), run(0), port(9000) {}
 };
 
 extern test_case _test_case;

@@ -98,9 +98,7 @@ return_t html_documents::load(const std::string& uri, std::string& content_type,
             insert_cache(uri, content);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -127,9 +125,7 @@ return_t html_documents::loadable(const std::string& uri, std::string& content_t
             ret = errorcode_t::not_found;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

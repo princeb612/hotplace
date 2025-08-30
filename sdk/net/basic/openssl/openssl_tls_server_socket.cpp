@@ -37,9 +37,7 @@ return_t openssl_tls_server_socket::tls_accept(socket_context_t** handle, socket
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -59,9 +57,7 @@ return_t openssl_tls_server_socket::read(socket_context_t* handle, int mode, cha
 
         ret = _tls->read(handle, mode, ptr_data, size_data, cbread);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -76,9 +72,7 @@ return_t openssl_tls_server_socket::send(socket_context_t* handle, const char* p
         int mode = tls_io_flag_t::send_all;
         ret = _tls->send(handle, mode, ptr_data, size_data, cbsent);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

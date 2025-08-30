@@ -173,9 +173,7 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, const
 
         ret = add_ec(cryptokey, nid, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -197,9 +195,7 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, const
 
         ret = add_ec(cryptokey, nid, x, y, d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -369,9 +365,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const ch
 
         ret = add_ec(cryptokey, nid, bin_x, bin_y, bin_d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -399,9 +393,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const c
 
         ret = add_ec(cryptokey, nid, bin_x, bin_y, bin_d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -429,9 +421,7 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const ch
 
         ret = add_ec(cryptokey, nid, bin_x, bin_y, bin_d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -459,9 +449,7 @@ return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const
 
         ret = add_ec(cryptokey, nid, bin_x, bin_y, bin_d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -482,9 +470,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, const char* curve, c
 
         ret = add_ec_b64(cryptokey, nid, x, y, d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -505,9 +491,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, const char* curve, 
 
         ret = add_ec_b64u(cryptokey, nid, x, y, d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -528,9 +512,7 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, const char* curve, c
 
         ret = add_ec_b16(cryptokey, nid, x, y, d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -551,9 +533,7 @@ return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, const char* curve
 
         ret = add_ec_b16rfc(cryptokey, nid, x, y, d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

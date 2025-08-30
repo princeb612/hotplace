@@ -58,9 +58,7 @@ static inline return_t json_open_stream(json_t** object, const char* buffer, boo
 
         *object = root;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -94,9 +92,7 @@ static inline return_t json_open_file(json_t** object, const char* file, bool su
 
         *object = root;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

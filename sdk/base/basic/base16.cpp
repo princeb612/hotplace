@@ -53,9 +53,7 @@ return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buf
         }
         *target = 0;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -85,9 +83,7 @@ return_t base16_encode(const byte_t* source, size_t size, std::string& outpart, 
             outpart += buf[1];
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -113,9 +109,7 @@ return_t base16_encode(const byte_t* source, size_t size, stream_t* stream, uint
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -165,9 +159,7 @@ return_t base16_encode(const char* source, std::string& outpart) {
 
         base16_encode((const byte_t*)source, strlen(source), outpart);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -232,9 +224,7 @@ return_t base16_decode(const char* source, size_t size, binary_t& outpart, uint3
             outpart.push_back(i);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -272,9 +262,7 @@ return_t base16_decode(const char* source, size_t size, stream_t* stream, uint32
             stream->printf("%c", i);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -34,9 +34,7 @@ http2_serverpush &http2_serverpush::add(const char *uri, const char *file) {
         }
         add(std::string(uri), std::string(file));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 
@@ -54,7 +52,6 @@ size_t http2_serverpush::is_promised(http_request *request, http_server *server)
         }
 
         if (2 != request->get_version()) {
-            // do nothing
             __leave2;
         }
 
@@ -69,9 +66,7 @@ size_t http2_serverpush::is_promised(http_request *request, http_server *server)
             ret = std::distance(lbound, ubound);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -96,7 +91,7 @@ return_t http2_serverpush::push_promise(http_request *request, http_server *serv
             auto lbound = _server_push_map.lower_bound(uri);
             auto ubound = _server_push_map.upper_bound(uri);
             for (auto iter = lbound; iter != ubound; iter++) {
-                auto const &promise = iter->second;
+                const auto &promise = iter->second;
                 q.push(promise);
             }
         }
@@ -104,16 +99,14 @@ return_t http2_serverpush::push_promise(http_request *request, http_server *serv
         auto stream_id = request->get_stream_id();
         binary_t stream;
         while (false == q.empty()) {
-            auto const &promise = q.front();
+            const auto &promise = q.front();
             q.pop();
 
             do_push_promise(promise, ++stream_id, request, server, session, stream);
         }
         session->send(&stream[0], stream.size());
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -138,14 +131,14 @@ return_t http2_serverpush::push(http_request *request, http_server *server, netw
             auto lbound = _server_push_map.lower_bound(uri);
             auto ubound = _server_push_map.upper_bound(uri);
             for (auto iter = lbound; iter != ubound; iter++) {
-                auto const &promise = iter->second;
+                const auto &promise = iter->second;
                 q.push(promise);
             }
         }
 
         auto stream_id = request->get_stream_id();
         while (false == q.empty()) {
-            auto const &promise = q.front();
+            const auto &promise = q.front();
             q.pop();
 
             http_response response(request);  // to refer accept-encoding
@@ -155,9 +148,7 @@ return_t http2_serverpush::push(http_request *request, http_server *server, netw
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -198,9 +189,7 @@ return_t http2_serverpush::do_push_promise(const std::string &promise, uint32 st
 #endif
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -227,9 +216,7 @@ return_t http2_serverpush::do_push(const std::string &promise, uint32 streamid, 
         response->set_version(2).set_stream_id(streamid).set_hpack_dyntable(&hpsess);
         response->compose(200, content_type, content);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

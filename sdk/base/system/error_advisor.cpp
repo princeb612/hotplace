@@ -299,9 +299,7 @@ bool error_advisor::find(return_t error, const error_description** desc) {
             ret = true;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

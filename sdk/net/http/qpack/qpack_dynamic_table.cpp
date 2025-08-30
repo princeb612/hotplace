@@ -121,9 +121,7 @@ return_t qpack_dynamic_table::query(int cmd, void* req, size_t reqsize, void* re
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

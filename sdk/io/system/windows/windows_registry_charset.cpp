@@ -59,9 +59,7 @@ return_t windows_registry::enumerate_subkeys(HKEY hkey, ENUM_CALLBACK_HANDLERW c
             lret = RegEnumKeyEx(hkey, index, buffer_key, &buffer_key_cbsize, 0, 0, 0, 0);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -107,11 +105,7 @@ return_t windows_registry::enumerate_values(HKEY hkey, ENUM_CALLBACK_HANDLERW ca
             lret = RegEnumValue(hkey, index, buffer_value, &buffer_value_cbsize, 0, &dwType, buffer_data, &buffer_data_cbsize);
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -139,11 +133,7 @@ return_t windows_registry::delete_key(HKEY hrootkey, LPCWSTR sub_key, DWORD opti
                 break;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -160,11 +150,7 @@ return_t windows_registry::set_string(HKEY hkey, LPCWSTR value, LPCWSTR data)
         size_t sizeLen = _tcslen(data);
         ret = RegSetValueEx(hkey, value, 0, REG_SZ, (LPBYTE)data, (DWORD)sizeLen * sizeof(TCHAR));
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -177,11 +163,7 @@ return_t windows_registry::set_value(HKEY hkey, LPCWSTR value, DWORD type, void*
     return_t ret = errorcode_t::success;
 
     __try2 { ret = RegSetValueEx(hkey, value, 0, type, (LPBYTE)data_ptr, cbsize); }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -194,11 +176,7 @@ return_t windows_registry::delete_value(HKEY hkey, LPCWSTR value)
     return_t ret = errorcode_t::success;
 
     __try2 { ret = RegDeleteValue(hkey, value); }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -211,11 +189,7 @@ return_t windows_registry::query_value(HKEY hkey, LPCWSTR value, LPDWORD type_pt
     return_t ret = errorcode_t::success;
 
     __try2 { ret = RegQueryValueEx(hkey, value, nullptr, type_ptr, (LPBYTE)data_ptr, data_cbsize_ptr); }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -324,11 +298,7 @@ return_t windows_registry::delete_sub_nodes(HKEY hrootkey, LPCWSTR sub_key)
             __leave2;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }

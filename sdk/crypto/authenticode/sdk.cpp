@@ -49,9 +49,7 @@ return_t crl_distribution_point(X509 *cert, std::set<std::string> &crls) {
         }
         CRL_DIST_POINTS_free(dist_points);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -173,9 +171,7 @@ return_t pkcs7_digest_info(PKCS7 *pkcs7, std::string &md, binary_t &digest) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

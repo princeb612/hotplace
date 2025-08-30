@@ -32,13 +32,9 @@
 namespace hotplace {
 namespace crypto {
 
-cbor_object_signing_encryption::cbor_object_signing_encryption() : _builtmap(false) {
-    // do nothing
-}
+cbor_object_signing_encryption::cbor_object_signing_encryption() : _builtmap(false) {}
 
-cbor_object_signing_encryption::~cbor_object_signing_encryption() {
-    // do nothing
-}
+cbor_object_signing_encryption::~cbor_object_signing_encryption() {}
 
 return_t cbor_object_signing_encryption::open(cose_context_t** handle) {
     return_t ret = errorcode_t::success;
@@ -54,9 +50,7 @@ return_t cbor_object_signing_encryption::open(cose_context_t** handle) {
         context->composer = new cose_composer;
         *handle = context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -72,9 +66,7 @@ return_t cbor_object_signing_encryption::close(cose_context_t* handle) {
         delete handle->composer;
         delete handle;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -90,9 +82,7 @@ return_t cbor_object_signing_encryption::set(cose_context_t* handle, uint32 flag
         handle->flags = flags;
         handle->debug_flags = debug_flags;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -108,9 +98,7 @@ return_t cbor_object_signing_encryption::get(cose_context_t* handle, uint32& fla
         flags = handle->flags;
         debug_flags = handle->debug_flags;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -140,9 +128,7 @@ return_t cbor_object_signing_encryption::set(cose_context_t* handle, cose_param_
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -233,9 +219,7 @@ return_t cbor_object_signing_encryption::process(cose_context_t* handle, crypto_
             body.finditem(cose_param_t::cose_param_ciphertext, output, cose_scope::cose_scope_params);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -288,9 +272,7 @@ return_t cbor_object_signing_encryption::subprocess(cose_context_t* handle, cryp
             ret = dosign(handle, key, layer, mode);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -307,9 +289,7 @@ return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, cryp
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -330,9 +310,7 @@ return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, cryp
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -413,9 +391,7 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
 
         body.setparam(cose_param_t::cose_param_plaintext, input);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -469,9 +445,7 @@ return_t cbor_object_signing_encryption::preprocess_random(cose_context_t* handl
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -750,9 +724,7 @@ return_t cbor_object_signing_encryption::preprocess_keydistribution(cose_context
 
         layer->setparam(cose_param_t::cose_param_secret, secret);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -971,9 +943,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
             layer->setparam(cose_param_t::cose_param_cek, cek);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

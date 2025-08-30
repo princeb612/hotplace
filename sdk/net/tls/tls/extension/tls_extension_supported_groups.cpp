@@ -89,9 +89,7 @@ return_t tls_extension_supported_groups::do_read_body(tls_direction_t dir, const
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

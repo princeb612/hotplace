@@ -50,9 +50,7 @@ return_t quic_packets::read(tls_session* session, tls_direction_t dir, const byt
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

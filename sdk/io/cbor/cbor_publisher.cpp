@@ -19,9 +19,7 @@
 namespace hotplace {
 namespace io {
 
-cbor_publisher::cbor_publisher() {
-    // do nothing
-}
+cbor_publisher::cbor_publisher() {}
 
 return_t cbor_publisher::publish(cbor_object* object, binary_t* b) {
     // 8.  Diagnostic Notation
@@ -38,9 +36,7 @@ return_t cbor_publisher::publish(cbor_object* object, binary_t* b) {
         cbor_concise_visitor concise(b);
         object->accept(&concise);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -64,9 +60,7 @@ return_t cbor_publisher::publish(cbor_reader_context_t* handle, binary_t* b) {
         cbor_reader reader;
         reader.cbor_foreach(handle, lambda, b);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -85,9 +79,7 @@ return_t cbor_publisher::publish(cbor_object* object, stream_t* s) {
         cbor_diagnostic_visitor diagnostic(s);
         object->accept(&diagnostic);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -114,9 +106,7 @@ return_t cbor_publisher::publish(cbor_reader_context_t* handle, stream_t* s) {
         cbor_reader reader;
         reader.cbor_foreach(handle, lambda, s);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

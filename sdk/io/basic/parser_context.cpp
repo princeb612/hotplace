@@ -299,9 +299,7 @@ parser::search_result parser::context::csearch(parser* obj, const char* pattern,
         result.size = size_pattern;
         result.pos = idx;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return result;
 }
 
@@ -338,9 +336,7 @@ parser::search_result parser::context::wsearch(parser* obj, const context& patte
         size_t size = pattern._tokens.size();
         wsearch_result(result, idx, size);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return result;
 }
 
@@ -450,9 +446,7 @@ return_t parser::context::add_context_token(std::function<bool(int, parser::toke
             ret = errorcode_t::empty;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -507,9 +501,7 @@ return_t parser::context::get(uint32 index, token_description* desc) {
         desc->line = t->get_line();
         desc->p = _p + t->get_pos();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

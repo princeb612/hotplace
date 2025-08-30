@@ -219,9 +219,7 @@ return_t ansi_string::getline(size_t pos, size_t* brk, ansi_string& line) {
         }
         _bio.unlock(_handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

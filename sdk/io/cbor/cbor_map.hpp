@@ -131,9 +131,7 @@ class cbor_map_hint {
                 *item = object;
             }
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return ret;
     }
     void get_order(std::list<KTY>& order) { order = _order; }

@@ -34,9 +34,7 @@ return_t tls_handshake_encrypted_extensions::do_postprocess(tls_direction_t dir,
 
         session->update_session_status(session_status_encrypted_extensions);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -76,9 +74,7 @@ return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, c
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -127,9 +127,7 @@ size_t bufferio::wfind_first_of_routine(bufferio_context_t* handle, int mode, co
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -181,9 +179,7 @@ size_t bufferio::wfind_first_of_routine(bufferio_context_t* handle, int mode, in
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -236,9 +232,7 @@ size_t bufferio::wfind_last_of_routine(bufferio_context_t* handle, int mode, con
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -296,9 +290,7 @@ size_t bufferio::wfind_last_of_routine(bufferio_context_t* handle, int mode, int
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -352,9 +344,7 @@ return_t bufferio::wreplace(bufferio_context_t* handle, const wchar_t* from, con
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -370,9 +360,7 @@ static int callback_printfw(printf_context_t* handle, const wchar_t* buf, int le
         bufferio bio;
         ret = bio.write(reinterpret_cast<bufferio_context_t*>(handle), buf, sizeof(TCHAR) * len);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return (int)ret;
 }
 

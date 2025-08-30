@@ -51,9 +51,7 @@ return_t crypto_key::extract(const EVP_PKEY* pkey, int flags, crypto_kty_t& type
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -85,9 +83,7 @@ return_t crypto_key::extract_oct(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             datamap.insert(std::make_pair(crypt_item_t::item_hmac_k, bin_k));
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -148,9 +144,7 @@ return_t crypto_key::extract_rsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -335,9 +329,7 @@ return_t crypto_key::extract_okp(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -400,9 +392,7 @@ return_t crypto_key::extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -443,7 +433,6 @@ return_t crypto_key::extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             get_asn1public_key(pkey, bin_pub);
             datamap.insert(std::make_pair(crypt_item_t::item_asn1der, std::move(bin_pub)));
         } else if (crypt_access_t::public_key & flags) {
-            // do nothing
             if (0) {
                 if (bn_y) {
                     binary_t bin_y;
@@ -476,9 +465,7 @@ return_t crypto_key::extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

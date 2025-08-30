@@ -16,13 +16,9 @@
 namespace hotplace {
 namespace io {
 
-cbor_tstrings::cbor_tstrings() : cbor_object(cbor_type_t::cbor_type_tstrs, cbor_flag_t::cbor_indef) {
-    // do nothing
-}
+cbor_tstrings::cbor_tstrings() : cbor_object(cbor_type_t::cbor_type_tstrs, cbor_flag_t::cbor_indef) {}
 
-cbor_tstrings::~cbor_tstrings() {
-    // do nothing
-}
+cbor_tstrings::~cbor_tstrings() {}
 
 return_t cbor_tstrings::join(cbor_object* object, cbor_object* extra) {
     return_t ret = errorcode_t::success;
@@ -44,9 +40,7 @@ return_t cbor_tstrings::join(cbor_object* object, cbor_object* extra) {
             ret = errorcode_t::not_available;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

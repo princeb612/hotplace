@@ -39,9 +39,7 @@ return_t openssl_chacha20_iv(binary_t &iv, uint32 counter, const byte_t *nonce, 
         }
         binary_append(iv, nonce, nonce_size);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

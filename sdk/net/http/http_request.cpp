@@ -58,9 +58,7 @@ return_t http_request::open(const char* request, size_t size_request, uint32 fla
             open_h2(request, size_request, flags);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -132,9 +130,7 @@ return_t http_request::open_h1(const char* request, size_t size_request, uint32 
 
         open_uri(uri, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -146,9 +142,7 @@ return_t http_request::open_h2(const char* request, size_t size_request, uint32 
         _method = get_http_header().get(":method");
         _uri.open(get_http_header().get(":path"));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -187,9 +181,7 @@ return_t http_request::open(const char* request, uint32 flags) {
 
         ret = open(request, strlen(request), flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

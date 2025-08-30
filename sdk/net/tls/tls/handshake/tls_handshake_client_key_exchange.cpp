@@ -49,9 +49,7 @@ return_t tls_handshake_client_key_exchange::do_preprocess(tls_direction_t dir) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -69,9 +67,7 @@ return_t tls_handshake_client_key_exchange::do_postprocess(tls_direction_t dir, 
             session->update_session_status(session_status_client_key_exchange);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -137,9 +133,7 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
 #endif
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

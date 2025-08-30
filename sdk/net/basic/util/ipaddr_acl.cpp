@@ -13,9 +13,7 @@
 namespace hotplace {
 namespace net {
 
-ipaddr_acl::ipaddr_acl() : _mode(ipaddr_acl_t::blacklist) {
-    // do nothing
-}
+ipaddr_acl::ipaddr_acl() : _mode(ipaddr_acl_t::blacklist) {}
 
 ipaddr_acl::ipaddr_acl(ipaddr_acl& obj) {
     critical_section_guard guard(obj._lock);
@@ -24,9 +22,7 @@ ipaddr_acl::ipaddr_acl(ipaddr_acl& obj) {
     _range_type_rule = obj._range_type_rule;
 }
 
-ipaddr_acl::~ipaddr_acl() {
-    // do nothing
-}
+ipaddr_acl::~ipaddr_acl() {}
 
 return_t ipaddr_acl::setmode(int mode) {
     return_t ret = errorcode_t::success;
@@ -78,9 +74,7 @@ return_t ipaddr_acl::add_rule(const char* addr, bool allow) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -112,9 +106,7 @@ return_t ipaddr_acl::add_rule(const sockaddr_storage_t* sockaddr, bool allow) {
             ret = errorcode_t::already_exist;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -159,9 +151,7 @@ return_t ipaddr_acl::add_rule(const char* addr, int mask, bool allow) {
             ret = errorcode_t::already_exist;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -198,9 +188,7 @@ return_t ipaddr_acl::add_rule(const sockaddr_storage_t* sockaddr, int mask, bool
             ret = errorcode_t::already_exist;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -244,9 +232,7 @@ return_t ipaddr_acl::add_rule(const char* addr_from, const char* addr_to, bool a
             ret = errorcode_t::already_exist;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -290,9 +276,7 @@ return_t ipaddr_acl::add_rule(const sockaddr_storage_t* sockaddr_from, const soc
             ret = errorcode_t::already_exist;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -361,9 +345,7 @@ return_t ipaddr_acl::determine(const char* addr, bool& accept) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -424,9 +406,7 @@ return_t ipaddr_acl::determine(const sockaddr_storage_t* sockaddr, bool& accept)
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

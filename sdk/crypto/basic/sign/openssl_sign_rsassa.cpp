@@ -77,9 +77,7 @@ return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t al
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -139,9 +137,7 @@ return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t 
 
         ret = errorcode_t::success;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -152,9 +152,7 @@ static inline std::string lowername(const char* input) {
         ret_value = input;
         std::transform(ret_value.begin(), ret_value.end(), ret_value.begin(), tolower);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -168,9 +166,7 @@ static inline std::string uppername(const char* input) {
         ret_value = input;
         std::transform(ret_value.begin(), ret_value.end(), ret_value.begin(), toupper);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -185,9 +181,7 @@ static inline std::string lowername(const std::string& input) {
         ret_value = input;
         std::transform(ret_value.begin(), ret_value.end(), ret_value.begin(), tolower);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -198,9 +192,7 @@ static inline std::string uppername(const std::string& input) {
         ret_value = input;
         std::transform(ret_value.begin(), ret_value.end(), ret_value.begin(), toupper);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -333,9 +325,7 @@ static inline return_t memxor(byte_t* target, const byte_t* mask, size_t len) {
             target[i] ^= mask[i];
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

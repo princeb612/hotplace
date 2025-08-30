@@ -182,9 +182,7 @@ http_server *http_server_builder::build() {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return server;
 }
 

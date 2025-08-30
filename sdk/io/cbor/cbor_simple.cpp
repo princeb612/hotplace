@@ -33,9 +33,7 @@ cbor_simple_t cbor_simple::is_kind_of(uint8 first) {
         }
         type = is_kind_of_value(lead_value);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return type;
 }

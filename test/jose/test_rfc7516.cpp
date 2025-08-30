@@ -34,9 +34,7 @@ return_t do_test_jose_file(crypto_key* key, const char* file, bool& result) {
             jose.close(jose_context);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

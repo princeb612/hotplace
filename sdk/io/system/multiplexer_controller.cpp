@@ -29,13 +29,9 @@ typedef struct _multiplexer_event_loop_controller_context_t : public multiplexer
     multiplexer_event_loop_controler_map_t control;
 } multiplexer_event_loop_controller_context_t;
 
-multiplexer_controller::multiplexer_controller() {
-    // do nothing
-}
+multiplexer_controller::multiplexer_controller() {}
 
-multiplexer_controller::~multiplexer_controller() {
-    // do nothing
-}
+multiplexer_controller::~multiplexer_controller() {}
 
 return_t multiplexer_controller::open(multiplexer_controller_context_t** handle) {
     return_t ret = errorcode_t::success;
@@ -52,9 +48,7 @@ return_t multiplexer_controller::open(multiplexer_controller_context_t** handle)
         context->signature = MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE;
         *handle = context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -76,9 +70,7 @@ return_t multiplexer_controller::close(multiplexer_controller_context_t* handle)
         context->signature = 0;
         delete context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -118,9 +110,7 @@ return_t multiplexer_controller::event_loop_new(multiplexer_controller_context_t
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -155,9 +145,7 @@ return_t multiplexer_controller::event_loop_break(multiplexer_controller_context
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -199,9 +187,7 @@ return_t multiplexer_controller::event_loop_break_concurrent(multiplexer_control
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -230,9 +216,7 @@ bool multiplexer_controller::event_loop_test_broken(multiplexer_controller_conte
             ret_value = true;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret_value;
 }
@@ -250,9 +234,7 @@ return_t multiplexer_controller::event_loop_close(multiplexer_controller_context
             context->control.erase(iter);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

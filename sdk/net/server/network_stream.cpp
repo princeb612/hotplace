@@ -18,13 +18,9 @@
 namespace hotplace {
 namespace net {
 
-network_stream::network_stream() {
-    // do nothing
-}
+network_stream::network_stream() {}
 
-network_stream::~network_stream() {
-    // do nothing
-}
+network_stream::~network_stream() {}
 
 return_t network_stream::produce(byte_t* buf_read, size_t size_buf_read, const sockaddr_storage_t* addr) {
     return_t ret = errorcode_t::success;
@@ -43,9 +39,7 @@ return_t network_stream::produce(byte_t* buf_read, size_t size_buf_read, const s
             _queue.push_back(buffer_object);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -99,9 +93,7 @@ return_t network_stream::read(network_protocol_group* protocol_group, network_st
 
         ret = from->write(protocol_group, this);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -137,9 +129,7 @@ return_t network_stream::write(network_protocol_group* protocol_group, network_s
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -160,9 +150,7 @@ return_t network_stream::do_write(network_stream* target) {
             _queue.pop_front();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

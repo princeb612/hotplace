@@ -59,9 +59,7 @@ return_t dtls_handshake_fragmented::prepare_fragment(const byte_t* stream, uint3
 
         _fragmented.insert(_fragmented.end(), stream + fragment_offset, stream + fragment_offset + fragment_length);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

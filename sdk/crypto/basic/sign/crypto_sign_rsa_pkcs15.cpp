@@ -25,9 +25,7 @@ return_t crypto_sign_rsa_pkcs1::sign(const EVP_PKEY* pkey, const byte_t* stream,
         openssl_sign s;
         ret = s.sign_rsassa_pkcs15(pkey, get_digest(), stream, size, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -41,9 +39,7 @@ return_t crypto_sign_rsa_pkcs1::verify(const EVP_PKEY* pkey, const byte_t* strea
         openssl_sign s;
         ret = s.verify_rsassa_pkcs15(pkey, get_digest(), stream, size, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -57,9 +53,7 @@ return_t crypto_sign_rsa_pkcs1::sign(const EVP_PKEY* pkey, const binary_t& input
         openssl_sign s;
         ret = s.sign_rsassa_pkcs15(pkey, get_digest(), input, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -73,9 +67,7 @@ return_t crypto_sign_rsa_pkcs1::verify(const EVP_PKEY* pkey, const binary_t& inp
         openssl_sign s;
         ret = s.verify_rsassa_pkcs15(pkey, get_digest(), input, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

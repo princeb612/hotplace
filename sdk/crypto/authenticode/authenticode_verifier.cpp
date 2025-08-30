@@ -106,9 +106,7 @@ return_t authenticode_verifier::add_engine(authenticode_context_t* handle, authe
             engine->release();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -130,9 +128,7 @@ return_t authenticode_verifier::load_engines(authenticode_context_t* handle) {
         // handle->engines.insert (std::make_pair (authenticode_engine_id_msi, new authenticode_plugin_msi ()));
         // handle->engines.insert (std::make_pair (authenticode_engine_id_cab, new authenticode_plugin_cabinet ()));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -156,9 +152,7 @@ return_t authenticode_verifier::free_engines(authenticode_context_t* handle) {
         }
         handle->engines.clear();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -247,9 +241,7 @@ return_t authenticode_verifier::set(authenticode_context_t* handle, int option, 
                 }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -358,7 +350,6 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
         }
     }
     __finally2 {
-        // do nothing
         if (engine_matched) {
             if (nullptr != engine_id) {
                 *engine_id = engine_matched->id();
@@ -434,9 +425,7 @@ return_t authenticode_verifier::verify_separated(authenticode_context_t* handle,
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -459,9 +448,7 @@ return_t authenticode_verifier::close(authenticode_context_t* handle) {
 
         delete handle;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -482,9 +469,7 @@ return_t authenticode_verifier::add_trusted_signer(authenticode_context_t* handl
 
         handle->signer.insert(std::string(signer));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -510,9 +495,7 @@ return_t authenticode_verifier::remove_trusted_signer(authenticode_context_t* ha
             handle->signer.erase(iter);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -532,9 +515,7 @@ return_t authenticode_verifier::remove_all_trusted_signer(authenticode_context_t
         critical_section_guard guard(handle->lock);
         handle->signer.clear();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -558,9 +539,7 @@ return_t authenticode_verifier::add_trusted_rootcert(authenticode_context_t* han
         critical_section_guard guard(handle->lock);
         handle->trusted_cert.insert(std::make_pair(file ? file : "", path ? path : ""));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -842,8 +821,6 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
                 _contexts.erase(pib.first);
             }
         }
-
-        // do nothing
     }
 
     return ret;
@@ -944,9 +921,7 @@ static return_t get_crl(authenticode_context_t* context, X509* cert, authenticod
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -968,9 +943,7 @@ static return_t clear_crl(authenticode_context_t* context) {
         }
         context->crl_map.clear();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

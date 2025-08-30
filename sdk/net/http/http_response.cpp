@@ -148,9 +148,7 @@ return_t http_response::open(const char* response, size_t size_response) {
         // RFC 2616 14.17 Content-Type
         _header.get("Content-Type", _content_type);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -165,9 +163,7 @@ return_t http_response::open(const char* response) {
 
         ret = open(response, strlen(response));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -247,9 +243,7 @@ return_t http_response::respond(network_session* session) {
             session->send(&bin[0], bin.size());
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

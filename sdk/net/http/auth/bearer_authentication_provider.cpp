@@ -40,9 +40,7 @@ bool bearer_authentication_provider::try_auth(http_authentication_resolver* reso
 
         ret_value = resolver->bearer_authenticate(this, session, request, response);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -60,9 +58,7 @@ return_t bearer_authentication_provider::request_auth(network_session* session, 
         std::string body = format("<html><body>%i %s</body></html>", status_code, http_resource::get_instance()->load(status_code).c_str());
         response->compose(status_code, "text/html", body.c_str());
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -70,9 +66,7 @@ std::string bearer_authentication_provider::get_challenge(http_request* request)
     std::string challenge;
 
     __try2 { request->get_http_header().get("Authorization", challenge); }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return challenge;
 }

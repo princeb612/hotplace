@@ -13,13 +13,9 @@
 namespace hotplace {
 namespace crypto {
 
-openssl_prng::openssl_prng() {
-    // do nothing
-}
+openssl_prng::openssl_prng() {}
 
-openssl_prng::~openssl_prng() {
-    // do nothing
-}
+openssl_prng::~openssl_prng() {}
 
 int32 openssl_prng::rand32() {
     int32 val = 0;
@@ -46,9 +42,7 @@ return_t openssl_prng::random(unsigned char* buf, size_t size) {
 
         RAND_bytes(buf, size);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

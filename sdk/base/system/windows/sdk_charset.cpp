@@ -74,10 +74,6 @@ return_t adjust_privileges(HANDLE hToken, LPCWSTR privilege, DWORD attrib, DWORD
         if (nullptr != advapi32_handle) {
             FreeLibrary(advapi32_handle);
         }
-
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
     }
 
     return ret;
@@ -137,9 +133,7 @@ return_t compose_windows_filepath(std::wstring& filepathname, const wchar_t* fil
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -171,9 +165,7 @@ return_t get_module_handle(HMODULE* module_handle, const wchar_t* dll_name, int3
 
         *module_handle = handle_dll;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -212,11 +204,7 @@ return_t get_system_wow64_directory(wchar_t* buffer, UINT size_buffer, UINT* siz
             *size_copied = nret;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -258,9 +246,7 @@ return_t load_library_ex(HMODULE* module_handle, const wchar_t* dll_name, uint32
 
         *module_handle = handle_dll;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -323,11 +309,7 @@ return_t read_version(const wchar_t* version, WORD* vect, WORD level, INT* count
             *count = nread;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }

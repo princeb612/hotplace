@@ -25,9 +25,7 @@ return_t crypto_sign_dsa::sign(const EVP_PKEY* pkey, const byte_t* stream, size_
         openssl_sign s;
         ret = s.sign_dsa(pkey, get_digest(), stream, size, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -41,9 +39,7 @@ return_t crypto_sign_dsa::verify(const EVP_PKEY* pkey, const byte_t* stream, siz
         openssl_sign s;
         ret = s.verify_dsa(pkey, get_digest(), stream, size, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -57,9 +53,7 @@ return_t crypto_sign_dsa::sign(const EVP_PKEY* pkey, const binary_t& input, bina
         openssl_sign s;
         ret = s.sign_dsa(pkey, get_digest(), input, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -73,9 +67,7 @@ return_t crypto_sign_dsa::verify(const EVP_PKEY* pkey, const binary_t& input, co
         openssl_sign s;
         ret = s.verify_dsa(pkey, get_digest(), input, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

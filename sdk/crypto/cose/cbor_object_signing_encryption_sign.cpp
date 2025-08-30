@@ -62,9 +62,7 @@ return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key
         handle->composer->compose(&root, output);
         root->release();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -97,9 +95,7 @@ return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key
         handle->composer->compose(&root, output);
         root->release();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -249,9 +245,7 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

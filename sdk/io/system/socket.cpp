@@ -331,8 +331,6 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
                     }
                 }
             }
-
-            // do nothing
         }
     }
 
@@ -434,11 +432,7 @@ return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addr
         setsockopt (s, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char *>(&optval), sizeof (optval));
 #endif
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -566,9 +560,7 @@ return_t addr_to_sockaddr(sockaddr_storage_t* storage, const char* address, uint
             ret = errorcode_t::bad_format;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

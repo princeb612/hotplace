@@ -49,9 +49,7 @@ return_t split_begin(split_context_t** handle, const char* str, const char* deli
         }
         *handle = context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -66,9 +64,7 @@ return_t split_count(split_context_t* handle, size_t& result) {
         }
         result = handle->info.size();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -92,9 +88,7 @@ return_t split_get(split_context_t* handle, unsigned int index, binary_t& data) 
             memcpy(&data[0], handle->source.c_str() + item.begin, item.length);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -115,9 +109,7 @@ return_t split_get(split_context_t* handle, unsigned int index, std::string& dat
         const split_map_item& item = handle->info[index];
         data.assign(handle->source.c_str() + item.begin, item.length);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -131,9 +123,7 @@ return_t split_end(split_context_t* handle) {
         }
         delete handle;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -150,9 +140,7 @@ return_t split_foreach(split_context_t* handle, std::function<void(const std::st
             func(data);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

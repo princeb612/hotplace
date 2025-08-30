@@ -19,9 +19,7 @@ enum obfuscate_flag_t {
     obfuscate_set_factor = (1 << 0),
 };
 
-obfuscate_string::obfuscate_string() : _flags(0) {
-    // do nothing
-}
+obfuscate_string::obfuscate_string() : _flags(0) {}
 
 obfuscate_string::obfuscate_string(const char* source) : _flags(0) {
     size_t len = 0;

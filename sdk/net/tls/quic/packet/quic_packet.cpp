@@ -164,9 +164,7 @@ return_t quic_packet::write(tls_direction_t dir, binary_t& header, binary_t& cip
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -241,9 +239,7 @@ return_t quic_packet::do_read_header(tls_direction_t dir, const byte_t* stream, 
         pl.get_binary(constexpr_dcid, _dcid);
         pl.get_binary(constexpr_scid, _scid);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -407,9 +403,7 @@ return_t quic_packet::header_protect(tls_direction_t dir, protection_space_t spa
         bin_protected_header[0] = hdr;
         bin_pn.resize(pn_length);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -475,9 +469,7 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
 
         session->get_session_info(dir).set_recordno(pn, space);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

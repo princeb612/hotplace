@@ -16,9 +16,7 @@ namespace odbc {
 
 odbc_record::odbc_record() { _shared.make_share(this); }
 
-odbc_record::~odbc_record() {
-    // do nothing
-}
+odbc_record::~odbc_record() {}
 
 odbc_record& odbc_record::operator<<(odbc_field* pField) {
     _odbc_columns.push_back(pField);

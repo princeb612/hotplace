@@ -78,9 +78,7 @@ const hint_digest_t* crypto_advisor::hintof_digest(const char* name) {
         t_maphint<std::string, const hint_digest_t*> hint(_md_byname_map);
         hint.find(lowername(name).c_str(), &ret_value);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 

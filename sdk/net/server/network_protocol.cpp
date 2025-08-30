@@ -33,9 +33,7 @@ return_t network_protocol_group::add(network_protocol* protocol) {
             protocol->addref();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -64,9 +62,7 @@ return_t network_protocol_group::find(const std::string& protocol_id, network_pr
             *ptr_protocol = protocol;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -94,9 +90,7 @@ return_t network_protocol_group::remove(network_protocol* protocol) {
             protocol_ref->release();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -112,9 +106,7 @@ return_t network_protocol_group::clear() {
         }
         _protocols.clear();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -158,9 +150,7 @@ return_t network_protocol_group::is_kind_of(void* stream, size_t stream_size, ne
             *ptr_protocol = protocol_match;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

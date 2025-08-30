@@ -90,9 +90,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -130,9 +128,7 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
             session->schedule(this);  // run_scheduled
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -221,9 +217,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             _verify_data = std::move(verify_data);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -193,7 +193,5 @@ void test_openssl_crypt(uint32 cooltime, uint32 unitsize) {
         do_test_crypto_loop(RTL_NUMBER_OF(gcm_algorithm_table), gcm_algorithm_table, crypt_mode_t::ccm, 16, keydata, 16, iv, (byte_t*)constexpr_text,
                             strlen(constexpr_text));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }

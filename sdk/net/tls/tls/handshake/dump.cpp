@@ -41,9 +41,7 @@ return_t tls_dump_handshake(tls_session *session, tls_direction_t dir, const byt
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

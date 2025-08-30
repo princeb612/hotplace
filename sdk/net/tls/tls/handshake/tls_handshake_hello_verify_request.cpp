@@ -44,9 +44,7 @@ return_t tls_handshake_hello_verify_request::do_preprocess(tls_direction_t dir) 
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -65,9 +63,7 @@ return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir,
         session->clear_session_status(session_status_client_hello);
         session->update_session_status(session_status_hello_verify_request);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

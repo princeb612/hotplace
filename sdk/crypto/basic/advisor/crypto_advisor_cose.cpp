@@ -90,9 +90,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, cose_alg_t alg) {
         }
         test = (cmp1 && cmp2);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return test;
 }
 

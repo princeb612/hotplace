@@ -100,9 +100,7 @@ return_t crypto_cbc_hmac::split_key(const binary_t key, binary_t& enckey, binary
             enckey.insert(enckey.end(), &key[pos], &key[pos] + keysize);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

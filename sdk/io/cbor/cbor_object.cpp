@@ -23,9 +23,7 @@ cbor_object::cbor_object(cbor_type_t type, uint32 flags) : _type(type), _flags(f
     _shared.make_share(this);
 }
 
-cbor_object::~cbor_object() {
-    // do nothing
-}
+cbor_object::~cbor_object() {}
 
 return_t cbor_object::join(cbor_object* object, cbor_object* extra) { return errorcode_t::not_available; }
 
@@ -56,13 +54,9 @@ int cbor_object::release() { return _shared.delref(); }
 
 void cbor_object::accept(cbor_visitor* v) { v->visit(this); }
 
-void cbor_object::represent(stream_t* s) {
-    // do nothing
-}
+void cbor_object::represent(stream_t* s) {}
 
-void cbor_object::represent(binary_t* b) {
-    // do nothing
-}
+void cbor_object::represent(binary_t* b) {}
 
 }  // namespace io
 }  // namespace hotplace

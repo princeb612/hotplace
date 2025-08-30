@@ -138,9 +138,7 @@ return_t tls_composer::do_compose(tls_record* record, tls_direction_t dir, std::
             func(session, bin);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -161,9 +159,7 @@ return_t tls_composer::do_compose(tls_records* records, tls_direction_t dir, std
             records->write(session, dir, func);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -291,9 +287,7 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
             __leave2_trace(ret);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

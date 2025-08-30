@@ -177,9 +177,7 @@ return_t simple_http_server1(void *) {
         stop_server(_http_server1);
         stop_server(_http_server2);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

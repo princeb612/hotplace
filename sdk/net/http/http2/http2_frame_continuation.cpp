@@ -37,9 +37,7 @@ return_t http2_frame_continuation::do_read_body(const byte_t* stream, size_t siz
 
         pl.get_binary(constexpr_frame_fragment, _fragment);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

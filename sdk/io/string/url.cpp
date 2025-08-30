@@ -75,9 +75,7 @@ return_t escape_url(const char* url, stream_t* s, uint32 flags) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -105,9 +103,7 @@ return_t unescape_url(const char* url, stream_t* s) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -190,9 +186,7 @@ return_t split_url(const char* src, url_info_t* info) {
             info->fragment.erase(info->fragment.begin());  // "#" fragment
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

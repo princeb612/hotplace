@@ -75,9 +75,7 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
             secrets.assign(tls_context_alpn, _protocols);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

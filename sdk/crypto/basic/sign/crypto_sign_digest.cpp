@@ -25,9 +25,7 @@ return_t crypto_sign_digest::sign(const EVP_PKEY* pkey, const byte_t* stream, si
         openssl_sign s;
         ret = s.sign_digest(pkey, get_digest(), stream, size, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -41,9 +39,7 @@ return_t crypto_sign_digest::verify(const EVP_PKEY* pkey, const byte_t* stream, 
         openssl_sign s;
         ret = s.verify_digest(pkey, get_digest(), stream, size, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -57,9 +53,7 @@ return_t crypto_sign_digest::sign(const EVP_PKEY* pkey, const binary_t& input, b
         openssl_sign s;
         ret = s.sign_digest(pkey, get_digest(), input, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -73,9 +67,7 @@ return_t crypto_sign_digest::verify(const EVP_PKEY* pkey, const binary_t& input,
         openssl_sign s;
         ret = s.verify_digest(pkey, get_digest(), input, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

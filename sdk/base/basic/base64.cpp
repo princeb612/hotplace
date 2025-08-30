@@ -165,9 +165,7 @@ return_t base64_encode(const byte_t* source, size_t source_size, byte_t* buffer,
 
         *buffer_size = size_need;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -254,9 +252,7 @@ return_t base64_decode(const byte_t* source, size_t source_size, byte_t* buffer,
 
         *buffer_size = (source_size * 3 / 4);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

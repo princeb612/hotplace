@@ -21,9 +21,7 @@
 namespace hotplace {
 namespace io {
 
-cbor_encode::cbor_encode() {
-    // do nothing
-}
+cbor_encode::cbor_encode() {}
 
 return_t cbor_encode::encode(binary_t& bin, variant_t vt) {
     return_t ret = errorcode_t::success;
@@ -88,9 +86,7 @@ return_t cbor_encode::encode(binary_t& bin, variant_t vt) {
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -108,9 +104,7 @@ return_t cbor_encode::encode(binary_t& bin, bool value) {
 
         bin.push_back((major << 5) | simple);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -134,9 +128,7 @@ return_t cbor_encode::encode(binary_t& bin, int8 value) {
             bin.push_back(value);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -151,9 +143,7 @@ return_t cbor_encode::encode(binary_t& bin, cbor_major_t major, uint8 value) {
             bin.push_back(value);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -180,9 +170,7 @@ return_t cbor_encode::encode(binary_t& target, int16 value) {
             binary_append(target, value, hton16);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -200,9 +188,7 @@ return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint16 value)
             binary_append(target, value, hton16);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -233,9 +219,7 @@ return_t cbor_encode::encode(binary_t& target, int32 value) {
             binary_append(target, value, hton32);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -256,9 +240,7 @@ return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint32 value)
             binary_append(target, value, hton32);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -292,9 +274,7 @@ return_t cbor_encode::encode(binary_t& target, int64 value) {
             binary_append(target, value, hton64);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -318,9 +298,7 @@ return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint64 value)
             binary_append(target, value, hton64);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -380,9 +358,7 @@ return_t cbor_encode::encode(binary_t& target, int128 value) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -413,9 +389,7 @@ return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint128 value
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 #endif
@@ -429,9 +403,7 @@ return_t cbor_encode::encodefp16(binary_t& target, uint16 value) {
         binary_push(target, (cbor_major_t::cbor_major_float << 5) | 25);
         binary_append(target, value, hton16);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -458,9 +430,7 @@ return_t cbor_encode::encode(binary_t& target, float value) {
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -491,9 +461,7 @@ return_t cbor_encode::encode(binary_t& target, double value) {
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -504,9 +472,7 @@ return_t cbor_encode::encode(binary_t& bin, const byte_t* value, size_t size) {
         encode(bin, cbor_major_t::cbor_major_bstr, size);
         binary_append(bin, value, size);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -535,9 +501,7 @@ return_t cbor_encode::encode(binary_t& bin, char* value, size_t size) {
             binary_append(bin, value, size);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -603,9 +567,7 @@ return_t cbor_encode::add_tag(binary_t& bin, cbor_object* object) {
             encode(bin, cbor_major_t::cbor_major_tag, (uint64)object->tag_value());
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

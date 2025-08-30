@@ -66,9 +66,7 @@ enum console_color_t {
 class console_color {
    public:
     console_color(console_style_t style = console_style_t::normal, console_color_t fg = console_color_t::white, console_color_t bg = console_color_t::black)
-        : _use(true), _style(style), _fg(fg), _bg(bg) {
-        // do nothing
-    }
+        : _use(true), _style(style), _fg(fg), _bg(bg) {}
     console_color& set_style(console_style_t style) {
         _style = style;
         return *this;
@@ -134,9 +132,7 @@ class console_color {
                 stream->printf("\e[0m");
             }
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return ret;
     }
 

@@ -58,9 +58,7 @@ class t_tokens {
                 }
             }
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return ret;
     }
 
@@ -79,9 +77,7 @@ class t_tokens {
                 _tokens.erase(iter);
             }
         }
-        __finally2 {
-            // do nothing
-        }
+        __finally2 {}
         return ret;
     }
 

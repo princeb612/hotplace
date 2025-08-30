@@ -40,9 +40,7 @@ bool basic_authentication_provider::try_auth(http_authentication_resolver* resol
             ret_value = resolver->basic_authenticate(this, session, request, response);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -61,9 +59,7 @@ return_t basic_authentication_provider::request_auth(network_session* session, h
         std::string body = format("<html><body>%i %s</body></html>", status_code, http_resource::get_instance()->load(status_code).c_str());
         response->compose(status_code, "text/html", body.c_str());
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -60,11 +60,7 @@ return_t odbc_connector::close(odbc_query* dbquery) {
 
         dbquery->release();
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -91,9 +87,7 @@ bool odbc_connector::is_connection_pooled(void) {
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -129,8 +123,6 @@ return_t odbc_connector::odbc_startup() {
                 _env_handle = SQL_NULL_HENV;
             }
 
-            // do nothing
-
             ret = ret_sql;
         }
     }
@@ -148,9 +140,7 @@ return_t odbc_connector::odbc_cleanup() {
         ::SQLFreeHandle(SQL_HANDLE_ENV, _env_handle);
         _env_handle = SQL_NULL_HENV;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

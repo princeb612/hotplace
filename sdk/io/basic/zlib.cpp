@@ -86,9 +86,7 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         } while (Z_OK == ret);
         deflateEnd(&defstream);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return dwRet;
 }
@@ -146,9 +144,7 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         } while (Z_OK == ret);
         inflateEnd(&infstream);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return dwRet;
 }
@@ -214,9 +210,7 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         } while (Z_OK == ret);
         deflateEnd(&defstream);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return dwRet;
 }
@@ -274,9 +268,7 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         } while (Z_OK == ret);
         inflateEnd(&infstream);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return dwRet;
 }
@@ -292,9 +284,7 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, stream_t const* input, strea
 
         ret = zlib_deflate(windowbits, input->data(), input->size(), output);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -310,9 +300,7 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, stream_t const* input, strea
 
         ret = zlib_inflate(windowbits, input->data(), input->size(), output);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

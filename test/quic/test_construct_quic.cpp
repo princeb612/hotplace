@@ -448,6 +448,10 @@ void test_construct_quic() {
             // C->S PKN#31
             construct_quic_settings(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "1-RTT [SETTINGS]");
             send_packet(&session_server, from_client, bins, "1-RTT [SETTINGS]");
+
+            construct_quic_ack(&session_server, from_server, quic_pad_packet, bins, "1-RTT [ACK]");
+            send_packet(&session_client, from_server, bins, "1-RTT [ACK]");
+
             // C->S PKN#32
             //  stream id 10
             //  client_initiated_uni
@@ -461,9 +465,15 @@ void test_construct_quic() {
             construct_quic_encoder(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "1-RTT [STREAM(QPACK_ENCODER_STREAM)]");
             send_packet(&session_server, from_client, bins, "1-RTT [STREAM(QPACK_ENCODER_STREAM)]");
 
+            construct_quic_ack(&session_server, from_server, quic_pad_packet, bins, "1-RTT [ACK]");
+            send_packet(&session_client, from_server, bins, "1-RTT [ACK]");
+
             // GET /
             construct_http3_get(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "1-RTT [HEADERS]");
             send_packet(&session_server, from_client, bins, "1-RTT [HEADERS]");
+
+            construct_quic_ack(&session_server, from_server, quic_pad_packet, bins, "1-RTT [ACK]");
+            send_packet(&session_client, from_server, bins, "1-RTT [ACK]");
         }
     }
     __finally2 {}

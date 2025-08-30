@@ -60,9 +60,7 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher(const EVP_CIPHER* ciph
         t_maphint<uint32, const hint_blockcipher_t*> hint_blockcipher(_blockcipher_map);
         hint_blockcipher.find(typeof_alg(hint), &blockcipher);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return blockcipher;
 }
 
@@ -99,9 +97,7 @@ const hint_cipher_t* crypto_advisor::hintof_cipher(const char* name) {
         t_maphint<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
         hint.find(name, &ret_value);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -123,9 +119,7 @@ const hint_cipher_t* crypto_advisor::hintof_cipher(const EVP_CIPHER* cipher) {
         t_maphint<const EVP_CIPHER*, const hint_cipher_t*> hint(_evp_cipher_map);
         hint.find(cipher, &ret_value);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -148,9 +142,7 @@ const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mod
         ret = hint.find(key, &item);
         ret_value = nameof_alg(item);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 

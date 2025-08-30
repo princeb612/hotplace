@@ -48,9 +48,7 @@ return_t http2_frame_alt_svc::do_read_body(const byte_t* stream, size_t size, si
         pl.get_binary(constexpr_frame_origin, _origin);
         pl.get_binary(constexpr_frame_alt_svc_field_value, _altsvc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

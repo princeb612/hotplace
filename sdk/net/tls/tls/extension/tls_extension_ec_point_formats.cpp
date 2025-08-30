@@ -89,9 +89,7 @@ return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -121,9 +119,7 @@ return_t tls_extension_ec_point_formats::do_write_body(tls_direction_t dir, bina
             pl.write(bin);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -170,9 +170,7 @@ return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& nam
             trace_debug_event(trace_category_net, trace_event_header_compression_select, &bs);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

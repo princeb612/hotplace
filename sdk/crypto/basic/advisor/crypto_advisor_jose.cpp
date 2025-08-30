@@ -182,9 +182,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, jwa_t alg) {
         bool cmp2 = (hint_enc->alt == crypto_kty_t::kty_unknown) ? true : (hint_enc->alt == kty);
         test = (cmp1 || cmp2);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return test;
 }
 
@@ -219,9 +217,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, jws_t sig) {
         }
         test = (cond1 && cond2 && cond3);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return test;
 }
 
@@ -244,9 +240,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, const char* alg) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return test;
 }
 

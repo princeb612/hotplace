@@ -213,9 +213,7 @@ return_t huffman_coding::expect(const char *source, size_t &size_expected) const
         }
         ret = expect((byte_t *)source, strlen(source), size_expected);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -230,9 +228,7 @@ return_t huffman_coding::expect(const char *source, size_t size, size_t &size_ex
         }
         ret = expect((byte_t *)source, size, size_expected);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -269,9 +265,7 @@ return_t huffman_coding::expect(const byte_t *source, size_t size, size_t &size_
          */
         size_expected = ((sum + 7) & ~7) >> 3;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -372,9 +366,7 @@ return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -397,9 +389,7 @@ return_t huffman_coding::encode(stream_t *stream, const byte_t *source, size_t s
             stream->printf("%s ", code.c_str());
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -477,9 +467,7 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -500,9 +488,7 @@ bool huffman_coding::decodable() {
             ret = true;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

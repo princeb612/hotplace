@@ -76,9 +76,7 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
 #endif
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

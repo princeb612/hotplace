@@ -45,9 +45,7 @@ return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t d
         // RFC 9000 18.  Transport Parameter Encoding
         ret = read_quic_params(stream, endpos_extension(), pos, _params);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

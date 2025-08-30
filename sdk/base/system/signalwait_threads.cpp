@@ -15,9 +15,7 @@
 
 namespace hotplace {
 
-signalwait_threads::signalwait_threads() {
-    // do nothing
-}
+signalwait_threads::signalwait_threads() {}
 
 signalwait_threads::~signalwait_threads() { signal_and_wait_all(); }
 

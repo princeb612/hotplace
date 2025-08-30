@@ -281,9 +281,7 @@ return_t tls_protection::build_iv(tls_session *session, binary_t &nonce, const b
             nonce[12 - 1 - i] = v ^ n;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -437,9 +435,7 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
             } break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -454,9 +450,7 @@ return_t tls_protection::get_cbc_hmac_key(tls_session *session, tls_direction_t 
             secret_mac_key = tls_secret_server_mac_key;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -539,8 +533,8 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         uint64 record_no = 0;
         record_no = session->get_recordno(dir, true, space);
 
-        auto const &key = get_secrets().get(secret_key);
-        auto const &iv = get_secrets().get(secret_iv);
+        const auto &key = get_secrets().get(secret_key);
+        const auto &iv = get_secrets().get(secret_iv);
         binary_t nonce;
         encrypt_option_t options[] = {{crypt_ctrl_nsize, hint_cipher->nsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
 
@@ -589,9 +583,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -698,9 +690,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -820,9 +810,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 
         ret = decrypt_aead(session, dir, stream, size - tagsize, pos, plaintext, aad, tag, space);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -954,9 +942,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -1082,9 +1068,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

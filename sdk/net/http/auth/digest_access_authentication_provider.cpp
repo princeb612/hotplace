@@ -57,9 +57,7 @@ bool digest_access_authentication_provider::try_auth(http_authentication_resolve
             ret_value = resolver->digest_authenticate(this, session, request, response);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -99,9 +97,7 @@ return_t digest_access_authentication_provider::request_auth(network_session* se
         std::string body = format("<html><body>%i %s</body></html>", status_code, http_resource::get_instance()->load(status_code).c_str());
         response->compose(status_code, "text/html", body.c_str());
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -136,9 +132,7 @@ return_t digest_access_authentication_provider::prepare_digest_access(network_se
             ret = errorcode_t::success;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -236,9 +230,7 @@ return_t digest_access_authentication_provider::auth_digest_access(network_sessi
 #endif
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

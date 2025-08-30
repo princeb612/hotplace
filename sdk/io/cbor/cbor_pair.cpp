@@ -41,9 +41,7 @@ cbor_pair::cbor_pair(int64 value, cbor_data* object)
         }
         __try_new_catch(_lhs, new cbor_data(value), ret, __leave2);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 #if defined __SIZEOF_INT128__
@@ -66,9 +64,7 @@ cbor_pair::cbor_pair(int64 value, cbor_map* object)
         }
         __try_new_catch(_lhs, new cbor_data(value), ret, __leave2);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 #if defined __SIZEOF_INT128__
@@ -91,9 +87,7 @@ cbor_pair::cbor_pair(int64 value, cbor_array* object)
         }
         __try_new_catch(_lhs, new cbor_data(value), ret, __leave2);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 cbor_pair::cbor_pair(const char* key, cbor_data* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
@@ -105,9 +99,7 @@ cbor_pair::cbor_pair(const char* key, cbor_data* object) : cbor_object(cbor_type
         }
         __try_new_catch(_lhs, new cbor_data(key), ret, __leave2);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 cbor_pair::cbor_pair(const char* key, cbor_map* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
@@ -119,9 +111,7 @@ cbor_pair::cbor_pair(const char* key, cbor_map* object) : cbor_object(cbor_type_
         }
         __try_new_catch(_lhs, new cbor_data(key), ret, __leave2);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 cbor_pair::cbor_pair(const char* key, cbor_array* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
@@ -133,9 +123,7 @@ cbor_pair::cbor_pair(const char* key, cbor_array* object) : cbor_object(cbor_typ
         }
         __try_new_catch(_lhs, new cbor_data(key), ret, __leave2);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 cbor_pair::cbor_pair(cbor_data* key, cbor_data* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
@@ -162,9 +150,7 @@ cbor_pair::cbor_pair(cbor_data* key, cbor_object* object) : cbor_object(cbor_typ
     }
 }
 
-cbor_pair::~cbor_pair() {
-    // do nothing
-}
+cbor_pair::~cbor_pair() {}
 
 int cbor_pair::addref() {
     if (_lhs) {

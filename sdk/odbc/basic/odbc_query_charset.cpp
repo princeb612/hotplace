@@ -35,11 +35,7 @@ return_t odbc_query::query(LPCTSTR query_string, ...) {
 
         va_end(ap);
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -59,11 +55,7 @@ return_t odbc_query::query(LPCTSTR query_string, va_list ap) {
                 break;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -76,17 +68,10 @@ return_t odbc_query::execute(LPCTSTR query_string, ...) {
         va_start(ap, query_string);
 
         ret = execute(query_string, ap);
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
 
         va_end(ap);
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -115,11 +100,7 @@ return_t odbc_query::execute(LPCTSTR query_string, va_list ap) {
             ret = execute_direct(str.c_str());
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -148,11 +129,7 @@ return_t odbc_query::execute_async(LPCTSTR query_string, va_list ap) {
 
         ret = execute_direct(str.c_str());
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -211,11 +188,7 @@ return_t odbc_query::prepare_statement(LPCTSTR query_string) {
             __leave2;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
     return ret;
 }
 

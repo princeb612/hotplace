@@ -43,9 +43,7 @@ class reference_counter {
     /**
      * @brief constructor
      */
-    reference_counter() : _count(0) {
-        // do nothing
-    }
+    reference_counter() : _count(0) {}
 
     /**
      * @brief increase reference counter (V)

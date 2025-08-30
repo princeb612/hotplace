@@ -77,9 +77,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, crypt_sig_t sig) {
         }
         test = (cond1 && cond2 && cond3);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return test;
 }
 

@@ -41,9 +41,7 @@ return_t openssl_mac::hmac(const char* alg, const binary_t& key, const byte_t* s
         }
         hash.close(handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -70,9 +68,7 @@ return_t openssl_mac::hmac(hash_algorithm_t alg, const binary_t& key, const byte
         hash.hash(handle, stream, size, output);
         hash.close(handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -94,9 +90,7 @@ return_t openssl_mac::cmac(const char* alg, const binary_t& key, const binary_t&
         }
         ret = cmac(hint->algorithm, key, input, output);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

@@ -89,9 +89,7 @@ TYPE t_atoi_n(const char* value, size_t size) {
             res = -res;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return res;
 }
 
@@ -186,9 +184,7 @@ int byte_capacity_signed(signed_type v) {
 template <typename K, typename V>
 class t_maphint {
    public:
-    t_maphint(std::map<K, V>& source) : _source(source) {
-        // do nothing
-    }
+    t_maphint(std::map<K, V>& source) : _source(source) {}
 
     return_t find(K const& key, V* value) {
         return_t ret = errorcode_t::success;
@@ -213,9 +209,7 @@ class t_maphint {
 template <typename K, typename V>
 class t_maphint_const {
    public:
-    t_maphint_const(std::map<K, V> const& source) : _source(source) {
-        // do nothing
-    }
+    t_maphint_const(std::map<K, V> const& source) : _source(source) {}
 
     return_t find(K const& key, V* value) {
         return_t ret = errorcode_t::success;

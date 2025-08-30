@@ -30,9 +30,7 @@ return_t b24_i32(const byte_t* p, uint8 len, uint32& value) {
         memcpy(value_p + 1, p, 3);
         value = ntoh32(value_n);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -54,9 +52,7 @@ return_t i32_b24(byte_t* p, uint8 len, uint32 value) {
         byte_t* value_p = (byte_t*)&value_n;
         memcpy(p, value_p + 1, 3);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -91,9 +87,7 @@ return_t b48_i64(const byte_t* p, uint8 len, uint64& value) {
         memcpy(value_p + 2, p, 6);
         value = ntoh64(value_n);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -115,9 +109,7 @@ return_t i64_b48(byte_t* p, uint8 len, uint64 value) {
         byte_t* value_p = (byte_t*)&value_n;
         memcpy(p, value_p + 2, 6);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

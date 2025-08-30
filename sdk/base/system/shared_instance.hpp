@@ -64,12 +64,8 @@ namespace hotplace {
 template <typename OBJECT_T>
 class t_shared_reference {
    public:
-    t_shared_reference() : _counter(0), _object(nullptr) {
-        // do nothing
-    }
-    ~t_shared_reference() {
-        // do nothing
-    }
+    t_shared_reference() : _counter(0), _object(nullptr) {}
+    ~t_shared_reference() {}
 
     void make_share(OBJECT_T* object) {
         if (nullptr == _object) {

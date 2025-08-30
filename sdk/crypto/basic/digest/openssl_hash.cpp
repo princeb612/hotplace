@@ -36,9 +36,7 @@ struct openssl_hash_context_t : public hash_context_t {
     const EVP_MD* _evp_md;          // hash, HMAC
     binary_t _key;                  // CMAC, HMAC
 
-    openssl_hash_context_t() : _signature(0), _flags(0), _md_context(nullptr), _cmac_context(nullptr), _hmac_context(nullptr) {
-        // do nothing
-    }
+    openssl_hash_context_t() : _signature(0), _flags(0), _md_context(nullptr), _cmac_context(nullptr), _hmac_context(nullptr) {}
     openssl_hash_context_t(const openssl_hash_context_t& rhs)
         : _signature(rhs._signature),
           _hash_type(rhs._hash_type),
@@ -71,13 +69,9 @@ struct openssl_hash_context_t : public hash_context_t {
     }
 };
 
-openssl_hash::openssl_hash() {
-    // do nothing
-}
+openssl_hash::openssl_hash() {}
 
-openssl_hash::~openssl_hash() {
-    // do nothing
-}
+openssl_hash::~openssl_hash() {}
 
 return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, const unsigned char* key, unsigned keysize) {
     return_t ret = errorcode_t::success;
@@ -101,9 +95,7 @@ return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, cons
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -177,8 +169,6 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
             if (nullptr != context) {
                 delete context;
             }
-
-            // do nothing
         }
     }
 
@@ -242,8 +232,6 @@ return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm
             if (nullptr != context) {
                 delete context;
             }
-
-            // do nothing
         }
     }
 
@@ -281,11 +269,7 @@ return_t openssl_hash::close(hash_context_t* handle) {
         context->_signature = 0;
         delete context;
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -313,11 +297,7 @@ return_t openssl_hash::init(hash_context_t* handle) {
             EVP_DigestInit_ex(context->_md_context, context->_evp_md, nullptr);
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -351,11 +331,7 @@ return_t openssl_hash::update(hash_context_t* handle, const byte_t* source_data,
             EVP_DigestUpdate(context->_md_context, source_data, source_size);
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -419,11 +395,7 @@ return_t openssl_hash::finalize(hash_context_t* handle, byte_t** hash_data, size
         *hash_data = buffer_allocated;
         *hash_size = size_digest;
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -476,11 +448,7 @@ return_t openssl_hash::finalize(hash_context_t* handle, binary_t& output) {
             }
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -552,11 +520,7 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
             }
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -575,9 +539,7 @@ return_t openssl_hash::dup(hash_context_t** duplicated, hash_context_t* handle) 
 
         *duplicated = context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

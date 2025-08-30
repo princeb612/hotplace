@@ -47,18 +47,14 @@ return_t trial_server_socket_adapter::shutdown_tls() {
             _tls_server_socket = nullptr;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
 return_t trial_server_socket_adapter::shutdown_dtls() {
     return_t ret = errorcode_t::success;
     __try2 { ret = errorcode_t::not_supported; }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

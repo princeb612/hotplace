@@ -144,9 +144,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
             _offset_encdata = offset_encdata;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -263,9 +261,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

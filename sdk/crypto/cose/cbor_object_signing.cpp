@@ -22,13 +22,9 @@
 namespace hotplace {
 namespace crypto {
 
-cbor_object_signing::cbor_object_signing() {
-    // do nothing
-}
+cbor_object_signing::cbor_object_signing() {}
 
-cbor_object_signing::~cbor_object_signing() {
-    // do nothing
-}
+cbor_object_signing::~cbor_object_signing() {}
 
 return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
@@ -44,9 +40,7 @@ return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, cose
 
         ret = sign(handle, key, methods, input, output);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -80,9 +74,7 @@ return_t cbor_object_signing::verify(cose_context_t* handle, crypto_key* key, co
             result = true;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

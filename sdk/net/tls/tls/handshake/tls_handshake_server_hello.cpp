@@ -139,9 +139,7 @@ return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -265,9 +263,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
         kv.set(session_tls_version, protection.get_tls_version());
         session->update_session_status(session_status_server_hello);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -404,9 +400,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             _version = version;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -529,9 +523,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

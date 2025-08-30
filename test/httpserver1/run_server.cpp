@@ -202,9 +202,7 @@ return_t simple_http_server(void *) {
 
         _http_server->stop();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

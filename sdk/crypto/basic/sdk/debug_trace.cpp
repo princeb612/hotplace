@@ -73,9 +73,7 @@ return_t debug_trace_openssl(stream_t *stream) {
 
         ERR_clear_error();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

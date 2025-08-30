@@ -15,13 +15,9 @@
 namespace hotplace {
 namespace crypto {
 
-openssl_sign::openssl_sign() {
-    // do nothing
-}
+openssl_sign::openssl_sign() {}
 
-openssl_sign::~openssl_sign() {
-    // do nothing
-}
+openssl_sign::~openssl_sign() {}
 
 return_t openssl_sign::sign(const EVP_PKEY* pkey, crypt_sig_t sig, const binary_t& input, binary_t& signature, uint32 flags) {
     return sign(pkey, sig, &input[0], input.size(), signature, flags);
@@ -147,9 +143,7 @@ return_t openssl_sign::verify(const EVP_PKEY* pkey, crypt_sig_t sig, const byte_
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

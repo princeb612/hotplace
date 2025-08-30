@@ -40,9 +40,7 @@ return_t dump_record(const char* text, tls_session* session, tls_direction_t dir
 
         _test_case.test(ret, __FUNCTION__, "%s : %s", (from_client == dir) ? "C -> S" : "C <- S", text);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -59,9 +57,7 @@ return_t dump_handshake(const char* text, tls_session* session, tls_direction_t 
 
         _test_case.test(ret, __FUNCTION__, "%s : %s", (from_client == dir) ? "C -> S" : "C <- S", text);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 };
 
@@ -159,9 +155,7 @@ return_t construct_record_fragmented(tls_record* record, tls_direction_t dir, st
 
         record->release();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -180,9 +174,7 @@ return_t construct_record_fragmented(tls_records* records, tls_direction_t dir, 
         };
         ret = records->for_each(lambda);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

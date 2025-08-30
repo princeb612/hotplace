@@ -38,9 +38,7 @@ return_t openssl_dtls_server_socket::dtls_open(socket_context_t** handle, socket
 #endif
         ret = _tls->dtls_open(handle, listen_sock, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -55,9 +53,7 @@ return_t openssl_dtls_server_socket::dtls_handshake(socket_context_t* handle, so
 
         ret = _tls->dtls_handshake(handle, addr, addrlen);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -73,9 +69,7 @@ return_t openssl_dtls_server_socket::recvfrom(socket_context_t* handle, int mode
 
         ret = _tls->recvfrom(handle, mode, ptr_data, size_data, cbread, addr, addrlen);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -92,9 +86,7 @@ return_t openssl_dtls_server_socket::sendto(socket_context_t* handle, const char
 
         ret = _tls->sendto(handle, mode, ptr_data, size_data, cbsent, addr, addrlen);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

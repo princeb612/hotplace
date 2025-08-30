@@ -171,9 +171,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -226,9 +224,7 @@ void do_test_cbor_file(const char* expect_file, const char* text) {
 
         _test_case.assert((bin_cbor == expect), __FUNCTION__, text ? text : "");
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 void test_rfc8152_b() {

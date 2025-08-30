@@ -74,9 +74,7 @@ bool find_discriminant(crypto_key_object item, const char* kid, ALGORITHM alg, c
 
         ret = true;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -142,9 +140,7 @@ static bool find_discriminant(crypto_key_object item, const char* kid, const cha
             ret = true;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -165,9 +161,7 @@ const EVP_PKEY* crypto_key::any(bool up_ref) {
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -190,9 +184,7 @@ const EVP_PKEY* crypto_key::select(crypto_use_t use, bool up_ref) {
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -220,9 +212,7 @@ const EVP_PKEY* crypto_key::select(crypto_kty_t kty, crypto_use_t use, bool up_r
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -254,9 +244,7 @@ const EVP_PKEY* crypto_key::select(jwa_t alg, crypto_use_t use, bool up_ref) {
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -285,9 +273,7 @@ const EVP_PKEY* crypto_key::select(crypt_sig_t sig, crypto_use_t use, bool up_re
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -316,9 +302,7 @@ const EVP_PKEY* crypto_key::select(jws_t sig, crypto_use_t use, bool up_ref) {
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -344,9 +328,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, crypto_use_t use, bool up_r
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -377,9 +359,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, crypto_kty_t kty, crypto_us
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -414,9 +394,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, jwa_t alg, crypto_use_t use
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -448,9 +426,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, crypt_sig_t sig, crypto_use
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -482,9 +458,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, jws_t sig, crypto_use_t use
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -516,9 +490,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, cose_alg_t alg, crypto_use_
             EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -555,9 +527,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypto_use_t use, bool up_ref)
             ret_value = select(use, up_ref);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -603,9 +573,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypto_kty_t kt, crypto_use_t 
             ret_value = select(kt, use, up_ref);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -655,9 +623,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, jwa_t alg, crypto_use_t use, b
             ret_value = select(alg, use, up_ref);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -706,9 +672,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypt_sig_t alg, crypto_use_t 
             ret_value = select(alg, use, up_ref);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -757,9 +721,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, jws_t alg, crypto_use_t use, b
             ret_value = select(alg, use, up_ref);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -782,9 +744,7 @@ const X509* crypto_key::select_x509(crypto_use_t use, bool up_ref) {
             X509_up_ref((X509*)ret_value);  // increments a reference counter
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -825,9 +785,7 @@ const X509* crypto_key::find_x509(const char* kid, crypto_kty_t kty, crypto_use_
             ret_value = select_x509(use, up_ref);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 
@@ -885,9 +843,7 @@ return_t crypto_key::reference(crypto_key* skeys, crypto_kty_t kty, const char* 
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

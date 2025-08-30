@@ -101,9 +101,7 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
             ret = get_handshakes().read(session, dir, stream, pos + len, pos);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -114,9 +112,7 @@ return_t tls_record_handshake::do_write_body(tls_direction_t dir, binary_t& bin)
         auto& handshakes = get_handshakes();
         ret = handshakes.write(get_session(), dir, bin);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

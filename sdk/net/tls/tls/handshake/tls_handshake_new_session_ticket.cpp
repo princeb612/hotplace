@@ -42,9 +42,7 @@ return_t tls_handshake_new_session_ticket::do_preprocess(tls_direction_t dir) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -57,9 +55,7 @@ return_t tls_handshake_new_session_ticket::do_postprocess(tls_direction_t dir, c
 
         protection.update_transcript_hash(session, stream + hspos, get_size());
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -148,9 +144,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             extensions.read(this, dir, ticket_extensions);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

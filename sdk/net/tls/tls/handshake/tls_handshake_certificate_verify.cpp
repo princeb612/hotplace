@@ -52,9 +52,7 @@ return_t tls_handshake_certificate_verify::do_preprocess(tls_direction_t dir) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -73,9 +71,7 @@ return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, c
             session->update_session_status(session_status_server_cert_verified);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -247,9 +243,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

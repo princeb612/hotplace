@@ -13,9 +13,7 @@
 
 namespace hotplace {
 
-valist::valist() : _va_internal(nullptr), _modified(false) {
-    // do nothing
-}
+valist::valist() : _va_internal(nullptr), _modified(false) {}
 
 valist::valist(const valist& object) : _va_internal(nullptr), _modified(false) { assign(object); }
 

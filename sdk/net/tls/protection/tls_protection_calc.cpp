@@ -496,7 +496,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
             binary_t okm;
             if (is_kindof_dtls()) {
-                auto const &secret_application_client = get_secrets().get(tls_secret_c_ap_traffic);
+                const auto &secret_application_client = get_secrets().get(tls_secret_c_ap_traffic);
                 lambda_expand_label(tls_secret_application_client_sn_key, okm, hashalg, keysize, secret_application_client, "sn", empty);
             }
 
@@ -637,9 +637,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             ret = calc_keyblock(hmac_alg, master_secret, client_hello_random, server_hello_random, cs);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -823,9 +821,7 @@ return_t tls_protection::calc_psk(tls_session *session, const binary_t &binder_h
             ret = errorcode_t::mismatch;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

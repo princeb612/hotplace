@@ -73,9 +73,7 @@ void do_cbor_test(cbor_object* root, const char* expected) {
 
         _test_case.test(ret, __FUNCTION__, "concise: %s diagnostic: %s", concise.c_str(), diagnostic.c_str());
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 void do_test_cbor_int(int8 value, const char* expect) {

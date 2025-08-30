@@ -138,9 +138,7 @@ return_t sighandler(int signo, void (*callback)(int)) {
 
         sigaction(signo, &sig, 0);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

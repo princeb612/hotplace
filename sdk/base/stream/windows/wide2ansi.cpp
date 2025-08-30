@@ -27,9 +27,7 @@ return_t W2A(ansi_string& target, const wchar_t* source, uint32 codepage) {
         WideCharToMultiByte(codepage, 0, source, -1, &buffer[0], sizeNeed, nullptr, nullptr);
         target = &buffer[0];
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -51,9 +49,7 @@ return_t A2W(stream_t* stream, const char* source, uint32 codepage) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -74,9 +70,7 @@ return_t W2A(stream_t* stream, const wchar_t* source, uint32 codepage) {
             stream->write((void*)&buffer[0], sizeNeed - sizeof(char));
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

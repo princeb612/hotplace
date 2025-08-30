@@ -36,9 +36,7 @@ return_t naive_tcp_server_socket::open(socket_context_t** handle, unsigned int f
         __try_new_catch(context, new socket_context_t(sock, closesocket_ondestroy), ret, __leave2);
         *handle = context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -60,9 +58,7 @@ return_t naive_tcp_server_socket::accept(socket_t* client_socket, socket_t liste
 
         *client_socket = socket;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -90,9 +86,7 @@ return_t naive_tcp_server_socket::read(socket_context_t* handle, int mode, char*
             *cbread = ret_routine;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -122,9 +116,7 @@ return_t naive_tcp_server_socket::send(socket_context_t* handle, const char* ptr
             *cbsent = ret_routine;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

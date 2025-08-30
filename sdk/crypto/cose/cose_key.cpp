@@ -109,9 +109,7 @@ cbor_map* cose_data::cose_key::cbor() {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return object;
 }
 

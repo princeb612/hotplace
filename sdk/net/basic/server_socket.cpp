@@ -29,9 +29,7 @@ return_t server_socket::close(socket_context_t* handle) {
 
         delete handle;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

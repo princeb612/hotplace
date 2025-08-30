@@ -174,9 +174,7 @@ return_t http2_frame::do_read_header(const byte_t* stream, size_t size, size_t& 
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -281,9 +279,7 @@ return_t http2_frame::write_compressed_header(binary_t& frag, const std::string&
         encoder.encode_header(get_hpack_dyntable(), frag, name, value, flags);
         get_hpack_dyntable()->commit();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -304,9 +300,7 @@ return_t http2_frame::write_compressed_header(http_header* header, binary_t& fra
         header->get_headers(lambda);
         get_hpack_dyntable()->commit();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

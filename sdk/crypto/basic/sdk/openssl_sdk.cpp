@@ -106,9 +106,7 @@ void openssl_thread_setup_implementation(void) {
         CRYPTO_set_locking_callback((void (*)(int, int, const char *, int))opensslthread_locking_callback);
         /* id callback defined */
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 /* openssl-0.9.8 thread-safe */

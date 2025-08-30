@@ -13,13 +13,9 @@
 namespace hotplace {
 namespace io {
 
-windows_registry::windows_registry() {
-    // do nothing
-}
+windows_registry::windows_registry() {}
 
-windows_registry::~windows_registry() {
-    // do nothing
-}
+windows_registry::~windows_registry() {}
 
 return_t windows_registry::close_key(HKEY hKey) {
     // treat LSTATUS as return_t

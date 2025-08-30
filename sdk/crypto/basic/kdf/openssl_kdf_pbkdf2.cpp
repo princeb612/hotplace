@@ -62,9 +62,7 @@ return_t openssl_kdf::pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dle
         derived.resize(dlen);
         PKCS5_PBKDF2_HMAC(password, size_password, salt, size_salt, iter, md, dlen, &derived[0]);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -89,9 +87,7 @@ return_t openssl_kdf::pbkdf2(binary_t& derived, const char* alg, size_t dlen, co
 
         ret = pbkdf2(derived, typeof_alg(hint), dlen, password, size_password, salt, size_salt, iter);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

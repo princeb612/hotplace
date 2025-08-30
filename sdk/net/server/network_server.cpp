@@ -212,9 +212,7 @@ return_t network_server::set_accept_control_handler(network_multiplexer_context_
 
         handle->accept_control_handler = accept_control_handler;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -234,9 +232,7 @@ return_t network_server::add_protocol(network_multiplexer_context_t* handle, net
 
         ret = handle->protocol_group.add(protocol_ptr);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -256,9 +252,7 @@ return_t network_server::remove_protocol(network_multiplexer_context_t* handle, 
 
         ret = handle->protocol_group.remove(protocol_ptr);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -278,9 +272,7 @@ return_t network_server::clear_protocols(network_multiplexer_context_t* handle) 
 
         ret = handle->protocol_group.clear();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -305,9 +297,7 @@ return_t network_server::tls_accept_loop_run(network_multiplexer_context_t* hand
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -329,9 +319,7 @@ return_t network_server::tls_accept_loop_break(network_multiplexer_context_t* ha
             handle->tls_accept_threads.join();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -368,9 +356,7 @@ return_t network_server::event_loop_run(network_multiplexer_context_t* handle, u
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -394,9 +380,7 @@ return_t network_server::event_loop_break(network_multiplexer_context_t* handle,
             handle->producer_threads.join();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -419,9 +403,7 @@ return_t network_server::consumer_loop_run(network_multiplexer_context_t* handle
             handle->consumer_threads.create();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -444,9 +426,7 @@ return_t network_server::consumer_loop_break(network_multiplexer_context_t* hand
             handle->consumer_threads.join();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -485,9 +465,7 @@ return_t network_server::close(network_multiplexer_context_t* handle) {
         handle->signature = 0;
         delete handle;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -511,9 +489,7 @@ return_t network_server::accept_thread(void* user_context) {
             ret = svr.accept_routine(handle);
         } while (errorcode_t::success == ret);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -576,9 +552,7 @@ return_t network_server::accept_routine(network_multiplexer_context_t* handle) {
             ret = session_accepted(handle, socket_handle, (handle_t)accpt_ctx.cli_socket, &accpt_ctx.client_addr);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -604,9 +578,7 @@ return_t network_server::try_connected(network_multiplexer_context_t* handle, so
         dispatch_data[6] = (void*)(arch_t)event_socket;
         handle->callback_routine(multiplexer_event_type_t::mux_tryconnect, RTL_NUMBER_OF(dispatch_data), dispatch_data, nullptr, handle->callback_param);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -621,9 +593,7 @@ return_t network_server::tls_accept_ready(network_multiplexer_context_t* handle,
         }
         *ready = handle->accept_queue.empty() ? false : true;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -660,9 +630,7 @@ return_t network_server::tls_accept_thread(void* user_context) {
 
         handle->svr_socket->tls_stop_accept();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -709,9 +677,7 @@ return_t network_server::tls_accept_routine(network_multiplexer_context_t* handl
             close_socket(accpt_ctx.cli_socket, true, 0);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -729,9 +695,7 @@ return_t network_server::tls_accept_signal(void* user_context) {
 
         handle->tls_accept_mutex.signal();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -759,9 +723,7 @@ return_t network_server::cleanup_tls_accept(network_multiplexer_context_t* handl
             close_socket(accpt_ctx.cli_socket, true, 0);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -782,9 +744,7 @@ return_t network_server::producer_thread(void* user_context) {
         network_server svr;
         ret = svr.mplexer.event_loop_run(handle->mplexer_handle, (handle_t)handle->listen_handle->fd, producer_routine, handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -891,9 +851,7 @@ return_t network_server::producer_signal(void* user_context) {
         network_server svr;
         svr.mplexer.event_loop_break_concurrent(handle->mplexer_handle, 1); /* call event_loop_break just 1 time */
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -921,9 +879,7 @@ return_t network_server::consumer_thread(void* user_context) {
             svr.consumer_routine(handle);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -983,9 +939,7 @@ return_t network_server::consumer_signal(void* user_context) {
         }
         handle->consumer_mutex.signal();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -1024,9 +978,7 @@ return_t network_server::session_accepted(network_multiplexer_context_t* handle,
         dispatch_data[0] = (void*)session_object->socket_info();
         handle->callback_routine(multiplexer_event_type_t::mux_connect, 4, dispatch_data, nullptr, handle->callback_param);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -1063,9 +1015,7 @@ return_t network_server::session_closed(network_multiplexer_context_t* handle, h
             session_object->release();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

@@ -274,9 +274,7 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t&
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -339,9 +337,7 @@ return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t s
             result = true;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -378,9 +374,7 @@ return_t json_object_signing::check_constraints(jws_t sig, const EVP_PKEY* pkey)
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -27,13 +27,9 @@ typedef struct _hotp_context_t : public otp_context_t {
     unsigned int _window_size;
 } hotp_context_t;
 
-hmac_otp::hmac_otp() {
-    // do nothing
-}
+hmac_otp::hmac_otp() {}
 
-hmac_otp::~hmac_otp() {
-    // do nothing
-}
+hmac_otp::~hmac_otp() {}
 
 uint32 hmac_otp::open(otp_context_t** handle, unsigned int digit_length, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size) {
     uint32 ret = errorcode_t::success;
@@ -100,9 +96,7 @@ uint32 hmac_otp::close(otp_context_t* handle) {
         hash.close(context->_hmac_context);
         delete context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -123,9 +117,7 @@ uint32 hmac_otp::set(otp_context_t* handle, uint32 count) {
 
         context->_counter = count;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -146,9 +138,7 @@ uint32 hmac_otp::get(otp_context_t* handle, uint32& code) {
         get(handle, context->_counter, code);
         context->_counter++;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -235,9 +225,7 @@ uint32 hmac_otp::verify(otp_context_t* handle, uint32 counter, uint32 code) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

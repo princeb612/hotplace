@@ -92,8 +92,6 @@ return_t odbc_query::build_fieldinfo(void) {
     __finally2 {
         if (errorcode_t::success != ret) {
             clear_fieldinfo();
-
-            // do nothing
         }
     }
 
@@ -121,11 +119,7 @@ return_t odbc_query::bind_statement_parameter(UINT nIndex, DWORD CType, DWORD SQ
             __leave2;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -153,11 +147,7 @@ return_t odbc_query::execute_statement() {
                 break;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -214,11 +204,7 @@ return_t odbc_query::get_resultset(DWORD* column_count, DWORD* row_count) {
         *column_count = (DWORD)nCols;
         *row_count = (DWORD)nRows;
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -235,11 +221,7 @@ return_t odbc_query::more() {
             ret = errorcode_t::internal_error;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -449,10 +431,6 @@ return_t odbc_query::fetch(odbc_record* odbc_record_ptr) {
             if (nullptr != _stmt_handle) {
                 odbc_diagnose::get_instance()->diagnose(SQL_HANDLE_STMT, _stmt_handle);
             }
-        }
-
-        if (errorcode_t::success != ret && errorcode_t::no_data != ret) {
-            // do nothing
         }
     }
 

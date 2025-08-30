@@ -31,13 +31,9 @@
 namespace hotplace {
 namespace crypto {
 
-json_object_encryption::json_object_encryption() {
-    // do nothing
-}
+json_object_encryption::json_object_encryption() {}
 
-json_object_encryption::~json_object_encryption() {
-    // do nothing
-}
+json_object_encryption::~json_object_encryption() {}
 
 return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, jwa_t alg, const binary_t &input, std::string &output, jose_serialization_t type) {
     return_t ret = errorcode_t::success;
@@ -427,9 +423,7 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -640,9 +634,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -673,9 +665,7 @@ return_t json_object_encryption::check_constraints(jwa_t alg, const EVP_PKEY *pk
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

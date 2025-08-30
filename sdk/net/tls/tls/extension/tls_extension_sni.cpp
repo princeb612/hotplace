@@ -87,9 +87,7 @@ return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stre
             _hostname.set(std::move(hostname));
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

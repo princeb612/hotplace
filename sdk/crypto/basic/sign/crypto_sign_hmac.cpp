@@ -25,9 +25,7 @@ return_t crypto_sign_hmac::sign(const EVP_PKEY* pkey, const byte_t* stream, size
         openssl_sign s;
         ret = s.sign_hmac(pkey, get_digest(), stream, size, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -41,9 +39,7 @@ return_t crypto_sign_hmac::verify(const EVP_PKEY* pkey, const byte_t* stream, si
         openssl_sign s;
         ret = s.verify_hmac(pkey, get_digest(), stream, size, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -57,9 +53,7 @@ return_t crypto_sign_hmac::sign(const EVP_PKEY* pkey, const binary_t& input, bin
         openssl_sign s;
         ret = s.sign_hmac(pkey, get_digest(), input, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -73,9 +67,7 @@ return_t crypto_sign_hmac::verify(const EVP_PKEY* pkey, const binary_t& input, c
         openssl_sign s;
         ret = s.verify_hmac(pkey, get_digest(), input, signature, flags);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

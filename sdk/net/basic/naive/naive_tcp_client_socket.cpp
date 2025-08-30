@@ -114,9 +114,7 @@ return_t naive_tcp_client_socket::send(const char* ptr_data, size_t size_data, s
             *cbsent = ret_send;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

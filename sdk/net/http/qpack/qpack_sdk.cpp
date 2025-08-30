@@ -129,9 +129,7 @@ return_t qpack_eic2ric(size_t capacity, size_t tni, size_t eic, bool sign, size_
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

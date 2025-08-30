@@ -216,9 +216,7 @@ bool http_router::get_auth_provider(http_request* request, http_response* respon
             ret_value = true;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 

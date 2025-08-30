@@ -92,9 +92,7 @@ return_t debug_trace(stream_t* stream) {
             free(symbols);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

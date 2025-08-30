@@ -18,9 +18,7 @@ odbc_diagnose odbc_diagnose::_instance;
 
 odbc_diagnose* odbc_diagnose::get_instance() { return &_instance; }
 
-odbc_diagnose::odbc_diagnose() {
-    // do nothing
-}
+odbc_diagnose::odbc_diagnose() {}
 
 void odbc_diagnose::diagnose(int handle_type, void* handle) {
     SQLTCHAR SqlState[6 + 200], Msg[SQL_MAX_MESSAGE_LENGTH];

@@ -76,9 +76,7 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
 
         do_postprocess(dir);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

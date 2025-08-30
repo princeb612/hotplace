@@ -92,9 +92,7 @@ return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, con
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -124,9 +122,7 @@ return_t tls_extension_renegotiation_info::do_write_body(tls_direction_t dir, bi
            << new payload_member(renegotiation_info, constexpr_renegotiation_info);
         pl.write(bin);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

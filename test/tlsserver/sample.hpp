@@ -17,9 +17,7 @@ struct OPTION : public CMDLINEOPTION {
     uint32 flags;
     std::string cs;
 
-    OPTION() : CMDLINEOPTION(), run(0), port(9000), flags(0) {
-        // do nothing
-    }
+    OPTION() : CMDLINEOPTION(), run(0), port(9000), flags(0) {}
 };
 
 extern test_case _test_case;

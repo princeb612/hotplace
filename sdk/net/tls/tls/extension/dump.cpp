@@ -44,9 +44,7 @@ return_t tls_dump_extension(tls_handshake* handshake, tls_direction_t dir, const
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

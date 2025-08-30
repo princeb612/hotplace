@@ -82,9 +82,7 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -159,9 +157,7 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

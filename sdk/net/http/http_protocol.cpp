@@ -16,13 +16,9 @@
 namespace hotplace {
 namespace net {
 
-http_protocol::http_protocol() : network_protocol() {
-    // do nothing
-}
+http_protocol::http_protocol() : network_protocol() {}
 
-http_protocol::~http_protocol() {
-    // do nothing
-}
+http_protocol::~http_protocol() {}
 
 return_t http_protocol::is_kind_of(void* stream, size_t stream_size) {
     return_t ret = errorcode_t::success;
@@ -62,9 +58,7 @@ return_t http_protocol::is_kind_of(void* stream, size_t stream_size) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -116,9 +110,7 @@ return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, 
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return errorcode_t::success;
 }
 

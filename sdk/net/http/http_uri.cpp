@@ -26,9 +26,7 @@ http_uri::http_uri(const http_uri& object) {
     _query_kv = object._query_kv;
 }
 
-http_uri::~http_uri() {
-    // do nothing
-}
+http_uri::~http_uri() {}
 
 return_t http_uri::open(const std::string& uri) { return open(uri.c_str()); }
 
@@ -54,9 +52,7 @@ return_t http_uri::open(const char* uri) {
         _query = url_info.query;
         to_keyvalue(_query, _query_kv);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -79,9 +75,7 @@ return_t http_uri::set_query(const char* query) {
 
         ret = to_keyvalue(query, _query_kv);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

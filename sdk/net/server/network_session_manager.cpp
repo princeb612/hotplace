@@ -19,9 +19,7 @@
 namespace hotplace {
 namespace net {
 
-network_session_manager::network_session_manager() : _server_conf(nullptr) {
-    // do nothing
-}
+network_session_manager::network_session_manager() : _server_conf(nullptr) {}
 
 network_session_manager::~network_session_manager() { shutdown(); }
 
@@ -58,9 +56,7 @@ return_t network_session_manager::connected(handle_t event_socket, sockaddr_stor
             ret = errorcode_t::already_assigned;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -84,9 +80,7 @@ return_t network_session_manager::find(handle_t event_socket, network_session** 
             *ptr_session_object = session_object;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -118,9 +112,7 @@ return_t network_session_manager::ready_to_close(handle_t event_socket, network_
             _session_map.erase(iter);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -174,9 +166,7 @@ return_t network_session_manager::get_dgram_session(network_session** ptr_sessio
             session_object->addref();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -230,9 +220,7 @@ return_t network_session_manager::get_dgram_cookie_session(network_session** ptr
             session_object->addref();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -257,9 +245,7 @@ return_t network_session_manager::dgram_find(const sockaddr_storage_t* addr, net
             *ptr_session_object = session_object;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

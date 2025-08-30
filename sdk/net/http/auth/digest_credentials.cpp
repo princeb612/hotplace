@@ -68,9 +68,7 @@ bool digest_credentials::verify(http_authentication_provider* provider, skey_val
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

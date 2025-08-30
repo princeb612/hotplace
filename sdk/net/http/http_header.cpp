@@ -16,9 +16,7 @@
 namespace hotplace {
 namespace net {
 
-http_header::http_header() : _version(1) {
-    // do nothing
-}
+http_header::http_header() : _version(1) {}
 
 http_header::http_header(const http_header& object) {
     _names = object._names;
@@ -26,9 +24,7 @@ http_header::http_header(const http_header& object) {
     _version = object._version;
 }
 
-http_header::~http_header() {
-    // do nothing
-}
+http_header::~http_header() {}
 
 http_header& http_header::add(const std::string& name, const std::string& value) {
     __try2 {
@@ -43,9 +39,7 @@ http_header& http_header::add(const std::string& name, const std::string& value)
             // pib.first->second = value;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 
@@ -158,9 +152,7 @@ return_t http_header::get_headers(std::function<void(const std::string&, const s
             f(key, value);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

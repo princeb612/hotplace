@@ -27,9 +27,7 @@ return_t A2W(wide_string& target, const char* source, uint32 codepage) {
             target = &buffer[0];
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

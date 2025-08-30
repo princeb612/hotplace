@@ -66,9 +66,7 @@ return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* strea
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -110,9 +108,7 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

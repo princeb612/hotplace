@@ -58,9 +58,7 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
         }
         *brk = startpos + p - pos + 1;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -93,9 +91,7 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
             *brk = pos + 1;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -114,9 +110,7 @@ return_t getline(const wchar_t* stream, size_t sizestream, size_t startpos, size
         }
         scan(stream, sizestream, startpos, brk, _T ("\n"));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

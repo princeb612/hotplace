@@ -24,9 +24,7 @@ cbor_concise_visitor::cbor_concise_visitor(binary_t* concise) : _concise(concise
     }
 }
 
-cbor_concise_visitor::~cbor_concise_visitor() {
-    // do nothing
-}
+cbor_concise_visitor::~cbor_concise_visitor() {}
 
 return_t cbor_concise_visitor::visit(cbor_object* object) {
     return_t ret = errorcode_t::success;
@@ -43,9 +41,7 @@ cbor_diagnostic_visitor::cbor_diagnostic_visitor(stream_t* stream) : _diagnostic
     }
 }
 
-cbor_diagnostic_visitor::~cbor_diagnostic_visitor() {
-    // do nothing
-}
+cbor_diagnostic_visitor::~cbor_diagnostic_visitor() {}
 
 return_t cbor_diagnostic_visitor::visit(cbor_object* object) {
     return_t ret = errorcode_t::success;

@@ -21,9 +21,7 @@ class test_scenario {
         __consumer_threads.set(1, consumer_scenario, consumer_signal, this);
     }
 
-    ~test_scenario() {
-        // do nothing
-    }
+    ~test_scenario() {}
 
     void make_scenario();
     void stop_scenario();

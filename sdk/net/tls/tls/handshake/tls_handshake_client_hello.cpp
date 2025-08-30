@@ -151,9 +151,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
             } break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -238,9 +236,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
 
         session->update_session_status(session_status_client_hello);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -406,9 +402,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -482,9 +476,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
 
         binary_append(bin, extensions);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -526,9 +518,7 @@ return_t tls_handshake_client_hello::add_ciphersuites(const char* ciphersuites) 
         split_foreach(context, lambda);
         split_end(context);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

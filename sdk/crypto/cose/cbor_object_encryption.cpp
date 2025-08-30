@@ -24,13 +24,9 @@
 namespace hotplace {
 namespace crypto {
 
-cbor_object_encryption::cbor_object_encryption() {
-    // do nothing
-}
+cbor_object_encryption::cbor_object_encryption() {}
 
-cbor_object_encryption::~cbor_object_encryption() {
-    // do nothing
-}
+cbor_object_encryption::~cbor_object_encryption() {}
 
 return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
@@ -47,9 +43,7 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
 
         ret = cose.encrypt(handle, key, methods, input, output);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -64,9 +58,7 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
         }
         ret = cose.encrypt(handle, key, methods, input, output);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -86,9 +78,7 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
         }
         ret = encrypt(handle, key, algs, input, output);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

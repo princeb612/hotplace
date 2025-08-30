@@ -138,9 +138,7 @@ return_t tls_protection::update_transcript_hash(tls_session *session, const byte
             hash->release();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -164,9 +162,7 @@ return_t tls_protection::calc_transcript_hash(tls_session *session, const byte_t
             hash->release();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 };
 
@@ -217,9 +213,7 @@ return_t tls_protection::calc_context_hash(tls_session *session, hash_algorithm_
             hash->release();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

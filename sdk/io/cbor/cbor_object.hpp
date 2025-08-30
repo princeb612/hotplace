@@ -100,9 +100,7 @@ T* cbor_typeof(cbor_object* object, cbor_type_t type) {
             ret_value = (T*)object;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret_value;
 }
 

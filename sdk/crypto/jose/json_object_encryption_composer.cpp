@@ -223,9 +223,7 @@ return_t json_object_encryption::composer::compose_encryption(jose_context_t *ha
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -375,9 +373,7 @@ return_t json_object_encryption::composer::compose_encryption_dorandom(jose_cont
             handle->encryptions.insert(std::make_pair(enc, item));
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -553,9 +549,7 @@ static void json_unpack_helper(std::list<json_t *> const &pool, const char *key,
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 static void json_unpack_helper(std::list<json_t *> const &pool, const char *key, int *ptr) {
@@ -575,9 +569,7 @@ static void json_unpack_helper(std::list<json_t *> const &pool, const char *key,
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 static void json_unpack_helper(std::list<json_t *> const &pool, const char *key, json_t **ptr) {
@@ -597,9 +589,7 @@ static void json_unpack_helper(std::list<json_t *> const &pool, const char *key,
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 return_t json_object_encryption::composer::parse_decryption(jose_context_t *handle, const char *input) {

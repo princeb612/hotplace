@@ -109,9 +109,7 @@ return_t crypto_keychain::add_oct_b64(crypto_key* cryptokey, const char* k, cons
 
         ret = add_oct(cryptokey, bin_k, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -135,9 +133,7 @@ return_t crypto_keychain::add_oct_b64u(crypto_key* cryptokey, const char* k, con
 
         ret = add_oct(cryptokey, bin_k, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -160,9 +156,7 @@ return_t crypto_keychain::add_oct_b16(crypto_key* cryptokey, const char* k, cons
 
         ret = add_oct(cryptokey, bin_k, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -185,9 +179,7 @@ return_t crypto_keychain::add_oct_b16rfc(crypto_key* cryptokey, const char* k, c
 
         ret = add_oct(cryptokey, bin_k, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

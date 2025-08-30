@@ -29,9 +29,7 @@ file_stream::file_stream()
       _filepos_low(0),
       _filepos_high(0),
       _mapping_size(0),
-      _stream_type(stream_type_t::file) {
-    // do nothing
-}
+      _stream_type(stream_type_t::file) {}
 
 file_stream::~file_stream() { close(); }
 
@@ -66,9 +64,7 @@ return_t file_stream::open(const char* file_name, uint32 flag) {
         wfilename = A2W(file_name);
         ret = open(wfilename.c_str(), flag);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -135,9 +131,7 @@ return_t file_stream::open(const wchar_t* file_name, uint32 flag) {
         _filesize_low = fi.nFileSizeLow;
         _filesize_high = fi.nFileSizeHigh;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -374,9 +368,7 @@ return_t file_stream::read(void* data, uint32 size_data, uint32* size_read) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -434,13 +426,7 @@ return_t file_stream::printf(const char* fmt, ...) {
 
         write(data, data_size);
     }
-    __finally2 {
-        io.close(handle);
-
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 { io.close(handle); }
 
     return ret;
 }
@@ -468,13 +454,7 @@ return_t file_stream::vprintf(const char* fmt, va_list ap) {
 
         write(data, data_size);
     }
-    __finally2 {
-        io.close(handle);
-
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 { io.close(handle); }
 
     return ret;
 }

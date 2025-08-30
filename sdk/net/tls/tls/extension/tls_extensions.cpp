@@ -48,9 +48,7 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

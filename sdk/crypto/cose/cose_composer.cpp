@@ -100,9 +100,7 @@ return_t cose_composer::compose(cbor_array** object, bool tagged) {
 
         *object = root;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -120,9 +118,7 @@ return_t cose_composer::compose(cbor_array** object, binary_t& cbor, bool tagged
             publisher.publish(*object, &cbor);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -139,9 +135,7 @@ return_t cose_composer::diagnose(cbor_array** object, basic_stream& stream, bool
             publisher.publish(*object, &stream);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

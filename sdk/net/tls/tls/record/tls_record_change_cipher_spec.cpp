@@ -49,9 +49,7 @@ return_t tls_record_change_cipher_spec::do_read_body(tls_direction_t dir, const 
         //     enum { change_cipher_spec(1), (255) } type;
         // } ChangeCipherSpec;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

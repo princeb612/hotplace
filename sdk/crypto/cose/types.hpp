@@ -91,13 +91,9 @@ struct _cose_context_t {
     _cose_context_t() : flags(0), debug_flags(0) {}
     ~_cose_context_t() { clearall(); }
     void clearall() {
-        clear();
         flags = 0;
         debug_flags = 0;
         debug_stream.clear();
-    }
-    void clear() {
-        // do nothing
     }
 };
 

@@ -105,9 +105,7 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary
 
         _keys.push_back(k);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 
@@ -123,9 +121,7 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary
 
         _keys.push_back(k);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 
@@ -140,9 +136,7 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign) 
 
         _keys.push_back(k);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 
@@ -158,9 +152,7 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign, 
 
         _keys.push_back(k);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 
@@ -181,9 +173,7 @@ cose_data& cose_data::add(cose_alg_t alg, const char* kid, const binary_t& signa
 
         add(countersign);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 
@@ -198,9 +188,7 @@ cose_data& cose_data::add(cose_recipient* countersign) {
         }
         countersigns->add(countersign);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 
@@ -413,9 +401,7 @@ return_t cose_data::build_unprotected(cbor_map** object) {
 
         *object = part_unprotected;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -454,9 +440,7 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
 
         *object = part_unprotected;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -471,9 +455,7 @@ return_t cose_data::build_data(cbor_data** object) {
 
         __try_new_catch(*object, new cbor_data(_payload), ret, __leave2);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -524,9 +506,7 @@ return_t cose_data::parse_unprotected(cbor_map* object) {
 
         ret = parse(object);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -541,9 +521,7 @@ return_t cose_data::parse_payload(cbor_data* object) {
 
         object->data().to_binary(_payload);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -621,9 +599,7 @@ return_t cose_data::parse(cbor_map* object) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -691,9 +667,7 @@ return_t cose_data::parse_static_key(cbor_map* object, int keyid) {
             cbor_y->release();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -725,9 +699,7 @@ return_t cose_data::parse_counter_signs(cbor_array* object, int keyid) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

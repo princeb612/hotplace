@@ -15,13 +15,9 @@
 namespace hotplace {
 namespace crypto {
 
-json_web_signature::json_web_signature() {
-    // do nothing
-}
+json_web_signature::json_web_signature() {}
 
-json_web_signature::~json_web_signature() {
-    // do nothing
-}
+json_web_signature::~json_web_signature() {}
 
 return_t json_web_signature::sign(crypto_key* crypto_key, const std::string& header, const std::string& claims, std::string& signature,
                                   jose_serialization_t mode) {

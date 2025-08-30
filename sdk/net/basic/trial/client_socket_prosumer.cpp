@@ -135,9 +135,7 @@ return_t client_socket_prosumer::send(const char* ptr_data, size_t size_data, si
             *cbsent = ret_send;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

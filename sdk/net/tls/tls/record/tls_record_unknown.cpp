@@ -22,12 +22,8 @@ tls_record_unknown::~tls_record_unknown() {}
 
 return_t tls_record_unknown::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        //
-    }
-    __finally2 {
-        // do nothing
-    }
+    __try2 {}
+    __finally2 {}
     return ret;
 }
 

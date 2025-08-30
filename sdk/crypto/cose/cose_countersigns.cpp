@@ -37,9 +37,7 @@ cbor_array* cose_countersigns::cbor() {
             object = recipients.front()->cbor();  // array
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return object;
 }
 

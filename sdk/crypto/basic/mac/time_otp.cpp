@@ -22,13 +22,9 @@ typedef struct _totp_context_t : public otp_context_t {
     time_t _interval;
 } totp_context_t;
 
-time_otp::time_otp() {
-    // do nothing
-}
+time_otp::time_otp() {}
 
-time_otp::~time_otp() {
-    // do nothing
-}
+time_otp::~time_otp() {}
 
 uint32 time_otp::open(otp_context_t** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size) {
     uint32 ret = errorcode_t::success;
@@ -92,9 +88,7 @@ uint32 time_otp::close(otp_context_t* handle) {
         }
         delete context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -116,9 +110,7 @@ uint32 time_otp::get(otp_context_t* handle, time64_t time, uint32& code) {
 
         hotp.get(context->_hotp_handle, c, code);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -145,9 +137,7 @@ uint32 time_otp::verify(otp_context_t* handle, time64_t time, uint32 code) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -168,9 +168,7 @@ return_t crypto_keychain::add_dsa_b64(crypto_key* cryptokey, uint32 nid, const c
 
         ret = add_dsa(cryptokey, nid, bin_pub, bin_priv, bin_p, bin_q, bin_g, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -203,9 +201,7 @@ return_t crypto_keychain::add_dsa_b64u(crypto_key* cryptokey, uint32 nid, const 
 
         ret = add_dsa(cryptokey, nid, bin_pub, bin_priv, bin_p, bin_q, bin_g, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -238,9 +234,7 @@ return_t crypto_keychain::add_dsa_b16(crypto_key* cryptokey, uint32 nid, const c
 
         ret = add_dsa(cryptokey, nid, bin_pub, bin_priv, bin_p, bin_q, bin_g, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -273,9 +267,7 @@ return_t crypto_keychain::add_dsa_b16rfc(crypto_key* cryptokey, uint32 nid, cons
 
         ret = add_dsa(cryptokey, nid, bin_pub, bin_priv, bin_p, bin_q, bin_g, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -38,9 +38,7 @@ return_t tls_handshake_end_of_early_data::do_postprocess(tls_direction_t dir, co
             protection.update_transcript_hash(session, stream + hspos, get_size());
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

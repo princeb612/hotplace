@@ -24,13 +24,9 @@ typedef struct _multiplexer_iocp_context_t : public multiplexer_context_t {
     multiplexer_controller_context_t *handle_controller;
 } multiplexer_iocp_context_t;
 
-multiplexer_iocp::multiplexer_iocp() {
-    // do nothing
-}
+multiplexer_iocp::multiplexer_iocp() {}
 
-multiplexer_iocp::~multiplexer_iocp() {
-    // do nothing
-}
+multiplexer_iocp::~multiplexer_iocp() {}
 
 return_t multiplexer_iocp::open(multiplexer_context_t **handle, size_t concurrent) {
     return_t ret = errorcode_t::success;
@@ -67,9 +63,7 @@ return_t multiplexer_iocp::open(multiplexer_context_t **handle, size_t concurren
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -98,9 +92,7 @@ return_t multiplexer_iocp::close(multiplexer_context_t *handle) {
         context->signature = 0;
         delete context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -136,9 +128,7 @@ return_t multiplexer_iocp::bind(multiplexer_context_t *handle, handle_t eventsou
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -219,9 +209,7 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t *handle, handle_
 
         controller.event_loop_close(context->handle_controller, token_handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -243,9 +231,7 @@ return_t multiplexer_iocp::event_loop_break(multiplexer_context_t *handle, arch_
         /* signal */
         ret = controller.event_loop_break(context->handle_controller, token_handle);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -267,9 +253,7 @@ return_t multiplexer_iocp::event_loop_break_concurrent(multiplexer_context_t *ha
         /* signal */
         ret = controller.event_loop_break_concurrent(context->handle_controller, concurrent);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -291,9 +275,7 @@ return_t multiplexer_iocp::post(multiplexer_context_t *handle, uint32 size_vecot
 
         PostQueuedCompletionStatus(context->handle_iocp, (DWORD)(arch_t)data_vector[1], (ULONG_PTR)data_vector[2], (LPOVERLAPPED)data_vector[3]);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

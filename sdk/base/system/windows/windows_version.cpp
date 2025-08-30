@@ -22,9 +22,7 @@ windows_version::windows_version() : _version(WINDOWSVERSION_UNKNOWN), _flags(0)
     memset(&_sysinfo, 0, sizeof _sysinfo);
 }
 
-windows_version::~windows_version() {
-    // do nothing
-}
+windows_version::~windows_version() {}
 
 windows_version* windows_version::get_instance() { return &_instance; }
 
@@ -57,11 +55,7 @@ return_t windows_version::detect() {
             _flags |= windows_version_flag_t::winver_detected;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -92,9 +86,7 @@ return_t windows_version::detect_getversion() {
 
         _flags |= windows_version_flag_t::winver_detect_getversion;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -256,7 +248,6 @@ return_t windows_version::detect_version() {
 
     __try2 {
         if (windows_version_flag_t::winver_test_version == (_flags & windows_version_flag_t::winver_test_version)) {
-            // do nothing
             __leave2;
         }
 
@@ -547,11 +538,7 @@ return_t windows_version::detect_version() {
             ret = errorcode_t::internal_error;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            // do nothing
-        }
-    }
+    __finally2 {}
 
     return ret;
 }

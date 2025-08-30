@@ -300,9 +300,7 @@ return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const c
             ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -351,9 +349,7 @@ return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const 
             ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -402,9 +398,7 @@ return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const c
             ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -453,9 +447,7 @@ return_t crypto_keychain::add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, cons
             ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

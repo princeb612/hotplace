@@ -21,13 +21,9 @@
 
 namespace hotplace {
 
-bufferio::bufferio() {
-    // do nothing
-}
+bufferio::bufferio() {}
 
-bufferio::~bufferio() {
-    // do nothing
-}
+bufferio::~bufferio() {}
 
 return_t bufferio::open(bufferio_context_t** handle, uint32 block_size, byte_t pad_size, uint32 flags) {
     return_t ret = errorcode_t::success;
@@ -54,9 +50,7 @@ return_t bufferio::open(bufferio_context_t** handle, uint32 block_size, byte_t p
 
         *handle = context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -100,9 +94,7 @@ return_t bufferio::close(bufferio_context_t* handle) {
 
         delete handle;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -214,9 +206,7 @@ return_t bufferio::write(bufferio_context_t* handle, const void* data, size_t da
 
         handle->bufferio_size += size_copied;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -239,9 +229,7 @@ return_t bufferio::clear(bufferio_context_t* handle) {
         clear_bufferio_queue_nolock(handle, handle->bufferio_queue);
         handle->bufferio_size = 0;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -260,9 +248,7 @@ bool bufferio::empty(bufferio_context_t* handle) {
 
         return (0 == handle->bufferio_size);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return false;
 }
 
@@ -281,9 +267,7 @@ bool bufferio::occupied(bufferio_context_t* handle) {
 
         return (0 != handle->bufferio_size);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return false;
 }
 
@@ -306,9 +290,7 @@ return_t bufferio::size(bufferio_context_t* handle, size_t* contents_size) {
 
         *contents_size = (uint32)data_size;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -374,9 +356,7 @@ return_t bufferio::get(bufferio_context_t* handle, byte_t** contents, size_t* co
             *contents_size = data_size;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -422,9 +402,7 @@ bool bufferio::compare(bufferio_context_t* handle, const void* data_to_compare, 
 
         ret_bool = ((0 == cmp) && (0 == compare_size_remains));
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret_bool;
 }
@@ -523,9 +501,7 @@ return_t bufferio::cut(bufferio_context_t* handle, uint32 begin_pos, uint32 leng
 
         handle->bufferio_size -= (end_pos - begin_pos);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -622,9 +598,7 @@ return_t bufferio::insert(bufferio_context_t* handle, size_t begin_pos, const vo
 
         handle->bufferio_size += data_size;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -644,9 +618,7 @@ return_t bufferio::lock(bufferio_context_t* handle) {
         }
         handle->bufferio_lock.enter();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -665,9 +637,7 @@ return_t bufferio::unlock(bufferio_context_t* handle) {
         }
         handle->bufferio_lock.leave();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

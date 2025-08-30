@@ -15,9 +15,7 @@ namespace crypto {
 
 authenticode_plugin::authenticode_plugin() { _shared.make_share(this); }
 
-authenticode_plugin::~authenticode_plugin() {
-    // do nothing
-}
+authenticode_plugin::~authenticode_plugin() {}
 
 return_t authenticode_plugin::extract(file_stream* filestream, binary_t& bin) {
     return_t ret = errorcode_t::success;
@@ -33,9 +31,7 @@ return_t authenticode_plugin::extract(file_stream* filestream, binary_t& bin) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -174,9 +174,7 @@ return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const ch
 
         ret = add_dh(cryptokey, nid, bin_pub, bin_priv, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -202,9 +200,7 @@ return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const c
 
         ret = add_dh(cryptokey, nid, bin_pub, bin_priv, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -230,9 +226,7 @@ return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const ch
 
         ret = add_dh(cryptokey, nid, bin_pub, bin_priv, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -258,9 +252,7 @@ return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const
 
         ret = add_dh(cryptokey, nid, bin_pub, bin_priv, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

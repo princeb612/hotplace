@@ -134,9 +134,7 @@ return_t crypto_key::append(crypto_key* source) {
             _key_map.insert(std::make_pair(name, keyobj));
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -156,9 +154,7 @@ void crypto_key::for_each(std::function<void(crypto_key_object*, void*)> fp_dump
             fp_dump(&keyobj, param);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 }
 
 void crypto_key::erase(const std::string& kid) {

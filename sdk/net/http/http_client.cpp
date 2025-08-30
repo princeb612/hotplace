@@ -57,9 +57,7 @@ client_socket* http_client::try_connect() {
             client->set_wto(_wto);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return client;
 }
@@ -135,9 +133,7 @@ http_client& http_client::do_request_and_response(const url_info_t& url_info, ht
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return *this;
 }

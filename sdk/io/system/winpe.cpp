@@ -13,13 +13,9 @@
 namespace hotplace {
 namespace io {
 
-winpe_checksum::winpe_checksum() : _checksum(0), _size(0) {
-    // do nothing
-}
+winpe_checksum::winpe_checksum() : _checksum(0), _size(0) {}
 
-winpe_checksum::~winpe_checksum() {
-    // do nothing
-}
+winpe_checksum::~winpe_checksum() {}
 
 return_t winpe_checksum::init() {
     return_t ret = errorcode_t::success;
@@ -48,9 +44,7 @@ return_t winpe_checksum::update(byte_t* data, size_t bytelen) {
             _checksum = (_checksum >> 16) + (_checksum & 0xffff);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }

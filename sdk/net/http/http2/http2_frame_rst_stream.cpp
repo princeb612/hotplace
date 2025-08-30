@@ -38,9 +38,7 @@ return_t http2_frame_rst_stream::do_read_body(const byte_t* stream, size_t size,
 
         _errorcode = pl.t_value_of<uint32>(constexpr_frame_error_code);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -27,13 +27,9 @@
 namespace hotplace {
 namespace crypto {
 
-json_object_signing_encryption::json_object_signing_encryption() {
-    // do nothing
-}
+json_object_signing_encryption::json_object_signing_encryption() {}
 
-json_object_signing_encryption::~json_object_signing_encryption() {
-    // do nothing
-}
+json_object_signing_encryption::~json_object_signing_encryption() {}
 
 return_t json_object_signing_encryption::open(jose_context_t** handle, crypto_key* crypto_key) {
     return_t ret = errorcode_t::success;
@@ -79,9 +75,7 @@ return_t json_object_signing_encryption::close(jose_context_t* handle) {
         }
         delete handle;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -96,9 +90,7 @@ return_t json_object_signing_encryption::setoption(jose_context_t* handle, uint3
 
         handle->flags = flags;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -186,9 +178,7 @@ return_t json_object_signing_encryption::clear_context(jose_context_t* handle) {
         handle->encryptions.clear();
         handle->signs.clear();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

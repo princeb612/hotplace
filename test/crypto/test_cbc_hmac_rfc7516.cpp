@@ -147,9 +147,7 @@ return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_c
 
         _test_case.assert(base16_decode(vector->c) == c, __FUNCTION__, "%s C = S || T", vector->text);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -57,9 +57,7 @@ typedef struct _jose_recipient_t {
     /* P2S, P2C case of PBES2-HS256+A128KW, PBES2-HS384+A192KW, PBES2-HS512+A256KW */
     /* EPK, APU, APV case of ECDH-ES, ECDH-ES+A128KW, ECDH-ES+A192KW, ECDH-ES+A256KW */
 
-    _jose_recipient_t() : alg_info(nullptr), pkey(nullptr), epk(nullptr), p2c(0) {
-        // do nothing
-    }
+    _jose_recipient_t() : alg_info(nullptr), pkey(nullptr), epk(nullptr), p2c(0) {}
 } jose_recipient_t;
 typedef std::map<jwa_t, jose_recipient_t> jose_recipients_t;
 typedef std::pair<jose_recipients_t::iterator, bool> jose_recipients_pib_t;
@@ -95,9 +93,7 @@ typedef struct _jose_encryption_t {
 
     jose_recipients_t recipients;  // per "alg"
 
-    _jose_encryption_t() : enc_info(nullptr) {
-        // do nothing
-    }
+    _jose_encryption_t() : enc_info(nullptr) {}
 } jose_encryption_t;
 typedef std::map<jwe_t, jose_encryption_t> jose_encryptions_map_t;
 typedef std::pair<jose_encryptions_map_t::iterator, bool> jose_encryptions_map_pib_t;
@@ -121,9 +117,7 @@ typedef struct _jose_context_t {
     jose_encryptions_map_t encryptions;  // JSON Object Encryption
     jose_signs_t signs;                  // JSON Object Signing
 
-    _jose_context_t() : key(nullptr), flags(0) {
-        // do nothing
-    }
+    _jose_context_t() : key(nullptr), flags(0) {}
 } jose_context_t;
 
 class json_object_encryption;

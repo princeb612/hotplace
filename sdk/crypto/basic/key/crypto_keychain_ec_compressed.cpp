@@ -147,9 +147,7 @@ return_t crypto_keychain::add_ec_compressed_b64(crypto_key* cryptokey, uint32 ni
 
         ret = add_ec_compressed(cryptokey, nid, bin_x, ysign, bin_d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -175,9 +173,7 @@ return_t crypto_keychain::add_ec_compressed_b64u(crypto_key* cryptokey, uint32 n
 
         ret = add_ec_compressed(cryptokey, nid, bin_x, ysign, bin_d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -203,9 +199,7 @@ return_t crypto_keychain::add_ec_compressed_b16(crypto_key* cryptokey, uint32 ni
 
         ret = add_ec_compressed(cryptokey, nid, bin_x, ysign, bin_d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -231,9 +225,7 @@ return_t crypto_keychain::add_ec_compressed_b16rfc(crypto_key* cryptokey, uint32
 
         ret = add_ec_compressed(cryptokey, nid, bin_x, ysign, bin_d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -254,9 +246,7 @@ return_t crypto_keychain::add_ec_compressed_b64(crypto_key* cryptokey, const cha
 
         ret = add_ec_compressed_b64(cryptokey, nid, x, ysign, d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -277,9 +267,7 @@ return_t crypto_keychain::add_ec_compressed_b64u(crypto_key* cryptokey, const ch
 
         ret = add_ec_compressed_b64u(cryptokey, nid, x, ysign, d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -300,9 +288,7 @@ return_t crypto_keychain::add_ec_compressed_b16(crypto_key* cryptokey, const cha
 
         ret = add_ec_compressed_b16(cryptokey, nid, x, ysign, d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -323,9 +309,7 @@ return_t crypto_keychain::add_ec_compressed_b16rfc(crypto_key* cryptokey, const 
 
         ret = add_ec_compressed_b16rfc(cryptokey, nid, x, ysign, d, desc);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

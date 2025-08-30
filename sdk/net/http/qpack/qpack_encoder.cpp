@@ -120,9 +120,7 @@ return_t qpack_encoder::encode(http_dynamic_table* dyntable, binary_t& target, c
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -177,9 +175,7 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
         }
 #endif
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -300,9 +296,7 @@ return_t qpack_encoder::decode_encoder_stream(http_dynamic_table* dyntable, cons
             dyntable->commit();
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -357,9 +351,7 @@ return_t qpack_encoder::decode_decoder_stream(http_dynamic_table* dyntable, cons
             item.flags |= qpack_decode_inc;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -475,9 +467,7 @@ return_t qpack_encoder::decode_http3_header(http_dynamic_table* dyntable, const 
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

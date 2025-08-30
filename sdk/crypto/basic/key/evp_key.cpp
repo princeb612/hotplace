@@ -40,9 +40,7 @@ return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
             __leave2;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -166,9 +164,7 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
                 break;
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -197,9 +193,7 @@ return_t bn2bin(const BIGNUM* bn, binary_t& bin) {
         bin.resize(BN_num_bytes(bn));
         BN_bn2bin(bn, &bin[0]);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -215,9 +209,7 @@ return_t bin2bn(const binary_t& bin, BIGNUM** bn) {
             *bn = BN_bin2bn(&bin[0], bin.size(), nullptr);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

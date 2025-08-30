@@ -52,9 +52,7 @@ return_t http2_frame_push_promise::do_read_body(const byte_t* stream, size_t siz
         _promised_id = pl.t_value_of<uint32>(constexpr_frame_promised_stream_id);
         pl.get_binary(constexpr_frame_fragment, _fragment);
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

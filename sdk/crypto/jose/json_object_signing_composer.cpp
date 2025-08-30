@@ -316,9 +316,7 @@ return_t json_object_signing::composer::compose_signature(jose_context_t* handle
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 

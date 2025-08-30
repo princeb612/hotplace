@@ -324,9 +324,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -354,9 +352,7 @@ return_t payload_member::doread_encoded(const byte_t* ptr, size_t size_ptr, size
         }
         *size_read = pos;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -372,9 +368,7 @@ payload_member& payload_member::read(const byte_t* ptr, size_t size_ptr, size_t 
             doread(ptr, size_ptr, offset, size_read);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return *this;
 }
 

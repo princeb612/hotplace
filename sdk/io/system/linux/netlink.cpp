@@ -45,18 +45,12 @@ typedef struct _NETLINK_CONTEXT {
     int consumer_loop;
     unsigned long cooldown;
 
-    _NETLINK_CONTEXT() : flags(0), consumer_handler(NULL), parameter(NULL), sock(0), producer_loop(1), consumer_loop(1), cooldown(10) {
-        // do nothing
-    }
+    _NETLINK_CONTEXT() : flags(0), consumer_handler(NULL), parameter(NULL), sock(0), producer_loop(1), consumer_loop(1), cooldown(10) {}
 } NETLINK_CONTEXT;
 
-netlink::netlink() {
-    // do nothing
-}
+netlink::netlink() {}
 
-netlink::~netlink() {
-    // do nothing
-}
+netlink::~netlink() {}
 
 return_t netlink::open(netlink_t **handle, uint32 flags, TYPE_CALLBACK_HANDLER consumer_handler, void *parameter) {
     return_t ret = errorcode_t::success;
@@ -132,9 +126,7 @@ return_t netlink::close(netlink_t *handle) {
         context = static_cast<NETLINK_CONTEXT *>(handle);
         delete context;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -196,9 +188,7 @@ return_t netlink::producer_thread_routine(void *param) {
             }
         };
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -216,9 +206,7 @@ return_t netlink::producer_thread_signal(void *param) {
         context->producer_loop = 0;
         // context->producer_sem.signal ();
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -256,9 +244,7 @@ return_t netlink::consumer_thread_routine(void *param) {
             }
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -275,9 +261,7 @@ return_t netlink::consumer_thread_signal(void *param) {
 
         context->consumer_loop = 0;
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -356,9 +340,7 @@ return_t netlink::netlink_control(socket_t sock, bool enable) {
             __leave2_trace(ret);
         }
     }
-    __finally2 {
-        // do nothing
-    }
+    __finally2 {}
     return ret;
 }
 
