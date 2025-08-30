@@ -87,7 +87,7 @@ http2_frame* http2_frame_builder::build() {
         } break;
     }
     if (frame) {
-        frame->set_hpack_session(get_hpack_dynamic_table());
+        frame->set_hpack_dyntable(get_hpack_dynamic_table());
     }
     return frame;
 }

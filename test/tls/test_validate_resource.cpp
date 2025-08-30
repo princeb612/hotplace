@@ -126,8 +126,8 @@ static void do_validate_resource_cipher_suite() {
             }
             replace(cipher_name, "-", "_");
 
-            auto const& keyex_val = keyex_map[item->keyexchange];
-            auto const& auth_val = auth_map[item->auth];
+            const auto& keyex_val = keyex_map[item->keyexchange];
+            const auto& auth_val = auth_map[item->auth];
             if (tls_13 == item->version) {
                 name += "TLS";
                 if ("NULL" != keyex_val) {

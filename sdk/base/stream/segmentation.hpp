@@ -28,7 +28,7 @@ namespace hotplace {
 
 enum fragment_context_flag_t {
     fragment_context_stream_alloc = (1 << 0),
-    fragment_context_forced = (1 << 1),
+    fragment_context_keep_entry = (1 << 1),
 };
 
 struct fragment_context {

@@ -101,7 +101,7 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
         auto lambda_readitem = [&](payload_member* item, const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read) -> void {
             item->read(ptr, size_ptr, offset, size_read);
             if (false == _cond_map.empty()) {
-                auto const& name = item->get_name();
+                const auto& name = item->get_name();
                 auto lbound = _cond_map.lower_bound(name);
                 auto ubound = _cond_map.upper_bound(name);
                 for (auto iter = lbound; iter != ubound; iter++) {
@@ -229,7 +229,7 @@ return_t payload::write(binary_t& bin, const std::set<std::string>& groups) {
     bool condition = false;
     for (auto item : _members) {
         condition = false;
-        auto const& group = item->get_group();
+        const auto& group = item->get_group();
         if (group.empty()) {
             condition = true;
         } else {

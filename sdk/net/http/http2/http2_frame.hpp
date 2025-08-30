@@ -37,8 +37,8 @@ class http2_frame {
     http2_frame& set_stream_id(uint32 id);
 
     http2_frame& load_hpack(hpack_stream& hp);
-    http2_frame& set_hpack_session(hpack_dynamic_table* session);
-    hpack_dynamic_table* get_hpack_session();
+    http2_frame& set_hpack_dyntable(hpack_dynamic_table* session);
+    hpack_dynamic_table* get_hpack_dyntable();
 
     virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(binary_t& frame);

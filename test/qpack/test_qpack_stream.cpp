@@ -145,11 +145,8 @@ void test_qpack_stream() {
     for (auto item : testvector_qpack_stream) {
         auto bin = base16_decode_rfc(item.stream);
         size_t pos = 0;
-        std::list<qpack_decode_t> kv;
+        std::list<http_compression_decode_t> kv;
         ret = enc.decode(&qpack_dyntable, &bin[0], bin.size(), pos, kv, item.type);
-        for (auto kvitem : kv) {
-            dump(kvitem);
-        }
         _test_case.test(ret, __FUNCTION__, "%s", item.desc);
     }
 }

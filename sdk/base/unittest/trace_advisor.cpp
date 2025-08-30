@@ -70,6 +70,8 @@ void trace_advisor::load() {
                 e.event_map.insert({trace_event_quic_packet, "QUIC packet"});
                 e.event_map.insert({trace_event_quic_frame, "QUIC frame"});
                 e.event_map.insert({trace_event_http3, "HTTP/3"});
+                e.event_map.insert({trace_event_hpack, "HPACK"});
+                e.event_map.insert({trace_event_qpack, "QPACK"});
                 _resource_map.insert({trace_category_net, e});
             }
         }
@@ -94,7 +96,7 @@ void trace_advisor::get_names(trace_category_t category, uint32 event, std::stri
     auto citer = _resource_map.find(category);
     if (_resource_map.end() != citer) {
         cvalue = citer->second.cname;
-        auto const& em = citer->second.event_map;
+        const auto& em = citer->second.event_map;
         auto eiter = em.find(event);
         if (em.end() != eiter) {
             evalue = eiter->second;

@@ -14,7 +14,6 @@ void dump_qpack_session_routine(const char* stream, size_t size);
 
 void test_expect(binary_t& bin, const char* expect, const char* func, const char* text, ...);
 void test_dump(binary_t& bin, const char* text, ...);
-void dump(const qpack_decode_t& item);
 
 void test_rfc9204_b();
 void test_zero_capacity();

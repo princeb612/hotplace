@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <sdk/odbc.hpp>
 #include <sdk/sdk.hpp>
 #include <test/test.hpp>
 using namespace hotplace::odbc;

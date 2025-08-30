@@ -33,7 +33,7 @@ return_t quic_frame_stream_h3_handler::read(uint64 stream_id) {
         auto lambda_decoder = [&](const binary_t& bin, size_t& pos) -> return_t {
             return_t ret = errorcode_t::success;
             qpack_encoder encoder;
-            std::list<qpack_decode_t> kv;
+            std::list<http_compression_decode_t> kv;
             auto& dyntable = session->get_quic_session().get_dynamic_table();
             ret = encoder.decode(&dyntable, bin.empty() ? nullptr : &bin[0], bin.size(), pos, kv, qpack_quic_stream_decoder);
             return ret;
@@ -41,7 +41,7 @@ return_t quic_frame_stream_h3_handler::read(uint64 stream_id) {
         auto lambda_encoder = [&](const binary_t& bin, size_t& pos) -> return_t {
             return_t ret = errorcode_t::success;
             qpack_encoder encoder;
-            std::list<qpack_decode_t> kv;
+            std::list<http_compression_decode_t> kv;
             auto& dyntable = session->get_quic_session().get_dynamic_table();
             ret = encoder.decode(&dyntable, bin.empty() ? nullptr : &bin[0], bin.size(), pos, kv, qpack_quic_stream_encoder);
             return ret;

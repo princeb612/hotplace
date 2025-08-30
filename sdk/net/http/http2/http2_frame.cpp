@@ -111,16 +111,16 @@ http2_frame& http2_frame::set_stream_id(uint32 id) {
 }
 
 http2_frame& http2_frame::load_hpack(hpack_stream& hp) {
-    _hpack_dyntable = hp.get_session();
+    _hpack_dyntable = hp.get_dyntable();
     return *this;
 }
 
-http2_frame& http2_frame::set_hpack_session(hpack_dynamic_table* session) {
+http2_frame& http2_frame::set_hpack_dyntable(hpack_dynamic_table* session) {
     _hpack_dyntable = session;
     return *this;
 }
 
-hpack_dynamic_table* http2_frame::get_hpack_session() { return _hpack_dyntable; }
+hpack_dynamic_table* http2_frame::get_hpack_dyntable() { return _hpack_dyntable; }
 
 return_t http2_frame::read(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -252,17 +252,17 @@ void http2_frame::dump(stream_t* s) {
 }
 
 void http2_frame::read_compressed_header(const byte_t* buf, size_t size, std::function<void(const std::string&, const std::string&)> v) {
-    if (buf && v && get_hpack_session()) {
+    if (buf && v && get_hpack_dyntable()) {
         size_t pos = 0;
         std::string name;
         std::string value;
 
         hpack_encoder encoder;
         while (pos < size) {
-            encoder.decode_header(get_hpack_session(), buf, size, pos, name, value);
+            encoder.decode_header(get_hpack_dyntable(), buf, size, pos, name, value);
             v(name, value);
         }
-        get_hpack_session()->commit();
+        get_hpack_dyntable()->commit();
     }
 }
 
@@ -273,13 +273,13 @@ void http2_frame::read_compressed_header(const binary_t& b, std::function<void(c
 return_t http2_frame::write_compressed_header(binary_t& frag, const std::string& name, const std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == get_hpack_session()) {
+        if (nullptr == get_hpack_dyntable()) {
             ret = errorcode_t::not_ready;
             __leave2;
         }
         hpack_encoder encoder;
-        encoder.encode_header(get_hpack_session(), frag, name, value, flags);
-        get_hpack_session()->commit();
+        encoder.encode_header(get_hpack_dyntable(), frag, name, value, flags);
+        get_hpack_dyntable()->commit();
     }
     __finally2 {
         // do nothing
@@ -294,15 +294,15 @@ return_t http2_frame::write_compressed_header(http_header* header, binary_t& fra
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (nullptr == get_hpack_session()) {
+        if (nullptr == get_hpack_dyntable()) {
             ret = errorcode_t::not_ready;
             __leave2;
         }
 
         hpack_encoder encoder;
-        auto lambda = [&](const std::string& name, const std::string& value) -> void { encoder.encode_header(get_hpack_session(), frag, name, value, flags); };
+        auto lambda = [&](const std::string& name, const std::string& value) -> void { encoder.encode_header(get_hpack_dyntable(), frag, name, value, flags); };
         header->get_headers(lambda);
-        get_hpack_session()->commit();
+        get_hpack_dyntable()->commit();
     }
     __finally2 {
         // do nothing

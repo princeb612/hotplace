@@ -19,28 +19,6 @@ t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 void dump_qpack_session_routine(const char* stream, size_t size) { _logger->writeln(stream); }
 
-void dump(const qpack_decode_t& item) {
-    if (qpack_decode_capacity & item.flags) {
-        _logger->writeln("> capacity %zi", item.capacity);
-    } else if (qpack_decode_field_section_prefix & item.flags) {
-        _logger->writeln("> field section prefix RIC=%zi Base=%zi", item.ric, item.base);
-    } else if (qpack_decode_index & item.flags) {
-        _logger->writeln("> Index   [%zi] %s: %s", item.index, item.name.c_str(), item.value.c_str());
-    } else if (qpack_decode_nameref & item.flags) {
-        _logger->writeln("> NameRef [%zi] %s: %s", item.index, item.name.c_str(), item.value.c_str());
-    } else if (qpack_decode_namevalue & item.flags) {
-        _logger->writeln("> NameVal %s: %s", item.name.c_str(), item.value.c_str());
-    } else if (qpack_decode_ack & item.flags) {
-        _logger->writeln("> ACK STREAM %zi", item.streamid);
-    } else if (qpack_decode_cancel & item.flags) {
-        _logger->writeln("> CANCEL STREAM %zi", item.streamid);
-    } else if (qpack_decode_dup & item.flags) {
-        _logger->writeln("> DUP [%zi] %s: %s", item.index, item.name.c_str(), item.value.c_str());
-    } else if (qpack_decode_inc & item.flags) {
-        _logger->writeln("> INC %zi", item.inc);
-    }
-}
-
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);

@@ -19,7 +19,7 @@ size_t segmentation::get_segment_size() { return _segment_size; }
 return_t segmentation::assign(uint32 type, const byte_t* stream, size_t size, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (0 == (fragment_context_forced & flags)) {
+        if (0 == (fragment_context_keep_entry & flags)) {
             if (nullptr == stream || 0 == size) {
                 ret = do_nothing;
                 __leave2;
@@ -84,9 +84,9 @@ return_t segmentation::consume(uint32 type, size_t avail, size_t bumper, std::fu
             context.pos += len;
 
             if (context.size == context.pos) {
-                if (fragment_context_forced & context.flags) {
+                if (fragment_context_keep_entry & context.flags) {
                     context.clear();
-                    context.flags = fragment_context_forced;
+                    context.flags = fragment_context_keep_entry;
                 } else {
                     _contexts.erase(iter);
                 }

@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/http/compression/http_dynamic_table.hpp>
 #include <sdk/net/http/hpack/hpack_encoder.hpp>
 #include <sdk/net/http/hpack/hpack_static_table.hpp>
@@ -306,6 +308,36 @@ hpack_encoder& hpack_encoder::encode_name_value(binary_t& target, uint32 flags, 
 hpack_encoder& hpack_encoder::encode_name_value(binary_t& target, uint32 flags, const std::string& name, const std::string& value) {
     encode_name_value(target, flags, name.c_str(), name.size(), value.c_str(), value.size());
     return *this;
+}
+
+return_t hpack_encoder::set_capacity(http_dynamic_table* dyntable, binary_t& target, uint8 maxsize) {
+    /**
+     * RFC 7541 Figure 12: Maximum Dynamic Table Size Change
+     *   0   1   2   3   4   5   6   7
+     * +---+---+---+---+---+---+---+---+
+     * | 0 | 0 | 1 |   Max size (5+)   |
+     * +---+---------------------------+
+     *
+     * RFC 9204 Figure 5: Set Dynamic Table Capacity
+     *   0   1   2   3   4   5   6   7
+     * +---+---+---+---+---+---+---+---+
+     * | 0 | 0 | 1 |   Capacity (5+)   |
+     * +---+---+---+-------------------+
+     */
+
+    if (dyntable) {
+        /**
+         * RFC 7541 4.2.  Maximum Table Size
+         * RFC 7541 6.3.  Dynamic Table Size Update
+         * RFC 9204 5.  Configuration
+         *
+         * SETTINGS_HEADER_TABLE_SIZE
+         * SETTINGS_QPACK_MAX_TABLE_CAPACITY
+         */
+        dyntable->set_capacity(maxsize);
+    }
+
+    return encode_int(target, 0x20, 5, maxsize);
 }
 
 }  // namespace net

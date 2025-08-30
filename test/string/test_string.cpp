@@ -162,7 +162,8 @@ void test_obfuscate_string() {
         _logger->dump(bin);
     }
 
-    _test_case.assert((0 == memcmp(helloworld, bin.empty() ? nullptr : &bin[0], bin.size())), __FUNCTION__, "binary_t << obfuscate");
+    test = bin.empty() ? false : (0 == memcmp(helloworld, &bin[0], bin.size()));
+    _test_case.assert(test, __FUNCTION__, "binary_t << obfuscate");
 
     str << obf;
 

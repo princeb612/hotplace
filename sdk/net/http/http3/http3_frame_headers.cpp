@@ -16,19 +16,23 @@
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
+#include <sdk/net/tls/quic_session.hpp>
+#include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-http3_frame_headers::http3_frame_headers(qpack_dynamic_table* dyntable) : http3_frame(h3_frame_headers), _dyntable(dyntable) {
-    if (nullptr == dyntable) {
-        throw exception(not_specified);
+http3_frame_headers::http3_frame_headers(tls_session* session) : http3_frame(h3_frame_headers), _session(session) {
+    if (nullptr == session) {
+        throw exception(no_session);
     }
 }
 
 return_t http3_frame_headers::do_read_payload(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+        auto& dyntable = _session->get_quic_session().get_dynamic_table();
+
         /**
          *  RFC 9114 7.2.2.  HEADERS
          *  HEADERS Frame {
@@ -38,8 +42,8 @@ return_t http3_frame_headers::do_read_payload(const byte_t* stream, size_t size,
          *  }
          */
         qpack_encoder encoder;
-        std::list<qpack_decode_t> kv;
-        ret = encoder.decode(_dyntable, stream, size, pos, kv, qpack_quic_stream_header);
+        std::list<http_compression_decode_t> kv;
+        ret = encoder.decode(&dyntable, stream, size, pos, kv, qpack_quic_stream_header);
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
@@ -60,10 +64,29 @@ return_t http3_frame_headers::do_read_payload(const byte_t* stream, size_t size,
 return_t http3_frame_headers::do_write(binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        //
+        qpack_stream stream;
+        uint32 flags = qpack_quic_stream_header;
+        auto& dyntable = _session->get_quic_session().get_dynamic_table();
+        stream.set_dyntable(&dyntable);
+        for (const auto& item : _kv) {
+            stream.encode_header(item.first, item.second, flags);
+        }
+        stream.pack(flags);
+        _payload = std::move(stream.get_binary());
+
+        payload pl;
+        pl << new payload_member(new quic_encoded(uint64(h3_frame_headers)))  //
+           << new payload_member(new quic_encoded(uint64(_payload.size())))   //
+           << new payload_member(_payload);
+        pl.write(bin);
     }
     __finally2 {}
     return ret;
+}
+
+http3_frame_headers& http3_frame_headers::add(const std::string& name, const std::string& value) {
+    _kv.push_back({name, value});
+    return *this;
 }
 
 }  // namespace net

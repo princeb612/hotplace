@@ -38,7 +38,7 @@ quic_packet_publisher& quic_packet_publisher::set_session(tls_session* session) 
     if (session) {
         set_payload_size(session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size));
         auto& dyntable = session->get_quic_session().get_dynamic_table();
-        _qpack.set_session(&dyntable);
+        _qpack.set_dyntable(&dyntable);
     }
     return *this;
 }
@@ -172,7 +172,7 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
                 get_frames().for_each([&](http3_frame* frame) -> return_t { return frame->write(unfragmented); });
             } else if (_unitype) {
                 unfragmented = std::move(get_qpack_stream().get_binary());
-                flags = fragment_context_forced;
+                flags = fragment_context_keep_entry;
             }
             segment.assign(quic_frame_type_stream, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size(), flags);
         } else {

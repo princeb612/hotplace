@@ -33,7 +33,7 @@ class http2_session {
     http2_session& consume(uint32 type, uint32 data_count, void* data_array[], http_server* server, http_request** request);
     return_t consume(const byte_t* buf, size_t bufsize, http_request** request, binary_t& bin_resp);
 
-    hpack_dynamic_table& get_hpack_session();
+    hpack_dynamic_table& get_hpack_dyntable();
 
     /**
      * @brief   enable push

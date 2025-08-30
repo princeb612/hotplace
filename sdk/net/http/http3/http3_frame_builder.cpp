@@ -51,8 +51,7 @@ http3_frame* http3_frame_builder::build() {
         } break;
         case h3_frame_headers: {
             if (_session) {
-                auto& dyntable = _session->get_quic_session().get_dynamic_table();
-                __try_new_catch_only(frame, new http3_frame_headers(&dyntable));
+                __try_new_catch_only(frame, new http3_frame_headers(_session));
             }
         } break;
         case h3_frame_cancel_push: {

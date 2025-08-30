@@ -106,11 +106,11 @@ match_result_t http_dynamic_table::match(uint32 flags, const std::string& name, 
 
     if (pq.size()) {
         state = match_result_t::all_matched_dynamic;
-        auto const& ent = pq.top();  // biggest = latest
+        const auto& ent = pq.top();  // biggest = latest
         get_entry(ent, index);
     } else if (nr.size()) {
         state = match_result_t::key_matched_dynamic;
-        auto const& ent = nr.top();
+        const auto& ent = nr.top();
         get_entry(ent, index);
     }
 
@@ -197,8 +197,8 @@ return_t http_dynamic_table::commit() {
         commit_pair item = _commit_queue.front();
         _commit_queue.pop();
 
-        auto const& name = item.name;
-        auto const& value = item.value;
+        const auto& name = item.name;
+        const auto& value = item.value;
 
         // RFC 7541 4.1.  Calculating Table Size
         // RFC 9204 3.2.1.  Dynamic Table Size
@@ -246,11 +246,11 @@ return_t http_dynamic_table::evict() {
         auto back = _dynamic_reversemap.find(entry);
 
         if (_dynamic_reversemap.end() != back) {
-            auto const& t = back->first;   // entry
-            auto const& k = back->second;  // (name, entry size)
+            const auto& t = back->first;   // entry
+            const auto& k = back->second;  // (name, entry size)
 
-            auto const& name = k.first;
-            auto const& entrysize = k.second;
+            const auto& name = k.first;
+            const auto& entrysize = k.second;
 
             _tablesize -= entrysize;
 
@@ -258,9 +258,9 @@ return_t http_dynamic_table::evict() {
             auto ubound = _dynamic_map.upper_bound(name);
 
             for (auto iter = lbound; iter != ubound; iter++) {
-                auto const& v = iter->second;  // pair(value, entry)
-                auto const& val = v.first;
-                auto const& ent = v.second;
+                const auto& v = iter->second;  // pair(value, entry)
+                const auto& val = v.first;
+                const auto& ent = v.second;
                 if (ent == t) {
                     if (_hook) {
                         _hook(trace_category_net, trace_event_header_compression_evict);

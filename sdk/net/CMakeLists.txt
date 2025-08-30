@@ -52,6 +52,7 @@ file (GLOB FILEGROUP_SDK_SOURCE_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/advisor/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/protection/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/session/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/tls/tls/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/tls/extension/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/tls/handshake/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/tls/tls/record/*.cpp

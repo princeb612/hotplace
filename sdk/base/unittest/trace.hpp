@@ -65,6 +65,8 @@ enum trace_event_net_t {
     trace_event_quic_packet = 14,               //
     trace_event_quic_frame = 15,                //
     trace_event_http3 = 16,                     //
+    trace_event_hpack = 17,                     //
+    trace_event_qpack = 18,                     //
 };
 
 /**

@@ -176,7 +176,7 @@ return_t http2_serverpush::do_push_promise(const std::string &promise, uint32 st
         ret = htmldocs.loadable(promise, content_type);  // do not load contents
         if (errorcode_t::success == ret) {
             auto &reqheader = request->get_http_header();
-            auto &hpsess = session->get_http2_session()->get_hpack_session();
+            auto &hpsess = session->get_http2_session()->get_hpack_dyntable();
             http_header header;
             auto method = reqheader.get(":method");
             auto scheme = reqheader.get(":scheme");
@@ -185,7 +185,7 @@ return_t http2_serverpush::do_push_promise(const std::string &promise, uint32 st
 
             binary_t fragment;
             http2_frame_push_promise frame;
-            frame.set_hpack_session(&hpsess).set_stream_id(streamid);
+            frame.set_hpack_dyntable(&hpsess).set_stream_id(streamid);
             frame.write_compressed_header(&header, fragment);
             frame.set_fragment(fragment);
 
@@ -215,7 +215,7 @@ return_t http2_serverpush::do_push(const std::string &promise, uint32 streamid, 
 
         auto &htmldocs = server->get_http_router().get_html_documents();
         auto &reqheader = request->get_http_header();
-        auto &hpsess = session->get_http2_session()->get_hpack_session();
+        auto &hpsess = session->get_http2_session()->get_hpack_dyntable();
 
         std::string content_type;
         binary_t content;
@@ -224,7 +224,7 @@ return_t http2_serverpush::do_push(const std::string &promise, uint32 streamid, 
             __leave2;
         }
 
-        response->set_version(2).set_stream_id(streamid).set_hpack_session(&hpsess);
+        response->set_version(2).set_stream_id(streamid).set_hpack_dyntable(&hpsess);
         response->compose(200, content_type, content);
     }
     __finally2 {

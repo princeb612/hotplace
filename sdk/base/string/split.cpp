@@ -144,7 +144,7 @@ return_t split_foreach(split_context_t* handle, std::function<void(const std::st
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        for (auto const& item : handle->info) {
+        for (const auto& item : handle->info) {
             std::string data;
             data.assign(handle->source.c_str() + item.begin, item.length);
             func(data);

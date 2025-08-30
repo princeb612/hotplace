@@ -21,49 +21,6 @@ namespace net {
 /**
  * RFC 9204 QPACK: Field Compression for HTTP/3
  */
-enum qpack_decode_flag_t {
-    qpack_decode_capacity = 1 << 0,              // 0x00000001 capacity
-    qpack_decode_field_section_prefix = 1 << 1,  // 0x00000002 ric, base
-    qpack_decode_index = 1 << 2,                 // 0x00000004 index, name, value
-    qpack_decode_nameref = 1 << 3,               // 0x00000008 index, name, value
-    qpack_decode_namevalue = 1 << 4,             // 0x00000010 name, value
-    qpack_decode_ack = 1 << 5,                   // 0x00000020 streamid
-    qpack_decode_cancel = 1 << 6,                // 0x00000040 streamid
-    qpack_decode_dup = 1 << 7,                   // 0x00000080 index, name, value
-    qpack_decode_inc = 1 << 8,                   // 0x00000100 inc
-};
-struct qpack_decode_t {
-    // qpack_decode_flag_t
-    uint32 flags;
-    // capacity
-    size_t capacity;
-    // field section prefix
-    size_t ric;
-    size_t base;
-    // index, nameref, dup
-    size_t index;
-    // index, nameref, namevalue, dup
-    std::string name;
-    std::string value;
-    // ack, cancel
-    uint64 streamid;
-    // inc
-    size_t inc;
-
-    qpack_decode_t() : flags(0), capacity(0), ric(0), base(0), index(0), streamid(0), inc(0) {}
-    void clear() {
-        flags = 0;
-        capacity = 0;
-        ric = 0;
-        base = 0;
-        index = 0;
-        name.clear();
-        value.clear();
-        streamid = 0;
-        inc = 0;
-    }
-};
-
 class qpack_encoder : public http_header_compression {
    public:
     qpack_encoder();
@@ -88,7 +45,7 @@ class qpack_encoder : public http_header_compression {
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
-     * @param   qpack_decode_t& item [out]
+     * @param   http_compression_decode_t& item [out]
      * @param   uint32 flags [inopt]
      * @return  error code (see error.hpp)
      * @sample
@@ -97,15 +54,15 @@ class qpack_encoder : public http_header_compression {
      *              encoder.decode(dyntable, stream, streamsize, pos, item, flags);
      *          }
      */
-    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item, uint32 flags = 0);
-    return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::list<qpack_decode_t>& kv, uint32 flags = 0);
+    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item, uint32 flags = 0);
+    return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::list<http_compression_decode_t>& kv, uint32 flags = 0);
     /**
      * @brief   RFC 9204 4.3.1.  Set Dynamic Table Capacity
      * @param   http_dynamic_table* dyntable [in]
      * @param   binary_t& target [out]
      * @param   uint64 capacity [in]
      */
-    return_t encode_dyntable_capacity(http_dynamic_table* dyntable, binary_t& target, uint64 capacity);
+    virtual return_t set_capacity(http_dynamic_table* dyntable, binary_t& target, uint64 capacity);
     /**
      * @brief   encode (qpack_indexing flag)
      * @param   http_dynamic_table* dyntable [in]
@@ -128,7 +85,8 @@ class qpack_encoder : public http_header_compression {
      *          qpackenc.encode
      *          qpackenc.pack -> generate the QPACK field section prefix
      */
-    virtual return_t pack(http_dynamic_table* dyntable, binary_t& target, uint32 flags = 0);
+    return_t pack(http_dynamic_table* dyntable, binary_t& target, uint32 flags = 0);
+    return_t unpack(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item);
 
     /**
      * @brief   encode (header compression)
@@ -145,10 +103,49 @@ class qpack_encoder : public http_header_compression {
      * @param   const byte_t* source [in]
      * @param   size_t size [in]
      * @param   size_t& pos [in]
-     * @param   qpack_decode_t& item [out]
+     * @param   http_compression_decode_t& item [out]
      */
-    qpack_encoder& decode_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item);
+    qpack_encoder& decode_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item);
 
+    /**
+     * @breif   duplicate
+     * @param   binary_t& target [out]
+     * @param   size_t index [in]
+     * @remarks
+     *          RFC 9204 4.3.  Encoder Instructions
+     *          RFC 9204 4.3.4.  Duplicate
+     */
+    virtual return_t duplicate(http_dynamic_table* dyntable, binary_t& target, size_t index);
+    /**
+     * @breif   ack
+     * @param   binary_t& target [out]
+     * @param   uint32 streamid [in]
+     * @remarks
+     *          RFC 9204 4.4.  Decoder Instructions
+     *          RFC 9204 4.4.1.  Section Acknowledgment
+     */
+    virtual return_t ack(http_dynamic_table* dyntable, binary_t& target, uint32 streamid);
+    /**
+     * @breif   cancel
+     * @param   binary_t& target [out]
+     * @param   uint32 streamid [in]
+     * @remarks
+     *          RFC 9204 4.4.  Decoder Instructions
+     *          RFC 9204 4.4.2.  Stream Cancellation
+     */
+    virtual return_t cancel(http_dynamic_table* dyntable, binary_t& target, uint32 streamid);
+    /**
+     * @breif   increment
+     * @param   binary_t& target [out]
+     * @param   size_t inc [in]
+     * @return  error code (see error.hpp)
+     * @remarks
+     *          RFC 9204 4.4.  Decoder Instructions
+     *          RFC 9204 4.4.3.  Insert Count Increment
+     */
+    virtual return_t increment(http_dynamic_table* dyntable, binary_t& target, size_t inc);
+
+   protected:
     /**
      * @brief   index
      * @param   binary_t& target [out]
@@ -174,52 +171,13 @@ class qpack_encoder : public http_header_compression {
      * @param   const std::string& value [in]
      */
     qpack_encoder& encode_name_value(http_dynamic_table* dyntable, binary_t& target, uint32 flags, const std::string& name, const std::string& value);
-    /**
-     * @breif   duplicate
-     * @param   binary_t& target [out]
-     * @param   size_t index [in]
-     * @remarks
-     *          RFC 9204 4.3.  Encoder Instructions
-     *          RFC 9204 4.3.4.  Duplicate
-     */
-    qpack_encoder& duplicate(http_dynamic_table* dyntable, binary_t& target, size_t index);
-    /**
-     * @breif   ack
-     * @param   binary_t& target [out]
-     * @param   uint32 streamid [in]
-     * @remarks
-     *          RFC 9204 4.4.  Decoder Instructions
-     *          RFC 9204 4.4.1.  Section Acknowledgment
-     */
-    qpack_encoder& ack(http_dynamic_table* dyntable, binary_t& target, uint32 streamid);
-    /**
-     * @breif   cancel
-     * @param   binary_t& target [out]
-     * @param   uint32 streamid [in]
-     * @remarks
-     *          RFC 9204 4.4.  Decoder Instructions
-     *          RFC 9204 4.4.2.  Stream Cancellation
-     */
-    qpack_encoder& cancel(http_dynamic_table* dyntable, binary_t& target, uint32 streamid);
-    /**
-     * @breif   increment
-     * @param   binary_t& target [out]
-     * @param   size_t inc [in]
-     * @return  error code (see error.hpp)
-     * @remarks
-     *          RFC 9204 4.4.  Decoder Instructions
-     *          RFC 9204 4.4.3.  Insert Count Increment
-     */
-    qpack_encoder& increment(http_dynamic_table* dyntable, binary_t& target, size_t inc);
 
-    return_t decode_section_prefix(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item);
-
-   protected:
-    virtual return_t decode_encoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item,
-                                           uint32 flags = 0);
-    virtual return_t decode_decoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item,
-                                           uint32 flags = 0);
-    virtual return_t decode_http3_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item, uint32 flags = 0);
+    return_t decode_encoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item,
+                                   uint32 flags = 0);
+    return_t decode_decoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item,
+                                   uint32 flags = 0);
+    return_t decode_http3_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item,
+                                 uint32 flags = 0);
 };
 
 /**

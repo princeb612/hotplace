@@ -28,8 +28,6 @@ return_t http_header_compression::decode(http_dynamic_table* dyntable, const byt
     return errorcode_t::success;
 }
 
-return_t http_header_compression::pack(http_dynamic_table* dyntable, binary_t& target, uint32 flags) { return errorcode_t::success; }
-
 return_t http_header_compression::encode_int(binary_t& target, uint8 mask, uint8 prefix, size_t value) {
     return_t ret = errorcode_t::success;
     if ((1 <= prefix) && (prefix <= 8)) {
@@ -232,36 +230,6 @@ return_t http_header_compression::decode_name_reference(const byte_t* p, size_t&
     return ret;
 }
 
-return_t http_header_compression::set_capacity(http_dynamic_table* dyntable, binary_t& target, uint8 maxsize) {
-    /**
-     * RFC 7541 Figure 12: Maximum Dynamic Table Size Change
-     *   0   1   2   3   4   5   6   7
-     * +---+---+---+---+---+---+---+---+
-     * | 0 | 0 | 1 |   Max size (5+)   |
-     * +---+---------------------------+
-     *
-     * RFC 9204 Figure 5: Set Dynamic Table Capacity
-     *   0   1   2   3   4   5   6   7
-     * +---+---+---+---+---+---+---+---+
-     * | 0 | 0 | 1 |   Capacity (5+)   |
-     * +---+---+---+-------------------+
-     */
-
-    if (dyntable) {
-        /**
-         * RFC 7541 4.2.  Maximum Table Size
-         * RFC 7541 6.3.  Dynamic Table Size Update
-         * RFC 9204 5.  Configuration
-         *
-         * SETTINGS_HEADER_TABLE_SIZE
-         * SETTINGS_QPACK_MAX_TABLE_CAPACITY
-         */
-        dyntable->set_capacity(maxsize);
-    }
-
-    return encode_int(target, 0x20, 5, maxsize);
-}
-
 return_t http_header_compression::sizeof_entry(const std::string& name, const std::string& value, size_t& size) {
     return_t ret = errorcode_t::success;
     size = name.size() + value.size() + 32;
@@ -335,6 +303,18 @@ return_t http_header_compression::selectall(http_static_table* statable, http_dy
     }
     return ret;
 }
+
+return_t http_header_compression::set_capacity(http_dynamic_table* dyntable, binary_t& target, uint8 maxsize) { return errorcode_t::success; }
+
+return_t http_header_compression::duplicate(http_dynamic_table* dyntable, binary_t& target, size_t index) { return errorcode_t::success; }
+
+return_t http_header_compression::ack(http_dynamic_table* dyntable, binary_t& target, uint32 streamid) { return errorcode_t::success; }
+
+return_t http_header_compression::cancel(http_dynamic_table* dyntable, binary_t& target, uint32 streamid) { return errorcode_t::success; }
+
+return_t http_header_compression::increment(http_dynamic_table* dyntable, binary_t& target, size_t inc) { return errorcode_t::success; }
+
+return_t http_header_compression::pack(http_dynamic_table* dyntable, binary_t& target, uint32 flags) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

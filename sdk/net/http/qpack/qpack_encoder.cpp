@@ -126,7 +126,7 @@ return_t qpack_encoder::encode(http_dynamic_table* dyntable, binary_t& target, c
     return ret;
 }
 
-return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item, uint32 flags) {
+return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         item.clear();
@@ -145,6 +145,37 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
         } else {
             ret = errorcode_t::bad_request;
         }
+
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+#if defined DEBUG
+        if (istraceable(trace_category_net)) {
+            basic_stream dbs;
+            dbs.printf("   ");
+            if (qpack_decode_capacity & item.flags) {
+                dbs.println("> capacity %zi", item.capacity);
+            } else if (qpack_decode_field_section_prefix & item.flags) {
+                dbs.println("> field section prefix RIC=%zi Base=%zi", item.ric, item.base);
+            } else if (qpack_decode_index & item.flags) {
+                dbs.println("> Index   [%zi] %s: %s", item.index, item.name.c_str(), item.value.c_str());
+            } else if (qpack_decode_nameref & item.flags) {
+                dbs.println("> NameRef [%zi] %s: %s", item.index, item.name.c_str(), item.value.c_str());
+            } else if (qpack_decode_namevalue & item.flags) {
+                dbs.println("> NameVal %s: %s", item.name.c_str(), item.value.c_str());
+            } else if (qpack_decode_ack & item.flags) {
+                dbs.println("> ACK STREAM %zi", item.streamid);
+            } else if (qpack_decode_cancel & item.flags) {
+                dbs.println("> CANCEL STREAM %zi", item.streamid);
+            } else if (qpack_decode_dup & item.flags) {
+                dbs.println("> DUP [%zi] %s: %s", item.index, item.name.c_str(), item.value.c_str());
+            } else if (qpack_decode_inc & item.flags) {
+                dbs.println("> INC %zi", item.inc);
+            }
+            trace_debug_event(trace_category_net, trace_event_qpack, &dbs);
+        }
+#endif
     }
     __finally2 {
         // do nothing
@@ -152,7 +183,8 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
     return ret;
 }
 
-return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::list<qpack_decode_t>& kv, uint32 flags) {
+return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::list<http_compression_decode_t>& kv,
+                               uint32 flags) {
     return_t ret = errorcode_t::success;
     size_t cursor = pos;
     __try2 {
@@ -164,8 +196,8 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
         kv.clear();
 
         if (qpack_quic_stream_header & flags) {
-            qpack_decode_t item;
-            ret = decode_section_prefix(dyntable, source, size, pos, item);
+            http_compression_decode_t item;
+            ret = unpack(dyntable, source, size, pos, item);
             if (errorcode_t::success != ret) {
                 pos = cursor;  // rollback
                 __leave2;
@@ -174,7 +206,7 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
         }
 
         while (pos < size) {
-            qpack_decode_t item;
+            http_compression_decode_t item;
             ret = decode(dyntable, source, size, pos, item, flags);
             if (errorcode_t::success != ret) {
                 pos = cursor;  // rollback
@@ -188,7 +220,7 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
     return ret;
 }
 
-return_t qpack_encoder::decode_encoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item,
+return_t qpack_encoder::decode_encoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item,
                                               uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -274,7 +306,7 @@ return_t qpack_encoder::decode_encoder_stream(http_dynamic_table* dyntable, cons
     return ret;
 }
 
-return_t qpack_encoder::decode_decoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item,
+return_t qpack_encoder::decode_decoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item,
                                               uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -331,7 +363,8 @@ return_t qpack_encoder::decode_decoder_stream(http_dynamic_table* dyntable, cons
     return ret;
 }
 
-return_t qpack_encoder::decode_http3_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item, uint32 flags) {
+return_t qpack_encoder::decode_http3_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item,
+                                            uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == dyntable) || (nullptr == source)) {
@@ -363,7 +396,7 @@ return_t qpack_encoder::decode_http3_header(http_dynamic_table* dyntable, const 
         if (qpack_field_section_prefix & flags) {
             size_t ric = 0;
             size_t base = 0;
-            ret = decode_section_prefix(dyntable, source, size, pos, item);
+            ret = unpack(dyntable, source, size, pos, item);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -448,51 +481,7 @@ return_t qpack_encoder::decode_http3_header(http_dynamic_table* dyntable, const 
     return ret;
 }
 
-return_t qpack_encoder::decode_section_prefix(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == dyntable || nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        size_t eic = 0;
-        uint8 sign = 0;
-        size_t deltabase = 0;
-        size_t ric = 0;
-        size_t base = 0;
-
-        decode_int(source, pos, 0, 8, eic);
-        sign = 0x80 & source[pos];
-        decode_int(source, pos, 0x80, 7, deltabase);
-
-        auto capacity = dyntable->get_capacity();
-        auto entries = dyntable->get_entries();
-
-        qpack_eic2ric(capacity, entries, eic, sign, deltabase, ric, base);
-
-        {
-            item.clear();
-            item.flags |= qpack_decode_field_section_prefix;
-            item.ric = ric;
-            item.base = base;
-        }
-
-        {
-            size_t ic = 0;  // insert count
-            size_t sizeof_ic = sizeof(ic);
-            dyntable->query(qpack_cmd_inserted, nullptr, 0, &ic, sizeof_ic);
-
-            if (ric > ic) {
-                ret = errorcode_t::not_ready;
-            }
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t qpack_encoder::encode_dyntable_capacity(http_dynamic_table* dyntable, binary_t& target, uint64 capacity) {
+return_t qpack_encoder::set_capacity(http_dynamic_table* dyntable, binary_t& target, uint64 capacity) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == dyntable) {
@@ -569,12 +558,64 @@ return_t qpack_encoder::pack(http_dynamic_table* dyntable, binary_t& target, uin
     return ret;
 }
 
+return_t qpack_encoder::unpack(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == dyntable || nullptr == source) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        size_t eic = 0;
+        uint8 sign = 0;
+        size_t deltabase = 0;
+        size_t ric = 0;
+        size_t base = 0;
+
+        decode_int(source, pos, 0, 8, eic);
+        sign = 0x80 & source[pos];
+        decode_int(source, pos, 0x80, 7, deltabase);
+
+        auto capacity = dyntable->get_capacity();
+        auto entries = dyntable->get_entries();
+
+        qpack_eic2ric(capacity, entries, eic, sign, deltabase, ric, base);
+
+        {
+            item.clear();
+            item.flags |= qpack_decode_field_section_prefix;
+            item.ric = ric;
+            item.base = base;
+        }
+
+        {
+            size_t ic = 0;  // insert count
+            size_t sizeof_ic = sizeof(ic);
+            dyntable->query(qpack_cmd_inserted, nullptr, 0, &ic, sizeof_ic);
+
+            if (ric > ic) {
+                ret = errorcode_t::not_ready;
+            }
+        }
+
+#if defined DEBUG
+        if (istraceable(trace_category_net)) {
+            basic_stream dbs;
+            dbs.println("   > field section prefix RIC=%zi Base=%zi", item.ric, item.base);
+            trace_debug_event(trace_category_net, trace_event_qpack, &dbs);
+        }
+#endif
+    }
+    __finally2 {}
+    return ret;
+}
+
 qpack_encoder& qpack_encoder::encode_header(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
     encode(dyntable, target, name, value, flags);
     return *this;
 }
 
-qpack_encoder& qpack_encoder::decode_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, qpack_decode_t& item) {
+qpack_encoder& qpack_encoder::decode_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item) {
     decode(dyntable, source, size, pos, item);
     return *this;
 }
@@ -770,7 +811,8 @@ qpack_encoder& qpack_encoder::encode_name_value(http_dynamic_table* dyntable, bi
     return *this;
 }
 
-qpack_encoder& qpack_encoder::duplicate(http_dynamic_table* dyntable, binary_t& target, size_t index) {
+return_t qpack_encoder::duplicate(http_dynamic_table* dyntable, binary_t& target, size_t index) {
+    return_t ret = errorcode_t::success;
     /**
      * RFC 9204 4.3.4.  Duplicate
      *
@@ -783,11 +825,12 @@ qpack_encoder& qpack_encoder::duplicate(http_dynamic_table* dyntable, binary_t& 
      */
     uint8 mask = 0x00;
     uint8 prefix = 5;
-    encode_int(target, mask, prefix, index);
-    return *this;
+    ret = encode_int(target, mask, prefix, index);
+    return ret;
 }
 
-qpack_encoder& qpack_encoder::ack(http_dynamic_table* dyntable, binary_t& target, uint32 streamid) {
+return_t qpack_encoder::ack(http_dynamic_table* dyntable, binary_t& target, uint32 streamid) {
+    return_t ret = errorcode_t::success;
     /**
      * RFC 9204 4.4.1.  Section Acknowledgment
      *
@@ -801,14 +844,17 @@ qpack_encoder& qpack_encoder::ack(http_dynamic_table* dyntable, binary_t& target
     if (dyntable) {
         uint8 mask = 0x80;
         uint8 prefix = 7;
-        encode_int(target, mask, prefix, streamid);
-        dyntable->commit();
-        dyntable->ack();
+        ret = encode_int(target, mask, prefix, streamid);
+        if (errorcode_t::success == ret) {
+            dyntable->commit();
+            dyntable->ack();
+        }
     }
-    return *this;
+    return ret;
 }
 
-qpack_encoder& qpack_encoder::cancel(http_dynamic_table* dyntable, binary_t& target, uint32 streamid) {
+return_t qpack_encoder::cancel(http_dynamic_table* dyntable, binary_t& target, uint32 streamid) {
+    return_t ret = errorcode_t::success;
     /**
      * RFC 9204 4.4.2.  Stream Cancellation
      *
@@ -822,13 +868,16 @@ qpack_encoder& qpack_encoder::cancel(http_dynamic_table* dyntable, binary_t& tar
     if (dyntable) {
         uint8 mask = 0x40;
         uint8 prefix = 6;
-        encode_int(target, mask, prefix, streamid);
-        dyntable->cancel();
+        ret = encode_int(target, mask, prefix, streamid);
+        if (errorcode_t::success == ret) {
+            dyntable->cancel();
+        }
     }
-    return *this;
+    return ret;
 }
 
-qpack_encoder& qpack_encoder::increment(http_dynamic_table* dyntable, binary_t& target, size_t inc) {
+return_t qpack_encoder::increment(http_dynamic_table* dyntable, binary_t& target, size_t inc) {
+    return_t ret = errorcode_t::success;
     /**
      * RFC 9204 4.4.3.  Insert Count Increment
      *
@@ -842,10 +891,12 @@ qpack_encoder& qpack_encoder::increment(http_dynamic_table* dyntable, binary_t& 
     if (dyntable) {
         uint8 mask = 0x00;
         uint8 prefix = 6;
-        encode_int(target, mask, prefix, inc);
-        dyntable->increment(inc);
+        ret = encode_int(target, mask, prefix, inc);
+        if (errorcode_t::success == ret) {
+            dyntable->increment(inc);
+        }
     }
-    return *this;
+    return ret;
 }
 
 }  // namespace net

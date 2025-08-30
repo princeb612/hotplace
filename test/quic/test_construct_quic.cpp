@@ -250,10 +250,42 @@ void construct_quic_encoder(tls_session* session, tls_direction_t dir, uint32 fl
 
     quic_packet_publisher publisher;
 
-    // try to publish [decoder stream (03) || no data]
+    // try to publish [decoder stream (03) || encoder stream]
+    publisher.set_session(session).set_flags(flags).set_streaminfo(6, h3_qpack_encoder_stream);
+    publisher.get_qpack_stream()
+        .set_encode_flags(qpack_indexing | qpack_intermediary)  // qpack_huffman
+        .set_capacity(4096)
+        .encode_header(":authority", "localhost")
+        .encode_header("user-agent", "hotplace 1.58.864");
+    publisher.publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+        bins.push_back(packet);
+        auto tlsadvisor = tls_advisor::get_instance();
+        auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
+        _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
+    });
+}
+
+void construct_http3_get(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+    bins.clear();
+
+    quic_packet_publisher publisher;
+    http3_frame_builder builder;
+
+    auto frame = (http3_frame_headers*)builder.set(h3_frame_headers).set(session).build();
+    if (frame) {
+        (*frame)
+            .add(":method", "GET")
+            .add(":scheme", "https")
+            .add(":authority", "localhost")
+            .add(":path", "/")
+            .add("user-agent", "hotplace 1.58.864")
+            .add("accept", "*/*");
+    }
+
     publisher.set_session(session)
         .set_flags(flags)
-        .set_streaminfo(6, h3_qpack_encoder_stream)
+        .add(frame)
+        .set_streaminfo(quic_stream_client_bidi, h3_control_stream)
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
             bins.push_back(packet);
             auto tlsadvisor = tls_advisor::get_instance();
@@ -420,14 +452,18 @@ void test_construct_quic() {
             //  stream id 10
             //  client_initiated_uni
             //  qpack decoder stream
-            construct_quic_decoder(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "1-RTT [STREAM]");
-            send_packet(&session_server, from_client, bins, "1-RTT [STREAM]");
+            construct_quic_decoder(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "1-RTT [STREAM(QPACK_DECODER_STREAM)]");
+            send_packet(&session_server, from_client, bins, "1-RTT [STREAM(QPACK_DECODER_STREAM)]");
             // C->S PKN#33
             //  stream id 6
             //  client_initiated_uni
             //  qpack encoder stream
-            construct_quic_encoder(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "1-RTT [STREAM]");
-            send_packet(&session_server, from_client, bins, "1-RTT [STREAM]");
+            construct_quic_encoder(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "1-RTT [STREAM(QPACK_ENCODER_STREAM)]");
+            send_packet(&session_server, from_client, bins, "1-RTT [STREAM(QPACK_ENCODER_STREAM)]");
+
+            // GET /
+            construct_http3_get(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "1-RTT [HEADERS]");
+            send_packet(&session_server, from_client, bins, "1-RTT [HEADERS]");
         }
     }
     __finally2 {}

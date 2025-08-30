@@ -31,13 +31,15 @@ namespace net {
 constexpr char constexpr_deflate[] = "deflate";
 constexpr char constexpr_gzip[] = "gzip";
 
-http_response::http_response() : _router(nullptr), _request(nullptr), _statuscode(0), _hpsess(nullptr), _version(1), _stream_id(0) { _shared.make_share(this); }
+http_response::http_response() : _router(nullptr), _request(nullptr), _statuscode(0), _dyntable(nullptr), _version(1), _stream_id(0) {
+    _shared.make_share(this);
+}
 
-http_response::http_response(http_request* request) : _router(nullptr), _request(request), _statuscode(0), _hpsess(nullptr), _version(1), _stream_id(0) {
+http_response::http_response(http_request* request) : _router(nullptr), _request(request), _statuscode(0), _dyntable(nullptr), _version(1), _stream_id(0) {
     _shared.make_share(this);
     if (request) {
         request->addref();
-        _hpsess = request->get_hpack_session();
+        _dyntable = request->get_hpack_dyntable();
         _version = request->get_version();
         _stream_id = request->get_stream_id();
 
@@ -52,7 +54,7 @@ http_response::http_response(const http_response& object) {
     if (_request) {
         _request->addref();
     }
-    _hpsess = object._hpsess;
+    _dyntable = object._dyntable;
     _version = object._version;
     _stream_id = object._stream_id;
     _header = object._header;
@@ -350,7 +352,7 @@ http_response& http_response::get_response(basic_stream& bs) {
 }
 
 http_response& http_response::get_response_h2(binary_t& bin) {
-    if ((2 == _version) && get_hpack_session()) {
+    if ((2 == _version) && get_hpack_dyntable()) {
         std::string accept_encoding;
         std::string method;
         if (_request) {
@@ -379,7 +381,7 @@ http_response& http_response::get_response_h2(binary_t& bin) {
 
         std::string altsvc_fieldvalue;
         hpack_stream hp;
-        hp.set_session(get_hpack_session())
+        hp.set_dyntable(get_hpack_dyntable())
             .set_encode_flags(hpack_wo_indexing | hpack_huffman)  // chrome test
             .encode_header(":status", format("%i", status_code()).c_str())
             .encode_header("content-type", content_type());
@@ -491,8 +493,8 @@ void http_response::set_http_router(http_router* router) { _router = router; }
 
 http_router* http_response::get_http_router() { return _router; }
 
-http_response& http_response::set_hpack_session(hpack_dynamic_table* session) {
-    _hpsess = session;
+http_response& http_response::set_hpack_dyntable(hpack_dynamic_table* session) {
+    _dyntable = session;
     return *this;
 }
 
@@ -514,7 +516,7 @@ http_response& http_response::set_stream_id(uint32 stream_id) {
     return *this;
 }
 
-hpack_dynamic_table* http_response::get_hpack_session() { return _hpsess; }
+hpack_dynamic_table* http_response::get_hpack_dyntable() { return _dyntable; }
 
 uint8 http_response::get_version() { return _version; }
 

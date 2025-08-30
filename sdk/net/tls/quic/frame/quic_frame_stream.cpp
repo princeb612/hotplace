@@ -128,12 +128,39 @@ return_t quic_frame_stream::do_read_body(tls_direction_t dir, const byte_t* stre
                     size_t pos = is_begin ? 1 : 0;
                     auto& streams = session->get_quic_session().get_streams();
                     streams.append(stream_id, stream_data.size() > pos ? &stream_data[pos] : nullptr, stream_data.size() - pos);
+
+                    uint8 unitype = 0;
+                    size_t spos = 0;
                     if (is_begin) {
-                        streams.settag(stream_id, stream_data[0]);
+                        unitype = stream_data[0];
+                        spos = 1;
+                        streams.settag(stream_id, unitype);
+                    } else {
+                        streams.gettag(stream_id, unitype);
                     }
 
-                    quic_frame_stream_h3_handler handler(session);
-                    handler.read(stream_id);
+                    switch (unitype) {
+                        case h3_control_stream: {
+                            quic_frame_stream_h3_handler handler(session);
+                            handler.read(stream_id);
+                        } break;
+                        case h3_qpack_encoder_stream: {
+                            if (stream_data.size() > spos) {
+                                auto& dyntable = session->get_quic_session().get_dynamic_table();
+                                qpack_encoder encstream;
+                                std::list<http_compression_decode_t> kv;
+                                encstream.decode(&dyntable, &stream_data[0], stream_data.size(), spos, kv, qpack_quic_stream_encoder);
+                            }
+                        } break;
+                        case h3_qpack_decoder_stream: {
+                            if (stream_data.size() > spos) {
+                                auto& dyntable = session->get_quic_session().get_dynamic_table();
+                                qpack_encoder encstream;
+                                std::list<http_compression_decode_t> kv;
+                                encstream.decode(&dyntable, &stream_data[0], stream_data.size(), spos, kv, qpack_quic_stream_decoder);
+                            }
+                        } break;
+                    }
                 }
             }
         }
@@ -194,6 +221,7 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, const byte_t* str
 
         size_t snapshot = bin.size();
         auto session = get_packet()->get_session();
+        auto tlsadvisor = tls_advisor::get_instance();
 
         uint8 type = quic_frame_type_stream;
         type |= quic_frame_stream_len;
@@ -217,21 +245,26 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, const byte_t* str
         pl.set_group(constexpr_unitype, is_begin);
         pl.write(bin);
 
+        auto& streams = session->get_quic_session().get_streams();
+        streams.append(_stream_id, stream + pos, len);
+        if (is_begin) {
+            streams.settag(_stream_id, _unitype);
+        } else {
+            streams.gettag(_stream_id, _unitype);
+        }
+
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
             dbs.println("\e[1;33m + STREAM");
             dbs.println("   > %s 0x%zx (%zi)", constexpr_offset, pos, pos);
             dbs.println("   > %s 0x%zx (%zi)\e[0m", constexpr_length, len, len);
+            dbs.println("   > %s 0x%I64x (%I64i) %s", constexpr_stream_id, _stream_id, _stream_id, tlsadvisor->quic_streamid_type_string(_stream_id).c_str());
+            auto resource = http_resource::get_instance();
+            dbs.println("    > %s", resource->get_h3_stream_name(_unitype).c_str());
             trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif
-
-        auto& streams = session->get_quic_session().get_streams();
-        streams.append(_stream_id, stream + pos, len);
-        if (is_begin) {
-            streams.settag(_stream_id, _unitype);
-        }
     }
     __finally2 {}
 

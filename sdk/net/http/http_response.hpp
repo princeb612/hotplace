@@ -96,10 +96,10 @@ class http_response {
 
     http_response& operator=(const http_response& object);
 
-    http_response& set_hpack_session(hpack_dynamic_table* session);
+    http_response& set_hpack_dyntable(hpack_dynamic_table* session);
     http_response& set_version(uint8 version);
     http_response& set_stream_id(uint32 stream_id);
-    hpack_dynamic_table* get_hpack_session();
+    hpack_dynamic_table* get_hpack_dyntable();
     uint8 get_version();
     uint32 get_stream_id();
 
@@ -119,7 +119,7 @@ class http_response {
     basic_stream _content;
     int _statuscode;
 
-    hpack_dynamic_table* _hpsess;
+    hpack_dynamic_table* _dyntable;
     uint8 _version;
     uint32 _stream_id;
 };

@@ -131,7 +131,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             req = &iter->second;
         } else {
             req = &_headers[stream_id];  // insert
-            (*req).set_hpack_session(&_hpack_dyntable).set_stream_id(stream_id).set_version(2);
+            (*req).set_hpack_dyntable(&_hpack_dyntable).set_stream_id(stream_id).set_version(2);
         }
 
         bool completion = (mask == (mask & flags)) ? true : false;
@@ -143,7 +143,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
                 req->add_content(frame_data->get_data());
 
                 if (req->get_http_header().contains("Content-Type", "application/x-www-form-urlencoded")) {
-                    auto const& content = req->get_content();
+                    const auto& content = req->get_content();
                     req->get_http_uri().set_query(content);
                 }
             } else if (h2_frame_t::h2_frame_headers == type) {
@@ -175,7 +175,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 
                 uint32 table_size = 0;
                 if (errorcode_t::success == frame_settings->find(h2_settings_header_table_size, table_size)) {
-                    get_hpack_session().set_capacity(table_size);
+                    get_hpack_dyntable().set_capacity(table_size);
                 }
                 uint32 push = 0;
                 if (errorcode_t::success == frame_settings->find(h2_settings_enable_push, push)) {
@@ -255,7 +255,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
     return ret;
 }
 
-hpack_dynamic_table& http2_session::get_hpack_session() { return _hpack_dyntable; }
+hpack_dynamic_table& http2_session::get_hpack_dyntable() { return _hpack_dyntable; }
 
 http2_session& http2_session::enable_push(bool enable) {
     _enable_push = enable;

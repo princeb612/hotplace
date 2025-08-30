@@ -275,7 +275,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto const& range = get_header_range();
+            const auto& range = get_header_range();
 
             dbs.println("# record (%s) [size 0x%zx(%zi) pos 0x%x]", tlsadvisor->nameof_direction(dir).c_str(), size, size, recpos);
 
@@ -412,7 +412,7 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto const& range = get_header_range();
+            const auto& range = get_header_range();
 
             dbs.println("# record %s", (from_server == dir) ? "(server)" : (from_client == dir) ? "(client)" : "");
 

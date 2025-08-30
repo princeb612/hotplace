@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_NET_HTTP_HTTP3_HTTP3FRAMEHEADERS__
 
 #include <sdk/net/http/http3/http3_frame.hpp>
+#include <sdk/net/tls/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -21,14 +22,17 @@ namespace net {
  */
 class http3_frame_headers : public http3_frame {
    public:
-    http3_frame_headers(qpack_dynamic_table* dyntable);
+    http3_frame_headers(tls_session* session);
+
+    http3_frame_headers& add(const std::string& name, const std::string& value);
 
    protected:
     virtual return_t do_read_payload(const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write(binary_t& bin);
 
    private:
-    qpack_dynamic_table* _dyntable;
+    tls_session* _session;
+    std::list<std::pair<std::string, std::string>> _kv;
 };
 
 }  // namespace net
