@@ -365,47 +365,81 @@ void test_construct_quic() {
 
         // initial
         {
-            // C->S PKN#10
+            // #Frame C->S
+            //   PKN 10 initial [CRYPTO(CH), PADDING]
             lambda(&session_client, from_client, protection_initial, 10);
             construct_quic_initial_client_hello(&session_client, from_client, quic_pad_packet, bins, "initial [CRYPTO(CH), PADDING]");
+            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct initial in 1 frame");
+            // #Frame S->C
             send_packet(&session_server, from_client, bins, "initial [CRYPTO(CH), PADDING]");
 
-            // S->C PKN#10 (ACK 10)
+            // S->C initial ACK (10)
+            {
+                auto& pkns = session_server.get_quic_session().get_pkns(protection_initial);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(10, 0);
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack initial");
+            }
+
+            // #Frame S->C
+            //   PKN 10 initial [ACK (10), CRYOTO(SH), PADDING]
             lambda(&session_server, from_server, protection_initial, 10);
             construct_quic_initial_server_hello(&session_server, from_server, quic_ack_packet | quic_pad_packet, bins, "initial [ACK, CRYPTO(SH), PADDING]");
+            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct initial in 1 frame");
+            // #Frame C->S
             send_packet(&session_client, from_server, bins, "initial [ACK, CRYPTO(SH), PADDING]");
 
+            // C->S initial ACK (10)
             {
-                auto& pkns = session_server.get_quic_session().get_pkns(protection_initial);
+                auto& pkns = session_client.get_quic_session().get_pkns(protection_initial);
                 ack_t ack;
                 ack << pkns;
                 ack_t expect(10, 0);
-                _test_case.assert(ack == expect, __FUNCTION__, "ack");
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack initial");
             }
 
-            // C->S PKN#11 (ACK 10)
+            // #Frame C->S
+            //   PKN 11 initial [ACK (10), PADDING]
             lambda(&session_client, from_client, protection_initial, 11);
             construct_quic_ack(&session_client, from_client, quic_pad_packet, bins, "initial [ACK]");
+            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct initial in 1 frame");
+            // #Frame S->C
             send_packet(&session_server, from_client, bins, "initial [ACK]");
-
-            {
-                auto& pkns = session_server.get_quic_session().get_pkns(protection_initial);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(10, 0);
-                _test_case.assert(ack == expect, __FUNCTION__, "ack initial");
-            }
         }
 
         // handshake, 1-RTT
         {
-            // S->C PKN#20, 21 handshake(fragmented), 30 1-RTT
+            // #Frame S->C
+            //   PKN 20 handshake [ACK(10), CRYPTO(EE, CERT, CV fragmented)]
+            // #Frame S->C
+            //   PKN 21 handshake [CRYPTO(CV fragmented, FIN)]
+            //   PKN 30 1-RTT [STREAM(HTTP/3 SETTINGS)]
             lambda(&session_server, from_server, protection_handshake, 20);
             lambda(&session_server, from_server, protection_application, 30);
-            construct_quic_handshake_ee_cert_cv_fin_settings(&session_server, from_server, quic_ack_packet | quic_pad_packet, bins,
-                                                             "handshake [CRYPTO(EE, CERT, CV, FIN)], 1-RTT [SETTINGS]");
-            _test_case.assert(2 == bins.size(), __FUNCTION__, "construct handshake+1-RTT");
-            send_packet(&session_client, from_server, bins, "handshake [CRYPTO(EE, CERT, CV, FIN)], 1-RTT [SETTINGS]");
+            construct_quic_handshake_ee_cert_cv_fin_settings(&session_server, from_server, quic_ack_packet, bins,
+                                                             "handshake [CRYPTO(EE, CERT, CV, FIN)], 1-RTT [STREAM(HTTP/3 SETTINGS)]");
+            _test_case.assert(2 == bins.size(), __FUNCTION__, "construct handshake+1-RTT in 2 frames");
+            // #Frame C->S
+            // #Frame C->S
+            send_packet(&session_client, from_server, bins, "handshake [CRYPTO(EE, CERT, CV, FIN)], 1-RTT [STREAM(HTTP/3 SETTINGS)]");
+
+            // C-S handshake ACK (21..20)
+            {
+                auto& pkns = session_client.get_quic_session().get_pkns(protection_handshake);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(21, 1);  // CRYPTO(EE, CERT, CV, FIN)
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack handshake");
+            }
+            // C->S 1-RTT ACK (30)
+            {
+                auto& pkns = session_client.get_quic_session().get_pkns(protection_application);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(30, 0);  // SETTINGS
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+            }
 
             // EE
             auto lambda_alpn = [&](tls_session* session, const char* text) -> void {
@@ -416,68 +450,168 @@ void test_construct_quic() {
             lambda_alpn(&session_client, "ALPN of session client");
             lambda_alpn(&session_server, "ALPN of session server");
 
-            // C->S PKN#20 (ACK 20, 21), PKN#30 (ACK 30)
             lambda(&session_client, from_client, protection_handshake, 20);
             lambda(&session_client, from_client, protection_application, 30);
-            construct_quic_handshake_fin(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK]");
-            send_packet(&session_server, from_client, bins, "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK]");
+            // #Frame C->S
+            //   PKN 20 handshake [ACK (21..20), CRYPTO(FIN)]
+            //   PKN 30 1-RTT [ACK (30), PADDING]
+            construct_quic_handshake_fin(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins,
+                                         "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK, PADDING]");
+            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct handshake+1-RTT in 1 frame");
+            // #Frame S->C
+            send_packet(&session_server, from_client, bins, "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK], PADDING");
 
+            // S->C handshake ACK (20)
             {
-                auto& pkns = session_client.get_quic_session().get_pkns(protection_handshake);
+                auto& pkns = session_server.get_quic_session().get_pkns(protection_handshake);
                 ack_t ack;
                 ack << pkns;
-                ack_t expect(21, 1);  // CRYPTO(FIN)
-                _test_case.assert(ack == expect, __FUNCTION__, "ack handshake [CRYPTO(FIN)]");
+                ack_t expect(20, 0);  // FIN
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack handshake");
             }
+            // S->C 1-RTT ACK (30)
             {
-                auto& pkns = session_client.get_quic_session().get_pkns(protection_application);
+                auto& pkns = session_server.get_quic_session().get_pkns(protection_application);
                 ack_t ack;
                 ack << pkns;
-                ack_t expect(30, 0);  // SETTINGS
-                _test_case.assert(ack == expect, __FUNCTION__, "ack 1-RTT [SETTINGS]");
+                ack_t expect(30, 0);
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
             }
 
-            // S->C PKN#22 (ACK 20)
+            // #Frame S->C
+            //   PKN 22 [ACK (20), PADDING]
             lambda(&session_server, from_server, protection_handshake, 22);
-            construct_quic_ack(&session_server, from_server, quic_pad_packet, bins, "handshake [ACK]");
-            send_packet(&session_client, from_server, bins, "handshake [ACK]");
+            construct_quic_ack(&session_server, from_server, quic_pad_packet, bins, "handshake [ACK, PADDING]");
+            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct handshake in 1 frame");
+            // #Frame C->S
+            send_packet(&session_client, from_server, bins, "handshake [ACK, PADDING]");
+
+            // no changes
+            // S->C handshake ACK (20)
+            {
+                auto& pkns = session_server.get_quic_session().get_pkns(protection_handshake);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(20, 0);  // FIN
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack handshake");
+            }
+            // S->C 1-RTT ACK (30)
+            {
+                auto& pkns = session_server.get_quic_session().get_pkns(protection_application);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(30, 0);
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+            }
         }
 
         // 1-RTT
         {
-            // C->S PKN#31
-            construct_quic_settings(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "1-RTT [SETTINGS]");
-            send_packet(&session_server, from_client, bins, "1-RTT [SETTINGS]");
+            // #Frame C->S
+            //   PKN 31 [ACK (31, 30), STREAM(HTTP/3 SETTINGS)]
+            construct_quic_settings(&session_client, from_client, quic_ack_packet, bins, "1-RTT [ACK, STREAM(HTTP/3 SETTINGS)]");
+            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct 1-RTT in 1 frame");
+            // #Frame S->C
+            send_packet(&session_server, from_client, bins, "1-RTT [ACK, STREAM(HTTP/3 SETTINGS)]");
 
-            construct_quic_ack(&session_server, from_server, quic_pad_packet, bins, "1-RTT [ACK]");
+            // S->C 1-RTT ACK (31..30)
+            {
+                auto& pkns = session_server.get_quic_session().get_pkns(protection_application);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(31, 1);
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+            }
+
+            // #Frame S->C
+            //   PKN 32 [ACK (31..30)]
+            construct_quic_ack(&session_server, from_server, 0, bins, "1-RTT [ACK]");
+            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct 1-RTT in 1 frame");
+            // #Frame C->S
             send_packet(&session_client, from_server, bins, "1-RTT [ACK]");
 
-            // C->S PKN#32
-            //  stream id 10
-            //  client_initiated_uni
-            //  qpack decoder stream
-            construct_quic_decoder(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "1-RTT [STREAM(QPACK_DECODER_STREAM)]");
+            // C->S 1-RTT ACK (32..30)
+            {
+                auto& pkns = session_client.get_quic_session().get_pkns(protection_application);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(32, 2);
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+            }
+
+            // #Frame C->S
+            //  PKN 32 [STREAM(QPACK_DECODER_STREAM)]
+            //    stream id 10
+            //    client_initiated_uni
+            //    qpack decoder stream
+            construct_quic_decoder(&session_client, from_client, quic_ack_packet, bins, "1-RTT [STREAM(QPACK_DECODER_STREAM)]");
+            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct 1-RTT in 1 frame");
+            // #Frame S->C
             send_packet(&session_server, from_client, bins, "1-RTT [STREAM(QPACK_DECODER_STREAM)]");
-            // C->S PKN#33
-            //  stream id 6
-            //  client_initiated_uni
-            //  qpack encoder stream
-            construct_quic_encoder(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "1-RTT [STREAM(QPACK_ENCODER_STREAM)]");
+
+            // S->C 1-RTT ACK (32..30)
+            {
+                auto& pkns = session_server.get_quic_session().get_pkns(protection_application);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(32, 2);
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+            }
+
+            // #Frame 11 C->S
+            //   PKN 33 [STREAM(QPACK_ENCODER_STREAM)]
+            //     stream id 6
+            //     client_initiated_uni
+            //     qpack encoder stream
+            construct_quic_encoder(&session_client, from_client, quic_ack_packet, bins, "1-RTT [STREAM(QPACK_ENCODER_STREAM)]");
+            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct 1-RTT in 1 frame");
             send_packet(&session_server, from_client, bins, "1-RTT [STREAM(QPACK_ENCODER_STREAM)]");
 
-            construct_quic_ack(&session_server, from_server, quic_pad_packet, bins, "1-RTT [ACK]");
+            // S->C 1-RTT ACK (33..30)
+            {
+                auto& pkns = session_server.get_quic_session().get_pkns(protection_application);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(33, 3);
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+            }
+
+            // #Frame 12 S->C
+            //   PKN 33 [ACK(33..30)]
+            construct_quic_ack(&session_server, from_server, 0, bins, "1-RTT [ACK]");
+            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct 1-RTT in 1 frame");
             send_packet(&session_client, from_server, bins, "1-RTT [ACK]");
 
+            {
+                auto& pkns = session_client.get_quic_session().get_pkns(protection_application);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(33, 3);
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+            }
+
+            // #Frame 13 C->S
+            //   PKN 34 [ACK(33..30),STREAM(HTTP/3 HEADERS]
             // GET /
-            construct_http3_get(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, "1-RTT [HEADERS]");
-            send_packet(&session_server, from_client, bins, "1-RTT [HEADERS]");
+            construct_http3_get(&session_client, from_client, quic_ack_packet, bins, "1-RTT [ACK, STREAM(HTTP/3 HEADERS)]");
+            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct 1-RTT in 1 frame");
+            send_packet(&session_server, from_client, bins, "1-RTT [ACK, STREAM(HTTP/3 HEADERS)]");
 
-            construct_quic_ack(&session_server, from_server, quic_pad_packet, bins, "1-RTT [ACK]");
+            // #Frame 14 S->C
+            //   PKN 34 [ACK(34..30)]
+            construct_quic_ack(&session_server, from_server, 0, bins, "1-RTT [ACK]");
+            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct 1-RTT in 1 frame");
             send_packet(&session_client, from_server, bins, "1-RTT [ACK]");
+
+            // S->C 1-RTT ACK (34..30)
+            {
+                auto& pkns = session_server.get_quic_session().get_pkns(protection_application);
+                ack_t ack;
+                ack << pkns;
+                ack_t expect(34, 4);
+                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+            }
         }
     }
     __finally2 {}
 }
-
-// TODO
-// 1-RTT wo PADDING

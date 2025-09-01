@@ -108,10 +108,9 @@ class quic_packet {
      * @brief   write
      * @param   tls_direction_t dir
      * @param   binary_t& header [out]
-     * @param   binary_t& ciphertext [out]
-     * @param   binary_t& tag [out]
+     * @param   binary_t& ciphertag [out] ciphertext || tag
      */
-    virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
+    virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertag);
 
     virtual return_t write_unprotected_header(binary_t& packet);
 
@@ -165,7 +164,7 @@ class quic_packet {
     virtual return_t do_write_header(binary_t& packet, const binary_t& body = binary_t());
     virtual return_t do_estimate();
     virtual return_t do_write_body(tls_direction_t dir, binary_t& body);
-    virtual return_t do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);
+    virtual return_t do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertag);
 
     /**
      * @brief   dump

@@ -125,17 +125,15 @@ return_t quic_packet::write(tls_direction_t dir, binary_t& packet) {
     auto snapshot = packet.size();
     __try2 {
         binary_t header;
-        binary_t ciphertext;
-        binary_t tag;
+        binary_t ciphertag;
 
-        ret = write(dir, header, ciphertext, tag);
+        ret = write(dir, header, ciphertag);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
         binary_append(packet, header);
-        binary_append(packet, ciphertext);
-        binary_append(packet, tag);
+        binary_append(packet, ciphertag);
     }
     __finally2 {
         if (errorcode_t::success != ret) {
@@ -145,7 +143,7 @@ return_t quic_packet::write(tls_direction_t dir, binary_t& packet) {
     return ret;
 }
 
-return_t quic_packet::write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) {
+return_t quic_packet::write(tls_direction_t dir, binary_t& header, binary_t& ciphertag) {
     return_t ret = errorcode_t::success;
     __try2 {
         ret = do_write_header(header);  // unprotected header
@@ -159,7 +157,7 @@ return_t quic_packet::write(tls_direction_t dir, binary_t& header, binary_t& cip
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        ret = do_write(dir, header, ciphertext, tag);  // header, CT, TAG
+        ret = do_write(dir, header, ciphertag);  // header, CT || TAG
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -170,10 +168,9 @@ return_t quic_packet::write(tls_direction_t dir, binary_t& header, binary_t& cip
 
 return_t quic_packet::write_unprotected_header(binary_t& header) {
     return_t ret = errorcode_t::success;
-    binary_t ciphertext;
-    binary_t tag;
+    binary_t ciphertag;
     do_write_header(header);
-    do_write(from_any, header, ciphertext, tag);
+    do_write(from_any, header, ciphertag);
     return ret;
 }
 
@@ -235,7 +232,9 @@ return_t quic_packet::do_read_header(tls_direction_t dir, const byte_t* stream, 
         pl.read(stream, size, pos);
 
         _ht = hdr;
-        _version = pl.t_value_of<uint32>(constexpr_version);
+        if (is_longheader) {
+            _version = pl.t_value_of<uint32>(constexpr_version);
+        }
         pl.get_binary(constexpr_dcid, _dcid);
         pl.get_binary(constexpr_scid, _scid);
     }
@@ -250,7 +249,12 @@ return_t quic_packet::do_unprotect(tls_direction_t dir, const byte_t* stream, si
     __try2 {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
-
+        /**
+         * layout
+         *   hdr || dcid || pn || ciphertext || tag
+         *                  \     \__ unprotect (stream+pos .. stream+pos + 16)
+         *                   \__ payload := pn || ciphertext
+         */
         ret = header_unprotect(dir, stream + pos, 16, space, _ht, _pn, _payload);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -321,7 +325,7 @@ return_t quic_packet::do_estimate() { return errorcode_t::success; }
 
 return_t quic_packet::do_write_body(tls_direction_t dir, binary_t& body) { return errorcode_t::success; }
 
-return_t quic_packet::do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) { return errorcode_t::success; }
+return_t quic_packet::do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertag) { return errorcode_t::success; }
 
 void quic_packet::dump() {
 #if defined DEBUG
@@ -368,7 +372,7 @@ return_t quic_packet::header_protect(tls_direction_t dir, protection_space_t spa
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
-            dbs.println(" > packet number 0x%s (%i)", base16_encode(bin_pn).c_str(), _pn);
+            dbs.println("\e[1;34m > packet number 0x%s (%i)\e[0m", base16_encode(bin_pn).c_str(), _pn);
             dbs.println(" > packet number length %i", pn_length);
             trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
         }
@@ -459,7 +463,7 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
             uint32 protected_pn = t_binary_to_integer<uint32>(bin_protected_pn);
 
             dbs.println(" > protected   packet number 0x%08x", protected_pn);
-            dbs.println(" > unprotected packet number 0x%08x (%08i)", pn, pn);
+            dbs.println("\e[1;34m > unprotected packet number 0x%08x (%08i)\e[0m", pn, pn);
 
             trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
         }

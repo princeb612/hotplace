@@ -109,6 +109,7 @@ void test_pcap_quic();
 // QUIC Frame
 void test_quic_frame();
 // construct
+void test_construct_1rtt();
 void test_construct_quic();
 
 #endif

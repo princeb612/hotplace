@@ -87,9 +87,7 @@ return_t quic_packet_1rtt::do_read(tls_direction_t dir, const byte_t* stream, si
             __leave2;
         }
 
-        if (get_quic_frames().is_significant()) {
-            session->get_quic_session().get_pkns(protection_application).add(get_pn());
-        }
+        session->get_quic_session().get_pkns(protection_application).add(get_pn());  // including ACK packet
     }
     __finally2 {}
     return ret;
@@ -115,7 +113,7 @@ return_t quic_packet_1rtt::do_write_body(tls_direction_t dir, binary_t& body) {
     return ret;
 }
 
-return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) {
+return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertag) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -164,11 +162,12 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
             binary_t bin_tag;
             binary_t bin_mask;
 
-            // AEAD
+            // AEAD (PT:payload, CT:ciphertext, AAD:unprotected header, TAG:tag, space:application)
             ret = protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_application);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
+            binary_append(bin_ciphertext, bin_tag);  // concatenatation
 
             // Header Protection
             {
@@ -187,8 +186,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
             }
 
             header = std::move(bin_protected_header);
-            ciphertext = std::move(bin_ciphertext);
-            tag = std::move(bin_tag);
+            ciphertag = std::move(bin_ciphertext);
         } else {
             header = std::move(bin_unprotected_header);
         }

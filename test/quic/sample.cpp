@@ -164,8 +164,8 @@ void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_sessio
             // [test vector] set record no
             session->set_recordno(dir, pn, protection_initial);
 
-            // packet protection -> protected header, payload, tag
-            initial.write(dir, bin_protected_header, bin_payload, bin_tag);
+            // packet protection -> protected header, payload + tag
+            initial.write(dir, bin_protected_header, bin_payload);
 
             // TLS forward secrecy applied...
             // do not call initial.write(dir, packet); after previous write member
@@ -177,10 +177,8 @@ void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_sessio
             binary_t temp;
             binary_append(temp, bin_protected_header);
             binary_append(temp, bin_payload);
-            binary_append(temp, bin_tag);
             _logger->hdump("> protected_header", bin_protected_header, 16, 3);
-            _logger->hdump("> payload", bin_payload, 16, 3);
-            _logger->hdump("> tag", bin_tag, 16, 3);
+            _logger->hdump("> payload + tag", bin_payload, 16, 3);
             _logger->hdump("> result", temp, 16, 3);
             _logger->hdump("> result (expected)", bin_expect_result, 16, 3);
             _test_case.assert(bin_frame == initial.get_payload(), func, "%s #payload", text);
@@ -400,6 +398,7 @@ int main(int argc, char** argv) {
 
     if (0 == option.flags) {
         test_quic_frame();
+        test_construct_1rtt();
         test_construct_quic();
     }
 

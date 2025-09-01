@@ -167,7 +167,7 @@ return_t quic_packet_initial::do_estimate() {
     return ret;
 }
 
-return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) {
+return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertag) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -227,6 +227,7 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
             if (errorcode_t::success != ret) {
                 __leave2;
             }
+            binary_append(bin_ciphertext, bin_tag);
 
             // Header Protection
             {
@@ -247,8 +248,7 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
             }
 
             header = std::move(bin_protected_header);
-            ciphertext = std::move(bin_ciphertext);
-            tag = std::move(bin_tag);
+            ciphertag = std::move(bin_ciphertext);
         } else {
             header = std::move(bin_unprotected_header);
         }
