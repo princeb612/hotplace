@@ -25,7 +25,7 @@ void test_construct_1rtt() {
     return_t ret = errorcode_t::success;
     auto dir = from_client;
 
-    // read
+    // read (PKN 14)
     {
         constexpr char ciphertext[] =
             "42 fe 21 df 6a 65 e7 6e 9e 86 10 55 47 10 c5 1f"
@@ -38,9 +38,9 @@ void test_construct_1rtt() {
         _test_case.test(ret, __FUNCTION__, "read");
     }
 
-    // write
+    // write & read (PKN 15)
     {
-        auto recno = quicsession.get_recordno(dir, false, protection_application);  // PKN 15
+        auto recno = quicsession.get_recordno(dir, false, protection_application);
 
         constexpr char payload[] = "02 18 00 01 0A 00 05";
         binary_t bin_payload = std::move(base16_decode_rfc(payload));

@@ -23,6 +23,7 @@ class quic_frame_handshake_done : public quic_frame {
     quic_frame_handshake_done(quic_packet* packet);
 
    protected:
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 };
 
 }  // namespace net

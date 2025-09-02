@@ -127,7 +127,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             dbs.println(" > %s 0x%08x (%i secs)", constexpr_ticket_lifetime, ticket_lifetime, ticket_lifetime);
             dbs.println(" > %s 0x%08x", constexpr_ticket_age_add, ticket_age_add);
             dbs.println(" > %s %s", constexpr_ticket_nonce, base16_encode(ticket_nonce).c_str());
-            dbs.println(" > %s", constexpr_session_ticket);
+            dbs.println(" > %s %s", constexpr_session_ticket, base16_encode(session_ticket).c_str());
             if (check_trace_level(loglevel_debug)) {
                 dump_memory(session_ticket, &dbs, 16, 3, 0x0, dump_notrunc);
             }
@@ -162,7 +162,7 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
         openssl_prng prng;
 
         {
-            ticket_lifetime = 30;                      // seconds as a 32-bit unsigned integer, MUST NOT use any value greater than 7 days.
+            ticket_lifetime = 3 * 60 * 60;             // seconds as a 32-bit unsigned integer, MUST NOT use any value greater than 7 days.
             prng.random((byte_t*)&ticket_age_add, 4);  // random 32-bit value
             ticket_nonce.resize(2);                    // nonce
             prng.random(session_ticket, 0xB2);         // PSK identity

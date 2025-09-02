@@ -17,6 +17,7 @@
 #include <sdk/net/http/compression/http_header_compression_stream.hpp>
 #include <sdk/net/http/http3/http3_frames.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_stream.hpp>
+#include <sdk/net/tls/quic/frame/quic_frames.hpp>
 #include <sdk/net/tls/quic/packet/quic_packets.hpp>
 #include <sdk/net/tls/quic/types.hpp>
 
@@ -29,7 +30,9 @@ enum quic_packet_flag_t {
 };
 
 /**
- * sketch
+ * @comments
+ *          // sketch
+ *
  *          // case ACK, CRYPTO[CERT, CV, FIN], PADDING
  *          // ex.
  *          //      PKN3 ACK, CRYPTO [CERT.fragment]
@@ -39,9 +42,9 @@ enum quic_packet_flag_t {
  *          publisher.set_session(session)
  *                   .set_payload_size(1200)
  *                   .set_flags(quic_pad_packet | quic_ack_packet)
- *                   .add(new tls_handshake_certificate(session))
- *                   .add(new tls_handshake_certificate_verify(session))
- *                   .add(new tls_handshake_finished(session))
+ *                   .add(tls_hs_certificate, from_server, nullptr)
+ *                   .add(tls_hs_certificate_verify, dir, nullptr)
+ *                   .add(tls_hs_finished, dir, nullptr)
  *                   .publish(from_server, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
  *
  *          // case ACK, PADDING
@@ -60,10 +63,14 @@ enum quic_packet_flag_t {
  *          publisher.set_session(session)
  *                   .set_payload_size(max_payload_size)
  *                   .set_flags(quic_ack_packet | quic_pad_packet)
- *                   .add(new tls_handshake_certificate(session))
- *                   .add(new tls_handshake_certificate_verify(session))
- *                   .add(new tls_handshake_finished(session))
- *                   .add(settings)
+ *                   .add(tls_hs_certificate, from_server, nullptr)
+ *                   .add(tls_hs_certificate_verify, dir, nullptr)
+ *                   .add(tls_hs_finished, dir, nullptr)
+ *                   .add(h3_frame_settings,
+ *                      [&](http3_frame* frame) -> return_t {
+ *                          // do something
+ *                          return success;
+ *                      })
  *                   .set_streaminfo(0x3, h3_control_stream)
  *                   .publish(from_server, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
  */
@@ -91,34 +98,42 @@ class quic_packet_publisher {
     uint64 get_streamid();
 
     /**
-     * initial, handshake
+     * @param   CRYOTO FRAME (initial, handshake, 1-RTT)
+     * @param   tls_hs_type_t type [in]
+     * @param   tls_direction_t dir [in]
+     * @param   std::function<return_t(tls_handshake*, tls_direction_t)> func [in]
      */
-    quic_packet_publisher& add(tls_handshake* handshake, bool upref = false);
+    quic_packet_publisher& add(tls_hs_type_t type, tls_direction_t dir, std::function<return_t(tls_handshake*, tls_direction_t)> func);
     /**
-     * 1-RTT (constrol stream)
+     * @param   STREAM FRAME (1-RTT)
+     * @param   h3_frame_t type [in]
+     * @param   std::function<return_t(http3_frame*)> func [in]
      */
-    quic_packet_publisher& add(http3_frame* frame, bool upref = false);
-
-    quic_packet_publisher& operator<<(tls_handshake* handshake);
-    quic_packet_publisher& operator<<(http3_frame* frame);
+    quic_packet_publisher& add(h3_frame_t type, std::function<return_t(http3_frame*)> func);
+    /**
+     * @param   QUIC FRAME (1-RTT)
+     * @param   quic_frame_t type [in]
+     * @param   std::function<return_t(quic_frame*)> func [in]
+     */
+    quic_packet_publisher& add(quic_frame_t type, std::function<return_t(quic_frame*)> func);
 
     /**
-     * QPACK encoder, decoder stream
-     *  publisher.set_session(session).get_qpack_stream().encode_header(":path", "/");
+     * @brief   QPACK encoder, decoder stream
+     * @comments
+     *          publisher.set_session(session).get_qpack_stream().encode_header(":path", "/");
      */
     qpack_stream& get_qpack_stream();
 
     return_t publish(tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
 
+    tls_handshakes& get_handshakes();
+    http3_frames& get_h3frames();
+
    protected:
     return_t probe_spaces(std::set<protection_space_t>& spaces);
     return_t publish_space(protection_space_t space, tls_direction_t dir, uint32 flags, std::list<binary_t>& container);
 
-    bool is_kindof_initial(tls_handshake* handshake);
-    bool is_kindof_handshake(tls_handshake* handshake);
-
-    tls_handshakes& get_handshakes();
-    http3_frames& get_frames();
+    return_t kindof_handshake(tls_handshake* handshake, protection_space_t& space);
 
    private:
     tls_session* _session;
@@ -127,9 +142,10 @@ class quic_packet_publisher {
     uint64 _stream_id;
     uint8 _unitype;
 
-    tls_handshakes _handshakes;
-    http3_frames _frames;
+    tls_handshakes _handshakes;  // 2 NST in 1 CRYPTO FRAME
+    http3_frames _h3frames;
     qpack_stream _qpack;
+    std::list<std::pair<quic_frame_t, std::function<return_t(quic_frame*)> > > _frames;
 };
 
 }  // namespace net

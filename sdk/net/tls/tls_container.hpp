@@ -39,11 +39,11 @@ namespace net {
  *   addref()
  *   release()
  * distinct_type_in_container
- *   tls_records    no
- *   tls_handshakes yes
- *   tls_extensions yes
- *   quic_packets   no
- *   quic_frames    yes
+ *   tls_records     no
+ *   tls_handshakes  yes
+ *   tls_extensions  yes
+ *   quic_packets    no
+ *   quic_frames     yes
  */
 enum tls_container_flag_t {
     distinct_type_in_container = (1 << 0),
@@ -137,6 +137,24 @@ class t_tls_container {
     }
 
     uint32 get_flags() { return _flags; }
+
+    /**
+     * sketch
+     *
+     *  // special case - 2 NST in 1 CRYPTO FRAME
+     *  // see quic_packet_publisher
+     *  quic_packet_publisher publisher;
+     *  publisher.get_handshakes().get_container().set_flags(0);  // turn off distinct_type_in_container
+     *  publisher.get_handshakes().add(new tls_handshake_new_session_ticket(session));
+     *  publisher.get_handshakes().add(new tls_handshake_new_session_ticket(session));
+     *  publisher.publish(...);
+     *  // published binary layout
+     *  //   1-RTT
+     *  //     CRYPTO
+     *  //       New Session Ticket
+     *  //       New Session Ticket
+     */
+    void set_flags(uint32 flags) { _flags = flags; }
 
    protected:
    private:

@@ -11,6 +11,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/net/basic/trial/tls_composer.hpp>
 #include <sdk/net/http/http3/http3_frame_builder.hpp>
 #include <sdk/net/http/http3/types.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_ack.hpp>
@@ -21,6 +22,7 @@
 #include <sdk/net/tls/quic/packet/quic_packet_builder.hpp>
 #include <sdk/net/tls/quic_packet_publisher.hpp>
 #include <sdk/net/tls/quic_session.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshake_builder.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>
 #include <sdk/net/tls/tls_session.hpp>
@@ -54,8 +56,6 @@ quic_packet_publisher& quic_packet_publisher::set_flags(uint32 flags) {
 }
 
 quic_packet_publisher& quic_packet_publisher::set_streaminfo(uint64 stream_id, uint8 unitype) {
-    // if (quic_stream_unidirectional & stream_id) {
-    // }
     _stream_id = stream_id;
     _unitype = unitype;
     return *this;
@@ -71,25 +71,72 @@ uint64 quic_packet_publisher::get_streamid() { return _stream_id; }
 
 tls_handshakes& quic_packet_publisher::get_handshakes() { return _handshakes; }
 
-http3_frames& quic_packet_publisher::get_frames() { return _frames; }
+http3_frames& quic_packet_publisher::get_h3frames() { return _h3frames; }
 
-quic_packet_publisher& quic_packet_publisher::add(tls_handshake* handshake, bool upref) {
-    _handshakes.add(handshake, upref);
+quic_packet_publisher& quic_packet_publisher::add(tls_hs_type_t type, tls_direction_t dir, std::function<return_t(tls_handshake*, tls_direction_t)> func) {
+    return_t ret = errorcode_t::success;
+    tls_handshake* handshake = nullptr;
+    auto session = get_session();
+    switch (type) {
+        case tls_hs_client_hello: {
+            ret = tls_composer::construct_client_hello(&handshake, session, func, tls_13, tls_13);
+        } break;
+        case tls_hs_server_hello: {
+            ret = tls_composer::construct_server_hello(&handshake, session, func, tls_13, tls_13);
+        } break;
+        default: {
+            tls_handshake_builder builder;
+            handshake = builder.set(type).set(session).build();
+            if (handshake) {
+                if (func) {
+                    ret = func(handshake, dir);
+                }
+            }
+        } break;
+    }
+    if (errorcode_t::success == ret) {
+        _handshakes.add(handshake);
+    } else {
+        handshake->release();
+    }
     return *this;
 }
 
-quic_packet_publisher& quic_packet_publisher::add(http3_frame* frame, bool upref) {
-    _frames.add(frame, upref);
+quic_packet_publisher& quic_packet_publisher::add(h3_frame_t type, std::function<return_t(http3_frame*)> func) {
+    return_t ret = errorcode_t::success;
+    auto session = get_session();
+    http3_frame_builder builder;
+    auto frame = builder.set(type).set(session).build();
+    if (frame) {
+        if (func) {
+            ret = func(frame);
+        }
+        if (errorcode_t::success == ret) {
+            _h3frames.add(frame);
+        } else {
+            frame->release();
+        }
+    }
     return *this;
 }
 
-quic_packet_publisher& quic_packet_publisher::operator<<(tls_handshake* handshake) {
-    _handshakes.add(handshake);
-    return *this;
-}
-
-quic_packet_publisher& quic_packet_publisher::operator<<(http3_frame* frame) {
-    _frames.add(frame);
+quic_packet_publisher& quic_packet_publisher::add(quic_frame_t type, std::function<return_t(quic_frame*)> func) {
+    switch (type) {
+        case quic_frame_type_crypto:
+        case quic_frame_type_stream:
+        case quic_frame_type_stream1:
+        case quic_frame_type_stream2:
+        case quic_frame_type_stream3:
+        case quic_frame_type_stream4:
+        case quic_frame_type_stream5:
+        case quic_frame_type_stream6:
+        case quic_frame_type_stream7: {
+            // do nothing
+        } break;
+        default: {
+            _frames.push_back({type, func});
+        } break;
+    }
     return *this;
 }
 
@@ -99,10 +146,11 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
     return_t ret = errorcode_t::success;
     __try2 {
         if (false == get_handshakes().empty()) {
-            // initial or handshake
             std::set<protection_space_t> temp;
             ret = get_handshakes().for_each([&](tls_handshake* handshake) -> return_t {
-                temp.insert(is_kindof_initial(handshake) ? protection_initial : protection_handshake);
+                protection_space_t space;
+                auto test = kindof_handshake(handshake, space);
+                temp.insert(space);
                 return (1 == temp.size()) ? success : bad_request;
             });
             if (errorcode_t::success != ret) {
@@ -111,7 +159,7 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
 
             spaces = temp;
         }
-        if (false == get_frames().empty()) {
+        if (false == get_h3frames().empty()) {
             // application (1-RTT)
             // h3_control_stream (0)
             spaces.insert(protection_application);
@@ -120,6 +168,9 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
             // h3_push_stream (1)
             // h3_qpack_encoder_stream (2)
             // h3_qpack_decoder_stream (3)
+            spaces.insert(protection_application);
+        }
+        if (false == _frames.empty()) {
             spaces.insert(protection_application);
         }
 
@@ -137,6 +188,10 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
             lambda_ack(get_session(), protection_initial);
             lambda_ack(get_session(), protection_handshake);
             lambda_ack(get_session(), protection_application);
+        }
+
+        if (spaces.empty()) {
+            ret = errorcode_t::do_nothing;
         }
     }
     __finally2 {}
@@ -168,16 +223,37 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
         binary_t unfragmented;
         if (protection_application == space) {
             uint32 flags = 0;
-            if (false == get_frames().empty()) {
-                get_frames().for_each([&](http3_frame* frame) -> return_t { return frame->write(unfragmented); });
+            if (false == get_h3frames().empty()) {
+                get_h3frames().for_each([&](http3_frame* frame) -> return_t { return frame->write(unfragmented); });
+                segment.assign(quic_frame_type_stream, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size(), flags);
             } else if (_unitype) {
                 unfragmented = std::move(get_qpack_stream().get_binary());
                 flags = fragment_context_keep_entry;
+                segment.assign(quic_frame_type_stream, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size(), flags);
+            } else if (false == get_handshakes().empty()) {
+                // NST
+                get_handshakes().for_each([&](tls_handshake* handshake) -> return_t {
+                    return_t test = errorcode_t::success;
+                    protection_space_t ps;
+                    kindof_handshake(handshake, ps);
+                    if (space == ps) {
+                        test = handshake->write(dir, unfragmented);
+                    }
+                    return test;
+                });
+                segment.assign(quic_frame_type_crypto, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size(), flags);
             }
-            segment.assign(quic_frame_type_stream, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size(), flags);
         } else {
             if (false == get_handshakes().empty()) {
-                get_handshakes().for_each([&](tls_handshake* handshake) -> return_t { return handshake->write(dir, unfragmented); });
+                get_handshakes().for_each([&](tls_handshake* handshake) -> return_t {
+                    return_t test = errorcode_t::success;
+                    protection_space_t ps;
+                    kindof_handshake(handshake, ps);
+                    if (space == ps) {
+                        test = handshake->write(dir, unfragmented);
+                    }
+                    return test;
+                });
                 segment.assign(quic_frame_type_crypto, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size());
             }
         }
@@ -188,7 +264,7 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
         if (false == container.empty()) {
             auto iter = container.begin();
             std::advance(iter, container.size() - 1);
-            if (get_payload_size() != (*iter).size()) {
+            if (get_payload_size() > (*iter).size()) {
                 bin = std::move(*iter);
                 concat = bin.size();
                 container.erase(iter);
@@ -219,10 +295,23 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
 
                 if (_unitype || (false == unfragmented.empty())) {
                     if (protection_application == space) {
-                        auto frame = (quic_frame_stream*)frame_builder.set(quic_frame_type_stream).set(packet).set_streaminfo(_stream_id, _unitype).build();
-                        *packet << frame;
+                        if (success == segment.isready(quic_frame_type_stream)) {
+                            auto frame = (quic_frame_stream*)frame_builder.set(quic_frame_type_stream).set(packet).set_streaminfo(_stream_id, _unitype).build();
+                            *packet << frame;
+                        } else if (success == segment.isready(quic_frame_type_crypto)) {
+                            auto frame = (quic_frame_stream*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
+                            *packet << frame;
+                        }
                     } else {
                         auto frame = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
+                        *packet << frame;
+                    }
+                } else if (false == _frames.empty()) {
+                    // except CRYPTO, STREAM
+                    for (auto& item : _frames) {
+                        auto& frmtype = item.first;
+                        auto& frmfunc = item.second;
+                        auto frame = frame_builder.set(frmtype).set(packet).set(dir).build();
                         *packet << frame;
                     }
                 }
@@ -256,9 +345,8 @@ return_t quic_packet_publisher::publish(tls_direction_t dir, std::function<void(
         }
 
         std::set<protection_space_t> spaces;
-        probe_spaces(spaces);
-        if (spaces.empty()) {
-            ret = do_nothing;
+        ret = probe_spaces(spaces);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -283,21 +371,36 @@ return_t quic_packet_publisher::publish(tls_direction_t dir, std::function<void(
     return ret;
 }
 
-bool quic_packet_publisher::is_kindof_initial(tls_handshake* handshake) {
-    bool ret = false;
-    if (handshake) {
-        auto type = handshake->get_type();
-        ret = (tls_hs_client_hello == type) || (tls_hs_server_hello == type);
-    }
-    return ret;
-}
+return_t quic_packet_publisher::kindof_handshake(tls_handshake* handshake, protection_space_t& space) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        space = protection_default;
 
-bool quic_packet_publisher::is_kindof_handshake(tls_handshake* handshake) {
-    bool ret = false;
-    if (handshake) {
+        if (nullptr == handshake) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
         auto type = handshake->get_type();
-        ret = (tls_hs_client_hello != type) && (tls_hs_server_hello != type);
+        switch (type) {
+            case tls_hs_client_hello:
+            case tls_hs_server_hello: {
+                space = protection_initial;
+            } break;
+            case tls_hs_encrypted_extensions:
+            case tls_hs_certificate:
+            case tls_hs_certificate_verify:
+            case tls_hs_finished: {
+                space = protection_handshake;
+            } break;
+            case tls_hs_new_session_ticket: {
+                space = protection_application;
+            } break;
+            default: {
+                ret = errorcode_t::not_supported;
+            } break;
+        }
     }
+    __finally2 {}
     return ret;
 }
 

@@ -107,8 +107,11 @@ return_t segmentation::isready(uint32 type) {
             __leave2;
         } else {
             auto& context = iter->second;
-            if (context.pos >= context.size) {
-                ret = errorcode_t::no_more;
+            if (fragment_context_keep_entry & context.flags) {
+            } else {
+                if (context.pos >= context.size) {
+                    ret = errorcode_t::no_more;
+                }
             }
         }
     }

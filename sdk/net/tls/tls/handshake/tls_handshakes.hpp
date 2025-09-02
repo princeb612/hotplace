@@ -18,6 +18,7 @@ namespace net {
 class tls_handshakes {
    public:
     tls_handshakes();
+    virtual ~tls_handshakes();
 
     return_t read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     return_t read(tls_session* session, tls_direction_t dir, const binary_t& bin);
@@ -34,6 +35,8 @@ class tls_handshakes {
 
     void set_dtls_seq(uint16 seq);
     uint16 get_dtls_seq();
+
+    t_tls_distinct_container<tls_handshake*, uint8>& get_container();
 
    protected:
    private:

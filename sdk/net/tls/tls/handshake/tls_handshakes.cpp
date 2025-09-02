@@ -17,6 +17,8 @@ namespace net {
 
 tls_handshakes::tls_handshakes() : _dtls_seq(0) {}
 
+tls_handshakes::~tls_handshakes() {}
+
 return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -113,6 +115,8 @@ void tls_handshakes::clear() { _handshakes.clear(); }
 void tls_handshakes::set_dtls_seq(uint16 seq) { _dtls_seq = seq; }
 
 uint16 tls_handshakes::get_dtls_seq() { return _dtls_seq; }
+
+t_tls_distinct_container<tls_handshake*, uint8>& tls_handshakes::get_container() { return _handshakes; }
 
 }  // namespace net
 }  // namespace hotplace
