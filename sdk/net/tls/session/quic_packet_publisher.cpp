@@ -11,6 +11,7 @@
 #include <sdk/base/stream/basic_stream.hpp>
 #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
+#include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/net/basic/trial/tls_composer.hpp>
 #include <sdk/net/http/http3/http3_frame_builder.hpp>
 #include <sdk/net/http/http3/types.hpp>
@@ -97,7 +98,9 @@ quic_packet_publisher& quic_packet_publisher::add(tls_hs_type_t type, tls_direct
     if (errorcode_t::success == ret) {
         _handshakes.add(handshake);
     } else {
-        handshake->release();
+        if (handshake) {
+            handshake->release();
+        }
     }
     return *this;
 }
@@ -322,6 +325,74 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
                     auto frame = (quic_frame_padding*)frame_builder.set(quic_frame_type_padding).set(packet).build();
                     frame->pad(get_payload_size(), quic_pad_packet);
                     *packet << frame;
+                }
+
+                auto session = get_session();
+                auto& protection = session->get_tls_protection();
+
+                auto ch = get_handshakes().get(tls_hs_client_hello);
+                const auto& s_cid = protection.get_secrets().get(tls_context_server_cid);
+
+                if (protection_initial == space) {
+                    if (from_client == dir) {
+                        if (ch) {
+                            binary_t id;
+                            openssl_prng prng;
+                            prng.random(id, 8);
+                            protection.get_secrets().assign(tls_context_quic_dcid, id);
+                            protection.calc(session, tls_hs_client_hello, dir);  // calc initial keys
+#if defined DEBUG
+                            if (istraceable(trace_category_net)) {
+                                basic_stream dbs;
+                                dbs.println("QUIC DCID %s", base16_encode(id).c_str());
+                                trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+                            }
+#endif
+                        }
+                    } else if (from_server == dir) {
+                        // tls_context_server_cid
+                        if (s_cid.empty()) {
+                            binary_t id;
+                            openssl_prng prng;
+                            prng.random(id, 8);
+                            protection.get_secrets().assign(tls_context_server_cid, id);
+                            session->get_quic_session().get_cid_tracker().insert({0, id});
+#if defined DEBUG
+                            if (istraceable(trace_category_net)) {
+                                basic_stream dbs;
+                                dbs.println("QUIC Server CID %s", base16_encode(id).c_str());
+                                trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+                            }
+#endif
+                        }
+                    }
+                }
+
+                if (from_client == dir) {
+                    if (ch) {
+                        const auto& dcid = protection.get_secrets().get(tls_context_quic_dcid);
+                        packet->set_dcid(dcid);
+                    } else {
+                        if (s_cid.empty()) {
+                            // do nothing
+                        } else {
+                            packet->set_dcid(s_cid);
+                        }
+                    }
+                } else if (from_server == dir) {
+                    switch (space) {
+                        case protection_initial:
+                        case protection_handshake: {
+                            if (s_cid.empty()) {
+                                // do nothing
+                            } else {
+                                packet->set_scid(s_cid);
+                            }
+                        } break;
+                        default: {
+                            // omit
+                        } break;
+                    }
                 }
 
                 packet->write(dir, bin);

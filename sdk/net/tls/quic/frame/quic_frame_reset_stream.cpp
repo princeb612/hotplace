@@ -26,18 +26,20 @@ constexpr char constexpr_error_code[] = "error code";
 
 quic_frame_reset_stream::quic_frame_reset_stream(quic_packet* packet) : quic_frame(quic_frame_type_reset_stream, packet) {}
 
+/**
+ * RFC 9000 19.4.  RESET_STREAM Frames
+ * RESET_STREAM Frame {
+ *   Type (i) = 0x04,
+ *   Stream ID (i),
+ *   Application Protocol Error Code (i),
+ *   Final Size (i),
+ * }
+ * Figure 28: RESET_STREAM Frame Format
+ */
+
 return_t quic_frame_reset_stream::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        // 19.4.  RESET_STREAM Frames
-
-        // RESET_STREAM Frame {
-        //   Type (i) = 0x04,
-        //   Stream ID (i),
-        //   Application Protocol Error Code (i),
-        //   Final Size (i),
-        // }
-        // Figure 28: RESET_STREAM Frame Format
         constexpr char constexpr_final_size[] = "final size";
 
         payload pl;

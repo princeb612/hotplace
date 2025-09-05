@@ -256,7 +256,7 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, const byte_t* str
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
-            dbs.println("\e[1;33m + STREAM");
+            dbs.println("\e[1;34m  + frame %s 0x%x(%i)\e[0m", tlsadvisor->quic_frame_type_string(type).c_str(), type, type);
             dbs.println("   > %s 0x%zx (%zi)", constexpr_offset, pos, pos);
             dbs.println("   > %s 0x%zx (%zi)\e[0m", constexpr_length, len, len);
             dbs.println("   > %s 0x%I64x (%I64i) %s", constexpr_stream_id, _stream_id, _stream_id, tlsadvisor->quic_streamid_type_string(_stream_id).c_str());

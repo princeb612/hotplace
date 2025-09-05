@@ -108,6 +108,7 @@ return_t quic_packet_initial::do_read(tls_direction_t dir, const byte_t* stream,
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
+        auto& tracker = session->get_quic_session().get_cid_tracker();
 
         if (from_client == dir) {
             if (secrets.get(tls_secret_initial_quic_client_hp).empty()) {
@@ -116,9 +117,16 @@ return_t quic_packet_initial::do_read(tls_direction_t dir, const byte_t* stream,
             } else {
                 if (false == get_dcid().empty()) {
                     secrets.assign(tls_context_server_cid, get_dcid());
+                    tracker.insert({0, get_dcid()});
                 }
             }
         } else if (from_server == dir) {
+            if (false == get_scid().empty()) {
+                if (secrets.get(tls_context_server_cid).empty()) {
+                    secrets.assign(tls_context_server_cid, get_scid());
+                    tracker.insert({0, get_scid()});
+                }
+            }
             if (false == get_dcid().empty()) {
                 if (secrets.get(tls_context_client_cid).empty()) {
                     secrets.assign(tls_context_client_cid, get_dcid());
@@ -214,7 +222,7 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
          *  in sampling header ciphertext for header protection, the Packet Number field is
          *  assumed to be 4 bytes long (its maximum possible encoded length).
          */
-        if (is_unidirection(dir) && (get_payload().size() > 0)) {
+        if (is_unidirection(dir)) {
             auto session = get_session();
             auto& protection = session->get_tls_protection();
 

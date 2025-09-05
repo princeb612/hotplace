@@ -26,6 +26,14 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * RFC 9000 19.1.  PADDING Frames
+ *   PADDING Frame {
+ *     Type (i) = 0x00,
+ *   }
+ *   Figure 23: PADDING Frame Format
+ */
+
 quic_frame_padding::quic_frame_padding(quic_packet* packet) : quic_frame(quic_frame_type_padding, packet), _len(0), _flags(0) {}
 
 return_t quic_frame_padding::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {

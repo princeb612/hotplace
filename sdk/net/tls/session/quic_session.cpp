@@ -28,6 +28,8 @@ quic_session::quic_session() { get_setting().set(quic_param_max_udp_payload_size
 
 quic_session::~quic_session() {}
 
+std::map<uint64, binary_t>& quic_session::get_cid_tracker() { return _cid_tracker; }
+
 t_key_value<uint64, uint64>& quic_session::get_setting() { return _setting; }
 
 qpack_dynamic_table& quic_session::get_dynamic_table() { return _qpack_dyntable; }

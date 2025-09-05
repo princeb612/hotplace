@@ -30,6 +30,8 @@ class quic_session {
     quic_session();
     ~quic_session();
 
+    // NCI
+    std::map<uint64, binary_t>& get_cid_tracker();
     // setting
     t_key_value<uint64, uint64>& get_setting();
     // settings, headers
@@ -41,6 +43,8 @@ class quic_session {
 
    protected:
    private:
+    // NCI
+    std::map<uint64, binary_t> _cid_tracker;
     // setting
     t_key_value<uint64, uint64> _setting;
     // settings, headers

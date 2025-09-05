@@ -263,9 +263,9 @@ class tls_protection {
      * @brief   TLS 1.3 decrypt
      * @remarks
      *          application_data
-     *          |   dir                     | client  | server  | key/iv        |
-     *          | 0 client session (C <- S) | decrypt | encrypt | server key/iv |
-     *          | 1 server session (C -> S) | encrypt | decrypt | client key/iv |
+     *          |   dir       | desc                    | client  | server  | key/iv        |
+     *          | from_server | client session (C <- S) | decrypt | encrypt | server key/iv |
+     *          | from_client | server session (C -> S) | encrypt | decrypt | client key/iv |
      *
      *          encrypt(&server_session, record, protected_record);
      *          decrypt(&client_session, protected_record, record);

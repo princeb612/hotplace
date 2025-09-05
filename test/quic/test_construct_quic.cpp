@@ -11,7 +11,7 @@
 
 static int max_udp_payload_size = 1200;
 
-void construct_quic_initial_client_hello(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+void construct_quic_cli_initial(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
     auto max_payload_size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
@@ -68,21 +68,24 @@ void construct_quic_initial_client_hello(tls_session* session, tls_direction_t d
         });
 }
 
-void construct_quic_initial_server_hello(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+void construct_quic_svr_initial(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
     quic_packet_publisher publisher;
 
     // ACK, CRYPTO[SH], PADDING
-    publisher.set_session(session).set_flags(flags).add(tls_hs_server_hello, dir, nullptr).publish(dir, [&](tls_session* session, binary_t& packet) -> void {
-        bins.push_back(packet);
-        auto tlsadvisor = tls_advisor::get_instance();
-        auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
-        _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
-    });
+    publisher.set_session(session)
+        .set_flags(flags)                        //
+        .add(tls_hs_server_hello, dir, nullptr)  //
+        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+            bins.push_back(packet);
+            auto tlsadvisor = tls_advisor::get_instance();
+            auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
+            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
+        });
 }
 
-void construct_quic_handshake_ee_cert_cv_fin_settings(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+void construct_quic_svr_handshakes_settings(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
     quic_packet_publisher publisher;
@@ -161,21 +164,24 @@ void construct_quic_handshake_ee_cert_cv_fin_settings(tls_session* session, tls_
         });
 }
 
-void construct_quic_handshake_fin(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+void construct_quic_cli_handshake(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
     quic_packet_publisher publisher;
 
     // ACK, CRYPTO[FIN], PADDING
-    publisher.set_session(session).set_flags(flags).add(tls_hs_finished, dir, nullptr).publish(dir, [&](tls_session* session, binary_t& packet) -> void {
-        bins.push_back(packet);
-        auto tlsadvisor = tls_advisor::get_instance();
-        auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
-        _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
-    });
+    publisher.set_session(session)
+        .set_flags(flags)                    //
+        .add(tls_hs_finished, dir, nullptr)  //
+        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+            bins.push_back(packet);
+            auto tlsadvisor = tls_advisor::get_instance();
+            auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
+            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
+        });
 }
 
-void construct_quic_settings(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+void construct_quic_cli_settings(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
     quic_packet_publisher publisher;
@@ -201,7 +207,7 @@ void construct_quic_settings(tls_session* session, tls_direction_t dir, uint32 f
         });
 }
 
-void construct_quic_decoder(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+void construct_quic_cli_decoder(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
     quic_packet_publisher publisher;
@@ -218,7 +224,7 @@ void construct_quic_decoder(tls_session* session, tls_direction_t dir, uint32 fl
         });
 }
 
-void construct_quic_encoder(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+void construct_quic_cli_encoder(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
     quic_packet_publisher publisher;
@@ -238,7 +244,7 @@ void construct_quic_encoder(tls_session* session, tls_direction_t dir, uint32 fl
     });
 }
 
-void construct_http3_get(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+void construct_http3_cli_get(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
     quic_packet_publisher publisher;
@@ -258,7 +264,7 @@ void construct_http3_get(tls_session* session, tls_direction_t dir, uint32 flags
                      .add("accept", "*/*");
                  return ret;
              })
-        .set_streaminfo(quic_stream_client_bidi, h3_control_stream)
+        .set_streaminfo(quic_stream_client_bidi, h3_control_stream)  // 0 quic_stream_client_bidi
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
             bins.push_back(packet);
             auto tlsadvisor = tls_advisor::get_instance();
@@ -267,7 +273,7 @@ void construct_http3_get(tls_session* session, tls_direction_t dir, uint32 flags
         });
 }
 
-void construct_quic_1rtt_2nst_in_1crypto(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+void construct_quic_svr_nst(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
     quic_packet_publisher publisher;
@@ -285,7 +291,7 @@ void construct_quic_1rtt_2nst_in_1crypto(tls_session* session, tls_direction_t d
         });
 }
 
-void construct_quic_done_nt_nci(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+void construct_quic_svr_done_nt_nci(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
     quic_packet_publisher publisher;
@@ -303,18 +309,60 @@ void construct_quic_done_nt_nci(tls_session* session, tls_direction_t dir, uint3
         });
 }
 
+void construct_quic_svr_decoder(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+    bins.clear();
+
+    quic_packet_publisher publisher;
+
+    // try to publish [decoder stream (03) || no data]
+    publisher.set_session(session).set_flags(flags).set_streaminfo(7, h3_qpack_decoder_stream);
+    publisher.get_qpack_stream().ack(0);  // STREAM(0) HEADERS GET /
+    publisher.publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+        bins.push_back(packet);
+        auto tlsadvisor = tls_advisor::get_instance();
+        auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
+        _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
+    });
+}
+
+void construct_http3_svr_ok(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+    bins.clear();
+
+    quic_packet_publisher publisher;
+
+    publisher.set_session(session)
+        .set_flags(flags)
+        .add(h3_frame_headers,
+             [&](http3_frame* frame) -> return_t {
+                 return_t ret = errorcode_t::success;
+                 http3_frame_headers* headers = (http3_frame_headers*)frame;
+                 (*headers).add(":status", "200").add("content-type", "text/html; charset=ISO-8859-1");
+                 return ret;
+             })
+        .set_streaminfo(quic_stream_client_bidi, h3_control_stream)  // 0 quic_stream_client_bidi
+        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+            bins.push_back(packet);
+            auto tlsadvisor = tls_advisor::get_instance();
+            auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
+            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
+        });
+}
+
 void construct_quic_ack(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
     quic_packet_publisher publisher;
 
     // ACK, PADDING
-    publisher.set_session(session).set_flags(quic_ack_packet | flags).publish(dir, [&](tls_session* session, binary_t& packet) -> void {
-        bins.push_back(packet);
-        auto tlsadvisor = tls_advisor::get_instance();
-        auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
-        _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
-    });
+    publisher
+        .set_session(session)                //
+        .set_flags(quic_ack_packet | flags)  //
+        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+            bins.push_back(packet);
+            auto tlsadvisor = tls_advisor::get_instance();
+            auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
+            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
+        });
 }
 
 return_t send_packet(tls_session* session, tls_direction_t dir, const std::list<binary_t>& bins, const char* message) {
@@ -339,15 +387,13 @@ void test_construct_quic() {
     // curl 0...I   I+1...H   H+1...
     // test 10...I  20...H    30...A
 
-    // TODO
-    // - case payload.size < 16
-
     _test_case.begin("construct");
 
     __try2 {
         return_t ret = errorcode_t::success;
 
-        tls_advisor::get_instance()->enable_alpn("h3");
+        auto tlsadvisor = tls_advisor::get_instance();
+        tlsadvisor->enable_alpn("h3");
 
         load_certificate("rsa.crt", "rsa.key", nullptr);
         load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
@@ -367,54 +413,50 @@ void test_construct_quic() {
         session_server.set_recordno(from_server, 20, protection_handshake);
         session_server.set_recordno(from_server, 30, protection_application);
 
-        auto lambda = [](tls_session* session, tls_direction_t dir, protection_space_t space, uint32 pkn_expect) -> void {
+        auto lambda_check_pkn = [](tls_session* session, tls_direction_t dir, protection_space_t space, uint32 pkn_expect) -> void {
             uint32 pkn = session->get_recordno(dir, false, space);
             _test_case.assert(pkn_expect == pkn, __FUNCTION__, "PKN %i", pkn);
+        };
+        auto lambda_test_ready_to_ack = [](tls_session* session, protection_space_t space, uint32 largest, uint32 range) -> void {
+            auto tlsadvisor = tls_advisor::get_instance();
+            auto& pkns = session->get_quic_session().get_pkns(space);
+            ack_t ack;
+            ack << pkns;
+            ack_t expect(largest, range);
+            _test_case.assert(ack == expect, __FUNCTION__, "confirm ack %s %i..%i", tlsadvisor->protection_space_string(space).c_str(), largest,
+                              largest - range);
         };
 
         // initial
         {
             // #Frame C->S
             //   PKN 10 initial [CRYPTO(CH), PADDING]
-            lambda(&session_client, from_client, protection_initial, 10);
-            construct_quic_initial_client_hello(&session_client, from_client, quic_pad_packet, bins, "initial [CRYPTO(CH), PADDING]");
-            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct initial in 1 frame");
-            // #Frame S->C
-            send_packet(&session_server, from_client, bins, "initial [CRYPTO(CH), PADDING]");
-
-            // S->C initial ACK (10)
             {
-                auto& pkns = session_server.get_quic_session().get_pkns(protection_initial);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(10, 0);
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack initial");
+                const char* text = "initial [CRYPTO(CH), PADDING]";
+                lambda_check_pkn(&session_client, from_client, protection_initial, 10);
+                construct_quic_cli_initial(&session_client, from_client, quic_pad_packet, bins, text);
+                send_packet(&session_server, from_client, bins, text);
+                lambda_test_ready_to_ack(&session_server, protection_initial, 10, 0);
             }
 
             // #Frame S->C
             //   PKN 10 initial [ACK (10), CRYOTO(SH), PADDING]
-            lambda(&session_server, from_server, protection_initial, 10);
-            construct_quic_initial_server_hello(&session_server, from_server, quic_ack_packet | quic_pad_packet, bins, "initial [ACK, CRYPTO(SH), PADDING]");
-            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct initial in 1 frame");
-            // #Frame C->S
-            send_packet(&session_client, from_server, bins, "initial [ACK, CRYPTO(SH), PADDING]");
-
-            // C->S initial ACK (10)
             {
-                auto& pkns = session_client.get_quic_session().get_pkns(protection_initial);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(10, 0);
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack initial");
+                const char* text = "initial [ACK, CRYPTO(SH), PADDING]";
+                lambda_check_pkn(&session_server, from_server, protection_initial, 10);
+                construct_quic_svr_initial(&session_server, from_server, quic_ack_packet | quic_pad_packet, bins, text);
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_client, protection_initial, 10, 0);
             }
 
             // #Frame C->S
             //   PKN 11 initial [ACK (10), PADDING]
-            lambda(&session_client, from_client, protection_initial, 11);
-            construct_quic_ack(&session_client, from_client, quic_pad_packet, bins, "initial [ACK]");
-            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct initial in 1 frame");
-            // #Frame S->C
-            send_packet(&session_server, from_client, bins, "initial [ACK]");
+            {
+                const char* text = "initial [ACK, PADDING]";
+                lambda_check_pkn(&session_client, from_client, protection_initial, 11);
+                construct_quic_ack(&session_client, from_client, quic_pad_packet, bins, text);
+                send_packet(&session_server, from_client, bins, text);
+            }
         }
 
         // handshake, 1-RTT
@@ -424,93 +466,51 @@ void test_construct_quic() {
             // #Frame S->C
             //   PKN 21 handshake [CRYPTO(CV fragmented, FIN)]
             //   PKN 30 1-RTT [STREAM(HTTP/3 SETTINGS)]
-            lambda(&session_server, from_server, protection_handshake, 20);
-            lambda(&session_server, from_server, protection_application, 30);
-            construct_quic_handshake_ee_cert_cv_fin_settings(&session_server, from_server, quic_ack_packet, bins,
-                                                             "handshake [CRYPTO(EE, CERT, CV, FIN)], 1-RTT [STREAM(HTTP/3 SETTINGS)]");
-            _test_case.assert(2 == bins.size(), __FUNCTION__, "construct handshake+1-RTT in 2 frames");
-            // #Frame C->S
-            // #Frame C->S
-            send_packet(&session_client, from_server, bins, "handshake [CRYPTO(EE, CERT, CV, FIN)], 1-RTT [STREAM(HTTP/3 SETTINGS)]");
-
-            // C-S handshake ACK (21..20)
             {
-                auto& pkns = session_client.get_quic_session().get_pkns(protection_handshake);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(21, 1);  // CRYPTO(EE, CERT, CV, FIN)
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack handshake");
-            }
-            // C->S 1-RTT ACK (30)
-            {
-                auto& pkns = session_client.get_quic_session().get_pkns(protection_application);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(30, 0);  // SETTINGS
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+                const char* text = "handshake [CRYPTO(EE, CERT, CV, FIN)], 1-RTT [STREAM(HTTP/3 SETTINGS)]";
+                lambda_check_pkn(&session_server, from_server, protection_handshake, 20);
+                lambda_check_pkn(&session_server, from_server, protection_application, 30);
+                construct_quic_svr_handshakes_settings(&session_server, from_server, quic_ack_packet, bins, text);
+                _test_case.assert(2 == bins.size(), __FUNCTION__, "construct handshake+1-RTT in 2 frames");
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_client, protection_handshake, 21, 1);    // CRYPTO(EE, CERT, CV, FIN)
+                lambda_test_ready_to_ack(&session_client, protection_application, 30, 0);  // SETTINGS
             }
 
             // EE
-            auto lambda_alpn = [&](tls_session* session, const char* text) -> void {
-                auto& alpn = session->get_tls_protection().get_secrets().get(tls_context_alpn);
-                auto test = alpn.empty() ? false : (0 == memcmp(&alpn[0], "\x2h3", 3));
-                _test_case.assert(test, __FUNCTION__, text);
-            };
-            lambda_alpn(&session_client, "ALPN of session client");
-            lambda_alpn(&session_server, "ALPN of session server");
+            {
+                auto lambda_alpn = [&](tls_session* session, const char* text) -> void {
+                    auto& alpn = session->get_tls_protection().get_secrets().get(tls_context_alpn);
+                    auto test = alpn.empty() ? false : (0 == memcmp(&alpn[0], "\x2h3", 3));
+                    _test_case.assert(test, __FUNCTION__, text);
+                };
+                lambda_alpn(&session_client, "ALPN of session client");
+                lambda_alpn(&session_server, "ALPN of session server");
+            }
 
-            lambda(&session_client, from_client, protection_handshake, 20);
-            lambda(&session_client, from_client, protection_application, 30);
             // #Frame C->S
             //   PKN 20 handshake [ACK (21..20), CRYPTO(FIN)]
             //   PKN 30 1-RTT [ACK (30), PADDING]
-            construct_quic_handshake_fin(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins,
-                                         "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK, PADDING]");
-            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct handshake+1-RTT in 1 frame");
-            // #Frame S->C
-            send_packet(&session_server, from_client, bins, "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK], PADDING");
+            {
+                lambda_check_pkn(&session_client, from_client, protection_handshake, 20);
+                lambda_check_pkn(&session_client, from_client, protection_application, 30);
 
-            // S->C handshake ACK (20)
-            {
-                auto& pkns = session_server.get_quic_session().get_pkns(protection_handshake);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(20, 0);  // FIN
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack handshake");
-            }
-            // S->C 1-RTT ACK (30)
-            {
-                auto& pkns = session_server.get_quic_session().get_pkns(protection_application);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(30, 0);
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+                const char* text = "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK, PADDING]";
+                construct_quic_cli_handshake(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, text);
+                send_packet(&session_server, from_client, bins, text);
+                lambda_test_ready_to_ack(&session_server, protection_handshake, 20, 0);
+                lambda_test_ready_to_ack(&session_server, protection_application, 30, 0);
             }
 
             // #Frame S->C
             //   PKN 22 [ACK (20), PADDING]
-            lambda(&session_server, from_server, protection_handshake, 22);
-            construct_quic_ack(&session_server, from_server, quic_pad_packet, bins, "handshake [ACK, PADDING]");
-            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct handshake in 1 frame");
-            // #Frame C->S
-            send_packet(&session_client, from_server, bins, "handshake [ACK, PADDING]");
-
-            // no changes
-            // S->C handshake ACK (20)
             {
-                auto& pkns = session_server.get_quic_session().get_pkns(protection_handshake);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(20, 0);  // FIN
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack handshake");
-            }
-            // S->C 1-RTT ACK (30)
-            {
-                auto& pkns = session_server.get_quic_session().get_pkns(protection_application);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(30, 0);
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+                const char* text = "handshake [ACK, PADDING]";
+                lambda_check_pkn(&session_server, from_server, protection_handshake, 22);
+                construct_quic_ack(&session_server, from_server, quic_pad_packet, bins, text);
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_server, protection_handshake, 20, 0);
+                lambda_test_ready_to_ack(&session_server, protection_application, 30, 0);
             }
         }
 
@@ -518,34 +518,20 @@ void test_construct_quic() {
         {
             // #Frame C->S
             //   PKN 31 [ACK (31, 30), STREAM(HTTP/3 SETTINGS)]
-            construct_quic_settings(&session_client, from_client, quic_ack_packet, bins, "1-RTT [ACK, STREAM(HTTP/3 SETTINGS)]");
-            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct 1-RTT in 1 frame");
-            // #Frame S->C
-            send_packet(&session_server, from_client, bins, "1-RTT [ACK, STREAM(HTTP/3 SETTINGS)]");
-
-            // S->C 1-RTT ACK (31..30)
             {
-                auto& pkns = session_server.get_quic_session().get_pkns(protection_application);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(31, 1);
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+                const char* text = "1-RTT [ACK, STREAM(HTTP/3 SETTINGS)]";
+                construct_quic_cli_settings(&session_client, from_client, quic_ack_packet, bins, text);
+                send_packet(&session_server, from_client, bins, text);
+                lambda_test_ready_to_ack(&session_server, protection_application, 31, 1);
             }
 
             // #Frame S->C
             //   PKN 32 [ACK (31..30)]
-            construct_quic_ack(&session_server, from_server, 0, bins, "1-RTT [ACK]");
-            _test_case.assert(1 == bins.size(), __FUNCTION__, "construct 1-RTT in 1 frame");
-            // #Frame C->S
-            send_packet(&session_client, from_server, bins, "1-RTT [ACK]");
-
-            // C->S 1-RTT ACK (32..30)
             {
-                auto& pkns = session_client.get_quic_session().get_pkns(protection_application);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(32, 2);
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+                const char* text = "1-RTT [ACK]";
+                construct_quic_ack(&session_server, from_server, 0, bins, text);
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_client, protection_application, 32, 2);
             }
 
             // #Frame C->S
@@ -553,17 +539,11 @@ void test_construct_quic() {
             //    stream id 10
             //    client_initiated_uni
             //    qpack decoder stream
-            construct_quic_decoder(&session_client, from_client, quic_ack_packet, bins, "1-RTT [STREAM(QPACK_DECODER_STREAM)]");
-            // #Frame S->C
-            send_packet(&session_server, from_client, bins, "1-RTT [STREAM(QPACK_DECODER_STREAM)]");
-
-            // S->C 1-RTT ACK (32..30)
             {
-                auto& pkns = session_server.get_quic_session().get_pkns(protection_application);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(32, 2);
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+                const char* text = "1-RTT [STREAM(QPACK_DECODER_STREAM)]";
+                construct_quic_cli_decoder(&session_client, from_client, quic_ack_packet, bins, text);
+                send_packet(&session_server, from_client, bins, text);
+                lambda_test_ready_to_ack(&session_server, protection_application, 32, 2);
             }
 
             // #Frame C->S
@@ -571,90 +551,105 @@ void test_construct_quic() {
             //     stream id 6
             //     client_initiated_uni
             //     qpack encoder stream
-            construct_quic_encoder(&session_client, from_client, quic_ack_packet, bins, "1-RTT [STREAM(QPACK_ENCODER_STREAM)]");
-            // #Frame S->C
-            send_packet(&session_server, from_client, bins, "1-RTT [STREAM(QPACK_ENCODER_STREAM)]");
-
-            // S->C 1-RTT ACK (33..30)
             {
-                auto& pkns = session_server.get_quic_session().get_pkns(protection_application);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(33, 3);
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+                const char* text = "1-RTT [STREAM(QPACK_ENCODER_STREAM)]";
+                construct_quic_cli_encoder(&session_client, from_client, quic_ack_packet, bins, text);
+                send_packet(&session_server, from_client, bins, text);
+                lambda_test_ready_to_ack(&session_server, protection_application, 33, 3);
             }
 
             // #Frame S->C
             //   PKN 33 [ACK(33..30)]
-            construct_quic_ack(&session_server, from_server, 0, bins, "1-RTT [ACK]");
-            // #Frame C->S
-            send_packet(&session_client, from_server, bins, "1-RTT [ACK]");
-
-            // C->S 1-RTT ACK (33..30)
             {
-                auto& pkns = session_client.get_quic_session().get_pkns(protection_application);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(33, 3);
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+                const char* text = "1-RTT [ACK]";
+                construct_quic_ack(&session_server, from_server, 0, bins, text);
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_client, protection_application, 33, 3);
             }
 
             // #Frame C->S
             //   PKN 34 [ACK(33..30),STREAM(HTTP/3 HEADERS]
             // GET /
-            construct_http3_get(&session_client, from_client, quic_ack_packet, bins, "1-RTT [ACK, STREAM(HTTP/3 HEADERS)]");
-            // #Frame S->C
-            send_packet(&session_server, from_client, bins, "1-RTT [ACK, STREAM(HTTP/3 HEADERS)]");
-
-            // S->C 1-RTT ACK (34..30)
             {
-                auto& pkns = session_server.get_quic_session().get_pkns(protection_application);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(34, 4);
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+                const char* text = "1-RTT [ACK, STREAM(HTTP/3 HEADERS)]";
+                construct_http3_cli_get(&session_client, from_client, quic_ack_packet, bins, text);
+                send_packet(&session_server, from_client, bins, text);
+                lambda_test_ready_to_ack(&session_server, protection_application, 34, 4);
             }
 
             // #Frame S->C
             //   PKN 34 [ACK(34..30)]
-            construct_quic_ack(&session_server, from_server, quic_ack_packet, bins, "1-RTT [ACK]");
-            // #Frame C->S
-            send_packet(&session_client, from_server, bins, "1-RTT [ACK]");
-
-            // C->S 1-RTT ACK (34..30)
             {
-                auto& pkns = session_client.get_quic_session().get_pkns(protection_application);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(34, 4);
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+                const char* text = "1-RTT [ACK]";
+                construct_quic_ack(&session_server, from_server, quic_ack_packet, bins, text);
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_client, protection_application, 34, 4);
             }
 
             // #Frame S->C
             //   PKN 35 [ACK(34..30), CRYPTO(NST, NST)]
-            construct_quic_1rtt_2nst_in_1crypto(&session_server, from_server, quic_ack_packet, bins, "1-RTT [CRYPTO(NST, NST)]");
-            // #Frame C->S
-            send_packet(&session_client, from_server, bins, "1-RTT [CRYOTO(NST, NST)]");
-
-            // C->S 1-RTT ACK (35..30)
             {
-                auto& pkns = session_client.get_quic_session().get_pkns(protection_application);
-                ack_t ack;
-                ack << pkns;
-                ack_t expect(35, 5);
-                _test_case.assert(ack == expect, __FUNCTION__, "confirm ack 1-RTT");
+                // 2 NST handshakes in 1 CRYPTO FRAME
+                const char* text = "1-RTT [CRYPTO(NST, NST)]";
+                construct_quic_svr_nst(&session_server, from_server, quic_ack_packet, bins, text);
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_client, protection_application, 35, 5);
             }
 
-// in progress
-// - redesign publisher
-// - quic_frame implementation
-#if 0
             // #Frame S->C
             //   PKN 36 [DONE, NT, NCI]
-            construct_quic_done_nt_nci(&session_server, from_server, quic_ack_packet, bins, "1-RTT [CRYPTO(DONE, NT, NCI)]");
+            {
+                const char* text = "1-RTT [CRYPTO(DONE, NT, NCI)]";
+                construct_quic_svr_done_nt_nci(&session_server, from_server, quic_ack_packet, bins, text);
+                // DONE || NT || NCI || 0x80(?) -> bad data
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_client, protection_application, 36, 6);
+            }
+
             // #Frame C->S
-            send_packet(&session_client, from_server, bins, "1-RTT [CRYOTO(DONE, NT, NCI)]");
-#endif
+            //   PKN 35
+            {
+                const char* text = "1-RTT [ACK]";
+                construct_quic_ack(&session_client, from_client, quic_ack_packet, bins, text);
+                send_packet(&session_server, from_client, bins, text);
+                lambda_test_ready_to_ack(&session_server, protection_application, 35, 5);
+            }
+
+            // #Frame S->C
+            //   PKN 37 [ACK]
+            {
+                const char* text = "1-RTT [ACK]";
+                construct_quic_ack(&session_server, from_server, quic_ack_packet, bins, text);
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_client, protection_application, 37, 7);
+            }
+
+            // #Frame S->C
+            //   PKN 38 [STREAM(QPACK_DECODER_STREAM)]
+            {
+                const char* text = "1-RTT [STREAM(QPACK_DECODER_STREAM)]";
+                construct_quic_svr_decoder(&session_server, from_server, quic_ack_packet, bins, text);
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_client, protection_application, 38, 8);
+            }
+
+            // #Frame C->S
+            //   PKN 36
+            {
+                const char* text = "1-RTT [ACK]";
+                construct_quic_ack(&session_client, from_client, quic_ack_packet, bins, text);
+                send_packet(&session_server, from_client, bins, text);
+                lambda_test_ready_to_ack(&session_server, protection_application, 36, 6);
+            }
+
+            // #Frame S->C
+            //  PKN 39
+            {
+                const char* text = "1-RTT [HEADERS(HTTP/3 HEADERS)]";
+                construct_http3_svr_ok(&session_server, from_server, quic_ack_packet, bins, text);
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_client, protection_application, 39, 9);
+            }
         }
     }
     __finally2 {}

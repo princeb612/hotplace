@@ -89,9 +89,11 @@ enum quic_frame_t : uint64 {
     quic_frame_type_max_data = 0x10,              // RFC 9000 19.9  __01
     quic_frame_type_max_stream_data = 0x11,       // RFC 9000 19.10 __01
     quic_frame_type_max_streams = 0x12,           // RFC 9000 19.11 __01 0x12-0x13
+    quic_frame_type_max_streams1 = 0x13,          //
     quic_frame_type_data_blocked = 0x14,          // RFC 9000 19.12 __01
     quic_frame_type_stream_data_blocked = 0x15,   // RFC 9000 19.13 __01
     quic_frame_type_stream_blocked = 0x16,        // RFC 9000 19.14 __01 0x16-0x17
+    quic_frame_type_stream_blocked1 = 0x17,       //
     quic_frame_type_new_connection_id = 0x18,     // RFC 9000 19.15 __01
     quic_frame_type_retire_connection_id = 0x19,  // RFC 9000 19.16 __01
     quic_frame_type_path_challenge = 0x1a,        // RFC 9000 19.17 __01
@@ -99,6 +101,16 @@ enum quic_frame_t : uint64 {
     quic_frame_type_connection_close = 0x1c,      // RFC 9000 19.19 ih01 0x1c-0x1d
     quic_frame_type_connection_close1 = 0x1d,     //
     quic_frame_type_handshake_done = 0x1e,        // RFC 9000 19.20 ___1
+    quic_frame_type_immediate_ack = 0x1f,
+    quic_frame_type_datagram = 0x30,
+    quic_frame_type_datagram1 = 0x31,
+    quic_frame_type_ack_frequency = 0xaf,
+    quic_frame_type_ack_mp = 0x15228c00,
+    quic_frame_type_ack_mp1 = 0x15228c01,
+    quic_frame_type_path_abandon = 0x15228c05,
+    quic_frame_type_path_status = 0x15228c06,
+    quic_frame_type_path_standby = 0x15228c07,
+    quic_frame_type_path_available = 0x15228c08,
 };
 
 /**
@@ -160,7 +172,7 @@ enum quic_param_t {
 /**
  * RFC 9000 20.  Error Codes
  */
-enum quic_errorcodes_t {
+enum quic_errorcode_t : uint64 {
     quic_no_error = 0x00,
     quic_internal_error = 0x01,
     quic_connection_refused = 0x02,
@@ -178,7 +190,11 @@ enum quic_errorcodes_t {
     quic_key_update_error = 0x0e,
     quic_aead_limit_reached = 0x0f,
     quic_no_viable_path = 0x10,
+    quic_version_negotiation_error = 0x11,
     quic_crypto_error = 0x0100,  // 0x0100-0x01ff
+    quic_crypto_error_end = 0x01ff,
+    quic_mp_protocol_violation = 0x1001d76d3ded42f3,
+    quic_bdp_token_error = 0x4143414213370002,
 };
 
 enum quic_frame_stream_flag_t : uint8 {

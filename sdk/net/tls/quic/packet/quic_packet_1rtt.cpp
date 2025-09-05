@@ -82,10 +82,7 @@ return_t quic_packet_1rtt::do_read(tls_direction_t dir, const byte_t* stream, si
         dump();
 
         size_t tpos = 0;
-        ret = get_quic_frames().read(dir, &_payload[0], _payload.size(), tpos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+        get_quic_frames().read(dir, &_payload[0], _payload.size(), tpos);
 
         session->get_quic_session().get_pkns(protection_application).add(get_pn());  // including ACK packet
     }
@@ -157,7 +154,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
          *  in sampling header ciphertext for header protection, the Packet Number field is
          *  assumed to be 4 bytes long (its maximum possible encoded length).
          */
-        if ((false == is_anydirection(dir)) && (get_payload().size() >= 4)) {
+        if (is_unidirection(dir)) {
             binary_t bin_ciphertext;
             binary_t bin_tag;
             binary_t bin_mask;

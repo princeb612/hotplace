@@ -555,6 +555,7 @@ enum tls_secret_t : uint16 {
     tls_context_client_cid = (TLS_SECRET_USERCONTEXT | 0x32),               //
     tls_context_server_cid = (TLS_SECRET_USERCONTEXT | 0x33),               //
     tls_context_dtls_cookie = (TLS_SECRET_USERCONTEXT | 0x34),              // network_session level
+    tls_context_stateless_reset_token = (TLS_SECRET_USERCONTEXT | 0x35),    //
 };
 
 /**

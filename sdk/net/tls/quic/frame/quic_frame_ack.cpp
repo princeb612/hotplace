@@ -40,6 +40,20 @@ constexpr char constexpr_ect0_count[] = "ect0 count";
 constexpr char constexpr_ect1_count[] = "ect1 count";
 constexpr char constexpr_ectce_count[] = "ect-ce count";
 
+/**
+ * RFC 9001 19.3.  ACK Frames
+ * ACK Frame {
+ *   Type (i) = 0x02..0x03,
+ *   Largest Acknowledged (i),
+ *   ACK Delay (i),
+ *   ACK Range Count (i),
+ *   First ACK Range (i),
+ *   ACK Range (..) ...,
+ *   [ECN Counts (..)],
+ * }
+ * Figure 25: ACK Frame Format
+ */
+
 quic_frame_ack::quic_frame_ack(quic_packet* packet, uint8 type) : quic_frame((quic_frame_t)type, packet), _space(protection_default) {
     if ((quic_frame_type_ack == type) || (quic_frame_type_ack1 == type)) {
     } else {
@@ -64,18 +78,6 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
     return_t ret = errorcode_t::success;
     __try2 {
         auto type = get_type();
-        // RFC 9001 19.3.  ACK Frames
-
-        // ACK Frame {
-        //   Type (i) = 0x02..0x03,
-        //   Largest Acknowledged (i),
-        //   ACK Delay (i),
-        //   ACK Range Count (i),
-        //   First ACK Range (i),
-        //   ACK Range (..) ...,
-        //   [ECN Counts (..)],
-        // }
-        // Figure 25: ACK Frame Format
 
         payload pl;
         pl << new payload_member(new quic_encoded(uint64(0)), constexpr_largest_ack)      //
@@ -167,6 +169,8 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
     __try2 {
         auto session = get_packet()->get_session();
         auto space = get_protection_space();
+        auto type = get_type();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         if (protection_default == space) {
             ret = errorcode_t::not_ready;
@@ -180,7 +184,7 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
         pkns.set_status(0);
 
         payload pl;
-        pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)                         //
+        pl << new payload_member(new quic_encoded(uint8(type)), constexpr_type)                               //
            << new payload_member(new quic_encoded(uint64(ack.largest_ack)), constexpr_largest_ack)            //
            << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)                            //
            << new payload_member(new quic_encoded(uint64(ack.ack_ranges.size())), constexpr_ack_range_count)  //
@@ -193,6 +197,14 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
                        << new payload_member(new quic_encoded(uint64(item.ack_range_length)), constexpr_range_length);
             ack_ranges.write(bin);
         }
+
+#if defined DEBUG
+        if (istraceable(trace_category_net)) {
+            basic_stream dbs;
+            dbs.println("\e[1;34m  + frame %s 0x%x(%i)\e[0m", tlsadvisor->quic_frame_type_string(type).c_str(), type, type);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
+        }
+#endif
     }
     __finally2 {}
     return ret;
