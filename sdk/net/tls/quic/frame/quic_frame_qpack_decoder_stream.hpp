@@ -17,9 +17,9 @@
 namespace hotplace {
 namespace net {
 
-class quic_frame_qpack_encoder_stream : public quic_frame_stream {
+class quic_frame_qpack_decoder_stream : public quic_frame_stream {
    public:
-    quic_frame_qpack_encoder_stream(quic_packet* packet, uint8 type);
+    quic_frame_qpack_decoder_stream(tls_session* session, uint8 type);
 
    protected:
     virtual return_t do_read_control_stream(uint64 stream_id);

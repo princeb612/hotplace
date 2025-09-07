@@ -10,7 +10,7 @@
 
 #include <sdk/net/http/http3/http3_frames.hpp>
 #include <sdk/net/http/qpack/qpack_encoder.hpp>
-#include <sdk/net/tls/quic/frame/quic_frame_qpack_encoder_stream.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_qpack_decoder_stream.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
@@ -19,9 +19,9 @@
 namespace hotplace {
 namespace net {
 
-quic_frame_qpack_encoder_stream::quic_frame_qpack_encoder_stream(tls_session* session, uint8 type) : quic_frame_stream(session, type) {}
+quic_frame_qpack_decoder_stream::quic_frame_qpack_decoder_stream(tls_session* session, uint8 type) : quic_frame_stream(session, type) {}
 
-return_t quic_frame_qpack_encoder_stream::do_read_control_stream(uint64 stream_id) {
+return_t quic_frame_qpack_decoder_stream::do_read_control_stream(uint64 stream_id) {
     return_t ret = errorcode_t::success;
     __try2 {
         //
