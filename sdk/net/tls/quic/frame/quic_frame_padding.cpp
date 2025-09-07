@@ -34,7 +34,7 @@ namespace net {
  *   Figure 23: PADDING Frame Format
  */
 
-quic_frame_padding::quic_frame_padding(quic_packet* packet) : quic_frame(quic_frame_type_padding, packet), _len(0), _flags(0) {}
+quic_frame_padding::quic_frame_padding(tls_session* session) : quic_frame(quic_frame_type_padding, session), _len(0), _flags(0) {}
 
 return_t quic_frame_padding::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -52,9 +52,9 @@ return_t quic_frame_padding::do_write_body(tls_direction_t dir, binary_t& bin) {
     // Figure 23: PADDING Frame Format
     if (quic_pad_packet & _flags) {
         // packet mode - make a packet padded
-        auto session = get_packet()->get_session();
-        auto fragment = get_packet()->get_fragment();
-        auto avail = fragment.available();
+        auto session = get_session();
+        auto fragment = get_fragment();
+        auto avail = fragment->available();
         auto len = avail > 0 ? avail : 0;
         if (bin.size() < len) {
             bin.resize(len);

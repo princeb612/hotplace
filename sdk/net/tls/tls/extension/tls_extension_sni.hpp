@@ -28,6 +28,7 @@ class tls_extension_sni : public tls_extension {
 
     uint8 get_nametype();
     binary& get_hostname();
+    void set_hostname(const std::string server);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

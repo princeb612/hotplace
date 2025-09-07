@@ -75,6 +75,25 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
 
 return_t tls_records::add(tls_record* record, bool upref) { return _records.add(record, upref); }
 
+tls_records& tls_records::add(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func, bool upref) {
+    __try2 {
+        tls_record_builder builder;
+        auto record = builder.set(type).set(session).build();
+        if (record) {
+            if (func) {
+                auto test = func(record);
+                if (errorcode_t::success != test) {
+                    record->release();
+                    __leave2;
+                }
+            }
+            _records.add(record, upref);
+        }
+    }
+    __finally2 {}
+    return *this;
+}
+
 tls_records& tls_records::operator<<(tls_record* record) {
     add(record);
     return *this;

@@ -8,23 +8,20 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/unittest/trace.hpp>
 #include <sdk/net/http/http3/http3_frames.hpp>
 #include <sdk/net/http/qpack/qpack_encoder.hpp>
-#include <sdk/net/tls/quic/frame/quic_frame_stream_h3_handler.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_http3_stream.hpp>
+#include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic_session.hpp>
+#include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-quic_frame_stream_h3_handler::quic_frame_stream_h3_handler(tls_session* session) : quic_frame_stream_handler(session) {}
+quic_frame_http3_stream::quic_frame_http3_stream(tls_session* session, uint8 type) : quic_frame_stream(session, type) {}
 
-quic_frame_stream_h3_handler::~quic_frame_stream_h3_handler() {}
-
-return_t quic_frame_stream_h3_handler::read(uint64 stream_id) {
+return_t quic_frame_http3_stream::do_read_control_stream(uint64 stream_id) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
@@ -81,6 +78,8 @@ return_t quic_frame_stream_h3_handler::read(uint64 stream_id) {
     __finally2 {}
     return ret;
 }
+
+http3_frames quic_frame_http3_stream::get_frames() { return _frames; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -24,6 +24,7 @@ class tls_records {
     return_t write(tls_session* session, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func);
 
     return_t add(tls_record* record, bool upref = false);
+    tls_records& add(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func = nullptr, bool upref = false);
     tls_records& operator<<(tls_record* record);
     return_t for_each(std::function<return_t(tls_record*)> func);
     tls_record* getat(size_t index, bool upref = false);

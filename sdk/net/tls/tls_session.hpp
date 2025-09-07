@@ -214,6 +214,8 @@ class tls_session {
     secure_prosumer _prosumer;
 };
 
+bool is_kindof_h3(tls_session* session);
+
 }  // namespace net
 }  // namespace hotplace
 

@@ -20,7 +20,7 @@ namespace net {
 // RFC 9000 19.2.  PING Frames
 class quic_frame_ping : public quic_frame {
    public:
-    quic_frame_ping(quic_packet* packet);
+    quic_frame_ping(tls_session* session);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

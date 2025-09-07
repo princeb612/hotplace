@@ -415,7 +415,6 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
                     // certificate
                     auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
                     *record << new tls_handshake_certificate(session);
-
                     records << record;
                 }
                 {
@@ -502,6 +501,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
         auto& protection = session->get_tls_protection();
         bool is_dtls = (session_type_dtls == session_type);
         tls_handshake_client_hello* hs = nullptr;
+        auto dir = from_client;
 
         __try_new_catch(hs, new tls_handshake_client_hello(session), ret, __leave2);
 
@@ -541,92 +541,85 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
             tlsadvisor->enum_cipher_suites(lambda_cs);
         }
 
-        {
-            // encrypt_then_mac
-            if (tls_12 == minspec) {
-                if (session->get_keyvalue().get(session_conf_enable_encrypt_then_mac)) {
-                    hs->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, hs));
-                }
-            }
-        }
-
-        {
-            // ec_point_formats
-            // RFC 9325 4.2.1
-            // Note that [RFC8422] deprecates all but the uncompressed point format.
-            // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-            auto ec_point_formats = new tls_extension_ec_point_formats(hs);
-            (*ec_point_formats).add("uncompressed");
-            hs->get_extensions().add(ec_point_formats);
-        }
-        {
-            // supported_groups
-            // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-            auto supported_groups = new tls_extension_supported_groups(hs);
-            (*supported_groups).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
-            hs->get_extensions().add(supported_groups);
-        }
-        {
-            // signature_algorithms
-            auto signature_algorithms = new tls_extension_signature_algorithms(hs);
-            (*signature_algorithms)
-                .add("ecdsa_secp256r1_sha256")
-                .add("ecdsa_secp384r1_sha384")
-                .add("ecdsa_secp521r1_sha512")
-                .add("ed25519")
-                .add("ed448")
-                .add("rsa_pkcs1_sha256")
-                .add("rsa_pkcs1_sha384")
-                .add("rsa_pkcs1_sha512")
-                .add("rsa_pss_pss_sha256")
-                .add("rsa_pss_pss_sha384")
-                .add("rsa_pss_pss_sha512")
-                .add("rsa_pss_rsae_sha256")
-                .add("rsa_pss_rsae_sha384")
-                .add("rsa_pss_rsae_sha512");
-            hs->get_extensions().add(signature_algorithms);
-        }
+        hs->get_extensions()
+            .add(tls_ext_ec_point_formats, dir, hs,
+                 // ec_point_formats
+                 // RFC 9325 4.2.1
+                 // Note that [RFC8422] deprecates all but the uncompressed point format.
+                 // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
+                 [](tls_extension* extension) -> return_t {
+                     (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
+                     return success;
+                 })
+            .add(tls_ext_supported_groups, dir, hs,
+                 // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
+                 [](tls_extension* extension) -> return_t {
+                     (*(tls_extension_supported_groups*)extension).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
+                     return success;
+                 })
+            .add(tls_ext_signature_algorithms, dir, hs, [](tls_extension* extension) -> return_t {
+                (*(tls_extension_signature_algorithms*)extension)
+                    .add("ecdsa_secp256r1_sha256")
+                    .add("ecdsa_secp384r1_sha384")
+                    .add("ecdsa_secp521r1_sha512")
+                    .add("ed25519")
+                    .add("ed448")
+                    .add("rsa_pkcs1_sha256")
+                    .add("rsa_pkcs1_sha384")
+                    .add("rsa_pkcs1_sha512")
+                    .add("rsa_pss_pss_sha256")
+                    .add("rsa_pss_pss_sha384")
+                    .add("rsa_pss_pss_sha512")
+                    .add("rsa_pss_rsae_sha256")
+                    .add("rsa_pss_rsae_sha384")
+                    .add("rsa_pss_rsae_sha512");
+                return success;
+            });
 
         if (tls_13 == maxspec) {
             // TLS 1.3
-            {
-                // supported_versions
-                auto supported_versions = new tls_extension_client_supported_versions(hs);
-                if (tls_13 == maxspec) {
-                    (*supported_versions).add(is_dtls ? dtls_13 : tls_13);
-                }
-                if (tls_12 == minspec) {
-                    (*supported_versions).add(is_dtls ? dtls_12 : tls_12);
-                }
-                hs->get_extensions().add(supported_versions);
-            }
-            {
-                // psk_key_exchange_modes
-                auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(hs);
-                (*psk_key_exchange_modes).add("psk_dhe_ke");
-                hs->get_extensions().add(psk_key_exchange_modes);
-            }
-            {
-                // key_share
-                auto key_share = new tls_extension_client_key_share(hs);
-                if (tls_flow_hello_retry_request != protection.get_flow()) {
-                    (*key_share).add("x25519");
-                }
-                hs->get_extensions().add(key_share);
+            hs->get_extensions()
+                .add(tls_ext_supported_versions, dir, hs,
+                     [&](tls_extension* extension) -> return_t {
+                         auto sv = (tls_extension_client_supported_versions*)extension;
+                         (*sv).add(is_dtls ? dtls_13 : tls_13);
+                         if (tls_12 == minspec) {
+                             (*sv).add(is_dtls ? dtls_12 : tls_12);
+                         }
+                         return success;
+                     })
+                .add(tls_ext_psk_key_exchange_modes, dir, hs,
+                     [](tls_extension* extension) -> return_t {
+                         (*(tls_extension_psk_key_exchange_modes*)extension).add("psk_dhe_ke");
+                         return success;
+                     })
+                .add(tls_ext_key_share, dir, hs, [&](tls_extension* extension) -> return_t {
+                    tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
+                    if (tls_flow_hello_retry_request != protection.get_flow()) {
+                        keyshare->clear();
+                        keyshare->add("x25519");
+                    }
+                    return success;
+                });
+        }
+
+        if (tls_12 == minspec) {
+            if (session->get_keyvalue().get(session_conf_enable_encrypt_then_mac)) {
+                hs->get_extensions().add(tls_ext_encrypt_then_mac, dir, hs, nullptr);
             }
         }
 
-        {
-            // session_ticket
-            hs->get_extensions().add(new tls_extension_unknown(tls_ext_session_ticket, hs));
-            // renegotiation_info
-            hs->get_extensions().add(new tls_extension_renegotiation_info(hs));
-            // master_secret
-            hs->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, hs));
-        }
+        hs->get_extensions()
+            .add(tls_ext_session_ticket, dir, hs, nullptr)
+            .add(tls_ext_renegotiation_info, dir, hs, nullptr)
+            .add(tls_ext_extended_master_secret, dir, hs, nullptr);
 
         if (hook) {
-            hook(hs, from_client);
+            ret = hook(hs, from_client);
+            if (errorcode_t::success != ret) {
+                hs->release();
+                __leave2;
+            }
         }
 
         *handshake = hs;
@@ -647,6 +640,7 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         uint16 cs = 0;
         uint16 tlsver = 0;
+        auto dir = from_server;
         auto& protection = session->get_tls_protection();
         ret = protection.negotiate(session, cs, tlsver);
         if (errorcode_t::success != ret) {
@@ -660,41 +654,38 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
         hs->set_cipher_suite(cs);
 
         if (tlsadvisor->is_kindof_tls13(tlsver)) {
-            {
-                auto supported_versions = new tls_extension_server_supported_versions(hs);
-                (*supported_versions).set(tlsver);
-                hs->get_extensions().add(supported_versions);
-            }
-
-            {
-                auto key_share = new tls_extension_server_key_share(hs);
-                key_share->clear();
-                key_share->add_keyshare();
-                hs->get_extensions().add(key_share);
-            }
+            hs->get_extensions()
+                .add(tls_ext_supported_versions, dir, hs,
+                     [&](tls_extension* extension) -> return_t {
+                         (*(tls_extension_server_supported_versions*)extension).set(tlsver);
+                         return success;
+                     })
+                .add(tls_ext_key_share, dir, hs, [](tls_extension* extension) -> return_t {
+                    auto keyshare = (tls_extension_server_key_share*)extension;
+                    keyshare->clear();
+                    keyshare->add_keyshare();
+                    return success;
+                });
         } else {
-            {
-                auto renegotiation_info = new tls_extension_renegotiation_info(hs);
-                hs->get_extensions().add(renegotiation_info);
-            }
-            {
-                auto ec_point_formats = new tls_extension_ec_point_formats(hs);
-                (*ec_point_formats).add("uncompressed");
-                hs->get_extensions().add(ec_point_formats);
-            }
-            {
-                auto supported_groups = new tls_extension_supported_groups(hs);
-                (*supported_groups).add("x25519");
-                hs->get_extensions().add(supported_groups);
-            }
-            {
-                // hs->get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, hs));
-                // hs->get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, hs));
-            }
+            hs->get_extensions()
+                .add(tls_ext_renegotiation_info, dir, hs, nullptr)
+                .add(tls_ext_ec_point_formats, dir, hs,
+                     [](tls_extension* extension) -> return_t {
+                         (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
+                         return success;
+                     })
+                .add(tls_ext_supported_groups, dir, hs, [](tls_extension* extension) -> return_t {
+                    (*(tls_extension_supported_groups*)extension).add("x25519");
+                    return success;
+                });
         }
 
         if (hook) {
-            hook(hs, from_server);
+            ret = hook(hs, from_server);
+            if (errorcode_t::success != ret) {
+                hs->release();
+                __leave2;
+            }
         }
 
         *handshake = hs;

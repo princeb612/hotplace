@@ -26,7 +26,7 @@ namespace net {
 // RFC 9000 19.15. NEW_CONNECTION_ID Frames
 class quic_frame_new_connection_id : public quic_frame {
    public:
-    quic_frame_new_connection_id(quic_packet* packet);
+    quic_frame_new_connection_id(tls_session* session);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

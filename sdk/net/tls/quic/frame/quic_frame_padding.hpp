@@ -20,7 +20,7 @@ namespace net {
 // RFC 9000 19.1.  PADDING Frames
 class quic_frame_padding : public quic_frame {
    public:
-    quic_frame_padding(quic_packet* packet);
+    quic_frame_padding(tls_session* session);
 
     /**
      * @param   uint16 len [in]

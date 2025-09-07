@@ -130,24 +130,25 @@ tls_extension* tls_extension_builder::build() {
                 __try_new_catch_only(extension, new tls_extension_early_data(handshake));
             } break;
 
-            case tls_ext_max_fragment_length:          /* 0x0001 */
-            case tls_ext_client_certificate_url:       /* 0x0002 */
-            case tls_ext_use_srtp:                     /* 0x000e */
-            case tls_ext_heartbeat:                    /* 0x000f */
-            case tls_ext_signed_certificate_timestamp: /* 0x0012 */
+            case tls_ext_certificate_authorities:      /* 0x002f */
             case tls_ext_client_certificate_type:      /* 0x0013 */
-            case tls_ext_server_certificate_type:      /* 0x0014 */
-            case tls_ext_padding:                      /* 0x0015 */
+            case tls_ext_client_certificate_url:       /* 0x0002 */
+            case tls_ext_cookie:                       /* 0x002c */
             case tls_ext_encrypt_then_mac:             /* 0x0016 */
             case tls_ext_extended_master_secret:       /* 0x0017 */
-            case tls_ext_record_size_limit:            /* 0x001c */
-            case tls_ext_session_ticket:               /* 0x0023 */
-            case tls_ext_tlmsp:                        /* 0x0024 */
-            case tls_ext_cookie:                       /* 0x002c */
-            case tls_ext_certificate_authorities:      /* 0x002f */
+            case tls_ext_heartbeat:                    /* 0x000f */
+            case tls_ext_max_fragment_length:          /* 0x0001 */
+            case tls_ext_next_protocol_negotiation:    /* 0x3374 */
             case tls_ext_oid_filters:                  /* 0x0030 */
+            case tls_ext_padding:                      /* 0x0015 */
             case tls_ext_post_handshake_auth:          /* 0x0031 */
+            case tls_ext_record_size_limit:            /* 0x001c */
+            case tls_ext_server_certificate_type:      /* 0x0014 */
+            case tls_ext_session_ticket:               /* 0x0023 */
             case tls_ext_signature_algorithms_cert:    /* 0x0032 */
+            case tls_ext_signed_certificate_timestamp: /* 0x0012 */
+            case tls_ext_tlmsp:                        /* 0x0024 */
+            case tls_ext_use_srtp:                     /* 0x000e */
             default: {
                 __try_new_catch_only(extension, new tls_extension_unknown(get_type(), handshake));
             } break;

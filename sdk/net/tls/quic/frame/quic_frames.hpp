@@ -38,13 +38,12 @@ class quic_frames {
    public:
     /**
      * @constructor
-     * @desc    MUST set_packet before read/write method
      */
     quic_frames();
     /**
      * @constructor
      */
-    quic_frames(quic_packet* packet);
+    quic_frames(tls_session* session);
 
     return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     return_t read(tls_direction_t dir, const binary_t& bin);
@@ -54,6 +53,7 @@ class quic_frames {
      * t_tls_distinct_container
      */
     return_t add(quic_frame* frame, bool upref = false);
+    quic_frames& add(quic_frame_t type, tls_session* session, std::function<return_t(quic_frame*)> func = nullptr, bool upref = false);
     quic_frames& operator<<(quic_frame* frame);
     return_t for_each(std::function<return_t(quic_frame*)> func);
     quic_frame* get(uint8 type, bool upref = false);
@@ -62,8 +62,8 @@ class quic_frames {
     size_t size();
     void clear();
 
-    quic_packet* get_packet();
-    void set_packet(quic_packet* packet);
+    tls_session* get_session();
+    void set_session(tls_session* session);
     /**
      * return true if there is any frame other than ACK, PADDING
      */
@@ -72,7 +72,7 @@ class quic_frames {
    protected:
    private:
     t_tls_distinct_container<quic_frame*, uint64> _frames;  // quic_frame_t
-    quic_packet* _packet;
+    tls_session* _session;
 };
 
 }  // namespace net

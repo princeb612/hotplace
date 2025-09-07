@@ -26,6 +26,11 @@ class dtls13_ciphertext : public tls_record {
     tls_handshakes& get_handshakes();
     tls_records& get_records();
 
+    virtual void operator<<(tls_record* record);
+    virtual void operator<<(tls_handshake* handshake);
+    virtual tls_record& add(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func = nullptr, bool upref = false);
+    virtual tls_record& add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func = nullptr, bool upref = false);
+
    protected:
     virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

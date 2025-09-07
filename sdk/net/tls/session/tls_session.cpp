@@ -316,5 +316,19 @@ quic_session& tls_session::get_quic_session() {
     return *_quic_session;
 }
 
+bool is_kindof_h3(tls_session* session) {
+    bool ret = false;
+    if (session) {
+        const binary_t& alpn = session->get_tls_protection().get_secrets().get(tls_context_alpn);
+        if (false == alpn.empty()) {
+            constexpr byte_t alpn_h3[3] = {0x2, 'h', '3'};  // HTTP/3
+            if (0 == memcmp(alpn_h3, &alpn[0], sizeof(alpn_h3))) {
+                ret = true;
+            }
+        }
+    }
+    return ret;
+}
+
 }  // namespace net
 }  // namespace hotplace

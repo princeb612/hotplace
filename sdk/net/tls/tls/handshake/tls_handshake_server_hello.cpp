@@ -423,7 +423,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
                 if (tlsadvisor->is_kindof_cbc(cs)) {
                     auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
                     if (nullptr == ext_etm) {
-                        get_extensions().add(new tls_extension_unknown(tls_ext_encrypt_then_mac, this));
+                        get_extensions().add(tls_ext_encrypt_then_mac, dir, this, nullptr);
                     }
                 }
             }
@@ -438,7 +438,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
                 if (request_ems) {
                     auto ext_ems = get_extensions().get(tls_ext_extended_master_secret);
                     if (nullptr == ext_ems) {
-                        get_extensions().add(new tls_extension_unknown(tls_ext_extended_master_secret, this));
+                        get_extensions().add(tls_ext_extended_master_secret, dir, this, nullptr);
                     }
                 }
             }
@@ -451,8 +451,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             // avoid final_renegotiate:unsafe legacy renegotiation disabled
             auto ext_renego = get_extensions().get(tls_ext_renegotiation_info);
             if (nullptr == ext_renego) {
-                auto renegotiation_info = new tls_extension_renegotiation_info(this);
-                get_extensions().add(renegotiation_info);
+                get_extensions().add(tls_ext_renegotiation_info, dir, this, nullptr);
             }
 
             // TLS 1.2 server_hello

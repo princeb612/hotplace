@@ -247,5 +247,15 @@ void tls_record_application_data::operator<<(tls_record* record) { get_records()
 
 void tls_record_application_data::operator<<(tls_handshake* handshake) { get_handshakes().add(handshake); }
 
+tls_record& tls_record_application_data::add(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func, bool upref) {
+    get_records().add(type, session, func, upref);
+    return *this;
+}
+
+tls_record& tls_record_application_data::add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
+    get_handshakes().add(type, session, func, upref);
+    return *this;
+}
+
 }  // namespace net
 }  // namespace hotplace

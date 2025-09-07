@@ -68,6 +68,25 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
 
 return_t tls_extensions::add(tls_extension* extension, bool upref) { return _extensions.add(extension, upref); }
 
+tls_extensions& tls_extensions::add(uint16 type, tls_direction_t dir, tls_handshake* handshake, std::function<return_t(tls_extension*)> func, bool upref) {
+    __try2 {
+        tls_extension_builder builder;
+        auto extension = builder.set(type).set(dir).set(handshake).build();
+        if (extension) {
+            if (func) {
+                auto test = func(extension);
+                if (errorcode_t::success != test) {
+                    extension->release();
+                    __leave2;
+                }
+            }
+            _extensions.add(extension, upref);
+        }
+    }
+    __finally2 {}
+    return *this;
+}
+
 tls_extensions& tls_extensions::operator<<(tls_extension* extension) {
     add(extension);
     return *this;

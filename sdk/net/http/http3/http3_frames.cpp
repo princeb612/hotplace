@@ -75,6 +75,25 @@ return_t http3_frames::write(tls_session* session, binary_t& bin) {
 
 return_t http3_frames::add(http3_frame* frame, bool upref) { return _frames.add(frame, upref); }
 
+http3_frames& http3_frames::add(h3_frame_t type, tls_session* session, std::function<return_t(http3_frame*)> func, bool upref) {
+    __try2 {
+        http3_frame_builder builder;
+        auto frame = builder.set(type).set(session).build();
+        if (frame) {
+            if (func) {
+                auto test = func(frame);
+                if (errorcode_t::success != test) {
+                    frame->release();
+                    __leave2;
+                }
+            }
+            _frames.add(frame, upref);
+        }
+    }
+    __finally2 {}
+    return *this;
+}
+
 http3_frames& http3_frames::operator<<(http3_frame* frame) {
     _frames.add(frame);
     return *this;

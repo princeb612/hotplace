@@ -114,5 +114,7 @@ uint8 tls_extension_sni::get_nametype() { return _nametype; }
 
 binary& tls_extension_sni::get_hostname() { return _hostname; }
 
+void tls_extension_sni::set_hostname(const std::string server) { _hostname = server; }
+
 }  // namespace net
 }  // namespace hotplace

@@ -34,15 +34,15 @@
 namespace hotplace {
 namespace net {
 
-quic_frames::quic_frames() : _packet(nullptr) {}
+quic_frames::quic_frames() : _session(nullptr) {}
 
-quic_frames::quic_frames(quic_packet* packet) : _packet(packet) {}
+quic_frames::quic_frames(tls_session* session) : _session(session) {}
 
 return_t quic_frames::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto packet = get_packet();
-        if (nullptr == packet) {
+        auto session = get_session();
+        if (nullptr == session) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
@@ -61,7 +61,7 @@ return_t quic_frames::read(tls_direction_t dir, const byte_t* stream, size_t siz
 
             quic_frame_t type = (quic_frame_t)value;
             quic_frame_builder builder;
-            auto frame = builder.set(type).set(packet).build();
+            auto frame = builder.set(type).set(session).build();
             if (frame) {
                 ret = frame->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {
@@ -94,7 +94,7 @@ return_t quic_frames::read(tls_direction_t dir, const binary_t& bin) {
 return_t quic_frames::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == get_packet()) {
+        if (nullptr == get_session()) {
             ret = errorcode_t::invalid_context;
             __leave2;
         }
@@ -107,6 +107,25 @@ return_t quic_frames::write(tls_direction_t dir, binary_t& bin) {
 }
 
 return_t quic_frames::add(quic_frame* frame, bool upref) { return _frames.add(frame, upref); }
+
+quic_frames& quic_frames::add(quic_frame_t type, tls_session* session, std::function<return_t(quic_frame*)> func, bool upref) {
+    __try2 {
+        quic_frame_builder builder;
+        auto frame = builder.set(type).set(session).build();
+        if (frame) {
+            if (func) {
+                auto test = func(frame);
+                if (errorcode_t::success != test) {
+                    frame->release();
+                    __leave2;
+                }
+            }
+            _frames.add(frame, upref);
+        }
+    }
+    __finally2 {}
+    return *this;
+}
 
 quic_frames& quic_frames::operator<<(quic_frame* frame) {
     add(frame);
@@ -125,9 +144,9 @@ size_t quic_frames::size() { return _frames.size(); }
 
 void quic_frames::clear() { return _frames.clear(); }
 
-quic_packet* quic_frames::get_packet() { return _packet; }
+tls_session* quic_frames::get_session() { return _session; }
 
-void quic_frames::set_packet(quic_packet* packet) { _packet = packet; }
+void quic_frames::set_session(tls_session* session) { _session = session; }
 
 bool quic_frames::is_significant() {
     bool ret = false;

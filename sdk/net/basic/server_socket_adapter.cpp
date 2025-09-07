@@ -13,7 +13,9 @@
 namespace hotplace {
 namespace net {
 
-server_socket_adapter::server_socket_adapter() {}
+server_socket_adapter::server_socket_adapter() { _shared.make_share(this); }
+
+server_socket_adapter::~server_socket_adapter() {}
 
 return_t server_socket_adapter::startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
     return errorcode_t::not_implemented;

@@ -18,7 +18,9 @@
 #include <sdk/net/tls/quic/frame/quic_frame_ack.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_builder.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_crypto.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_http3_stream.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_padding.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame_stream.hpp>
 #include <sdk/net/tls/quic/frame/quic_frames.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet_builder.hpp>
 #include <sdk/net/tls/quic_packet_publisher.hpp>
@@ -32,7 +34,7 @@
 namespace hotplace {
 namespace net {
 
-quic_packet_publisher::quic_packet_publisher() : _session(nullptr), _payload_size(0), _flags(0), _stream_id(0), _unitype(0) {}
+quic_packet_publisher::quic_packet_publisher() : _session(nullptr), _payload_size(0), _flags(0) {}
 
 quic_packet_publisher::~quic_packet_publisher() {}
 
@@ -40,8 +42,6 @@ quic_packet_publisher& quic_packet_publisher::set_session(tls_session* session) 
     _session = session;
     if (session) {
         set_payload_size(session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size));
-        auto& dyntable = session->get_quic_session().get_dynamic_table();
-        _qpack.set_dyntable(&dyntable);
     }
     return *this;
 }
@@ -56,23 +56,13 @@ quic_packet_publisher& quic_packet_publisher::set_flags(uint32 flags) {
     return *this;
 }
 
-quic_packet_publisher& quic_packet_publisher::set_streaminfo(uint64 stream_id, uint8 unitype) {
-    _stream_id = stream_id;
-    _unitype = unitype;
-    return *this;
-}
-
 tls_session* quic_packet_publisher::get_session() { return _session; }
 
 uint16 quic_packet_publisher::get_payload_size() { return _payload_size; }
 
 uint32 quic_packet_publisher::get_flags() { return _flags; }
 
-uint64 quic_packet_publisher::get_streamid() { return _stream_id; }
-
 tls_handshakes& quic_packet_publisher::get_handshakes() { return _handshakes; }
-
-http3_frames& quic_packet_publisher::get_h3frames() { return _h3frames; }
 
 quic_packet_publisher& quic_packet_publisher::add(tls_hs_type_t type, tls_direction_t dir, std::function<return_t(tls_handshake*, tls_direction_t)> func) {
     return_t ret = errorcode_t::success;
@@ -105,25 +95,61 @@ quic_packet_publisher& quic_packet_publisher::add(tls_hs_type_t type, tls_direct
     return *this;
 }
 
-quic_packet_publisher& quic_packet_publisher::add(h3_frame_t type, std::function<return_t(http3_frame*)> func) {
+quic_packet_publisher& quic_packet_publisher::add_stream(uint64 stream_id, uint8 uni_type, h3_frame_t type, std::function<return_t(http3_frame*)> func) {
     return_t ret = errorcode_t::success;
-    auto session = get_session();
-    http3_frame_builder builder;
-    auto frame = builder.set(type).set(session).build();
-    if (frame) {
-        if (func) {
-            ret = func(frame);
-        }
-        if (errorcode_t::success == ret) {
-            _h3frames.add(frame);
-        } else {
-            frame->release();
+    __try2 {
+        auto session = get_session();
+
+        quic_frame_builder builder;
+        auto frame = builder.set(quic_frame_type_stream).set(session).build();
+        if (frame) {
+            auto h3stream = (quic_frame_http3_stream*)frame;
+            h3stream->set_streaminfo(stream_id, uni_type);
+            h3stream->get_frames().add(type, session, [&](http3_frame* h3frame) -> return_t {
+                return_t ret = errorcode_t::success;
+                if (func) {
+                    ret = func(h3frame);
+                }
+                return ret;
+            });
+            _frames.add(frame);
         }
     }
+    __finally2 {}
+    return *this;
+}
+
+quic_packet_publisher& quic_packet_publisher::add_stream(uint64 stream_id, uint8 uni_type, std::function<return_t(qpack_stream&)> func) {
+    __try2 {
+        if (nullptr == func) {
+            __leave2;
+        }
+
+        auto session = get_session();
+
+        qpack_stream qp;
+        auto& dyntable = session->get_quic_session().get_dynamic_table();
+        qp.set_dyntable(&dyntable);
+        auto test = func(qp);
+        if (errorcode_t::success != test) {
+            __leave2;
+        }
+
+        quic_frame_builder builder;
+        auto frame = builder.set(quic_frame_type_stream).set(session).build();
+        if (frame) {
+            (*(quic_frame_http3_stream*)frame).set_streaminfo(stream_id, uni_type);
+            _frames.add(frame);
+
+            _unfragmented.insert({frame, std::move(qp.get_binary())});
+        }
+    }
+    __finally2 {}
     return *this;
 }
 
 quic_packet_publisher& quic_packet_publisher::add(quic_frame_t type, std::function<return_t(quic_frame*)> func) {
+    auto session = get_session();
     switch (type) {
         case quic_frame_type_crypto:
         case quic_frame_type_stream:
@@ -137,18 +163,33 @@ quic_packet_publisher& quic_packet_publisher::add(quic_frame_t type, std::functi
             // do nothing
         } break;
         default: {
-            _frames.push_back({type, func});
+            __try2 {
+                quic_frame_builder builder;
+                auto frame = builder.set(type).set(session).build();
+                if (frame) {
+                    _frames.add(frame);
+
+                    if (func) {
+                        auto test = func(frame);
+                        if (errorcode_t::success != test) {
+                            frame->release();
+                            __leave2;
+                        }
+                    }
+
+                    _frames.add(frame);
+                }
+            }
+            __finally2 {}
         } break;
     }
     return *this;
 }
 
-qpack_stream& quic_packet_publisher::get_qpack_stream() { return _qpack; }
-
 return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& spaces) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (false == get_handshakes().empty()) {
+        if (get_handshakes().size()) {
             std::set<protection_space_t> temp;
             ret = get_handshakes().for_each([&](tls_handshake* handshake) -> return_t {
                 protection_space_t space;
@@ -162,20 +203,20 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
 
             spaces = temp;
         }
-        if (false == get_h3frames().empty()) {
-            // application (1-RTT)
-            // h3_control_stream (0)
-            spaces.insert(protection_application);
-        }
-        if (_unitype) {
-            // h3_push_stream (1)
-            // h3_qpack_encoder_stream (2)
-            // h3_qpack_decoder_stream (3)
-            spaces.insert(protection_application);
-        }
-        if (false == _frames.empty()) {
-            spaces.insert(protection_application);
-        }
+        // if (_h3frames.size()) {
+        //     // application (1-RTT)
+        //     // h3_control_stream (0)
+        //     spaces.insert(protection_application);
+        // }
+        // if (_qpack_streams.size()) {
+        //     // h3_push_stream (1)
+        //     // h3_qpack_encoder_stream (2)
+        //     // h3_qpack_decoder_stream (3)
+        //     spaces.insert(protection_application);
+        // }
+        // if (_frames.size()) {
+        //     spaces.insert(protection_application);
+        // }
 
         // ack
         if (quic_ack_packet & get_flags()) {
@@ -226,14 +267,26 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
         binary_t unfragmented;
         if (protection_application == space) {
             uint32 flags = 0;
-            if (false == get_h3frames().empty()) {
-                get_h3frames().for_each([&](http3_frame* frame) -> return_t { return frame->write(unfragmented); });
-                segment.assign(quic_frame_type_stream, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size(), flags);
-            } else if (_unitype) {
-                unfragmented = std::move(get_qpack_stream().get_binary());
-                flags = fragment_context_keep_entry;
-                segment.assign(quic_frame_type_stream, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size(), flags);
-            } else if (false == get_handshakes().empty()) {
+            // if (_h3frames.size()) {
+            //     for (auto& entry : _h3frames) {
+            //         auto& frames = entry.second;
+            //         frames.for_each([&](http3_frame* frame) -> return_t { return frame->write(unfragmented); });
+            //         segment.assign(quic_frame_type_stream, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size(), flags);
+            //     }
+            // } else if (_qpack_streams.size()) {
+            //     auto& dyntable = session->get_quic_session().get_dynamic_table();
+            //     for (auto& item : _qpack_streams) {
+            //         qpack_stream qstream;
+            //         qstream.set_dyntable(&dyntable);
+            //
+            //         item.func(qstream);
+            //
+            //         binary_t temp = std::move(qstream.get_binary());
+            //         flags = fragment_context_keep_entry;
+            //         segment.assign(item.seg_type, unfragmented.empty() ? nullptr : &unfragmented[0], unfragmented.size(), flags);
+            //     }
+            // } else
+            if (get_handshakes().size()) {
                 // NST
                 get_handshakes().for_each([&](tls_handshake* handshake) -> return_t {
                     return_t test = errorcode_t::success;
@@ -290,39 +343,39 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
                     auto& pkns = session->get_quic_session().get_pkns(space);
                     critical_section_guard guard(pkns.get_lock());
                     if (pkns.is_modified()) {
-                        auto frame = (quic_frame_ack*)frame_builder.set(quic_frame_type_ack).set(packet).build();
+                        auto frame = (quic_frame_ack*)frame_builder.set(quic_frame_type_ack).set(session).build();
                         frame->set_protection_level(space);
                         *packet << frame;
                     }
                 }
 
-                if (_unitype || (false == unfragmented.empty())) {
-                    if (protection_application == space) {
-                        if (success == segment.isready(quic_frame_type_stream)) {
-                            auto frame = (quic_frame_stream*)frame_builder.set(quic_frame_type_stream).set(packet).set_streaminfo(_stream_id, _unitype).build();
-                            *packet << frame;
-                        } else if (success == segment.isready(quic_frame_type_crypto)) {
-                            auto frame = (quic_frame_stream*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
-                            *packet << frame;
-                        }
-                    } else {
-                        auto frame = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
-                        *packet << frame;
-                    }
-                } else if (false == _frames.empty()) {
-                    // except CRYPTO, STREAM
-                    for (auto& item : _frames) {
-                        auto& frmtype = item.first;
-                        auto& frmfunc = item.second;
-                        auto frame = frame_builder.set(frmtype).set(packet).set(dir).build();
-                        *packet << frame;
-                    }
-                }
+                // if (_qpack_streams.size() || unfragmented.size()) {
+                //     if (protection_application == space) {
+                //         if (success == segment.isready(quic_frame_type_stream)) {
+                //             // auto frame = (quic_frame_stream*)frame_builder.set(quic_frame_type_stream).set(packet).set_streaminfo(_stream_id,
+                //             // _unitype).build(); *packet << frame;
+                //         } else if (success == segment.isready(quic_frame_type_crypto)) {
+                //             auto frame = (quic_frame_stream*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
+                //             *packet << frame;
+                //         }
+                //     } else {
+                //         auto frame = (quic_frame_crypto*)frame_builder.set(quic_frame_type_crypto).set(packet).build();
+                //         *packet << frame;
+                //     }
+                // } else if (false == _frames.empty()) {
+                //     // except CRYPTO, STREAM
+                //     for (auto& item : _frames) {
+                //         auto& frmtype = item.first;
+                //         auto& frmfunc = item.second;
+                //         auto frame = frame_builder.set(frmtype).set(packet).set(dir).build();
+                //         *packet << frame;
+                //     }
+                // }
 
                 // padding
                 if (flags & quic_pad_packet) {
                     // if max_size is set, fill 0 upto max_size
-                    auto frame = (quic_frame_padding*)frame_builder.set(quic_frame_type_padding).set(packet).build();
+                    auto frame = (quic_frame_padding*)frame_builder.set(quic_frame_type_padding).set(session).build();
                     frame->pad(get_payload_size(), quic_pad_packet);
                     *packet << frame;
                 }

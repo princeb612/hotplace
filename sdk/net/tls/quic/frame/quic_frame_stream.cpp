@@ -10,12 +10,13 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/stream/fragmentation.hpp>
+#include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/http/http3/http3_frame.hpp>
 #include <sdk/net/http/http_resource.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_stream.hpp>
-#include <sdk/net/tls/quic/frame/quic_frame_stream_h3_handler.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
@@ -38,7 +39,7 @@ constexpr char constexpr_length[] = "length";
 constexpr char constexpr_stream_data[] = "stream data";
 constexpr char constexpr_unitype[] = "uni type";  // uni-directional
 
-quic_frame_stream::quic_frame_stream(quic_packet* packet, uint8 type) : quic_frame((quic_frame_t)type, packet), _stream_id(0), _unitype(0) {
+quic_frame_stream::quic_frame_stream(tls_session* session, uint8 type) : quic_frame((quic_frame_t)type, session), _stream_id(0), _unitype(0) {
     if ((quic_frame_type_stream <= type) && (type <= quic_frame_type_stream7)) {
     } else {
         throw exception(bad_request);
@@ -113,7 +114,7 @@ return_t quic_frame_stream::do_read_body(tls_direction_t dir, const byte_t* stre
         }
 
         if (false == stream_data.empty()) {
-            auto session = get_packet()->get_session();
+            auto session = get_session();
             const binary_t& alpn = session->get_tls_protection().get_secrets().get(tls_context_alpn);
             if (false == alpn.empty()) {
                 constexpr byte_t alpn_h3[3] = {0x2, 'h', '3'};  // HTTP/3
@@ -141,8 +142,7 @@ return_t quic_frame_stream::do_read_body(tls_direction_t dir, const byte_t* stre
 
                     switch (unitype) {
                         case h3_control_stream: {
-                            quic_frame_stream_h3_handler handler(session);
-                            handler.read(stream_id);
+                            ret = do_read_control_stream(stream_id);
                         } break;
                         case h3_qpack_encoder_stream: {
                             if (stream_data.size() > spos) {
@@ -173,7 +173,7 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         // segmentation
-        auto segment = get_packet()->get_fragment().get_segment();
+        auto segment = get_fragment()->get_segment();
         if (segment) {
             // at first calc bumper (size of fragment header)
             size_t bumper = 0;
@@ -203,7 +203,7 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, binary_t& bin) {
                 ret = do_write_body(dir, stream, size, pos, len, bin);
                 return ret;
             };
-            ret = get_packet()->get_fragment().consume(quic_frame_type_stream, bumper, lambda);
+            ret = get_fragment()->consume(quic_frame_type_stream, bumper, lambda);
         }
     }
     __finally2 {}
@@ -220,7 +220,7 @@ return_t quic_frame_stream::do_write_body(tls_direction_t dir, const byte_t* str
         }
 
         size_t snapshot = bin.size();
-        auto session = get_packet()->get_session();
+        auto session = get_session();
         auto tlsadvisor = tls_advisor::get_instance();
 
         uint8 type = quic_frame_type_stream;
@@ -276,6 +276,11 @@ return_t quic_frame_stream::do_postprocess(tls_direction_t dir) {
     return ret;
 }
 
+return_t quic_frame_stream::do_read_control_stream(uint64 stream_id) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
+
 uint8 quic_frame_stream::get_flags() { return (quic_frame_stream_mask & get_type()); }
 
 uint64 quic_frame_stream::get_streamid() { return _stream_id; }
@@ -286,9 +291,9 @@ quic_frame_stream& quic_frame_stream::set_streaminfo(uint64 stream_id, uint8 uni
     return *this;
 }
 
-http3_frames quic_frame_stream::get_frames() { return _frames; }
+uint8 quic_frame_stream::get_unistream_type() { return _unitype; }
 
-bool quic_frame_stream::is_beginof_unistream(uint64 stream_id) { return is_beginof_unistream(get_packet()->get_session(), stream_id); }
+bool quic_frame_stream::is_beginof_unistream(uint64 stream_id) { return is_beginof_unistream(get_session(), stream_id); }
 
 bool quic_frame_stream::is_beginof_unistream(tls_session* session, uint64 stream_id) {
     bool ret = false;

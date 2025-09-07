@@ -34,7 +34,7 @@ namespace net {
  *   Figure 24: PING Frame Format
  */
 
-quic_frame_ping::quic_frame_ping(quic_packet* packet) : quic_frame(quic_frame_type_ping, packet) {}
+quic_frame_ping::quic_frame_ping(tls_session* session) : quic_frame(quic_frame_type_ping, session) {}
 
 return_t quic_frame_ping::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

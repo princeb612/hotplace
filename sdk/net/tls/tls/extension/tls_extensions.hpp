@@ -23,7 +23,22 @@ class tls_extensions {
     return_t read(tls_handshake *handshake, tls_direction_t dir, const binary_t &bin);
     return_t write(tls_direction_t dir, binary_t &bin);
 
+    /**
+     * add
+     *  case 1
+     *          auto extension = new tls_extension_unknown(tls_ext_encrypt_then_mac, handshake);
+     *          handshake->get_extensions().add(extension);
+     *  case 2
+     *          handshake->get_extensions().add(tls_ext_encrypt_then_mac, dir, handshake, nullptr);
+     *  case 3
+     *          handshake->get_extensions().add(tls_ext_ec_point_formats, dir, handshake, [](tls_extension* extension) -> return_t {
+     *              (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
+     *              return success;
+     *          });
+     */
     return_t add(tls_extension *extension, bool upref = false);
+    tls_extensions &add(uint16 type, tls_direction_t dir, tls_handshake *handshake, std::function<return_t(tls_extension *)> func = nullptr,
+                        bool upref = false);
     tls_extensions &operator<<(tls_extension *extension);
     tls_extensions &operator<<(tls_extensions *extensions);
     return_t for_each(std::function<return_t(tls_extension *)> func);

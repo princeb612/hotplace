@@ -23,6 +23,7 @@ class tls_record_handshake : public tls_record {
     tls_handshakes& get_handshakes();
 
     virtual void operator<<(tls_handshake* handshake);
+    virtual tls_record& add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func = nullptr, bool upref = false);
 
    protected:
     virtual return_t do_preprocess(tls_direction_t dir);

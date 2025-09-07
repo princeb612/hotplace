@@ -495,6 +495,11 @@ void tls_record::operator<<(tls_handshake* handshake) {
     }
 }
 
+tls_record& tls_record::add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
+    // do nothing
+    return *this;
+}
+
 void tls_record::addref() { _shared.addref(); }
 
 void tls_record::release() { _shared.delref(); }

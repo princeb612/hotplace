@@ -195,8 +195,6 @@ class quic_packet {
      */
     return_t header_unprotect(tls_direction_t dir, const byte_t* stream, size_t size, protection_space_t space, uint8& hdr, uint32& pn, binary_t& bin_payload);
 
-    t_shared_reference<quic_packet> _shared;
-
     /**
      * @brief   version
      */
@@ -216,6 +214,8 @@ class quic_packet {
 
     // consider udp_max_payload_size
     fragmentation _fragment;
+
+    t_shared_reference<quic_packet> _shared;
 };
 
 /**

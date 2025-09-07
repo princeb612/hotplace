@@ -14,142 +14,129 @@
 
 static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
-    tls_record_handshake record(session);
-    tls_handshake_client_hello* handshake = nullptr;
 
     __try2 {
-        __try_new_catch(handshake, new tls_handshake_client_hello(session), ret, __leave2);
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        tls_record_handshake record(session);
 
-        {
-            // client_hello generate random member
+        ret = record
+                  .add(tls_hs_client_hello, session,
+                       [&](tls_handshake* hs) -> return_t {
+                           auto handshake = (tls_handshake_client_hello*)hs;
 
-            openssl_prng prng;
-            binary_t session_id;
-            prng.random(session_id, 32);
-            handshake->set_session_id(session_id);
-        }
+                           {
+                               // client_hello generate random member
 
-        // cipher suites
-        {
-            if (option.cipher_suite.empty()) {
-                // *handshake << "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384"
-                //            << "TLS_CHACHA20_POLY1305_SHA256"
-                //            << "TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256"
-                //            << "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
-                //            << "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"
-                //            << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM"
-                //            << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"
-                //            << "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
-                //            << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
-                //            << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384";
-            } else {
-                handshake->add_ciphersuites(option.cipher_suite.c_str());
-            }
-        }
+                               openssl_prng prng;
+                               binary_t session_id;
+                               prng.random(session_id, 32);
+                               handshake->set_session_id(session_id);
+                           }
 
-        {
-            auto sni = new tls_extension_sni(handshake);
-            auto& hostname = sni->get_hostname();
-            hostname = "test.server.com";
-            handshake->get_extensions().add(sni);
-        }
-        {
-            // RFC 9325 4.2.1
-            // Note that [RFC8422] deprecates all but the uncompressed point format.
-            // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-            auto ec_point_formats = new tls_extension_ec_point_formats(handshake);
-            (*ec_point_formats).add("uncompressed");
-            handshake->get_extensions().add(ec_point_formats);
-        }
-        {
-            // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-            auto supported_groups = new tls_extension_supported_groups(handshake);
-            (*supported_groups)
-                .add("x25519")
-                .add("secp256r1")
-                .add("x448")
-                .add("secp521r1")
-                .add("secp384r1")
-                .add("ffdhe2048")
-                .add("ffdhe3072")
-                .add("ffdhe4096")
-                .add("ffdhe6144")
-                .add("ffdhe8192");
-            handshake->get_extensions().add(supported_groups);
-        }
-        {
-            auto extension = new tls_extension_unknown(tls_ext_next_protocol_negotiation, handshake);
-            handshake->get_extensions().add(extension);
-        }
-        {
-            auto extension = new tls_extension_unknown(tls_ext_encrypt_then_mac, handshake);
-            handshake->get_extensions().add(extension);
-        }
-        {
-            auto extension = new tls_extension_unknown(tls_ext_extended_master_secret, handshake);
-            handshake->get_extensions().add(extension);
-        }
-        {
-            auto extension = new tls_extension_unknown(tls_ext_post_handshake_auth, handshake);
-            handshake->get_extensions().add(extension);
-        }
-        {
-            auto signature_algorithms = new tls_extension_signature_algorithms(handshake);
-            (*signature_algorithms)
-                .add("ecdsa_secp256r1_sha256")
-                .add("ecdsa_secp384r1_sha384")
-                .add("ecdsa_secp521r1_sha512")
-                .add("ed25519")
-                .add("ed448")
-                .add("rsa_pkcs1_sha256")
-                .add("rsa_pkcs1_sha384")
-                .add("rsa_pkcs1_sha512")
-                .add("rsa_pss_pss_sha256")
-                .add("rsa_pss_pss_sha384")
-                .add("rsa_pss_pss_sha512")
-                .add("rsa_pss_rsae_sha256")
-                .add("rsa_pss_rsae_sha384")
-                .add("rsa_pss_rsae_sha512");
-            handshake->get_extensions().add(signature_algorithms);
-        }
-        {
-            auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(handshake);
-            (*psk_key_exchange_modes).add("psk_dhe_ke");
-            handshake->get_extensions().add(psk_key_exchange_modes);
-        }
-        if (tls_13 == option.version) {
-            {
-                auto supported_versions = new tls_extension_client_supported_versions(handshake);
-                if (tlsadvisor->is_kindof(tls_13, option.version)) {
-                    (*supported_versions).add(tls_13);
-                } else {
-                    (*supported_versions).add(tls_12);
-                }
-                handshake->get_extensions().add(supported_versions);
-            }
+                           // cipher suites
+                           if (option.cipher_suite.empty()) {
+                               // *handshake << "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384"
+                               //            << "TLS_CHACHA20_POLY1305_SHA256"
+                               //            << "TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256"
+                               //            << "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+                               //            << "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"
+                               //            << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM"
+                               //            << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"
+                               //            << "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
+                               //            << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
+                               //            << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384";
+                           } else {
+                               handshake->add_ciphersuites(option.cipher_suite.c_str());
+                           }
 
-            {
-                auto key_share = new tls_extension_client_key_share(handshake);
-                key_share->clear();
-                key_share->add("x25519");
-                handshake->get_extensions().add(key_share);
-            }
+                           handshake->get_extensions()
+                               .add(tls_ext_server_name, dir, handshake,
+                                    [](tls_extension* extension) -> return_t {
+                                        (*(tls_extension_sni*)extension).set_hostname("test.server.com");
+                                        return success;
+                                    })
+                               .add(tls_ext_ec_point_formats, dir, handshake,
+                                    [](tls_extension* extension) -> return_t {
+                                        // RFC 9325 4.2.1
+                                        // Note that [RFC8422] deprecates all but the uncompressed point format.
+                                        // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element,
+                                        // "uncompressed".
+                                        (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
+                                        return success;
+                                    })
+                               .add(tls_ext_supported_groups, dir, handshake,
+                                    [](tls_extension* extension) -> return_t {
+                                        // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
+                                        (*(tls_extension_supported_groups*)extension)
+                                            .add("x25519")
+                                            .add("secp256r1")
+                                            .add("x448")
+                                            .add("secp521r1")
+                                            .add("secp384r1")
+                                            .add("ffdhe2048")
+                                            .add("ffdhe3072")
+                                            .add("ffdhe4096")
+                                            .add("ffdhe6144")
+                                            .add("ffdhe8192");
+                                        return success;
+                                    })
+                               .add(tls_ext_next_protocol_negotiation, dir, handshake, nullptr)
+                               .add(tls_ext_encrypt_then_mac, dir, handshake, nullptr)
+                               .add(tls_ext_extended_master_secret, dir, handshake, nullptr)
+                               .add(tls_ext_post_handshake_auth, dir, handshake, nullptr)
+                               .add(tls_ext_signature_algorithms, dir, handshake,
+                                    [](tls_extension* extension) -> return_t {
+                                        (*(tls_extension_signature_algorithms*)extension)
+                                            .add("ecdsa_secp256r1_sha256")
+                                            .add("ecdsa_secp384r1_sha384")
+                                            .add("ecdsa_secp521r1_sha512")
+                                            .add("ed25519")
+                                            .add("ed448")
+                                            .add("rsa_pkcs1_sha256")
+                                            .add("rsa_pkcs1_sha384")
+                                            .add("rsa_pkcs1_sha512")
+                                            .add("rsa_pss_pss_sha256")
+                                            .add("rsa_pss_pss_sha384")
+                                            .add("rsa_pss_pss_sha512")
+                                            .add("rsa_pss_rsae_sha256")
+                                            .add("rsa_pss_rsae_sha384")
+                                            .add("rsa_pss_rsae_sha512");
+                                        return success;
+                                    })
+                               .add(tls_ext_psk_key_exchange_modes, dir, handshake, [](tls_extension* extension) -> return_t {
+                                   (*(tls_extension_psk_key_exchange_modes*)extension).add("psk_dhe_ke");
+                                   return success;
+                               });
 
-            basic_stream bs;
-            auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
-            dump_key(pkey, &bs);
-            _logger->write(bs);
-            _test_case.assert(pkey, __FUNCTION__, "{client} key share (client generated)");
-        }
+                           if (tls_13 == option.version) {
+                               handshake->get_extensions()
+                                   .add(tls_ext_supported_versions, dir, handshake,
+                                        [&](tls_extension* extension) -> return_t {
+                                            if (tlsadvisor->is_kindof(tls_13, option.version)) {
+                                                (*(tls_extension_client_supported_versions*)extension).add(tls_13);
+                                            } else {
+                                                (*(tls_extension_client_supported_versions*)extension).add(tls_12);
+                                            }
+                                            return success;
+                                        })
+                                   .add(tls_ext_key_share, dir, handshake, [](tls_extension* extension) -> return_t {
+                                       tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
+                                       keyshare->clear();
+                                       keyshare->add("x25519");
+                                       return success;
+                                   });
+
+                               basic_stream bs;
+                               auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
+                               dump_key(pkey, &bs);
+                               _logger->write(bs);
+                               _test_case.assert(pkey, __FUNCTION__, "{client} key share (client generated)");
+                           }
+                           return success;
+                       })
+                  .write(dir, bin);
     }
     __finally2 {
-        if (errorcode_t::success == ret) {
-            record.get_handshakes().add(handshake);
-            ret = record.write(dir, bin);
-        }
-
         std::string dirstr;
         direction_string(dir, 0, dirstr);
         _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
@@ -160,22 +147,18 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
 static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
 
-    auto& protection = session->get_tls_protection();
-
-    uint16 server_cs = 0;
-    uint16 server_version = 0;
-    protection.negotiate(session, server_cs, server_version);
-
-    tls_handshake_server_hello* handshake = nullptr;
-
     __try2 {
+        uint16 server_cs = 0;
+        uint16 server_version = 0;
+
+        auto& protection = session->get_tls_protection();
+        protection.negotiate(session, server_cs, server_version);
+
         if (0x0000 == server_cs) {
             ret = errorcode_t::unknown;
             _test_case.test(ret, __FUNCTION__, "no cipher suite");
             __leave2;
         }
-
-        __try_new_catch(handshake, new tls_handshake_server_hello(session), ret, __leave2);
 
         {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -183,64 +166,64 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
             _test_case.assert(csname.size(), __FUNCTION__, "%s", csname.c_str());
         }
 
-        {
-            // client_hello generate random member
+        tls_record_handshake record(session);
+        ret = record
+                  .add(tls_hs_server_hello, session,
+                       [&](tls_handshake* hs) -> return_t {
+                           auto handshake = (tls_handshake_server_hello*)hs;
 
-            openssl_prng prng;
+                           {
+                               // client_hello generate random member
 
-            binary_t session_id;
-            prng.random(session_id, 32);
-            handshake->set_session_id(session_id);
+                               openssl_prng prng;
 
-            handshake->set_cipher_suite(server_cs);
-        }
+                               binary_t session_id;
+                               prng.random(session_id, 32);
+                               handshake->set_session_id(session_id);
 
-        {
-            {
-                auto renegotiation_info = new tls_extension_renegotiation_info(handshake);
-                handshake->get_extensions().add(renegotiation_info);
-            }
-            {
-                auto ec_point_formats = new tls_extension_ec_point_formats(handshake);
-                (*ec_point_formats).add("uncompressed");
-                handshake->get_extensions().add(ec_point_formats);
-            }
-            {
-                auto supported_groups = new tls_extension_supported_groups(handshake);
-                (*supported_groups).add("x25519");
-                handshake->get_extensions().add(supported_groups);
-            }
-        }
+                               handshake->set_cipher_suite(server_cs);
+                           }
 
-        if (tls_13 == option.version) {
-            {
-                auto supported_versions = new tls_extension_server_supported_versions(handshake);
-                (*supported_versions).set(server_version);
-                handshake->get_extensions().add(supported_versions);
-            }
-            {
-                auto key_share = new tls_extension_server_key_share(handshake);
-                key_share->clear();
-                key_share->add_keyshare();
-                handshake->get_extensions().add(key_share);
+                           handshake->get_extensions()
+                               .add(tls_ext_renegotiation_info, dir, handshake, nullptr)
+                               .add(tls_ext_ec_point_formats, dir, handshake,
+                                    [](tls_extension* extension) -> return_t {
+                                        (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
+                                        return success;
+                                    })
+                               .add(tls_ext_supported_groups, dir, handshake, [](tls_extension* extension) -> return_t {
+                                   (*(tls_extension_supported_groups*)extension).add("x25519");
+                                   return success;
+                               });
 
-                basic_stream bs;
-                auto svr_keyshare = protection.get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
-                dump_key(svr_keyshare, &bs);
-                _logger->write(bs);
-                _test_case.assert(svr_keyshare, __FUNCTION__, "{server} key share (server generated)");
-            }
-        } else {
-            //
-        }
+                           if (tls_13 == option.version) {
+                               handshake->get_extensions()
+                                   .add(tls_ext_supported_versions, dir, handshake,
+                                        [&](tls_extension* extension) -> return_t {
+                                            (*(tls_extension_server_supported_versions*)extension).set(server_version);
+                                            return success;
+                                        })
+                                   .add(tls_ext_key_share, dir, handshake, [](tls_extension* extension) -> return_t {
+                                       tls_extension_server_key_share* keyshare = (tls_extension_server_key_share*)extension;
+                                       keyshare->clear();
+                                       keyshare->add_keyshare();
+                                       return success;
+                                   });
+
+                               {
+                                   basic_stream bs;
+                                   auto svr_keyshare = protection.get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
+                                   dump_key(svr_keyshare, &bs);
+                                   _logger->write(bs);
+                                   _test_case.assert(svr_keyshare, __FUNCTION__, "{server} key share (server generated)");
+                               }
+                           }
+
+                           return success;
+                       })
+                  .write(dir, bin);
     }
     __finally2 {
-        if (errorcode_t::success == ret) {
-            tls_record_handshake record(session);
-            record.get_handshakes().add(handshake);
-            ret = record.write(dir, bin);
-        }
-
         std::string dirstr;
         direction_string(dir, 0, dirstr);
         _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
@@ -279,21 +262,25 @@ static return_t do_test_construct_encrypted_extensions(tls_session* session, tls
             if (session->get_session_info(dir).apply_protection()) {
                 tls_record_builder builder;
                 auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
-
-                auto handshake = new tls_handshake_encrypted_extensions(session);
-                {
-                    auto extension = new tls_extension_alpn(handshake);
-                    binary_t protocols;
-                    binary_append(protocols, uint8(2));
-                    binary_append(protocols, "h2");
-                    binary_append(protocols, uint8(8));
-                    binary_append(protocols, "http/1.1");
-                    extension->set_protocols(protocols);
-                    handshake->get_extensions().add(extension);
+                if (record) {
+                    ret = (*record)
+                              .add(tls_hs_encrypted_extensions, session,
+                                   [&](tls_handshake* handshake) -> return_t {
+                                       handshake->get_extensions().add(tls_ext_alpn, dir, handshake, [](tls_extension* extension) -> return_t {
+                                           auto alpn = (tls_extension_alpn*)extension;
+                                           binary_t protocols;
+                                           binary_append(protocols, uint8(2));
+                                           binary_append(protocols, "h2");
+                                           binary_append(protocols, uint8(8));
+                                           binary_append(protocols, "http/1.1");
+                                           alpn->set_protocols(protocols);
+                                           return success;
+                                       });
+                                       return success;
+                                   })
+                              .write(dir, bin);
+                    record->release();
                 }
-                *record << handshake;
-                ret = record->write(dir, bin);
-                record->release();
             }
         }
     }
@@ -316,12 +303,10 @@ static return_t do_test_construct_certificate(tls_session* session, tls_directio
         // SC (server certificate)
         tls_record_builder builder;
         auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
-
-        auto handshake = new tls_handshake_certificate(session);
-        *record << handshake;
-
-        record->write(dir, bin);
-        record->release();
+        if (record) {
+            ret = (*record).add(tls_hs_certificate, session).write(dir, bin);
+            record->release();
+        }
     }
     __finally2 {
         std::string dirstr;
@@ -342,10 +327,10 @@ static return_t do_test_construct_server_key_exchange(tls_session* session, tls_
         if (tls_12 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
             auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
-
-            *record << new tls_handshake_server_key_exchange(session);
-            record->write(dir, bin);
-            record->release();
+            if (record) {
+                ret = (*record).add(tls_hs_server_key_exchange, session).write(dir, bin);
+                record->release();
+            }
         }
     }
     __finally2 {
@@ -367,10 +352,10 @@ static return_t do_test_construct_server_hello_done(tls_session* session, tls_di
         if (tls_12 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
             auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
-
-            *record << new tls_handshake_server_hello_done(session);
-            record->write(dir, bin);
-            record->release();
+            if (record) {
+                ret = (*record).add(tls_hs_server_hello_done, session).write(dir, bin);
+                record->release();
+            }
         }
     }
     __finally2 {
@@ -392,10 +377,10 @@ static return_t do_test_construct_client_key_exchange(tls_session* session, tls_
         if (tls_12 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
             auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
-
-            *record << new tls_handshake_client_key_exchange(session);
-            record->write(dir, bin);
-            record->release();
+            if (record) {
+                ret = (*record).add(tls_hs_client_key_exchange, session).write(dir, bin);
+                record->release();
+            }
         }
     }
     __finally2 {
@@ -417,10 +402,10 @@ static return_t do_test_construct_certificate_verify(tls_session* session, tls_d
         if (tls_13 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
             auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
-
-            *record << new tls_handshake_certificate_verify(session);
-            record->write(dir, bin);
-            record->release();
+            if (record) {
+                ret = (*record).add(tls_hs_certificate_verify, session).write(dir, bin);
+                record->release();
+            }
         }
     }
     __finally2 {
@@ -441,10 +426,10 @@ static return_t do_test_construct_server_finished(tls_session* session, tls_dire
 
         tls_record_builder builder;
         auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
-
-        *record << new tls_handshake_finished(session);
-        record->write(dir, bin);
-        record->release();
+        if (record) {
+            ret = (*record).add(tls_hs_finished, session).write(dir, bin);
+            record->release();
+        }
     }
     __finally2 {
         std::string dirstr;
@@ -464,10 +449,10 @@ static return_t do_test_construct_client_finished(tls_session* session, tls_dire
 
         tls_record_builder builder;
         auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
-
-        *record << new tls_handshake_finished(session);
-        record->write(dir, bin);
-        record->release();
+        if (record) {
+            ret = (*record).add(tls_hs_finished, session).write(dir, bin);
+            record->release();
+        }
     }
     __finally2 {
         std::string dirstr;
@@ -506,7 +491,7 @@ static return_t do_test_construct_client_ping(tls_session* session, tls_directio
 
         tls_record_application_data record(session);
         record.get_records().add(new tls_record_application_data(session, "ping"));
-        record.write(dir, bin);
+        ret = record.write(dir, bin);
     }
     __finally2 {
         std::string dirstr;
@@ -526,7 +511,7 @@ static return_t do_test_construct_server_pong(tls_session* session, tls_directio
 
         tls_record_application_data record(session);
         record.get_records().add(new tls_record_application_data(session, "pong"));
-        record.write(dir, bin);
+        ret = record.write(dir, bin);
     }
     __finally2 {
         std::string dirstr;
@@ -548,7 +533,7 @@ static return_t do_test_construct_close_notify(tls_session* session, tls_directi
         auto record = builder.set(session).set(tls_content_type_alert).set(dir).construct().build();
 
         *record << new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify);
-        record->write(dir, bin);
+        ret = record->write(dir, bin);
         record->release();
     }
     __finally2 {
@@ -635,24 +620,22 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             __leave2;
         }
 
-        {
-            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            do_cross_check_keycalc(&client_session, &server_session, tls_context_client_hello_random, "tls_context_client_hello_random");
-            do_cross_check_keycalc(&client_session, &server_session, tls_context_server_hello_random, "tls_context_server_hello_random");
-            do_cross_check_keycalc(&client_session, &server_session, tls_context_empty_hash, "tls_context_empty_hash");
-            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            if (server_session.get_tls_protection().is_kindof_tls13()) {
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_shared_secret, "tls_context_shared_secret");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_early_secret, "tls_secret_early_secret");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_handshake_derived, "tls_secret_handshake_derived");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_handshake, "tls_secret_handshake");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_c_hs_traffic, "tls_secret_c_hs_traffic");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_s_hs_traffic, "tls_secret_s_hs_traffic");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_handshake_client_key, "tls_secret_handshake_client_key");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_handshake_client_iv, "tls_secret_handshake_client_iv");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_handshake_server_key, "tls_secret_handshake_server_key");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_handshake_server_iv, "tls_secret_handshake_server_iv");
-            }
+        do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
+        do_cross_check_keycalc(&client_session, &server_session, tls_context_client_hello_random, "tls_context_client_hello_random");
+        do_cross_check_keycalc(&client_session, &server_session, tls_context_server_hello_random, "tls_context_server_hello_random");
+        do_cross_check_keycalc(&client_session, &server_session, tls_context_empty_hash, "tls_context_empty_hash");
+        do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
+        if (server_session.get_tls_protection().is_kindof_tls13()) {
+            do_cross_check_keycalc(&client_session, &server_session, tls_context_shared_secret, "tls_context_shared_secret");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_early_secret, "tls_secret_early_secret");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_handshake_derived, "tls_secret_handshake_derived");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_handshake, "tls_secret_handshake");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_c_hs_traffic, "tls_secret_c_hs_traffic");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_s_hs_traffic, "tls_secret_s_hs_traffic");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_handshake_client_key, "tls_secret_handshake_client_key");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_handshake_client_iv, "tls_secret_handshake_client_iv");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_handshake_server_key, "tls_secret_handshake_server_key");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_handshake_server_iv, "tls_secret_handshake_server_iv");
         }
 
         uint16 tlsversion = 0;
@@ -682,10 +665,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 __leave2;
             }
 
-            {
-                //
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            }
+            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
 
             // S -> C EE
             binary_t bin_encrypted_extensions;
@@ -695,10 +675,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 __leave2;
             }
 
-            {
-                //
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            }
+            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
 
             // S -> C SC
             binary_t bin_certificate;
@@ -708,10 +685,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 __leave2;
             }
 
-            {
-                //
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            }
+            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
 
             // S -> C SCV
             binary_t bin_certificate_verify;
@@ -721,10 +695,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 __leave2;
             }
 
-            {
-                //
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            }
+            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
 
             // S -> C SF
             binary_t bin_server_finished;
@@ -739,10 +710,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 __leave2;
             }
 
-            {
-                //
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            }
+            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
 
             // C -> S CF
             binary_t bin_client_finished;
@@ -760,10 +728,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 __leave2;
             }
 
-            {
-                //
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            }
+            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
 
             // before change_cipher_spec
             // S->C SKE server_key_exchange
@@ -776,10 +741,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 __leave2;
             }
 
-            {
-                //
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            }
+            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
 
             binary_t bin_server_hello_done;
             do_test_construct_server_hello_done(&server_session, from_server, bin_server_hello_done, "construct server_hello_done");
@@ -788,10 +750,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 __leave2;
             }
 
-            {
-                //
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            }
+            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
 
             binary_t bin_client_key_exchange;
             do_test_construct_client_key_exchange(&client_session, from_client, bin_client_key_exchange, "construct client_key_exchange");
@@ -802,13 +761,11 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
 
             // CKE
 
-            {
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_server_key, "tls_secret_server_key");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_server_mac_key, "tls_secret_server_mac_key");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_client_key, "tls_secret_client_key");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_client_mac_key, "tls_secret_client_mac_key");
-            }
+            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_server_key, "tls_secret_server_key");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_server_mac_key, "tls_secret_server_mac_key");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_client_key, "tls_secret_client_key");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_client_mac_key, "tls_secret_client_mac_key");
 
             // C -> S CCS
             binary_t bin_client_change_cipher_spec;
@@ -818,10 +775,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 __leave2;
             }
 
-            {
-                //
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            }
+            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
 
             // C -> S CF
             binary_t bin_client_finished;
@@ -839,10 +793,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
                 __leave2;
             }
 
-            {
-                //
-                do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            }
+            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
 
             // S -> C SF
             binary_t bin_server_finished;
@@ -853,26 +804,22 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
             }
         }
 
-        {
-            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            if (server_session.get_tls_protection().is_kindof_tls13()) {
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_application_derived, "tls_secret_application_derived");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_application, "tls_secret_application");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_c_ap_traffic, "tls_secret_c_ap_traffic");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_application_client_key, "tls_secret_application_client_key");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_application_client_iv, "tls_secret_application_client_iv");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_s_ap_traffic, "tls_secret_s_ap_traffic");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_application_server_key, "tls_secret_application_server_key");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_application_server_iv, "tls_secret_application_server_iv");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_exp_master, "tls_secret_exp_master");
-            }
+        do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
+        if (server_session.get_tls_protection().is_kindof_tls13()) {
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_application_derived, "tls_secret_application_derived");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_application, "tls_secret_application");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_c_ap_traffic, "tls_secret_c_ap_traffic");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_application_client_key, "tls_secret_application_client_key");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_application_client_iv, "tls_secret_application_client_iv");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_s_ap_traffic, "tls_secret_s_ap_traffic");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_application_server_key, "tls_secret_application_server_key");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_application_server_iv, "tls_secret_application_server_iv");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_exp_master, "tls_secret_exp_master");
         }
 
-        {
-            do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
-            do_cross_check_keycalc(&client_session, &server_session, tls_secret_res_master, "tls_secret_res_master");
-            do_cross_check_keycalc(&client_session, &server_session, tls_secret_resumption, "tls_secret_resumption");
-        }
+        do_cross_check_keycalc(&client_session, &server_session, tls_context_transcript_hash, "tls_context_transcript_hash");
+        do_cross_check_keycalc(&client_session, &server_session, tls_secret_res_master, "tls_secret_res_master");
+        do_cross_check_keycalc(&client_session, &server_session, tls_secret_resumption, "tls_secret_resumption");
 
         // C->S ping
         binary_t bin_client_ping;

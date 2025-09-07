@@ -25,6 +25,7 @@ class tls_handshakes {
     return_t write(tls_session* session, tls_direction_t dir, binary_t& bin);
 
     return_t add(tls_handshake* handshake, bool upref = false);
+    tls_handshakes& add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func = nullptr, bool upref = false);
     tls_handshakes& operator<<(tls_handshake* handshake);
     return_t for_each(std::function<return_t(tls_handshake*)> func);
     tls_handshake* get(uint8 type, bool upref = false);

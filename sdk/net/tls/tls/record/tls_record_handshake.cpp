@@ -120,5 +120,10 @@ bool tls_record_handshake::apply_protection() { return true; }
 
 void tls_record_handshake::operator<<(tls_handshake* handshake) { get_handshakes().add(handshake); }
 
+tls_record& tls_record_handshake::add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
+    get_handshakes().add(type, session, func, upref);
+    return *this;
+}
+
 }  // namespace net
 }  // namespace hotplace

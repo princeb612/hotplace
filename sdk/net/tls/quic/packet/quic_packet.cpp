@@ -35,7 +35,7 @@ constexpr char constexpr_scid_len[] = "scid len";
 quic_packet::quic_packet(tls_session* session) : _type(0), _session(nullptr), _ht(0), _version(1), _pn(0) {
     set_session(session);
     set_version();
-    _frames.set_packet(this);
+    _frames.set_session(session);
     _shared.make_share(this);
 }
 
@@ -44,7 +44,7 @@ quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type)
     set_session(session);
     set_version();
     set_type(type, _ht, is_longheader);
-    _frames.set_packet(this);
+    _frames.set_session(session);
     _shared.make_share(this);
 }
 
@@ -52,7 +52,7 @@ quic_packet::quic_packet(const quic_packet& rhs)
     : _type(rhs._type), _session(nullptr), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _pn(rhs._pn) {
     set_session(rhs._session);
     set_version();
-    _frames.set_packet(this);
+    _frames.set_session(_frames.get_session());
     _shared.make_share(this);
 }
 

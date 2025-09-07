@@ -211,6 +211,7 @@ class quic_frame_connection_close;
 class quic_frame_crypto;
 class quic_frame_data_blocked;
 class quic_frame_handshake_done;
+class quic_frame_http3_stream;
 class quic_frame_max_data;
 class quic_frame_max_stream_data;
 class quic_frame_new_token;
@@ -226,10 +227,6 @@ class quic_frame_stream_blocked;
 class quic_frame_stream_data_blocked;
 class quic_frame_stop_sending;
 class quic_frames;
-
-class quic_frame_stream_handler;
-class quic_frame_stream_h3_handler;
-class quic_frame_stream_ping_handler;
 
 class quic_packet;
 class quic_packet_initial;

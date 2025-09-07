@@ -37,14 +37,16 @@ namespace net {
 
 class quic_frame {
    public:
-    quic_frame(quic_frame_t type, quic_packet* packet);
+    quic_frame(quic_frame_t type, tls_session* session);
     virtual ~quic_frame();
 
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& bin);
 
+    void set_fragment(fragmentation* fragment);
+    fragmentation* get_fragment();
     quic_frame_t get_type();
-    quic_packet* get_packet();
+    tls_session* get_session();
 
     void addref();
     void release();
@@ -59,19 +61,20 @@ class quic_frame {
 
    private:
     quic_frame_t _type;
-    quic_packet* _packet;
+    tls_session* _session;
+    fragmentation* _fragment;
     t_shared_reference<quic_frame> _shared;
 };
 
 /**
  * @brief   read
- * @param   quic_packet* packet [in]
+ * @param   tls_session* session [in]
  * @param   const byte_t** stream [in]
  * @param   size_t size [in]
  * @param   size_t& pos [inout]
  */
-return_t quic_dump_frame(quic_packet* packet, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
-return_t quic_dump_frame(quic_packet* packet, const binary_t frame, size_t& pos, tls_direction_t dir = from_server);
+return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size, size_t& pos, tls_direction_t dir = from_server);
+return_t quic_dump_frame(tls_session* session, const binary_t frame, size_t& pos, tls_direction_t dir = from_server);
 
 }  // namespace net
 }  // namespace hotplace

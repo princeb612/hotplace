@@ -403,5 +403,19 @@ return_t dtls13_ciphertext::do_write_body(tls_direction_t dir, binary_t& bin) {
     return ret;
 }
 
+void dtls13_ciphertext::operator<<(tls_record* record) { get_records().add(record); }
+
+void dtls13_ciphertext::operator<<(tls_handshake* handshake) { get_handshakes().add(handshake); }
+
+tls_record& dtls13_ciphertext::add(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func, bool upref) {
+    get_records().add(type, session, func, upref);
+    return *this;
+}
+
+tls_record& dtls13_ciphertext::add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
+    get_handshakes().add(type, session, func, upref);
+    return *this;
+}
+
 }  // namespace net
 }  // namespace hotplace

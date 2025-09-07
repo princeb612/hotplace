@@ -95,6 +95,25 @@ return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary
 
 return_t tls_handshakes::add(tls_handshake* handshake, bool upref) { return _handshakes.add(handshake, upref); }
 
+tls_handshakes& tls_handshakes::add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
+    __try2 {
+        tls_handshake_builder builder;
+        auto handshake = builder.set(type).set(session).build();
+        if (handshake) {
+            if (func) {
+                auto test = func(handshake);
+                if (errorcode_t::success != test) {
+                    handshake->release();
+                    __leave2;
+                }
+            }
+            _handshakes.add(handshake, upref);
+        }
+    }
+    __finally2 {}
+    return *this;
+}
+
 tls_handshakes& tls_handshakes::operator<<(tls_handshake* handshake) {
     add(handshake);
     return *this;

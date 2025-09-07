@@ -45,69 +45,75 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
             handshake->add_ciphersuites("TLS_AES_128_GCM_SHA256");
         }
 
-        {
-            // RFC 9325 4.2.1
-            // Note that [RFC8422] deprecates all but the uncompressed point format.
-            // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-            auto ec_point_formats = new tls_extension_ec_point_formats(handshake);
-            (*ec_point_formats).add("uncompressed");
-            handshake->get_extensions().add(ec_point_formats);
-        }
-        {
-            // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-            auto supported_groups = new tls_extension_supported_groups(handshake);
-            (*supported_groups)
-                .add("x25519")
-                .add("secp256r1")
-                .add("x448")
-                .add("secp521r1")
-                .add("secp384r1")
-                .add("ffdhe2048")
-                .add("ffdhe3072")
-                .add("ffdhe4096")
-                .add("ffdhe6144")
-                .add("ffdhe8192");
-            handshake->get_extensions().add(supported_groups);
-        }
-        {
-            auto extension = new tls_extension_unknown(tls_ext_encrypt_then_mac, handshake);
-            handshake->get_extensions().add(extension);
-        }
-        {
-            auto signature_algorithms = new tls_extension_signature_algorithms(handshake);
-            (*signature_algorithms)
-                .add("ecdsa_secp256r1_sha256")
-                .add("ecdsa_secp384r1_sha384")
-                .add("ecdsa_secp521r1_sha512")
-                .add("ed25519")
-                .add("ed448")
-                .add("rsa_pkcs1_sha256")
-                .add("rsa_pkcs1_sha384")
-                .add("rsa_pkcs1_sha512")
-                .add("rsa_pss_pss_sha256")
-                .add("rsa_pss_pss_sha384")
-                .add("rsa_pss_pss_sha512")
-                .add("rsa_pss_rsae_sha256")
-                .add("rsa_pss_rsae_sha384")
-                .add("rsa_pss_rsae_sha512");
-            handshake->get_extensions().add(signature_algorithms);
-        }
-        {
-            auto supported_versions = new tls_extension_client_supported_versions(handshake);
-            (*supported_versions).add(tls_13);
-            handshake->get_extensions().add(supported_versions);
-        }
-        {
-            auto psk_key_exchange_modes = new tls_extension_psk_key_exchange_modes(handshake);
-            (*psk_key_exchange_modes).add("psk_dhe_ke");
-            handshake->get_extensions().add(psk_key_exchange_modes);
-        }
-        {
-            auto key_share = new tls_extension_client_key_share(handshake);
-            key_share->clear();
-            key_share->add(group);
-            handshake->get_extensions().add(key_share);
+        handshake->get_extensions()
+            .add(tls_ext_server_name, dir, handshake,
+                 [](tls_extension* extension) -> return_t {
+                     (*(tls_extension_sni*)extension).set_hostname("test.server.com");
+                     return success;
+                 })
+            .add(tls_ext_ec_point_formats, dir, handshake,
+                 [](tls_extension* extension) -> return_t {
+                     // RFC 9325 4.2.1
+                     // Note that [RFC8422] deprecates all but the uncompressed point format.
+                     // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
+                     (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
+                     return success;
+                 })
+            .add(tls_ext_supported_groups, dir, handshake,
+                 [](tls_extension* extension) -> return_t {
+                     // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
+                     (*(tls_extension_supported_groups*)extension)
+                         .add("x25519")
+                         .add("secp256r1")
+                         .add("x448")
+                         .add("secp521r1")
+                         .add("secp384r1")
+                         .add("ffdhe2048")
+                         .add("ffdhe3072")
+                         .add("ffdhe4096")
+                         .add("ffdhe6144")
+                         .add("ffdhe8192");
+                     return success;
+                 })
+            .add(tls_ext_encrypt_then_mac, dir, handshake, nullptr)
+            .add(tls_ext_extended_master_secret, dir, handshake, nullptr)
+            .add(tls_ext_signature_algorithms, dir, handshake,
+                 [](tls_extension* extension) -> return_t {
+                     (*(tls_extension_signature_algorithms*)extension)
+                         .add("ecdsa_secp256r1_sha256")
+                         .add("ecdsa_secp384r1_sha384")
+                         .add("ecdsa_secp521r1_sha512")
+                         .add("ed25519")
+                         .add("ed448")
+                         .add("rsa_pkcs1_sha256")
+                         .add("rsa_pkcs1_sha384")
+                         .add("rsa_pkcs1_sha512")
+                         .add("rsa_pss_pss_sha256")
+                         .add("rsa_pss_pss_sha384")
+                         .add("rsa_pss_pss_sha512")
+                         .add("rsa_pss_rsae_sha256")
+                         .add("rsa_pss_rsae_sha384")
+                         .add("rsa_pss_rsae_sha512");
+                     return success;
+                 })
+            .add(tls_ext_psk_key_exchange_modes, dir, handshake,
+                 [](tls_extension* extension) -> return_t {
+                     (*(tls_extension_psk_key_exchange_modes*)extension).add("psk_dhe_ke");
+                     return success;
+                 })
+            .add(tls_ext_supported_versions, dir, handshake,
+                 [&](tls_extension* extension) -> return_t {
+                     (*(tls_extension_client_supported_versions*)extension).add(tls_13);
+                     return success;
+                 })
+            .add(tls_ext_key_share, dir, handshake, [&](tls_extension* extension) -> return_t {
+                tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
+                keyshare->clear();
+                keyshare->add(group);
+                return success;
+            });
 
+        {
             basic_stream bs;
             auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
             dump_key(pkey, &bs);
@@ -174,17 +180,18 @@ static return_t do_test_construct_server_hello(tls_session* session, tls_session
             handshake->set_cipher_suite(server_cs);
         }
 
-        {
-            auto supported_versions = new tls_extension_server_supported_versions(handshake);
-            (*supported_versions).set(server_version);
-            handshake->get_extensions().add(supported_versions);
-        }
-        {
-            auto key_share = new tls_extension_server_key_share(handshake);
-            key_share->clear();
-            key_share->add_keyshare();
-            handshake->get_extensions().add(key_share);
-        }
+        handshake->get_extensions()
+            .add(tls_ext_supported_versions, dir, handshake,
+                 [&](tls_extension* extension) -> return_t {
+                     (*(tls_extension_server_supported_versions*)extension).set(server_version);
+                     return success;
+                 })
+            .add(tls_ext_key_share, dir, handshake, [](tls_extension* extension) -> return_t {
+                tls_extension_server_key_share* keyshare = (tls_extension_server_key_share*)extension;
+                keyshare->clear();
+                keyshare->add_keyshare();
+                return success;
+            });
     }
     __finally2 {
         if (errorcode_t::success == ret) {

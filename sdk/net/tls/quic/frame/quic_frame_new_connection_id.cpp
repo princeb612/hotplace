@@ -45,7 +45,7 @@ constexpr char constexpr_stateless_reset_token[] = "stateless reset token";
  *   Figure 39: NEW_CONNECTION_ID Frame Format
  */
 
-quic_frame_new_connection_id::quic_frame_new_connection_id(quic_packet* packet) : quic_frame(quic_frame_type_new_connection_id, packet) {}
+quic_frame_new_connection_id::quic_frame_new_connection_id(tls_session* session) : quic_frame(quic_frame_type_new_connection_id, session) {}
 
 return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -70,7 +70,7 @@ return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const b
         pl.get_binary(constexpr_connection_id, connection_id);
         pl.get_binary(constexpr_stateless_reset_token, stateless_reset_token);
 
-        auto session = get_packet()->get_session();
+        auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
 
@@ -117,7 +117,7 @@ return_t quic_frame_new_connection_id::do_write_body(tls_direction_t dir, binary
         auto type = get_type();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        auto session = get_packet()->get_session();
+        auto session = get_session();
         auto& secrets = session->get_tls_protection().get_secrets();
         auto& tracker = session->get_quic_session().get_cid_tracker();
         if (tracker.empty()) {

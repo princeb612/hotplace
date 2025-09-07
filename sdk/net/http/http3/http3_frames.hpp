@@ -25,6 +25,7 @@ class http3_frames {
     return_t write(tls_session* session, binary_t& bin);
 
     return_t add(http3_frame* frame, bool upref = false);
+    http3_frames& add(h3_frame_t type, tls_session* session, std::function<return_t(http3_frame*)> func = nullptr, bool upref = false);
     http3_frames& operator<<(http3_frame* frame);
     return_t for_each(std::function<return_t(http3_frame*)> func);
     http3_frame* getat(size_t index, bool upref = false);

@@ -27,6 +27,8 @@ openssl_server_socket_adapter::openssl_server_socket_adapter()
       _dtls(nullptr),
       _dtls_server_socket(nullptr) {}
 
+openssl_server_socket_adapter::~openssl_server_socket_adapter() {}
+
 return_t openssl_server_socket_adapter::startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list,
                                                     int verify_peer) {
     return_t ret = errorcode_t::success;

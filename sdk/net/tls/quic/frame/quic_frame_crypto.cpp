@@ -10,6 +10,7 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
+#include <sdk/base/stream/fragmentation.hpp>
 #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
@@ -31,12 +32,12 @@ constexpr char constexpr_length[] = "length";
 constexpr char constexpr_offset[] = "offset";
 constexpr char constexpr_crypto_data[] = "crypto data";
 
-quic_frame_crypto::quic_frame_crypto(quic_packet* packet) : quic_frame(quic_frame_type_crypto, packet) {}
+quic_frame_crypto::quic_frame_crypto(tls_session* session) : quic_frame(quic_frame_type_crypto, session) {}
 
 return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_packet()->get_session();
+        auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
 
@@ -109,7 +110,7 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
 return_t quic_frame_crypto::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto segment = get_packet()->get_fragment().get_segment();
+        auto segment = get_fragment()->get_segment();
         if (segment) {
             size_t bumper = 0;
             segment->peek(quic_frame_type_crypto, [&](const fragment_context& context) -> return_t {
@@ -125,7 +126,7 @@ return_t quic_frame_crypto::do_write_body(tls_direction_t dir, binary_t& bin) {
                 ret = do_write_body(dir, stream, size, pos, len, bin);
                 return ret;
             };
-            ret = get_packet()->get_fragment().consume(quic_frame_type_crypto, bumper, lambda);
+            ret = get_fragment()->consume(quic_frame_type_crypto, bumper, lambda);
         }
     }
     __finally2 {}
@@ -148,7 +149,7 @@ return_t quic_frame_crypto::do_write_body(tls_direction_t dir, const byte_t* str
         //   calc
         //     exclude packet.header, packet.tag, frame.header
 
-        auto session = get_packet()->get_session();
+        auto session = get_session();
 
         payload pl;
         pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)  //

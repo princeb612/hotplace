@@ -54,7 +54,7 @@ constexpr char constexpr_ectce_count[] = "ect-ce count";
  * Figure 25: ACK Frame Format
  */
 
-quic_frame_ack::quic_frame_ack(quic_packet* packet, uint8 type) : quic_frame((quic_frame_t)type, packet), _space(protection_default) {
+quic_frame_ack::quic_frame_ack(tls_session* session, uint8 type) : quic_frame((quic_frame_t)type, session), _space(protection_default) {
     if ((quic_frame_type_ack == type) || (quic_frame_type_ack1 == type)) {
     } else {
         throw exception(bad_request);
@@ -167,7 +167,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_packet()->get_session();
+        auto session = get_session();
         auto space = get_protection_space();
         auto type = get_type();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();

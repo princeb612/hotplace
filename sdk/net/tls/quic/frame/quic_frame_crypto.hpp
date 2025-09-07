@@ -20,7 +20,7 @@ namespace net {
 // RFC 9000 19.6.  CRYPTO Frames
 class quic_frame_crypto : public quic_frame {
    public:
-    quic_frame_crypto(quic_packet* packet);
+    quic_frame_crypto(tls_session* session);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
