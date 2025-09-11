@@ -346,18 +346,29 @@ bool error_advisor::error_message(return_t error, std::string& code, std::string
 
 error_category_t error_advisor::categoryof(return_t code) {
     error_category_t category = error_category_success;
-    if (success == code) {
-        category = error_category_success;
-    } else if (expect_failure == code) {
-        category = error_category_expect_failure;
-    } else if (not_supported == code) {
-        category = error_category_not_supported;
-    } else if (low_security == code) {
-        category = error_category_low_security;
-    } else if ((code > success) && (code < WARN_CODE_BEGIN)) {
-        category = error_category_severe;
-    } else if (code >= WARN_CODE_BEGIN) {
-        category = error_category_warn;
+    switch (code) {
+        case success: {
+            category = error_category_success;
+        } break;
+        case expect_failure: {
+            category = error_category_expect_failure;
+        } break;
+        case not_supported: {
+            category = error_category_not_supported;
+        } break;
+        case low_security: {
+            category = error_category_low_security;
+        } break;
+        case do_nothing: {
+            category = error_category_trivial;
+        } break;
+        default: {
+            if ((code > success) && (code < WARN_CODE_BEGIN)) {
+                category = error_category_severe;
+            } else if (code >= WARN_CODE_BEGIN) {
+                category = error_category_warn;
+            }
+        } break;
     }
     return category;
 }

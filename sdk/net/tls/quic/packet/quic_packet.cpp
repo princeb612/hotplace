@@ -9,7 +9,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/stream/segmentation.hpp>
+// #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/string/string.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
@@ -562,8 +562,6 @@ void quic_packet::addref() { _shared.addref(); }
 void quic_packet::release() { _shared.delref(); }
 
 uint32 quic_packet::get_flags() { return 0; }
-
-fragmentation& quic_packet::get_fragment() { return _fragment; }
 
 }  // namespace net
 }  // namespace hotplace

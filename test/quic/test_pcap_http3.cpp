@@ -9,7 +9,7 @@
 
 #include "sample.hpp"
 
-void test_pcap_quic() {
+void test_pcap_http3() {
     _test_case.begin("HTTP/3");
 
     tls_session tlssession(session_type_tls);
@@ -52,6 +52,7 @@ void test_pcap_quic() {
         } else if (prot_tls13 == prot) {
             // tls_records records;
             // ret = records.read(&tlssession, dir, bin_frame);
+            ret = do_nothing;
         }
 
         _test_case.test(ret, __FUNCTION__, "%s", item->desc);

@@ -393,7 +393,7 @@ int main(int argc, char** argv) {
 
     if ((test_flag_pcap & option.flags) || (0 == option.flags)) {
         // http3.pcapng
-        test_pcap_quic();
+        test_pcap_http3();
     }
 
     if (0 == option.flags) {

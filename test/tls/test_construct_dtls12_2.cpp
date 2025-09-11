@@ -79,9 +79,9 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                              .add("rsa_pss_rsae_sha512");
                          return success;
                      })
-                .add(tls_ext_encrypt_then_mac, dir, handshake, nullptr)
-                .add(tls_ext_renegotiation_info, dir, handshake, nullptr)
-                .add(tls_ext_extended_master_secret, dir, handshake, nullptr);
+                .add(tls_ext_encrypt_then_mac, dir, handshake)
+                .add(tls_ext_renegotiation_info, dir, handshake)
+                .add(tls_ext_extended_master_secret, dir, handshake);
 
             return success;
         });
@@ -154,8 +154,8 @@ static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_ses
                      handshake->set_cipher_suite(server_cs);
 
                      handshake->get_extensions()
-                         .add(tls_ext_encrypt_then_mac, dir, handshake, nullptr)
-                         .add(tls_ext_renegotiation_info, dir, handshake, nullptr)
+                         .add(tls_ext_encrypt_then_mac, dir, handshake)
+                         .add(tls_ext_renegotiation_info, dir, handshake)
                          .add(tls_ext_ec_point_formats, dir, handshake,
                               [](tls_extension* extension) -> return_t {
                                   (*(tls_extension_ec_point_formats*)extension).add("uncompressed");

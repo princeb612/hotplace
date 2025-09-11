@@ -76,12 +76,18 @@ class quic_packet_publisher {
     return_t publish(tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
 
     tls_handshakes& get_handshakes();
+    quic_frames& get_frames();
 
    protected:
     return_t probe_spaces(std::set<protection_space_t>& spaces);
+    return_t prepare_frame(protection_space_t space, tls_direction_t dir);
+    return_t prepare_packet_cid(quic_packet* packet, protection_space_t space, tls_direction_t dir);
     return_t publish_space(protection_space_t space, tls_direction_t dir, uint32 flags, std::list<binary_t>& container);
 
     return_t kindof_handshake(tls_handshake* handshake, protection_space_t& space);
+    bool is_kindof_handshake(tls_handshake* handshake, protection_space_t space);
+    return_t kindof_frame(quic_frame* frame, protection_space_t& space);
+    bool is_kindof_frame(quic_frame* frame, protection_space_t space);
 
    private:
     tls_session* _session;
@@ -90,7 +96,7 @@ class quic_packet_publisher {
 
     tls_handshakes _handshakes;
     quic_frames _frames;
-    std::map<quic_frame*, binary_t> _unfragmented;
+    std::map<uint32, quic_frame_t> _typemap;
 };
 
 }  // namespace net

@@ -10,7 +10,7 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/stream/segmentation.hpp>
+// #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_padding.hpp>
@@ -52,16 +52,20 @@ return_t quic_frame_padding::do_write_body(tls_direction_t dir, binary_t& bin) {
     // Figure 23: PADDING Frame Format
     if (quic_pad_packet & _flags) {
         // packet mode - make a packet padded
-        auto session = get_session();
-        auto fragment = get_fragment();
-        auto avail = fragment->available();
-        auto len = avail > 0 ? avail : 0;
-        if (bin.size() < len) {
-            bin.resize(len);
-        }
+        // auto fragment = get_fragment();
+        // if (fragment) {
+        //     auto session = get_session();
+        //     auto avail = fragment->available();
+        //     auto len = avail > 0 ? avail : 0;
+        //     if (bin.size() < len) {
+        //         bin.resize(len);
+        //     }
+        // }
     } else {
         // frame mode - add a frame
-        bin.resize(bin.size() + _len);
+        if (_len) {
+            bin.resize(bin.size() + _len);
+        }
     }
     return ret;
 }

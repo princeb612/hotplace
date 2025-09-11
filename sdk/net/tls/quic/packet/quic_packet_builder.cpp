@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/segmentation.hpp>
+// #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
@@ -29,6 +29,22 @@ quic_packet_builder::quic_packet_builder() : _type(0), _msb(0), _session(nullptr
 
 quic_packet_builder& quic_packet_builder::set(quic_packet_t type) {
     _type = type;
+    return *this;
+}
+
+quic_packet_builder& quic_packet_builder::set(protection_space_t space) {
+    quic_packet_t type = quic_packet_type_initial;
+    switch (space) {
+        case protection_initial: {
+            _type = quic_packet_type_initial;
+        } break;
+        case protection_handshake: {
+            _type = quic_packet_type_handshake;
+        } break;
+        case protection_application: {
+            _type = quic_packet_type_1_rtt;
+        } break;
+    }
     return *this;
 }
 
@@ -93,7 +109,7 @@ quic_packet* quic_packet_builder::build() {
                     auto pn = session->get_recordno(get_direction(), false, protection_initial);
                     auto pnl = (prng.rand32() % 4) + 1;
                     packet->set_pn(pn, pnl);
-                    packet->get_fragment().set(_segment, _concat);
+                    // packet->get_fragment().set(_segment, _concat);
                 }
             } break;
             case quic_packet_type_0_rtt: {
@@ -106,7 +122,7 @@ quic_packet* quic_packet_builder::build() {
                     auto pn = session->get_recordno(get_direction(), false, protection_handshake);
                     auto pnl = (prng.rand32() % 4) + 1;
                     packet->set_pn(pn, pnl);
-                    packet->get_fragment().set(_segment, _concat);
+                    // packet->get_fragment().set(_segment, _concat);
                 }
             } break;
             case quic_packet_type_retry: {
@@ -119,7 +135,7 @@ quic_packet* quic_packet_builder::build() {
                     auto pn = session->get_recordno(get_direction(), false, protection_application);
                     auto pnl = (prng.rand32() % 4) + 1;
                     packet->set_pn(pn, pnl);
-                    packet->get_fragment().set(_segment, _concat);
+                    // packet->get_fragment().set(_segment, _concat);
                 }
             } break;
         }

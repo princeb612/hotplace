@@ -39,7 +39,7 @@ class quic_session {
     // ack
     t_ovl_points<uint32>& get_pkns(protection_space_t space);
     // stream
-    t_quic_streams<uint64, uint8>& get_streams();
+    quic_streams& get_streams();
 
    protected:
    private:
@@ -52,8 +52,7 @@ class quic_session {
     // ack
     std::map<protection_space_t, t_ovl_points<uint32>> _pkn;
     // stream
-    critical_section _lock;
-    t_quic_streams<uint64, uint8> _streams;
+    quic_streams _streams;
 };
 
 }  // namespace net

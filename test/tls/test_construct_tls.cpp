@@ -80,10 +80,10 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
                                             .add("ffdhe8192");
                                         return success;
                                     })
-                               .add(tls_ext_next_protocol_negotiation, dir, handshake, nullptr)
-                               .add(tls_ext_encrypt_then_mac, dir, handshake, nullptr)
-                               .add(tls_ext_extended_master_secret, dir, handshake, nullptr)
-                               .add(tls_ext_post_handshake_auth, dir, handshake, nullptr)
+                               .add(tls_ext_next_protocol_negotiation, dir, handshake)
+                               .add(tls_ext_encrypt_then_mac, dir, handshake)
+                               .add(tls_ext_extended_master_secret, dir, handshake)
+                               .add(tls_ext_post_handshake_auth, dir, handshake)
                                .add(tls_ext_signature_algorithms, dir, handshake,
                                     [](tls_extension* extension) -> return_t {
                                         (*(tls_extension_signature_algorithms*)extension)
@@ -185,7 +185,7 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
                            }
 
                            handshake->get_extensions()
-                               .add(tls_ext_renegotiation_info, dir, handshake, nullptr)
+                               .add(tls_ext_renegotiation_info, dir, handshake)
                                .add(tls_ext_ec_point_formats, dir, handshake,
                                     [](tls_extension* extension) -> return_t {
                                         (*(tls_extension_ec_point_formats*)extension).add("uncompressed");

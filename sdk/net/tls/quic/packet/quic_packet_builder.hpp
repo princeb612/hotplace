@@ -25,6 +25,7 @@ class quic_packet_builder {
     quic_packet_builder();
 
     quic_packet_builder& set(quic_packet_t type);
+    quic_packet_builder& set(protection_space_t space);
     quic_packet_builder& set_msb(uint8 msb);
     quic_packet_builder& set(tls_session* session);
     quic_packet_builder& set(tls_direction_t dir);

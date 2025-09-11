@@ -105,7 +105,7 @@ void test_rfc_9369_a4(tls_session* client_session, tls_session* server_session);
 void test_rfc_9369_a5();
 
 // pcap
-void test_pcap_quic();
+void test_pcap_http3();
 // QUIC Frame
 void test_quic_frame();
 // construct

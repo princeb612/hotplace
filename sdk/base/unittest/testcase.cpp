@@ -322,36 +322,6 @@ void test_case::test(return_t result, const char* test_function, const char* mes
 
         console_color_t color = console_color_t::yellow;
         auto category = advisor->categoryof(result);
-        switch (category) {
-            case error_category_success:
-                _total._count_success++;
-                break;
-            case error_category_expect_failure:
-                color = console_color_t::magenta;
-                _total._count_success++;
-                break;
-            case error_category_severe:
-                color = console_color_t::red;
-                _total._count_fail++;
-                break;
-            case error_category_not_supported:
-                color = console_color_t::cyan;
-                _total._count_not_supported++;
-                break;
-            case error_category_low_security:
-                color = console_color_t::yellow;
-                _total._count_low_security++;
-                break;
-            case error_category_trivial:
-            case error_category_warn:
-                color = console_color_t::white;
-                _total._count_trivial++;
-                break;
-            default:
-                // do not reach here
-                color = console_color_t::white;
-                break;
-        }
 
         unittest_item_t item;
         memcpy(&item._time, &elapsed, sizeof(elapsed));
@@ -371,25 +341,36 @@ void test_case::test(return_t result, const char* test_function, const char* mes
         unittest_map_t::iterator it = pib.first;
         test_status_t& status = it->second;
 
-        switch (result) {
-            case errorcode_t::success:
+        switch (category) {
+            case error_category_success:  // pass
+                _total._count_success++;
                 status._test_stat._count_success++;
                 break;
-            case errorcode_t::not_supported:
+            case error_category_expect_failure:  // pass
+                color = console_color_t::magenta;
+                _total._count_success++;
+                status._test_stat._count_success++;
+                break;
+            case error_category_severe:  // fail
+                color = console_color_t::red;
+                _total._count_fail++;
+                status._test_stat._count_fail++;
+                break;
+            case error_category_not_supported:  // skip
+                color = console_color_t::cyan;
+                _total._count_not_supported++;
                 status._test_stat._count_not_supported++;
                 break;
-            case errorcode_t::low_security:
-                status._test_stat._count_low_security++;
-                break;
-            case errorcode_t::do_nothing:
+            case error_category_low_security:  // triv
+            case error_category_trivial:
+            case error_category_warn:
+                color = console_color_t::yellow;
+                _total._count_trivial++;
                 status._test_stat._count_trivial++;
                 break;
-            case errorcode_t::expect_failure:
-                // status._test_stat._count_expect_failure++;
-                status._test_stat._count_success++;
-                break;
             default:
-                status._test_stat._count_fail++;
+                // do not reach here
+                color = console_color_t::white;
                 break;
         }
 
@@ -432,8 +413,9 @@ constexpr char constexpr_success[] = "success";
 constexpr char constexpr_pass[] = "pass";
 constexpr char constexpr_fail[] = "fail";
 constexpr char constexpr_skip[] = "skip";
-constexpr char constexpr_low[] = "low ";
+constexpr char constexpr_trivial[] = "triv";
 constexpr char constexpr_warn[] = "warn";
+constexpr char constexpr_blah[] = "    ";
 constexpr char constexpr_expect_failure[] = "expt";
 
 constexpr char constexpr_report[] = "report";
@@ -493,12 +475,14 @@ void test_case::dump_list_into_stream(unittest_list_t& array, basic_stream& stre
                 cprint(console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_skip);
                 break;
             case error_category_low_security:
-                cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_low);
-                break;
             case error_category_trivial:
+                cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_trivial);
+                break;
             case error_category_warn:
-            default:
                 cprint(console_colored_stream, _concolor, console_color_t::green, fgcolor, constexpr_warn);
+                break;
+            default:
+                cprint(console_colored_stream, _concolor, console_color_t::green, fgcolor, constexpr_blah);
                 break;
         }
 
@@ -631,10 +615,10 @@ void test_case::report_unittest(basic_stream& stream) {
             cprint(console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_skip);
             stream << " " << status._test_stat._count_not_supported;
         }
-        if (status._test_stat._count_low_security) {
+        if (status._test_stat._count_trivial) {
             stream << " ";
-            cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_low);
-            stream << " " << status._test_stat._count_low_security;
+            cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_trivial);
+            stream << " " << status._test_stat._count_trivial;
         }
         stream << "\n";
 
@@ -660,10 +644,10 @@ void test_case::report_unittest(basic_stream& stream) {
         cprint(console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_skip);
         stream << " " << _total._count_not_supported;
     }
-    if (_total._count_low_security) {
+    if (_total._count_trivial) {
         stream << " ";
-        cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_low);
-        stream << " " << _total._count_low_security;
+        cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_trivial);
+        stream << " " << _total._count_trivial;
     }
     stream << "\n";
     stream.fill(80, '-');
@@ -693,7 +677,7 @@ void test_case::report_cases(basic_stream& stream) {
     console_colored_stream << _concolor.turnon().set_style(console_style_t::bold);
 
     stream << constexpr_brief << "\n";
-    stream << constexpr_pass << " " << constexpr_fail << " " << constexpr_skip << " " << constexpr_low << constexpr_case << "\n";
+    stream << constexpr_pass << " " << constexpr_fail << " " << constexpr_skip << " " << constexpr_trivial << " " << constexpr_case << "\n";
 
     for (const auto& testcase : _test_list) {
         unittest_map_t::iterator map_iter = _test_map.find(testcase);
@@ -704,14 +688,14 @@ void test_case::report_cases(basic_stream& stream) {
             console_colored_stream << _concolor.set_fgcolor(console_color_t::red);
         } else if (status._test_stat._count_not_supported) {
             console_colored_stream << _concolor.set_fgcolor(console_color_t::cyan);
-        } else if (status._test_stat._count_low_security) {
+        } else if (status._test_stat._count_trivial) {
             console_colored_stream << _concolor.set_fgcolor(console_color_t::yellow);
         } else {
             console_colored_stream << _concolor.set_fgcolor(console_color_t::white);
         }
 
-        stream.printf("%4i %4i %4i %3i %s\n", status._test_stat._count_success, status._test_stat._count_fail, status._test_stat._count_not_supported,
-                      status._test_stat._count_low_security, testcase.c_str());
+        stream.printf("%4i %4i %4i %4i %s\n", status._test_stat._count_success, status._test_stat._count_fail, status._test_stat._count_not_supported,
+                      status._test_stat._count_trivial, testcase.c_str());
 
         console_colored_stream << _concolor.set_fgcolor(console_color_t::white);
     }

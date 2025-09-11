@@ -14,119 +14,117 @@
 
 static return_t do_test_construct_client_hello(tls_session* session, tls_direction_t dir, const char* group, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
-    tls_record_handshake record(session);
-    tls_handshake_client_hello* handshake = nullptr;
 
     __try2 {
-        __try_new_catch(handshake, new tls_handshake_client_hello(session), ret, __leave2);
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        tls_record_handshake record(session);
 
-        // random
-        {
-            openssl_prng prng;
+        ret = record
+                  .add(tls_hs_client_hello, session,
+                       [&](tls_handshake* hs) -> return_t {
+                           auto handshake = (tls_handshake_client_hello*)hs;
 
-            binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
-            time_t gmt_unix_time = time(nullptr);
-            binary_append(random, gmt_unix_time, hton64);
-            random.resize(sizeof(uint32));
-            binary_t temp;
-            prng.random(temp, 28);
-            binary_append(random, temp);
-            handshake->set_random(random);
+                           {
+                               openssl_prng prng;
 
-            binary_t session_id;
-            prng.random(session_id, 32);
-            handshake->set_session_id(session_id);
-        }
+                               binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
+                               time_t gmt_unix_time = time(nullptr);
+                               binary_append(random, gmt_unix_time, hton64);
+                               random.resize(sizeof(uint32));
+                               binary_t temp;
+                               prng.random(temp, 28);
+                               binary_append(random, temp);
+                               handshake->set_random(random);
 
-        {
-            // cipher suites
-            handshake->add_ciphersuites("TLS_AES_128_GCM_SHA256");
-        }
+                               binary_t session_id;
+                               prng.random(session_id, 32);
+                               handshake->set_session_id(session_id);
+                           }
 
-        handshake->get_extensions()
-            .add(tls_ext_server_name, dir, handshake,
-                 [](tls_extension* extension) -> return_t {
-                     (*(tls_extension_sni*)extension).set_hostname("test.server.com");
-                     return success;
-                 })
-            .add(tls_ext_ec_point_formats, dir, handshake,
-                 [](tls_extension* extension) -> return_t {
-                     // RFC 9325 4.2.1
-                     // Note that [RFC8422] deprecates all but the uncompressed point format.
-                     // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-                     (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
-                     return success;
-                 })
-            .add(tls_ext_supported_groups, dir, handshake,
-                 [](tls_extension* extension) -> return_t {
-                     // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-                     (*(tls_extension_supported_groups*)extension)
-                         .add("x25519")
-                         .add("secp256r1")
-                         .add("x448")
-                         .add("secp521r1")
-                         .add("secp384r1")
-                         .add("ffdhe2048")
-                         .add("ffdhe3072")
-                         .add("ffdhe4096")
-                         .add("ffdhe6144")
-                         .add("ffdhe8192");
-                     return success;
-                 })
-            .add(tls_ext_encrypt_then_mac, dir, handshake, nullptr)
-            .add(tls_ext_extended_master_secret, dir, handshake, nullptr)
-            .add(tls_ext_signature_algorithms, dir, handshake,
-                 [](tls_extension* extension) -> return_t {
-                     (*(tls_extension_signature_algorithms*)extension)
-                         .add("ecdsa_secp256r1_sha256")
-                         .add("ecdsa_secp384r1_sha384")
-                         .add("ecdsa_secp521r1_sha512")
-                         .add("ed25519")
-                         .add("ed448")
-                         .add("rsa_pkcs1_sha256")
-                         .add("rsa_pkcs1_sha384")
-                         .add("rsa_pkcs1_sha512")
-                         .add("rsa_pss_pss_sha256")
-                         .add("rsa_pss_pss_sha384")
-                         .add("rsa_pss_pss_sha512")
-                         .add("rsa_pss_rsae_sha256")
-                         .add("rsa_pss_rsae_sha384")
-                         .add("rsa_pss_rsae_sha512");
-                     return success;
-                 })
-            .add(tls_ext_psk_key_exchange_modes, dir, handshake,
-                 [](tls_extension* extension) -> return_t {
-                     (*(tls_extension_psk_key_exchange_modes*)extension).add("psk_dhe_ke");
-                     return success;
-                 })
-            .add(tls_ext_supported_versions, dir, handshake,
-                 [&](tls_extension* extension) -> return_t {
-                     (*(tls_extension_client_supported_versions*)extension).add(tls_13);
-                     return success;
-                 })
-            .add(tls_ext_key_share, dir, handshake, [&](tls_extension* extension) -> return_t {
-                tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
-                keyshare->clear();
-                keyshare->add(group);
-                return success;
-            });
+                           handshake->add_ciphersuites("TLS_AES_128_GCM_SHA256");
 
-        {
-            basic_stream bs;
-            auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
-            dump_key(pkey, &bs);
-            _logger->write(bs);
-            _test_case.assert(pkey, __FUNCTION__, "{client} key share (client generated)");
-        }
+                           handshake->get_extensions()
+                               .add(tls_ext_server_name, dir, handshake,
+                                    [](tls_extension* extension) -> return_t {
+                                        (*(tls_extension_sni*)extension).set_hostname("test.server.com");
+                                        return success;
+                                    })
+                               .add(tls_ext_ec_point_formats, dir, handshake,
+                                    [](tls_extension* extension) -> return_t {
+                                        // RFC 9325 4.2.1
+                                        // Note that [RFC8422] deprecates all but the uncompressed point format.
+                                        // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element,
+                                        // "uncompressed".
+                                        (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
+                                        return success;
+                                    })
+                               .add(tls_ext_supported_groups, dir, handshake,
+                                    [](tls_extension* extension) -> return_t {
+                                        // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
+                                        (*(tls_extension_supported_groups*)extension)
+                                            .add("x25519")
+                                            .add("secp256r1")
+                                            .add("x448")
+                                            .add("secp521r1")
+                                            .add("secp384r1")
+                                            .add("ffdhe2048")
+                                            .add("ffdhe3072")
+                                            .add("ffdhe4096")
+                                            .add("ffdhe6144")
+                                            .add("ffdhe8192");
+                                        return success;
+                                    })
+                               .add(tls_ext_encrypt_then_mac, dir, handshake, nullptr)
+                               .add(tls_ext_extended_master_secret, dir, handshake, nullptr)
+                               .add(tls_ext_signature_algorithms, dir, handshake,
+                                    [](tls_extension* extension) -> return_t {
+                                        (*(tls_extension_signature_algorithms*)extension)
+                                            .add("ecdsa_secp256r1_sha256")
+                                            .add("ecdsa_secp384r1_sha384")
+                                            .add("ecdsa_secp521r1_sha512")
+                                            .add("ed25519")
+                                            .add("ed448")
+                                            .add("rsa_pkcs1_sha256")
+                                            .add("rsa_pkcs1_sha384")
+                                            .add("rsa_pkcs1_sha512")
+                                            .add("rsa_pss_pss_sha256")
+                                            .add("rsa_pss_pss_sha384")
+                                            .add("rsa_pss_pss_sha512")
+                                            .add("rsa_pss_rsae_sha256")
+                                            .add("rsa_pss_rsae_sha384")
+                                            .add("rsa_pss_rsae_sha512");
+                                        return success;
+                                    })
+                               .add(tls_ext_psk_key_exchange_modes, dir, handshake,
+                                    [](tls_extension* extension) -> return_t {
+                                        (*(tls_extension_psk_key_exchange_modes*)extension).add("psk_dhe_ke");
+                                        return success;
+                                    })
+                               .add(tls_ext_supported_versions, dir, handshake,
+                                    [&](tls_extension* extension) -> return_t {
+                                        (*(tls_extension_client_supported_versions*)extension).add(tls_13);
+                                        return success;
+                                    })
+                               .add(tls_ext_key_share, dir, handshake, [&](tls_extension* extension) -> return_t {
+                                   tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
+                                   keyshare->clear();
+                                   keyshare->add(group);
+                                   return success;
+                               });
+
+                           {
+                               basic_stream bs;
+                               auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
+                               dump_key(pkey, &bs);
+                               _logger->write(bs);
+                               _test_case.assert(pkey, __FUNCTION__, "{client} key share (client generated)");
+                           }
+
+                           return success;
+                       })
+                  .write(dir, bin);
     }
     __finally2 {
-        if (errorcode_t::success == ret) {
-            record.get_handshakes().add(handshake);
-            ret = record.write(dir, bin);
-        }
-
         std::string dirstr;
         direction_string(dir, 0, dirstr);
         _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);
@@ -137,22 +135,18 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
 static return_t do_test_construct_server_hello(tls_session* session, tls_session* client_session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
 
-    auto& protection = session->get_tls_protection();
-
-    uint16 server_cs = 0;
-    uint16 server_version = 0;
-    protection.negotiate(session, server_cs, server_version);
-
-    tls_handshake_server_hello* handshake = nullptr;
-
     __try2 {
+        uint16 server_cs = 0;
+        uint16 server_version = 0;
+
+        auto& protection = session->get_tls_protection();
+        protection.negotiate(session, server_cs, server_version);
+
         if (0x0000 == server_cs) {
             ret = errorcode_t::unknown;
             _test_case.test(ret, __FUNCTION__, "no cipher suite");
             __leave2;
         }
-
-        __try_new_catch(handshake, new tls_handshake_server_hello(session), ret, __leave2);
 
         {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -160,46 +154,50 @@ static return_t do_test_construct_server_hello(tls_session* session, tls_session
             _test_case.assert(csname.size(), __FUNCTION__, "%s", csname.c_str());
         }
 
-        {
-            openssl_prng prng;
+        tls_record_handshake record(session);
+        ret = record
+                  .add(tls_hs_server_hello, session,
+                       [&](tls_handshake* hs) -> return_t {
+                           auto handshake = (tls_handshake_server_hello*)hs;
 
-            // server_key_exchange, client_key_exchange
-            binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
-            time_t gmt_unix_time = time(nullptr);
-            binary_append(random, gmt_unix_time, hton64);
-            random.resize(sizeof(uint32));
-            binary_t temp;
-            prng.random(temp, 28);
-            binary_append(random, temp);
-            handshake->set_random(random);
+                           {
+                               openssl_prng prng;
 
-            binary_t session_id;
-            prng.random(session_id, 32);
-            handshake->set_session_id(session_id);
+                               // server_key_exchange, client_key_exchange
+                               binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
+                               time_t gmt_unix_time = time(nullptr);
+                               binary_append(random, gmt_unix_time, hton64);
+                               random.resize(sizeof(uint32));
+                               binary_t temp;
+                               prng.random(temp, 28);
+                               binary_append(random, temp);
+                               handshake->set_random(random);
 
-            handshake->set_cipher_suite(server_cs);
-        }
+                               binary_t session_id;
+                               prng.random(session_id, 32);
+                               handshake->set_session_id(session_id);
 
-        handshake->get_extensions()
-            .add(tls_ext_supported_versions, dir, handshake,
-                 [&](tls_extension* extension) -> return_t {
-                     (*(tls_extension_server_supported_versions*)extension).set(server_version);
-                     return success;
-                 })
-            .add(tls_ext_key_share, dir, handshake, [](tls_extension* extension) -> return_t {
-                tls_extension_server_key_share* keyshare = (tls_extension_server_key_share*)extension;
-                keyshare->clear();
-                keyshare->add_keyshare();
-                return success;
-            });
+                               handshake->set_cipher_suite(server_cs);
+                           }
+
+                           handshake->get_extensions()
+                               .add(tls_ext_supported_versions, dir, handshake,
+                                    [&](tls_extension* extension) -> return_t {
+                                        (*(tls_extension_server_supported_versions*)extension).set(server_version);
+                                        return success;
+                                    })
+                               .add(tls_ext_key_share, dir, handshake, [](tls_extension* extension) -> return_t {
+                                   tls_extension_server_key_share* keyshare = (tls_extension_server_key_share*)extension;
+                                   keyshare->clear();
+                                   keyshare->add_keyshare();
+                                   return success;
+                               });
+
+                           return success;
+                       })
+                  .write(dir, bin);
     }
     __finally2 {
-        if (errorcode_t::success == ret) {
-            tls_record_handshake record(session);
-            record.get_handshakes().add(handshake);
-            ret = record.write(dir, bin);
-        }
-
         std::string dirstr;
         direction_string(dir, 0, dirstr);
         _test_case.test(ret, __FUNCTION__, "%s %s", dirstr.c_str(), message);

@@ -61,12 +61,12 @@ quic_frame_ack::quic_frame_ack(tls_session* session, uint8 type) : quic_frame((q
     }
 }
 
-quic_frame_ack& quic_frame_ack::set_protection_level(protection_space_t space) {
+quic_frame_ack& quic_frame_ack::set_space(protection_space_t space) {
     _space = space;
     return *this;
 }
 
-protection_space_t quic_frame_ack::get_protection_space() { return _space; }
+protection_space_t quic_frame_ack::get_space() { return _space; }
 
 return_t quic_frame_ack::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
@@ -168,7 +168,7 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        auto space = get_protection_space();
+        auto space = get_space();
         auto type = get_type();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 

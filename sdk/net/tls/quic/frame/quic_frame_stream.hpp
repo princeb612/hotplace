@@ -27,24 +27,14 @@ class quic_frame_stream : public quic_frame {
     uint64 get_streamid();
     uint8 get_unistream_type();
 
-    quic_frame_stream& set_streaminfo(uint64 stream_id, uint8 unitype);
+    quic_frame_stream& set(uint64 stream_id, uint8 unitype);
+    quic_frame_stream& set(const binary_t& bin);
 
    protected:
-    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
-    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
-    virtual return_t do_write_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, size_t len, binary_t& bin);
-    virtual return_t do_postprocess(tls_direction_t dir);
-
-    // read from session->get_quic_session().get_streams()
-    virtual return_t do_read_control_stream(uint64 stream_id);
-
-    void set_streamid(uint64 stream_id);
-    bool is_beginof_unistream(uint64 stream_id);
-    bool is_beginof_unistream(tls_session* session, uint64 stream_id);
-
-   private:
+   protected:
     uint64 _stream_id;
     uint8 _unitype;
+    binary_t _stream_data;
 };
 
 }  // namespace net

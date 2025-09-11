@@ -427,9 +427,9 @@ void test_construct_quic() {
                               largest - range);
         };
 
+#if 0
         // initial
         {
-#if 0
             // #Frame C->S
             //   PKN 10 initial [CRYPTO(CH), PADDING]
             {
@@ -458,8 +458,8 @@ void test_construct_quic() {
                 construct_quic_ack(&session_client, from_client, quic_pad_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
             }
-#endif
         }
+#endif
 
 #if 0
         // handshake, 1-RTT

@@ -48,7 +48,8 @@ class quic_frame_builder {
     quic_frame_builder& set(quic_frame_t type);
     quic_frame_builder& set(tls_session* session);
     quic_frame_builder& set(tls_direction_t dir);
-    quic_frame_builder& set_streaminfo(uint64 streamid, uint8 unitype);
+    quic_frame_builder& set(uint64 streamid, uint8 unitype);
+    quic_frame_builder& set(quic_packet* packet);
     quic_frame_builder& construct();
 
     quic_frame* build();
@@ -58,6 +59,7 @@ class quic_frame_builder {
     tls_session* get_session();
     tls_direction_t get_direction();
     uint64 get_streamid();
+    quic_packet* get_packet();
     bool is_construct();
 
    private:
@@ -66,6 +68,7 @@ class quic_frame_builder {
     tls_direction_t _dir;
     uint64 _streamid;
     uint8 _unitype;
+    quic_packet* _packet;
     bool _construct;
 };
 

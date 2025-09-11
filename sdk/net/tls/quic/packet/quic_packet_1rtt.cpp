@@ -10,7 +10,7 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/stream/segmentation.hpp>
+// #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_crypt.hpp>
 #include <sdk/io/basic/payload.hpp>
@@ -93,13 +93,13 @@ return_t quic_packet_1rtt::do_read(tls_direction_t dir, const byte_t* stream, si
 return_t quic_packet_1rtt::do_estimate() {
     return_t ret = errorcode_t::success;
 
-    auto session = get_session();
-    auto& protection = session->get_tls_protection();
-    auto tagsize = protection.get_tag_size();
-    auto size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
-    auto type = get_type();
-    auto estimate = estimate_quic_packet_size(get_type(), _dcid.size(), 0, 0, get_pn_length(), size, tagsize);
-    get_fragment().use(estimate - size);  // quic packet header + tag
+    // auto session = get_session();
+    // auto& protection = session->get_tls_protection();
+    // auto tagsize = protection.get_tag_size();
+    // auto size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
+    // auto type = get_type();
+    // auto estimate = estimate_quic_packet_size(get_type(), _dcid.size(), 0, 0, get_pn_length(), size, tagsize);
+    // get_fragment().use(estimate - size);  // quic packet header + tag
 
     return ret;
 }
