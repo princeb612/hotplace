@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace net {
 
-quic_streams::quic_streams() {}
+quic_streams::quic_streams() : t_binaries<uint64, uint8>() {}
 
 return_t quic_streams::set_unistream_type(uint64 stream_id, uint8 type) { return set_tag(stream_id, type); }
 
