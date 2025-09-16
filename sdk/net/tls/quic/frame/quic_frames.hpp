@@ -54,6 +54,7 @@ class quic_frames {
      */
     return_t add(quic_frame* frame, bool upref = false);
     quic_frames& add(quic_frame_t type, tls_session* session, std::function<return_t(quic_frame*)> func = nullptr, bool upref = false);
+    quic_frames& add_h3(quic_frame_t type, tls_session* session, std::function<return_t(quic_frame*)> func = nullptr, bool upref = false);
     quic_frames& operator<<(quic_frame* frame);
     return_t for_each(std::function<return_t(quic_frame*)> func);
     quic_frame* get(uint8 type, bool upref = false);
@@ -68,6 +69,8 @@ class quic_frames {
      * return true if there is any frame other than ACK, PADDING
      */
     bool is_significant();
+
+    t_tls_distinct_container<quic_frame*, uint64>& get_container();
 
    protected:
    private:

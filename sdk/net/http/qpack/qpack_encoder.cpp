@@ -578,8 +578,8 @@ return_t qpack_encoder::unpack(http_dynamic_table* dyntable, const byte_t* sourc
             item.base = base;
         }
 
+        size_t ic = 0;  // insert count
         {
-            size_t ic = 0;  // insert count
             size_t sizeof_ic = sizeof(ic);
             dyntable->query(qpack_cmd_inserted, nullptr, 0, &ic, sizeof_ic);
 
@@ -591,7 +591,7 @@ return_t qpack_encoder::unpack(http_dynamic_table* dyntable, const byte_t* sourc
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
-            dbs.println("   > field section prefix RIC=%zi Base=%zi", item.ric, item.base);
+            dbs.println("   > field section prefix RIC=%zi Base=%zi (IC=%zi)", item.ric, item.base, ic);
             trace_debug_event(trace_category_net, trace_event_qpack, &dbs);
         }
 #endif

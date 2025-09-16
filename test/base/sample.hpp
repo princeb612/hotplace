@@ -16,6 +16,7 @@ void test_endian();
 void test_byte_capacity_unsigned();
 void test_byte_capacity_signed();
 void test_maphint();
+void test_mapinsert();
 void test_binary();
 void test_loglevel();
 void test_nostd();

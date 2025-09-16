@@ -12,6 +12,8 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_SDK__
 #define __HOTPLACE_SDK_NET_TLS_SDK__
 
+#include <sdk/net/tls/quic/types.hpp>
+#include <sdk/net/tls/tls/types.hpp>
 #include <sdk/net/tls/types.hpp>
 
 namespace hotplace {
@@ -32,6 +34,13 @@ return_t load_certificate(const char* certfile, const char* keyfile, const char*
  * @brief   keylog callback
  */
 void set_tls_keylog_callback(std::function<void(const char*)> func);
+
+return_t kindof_handshake(tls_handshake* handshake, protection_space_t& space);
+bool is_kindof_handshake(tls_handshake* handshake, protection_space_t space);
+return_t kindof_frame(quic_frame* frame, protection_space_t& space);
+bool is_kindof_frame(quic_frame* frame, protection_space_t space);
+return_t kindof_frame(quic_frame_t type, protection_space_t& space);
+bool is_kindof_frame(quic_frame_t type, protection_space_t space);
 
 }  // namespace net
 }  // namespace hotplace

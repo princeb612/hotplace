@@ -50,6 +50,7 @@ class quic_frame_builder {
     quic_frame_builder& set(tls_direction_t dir);
     quic_frame_builder& set(uint64 streamid, uint8 unitype);
     quic_frame_builder& set(quic_packet* packet);
+    quic_frame_builder& enable_alpn(const std::string& alpn);
     quic_frame_builder& construct();
 
     quic_frame* build();
@@ -69,6 +70,7 @@ class quic_frame_builder {
     uint64 _streamid;
     uint8 _unitype;
     quic_packet* _packet;
+    std::string _alpn;
     bool _construct;
 };
 

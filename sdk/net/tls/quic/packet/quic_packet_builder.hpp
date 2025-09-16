@@ -30,6 +30,9 @@ class quic_packet_builder {
     quic_packet_builder& set(tls_session* session);
     quic_packet_builder& set(tls_direction_t dir);
     quic_packet_builder& set(segmentation* segment, size_t concat = 0);
+    /**
+     * set PKN
+     */
     quic_packet_builder& construct();
 
     quic_packet* build();

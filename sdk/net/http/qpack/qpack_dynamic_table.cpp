@@ -66,7 +66,7 @@ void qpack_dynamic_table::dump(const std::string& desc, std::function<void(const
                 lambda();
             }
 
-            size_t entno = (entry - _dropped);
+            size_t entno = (entry);
             size_t entsize = iter->second.second;
             const std::string& key = iter->second.first;
             std::string value;

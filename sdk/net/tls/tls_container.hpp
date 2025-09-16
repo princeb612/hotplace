@@ -52,6 +52,8 @@ template <typename TYPE_PTR, typename ENTITY_TYPE>
 class t_tls_container {
    public:
     t_tls_container(uint32 flags = 0) : _flags(flags) {}
+    t_tls_container(const t_tls_container& rhs) { *this = rhs; }
+    t_tls_container(t_tls_container&& rhs) { *this = std::move(rhs); }
     virtual ~t_tls_container() { clear(); }
 
     return_t add(TYPE_PTR item, bool upref = false) {
@@ -70,6 +72,7 @@ class t_tls_container {
                 if (_dictionary.end() != iter) {
                     // keep the older
                     item->release();
+                    ret = errorcode_t::not_available;
                 } else {
                     _dictionary.insert({type, item});
                     _members.push_back(item);
@@ -155,6 +158,22 @@ class t_tls_container {
      *  //       New Session Ticket
      */
     void set_flags(uint32 flags) { _flags = flags; }
+
+    t_tls_container& operator=(const t_tls_container& rhs) {
+        _flags = rhs._flags;
+        _members = rhs._members;
+        for (auto& member : _members) {
+            member->addref();
+        }
+        _dictionary = rhs._dictionary;
+        return *this;
+    }
+    t_tls_container& operator=(t_tls_container&& rhs) {
+        _flags = std::move(rhs._flags);
+        _members = std::move(rhs._members);
+        _dictionary = std::move(rhs._dictionary);
+        return *this;
+    }
 
    protected:
    private:

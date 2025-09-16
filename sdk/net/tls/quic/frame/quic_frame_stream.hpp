@@ -25,15 +25,13 @@ class quic_frame_stream : public quic_frame {
 
     uint8 get_flags();
     uint64 get_streamid();
-    uint8 get_unistream_type();
 
-    quic_frame_stream& set(uint64 stream_id, uint8 unitype);
+    virtual void set(uint64 stream_id, uint8 unitype);
     quic_frame_stream& set(const binary_t& bin);
 
    protected:
    protected:
     uint64 _stream_id;
-    uint8 _unitype;
     binary_t _stream_data;
 };
 

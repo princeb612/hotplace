@@ -10,14 +10,13 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
-// #include <sdk/base/stream/fragmentation.hpp>
-// #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_crypto.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
+#include <sdk/net/tls/quic_packet_publisher.hpp>
 #include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshakes.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
@@ -109,30 +108,17 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
 
 return_t quic_frame_crypto::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        // if (get_fragment()) {
-        //     auto segment = get_fragment()->get_segment();
-        //     if (segment) {
-        //         auto lambda = [&](const fragment_context& context, size_t& len) -> return_t {
-        //             return_t ret = errorcode_t::success;
-        //
-        //             {
-        //                 binary_t temp;
-        //                 quic_write_vle_int(get_type(), temp);
-        //                 quic_write_vle_int(context.pos, temp);
-        //                 quic_write_vle_int(context.limit, temp);
-        //
-        //                 len -= temp.size();
-        //             }
-        //
-        //             ret = do_write_body(dir, context.stream, context.size, context.pos, len, bin);
-        //             return ret;
-        //         };
-        //         ret = get_fragment()->consume(quic_frame_type_crypto, lambda);
-        //     }
-        // }
+    if (get_publisher()) {
+        get_publisher()->consume(get_packet(), bin.size(), [&](segment_t& segment) -> return_t {
+            binary_t temp;
+            quic_write_vle_int(get_type(), temp);
+            quic_write_vle_int(segment.pos, temp);
+            quic_write_vle_int(segment.size, temp);
+            segment.calc(bin.size() + temp.size());
+
+            return do_write_body(dir, segment.stream, segment.size, segment.pos, segment.len, bin);
+        });
     }
-    __finally2 {}
     return ret;
 }
 

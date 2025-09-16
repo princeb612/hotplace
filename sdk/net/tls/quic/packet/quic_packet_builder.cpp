@@ -8,7 +8,6 @@
  * Date         Name                Description
  */
 
-// #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/crypto/basic/openssl_prng.hpp>
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
@@ -109,7 +108,6 @@ quic_packet* quic_packet_builder::build() {
                     auto pn = session->get_recordno(get_direction(), false, protection_initial);
                     auto pnl = (prng.rand32() % 4) + 1;
                     packet->set_pn(pn, pnl);
-                    // packet->get_fragment().set(_segment, _concat);
                 }
             } break;
             case quic_packet_type_0_rtt: {
@@ -122,7 +120,6 @@ quic_packet* quic_packet_builder::build() {
                     auto pn = session->get_recordno(get_direction(), false, protection_handshake);
                     auto pnl = (prng.rand32() % 4) + 1;
                     packet->set_pn(pn, pnl);
-                    // packet->get_fragment().set(_segment, _concat);
                 }
             } break;
             case quic_packet_type_retry: {
@@ -135,7 +132,6 @@ quic_packet* quic_packet_builder::build() {
                     auto pn = session->get_recordno(get_direction(), false, protection_application);
                     auto pnl = (prng.rand32() % 4) + 1;
                     packet->set_pn(pn, pnl);
-                    // packet->get_fragment().set(_segment, _concat);
                 }
             } break;
         }

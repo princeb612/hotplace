@@ -10,7 +10,6 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
-// #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame_padding.hpp>
@@ -36,13 +35,6 @@ namespace net {
 
 quic_frame_padding::quic_frame_padding(tls_session* session) : quic_frame(quic_frame_type_padding, session), _len(0), _flags(0) {}
 
-return_t quic_frame_padding::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {}
-    __finally2 {}
-    return ret;
-}
-
 return_t quic_frame_padding::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     // RFC 9001 19.1.  PADDING Frames
@@ -51,16 +43,9 @@ return_t quic_frame_padding::do_write_body(tls_direction_t dir, binary_t& bin) {
     // }
     // Figure 23: PADDING Frame Format
     if (quic_pad_packet & _flags) {
-        // packet mode - make a packet padded
-        // auto fragment = get_fragment();
-        // if (fragment) {
-        //     auto session = get_session();
-        //     auto avail = fragment->available();
-        //     auto len = avail > 0 ? avail : 0;
-        //     if (bin.size() < len) {
-        //         bin.resize(len);
-        //     }
-        // }
+        if (bin.size() < _len) {
+            bin.resize(_len);
+        }
     } else {
         // frame mode - add a frame
         if (_len) {

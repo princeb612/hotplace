@@ -237,6 +237,8 @@ class quic_packet_version_negotiation;
 class quic_packet_1rtt;
 class quic_encoded;
 
+class quic_packet_publisher;
+
 }  // namespace net
 }  // namespace hotplace
 

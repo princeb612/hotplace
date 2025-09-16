@@ -26,7 +26,6 @@
 #define __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_QUICFRAME__
 
 #include <sdk/base/nostd/ovl.hpp>
-// #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/types.hpp>
 #include <sdk/net/tls/tls/handshake/tls_handshakes.hpp>
@@ -50,6 +49,10 @@ class quic_frame {
     void addref();
     void release();
 
+    void set(quic_packet_publisher* publisher, quic_packet* packet);
+    quic_packet_publisher* get_publisher();
+    quic_packet* get_packet();
+
    protected:
     virtual return_t do_preprocess(tls_direction_t dir);
     virtual return_t do_postprocess(tls_direction_t dir);
@@ -63,6 +66,8 @@ class quic_frame {
     quic_frame_t _type;
     tls_session* _session;
     t_shared_reference<quic_frame> _shared;
+    quic_packet_publisher* _publisher;
+    quic_packet* _packet;
 };
 
 /**

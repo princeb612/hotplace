@@ -21,14 +21,18 @@ class quic_frame_http3_stream : public quic_frame_stream {
    public:
     quic_frame_http3_stream(tls_session* session, uint8 type);
 
+    void set(uint64 stream_id, uint8 unitype);
+
     http3_frames& get_frames();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
     virtual return_t do_write_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, size_t len, binary_t& bin);
 
    private:
     http3_frames _frames;
+    uint8 _unitype;
 };
 
 }  // namespace net

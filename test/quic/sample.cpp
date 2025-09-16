@@ -196,7 +196,7 @@ void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_sessio
             _test_case.assert(quic_packet_type_initial == initial.get_type(), func, "%s #initial packet", text);
             _test_case.assert(bin_dcid == initial.get_dcid(), func, "%s #DCID", text);
             _test_case.assert(bin_scid == initial.get_scid(), func, "%s #SCID", text);
-            _test_case.assert(length == initial.get_length(), func, "%s #length %zi", text, length);
+            _test_case.assert(length == initial.get_bodysize(), func, "%s #length %zi", text, length);
             _test_case.assert(pn == initial.get_pn(), func, "%s #packet number %i", text, pn);
             _test_case.assert(pn_length == initial.get_pn_length(), func, "%s #packet number length %i", text, pn_length);
             _test_case.assert(bin_expect_unprotected_header == bin_unprotected_header, func, "%s #unprotected header", text);
@@ -250,7 +250,7 @@ void test_rfc_9001_send_initial(testvector_initial_packet* item, tls_session* se
         _test_case.assert(bin_scid == initial.get_scid(), func, "%s #SCID", text);
         _test_case.assert(pn == initial.get_pn(), func, "%s #packet number %i", text, initial.get_pn());
         _test_case.assert(pn_length == initial.get_pn_length(), func, "%s #packet number length %i", text, initial.get_pn_length());
-        _test_case.assert(length == initial.get_length(), func, "%s #length %zi %I64u", text, length, initial.get_length());
+        _test_case.assert(length == initial.get_bodysize(), func, "%s #length %zi %I64u", text, length, initial.get_bodysize());
     }
 }
 

@@ -201,21 +201,6 @@ void test_rfc9204_b2_header_stream(const char* text2, binary_t& bin, qpack_dynam
         const char* expect2 = "0381 10 11";
         test_expect(bin, expect2, __FUNCTION__, "%s #field section", text2);
         _test_case.assert(106 == dyntable.get_tablesize(), __FUNCTION__, "%s #table size %zi", text2, dyntable.get_tablesize());
-
-        flags = qpack_quic_stream_header;
-        pos = 0;
-#if 0
-        ret = enc.decode(&dyntable, &bin[0], bin.size(), pos, item, flags | qpack_field_section_prefix);
-#else
-        ret = enc.unpack(&dyntable, &bin[0], bin.size(), pos, item);
-#endif
-        _test_case.assert((2 == item.ric) && (0 == item.base), __FUNCTION__, "%s #field section prefix", text2);
-
-        enc.decode(&dyntable, &bin[0], bin.size(), pos, item, flags);  // :authority
-        _test_case.assert((":authority" == item.name) && ("www.example.com" == item.value), __FUNCTION__, "%s #decode", text2);
-
-        enc.decode(&dyntable, &bin[0], bin.size(), pos, item, flags);  // :path
-        _test_case.assert((":path" == item.name) && ("/sample/path" == item.value), __FUNCTION__, "%s #decode", text2);
     }
 }
 
@@ -241,8 +226,12 @@ void test_rfc9204_b2(const char* text2, const binary_t& encoderstream, const bin
         _test_case.assert((":path" == item.name) && ("/sample/path" == item.value), __FUNCTION__, "%s #decode", text2);
 
         _test_case.assert(220 == dyntable.get_capacity(), __FUNCTION__, "%s #capacity %zi", text2, dyntable.get_capacity());
-
-        dyntable.dump("RFC 9204 B.2. Stream: Decoder #before", dump_qpack_session_routine);
+    }
+    {
+        flags = qpack_quic_stream_header;
+        pos = 0;
+        std::list<http_compression_decode_t> kv;
+        enc.decode(&dyntable, &headerstream[0], headerstream.size(), pos, kv, flags);
     }
 
     /**
@@ -262,7 +251,7 @@ void test_rfc9204_b2(const char* text2, const binary_t& encoderstream, const bin
     }
 
     {
-        dyntable.dump("RFC 9204 B.2. Stream: Decoder #after", dump_qpack_session_routine);
+        dyntable.dump("RFC 9204 B.2. Stream: Decoder", dump_qpack_session_routine);
 
         const char* expect3 = "84";
         test_expect(decoderstream, expect3, __FUNCTION__, "%s #ack", text2);
@@ -270,25 +259,19 @@ void test_rfc9204_b2(const char* text2, const binary_t& encoderstream, const bin
 }
 
 void test_rfc9204_b2_decoder_stream(const char* text2, binary_t& bin, qpack_dynamic_table& dyntable) {
-    bin.clear();
-
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
     uint32 flags = 0;
     size_t pos = 0;
-    http_compression_decode_t item;
 
-    dyntable.dump("RFC 9204 B.2. Stream: Decoder #before", dump_qpack_session_routine);
+    flags = qpack_quic_stream_decoder;
+    std::list<http_compression_decode_t> kv;
+    pos = 0;
+    ret = enc.decode(&dyntable, bin.empty() ? nullptr : &bin[0], bin.size(), pos, kv, flags);
 
-    {
-        flags = qpack_quic_stream_decoder;
-        pos = 0;
-        ret = enc.decode(&dyntable, bin.empty() ? nullptr : &bin[0], bin.size(), pos, item, flags);
+    dyntable.dump("RFC 9204 B.2. Stream: Decoder", dump_qpack_session_routine);
 
-        dyntable.dump("RFC 9204 B.2. Stream: Decoder #after", dump_qpack_session_routine);
-
-        _test_case.assert(106 == dyntable.get_tablesize(), __FUNCTION__, "%s #table size %zi", text2, dyntable.get_tablesize());
-    }
+    _test_case.assert(106 == dyntable.get_tablesize(), __FUNCTION__, "%s #table size %zi", text2, dyntable.get_tablesize());
 }
 
 void test_rfc9204_b3_encoder_stream(const char* text3, binary_t& bin, qpack_dynamic_table& dyntable) {
@@ -345,8 +328,6 @@ void test_rfc9204_b3(const char* text3, const binary_t& encoderstream, binary_t&
         enc.decode(&dyntable, &encoderstream[0], encoderstream.size(), pos, item, flags);
 
         _test_case.assert(("custom-key" == item.name) && ("custom-value" == item.value), __FUNCTION__, "%s #decode", text3);
-
-        dyntable.dump("RFC 9204 B.3. Stream: Decoder #before", dump_qpack_session_routine);
     }
 
     /**
@@ -363,7 +344,7 @@ void test_rfc9204_b3(const char* text3, const binary_t& encoderstream, binary_t&
     enc.increment(&dyntable, decoderstream, 1);
 
     {
-        dyntable.dump("RFC 9204 B.3. Stream: Decoder #after", dump_qpack_session_routine);
+        dyntable.dump("RFC 9204 B.3. Stream: Decoder", dump_qpack_session_routine);
 
         test_expect(decoderstream, "01", __FUNCTION__, "%s #increment", text3);
     }
@@ -376,15 +357,13 @@ void test_rfc9204_b3_decoder_stream(const char* text3, const binary_t& bin, qpac
     size_t pos = 0;
     http_compression_decode_t item;
 
-    dyntable.dump("RFC 9204 B.3. Stream: Decoder #efore", dump_qpack_session_routine);
-
     {
         flags = qpack_quic_stream_decoder;
         pos = 0;
         enc.decode(&dyntable, &bin[0], bin.size(), pos, item, flags);
     }
 
-    dyntable.dump("RFC 9204 B.3. Stream: Decoder #after", dump_qpack_session_routine);
+    dyntable.dump("RFC 9204 B.3. Stream: Decoder", dump_qpack_session_routine);
 }
 
 void test_rfc9204_b4_encoder_stream(const char* text4, binary_t& bin, qpack_dynamic_table& dyntable) {
@@ -483,7 +462,9 @@ void test_rfc9204_b4(const char* text4, const binary_t& encoderstream, const bin
 
     dyntable.dump("RFC 9204 B.4. #Before the encoder stream packet arrives", dump_qpack_session_routine);
 
-    int encoder_stream_state = 0;  // RFC 9204. B.4. before the encoder stream packet arrives
+    // RFC 9204. B.4. before the encoder stream packet arrives
+    // set encoder_stream_state to 0
+    int encoder_stream_state = 0;
     if (encoder_stream_state) {
         flags = qpack_quic_stream_encoder;
         pos = 0;
@@ -514,7 +495,7 @@ void test_rfc9204_b4(const char* text4, const binary_t& encoderstream, const bin
             enc.decode(&dyntable, &headerstream[0], headerstream.size(), pos, item, flags);
             _test_case.assert(("custom-key" == item.name) && ("custom-value" == item.value), __FUNCTION__, "%s #decode", text4);
         } else if (errorcode_t::not_ready == ret) {
-            // delayed state
+            // delayed state (ric > ic)
 
             uint32 streamid = 8;
             enc.cancel(&dyntable, decoderstream, streamid);
@@ -653,7 +634,7 @@ void test_rfc9204_b() {
     _logger->colorln(text3);
 
     // (client) send encoder stream
-    test_rfc9204_b3_encoder_stream(text3, encoderstream, clienttable);
+    test_rfc9204_b3_encoder_stream(text3, encoderstream, clienttable);  // increment
     // (client) do not send header stream
     // (server) increment
     // (server) send decoder stream

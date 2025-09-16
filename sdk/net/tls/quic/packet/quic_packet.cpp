@@ -9,7 +9,6 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
-// #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/string/string.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
@@ -19,6 +18,7 @@
 #include <sdk/net/tls/quic/packet/quic_packet_builder.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
+#include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
@@ -33,6 +33,9 @@ constexpr char constexpr_dcid_len[] = "dcid len";
 constexpr char constexpr_scid_len[] = "scid len";
 
 quic_packet::quic_packet(tls_session* session) : _type(0), _session(nullptr), _ht(0), _version(1), _pn(0) {
+    if (nullptr == session) {
+        throw no_session;
+    }
     set_session(session);
     set_version();
     _frames.set_session(session);
@@ -40,6 +43,9 @@ quic_packet::quic_packet(tls_session* session) : _type(0), _session(nullptr), _h
 }
 
 quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _session(nullptr), _ht(0), _version(1), _pn(0) {
+    if (nullptr == session) {
+        throw no_session;
+    }
     bool is_longheader = true;
     set_session(session);
     set_version();
@@ -50,6 +56,9 @@ quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type)
 
 quic_packet::quic_packet(const quic_packet& rhs)
     : _type(rhs._type), _session(nullptr), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _pn(rhs._pn) {
+    if (nullptr == rhs._session) {
+        throw no_session;
+    }
     set_session(rhs._session);
     set_version();
     _frames.set_session(_frames.get_session());
@@ -150,8 +159,6 @@ return_t quic_packet::write(tls_direction_t dir, binary_t& header, binary_t& cip
         if (errorcode_t::success != ret) {
             __leave2;
         }
-
-        do_estimate();  // segmentation
 
         ret = do_write_body(dir, _payload);  // payload
         if (errorcode_t::success != ret) {
@@ -268,7 +275,8 @@ return_t quic_packet::do_unprotect(tls_direction_t dir, const byte_t* stream, si
         binary_t bin_plaintext;
         {
             size_t tpos = 0;
-            ret = protection.decrypt(session, dir, &_payload[0], _payload.size(), tpos, bin_plaintext, bin_unprotected_header, _tag, space);
+            ret = protection.decrypt(session, dir, _payload.empty() ? nullptr : &_payload[0], _payload.size(), tpos, bin_plaintext, bin_unprotected_header,
+                                     _tag, space);
             if (errorcode_t::success == ret) {
                 _payload = std::move(bin_plaintext);
             } else {
@@ -321,9 +329,11 @@ return_t quic_packet::do_write_header(binary_t& header, const binary_t& body) {
     return ret;
 }
 
-return_t quic_packet::do_estimate() { return errorcode_t::success; }
-
-return_t quic_packet::do_write_body(tls_direction_t dir, binary_t& body) { return errorcode_t::success; }
+return_t quic_packet::do_write_body(tls_direction_t dir, binary_t& body) {
+    return_t ret = errorcode_t::success;
+    get_quic_frames().write(dir, body);
+    return ret;
+}
 
 return_t quic_packet::do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertag) { return errorcode_t::success; }
 
@@ -562,6 +572,10 @@ void quic_packet::addref() { _shared.addref(); }
 void quic_packet::release() { _shared.delref(); }
 
 uint32 quic_packet::get_flags() { return 0; }
+
+size_t quic_packet::get_max_payload_size() { return get_session()->get_quic_session().get_setting().get(quic_param_max_udp_payload_size); }
+
+size_t quic_packet::estimate_overhead() { return 0; }
 
 }  // namespace net
 }  // namespace hotplace

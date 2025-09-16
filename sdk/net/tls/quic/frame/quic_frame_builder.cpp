@@ -60,6 +60,11 @@ quic_frame_builder& quic_frame_builder::set(quic_packet* packet) {
     return *this;
 }
 
+quic_frame_builder& quic_frame_builder::enable_alpn(const std::string& alpn) {
+    _alpn = alpn;
+    return *this;
+}
+
 quic_frame_builder& quic_frame_builder::construct() {
     _construct = true;
     return *this;
@@ -120,7 +125,7 @@ quic_frame* quic_frame_builder::build() {
         case quic_frame_type_stream6:
         case quic_frame_type_stream7: {
             // 19.8.  STREAM Frames
-            if (is_kindof_h3(session)) {
+            if ((_alpn == "\x2h3") || is_kindof_h3(session)) {
                 __try_new_catch_only(frame, new quic_frame_http3_stream(session, type));
             } else {
                 __try_new_catch_only(frame, new quic_frame_stream(session, type));

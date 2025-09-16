@@ -10,8 +10,6 @@
 
 #include <sdk/base/basic/dump_memory.hpp>
 #include <sdk/base/stream/basic_stream.hpp>
-// #include <sdk/base/stream/fragmentation.hpp>
-// #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/http/http3/http3_frame.hpp>
@@ -20,6 +18,7 @@
 #include <sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <sdk/net/tls/quic/quic.hpp>
 #include <sdk/net/tls/quic/quic_encoded.hpp>
+#include <sdk/net/tls/quic_packet_publisher.hpp>
 #include <sdk/net/tls/quic_session.hpp>
 #include <sdk/net/tls/tls/tls.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
@@ -39,7 +38,7 @@ constexpr char constexpr_length[] = "length";
 constexpr char constexpr_stream_data[] = "stream data";
 constexpr char constexpr_unitype[] = "uni type";  // uni-directional
 
-quic_frame_http3_stream::quic_frame_http3_stream(tls_session* session, uint8 type) : quic_frame_stream(session, type) {}
+quic_frame_http3_stream::quic_frame_http3_stream(tls_session* session, uint8 type) : quic_frame_stream(session, type), _unitype(0) {}
 
 return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -201,6 +200,40 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
     return ret;
 }
 
+return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    if (get_publisher()) {
+        get_publisher()->consume(get_packet(), bin.size(), [&](segment_t& segment) -> return_t {
+            binary_t temp;
+            uint8 type = quic_frame_type_stream | quic_frame_stream_len;
+            if (segment.pos) {
+                type |= quic_frame_stream_off;
+            }
+            quic_write_vle_int(type, temp);
+            quic_write_vle_int(_stream_id, temp);
+            if (segment.pos) {
+                quic_write_vle_int(segment.pos, temp);
+            }
+
+            segment.calc(bin.size() + temp.size());
+
+            quic_write_vle_int(segment.len, temp);
+
+            auto session = get_session();
+            auto& streams = session->get_quic_session().get_streams();
+            if (streams.is_unidirectional_stream(_stream_id)) {
+                if (false == streams.exist(_stream_id)) {
+                    temp.push_back(_unitype);
+                    segment.calc(bin.size() + temp.size());
+                }
+            }
+
+            return do_write_body(dir, segment.stream, segment.size, segment.pos, segment.len, bin);
+        });
+    }
+    return ret;
+}
+
 return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, size_t len, binary_t& bin) {
     return_t ret = errorcode_t::success;
 
@@ -218,6 +251,9 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
         if (pos) {
             type |= quic_frame_stream_off;
         }
+        if (size == pos + len) {
+            type |= quic_frame_stream_fin;
+        }
 
         set_type(type);
 
@@ -225,9 +261,7 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
         auto& streams = session->get_quic_session().get_streams();
         auto is_begin = false;
         size_t slen = len;
-        uint8 _unitype = 0;
         if (streams.is_unidirectional_stream(_stream_id)) {
-            _unitype = stream[0];
             is_begin = streams.reserve(_stream_id, _unitype);
             if (is_begin) {
                 slen += 1;
@@ -264,6 +298,11 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
     __finally2 {}
 
     return ret;
+}
+
+void quic_frame_http3_stream::set(uint64 stream_id, uint8 unitype) {
+    _stream_id = stream_id;
+    _unitype = unitype;
 }
 
 http3_frames& quic_frame_http3_stream::get_frames() { return _frames; }

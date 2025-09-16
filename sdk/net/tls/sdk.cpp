@@ -10,8 +10,10 @@
 
 #include <sdk/crypto/basic/crypto_key.hpp>
 #include <sdk/crypto/basic/crypto_keychain.hpp>
+#include <sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <sdk/net/tls/sdk.hpp>
 #include <sdk/net/tls/sslkeylog_exporter.hpp>
+#include <sdk/net/tls/tls/handshake/tls_handshakes.hpp>
 #include <sdk/net/tls/tls_advisor.hpp>
 #include <sdk/net/tls/tls_protection.hpp>  // KID
 
@@ -61,6 +63,85 @@ bool is_bidirection(tls_direction_t dir) { return (client_initiated_bidi == dir)
 bool is_clientinitiated(tls_direction_t dir) { return (client_initiated_uni == dir) || (client_initiated_bidi == dir); }
 
 bool is_serverinitiated(tls_direction_t dir) { return (server_initiated_uni == dir) || (server_initiated_bidi == dir); }
+
+return_t kindof_handshake(tls_handshake* handshake, protection_space_t& space) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        space = protection_default;
+
+        if (nullptr == handshake) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        auto type = handshake->get_type();
+        switch (type) {
+            case tls_hs_client_hello:
+            case tls_hs_server_hello: {
+                space = protection_initial;
+            } break;
+            case tls_hs_encrypted_extensions:
+            case tls_hs_certificate:
+            case tls_hs_certificate_verify:
+            case tls_hs_finished: {
+                space = protection_handshake;
+            } break;
+            case tls_hs_new_session_ticket: {
+                space = protection_application;
+            } break;
+            default: {
+                ret = errorcode_t::not_supported;
+            } break;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+bool is_kindof_handshake(tls_handshake* handshake, protection_space_t space) {
+    bool ret = false;
+    protection_space_t sp;
+    if (success == kindof_handshake(handshake, sp)) {
+        ret = (sp == space);
+    }
+    return ret;
+}
+
+return_t kindof_frame(quic_frame* frame, protection_space_t& space) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == frame) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        space = protection_application;
+    }
+    __finally2 {}
+    return ret;
+}
+
+bool is_kindof_frame(quic_frame* frame, protection_space_t space) {
+    bool ret = false;
+    protection_space_t sp;
+    if (success == kindof_frame(frame, sp)) {
+        ret = (sp == space);
+    }
+    return ret;
+}
+
+return_t kindof_frame(quic_frame_t type, protection_space_t& space) {
+    return_t ret = errorcode_t::success;
+    space = protection_application;
+    return success;
+}
+
+bool is_kindof_frame(quic_frame_t type, protection_space_t space) {
+    bool ret = false;
+    protection_space_t sp;
+    if (success == kindof_frame(type, sp)) {
+        ret = (sp == space);
+    }
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

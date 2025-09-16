@@ -49,6 +49,7 @@ int main(int argc, char **argv) {
         builder.set_timeformat("[Y-M-D h:m:s.f]");
     }
     _logger.make_share(builder.build());
+    _logger->setcolor(bold, cyan);
 
     if (option.debug) {
         auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t *s) -> void { _logger->write(s); };
@@ -68,6 +69,7 @@ int main(int argc, char **argv) {
     test_byte_capacity_unsigned();
     test_byte_capacity_signed();
     test_maphint();
+    test_mapinsert();
     test_binary();
     test_loglevel();
     test_nostd();

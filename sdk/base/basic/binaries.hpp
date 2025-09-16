@@ -22,7 +22,7 @@ namespace hotplace {
 enum binary_flag_t {
     bin_trunc = 0x1,        // truncate
     bin_wait_fin = 0x2,     // wait until the fin
-    bin_check_fin = 0x4,    // check fin
+    bin_set_fin = 0x4,      // set fin
     bin_keep_entry = 0x80,  //
 };
 
@@ -46,28 +46,58 @@ class t_binaries {
    public:
     t_binaries() {}
 
-    void assign(T id, const byte_t* stream, size_t size) {
-        critical_section_guard guard(_lock);
-        auto& entry = _map[id];
-        entry.clear();
+    /**
+     * @brief   assign
+     * @param   T id [in]
+     * @param   const byte_t* stream [in]
+     * @param   size_t size [in]
+     * @param   uint32 flags [inopt] bin_set_fin
+     */
+    void assign(T id, const byte_t* stream, size_t size, uint32 flags = 0) {
         if (stream && size) {
+            critical_section_guard guard(_lock);
+            auto& entry = _map[id];
+            entry.clear();
             entry.part.add(0, size);
             entry.bin.insert(entry.bin.end(), stream, stream + size);
+            entry.flags |= (flags & bin_set_fin);
+            if (bin_set_fin & flags) {
+                entry.finsize = entry.bin.size();
+            }
         }
     }
-    void assign(T id, const binary_t& bin) { assign(id, bin.empty() ? nullptr : &bin[0], bin.size()); }
+    void assign(T id, const binary_t& bin, uint32 flags = 0) { assign(id, bin.empty() ? nullptr : &bin[0], bin.size(), flags); }
 
-    void append(T id, const byte_t* stream, size_t size) {
+    /**
+     * @brief   append
+     * @param   T id [in]
+     * @param   const byte_t* stream [in]
+     * @param   size_t size [in]
+     * @param   uint32 flags [inopt] bin_set_fin
+     */
+    void append(T id, const byte_t* stream, size_t size, uint32 flags = 0) {
         if (stream && size) {
             critical_section_guard guard(_lock);
             auto& entry = _map[id];
             auto binsize = entry.bin.size();
             entry.part.add(binsize, binsize + size);
             entry.bin.insert(entry.bin.end(), stream, stream + size);
+            entry.flags |= (flags & bin_set_fin);
+            if (bin_set_fin & flags) {
+                entry.finsize = entry.bin.size();
+            }
         }
     }
     void append(T id, const binary_t& bin) { append(id, bin.empty() ? nullptr : &bin[0], bin.size()); }
 
+    /**
+     * @brief   write
+     * @param   T id [in]
+     * @param   size_t offset [in]
+     * @param   const byte_t* stream [in]
+     * @param   size_t size [in]
+     * @param   uint32 flags [inopt] bin_set_fin
+     */
     return_t write(T id, size_t offset, const byte_t* stream, size_t size, uint32 flags = 0) {
         return_t ret = errorcode_t::success;
         if (stream && size) {
@@ -79,9 +109,9 @@ class t_binaries {
                 entry.bin.resize(offset + size);
             }
             memcpy(&entry.bin[offset], stream, size);
-            if (bin_wait_fin & flags) {
+            entry.flags |= (flags & bin_set_fin);
+            if (bin_set_fin & flags) {
                 entry.finsize = offset + size;
-                entry.flags |= (bin_wait_fin | bin_check_fin);
             }
         } else {
             ret = errorcode_t::do_nothing;
@@ -90,8 +120,16 @@ class t_binaries {
     }
     return_t write(T id, size_t offset, const binary_t& bin, uint32 flags = 0) { return write(id, offset, bin.empty() ? nullptr : &bin[0], bin.size(), flags); }
 
+    /**
+     * @brief   get
+     * @param   T id [in]
+     */
     const binary_t& get(T id) { return _map[id].bin; }
 
+    /**
+     * @brief   erase
+     * @param   T id [in]
+     */
     void erase(T id) {
         critical_section_guard guard(_lock);
         auto iter = _map.find(id);
@@ -105,26 +143,30 @@ class t_binaries {
         }
     }
 
+    /**
+     * @brief   clear
+     */
     void clear() { _map.clear(); }
 
+    /**
+     * @brief   is fragmented
+     * @param   T id [in]
+     */
     bool is_fragmented(T id) {
         bool ret = false;
         critical_section_guard guard(_lock);
         auto iter = _map.find(id);
         if (_map.end() != iter) {
             auto& entry = iter->second;
-            // size_t entries = entry.part.size();
             auto res = entry.part.merge();
-            if (1 < res.size()) {
+            auto parts = res.size();
+            if (1 < parts) {
                 ret = true;
-            } else if (1 == res.size()) {
+            } else if (1 == parts) {
                 bool check = ((0 == res[0].s) && (entry.bin.size() == res[0].e));
-
-                uint32 mask = bin_wait_fin | bin_check_fin;
-                if (mask == (mask & entry.flags)) {
+                if (bin_set_fin & entry.flags) {
                     check = (check && (entry.bin.size() == entry.finsize));
                 }
-
                 ret = !check;
             }
         }
@@ -132,50 +174,58 @@ class t_binaries {
     }
 
     /**
+     * @brief   produce
      * @param   T id [in]
      * @param   const byte_t* stream [in]
      * @param   size_t size [in]
-     * @param   uint32 flags [inopt]
+     * @param   uint32 flags [inopt] bin_trunc, bin_set_fin
      */
     return_t produce(T id, const byte_t* stream, size_t size, uint32 flags = 0) {
         return_t ret = errorcode_t::success;
         if (bin_trunc & flags) {
-            assign(id, stream, size);
+            ret = assign(id, stream, size, flags);
         } else {
-            append(id, stream, size);
+            ret = append(id, stream, size, flags);
         }
         return ret;
     }
     /**
+     * @brief   produce
      * @param   T id [in]
      * @param   const binary_t& bin [in]
-     * @param   uint32 flags [inopt]
+     * @param   uint32 flags [inopt] bin_trunc, bin_set_fin
      */
     return_t produce(T id, const binary_t& bin, uint32 flags = 0) {
         return_t ret = errorcode_t::success;
         if (bin_trunc & flags) {
-            assign(id, bin);
+            ret = assign(id, bin, flags);
         } else {
-            append(id, bin);
+            ret = append(id, bin, flags);
         }
         return ret;
     }
     /**
+     * @brief   produce
      * @param   T id [in]
      * @param   size_t offset [in]
      * @param   const byte_t* stream [in]
      * @param   size_t size [in]
-     * @param   uint32 flags [inopt]
+     * @param   uint32 flags [inopt] bin_trunc, bin_set_fin
      */
-    return_t produce(T id, size_t offset, const byte_t* stream, size_t size) { return write(id, offset, stream, size); }
+    return_t produce(T id, size_t offset, const byte_t* stream, size_t size, uint32 flags = 0) { return write(id, offset, stream, size, flags); }
     /**
+     * @brief   produce
      * @param   T id [in]
      * @param   size_t offset [in]
      * @param   const binary_t& bin [in]
+     * @param   uint32 flags [inopt] bin_trunc, bin_set_fin
      */
-    return_t produce(T id, size_t offset, const binary_t& bin) { return write(id, offset, bin.empty() ? nullptr : &bin[0], bin.size()); }
+    return_t produce(T id, size_t offset, const binary_t& bin, uint32 flags = 0) {
+        return write(id, offset, bin.empty() ? nullptr : &bin[0], bin.size(), flags);
+    }
 
     /**
+     * @brief   consume
      * @param   T id [in]
      * @param   binary_t& bin [out]
      */
@@ -200,6 +250,11 @@ class t_binaries {
         __finally2 {}
         return ret;
     }
+    /**
+     * @brief   consume
+     * @param   T id [in]
+     * @param   size_t size [in]
+     */
     return_t consume(T id, size_t size) {
         return_t ret = errorcode_t::success;
         __try2 {
@@ -221,26 +276,37 @@ class t_binaries {
         __finally2 {}
         return ret;
     }
-    return_t consume(T id, std::function<return_t(const binary_t&, size_t&)> func) {
+    /**
+     * @brief   consume
+     * @param   T id [in]
+     * @param   std::function<return_t(const binary_t&, size_t&)> func [in]
+     * @param   uint32 flags [inopt]
+     */
+    return_t consume(T id, std::function<return_t(const binary_t&, size_t&)> func, uint32 flags = 0) {
         return_t ret = errorcode_t::success;
         __try2 {
             critical_section_guard guard(_lock);
-            if (is_fragmented(id)) {
-                __leave2;
-            }
             auto iter = _map.find(id);
             if (_map.end() == iter) {
                 ret = errorcode_t::not_found;
                 __leave2;
             } else {
+                bool test = is_fragmented(id);
+                if (test) {
+                    ret = errorcode_t::more_data;
+                    __leave2;
+                }
+
                 auto& entry = iter->second;
+
                 ret = func(entry.bin, entry.pos);
                 if (errorcode_t::success == ret) {
-                    if (bin_wait_fin & entry.flags) {
-                        // keep entry
-                        auto binsize = entry.bin.size();
-                        if ((binsize == entry.pos) && (binsize == entry.finsize)) {
+                    test = (entry.bin.size() == entry.pos);
+                    if (test) {
+                        if (bin_keep_entry & entry.flags) {
                             entry.clear();
+                        } else {
+                            _map.erase(iter);
                         }
                     }
                 }
@@ -250,18 +316,29 @@ class t_binaries {
         return ret;
     }
 
-    bool reserve(T id, const TAG& tag) {
+    /**
+     * @brief   reserve
+     * @param   T id [in]
+     * @param   const TAG& tag [in]
+     * @param   uint32 flags [inopt] bin_wait_fin
+     */
+    bool reserve(T id, const TAG& tag, uint32 flags = 0) {
         bool ret = false;
         critical_section_guard guard(_lock);
-        auto pib = _map.insert({id, entry_t()});
-        if (true == pib.second) {
-            auto& entry = pib.first->second;
+        auto iter = _map.find(id);
+        if (_map.end() == iter) {
+            auto& entry = _map[id];
             entry.tag = tag;
-            entry.flags = bin_keep_entry;
+            entry.flags = bin_keep_entry | (flags & bin_wait_fin);
+            ret = true;
         }
-        return pib.second;
+        return ret;
     }
 
+    /**
+     * @brief   exist
+     * @param   T id [in]
+     */
     bool exist(uint64 id) {
         bool ret = false;
         critical_section_guard guard(_lock);
@@ -272,6 +349,11 @@ class t_binaries {
         return ret;
     }
 
+    /**
+     * @brief   tag
+     * @param   T id [in]
+     * @param   const TAG& tag [in]
+     */
     return_t set_tag(uint64 id, const TAG& tag) {
         return_t ret = errorcode_t::success;
         critical_section_guard guard(_lock);
@@ -284,6 +366,11 @@ class t_binaries {
         return ret;
     }
 
+    /**
+     * @brief   tag
+     * @param   T id [in]
+     * @param   TAG& tag [out]
+     */
     return_t get_tag(uint64 id, TAG& tag) {
         return_t ret = errorcode_t::success;
         critical_section_guard guard(_lock);
@@ -308,7 +395,8 @@ class t_binaries {
 
         entry_t() : tag(TAG()), flags(0), finsize(0), pos(0) {}
         void clear() {
-            // keep the tag, flags
+            // keep the tag
+            flags &= bin_keep_entry;
             finsize = 0;
             pos = 0;
             part.clear();

@@ -32,7 +32,6 @@ class quic_frame_padding : public quic_frame {
     void pad(uint16 len, uint32 flags = 0);
 
    protected:
-    virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:

@@ -32,7 +32,6 @@
  */
 
 #include <sdk/base/basic/dump_memory.hpp>
-// #include <sdk/base/stream/segmentation.hpp>
 #include <sdk/base/unittest/trace.hpp>
 #include <sdk/io/basic/payload.hpp>
 #include <sdk/net/tls/quic/frame/quic_frame.hpp>
@@ -155,26 +154,6 @@ return_t quic_packet_initial::do_read(tls_direction_t dir, const byte_t* stream,
     return ret;
 }
 
-return_t quic_packet_initial::do_write_body(tls_direction_t dir, binary_t& body) {
-    return_t ret = errorcode_t::success;
-    get_quic_frames().write(dir, body);
-    return ret;
-}
-
-return_t quic_packet_initial::do_estimate() {
-    return_t ret = errorcode_t::success;
-
-    // auto session = get_session();
-    // auto& protection = session->get_tls_protection();
-    // auto tagsize = protection.get_tag_size();
-    // auto size = session->get_quic_session().get_setting().get(quic_param_max_udp_payload_size);
-    // auto estimate = estimate_quic_packet_size(get_type(), _dcid.size(), _scid.size(), _token.size(), get_pn_length(), size, tagsize);
-    //
-    // get_fragment().use(estimate - size);  // quic packet header + tag
-
-    return ret;
-}
-
 return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertag) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -279,7 +258,7 @@ void quic_packet_initial::dump() {
             dump_memory(_token, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
         }
         // length = packet number + payload
-        auto len = get_length();
+        auto len = get_bodysize();
         dbs.println(" > length %I64i", len);
         // packet number
         dbs.println(" > packet number 0x%08x (%i)", get_pn(), get_pn());
@@ -301,11 +280,20 @@ quic_packet_initial& quic_packet_initial::set_token(const binary_t& token) {
 
 const binary_t& quic_packet_initial::get_token() { return _token; }
 
-uint64 quic_packet_initial::get_length() {
+uint64 quic_packet_initial::get_bodysize() {
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     auto tagsize = protection.get_tag_size();
     return get_pn_length() + _payload.size() + tagsize;
+}
+
+size_t quic_packet_initial::estimate_overhead() {
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto tagsize = protection.get_tag_size();
+    auto maxsize = get_max_payload_size();
+    auto estimate = estimate_quic_packet_size(get_type(), _dcid.size(), _scid.size(), _token.size(), get_pn_length(), maxsize, tagsize);
+    return estimate - maxsize;
 }
 
 }  // namespace net

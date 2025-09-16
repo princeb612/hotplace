@@ -74,8 +74,8 @@ void construct_quic_svr_initial(tls_session* session, tls_direction_t dir, uint3
 
     // ACK, CRYPTO[SH], PADDING
     publisher.set_session(session)
-        .set_flags(flags)                        //
-        .add(tls_hs_server_hello, dir, nullptr)  //
+        .set_flags(flags)               //
+        .add(tls_hs_server_hello, dir)  //
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
             bins.push_back(packet);
             auto tlsadvisor = tls_advisor::get_instance();
@@ -135,9 +135,9 @@ void construct_quic_svr_handshakes_settings(tls_session* session, tls_direction_
                      });
                  return success;
              })
-        .add(tls_hs_certificate, dir, nullptr)
-        .add(tls_hs_certificate_verify, dir, nullptr)
-        .add(tls_hs_finished, dir, nullptr)
+        .add(tls_hs_certificate, dir)
+        .add(tls_hs_certificate_verify, dir)
+        .add(tls_hs_finished, dir)
         .add_stream(quic_stream_server_uni, h3_control_stream, h3_frame_settings,
                     [&](http3_frame* frame) -> return_t {
                         return_t ret = errorcode_t::success;
@@ -165,8 +165,8 @@ void construct_quic_cli_handshake(tls_session* session, tls_direction_t dir, uin
 
     // ACK, CRYPTO[FIN], PADDING
     publisher.set_session(session)
-        .set_flags(flags)                    //
-        .add(tls_hs_finished, dir, nullptr)  //
+        .set_flags(flags)           //
+        .add(tls_hs_finished, dir)  //
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
             bins.push_back(packet);
             auto tlsadvisor = tls_advisor::get_instance();
@@ -206,15 +206,12 @@ void construct_quic_cli_decoder(tls_session* session, tls_direction_t dir, uint3
     quic_packet_publisher publisher;
 
     // try to publish [decoder stream (03) || no data]
-    publisher.set_session(session)
-        .set_flags(flags)
-        .add_stream(10, h3_qpack_decoder_stream, nullptr)
-        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
-            bins.push_back(packet);
-            auto tlsadvisor = tls_advisor::get_instance();
-            auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
-            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
-        });
+    publisher.set_session(session).set_flags(flags).add_stream(10, h3_qpack_decoder_stream).publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+        bins.push_back(packet);
+        auto tlsadvisor = tls_advisor::get_instance();
+        auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
+        _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
+    });
 }
 
 void construct_quic_cli_encoder(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -277,8 +274,8 @@ void construct_quic_svr_nst(tls_session* session, tls_direction_t dir, uint32 fl
 
     publisher.set_session(session)
         .set_flags(flags)
-        .add(tls_hs_new_session_ticket, dir, nullptr)
-        .add(tls_hs_new_session_ticket, dir, nullptr)
+        .add(tls_hs_new_session_ticket, dir)
+        .add(tls_hs_new_session_ticket, dir)
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
             bins.push_back(packet);
             auto tlsadvisor = tls_advisor::get_instance();
@@ -294,9 +291,9 @@ void construct_quic_svr_done_nt_nci(tls_session* session, tls_direction_t dir, u
 
     publisher.set_session(session)
         .set_flags(flags)
-        .add(quic_frame_type_handshake_done, nullptr)
-        .add(quic_frame_type_new_token, nullptr)
-        .add(quic_frame_type_new_connection_id, nullptr)
+        .add(quic_frame_type_handshake_done)
+        .add(quic_frame_type_new_token)
+        .add(quic_frame_type_new_connection_id)
         .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
             bins.push_back(packet);
             auto tlsadvisor = tls_advisor::get_instance();
@@ -333,6 +330,11 @@ void construct_http3_svr_ok(tls_session* session, tls_direction_t dir, uint32 fl
 
     publisher.set_session(session)
         .set_flags(flags)
+        .add_stream(11, h3_qpack_encoder_stream,
+                    [](qpack_stream& stream) -> return_t {
+                        stream.increment(0);
+                        return success;
+                    })
         .add_stream(quic_stream_client_bidi, h3_control_stream, h3_frame_headers,
                     [&](http3_frame* frame) -> return_t {
                         return_t ret = errorcode_t::success;
@@ -429,7 +431,6 @@ void test_construct_quic() {
 
         // initial
         {
-#if 0
             // #Frame C->S
             //   PKN 10 initial [CRYPTO(CH), PADDING]
             {
@@ -458,10 +459,8 @@ void test_construct_quic() {
                 construct_quic_ack(&session_client, from_client, quic_pad_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
             }
-#endif
         }
 
-#if 0
         // handshake, 1-RTT
         {
             // #Frame S->C
@@ -474,7 +473,7 @@ void test_construct_quic() {
                 lambda_check_pkn(&session_server, from_server, protection_handshake, 20);
                 lambda_check_pkn(&session_server, from_server, protection_application, 30);
                 construct_quic_svr_handshakes_settings(&session_server, from_server, quic_ack_packet, bins, text);
-                _test_case.assert(2 == bins.size(), __FUNCTION__, "construct handshake+1-RTT in 2 frames");
+                _test_case.assert(2 == bins.size(), __FUNCTION__, "segmentation");
                 send_packet(&session_client, from_server, bins, text);
                 lambda_test_ready_to_ack(&session_client, protection_handshake, 21, 1);    // CRYPTO(EE, CERT, CV, FIN)
                 lambda_test_ready_to_ack(&session_client, protection_application, 30, 0);  // SETTINGS
@@ -647,14 +646,13 @@ void test_construct_quic() {
 
             // #Frame S->C
             //  PKN 39
-            {
-                const char* text = "1-RTT [HEADERS(HTTP/3 HEADERS)]";
-                construct_http3_svr_ok(&session_server, from_server, quic_ack_packet, bins, text);
-                send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_client, protection_application, 39, 9);
-            }
+            // {
+            //     const char* text = "1-RTT [STREAM(QPACK_DECODER_STREAM), STREAM(HTTP/3 HEADERS)]";
+            //     construct_http3_svr_ok(&session_server, from_server, quic_ack_packet, bins, text);
+            //     send_packet(&session_client, from_server, bins, text);
+            //     lambda_test_ready_to_ack(&session_client, protection_application, 39, 9);
+            // }
         }
-#endif
     }
     __finally2 {}
 }

@@ -20,14 +20,14 @@
 namespace hotplace {
 namespace net {
 
-quic_frame::quic_frame(quic_frame_t type, tls_session* session) : _type(type), _session(session) {
+quic_frame::quic_frame(quic_frame_t type, tls_session* session) : _type(type), _session(session), _publisher(nullptr), _packet(nullptr) {
     if (nullptr == session) {
         throw exception(not_specified);
     }
     _shared.make_share(this);
 }
 
-quic_frame::~quic_frame() {}
+quic_frame::~quic_frame() { set(nullptr, nullptr); }
 
 return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -137,6 +137,21 @@ tls_session* quic_frame::get_session() { return _session; }
 void quic_frame::addref() { _shared.addref(); }
 
 void quic_frame::release() { _shared.delref(); }
+
+void quic_frame::set(quic_packet_publisher* publisher, quic_packet* packet) {
+    _publisher = publisher;
+    if (_packet) {
+        _packet->release();
+    }
+    _packet = packet;
+    if (_packet) {
+        _packet->addref();
+    }
+}
+
+quic_packet_publisher* quic_frame::get_publisher() { return _publisher; }
+
+quic_packet* quic_frame::get_packet() { return _packet; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -127,6 +127,25 @@ quic_frames& quic_frames::add(quic_frame_t type, tls_session* session, std::func
     return *this;
 }
 
+quic_frames& quic_frames::add_h3(quic_frame_t type, tls_session* session, std::function<return_t(quic_frame*)> func, bool upref) {
+    __try2 {
+        quic_frame_builder builder;
+        auto frame = builder.set(type).set(session).enable_alpn("\x2h3").build();
+        if (frame) {
+            if (func) {
+                auto test = func(frame);
+                if (errorcode_t::success != test) {
+                    frame->release();
+                    __leave2;
+                }
+            }
+            _frames.add(frame, upref);
+        }
+    }
+    __finally2 {}
+    return *this;
+}
+
 quic_frames& quic_frames::operator<<(quic_frame* frame) {
     add(frame);
     return *this;
@@ -165,6 +184,8 @@ bool quic_frames::is_significant() {
     for_each(lambda);
     return ret;
 }
+
+t_tls_distinct_container<quic_frame*, uint64>& quic_frames::get_container() { return _frames; }
 
 }  // namespace net
 }  // namespace hotplace
