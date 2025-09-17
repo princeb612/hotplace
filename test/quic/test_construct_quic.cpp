@@ -350,6 +350,45 @@ void construct_http3_svr_ok(tls_session* session, tls_direction_t dir, uint32 fl
         });
 }
 
+void construct_http3_svr_resp(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+    bins.clear();
+
+    quic_packet_publisher publisher;
+
+    publisher.set_session(session)
+        .set_flags(flags)
+        .add_stream(
+            quic_stream_client_bidi, h3_control_stream, h3_frame_data,
+            [&](http3_frame* frame) -> return_t {
+                return_t ret = errorcode_t::success;
+                http3_frame_data* headers = (http3_frame_data*)frame;
+                headers->set_contents(R"(<!DOCTYPE html><html><head><title>test</title><meta charset="UTF-8"></head><body><p>Hello world</p></body></html>)");
+                return ret;
+            })
+        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+            bins.push_back(packet);
+            auto tlsadvisor = tls_advisor::get_instance();
+            auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
+            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
+        });
+}
+
+void construct_quic_connection_close(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
+    bins.clear();
+
+    quic_packet_publisher publisher;
+
+    publisher.set_session(session)
+        .set_flags(flags)  //
+        .add(quic_frame_type_connection_close)
+        .publish(dir, [&](tls_session* session, binary_t& packet) -> void {
+            bins.push_back(packet);
+            auto tlsadvisor = tls_advisor::get_instance();
+            auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
+            _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
+        });
+}
+
 void construct_quic_ack(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
@@ -431,6 +470,7 @@ void test_construct_quic() {
 
         // initial
         {
+            // cf. http3.pcapng #1
             // #Frame C->S
             //   PKN 10 initial [CRYPTO(CH), PADDING]
             {
@@ -441,6 +481,7 @@ void test_construct_quic() {
                 lambda_test_ready_to_ack(&session_server, protection_initial, 10, 0);
             }
 
+            // cf. http3.pcapng #3
             // #Frame S->C
             //   PKN 10 initial [ACK (10), CRYOTO(SH), PADDING]
             {
@@ -451,6 +492,7 @@ void test_construct_quic() {
                 lambda_test_ready_to_ack(&session_client, protection_initial, 10, 0);
             }
 
+            // cf. http3.pcapng #4
             // #Frame C->S
             //   PKN 11 initial [ACK (10), PADDING]
             {
@@ -463,6 +505,7 @@ void test_construct_quic() {
 
         // handshake, 1-RTT
         {
+            // cf. http3.pcapng #8,9,12,13,14
             // #Frame S->C
             //   PKN 20 handshake [ACK(10), CRYPTO(EE, CERT, CV fragmented)]
             // #Frame S->C
@@ -490,6 +533,7 @@ void test_construct_quic() {
                 lambda_alpn(&session_server, "ALPN of session server");
             }
 
+            // cf. http3.pcapng #17
             // #Frame C->S
             //   PKN 20 handshake [ACK (21..20), CRYPTO(FIN)]
             //   PKN 30 1-RTT [ACK (30), PADDING]
@@ -518,6 +562,7 @@ void test_construct_quic() {
 
         // 1-RTT
         {
+            // cf. http3.pcapng #20
             // #Frame C->S
             //   PKN 31 [ACK (31, 30), STREAM(HTTP/3 SETTINGS)]
             {
@@ -536,6 +581,7 @@ void test_construct_quic() {
                 lambda_test_ready_to_ack(&session_client, protection_application, 32, 2);
             }
 
+            // cf. http3.pcapng #21
             // #Frame C->S
             //  PKN 32 [STREAM(QPACK_DECODER_STREAM)]
             //    stream id 10
@@ -548,6 +594,7 @@ void test_construct_quic() {
                 lambda_test_ready_to_ack(&session_server, protection_application, 32, 2);
             }
 
+            // cf. http3.pcapng #22,23
             // #Frame C->S
             //   PKN 33 [STREAM(QPACK_ENCODER_STREAM)]
             //     stream id 6
@@ -569,6 +616,7 @@ void test_construct_quic() {
                 lambda_test_ready_to_ack(&session_client, protection_application, 33, 3);
             }
 
+            // cf. http3.pcapng #24
             // #Frame C->S
             //   PKN 34 [ACK(33..30),STREAM(HTTP/3 HEADERS]
             // GET /
@@ -588,6 +636,7 @@ void test_construct_quic() {
                 lambda_test_ready_to_ack(&session_client, protection_application, 34, 4);
             }
 
+            // cf. http3.pcapng #28
             // #Frame S->C
             //   PKN 35 [ACK(34..30), CRYPTO(NST, NST)]
             {
@@ -598,6 +647,7 @@ void test_construct_quic() {
                 lambda_test_ready_to_ack(&session_client, protection_application, 35, 5);
             }
 
+            // cf. http3.pcapng #29
             // #Frame S->C
             //   PKN 36 [DONE, NT, NCI]
             {
@@ -626,6 +676,7 @@ void test_construct_quic() {
                 lambda_test_ready_to_ack(&session_client, protection_application, 37, 7);
             }
 
+            // cf. http3.pcapng #34,36
             // #Frame S->C
             //   PKN 38 [STREAM(QPACK_DECODER_STREAM)]
             {
@@ -644,14 +695,31 @@ void test_construct_quic() {
                 lambda_test_ready_to_ack(&session_server, protection_application, 36, 6);
             }
 
+            // cf. http3.pcapng #38
             // #Frame S->C
-            //  PKN 39
-            // {
-            //     const char* text = "1-RTT [STREAM(QPACK_DECODER_STREAM), STREAM(HTTP/3 HEADERS)]";
-            //     construct_http3_svr_ok(&session_server, from_server, quic_ack_packet, bins, text);
-            //     send_packet(&session_client, from_server, bins, text);
-            //     lambda_test_ready_to_ack(&session_client, protection_application, 39, 9);
-            // }
+            //   PKN 39
+            {
+                const char* text = "1-RTT [STREAM(QPACK_DECODER_STREAM), STREAM(HTTP/3 HEADERS)]";
+                construct_http3_svr_ok(&session_server, from_server, quic_ack_packet, bins, text);
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_client, protection_application, 39, 9);
+            }
+
+            // cf. http3.pcapng #39~45
+            {
+                const char* text = "1-RTT [STREAM(HTTP/3 DATA)]";
+                construct_http3_svr_resp(&session_server, from_server, quic_ack_packet, bins, text);
+                send_packet(&session_client, from_server, bins, text);
+                lambda_test_ready_to_ack(&session_client, protection_application, 40, 10);
+            }
+
+            // cf. http3.pcapng #67
+            {
+                const char* text = "1-RTT [CC]";
+                construct_quic_connection_close(&session_client, from_client, quic_ack_packet, bins, text);
+                send_packet(&session_server, from_client, bins, text);
+                lambda_test_ready_to_ack(&session_server, protection_application, 37, 7);
+            }
         }
     }
     __finally2 {}

@@ -16,7 +16,7 @@
 const pcap_testvector pcap_tls13_aes128gcm_sha256[] = {
     {
         from_client,
-        "client_hello",
+        "#4 client_hello",
         "16 03 01 00 e3 01 00 00 df 03 03 80 9e 81 58 ce"
         "56 15 09 69 11 89 60 42 af a6 6b 1b df 63 67 8c"
         "35 ac e0 66 18 e5 da 52 0c 2d ed 20 f7 9f 1a 7a"
@@ -35,7 +35,7 @@ const pcap_testvector pcap_tls13_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
+        "#6 server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
         "16 03 03 00 7a 02 00 00 76 03 03 1a ec 8f 05 c3"
         "3b 74 5e 02 80 08 53 a1 1a b9 28 a4 5f 26 0a 57"
         "2f 6a f6 a6 da 41 76 62 8e 59 59 20 f7 9f 1a 7a"
@@ -94,7 +94,7 @@ const pcap_testvector pcap_tls13_aes128gcm_sha256[] = {
     },
     {
         from_client,
-        "change_cipher_spec, finished",
+        "#8 change_cipher_spec, finished",
         "14 03 03 00 01 01 17 03 03 00 35 51 11 89 9e 96"
         "36 37 43 e2 6c 51 36 59 79 87 1c cf 33 83 5e 01"
         "d8 9d fe 33 d8 0d 91 a7 b3 16 f1 b0 35 5f c3 f2"
@@ -102,7 +102,7 @@ const pcap_testvector pcap_tls13_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "new_session_ticket",
+        "#10 new_session_ticket",
         "17 03 03 00 ea 37 46 36 b1 0b 9a ee d9 8a 7c d8"
         "76 96 49 6d d5 4d 30 7c 77 f4 e9 0d 2e 64 4f 93"
         "3d 28 0a 5f fb 6b e9 76 12 0e bd ec b8 b3 f7 62"
@@ -121,7 +121,7 @@ const pcap_testvector pcap_tls13_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "new_session_ticket",
+        "#12 new_session_ticket",
         "17 03 03 00 ea 15 0d c6 fc 46 1c 65 8c be cd 80"
         "bc a5 30 eb b7 c5 e6 81 b4 15 91 87 bb 66 78 82"
         "ae cc ae da df 8d ed a3 0b 5a 61 61 1e 3d 98 c9"
@@ -140,19 +140,19 @@ const pcap_testvector pcap_tls13_aes128gcm_sha256[] = {
     },
     {
         from_client,
-        "application data",
+        "#14 application data",
         "17 03 03 00 17 ab a5 35 84 e5 9c 28 a4 09 23 8f"
         "2e 73 9e 56 84 79 01 9f 57 75 9b 98",
     },
     {
         from_client,
-        "alert",
+        "#16 alert",
         "17 03 03 00 13 8d 24 ce 45 63 68 f0 c4 16 60 8a"
         "73 c2 90 5f e2 31 38 e0",
     },
     {
         from_server,
-        "alert",
+        "#20 alert",
         "17 03 03 00 13 d2 f3 f4 a5 33 e5 91 3d 7a 85 9e"
         "5b 97 cf 7e c1 1c ba 03",
     },
@@ -163,7 +163,7 @@ const size_t sizeof_pcap_tls13_aes128gcm_sha256 = RTL_NUMBER_OF(pcap_tls13_aes12
 const pcap_testvector pcap_tls13_aes256gcm_sha384[] = {
     {
         from_client,
-        "client_hello",
+        "#4 client_hello",
         "16 03 01 00 e7 01 00 00 e3 03 03 b9 39 8c 3a f3"
         "5d 14 01 fe 4a a6 2e a9 4b 26 43 37 f1 85 bc 84"
         "4e 1b c2 dd ed 35 86 b8 da e2 25 20 43 9a cd c3"
@@ -182,7 +182,7 @@ const pcap_testvector pcap_tls13_aes256gcm_sha384[] = {
     },
     {
         from_server,
-        "server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
+        "#6 server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
         "16 03 03 00 7a 02 00 00 76 03 03 73 8a 10 e3 4d"
         "0a d3 4b 5c 0c 9b b5 6b 9b 20 f9 b6 1e 55 73 6e"
         "35 ca cb a3 14 7d ff 09 f8 5a 9a 20 43 9a cd c3"
@@ -275,7 +275,7 @@ const pcap_testvector pcap_tls13_aes256gcm_sha384[] = {
     },
     {
         from_client,
-        "change_cipher_spec, finished",
+        "#8 change_cipher_spec, finished",
         "14 03 03 00 01 01 17 03 03 00 45 3e 55 2d be a4"
         "88 ba 1f 12 73 73 f8 84 75 05 d9 9f d2 1a 84 aa"
         "b7 7c e4 3f f4 ea 4e de fa 94 da c7 3c 66 fc 29"
@@ -284,7 +284,7 @@ const pcap_testvector pcap_tls13_aes256gcm_sha384[] = {
     },
     {
         from_server,
-        "new_session_ticket",
+        "#10 new_session_ticket",
         "17 03 03 00 fa e1 f5 d3 d5 fc 93 f7 11 d4 e9 0c"
         "dc 95 00 2d 83 56 34 e6 dc 11 98 7f 89 ad 9c 36"
         "95 e0 52 f4 59 4a a7 96 c9 69 63 1c b7 68 79 f6"
@@ -304,7 +304,7 @@ const pcap_testvector pcap_tls13_aes256gcm_sha384[] = {
     },
     {
         from_server,
-        "new_session_ticket",
+        "#12 new_session_ticket",
         "17 03 03 00 fa 73 0c 72 9b 71 6d b8 a1 02 19 32"
         "1d bf fa 05 89 82 b6 bb 0c c5 fd 9c 00 14 20 5c"
         "2c e7 2a cb d5 f9 a5 b2 e7 68 d5 76 e3 ca 0c 71"
@@ -324,19 +324,19 @@ const pcap_testvector pcap_tls13_aes256gcm_sha384[] = {
     },
     {
         from_client,
-        "application data",
+        "#14 application data",
         "17 03 03 00 18 f1 40 f0 3b 33 67 09 18 be 0a 57"
         "fc 94 64 08 ae b5 4f 02 20 fe 01 46 ec",
     },
     {
         from_client,
-        "alert",
+        "#16 alert",
         "17 03 03 00 13 a0 d4 71 0a 7a 11 44 63 97 ff 63"
         "2c 0c b5 b1 23 cb a9 01",
     },
     {
         from_server,
-        "alert",
+        "#20 alert",
         "17 03 03 00 13 6e ca 59 6f 00 37 ca bd 87 17 10"
         "1a ab 9c d9 1c 38 23 9d",
     },
@@ -347,7 +347,7 @@ const size_t sizeof_pcap_tls13_aes256gcm_sha384 = RTL_NUMBER_OF(pcap_tls13_aes25
 const pcap_testvector pcap_tls13_aes128ccm_sha256[] = {
     {
         from_client,
-        "client_hello",
+        "#4 client_hello",
         "16 03 01 00 e3 01 00 00 df 03 03 20 e4 66 26 7b"
         "48 0e d9 19 49 cb 1c 27 50 38 02 6b e8 16 b9 b4"
         "bb d4 90 cc 1c e5 64 5e b5 c6 b7 20 f0 13 dc e6"
@@ -366,7 +366,7 @@ const pcap_testvector pcap_tls13_aes128ccm_sha256[] = {
     },
     {
         from_server,
-        "server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
+        "#6 server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
         "16 03 03 00 7a 02 00 00 76 03 03 49 33 3c d0 4d"
         "ce b0 2a 1e f7 19 5d d7 3f 2f f1 0f 14 be 20 c6"
         "4a 5b 4d 61 a2 6c 39 ac c3 9c 47 20 f0 13 dc e6"
@@ -425,7 +425,7 @@ const pcap_testvector pcap_tls13_aes128ccm_sha256[] = {
     },
     {
         from_client,
-        "change_cipher_spec, finished",
+        "#8 change_cipher_spec, finished",
         "14 03 03 00 01 01 17 03 03 00 35 10 e1 6d b0 73"
         "df 52 90 e2 d5 a6 3c 5a c5 ea 2c b6 5f b4 2b 8b"
         "92 ba 84 6d 27 aa d7 de 4e cb dd 8a 4f 8f 4b a5"
@@ -433,7 +433,7 @@ const pcap_testvector pcap_tls13_aes128ccm_sha256[] = {
     },
     {
         from_server,
-        "new_session_ticket",
+        "#10 new_session_ticket",
         "17 03 03 00 ea 74 57 a5 a5 37 db 2a 8f b9 0c d4"
         "ce d9 ad 0f 81 d7 a3 ee c6 39 fb 18 fb 77 8e 07"
         "d5 c0 5c c6 74 05 9e b9 ef 99 13 ad c6 fb c8 96"
@@ -452,7 +452,7 @@ const pcap_testvector pcap_tls13_aes128ccm_sha256[] = {
     },
     {
         from_server,
-        "new_session_ticket",
+        "#12 new_session_ticket",
         "17 03 03 00 ea 57 44 a5 b6 b5 84 4c ad e0 e3 0e"
         "37 af 8d ac 4b 80 95 a4 d7 bd a0 45 34 44 ac e7"
         "46 17 99 85 98 63 f2 8e d3 69 bc f9 37 82 35 99"
@@ -471,19 +471,19 @@ const pcap_testvector pcap_tls13_aes128ccm_sha256[] = {
     },
     {
         from_client,
-        "application data",
+        "#14 application data",
         "17 03 03 00 17 de c7 2b 92 cd 5a eb d7 09 23 79"
         "c2 ea 39 32 5f 3c ea 2e ea 6e 6d 28",
     },
     {
         from_client,
-        "close_notify",
+        "#16 close_notify",
         "17 03 03 00 13 8d c4 d6 ce d5 f1 0c 0f b5 2d 3f"
         "9d 99 1c fd 95 42 04 87",
     },
     {
         from_server,
-        "close_notify",
+        "#20 close_notify",
         "17 03 03 00 13 06 a9 a4 a9 6f fd f2 cb 13 00 c1"
         "b0 3c 79 52 15 fb d8 db",
     },
@@ -494,7 +494,7 @@ const size_t sizeof_pcap_tls13_aes128ccm_sha256 = RTL_NUMBER_OF(pcap_tls13_aes12
 const pcap_testvector pcap_tls13_chacha20_poly1305[] = {
     {
         from_client,
-        "client_hello",
+        "#4 client_hello",
         "16 03 01 00 e3 01 00 00 df 03 03 c5 5d 7d e4 cc"
         "a2 ee 3f 72 5c a0 27 cb b3 0a 1b f3 b8 57 f2 96"
         "2a a4 b7 bc cf 31 06 bb c9 e7 b3 20 cd b0 2b 3b"
@@ -513,7 +513,7 @@ const pcap_testvector pcap_tls13_chacha20_poly1305[] = {
     },
     {
         from_server,
-        "server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
+        "#6 server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
         "16 03 03 00 7a 02 00 00 76 03 03 94 d9 85 bd 42"
         "8c 53 b2 85 92 da cd 71 d6 95 96 78 17 80 19 8e"
         "94 d4 f0 4f cc 89 62 71 5f 6a f6 20 cd b0 2b 3b"
@@ -572,7 +572,7 @@ const pcap_testvector pcap_tls13_chacha20_poly1305[] = {
     },
     {
         from_client,
-        "change_cipher_spec, finished",
+        "#8 change_cipher_spec, finished",
         "14 03 03 00 01 01 17 03 03 00 35 de 19 ea 02 75"
         "ab 10 91 7a 37 c2 77 50 9e ac 25 8a 2e 0c 72 b5"
         "15 62 5c d0 db df 0d b7 c2 2c 26 73 d6 a6 10 61"
@@ -580,7 +580,7 @@ const pcap_testvector pcap_tls13_chacha20_poly1305[] = {
     },
     {
         from_server,
-        "new_session_ticket",
+        "#10 new_session_ticket",
         "17 03 03 00 ea 2e 66 ba 03 04 78 98 2f eb 84 96"
         "67 70 5d 2f 63 d9 cf f1 df f8 d3 8a 83 eb c6 87"
         "f4 b2 a0 f0 b3 aa b7 fe 00 68 a7 9f 53 45 20 da"
@@ -599,7 +599,7 @@ const pcap_testvector pcap_tls13_chacha20_poly1305[] = {
     },
     {
         from_server,
-        "new_session_ticket",
+        "#12 new_session_ticket",
         "17 03 03 00 ea 2b 97 be 44 5a ca 9a 5f 14 18 76"
         "46 ec 29 5f 01 69 8f b6 ac aa 2f fb 32 00 d8 ca"
         "b0 ea 77 e5 2b 60 0f 72 4f 85 a4 a9 b2 d3 c6 d9"
@@ -618,19 +618,19 @@ const pcap_testvector pcap_tls13_chacha20_poly1305[] = {
     },
     {
         from_client,
-        "application_data",
+        "#14 application_data",
         "17 03 03 00 17 a7 08 39 a3 f8 53 2b 8b 1e e8 20"
         "bb 86 cc ef 9f 8d a4 7c e7 b7 68 79",
     },
     {
         from_client,
-        "close_notify",
+        "#16 close_notify",
         "17 03 03 00 13 f9 81 52 9f a2 78 a7 b9 c4 f1 74"
         "16 f2 28 bf f2 e8 ed bc",
     },
     {
         from_server,
-        "close_notify",
+        "#20 close_notify",
         "17 03 03 00 13 ec dc 93 21 f5 3b ce e3 dd 8b 6f"
         "db e6 c6 20 b5 6c d8 a8",
     },

@@ -1,6 +1,6 @@
 #### HTTP/2
 
-$ ./test-httpserver2.exe -v -d -r --debug &
+$ ./test-httpserver2.exe -r --debug &
 
 ````
 [test case] http/2 powered by http_server and libssl

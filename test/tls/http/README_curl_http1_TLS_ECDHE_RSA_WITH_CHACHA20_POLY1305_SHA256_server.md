@@ -1,7 +1,7 @@
 #### curl_http1_TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256.pcapng - server
 
 ````
-$ ./test-httpserver1.exe -v -d -r -T -cs TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256 -k &
+$ ./test-httpserver1.exe -r --debug -T -cs TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256 -k &
 # [test case] HTTP/1.1 powered by http_server
 # set ciphersuite(s)
  > 0xcca8 TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256

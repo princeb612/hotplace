@@ -273,7 +273,7 @@ void test_split() {
 
     split_context_t* handle = nullptr;
     size_t count = 0;
-    split_begin(&handle, "test1.hello2.bye3..", ".");
+    split_begin(&handle, "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256", ":");
     split_count(handle, count);
     binary_t data;
     for (size_t i = 0; i < count; i++) {

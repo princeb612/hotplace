@@ -23,6 +23,9 @@ class http3_frame_data : public http3_frame {
    public:
     http3_frame_data();
 
+    return_t set_contents(const std::string& contents);
+    std::string get_contents();
+
    protected:
     virtual return_t do_read_payload(const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write(binary_t& bin);

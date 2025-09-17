@@ -351,25 +351,25 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
             }
         }
 
-        auto session = get_session();
+        binary_t bin;
+        if (false == container.empty()) {
+            auto iter = container.begin();
+            std::advance(iter, container.size() - 1);
+            if (get_payload_size() > (*iter).size()) {
+                bin = std::move(*iter);
+                container.erase(iter);
+            }
+        }
 
+        auto session = get_session();
         quic_packet_builder builder;
         quic_frame_builder framebuilder;
-
         while (1) {
-            binary_t bin;
-            if (false == container.empty()) {
-                auto iter = container.begin();
-                std::advance(iter, container.size() - 1);
-                if (get_payload_size() > (*iter).size()) {
-                    bin = std::move(*iter);
-                    container.erase(iter);
-                }
-            }
-
             auto packet = builder.set(space).set(session).set(dir).construct().build();
             if (packet) {
                 prepare_packet_cid(packet, space, dir);
+                auto payload_space = packet->get_max_payload_size() - packet->estimate_overhead() - bin.size();
+                packet->get_quic_frames().get_container().set_flags(0);  // turn off distinct_type_in_container
 
                 if (quic_ack_packet & flags) {
                     auto& pkns = session->get_quic_session().get_pkns(space);
@@ -381,11 +381,10 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
                     }
                 }
 
-                auto payload_space = packet->get_max_payload_size() - packet->estimate_overhead();
-
                 if (_segment[space].size()) {
-                    auto& item = *_segment[space].begin();
-                    if (item.pos <= item.bin.size()) {
+                    size_t size_segments = 0;
+                    for (auto& item : _segment[space]) {
+                        size_segments += item.bin.size() - item.pos;
                         auto frame = framebuilder.set(item.type).set(session).set(packet).build();
                         if (frame) {
                             if (quic_frame_type_stream == item.type) {
@@ -397,6 +396,9 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
                                 item.func(frame);
                             }
                             *packet << frame;
+                        }
+                        if (payload_space <= size_segments) {
+                            break;
                         }
                     }
                 }
@@ -422,7 +424,7 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
                 if (flags & quic_pad_packet) {
                     // if max_size is set, fill 0 upto max_size
                     auto frame = (quic_frame_padding*)framebuilder.set(quic_frame_type_padding).set(session).set(packet).build();
-                    frame->pad(payload_space - bin.size(), quic_pad_packet);
+                    frame->pad(payload_space, quic_pad_packet);
                     *packet << frame;
                 }
 

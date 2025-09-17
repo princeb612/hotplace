@@ -16,7 +16,7 @@
 const pcap_testvector pcap_tls13_http1_aes128gcm_sha256[] = {
     {
         from_client,
-        "client_hello",
+        "#4 client_hello",
         "16 03 01 07 12 01 00 07 0e 03 03 c1 26 cf af ae"
         "8c b4 f1 ec 61 46 8e 6f 8b 16 db 41 bc b2 bd 16"
         "ff 0c 81 61 0f 8c 40 c5 d0 28 e4 20 c6 60 6c 90"
@@ -134,7 +134,7 @@ const pcap_testvector pcap_tls13_http1_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
+        "#6 server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
         "16 03 03 00 7a 02 00 00 76 03 03 86 57 fe 0f 4c"
         "0b 4e 57 27 bb 1f ee bd da 19 fb be cf cb 8b c2"
         "c0 e0 ee 8a 12 4f 91 bd 8c 54 0b 20 c6 60 6c 90"
@@ -227,14 +227,14 @@ const pcap_testvector pcap_tls13_http1_aes128gcm_sha256[] = {
     // self-signed certificate scenario
     {
         from_client,
-        "change_cipher_spec, alert (fatal, Certificate Unknown)",
+        "#8 change_cipher_spec, alert (fatal, Certificate Unknown)",
         "14 03 03 00 01 01 17 03 03 00 13 83 8e 0e 12 57"
         "86 0b 78 8f e6 22 9d 94 f9 50 3c 31 8f 49",
     },
     // after user interaction
     {
         from_client,
-        "client_hello",
+        "#17 client_hello",
         "16 03 01 06 b2 01 00 06 ae 03 03 f9 ce f6 ee 59"
         "e4 1f 07 f4 95 a8 35 98 24 51 15 0e 5a d0 90 ff"
         "6b 33 54 7b 56 a3 64 f5 8e 8b 62 20 2a 98 3f 8d"
@@ -346,7 +346,7 @@ const pcap_testvector pcap_tls13_http1_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
+        "#19 server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
         "16 03 03 00 7a 02 00 00 76 03 03 26 41 84 11 80"
         "98 f9 28 97 3f e0 da d6 bb 29 13 e0 a3 38 eb da"
         "8b d4 f8 b2 90 b2 03 57 5a 93 21 20 2a 98 3f 8d"
@@ -438,7 +438,7 @@ const pcap_testvector pcap_tls13_http1_aes128gcm_sha256[] = {
     },
     {
         from_client,
-        "change_cipher_spec, finished",
+        "#21 change_cipher_spec, finished",
         "14 03 03 00 01 01 17 03 03 00 35 51 d3 86 8b f1"
         "01 93 14 42 a4 44 ee 73 e0 7d 8c 4e e9 e6 52 65"
         "a6 cd dd b1 65 66 7e 7f d0 a2 0e 79 45 5b 21 19"
@@ -446,7 +446,7 @@ const pcap_testvector pcap_tls13_http1_aes128gcm_sha256[] = {
     },
     {
         from_client,
-        "GET / HTTP/1.1",
+        "#23 GET / HTTP/1.1",
         "17 03 03 02 be e3 76 cb 17 e8 72 a2 9f 17 6c 87"
         "f3 50 87 31 24 c3 c1 00 82 d0 09 7f 4c 5e f2 dd"
         "0c 89 48 35 37 1d ae 68 d8 b2 ea 67 22 b5 98 d6"
@@ -495,7 +495,7 @@ const pcap_testvector pcap_tls13_http1_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "new_session_ticket",
+        "#25 new_session_ticket",
         "17 03 03 00 ea f9 cc 61 2a b8 95 64 1e da ee a8"
         "4a 94 e5 6b 4f 1c a7 37 6f 1e e9 89 9d 6a e0 59"
         "52 37 03 94 87 9e 97 46 d6 be 99 18 3d 01 ef 3f"
@@ -514,7 +514,7 @@ const pcap_testvector pcap_tls13_http1_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "new_session_ticket",
+        "#27 new_session_ticket",
         "17 03 03 00 ea d3 26 cd 91 a3 53 17 51 9b a5 92"
         "99 51 18 d5 c3 e5 98 25 29 9b af 1b 68 ad 33 60"
         "9c 80 d9 cc 1b 5f 5e 60 63 8e c1 07 51 6d f3 d9"
@@ -533,7 +533,7 @@ const pcap_testvector pcap_tls13_http1_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "HTTP/1.1 200 OK",
+        "#29 HTTP/1.1 200 OK",
         "17 03 03 01 8d f4 7f 2a 03 54 e5 23 1d cf e5 bf"
         "1d 62 43 78 3e 6b 6f d9 7f 9a 94 f4 70 bc 2f d6"
         "da a1 b2 11 8e 98 d3 3d 11 bf 76 8f e9 c1 e0 be"
@@ -568,7 +568,7 @@ const size_t sizeof_pcap_tls13_http1_aes128gcm_sha256 = RTL_NUMBER_OF(pcap_tls13
 const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     {
         from_client,
-        "client_hello",
+        "#8 client_hello",
         "16 03 01 06 d2 01 00 06 ce 03 03 e3 d9 36 34 08"
         "4c 35 63 a9 15 8c 0d d7 98 b4 5b ce 97 4d ed 17"
         "ec b8 4c 60 64 6f 05 51 11 8f f5 20 e0 f6 ba 41"
@@ -682,7 +682,7 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
+        "#10 server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
         "16 03 03 00 7a 02 00 00 76 03 03 75 17 45 b8 e6"
         "e5 61 97 3c 10 03 c9 9e 13 99 9d 6a e1 24 6a 0b"
         "8e 10 27 60 6d fb 86 e7 e9 00 ac 20 e0 f6 ba 41"
@@ -775,13 +775,13 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     },
     {
         from_client,
-        "change_cipher_spec, alert (fatal, Certificate Unknown)",
+        "#12 change_cipher_spec, alert (fatal, Certificate Unknown)",
         "14 03 03 00 01 01 17 03 03 00 13 c3 b0 ee 3b 62"
         "bb 85 83 ad 16 c6 db 04 8c 9f db c4 64 fb",
     },
     {
         from_client,
-        "client_hello",
+        "#23 client_hello",
         "16 03 01 07 12 01 00 07 0e 03 03 5f 8a e4 1b 15"
         "13 96 5c 56 6f 57 af 03 f2 05 86 57 12 46 37 61"
         "78 a1 81 26 df 38 42 90 5b b1 8b 20 91 a8 43 1f"
@@ -899,7 +899,7 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
+        "#25 server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
         "16 03 03 00 7a 02 00 00 76 03 03 30 5e 5f 4f 8e"
         "4b 5f 45 fb 94 6a df 97 5b 33 6b 0b c4 ed a7 ab"
         "34 cb 7a 32 f6 cb 85 66 63 ed 8a 20 91 a8 43 1f"
@@ -992,13 +992,13 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     },
     {
         from_client,
-        "change_cipher_spec, finished",
+        "#27 change_cipher_spec, finished",
         "14 03 03 00 01 01 17 03 03 00 13 46 c5 22 c4 b5"
         "1c 7d 07 f8 41 5e bc 14 c2 56 58 1c ea 4c",
     },
     {
         from_client,
-        "client_hello",
+        "#38 client_hello",
         "16 03 01 07 12 01 00 07 0e 03 03 06 02 52 a6 b6"
         "8f 14 21 a1 0d 97 8a 20 c1 d4 95 ac 2a 65 78 26"
         "43 e6 88 72 5b 50 26 3b 8b fc fa 20 97 55 03 8a"
@@ -1116,7 +1116,7 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
+        "#40 server_hello, change_cipher_spec, encrypted_extensions, certificate, certificate_verify, finished",
         "16 03 03 00 7a 02 00 00 76 03 03 f2 87 b4 42 52"
         "fa a9 a8 af b3 51 95 01 ec d8 18 ef b4 12 e7 50"
         "8f fd 6d 3e 95 70 51 e1 b9 69 6a 20 97 55 03 8a"
@@ -1209,7 +1209,7 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     },
     {
         from_client,
-        "change_cipher_spec, finished",
+        "#42 change_cipher_spec, finished",
         "14 03 03 00 01 01 17 03 03 00 35 6d 39 93 53 51"
         "ab 04 21 20 59 a0 d5 d4 f1 18 6d 1a 1f 5c 55 6b"
         "ac 8b e7 61 71 03 ce 6e cd 58 27 5c 24 83 dc 0d"
@@ -1217,7 +1217,7 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     },
     {
         from_client,
-        "HTTP/2 - SETTINGS, WINDOW_UPDATE",
+        "#44 HTTP/2 - SETTINGS, WINDOW_UPDATE",
         "17 03 03 00 57 34 5c d2 11 f1 6c f1 7a 82 0d ba"
         "2d ea be d8 21 1c bc 33 04 b7 a0 22 85 56 83 6c"
         "64 15 a0 bf be 0c 98 b1 aa 82 ec 57 e0 3a 9a 65"
@@ -1227,7 +1227,7 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     },
     {
         from_client,
-        "HTTP/2 - GET /",
+        "#46 HTTP/2 - GET /",
         "17 03 03 01 f1 56 a1 f9 14 88 85 ad 4b 4e 44 55"
         "ee 77 b9 1a ba 75 ae 05 89 1e 4b 58 7b d9 4c d0"
         "37 5d 9e 8d 1d f6 45 85 86 46 2a 98 b2 eb b1 69"
@@ -1263,7 +1263,7 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "new_session_ticket",
+        "#48 new_session_ticket",
         "17 03 03 00 ea 24 0f 28 cc 53 03 11 4e ff 94 7f"
         "90 f1 4b 83 cc bf bc ca 93 64 1b 10 44 f1 1d 23"
         "69 4e 17 9c bb b2 ff 67 96 37 2b 1b 43 55 70 6a"
@@ -1282,7 +1282,7 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "new_session_ticket",
+        "#50 new_session_ticket",
         "17 03 03 00 ea ea ab 20 80 c4 21 b8 12 fa 07 91"
         "8a 1e ab 75 0a ec 89 b4 dd 41 fc 2c 19 e1 84 92"
         "92 db c9 9f 42 90 c5 0f d4 5c 14 22 7e 20 5d 6a"
@@ -1301,7 +1301,7 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     },
     {
         from_server,
-        "HTTP/2 - SETTINGS",
+        "#52 HTTP/2 - SETTINGS",
         "17 03 03 00 2c ab 34 cb 19 d1 3a c3 98 ad 29 d2"
         "ce 55 25 16 82 fe dc 85 33 a0 ff 0f 61 54 62 9a"
         "0f ce cc 67 17 25 37 e1 2e 2d ef 13 e3 59 80 6b"
@@ -1309,19 +1309,19 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
     },
     {
         from_client,
-        "HTTP/2 - SETTINGS",
+        "#54 HTTP/2 - SETTINGS",
         "17 03 03 00 1a 3c d6 80 ec aa db b3 0c 6e 04 2d"
         "c3 e1 36 d6 eb 72 d1 05 f9 5f 0d c6 dd 61 19",
     },
     {
         from_server,
-        "HTTP/2 - SETTINGS",
+        "#56 HTTP/2 - SETTINGS",
         "17 03 03 00 1a 68 6c ce 0e 90 04 29 e4 be 02 15"
         "0b d8 a0 fd 6c d4 4d 0b e2 3b 26 7e 5b cb c2",
     },
     {
         from_server,
-        "HTTP/2 - 200 OK",
+        "#58 HTTP/2 - 200 OK",
         "17 03 03 01 56 d3 18 d3 77 0c 3d ce cc 90 c0 ef"
         "8b 2a 81 a9 ac 0f a1 a6 85 98 8c 42 d4 85 ec 02"
         "b9 7f f0 5c c2 6f de f0 74 c1 6f 57 c0 d1 21 a8"
@@ -1349,10 +1349,11 @@ const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[] = {
 const size_t sizeof_pcap_tls13_http2_aes128gcm_sha256 = RTL_NUMBER_OF(pcap_tls13_http2_aes128gcm_sha256);
 
 // curl_http1_tls12.pcapng
+// TCP segmentation
 const pcap_testvector pcap_curl_http1_tls12[] = {
     {
         from_client,
-        "client_hello",
+        "#4 client_hello",
         "16 03 01 00 ae 01 00 00 aa 03 03 9d 43 00 31 eb"
         "9b df bf 49 a5 ef cb f5 75 82 b8 82 8f d1 82 57"
         "72 85 5f 54 9c 49 60 25 82 2b 7d 00 00 02 c0 30"
@@ -1368,7 +1369,7 @@ const pcap_testvector pcap_curl_http1_tls12[] = {
     },
     {
         from_server,
-        "server_hello, certificate",
+        "#6 server_hello, certificate (segment)",
         // server_hello
         "16 03 03 00 6a 02 00 00 66 03 03 68 54 ec 70 c5"
         "80 49 12 33 b5 a0 ab ad a5 53 74 83 d7 05 28 5f"
@@ -1377,7 +1378,7 @@ const pcap_testvector pcap_curl_http1_tls12[] = {
         "8a ab ef 6a 47 c8 09 31 67 b4 3e 6b c0 30 00 00"
         "1e 00 17 00 00 ff 01 00 01 00 00 0b 00 02 01 00"
         "00 10 00 0b 00 09 08 68 74 74 70 2f 31 2e 31"
-        // 3 certificates
+        // certificates (serv er certificate, intermediate certificate, root certificate)
         "16 03 03 0f aa 0b 00 0f a6 00 0f a3 00 05 25 30"
         "82 05 21 30 82 04 09 a0 03 02 01 02 02 11 00 d7"
         "dc f9 de 58 d7 b8 d7 09 a6 3a 20 62 a9 25 d3 30"
@@ -1459,7 +1460,9 @@ const pcap_testvector pcap_curl_http1_tls12[] = {
         "0d d8 ba 97 1c 8f de 14 0b 73 8b 30 e5 ed 5f 93"
         "ae f2 e6 e6 fb 45 0e d6 4b cd b7 72 19 82 3b 3b"
         "df ec 7f d8 67 f6 8e 4b 10 6b 35 03 ee c3 07 3e"
-        "d4 db de ec 32 0e 86 51 21 f5 59 fe 04 6a d4 91"
+        "d4 db de ec 32"
+        // #7 certificate (segment)
+        "0e 86 51 21 f5 59 fe 04 6a d4 91"
         "f9 ce 9f 41 01 60 2f dc 87 15 53 58 c1 e1 59 48"
         "5b ac 1a a3 00 05 0f 30 82 05 0b 30 82 02 f3 a0"
         "03 02 01 02 02 10 7f f0 05 a0 7c 4c de d1 00 ad"
@@ -1547,7 +1550,9 @@ const pcap_testvector pcap_curl_http1_tls12[] = {
         "ea 21 0f c4 f0 58 d3 0d 30 0d 06 09 2a 86 48 86"
         "f7 0d 01 01 0b 05 00 30 57 31 0b 30 09 06 03 55"
         "04 06 13 02 42 45 31 19 30 17 06 03 55 04 0a 13"
-        "10 47 6c 6f 62 61 6c 53 69 67 6e 20 6e 76 2d 73"
+        "10 47 6c 6f 62 61 6c 53 69"
+        // #8 certificate (segment)
+        "67 6e 20 6e 76 2d 73"
         "61 31 10 30 0e 06 03 55 04 0b 13 07 52 6f 6f 74"
         "20 43 41 31 1b 30 19 06 03 55 04 03 13 12 47 6c"
         "6f 62 61 6c 53 69 67 6e 20 52 6f 6f 74 20 43 41"
@@ -1632,7 +1637,7 @@ const pcap_testvector pcap_curl_http1_tls12[] = {
     },
     {
         from_server,
-        "server_key_exchange, server_hello_done",
+        "#9 server_key_exchange, server_hello_done",
         // server_key_exchange
         "16 03 03 01 2c 0c 00 01 28 03 00 1d 20 61 a4 a2"
         "f5 81 d5 e8 d9 e4 ce 53 8b 7a d2 f6 84 af f9 5c"
@@ -1659,7 +1664,7 @@ const pcap_testvector pcap_curl_http1_tls12[] = {
     },
     {
         from_client,
-        "client_key_exchange, change_cipher_spec, finished",
+        "#11 client_key_exchange, change_cipher_spec, finished",
         "16 03 03 00 25 10 00 00 21 20 e9 ec 3c 40 3a 19"
         "6e 90 41 a3 0c 0f 14 c4 07 fe 71 7d 05 ba 7d 2d"
         "e6 1e 98 09 c3 4c f3 06 0c 1a 14 03 03 00 01 01"
@@ -1669,7 +1674,7 @@ const pcap_testvector pcap_curl_http1_tls12[] = {
     },
     {
         from_server,
-        "change_cipher_spec, finished",
+        "#12 change_cipher_spec, finished",
         "14 03 03 00 01 01 16 03 03 00 28 00 00 00 00 00"
         "00 00 00 59 6e a3 63 67 6d bc 6d 6f 36 24 b4 75"
         "f1 37 d1 47 ba 96 34 1b fd 41 82 ee 15 f2 17 a0"
@@ -1677,7 +1682,7 @@ const pcap_testvector pcap_curl_http1_tls12[] = {
     },
     {
         from_client,
-        "HEAD / HTTP/1.1",
+        "#13 HEAD / HTTP/1.1",
         "17 03 03 00 67 f1 15 cb ff 4e a6 ae 87 d7 6b b0"
         "04 18 d4 f5 ba 04 a7 37 b9 18 95 ee 3b 74 28 2c"
         "55 ce 41 60 97 dc 84 f9 91 e8 a0 d8 1e c1 da fe"
@@ -1688,7 +1693,7 @@ const pcap_testvector pcap_curl_http1_tls12[] = {
     },
     {
         from_server,
-        "HTTP/1.1 200 OK",
+        "#15 HTTP/1.1 200 OK",
         "17 03 03 04 94 00 00 00 00 00 00 00 01 5d 86 0e"
         "61 62 1c f4 b8 d8 db 2f f0 8c 86 9e 40 18 56 96"
         "15 d6 4a c4 91 b5 96 41 db 0e 48 3f cb 51 56 5f"
@@ -1766,7 +1771,7 @@ const pcap_testvector pcap_curl_http1_tls12[] = {
     },
     {
         from_client,
-        "close_notify",
+        "#16 close_notify",
         "15 03 03 00 1a f1 15 cb ff 4e a6 ae 88 f3 bf 10"
         "5e c1 ea 2f 8b 87 2b 54 8d 67 f2 47 bd 8b 3c",
     },

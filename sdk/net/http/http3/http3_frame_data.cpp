@@ -20,19 +20,20 @@
 namespace hotplace {
 namespace net {
 
+/**
+ *  RFC 9114 7.2.1.  DATA
+ *  DATA Frame {
+ *    Type (i) = 0x00,
+ *    Length (i),
+ *    Data (..),
+ *  }
+ */
+
 http3_frame_data::http3_frame_data() : http3_frame(h3_frame_data) {}
 
 return_t http3_frame_data::do_read_payload(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        /**
-         *  RFC 9114 7.2.1.  DATA
-         *  DATA Frame {
-         *    Type (i) = 0x00,
-         *    Length (i),
-         *    Data (..),
-         *  }
-         */
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             basic_stream dbs;
@@ -47,7 +48,27 @@ return_t http3_frame_data::do_read_payload(const byte_t* stream, size_t size, si
 
 return_t http3_frame_data::do_write(binary_t& bin) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        payload pl;
+        pl << new payload_member(new quic_encoded(uint64(get_type())))       //
+           << new payload_member(new quic_encoded(uint64(_payload.size())))  //
+           << new payload_member(_payload);
+        pl.write(bin);
+    }
+    __finally2 {}
     return ret;
+}
+
+return_t http3_frame_data::set_contents(const std::string& contents) {
+    return_t ret = errorcode_t::success;
+    _payload = str2bin(contents);
+    return ret;
+}
+
+std::string http3_frame_data::get_contents() {
+    std::string value;
+    value = bin2str(_payload);
+    return value;
 }
 
 }  // namespace net
