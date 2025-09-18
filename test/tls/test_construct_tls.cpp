@@ -103,10 +103,11 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
                                             .add("rsa_pss_rsae_sha512");
                                         return success;
                                     })
-                               .add(tls_ext_psk_key_exchange_modes, dir, handshake, [](tls_extension* extension) -> return_t {
-                                   (*(tls_extension_psk_key_exchange_modes*)extension).add("psk_dhe_ke");
-                                   return success;
-                               });
+                               .add(tls_ext_psk_key_exchange_modes, dir, handshake,  //
+                                    [](tls_extension* extension) -> return_t {
+                                        (*(tls_extension_psk_key_exchange_modes*)extension).add("psk_dhe_ke");
+                                        return success;
+                                    });
 
                            if (tls_13 == option.version) {
                                handshake->get_extensions()
@@ -119,12 +120,13 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
                                             }
                                             return success;
                                         })
-                                   .add(tls_ext_key_share, dir, handshake, [](tls_extension* extension) -> return_t {
-                                       tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
-                                       keyshare->clear();
-                                       keyshare->add("x25519");
-                                       return success;
-                                   });
+                                   .add(tls_ext_key_share, dir, handshake,  //
+                                        [](tls_extension* extension) -> return_t {
+                                            tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
+                                            keyshare->clear();
+                                            keyshare->add("x25519");
+                                            return success;
+                                        });
 
                                basic_stream bs;
                                auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
@@ -203,12 +205,13 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
                                             (*(tls_extension_server_supported_versions*)extension).set(server_version);
                                             return success;
                                         })
-                                   .add(tls_ext_key_share, dir, handshake, [](tls_extension* extension) -> return_t {
-                                       tls_extension_server_key_share* keyshare = (tls_extension_server_key_share*)extension;
-                                       keyshare->clear();
-                                       keyshare->add_keyshare();
-                                       return success;
-                                   });
+                                   .add(tls_ext_key_share, dir, handshake,  //
+                                        [](tls_extension* extension) -> return_t {
+                                            tls_extension_server_key_share* keyshare = (tls_extension_server_key_share*)extension;
+                                            keyshare->clear();
+                                            keyshare->add_keyshare();
+                                            return success;
+                                        });
 
                                {
                                    basic_stream bs;
@@ -266,16 +269,17 @@ static return_t do_test_construct_encrypted_extensions(tls_session* session, tls
                     ret = (*record)
                               .add(tls_hs_encrypted_extensions, session,
                                    [&](tls_handshake* handshake) -> return_t {
-                                       handshake->get_extensions().add(tls_ext_alpn, dir, handshake, [](tls_extension* extension) -> return_t {
-                                           auto alpn = (tls_extension_alpn*)extension;
-                                           binary_t protocols;
-                                           binary_append(protocols, uint8(2));
-                                           binary_append(protocols, "h2");
-                                           binary_append(protocols, uint8(8));
-                                           binary_append(protocols, "http/1.1");
-                                           alpn->set_protocols(protocols);
-                                           return success;
-                                       });
+                                       handshake->get_extensions().add(tls_ext_alpn, dir, handshake,  //
+                                                                       [](tls_extension* extension) -> return_t {
+                                                                           auto alpn = (tls_extension_alpn*)extension;
+                                                                           binary_t protocols;
+                                                                           binary_append(protocols, uint8(2));
+                                                                           binary_append(protocols, "h2");
+                                                                           binary_append(protocols, uint8(8));
+                                                                           binary_append(protocols, "http/1.1");
+                                                                           alpn->set_protocols(protocols);
+                                                                           return success;
+                                                                       });
                                        return success;
                                    })
                               .write(dir, bin);

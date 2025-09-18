@@ -26,23 +26,25 @@ t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 uint16 toprot(OPTION& o, const char* source) {
-    int type = 1;               // 1 tcp, 2 udp, 3 tls, 4 dtls
+    int type = 0;               // 1 tcp, 2 udp, 3 tls, 4 dtls, 5 quic
     std::string text = source;  // source not nullptr
     std::transform(text.begin(), text.end(), text.begin(), tolower);
     if (("tcp" == text) || ("1" == text)) {
-        type = 1;
+        type = netclient_scheme_tcp;
     } else if (("udp" == text) || ("2" == text)) {
-        type = 2;
+        type = netclient_scheme_udp;
     } else if (("tls" == text) || ("3" == text)) {
-        type = 3;
+        type = netclient_scheme_tls;
     } else if ("tls13" == text) {
-        type = 3;
+        type = netclient_scheme_tls;
         o.flags |= option_flag_allow_tls13;
     } else if ("tls12" == text) {
-        type = 3;
+        type = netclient_scheme_tls;
         o.flags |= option_flag_allow_tls12;
     } else if (("dtls" == text) || ("4" == text)) {
-        type = 4;
+        type = netclient_scheme_dtls;
+    } else if ("quic" == text) {
+        type = netclient_scheme_quic;
     }
     return type;
 }
@@ -67,7 +69,7 @@ int main(int argc, char** argv) {
         << t_cmdarg_t<OPTION>("-b", "bufsize (1500)", [](OPTION& o, char* param) -> void { o.bufsize = atoi(param); }).optional().preced()
         << t_cmdarg_t<OPTION>("-a", "address (127.0.0.1)", [](OPTION& o, char* param) -> void { o.address = param; }).optional().preced()
         << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
-        << t_cmdarg_t<OPTION>("-P", "protocol tcp|udp|tls|tls13|tls12|dtls (1 tcp, 2 udp, 3 tls, 4 dtls)",
+        << t_cmdarg_t<OPTION>("-P", "protocol tcp|udp|tls|tls13|tls12|dtls|quic (1 tcp, 2 udp, 3 tls, 4 dtls, 5 quic)",
                               [](OPTION& o, char* param) -> void { o.prot = toprot(o, param); })
                .preced()
         << t_cmdarg_t<OPTION>("-c", "count (1)", [](OPTION& o, char* param) -> void { o.count = atoi(param); }).optional().preced()
@@ -113,25 +115,28 @@ int main(int argc, char** argv) {
 #endif
 
         switch (option.prot) {
-            case 1:
+            case netclient_scheme_tcp:
                 tcp_client();
                 break;
-            case 2:
+            case netclient_scheme_udp:
                 udp_client();
                 break;
-            case 3:
+            case netclient_scheme_tls:
                 if (0 == (option.flags & option_flag_debug_tls_inside)) {
                     tls_client();
                 } else {
                     tls_client2();
                 }
                 break;
-            case 4:
+            case netclient_scheme_dtls:
                 if (0 == (option.flags & option_flag_debug_tls_inside)) {
                     dtls_client();
                 } else {
                     dtls_client2();
                 }
+                break;
+            case netclient_scheme_quic:
+                quic_client();
                 break;
             default:
                 break;

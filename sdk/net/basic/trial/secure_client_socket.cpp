@@ -68,14 +68,16 @@ return_t secure_client_socket::do_shutdown() {
 
         binary_t bin;
 
-        {
-            auto dir = from_client;
-            tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_alert).set(dir).construct().build();
-
+        auto dir = from_client;
+        tls_record_builder builder;
+        auto record = builder.set(session).set(tls_content_type_alert).set(dir).construct().build();
+        if (record) {
             *record << new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify);
             record->write(dir, bin);
             record->release();
+        } else {
+            ret = errorcode_t::internal_error;
+            __leave2;
         }
 
         do_send(bin);

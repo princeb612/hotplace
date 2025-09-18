@@ -12,6 +12,14 @@ enum {
     option_flag_keylog = 1 << 5,
 };
 
+enum netclient_scheme {
+    netclient_scheme_tcp = 1,
+    netclient_scheme_udp = 2,
+    netclient_scheme_tls = 3,
+    netclient_scheme_dtls = 4,
+    netclient_scheme_quic = 5,
+};
+
 struct OPTION : public CMDLINEOPTION {
     int bufsize;
     std::string address;
@@ -40,5 +48,7 @@ void dtls_client();
 // insecure simple implementation to understand TLS
 void tls_client2();
 void dtls_client2();
+
+void quic_client();
 
 #endif

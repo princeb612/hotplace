@@ -152,12 +152,13 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
                                         (*(tls_extension_server_supported_versions*)extension).set(server_version);
                                         return success;
                                     })
-                               .add(tls_ext_key_share, dir, handshake, [](tls_extension* extension) -> return_t {
-                                   auto keyshare = (tls_extension_server_key_share*)extension;
-                                   keyshare->clear();
-                                   keyshare->add_keyshare();
-                                   return success;
-                               });
+                               .add(tls_ext_key_share, dir, handshake,  //
+                                    [](tls_extension* extension) -> return_t {
+                                        auto keyshare = (tls_extension_server_key_share*)extension;
+                                        keyshare->clear();
+                                        keyshare->add_keyshare();
+                                        return success;
+                                    });
 
                            return success;
                        })
@@ -188,13 +189,17 @@ static return_t do_test_construct_encrypted_extensions(tls_session* session, tls
         }
 
         dtls13_ciphertext record(tls_content_type_handshake, session);
-        record.add(tls_hs_encrypted_extensions, session, [&](tls_handshake* handshake) -> return_t {
-            (*handshake).get_extensions().add(tls_ext_supported_groups, dir, handshake, [](tls_extension* extension) -> return_t {
-                (*(tls_extension_supported_groups*)extension).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
-                return success;
-            });
-            return success;
-        });
+        record.add(tls_hs_encrypted_extensions, session,  //
+                   [&](tls_handshake* handshake) -> return_t {
+                       (*handshake)
+                           .get_extensions()
+                           .add(tls_ext_supported_groups, dir, handshake,  //
+                                [](tls_extension* extension) -> return_t {
+                                    (*(tls_extension_supported_groups*)extension).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
+                                    return success;
+                                });
+                       return success;
+                   });
         ret = record.write(dir, bin);
     }
     __finally2 {

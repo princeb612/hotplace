@@ -56,6 +56,11 @@ tls_records& tls_record_application_data::get_records() { return _records; }
 
 void tls_record_application_data::set_binary(const binary_t bin) { _bin = bin; }
 
+void tls_record_application_data::set_binary(const byte_t* data, size_t size) {
+    _bin.clear();
+    binary_append(_bin, data, size);
+}
+
 const binary_t& tls_record_application_data::get_binary() { return _bin; }
 
 return_t tls_record_application_data::do_preprocess(tls_direction_t dir) {

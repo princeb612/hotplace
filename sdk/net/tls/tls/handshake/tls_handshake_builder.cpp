@@ -96,6 +96,24 @@ tls_handshake* tls_handshake_builder::build() {
     return handshake;
 }
 
+tls_handshake* tls_handshake_builder::build(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func) {
+    tls_handshake* handshake = nullptr;
+    auto temp = set(type).set(session).build();
+    if (temp) {
+        if (func) {
+            auto test = func(temp);
+            if (errorcode_t::success == test) {
+                handshake = temp;
+            } else {
+                temp->release();
+            }
+        } else {
+            handshake = temp;
+        }
+    }
+    return handshake;
+}
+
 tls_hs_type_t tls_handshake_builder::get_type() { return _type; }
 
 tls_session* tls_handshake_builder::get_session() { return _session; }

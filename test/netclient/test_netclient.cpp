@@ -319,3 +319,12 @@ void dtls_client2() {
         _test_case.test(ret, __FUNCTION__, "client %s:%i", option.address.c_str(), option.port);
     }
 }
+
+void quic_client() {
+    const OPTION& option = _cmdline->value();
+
+    // - [ ] TODO
+    //   - [ ] tls_composer QUIC feature
+    //   - [ ] trial_quic_client_socket
+    //   - [ ] trial_quic_server_socket
+}

@@ -21,6 +21,7 @@ class tls_handshake_builder {
     tls_handshake_builder& set(tls_hs_type_t type);
     tls_handshake_builder& set(tls_session* session);
     tls_handshake* build();
+    tls_handshake* build(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func = nullptr);
 
     tls_hs_type_t get_type();
     tls_session* get_session();

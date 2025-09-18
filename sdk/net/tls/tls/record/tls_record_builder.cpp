@@ -42,13 +42,33 @@ tls_record_builder& tls_record_builder::set(tls_direction_t dir) {
     return *this;
 }
 
-tls_record_builder& tls_record_builder::construct() {
-    _construct = true;
+tls_record_builder& tls_record_builder::construct(bool flag) {
+    _construct = flag;
     return *this;
 }
 
 tls_record_builder& tls_record_builder::set_protected(bool protect) {
     _protected = protect;
+    return *this;
+}
+
+tls_record_builder& tls_record_builder::add(tls_records* records, tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func) {
+    __try2 {
+        if (records) {
+            auto record = set(type).set(session).build();
+            if (record) {
+                if (func) {
+                    auto test = func(record);
+                    if (errorcode_t::success != test) {
+                        record->release();
+                        __leave2;
+                    }
+                }
+                *records << record;
+            }
+        }
+    }
+    __finally2 {}
     return *this;
 }
 
@@ -110,6 +130,24 @@ tls_record* tls_record_builder::build() {
                     __try_new_catch_only(record, new tls_record_unknown(get_type(), session));
                 }
             } break;
+        }
+    }
+    return record;
+}
+
+tls_record* tls_record_builder::build(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func) {
+    tls_record* record = nullptr;
+    auto temp = set(type).set(session).build();
+    if (temp) {
+        if (func) {
+            auto test = func(temp);
+            if (errorcode_t::success == test) {
+                record = temp;
+            } else {
+                temp->release();
+            }
+        } else {
+            record = temp;
         }
     }
     return record;

@@ -68,9 +68,47 @@ class tls_record_builder {
      *              record->release();
      *          }
      */
-    tls_record_builder& construct();
+    tls_record_builder& construct(bool flag = true);
+    /*
+     * @brief   set state to [change cipher spec]
+     * @example
+     *          builder  //
+     *              .set(dir)
+     *              .construct()
+     *              .add(&records, tls_content_type_change_cipher_spec, session)
+     *              .set_protected(true)
+     *              .add(&records, tls_content_type_handshake, session,  //
+     *                   [&](tls_record* record) -> return_t {
+     *                       record->add(tls_hs_finished, session);
+     *                       return success;
+     *                   });
+     */
     tls_record_builder& set_protected(bool protect);
+    /**
+     * @brief   add record into tls_records
+     * @param   tls_records* records [in]
+     * @param   tls_content_type_t type [in]
+     * @param   tls_session* session [in]
+     * @param   std::function<return_t(tls_record*)> func [inopt]
+     * @example
+     *          tls_record_builder builder;
+     *          tls_records records;
+     *                  builder                                                  //
+     *                      .add(&records, tls_content_type_handshake, session,  //
+     *                           [&](tls_record* record) -> return_t {
+     *                               return_t ret = errorcode_t::success;
+     *                               tls_handshake* handshake = nullptr;
+     *                               ret = construct_server_hello(&handshake, session, nullptr, _minspec, _maxspec);
+     *                               if (errorcode_t::success == ret) {
+     *                                   *record << handshake;
+     *                               }
+     *                               return ret;
+     *                           });
+     */
+    tls_record_builder& add(tls_records* records, tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func = nullptr);
+
     tls_record* build();
+    tls_record* build(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func = nullptr);
 
     tls_session* get_session();
     uint8 get_type();
