@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_IO_TYPES__
 #define __HOTPLACE_SDK_IO_TYPES__
 
-#include <sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
 
 namespace hotplace {
 namespace io {

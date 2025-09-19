@@ -14,9 +14,9 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_BASIC_OPENSSLHASH__
 #define __HOTPLACE_SDK_CRYPTO_BASIC_OPENSSLHASH__
 
-#include <sdk/base/stream/basic_stream.hpp>  // basic_stream
-#include <sdk/crypto/basic/types.hpp>
-#include <sdk/crypto/crypto.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>  // basic_stream
+#include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/crypto/crypto.hpp>
 
 namespace hotplace {
 namespace crypto {

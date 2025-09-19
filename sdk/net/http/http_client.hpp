@@ -12,9 +12,9 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPCLIENT__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPCLIENT__
 
-#include <sdk/io/string/string.hpp>       // url_info_t
-#include <sdk/net/http/http_request.hpp>  // http_request
-#include <sdk/net/http/types.hpp>
+#include <hotplace/sdk/io/string/string.hpp>       // url_info_t
+#include <hotplace/sdk/net/http/http_request.hpp>  // http_request
+#include <hotplace/sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {

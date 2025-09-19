@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/trial/trial_tcp_client_socket.hpp>
+#include <hotplace/sdk/net/basic/trial/trial_tcp_client_socket.hpp>
 
 namespace hotplace {
 namespace net {

@@ -25,11 +25,11 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKET__
 #define __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKET__
 
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/net/tls/quic/frame/quic_frames.hpp>
-#include <sdk/net/tls/quic/types.hpp>
-#include <sdk/net/tls/tls/types.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/net/tls/quic/frame/quic_frames.hpp>
+#include <hotplace/sdk/net/tls/quic/types.hpp>
+#include <hotplace/sdk/net/tls/tls/types.hpp>
 
 namespace hotplace {
 namespace net {

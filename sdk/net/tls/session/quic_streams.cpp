@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/tls/quic/types.hpp>
-#include <sdk/net/tls/quic_streams.hpp>
+#include <hotplace/sdk/net/tls/quic/types.hpp>
+#include <hotplace/sdk/net/tls/quic_streams.hpp>
 
 namespace hotplace {
 namespace net {

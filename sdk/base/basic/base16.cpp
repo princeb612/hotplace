@@ -12,8 +12,8 @@
 
 #include <string.h>
 
-#include <sdk/base/basic/base16.hpp>
-#include <sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/basic/base16.hpp>
+#include <hotplace/sdk/base/string/string.hpp>
 
 namespace hotplace {
 

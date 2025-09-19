@@ -13,9 +13,9 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOKEY__
 #define __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOKEY__
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
 
 namespace hotplace {
 namespace crypto {

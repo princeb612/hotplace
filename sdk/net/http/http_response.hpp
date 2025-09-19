@@ -12,10 +12,10 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPRESPONSE__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPRESPONSE__
 
-#include <sdk/base/stream/basic_stream.hpp>  // basic_stream
-#include <sdk/net/http/http_header.hpp>      // http_header
-#include <sdk/net/http/http_router.hpp>      // http_router
-#include <sdk/net/http/types.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>  // basic_stream
+#include <hotplace/sdk/net/http/http_header.hpp>      // http_header
+#include <hotplace/sdk/net/http/http_router.hpp>      // http_router
+#include <hotplace/sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {

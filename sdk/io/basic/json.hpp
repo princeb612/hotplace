@@ -13,8 +13,8 @@
 
 #include <jansson.h>
 
-#include <sdk/io/system/sdk.hpp>
-#include <sdk/io/types.hpp>
+#include <hotplace/sdk/io/system/sdk.hpp>
+#include <hotplace/sdk/io/types.hpp>
 
 namespace hotplace {
 namespace io {

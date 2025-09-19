@@ -9,13 +9,13 @@
  */
 
 #include <fstream>
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/unittest/trace.hpp>
-#include <sdk/crypto/basic/crypto_key.hpp>
-#include <sdk/crypto/basic/crypto_keychain.hpp>
-#include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/io/stream/file_stream.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
+#include <hotplace/sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
 namespace crypto {

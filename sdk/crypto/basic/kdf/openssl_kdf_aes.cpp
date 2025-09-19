@@ -8,11 +8,11 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/system/types.hpp>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/openssl_hash.hpp>
-#include <sdk/crypto/basic/openssl_kdf.hpp>
-#include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 
 #if defined __linux__
 #include <dlfcn.h>

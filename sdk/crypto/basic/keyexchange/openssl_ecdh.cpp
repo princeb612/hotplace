@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/crypto/basic/openssl_ecdh.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
 #if defined __linux__
 #include <arpa/inet.h>
 #endif

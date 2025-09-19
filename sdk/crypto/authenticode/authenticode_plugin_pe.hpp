@@ -16,7 +16,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_AUTHENTICODEPLUGINPE__
 #define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_AUTHENTICODEPLUGINPE__
 
-#include <sdk/crypto/authenticode/authenticode_plugin.hpp>
+#include <hotplace/sdk/crypto/authenticode/authenticode_plugin.hpp>
 
 namespace hotplace {
 namespace crypto {

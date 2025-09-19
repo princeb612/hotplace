@@ -9,7 +9,7 @@
  *
  */
 
-#include <sdk/base/unittest/logger.hpp>
+#include <hotplace/sdk/base/unittest/logger.hpp>
 
 namespace hotplace {
 

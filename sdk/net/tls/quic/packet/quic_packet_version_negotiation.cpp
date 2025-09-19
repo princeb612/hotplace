@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/io/basic/payload.hpp>
-#include <sdk/net/tls/quic/packet/quic_packet_version_negotiation.hpp>
-#include <sdk/net/tls/quic/quic.hpp>
+#include <hotplace/sdk/io/basic/payload.hpp>
+#include <hotplace/sdk/net/tls/quic/packet/quic_packet_version_negotiation.hpp>
+#include <hotplace/sdk/net/tls/quic/quic.hpp>
 
 namespace hotplace {
 namespace net {

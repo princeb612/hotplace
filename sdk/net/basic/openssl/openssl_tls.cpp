@@ -17,15 +17,15 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/nostd/exception.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/unittest/trace.hpp>
-#include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/io/system/socket.hpp>
-#include <sdk/net/basic/openssl/openssl_tls.hpp>
-#include <sdk/net/basic/openssl/openssl_tls_context.hpp>
-#include <sdk/net/basic/openssl/sdk.hpp>
-#include <sdk/net/basic/openssl/types.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
+#include <hotplace/sdk/io/system/socket.hpp>
+#include <hotplace/sdk/net/basic/openssl/openssl_tls.hpp>
+#include <hotplace/sdk/net/basic/openssl/openssl_tls_context.hpp>
+#include <hotplace/sdk/net/basic/openssl/sdk.hpp>
+#include <hotplace/sdk/net/basic/openssl/types.hpp>
 
 namespace hotplace {
 namespace net {

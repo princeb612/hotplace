@@ -11,12 +11,12 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/base/basic/ieee754.hpp>
-#include <sdk/io/cbor/cbor_encode.hpp>
-#include <sdk/io/cbor/cbor_object.hpp>
-#include <sdk/io/stream/stream.hpp>
-#include <sdk/io/system/types.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/basic/ieee754.hpp>
+#include <hotplace/sdk/io/cbor/cbor_encode.hpp>
+#include <hotplace/sdk/io/cbor/cbor_object.hpp>
+#include <hotplace/sdk/io/stream/stream.hpp>
+#include <hotplace/sdk/io/system/types.hpp>
 
 namespace hotplace {
 namespace io {

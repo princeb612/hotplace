@@ -12,9 +12,9 @@
 #ifndef __HOTPLACE_SDK_BASE_NOSTD_LIST__
 #define __HOTPLACE_SDK_BASE_NOSTD_LIST__
 
-#include <sdk/base/nostd/exception.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/types.hpp>
 
 namespace hotplace {
 

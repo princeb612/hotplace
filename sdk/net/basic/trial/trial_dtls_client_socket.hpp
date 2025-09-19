@@ -13,7 +13,7 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALDTLSCLIENTSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALDTLSCLIENTSOCKET__
 
-#include <sdk/net/basic/trial/secure_client_socket.hpp>
+#include <hotplace/sdk/net/basic/trial/secure_client_socket.hpp>
 
 namespace hotplace {
 namespace net {

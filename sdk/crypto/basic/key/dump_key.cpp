@@ -8,13 +8,13 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/dump_memory.hpp>  // dump_notrunc
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_key.hpp>
-#include <sdk/crypto/basic/evp_key.hpp>
-#include <sdk/io/cbor/cbor_data.hpp>
-#include <sdk/io/cbor/cbor_publisher.hpp>
+#include <hotplace/sdk/base/basic/dump_memory.hpp>  // dump_notrunc
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/io/cbor/cbor_data.hpp>
+#include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
 
 namespace hotplace {
 namespace crypto {

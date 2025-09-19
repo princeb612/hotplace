@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/tls/tls/record/tls_record_unknown.hpp>
-#include <sdk/net/tls/tls/tls.hpp>
-#include <sdk/net/tls/tls_advisor.hpp>
-#include <sdk/net/tls/tls_session.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record_unknown.hpp>
+#include <hotplace/sdk/net/tls/tls/tls.hpp>
+#include <hotplace/sdk/net/tls/tls_advisor.hpp>
+#include <hotplace/sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {

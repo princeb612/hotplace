@@ -12,15 +12,15 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUICPACKETPUBLISHER__
 #define __HOTPLACE_SDK_NET_TLS_QUICPACKETPUBLISHER__
 
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/net/http/compression/http_header_compression_stream.hpp>
+#include <hotplace/sdk/net/http/http3/http3_frames.hpp>
+#include <hotplace/sdk/net/tls/quic/frame/quic_frame_http3_stream.hpp>
+#include <hotplace/sdk/net/tls/quic/frame/quic_frame_stream.hpp>
+#include <hotplace/sdk/net/tls/quic/frame/quic_frames.hpp>
+#include <hotplace/sdk/net/tls/quic/packet/quic_packets.hpp>
+#include <hotplace/sdk/net/tls/quic/types.hpp>
 #include <queue>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/net/http/compression/http_header_compression_stream.hpp>
-#include <sdk/net/http/http3/http3_frames.hpp>
-#include <sdk/net/tls/quic/frame/quic_frame_http3_stream.hpp>
-#include <sdk/net/tls/quic/frame/quic_frame_stream.hpp>
-#include <sdk/net/tls/quic/frame/quic_frames.hpp>
-#include <sdk/net/tls/quic/packet/quic_packets.hpp>
-#include <sdk/net/tls/quic/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -53,7 +53,14 @@ struct segment_t {
 };
 
 /**
- * publisher
+ * @brief   publisher
+ * @example
+ *          quic_packet_publisher publisher;
+ *          // ACK, CRYPTO[SH], PADDING
+ *          publisher.set_session(session)
+ *              .set_flags(flags)
+ *              .add(tls_hs_server_hello, dir)
+ *              .publish(dir, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
  */
 class quic_packet_publisher {
    public:
@@ -76,14 +83,62 @@ class quic_packet_publisher {
      * @param   QUIC FRAME CRYOTO
      * @param   tls_hs_type_t type [in]
      * @param   tls_direction_t dir [in]
-     * @param   std::function<return_t(tls_handshake*, tls_direction_t)> func [in]
+     * @param   std::function<return_t(tls_handshake*, tls_direction_t)> func [inopt]
+     * @example
+     *          // EE
+     *          publisher.set_session(session)
+     *              .set_flags(flags)
+     *              .add(tls_hs_encrypted_extensions, dir,
+     *                   [](tls_handshake* handshake, tls_direction_t dir) -> return_t {
+     *                       handshake->get_extensions()
+     *                           .add(tls_ext_sni, dir, handshake,
+     *                                [](tls_extension* extension) -> return_t {
+     *                                    (*(tls_extension_sni*)extension).set_hostname("localhost");
+     *                                    return success;
+     *                                })
+     *                           .add(tls_ext_alpn, dir, handshake,
+     *                                [](tls_extension* extension) -> return_t {
+     *                                    binary_t protocols;
+     *                                    binary_append(protocols, uint8(2));
+     *                                    binary_append(protocols, "h3");
+     *                                    (*(tls_extension_alpn*)extension).set_protocols(protocols);
+     *                                    return success;
+     *                                })
+     *                           .add(tls_ext_quic_transport_parameters, dir, handshake,  //
+     *                                [](tls_extension* extension) -> return_t {
+     *                                    (*(tls_extension_quic_transport_parameters*)extension)
+     *                                        .set(quic_param_initial_max_stream_data_bidi_local, 0x20000)
+     *                                        .set(quic_param_stateless_reset_token, binary_t())
+     *                                        .set(quic_param_initial_max_stream_data_uni, 0x20000)
+     *                                        .set(quic_param_initial_source_connection_id, binary_t())
+     *                                        .set(quic_param_version_information, binary_t())
+     *                                        .set(quic_param_initial_max_data, 0x30000)
+     *                                        .set(quic_param_original_destination_connection_id, binary_t())
+     *                                        .set(quic_param_max_idle_timeout, 240000)
+     *                                        .set(quic_param_initial_max_streams_uni, 103)
+     *                                        .set(quic_param_initial_max_stream_data_bidi_remote, 0x20000)
+     *                                        .set(quic_param_google_version, binary_t())
+     *                                        .set(quic_param_max_datagram_frame_size, 0x10000)
+     *                                        .set(quic_param_max_udp_payload_size, max_udp_payload_size)
+     *                                        .set(quic_param_initial_max_streams_bidi, 100);
+     *                                    return success;
+     *                                });
+     *                       return success;
+     *                   })
+     *              .publish(dir, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
      */
     quic_packet_publisher& add(tls_hs_type_t type, tls_direction_t dir, std::function<return_t(tls_handshake*, tls_direction_t)> func = nullptr);
     /**
      * @brief   QUIC FRAME
      * @param   QUIC FRAME (1-RTT)
      * @param   quic_frame_t type [in]
-     * @param   std::function<return_t(quic_frame*)> func [in]
+     * @param   std::function<return_t(quic_frame*)> func [inopt]
+     * @example
+     *          publisher.set_session(session)
+     *              .set_flags(flags)
+     *              .add(tls_hs_new_session_ticket, dir)
+     *              .add(tls_hs_new_session_ticket, dir)
+     *              .publish(dir, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
      */
     quic_packet_publisher& add(quic_frame_t type, std::function<return_t(quic_frame*)> func = nullptr);
     /**
@@ -92,14 +147,41 @@ class quic_packet_publisher {
      * @param   uint64 stream_id [in]
      * @param   uint8 uni_type [in]
      * @param   h3_frame_t type [in]
-     * @param   std::function<return_t(http3_frame*)> func [in]
+     * @param   std::function<return_t(http3_frame*)> func [inopt]
+     * @example
+     *          publisher.set_session(session)
+     *             .add_stream(quic_stream_server_uni, h3_control_stream, h3_frame_settings,
+     *                         [&](http3_frame* frame) -> return_t {
+     *                             return_t ret = errorcode_t::success;
+     *                             http3_frame_settings* settings = (http3_frame_settings*)frame;
+     *                             (*settings)
+     *                                 .set(h3_settings_qpack_max_table_capacity, 0x10000)
+     *                                 .set(h3_settings_max_field_section_size, 0x10000)
+     *                                 .set(h3_settings_qpack_blocked_streams, 100)
+     *                                 .set(h3_settings_enable_connect_protocol, 1)
+     *                                 .set(h3_settings_h3_datagram, 1);
+     *                             return ret;
+     *                         })
+     *              .publish(dir, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
      */
     quic_packet_publisher& add_stream(uint64 stream_id, uint8 uni_type, h3_frame_t type, std::function<return_t(http3_frame*)> func = nullptr);
     /**
      * @brief   QPACK ENDODER/DECODER STREAM
      * @param   uint64 stream_id [in]
      * @param   uint8 uni_type [in]
-     * @param   std::function<return_t(qpack_stream&)> func [in]
+     * @param   std::function<return_t(qpack_stream&)> func [inopt]
+     * @example
+     *          publisher.set_session(session)
+     *              .set_flags(flags)
+     *              .add_stream(6, h3_qpack_encoder_stream,
+     *                          [](qpack_stream& stream) -> return_t {
+     *                              stream.set_encode_flags(qpack_indexing | qpack_huffman | qpack_intermediary)
+     *                                  .set_capacity(4096)
+     *                                  .encode_header(":authority", "localhost")
+     *                                  .encode_header("user-agent", "hotplace 1.58.864");
+     *                              return success;
+     *                          })
+     *              .publish(dir, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
      */
     quic_packet_publisher& add_stream(uint64 stream_id, uint8 uni_type, std::function<return_t(qpack_stream&)> func = nullptr);
 

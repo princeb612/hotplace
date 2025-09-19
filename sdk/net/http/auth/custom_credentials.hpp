@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_AUTH_CUSTOMCREDENTIALS__
 #define __HOTPLACE_SDK_NET_HTTP_AUTH_CUSTOMCREDENTIALS__
 
+#include <hotplace/sdk/net/http/types.hpp>
 #include <map>
-#include <sdk/net/http/types.hpp>
 #include <string>
 
 namespace hotplace {

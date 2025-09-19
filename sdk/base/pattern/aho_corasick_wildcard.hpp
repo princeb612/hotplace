@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICKWILDCARD__
 #define __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICKWILDCARD__
 
-#include <sdk/base/pattern/aho_corasick.hpp>
+#include <hotplace/sdk/base/pattern/aho_corasick.hpp>
 
 namespace hotplace {
 

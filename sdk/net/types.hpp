@@ -29,18 +29,18 @@
 
 #elif defined _WIN32 || defined _WIN64
 
-#include <sdk/base/system/windows/types.hpp>
+#include <hotplace/sdk/base/system/windows/types.hpp>
 
 #endif
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/nostd/range.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/crypto/basic/types.hpp>
-#include <sdk/io/system/socket.hpp>
-#include <sdk/io/types.hpp>
+#include <hotplace/sdk/base/charset.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/nostd/range.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/io/system/socket.hpp>
+#include <hotplace/sdk/io/types.hpp>
 
 namespace hotplace {
 using namespace crypto;

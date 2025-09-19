@@ -9,10 +9,10 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDAPPLICATIONDATA__
 #define __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDAPPLICATIONDATA__
 
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/net/tls/tls/handshake/tls_handshakes.hpp>
-#include <sdk/net/tls/tls/record/tls_record.hpp>
-#include <sdk/net/tls/tls/record/tls_records.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/net/tls/tls/handshake/tls_handshakes.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_records.hpp>
 
 namespace hotplace {
 namespace net {

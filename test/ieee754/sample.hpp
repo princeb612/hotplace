@@ -1,8 +1,8 @@
 #ifndef __HOTPLACE_TEST_IEEE754__
 #define __HOTPLACE_TEST_IEEE754__
 
-#include <sdk/sdk.hpp>
-#include <test/test.hpp>
+#include <hotplace/sdk/sdk.hpp>
+#include <hotplace/test/test.hpp>
 
 using namespace hotplace;
 using namespace hotplace::crypto;

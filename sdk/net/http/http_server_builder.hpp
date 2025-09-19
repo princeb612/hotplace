@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPSERVERBUILDER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPSERVERBUILDER__
 
-#include <sdk/net/http/http_server.hpp>
+#include <hotplace/sdk/net/http/http_server.hpp>
 
 namespace hotplace {
 namespace net {

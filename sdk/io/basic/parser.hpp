@@ -12,11 +12,11 @@
 #ifndef __HOTPLACE_SDK_IO_BASIC_PARSER__
 #define __HOTPLACE_SDK_IO_BASIC_PARSER__
 
-#include <sdk/base/basic/keyvalue.hpp>
-#include <sdk/base/pattern/aho_corasick.hpp>
-#include <sdk/base/pattern/trie.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/io/types.hpp>
+#include <hotplace/sdk/base/basic/keyvalue.hpp>
+#include <hotplace/sdk/base/pattern/aho_corasick.hpp>
+#include <hotplace/sdk/base/pattern/trie.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/io/types.hpp>
 
 namespace hotplace {
 namespace io {

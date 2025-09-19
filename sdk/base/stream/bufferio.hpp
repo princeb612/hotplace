@@ -11,10 +11,10 @@
 #ifndef __HOTPLACE_SDK_BASE_STREAM_BUFFERIO__
 #define __HOTPLACE_SDK_BASE_STREAM_BUFFERIO__
 
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <list>
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/stream/printf.hpp>
-#include <sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
 

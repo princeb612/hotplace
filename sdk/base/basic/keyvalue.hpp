@@ -14,11 +14,11 @@
 #include <algorithm>
 #include <deque>
 #include <functional>
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/datetime.hpp>
 #include <map>
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/datetime.hpp>
 
 namespace hotplace {
 

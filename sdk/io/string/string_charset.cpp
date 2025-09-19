@@ -10,8 +10,8 @@
 
 #include <string.h>
 
+#include <hotplace/sdk/io/string/string.hpp>
 #include <list>
-#include <sdk/io/string/string.hpp>
 #include <string>
 
 namespace hotplace {

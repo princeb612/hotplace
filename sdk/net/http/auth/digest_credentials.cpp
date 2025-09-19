@@ -10,9 +10,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/auth/digest_access_authentication_provider.hpp>
-#include <sdk/net/http/auth/digest_credentials.hpp>
-#include <sdk/net/http/auth/rfc2617_digest.hpp>
+#include <hotplace/sdk/net/http/auth/digest_access_authentication_provider.hpp>
+#include <hotplace/sdk/net/http/auth/digest_credentials.hpp>
+#include <hotplace/sdk/net/http/auth/rfc2617_digest.hpp>
 
 namespace hotplace {
 namespace net {

@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_BASE_STREAM_TYPES__
 #define __HOTPLACE_SDK_BASE_STREAM_TYPES__
 
+#include <hotplace/sdk/base/basic/types.hpp>
 #include <list>
-#include <sdk/base/basic/types.hpp>
 
 namespace hotplace {
 

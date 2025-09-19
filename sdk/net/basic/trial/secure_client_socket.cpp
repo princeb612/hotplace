@@ -8,12 +8,11 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/trial/secure_client_socket.hpp>
-#include <sdk/net/basic/trial/tls_composer.hpp>
-#include <sdk/net/tls/tls/record/tls_record_alert.hpp>
-#include <sdk/net/tls/tls/record/tls_record_builder.hpp>
-#include <sdk/net/tls/tls/tls.hpp>
-#include <sdk/net/tls/tls_advisor.hpp>
+#include <hotplace/sdk/net/basic/trial/secure_client_socket.hpp>
+#include <hotplace/sdk/net/basic/trial/tls_composer.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record_alert.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record_builder.hpp>
+#include <hotplace/sdk/net/tls/tls/tls.hpp>
 
 namespace hotplace {
 namespace net {
@@ -24,7 +23,6 @@ secure_client_socket::~secure_client_socket() {}
 
 return_t secure_client_socket::do_handshake() {
     return_t ret = errorcode_t::success;
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
     __try2 {
         tls_composer composer(get_session());

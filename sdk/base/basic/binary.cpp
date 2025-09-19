@@ -11,7 +11,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include <sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
 
 namespace hotplace {
 

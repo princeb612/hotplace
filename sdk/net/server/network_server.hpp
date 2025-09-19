@@ -11,10 +11,10 @@
 #ifndef __HOTPLACE_SDK_NET_SERVER_NETWORKSERVER__
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKSERVER__
 
-#include <sdk/base/basic/keyvalue.hpp>
-#include <sdk/io/system/multiplexer.hpp>
-#include <sdk/net/basic/types.hpp>
-#include <sdk/net/server/types.hpp>
+#include <hotplace/sdk/base/basic/keyvalue.hpp>
+#include <hotplace/sdk/io/system/multiplexer.hpp>
+#include <hotplace/sdk/net/basic/types.hpp>
+#include <hotplace/sdk/net/server/types.hpp>
 
 namespace hotplace {
 namespace net {

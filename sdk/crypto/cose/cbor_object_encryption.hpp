@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTENCRYPTION__
 #define __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTENCRYPTION__
 
-#include <sdk/crypto/cose/types.hpp>
+#include <hotplace/sdk/crypto/cose/types.hpp>
 
 namespace hotplace {
 namespace crypto {

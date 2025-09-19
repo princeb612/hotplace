@@ -8,13 +8,13 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/string/string.hpp>
-#include <sdk/base/unittest/trace.hpp>
-#include <sdk/net/tls/sslkeylog_importer.hpp>
-#include <sdk/net/tls/tls_session.hpp>
-#include <sdk/net/tls/types.hpp>
+#include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/net/tls/sslkeylog_importer.hpp>
+#include <hotplace/sdk/net/tls/tls_session.hpp>
+#include <hotplace/sdk/net/tls/types.hpp>
 
 namespace hotplace {
 namespace net {

@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_BASE_NOSTD_INTEGER__
 #define __HOTPLACE_SDK_BASE_NOSTD_INTEGER__
 
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 
 namespace hotplace {
 

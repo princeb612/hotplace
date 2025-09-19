@@ -8,19 +8,19 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>  // basic_stream
-#include <sdk/base/unittest/trace.hpp>
-#include <sdk/net/http/html_documents.hpp>
-#include <sdk/net/http/http2/http2_frame.hpp>
-#include <sdk/net/http/http2/http2_frame_continuation.hpp>
-#include <sdk/net/http/http2/http2_frame_push_promise.hpp>
-#include <sdk/net/http/http2/http2_protocol.hpp>
-#include <sdk/net/http/http2/http2_serverpush.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_resource.hpp>
-#include <sdk/net/http/http_response.hpp>
-#include <sdk/net/http/http_server.hpp>
-#include <sdk/net/server/network_session.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>  // basic_stream
+#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/net/http/html_documents.hpp>
+#include <hotplace/sdk/net/http/http2/http2_frame.hpp>
+#include <hotplace/sdk/net/http/http2/http2_frame_continuation.hpp>
+#include <hotplace/sdk/net/http/http2/http2_frame_push_promise.hpp>
+#include <hotplace/sdk/net/http/http2/http2_protocol.hpp>
+#include <hotplace/sdk/net/http/http2/http2_serverpush.hpp>
+#include <hotplace/sdk/net/http/http_request.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/net/http/http_response.hpp>
+#include <hotplace/sdk/net/http/http_server.hpp>
+#include <hotplace/sdk/net/server/network_session.hpp>
 
 namespace hotplace {
 namespace net {

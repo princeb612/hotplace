@@ -10,8 +10,8 @@
  * 2009.07.22   Soo Han, Kim        codename.merlin
  */
 
-#include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
 
 namespace hotplace {
 

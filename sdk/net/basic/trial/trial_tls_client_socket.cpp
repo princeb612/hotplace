@@ -8,12 +8,12 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/trial/tls_composer.hpp>
-#include <sdk/net/basic/trial/trial_tls_client_socket.hpp>
-#include <sdk/net/tls/tls/record/tls_record_alert.hpp>
-#include <sdk/net/tls/tls/record/tls_record_application_data.hpp>
-#include <sdk/net/tls/tls/tls.hpp>
-#include <sdk/net/tls/tls_advisor.hpp>
+#include <hotplace/sdk/net/basic/trial/tls_composer.hpp>
+#include <hotplace/sdk/net/basic/trial/trial_tls_client_socket.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record_alert.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record_application_data.hpp>
+#include <hotplace/sdk/net/tls/tls/tls.hpp>
+#include <hotplace/sdk/net/tls/tls_advisor.hpp>
 
 namespace hotplace {
 namespace net {

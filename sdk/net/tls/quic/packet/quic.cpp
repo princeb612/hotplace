@@ -10,9 +10,9 @@
 
 #include <math.h>
 
-#include <sdk/net/tls/quic/packet/quic_packet.hpp>
-#include <sdk/net/tls/quic/packet/quic_packet_builder.hpp>
-#include <sdk/net/tls/quic/quic.hpp>
+#include <hotplace/sdk/net/tls/quic/packet/quic_packet.hpp>
+#include <hotplace/sdk/net/tls/quic/packet/quic_packet_builder.hpp>
+#include <hotplace/sdk/net/tls/quic/quic.hpp>
 
 namespace hotplace {
 namespace net {

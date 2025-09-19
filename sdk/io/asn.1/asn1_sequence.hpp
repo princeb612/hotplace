@@ -13,7 +13,7 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_ASN1SEQUENCE__
 #define __HOTPLACE_SDK_IO_ASN1_ASN1SEQUENCE__
 
-#include <sdk/io/asn.1/asn1_container.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_container.hpp>
 
 namespace hotplace {
 namespace io {

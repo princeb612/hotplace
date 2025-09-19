@@ -13,10 +13,10 @@
 #define __HOTPLACE_SDK_BASE_UNITTEST_TRACE__
 
 #include <functional>
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/trace.hpp>
 #include <list>
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/trace.hpp>
 
 namespace hotplace {
 

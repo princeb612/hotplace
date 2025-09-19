@@ -15,9 +15,9 @@
 #ifndef __HOTPLACE_SDK_ODBC_BASIC_ODBCFIELD__
 #define __HOTPLACE_SDK_ODBC_BASIC_ODBCFIELD__
 
-#include <sdk/base/system/datetime.hpp>
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/odbc/types.hpp>
+#include <hotplace/sdk/base/system/datetime.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/odbc/types.hpp>
 
 namespace hotplace {
 namespace odbc {

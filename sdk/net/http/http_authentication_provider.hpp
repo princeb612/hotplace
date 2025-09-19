@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPAUTHENTICATIONPROVIDER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPAUTHENTICATIONPROVIDER__
 
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/net/http/types.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {

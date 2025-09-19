@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_OPENSSL_OPENSSLTLSCONTEXT__
 #define __HOTPLACE_SDK_NET_BASIC_OPENSSL_OPENSSLTLSCONTEXT__
 
-#include <sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
 
 namespace hotplace {
 namespace net {

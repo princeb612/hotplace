@@ -9,8 +9,8 @@
 #include <deque>
 #include <fstream>
 #include <functional>
+#include <hotplace/sdk/sdk.hpp>
 #include <iostream>
-#include <sdk/sdk.hpp>
 #include <string>
 
 using namespace hotplace;

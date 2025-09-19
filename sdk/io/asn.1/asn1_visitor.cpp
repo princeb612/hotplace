@@ -11,8 +11,8 @@
  *
  */
 
-#include <sdk/io/asn.1/asn1_object.hpp>
-#include <sdk/io/asn.1/asn1_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
 
 namespace hotplace {
 namespace io {

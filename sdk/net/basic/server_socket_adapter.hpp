@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_SERVERSOCKETADAPTER__
 #define __HOTPLACE_SDK_NET_BASIC_SERVERSOCKETADAPTER__
 
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/net/basic/types.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/net/basic/types.hpp>
 
 namespace hotplace {
 namespace net {

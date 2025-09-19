@@ -10,8 +10,8 @@
 
 #include <math.h>
 
-#include <sdk/net/http/http_resource.hpp>
-#include <sdk/net/http/qpack/qpack_encoder.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/net/http/qpack/qpack_encoder.hpp>
 
 namespace hotplace {
 namespace net {

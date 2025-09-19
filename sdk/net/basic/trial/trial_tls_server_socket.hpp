@@ -11,11 +11,11 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALTLSSERVERSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALTLSSERVERSOCKET__
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/net/basic/naive/naive_tcp_server_socket.hpp>  // naive_tcp_server_socket
-#include <sdk/net/basic/trial/secure_prosumer.hpp>
-#include <sdk/net/basic/trial/types.hpp>
-#include <sdk/net/tls/tls_session.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/net/basic/naive/naive_tcp_server_socket.hpp>  // naive_tcp_server_socket
+#include <hotplace/sdk/net/basic/trial/secure_prosumer.hpp>
+#include <hotplace/sdk/net/basic/trial/types.hpp>
+#include <hotplace/sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {

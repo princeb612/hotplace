@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/crypto/basic/openssl_sdk.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {
 namespace crypto {

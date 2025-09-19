@@ -8,11 +8,11 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_resource.hpp>
-#include <sdk/net/http/http_response.hpp>
-#include <sdk/net/http/http_router.hpp>
-#include <sdk/net/server/network_session.hpp>
+#include <hotplace/sdk/net/http/http_request.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/net/http/http_response.hpp>
+#include <hotplace/sdk/net/http/http_router.hpp>
+#include <hotplace/sdk/net/server/network_session.hpp>
 
 namespace hotplace {
 namespace net {

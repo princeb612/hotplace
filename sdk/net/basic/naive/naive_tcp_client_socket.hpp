@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_NAIVE_NAIVETCPCLIENTSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_NAIVE_NAIVETCPCLIENTSOCKET__
 
-#include <sdk/net/basic/client_socket.hpp>
+#include <hotplace/sdk/net/basic/client_socket.hpp>
 
 namespace hotplace {
 namespace net {

@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/tstring.hpp>
-#include <sdk/odbc/basic/odbc_diagnose.hpp>
-#include <sdk/odbc/basic/odbc_query.hpp>
+#include <hotplace/sdk/base/stream/tstring.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_diagnose.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_query.hpp>
 
 namespace hotplace {
 namespace odbc {

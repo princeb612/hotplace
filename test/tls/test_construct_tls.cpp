@@ -535,10 +535,11 @@ static return_t do_test_construct_close_notify(tls_session* session, tls_directi
 
         tls_record_builder builder;
         auto record = builder.set(session).set(tls_content_type_alert).set(dir).construct().build();
-
-        *record << new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify);
-        ret = record->write(dir, bin);
-        record->release();
+        if (record) {
+            *record << new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify);
+            ret = record->write(dir, bin);
+            record->release();
+        }
     }
     __finally2 {
         std::string dirstr;

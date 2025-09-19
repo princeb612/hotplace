@@ -12,10 +12,10 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPHEADER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPHEADER__
 
+#include <hotplace/sdk/base/basic/keyvalue.hpp>
+#include <hotplace/sdk/net/http/types.hpp>
 #include <list>
 #include <map>
-#include <sdk/base/basic/keyvalue.hpp>
-#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {

@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_BASE_PATTERN_UKKONEN__
 #define __HOTPLACE_SDK_BASE_PATTERN_UKKONEN__
 
-#include <sdk/base/pattern/pattern.hpp>
+#include <hotplace/sdk/base/pattern/pattern.hpp>
 
 namespace hotplace {
 

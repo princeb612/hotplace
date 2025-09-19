@@ -1,8 +1,8 @@
 #ifndef __HOTPLACE_TEST_ENCODE__
 #define __HOTPLACE_TEST_ENCODE__
 
-#include <sdk/sdk.hpp>
-#include <test/test.hpp>
+#include <hotplace/sdk/sdk.hpp>
+#include <hotplace/test/test.hpp>
 
 enum {
     decode_b64u = 1,

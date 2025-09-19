@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_AUTH_BEARERCREDENTIALS__
 #define __HOTPLACE_SDK_NET_HTTP_AUTH_BEARERCREDENTIALS__
 
+#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <map>
-#include <sdk/base/system/critical_section.hpp>
 #include <string>
 
 namespace hotplace {

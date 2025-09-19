@@ -14,9 +14,9 @@
 #include <string.h>
 #include <time.h>
 
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/stream/types.hpp>
 #include <list>
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/stream/types.hpp>
 
 namespace hotplace {
 

@@ -18,9 +18,9 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/io/types.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/io/types.hpp>
 
 namespace hotplace {
 namespace io {

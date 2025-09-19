@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/auth/bearer_credentials.hpp>
+#include <hotplace/sdk/net/http/auth/bearer_credentials.hpp>
 
 namespace hotplace {
 namespace net {

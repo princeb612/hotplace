@@ -11,10 +11,10 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_COMPRESSION_HTTPHEADERCOMPRESSIONSTREAM__
 #define __HOTPLACE_SDK_NET_HTTP_COMPRESSION_HTTPHEADERCOMPRESSIONSTREAM__
 
-#include <sdk/net/http/hpack/hpack_dynamic_table.hpp>
-#include <sdk/net/http/hpack/hpack_encoder.hpp>
-#include <sdk/net/http/qpack/qpack_dynamic_table.hpp>
-#include <sdk/net/http/qpack/qpack_encoder.hpp>
+#include <hotplace/sdk/net/http/hpack/hpack_dynamic_table.hpp>
+#include <hotplace/sdk/net/http/hpack/hpack_encoder.hpp>
+#include <hotplace/sdk/net/http/qpack/qpack_dynamic_table.hpp>
+#include <hotplace/sdk/net/http/qpack/qpack_encoder.hpp>
 
 namespace hotplace {
 namespace net {

@@ -10,9 +10,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/net/http/auth/basic_authentication_provider.hpp>
-#include <sdk/net/http/auth/basic_credentials.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/net/http/auth/basic_authentication_provider.hpp>
+#include <hotplace/sdk/net/http/auth/basic_credentials.hpp>
 
 namespace hotplace {
 namespace net {

@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/tls/tls/tls.hpp>
-#include <sdk/net/tls/tls_advisor.hpp>
+#include <hotplace/sdk/net/tls/tls/tls.hpp>
+#include <hotplace/sdk/net/tls/tls_advisor.hpp>
 
 namespace hotplace {
 namespace net {

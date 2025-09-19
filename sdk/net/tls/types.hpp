@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TYPES__
 #define __HOTPLACE_SDK_NET_TLS_TYPES__
 
-#include <sdk/base/system/types.hpp>
-#include <sdk/net/types.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
+#include <hotplace/sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {

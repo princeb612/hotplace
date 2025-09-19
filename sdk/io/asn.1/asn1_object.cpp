@@ -11,13 +11,13 @@
  *
  */
 
-#include <sdk/io/asn.1/asn1_container.hpp>
-#include <sdk/io/asn.1/asn1_encode.hpp>
-#include <sdk/io/asn.1/asn1_object.hpp>
-#include <sdk/io/asn.1/asn1_resource.hpp>
-#include <sdk/io/asn.1/asn1_tag.hpp>
-#include <sdk/io/asn.1/asn1_visitor.hpp>
-#include <sdk/io/asn.1/template.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_container.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_tag.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/template.hpp>
 
 namespace hotplace {
 namespace io {

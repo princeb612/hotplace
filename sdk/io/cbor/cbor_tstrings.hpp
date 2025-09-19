@@ -14,7 +14,7 @@
 #ifndef __HOTPLACE_SDK_IO_CBOR_CBORTSTRINGS__
 #define __HOTPLACE_SDK_IO_CBOR_CBORTSTRINGS__
 
-#include <sdk/io/cbor/cbor_object.hpp>
+#include <hotplace/sdk/io/cbor/cbor_object.hpp>
 
 namespace hotplace {
 namespace io {

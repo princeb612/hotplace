@@ -12,16 +12,16 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLSSESSION__
 #define __HOTPLACE_SDK_NET_TLS_TLSSESSION__
 
+#include <hotplace/sdk/base/basic/keyvalue.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/semaphore.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/net/basic/trial/secure_prosumer.hpp>
+#include <hotplace/sdk/net/tls/tls_protection.hpp>
 #include <queue>
-#include <sdk/base/basic/keyvalue.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/semaphore.hpp>
-#include <sdk/base/system/types.hpp>
-#include <sdk/crypto/basic/crypto_key.hpp>
-#include <sdk/crypto/basic/types.hpp>
-#include <sdk/net/basic/trial/secure_prosumer.hpp>
-#include <sdk/net/tls/tls_protection.hpp>
 
 namespace hotplace {
 namespace net {

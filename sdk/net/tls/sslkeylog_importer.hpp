@@ -12,10 +12,10 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_SSLKEYLOGIMPORTER__
 #define __HOTPLACE_SDK_NET_TLS_SSLKEYLOGIMPORTER__
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/crypto/basic/types.hpp>
-#include <sdk/net/tls/tls_advisor.hpp>
-#include <sdk/net/tls/types.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/net/tls/tls_advisor.hpp>
+#include <hotplace/sdk/net/tls/types.hpp>
 
 namespace hotplace {
 namespace net {

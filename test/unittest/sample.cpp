@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/sdk.hpp>
-#include <test/test.hpp>
+#include <hotplace/sdk/sdk.hpp>
+#include <hotplace/test/test.hpp>
 
 test_case _test_case;
 t_shared_instance<logger> _logger;

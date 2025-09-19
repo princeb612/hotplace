@@ -485,7 +485,7 @@ void test_construct_quic() {
                               largest - range);
         };
 
-        // initial
+        // initial (PADDING)
         {
             // cf. http3.pcapng #1
             // #Frame C->S
@@ -520,7 +520,7 @@ void test_construct_quic() {
             }
         }
 
-        // handshake, 1-RTT
+        // handshake, 1-RTT (upto max_udp_payload_size)
         {
             // cf. http3.pcapng #8,9,12,13,14
             // #Frame S->C
@@ -559,7 +559,7 @@ void test_construct_quic() {
                 lambda_check_pkn(&session_client, from_client, protection_application, 30);
 
                 const char* text = "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK, PADDING]";
-                construct_quic_cli_handshake(&session_client, from_client, quic_ack_packet | quic_pad_packet, bins, text);
+                construct_quic_cli_handshake(&session_client, from_client, quic_ack_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
                 lambda_test_ready_to_ack(&session_server, protection_handshake, 20, 0);
                 lambda_test_ready_to_ack(&session_server, protection_application, 30, 0);
@@ -570,7 +570,7 @@ void test_construct_quic() {
             {
                 const char* text = "handshake [ACK, PADDING]";
                 lambda_check_pkn(&session_server, from_server, protection_handshake, 22);
-                construct_quic_ack(&session_server, from_server, quic_pad_packet, bins, text);
+                construct_quic_ack(&session_server, from_server, 0, bins, text);
                 send_packet(&session_client, from_server, bins, text);
                 lambda_test_ready_to_ack(&session_server, protection_handshake, 20, 0);
                 lambda_test_ready_to_ack(&session_server, protection_application, 30, 0);

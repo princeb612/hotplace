@@ -9,8 +9,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto/basic/openssl_prng.hpp>
-#include <sdk/net/http/auth/oauth2_credentials.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
+#include <hotplace/sdk/net/http/auth/oauth2_credentials.hpp>
 
 namespace hotplace {
 namespace net {

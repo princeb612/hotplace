@@ -11,7 +11,7 @@
  * 2023.08.20   Soo Han, Kim        fix : base64_encode source access range
  */
 
-#include <sdk/base/basic/base64.hpp>
+#include <hotplace/sdk/base/basic/base64.hpp>
 
 namespace hotplace {
 

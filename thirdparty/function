@@ -53,7 +53,7 @@ function build_openssl ()
 {
     local install_dir=${HOTPLACE_HOME}/thirdparty
 
-    if [ $OSTYPE = "msys" ]; then
+    if [[ $OSTYPE = "cygwin" || $OSTYPE = "msys" ]]; then
         # undefined reference to `strerror_r'
         ./Configure mingw64 --prefix=${install_dir} --with-rand-seed=os no-egd -d shared
     else
@@ -90,5 +90,29 @@ function build_zlib ()
     make
     make install
 
+    touch .complete
+}
+
+function build_liboqs()
+{
+    local install_dir=${HOTPLACE_HOME}/thirdparty
+
+    cmake -G 'Unix Makefiles' --install-prefix ${install_dir} -B build
+    cd build
+    make
+    make install
+    cd -
+    touch .complete
+}
+
+function build_oqsprovider()
+{
+    local install_dir=${HOTPLACE_HOME}/thirdparty
+
+    cmake -G 'Unix Makefiles' --install-prefix ${install_dir} -B build
+    cd build
+    make
+    make install
+    cd -
     touch .complete
 }

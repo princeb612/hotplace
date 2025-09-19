@@ -10,8 +10,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/http2/http2_frame.hpp>
-#include <sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/net/http/http2/http2_frame.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {

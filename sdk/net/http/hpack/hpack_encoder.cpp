@@ -8,12 +8,12 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/unittest/trace.hpp>
-#include <sdk/net/http/compression/http_dynamic_table.hpp>
-#include <sdk/net/http/hpack/hpack_encoder.hpp>
-#include <sdk/net/http/hpack/hpack_static_table.hpp>
-#include <sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/net/http/compression/http_dynamic_table.hpp>
+#include <hotplace/sdk/net/http/hpack/hpack_encoder.hpp>
+#include <hotplace/sdk/net/http/hpack/hpack_static_table.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {

@@ -25,8 +25,11 @@ declare -A oss_openssl30=([name]=openssl [url]=https://github.com/openssl/openss
 declare -A oss_openssl32=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.2.5/openssl-3.2.5.tar.gz [dir]= [build]=build_openssl [buildscript]=)
 declare -A oss_openssl33=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.3.4/openssl-3.3.4.tar.gz [dir]= [build]=build_openssl [buildscript]=)
 declare -A oss_openssl34=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.4.2/openssl-3.4.2.tar.gz [dir]= [build]=build_openssl [buildscript]=)
-declare -A oss_openssl35=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.5.2/openssl-3.5.2.tar.gz [dir]= [build]=build_openssl [buildscript]=)
+declare -A oss_openssl35=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.5.3/openssl-3.5.3.tar.gz [dir]= [build]=build_openssl [buildscript]=)
+declare -A oss_openssl36=([name]=openssl [url]=https://github.com/openssl/openssl/releases/download/openssl-3.6.0-beta1/openssl-3.6.0-beta1.tar.gz [dir]= [build]=build_openssl [buildscript]=)
 declare -A oss_jansson=([name]=jansson [url]=https://github.com/akheron/jansson/releases/download/v2.14/jansson-2.14.tar.gz [dir]=jansson-2.14 [build]=build_jansson [buildscript]=)
 declare -A oss_zlib=([name]=zlib [url]=https://www.zlib.net/zlib-1.3.1.tar.gz [dir]= [build]=build_zlib [buildscript]=)
+declare -A oss_liboqs=([name]=liboqs [url]=https://github.com/open-quantum-safe/liboqs/archive/refs/tags/0.14.0.tar.gz [dir]=liboqs-0.14.0 [build]=build_liboqs [buildscript]=)
+declare -A oss_oqsprovider=([name]=oqsprovider [url]=https://github.com/open-quantum-safe/oqs-provider/archive/refs/tags/0.10.0.tar.gz [dir]=oqs-provider-0.10.0 [build]=build_oqsprovider [buildscript]=)
 
-declare -a dependency=( oss_openssl35 oss_jansson oss_zlib )
+declare -a dependency=( oss_openssl30 oss_jansson oss_zlib oss_liboqs oss_oqsprovider )

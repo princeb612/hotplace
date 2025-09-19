@@ -14,14 +14,14 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include <hotplace/sdk/base/charset.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/stream.hpp>
+#include <hotplace/sdk/base/stream/bufferio.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/types.hpp>
 #include <iostream>
 #include <ostream>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/stream.hpp>
-#include <sdk/base/stream/bufferio.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
 
 namespace hotplace {
 class valist;

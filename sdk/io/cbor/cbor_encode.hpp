@@ -14,7 +14,7 @@
 #ifndef __HOTPLACE_SDK_IO_CBOR_CBORENCODE__
 #define __HOTPLACE_SDK_IO_CBOR_CBORENCODE__
 
-#include <sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/io/cbor/cbor.hpp>
 
 namespace hotplace {
 namespace io {

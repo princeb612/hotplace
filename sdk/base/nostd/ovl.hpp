@@ -14,9 +14,9 @@
 
 #include <algorithm>
 #include <functional>
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/nostd/range.hpp>
-#include <sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/nostd/range.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <set>
 
 namespace hotplace {

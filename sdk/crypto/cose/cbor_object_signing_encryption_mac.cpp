@@ -10,22 +10,22 @@
  *
  */
 
-#include <sdk/base/nostd/exception.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/unittest/trace.hpp>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_key.hpp>
-#include <sdk/crypto/basic/crypto_keychain.hpp>
-#include <sdk/crypto/basic/openssl_crypt.hpp>
-#include <sdk/crypto/basic/openssl_ecdh.hpp>
-#include <sdk/crypto/basic/openssl_hash.hpp>
-#include <sdk/crypto/basic/openssl_kdf.hpp>
-#include <sdk/crypto/basic/openssl_prng.hpp>
-#include <sdk/crypto/basic/openssl_sign.hpp>
-#include <sdk/crypto/cose/cbor_object_encryption.hpp>
-#include <sdk/crypto/cose/cbor_object_signing.hpp>
-#include <sdk/crypto/cose/cbor_object_signing_encryption.hpp>
-#include <sdk/crypto/cose/cose_composer.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
+#include <hotplace/sdk/crypto/cose/cbor_object_encryption.hpp>
+#include <hotplace/sdk/crypto/cose/cbor_object_signing.hpp>
+#include <hotplace/sdk/crypto/cose/cbor_object_signing_encryption.hpp>
+#include <hotplace/sdk/crypto/cose/cose_composer.hpp>
 #include <set>
 
 namespace hotplace {

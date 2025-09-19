@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_OPENSSL_OPENSSLTLS__
 #define __HOTPLACE_SDK_NET_BASIC_OPENSSL_OPENSSLTLS__
 
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/net/basic/openssl/types.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/net/basic/openssl/types.hpp>
 
 namespace hotplace {
 namespace net {

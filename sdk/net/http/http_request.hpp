@@ -12,10 +12,10 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPREQUEST__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPREQUEST__
 
-#include <sdk/net/http/http_header.hpp>  // http_header
-#include <sdk/net/http/http_router.hpp>  // http_router
-#include <sdk/net/http/http_uri.hpp>     // http_uri
-#include <sdk/net/http/types.hpp>
+#include <hotplace/sdk/net/http/http_header.hpp>  // http_header
+#include <hotplace/sdk/net/http/http_router.hpp>  // http_router
+#include <hotplace/sdk/net/http/http_uri.hpp>     // http_uri
+#include <hotplace/sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {

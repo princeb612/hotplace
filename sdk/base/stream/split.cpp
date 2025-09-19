@@ -10,10 +10,10 @@
 
 #include <stdio.h>
 
-#include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/stream/split.hpp>
-#include <sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/stream/split.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
 
 namespace hotplace {
 namespace io {

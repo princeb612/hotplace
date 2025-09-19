@@ -8,16 +8,16 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/naive/naive_tcp_client_socket.hpp>
-#include <sdk/net/basic/naive/naive_udp_client_socket.hpp>
-#include <sdk/net/basic/openssl/openssl_dtls_client_socket.hpp>
-#include <sdk/net/basic/openssl/openssl_tls_client_socket.hpp>
-#include <sdk/net/http/http_client.hpp>
-#include <sdk/net/http/http_protocol.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_response.hpp>
-#include <sdk/net/server/network_protocol.hpp>
-#include <sdk/net/server/network_stream.hpp>
+#include <hotplace/sdk/net/basic/naive/naive_tcp_client_socket.hpp>
+#include <hotplace/sdk/net/basic/naive/naive_udp_client_socket.hpp>
+#include <hotplace/sdk/net/basic/openssl/openssl_dtls_client_socket.hpp>
+#include <hotplace/sdk/net/basic/openssl/openssl_tls_client_socket.hpp>
+#include <hotplace/sdk/net/http/http_client.hpp>
+#include <hotplace/sdk/net/http/http_protocol.hpp>
+#include <hotplace/sdk/net/http/http_request.hpp>
+#include <hotplace/sdk/net/http/http_response.hpp>
+#include <hotplace/sdk/net/server/network_protocol.hpp>
+#include <hotplace/sdk/net/server/network_stream.hpp>
 
 namespace hotplace {
 namespace net {

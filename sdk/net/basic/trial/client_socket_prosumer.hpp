@@ -11,13 +11,13 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_CLIENTSOCKETPROSUMER__
 #define __HOTPLACE_SDK_NET_BASIC_TRIAL_CLIENTSOCKETPROSUMER__
 
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/semaphore.hpp>
+#include <hotplace/sdk/io/system/multiplexer.hpp>
+#include <hotplace/sdk/net/basic/client_socket.hpp>
+#include <hotplace/sdk/net/basic/trial/types.hpp>
 #include <queue>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/semaphore.hpp>
-#include <sdk/io/system/multiplexer.hpp>
-#include <sdk/net/basic/client_socket.hpp>
-#include <sdk/net/basic/trial/types.hpp>
 
 namespace hotplace {
 namespace net {

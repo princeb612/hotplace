@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/system/windows/sdk.hpp>
+#include <hotplace/sdk/base/system/windows/sdk.hpp>
 // strsafe.h after tchar.h
 #include <strsafe.h>
 

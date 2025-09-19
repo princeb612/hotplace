@@ -25,9 +25,9 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_QUICFRAMEBUILDER__
 #define __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_QUICFRAMEBUILDER__
 
-#include <sdk/io/basic/payload.hpp>
-#include <sdk/net/tls/quic/types.hpp>
-#include <sdk/net/tls/types.hpp>
+#include <hotplace/sdk/io/basic/payload.hpp>
+#include <hotplace/sdk/net/tls/quic/types.hpp>
+#include <hotplace/sdk/net/tls/types.hpp>
 
 namespace hotplace {
 namespace net {

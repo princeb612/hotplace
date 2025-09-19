@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTSIGNINGENCRYPTION__
 #define __HOTPLACE_SDK_CRYPTO_COSE_CBOROBJECTSIGNINGENCRYPTION__
 
-#include <sdk/crypto/cose/types.hpp>
-#include <sdk/crypto/types.hpp>
+#include <hotplace/sdk/crypto/cose/types.hpp>
+#include <hotplace/sdk/crypto/types.hpp>
 
 namespace hotplace {
 namespace crypto {

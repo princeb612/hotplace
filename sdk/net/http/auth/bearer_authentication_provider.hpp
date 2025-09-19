@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_AUTH_BEARERAUTHENTICATIONPROVIDER__
 #define __HOTPLACE_SDK_NET_HTTP_AUTH_BEARERAUTHENTICATIONPROVIDER__
 
-#include <sdk/net/http/http_authentication_provider.hpp>
+#include <hotplace/sdk/net/http/http_authentication_provider.hpp>
 
 namespace hotplace {
 namespace net {

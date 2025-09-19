@@ -10,5 +10,5 @@
 
 #ifndef __HOTPLACE_SDK_BASE_CPP14__
 #define __HOTPLACE_SDK_BASE_CPP14__
-#include <sdk/base/basic/constexpr_obfuscate.hpp>
+#include <hotplace/sdk/base/basic/constexpr_obfuscate.hpp>
 #endif

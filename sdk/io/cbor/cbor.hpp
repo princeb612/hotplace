@@ -43,10 +43,10 @@
 #define __HOTPLACE_SDK_IO_CBOR_CBOR__
 
 #include <deque>
-#include <sdk/base/stream/printf.hpp>
-#include <sdk/base/system/endian.hpp>
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/io/system/types.hpp>
+#include <hotplace/sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/system/endian.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/io/system/types.hpp>
 
 namespace hotplace {
 namespace io {

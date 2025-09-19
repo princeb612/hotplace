@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/string/string.hpp>
 
 namespace hotplace {
 

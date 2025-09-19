@@ -15,8 +15,8 @@
 #ifndef __HOTPLACE_SDK_ODBC_BASIC_ODBCCONNECTOR__
 #define __HOTPLACE_SDK_ODBC_BASIC_ODBCCONNECTOR__
 
-#include <sdk/base.hpp>
-#include <sdk/odbc/types.hpp>
+#include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/odbc/types.hpp>
 
 namespace hotplace {
 namespace odbc {

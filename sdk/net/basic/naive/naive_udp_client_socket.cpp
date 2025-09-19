@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/naive/naive_udp_client_socket.hpp>
+#include <hotplace/sdk/net/basic/naive/naive_udp_client_socket.hpp>
 
 namespace hotplace {
 namespace net {

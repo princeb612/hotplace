@@ -12,17 +12,17 @@
 #ifndef __HOTPLACE_SDK_BASE_UNITTEST_LOGGER__
 #define __HOTPLACE_SDK_BASE_UNITTEST_LOGGER__
 
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/base/basic/console_color.hpp>
-#include <sdk/base/basic/keyvalue.hpp>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/base/system/thread.hpp>
-#include <sdk/base/types.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/basic/console_color.hpp>
+#include <hotplace/sdk/base/basic/keyvalue.hpp>
+#include <hotplace/sdk/base/charset.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/base/system/thread.hpp>
+#include <hotplace/sdk/base/types.hpp>
 
 namespace hotplace {
 

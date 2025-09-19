@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/nostd/exception.hpp>
-#include <sdk/odbc/basic/odbc_field.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_field.hpp>
 
 namespace hotplace {
 namespace odbc {

@@ -15,12 +15,12 @@
 
 #include <math.h>
 
-#include <sdk/base/basic/ieee754.hpp>
-#include <sdk/base/inline.hpp>
-#include <sdk/base/template.hpp>
-#include <sdk/io/asn.1/asn1.hpp>
-#include <sdk/io/asn.1/types.hpp>
-#include <sdk/io/basic/parser.hpp>
+#include <hotplace/sdk/base/basic/ieee754.hpp>
+#include <hotplace/sdk/base/inline.hpp>
+#include <hotplace/sdk/base/template.hpp>
+#include <hotplace/sdk/io/asn.1/asn1.hpp>
+#include <hotplace/sdk/io/asn.1/types.hpp>
+#include <hotplace/sdk/io/basic/parser.hpp>
 
 namespace hotplace {
 namespace io {

@@ -12,9 +12,9 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_AUTH_DIGESTCREDENTIALS__
 #define __HOTPLACE_SDK_NET_HTTP_AUTH_DIGESTCREDENTIALS__
 
+#include <hotplace/sdk/base/basic/keyvalue.hpp>
+#include <hotplace/sdk/net/types.hpp>
 #include <map>
-#include <sdk/base/basic/keyvalue.hpp>
-#include <sdk/net/types.hpp>
 #include <string>
 
 namespace hotplace {

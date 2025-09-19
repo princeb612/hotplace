@@ -14,7 +14,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <sdk/io/stream/stream.hpp>
+#include <hotplace/sdk/io/stream/stream.hpp>
 #if defined __linux__
 #include <sys/file.h>  // flock
 #include <sys/mman.h>  // mmap

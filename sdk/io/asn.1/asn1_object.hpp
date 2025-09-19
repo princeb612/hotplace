@@ -13,9 +13,9 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_ASN1OBJECT__
 #define __HOTPLACE_SDK_IO_ASN1_ASN1OBJECT__
 
-#include <sdk/base/basic/variant.hpp>
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/io/asn.1/types.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/io/asn.1/types.hpp>
 
 namespace hotplace {
 namespace io {

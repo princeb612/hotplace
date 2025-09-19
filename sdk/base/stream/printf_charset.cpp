@@ -40,8 +40,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <sdk/base/basic/ieee754.hpp>
-#include <sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/basic/ieee754.hpp>
+#include <hotplace/sdk/base/stream/printf.hpp>
 
 namespace hotplace {
 

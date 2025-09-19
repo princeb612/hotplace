@@ -14,7 +14,7 @@
 
 #include <algorithm>
 #include <functional>
-#include <sdk/sdk.hpp>
+#include <hotplace/sdk/sdk.hpp>
 
 using namespace hotplace;
 using namespace hotplace::crypto;

@@ -1,8 +1,8 @@
 #ifndef __HOTPLACE_TEST_SIGN__
 #define __HOTPLACE_TEST_SIGN__
 
-#include <sdk/sdk.hpp>
-#include <test/test.hpp>
+#include <hotplace/sdk/sdk.hpp>
+#include <hotplace/test/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {
     bool dump_keys;

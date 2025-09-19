@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2PROTOCOL__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2PROTOCOL__
 
-#include <sdk/net/server/network_protocol.hpp>  // network_protocol
+#include <hotplace/sdk/net/server/network_protocol.hpp>  // network_protocol
 
 namespace hotplace {
 namespace net {

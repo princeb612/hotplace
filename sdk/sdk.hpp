@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_SDK__
 #define __HOTPLACE_SDK_SDK__
 
-#include <sdk/base.hpp>
-#include <sdk/crypto.hpp>
-#include <sdk/io.hpp>
-#include <sdk/net.hpp>
+#include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/crypto.hpp>
+#include <hotplace/sdk/io.hpp>
+#include <hotplace/sdk/net.hpp>
 
 #endif

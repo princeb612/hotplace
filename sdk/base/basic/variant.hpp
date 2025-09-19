@@ -13,9 +13,9 @@
 
 #include <string.h>
 
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/system/datetime.hpp>
-#include <sdk/base/system/types.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/system/datetime.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
 
 namespace hotplace {
 

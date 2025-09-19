@@ -14,11 +14,11 @@
 
 #include <deque>
 #include <functional>
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/nostd/range.hpp>
+#include <hotplace/sdk/base/nostd/tree.hpp>
+#include <hotplace/sdk/base/pattern/trie.hpp>
 #include <map>
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/nostd/range.hpp>
-#include <sdk/base/nostd/tree.hpp>
-#include <sdk/base/pattern/trie.hpp>
 
 #define SWITCH_HUFFMANCODING_TRIE 1
 

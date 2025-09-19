@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/base16.hpp>
-#include <sdk/base/stream/tstring.hpp>
-#include <sdk/base/system/datetime.hpp>
-#include <sdk/odbc/basic/odbc_field.hpp>
+#include <hotplace/sdk/base/basic/base16.hpp>
+#include <hotplace/sdk/base/stream/tstring.hpp>
+#include <hotplace/sdk/base/system/datetime.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_field.hpp>
 
 namespace hotplace {
 namespace odbc {

@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/nostd/exception.hpp>
-#include <sdk/io/stream/string.hpp>
-#include <sdk/odbc/basic/odbc_diagnose.hpp>
-#include <sdk/odbc/basic/odbc_query.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/io/stream/string.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_diagnose.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_query.hpp>
 
 namespace hotplace {
 namespace odbc {

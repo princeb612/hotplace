@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_TYPES__
 #define __HOTPLACE_SDK_IO_SYSTEM_TYPES__
 
-#include <sdk/base/system/types.hpp>
-#include <sdk/io/types.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
+#include <hotplace/sdk/io/types.hpp>
 
 namespace hotplace {
 namespace io {

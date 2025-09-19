@@ -12,9 +12,9 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_DTLSRECORDARRANGE__
 #define __HOTPLACE_SDK_NET_TLS_DTLSRECORDARRANGE__
 
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/net/tls/types.hpp>
 #include <queue>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/net/tls/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -31,6 +31,11 @@ namespace net {
  *            record epoch:0 seq:0
  *            record epoch:0 seq:1
  *            record epoch:0 seq:2
+ * @example
+ *          tls_session session(session_type_dtls);
+ *          auto& arrange = session.get_dtls_record_arrange();
+ *          arrange.produce(dgram, dgramsize);
+ *          arrange.consume(epoch, seq, packet);  // reorder
  */
 class dtls_record_arrange {
     friend class tls_session;

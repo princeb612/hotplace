@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_TLSCOMPOSER__
 #define __HOTPLACE_SDK_NET_BASIC_TRIAL_TLSCOMPOSER__
 
-#include <sdk/net/basic/trial/client_socket_prosumer.hpp>
-#include <sdk/net/basic/trial/types.hpp>
-#include <sdk/net/tls/tls/types.hpp>
+#include <hotplace/sdk/net/basic/trial/client_socket_prosumer.hpp>
+#include <hotplace/sdk/net/basic/trial/types.hpp>
+#include <hotplace/sdk/net/tls/tls/types.hpp>
 
 namespace hotplace {
 namespace net {

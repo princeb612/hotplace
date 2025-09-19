@@ -10,10 +10,10 @@
 
 #include <ctype.h>
 
-#include <sdk/base/basic/valist.hpp>
-#include <sdk/base/basic/variant.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/stream/printf.hpp>
 
 namespace hotplace {
 

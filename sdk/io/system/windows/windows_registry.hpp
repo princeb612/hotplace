@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_REGISTRY__
 #define __HOTPLACE_SDK_IO_SYSTEM_WINDOWS_REGISTRY__
 
-#include <sdk/base/callback.hpp>
-#include <sdk/io/system/types.hpp>
+#include <hotplace/sdk/base/callback.hpp>
+#include <hotplace/sdk/io/system/types.hpp>
 
 namespace hotplace {
 namespace io {

@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_ENDIAN__
 #define __HOTPLACE_SDK_BASE_SYSTEM_ENDIAN__
 
-#include <sdk/base/types.hpp>
+#include <hotplace/sdk/base/types.hpp>
 
 namespace hotplace {
 

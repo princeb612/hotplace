@@ -8,15 +8,15 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/base/basic/valist.hpp>
-#include <sdk/base/pattern/aho_corasick.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/unittest/trace.hpp>
-#include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/net/basic/openssl/openssl_tls_context.hpp>
-#include <sdk/net/basic/openssl/sdk.hpp>
-#include <sdk/net/tls/sslkeylog_exporter.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/pattern/aho_corasick.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
+#include <hotplace/sdk/net/basic/openssl/openssl_tls_context.hpp>
+#include <hotplace/sdk/net/basic/openssl/sdk.hpp>
+#include <hotplace/sdk/net/tls/sslkeylog_exporter.hpp>
 
 namespace hotplace {
 namespace net {

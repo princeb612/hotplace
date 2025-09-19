@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_REFERENCECOUNTER__
 #define __HOTPLACE_SDK_BASE_SYSTEM_REFERENCECOUNTER__
 
-#include <sdk/base/system/atomic.hpp>
+#include <hotplace/sdk/base/system/atomic.hpp>
 
 namespace hotplace {
 

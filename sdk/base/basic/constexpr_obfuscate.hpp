@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_CONSTEXPROBFUSCATE__
 #define __HOTPLACE_SDK_BASE_BASIC_CONSTEXPROBFUSCATE__
 
-#include <sdk/base/types.hpp>
+#include <hotplace/sdk/base/types.hpp>
 
 namespace hotplace {
 

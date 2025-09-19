@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_BASE_CALLBACK__
 #define __HOTPLACE_SDK_BASE_CALLBACK__
 
-#include <sdk/base/error.hpp>
-#include <sdk/base/types.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/types.hpp>
 
 namespace hotplace {
 

@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 
-#include <sdk/sdk.hpp>
-#include <test/test.hpp>
+#include <hotplace/sdk/sdk.hpp>
+#include <hotplace/test/test.hpp>
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

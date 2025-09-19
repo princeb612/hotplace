@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2FRAMEPRIORITY__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP2_HTTP2FRAMEPRIORITY__
 
-#include <sdk/net/http/http2/http2_frame.hpp>
+#include <hotplace/sdk/net/http/http2/http2_frame.hpp>
 
 namespace hotplace {
 namespace net {

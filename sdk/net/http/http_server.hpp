@@ -12,13 +12,13 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 
-#include <sdk/net/basic/server_socket_adapter.hpp>
-#include <sdk/net/basic/util/ipaddr_acl.hpp>      // ipaddr_acl
-#include <sdk/net/http/http2/http2_protocol.hpp>  // http2_protocol
-#include <sdk/net/http/http_protocol.hpp>         // http_protocol
-#include <sdk/net/http/http_router.hpp>           // http_router
-#include <sdk/net/http/types.hpp>                 //
-#include <sdk/net/server/network_server.hpp>      // network_server
+#include <hotplace/sdk/net/basic/server_socket_adapter.hpp>
+#include <hotplace/sdk/net/basic/util/ipaddr_acl.hpp>      // ipaddr_acl
+#include <hotplace/sdk/net/http/http2/http2_protocol.hpp>  // http2_protocol
+#include <hotplace/sdk/net/http/http_protocol.hpp>         // http_protocol
+#include <hotplace/sdk/net/http/http_router.hpp>           // http_router
+#include <hotplace/sdk/net/http/types.hpp>                 //
+#include <hotplace/sdk/net/server/network_server.hpp>      // network_server
 
 namespace hotplace {
 namespace net {

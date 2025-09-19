@@ -8,19 +8,19 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/base/unittest/trace.hpp>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_hash.hpp>
-#include <sdk/crypto/basic/evp_key.hpp>
-#include <sdk/crypto/basic/openssl_hash.hpp>
-#include <sdk/crypto/basic/transcript_hash.hpp>
-#include <sdk/net/tls/tls_advisor.hpp>
-#include <sdk/net/tls/tls_protection.hpp>
-#include <sdk/net/tls/tls_session.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_hash.hpp>
+#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/transcript_hash.hpp>
+#include <hotplace/sdk/net/tls/tls_advisor.hpp>
+#include <hotplace/sdk/net/tls/tls_protection.hpp>
+#include <hotplace/sdk/net/tls/tls_session.hpp>
 // debug
-#include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {
 namespace net {

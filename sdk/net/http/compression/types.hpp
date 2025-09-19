@@ -12,8 +12,8 @@
 #define __HOTPLACE_SDK_NET_HTTP_COMPRESSION_TYPES__
 
 #include <functional>
+#include <hotplace/sdk/net/http/types.hpp>
 #include <queue>
-#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {

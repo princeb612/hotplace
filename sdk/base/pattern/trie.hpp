@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_PATTERN_TRIE__
 #define __HOTPLACE_SDK_BASE_PATTERN_TRIE__
 
-#include <sdk/base/pattern/pattern.hpp>
+#include <hotplace/sdk/base/pattern/pattern.hpp>
 
 namespace hotplace {
 

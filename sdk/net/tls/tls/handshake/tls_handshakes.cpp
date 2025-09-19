@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/tls/tls/handshake/tls_handshake_builder.hpp>
-#include <sdk/net/tls/tls/handshake/tls_handshakes.hpp>
-#include <sdk/net/tls/tls_session.hpp>
+#include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_builder.hpp>
+#include <hotplace/sdk/net/tls/tls/handshake/tls_handshakes.hpp>
+#include <hotplace/sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {

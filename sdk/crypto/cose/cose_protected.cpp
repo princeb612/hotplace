@@ -10,13 +10,13 @@
  *
  */
 
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_keychain.hpp>
-#include <sdk/crypto/basic/openssl_crypt.hpp>
-#include <sdk/crypto/basic/openssl_hash.hpp>
-#include <sdk/crypto/basic/openssl_sign.hpp>
-#include <sdk/crypto/cose/cbor_object_signing.hpp>
-#include <sdk/crypto/cose/cose_composer.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
+#include <hotplace/sdk/crypto/cose/cbor_object_signing.hpp>
+#include <hotplace/sdk/crypto/cose/cose_composer.hpp>
 
 namespace hotplace {
 namespace crypto {

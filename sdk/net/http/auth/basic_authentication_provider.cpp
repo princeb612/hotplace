@@ -10,13 +10,13 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/keyvalue.hpp>
-#include <sdk/base/string/string.hpp>
-#include <sdk/net/http/auth/basic_authentication_provider.hpp>
-#include <sdk/net/http/http_authentication_resolver.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_resource.hpp>
-#include <sdk/net/http/http_response.hpp>
+#include <hotplace/sdk/base/basic/keyvalue.hpp>
+#include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/net/http/auth/basic_authentication_provider.hpp>
+#include <hotplace/sdk/net/http/http_authentication_resolver.hpp>
+#include <hotplace/sdk/net/http/http_request.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/net/http/http_response.hpp>
 
 namespace hotplace {
 namespace net {

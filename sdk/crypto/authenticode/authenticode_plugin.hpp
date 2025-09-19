@@ -16,8 +16,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_AUTHENTICODEPLUGIN__
 #define __HOTPLACE_SDK_CRYPTO_AUTHENTICODE_AUTHENTICODEPLUGIN__
 
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/crypto/authenticode/types.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/crypto/authenticode/types.hpp>
 
 namespace hotplace {
 namespace crypto {

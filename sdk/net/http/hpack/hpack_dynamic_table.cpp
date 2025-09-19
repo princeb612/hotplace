@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/net/http/hpack/hpack_dynamic_table.hpp>
-#include <sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/net/http/hpack/hpack_dynamic_table.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {

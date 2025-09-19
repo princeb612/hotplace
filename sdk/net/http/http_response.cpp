@@ -10,20 +10,20 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/unittest/trace.hpp>
-#include <sdk/io/basic/zlib.hpp>
-#include <sdk/io/string/string.hpp>
-#include <sdk/net/http/hpack/hpack_dynamic_table.hpp>
-#include <sdk/net/http/http2/http2_frame_alt_svc.hpp>
-#include <sdk/net/http/http2/http2_frame_data.hpp>
-#include <sdk/net/http/http2/http2_frame_headers.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_resource.hpp>
-#include <sdk/net/http/http_response.hpp>
-#include <sdk/net/http/http_server.hpp>
-#include <sdk/net/server/network_session.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/io/basic/zlib.hpp>
+#include <hotplace/sdk/io/string/string.hpp>
+#include <hotplace/sdk/net/http/hpack/hpack_dynamic_table.hpp>
+#include <hotplace/sdk/net/http/http2/http2_frame_alt_svc.hpp>
+#include <hotplace/sdk/net/http/http2/http2_frame_data.hpp>
+#include <hotplace/sdk/net/http/http2/http2_frame_headers.hpp>
+#include <hotplace/sdk/net/http/http_request.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/net/http/http_response.hpp>
+#include <hotplace/sdk/net/http/http_server.hpp>
+#include <hotplace/sdk/net/server/network_session.hpp>
 
 namespace hotplace {
 namespace net {

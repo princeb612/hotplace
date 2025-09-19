@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_QUICFRAMESTREAM__
 #define __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_QUICFRAMESTREAM__
 
-#include <sdk/net/http/http3/http3_frames.hpp>
-#include <sdk/net/tls/quic/frame/quic_frame.hpp>
+#include <hotplace/sdk/net/http/http3/http3_frames.hpp>
+#include <hotplace/sdk/net/tls/quic/frame/quic_frame.hpp>
 
 namespace hotplace {
 namespace net {

@@ -9,8 +9,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto/basic/hmac_otp.hpp>
-#include <sdk/crypto/basic/time_otp.hpp>
+#include <hotplace/sdk/crypto/basic/hmac_otp.hpp>
+#include <hotplace/sdk/crypto/basic/time_otp.hpp>
 
 namespace hotplace {
 namespace crypto {

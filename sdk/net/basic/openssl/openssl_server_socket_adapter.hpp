@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_OPENSSL_OPENSSLSERVERSOCKETADAPTER__
 #define __HOTPLACE_SDK_NET_BASIC_OPENSSL_OPENSSLSERVERSOCKETADAPTER__
 
-#include <sdk/net/basic/server_socket_adapter.hpp>
-#include <sdk/net/basic/types.hpp>
+#include <hotplace/sdk/net/basic/server_socket_adapter.hpp>
+#include <hotplace/sdk/net/basic/types.hpp>
 
 namespace hotplace {
 namespace net {

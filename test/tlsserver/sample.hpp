@@ -1,8 +1,8 @@
 #ifndef __HOTPLACE_TEST_TLSSERVER__
 #define __HOTPLACE_TEST_TLSSERVER__
 
-#include <sdk/sdk.hpp>
-#include <test/test.hpp>
+#include <hotplace/sdk/sdk.hpp>
+#include <hotplace/test/test.hpp>
 
 enum option_flag_t {
     option_flag_allow_tls13 = (1 << 0),

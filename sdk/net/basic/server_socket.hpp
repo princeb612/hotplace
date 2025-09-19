@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_SERVERSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_SERVERSOCKET__
 
-#include <sdk/net/basic/basic_socket.hpp>
+#include <hotplace/sdk/net/basic/basic_socket.hpp>
 
 namespace hotplace {
 namespace net {

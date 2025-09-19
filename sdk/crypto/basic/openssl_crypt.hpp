@@ -15,8 +15,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_BASIC_OPENSSLCRYPT__
 #define __HOTPLACE_SDK_CRYPTO_BASIC_OPENSSLCRYPT__
 
-#include <sdk/crypto/basic/types.hpp>
-#include <sdk/crypto/crypto.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/crypto/crypto.hpp>
 
 namespace hotplace {
 namespace crypto {

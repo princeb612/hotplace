@@ -10,10 +10,10 @@
 
 #include <math.h>
 
-#include <sdk/net/http/compression/http_huffman_coding.hpp>
-#include <sdk/net/http/http_resource.hpp>
-#include <sdk/net/http/qpack/qpack_encoder.hpp>
-#include <sdk/net/http/qpack/qpack_static_table.hpp>
+#include <hotplace/sdk/net/http/compression/http_huffman_coding.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/net/http/qpack/qpack_encoder.hpp>
+#include <hotplace/sdk/net/http/qpack/qpack_static_table.hpp>
 
 namespace hotplace {
 namespace net {

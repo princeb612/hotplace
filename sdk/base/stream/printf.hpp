@@ -28,8 +28,8 @@
 #ifndef __HOTPLACE_SDK_BASE_STREAM_PRINTF__
 #define __HOTPLACE_SDK_BASE_STREAM_PRINTF__
 
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/basic/valist.hpp>
 #include <string>
 
 namespace hotplace {

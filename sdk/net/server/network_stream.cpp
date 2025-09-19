@@ -8,12 +8,12 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/dump_memory.hpp>
-#include <sdk/base/nostd/list.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/unittest/trace.hpp>
-#include <sdk/net/server/network_protocol.hpp>
-#include <sdk/net/server/network_stream.hpp>
+#include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/list.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/net/server/network_protocol.hpp>
+#include <hotplace/sdk/net/server/network_stream.hpp>
 
 namespace hotplace {
 namespace net {

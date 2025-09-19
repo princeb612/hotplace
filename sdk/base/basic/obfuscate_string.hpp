@@ -16,7 +16,7 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_OBFUSCATESTRING__
 #define __HOTPLACE_SDK_BASE_BASIC_OBFUSCATESTRING__
 
-#include <sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <string>
 
 namespace hotplace {

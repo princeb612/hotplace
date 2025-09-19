@@ -10,9 +10,9 @@
 
 #include <string.h>
 
+#include <hotplace/sdk/base/pattern/kmp.hpp>
+#include <hotplace/sdk/base/string/string.hpp>
 #include <list>
-#include <sdk/base/pattern/kmp.hpp>
-#include <sdk/base/string/string.hpp>
 #include <string>
 
 namespace hotplace {

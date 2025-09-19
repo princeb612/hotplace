@@ -12,16 +12,16 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_TYPES__
 #define __HOTPLACE_SDK_CRYPTO_COSE_TYPES__
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/crypto/basic/crypto_key.hpp>
-#include <sdk/crypto/types.hpp>
-#include <sdk/io/cbor/cbor.hpp>
-#include <sdk/io/cbor/cbor_array.hpp>
-#include <sdk/io/cbor/cbor_data.hpp>
-#include <sdk/io/cbor/cbor_encode.hpp>
-#include <sdk/io/cbor/cbor_map.hpp>
-#include <sdk/io/cbor/cbor_publisher.hpp>
-#include <sdk/io/cbor/cbor_reader.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/types.hpp>
+#include <hotplace/sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/io/cbor/cbor_array.hpp>
+#include <hotplace/sdk/io/cbor/cbor_data.hpp>
+#include <hotplace/sdk/io/cbor/cbor_encode.hpp>
+#include <hotplace/sdk/io/cbor/cbor_map.hpp>
+#include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
+#include <hotplace/sdk/io/cbor/cbor_reader.hpp>
 
 namespace hotplace {
 namespace crypto {

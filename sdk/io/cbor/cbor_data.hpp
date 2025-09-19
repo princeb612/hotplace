@@ -14,8 +14,8 @@
 #ifndef __HOTPLACE_SDK_IO_CBOR_CBORDATA__
 #define __HOTPLACE_SDK_IO_CBOR_CBORDATA__
 
-#include <sdk/base/basic/ieee754.hpp>
-#include <sdk/io/cbor/cbor_object.hpp>
+#include <hotplace/sdk/base/basic/ieee754.hpp>
+#include <hotplace/sdk/io/cbor/cbor_object.hpp>
 
 namespace hotplace {
 namespace io {

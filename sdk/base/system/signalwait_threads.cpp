@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/nostd/exception.hpp>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/datetime.hpp>
-#include <sdk/base/system/signalwait_threads.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/datetime.hpp>
+#include <hotplace/sdk/base/system/signalwait_threads.hpp>
 
 namespace hotplace {
 

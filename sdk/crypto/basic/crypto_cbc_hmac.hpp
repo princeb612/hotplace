@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOCBCHMAC__
 #define __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOCBCHMAC__
 
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/crypto/basic/types.hpp>
-#include <sdk/crypto/crypto.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/crypto/crypto.hpp>
 
 namespace hotplace {
 namespace crypto {

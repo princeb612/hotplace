@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_CRYPTO__
 #define __HOTPLACE_SDK_CRYPTO_CRYPTO__
 
-#include <sdk/crypto/types.hpp>
+#include <hotplace/sdk/crypto/types.hpp>
 
 namespace hotplace {
 namespace crypto {

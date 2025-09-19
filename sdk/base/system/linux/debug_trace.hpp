@@ -13,7 +13,7 @@
 
 #include <pthread.h>
 
-#include <sdk/base/system/thread.hpp>
+#include <hotplace/sdk/base/system/thread.hpp>
 
 namespace hotplace {
 

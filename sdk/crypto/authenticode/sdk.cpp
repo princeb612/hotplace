@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto/authenticode/sdk.hpp>
+#include <hotplace/sdk/crypto/authenticode/sdk.hpp>
 
 namespace hotplace {
 namespace crypto {

@@ -11,12 +11,12 @@
 #ifndef __HOTPLACE_SDK_ODBC__
 #define __HOTPLACE_SDK_ODBC__
 
-#include <sdk/base.hpp>
-#include <sdk/odbc/basic/odbc_connector.hpp>
-#include <sdk/odbc/basic/odbc_diagnose.hpp>
-#include <sdk/odbc/basic/odbc_field.hpp>
-#include <sdk/odbc/basic/odbc_query.hpp>
-#include <sdk/odbc/basic/odbc_record.hpp>
-#include <sdk/odbc/types.hpp>
+#include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_connector.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_diagnose.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_field.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_query.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_record.hpp>
+#include <hotplace/sdk/odbc/types.hpp>
 
 #endif

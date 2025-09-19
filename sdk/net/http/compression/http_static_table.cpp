@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/compression/http_static_table.hpp>
-#include <sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/net/http/compression/http_static_table.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {

@@ -13,8 +13,8 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_TYPES__
 #define __HOTPLACE_SDK_NET_BASIC_TRIAL_TYPES__
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/net/tls/types.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/net/tls/types.hpp>
 
 namespace hotplace {
 namespace net {

@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_STREAM_SPLIT__
 #define __HOTPLACE_SDK_BASE_STREAM_SPLIT__
 
-#include <sdk/base/stream/types.hpp>
+#include <hotplace/sdk/base/stream/types.hpp>
 
 namespace hotplace {
 namespace io {

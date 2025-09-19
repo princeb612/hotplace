@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALUDPCLIENTSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALUDPCLIENTSOCKET__
 
-#include <sdk/net/basic/trial/client_socket_prosumer.hpp>
+#include <hotplace/sdk/net/basic/trial/client_socket_prosumer.hpp>
 
 namespace hotplace {
 namespace net {

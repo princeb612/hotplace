@@ -12,15 +12,15 @@
 #define __HOTPLACE_SDK_IO_BASIC_PAYLOAD__
 
 #include <functional>
+#include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/nostd/integer.hpp>
+#include <hotplace/sdk/base/system/endian.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/base/template.hpp>
+#include <hotplace/sdk/io/basic/types.hpp>
+#include <hotplace/sdk/io/system/types.hpp>
 #include <list>
 #include <map>
-#include <sdk/base/basic/variant.hpp>
-#include <sdk/base/nostd/integer.hpp>
-#include <sdk/base/system/endian.hpp>
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/base/template.hpp>
-#include <sdk/io/basic/types.hpp>
-#include <sdk/io/system/types.hpp>
 #include <set>
 
 namespace hotplace {

@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/naive/naive_tcp_server_socket.hpp>
-#include <sdk/net/basic/trial/trial_server_socket_adapter.hpp>
-#include <sdk/net/basic/trial/trial_tls_server_socket.hpp>
-#include <sdk/net/tls/sdk.hpp>
+#include <hotplace/sdk/net/basic/naive/naive_tcp_server_socket.hpp>
+#include <hotplace/sdk/net/basic/trial/trial_server_socket_adapter.hpp>
+#include <hotplace/sdk/net/basic/trial/trial_tls_server_socket.hpp>
+#include <hotplace/sdk/net/tls/sdk.hpp>
 
 namespace hotplace {
 namespace net {

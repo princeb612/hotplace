@@ -14,8 +14,8 @@
 #include <string.h>
 
 #include <functional>
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/base/nostd/ovl.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/nostd/ovl.hpp>
 
 namespace hotplace {
 

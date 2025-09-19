@@ -12,10 +12,10 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_COSECOUNTERSIGN__
 #define __HOTPLACE_SDK_CRYPTO_COSE_COSECOUNTERSIGN__
 
-#include <sdk/crypto/basic/types.hpp>
-#include <sdk/crypto/cose/cose_recipient.hpp>
-#include <sdk/crypto/cose/types.hpp>
-#include <sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/crypto/cose/cose_recipient.hpp>
+#include <hotplace/sdk/crypto/cose/types.hpp>
+#include <hotplace/sdk/io/cbor/cbor.hpp>
 
 namespace hotplace {
 namespace crypto {

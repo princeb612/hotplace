@@ -9,9 +9,9 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORD__
 #define __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORD__
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/types.hpp>
-#include <sdk/net/tls/tls/tls.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
+#include <hotplace/sdk/net/tls/tls/tls.hpp>
 
 namespace hotplace {
 namespace net {

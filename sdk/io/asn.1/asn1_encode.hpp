@@ -13,8 +13,8 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_ASN1ENCODE__
 #define __HOTPLACE_SDK_IO_ASN1_ASN1ENCODE__
 
-#include <sdk/base/basic/variant.hpp>
-#include <sdk/io/asn.1/types.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/io/asn.1/types.hpp>
 
 namespace hotplace {
 namespace io {

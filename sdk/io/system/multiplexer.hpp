@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_MULTIPLEXER__
 #define __HOTPLACE_SDK_IO_SYSTEM_MULTIPLEXER__
 
-#include <sdk/io/types.hpp>
+#include <hotplace/sdk/io/types.hpp>
 
 namespace hotplace {
 namespace io {

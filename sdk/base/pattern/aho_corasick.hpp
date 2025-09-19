@@ -12,9 +12,9 @@
 #ifndef __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICK__
 #define __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICK__
 
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/nostd/range.hpp>
-#include <sdk/base/pattern/pattern.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/nostd/range.hpp>
+#include <hotplace/sdk/base/pattern/pattern.hpp>
 
 namespace hotplace {
 

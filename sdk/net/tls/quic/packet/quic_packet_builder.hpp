@@ -12,10 +12,10 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKETBUILDER__
 #define __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKETBUILDER__
 
-#include <sdk/base/stream/types.hpp>
-#include <sdk/net/tls/quic/packet/quic_packet.hpp>
-#include <sdk/net/tls/quic/types.hpp>
-#include <sdk/net/tls/types.hpp>
+#include <hotplace/sdk/base/stream/types.hpp>
+#include <hotplace/sdk/net/tls/quic/packet/quic_packet.hpp>
+#include <hotplace/sdk/net/tls/quic/types.hpp>
+#include <hotplace/sdk/net/tls/types.hpp>
 
 namespace hotplace {
 namespace net {

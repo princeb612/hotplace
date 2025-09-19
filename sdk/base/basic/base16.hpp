@@ -28,7 +28,7 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_BASE16__
 #define __HOTPLACE_SDK_BASE_BASIC_BASE16__
 
-#include <sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
 
 namespace hotplace {
 

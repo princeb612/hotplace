@@ -13,11 +13,11 @@
 #define __HOTPLACE_SDK_BASE_BASIC_CMDLINE__
 
 #include <functional>
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/string/string.hpp>
 #include <iostream>
 #include <list>
 #include <map>
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/string/string.hpp>
 #include <set>
 
 namespace hotplace {

@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/valist.hpp>
-#include <sdk/base/stream/printf.hpp>
-#include <sdk/base/stream/tstring.hpp>
-#include <sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/stream/tstring.hpp>
+#include <hotplace/sdk/base/string/string.hpp>
 
 namespace hotplace {
 

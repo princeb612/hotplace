@@ -13,8 +13,8 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_ASN1RESOURCE__
 #define __HOTPLACE_SDK_IO_ASN1_ASN1RESOURCE__
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/io/asn.1/types.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/io/asn.1/types.hpp>
 
 namespace hotplace {
 namespace io {

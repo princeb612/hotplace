@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/http/compression/http_huffman_codes.hpp>
-#include <sdk/net/http/compression/http_huffman_coding.hpp>
-#include <sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/net/http/compression/http_huffman_codes.hpp>
+#include <hotplace/sdk/net/http/compression/http_huffman_coding.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {

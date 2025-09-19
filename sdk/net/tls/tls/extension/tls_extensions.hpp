@@ -9,8 +9,8 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONS__
 #define __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONS__
 
-#include <sdk/net/tls/tls/extension/tls_extension.hpp>
-#include <sdk/net/tls/tls_container.hpp>
+#include <hotplace/sdk/net/tls/tls/extension/tls_extension.hpp>
+#include <hotplace/sdk/net/tls/tls_container.hpp>
 
 namespace hotplace {
 namespace net {

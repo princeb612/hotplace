@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_IEEE754__
 #define __HOTPLACE_SDK_BASE_BASIC_IEEE754__
 
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 #include <string>
 
 namespace hotplace {

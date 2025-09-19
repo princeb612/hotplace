@@ -11,10 +11,10 @@
  *
  */
 
-#include <sdk/io/asn.1/asn1_composite.hpp>
-#include <sdk/io/asn.1/asn1_tag.hpp>
-#include <sdk/io/asn.1/asn1_visitor.hpp>
-#include <sdk/io/asn.1/template.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_composite.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_tag.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/template.hpp>
 
 namespace hotplace {
 namespace io {

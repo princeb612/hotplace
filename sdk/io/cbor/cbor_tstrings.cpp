@@ -9,9 +9,9 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <sdk/io/cbor/cbor_data.hpp>
-#include <sdk/io/cbor/cbor_encode.hpp>
-#include <sdk/io/cbor/cbor_tstrings.hpp>
+#include <hotplace/sdk/io/cbor/cbor_data.hpp>
+#include <hotplace/sdk/io/cbor/cbor_encode.hpp>
+#include <hotplace/sdk/io/cbor/cbor_tstrings.hpp>
 
 namespace hotplace {
 namespace io {

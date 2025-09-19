@@ -11,10 +11,10 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_CRITICALSECTION__
 #define __HOTPLACE_SDK_BASE_SYSTEM_CRITICALSECTION__
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
+#include <hotplace/sdk/base/charset.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/types.hpp>
 
 namespace hotplace {
 
@@ -28,9 +28,9 @@ class critical_section_t {
 }  // namespace hotplace
 
 #if defined _WIN32 || defined _WIN64
-#include <sdk/base/system/windows/critical_section.hpp>
+#include <hotplace/sdk/base/system/windows/critical_section.hpp>
 #elif defined __linux__
-#include <sdk/base/system/linux/critical_section.hpp>
+#include <hotplace/sdk/base/system/linux/critical_section.hpp>
 #endif
 
 namespace hotplace {

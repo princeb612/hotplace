@@ -10,12 +10,12 @@
  * Date         Name                Description
  */
 
-#include <sdk/io/string/string.hpp>
-#include <sdk/net/http/hpack/hpack_dynamic_table.hpp>
-#include <sdk/net/http/http2/http2_frame.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_resource.hpp>
-#include <sdk/net/http/http_server.hpp>
+#include <hotplace/sdk/io/string/string.hpp>
+#include <hotplace/sdk/net/http/hpack/hpack_dynamic_table.hpp>
+#include <hotplace/sdk/net/http/http2/http2_frame.hpp>
+#include <hotplace/sdk/net/http/http_request.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/net/http/http_server.hpp>
 
 namespace hotplace {
 namespace net {

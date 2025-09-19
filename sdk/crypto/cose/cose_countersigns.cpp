@@ -10,9 +10,9 @@
  *
  */
 
-#include <sdk/crypto/cose/cose_countersigns.hpp>
-#include <sdk/crypto/cose/cose_recipient.hpp>
-#include <sdk/crypto/cose/cose_recipients.hpp>
+#include <hotplace/sdk/crypto/cose/cose_countersigns.hpp>
+#include <hotplace/sdk/crypto/cose/cose_recipient.hpp>
+#include <hotplace/sdk/crypto/cose/cose_recipients.hpp>
 
 namespace hotplace {
 namespace crypto {

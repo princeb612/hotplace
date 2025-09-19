@@ -11,10 +11,10 @@
 #ifndef __HOTPLACE_SDK_BASE_SYNTAX__
 #define __HOTPLACE_SDK_BASE_SYNTAX__
 
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/stream.hpp>
-#include <sdk/base/types.hpp>
+#include <hotplace/sdk/base/charset.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/stream.hpp>
+#include <hotplace/sdk/base/types.hpp>
 
 #define __try2 do
 #define __finally2 while (0);

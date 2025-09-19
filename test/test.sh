@@ -14,7 +14,7 @@ if [ $# -eq 0 ]; then
     array+=(cbor mlfq payload stream string asn1 parser) # io
     array+=(authenticode crypto cose hash jose kdf key random sign) # crypto
     array+=(ipaddr httptest quic tls13) # net
-    if [ $OSTYPE = "msys" ]; then
+    if [[ $OSTYPE = "cygwin" || $OSTYPE = "msys" ]]; then
         array+=(windows)
     else
         array+=(linux)

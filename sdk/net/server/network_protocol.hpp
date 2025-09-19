@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_NET_SERVER_NETWORKPROTOCOL__
 #define __HOTPLACE_SDK_NET_SERVER_NETWORKPROTOCOL__
 
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/net/types.hpp>
 #include <map>
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/net/types.hpp>
 
 namespace hotplace {
 class basic_stream;

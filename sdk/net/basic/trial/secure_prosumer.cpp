@@ -8,13 +8,13 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/basic/trial/secure_prosumer.hpp>
-#include <sdk/net/tls/tls/record/tls_record.hpp>
-#include <sdk/net/tls/tls/record/tls_record_application_data.hpp>
-#include <sdk/net/tls/tls/record/tls_record_builder.hpp>
-#include <sdk/net/tls/tls_advisor.hpp>
-#include <sdk/net/tls/tls_protection.hpp>
-#include <sdk/net/tls/tls_session.hpp>
+#include <hotplace/sdk/net/basic/trial/secure_prosumer.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record_application_data.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record_builder.hpp>
+#include <hotplace/sdk/net/tls/tls_advisor.hpp>
+#include <hotplace/sdk/net/tls/tls_protection.hpp>
+#include <hotplace/sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {

@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/nostd/exception.hpp>
-#include <sdk/net/basic/openssl/openssl_dtls_server_socket.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/net/basic/openssl/openssl_dtls_server_socket.hpp>
 
 namespace hotplace {
 namespace net {

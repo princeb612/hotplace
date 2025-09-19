@@ -11,13 +11,13 @@
 #ifndef __HOTPLACE_SDK_BASE_STREAM_TSTRING__
 #define __HOTPLACE_SDK_BASE_STREAM_TSTRING__
 
+#include <hotplace/sdk/base/charset.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/stream/bufferio.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/types.hpp>
 #include <ostream>
-#include <sdk/base/charset.hpp>
-#include <sdk/base/error.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/stream/bufferio.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/types.hpp>
 
 namespace hotplace {
 

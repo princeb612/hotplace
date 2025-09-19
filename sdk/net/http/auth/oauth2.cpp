@@ -9,15 +9,15 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/string/string.hpp>
-#include <sdk/base/system/error.hpp>
-#include <sdk/io/basic/json.hpp>
-#include <sdk/net/http/auth/oauth2.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_response.hpp>
-#include <sdk/net/http/http_router.hpp>
-#include <sdk/net/server/network_session.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/system/error.hpp>
+#include <hotplace/sdk/io/basic/json.hpp>
+#include <hotplace/sdk/net/http/auth/oauth2.hpp>
+#include <hotplace/sdk/net/http/http_request.hpp>
+#include <hotplace/sdk/net/http/http_response.hpp>
+#include <hotplace/sdk/net/http/http_router.hpp>
+#include <hotplace/sdk/net/server/network_session.hpp>
 
 namespace hotplace {
 namespace net {

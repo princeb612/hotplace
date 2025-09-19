@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_IO_SYSTEM_SOCKET__
 #define __HOTPLACE_SDK_IO_SYSTEM_SOCKET__
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/io/types.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/io/types.hpp>
 
 namespace hotplace {
 namespace io {

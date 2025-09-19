@@ -11,10 +11,10 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP3_HTTP3FRAME__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP3_HTTP3FRAME__
 
-#include <sdk/base/basic/variant.hpp>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/net/http/http3/types.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/net/http/http3/types.hpp>
 
 namespace hotplace {
 namespace net {

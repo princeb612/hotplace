@@ -12,13 +12,13 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPAUTHENTICATIONRESOLVER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPAUTHENTICATIONRESOLVER__
 
+#include <hotplace/sdk/net/http/auth/basic_credentials.hpp>   // basic_credentials
+#include <hotplace/sdk/net/http/auth/bearer_credentials.hpp>  // bearer_credentials
+#include <hotplace/sdk/net/http/auth/custom_credentials.hpp>  // custom_credentials
+#include <hotplace/sdk/net/http/auth/digest_credentials.hpp>  // digest_credentials
+#include <hotplace/sdk/net/http/auth/oauth2_credentials.hpp>  // oauth2_credentials
+#include <hotplace/sdk/net/http/types.hpp>
 #include <map>
-#include <sdk/net/http/auth/basic_credentials.hpp>   // basic_credentials
-#include <sdk/net/http/auth/bearer_credentials.hpp>  // bearer_credentials
-#include <sdk/net/http/auth/custom_credentials.hpp>  // custom_credentials
-#include <sdk/net/http/auth/digest_credentials.hpp>  // digest_credentials
-#include <sdk/net/http/auth/oauth2_credentials.hpp>  // oauth2_credentials
-#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {

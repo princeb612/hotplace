@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/server/network_server.hpp>
+#include <hotplace/sdk/net/server/network_server.hpp>
 
 namespace hotplace {
 namespace net {

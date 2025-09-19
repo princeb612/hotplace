@@ -11,8 +11,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_COMPRESSION_HTTPHUFFMANCODES__
 #define __HOTPLACE_SDK_NET_HTTP_COMPRESSION_HTTPHUFFMANCODES__
 
-#include <sdk/base/basic/huffman_coding.hpp>
-#include <sdk/net/http/compression/http_header_compression.hpp>
+#include <hotplace/sdk/base/basic/huffman_coding.hpp>
+#include <hotplace/sdk/net/http/compression/http_header_compression.hpp>
 
 namespace hotplace {
 namespace net {

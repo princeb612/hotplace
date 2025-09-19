@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALDTLSSERVERSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALDTLSSERVERSOCKET__
 
-#include <sdk/net/basic/naive/naive_udp_server_socket.hpp>  // naive_udp_server_socket
+#include <hotplace/sdk/net/basic/naive/naive_udp_server_socket.hpp>  // naive_udp_server_socket
 
 namespace hotplace {
 namespace net {

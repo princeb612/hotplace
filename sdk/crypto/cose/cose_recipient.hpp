@@ -12,14 +12,14 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_COSE_COSERECIPIENT__
 #define __HOTPLACE_SDK_CRYPTO_COSE_COSERECIPIENT__
 
-#include <sdk/crypto/basic/types.hpp>
-#include <sdk/crypto/cose/cose_binary.hpp>
-#include <sdk/crypto/cose/cose_data.hpp>
-#include <sdk/crypto/cose/cose_protected.hpp>
-#include <sdk/crypto/cose/cose_recipients.hpp>
-#include <sdk/crypto/cose/cose_unprotected.hpp>
-#include <sdk/crypto/cose/types.hpp>
-#include <sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/crypto/cose/cose_binary.hpp>
+#include <hotplace/sdk/crypto/cose/cose_data.hpp>
+#include <hotplace/sdk/crypto/cose/cose_protected.hpp>
+#include <hotplace/sdk/crypto/cose/cose_recipients.hpp>
+#include <hotplace/sdk/crypto/cose/cose_unprotected.hpp>
+#include <hotplace/sdk/crypto/cose/types.hpp>
+#include <hotplace/sdk/io/cbor/cbor.hpp>
 
 namespace hotplace {
 namespace crypto {

@@ -10,9 +10,9 @@
 
 #include <stdio.h>
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/io/stream/file_stream.hpp>
-#include <sdk/io/string/string.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/io/stream/file_stream.hpp>
+#include <hotplace/sdk/io/string/string.hpp>
 
 namespace hotplace {
 namespace io {

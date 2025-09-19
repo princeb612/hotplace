@@ -11,10 +11,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
-#include <sdk/net/tls/tls/handshake/tls_handshake_builder.hpp>
-#include <sdk/net/tls/tls/tls.hpp>
-#include <sdk/net/tls/tls_advisor.hpp>
+#include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
+#include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_builder.hpp>
+#include <hotplace/sdk/net/tls/tls/tls.hpp>
+#include <hotplace/sdk/net/tls/tls_advisor.hpp>
 
 namespace hotplace {
 namespace net {

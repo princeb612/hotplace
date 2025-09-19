@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/sdk.hpp>
-#include <test/test.hpp>
+#include <hotplace/sdk/sdk.hpp>
+#include <hotplace/test/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {};
 

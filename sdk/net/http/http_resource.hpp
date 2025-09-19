@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPRESOURCE__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPRESOURCE__
 
+#include <hotplace/sdk/net/http/types.hpp>
 #include <map>
-#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {

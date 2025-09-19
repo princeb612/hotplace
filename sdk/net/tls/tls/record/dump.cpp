@@ -11,9 +11,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/net/tls/tls/record/tls_record.hpp>
-#include <sdk/net/tls/tls/record/tls_record_builder.hpp>
-#include <sdk/net/tls/tls/tls.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record_builder.hpp>
+#include <hotplace/sdk/net/tls/tls/tls.hpp>
 
 namespace hotplace {
 namespace net {

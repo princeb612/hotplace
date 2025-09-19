@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SEMAPHORE__
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SEMAPHORE__
 
-#include <sdk/base/error.hpp>
-#include <sdk/base/system/semaphore.hpp>
-#include <sdk/base/system/windows/types.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/system/semaphore.hpp>
+#include <hotplace/sdk/base/system/windows/types.hpp>
 
 namespace hotplace {
 

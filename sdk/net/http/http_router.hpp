@@ -12,13 +12,13 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPROUTER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPROUTER__
 
+#include <hotplace/sdk/net/http/auth/oauth2.hpp>             // oauth2_provider
+#include <hotplace/sdk/net/http/html_documents.hpp>          // html_documents
+#include <hotplace/sdk/net/http/http2/http2_serverpush.hpp>  // http2_serverpush
+#include <hotplace/sdk/net/http/http_authentication_provider.hpp>
+#include <hotplace/sdk/net/http/http_authentication_resolver.hpp>  // http_authentication_resolver
+#include <hotplace/sdk/net/http/types.hpp>
 #include <map>
-#include <sdk/net/http/auth/oauth2.hpp>             // oauth2_provider
-#include <sdk/net/http/html_documents.hpp>          // html_documents
-#include <sdk/net/http/http2/http2_serverpush.hpp>  // http2_serverpush
-#include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/http/http_authentication_resolver.hpp>  // http_authentication_resolver
-#include <sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {

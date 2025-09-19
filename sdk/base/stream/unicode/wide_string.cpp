@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/tstring.hpp>
-#include <sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/stream/tstring.hpp>
+#include <hotplace/sdk/base/string/string.hpp>
 
 namespace hotplace {
 

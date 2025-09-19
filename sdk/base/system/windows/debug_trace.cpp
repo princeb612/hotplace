@@ -8,11 +8,11 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/system/error.hpp>
+#include <hotplace/sdk/base/system/windows/debug_trace.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
 #include <iostream>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/system/error.hpp>
-#include <sdk/base/system/windows/debug_trace.hpp>
-#include <sdk/base/unittest/trace.hpp>
 
 namespace hotplace {
 

@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/unittest/trace.hpp>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/openssl_prng.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 
 namespace hotplace {
 namespace crypto {

@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTP3_TYPES__
 #define __HOTPLACE_SDK_NET_HTTP_HTTP3_TYPES__
 
-#include <sdk/net/http/types.hpp>
+#include <hotplace/sdk/net/http/types.hpp>
 
 namespace hotplace {
 namespace net {

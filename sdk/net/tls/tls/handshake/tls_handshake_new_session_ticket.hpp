@@ -9,8 +9,8 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKENEWSESSIONTICKET__
 #define __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKENEWSESSIONTICKET__
 
-#include <sdk/net/tls/tls/extension/tls_extensions.hpp>
-#include <sdk/net/tls/tls/handshake/tls_handshake.hpp>
+#include <hotplace/sdk/net/tls/tls/extension/tls_extensions.hpp>
+#include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
 
 namespace hotplace {
 namespace net {

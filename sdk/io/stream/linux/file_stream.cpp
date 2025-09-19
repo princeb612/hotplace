@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/io/stream/file_stream.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
 namespace io {

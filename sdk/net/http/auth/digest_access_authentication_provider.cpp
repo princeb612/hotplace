@@ -10,16 +10,16 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/valist.hpp>
-#include <sdk/base/string/string.hpp>
-#include <sdk/crypto/basic/openssl_prng.hpp>
-#include <sdk/net/http/auth/digest_access_authentication_provider.hpp>
-#include <sdk/net/http/auth/rfc2617_digest.hpp>
-#include <sdk/net/http/http_authentication_resolver.hpp>
-#include <sdk/net/http/http_request.hpp>
-#include <sdk/net/http/http_resource.hpp>
-#include <sdk/net/http/http_response.hpp>
-#include <sdk/net/server/network_session.hpp>
+#include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
+#include <hotplace/sdk/net/http/auth/digest_access_authentication_provider.hpp>
+#include <hotplace/sdk/net/http/auth/rfc2617_digest.hpp>
+#include <hotplace/sdk/net/http/http_authentication_resolver.hpp>
+#include <hotplace/sdk/net/http/http_request.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/net/http/http_response.hpp>
+#include <hotplace/sdk/net/server/network_session.hpp>
 
 namespace hotplace {
 namespace net {

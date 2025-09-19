@@ -56,7 +56,7 @@ HELP
     SET_STDCPP      - c++11 (gcc 4.7~), c++14 (gcc 5.1~), linux option
 SWITCHES
 
-if [ $OSTYPE = "msys" ]; then
+if [[ $OSTYPE = "cygwin" || $OSTYPE = "msys" ]]; then
     true
 else
     export SET_STDCPP=c++11

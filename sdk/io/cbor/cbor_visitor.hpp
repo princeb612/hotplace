@@ -15,7 +15,7 @@
 #define __HOTPLACE_SDK_IO_CBOR_CBORVISITOR__
 
 #include <deque>
-#include <sdk/io/cbor/cbor.hpp>
+#include <hotplace/sdk/io/cbor/cbor.hpp>
 
 namespace hotplace {
 namespace io {

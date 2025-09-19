@@ -9,8 +9,8 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDS__
 #define __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDS__
 
-#include <sdk/net/tls/tls/record/tls_record.hpp>
-#include <sdk/net/tls/tls_container.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record.hpp>
+#include <hotplace/sdk/net/tls/tls_container.hpp>
 
 namespace hotplace {
 namespace net {

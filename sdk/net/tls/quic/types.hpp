@@ -12,9 +12,9 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUIC_TYPES__
 #define __HOTPLACE_SDK_NET_TLS_QUIC_TYPES__
 
-#include <sdk/net/http/types.hpp>
-#include <sdk/net/server/types.hpp>
-#include <sdk/net/types.hpp>
+#include <hotplace/sdk/net/http/types.hpp>
+#include <hotplace/sdk/net/server/types.hpp>
+#include <hotplace/sdk/net/types.hpp>
 
 namespace hotplace {
 namespace net {

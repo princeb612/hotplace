@@ -8,10 +8,10 @@
  * Date         Name                Description
  */
 
-#include <sdk/io/basic/payload.hpp>
-#include <sdk/net/http/http2/http2_frame_window_update.hpp>
-#include <sdk/net/http/http2/http2_protocol.hpp>
-#include <sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/io/basic/payload.hpp>
+#include <hotplace/sdk/net/http/http2/http2_frame_window_update.hpp>
+#include <hotplace/sdk/net/http/http2/http2_protocol.hpp>
+#include <hotplace/sdk/net/http/http_resource.hpp>
 
 namespace hotplace {
 namespace net {

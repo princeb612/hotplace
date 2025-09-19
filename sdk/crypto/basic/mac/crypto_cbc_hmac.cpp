@@ -8,13 +8,13 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_cbc_hmac.hpp>
-#include <sdk/crypto/basic/crypto_hmac.hpp>
-#include <sdk/crypto/basic/openssl_crypt.hpp>
-#include <sdk/crypto/basic/openssl_hash.hpp>
-#include <sdk/crypto/basic/openssl_prng.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_cbc_hmac.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_hmac.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 
 namespace hotplace {
 namespace crypto {

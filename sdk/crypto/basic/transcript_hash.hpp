@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_BASIC_TRANSCRIPTHASH__
 #define __HOTPLACE_SDK_CRYPTO_BASIC_TRANSCRIPTHASH__
 
-#include <sdk/base/system/shared_instance.hpp>
-#include <sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 
 namespace hotplace {
 namespace crypto {

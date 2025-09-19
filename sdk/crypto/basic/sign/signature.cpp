@@ -16,11 +16,11 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_sign.hpp>
-#include <sdk/crypto/basic/openssl_sign.hpp>
-#include <sdk/io/asn.1/types.hpp>
-#include <sdk/io/basic/payload.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
+#include <hotplace/sdk/io/asn.1/types.hpp>
+#include <hotplace/sdk/io/basic/payload.hpp>
 
 namespace hotplace {
 namespace crypto {

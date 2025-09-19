@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/odbc/basic/odbc_diagnose.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/odbc/basic/odbc_diagnose.hpp>
 
 namespace hotplace {
 namespace odbc {

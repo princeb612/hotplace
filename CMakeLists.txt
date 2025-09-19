@@ -177,7 +177,7 @@ function (maketest module_name group_source module_dependency module_library cte
 endfunction ()
 
 # -Ixxx
-include_directories (.)
+include_directories (..)
 include_directories (${PROJECT_SOURCE_DIR}/thirdparty/include)
 # -Lxxx
 link_directories (${CMAKE_INSTALL_RPATH})

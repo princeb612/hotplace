@@ -13,9 +13,9 @@
 
 #include <stdarg.h>
 
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <ostream>
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {
 

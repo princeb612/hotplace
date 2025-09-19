@@ -14,15 +14,15 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/binary.hpp>
-#include <sdk/base/string/string.hpp>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_keychain.hpp>
-#include <sdk/crypto/basic/openssl_prng.hpp>
-#include <sdk/crypto/jose/json_object_encryption.hpp>
-#include <sdk/crypto/jose/json_object_signing.hpp>
-#include <sdk/crypto/jose/json_object_signing_encryption.hpp>
-#include <sdk/crypto/jose/json_web_key.hpp>
+#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
+#include <hotplace/sdk/crypto/jose/json_object_encryption.hpp>
+#include <hotplace/sdk/crypto/jose/json_object_signing.hpp>
+#include <hotplace/sdk/crypto/jose/json_object_signing_encryption.hpp>
+#include <hotplace/sdk/crypto/jose/json_web_key.hpp>
 
 namespace hotplace {
 namespace crypto {

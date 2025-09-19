@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_AUTH_BASICCREDENTIALS__
 #define __HOTPLACE_SDK_NET_HTTP_AUTH_BASICCREDENTIALS__
 
+#include <hotplace/sdk/net/http/http_authentication_provider.hpp>
 #include <map>
-#include <sdk/net/http/http_authentication_provider.hpp>
 #include <set>
 #include <string>
 

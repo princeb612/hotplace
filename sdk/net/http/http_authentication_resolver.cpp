@@ -8,14 +8,14 @@
  * Date         Name                Description
  */
 
-#include <sdk/io/string/string.hpp>
-#include <sdk/net/http/auth/basic_authentication_provider.hpp>
-#include <sdk/net/http/auth/bearer_authentication_provider.hpp>
-#include <sdk/net/http/auth/digest_access_authentication_provider.hpp>
-#include <sdk/net/http/auth/oauth2.hpp>
-#include <sdk/net/http/http_authentication_provider.hpp>
-#include <sdk/net/http/http_authentication_resolver.hpp>
-#include <sdk/net/http/http_request.hpp>
+#include <hotplace/sdk/io/string/string.hpp>
+#include <hotplace/sdk/net/http/auth/basic_authentication_provider.hpp>
+#include <hotplace/sdk/net/http/auth/bearer_authentication_provider.hpp>
+#include <hotplace/sdk/net/http/auth/digest_access_authentication_provider.hpp>
+#include <hotplace/sdk/net/http/auth/oauth2.hpp>
+#include <hotplace/sdk/net/http/http_authentication_provider.hpp>
+#include <hotplace/sdk/net/http/http_authentication_resolver.hpp>
+#include <hotplace/sdk/net/http/http_request.hpp>
 
 namespace hotplace {
 namespace net {

@@ -55,11 +55,11 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_TLS__
 #define __HOTPLACE_SDK_NET_TLS_TLS_TLS__
 
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/types.hpp>
-#include <sdk/crypto/basic/crypto_key.hpp>
-#include <sdk/crypto/basic/types.hpp>
-#include <sdk/net/tls/tls/types.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/net/tls/tls/types.hpp>
 
 namespace hotplace {
 namespace net {

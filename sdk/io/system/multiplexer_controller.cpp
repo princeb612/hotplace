@@ -8,12 +8,12 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/thread.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/io/system/multiplexer.hpp>
 #include <map>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/thread.hpp>
-#include <sdk/base/unittest/trace.hpp>
-#include <sdk/io/system/multiplexer.hpp>
 
 namespace hotplace {
 namespace io {

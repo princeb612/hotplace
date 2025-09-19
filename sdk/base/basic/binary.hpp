@@ -14,8 +14,8 @@
 #include <string.h>
 
 #include <functional>
-#include <sdk/base/basic/types.hpp>
-#include <sdk/base/system/endian.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/system/endian.hpp>
 
 namespace hotplace {
 

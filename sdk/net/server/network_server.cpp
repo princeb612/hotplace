@@ -18,15 +18,15 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/system/signalwait_threads.hpp>
+#include <hotplace/sdk/net/basic/naive/naive_tcp_server_socket.hpp>
+#include <hotplace/sdk/net/basic/naive/naive_udp_server_socket.hpp>
+#include <hotplace/sdk/net/basic/openssl/openssl_tls.hpp>
+#include <hotplace/sdk/net/server/network_protocol.hpp>
+#include <hotplace/sdk/net/server/network_server.hpp>
+#include <hotplace/sdk/net/server/network_session.hpp>
+#include <hotplace/sdk/net/server/network_stream.hpp>
 #include <queue>
-#include <sdk/base/system/signalwait_threads.hpp>
-#include <sdk/net/basic/naive/naive_tcp_server_socket.hpp>
-#include <sdk/net/basic/naive/naive_udp_server_socket.hpp>
-#include <sdk/net/basic/openssl/openssl_tls.hpp>
-#include <sdk/net/server/network_protocol.hpp>
-#include <sdk/net/server/network_server.hpp>
-#include <sdk/net/server/network_session.hpp>
-#include <sdk/net/server/network_stream.hpp>
 
 namespace hotplace {
 namespace net {

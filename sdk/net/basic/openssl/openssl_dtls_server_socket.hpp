@@ -11,9 +11,9 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_OPENSSL_OPENSSLDTLSSERVERSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_OPENSSL_OPENSSLDTLSSERVERSOCKET__
 
-#include <sdk/net/basic/naive/naive_udp_server_socket.hpp>  // naive_udp_server_socket
-#include <sdk/net/basic/openssl/openssl_tls.hpp>
-#include <sdk/net/basic/openssl/openssl_tls_context.hpp>
+#include <hotplace/sdk/net/basic/naive/naive_udp_server_socket.hpp>  // naive_udp_server_socket
+#include <hotplace/sdk/net/basic/openssl/openssl_tls.hpp>
+#include <hotplace/sdk/net/basic/openssl/openssl_tls_context.hpp>
 
 namespace hotplace {
 namespace net {

@@ -13,8 +13,8 @@
 
 #include <semaphore.h>
 
-#include <sdk/base/error.hpp>
-#include <sdk/base/system/semaphore.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/system/semaphore.hpp>
 
 namespace hotplace {
 

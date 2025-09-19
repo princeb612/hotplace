@@ -9,7 +9,7 @@
  * 2023.09.12   Soo Han, Kim        CBOR (codename.hotplace)
  */
 
-#include <sdk/base/basic/huffman_coding.hpp>
+#include <hotplace/sdk/base/basic/huffman_coding.hpp>
 
 namespace hotplace {
 

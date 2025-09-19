@@ -13,9 +13,9 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_SECURECLIENTSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_TRIAL_SECURECLIENTSOCKET__
 
-#include <sdk/net/basic/trial/client_socket_prosumer.hpp>
-#include <sdk/net/basic/trial/secure_prosumer.hpp>
-#include <sdk/net/tls/tls_session.hpp>
+#include <hotplace/sdk/net/basic/trial/client_socket_prosumer.hpp>
+#include <hotplace/sdk/net/basic/trial/secure_prosumer.hpp>
+#include <hotplace/sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {

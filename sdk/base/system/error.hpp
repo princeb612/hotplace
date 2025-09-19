@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_ERROR__
 #define __HOTPLACE_SDK_BASE_SYSTEM_ERROR__
 
+#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <queue>
-#include <sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
 

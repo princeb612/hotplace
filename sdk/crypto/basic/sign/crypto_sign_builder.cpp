@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_sign.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
 
 namespace hotplace {
 namespace crypto {

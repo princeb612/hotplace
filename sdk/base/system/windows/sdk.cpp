@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/system/windows/sdk.hpp>
-#include <sdk/base/system/windows/windows_version.hpp>
+#include <hotplace/sdk/base/system/windows/sdk.hpp>
+#include <hotplace/sdk/base/system/windows/windows_version.hpp>
 
 // COM
 #include <comdef.h>

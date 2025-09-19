@@ -9,16 +9,16 @@
  * Date         Name                Description
  */
 
-#include <sdk/base/basic/base16.hpp>
-#include <sdk/base/basic/base64.hpp>
-#include <sdk/base/basic/variant.hpp>
-#include <sdk/base/stream/basic_stream.hpp>
-#include <sdk/crypto/basic/crypto_advisor.hpp>
-#include <sdk/crypto/basic/crypto_keychain.hpp>
-#include <sdk/crypto/basic/evp_key.hpp>
-#include <sdk/crypto/basic/openssl_sdk.hpp>
-#include <sdk/crypto/cose/cbor_web_key.hpp>
-#include <sdk/io/stream/file_stream.hpp>
+#include <hotplace/sdk/base/basic/base16.hpp>
+#include <hotplace/sdk/base/basic/base64.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
+#include <hotplace/sdk/crypto/cose/cbor_web_key.hpp>
+#include <hotplace/sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
 namespace crypto {

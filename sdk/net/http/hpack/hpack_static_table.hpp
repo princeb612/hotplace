@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HPACK_HPACKSTATICTABLE__
 #define __HOTPLACE_SDK_NET_HTTP_HPACK_HPACKSTATICTABLE__
 
-#include <sdk/net/http/compression/http_static_table.hpp>
+#include <hotplace/sdk/net/http/compression/http_static_table.hpp>
 
 namespace hotplace {
 namespace net {

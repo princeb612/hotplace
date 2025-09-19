@@ -10,7 +10,7 @@
  *
  */
 
-#include <sdk/crypto/cose/cose_countersign.hpp>
+#include <hotplace/sdk/crypto/cose/cose_countersign.hpp>
 
 namespace hotplace {
 namespace crypto {

@@ -12,12 +12,12 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLSCONTAINER__
 #define __HOTPLACE_SDK_NET_TLS_TLSCONTAINER__
 
-#include <sdk/base/error.hpp>
-#include <sdk/base/syntax.hpp>
-#include <sdk/base/system/critical_section.hpp>
-#include <sdk/base/system/error.hpp>
-#include <sdk/base/types.hpp>
-#include <sdk/net/tls/types.hpp>
+#include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/error.hpp>
+#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/net/tls/types.hpp>
 
 namespace hotplace {
 namespace net {
