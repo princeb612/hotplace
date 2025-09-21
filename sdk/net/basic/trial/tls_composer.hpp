@@ -13,6 +13,7 @@
 
 #include <hotplace/sdk/net/basic/trial/client_socket_prosumer.hpp>
 #include <hotplace/sdk/net/basic/trial/types.hpp>
+#include <hotplace/sdk/net/tls/quic/types.hpp>
 #include <hotplace/sdk/net/tls/tls/types.hpp>
 
 namespace hotplace {
