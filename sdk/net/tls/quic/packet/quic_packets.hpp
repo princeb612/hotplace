@@ -33,6 +33,7 @@ class quic_packets {
     quic_packets& operator<<(quic_packet* packet);
     return_t for_each(std::function<return_t(quic_packet*)> func);
     quic_packet* getat(size_t index, bool upref = false);
+    quic_packet* operator[](size_t index);
     bool empty();
     size_t size();
     void clear();

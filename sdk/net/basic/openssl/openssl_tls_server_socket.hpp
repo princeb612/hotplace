@@ -60,6 +60,11 @@ class openssl_tls_server_socket : public naive_tcp_server_socket {
      */
     virtual bool support_tls();
 
+    openssl_tls* get_openssl_tls();
+
+    virtual int addref();
+    virtual int release();
+
    protected:
    private:
     openssl_tls* _tls;

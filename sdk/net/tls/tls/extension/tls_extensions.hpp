@@ -44,6 +44,7 @@ class tls_extensions {
     return_t for_each(std::function<return_t(tls_extension *)> func);
     tls_extension *get(uint16 type, bool upref = false);
     tls_extension *getat(size_t index, bool upref = false);
+    tls_extension *operator[](size_t index);
     bool empty();
     size_t size();
     void clear();

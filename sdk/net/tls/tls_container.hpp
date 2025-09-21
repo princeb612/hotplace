@@ -13,6 +13,7 @@
 #define __HOTPLACE_SDK_NET_TLS_TLSCONTAINER__
 
 #include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/error.hpp>
@@ -125,9 +126,12 @@ class t_tls_container {
             if (upref) {
                 obj->addref();
             }
+        } else {
+            throw exception(out_of_range);
         }
         return obj;
     }
+    TYPE_PTR operator[](size_t index) { return getat(index); }
     bool empty() { return _members.empty(); }
     size_t size() { return _members.size(); }
     void clear() {

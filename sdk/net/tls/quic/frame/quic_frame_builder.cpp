@@ -26,6 +26,7 @@
 #include <hotplace/sdk/net/tls/quic/quic.hpp>
 #include <hotplace/sdk/net/tls/quic/quic_encoded.hpp>
 #include <hotplace/sdk/net/tls/quic_session.hpp>
+#include <hotplace/sdk/net/tls/sdk.hpp>
 #include <hotplace/sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
@@ -125,7 +126,7 @@ quic_frame* quic_frame_builder::build() {
         case quic_frame_type_stream6:
         case quic_frame_type_stream7: {
             // 19.8.  STREAM Frames
-            if ((_alpn == "\x2h3") || is_kindof_h3(session)) {
+            if ((_alpn == "\x2h3") || is_kindof_alpn(session, std::string("\x2h3"))) {
                 __try_new_catch_only(frame, new quic_frame_http3_stream(session, type));
             } else {
                 __try_new_catch_only(frame, new quic_frame_stream(session, type));

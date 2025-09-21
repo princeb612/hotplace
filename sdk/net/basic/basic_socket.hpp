@@ -48,8 +48,8 @@ class basic_socket {
      */
     virtual int socket_type(); /* override */
 
-    int addref();
-    int release();
+    virtual int addref();
+    virtual int release();
 
    protected:
     basic_socket();

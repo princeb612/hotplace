@@ -75,12 +75,12 @@ return_t tls_composer::session_status_changed(uint32 session_status, tls_directi
             //   S change_cipher_spec, finished
             switch (session_status) {
                 case session_status_client_hello: {
-                    ret = do_server_handshake_phase1(func);
+                    ret = do_tls_server_handshake_phase1(func);
                 } break;
                 case session_status_client_finished: {
                     // TLS 1.2
                     if (protection.is_kindof_tls12()) {
-                        ret = do_server_handshake_phase2(func);
+                        ret = do_tls_server_handshake_phase2(func);
                     }
                 } break;
             }
@@ -90,47 +90,28 @@ return_t tls_composer::session_status_changed(uint32 session_status, tls_directi
     return ret;
 }
 
-return_t tls_composer::do_compose(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
+return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == record || nullptr == func) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        auto session = get_session();
-        auto session_type = session->get_type();
-        if (session_type_dtls == session_type) {
-            // fragmentation
-            session->get_dtls_record_publisher().publish(record, dir, func);
-        } else {
-            binary_t bin;
-            ret = record->write(dir, bin);
-            func(session, bin);
+    auto session = get_session();
+    auto session_type = session->get_type();
+    switch (session_type) {
+        case session_type_tls:
+        case session_type_dtls: {
+            if (from_client == dir) {
+                ret = do_tls_client_handshake(wto, func);
+            } else if (from_server == dir) {
+                ret = errorcode_t::not_supported;
+            }
+        } break;
+        case session_type_quic:
+        case session_type_quic2: {
+            if (from_client == dir) {
+                ret = do_quic_client_handshake(wto, func);
+            } else if (from_server == dir) {
+                ret = errorcode_t::not_supported;
+            }
         }
     }
-    __finally2 {}
-    return ret;
-}
-
-return_t tls_composer::do_compose(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == records || nullptr == func) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        auto session = get_session();
-        auto session_type = session->get_type();
-        if (session_type_dtls == session_type) {
-            // fragmentation
-            session->get_dtls_record_publisher().publish(records, dir, func);
-        } else {
-            records->write(session, dir, func);
-        }
-    }
-    __finally2 {}
     return ret;
 }
 

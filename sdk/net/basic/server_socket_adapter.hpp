@@ -34,8 +34,10 @@ class server_socket_adapter {
 
     virtual return_t startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
     virtual return_t startup_dtls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
+    virtual return_t startup_quic(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
     virtual return_t shutdown_tls();
     virtual return_t shutdown_dtls();
+    virtual return_t shutdown_quic();
 
     virtual server_socket* get_tcp_server_socket();
     virtual server_socket* get_tls_server_socket();

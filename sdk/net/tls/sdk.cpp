@@ -15,7 +15,8 @@
 #include <hotplace/sdk/net/tls/sslkeylog_exporter.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshakes.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
-#include <hotplace/sdk/net/tls/tls_protection.hpp>  // KID
+#include <hotplace/sdk/net/tls/tls_protection.hpp>
+#include <hotplace/sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
@@ -139,6 +140,16 @@ bool is_kindof_frame(quic_frame_t type, protection_space_t space) {
     protection_space_t sp;
     if (success == kindof_frame(type, sp)) {
         ret = (sp == space);
+    }
+    return ret;
+}
+
+// bool is_kindof_h3(tls_session* session) {
+bool is_kindof_alpn(tls_session* session, const std::string& alpn) {
+    bool ret = false;
+    if (session) {
+        std::string session_alpn = bin2str(session->get_tls_protection().get_secrets().get(tls_context_alpn));
+        ret = (alpn == session_alpn);
     }
     return ret;
 }

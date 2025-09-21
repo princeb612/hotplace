@@ -28,6 +28,7 @@ class tls_records {
     tls_records& operator<<(tls_record* record);
     return_t for_each(std::function<return_t(tls_record*)> func);
     tls_record* getat(size_t index, bool upref = false);
+    tls_record* operator[](size_t index);
     bool empty();
     size_t size();
     void clear();

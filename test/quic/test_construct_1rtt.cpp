@@ -35,6 +35,8 @@ void test_construct_1rtt() {
         binary_t bin_ciphertext = std::move(base16_decode_rfc(ciphertext));
         quic_packets packets;
         ret = packets.read(&quicsession, dir, bin_ciphertext);
+        auto pkt = packets[0];
+        _test_case.assert(14 == pkt->get_pn(), __FUNCTION__, "PKN");
         _test_case.test(ret, __FUNCTION__, "read");
     }
 
@@ -42,6 +44,16 @@ void test_construct_1rtt() {
     {
         auto recno = quicsession.get_recordno(dir, false, protection_application);
 
+        /**
+         *  > frame ACK 0x2(2) @0x0
+         *   > largest ack 24
+         *   > ack delay 0
+         *   > ack range count 1
+         *   > first ack range 10
+         *   > ack ranges[0]
+         *    > gap 0
+         *    > range length 5
+         */
         constexpr char payload[] = "02 18 00 01 0A 00 05";
         binary_t bin_payload = std::move(base16_decode_rfc(payload));
         binary_t bin_packet;
@@ -58,6 +70,8 @@ void test_construct_1rtt() {
         // check
         quic_packets packets;
         ret = packets.read(&quicsession, dir, bin_packet);
+        auto pkt = packets[0];
+        _test_case.assert(15 == pkt->get_pn(), __FUNCTION__, "PKN");
         _test_case.test(ret, __FUNCTION__, "read");
     }
 }

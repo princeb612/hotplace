@@ -157,6 +157,8 @@ quic_frame* quic_frames::get(uint8 type, bool upref) { return _frames.get(type, 
 
 quic_frame* quic_frames::getat(size_t index, bool upref) { return _frames.getat(index, upref); }
 
+quic_frame* quic_frames::operator[](size_t index) { return _frames[index]; }
+
 bool quic_frames::empty() { return _frames.empty(); }
 
 size_t quic_frames::size() { return _frames.size(); }

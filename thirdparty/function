@@ -97,7 +97,7 @@ function build_liboqs()
 {
     local install_dir=${HOTPLACE_HOME}/thirdparty
 
-    cmake -G 'Unix Makefiles' --install-prefix ${install_dir} -B build
+    cmake -G 'Unix Makefiles' --install-prefix ${install_dir} -B build -DCMAKE_BUILD_TYPE=Debug
     cd build
     make
     make install
@@ -109,7 +109,7 @@ function build_oqsprovider()
 {
     local install_dir=${HOTPLACE_HOME}/thirdparty
 
-    cmake -G 'Unix Makefiles' --install-prefix ${install_dir} -B build
+    cmake -G 'Unix Makefiles' --install-prefix ${install_dir} -B build -DCMAKE_BUILD_TYPE=Debug
     cd build
     make
     make install

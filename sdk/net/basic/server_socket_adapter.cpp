@@ -25,9 +25,15 @@ return_t server_socket_adapter::startup_dtls(const std::string& server_cert, con
     return errorcode_t::not_implemented;
 }
 
+return_t server_socket_adapter::startup_quic(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
+    return errorcode_t::not_implemented;
+}
+
 return_t server_socket_adapter::shutdown_tls() { return errorcode_t::not_implemented; }
 
 return_t server_socket_adapter::shutdown_dtls() { return errorcode_t::not_implemented; }
+
+return_t server_socket_adapter::shutdown_quic() { return errorcode_t::not_implemented; }
 
 server_socket* server_socket_adapter::get_tcp_server_socket() { return nullptr; }
 

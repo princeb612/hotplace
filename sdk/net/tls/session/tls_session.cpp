@@ -12,6 +12,7 @@
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_arrange.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_publisher.hpp>
+#include <hotplace/sdk/net/tls/quic_packet_publisher.hpp>
 #include <hotplace/sdk/net/tls/quic_session.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
@@ -23,13 +24,25 @@ namespace hotplace {
 namespace net {
 
 tls_session::tls_session()
-    : _type(session_type_tls), _status(0), _hook_param(nullptr), _dtls_record_publisher(nullptr), _dtls_record_arrange(nullptr), _quic_session(nullptr) {
+    : _type(session_type_tls),
+      _status(0),
+      _hook_param(nullptr),
+      _dtls_record_publisher(nullptr),
+      _dtls_record_arrange(nullptr),
+      _quic_session(nullptr),
+      _quic_packet_publisher(nullptr) {
     _shared.make_share(this);
     _tls_protection.set_session(this);
 }
 
 tls_session::tls_session(session_type_t type)
-    : _type(type), _status(0), _hook_param(nullptr), _dtls_record_publisher(nullptr), _dtls_record_arrange(nullptr), _quic_session(nullptr) {
+    : _type(type),
+      _status(0),
+      _hook_param(nullptr),
+      _dtls_record_publisher(nullptr),
+      _dtls_record_arrange(nullptr),
+      _quic_session(nullptr),
+      _quic_packet_publisher(nullptr) {
     _shared.make_share(this);
     set_type(type);
 }
@@ -43,6 +56,9 @@ tls_session::~tls_session() {
     }
     if (_quic_session) {
         delete _quic_session;
+    }
+    if (_quic_packet_publisher) {
+        delete _quic_packet_publisher;
     }
 }
 
@@ -68,6 +84,27 @@ dtls_record_arrange& tls_session::get_dtls_record_arrange() {
         }
     }
     return *_dtls_record_arrange;
+}
+
+quic_packet_publisher& tls_session::get_quic_packet_publisher() {
+    if (nullptr == _quic_packet_publisher) {
+        critical_section_guard guard(_quic_lock);
+        if (nullptr == _quic_packet_publisher) {
+            _quic_packet_publisher = new quic_packet_publisher;
+            _quic_packet_publisher->set_session(this);
+        }
+    }
+    return *_quic_packet_publisher;
+}
+
+quic_session& tls_session::get_quic_session() {
+    if (nullptr == _quic_session) {
+        critical_section_guard guard(_dtls_lock);
+        if (nullptr == _quic_session) {
+            _quic_session = new quic_session;
+        }
+    }
+    return *_quic_session;
 }
 
 void tls_session::set_type(session_type_t type) {
@@ -305,30 +342,6 @@ void tls_session::push_alert(tls_direction_t dir, uint8 level, uint8 desc) { get
 void tls_session::get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags) { get_session_info(dir).get_alert(func, flags); }
 
 bool tls_session::has_alert(tls_direction_t dir, uint8 level) { return get_session_info(dir).has_alert(level); }
-
-quic_session& tls_session::get_quic_session() {
-    if (nullptr == _quic_session) {
-        critical_section_guard guard(_dtls_lock);
-        if (nullptr == _quic_session) {
-            _quic_session = new quic_session;
-        }
-    }
-    return *_quic_session;
-}
-
-bool is_kindof_h3(tls_session* session) {
-    bool ret = false;
-    if (session) {
-        const binary_t& alpn = session->get_tls_protection().get_secrets().get(tls_context_alpn);
-        if (false == alpn.empty()) {
-            constexpr byte_t alpn_h3[3] = {0x2, 'h', '3'};  // HTTP/3
-            if (0 == memcmp(alpn_h3, &alpn[0], sizeof(alpn_h3))) {
-                ret = true;
-            }
-        }
-    }
-    return ret;
-}
 
 }  // namespace net
 }  // namespace hotplace

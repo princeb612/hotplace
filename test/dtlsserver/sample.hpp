@@ -14,6 +14,7 @@ struct OPTION : public CMDLINEOPTION {
     int run;
     uint16 port;
     uint32 flags;
+    std::string cs;
 
     OPTION() : CMDLINEOPTION(), run(0), port(9000), flags(0) {}
 };

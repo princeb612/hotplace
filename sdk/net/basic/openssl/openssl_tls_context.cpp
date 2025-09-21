@@ -14,6 +14,7 @@
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
+#include <hotplace/sdk/net/basic/openssl/openssl_tls.hpp>
 #include <hotplace/sdk/net/basic/openssl/openssl_tls_context.hpp>
 #include <hotplace/sdk/net/basic/openssl/sdk.hpp>
 #include <hotplace/sdk/net/tls/sslkeylog_exporter.hpp>
@@ -21,361 +22,40 @@
 namespace hotplace {
 namespace net {
 
-static void set_info_callback_routine(const SSL* ssl, int where, int ret) {
-    __try2 {
-        uint32 option = get_trace_option();
-        if (trace_option_t::trace_debug & ~option) {
-            __leave2;
-        }
-
-        basic_stream bs;
-        valist va;
-        const char* state = "*";
-
-        // # define SSL_ST_CONNECT                  0x1000
-        // # define SSL_ST_ACCEPT                   0x2000
-        //
-        // # define SSL_ST_MASK                     0x0FFF
-        //
-        // # define SSL_CB_LOOP                     0x01
-        // # define SSL_CB_EXIT                     0x02
-        // # define SSL_CB_READ                     0x04
-        // # define SSL_CB_WRITE                    0x08
-        // # define SSL_CB_ALERT                    0x4000
-        // # define SSL_CB_HANDSHAKE_START          0x10
-        // # define SSL_CB_HANDSHAKE_DONE           0x20
-
-        if (where & SSL_ST_CONNECT) {
-            state = "SSL_connect";
-        } else if (where & SSL_ST_ACCEPT) {
-            state = "SSL_accept";
-        } else if (where & SSL_CB_READ) {
-            state = "SSL_read";
-        } else if (where & SSL_CB_WRITE) {
-            state = "SSL_write";
-        }
-
-        if (where & SSL_CB_LOOP) {
-            va << state << "loop" << SSL_state_string_long(ssl) << SSL_get_cipher_name(ssl);
-        } else if (where & SSL_CB_EXIT) {
-            va << state << "exit" << SSL_state_string_long(ssl);
-        } else if (where & SSL_CB_ALERT) {
-            va << state << "callback" << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
-        } else if (where & SSL_CB_HANDSHAKE_START) {
-            va << "handshake start";
-        } else if (where & SSL_CB_HANDSHAKE_DONE) {
-            va << "handshake done";
-        } else {
-            va << state << SSL_state_string_long(ssl) << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
-        }
-
-        // # define TLS1_3_VERSION  0x0304
-        // # define TLS1_VERSION    0x0301
-        // # define TLS1_1_VERSION  0x0302
-        // # define TLS1_2_VERSION  0x0303
-        // # define DTLS1_VERSION   0xFEFF
-        // # define DTLS1_2_VERSION 0xFEFD
-
-        bs.printf("TLS %08X %08x ", SSL_version(ssl), where);
-        switch (va.size()) {
-            case 1:
-                bs.vprintf("{1}\n", va);
-                break;
-            case 3:
-                bs.vprintf("{1}:{2}:{3}\n", va);
-                break;
-            case 4:
-                bs.vprintf("{1}:{2}:{3}:{4}\n", va);
-                break;
-            default:
-                break;
-        }
-        trace_debug_event(trace_category_net, trace_event_openssl_tls_state, &bs);
-    }
-    __finally2 {}
-}
-
-static int set_cookie_generate_callback_routine(SSL* ssl, unsigned char* cookie, unsigned int* cookie_len) {
-    binary_t bin;
-    dtls_cookie_dgram_peer_sockaddr(bin, ssl);
-
-    memcpy(cookie, &bin[0], bin.size());
-    *cookie_len = bin.size();
-
-    return 1;
-}
-
-static int set_cookie_verify_callback_routine(SSL* ssl, const unsigned char* cookie, unsigned int cookie_len) {
-    int ret = 0;
-
-    binary_t bin;
-    dtls_cookie_dgram_peer_sockaddr(bin, ssl);
-
-    binary_t bin_cookie;
-    binary_append(bin_cookie, cookie, cookie_len);
-    if (bin_cookie == bin) {
-        ret = 1;
-    }
-
-    return ret;
-}
-
-static void keylog_callback_routine(const SSL* ssl, const char* line) {
-    if (line) {
-        auto sslkeylog = sslkeylog_exporter::get_instance();
-        sslkeylog->log(line);
-    }
-}
-
-return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {
-    return_t ret = errorcode_t::success;
-    SSL_CTX* ssl_ctx = nullptr;
-
-    __try2 {
-        if (nullptr == context) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        const SSL_METHOD* method = nullptr;
-        if (tlscontext_flag_tls & flags) {
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-            method = TLS_method();
-#else
-            method = TLSv1_2_method();  // openssl-1.0
-#endif
-        } else if (tlscontext_flag_dtls & flags) {
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-            method = DTLS_method();
-#else
-            method = DTLSv1_2_method();  // openssl-1.0
-#endif
-        } else {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        ssl_ctx = SSL_CTX_new(method);
-        if (nullptr == ssl_ctx) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        /*
-         * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
-         * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
-         */
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-        int minver = 0;
-        int maxver = 0;
-        if (tlscontext_flag_tls & flags) {
-            if (tlscontext_flag_allow_tls12 & flags) {
-                minver = TLS1_2_VERSION;
-                if (tlscontext_flag_allow_tls13 & flags) {
-                    maxver = TLS1_3_VERSION;
-                } else {
-                    maxver = TLS1_2_VERSION;
-                }
-            } else if (tlscontext_flag_allow_tls13 & flags) {
-                minver = TLS1_3_VERSION;
-                maxver = TLS1_3_VERSION;
-            } else {
-                minver = TLS1_2_VERSION;
-                maxver = TLS1_3_VERSION;
-            }
-            SSL_CTX_set_min_proto_version(ssl_ctx, minver);
-            SSL_CTX_set_max_proto_version(ssl_ctx, maxver);
-        } else if (tlscontext_flag_dtls & flags) {
-            SSL_CTX_set_min_proto_version(ssl_ctx, DTLS1_2_VERSION);
-            SSL_CTX_set_cookie_generate_cb(ssl_ctx, set_cookie_generate_callback_routine);
-            SSL_CTX_set_cookie_verify_cb(ssl_ctx, set_cookie_verify_callback_routine);
-        }
-#else
-/* 1.0.x defines SSL_OP_NO_SSLv2~SSL_OP_NO_TLSv1_1 */
-#ifndef SSL_OP_NO_TLSv1_2
-#define SSL_OP_NO_TLSv1_2 0x0
-#endif
-#ifndef SSL_OP_NO_DTLSv1
-#define SSL_OP_NO_DTLSv1 0x0
-#endif
-#ifndef SSL_OP_NO_DTLSv1_2
-#define SSL_OP_NO_DTLSv1_2 0x0
-#endif
-        long option_flags = 0;
-        option_flags = (SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1 | SSL_OP_NO_DTLSv1); /* TLS 1.2 and above */
-        SSL_CTX_set_options(ssl_ctx, option_flags);
-#endif
-
-        SSL_CTX_set_verify(ssl_ctx, 0, nullptr);
-
-        uint32 option = get_trace_option();
-        if (trace_option_t::trace_debug & option) {
-            SSL_CTX_set_info_callback(ssl_ctx, set_info_callback_routine);
-            SSL_CTX_set_keylog_callback(ssl_ctx, keylog_callback_routine);
-        }
-
-#if defined DEBUG
-        if (istraceable(trace_category_crypto)) {
-            basic_stream dbs;
-            dbs.println("flag %08x", flags);
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-            dbs.println("min proto version %08x", minver);
-            dbs.println("max proto version %08x", maxver);
-#endif
-            trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
-        }
-#endif
-
-        *context = ssl_ctx;
-    }
-    __finally2 {}
-    return ret;
-}
-
-static int set_default_passwd_callback_routine(char* buf, int num, int rwflag, void* userdata) {
-    stream_t* stream = (stream_t*)userdata;
-    size_t len = stream->size();
-
-    strncpy(buf, (char*)stream->data(), len);
-    return len;
-}
-
-return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file) {
-    return_t ret = errorcode_t::success;
-    SSL_CTX* ssl_ctx = nullptr;
-    SSL* ssl = nullptr;
-
-    __try2 {
-        if (nullptr == context || nullptr == key_file) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        ret = tlscontext_open_simple(&ssl_ctx, flag);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        basic_stream bs;
-        if (password) {
-            bs.printf(password);
-        }
-
-        SSL_CTX_set_default_passwd_cb_userdata(ssl_ctx, &bs);
-        SSL_CTX_set_default_passwd_cb(ssl_ctx, set_default_passwd_callback_routine);
-
-        int check = 0;
-        // certificate
-        if (cert_file) {
-            check = SSL_CTX_use_certificate_file(ssl_ctx, cert_file, SSL_FILETYPE_PEM);
-            ret = get_opensslerror(check);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-        }
-        // private key
-        {
-            check = SSL_CTX_use_PrivateKey_file(ssl_ctx, key_file, SSL_FILETYPE_PEM);
-            ret = get_opensslerror(check);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-
-            check = SSL_CTX_check_private_key(ssl_ctx);
-            ret = get_opensslerror(check);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-        }
-        // certificate chain
-        if (chain_file) {
-            check = SSL_CTX_use_certificate_chain_file(ssl_ctx, chain_file);
-            ret = get_opensslerror(check);
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-        }
-
-        //    ~   not_before  ~  not_after   ~
-        // invalid          valid         invalid
-        {
-            ssl = SSL_new(ssl_ctx);
-            if (nullptr == ssl) {
-                ret = errorcode_t::error_openssl_inside;
-                __leave2;
-            }
-
-#if defined DEBUG
-            if (istraceable(trace_category_crypto, loglevel_debug)) {
-                basic_stream dbs;
-                dbs.println("- SSL_new %p", ssl);
-                trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
-            }
-#endif
-
-            X509* x509 = SSL_get_certificate(ssl);
-            if (nullptr == x509) {
-                ret = errorcode_t::error_certificate;
-                __leave2;
-            }
-
-            // function         UTC/local?  in          out         return
-            // ASN1_TIME_to_tm  UTC         ASN1_TIME*  tm*
-            // time             local       N/A         time_t*     time_t
-            // mktime           local       tm*         N/A         time_t
-            // timegm/_mkgmtime UTC         tm*         N/A         time_t
-
-            ASN1_TIME* asn1time_not_before = X509_get_notBefore(x509);
-            ASN1_TIME* asn1time_not_after = X509_get_notAfter(x509);
-            if (asn1time_not_before && asn1time_not_after) {
-                struct tm tm_not_before;
-                struct tm tm_not_after;
-                // GMT(UTC)
-                ASN1_TIME_to_tm(asn1time_not_before, &tm_not_before);
-                ASN1_TIME_to_tm(asn1time_not_after, &tm_not_after);
-                // localtime
-                time_t now = time(nullptr);
-                time_t not_before = mktime(&tm_not_before);
-                time_t not_after = mktime(&tm_not_after);
-
-                if ((not_before < now) && (now < not_after)) {
-                    // do nothing
-                } else {
-                    ret = errorcode_t::expired;
-                }
-            }
-        }
-
-        *context = ssl_ctx;
-    }
-    __finally2 {
-        if (ssl) {
-            SSL_free(ssl);
-#if defined DEBUG
-            if (istraceable(trace_category_crypto, loglevel_debug)) {
-                basic_stream dbs;
-                dbs.println("- SSL_free %p", ssl);
-                trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
-            }
-#endif
-        }
-        switch (ret) {
-            case errorcode_t::success:
-            case errorcode_t::expired:
-                break;
-            default:
-                SSL_CTX_free(ssl_ctx);
-                break;
-        }
-    }
-    return ret;
-}
-
 openssl_tls_context::openssl_tls_context(uint32 flag) : _ctx(nullptr) { tlscontext_open_simple(&_ctx, flag); }
 
 openssl_tls_context::openssl_tls_context(uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file)
     : _ctx(nullptr) {
     openssl_tls_context_open(&_ctx, flag, cert_file, key_file, password, chain_file);
+}
+
+openssl_tls_context::openssl_tls_context(const openssl_tls_context& rhs) : _ctx(rhs._ctx) {
+    if (nullptr == _ctx) {
+        throw exception(not_specified);
+    }
+    SSL_CTX_up_ref(_ctx);
+}
+
+openssl_tls_context::openssl_tls_context(openssl_tls_context&& rhs) : _ctx(std::move(rhs._ctx)) {
+    if (nullptr == _ctx) {
+        throw exception(not_specified);
+    }
+}
+
+openssl_tls_context::openssl_tls_context(openssl_tls* tls) {
+    if (tls && tls->get()) {
+        _ctx = tls->get();
+        SSL_CTX_up_ref(_ctx);
+    } else {
+        throw exception(not_specified);
+    }
+}
+
+openssl_tls_context::openssl_tls_context(SSL_CTX* ctx) : _ctx(ctx) {
+    if (nullptr == _ctx) {
+        throw exception(not_specified);
+    }
+    SSL_CTX_up_ref(_ctx);
 }
 
 openssl_tls_context::~openssl_tls_context() {

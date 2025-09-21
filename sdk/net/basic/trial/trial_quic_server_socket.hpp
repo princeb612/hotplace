@@ -8,41 +8,39 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_BASIC_OPENSSL_OPENSSLDTLSSERVERSOCKET__
-#define __HOTPLACE_SDK_NET_BASIC_OPENSSL_OPENSSLDTLSSERVERSOCKET__
+#ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALQUICSERVERSOCKET__
+#define __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALQUICSERVERSOCKET__
 
 #include <hotplace/sdk/net/basic/naive/naive_udp_server_socket.hpp>  // naive_udp_server_socket
-#include <hotplace/sdk/net/basic/openssl/openssl_tls.hpp>
-#include <hotplace/sdk/net/basic/openssl/openssl_tls_context.hpp>
 
 namespace hotplace {
 namespace net {
 
 /**
- * @brief   DTLS server socket
+ * @brief   QUIC server socket
  */
-class openssl_dtls_server_socket : public naive_udp_server_socket {
+class trial_quic_server_socket : public naive_udp_server_socket {
    public:
-    openssl_dtls_server_socket(openssl_tls* tls);
-    virtual ~openssl_dtls_server_socket();
+    trial_quic_server_socket();
+    virtual ~trial_quic_server_socket();
 
     /**
-     * @brief   DTLS session
-     * @param   sokcet_context_t** handle [out]
+     * @brief   QUIC session
+     * @param   socket_context_t** handle [out]
      * @param   socket_t listen_sock [in]
      */
     virtual return_t dtls_open(socket_context_t** handle, socket_t listen_sock);
     /**
-     * @brief   DTLS handshake
-     * @param   socket_context_t* handle
-     * @param   sockaddr* addr
-     * @param   socklen_t addrlen [in]
+     * @brief   QUIC handshake
+     * @param   netsession_t* sess [in]
      */
-    virtual return_t dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen);
+    virtual return_t dtls_handshake(netsession_t* sess);
+
     /**
      * @brief   recvfrom
      * @param   socket_context_t* handle [in]
      * @param   int mode [in]
+     *                  mode read_socket_recv - obtain the peer address
      * @param   char* ptr_data [out]
      * @param   size_t size_data [in]
      * @param   size_t* cbread [out]
@@ -67,14 +65,8 @@ class openssl_dtls_server_socket : public naive_udp_server_socket {
      */
     virtual bool support_tls();
 
-    openssl_tls* get_openssl_tls();
-
-    virtual int addref();
-    virtual int release();
-
    protected:
    private:
-    openssl_tls* _tls;
 };
 
 }  // namespace net

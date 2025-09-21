@@ -85,6 +85,7 @@ class tls_session {
     tls_protection& get_tls_protection();
     dtls_record_publisher& get_dtls_record_publisher();
     dtls_record_arrange& get_dtls_record_arrange();
+    quic_packet_publisher& get_quic_packet_publisher();
     quic_session& get_quic_session();
 
     void set_type(session_type_t type);
@@ -211,10 +212,10 @@ class tls_session {
     dtls_record_publisher* _dtls_record_publisher;
     dtls_record_arrange* _dtls_record_arrange;
     quic_session* _quic_session;
+    critical_section _quic_lock;
+    quic_packet_publisher* _quic_packet_publisher;
     secure_prosumer _prosumer;
 };
-
-bool is_kindof_h3(tls_session* session);
 
 }  // namespace net
 }  // namespace hotplace

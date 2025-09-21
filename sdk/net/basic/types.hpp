@@ -126,8 +126,12 @@ class openssl_tls_context;
 
 class trial_tcp_client_socket;
 class trial_udp_client_socket;
-
+class trial_tls_client_socket;
+class trial_dtls_client_socket;
+class trial_quic_client_socket;
 class trial_tls_server_socket;
+class trial_dtls_server_socket;
+class trial_quic_server_socket;
 
 class server_socket_adapter;
 class openssl_server_socket_adapter;

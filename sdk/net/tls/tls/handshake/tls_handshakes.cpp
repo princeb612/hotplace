@@ -125,6 +125,8 @@ tls_handshake* tls_handshakes::get(uint8 type, bool upref) { return _handshakes.
 
 tls_handshake* tls_handshakes::getat(size_t index, bool upref) { return _handshakes.getat(index, upref); }
 
+tls_handshake* tls_handshakes::operator[](size_t index) { return _handshakes[index]; }
+
 bool tls_handshakes::empty() { return _handshakes.empty(); }
 
 size_t tls_handshakes::size() { return _handshakes.size(); }

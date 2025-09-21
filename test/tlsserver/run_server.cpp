@@ -59,9 +59,6 @@ return_t echo_server(void*) {
 
     fclose(fp);
 
-    SSL_CTX* sslctx = nullptr;
-    // http_protocol* http_prot = nullptr;
-    openssl_tls* tls = nullptr;
     server_socket* tls_socket = nullptr;
 
     __try2 {
@@ -71,10 +68,8 @@ return_t echo_server(void*) {
             // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
             load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
 
-            __try_new_catch(tls_socket, new trial_tls_server_socket, ret, __leave2);
-
-            auto tlsadvisor = tls_advisor::get_instance();
-            tlsadvisor->set_ciphersuites(option.cs.c_str());
+            server_socket_builder builder;
+            tls_socket = builder.set(socket_scheme_tls | socket_scheme_trial).set_ciphersuites(option.cs).set_verify(0).build();
         } else {
             // part of ssl certificate
 
@@ -103,16 +98,14 @@ return_t echo_server(void*) {
                 ciphersuites += option.cs;
             }
 
-            ret = openssl_tls_context_open(&sslctx, tlscontext_flags, "rsa.crt", "rsa.key");
-
-            SSL_CTX_set_cipher_list(sslctx, ciphersuites.c_str());
+            server_socket_builder builder;
+            tls_socket = builder.set(socket_scheme_tls | socket_scheme_openssl)
+                             .set_certificate("rsa.crt", "rsa.key")
+                             .set_ciphersuites(ciphersuites)
+                             .set_verify(0)
+                             .build();
 
             _logger->writeln("ciphersuites %s", ciphersuites.c_str());
-
-            SSL_CTX_set_verify(sslctx, 0, nullptr);
-
-            __try_new_catch(tls, new openssl_tls(sslctx), ret, __leave2);
-            __try_new_catch(tls_socket, new openssl_tls_server_socket(tls), ret, __leave2);
         }
 
         server_conf conf;
@@ -156,12 +149,6 @@ return_t echo_server(void*) {
         netserver.close(handle_ipv6);
 
         tls_socket->release();
-
-        if (option_flag_trial & option.flags) {
-        } else {
-            tls->release();
-            SSL_CTX_free(sslctx);
-        }
     }
 
     return ret;

@@ -20,9 +20,6 @@ namespace net {
 /**
  * @brief TLS
  * @example
- *      uint32 ret = errorcode_t::success;
- *      tlscontext_open_simple(tlscontext_flag_tls, &sslctx);
- *      openssl_tls tls(sslctx);
  *      openssl_tls_client_socket cli(&tls);
  *      cli.connect(&sock, &tlshandle, host, port, 1);
  *      cli.send(sock, tlshandle, message, size, &cbsent);
@@ -34,7 +31,6 @@ namespace net {
  *          bs.write(buffer, cbread);
  *      }
  *      cli.close(sock, tlshandle);
- *      SSL_CTX_free(sslctx);
  */
 class openssl_tls {
    public:

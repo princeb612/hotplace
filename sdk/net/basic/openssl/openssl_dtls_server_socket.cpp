@@ -92,5 +92,17 @@ return_t openssl_dtls_server_socket::sendto(socket_context_t* handle, const char
 
 bool openssl_dtls_server_socket::support_tls() { return true; }
 
+openssl_tls* openssl_dtls_server_socket::get_openssl_tls() { return _tls; }
+
+int openssl_dtls_server_socket::addref() {
+    _tls->addref();
+    return basic_socket::addref();
+}
+
+int openssl_dtls_server_socket::release() {
+    _tls->release();
+    return basic_socket::release();
+}
+
 }  // namespace net
 }  // namespace hotplace

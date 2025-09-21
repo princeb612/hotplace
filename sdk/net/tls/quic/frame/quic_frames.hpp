@@ -59,6 +59,7 @@ class quic_frames {
     return_t for_each(std::function<return_t(quic_frame*)> func);
     quic_frame* get(uint8 type, bool upref = false);
     quic_frame* getat(size_t index, bool upref = false);
+    quic_frame* operator[](size_t index);
     bool empty();
     size_t size();
     void clear();

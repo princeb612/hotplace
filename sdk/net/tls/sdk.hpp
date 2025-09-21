@@ -42,6 +42,8 @@ bool is_kindof_frame(quic_frame* frame, protection_space_t space);
 return_t kindof_frame(quic_frame_t type, protection_space_t& space);
 bool is_kindof_frame(quic_frame_t type, protection_space_t space);
 
+bool is_kindof_alpn(tls_session* session, const std::string& alpn);
+
 }  // namespace net
 }  // namespace hotplace
 

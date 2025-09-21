@@ -108,6 +108,8 @@ tls_extension* tls_extensions::get(uint16 type, bool upref) { return _extensions
 
 tls_extension* tls_extensions::getat(size_t index, bool upref) { return _extensions.getat(index, upref); }
 
+tls_extension* tls_extensions::operator[](size_t index) { return _extensions[index]; }
+
 bool tls_extensions::empty() { return _extensions.empty(); }
 
 size_t tls_extensions::size() { return _extensions.size(); }

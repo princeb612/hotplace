@@ -11,6 +11,7 @@
       * Versions 1.1.1 and 1.0.2 are no longer supported. Extended support for 1.1.1 and 1.0.2 to gain access to security fixes for those versions is available.
       * Versions 1.1.0, 1.0.1, 1.0.0 and 0.9.8 are no longer supported.
     * https://openssl-library.org/source/
+      * 3.6 end-of-life TBD
       * 3.5 end-of-life 2030-04-08 LTS
       * 3.4 end-of-life 2026-10-22
       * 3.3 end-of-life 2026-04-09

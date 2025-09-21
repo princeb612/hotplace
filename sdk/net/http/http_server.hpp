@@ -62,6 +62,8 @@ class http_server {
     return_t shutdown_tls();
     return_t startup_dtls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
     return_t shutdown_dtls();
+    return_t startup_quic(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
+    return_t shutdown_quic();
     /**
      * @brief   startup
      * @param   http_service_t service [in]

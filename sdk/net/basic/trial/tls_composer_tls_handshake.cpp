@@ -24,27 +24,18 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::function<void(tls_session*, binary_t&)> func) {
-    return_t ret = errorcode_t::success;
-    if (from_client == dir) {
-        ret = do_client_handshake(dir, wto, func);
-    } else if (from_server == dir) {
-        ret = errorcode_t::not_supported;
-    }
-    return ret;
-}
-
-return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, std::function<void(tls_session*, binary_t&)> func) {
+return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto session_type = session->get_type();
+        auto dir = from_client;
         uint32 session_status = 0;
 
         uint8 retry = 3;
         do {
-            ret = do_client_hello(func);
+            ret = do_tls_client_hello(func);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -59,7 +50,7 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
                 }
 
                 // client_hello(cookie that server sent)
-                ret = do_client_hello(func);
+                ret = do_tls_client_hello(func);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }
@@ -137,7 +128,7 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
             session_status_finished = session_status_server_finished;
         }
 
-        ret = do_compose(&records, dir, func);
+        ret = do_tls_compose(&records, dir, func);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -154,7 +145,7 @@ return_t tls_composer::do_client_handshake(tls_direction_t dir, unsigned wto, st
     return ret;
 }
 
-return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t&)> func) {
+return_t tls_composer::do_tls_client_hello(std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     tls_record* record = nullptr;
@@ -186,7 +177,7 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
             return ret;
         });
 
-        do_compose(record, dir, func);
+        do_tls_compose(record, dir, func);
     }
     __finally2 {
         if (record) {
@@ -196,7 +187,7 @@ return_t tls_composer::do_client_hello(std::function<void(tls_session*, binary_t
     return ret;
 }
 
-return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session*, binary_t&)> func) {
+return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     tls_record_builder builder;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -281,13 +272,13 @@ return_t tls_composer::do_server_handshake_phase1(std::function<void(tls_session
             }
         }
 
-        do_compose(&records, dir, func);
+        do_tls_compose(&records, dir, func);
     }
     __finally2 {}
     return ret;
 }
 
-return_t tls_composer::do_server_handshake_phase2(std::function<void(tls_session*, binary_t&)> func) {
+return_t tls_composer::do_tls_server_handshake_phase2(std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     tls_record_builder builder;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -307,7 +298,51 @@ return_t tls_composer::do_server_handshake_phase2(std::function<void(tls_session
                      return success;
                  });
 
-        do_compose(&records, dir, func);
+        do_tls_compose(&records, dir, func);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_composer::do_tls_compose(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == record || nullptr == func) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto session = get_session();
+        auto session_type = session->get_type();
+        if (session_type_dtls == session_type) {
+            // fragmentation
+            session->get_dtls_record_publisher().publish(record, dir, func);
+        } else {
+            binary_t bin;
+            ret = record->write(dir, bin);
+            func(session, bin);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_composer::do_tls_compose(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == records || nullptr == func) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto session = get_session();
+        auto session_type = session->get_type();
+        if (session_type_dtls == session_type) {
+            // fragmentation
+            session->get_dtls_record_publisher().publish(records, dir, func);
+        } else {
+            records->write(session, dir, func);
+        }
     }
     __finally2 {}
     return ret;

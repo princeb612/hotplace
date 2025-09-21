@@ -64,24 +64,28 @@ return_t echo_server(void*) {
             // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
             load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
 
-            __try_new_catch(dtls_socket, new trial_dtls_server_socket, ret, __leave2);
+            server_socket_builder builder;
+            dtls_socket = builder.set(socket_scheme_dtls | socket_scheme_trial).set_ciphersuites(option.cs).build();
         } else {
-            // part of ssl certificate
-            ret = openssl_tls_context_open(&sslctx, tlscontext_flag_dtls, "server.crt", "server.key");
+            std::string ciphersuites;
+            if (option.cs.empty()) {
+                ciphersuites =
+                    "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-"
+                    "POLY1305:"
+                    "DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:"
+                    "ECDHE-RSA-AES256-SHA384:DHE-RSA-AES256-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES256-"
+                    "SHA:"
+                    "ECDHE-RSA-AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA";
+            } else {
+                ciphersuites = option.cs;
+            }
 
-            // https://docs.openssl.org/1.1.1/man1/ciphers/
-            // TLS 1.2
-            SSL_CTX_set_cipher_list(
-                sslctx,
-                "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:"
-                "DHE-"
-                "RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-"
-                "AES256-SHA384:DHE-RSA-AES256-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-"
-                "AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA");
-            SSL_CTX_set_verify(sslctx, 0, nullptr);
-
-            __try_new_catch(tls, new openssl_tls(sslctx), ret, __leave2);
-            __try_new_catch(dtls_socket, new openssl_dtls_server_socket(tls), ret, __leave2);
+            server_socket_builder builder;
+            dtls_socket = builder.set(socket_scheme_dtls | socket_scheme_openssl)
+                              .set_certificate("server.crt", "server.key")
+                              .set_ciphersuites(ciphersuites)
+                              .set_verify(0)
+                              .build();
         }
 
         server_conf conf;
@@ -125,11 +129,6 @@ return_t echo_server(void*) {
         netserver.close(handle_ipv6);
 
         dtls_socket->release();
-        if (option_flag_trial & option.flags) {
-        } else {
-            tls->release();
-            SSL_CTX_free(sslctx);
-        }
     }
 
     return ret;

@@ -103,6 +103,8 @@ return_t tls_records::for_each(std::function<return_t(tls_record*)> func) { retu
 
 tls_record* tls_records::getat(size_t index, bool upref) { return _records.getat(index, upref); }
 
+tls_record* tls_records::operator[](size_t index) { return _records[index]; }
+
 bool tls_records::empty() { return _records.empty(); }
 
 size_t tls_records::size() { return _records.size(); }

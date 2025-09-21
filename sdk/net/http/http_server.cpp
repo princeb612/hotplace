@@ -118,6 +118,34 @@ return_t http_server::shutdown_dtls() {
     return ret;
 }
 
+return_t http_server::startup_quic(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto adapter = get_server_socket_adapter();
+        if (nullptr == adapter) {
+            ret = errorcode_t::not_specified;
+            __leave2;
+        }
+        ret = adapter->startup_quic(server_cert, server_key, cipher_list, verify_peer);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t http_server::shutdown_quic() {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto adapter = get_server_socket_adapter();
+        if (nullptr == adapter) {
+            ret = errorcode_t::not_specified;
+            __leave2;
+        }
+        ret = adapter->shutdown_quic();
+    }
+    __finally2 {}
+    return ret;
+}
+
 return_t http_server::startup_server(http_service_t service, uint16 family, uint16 port, http_server_handler_t handler, void* user_context) {
     return_t ret = errorcode_t::success;
     network_multiplexer_context_t* handle = nullptr;

@@ -44,10 +44,13 @@ class tls_composer {
                                            uint16 minspec = tls_12, uint16 maxspec = tls_13);
 
    protected:
-    return_t do_client_hello(std::function<void(tls_session*, binary_t&)> func);
-    return_t do_client_handshake(tls_direction_t dir, unsigned wto, std::function<void(tls_session*, binary_t&)> func);
-    return_t do_server_handshake_phase1(std::function<void(tls_session*, binary_t&)> func);
-    return_t do_server_handshake_phase2(std::function<void(tls_session*, binary_t&)> func);
+    /**
+     * TLS handshake
+     */
+    return_t do_tls_client_handshake(unsigned wto, std::function<void(tls_session*, binary_t&)> func);
+    return_t do_tls_client_hello(std::function<void(tls_session*, binary_t&)> func);
+    return_t do_tls_server_handshake_phase1(std::function<void(tls_session*, binary_t&)> func);
+    return_t do_tls_server_handshake_phase2(std::function<void(tls_session*, binary_t&)> func);
 
     /**
      * TLS
@@ -55,8 +58,14 @@ class tls_composer {
      * DTLS
      *  generate fragmented DTLS record(s) and then call func (something like sendto)
      */
-    return_t do_compose(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
-    return_t do_compose(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
+    return_t do_tls_compose(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
+    return_t do_tls_compose(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
+    /**
+     * QUIC handshake
+     */
+    return_t do_quic_client_handshake(unsigned wto, std::function<void(tls_session*, binary_t&)> func);
+    return_t do_quic_server_handshake(std::function<void(tls_session*, binary_t&)> func);
+    return_t do_quic_compose(quic_frame* frame, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
 
     tls_session* _session;
     uint16 _minspec;
