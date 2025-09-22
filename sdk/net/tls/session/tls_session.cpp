@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/net/basic/trial/tls_composer.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_arrange.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_publisher.hpp>
 #include <hotplace/sdk/net/tls/quic_packet_publisher.hpp>
@@ -27,10 +28,10 @@ tls_session::tls_session()
     : _type(session_type_tls),
       _status(0),
       _hook_param(nullptr),
+      _composer(nullptr),
       _dtls_record_publisher(nullptr),
       _dtls_record_arrange(nullptr),
-      _quic_session(nullptr),
-      _quic_packet_publisher(nullptr) {
+      _quic_session(nullptr) {
     _shared.make_share(this);
     _tls_protection.set_session(this);
 }
@@ -39,15 +40,18 @@ tls_session::tls_session(session_type_t type)
     : _type(type),
       _status(0),
       _hook_param(nullptr),
+      _composer(nullptr),
       _dtls_record_publisher(nullptr),
       _dtls_record_arrange(nullptr),
-      _quic_session(nullptr),
-      _quic_packet_publisher(nullptr) {
+      _quic_session(nullptr) {
     _shared.make_share(this);
     set_type(type);
 }
 
 tls_session::~tls_session() {
+    if (_composer) {
+        delete _composer;
+    }
     if (_dtls_record_publisher) {
         delete _dtls_record_publisher;
     }
@@ -57,12 +61,21 @@ tls_session::~tls_session() {
     if (_quic_session) {
         delete _quic_session;
     }
-    if (_quic_packet_publisher) {
-        delete _quic_packet_publisher;
-    }
 }
 
 tls_protection& tls_session::get_tls_protection() { return _tls_protection; }
+
+tls_composer* tls_session::get_tls_composer() {
+    if (nullptr == _composer) {
+        critical_section_guard guard(_dtls_lock);
+        if (nullptr == _composer) {
+            _composer = new tls_composer(this);
+        }
+    }
+    return _composer;
+}
+
+secure_prosumer* tls_session::get_secure_prosumer() { return &_prosumer; }
 
 dtls_record_publisher& tls_session::get_dtls_record_publisher() {
     if (nullptr == _dtls_record_publisher) {
@@ -86,17 +99,6 @@ dtls_record_arrange& tls_session::get_dtls_record_arrange() {
     return *_dtls_record_arrange;
 }
 
-quic_packet_publisher& tls_session::get_quic_packet_publisher() {
-    if (nullptr == _quic_packet_publisher) {
-        critical_section_guard guard(_quic_lock);
-        if (nullptr == _quic_packet_publisher) {
-            _quic_packet_publisher = new quic_packet_publisher;
-            _quic_packet_publisher->set_session(this);
-        }
-    }
-    return *_quic_packet_publisher;
-}
-
 quic_session& tls_session::get_quic_session() {
     if (nullptr == _quic_session) {
         critical_section_guard guard(_dtls_lock);
@@ -106,6 +108,8 @@ quic_session& tls_session::get_quic_session() {
     }
     return *_quic_session;
 }
+
+quic_packet_publisher& tls_session::get_quic_packet_publisher() { return get_quic_session().get_quic_packet_publisher(); }
 
 void tls_session::set_type(session_type_t type) {
     _type = type;
@@ -279,8 +283,6 @@ bool tls_session::session_info::has_alert(uint8 level) {
     }
     return ret;
 }
-
-secure_prosumer* tls_session::get_secure_prosumer() { return &_prosumer; }
 
 t_key_value<uint8, uint64>& tls_session::session_info::get_keyvalue() { return _kv; }
 

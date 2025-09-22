@@ -32,7 +32,7 @@ namespace net {
  */
 class trial_tls_client_socket : public secure_client_socket {
    public:
-    trial_tls_client_socket(tls_version_t version = tls_13);
+    trial_tls_client_socket(tls_version_t spec = tls_13);
     virtual ~trial_tls_client_socket();
 
     virtual return_t send(const char *ptr_data, size_t size_data, size_t *cbsent);

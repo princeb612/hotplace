@@ -11,7 +11,8 @@
 #ifndef __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALDTLSSERVERSOCKET__
 #define __HOTPLACE_SDK_NET_BASIC_TRIAL_TRIALDTLSSERVERSOCKET__
 
-#include <hotplace/sdk/net/basic/naive/naive_udp_server_socket.hpp>  // naive_udp_server_socket
+#include <hotplace/sdk/net/basic/naive/naive_udp_server_socket.hpp>
+#include <hotplace/sdk/net/tls/tls/types.hpp>
 
 namespace hotplace {
 namespace net {
@@ -21,7 +22,7 @@ namespace net {
  */
 class trial_dtls_server_socket : public naive_udp_server_socket {
    public:
-    trial_dtls_server_socket();
+    trial_dtls_server_socket(tls_version_t minspec = tls_12, tls_version_t maxspec = tls_12);
     virtual ~trial_dtls_server_socket();
 
     /**
@@ -67,6 +68,8 @@ class trial_dtls_server_socket : public naive_udp_server_socket {
 
    protected:
    private:
+    tls_version_t _minspec;
+    tls_version_t _maxspec;
 };
 
 }  // namespace net

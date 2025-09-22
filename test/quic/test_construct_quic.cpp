@@ -97,7 +97,7 @@ void construct_quic_svr_handshakes_settings(tls_session* session, tls_direction_
     //   ...
     //   CRYPTO[CERT, CV, FIN]
     // 1-RTT
-    //   SETTINGS, PADDING
+    //   SETTINGS
 
     publisher.set_session(session)
         .set_flags(flags)
@@ -166,7 +166,7 @@ void construct_quic_cli_handshake(tls_session* session, tls_direction_t dir, uin
 
     quic_packet_publisher publisher;
 
-    // ACK, CRYPTO[FIN], PADDING
+    // ACK, CRYPTO[FIN]
     publisher.set_session(session)
         .set_flags(flags)
         .add(tls_hs_finished, dir)
@@ -411,7 +411,7 @@ void construct_quic_ack(tls_session* session, tls_direction_t dir, uint32 flags,
 
     quic_packet_publisher publisher;
 
-    // ACK, PADDING
+    // ACK
     publisher.set_session(session)
         .set_flags(quic_ack_packet | flags)
         .publish(dir,  //
@@ -553,12 +553,12 @@ void test_construct_quic() {
             // cf. http3.pcapng #17
             // #Frame C->S
             //   PKN 20 handshake [ACK (21..20), CRYPTO(FIN)]
-            //   PKN 30 1-RTT [ACK (30), PADDING]
+            //   PKN 30 1-RTT [ACK (30)]
             {
                 lambda_check_pkn(&session_client, from_client, protection_handshake, 20);
                 lambda_check_pkn(&session_client, from_client, protection_application, 30);
 
-                const char* text = "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK, PADDING]";
+                const char* text = "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK]";
                 construct_quic_cli_handshake(&session_client, from_client, quic_ack_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
                 lambda_test_ready_to_ack(&session_server, protection_handshake, 20, 0);
@@ -566,9 +566,9 @@ void test_construct_quic() {
             }
 
             // #Frame S->C
-            //   PKN 22 [ACK (20), PADDING]
+            //   PKN 22 [ACK (20)]
             {
-                const char* text = "handshake [ACK, PADDING]";
+                const char* text = "handshake [ACK]";
                 lambda_check_pkn(&session_server, from_server, protection_handshake, 22);
                 construct_quic_ack(&session_server, from_server, 0, bins, text);
                 send_packet(&session_client, from_server, bins, text);

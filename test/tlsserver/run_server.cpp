@@ -62,6 +62,15 @@ return_t echo_server(void*) {
     server_socket* tls_socket = nullptr;
 
     __try2 {
+        uint32 flags = 0;
+        std::string ciphersuites;
+        if (option.flags & option_flag_allow_tls13) {
+            flags |= socket_scheme_tls13;
+        }
+        if (option.flags & option_flag_allow_tls12) {
+            flags |= socket_scheme_tls12;
+        }
+
         if (option_flag_trial & option.flags) {
             // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
             load_certificate("rsa.crt", "rsa.key", nullptr);
@@ -69,18 +78,9 @@ return_t echo_server(void*) {
             load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
 
             server_socket_builder builder;
-            tls_socket = builder.set(socket_scheme_tls | socket_scheme_trial).set_ciphersuites(option.cs).set_verify(0).build();
+            tls_socket = builder.set(socket_scheme_tls | socket_scheme_trial | flags).set_ciphersuites(option.cs).build();
         } else {
             // part of ssl certificate
-
-            uint32 tlscontext_flags = tlscontext_flag_tls;
-            std::string ciphersuites;
-            if (option.flags & option_flag_allow_tls13) {
-                tlscontext_flags |= tlscontext_flag_allow_tls13;
-            }
-            if (option.flags & option_flag_allow_tls12) {
-                tlscontext_flags |= tlscontext_flag_allow_tls12;
-            }
 
             if (option.cs.empty()) {
                 ciphersuites += "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256";
@@ -99,7 +99,7 @@ return_t echo_server(void*) {
             }
 
             server_socket_builder builder;
-            tls_socket = builder.set(socket_scheme_tls | socket_scheme_openssl)
+            tls_socket = builder.set(socket_scheme_tls | socket_scheme_openssl | flags)
                              .set_certificate("rsa.crt", "rsa.key")
                              .set_ciphersuites(ciphersuites)
                              .set_verify(0)

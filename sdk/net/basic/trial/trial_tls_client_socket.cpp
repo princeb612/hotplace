@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace net {
 
-trial_tls_client_socket::trial_tls_client_socket(tls_version_t version) : secure_client_socket(version) {
+trial_tls_client_socket::trial_tls_client_socket(tls_version_t spec) : secure_client_socket(spec) {
     auto session = &_session;
     session->set_type(session_type_tls);
 }

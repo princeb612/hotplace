@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/net/basic/trial/tls_composer.hpp>
@@ -35,12 +36,15 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
 
         uint8 retry = 3;
         do {
+            // C->S CH
             ret = do_tls_client_hello(func);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
 
+            // if DTLS(HVR), then CH(cookie)
             if (session_type_dtls == session_type) {
+                // S->C HVR
                 session->wait_change_session_status(session_status_hello_verify_request, wto);
                 session_status = session->get_session_status();
 
@@ -49,13 +53,14 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
                     __leave2_trace(ret);
                 }
 
-                // client_hello(cookie that server sent)
+                // C->S CH(cookie that server sent)
                 ret = do_tls_client_hello(func);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }
             }
 
+            // S->C SH, check HRR
             session->wait_change_session_status(session_status_server_hello, wto);
             session_status = session->get_session_status();
 
@@ -133,6 +138,7 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
             __leave2;
         }
 
+        // wait FIN
         session->wait_change_session_status(session_status_finished, wto);
         session_status = session->get_session_status();
 

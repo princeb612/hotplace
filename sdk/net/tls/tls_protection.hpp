@@ -43,6 +43,7 @@ class protection_context {
     protection_context(protection_context&& rhs);
 
     return_t negotiate(tls_session* session, uint16& cs, uint16& tlsver);
+    return_t negotiate(tls_session* session, uint16 minspec, uint16 maxspec, uint16& cs, uint16& tlsver);
 
     void add_cipher_suite(uint16 cs);
     void add_signature_algorithm(uint16 sa);
@@ -62,7 +63,7 @@ class protection_context {
     void for_each_supported_versions(std::function<void(uint16, bool*)> fn) const;
     void for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) const;
 
-    return_t select_from(const protection_context& rhs, tls_session* session);
+    return_t select_from(const protection_context& rhs, tls_session* session, uint16 minspec = tls_12, uint16 maxspec = tls_13);
 
     void set_cipher_suite(uint16 cs);
     uint16 get_cipher_suite(uint16 cs);
@@ -124,6 +125,7 @@ class tls_protection {
 
     size_t get_header_size();
     static return_t negotiate(tls_session* session, uint16& ciphersuite, uint16& tlsversion);
+    static return_t negotiate(tls_session* session, uint16 minspec, uint16 maxspec, uint16& ciphersuite, uint16& tlsversion);
 
     ///////////////////////////////////////////////////////////////////////////
     // hash

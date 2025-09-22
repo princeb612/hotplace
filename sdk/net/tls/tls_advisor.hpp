@@ -119,7 +119,7 @@ enum tls_resource_flag_t : uint8 {
 };
 struct tls_cipher_suite_t {
     uint16 code;                // 0xc023
-    tls_version_t version;      // tls_12
+    tls_version_t spec;         // tls_12 (specfication i.e. TLS 1.2, TLS 1.3)
     uint8 flags;                // tls_resource_flag_t
     const char* name_iana;      // TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
     const char* name_ossl;      // ECDHE-ECDSA-AES128-SHA256

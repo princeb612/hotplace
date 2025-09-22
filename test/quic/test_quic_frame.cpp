@@ -96,7 +96,78 @@ void test_ack() {
     }
 }
 
+void test_subtraction() {
+    _test_case.begin("subtraction");
+    // [retransmission] check PKN not acknowledged
+
+    {
+        t_merge_ovl_intervals<uint32> ovl;
+        ovl.add(7, 12).add(15, 16).add(17, 18).add(19, 25);
+        ovl.subtract(7, 11).subtract(16, 16).subtract(17, 19).subtract(23, 25).for_each([](uint32 s, uint32 e) -> void {
+            if (s == e) {
+                _logger->writeln("> %u", s);
+            } else {
+                _logger->writeln("> %u-%u", s, e);
+            }
+        });
+        t_merge_ovl_intervals<uint32> expect;
+        expect.add(12, 12).add(15, 15).add(20, 22);
+        _test_case.assert(ovl == expect, __FUNCTION__, "subtract #1");
+    }
+
+    {
+        t_merge_ovl_intervals<uint32> ovl1;
+        ovl1.add(7, 12).add(15, 16).add(17, 18).add(19, 25);
+        t_merge_ovl_intervals<uint32> ovl2;
+        ovl2.add(7, 11).add(16, 16).add(17, 19).add(23, 25);
+        ovl1.subtract(ovl2).for_each([](uint32 s, uint32 e) -> void {
+            if (s == e) {
+                _logger->writeln("> %u", s);
+            } else {
+                _logger->writeln("> %u-%u", s, e);
+            }
+        });
+        t_merge_ovl_intervals<uint32> expect;
+        expect.add(12, 12).add(15, 15).add(20, 22);
+        _test_case.assert(ovl1 == expect, __FUNCTION__, "subtract #2");
+    }
+
+    {
+        t_ovl_points<uint32> part;
+        part.add(7, 12).add(14).add(15, 16).add(17, 18).add(21).add(19).add(22).add(20).add(25).add(23).add(24);
+        part.subtract(7, 12).subtract(14).subtract(16).subtract(17, 18).subtract(19, 22).subtract(23, 24).subtract(26, 30).for_each(
+            [](uint32 s, uint32 e) -> void {
+                if (s == e) {
+                    _logger->writeln("> %u", s);
+                } else {
+                    _logger->writeln("> %u-%u", s, e);
+                }
+            });
+        t_ovl_points<uint32> expect;
+        expect.add(15).add(25);
+        _test_case.assert(part == expect, __FUNCTION__, "subtract #3");
+    }
+
+    {
+        t_ovl_points<uint32> part1;
+        part1.add(7, 12).add(14).add(15, 16).add(17, 18).add(21).add(19).add(22).add(20).add(25).add(23).add(24);
+        t_ovl_points<uint32> part2;
+        part2.add(7, 12).add(14).add(16).add(17, 18).add(19, 22).add(23, 24).add(26, 30);
+        part1.subtract(part2).for_each([](uint32 s, uint32 e) -> void {
+            if (s == e) {
+                _logger->writeln("> %u", s);
+            } else {
+                _logger->writeln("> %u-%u", s, e);
+            }
+        });
+        t_ovl_points<uint32> expect;
+        expect.add(15).add(25);
+        _test_case.assert(part1 == expect, __FUNCTION__, "subtract #4");
+    }
+}
+
 void test_quic_frame() {
     // RFC 9000 19.3 ACK Frames
     test_ack();
+    test_subtraction();
 }

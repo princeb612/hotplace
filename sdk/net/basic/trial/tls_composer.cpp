@@ -73,14 +73,27 @@ return_t tls_composer::session_status_changed(uint32 session_status, tls_directi
             //   S server_hello, certificate, server_key_exchange, server_hello_done
             //   C client_key_exchange, change_cipher_spec, finished
             //   S change_cipher_spec, finished
-            switch (session_status) {
-                case session_status_client_hello: {
-                    ret = do_tls_server_handshake_phase1(func);
+            switch (session_type) {
+                case session_type_tls:
+                case session_type_dtls: {
+                    switch (session_status) {
+                        case session_status_client_hello: {
+                            ret = do_tls_server_handshake_phase1(func);
+                        } break;
+                        case session_status_client_finished: {
+                            // TLS 1.2
+                            if (protection.is_kindof_tls12()) {
+                                ret = do_tls_server_handshake_phase2(func);
+                            }
+                        } break;
+                    }
                 } break;
-                case session_status_client_finished: {
-                    // TLS 1.2
-                    if (protection.is_kindof_tls12()) {
-                        ret = do_tls_server_handshake_phase2(func);
+                case session_type_quic:
+                case session_type_quic2: {
+                    switch (session_status) {
+                        case session_status_client_hello: {
+                            ret = do_quic_server_handshake(func);
+                        } break;
                     }
                 } break;
             }
@@ -100,7 +113,7 @@ return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::functio
             if (from_client == dir) {
                 ret = do_tls_client_handshake(wto, func);
             } else if (from_server == dir) {
-                ret = errorcode_t::not_supported;
+                ret = errorcode_t::not_supported;  // session_status_changed
             }
         } break;
         case session_type_quic:
@@ -108,7 +121,7 @@ return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::functio
             if (from_client == dir) {
                 ret = do_quic_client_handshake(wto, func);
             } else if (from_server == dir) {
-                ret = errorcode_t::not_supported;
+                ret = errorcode_t::not_supported;  // session_status_changed
             }
         }
     }

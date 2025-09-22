@@ -15,6 +15,7 @@
 #include <hotplace/sdk/net/basic/naive/naive_tcp_server_socket.hpp>  // naive_tcp_server_socket
 #include <hotplace/sdk/net/basic/trial/secure_prosumer.hpp>
 #include <hotplace/sdk/net/basic/trial/types.hpp>
+#include <hotplace/sdk/net/tls/tls/types.hpp>
 #include <hotplace/sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
@@ -25,7 +26,7 @@ namespace net {
  */
 class trial_tls_server_socket : public naive_tcp_server_socket {
    public:
-    trial_tls_server_socket();
+    trial_tls_server_socket(tls_version_t minspec = tls_12, tls_version_t maxspec = tls_13);
     virtual ~trial_tls_server_socket();
 
     /**
@@ -68,6 +69,8 @@ class trial_tls_server_socket : public naive_tcp_server_socket {
    protected:
    private:
     secure_prosumer _secure;
+    tls_version_t _minspec;
+    tls_version_t _maxspec;
 };
 
 }  // namespace net

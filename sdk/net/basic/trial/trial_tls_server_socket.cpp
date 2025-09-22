@@ -17,11 +17,13 @@
 #include <hotplace/sdk/net/tls/tls/record/tls_record_application_data.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
+#include <hotplace/sdk/net/tls/tls_session.hpp>
 
 namespace hotplace {
 namespace net {
 
-trial_tls_server_socket::trial_tls_server_socket() : naive_tcp_server_socket() {}
+trial_tls_server_socket::trial_tls_server_socket(tls_version_t minspec, tls_version_t maxspec)
+    : naive_tcp_server_socket(), _minspec(minspec), _maxspec(maxspec) {}
 
 trial_tls_server_socket::~trial_tls_server_socket() {}
 
@@ -33,6 +35,10 @@ return_t trial_tls_server_socket::tls_accept(socket_context_t **handle, socket_t
 
         context->handle.session = session;
         *handle = context;
+
+        auto composer = session->get_tls_composer();
+        composer->set_minver(_minspec);
+        composer->set_maxver(_maxspec);
 
         {
             auto lambda_send = [&](tls_session *sess, binary_t &bin) -> void {
@@ -46,11 +52,10 @@ return_t trial_tls_server_socket::tls_accept(socket_context_t **handle, socket_t
                 }
 #endif
                 size_t sent = 0;
-                naive_tcp_server_socket::send(ctx, (char *)&bin[0], bin.size(), &sent);
+                naive_tcp_server_socket::send(ctx, bin.empty() ? nullptr : (char *)&bin[0], bin.size(), &sent);
             };
             auto lambda = [&](tls_session *sess, uint32 status) -> void {
-                tls_composer composer(sess);
-                composer.session_status_changed(status, from_server, 1000, lambda_send);
+                sess->get_tls_composer()->session_status_changed(status, from_server, 1000, lambda_send);
             };
 
             session->set_hook_change_session_status(lambda);

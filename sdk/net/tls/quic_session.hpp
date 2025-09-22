@@ -18,6 +18,7 @@
 #include <hotplace/sdk/net/http/qpack/qpack_dynamic_table.hpp>
 #include <hotplace/sdk/net/http/qpack/qpack_encoder.hpp>
 #include <hotplace/sdk/net/tls/quic/types.hpp>
+#include <hotplace/sdk/net/tls/quic_packet_publisher.hpp>
 #include <hotplace/sdk/net/tls/quic_streams.hpp>
 #include <hotplace/sdk/net/tls/types.hpp>
 #include <queue>
@@ -30,16 +31,30 @@ class quic_session {
     quic_session();
     ~quic_session();
 
-    // NCI
+    /**
+     * NCI
+     */
     std::map<uint64, binary_t>& get_cid_tracker();
-    // setting
+    /**
+     * setting
+     */
     t_key_value<uint64, uint64>& get_setting();
-    // settings, headers
+    /**
+     * settings, headers
+     */
     qpack_dynamic_table& get_dynamic_table();
-    // ack
+    /**
+     * ack
+     */
     t_ovl_points<uint32>& get_pkns(protection_space_t space);
-    // stream
+    /**
+     * stream
+     */
     quic_streams& get_streams();
+    /**
+     * publisher
+     */
+    quic_packet_publisher& get_quic_packet_publisher();
 
    protected:
    private:
@@ -53,6 +68,10 @@ class quic_session {
     std::map<protection_space_t, t_ovl_points<uint32>> _pkn;
     // stream
     quic_streams _streams;
+    // publisjer
+    quic_packet_publisher _quic_packet_publisher;
+    // retransmission
+    std::map<protection_space_t, t_binaries<uint32>> _retrans;
 };
 
 }  // namespace net

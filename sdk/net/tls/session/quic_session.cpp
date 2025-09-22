@@ -27,5 +27,7 @@ t_ovl_points<uint32>& quic_session::get_pkns(protection_space_t space) { return 
 
 quic_streams& quic_session::get_streams() { return _streams; }
 
+quic_packet_publisher& quic_session::get_quic_packet_publisher() { return _quic_packet_publisher; }
+
 }  // namespace net
 }  // namespace hotplace

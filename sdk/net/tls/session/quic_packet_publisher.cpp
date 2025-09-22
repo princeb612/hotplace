@@ -68,12 +68,13 @@ quic_packet_publisher& quic_packet_publisher::add(tls_hs_type_t type, tls_direct
     return_t ret = errorcode_t::success;
     tls_handshake* handshake = nullptr;
     auto session = get_session();
+    auto spec = tls_13;
     switch (type) {
         case tls_hs_client_hello: {
-            ret = tls_composer::construct_client_hello(&handshake, session, func, tls_13, tls_13);
+            ret = tls_composer::construct_client_hello(&handshake, session, func, spec, spec);
         } break;
         case tls_hs_server_hello: {
-            ret = tls_composer::construct_server_hello(&handshake, session, func, tls_13, tls_13);
+            ret = tls_composer::construct_server_hello(&handshake, session, func, spec, spec);
         } break;
         default: {
             tls_handshake_builder builder;

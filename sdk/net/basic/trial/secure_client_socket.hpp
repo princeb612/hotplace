@@ -34,7 +34,7 @@ class secure_client_socket : public client_socket_prosumer {
     secure_prosumer* get_secure_prosumer();
 
    protected:
-    secure_client_socket(tls_version_t version = tls_12);
+    secure_client_socket(tls_version_t spec = tls_12);
 
     virtual return_t do_handshake();
     virtual return_t do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);
@@ -43,7 +43,7 @@ class secure_client_socket : public client_socket_prosumer {
     virtual return_t do_send(binary_t& bin);
 
     tls_session _session;
-    tls_version_t _version;
+    tls_version_t _spec;
 
     secure_prosumer _secure;
 };

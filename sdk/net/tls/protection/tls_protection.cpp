@@ -92,7 +92,11 @@ size_t tls_protection::get_header_size() {
 protection_context &tls_protection::get_protection_context() { return _handshake_context; }
 
 return_t tls_protection::negotiate(tls_session *session, uint16 &ciphersuite, uint16 &tlsversion) {
-    return session->get_tls_protection().get_protection_context().negotiate(session, ciphersuite, tlsversion);
+    return session->get_tls_protection().get_protection_context().negotiate(session, tls_10, tls_13, ciphersuite, tlsversion);
+}
+
+return_t tls_protection::negotiate(tls_session *session, uint16 minspec, uint16 maxspec, uint16 &ciphersuite, uint16 &tlsversion) {
+    return session->get_tls_protection().get_protection_context().negotiate(session, minspec, maxspec, ciphersuite, tlsversion);
 }
 
 void tls_protection::set_session(tls_session *session) {

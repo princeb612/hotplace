@@ -27,10 +27,17 @@ enum socket_scheme_t : uint32 {
     // 0x000F0000
     socket_scheme_openssl = 0x00000000,
     socket_scheme_trial = 0x00010000,
+    // 0x00F00000 - reserved
+    // 0xFF000000
+    // socket_scheme_tls, socket_scheme_dtls
+    socket_scheme_tls12 = 0x01000000,
+    socket_scheme_tls13 = 0x02000000,
+    socket_scheme_tls12_13 = socket_scheme_tls12 | socket_scheme_tls13,
     // mask
     socket_scheme_mask = 0x0000ffff,
     socket_scheme_mask_secure = 0x00008000,
     socket_scheme_mask_powered_by = 0x000f0000,
+    socket_scheme_mask_tune = 0xff000000,
 };
 
 class server_socket_builder {

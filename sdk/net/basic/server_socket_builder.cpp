@@ -43,9 +43,41 @@ server_socket_builder& server_socket_builder::set_verify(int verify_peer) {
 server_socket* server_socket_builder::build() {
     server_socket* svrsocket = nullptr;
     __try2 {
-        auto socket_scheme = socket_scheme_mask & get_scheme();
-        auto powered_by = socket_scheme_mask_powered_by & get_scheme();
-        auto secure = socket_scheme_mask_secure & get_scheme();
+        auto scheme = get_scheme();
+        auto socket_scheme = socket_scheme_mask & scheme;
+        auto powered_by = socket_scheme_mask_powered_by & scheme;
+        auto secure = socket_scheme_mask_secure & scheme;
+        uint32 ossl_flags = 0;
+        tls_version_t trial_minspec = tls_12;
+        tls_version_t trial_maxspec = tls_12;
+
+        switch (powered_by) {
+            case socket_scheme_openssl: {
+                if (socket_scheme_tls12 & scheme) {
+                    ossl_flags |= tlscontext_flag_allow_tls12;
+                }
+                if (socket_scheme_tls13 & scheme) {
+                    ossl_flags |= tlscontext_flag_allow_tls13;
+                }
+            } break;
+            case socket_scheme_trial: {
+                if (socket_scheme_tls12 & scheme) {
+                    trial_minspec = tls_12;
+                    if (socket_scheme_tls13 & scheme) {
+                        trial_maxspec = tls_13;
+                    } else {
+                        trial_maxspec = tls_12;
+                    }
+                } else if (socket_scheme_tls13 & scheme) {
+                    trial_minspec = tls_13;
+                    trial_maxspec = tls_13;
+                } else {
+                    trial_minspec = tls_12;
+                    trial_maxspec = tls_13;
+                }
+            } break;
+        }
+
         switch (socket_scheme) {
             case socket_scheme_tcp: {
                 __try_new_catch_only(svrsocket, new naive_tcp_server_socket);
@@ -56,26 +88,26 @@ server_socket* server_socket_builder::build() {
             case socket_scheme_tls: {
                 switch (powered_by) {
                     case socket_scheme_openssl: {
-                        openssl_tls_context ctx(tlscontext_flag_tls, _server_cert.c_str(), _server_key.c_str());
+                        openssl_tls_context ctx(tlscontext_flag_tls | ossl_flags, _server_cert.c_str(), _server_key.c_str());
                         __try_new_catch_only(svrsocket, new openssl_tls_server_socket(new openssl_tls(&ctx)));
                         ctx.set_cipher_list(_cipher_suites.c_str());
                         ctx.set_verify(_verify);
                     } break;
                     case socket_scheme_trial: {
-                        __try_new_catch_only(svrsocket, new trial_tls_server_socket);
+                        __try_new_catch_only(svrsocket, new trial_tls_server_socket(trial_minspec, trial_maxspec));
                     } break;
                 }
             } break;
             case socket_scheme_dtls: {
                 switch (powered_by) {
                     case socket_scheme_openssl: {
-                        openssl_tls_context ctx(tlscontext_flag_dtls, _server_cert.c_str(), _server_key.c_str());
+                        openssl_tls_context ctx(tlscontext_flag_dtls | ossl_flags, _server_cert.c_str(), _server_key.c_str());
                         __try_new_catch_only(svrsocket, new openssl_dtls_server_socket(new openssl_tls(&ctx)));
                         ctx.set_cipher_list(_cipher_suites.c_str());
                         ctx.set_verify(_verify);
                     } break;
                     case socket_scheme_trial: {
-                        __try_new_catch_only(svrsocket, new trial_dtls_server_socket);
+                        __try_new_catch_only(svrsocket, new trial_dtls_server_socket(trial_minspec, trial_maxspec));
                     } break;
                 }
             } break;

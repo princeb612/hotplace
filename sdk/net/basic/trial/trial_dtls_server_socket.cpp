@@ -24,7 +24,8 @@
 namespace hotplace {
 namespace net {
 
-trial_dtls_server_socket::trial_dtls_server_socket() : naive_udp_server_socket() {}
+trial_dtls_server_socket::trial_dtls_server_socket(tls_version_t minspec, tls_version_t maxspec)
+    : naive_udp_server_socket(), _minspec(minspec), _maxspec(maxspec) {}
 
 trial_dtls_server_socket::~trial_dtls_server_socket() {}
 
@@ -59,6 +60,17 @@ return_t trial_dtls_server_socket::dtls_handshake(netsession_t* sess) {
     return_t ret = errorcode_t::success;
 
     __try2 {
+        if (nullptr == sess) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto handle = sess->netsock.event_handle;
+        auto session = handle->handle.session;
+        auto composer = session->get_tls_composer();
+        composer->set_minver(_minspec);
+        composer->set_maxver(_maxspec);
+
         auto lambda_send = [&](tls_session* session, binary_t& bin) -> void {
             netsession_t* nsess = (netsession_t*)(session->get_hook_param());
             const auto& sa = nsess->netsock.cli_addr;
@@ -74,15 +86,12 @@ return_t trial_dtls_server_socket::dtls_handshake(netsession_t* sess) {
             }
 #endif
             size_t sent = 0;
-            naive_udp_server_socket::sendto(ctx, (char*)&bin[0], bin.size(), &sent, (sockaddr*)&sa, sizeof(sa));
+            naive_udp_server_socket::sendto(ctx, bin.empty() ? nullptr : (char*)&bin[0], bin.size(), &sent, (sockaddr*)&sa, sizeof(sa));
         };
         auto lambda = [&](tls_session* session, uint32 status) -> void {
-            tls_composer composer(session);
-            composer.session_status_changed(status, from_server, 1000, lambda_send);
+            session->get_tls_composer()->session_status_changed(status, from_server, 1000, lambda_send);
         };
 
-        auto handle = sess->netsock.event_handle;
-        auto session = handle->handle.session;
         session->set_hook_change_session_status(lambda);
         session->set_hook_param(sess);
     }

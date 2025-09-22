@@ -41,7 +41,7 @@ protection_context::protection_context(protection_context&& rhs) {
     _cipher_suite = rhs._cipher_suite;
 }
 
-return_t protection_context::negotiate(tls_session* session, uint16& cs, uint16& tlsver) {
+return_t protection_context::negotiate(tls_session* session, uint16 minspec, uint16 maxspec, uint16& cs, uint16& tlsver) {
     return_t ret = errorcode_t::success;
     if (session) {
         cs = 0;
@@ -52,7 +52,7 @@ return_t protection_context::negotiate(tls_session* session, uint16& cs, uint16&
         auto& prot_context = protection.get_protection_context();
         auto nego_context = protection.get_protection_context();  // copy
 
-        ret = prot_context.select_from(nego_context, session);
+        ret = prot_context.select_from(nego_context, session, minspec, maxspec);
 
         cs = prot_context.get0_cipher_suite();
         tlsver = prot_context.get0_supported_version();
@@ -140,7 +140,7 @@ void protection_context::clear() {
     clear_ec_point_formats();
 }
 
-return_t protection_context::select_from(const protection_context& rhs, tls_session* session) {
+return_t protection_context::select_from(const protection_context& rhs, tls_session* session, uint16 minspec, uint16 maxspec) {
     return_t ret = errorcode_t::success;
     __try2 {
         clear();
@@ -155,14 +155,22 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
+        std::set<uint16> specs;
         std::set<crypto_kty_t> ktypes_set;
-        std::map<uint16, uint16> tlsversion_map;
+        // std::map<uint16, uint16> tlsversion_map;
         std::map<uint16, std::list<uint16>> cs_map;
 
-        for (auto ver : rhs._supported_versions) {
-            bool is_tls13 = tlsadvisor->is_kindof_tls13(ver);
-            tlsversion_map.insert({is_tls13 ? tls_13 : tls_12, ver});
+        // TLS specification
+        for (uint16 t = tls_10; t <= tls_13; t++) {
+            if ((minspec <= t) && (t <= maxspec)) {
+                specs.insert(t);
+            }
         }
+
+        // for (auto ver : rhs._supported_versions) {
+        //     bool is_tls13 = tlsadvisor->is_kindof_tls13(ver);
+        //     tlsversion_map.insert({is_tls13 ? tls_13 : tls_12, ver});
+        // }
 
         {
             // check certificate type(s), see load_certificate
@@ -181,11 +189,18 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
             for (auto cs : rhs._cipher_suites) {  // request
                 auto hint = tlsadvisor->hintof_cipher_suite(cs);
                 if (hint && (tls_flag_support & hint->flags)) {
+                    {
+                        // enforce minspec~maxspec
+                        auto it = specs.find(hint->spec);
+                        if (specs.end() == it) {
+                            continue;
+                        }
+                    }
                     if (false == tlsadvisor->test_ciphersuite(cs)) {  // see set_ciphersuites
                         continue;
                     }
 
-                    if (tls_13 != hint->version) {
+                    if (tls_13 != hint->spec) {
                         if (ktypes_set.empty()) {
                             continue;
                         }
@@ -213,7 +228,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                         trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
                     }
 #endif
-                    cs_map[hint->version].push_back(cs);
+                    cs_map[hint->spec].push_back(cs);
                 }
             }
         }

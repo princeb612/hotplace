@@ -33,8 +33,6 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-r", "run server", [](OPTION& o, char* param) -> void { o.run = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-p", "port (9000)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-tls13", "allow TLS 1.3", [](OPTION& o, char* param) -> void { o.flags |= option_flag_allow_tls13; }).optional()
-                << t_cmdarg_t<OPTION>("-tls12", "allow TLS 1.2", [](OPTION& o, char* param) -> void { o.flags |= option_flag_allow_tls12; }).optional()
                 << t_cmdarg_t<OPTION>("-T", "use trial adapter", [](OPTION& o, char* param) -> void { o.flags |= option_flag_trial; }).optional()
                 << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.flags |= option_flag_keylog; }).optional()
                 << t_cmdarg_t<OPTION>("-cs", "ciphersuite", [](OPTION& o, char* param) -> void { o.cs = param; }).optional().preced();

@@ -43,9 +43,9 @@ class t_merge_ovl_intervals {
         TAGTYPE t;  // tag
 
         interval() : s(0), e(0), t(TAGTYPE()) {}
-        interval(T start, T end) : s(start), e(end), t(TAGTYPE()) {}
-        interval(T start, T end, const TAGTYPE& tag) : s(start), e(end), t(tag) {}
-        interval(T start, T end, TAGTYPE&& tag) : s(start), e(end), t(std::move(tag)) {}
+        interval(T start, T end) : s(std::min(start, end)), e(std::max(start, end)), t(TAGTYPE()) {}
+        interval(T start, T end, const TAGTYPE& tag) : s(std::min(start, end)), e(std::max(start, end)), t(tag) {}
+        interval(T start, T end, TAGTYPE&& tag) : s(std::min(start, end)), e(std::max(start, end)), t(std::move(tag)) {}
         interval(const interval& rhs) : s(rhs.s), e(rhs.e), t(rhs.t) {}
         interval(interval&& rhs) : s(rhs.s), e(rhs.e), t(std::move(rhs.t)) {}
         interval& operator=(const interval& rhs) {
@@ -99,6 +99,28 @@ class t_merge_ovl_intervals {
         return *this;
     }
 
+    t_merge_ovl_intervals& subtract(T t) {
+        critical_section_guard guard(_lock);
+
+        t_merge_ovl_intervals<T, TAGTYPE> temp;
+        temp._arr = std::move(_arr);
+        temp.merge();
+        for (auto item : temp._arr) {
+            if (item.e < t) {
+                add(std::move(item));
+            } else if (t < item.s) {
+                add(std::move(item));
+            } else {
+                if (item.s < t) {
+                    add(item.s, t - 1);
+                }
+                if (t < item.e) {
+                    add(t + 1, item.e);
+                }
+            }
+        }
+        return *this;
+    }
     t_merge_ovl_intervals& subtract(T start, T end) {
         critical_section_guard guard(_lock);
 
@@ -111,13 +133,21 @@ class t_merge_ovl_intervals {
             } else if (end < item.s) {
                 add(std::move(item));
             } else {
-                if ((item.s < start) && (start < item.e)) {
+                if (item.s < start) {
                     add(item.s, start - 1);
                 }
-                if ((item.s < end) && (end < item.e)) {
+                if (end < item.e) {
                     add(end + 1, item.e);
                 }
             }
+        }
+        return *this;
+    }
+    t_merge_ovl_intervals& subtract(t_merge_ovl_intervals& rhs) {
+        critical_section_guard guard(_lock);
+        auto temp = rhs.merge();
+        for (const auto& item : temp) {
+            subtract(item.s, item.e);
         }
         return *this;
     }
@@ -150,6 +180,24 @@ class t_merge_ovl_intervals {
     }
     size_t size() { return _arr.size(); }
 
+    bool operator==(t_merge_ovl_intervals& rhs) {
+        critical_section_guard guard(_lock);
+        critical_section_guard guard_rhs(rhs._lock);
+
+        auto l = merge();
+        auto r = rhs.merge();
+        return l == r;
+    }
+
+    void for_each(std::function<void(const T&, const T&)> func) {
+        if (func) {
+            critical_section_guard guard(_lock);
+            for (const auto& item : _arr) {
+                func(item.s, item.e);
+            }
+        }
+    }
+
    private:
     critical_section _lock;
     std::vector<interval> _arr;
@@ -175,7 +223,7 @@ class t_ovl_points {
 
         interval() : s(0), e(0) {}
         interval(T p) : s(p), e(p) {}
-        interval(T start, T end) : s(start), e(end) {}
+        interval(T start, T end) : s(std::min(start, end)), e(std::max(start, end)) {}
         interval(const interval& rhs) : s(rhs.s), e(rhs.e) {}
         interval(interval&& rhs) : s(rhs.s), e(rhs.e) {}
         interval& operator=(const interval& rhs) {
@@ -195,6 +243,18 @@ class t_ovl_points {
 
     t_ovl_points() : _status(0) {}
 
+    t_ovl_points& add(const interval& t) {
+        critical_section_guard guard(_lock);
+        _arr.push_back(t);
+        set_modified();
+        return *this;
+    }
+    t_ovl_points& add(interval&& t) {
+        critical_section_guard guard(_lock);
+        _arr.push_back(std::move(t));
+        set_modified();
+        return *this;
+    }
     t_ovl_points& add(T p) {
         critical_section_guard guard(_lock);
         _arr.push_back(interval(p, p));
@@ -218,6 +278,59 @@ class t_ovl_points {
         critical_section_guard guard(_lock);
         _arr.clear();
         set_status(0);
+        return *this;
+    }
+
+    t_ovl_points& subtract(T t) {
+        critical_section_guard guard(_lock);
+
+        t_ovl_points<T> temp;
+        temp._arr = std::move(_arr);
+        temp.merge();
+        for (auto item : temp._arr) {
+            if (item.e < t) {
+                add(std::move(item));
+            } else if (t < item.s) {
+                add(std::move(item));
+            } else {
+                if (item.s < t) {
+                    add(item.s, t - 1);
+                }
+                if (t < item.e) {
+                    add(t + 1, item.e);
+                }
+            }
+        }
+        return *this;
+    }
+    t_ovl_points& subtract(T start, T end) {
+        critical_section_guard guard(_lock);
+
+        t_ovl_points<T> temp;
+        temp._arr = std::move(_arr);
+        temp.merge();
+        for (auto item : temp._arr) {
+            if (item.e < start) {
+                add(std::move(item));
+            } else if (end < item.s) {
+                add(std::move(item));
+            } else {
+                if (item.s < start) {
+                    add(item.s, start - 1);
+                }
+                if (end < item.e) {
+                    add(end + 1, item.e);
+                }
+            }
+        }
+        return *this;
+    }
+    t_ovl_points& subtract(t_ovl_points& rhs) {
+        critical_section_guard guard(_lock);
+        auto temp = rhs.merge();
+        for (const auto& item : temp) {
+            subtract(item.s, item.e);
+        }
         return *this;
     }
 
@@ -252,9 +365,18 @@ class t_ovl_points {
         critical_section_guard guard(_lock);
         critical_section_guard guard_rhs(rhs._lock);
 
-        auto lres = merge();
-        auto rres = rhs.merge();
-        return lres == rres;
+        auto l = merge();
+        auto r = rhs.merge();
+        return l == r;
+    }
+
+    void for_each(std::function<void(const T&, const T&)> func) {
+        if (func) {
+            critical_section_guard guard(_lock);
+            for (const auto& item : _arr) {
+                func(item.s, item.e);
+            }
+        }
     }
 
     /**

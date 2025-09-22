@@ -66,7 +66,6 @@ class tls_composer {
      */
     return_t do_quic_client_handshake(unsigned wto, std::function<void(tls_session*, binary_t&)> func);
     return_t do_quic_server_handshake(std::function<void(tls_session*, binary_t&)> func);
-    return_t do_quic_compose(quic_frame* frame, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
 
     tls_session* _session;
     uint16 _minspec;
