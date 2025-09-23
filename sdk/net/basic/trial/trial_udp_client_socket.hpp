@@ -25,6 +25,8 @@ class trial_udp_client_socket : public client_socket_prosumer {
     virtual ~trial_udp_client_socket();
 
     virtual int socket_type();
+
+    virtual uint32 get_scheme();
 };
 
 }  // namespace net

@@ -19,5 +19,7 @@ trial_tcp_client_socket::~trial_tcp_client_socket() {}
 
 int trial_tcp_client_socket::socket_type() { return SOCK_STREAM; }
 
+uint32 trial_tcp_client_socket::get_scheme() { return socket_scheme_tcp | socket_scheme_trial | socket_scheme_client; }
+
 }  // namespace net
 }  // namespace hotplace

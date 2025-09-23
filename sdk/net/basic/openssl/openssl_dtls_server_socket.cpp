@@ -104,5 +104,7 @@ int openssl_dtls_server_socket::release() {
     return basic_socket::release();
 }
 
+uint32 openssl_dtls_server_socket::get_scheme() { return socket_scheme_dtls | socket_scheme_openssl | socket_scheme_server; }
+
 }  // namespace net
 }  // namespace hotplace

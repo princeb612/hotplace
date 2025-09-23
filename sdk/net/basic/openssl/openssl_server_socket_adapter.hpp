@@ -27,23 +27,12 @@ class openssl_server_socket_adapter : public server_socket_adapter {
     openssl_server_socket_adapter();
     virtual ~openssl_server_socket_adapter();
 
-    virtual return_t startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_suites, int verify_peer);
-    virtual return_t startup_dtls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_suites, int verify_peer);
-    virtual return_t shutdown_tls();
-    virtual return_t shutdown_dtls();
-
-    virtual server_socket* get_tcp_server_socket();
-    virtual server_socket* get_tls_server_socket();
-    virtual server_socket* get_dtls_server_socket();
+    virtual uint32 get_adapter_scheme(uint32 scheme, return_t& retcode);
 
     virtual return_t enable_alpn(const char* prot);
 
    protected:
    private:
-    // TCP
-    naive_tcp_server_socket _server_socket;
-    openssl_tls_server_socket* _tls_server_socket;
-    openssl_dtls_server_socket* _dtls_server_socket;
 };
 
 }  // namespace net

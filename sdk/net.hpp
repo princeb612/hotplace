@@ -65,7 +65,6 @@
 #include <hotplace/sdk/net/http/http_authentication_resolver.hpp>
 #include <hotplace/sdk/net/http/http_client.hpp>
 #include <hotplace/sdk/net/http/http_header.hpp>
-#include <hotplace/sdk/net/http/http_protocol.hpp>
 #include <hotplace/sdk/net/http/http_request.hpp>
 #include <hotplace/sdk/net/http/http_resource.hpp>
 #include <hotplace/sdk/net/http/http_response.hpp>
@@ -74,6 +73,9 @@
 #include <hotplace/sdk/net/http/http_server_builder.hpp>
 #include <hotplace/sdk/net/http/http_uri.hpp>
 #include <hotplace/sdk/net/http/types.hpp>
+
+/* http/http1 */
+#include <hotplace/sdk/net/http/http1/http_protocol.hpp>
 
 /* http/auth */
 #include <hotplace/sdk/net/http/auth/basic_authentication_provider.hpp>

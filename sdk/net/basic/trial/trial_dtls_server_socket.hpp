@@ -66,6 +66,8 @@ class trial_dtls_server_socket : public naive_udp_server_socket {
      */
     virtual bool support_tls();
 
+    virtual uint32 get_scheme();
+
    protected:
    private:
     tls_version_t _minspec;

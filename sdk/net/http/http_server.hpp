@@ -14,8 +14,8 @@
 
 #include <hotplace/sdk/net/basic/server_socket_adapter.hpp>
 #include <hotplace/sdk/net/basic/util/ipaddr_acl.hpp>      // ipaddr_acl
+#include <hotplace/sdk/net/http/http1/http_protocol.hpp>   // http_protocol
 #include <hotplace/sdk/net/http/http2/http2_protocol.hpp>  // http2_protocol
-#include <hotplace/sdk/net/http/http_protocol.hpp>         // http_protocol
 #include <hotplace/sdk/net/http/http_router.hpp>           // http_router
 #include <hotplace/sdk/net/http/types.hpp>                 //
 #include <hotplace/sdk/net/server/network_server.hpp>      // network_server
@@ -58,12 +58,18 @@ class http_server {
 
     static return_t accept_handler(socket_t socket, sockaddr_storage_t* client_addr, CALLBACK_CONTROL* control, void* parameter);
 
-    return_t startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
-    return_t shutdown_tls();
-    return_t startup_dtls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
-    return_t shutdown_dtls();
-    return_t startup_quic(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer);
-    return_t shutdown_quic();
+    /**
+     * @param   uint32 scheme [in] socket_scheme_tls, socket_scheme_quic
+     * @param   const std::string& server_cert [in]
+     * @param   const std::string& server_key [in]
+     * @param   const std::string& cipher_suites [in]
+     * @param   int verify_peer [in]
+     */
+    return_t startup(uint32 scheme, const std::string& server_cert, const std::string& server_key, const std::string& cipher_suites, int verify_peer);
+    /**
+     * @param   uint32 scheme [in] socket_scheme_tls, socket_scheme_quic
+     */
+    return_t shutdown(uint32 scheme);
     /**
      * @brief   startup
      * @param   http_service_t service [in]

@@ -3,12 +3,15 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *      simple https server implementation
+ *      simple HTTP/2 server implementation
  * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpauth, httpserver2
  *
  * Revision History
  * Date         Name                Description
  *
+ * @comments
+ *      debug w/ curl
+ *      curl -v -k https://localhost:9000 --http3
  */
 
 #include "sample.hpp"
@@ -17,8 +20,6 @@ test_case _test_case;
 t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 t_shared_instance<http_server> _http_server;
-
-#define FILENAME_RUN _T (".run")
 
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
@@ -39,8 +40,7 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION& o, char* param) -> void { o.port = atoi(param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [](OPTION& o, char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
                 << t_cmdarg_t<OPTION>("-e", "allow Content-Encoding", [](OPTION& o, char* param) -> void { o.content_encoding = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-T", "use trial", [](OPTION& o, char* param) -> void { o.trial = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-h2", "HTTP/2", [](OPTION& o, char* param) -> void { o.h2 = 1; }).optional()
+                // << t_cmdarg_t<OPTION>("-T", "use trial", [](OPTION& o, char* param) -> void { o.trial = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.keylog = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-cs", "ciphersuite", [](OPTION& o, char* param) -> void { o.cs = param; }).optional().preced();
 
@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     logger_builder builder;
     builder.set(logger_t::logger_stdout, option.verbose);
     if (option.log) {
-        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("test.log").attach(&_test_case);
+        builder.set(logger_t::logger_flush_time, 1).set(logger_t::logger_flush_size, 1024).set_logfile("server.log").attach(&_test_case);
     }
     if (option.time) {
         builder.set_timeformat("[Y-M-D h:m:s.f]");
@@ -70,6 +70,12 @@ int main(int argc, char** argv) {
     if (option.keylog) {
         auto sslkeylog = sslkeylog_exporter::get_instance();
         sslkeylog->set(lambda);
+    }
+    if (option.trial) {
+        // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
+        load_certificate("rsa.crt", "rsa.key", nullptr);
+        // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
+        load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
     }
 
     if (option.run) {

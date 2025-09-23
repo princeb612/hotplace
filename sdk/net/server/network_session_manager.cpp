@@ -30,7 +30,6 @@ server_conf* network_session_manager::get_server_conf() { return _server_conf; }
 return_t network_session_manager::connected(handle_t event_socket, sockaddr_storage_t* addr, server_socket* svr_socket, socket_context_t* socket_handle,
                                             network_session** ptr_session_object) {
     return_t ret = errorcode_t::success;
-    network_session_map_pib_t pairib;
     network_session* session_object = nullptr;
 
     __try2 {
@@ -41,7 +40,7 @@ return_t network_session_manager::connected(handle_t event_socket, sockaddr_stor
 
         critical_section_guard guard(_session_lock);
 
-        pairib = _session_map.insert(std::make_pair(event_socket, (network_session*)nullptr));
+        auto pairib = _session_map.insert(std::make_pair(event_socket, (network_session*)nullptr));
         if (true == pairib.second) {
             session_object = new network_session(svr_socket);
             server_conf* conf = get_server_conf();
@@ -123,16 +122,15 @@ void network_session_manager::shutdown() {
         item.second->release();
     }
     _session_map.clear();
-    for (auto item : _dgram_map) {
+    for (auto item : _dgram_session_map) {
         item.second->release();
     }
-    _dgram_map.clear();
+    _dgram_session_map.clear();
 }
 
 return_t network_session_manager::get_dgram_session(network_session** ptr_session_object, handle_t listen_sock, server_socket* svr_socket,
                                                     socket_context_t* socket_handle) {
     return_t ret = errorcode_t::success;
-    network_session_map_pib_t pairib;
     network_session* session_object = nullptr;
 
     __try2 {
@@ -143,7 +141,7 @@ return_t network_session_manager::get_dgram_session(network_session** ptr_sessio
 
         critical_section_guard guard(_session_lock);
 
-        pairib = _session_map.insert(std::make_pair(listen_sock, (network_session*)nullptr));
+        auto pairib = _session_map.insert(std::make_pair(listen_sock, (network_session*)nullptr));
         if (true == pairib.second) {
             session_object = new network_session(svr_socket);
             server_conf* conf = get_server_conf();
@@ -174,7 +172,6 @@ return_t network_session_manager::get_dgram_session(network_session** ptr_sessio
 return_t network_session_manager::get_dgram_cookie_session(network_session** ptr_session_object, handle_t listen_sock, const sockaddr_storage_t* addr,
                                                            server_socket* svr_socket, socket_context_t* socket_handle) {
     return_t ret = errorcode_t::success;
-    dgram_session_map_pib_t pairib;
     network_session* session_object = nullptr;
 
     __try2 {
@@ -188,7 +185,7 @@ return_t network_session_manager::get_dgram_cookie_session(network_session** ptr
         binary_t cookie;
         generate_cookie_sockaddr(cookie, (sockaddr*)addr, sizeof(sockaddr_storage_t));
 
-        pairib = _dgram_map.insert(std::make_pair(cookie, (network_session*)nullptr));
+        auto pairib = _dgram_session_map.insert(std::make_pair(cookie, (network_session*)nullptr));
         if (true == pairib.second) {
             session_object = new network_session(svr_socket, addr);
             server_conf* conf = get_server_conf();
@@ -224,30 +221,30 @@ return_t network_session_manager::get_dgram_cookie_session(network_session** ptr
     return ret;
 }
 
-return_t network_session_manager::dgram_find(const sockaddr_storage_t* addr, network_session** ptr_session_object) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == addr || nullptr == ptr_session_object) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        binary_t cookie;
-        generate_cookie_sockaddr(cookie, (sockaddr*)addr, sizeof(sockaddr_storage_t));
-
-        auto iter = _dgram_map.find(cookie);
-        if (_dgram_map.end() == iter) {
-            ret = errorcode_t::not_found;
-            __leave2;
-        } else {
-            auto session_object = iter->second;
-            session_object->addref();
-            *ptr_session_object = session_object;
-        }
-    }
-    __finally2 {}
-    return ret;
-}
+// return_t network_session_manager::dgram_find(const sockaddr_storage_t* addr, network_session** ptr_session_object) {
+//     return_t ret = errorcode_t::success;
+//     __try2 {
+//         if (nullptr == addr || nullptr == ptr_session_object) {
+//             ret = errorcode_t::invalid_parameter;
+//             __leave2;
+//         }
+//
+//         binary_t cookie;
+//         generate_cookie_sockaddr(cookie, (sockaddr*)addr, sizeof(sockaddr_storage_t));
+//
+//         auto iter = _dgram_session_map.find(cookie);
+//         if (_dgram_session_map.end() == iter) {
+//             ret = errorcode_t::not_found;
+//             __leave2;
+//         } else {
+//             auto session_object = iter->second;
+//             session_object->addref();
+//             *ptr_session_object = session_object;
+//         }
+//     }
+//     __finally2 {}
+//     return ret;
+// }
 
 }  // namespace net
 }  // namespace hotplace

@@ -62,7 +62,7 @@ return_t http_server::accept_handler(socket_t socket, sockaddr_storage_t* client
     return ret;
 }
 
-return_t http_server::startup_tls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
+return_t http_server::startup(uint32 scheme, const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto adapter = get_server_socket_adapter();
@@ -70,13 +70,13 @@ return_t http_server::startup_tls(const std::string& server_cert, const std::str
             ret = errorcode_t::not_specified;
             __leave2;
         }
-        ret = adapter->startup_tls(server_cert, server_key, cipher_list, verify_peer);
+        ret = adapter->startup(scheme, server_cert, server_key, cipher_list, verify_peer);
     }
     __finally2 {}
     return ret;
 }
 
-return_t http_server::shutdown_tls() {
+return_t http_server::shutdown(uint32 scheme) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto adapter = get_server_socket_adapter();
@@ -84,63 +84,7 @@ return_t http_server::shutdown_tls() {
             ret = errorcode_t::not_specified;
             __leave2;
         }
-        ret = adapter->shutdown_tls();
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t http_server::startup_dtls(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto adapter = get_server_socket_adapter();
-        if (nullptr == adapter) {
-            ret = errorcode_t::not_specified;
-            __leave2;
-        }
-        ret = adapter->startup_dtls(server_cert, server_key, cipher_list, verify_peer);
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t http_server::shutdown_dtls() {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto adapter = get_server_socket_adapter();
-        if (nullptr == adapter) {
-            ret = errorcode_t::not_specified;
-            __leave2;
-        }
-        ret = adapter->shutdown_dtls();
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t http_server::startup_quic(const std::string& server_cert, const std::string& server_key, const std::string& cipher_list, int verify_peer) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto adapter = get_server_socket_adapter();
-        if (nullptr == adapter) {
-            ret = errorcode_t::not_specified;
-            __leave2;
-        }
-        ret = adapter->startup_quic(server_cert, server_key, cipher_list, verify_peer);
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t http_server::shutdown_quic() {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto adapter = get_server_socket_adapter();
-        if (nullptr == adapter) {
-            ret = errorcode_t::not_specified;
-            __leave2;
-        }
-        ret = adapter->shutdown_quic();
+        ret = adapter->shutdown(scheme);
     }
     __finally2 {}
     return ret;
@@ -161,14 +105,14 @@ return_t http_server::startup_server(http_service_t service, uint16 family, uint
 
         switch (service) {
             case service_http:
-                socket = get_server_socket_adapter()->get_tcp_server_socket();
+                socket = get_server_socket_adapter()->get_server_socket(socket_scheme_tcp);
                 break;
             case service_http3:
-                socket = get_server_socket_adapter()->get_dtls_server_socket();
+                socket = get_server_socket_adapter()->get_server_socket(socket_scheme_quic);
                 break;
             case service_https:
             default:
-                socket = get_server_socket_adapter()->get_tls_server_socket();
+                socket = get_server_socket_adapter()->get_server_socket(socket_scheme_tls);
                 break;
         }
 
@@ -207,7 +151,9 @@ return_t http_server::shutdown_server() {
 
 void http_server::shutdown() {
     shutdown_server();
-    shutdown_tls();
+    shutdown(socket_scheme_tcp);
+    shutdown(socket_scheme_tls);
+    shutdown(socket_scheme_quic);
     get_server_socket_adapter()->release();
 }
 

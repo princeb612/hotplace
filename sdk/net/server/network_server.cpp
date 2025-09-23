@@ -346,13 +346,19 @@ return_t network_server::event_loop_run(network_multiplexer_context_t* handle, u
             // (epoll, iocp) bind udp.socket - mplexer.bind(mplexer_handle, (handle_t)sock, session_object);
             // (windows) async read
 
-            socket_t listen_sock = handle->listen_handle->fd;
-            network_session* dgram_session = nullptr;
-            handle->session_manager.get_dgram_session(&dgram_session, (handle_t)listen_sock, handle->svr_socket, nullptr);
-            if (dgram_session) {
-                mplexer.bind(handle->mplexer_handle, (handle_t)listen_sock, dgram_session);
-                dgram_session->ready_to_read();  // MSG_PEEK
-                dgram_session->release();
+            auto scheme = handle->svr_socket->get_scheme();
+            if (socket_scheme_dtls & scheme) {
+                // HVR cookie
+                socket_t listen_sock = handle->listen_handle->fd;
+                network_session* dgram_session = nullptr;
+                handle->session_manager.get_dgram_session(&dgram_session, (handle_t)listen_sock, handle->svr_socket, nullptr);
+                if (dgram_session) {
+                    mplexer.bind(handle->mplexer_handle, (handle_t)listen_sock, dgram_session);
+                    dgram_session->ready_to_read();  // MSG_PEEK
+                    dgram_session->release();
+                }
+            } else if (socket_scheme_quic & scheme) {
+                // TODO
             }
         }
     }
@@ -779,23 +785,28 @@ return_t network_server::producer_routine(uint32 type, uint32 data_count, void* 
             }
         }
     } else if (multiplexer_event_type_t::mux_dgram == type) {
-        network_session* dgram_session = nullptr;
-        context->session_manager.get_dgram_session(&dgram_session, (handle_t)context->listen_handle->fd, context->svr_socket, nullptr);
-        if (dgram_session) {
-            if (context->svr_socket->support_tls()) {
-                sockaddr_storage_t* addr = &dgram_session->socket_info()->cli_addr;
-                dgram_session->dgram_get_sockaddr(addr);
-                network_session* dtls_session = nullptr;
-                context->session_manager.get_dgram_cookie_session(&dtls_session, (handle_t)context->listen_handle->fd, addr, context->svr_socket, nullptr);
-                if (dtls_session) {
-                    dtls_session->produce(&context->event_queue, nullptr, 0, addr);
-                    dtls_session->release();
+        auto scheme = context->svr->socket->get_scheme();
+        if (socket_scheme_dtls & scheme) {
+            network_session* dgram_session = nullptr;
+            context->session_manager.get_dgram_session(&dgram_session, (handle_t)context->listen_handle->fd, context->svr_socket, nullptr);
+            if (dgram_session) {
+                if (context->svr_socket->support_tls()) {
+                    sockaddr_storage_t* addr = &dgram_session->socket_info()->cli_addr;
+                    dgram_session->dgram_get_sockaddr(addr);
+                    network_session* dtls_session = nullptr;
+                    context->session_manager.get_dgram_cookie_session(&dtls_session, (handle_t)context->listen_handle->fd, addr, context->svr_socket, nullptr);
+                    if (dtls_session) {
+                        dtls_session->produce(&context->event_queue, nullptr, 0, addr);
+                        dtls_session->release();
+                    }
+                } else {
+                    /* consumer_routine (decrease), close_if_not_referenced (delete) */
+                    dgram_session->produce(&context->event_queue, nullptr, 0);
                 }
-            } else {
-                /* consumer_routine (decrease), close_if_not_referenced (delete) */
-                dgram_session->produce(&context->event_queue, nullptr, 0);
+                dgram_session->release(); /* find, refcount-- */
             }
-            dgram_session->release(); /* find, refcount-- */
+        } else if (socket_scheme_quic & scheme) {
+            // TODO
         }
     }
     // else if (multiplexer_event_type_t::mux_disconnect == type) /* no event catchable */
@@ -812,25 +823,30 @@ return_t network_server::producer_routine(uint32 type, uint32 data_count, void* 
     } else if (multiplexer_event_type_t::mux_disconnect == type) {
         svr.session_closed(context, (handle_t)session_object->socket_info()->event_handle->fd);
     } else if (multiplexer_event_type_t::mux_dgram) {
-        // dgram_session is bound to listenfd
-        network_session* dgram_session = nullptr;
-        context->session_manager.get_dgram_session(&dgram_session, (handle_t)context->listen_handle->fd, context->svr_socket, nullptr);
-        if (dgram_session) {
-            byte_t* buffer = (byte_t*)&dgram_session->get_buffer()->bin[0];
-            sockaddr_storage_t* addr = &dgram_session->socket_info()->cli_addr;  // the address space is bound to dgram_session
-            if (context->svr_socket->support_tls()) {
-                // dtls_session is bound to addr
-                network_session* dtls_session = nullptr;
-                context->session_manager.get_dgram_cookie_session(&dtls_session, (handle_t)context->listen_handle->fd, addr, context->svr_socket, nullptr);
-                if (dtls_session) {
-                    dtls_session->produce(&context->event_queue, buffer, transferred, addr);
-                    dtls_session->release();
+        auto scheme = context->svr_socket->get_scheme();
+        if (socket_scheme_dtls & scheme) {
+            // dgram_session is bound to listenfd
+            network_session* dgram_session = nullptr;
+            context->session_manager.get_dgram_session(&dgram_session, (handle_t)context->listen_handle->fd, context->svr_socket, nullptr);
+            if (dgram_session) {
+                byte_t* buffer = (byte_t*)&dgram_session->get_buffer()->bin[0];
+                sockaddr_storage_t* addr = &dgram_session->socket_info()->cli_addr;  // the address space is bound to dgram_session
+                if (context->svr_socket->support_tls()) {
+                    // dtls_session is bound to addr
+                    network_session* dtls_session = nullptr;
+                    context->session_manager.get_dgram_cookie_session(&dtls_session, (handle_t)context->listen_handle->fd, addr, context->svr_socket, nullptr);
+                    if (dtls_session) {
+                        dtls_session->produce(&context->event_queue, buffer, transferred, addr);
+                        dtls_session->release();
+                    }
+                } else {
+                    dgram_session->produce(&context->event_queue, buffer, transferred, addr);
                 }
-            } else {
-                dgram_session->produce(&context->event_queue, buffer, transferred, addr);
+                dgram_session->ready_to_read();  // MSG_PEEK
+                dgram_session->release();
             }
-            dgram_session->ready_to_read();  // MSG_PEEK
-            dgram_session->release();
+        } else if (socket_scheme_quic & scheme) {
+            // TODO
         }
     }
 

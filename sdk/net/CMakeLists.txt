@@ -12,6 +12,7 @@ file (GLOB FILEGROUP_SDK_HEADER_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/basic/trial/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/basic/util/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/http1/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/auth/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/compression/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/http2/*.hpp
@@ -40,6 +41,7 @@ file (GLOB FILEGROUP_SDK_SOURCE_NET
     ${PROJECT_SOURCE_DIR}/sdk/net/basic/trial/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/basic/util/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/net/http/http1/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/auth/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/compression/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/net/http/http2/*.cpp

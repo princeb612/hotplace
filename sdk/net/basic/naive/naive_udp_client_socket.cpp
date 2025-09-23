@@ -110,5 +110,7 @@ int naive_udp_client_socket::socket_type() { return SOCK_DGRAM; }
 
 socket_t naive_udp_client_socket::get_socket() { return _fd; }
 
+uint32 naive_udp_client_socket::get_scheme() { return socket_scheme_udp | socket_scheme_client; }
+
 }  // namespace net
 }  // namespace hotplace

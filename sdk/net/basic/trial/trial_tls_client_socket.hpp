@@ -39,6 +39,8 @@ class trial_tls_client_socket : public secure_client_socket {
 
     virtual int socket_type();
 
+    virtual uint32 get_scheme();
+
    protected:
     virtual return_t do_send(binary_t &bin);
 

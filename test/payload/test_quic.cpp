@@ -46,8 +46,12 @@ void test_quic_integer() {
         _test_case.assert(bin2 == bin_expect, __FUNCTION__, "QUIC variable length integer #read");
         size_t len1 = pl2.select("len1")->get_payload_encoded()->value();
         _test_case.assert(59 == len1, __FUNCTION__, "QUIC variable length integer #get_length %zi", len1);
+        uint64 temp1 = pl2.t_value_of<uint64>("len1");
+        _test_case.assert(len1 == temp1, __FUNCTION__, "len1");
         size_t len2 = pl2.select("len2")->get_payload_encoded()->value();
         _test_case.assert(37 == len2, __FUNCTION__, "QUIC variable length integer #get_length %zi", len2);
+        uint64 temp2 = pl2.t_value_of<uint64>("len2");
+        _test_case.assert(len2 == temp2, __FUNCTION__, "len2");
     }
 
     // step.1 encode a variable length integer + data

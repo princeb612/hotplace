@@ -122,5 +122,7 @@ int naive_tcp_client_socket::socket_type() { return SOCK_STREAM; }
 
 socket_t naive_tcp_client_socket::get_socket() { return _fd; }
 
+uint32 naive_tcp_client_socket::get_scheme() { return socket_scheme_tcp | socket_scheme_client; }
+
 }  // namespace net
 }  // namespace hotplace

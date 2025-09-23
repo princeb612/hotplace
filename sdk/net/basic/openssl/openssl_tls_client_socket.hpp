@@ -37,6 +37,8 @@ class openssl_tls_client_socket : public client_socket {
     virtual int socket_type();
     virtual socket_t get_socket();
 
+    virtual uint32 get_scheme();
+
    protected:
    private:
     openssl_tls* _tls;

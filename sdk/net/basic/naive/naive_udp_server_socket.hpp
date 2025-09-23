@@ -59,6 +59,8 @@ class naive_udp_server_socket : public server_socket {
      * @return  return SOCK_DGRAM
      */
     virtual int socket_type();
+
+    virtual uint32 get_scheme();
 };
 
 }  // namespace net

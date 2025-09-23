@@ -99,28 +99,7 @@ class t_merge_ovl_intervals {
         return *this;
     }
 
-    t_merge_ovl_intervals& subtract(T t) {
-        critical_section_guard guard(_lock);
-
-        t_merge_ovl_intervals<T, TAGTYPE> temp;
-        temp._arr = std::move(_arr);
-        temp.merge();
-        for (auto item : temp._arr) {
-            if (item.e < t) {
-                add(std::move(item));
-            } else if (t < item.s) {
-                add(std::move(item));
-            } else {
-                if (item.s < t) {
-                    add(item.s, t - 1);
-                }
-                if (t < item.e) {
-                    add(t + 1, item.e);
-                }
-            }
-        }
-        return *this;
-    }
+    t_merge_ovl_intervals& subtract(T t) { return subtract(t, t); }
     t_merge_ovl_intervals& subtract(T start, T end) {
         critical_section_guard guard(_lock);
 
@@ -281,28 +260,7 @@ class t_ovl_points {
         return *this;
     }
 
-    t_ovl_points& subtract(T t) {
-        critical_section_guard guard(_lock);
-
-        t_ovl_points<T> temp;
-        temp._arr = std::move(_arr);
-        temp.merge();
-        for (auto item : temp._arr) {
-            if (item.e < t) {
-                add(std::move(item));
-            } else if (t < item.s) {
-                add(std::move(item));
-            } else {
-                if (item.s < t) {
-                    add(item.s, t - 1);
-                }
-                if (t < item.e) {
-                    add(t + 1, item.e);
-                }
-            }
-        }
-        return *this;
-    }
+    t_ovl_points& subtract(T t) { return subtract(t, t); }
     t_ovl_points& subtract(T start, T end) {
         critical_section_guard guard(_lock);
 

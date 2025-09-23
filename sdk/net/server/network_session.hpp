@@ -240,20 +240,22 @@ class network_session_manager {
      *              // do something
      *          }
      */
-    return_t dgram_find(const sockaddr_storage_t* sockaddr, network_session** ptr_session_object);
+    // return_t dgram_find(const sockaddr_storage_t* sockaddr, network_session** ptr_session_object);
+
+    return_t get_quic_session(network_session** ptr_session_object, handle_t listen_sock, server_socket* svr_socket, socket_context_t* socket_handle);
 
    protected:
     void shutdown();
 
    private:
     typedef std::map<handle_t, network_session*> network_session_map_t;
-    typedef std::pair<network_session_map_t::iterator, bool> network_session_map_pib_t;
     typedef std::map<binary_t, network_session*> dgram_session_map_t;
-    typedef std::pair<dgram_session_map_t::iterator, bool> dgram_session_map_pib_t;
+    typedef std::map<binary_t, network_session*> quic_session_map_t;
 
     critical_section _session_lock;
     network_session_map_t _session_map;
-    dgram_session_map_t _dgram_map;
+    dgram_session_map_t _dgram_session_map;
+    quic_session_map_t _quic_session_map;
     server_conf* _server_conf;
 };
 

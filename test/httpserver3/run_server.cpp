@@ -3,16 +3,15 @@
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
- *      simple HTTP/2 server implementation
- * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpauth, httpserver2
+ *      simple HTTP/3 server implementation
+ * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpauth, httpserver2, dtlsserver, httpserver3
  *
  * Revision History
  * Date         Name                Description
  *
  * @comments
  *      debug w/ curl
- *      curl -v -k https://localhost:9000 --http2
- *      curl -v -k https://localhost:9000 --http2  --http2-prior-knowledge
+ *      curl -v -k https://localhost:9000 --http3
  */
 
 #include "sample.hpp"
@@ -68,22 +67,12 @@ return_t simple_http2_server(void*) {
     fclose(fp);
 
     __try2 {
-        uint32 scheme = 0;
-        const char* title = nullptr;
-        if (option.trial) {
-            title = "HTTP/2 powered by http_server";
-            scheme = socket_scheme_trial;
-        } else {
-            title = "HTTP/2 powered by http_server and libssl";
-            scheme = socket_scheme_openssl;
-        }
-
-        _test_case.begin(title);
+        _test_case.begin("HTTP/3 powered by http_server");
 
         server_socket_adapter* adapter = nullptr;
         {
             server_socket_builder builder;
-            adapter = builder.set(scheme).build_adapter();
+            adapter = builder.set(socket_scheme_trial).build_adapter();
         }
         if (nullptr == adapter) {
             ret = errorcode_t::internal_error;
@@ -93,10 +82,7 @@ return_t simple_http2_server(void*) {
         {
             std::string ciphersuites;
             if (option.cs.empty()) {
-                ciphersuites =
-                    "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:"
-                    "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:"
-                    "TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256";
+                ciphersuites = "TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256";
             } else {
                 ciphersuites = option.cs;
             }
@@ -111,7 +97,9 @@ return_t simple_http2_server(void*) {
                 .set_tls_verify_peer(0)                         // self-signed certificate
                 .enable_ipv4(true)                              // enable IPv4
                 .enable_ipv6(true)                              // enable IPv6
-                .enable_h2(true)                                // enable HTTP/2
+                .enable_h1(false)                               //
+                .enable_h2(false)                               //
+                .enable_h3(true)                                //
                 .set_handler(consumer_routine)
                 .set_tls_cipher_list(ciphersuites);
 

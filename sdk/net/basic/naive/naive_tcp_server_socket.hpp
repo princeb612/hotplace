@@ -65,6 +65,8 @@ class naive_tcp_server_socket : public server_socket {
      */
     virtual int socket_type();
 
+    virtual uint32 get_scheme();
+
    protected:
 };
 

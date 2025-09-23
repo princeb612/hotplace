@@ -36,6 +36,8 @@ class openssl_dtls_client_socket : public client_socket {
     virtual int socket_type();
     virtual socket_t get_socket();
 
+    virtual uint32 get_scheme();
+
    protected:
     openssl_tls* _tls;
     socket_context_t* _handle;

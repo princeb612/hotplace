@@ -84,6 +84,11 @@ http_server_builder &http_server_builder::enable_ipv6(bool enable) {
     return *this;
 }
 
+http_server_builder &http_server_builder::enable_h1(bool enable) {
+    get_server_conf().set(netserver_config_t::serverconf_enable_h1, enable ? 1 : 0);
+    return *this;
+}
+
 http_server_builder &http_server_builder::enable_h2(bool enable) {
     get_server_conf().set(netserver_config_t::serverconf_enable_h2, enable ? 1 : 0);
     return *this;
@@ -134,7 +139,7 @@ http_server *http_server_builder::build() {
 
                 if (enable_h1 || enable_h2) {
                     // TLS
-                    ret = server->startup_tls(_server_cert, _server_key, _tls_cipher_list, verify_peer);
+                    ret = server->startup(socket_scheme_tls, _server_cert, _server_key, _tls_cipher_list, verify_peer);
                     if (errorcode_t::success != ret) {
                         __leave2;
                     }
@@ -147,7 +152,7 @@ http_server *http_server_builder::build() {
                 }
                 if (enable_h3) {
                     // DTLS
-                    ret = server->startup_dtls(_server_cert, _server_key, _tls_cipher_list, verify_peer);
+                    ret = server->startup(socket_scheme_quic, _server_cert, _server_key, _tls_cipher_list, verify_peer);
                     if (errorcode_t::success != ret) {
                         __leave2;
                     }
@@ -171,7 +176,9 @@ http_server *http_server_builder::build() {
                 }
             }
 
-            if (enable_h2) {
+            if (enable_h3) {
+                adapter->enable_alpn("h3");
+            } else if (enable_h2) {
                 adapter->enable_alpn("h2");
             } else {
                 adapter->enable_alpn("http/1.1");

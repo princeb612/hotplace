@@ -115,5 +115,7 @@ socket_t openssl_tls_client_socket::get_socket() {
     return sock;
 }
 
+uint32 openssl_tls_client_socket::get_scheme() { return socket_scheme_tls | socket_scheme_openssl | socket_scheme_client; }
+
 }  // namespace net
 }  // namespace hotplace

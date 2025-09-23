@@ -78,30 +78,74 @@ return_t simple_http_server(void*) {
     const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    http_server_builder builder;
 
     FILE* fp = fopen(FILENAME_RUN, "w");
     fclose(fp);
 
     __try2 {
-        builder.enable_http(true)
-            .set_port_http(option.port)
-            .enable_https(true)
-            .set_port_https(option.port_tls)
-            .set_tls_certificate("server.crt", "server.key")
-            .set_tls_cipher_list("TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_8_SHA256:TLS_AES_128_CCM_SHA256")
-            .set_tls_verify_peer(0)
-            .enable_ipv4(true)
-            .enable_ipv6(true)
-            .set_handler(consumer_routine);
-        if (option.h2) {
-            builder.enable_h2(true);
+        uint32 scheme = 0;
+        const char* title = nullptr;
+        if (option.trial) {
+            title = "HTTP/2 powered by http_server";
+            scheme = socket_scheme_trial;
+        } else {
+            title = "HTTP/2 powered by http_server and libssl";
+            scheme = socket_scheme_openssl;
         }
-        builder.get_server_conf()
-            .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
-            .set(netserver_config_t::serverconf_concurrent_network, 4)
-            .set(netserver_config_t::serverconf_concurrent_consume, 4);
-        _http_server.make_share(builder.build());
+
+        _test_case.begin(title);
+
+        server_socket_adapter* adapter = nullptr;
+        {
+            server_socket_builder builder;
+            adapter = builder.set(scheme).build_adapter();
+        }
+        if (nullptr == adapter) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        {
+            std::string ciphersuites;
+            if (option.cs.empty()) {
+                ciphersuites =
+                    "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:"
+                    "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:"
+                    "TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256";
+            } else {
+                ciphersuites = option.cs;
+            }
+
+            http_server_builder builder;
+            builder.set(adapter)
+                .enable_http(true)  // enable http scheme
+                .set_port_http(option.port)
+                .enable_https(true)  // enable https scheme
+                .set_port_https(option.port_tls)
+                .set_tls_certificate("server.crt", "server.key")  // RSA certificate
+                .set_tls_verify_peer(0)                           // self-signed certificate
+                .enable_ipv4(true)                                // enable IPv4
+                .enable_ipv6(true)                                // enable IPv6
+                .enable_h2(true)                                  // enable HTTP/2
+                .set_handler(consumer_routine)
+                .set_tls_cipher_list(ciphersuites);
+
+            if (option.content_encoding) {
+                builder.allow_content_encoding("deflate, gzip");
+            }
+
+            if (option.h2) {
+                builder.enable_h2(true);
+            }
+
+            builder.get_server_conf()
+                .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
+                .set(netserver_config_t::serverconf_concurrent_network, 4)
+                .set(netserver_config_t::serverconf_concurrent_consume, 4);
+
+            _http_server.make_share(builder.build());
+        }
+
         // _http_server->get_ipaddr_acl().add_rule("10.10.10.10", false);  // deny
 
         // Basic Authentication (realm)

@@ -36,6 +36,36 @@ enum tls_io_flag_t {
     peek_msg = (1 << 6),                                             // 0100 0000
 };
 
+/**
+ * @sa  server_socket_builder, server_socket_adapter
+ */
+enum socket_scheme_t : uint32 {
+    // 0x0000FFFF
+    socket_scheme_tcp = 0x00000000,
+    socket_scheme_udp = 0x00000001,
+    socket_scheme_tls = 0x00008000,
+    socket_scheme_dtls = 0x00008001,
+    socket_scheme_quic = 0x00008002,
+    socket_scheme_quic2 = 0x00008003,
+    // 0x000F0000
+    socket_scheme_openssl = 0x00000000,
+    socket_scheme_trial = 0x00010000,
+    // 0x00F00000
+    socket_scheme_client = 0x00100000,
+    socket_scheme_server = 0x00200000,
+    // 0xFF000000
+    // socket_scheme_tls, socket_scheme_dtls
+    socket_scheme_tls12 = 0x01000000,
+    socket_scheme_tls13 = 0x02000000,
+    socket_scheme_tls12_13 = socket_scheme_tls12 | socket_scheme_tls13,
+    // mask
+    socket_scheme_mask = 0x0000ffff,
+    socket_scheme_mask_secure = 0x00008000,
+    socket_scheme_mask_powered_by = 0x000f0000,
+    socket_scheme_mask_dir = 0x00f00000,
+    socket_scheme_mask_tune = 0xff000000,
+};
+
 class tls_session;
 struct socket_context_t {
     socket_t fd;   // socket

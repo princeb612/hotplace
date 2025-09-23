@@ -11,7 +11,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/net/http/http_protocol.hpp>
+#include <hotplace/sdk/net/http/http1/http_protocol.hpp>
 
 namespace hotplace {
 namespace net {

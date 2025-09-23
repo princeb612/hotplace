@@ -25,5 +25,7 @@ int basic_socket::addref() { return _shared.addref(); }
 
 int basic_socket::release() { return _shared.delref(); }
 
+uint32 basic_socket::get_scheme() { return 0; }
+
 }  // namespace net
 }  // namespace hotplace

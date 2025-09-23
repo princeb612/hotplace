@@ -139,5 +139,7 @@ return_t trial_tls_server_socket::send(socket_context_t *handle, const char *ptr
 
 bool trial_tls_server_socket::support_tls() { return true; }
 
+uint32 trial_tls_server_socket::get_scheme() { return socket_scheme_tls | socket_scheme_trial | socket_scheme_server; }
+
 }  // namespace net
 }  // namespace hotplace

@@ -51,6 +51,8 @@ class basic_socket {
     virtual int addref();
     virtual int release();
 
+    virtual uint32 get_scheme();
+
    protected:
     basic_socket();
 

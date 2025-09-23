@@ -59,6 +59,7 @@ class http_server_builder {
     http_server_builder& enable_ipv4(bool enable);
     http_server_builder& enable_ipv6(bool enable);
 
+    http_server_builder& enable_h1(bool enable);
     http_server_builder& enable_h2(bool enable);
     http_server_builder& enable_h3(bool enable);
 

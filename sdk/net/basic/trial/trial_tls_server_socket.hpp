@@ -66,6 +66,8 @@ class trial_tls_server_socket : public naive_tcp_server_socket {
     uint32 get_wto();
     secure_prosumer* get_secure_prosumer();
 
+    virtual uint32 get_scheme();
+
    protected:
    private:
     secure_prosumer _secure;

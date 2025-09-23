@@ -62,8 +62,7 @@ return_t echo_server(void*) {
     server_socket* tls_socket = nullptr;
 
     __try2 {
-        uint32 flags = 0;
-        std::string ciphersuites;
+        uint32 flags = socket_scheme_tls;
         if (option.flags & option_flag_allow_tls13) {
             flags |= socket_scheme_tls13;
         }
@@ -77,11 +76,12 @@ return_t echo_server(void*) {
             // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
             load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
 
-            server_socket_builder builder;
-            tls_socket = builder.set(socket_scheme_tls | socket_scheme_trial | flags).set_ciphersuites(option.cs).build();
+            flags |= socket_scheme_trial;
         } else {
-            // part of ssl certificate
-
+            flags |= socket_scheme_openssl;
+        }
+        {
+            std::string ciphersuites;
             if (option.cs.empty()) {
                 ciphersuites += "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256";
                 ciphersuites += ":";
@@ -98,14 +98,10 @@ return_t echo_server(void*) {
                 ciphersuites += option.cs;
             }
 
-            server_socket_builder builder;
-            tls_socket = builder.set(socket_scheme_tls | socket_scheme_openssl | flags)
-                             .set_certificate("rsa.crt", "rsa.key")
-                             .set_ciphersuites(ciphersuites)
-                             .set_verify(0)
-                             .build();
-
             _logger->writeln("ciphersuites %s", ciphersuites.c_str());
+
+            server_socket_builder builder;
+            tls_socket = builder.set(flags).set_certificate("rsa.crt", "rsa.key").set_ciphersuites(ciphersuites).set_verify(0).build();
         }
 
         server_conf conf;

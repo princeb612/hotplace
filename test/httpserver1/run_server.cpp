@@ -99,51 +99,69 @@ return_t simple_http_server(void *) {
     const OPTION &option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
-    http_server_builder builder;
 
     FILE *fp = fopen(FILENAME_RUN, "w");
 
     fclose(fp);
 
     __try2 {
-        server_socket_adapter *adapter = nullptr;
+        uint32 scheme = 0;
         const char *title = nullptr;
         if (option.trial) {
             title = "HTTP/1.1 powered by http_server";
-            __try_new_catch(adapter, new trial_server_socket_adapter, ret, __leave2);
+            scheme = socket_scheme_trial;
         } else {
             title = "HTTP/1.1 powered by http_server and libssl";
-            __try_new_catch(adapter, new openssl_server_socket_adapter, ret, __leave2);
+            scheme = socket_scheme_openssl;
         }
 
         _test_case.begin(title);
 
-        builder.set(adapter)
-            .enable_http(true)
-            .set_port_http(option.port)
-            .enable_https(true)
-            .set_port_https(option.port_tls)
-            .set_tls_certificate("ecdsa.crt", "ecdsa.key")
-            .set_tls_verify_peer(0)
-            .enable_ipv4(true)
-            .enable_ipv6(true)
-            .set_handler(consumer_routine);
-        if (option.trial) {
-            builder.set_tls_cipher_list(option.cs);
-        } else {
-            builder.set_tls_cipher_list(
-                "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:"
-                "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:"
-                "TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256");
+        server_socket_adapter *adapter = nullptr;
+        {
+            server_socket_builder builder;
+            adapter = builder.set(scheme).build_adapter();
         }
-        if (option.content_encoding) {
-            builder.allow_content_encoding("deflate, gzip");
+        if (nullptr == adapter) {
+            ret = errorcode_t::internal_error;
+            __leave2;
         }
-        builder.get_server_conf()
-            .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
-            .set(netserver_config_t::serverconf_concurrent_network, 4)
-            .set(netserver_config_t::serverconf_concurrent_consume, 4);
-        _http_server.make_share(builder.build());
+
+        {
+            std::string ciphersuites;
+            if (option.cs.empty()) {
+                ciphersuites =
+                    "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:"
+                    "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:"
+                    "TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256";
+            } else {
+                ciphersuites = option.cs;
+            }
+
+            http_server_builder builder;
+            builder.set(adapter)
+                .enable_http(true)
+                .set_port_http(option.port)
+                .enable_https(true)
+                .set_port_https(option.port_tls)
+                .set_tls_certificate("ecdsa.crt", "ecdsa.key")
+                .set_tls_verify_peer(0)
+                .enable_ipv4(true)
+                .enable_ipv6(true)
+                .set_handler(consumer_routine)
+                .set_tls_cipher_list(ciphersuites);
+
+            if (option.content_encoding) {
+                builder.allow_content_encoding("deflate, gzip");
+            }
+
+            builder.get_server_conf()
+                .set(netserver_config_t::serverconf_concurrent_tls_accept, 2)
+                .set(netserver_config_t::serverconf_concurrent_network, 4)
+                .set(netserver_config_t::serverconf_concurrent_consume, 4);
+
+            _http_server.make_share(builder.build());
+        }
 
         _http_server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
 

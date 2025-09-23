@@ -9,10 +9,12 @@
  */
 
 #include <hotplace/sdk/net/basic/openssl/openssl_dtls_server_socket.hpp>
+#include <hotplace/sdk/net/basic/openssl/openssl_server_socket_adapter.hpp>
 #include <hotplace/sdk/net/basic/openssl/openssl_tls_server_socket.hpp>
 #include <hotplace/sdk/net/basic/server_socket_builder.hpp>
 #include <hotplace/sdk/net/basic/trial/trial_dtls_server_socket.hpp>
 #include <hotplace/sdk/net/basic/trial/trial_quic_server_socket.hpp>
+#include <hotplace/sdk/net/basic/trial/trial_server_socket_adapter.hpp>
 #include <hotplace/sdk/net/basic/trial/trial_tls_server_socket.hpp>
 #include <hotplace/sdk/net/tls/sdk.hpp>
 
@@ -141,6 +143,24 @@ server_socket* server_socket_builder::build() {
     }
     __finally2 {}
     return svrsocket;
+}
+
+server_socket_adapter* server_socket_builder::build_adapter() {
+    server_socket_adapter* adapter;
+    __try2 {
+        auto scheme = get_scheme();
+        auto powered_by = socket_scheme_mask_powered_by & scheme;
+        switch (powered_by) {
+            case socket_scheme_openssl: {
+                __try_new_catch_only(adapter, new openssl_server_socket_adapter);
+            } break;
+            case socket_scheme_trial: {
+                __try_new_catch_only(adapter, new trial_server_socket_adapter);
+            } break;
+        }
+    }
+    __finally2 {}
+    return adapter;
 }
 
 uint32 server_socket_builder::get_scheme() { return _scheme; }

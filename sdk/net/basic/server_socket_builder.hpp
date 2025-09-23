@@ -16,51 +16,49 @@
 namespace hotplace {
 namespace net {
 
-enum socket_scheme_t : uint32 {
-    // 0x0000FFFF
-    socket_scheme_tcp = 0x00000000,
-    socket_scheme_udp = 0x00000001,
-    socket_scheme_tls = 0x00008000,
-    socket_scheme_dtls = 0x00008001,
-    socket_scheme_quic = 0x00008002,
-    socket_scheme_quic2 = 0x00008003,
-    // 0x000F0000
-    socket_scheme_openssl = 0x00000000,
-    socket_scheme_trial = 0x00010000,
-    // 0x00F00000 - reserved
-    // 0xFF000000
-    // socket_scheme_tls, socket_scheme_dtls
-    socket_scheme_tls12 = 0x01000000,
-    socket_scheme_tls13 = 0x02000000,
-    socket_scheme_tls12_13 = socket_scheme_tls12 | socket_scheme_tls13,
-    // mask
-    socket_scheme_mask = 0x0000ffff,
-    socket_scheme_mask_secure = 0x00008000,
-    socket_scheme_mask_powered_by = 0x000f0000,
-    socket_scheme_mask_tune = 0xff000000,
-};
-
+/**
+ * @example
+ *          server_socket_builder builder;
+ *          tls_socket = builder
+ *                          .set(socket_scheme_tls | socket_scheme_openssl)
+ *                          .set_certificate("rsa.crt", "rsa.key")
+ *                          .set_ciphersuites(ciphersuites)
+ *                          .set_verify(0)
+ *                          .build();
+ */
 class server_socket_builder {
    public:
     server_socket_builder();
 
+    /**
+     * @param   uint32 scheme [in] socket_scheme_t
+     */
     server_socket_builder& set(uint32 scheme);
+    /**
+     * @param   const std::string& server_cert [in]
+     * @param   const std::string& server_key [in]
+     */
     server_socket_builder& set_certificate(const std::string& server_cert, const std::string& server_key);
+    /**
+     * @param   const std::string& cipher_suites [in]
+     */
     server_socket_builder& set_ciphersuites(const std::string& cipher_suites);
+    /**
+     * @param   int verify_peer [in]
+     */
     server_socket_builder& set_verify(int verify_peer);
     /**
-     * auto s = builder.set(scheme).build();
-     *
-     * (naive_tcp_server_socket*)set(socket_scheme_tcp).build();
-     * (naive_udp_server_socket*)set(socket_scheme_udp).build();
-     * (openssl_tls_server_socket*)set(socket_scheme_tls | socket_scheme_openssl).set_sertificate(server_cert,
-     * server_key).set_ciphersuites(ciphersuites).build(); (openssl_dtls_server_socket*)set(socket_scheme_dtls |
-     * socket_scheme_openssl).set_sertificate(server_cert, server_key).set_ciphersuites(ciphersuites).build(); (trial_dtls_server_socket*)set(socket_scheme_dtls
-     * | socket_scheme_trial).set_sertificate(server_cert, server_key).set_ciphersuites(ciphersuites).build(); (trial_tls_server_socket*)set(socket_scheme_tls |
-     * socket_scheme_trial).set_sertificate(server_cert, server_key).set_ciphersuites(ciphersuites).build(); (trial_quic_server_socket*)set(socket_scheme_quic |
-     * socket_scheme_trial).set_sertificate(server_cert, server_key).set_ciphersuites(ciphersuites).build();
+     * @brief   build
      */
     server_socket* build();
+    /**
+     * @example
+     *          server_socket_builder builder;
+     *          adapter = builder
+     *                          .set(socket_scheme_openssl)
+     *                          .build_adapter();
+     */
+    server_socket_adapter* build_adapter();
 
     uint32 get_scheme();
 

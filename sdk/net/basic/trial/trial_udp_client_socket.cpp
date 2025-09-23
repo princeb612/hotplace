@@ -19,5 +19,7 @@ trial_udp_client_socket::~trial_udp_client_socket() {}
 
 int trial_udp_client_socket::socket_type() { return SOCK_DGRAM; }
 
+uint32 trial_udp_client_socket::get_scheme() { return socket_scheme_udp | socket_scheme_trial | socket_scheme_client; }
+
 }  // namespace net
 }  // namespace hotplace
