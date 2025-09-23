@@ -785,7 +785,7 @@ return_t network_server::producer_routine(uint32 type, uint32 data_count, void* 
             }
         }
     } else if (multiplexer_event_type_t::mux_dgram == type) {
-        auto scheme = context->svr->socket->get_scheme();
+        auto scheme = context->svr_socket->get_scheme();
         if (socket_scheme_dtls & scheme) {
             network_session* dgram_session = nullptr;
             context->session_manager.get_dgram_session(&dgram_session, (handle_t)context->listen_handle->fd, context->svr_socket, nullptr);
