@@ -14,11 +14,12 @@ project (hotplace)
 set (CMAKE_VERBOSE_MAKEFILE OFF)
 set (CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-set (SUPPORT_STATIC 1) # 1 if not set disable_static
-set (SUPPORT_SHARED 0) # set 1 in mingw, ubuntu, custom build
+set (SET_STDCPP c++11)
 set (SUPPORT_ODBC 0)   # 
 set (SUPPORT_PCH 0)    # cmake 2.x
-set (SET_STDCPP c++11)
+set (SUPPORT_PQC 0)    # 
+set (SUPPORT_SHARED 0) # set 1 in mingw, ubuntu, custom build
+set (SUPPORT_STATIC 1) # 1 if not set disable_static
 
 if (NOT "$ENV{CMAKE_VERBOSE_MAKEFILE}" STREQUAL "")
     set (CMAKE_VERBOSE_MAKEFILE "$ENV{CMAKE_VERBOSE_MAKEFILE}")
@@ -48,6 +49,9 @@ if(CMAKE_VERSION VERSION_GREATER 3.8)
     else (1)
         set (SUPPORT_PCH 1)
     endif ()
+endif ()
+if (NOT "$ENV{SUPPORT_PQC}" STREQUAL "")
+    set (SUPPORT_PQC $ENV{SUPPORT_PQC})
 endif ()
 
 # -std=c++11
@@ -79,6 +83,7 @@ message (STATUS "SUPPORT_STATIC ${SUPPORT_STATIC}")
 message (STATUS "SUPPORT_SHARED ${SUPPORT_SHARED}")
 message (STATUS "SUPPORT_ODBC ${SUPPORT_ODBC}")
 message (STATUS "SUPPORT_PCH ${SUPPORT_PCH}")
+message (STATUS "SUPPORT_PQC ${SUPPORT_PQC}")
 
 # project modules
 set (PROJECT_SDK_MODULE_BASE ${CMAKE_PROJECT_NAME}-sdk-base)

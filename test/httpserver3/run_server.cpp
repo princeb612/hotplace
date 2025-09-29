@@ -149,7 +149,7 @@ return_t simple_http2_server(void*) {
             .add("/api/json", api_response_json_handler)
             .add("/api/test", default_handler);
 
-        _http_server->get_http_router().get_http2_serverpush().add("/index.html", "/style.css").add("/index.html", "/blah.js");
+        // _http_server->get_http_router().get_http2_serverpush().add("/index.html", "/style.css").add("/index.html", "/blah.js");
 
         _http_server->start();
 

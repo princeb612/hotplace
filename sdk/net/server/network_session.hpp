@@ -255,7 +255,6 @@ class network_session_manager {
     critical_section _session_lock;
     network_session_map_t _session_map;
     dgram_session_map_t _dgram_session_map;
-    quic_session_map_t _quic_session_map;
     server_conf* _server_conf;
 };
 

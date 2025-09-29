@@ -109,7 +109,7 @@ function build_oqsprovider()
 {
     local install_dir=${HOTPLACE_HOME}/thirdparty
 
-    cmake -G 'Unix Makefiles' --install-prefix ${install_dir} -B build -DCMAKE_BUILD_TYPE=Debug
+    cmake -G 'Unix Makefiles' --install-prefix ${install_dir} -B build -DCMAKE_BUILD_TYPE=Debug -DOQS_KEM_ENCODERS=ON
     cd build
     make
     make install

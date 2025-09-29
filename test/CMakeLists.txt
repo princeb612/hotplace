@@ -63,6 +63,11 @@ if (SUPPORT_ODBC)
 add_subdirectory (odbc)
 endif ()
 
+# oqs, pqc
+if (SUPPORT_PQC)
+add_subdirectory (pqc)
+endif ()
+
 # etc
 add_subdirectory (etc)
 

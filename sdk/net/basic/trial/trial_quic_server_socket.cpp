@@ -24,51 +24,9 @@
 namespace hotplace {
 namespace net {
 
-trial_quic_server_socket::trial_quic_server_socket() : naive_udp_server_socket() {}
+trial_quic_server_socket::trial_quic_server_socket() : trial_dtls_server_socket() {}
 
 trial_quic_server_socket::~trial_quic_server_socket() {}
-
-return_t trial_quic_server_socket::dtls_open(socket_context_t** handle, socket_t fd) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        // TODO
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t trial_quic_server_socket::dtls_handshake(netsession_t* sess) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        // TODO
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t trial_quic_server_socket::recvfrom(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
-                                            socklen_t* addrlen) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        // TODO
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t trial_quic_server_socket::sendto(socket_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
-                                          socklen_t addrlen) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        // TODO
-    }
-    __finally2 {}
-    return ret;
-}
-
-bool trial_quic_server_socket::support_tls() { return true; }
 
 uint32 trial_quic_server_socket::get_scheme() { return socket_scheme_quic | socket_scheme_trial | socket_scheme_server; }
 

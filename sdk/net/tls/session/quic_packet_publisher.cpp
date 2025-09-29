@@ -430,6 +430,10 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
                 }
 
                 ret = packet->write(dir, bin);
+                if (errorcode_t::success == ret) {
+                    auto pkn = packet->get_pn();
+                    _pkns_published[space].insert(pkn);
+                }
 
                 packet->release();
 
@@ -453,6 +457,10 @@ return_t quic_packet_publisher::publish(tls_direction_t dir, std::function<void(
             ret = errorcode_t::invalid_context;
             __leave2;
         }
+
+        critical_section_guard guard(_lock);
+
+        _pkns_published.clear();
 
         std::set<protection_space_t> spaces;
         ret = probe_spaces(spaces);
@@ -549,6 +557,19 @@ return_t quic_packet_publisher::consume(quic_packet* packet, size_t paid, std::f
     }
     __finally2 {}
     return ret;
+}
+
+void quic_packet_publisher::for_each_pkn(std::function<void(protection_space_t, uint64)> func) {
+    if (func) {
+        critical_section_guard guard(_lock);
+        for (const auto& ps : _pkns_published) {
+            auto space = ps.first;
+            auto const& pkns = ps.second;
+            for (const auto& pkn : pkns) {
+                func(space, pkn);
+            }
+        }
+    }
 }
 
 }  // namespace net

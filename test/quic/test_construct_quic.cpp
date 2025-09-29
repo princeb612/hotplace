@@ -11,6 +11,13 @@
 
 static int max_udp_payload_size = 1200;
 
+void enum_pkns(quic_packet_publisher& publisher) {
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    _logger->colorln("PKN published");
+    publisher.for_each_pkn(
+        [&](protection_space_t space, uint64 pkn) -> void { _logger->colorln("+ %s %I64i", tlsadvisor->protection_space_string(space).c_str(), pkn); });
+}
+
 void construct_quic_cli_initial(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
     bins.clear();
 
@@ -66,6 +73,8 @@ void construct_quic_cli_initial(tls_session* session, tls_direction_t dir, uint3
                      auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
                      _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
                  });
+
+    enum_pkns(publisher);
 }
 
 void construct_quic_svr_initial(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -84,6 +93,8 @@ void construct_quic_svr_initial(tls_session* session, tls_direction_t dir, uint3
                      auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
                      _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
                  });
+
+    enum_pkns(publisher);
 }
 
 void construct_quic_svr_handshakes_settings(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -159,6 +170,8 @@ void construct_quic_svr_handshakes_settings(tls_session* session, tls_direction_
             auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
             _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
         });
+
+    enum_pkns(publisher);
 }
 
 void construct_quic_cli_handshake(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -177,6 +190,8 @@ void construct_quic_cli_handshake(tls_session* session, tls_direction_t dir, uin
                      auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
                      _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
                  });
+
+    enum_pkns(publisher);
 }
 
 void construct_quic_cli_settings(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -221,6 +236,8 @@ void construct_quic_cli_decoder(tls_session* session, tls_direction_t dir, uint3
                      auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
                      _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
                  });
+
+    enum_pkns(publisher);
 }
 
 void construct_quic_cli_encoder(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -275,6 +292,8 @@ void construct_http3_cli_get(tls_session* session, tls_direction_t dir, uint32 f
                      auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
                      _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
                  });
+
+    enum_pkns(publisher);
 }
 
 void construct_quic_svr_nst(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -294,6 +313,8 @@ void construct_quic_svr_nst(tls_session* session, tls_direction_t dir, uint32 fl
                      auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
                      _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
                  });
+
+    enum_pkns(publisher);
 }
 
 void construct_quic_svr_done_nt_nci(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -335,6 +356,8 @@ void construct_quic_svr_decoder(tls_session* session, tls_direction_t dir, uint3
                      auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
                      _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
                  });
+
+    enum_pkns(publisher);
 }
 
 void construct_http3_svr_ok(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -363,6 +386,8 @@ void construct_http3_svr_ok(tls_session* session, tls_direction_t dir, uint32 fl
                      auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
                      _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
                  });
+
+    enum_pkns(publisher);
 }
 
 void construct_http3_svr_resp(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -387,6 +412,8 @@ void construct_http3_svr_resp(tls_session* session, tls_direction_t dir, uint32 
                      auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
                      _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
                  });
+
+    enum_pkns(publisher);
 }
 
 void construct_quic_connection_close(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -404,6 +431,8 @@ void construct_quic_connection_close(tls_session* session, tls_direction_t dir, 
                      auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
                      _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
                  });
+
+    enum_pkns(publisher);
 }
 
 void construct_quic_ack(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -421,6 +450,8 @@ void construct_quic_ack(tls_session* session, tls_direction_t dir, uint32 flags,
                      auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
                      _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
                  });
+
+    enum_pkns(publisher);
 }
 
 return_t send_packet(tls_session* session, tls_direction_t dir, const std::list<binary_t>& bins, const char* message) {

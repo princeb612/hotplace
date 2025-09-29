@@ -39,6 +39,8 @@
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 #include <openssl/core_names.h>
+#include <openssl/decoder.h>
+#include <openssl/encoder.h>
 #include <openssl/params.h>
 #include <openssl/provider.h>
 #endif

@@ -24,8 +24,10 @@ COMMENTS
     format         - clang-format (syn. cf)
     leaks          - gdb 
     opt            - optimize
+    oqs            - liboqs, oqs-provider feature
     pch            - precompiled header
     prof           - gprof
+    pqc            - liboqs, oqs-provider feature
     odbc           - ODBC feature
     redist         - redistribute MSYS2(MINGW) binaries
     shared         - shared build
@@ -96,8 +98,12 @@ if [ ${#args[@]} -ne 0 ]; then
             export SUPPORT_ODBC=1
         elif [ $arg = 'opt' ]; then
             CXXFLAGS="${CXXFLAGS}  -O2"
+        elif [ $arg = 'oqs' ]; then
+            export SUPPORT_PQC=1
         elif [ $arg = 'pch' ]; then
             SUPPORT_PCH=1
+        elif [ $arg = 'pqc' ]; then
+            export SUPPORT_PQC=1
         elif [ $arg = 'prof' ]; then
             CXXFLAGS="${CXXFLAGS} -pg"
         elif [ $arg = 'redist' ]; then

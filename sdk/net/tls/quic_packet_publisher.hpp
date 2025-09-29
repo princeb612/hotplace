@@ -191,6 +191,18 @@ class quic_packet_publisher {
 
     tls_handshakes& get_handshakes();
 
+    /**
+     * @example
+     *          publisher
+     *              .publish(dir, lambda_publish)
+     *              .for_each_pkn([](protection_space_t space, uint64 pkn) -> void {
+     *                                // do something
+     *                            });
+     */
+    void for_each_pkn(std::function<void(protection_space_t, uint64)> func);
+
+    return_t ack(protection_space_t space, uint64 pkn);
+
    protected:
     return_t probe_spaces(std::set<protection_space_t>& spaces);
     return_t prepare_packet_cid(quic_packet* packet, protection_space_t space, tls_direction_t dir);
@@ -242,7 +254,18 @@ class quic_packet_publisher {
         ~entry_t() {}
     };
     critical_section _lock;
+    /**
+     * segmentation
+     */
     std::map<protection_space_t, std::list<entry_t>> _segment;
+    /**
+     * PKNs published
+     */
+    std::map<protection_space_t, std::set<uint64>> _pkns_published;
+    // simple
+    //  std::map<protection_space_t, t_binaries<uint32>> _retrans;
+    // complex
+    //  handshake 5 + application 6
 };
 
 }  // namespace net

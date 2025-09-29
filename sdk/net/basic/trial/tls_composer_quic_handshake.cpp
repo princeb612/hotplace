@@ -91,17 +91,6 @@ return_t tls_composer::do_quic_client_handshake(unsigned wto, std::function<void
         publisher.set_session(session).set_flags(flags).add(tls_hs_finished, dir).publish(dir, [&](tls_session* session, binary_t& packet) -> void {
             func(session, packet);
         });
-
-        // wait FIN
-        session_status_finished = session_status_client_finished;
-
-        session->wait_change_session_status(session_status_finished, wto);
-        session_status = session->get_session_status();
-
-        if (0 == (session_status_finished & session_status)) {
-            ret = errorcode_t::error_handshake;
-            __leave2_trace(ret);
-        }
     }
     __finally2 {}
     return ret;

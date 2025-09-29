@@ -150,8 +150,9 @@ return_t network_session_manager::get_dgram_session(network_session** ptr_sessio
                 session_object->get_buffer()->set_bufsize(udp_bufsize);  // 0 for default buffer size
             }
             pairib.first->second = session_object;
-            session_object->dtls_session_open(listen_sock);
-            if (false == session_object->get_server_socket()->support_tls()) {
+            if (session_object->get_server_socket()->support_tls()) {
+                session_object->dtls_session_open(listen_sock);
+            } else {
                 session_object->udp_session_open(listen_sock);
             }
             *ptr_session_object = session_object;

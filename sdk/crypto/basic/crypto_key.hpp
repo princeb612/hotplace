@@ -645,6 +645,8 @@ return_t dump_pem(const EVP_PKEY* pkey, stream_t* stream);
  */
 return_t dump_pem(const EVP_PKEY* pkey, BIO* bio);
 
+void dump_key_openssl(const EVP_PKEY* pkey, stream_t* stream, uint8 indent);
+
 }  // namespace crypto
 }  // namespace hotplace
 

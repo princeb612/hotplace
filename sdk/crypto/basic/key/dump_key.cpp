@@ -147,7 +147,7 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
     __finally2 {}
 }
 
-static void dump_key_openssl(const EVP_PKEY* pkey, stream_t* stream, uint8 indent) {
+void dump_key_openssl(const EVP_PKEY* pkey, stream_t* stream, uint8 indent) {
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
             __leave2;

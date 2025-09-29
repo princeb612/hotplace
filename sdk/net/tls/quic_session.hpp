@@ -70,8 +70,6 @@ class quic_session {
     quic_streams _streams;
     // publisjer
     quic_packet_publisher _quic_packet_publisher;
-    // retransmission
-    std::map<protection_space_t, t_binaries<uint32>> _retrans;
 };
 
 }  // namespace net

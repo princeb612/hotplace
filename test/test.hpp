@@ -36,6 +36,10 @@ struct CMDLINEOPTION {
         debug = 1;
         trace_level = level;
     }
+    bool is_verbose() const { return verbose > 0; }
+    bool is_debug() const { return debug > 0; }
+    bool is_loglevel_trace() const { return loglevel_trace == trace_level; }
+    bool is_loglevel_debug() const { return loglevel_debug == trace_level; }
 };
 
 #endif

@@ -28,7 +28,8 @@
     * CBOR
 
 * details
-  * Revision 882
+  * Revision 883
+    * [tested] PQC KEM
   * Revision 839
     * [tested] DTLS records
   * Revision 836

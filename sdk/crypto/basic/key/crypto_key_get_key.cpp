@@ -202,6 +202,10 @@ return_t crypto_key::get_asn1public_key(const EVP_PKEY* pkey, binary_t& pub) {
         }
 
         int len = i2d_PUBKEY((EVP_PKEY*)pkey, nullptr);
+        if (len < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
         pub.resize(len);
         byte_t* p = &pub[0];
         len = i2d_PUBKEY((EVP_PKEY*)pkey, &p);
