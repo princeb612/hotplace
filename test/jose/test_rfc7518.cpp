@@ -59,8 +59,8 @@ int test_ecdh() {
     const EVP_PKEY* alicePrivateKey = keys.find("alice", crypto_kty_t::kty_ec);
     const EVP_PKEY* bobPrivateKey = keys.find("bob", crypto_kty_t::kty_ec);
 
-    const EVP_PKEY* alicePublicKey = get_peer_key(alicePrivateKey);
-    const EVP_PKEY* bobPublicKey = get_peer_key(bobPrivateKey);
+    const EVP_PKEY* alicePublicKey = get_public_key(alicePrivateKey);
+    const EVP_PKEY* bobPublicKey = get_public_key(bobPrivateKey);
 
     keys.get_public_key(alicePrivateKey, x_alice, y_alice);
     keys.get_private_key(alicePrivateKey, d_alice);

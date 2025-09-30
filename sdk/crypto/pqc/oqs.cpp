@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/pqc/oqs.hpp>
 
 namespace hotplace {
@@ -397,6 +398,98 @@ return_t pqc_oqs::decapsule(oqs_context* context, EVP_PKEY* pkey, const binary_t
         }
     }
     __finally2 {}
+    return ret;
+}
+
+return_t pqc_oqs::sign(oqs_context* context, EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature) {
+    return_t ret = errorcode_t::success;
+    EVP_MD_CTX* md_context = nullptr;
+    int rc = 1;
+    size_t dgstsize = 0;
+    __try2 {
+        signature.resize(0);
+        if (nullptr == context || nullptr == pkey || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        md_context = EVP_MD_CTX_new();
+        if (nullptr == md_context) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
+
+        rc = EVP_DigestSignInit_ex(md_context, nullptr, nullptr, context->libctx, nullptr, pkey, nullptr);
+        if (rc < 1) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
+        rc = EVP_DigestSignUpdate(md_context, stream, size);
+        if (rc < 1) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
+        rc = EVP_DigestSignFinal(md_context, nullptr, &dgstsize);
+        if (rc < 1) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
+
+        signature.resize(dgstsize);
+        EVP_DigestSignFinal(md_context, &signature[0], &dgstsize);
+
+        signature.resize(dgstsize);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t pqc_oqs::verify(oqs_context* context, EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature) {
+    return_t ret = errorcode_t::success;
+    EVP_MD_CTX* md_context = nullptr;
+    int rc = 1;
+
+    __try2 {
+        if (nullptr == context || nullptr == pkey || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = errorcode_t::error_verify;
+        if (signature.empty()) {
+            __leave2;
+        }
+
+        md_context = EVP_MD_CTX_new();
+        if (nullptr == md_context) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
+
+        rc = EVP_DigestVerifyInit_ex(md_context, nullptr, nullptr, context->libctx, nullptr, pkey, nullptr);
+        if (rc < 1) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
+
+        rc = EVP_DigestVerifyUpdate(md_context, stream, size);
+        if (rc < 1) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
+
+        rc = EVP_DigestVerifyFinal(md_context, &signature[0], signature.size());
+        if (rc < 1) {
+            ret = errorcode_t::error_verify;
+            __leave2_trace_openssl(ret);
+        }
+
+        ret = errorcode_t::success;
+    }
+    __finally2 {
+        if (nullptr != md_context) {
+            EVP_MD_CTX_destroy(md_context);
+        }
+    }
     return ret;
 }
 

@@ -4,8 +4,9 @@
   * Hybrid Public Key Encryption
     * RFC 9180 Hybrid Public Key Encryption
     * [Hybrid Public Key Encryption (HPKE)](https://cryptosys.net/pki/hpke.html)
-  * Key Encapsulation Mechanism
-    * [oqs-provider](https://github.com/open-quantum-safe/oqs-provider/)
+  * RFC 7748
+    * 6.1.  Curve25519
+    * 6.2.  Curve448
 
 #### PQC
 

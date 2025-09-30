@@ -674,7 +674,7 @@ void do_key_match(crypto_key* key, jws_t sig, crypto_use_t use) {
             key->get_key(pkey, pub1, pub2, priv);
 
             dump_key(pkey, &bs);
-            bs.printf("%s");
+            bs.printf("\n");
         }
     }
     bs.printf(pkey ? "found" : "not found");

@@ -24,8 +24,8 @@ namespace crypto {
  *      generate KEM key pair
  *      encode public key and distribute  --->
  *                                                  decode public key
- *                                        <---      encapsulate key, calc shared key
- *      calc shared secret
+ *                                        <---      encapsulate key (public key), calc shared key
+ *      decapsulate (private key), calc shared secret
  */
 class pqc_oqs {
    public:
@@ -69,6 +69,9 @@ class pqc_oqs {
 
     return_t encapsule(oqs_context* context, EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret);
     return_t decapsule(oqs_context* context, EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret);
+
+    return_t sign(oqs_context* context, EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature);
+    return_t verify(oqs_context* context, EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature);
 
     std::string nameof_encoding(oqs_key_encoding_t encoding);
 

@@ -196,10 +196,11 @@ flowchart LR
 
 - feature
 
-| feature | API                   | minimum version |
-| --      | --                    | --              |
-| HPKE    | OSSL_HPKE_seal        | openssl 3.2~    |
-| KDF     | OSSL_set_max_threads  | openssl 3.2~    |
+| feature | API                        | minimum version |
+| --      | --                         | --              |
+|         | EVP_PKEY_CTX_new_from_name | openssl 3.0~    |
+| HPKE    | OSSL_HPKE_seal             | openssl 3.2~    |
+| KDF     | OSSL_set_max_threads       | openssl 3.2~    |
 
 ## TODO
 

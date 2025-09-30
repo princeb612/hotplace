@@ -12,5 +12,6 @@ extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 void test_encode();
 void test_kem();
+void test_dsa();
 
 #endif

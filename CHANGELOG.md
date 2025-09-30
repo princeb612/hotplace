@@ -28,6 +28,8 @@
     * CBOR
 
 * details
+  * Revision 884
+    * [tested] PQC DSA
   * Revision 883
     * [tested] PQC KEM
   * Revision 839

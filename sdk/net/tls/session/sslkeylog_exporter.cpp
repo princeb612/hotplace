@@ -47,6 +47,24 @@ return_t sslkeylog_exporter::log(tls_session* session, tls_secret_t secret) {
             __leave2;
         }
 
+        /**
+         * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
+         *
+         * TLS SSLKEYLOGFILE Labels
+         *
+         * Value 	                        Description
+         * CLIENT_RANDOM	                Master secret in TLS 1.2 and earlier
+         * CLIENT_EARLY_TRAFFIC_SECRET	    Secret for client early data records
+         * EARLY_EXPORTER_SECRET	        Early exporters secret
+         * CLIENT_HANDSHAKE_TRAFFIC_SECRET	Secret protecting client handshake
+         * SERVER_HANDSHAKE_TRAFFIC_SECRET	Secret protecting server handshake
+         * CLIENT_TRAFFIC_SECRET_0	        Secret protecting client records post handshake
+         * SERVER_TRAFFIC_SECRET_0	        Secret protecting server records post handshake
+         * EXPORTER_SECRET	                Exporter secret after handshake
+         * ECH_SECRET	                    HPKE KEM shared secret used in the ECH
+         * ECH_CONFIG	                    ECHConfig used for construction of the ECH
+         */
+
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
 

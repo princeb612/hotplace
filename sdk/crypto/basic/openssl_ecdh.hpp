@@ -20,10 +20,10 @@ namespace crypto {
 /**
  * @brief   public key of peer
  * @example
- *          const EVP_PKEY* alicePublicKey = get_peer_key (alicePrivateKey);
+ *          const EVP_PKEY* alicePublicKey = get_public_key (alicePrivateKey);
  *          crypto_key_free ((EVP_PKEY*)alicePublicKey);
  */
-const EVP_PKEY* get_peer_key(const EVP_PKEY* pkey);
+const EVP_PKEY* get_public_key(const EVP_PKEY* pkey);
 /**
  * @brief   Diffie–Hellman key exchange
  * @example
@@ -42,11 +42,11 @@ const EVP_PKEY* get_peer_key(const EVP_PKEY* pkey);
  *          keyset.add_ec (&keys, "alice", NID_secp384r1);
  *          keyset.add_ec (&keys, "bob", NID_secp384r1);
  *
- *          const EVP_PKEY* alicePrivateKey = keys.get_by_name (crypto_kty_t::kty_ec, "alice");
- *          const EVP_PKEY* bobPrivateKey = keys.get_by_name (crypto_kty_t::kty_ec, "bob");
+ *          const EVP_PKEY* alicePrivateKey = keys.find ("alice", crypto_kty_t::kty_ec);
+ *          const EVP_PKEY* bobPrivateKey = keys.find ("bob", crypto_kty_t::kty_ec);
  *
- *          const EVP_PKEY* alicePublicKey = get_peer_key (alicePrivateKey);
- *          const EVP_PKEY* bobPublicKey = get_peer_key (bobPrivateKey);
+ *          const EVP_PKEY* alicePublicKey = get_public_key (alicePrivateKey);
+ *          const EVP_PKEY* bobPublicKey = get_public_key (bobPrivateKey);
  *
  *          keys.get_public_key (alicePrivateKey, x_alice, y_alice);
  *          keys.get_private_key (alicePrivateKey, d_alice);
@@ -59,7 +59,7 @@ const EVP_PKEY* get_peer_key(const EVP_PKEY* pkey);
  *          crypto_key_free ((EVP_PKEY*)alicePublicKey);
  *          crypto_key_free ((EVP_PKEY*)bobPublicKey);
  */
-return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* peer, binary_t& secret);
+return_t dh_key_agreement(const EVP_PKEY* privkey, const EVP_PKEY* pubkey, binary_t& secret);
 
 binary_t kdf_parameter_int(uint32 source);
 binary_t kdf_parameter_string(const char* source);

@@ -28,46 +28,55 @@ void test_kem() {
         if (errorcode_t::success == ret) {
             // p256_mlkem512, x25519_mlkem512 : OID registered only
             oqs.for_each(context, OSSL_OP_KEM, [&](const std::string& alg) -> void {
-                _logger->writeln("KEM algorithm : %s", alg.c_str());
+                _logger->writeln("algorithm : %s", alg.c_str());
 
                 if (OBJ_sn2nid(alg.c_str())) {
-                    EVP_PKEY* pkey = nullptr;
+                    EVP_PKEY* pkey_keygen = nullptr;
                     binary_t capsulekey;
-                    binary_t sharedsecret;
+                    binary_t sharedsecret_bob;
                     binary_t pubkey;
-                    auto encoding = oqs_key_encoding_pub_der;
+                    binary_t privkey;
+                    auto encoding_pubkey = oqs_key_encoding_pub_der;
+                    auto encoding_privkey = oqs_key_encoding_priv_der;
 
                     // generate keypair
-                    oqs.keygen(context, alg.c_str(), &pkey);
-                    _test_case.assert(nullptr != pkey, __FUNCTION__, "keygen %s", alg.c_str());
+                    oqs.keygen(context, alg.c_str(), &pkey_keygen);
+                    _test_case.assert(nullptr != pkey_keygen, __FUNCTION__, "keygen %s", alg.c_str());
 
                     // public key
-                    ret = oqs.encode_key(context, pkey, pubkey, encoding);
+                    ret = oqs.encode_key(context, pkey_keygen, pubkey, encoding_pubkey);
                     _logger->writeln("pub key %s", base16_encode(pubkey).c_str());
                     _test_case.test(ret, __FUNCTION__, "public key %s", alg.c_str());
 
+                    ret = oqs.encode_key(context, pkey_keygen, privkey, encoding_privkey);
+                    _logger->writeln("priv key %s", base16_encode(privkey).c_str());
+                    _test_case.test(ret, __FUNCTION__, "private key %s", alg.c_str());
+
                     // key distribution
-                    EVP_PKEY* pk = nullptr;
-                    ret = oqs.decode_key(context, &pk, pubkey, encoding);
+                    EVP_PKEY* pkey_pub = nullptr;
+                    ret = oqs.decode_key(context, &pkey_pub, pubkey, encoding_pubkey);
                     _test_case.test(ret, __FUNCTION__, "distribute public key %s", alg.c_str());
 
                     if (errorcode_t::success == ret) {
                         // encapsulate using public key
-                        ret = oqs.encapsule(context, pk, capsulekey, sharedsecret);
+                        ret = oqs.encapsule(context, pkey_pub, capsulekey, sharedsecret_bob);
                         if (option.is_loglevel_debug()) {
                             _logger->hdump("encapsulated key", capsulekey, 16, 3);
-                            _logger->hdump("shared secret", sharedsecret, 16, 3);
+                            _logger->hdump("shared secret", sharedsecret_bob, 16, 3);
                         }
                         _test_case.test(ret, __FUNCTION__, "encapsulate %s", alg.c_str());
 
                         // decapsulate using private key
-                        binary_t sharedsecret2;
-                        ret = oqs.decapsule(context, pkey, capsulekey, sharedsecret2);
+                        binary_t sharedsecret_alice;
+                        ret = oqs.decapsule(context, pkey_keygen, capsulekey, sharedsecret_alice);
                         _test_case.test(ret, __FUNCTION__, "decapsulate %s", alg.c_str());
-                        _test_case.assert(sharedsecret == sharedsecret2, __FUNCTION__, "compare");
+
+                        // compare
+                        _test_case.assert(sharedsecret_bob == sharedsecret_alice, __FUNCTION__, "compare");
                     }
 
-                    EVP_PKEY_free(pkey);
+                    EVP_PKEY_free(pkey_pub);
+                    EVP_PKEY_free(pkey_keygen);
                 } else {
                     ret = errorcode_t::not_supported;
                     _test_case.test(ret, __FUNCTION__, "No OID registered for %s", alg.c_str());

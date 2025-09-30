@@ -17,7 +17,7 @@
 namespace hotplace {
 namespace crypto {
 
-const EVP_PKEY* get_peer_key(const EVP_PKEY* pkey) {
+const EVP_PKEY* get_public_key(const EVP_PKEY* pkey) {
     const EVP_PKEY* peer = nullptr;
 
     __try2 {
@@ -42,7 +42,7 @@ const EVP_PKEY* get_peer_key(const EVP_PKEY* pkey) {
     return peer;
 }
 
-return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* peer, binary_t& secret) {
+return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* pkey_pub, binary_t& secret) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pkey_context = nullptr;
     int ret_test = 0;
@@ -50,7 +50,7 @@ return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* peer, binary_t& 
     __try2 {
         secret.clear();
 
-        if (nullptr == pkey || nullptr == peer) {
+        if (nullptr == pkey || nullptr == pkey_pub) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -62,35 +62,27 @@ return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* peer, binary_t& 
         }
 
         size_t size_secret = 0;
-        const EVP_PKEY* pkey_peer = get_peer_key(peer);
-        if (pkey_peer) {
-            __try2 {
-                ret_test = EVP_PKEY_derive_init(pkey_context);
-                if (1 > ret_test) {
-                    ret = errorcode_t::internal_error;
-                    __leave2;
-                }
-                ret_test = EVP_PKEY_derive_set_peer(pkey_context, (EVP_PKEY*)pkey_peer);
-                if (1 > ret_test) {
-                    ret = errorcode_t::internal_error;
-                    __leave2_trace_openssl(ret);
-                }
-                ret_test = EVP_PKEY_derive(pkey_context, nullptr, &size_secret);
-                if (1 > ret_test) {
-                    ret = errorcode_t::internal_error;
-                    __leave2_trace_openssl(ret);
-                }
-                secret.resize(size_secret);
-                ret_test = EVP_PKEY_derive(pkey_context, &secret[0], &size_secret);
-                if (1 > ret_test) {
-                    ret = errorcode_t::internal_error;
-                    __leave2_trace_openssl(ret);
-                }
-            }
-            __finally2 { EVP_PKEY_free((EVP_PKEY*)pkey_peer); }
-        } else {
+
+        ret_test = EVP_PKEY_derive_init(pkey_context);
+        if (1 > ret_test) {
             ret = errorcode_t::internal_error;
             __leave2;
+        }
+        ret_test = EVP_PKEY_derive_set_peer(pkey_context, (EVP_PKEY*)pkey_pub);
+        if (1 > ret_test) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
+        ret_test = EVP_PKEY_derive(pkey_context, nullptr, &size_secret);
+        if (1 > ret_test) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
+        secret.resize(size_secret);
+        ret_test = EVP_PKEY_derive(pkey_context, &secret[0], &size_secret);
+        if (1 > ret_test) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
         }
     }
     __finally2 {

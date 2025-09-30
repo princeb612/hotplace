@@ -90,8 +90,7 @@ void test_crypto_key() {
     auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
         auto pkey = item->get_pkey();
 
-        bs.printf(R"(> kid "%s")", item->get_desc().get_kid_cstr());
-        bs.printf("\n");
+        bs.println("\e[1;32m> kid \"%s\"\e[0m", item->get_desc().get_kid_cstr());
         dump_key(pkey, &bs, 16, 3, dump_notrunc);
         _logger->write(bs);
         bs.clear();

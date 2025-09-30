@@ -127,7 +127,8 @@ void dump_crypto_key(crypto_key_object* key, void*) {
         uint32 nid = 0;
 
         nidof_evp_pkey(key->get_pkey(), nid);
-        _logger->writeln("nid %i kid %s alg %s use %i", nid, key->get_desc().get_kid_cstr(), key->get_desc().get_alg_cstr(), key->get_desc().get_use());
+        _logger->writeln("\e[1;32mnid %i kid \"%s\" alg %s use %i\e[0m", nid, key->get_desc().get_kid_cstr(), key->get_desc().get_alg_cstr(),
+                         key->get_desc().get_use());
 
         basic_stream bs;
         dump_key(key->get_pkey(), &bs);

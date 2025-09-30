@@ -344,7 +344,7 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const binar
 return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == x) {
+        if (nullptr == cryptokey || (nullptr == x && nullptr == d)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -372,7 +372,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const ch
 return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == x) {
+        if (nullptr == cryptokey || (nullptr == x && nullptr == d)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -400,7 +400,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const c
 return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == x) {
+        if (nullptr == cryptokey || (nullptr == x && nullptr == d)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -428,7 +428,7 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const ch
 return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == x) {
+        if (nullptr == cryptokey || (nullptr == x && nullptr == d)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -456,7 +456,7 @@ return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const
 return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
+        if (nullptr == cryptokey || nullptr == curve || (nullptr == x && nullptr == d)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -477,7 +477,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, const char* curve, c
 return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
+        if (nullptr == cryptokey || nullptr == curve || (nullptr == x && nullptr == d)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -498,7 +498,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, const char* curve, 
 return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
+        if (nullptr == cryptokey || nullptr == curve || (nullptr == x && nullptr == d)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -519,7 +519,7 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, const char* curve, c
 return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == curve || nullptr == x) {
+        if (nullptr == cryptokey || nullptr == curve || (nullptr == x && nullptr == d)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }

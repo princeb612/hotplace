@@ -52,6 +52,7 @@ int main(int argc, char **argv) {
 
     test_encode();
     test_kem();
+    test_dsa();
 
     _logger->flush();
 

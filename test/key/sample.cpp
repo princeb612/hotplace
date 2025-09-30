@@ -55,11 +55,13 @@ int main(int argc, char** argv) {
         openssl_startup();
 
         test_crypto_key();
+        test_rsa();
         test_eckey_compressed();
         test_ffdhe();
         test_ffdhe_dh();
         test_der();
         test_dsa();
+        test_dh_rfc7748();
     }
     __finally2 { openssl_cleanup(); }
 
