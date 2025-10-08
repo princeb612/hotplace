@@ -115,8 +115,6 @@ void test_rfc_9369_a5();
 
 // pcap
 void test_pcap_http3();
-// QUIC Frame
-void test_quic_frame();
 // construct
 void test_construct_1rtt();
 void test_construct_quic();

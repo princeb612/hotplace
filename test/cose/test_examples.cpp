@@ -143,7 +143,6 @@ void test_github_example() {
 
     _test_case.reset_time();
 
-    basic_stream bs;
     bool result = false;
     cbor_object_signing_encryption cose;
     for (i = 0; i < sizeof_test_vector_github_cose_wg; i++) {

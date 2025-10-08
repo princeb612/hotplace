@@ -251,14 +251,12 @@ void test_x690_encoding_value() {
 
 void do_dump_asn1(asn1* object, const char* expect, const char* text) {
     if (object && expect && text) {
-        basic_stream bs;
+        _logger->write([&](basic_stream& bs) -> void { object->publish(&bs); });
+
         binary_t bin;
-
-        object->publish(&bs);
         object->publish(&bin);
-
-        _logger->write(bs);
         _logger->writeln("%s", base16_encode(bin).c_str());
+
         _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "%s [%s]", text, expect);
     }
 }
@@ -411,8 +409,6 @@ void test_x690_8_9_sequence() {
 
     // SEQUENCE {name IA5String , ok BOOLEAN }
     {
-        basic_stream bs;
-
         constexpr char type[] = R"(SEQUENCE {name IA5String, ok BOOLEAN})";
         constexpr char value[] = R"({name "Smith", ok TRUE})";
         constexpr char expect[] = "300a1605536d6974680101ff";
@@ -420,8 +416,7 @@ void test_x690_8_9_sequence() {
         auto seq = new asn1_sequence;
         *seq << new asn1_object("name", asn1_type_ia5string) << new asn1_object("ok", asn1_type_boolean);
         notation << seq;
-        notation.publish(&bs);
-        _logger->write(bs);
+        _logger->write([&](basic_stream& bs) -> void { notation.publish(&bs); });
     }
 
     // 00000000 : 30 0A 16 05 53 6D 69 74 68 01 01 FF -- -- -- -- | 0...Smith...
@@ -440,15 +435,15 @@ void test_x690_8_9_sequence() {
 
 #if 0
     {
-        basic_stream bs;
         binary_t bin;
         auto n = notation.clone();
         n->set_value_byname("name", "Smith").set_value_byname("ok", true);
         n->publish(&bin);
-        n->publish(&bs);
-        n->release();
-        _logger->write(bs);
         _logger->writeln("%s", base16_encode(bin).c_str());
+        _logger->write([&](basic_stream& bs) -> void {
+            n->publish(&bs);
+        });
+        n->release();
     }
 #endif
 }

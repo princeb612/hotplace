@@ -10,8 +10,8 @@
 
 #include "sample.hpp"
 
-void test_nostd() {
-    _test_case.begin("nostd");
+void test_exception() {
+    _test_case.begin("exception");
     return_t rc = errorcode_t::success;
     std::string reason;
     __try {

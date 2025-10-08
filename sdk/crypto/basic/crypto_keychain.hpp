@@ -39,8 +39,8 @@ enum keyflag_t {
  *                      key access  : get_key, get_public_key, get_private_key
  *              keytype
  *                  rsa     RSA
- *                  ec2     EC2, OKP
- *                  ec      EC2
+ *                  ec2     EC, OKP
+ *                  ec      EC
  *                  okp     OKP
  *                  oct     oct(HMAC)
  *                  dh      DH

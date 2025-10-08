@@ -49,7 +49,6 @@ return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_c
         binary_t s;
         binary_t t;
         binary_t c;
-        basic_stream bs;
 
         const hint_blockcipher_t* hint_blockcipher = advisor->hintof_blockcipher(enc_alg);
         if (nullptr == hint_blockcipher) {

@@ -66,6 +66,20 @@ cbor_array& cbor_array::add(cbor_map* object) {
     return *this;
 }
 
+template <typename T>
+cbor_array& cbor_array::add(std::function<void(T*)> f, uint32 flags) {
+    if (f) {
+        auto obj = new T(flags);
+        f(obj);
+        *this << obj;
+    }
+    return *this;
+}
+
+cbor_array& cbor_array::add(std::function<void(cbor_array*)> f, uint32 flags) { return add<cbor_array>(f, flags); }
+
+cbor_array& cbor_array::add(std::function<void(cbor_map*)> f, uint32 flags) { return add<cbor_map>(f, flags); }
+
 cbor_array& cbor_array::operator<<(cbor_array* object) {
     join(object);
     return *this;

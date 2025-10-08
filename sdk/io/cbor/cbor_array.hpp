@@ -54,6 +54,22 @@ class cbor_array : public cbor_object {
     cbor_array& add(cbor_data* object);
     cbor_array& add(cbor_map* object);
 
+    /**
+     * @example
+     *          // ["a",{"b":"c"}]
+     *          auto root = new cbor_array();
+     *          (*root)  //
+     *              .add(new cbor_data("a"))
+     *              .add([](cbor_map* obj) -> void { *obj << new cbor_pair("b", new cbor_data("c")); });
+     *          root->release();
+     */
+
+    template <typename T>
+    cbor_array& add(std::function<void(T*)> f, uint32 flags = 0);
+
+    cbor_array& add(std::function<void(cbor_array*)> f, uint32 flags = 0);
+    cbor_array& add(std::function<void(cbor_map*)> f, uint32 flags = 0);
+
     cbor_array& operator<<(cbor_array* object);
     cbor_array& operator<<(cbor_data* object);
     cbor_array& operator<<(cbor_map* object);

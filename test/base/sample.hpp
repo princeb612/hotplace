@@ -28,8 +28,6 @@ void test_maphint();
 void test_mapinsert();
 void test_binary();
 void test_loglevel();
-void test_nostd();
-void test_range();
 void test_merge();
 
 #endif

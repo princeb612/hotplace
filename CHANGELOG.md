@@ -28,7 +28,7 @@
     * CBOR
 
 * details
-  * Revision 886
+  * Revision 887
   * Revision 884
     * [tested] PQC DSA
   * Revision 883

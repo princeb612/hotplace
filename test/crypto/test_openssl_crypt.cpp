@@ -129,10 +129,10 @@ void test_openssl_crypt(uint32 cooltime, uint32 unitsize) {
     ossl_set_cooltime(cooltime);
     ossl_set_unitsize(unitsize);
 
-    basic_stream bs;
-    bs << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::white) << "cooltime " << ossl_get_cooltime() << " unitsize "
-       << ossl_get_unitsize() << concolor.turnoff();
-    _logger->writeln(bs);
+    _logger->writeln([&](basic_stream& bs) -> void {
+        bs << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::white) << "cooltime " << ossl_get_cooltime() << " unitsize "
+           << ossl_get_unitsize() << concolor.turnoff();
+    });
 
     crypt_algorithm_t algorithm_table[] = {
         crypt_algorithm_t::aes128,      crypt_algorithm_t::aes192,      crypt_algorithm_t::aes256,   crypt_algorithm_t::aria128,

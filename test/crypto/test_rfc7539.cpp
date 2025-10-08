@@ -28,7 +28,6 @@ void do_test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {
     binary_t encrypted;
     binary_t nonce;
     binary_t tag;
-    basic_stream bs;
 
     openssl_chacha20_iv(nonce, counter, iv);
     ret = crypt.encrypt(alg, key, nonce, input, encrypted, aad, tag);

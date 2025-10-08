@@ -389,12 +389,11 @@ void test_rfc7049_table4_2() {
     }
     {
         // [1,[2,3],[4,5]]
-        cbor_array* root = new cbor_array();
-        cbor_array* sample1 = new cbor_array();
-        *sample1 << new cbor_data(2) << new cbor_data(3);
-        cbor_array* sample2 = new cbor_array();
-        *sample2 << new cbor_data(4) << new cbor_data(5);
-        *root << new cbor_data(1) << sample1 << sample2;
+        auto root = new cbor_array();
+        (*root)  //
+            .add(new cbor_data(1))
+            .add([](cbor_array* obj) -> void { *obj << new cbor_data(2) << new cbor_data(3); })
+            .add([](cbor_array* obj) -> void { *obj << new cbor_data(4) << new cbor_data(5); });
         do_cbor_test(root, "8301820203820405");
         root->release();
     }
@@ -422,19 +421,19 @@ void test_rfc7049_table4_2() {
     }
     {
         // {"a":1,"b":[2,3]}
-        cbor_map* root = new cbor_map();
-        cbor_array* sample1 = new cbor_array();
-        *sample1 << new cbor_data(2) << new cbor_data(3);
-        *root << new cbor_pair("a", new cbor_data(1)) << new cbor_pair("b", sample1);
+        auto root = new cbor_map();
+        (*root)  //
+            .add("a", new cbor_data(1))
+            .add("b", [](cbor_array* obj) -> void { *obj << new cbor_data(2) << new cbor_data(3); });
         do_cbor_test(root, "a26161016162820203");
         root->release();
     }
     {
         // ["a",{"b":"c"}]
-        cbor_array* root = new cbor_array();
-        cbor_map* sample1 = new cbor_map();
-        *sample1 << new cbor_pair("b", new cbor_data("c"));
-        *root << new cbor_data("a") << sample1;
+        auto root = new cbor_array();
+        (*root)  //
+            .add(new cbor_data("a"))
+            .add([](cbor_map* obj) -> void { *obj << new cbor_pair("b", new cbor_data("c")); });
         do_cbor_test(root, "826161a161626163");
         root->release();
     }
@@ -472,44 +471,40 @@ void test_rfc7049_table4_2() {
     {
         // [_ 1,[2,3],[_ 4,5]]
         cbor_array* root = new cbor_array(cbor_flag_t::cbor_indef);
-        cbor_array* sample1 = new cbor_array();
-        cbor_array* sample2 = new cbor_array(cbor_flag_t::cbor_indef);
-        *sample1 << new cbor_data(2) << new cbor_data(3);
-        *sample2 << new cbor_data(4) << new cbor_data(5);
-        *root << new cbor_data(1) << sample1 << sample2;
+        (*root)
+            .add(new cbor_data(1))
+            .add([](cbor_array* obj) -> void { *obj << new cbor_data(2) << new cbor_data(3); })
+            .add([](cbor_array* obj) -> void { *obj << new cbor_data(4) << new cbor_data(5); }, cbor_flag_t::cbor_indef);
         do_cbor_test(root, "9f018202039f0405ffff");
         root->release();
     }
     {
         // [_ 1,[2,3],[4,5]]
         cbor_array* root = new cbor_array(cbor_flag_t::cbor_indef);
-        cbor_array* sample1 = new cbor_array();
-        cbor_array* sample2 = new cbor_array();
-        *sample1 << new cbor_data(2) << new cbor_data(3);
-        *sample2 << new cbor_data(4) << new cbor_data(5);
-        *root << new cbor_data(1) << sample1 << sample2;
+        (*root)  //
+            .add(new cbor_data(1))
+            .add([](cbor_array* obj) -> void { *obj << new cbor_data(2) << new cbor_data(3); })
+            .add([](cbor_array* obj) -> void { *obj << new cbor_data(4) << new cbor_data(5); });
         do_cbor_test(root, "9f01820203820405ff");
         root->release();
     }
     {
         // [1,[2,3],[_ 4,5]]
         cbor_array* root = new cbor_array();
-        cbor_array* sample1 = new cbor_array();
-        cbor_array* sample2 = new cbor_array(cbor_flag_t::cbor_indef);
-        *sample1 << new cbor_data(2) << new cbor_data(3);
-        *sample2 << new cbor_data(4) << new cbor_data(5);
-        *root << new cbor_data(1) << sample1 << sample2;
+        (*root)
+            .add(new cbor_data(1))
+            .add([](cbor_array* obj) -> void { *obj << new cbor_data(2) << new cbor_data(3); })
+            .add([](cbor_array* obj) -> void { *obj << new cbor_data(4) << new cbor_data(5); }, cbor_flag_t::cbor_indef);
         do_cbor_test(root, "83018202039f0405ff");
         root->release();
     }
     {
         // [1,[_ 2,3],[4,5]]
         cbor_array* root = new cbor_array();
-        cbor_array* sample1 = new cbor_array(cbor_flag_t::cbor_indef);
-        cbor_array* sample2 = new cbor_array();
-        *sample1 << new cbor_data(2) << new cbor_data(3);
-        *sample2 << new cbor_data(4) << new cbor_data(5);
-        *root << new cbor_data(1) << sample1 << sample2;
+        (*root)
+            .add(new cbor_data(1))
+            .add([](cbor_array* obj) -> void { *obj << new cbor_data(2) << new cbor_data(3); }, cbor_flag_t::cbor_indef)
+            .add([](cbor_array* obj) -> void { *obj << new cbor_data(4) << new cbor_data(5); });
         do_cbor_test(root, "83019f0203ff820405");
         root->release();
     }
@@ -525,18 +520,18 @@ void test_rfc7049_table4_2() {
     {
         // {_ "a":1,"b":[_ 2,3]}
         cbor_map* root = new cbor_map(cbor_flag_t::cbor_indef);
-        cbor_array* sample1 = new cbor_array(cbor_flag_t::cbor_indef);
-        *sample1 << new cbor_data(2) << new cbor_data(3);
-        *root << new cbor_pair("a", new cbor_data(1)) << new cbor_pair("b", sample1);
+        (*root)  //
+            .add("a", new cbor_data(1))
+            .add("b", [](cbor_array* obj) -> void { *obj << new cbor_data(2) << new cbor_data(3); }, cbor_flag_t::cbor_indef);
         do_cbor_test(root, "bf61610161629f0203ffff");
         root->release();
     }
     {
         // ["a",{_ "b":"c"}]
         cbor_array* root = new cbor_array();
-        cbor_map* sample1 = new cbor_map(cbor_flag_t::cbor_indef);
-        *sample1 << new cbor_pair("b", new cbor_data("c"));
-        *root << new cbor_data("a") << sample1;
+        (*root)  //
+            .add(new cbor_data("a"))
+            .add([](cbor_map* obj) -> void { *obj << new cbor_pair("b", new cbor_data("c")); }, cbor_flag_t::cbor_indef);
         do_cbor_test(root, "826161bf61626163ff");
         root->release();
     }

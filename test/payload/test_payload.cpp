@@ -28,7 +28,6 @@ void test_payload_write() {
     binary_t data = std::move(str2bin("data"));
     binary_t pad = std::move(str2bin("pad"));
     uint8 padlen = 3;  // "pad"
-    basic_stream bs;
     binary_t bin_padded;
     binary_t bin_notpadded;
 
@@ -148,8 +147,7 @@ void test_payload_uint24() {
     // write
     {
         payload pl;
-        uint8 padlen = 3;  // "pad"
-        basic_stream bs;
+        uint8 padlen = 3;           // "pad"
         uint24_t i32_24(0x100000);  // 32/24 [0 .. 0x00ffffff]
         uint32 i32 = 0x10000000;    // 32/32 [0 .. 0xffffffff]
 

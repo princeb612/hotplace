@@ -139,31 +139,37 @@ class logger {
     logger& consoleln(const std::string& msg);
     logger& consoleln(const basic_stream& msg);
     logger& consoleln(stream_t* s);
+    logger& consoleln(std::function<void(basic_stream& bs)> f);
 
     logger& consoleln(loglevel_t level, const char* fmt, ...);
     logger& consoleln(loglevel_t level, const std::string& msg);
     logger& consoleln(loglevel_t level, const basic_stream& msg);
     logger& consoleln(loglevel_t level, stream_t* s);
+    logger& consoleln(loglevel_t level, std::function<void(basic_stream& bs)> f);
 
     logger& writeln(const char* fmt, ...);
     logger& writeln(const std::string& msg);
     logger& writeln(const basic_stream& msg);
     logger& writeln(stream_t* s);
+    logger& writeln(std::function<void(basic_stream& bs)> f);
 
     logger& writeln(loglevel_t level, const char* fmt, ...);
     logger& writeln(loglevel_t level, const std::string& msg);
     logger& writeln(loglevel_t level, const basic_stream& msg);
     logger& writeln(loglevel_t level, stream_t* s);
+    logger& writeln(loglevel_t level, std::function<void(basic_stream& bs)> f);
 
     logger& write(const char* fmt, ...);
     logger& write(const std::string& msg);
     logger& write(const basic_stream& msg);
     logger& write(stream_t* s);
+    logger& write(std::function<void(basic_stream& bs)> f);
 
     logger& write(loglevel_t level, const char* fmt, ...);
     logger& write(loglevel_t level, const std::string& msg);
     logger& write(loglevel_t level, const basic_stream& msg);
     logger& write(loglevel_t level, stream_t* s);
+    logger& write(loglevel_t level, std::function<void(basic_stream& bs)> f);
 
     logger& dump(const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
@@ -204,6 +210,7 @@ class logger {
     logger& colorln(const std::string& msg);
     logger& colorln(const basic_stream& msg);
     logger& colorln(stream_t* s);
+    logger& colorln(std::function<void(basic_stream& bs)> f);
 
     logger& attach(test_case* testcase);
 

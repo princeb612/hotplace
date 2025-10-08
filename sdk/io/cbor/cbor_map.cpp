@@ -11,9 +11,11 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
+#include <hotplace/sdk/io/cbor/cbor_array.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>
 #include <hotplace/sdk/io/cbor/cbor_encode.hpp>
 #include <hotplace/sdk/io/cbor/cbor_map.hpp>
+#include <hotplace/sdk/io/cbor/cbor_pair.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
 
 namespace hotplace {
@@ -179,6 +181,94 @@ void cbor_map::represent(binary_t* b) {
         enc.encode(*b, cbor_major_t::cbor_major_map, cbor_control_t::cbor_control_end, this);
     }
 }
+
+template <typename K, typename V>
+cbor_map& cbor_map::add(K value, std::function<void(V* object)> f, uint32 flags) {
+    if (f) {
+        auto obj = new V(flags);
+        f(obj);
+        *this << new cbor_pair(value, obj);
+    }
+    return *this;
+}
+
+#if defined __SIZEOF_INT128__
+cbor_map& cbor_map::add(int128 value, cbor_data* object) {
+    *this << new cbor_pair(value, object);
+    return *this;
+}
+
+cbor_map& cbor_map::add(int128 value, cbor_map* object) {
+    *this << new cbor_pair(value, object);
+    return *this;
+}
+
+cbor_map& cbor_map::add(int128 value, cbor_array* object) {
+    *this << new cbor_pair(value, object);
+    return *this;
+}
+
+cbor_map& cbor_map::add(int128 value, std::function<void(cbor_map* object)> f, uint32 flags) { return add<int128, cbor_map>(value, f, flags); }
+
+cbor_map& cbor_map::add(int128 value, std::function<void(cbor_array* object)> f, uint32 flags) { return add<int128, cbor_array>(value, f, flags); }
+#else
+cbor_map& cbor_map::add(int64 value, cbor_data* object) {
+    *this << new cbor_pair(value, object);
+    return *this;
+}
+
+cbor_map& cbor_map::add(int64 value, cbor_map* object) {
+    *this << new cbor_pair(value, object);
+    return *this;
+}
+
+cbor_map& cbor_map::add(int64 value, cbor_array* object) {
+    *this << new cbor_pair(value, object);
+    return *this;
+}
+
+cbor_map& cbor_map::add(int64 value, std::function<void(cbor_map* object)> f, uint32 flags) { return add<int64, cbor_map>(value, f, flags); }
+
+cbor_map& cbor_map::add(int64 value, std::function<void(cbor_array* object)> f, uint32 flags) { return add<int64, cbor_array>(value, f, flags); }
+#endif
+
+cbor_map& cbor_map::add(const char* key, cbor_data* object) {
+    *this << new cbor_pair(key, object);
+    return *this;
+}
+
+cbor_map& cbor_map::add(const char* key, cbor_map* object) {
+    *this << new cbor_pair(key, object);
+    return *this;
+}
+
+cbor_map& cbor_map::add(const char* key, cbor_array* object) {
+    *this << new cbor_pair(key, object);
+    return *this;
+}
+
+cbor_map& cbor_map::add(const char* key, std::function<void(cbor_map*)> f, uint32 flags) { return add<const char*, cbor_map>(key, f, flags); }
+
+cbor_map& cbor_map::add(const char* key, std::function<void(cbor_array*)> f, uint32 flags) { return add<const char*, cbor_array>(key, f, flags); }
+
+cbor_map& cbor_map::add(cbor_data* key, cbor_data* object) {
+    *this << new cbor_pair(key, object);
+    return *this;
+}
+
+cbor_map& cbor_map::add(cbor_data* key, cbor_map* object) {
+    *this << new cbor_pair(key, object);
+    return *this;
+}
+
+cbor_map& cbor_map::add(cbor_data* key, cbor_array* object) {
+    *this << new cbor_pair(key, object);
+    return *this;
+}
+
+cbor_map& cbor_map::add(cbor_data* key, std::function<void(cbor_map*)> f, uint32 flags) { return add<cbor_data*, cbor_map>(key, f, flags); }
+
+cbor_map& cbor_map::add(cbor_data* key, std::function<void(cbor_array*)> f, uint32 flags) { return add<cbor_data*, cbor_array>(key, f, flags); }
 
 }  // namespace io
 }  // namespace hotplace

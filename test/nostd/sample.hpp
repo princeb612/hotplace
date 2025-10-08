@@ -19,11 +19,15 @@ extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
-void test_btree();
 void test_avl_tree();
-void test_vector();
-void test_list();
-void test_pq();
+void test_btree();
+void test_exception();
 void test_find_lessthan_or_equal();
+void test_list();
+void test_merge();
+void test_ovl();
+void test_pq();
+void test_range();
+void test_vector();
 
 #endif

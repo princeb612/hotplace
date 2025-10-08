@@ -50,6 +50,43 @@ class cbor_map : public cbor_object {
     cbor_map& add(cbor_pair* object);
     cbor_map& operator<<(cbor_pair* object);
 
+    /**
+     * @example
+     *          // {"a":1,"b":[2,3]}
+     *          auto root = new cbor_map();
+     *          (*root)  //
+     *              .add("a", new cbor_data(1))
+     *              .add("b", [](cbor_array* obj) -> void { *obj << new cbor_data(2) << new cbor_data(3); });
+     *          root->release();
+     */
+
+    template <typename K, typename V>
+    cbor_map& add(K value, std::function<void(V* object)> f, uint32 flags = 0);
+
+#if defined __SIZEOF_INT128__
+    cbor_map& add(int128 value, cbor_data* object);
+    cbor_map& add(int128 value, cbor_map* object);
+    cbor_map& add(int128 value, cbor_array* object);
+    cbor_map& add(int128 value, std::function<void(cbor_map*)> f, uint32 flags = 0);
+    cbor_map& add(int128 value, std::function<void(cbor_array*)> f, uint32 flags = 0);
+#else
+    cbor_map& add(int64 value, cbor_data* object);
+    cbor_map& add(int64 value, cbor_map* object);
+    cbor_map& add(int64 value, cbor_array* object);
+    cbor_map& add(int64 value, std::function<void(cbor_map*)> f, uint32 flags = 0);
+    cbor_map& add(int64 value, std::function<void(cbor_array*)> f, uint32 flags = 0);
+#endif
+    cbor_map& add(const char* key, cbor_data* object);
+    cbor_map& add(const char* key, cbor_map* object);
+    cbor_map& add(const char* key, cbor_array* object);
+    cbor_map& add(const char* key, std::function<void(cbor_map*)> f, uint32 flags = 0);
+    cbor_map& add(const char* key, std::function<void(cbor_array*)> f, uint32 flags = 0);
+    cbor_map& add(cbor_data* key, cbor_data* object);
+    cbor_map& add(cbor_data* key, cbor_map* object);
+    cbor_map& add(cbor_data* key, cbor_array* object);
+    cbor_map& add(cbor_data* key, std::function<void(cbor_map*)> f, uint32 flags = 0);
+    cbor_map& add(cbor_data* key, std::function<void(cbor_array*)> f, uint32 flags = 0);
+
     virtual size_t size();
     cbor_pair* operator[](size_t index);
     std::list<cbor_pair*>& accessor();

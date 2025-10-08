@@ -50,12 +50,16 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
-    test_btree();
     test_avl_tree();
-    test_vector();
-    test_list();
-    test_pq();
+    test_btree();
+    test_exception();
     test_find_lessthan_or_equal();
+    test_list();
+    test_merge();
+    test_ovl();
+    test_pq();
+    test_range();
+    test_vector();
 
     _logger->flush();
 

@@ -397,7 +397,6 @@ int main(int argc, char** argv) {
     }
 
     if (0 == option.flags) {
-        test_quic_frame();
         test_construct_1rtt();
         test_construct_quic();
     }
