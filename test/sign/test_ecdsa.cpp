@@ -115,7 +115,7 @@ void check_ecdsa_size() {
     crypto_key key;
     crypto_keychain keychain;
 
-#define ADD_KEY(x) keychain.add_ec(&key, x, keydesc(#x))
+#define ADD_KEY(x) keychain.add_ec2(&key, x, keydesc(#x))
     ADD_KEY(NID_secp112r1);
     ADD_KEY(NID_secp112r2);
     ADD_KEY(NID_secp128r1);

@@ -187,7 +187,7 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                 hint_key.find(cose_key_lable_t::cose_ec_x, &x);  // -2
                 hint_key.find(cose_key_lable_t::cose_ec_y, &y);  // -3
                 hint_key.find(cose_key_lable_t::cose_ec_d, &d);  // -4
-                add_ec(cryptokey, nid, x, y, d, desc);
+                add_ec2(cryptokey, nid, x, y, d, desc);
             } else if (cose_kty_t::cose_kty_rsa == keyobj.type) {  // 3
                 binary_t n;
                 binary_t e;

@@ -1,3 +1,12 @@
+/* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
+/**
+ * @file {file}
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @desc
+ *
+ * Revision History
+ * Date         Name                Description
+ */
 #ifndef __HOTPLACE_TEST_CRYPTO__
 #define __HOTPLACE_TEST_CRYPTO__
 
@@ -25,6 +34,7 @@ void test_crypto_aead();
 void test_cbc_hmac_tls_mte();
 void test_cbc_hmac_tls_etm();
 void test_aead_ccm();
+void test_curves();
 
 typedef struct _test_vector_nist_cavp_blockcipher_t {
     const char* desc;

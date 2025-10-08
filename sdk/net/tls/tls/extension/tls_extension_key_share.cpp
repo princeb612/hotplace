@@ -69,7 +69,7 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
         switch (kty) {
             case kty_ec:
             case kty_okp: {
-                ret = keychain.add_ec(&keyshare, nid, desc);
+                ret = keychain.add_ec2(&keyshare, nid, desc);
             } break;
             case kty_dh: {
                 ret = keychain.add_dh(&keyshare, nid, desc);

@@ -80,13 +80,13 @@ void test_basic() {
         _logger->write(bs);
 
         _logger->writeln("JWA");
-        advisor->jose_for_each_algorithm(lambda1, nullptr);
+        advisor->for_each_jwa(lambda1, nullptr);
 
         _logger->writeln("JWE");
-        advisor->jose_for_each_encryption(lambda1, nullptr);
+        advisor->for_each_jwe(lambda1, nullptr);
 
         _logger->writeln("JWS");
-        advisor->jose_for_each_signature(lambda2, nullptr);
+        advisor->for_each_jws(lambda2, nullptr);
     }
 #endif
 
@@ -540,15 +540,15 @@ void test_rfc7515_bykeygen() {
 
     keychain.add_oct(&key, 256, keydesc("sample"));
     keychain.add_rsa(&key, nid_rsa, 2048, keydesc("sample"));
-    keychain.add_ec(&key, ec_p256, keydesc("sample"));
+    keychain.add_ec2(&key, ec_p256, keydesc("sample"));
 
     keychain.add_oct(&key, 256, keydesc("HS256"));
     keychain.add_rsa(&key, nid_rsa, 2048, keydesc("RS256"));
     keychain.add_rsa(&key, nid_rsa, 2048, keydesc("RS384"));
     keychain.add_rsa(&key, nid_rsa, 2048, keydesc("RS512"));
-    keychain.add_ec(&key, ec_p256, keydesc("ES256"));
-    keychain.add_ec(&key, ec_p384, keydesc("ES384"));
-    keychain.add_ec(&key, ec_p521, keydesc("ES512"));
+    keychain.add_ec2(&key, ec_p256, keydesc("ES256"));
+    keychain.add_ec2(&key, ec_p384, keydesc("ES384"));
+    keychain.add_ec2(&key, ec_p521, keydesc("ES512"));
 
     json_web_signature jws;
     std::string signature;

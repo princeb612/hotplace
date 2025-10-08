@@ -81,7 +81,7 @@ void test_crypto_key() {
     // generate
 
     for (auto item : curves) {
-        keychain.add_ec(&key, item.nid, keydesc(item.name));
+        keychain.add_ec2(&key, item.nid, keydesc(item.name));
     }
     for (auto item : ffdhes) {
         keychain.add_dh(&key, item.nid, keydesc(item.name));
@@ -127,6 +127,9 @@ void test_crypto_key() {
     _test_case.test(ret, __FUNCTION__, "JWK");
 
     cbor_web_key cwk;
+    binary_t cwk_cbor;
+    cwk.write(&key, cwk_cbor, public_key | private_key);
+    _logger->hdump("CWK", cwk_cbor, 16, 3);
     ret = cwk.diagnose(&key, &bs, public_key | private_key);
     _logger->writeln(bs);
     bs.clear();

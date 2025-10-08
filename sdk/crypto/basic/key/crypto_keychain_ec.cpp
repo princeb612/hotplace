@@ -22,6 +22,7 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydes
     int ret_openssl = 0;
     EVP_PKEY* params = nullptr;
     EVP_PKEY_CTX* keyctx = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         if (nullptr == cryptokey) {
@@ -29,75 +30,60 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydes
             __leave2;
         }
 
-        int type = 0;  // EVP_PKEY_CTX_new_id type
-        switch (nid) {
-            case NID_X25519:
-            case NID_ED25519:
-            case NID_X448:
-            case NID_ED448:
-                type = nid;
-                break;
-            case NID_X9_62_prime256v1:
-            case NID_secp256k1:
-            case NID_secp384r1:
-            case NID_secp521r1:
-            // other curves ...
-            default:
-                type = EVP_PKEY_EC;
-                break;
+        int type = EVP_PKEY_EC;  // EVP_PKEY_CTX_new_id type
+
+        auto hint = advisor->hintof_curve_nid(nid);
+        if (nullptr == hint) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        auto kty = ktyof(hint);
+        if (kty_ec != kty) {
+            ret = errorcode_t::different_type;
+            __leave2;
         }
 
         ctx = EVP_PKEY_CTX_new_id(type, nullptr);
-        if (EVP_PKEY_EC == type) {
-            ret_openssl = EVP_PKEY_paramgen_init(ctx);
-            if (ret_openssl < 0) {
-                ret = errorcode_t::internal_error;
-                __leave2;
-            }
-            ret_openssl = EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, nid);
-            if (ret_openssl < 0) {
-                ret = errorcode_t::not_supported;
-                __leave2;
-            }
-            ret_openssl = EVP_PKEY_paramgen(ctx, &params);
-            if (ret_openssl < 0) {
-                ret = errorcode_t::internal_error;
-                __leave2;
-            }
-            keyctx = EVP_PKEY_CTX_new(params, nullptr);
-            if (nullptr == keyctx) {
-                ret = errorcode_t::internal_error;
-                __leave2;
-            }
-            ret_openssl = EVP_PKEY_keygen_init(keyctx);
-            if (ret_openssl < 0) {
-                ret = errorcode_t::internal_error;
-                __leave2;
-            }
-            ret_openssl = EVP_PKEY_keygen(keyctx, &pkey);
-            if (ret_openssl < 0) {
-                ret = errorcode_t::internal_error;
-                __leave2;
-            }
-            if (nullptr == pkey) { /* [openssl 3.0.3] return success but pkey is nullptr */
-                ret = errorcode_t::internal_error;
-                __leave2;
-            }
-            // set ASN.1 OPENSSL_EC_NAMED_CURVE flag for PEM export (PEM_write_bio_PUBKEY, PEM_write_bio_PrivateKey)
-            EC_KEY_set_asn1_flag((EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey), OPENSSL_EC_NAMED_CURVE);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
-        } else {
-            // OKP
-            ret_openssl = EVP_PKEY_keygen_init(ctx);
-            if (ret_openssl < 0) {
-                ret = errorcode_t::internal_error;
-                __leave2;
-            }
-            ret_openssl = EVP_PKEY_keygen(ctx, &pkey);
-            if (ret_openssl < 0) {
-                ret = errorcode_t::internal_error;
-                __leave2;
-            }
+        if (nullptr == ctx) {
+            ret = errorcode_t::internal_error;
+            __leave2;
         }
+        ret_openssl = EVP_PKEY_paramgen_init(ctx);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        ret_openssl = EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, nid);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+        ret_openssl = EVP_PKEY_paramgen(ctx, &params);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        keyctx = EVP_PKEY_CTX_new(params, nullptr);
+        if (nullptr == keyctx) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        ret_openssl = EVP_PKEY_keygen_init(keyctx);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        ret_openssl = EVP_PKEY_keygen(keyctx, &pkey);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        if (nullptr == pkey) { /* [openssl 3.0.3] return success but pkey is nullptr */
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        // set ASN.1 OPENSSL_EC_NAMED_CURVE flag for PEM export (PEM_write_bio_PUBKEY, PEM_write_bio_PrivateKey)
+        EC_KEY_set_asn1_flag((EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey), OPENSSL_EC_NAMED_CURVE);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
 
         if (pkey) {
             crypto_key_object key(pkey, desc);
@@ -126,81 +112,6 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydes
 
 return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
-
-    switch (nid) {
-        case NID_X25519:
-        case NID_X448:
-        case NID_ED25519:
-        case NID_ED448:
-            ret = add_okp(cryptokey, nid, x, d, desc);
-            break;
-        case NID_X9_62_prime256v1:
-        case NID_secp384r1:
-        case NID_secp521r1:
-        // other curves
-        default:
-            ret = add_ec2(cryptokey, nid, x, y, d, desc);
-            break;
-    }
-    return ret;
-}
-
-return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, jwa_t alg, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc) {
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
-    keydesc kd(desc);
-    if (hint) {
-        kd.set_alg(nameof_alg(hint));
-    }
-    return add_ec(cryptokey, nid, x, y, d, desc);
-}
-
-return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, const keydesc& desc) {
-    return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-
-    __try2 {
-        if (nullptr == cryptokey || nullptr == curve) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        uint32 nid = 0;
-        ret = advisor->nidof_ec_curve(curve, nid);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        ret = add_ec(cryptokey, nid, desc);
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc) {
-    return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-
-    __try2 {
-        if (nullptr == cryptokey || nullptr == curve) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        uint32 nid = 0;
-        ret = advisor->nidof_ec_curve(curve, nid);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        ret = add_ec(cryptokey, nid, x, y, d, desc);
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t crypto_keychain::add_ec2(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc) {
-    return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     EC_KEY* ec = nullptr;
     BIGNUM* bn_x = nullptr;
@@ -214,6 +125,18 @@ return_t crypto_keychain::add_ec2(crypto_key* cryptokey, uint32 nid, const binar
     __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        auto hint = advisor->hintof_curve_nid(nid);
+        if (nullptr == hint) {
+            ret = errorcode_t::bad_request;
+            __leave2;
+        }
+        auto kty = ktyof(hint);
+        if (kty_ec != kty) {
+            ret = errorcode_t::different_type;
             __leave2;
         }
 
@@ -309,35 +232,57 @@ return_t crypto_keychain::add_ec2(crypto_key* cryptokey, uint32 nid, const binar
     return ret;
 }
 
-return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& d, const keydesc& desc) {
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, jwa_t alg, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
+    keydesc kd(desc);
+    if (hint) {
+        kd.set_alg(nameof_alg(hint));
+    }
+    return add_ec(cryptokey, nid, x, y, d, std::move(kd));
+}
+
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, const keydesc& desc) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY* pkey = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
-        if (nullptr == cryptokey) {
+        if (nullptr == cryptokey || nullptr == curve) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (d.size()) {
-            pkey = EVP_PKEY_new_raw_private_key(nid, nullptr, &d[0], d.size());
-        } else if (x.size()) {
-            pkey = EVP_PKEY_new_raw_public_key(nid, nullptr, &x[0], x.size());
-        }
-        if (nullptr == pkey) {
-            ret = errorcode_t::bad_request;
-            __leave2_trace_openssl(ret);
+
+        uint32 nid = 0;
+        ret = advisor->nidof_ec_curve(curve, nid);
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
 
-        crypto_key_object key(pkey, desc);
-        cryptokey->add(key);
+        ret = add_ec2(cryptokey, nid, desc);
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (pkey) {
-                EVP_PKEY_free(pkey);
-            }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == cryptokey || nullptr == curve) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
         }
+
+        uint32 nid = 0;
+        ret = advisor->nidof_ec_curve(curve, nid);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = add_ec2(cryptokey, nid, x, y, d, desc);
     }
+    __finally2 {}
     return ret;
 }
 
@@ -363,7 +308,7 @@ return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const ch
         os2b(y, bin_y);
         os2b(d, bin_d);
 
-        ret = add_ec(cryptokey, nid, bin_x, bin_y, bin_d, desc);
+        ret = add_ec2(cryptokey, nid, bin_x, bin_y, bin_d, desc);
     }
     __finally2 {}
     return ret;
@@ -391,7 +336,7 @@ return_t crypto_keychain::add_ec_b64u(crypto_key* cryptokey, uint32 nid, const c
         os2b(y, bin_y);
         os2b(d, bin_d);
 
-        ret = add_ec(cryptokey, nid, bin_x, bin_y, bin_d, desc);
+        ret = add_ec2(cryptokey, nid, bin_x, bin_y, bin_d, desc);
     }
     __finally2 {}
     return ret;
@@ -419,7 +364,7 @@ return_t crypto_keychain::add_ec_b16(crypto_key* cryptokey, uint32 nid, const ch
         os2b(y, bin_y);
         os2b(d, bin_d);
 
-        ret = add_ec(cryptokey, nid, bin_x, bin_y, bin_d, desc);
+        ret = add_ec2(cryptokey, nid, bin_x, bin_y, bin_d, desc);
     }
     __finally2 {}
     return ret;
@@ -447,7 +392,7 @@ return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const
         os2b(y, bin_y);
         os2b(d, bin_d);
 
-        ret = add_ec(cryptokey, nid, bin_x, bin_y, bin_d, desc);
+        ret = add_ec2(cryptokey, nid, bin_x, bin_y, bin_d, desc);
     }
     __finally2 {}
     return ret;

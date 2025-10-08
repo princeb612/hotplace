@@ -146,7 +146,7 @@ const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mod
     return ret_value;
 }
 
-return_t crypto_advisor::cipher_for_each(std::function<void(const char*, uint32, void*)> f, void* user) {
+return_t crypto_advisor::for_each_cipher(std::function<void(const char*, uint32, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
     for (auto i = 0; i < sizeof_evp_cipher_methods; i++) {
         const hint_cipher_t* item = evp_cipher_methods + i;
@@ -159,7 +159,7 @@ return_t crypto_advisor::cipher_for_each(std::function<void(const char*, uint32,
     return ret;
 }
 
-return_t crypto_advisor::cipher_for_each(std::function<void(const hint_cipher_t*)> func) {
+return_t crypto_advisor::for_each_cipher(std::function<void(const hint_cipher_t*)> func) {
     return_t ret = errorcode_t::success;
     for (auto i = 0; i < sizeof_evp_cipher_methods; i++) {
         const hint_cipher_t* item = evp_cipher_methods + i;

@@ -48,16 +48,16 @@ return_t pqc_oqs::open(oqs_context** context) {
             if (algs) {
                 for (; algs->algorithm_names; algs++) {
                     auto alg = algs->algorithm_names;
-                    if (OBJ_sn2nid(alg)) {
-                        // encode/decode supported
-                        // - p256_mlkem512
-                        // - x25519_mlkem512
-                        ctx->algs.insert({alg, opid});
-                        if (OSSL_OP_KEM == opid) {
-                            ctx->kemalgs.push_back(alg);
-                        } else if (OSSL_OP_SIGNATURE == opid) {
-                            ctx->sigalgs.push_back(alg);
-                        }
+                    int flags = 0;
+                    flags |= OBJ_sn2nid(alg) ? oqs_alg_oid_registered : 0;
+                    // encode/decode supported
+                    // - p256_mlkem512
+                    // - x25519_mlkem512
+                    ctx->algs.insert({alg, opid});
+                    if (OSSL_OP_KEM == opid) {
+                        ctx->kemalgs.push_back({alg, flags});
+                    } else if (OSSL_OP_SIGNATURE == opid) {
+                        ctx->sigalgs.push_back({alg, flags});
                     }
                 }
             }
@@ -99,7 +99,7 @@ return_t pqc_oqs::close(oqs_context* context) {
     return ret;
 }
 
-return_t pqc_oqs::for_each(oqs_context* context, int opid, std::function<void(const std::string&)> func) {
+return_t pqc_oqs::for_each(oqs_context* context, int opid, std::function<void(const std::string&, int)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == context || nullptr == func) {
@@ -108,12 +108,16 @@ return_t pqc_oqs::for_each(oqs_context* context, int opid, std::function<void(co
         }
 
         if (OSSL_OP_KEM == opid) {
-            for (auto alg : context->kemalgs) {
-                func(alg);
+            for (const auto& item : context->kemalgs) {
+                const auto& alg = item.first;
+                int flags = item.second;
+                func(alg, flags);
             }
         } else if (OSSL_OP_SIGNATURE == opid) {
-            for (auto alg : context->sigalgs) {
-                func(alg);
+            for (const auto& item : context->sigalgs) {
+                const auto& alg = item.first;
+                int flags = item.second;
+                func(alg, flags);
             }
         } else {
             ret = not_supported;
@@ -218,7 +222,7 @@ return_t pqc_oqs::get_params(oqs_key_encoding_t encoding, oqs_key_encparams_t& p
     return ret;
 }
 
-return_t pqc_oqs::encode_key(oqs_context* context, EVP_PKEY* pkey, binary_t& pubkey, oqs_key_encoding_t encoding, const char* passphrase) {
+return_t pqc_oqs::encode_key(oqs_context* context, EVP_PKEY* pkey, binary_t& keydata, oqs_key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey) {
@@ -266,8 +270,8 @@ return_t pqc_oqs::encode_key(oqs_context* context, EVP_PKEY* pkey, binary_t& pub
             __leave2;
         }
 
-        pubkey.resize(buf->length);
-        memcpy(&pubkey[0], buf->data, buf->length);
+        keydata.resize(buf->length);
+        memcpy(&keydata[0], buf->data, buf->length);
 
         BIO_free(mem);
         OSSL_ENCODER_CTX_free(encoder_context);
@@ -276,14 +280,14 @@ return_t pqc_oqs::encode_key(oqs_context* context, EVP_PKEY* pkey, binary_t& pub
     return ret;
 }
 
-return_t pqc_oqs::decode_key(oqs_context* context, EVP_PKEY** pkey, const binary_t& pubkey, oqs_key_encoding_t encoding, const char* passphrase) {
+return_t pqc_oqs::decode_key(oqs_context* context, EVP_PKEY** pkey, const binary_t& keydata, oqs_key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == context || nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (pubkey.empty()) {
+        if (keydata.empty()) {
             ret = errorcode_t::bad_data;
             __leave2;
         }
@@ -296,7 +300,7 @@ return_t pqc_oqs::decode_key(oqs_context* context, EVP_PKEY** pkey, const binary
             __leave2;
         }
 
-        BIO* buf = BIO_new_mem_buf(&pubkey[0], pubkey.size());
+        BIO* buf = BIO_new_mem_buf(&keydata[0], keydata.size());
 
         OSSL_DECODER_CTX* decoder_context = nullptr;
         decoder_context = OSSL_DECODER_CTX_new_for_pkey(pkey, params.format, params.structure, nullptr, params.selection, context->libctx, nullptr);

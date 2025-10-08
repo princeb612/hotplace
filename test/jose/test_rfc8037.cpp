@@ -97,10 +97,10 @@ void test_okp() {
     binary_t source;
     std::string signature;
 
-    keychain.add_ec(&key, ec_x25519, keydesc("test1", crypto_use_t::use_enc));
-    keychain.add_ec(&key, ec_ed25519, keydesc("test2", crypto_use_t::use_sig));
-    keychain.add_ec(&key, ec_x448, keydesc("test3", crypto_use_t::use_enc));
-    keychain.add_ec(&key, ec_ed448, keydesc("test4", crypto_use_t::use_sig));
+    keychain.add_ec2(&key, ec_x25519, keydesc("test1", crypto_use_t::use_enc));
+    keychain.add_ec2(&key, ec_ed25519, keydesc("test2", crypto_use_t::use_sig));
+    keychain.add_ec2(&key, ec_x448, keydesc("test3", crypto_use_t::use_enc));
+    keychain.add_ec2(&key, ec_ed448, keydesc("test4", crypto_use_t::use_sig));
     key.for_each(dump_crypto_key, nullptr);
 
     jose.open(&handle, &key);

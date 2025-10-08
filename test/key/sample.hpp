@@ -1,3 +1,12 @@
+/* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
+/**
+ * @file {file}
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @desc
+ *
+ * Revision History
+ * Date         Name                Description
+ */
 #ifndef __HOTPLACE_TEST_CRYPTOKEY__
 #define __HOTPLACE_TEST_CRYPTOKEY__
 
@@ -18,5 +27,6 @@ void test_ffdhe_dh();
 void test_der();
 void test_dsa();
 void test_dh_rfc7748();
+void test_hpke();
 
 #endif

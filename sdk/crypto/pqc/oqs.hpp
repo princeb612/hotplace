@@ -18,14 +18,25 @@
 namespace hotplace {
 namespace crypto {
 
+enum oqs_alg_flag_t {
+    oqs_alg_oid_registered = 1,
+};
+
 /**
  * key encapsulation mechanism
  *      Alice                                       Bob
  *      generate KEM key pair
  *      encode public key and distribute  --->
  *                                                  decode public key
- *                                        <---      encapsulate key (public key), calc shared key
- *      decapsulate (private key), calc shared secret
+ *                                        <---      encapsulate key
+ *                                                  calc shared key
+ *      decapsulate
+ *      calc shared secret
+ *
+ *      generate DSA key pair
+ *      encode public key and distribute  --->
+ *                                                  decode public key
+ *      sign message                      --->      verify message
  */
 class pqc_oqs {
    public:
@@ -36,16 +47,17 @@ class pqc_oqs {
     return_t close(oqs_context* context);
 
     /**
-     *  pqc.for_each(context, OSSL_OP_KEM, [&](const std::string& alg) -> void {});
-     *  pqc.for_each(context, OSSL_OP_SIGNATURE, [&](const std::string& alg) -> void {});
+     * @example
+     *          pqc.for_each(context, OSSL_OP_KEM, [&](const std::string& alg, int flags) -> void {});
+     *          pqc.for_each(context, OSSL_OP_SIGNATURE, [&](const std::string& alg, int flags) -> void {});
      */
-    return_t for_each(oqs_context* context, int opid, std::function<void(const std::string&)> func);
+    return_t for_each(oqs_context* context, int opid, std::function<void(const std::string&, int)> func);
     return_t keygen(oqs_context* context, const std::string& alg, EVP_PKEY** pkey);
     /**
      * @brief   encode key
      * @param   oqs_context* context [in]
      * @param   EVP_PKEY* pkey [in]
-     * @param   binary_t& pubkey [out]
+     * @param   binary_t& keydata [out]
      * @param   oqs_key_encoding_t encoding [in]
      * @param   const char* password [inopt]
      * @remarks
@@ -53,11 +65,11 @@ class pqc_oqs {
      *              oqs_key_encoding_encrypted_priv_pem
      *              oqs_key_encoding_encrypted_priv_der
      */
-    return_t encode_key(oqs_context* context, EVP_PKEY* pkey, binary_t& pubkey, oqs_key_encoding_t encoding, const char* password = nullptr);
+    return_t encode_key(oqs_context* context, EVP_PKEY* pkey, binary_t& keydata, oqs_key_encoding_t encoding, const char* password = nullptr);
     /**
      * @param   oqs_context* context [in]
      * @param   EVP_PKEY** pkey [out]
-     * @param   const binary_t& pubkey [in]
+     * @param   const binary_t& keydata [in]
      * @param   oqs_key_encoding_t encoding [in]
      * @param   const char* password [inopt]
      * @remarks
@@ -65,7 +77,7 @@ class pqc_oqs {
      *              oqs_key_encoding_encrypted_priv_pem
      *              oqs_key_encoding_encrypted_priv_der
      */
-    return_t decode_key(oqs_context* context, EVP_PKEY** pkey, const binary_t& pubkey, oqs_key_encoding_t encoding, const char* password = nullptr);
+    return_t decode_key(oqs_context* context, EVP_PKEY** pkey, const binary_t& keydata, oqs_key_encoding_t encoding, const char* password = nullptr);
 
     return_t encapsule(oqs_context* context, EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret);
     return_t decapsule(oqs_context* context, EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret);

@@ -46,40 +46,45 @@
 #endif
 
 #if OPENSSL_VERSION_NUMBER >= 0x30200000L
+#include <openssl/hpke.h>
 #include <openssl/thread.h>
 #endif
 
 namespace hotplace {
 namespace crypto {
 
-class crypto_advisor;
-class crypto_key;
-class crypto_keychain;
-class crypto_key_object;
-class hmac_otp;
 class openssl_crypt;
 class openssl_digest;
 class openssl_hash;
+class openssl_hpke;
 class openssl_kdf;
 class openssl_mac;
 class openssl_prng;
 class openssl_sign;
-class time_otp;
 
-class crypto_aead;
-class crypto_aead_builder;
 class cipher_encrypt;
 class cipher_encrypt_builder;
+
+class crypto_advisor;
+class crypto_aead;
+class crypto_aead_builder;
+class crypto_cbc_hmac;
 class crypto_encrypt;
 class crypto_encrypt_builder;
 class crypto_hash;
 class crypto_hash_builder;
 class crypto_hmac;
 class crypto_hmac_builder;
+class crypto_key;
+class crypto_keychain;
+class crypto_key_object;
 class crypto_sign;
 class crypto_sign_builder;
 class transcript_hash;
 class transcript_hash_builder;
+
+class hmac_otp;
+class time_otp;
 
 }  // namespace crypto
 }  // namespace hotplace

@@ -33,7 +33,7 @@ void cose_data::cose_key::set(crypto_key* key, uint16 curve, const binary_t& x, 
     const hint_curve_t* hint = advisor->hintof_curve((cose_ec_curve_t)curve);
     crypto_keychain keychain;
     binary_t d;
-    keychain.add_ec(key, hint->nid, x, y, d, keydesc());
+    keychain.add_ec2(key, hint->nid, x, y, d, keydesc());
 }
 
 void cose_data::cose_key::set(crypto_key* key, uint16 curve, const binary_t& x, bool ysign) {

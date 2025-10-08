@@ -506,7 +506,7 @@ return_t json_object_encryption::composer::docompose_encryption_recipient_random
         crypto_keychain keyset;
         std::string kid;
         nidof_evp_pkey(pkey, nid);                                // "crv" of key
-        keyset.add_ec(&key, nid, keydesc());                      // same "crv"
+        keyset.add_ec2(&key, nid, keydesc());                     // same "crv"
         recipient.epk = key.select(crypto_use_t::use_enc, true);  // EVP_PKEY_up_ref
         variant vt;
         vt.set_pointer(recipient.epk);

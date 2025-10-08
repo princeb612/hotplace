@@ -50,11 +50,11 @@ void test_features() {
         _test_case.test(ret, __FUNCTION__, R"(check feature Elliptic Curve "%s" [%08x])", feature, spec);
     };
 
-    advisor->cipher_for_each(query_cipher, nullptr);
-    advisor->md_for_each(query_md, nullptr);
-    advisor->jose_for_each_algorithm(query_jwa, nullptr);
-    advisor->jose_for_each_encryption(query_jwe, nullptr);
-    advisor->jose_for_each_signature(query_jws, nullptr);
-    advisor->cose_for_each(query_cose, nullptr);
-    advisor->curve_for_each(query_curve, nullptr);
+    advisor->for_each_cipher(query_cipher, nullptr);
+    advisor->for_each_md(query_md, nullptr);
+    advisor->for_each_jwa(query_jwa, nullptr);
+    advisor->for_each_jwe(query_jwe, nullptr);
+    advisor->for_each_jws(query_jws, nullptr);
+    advisor->for_each_cose(query_cose, nullptr);
+    advisor->for_each_curve(query_curve, nullptr);
 }

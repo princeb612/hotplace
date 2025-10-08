@@ -106,12 +106,12 @@ void test_keygen(crypto_key* key) {
     crypto_keychain keychain;
     keychain.add_oct(key, 32, keydesc("kid_symm", crypto_use_t::use_any));
     keychain.add_rsa(key, nid_rsa, 2048, keydesc("kid_rsa", crypto_use_t::use_any));
-    keychain.add_ec(key, ec_curve_t::ec_p256, keydesc("kid_ec256", crypto_use_t::use_any));
-    keychain.add_ec(key, ec_curve_t::ec_p256k, keydesc("kid_ec256k", crypto_use_t::use_any));
-    keychain.add_ec(key, ec_curve_t::ec_p384, keydesc("kid_ec384", crypto_use_t::use_any));
-    keychain.add_ec(key, ec_curve_t::ec_p521, keydesc("kid_ec521", crypto_use_t::use_any));
-    keychain.add_ec(key, ec_curve_t::ec_x25519, keydesc("kid_x25519", crypto_use_t::use_enc));
-    keychain.add_ec(key, ec_curve_t::ec_ed25519, keydesc("kid_ed25519", crypto_use_t::use_sig));
+    keychain.add_ec2(key, ec_curve_t::ec_p256, keydesc("kid_ec256", crypto_use_t::use_any));
+    keychain.add_ec2(key, ec_curve_t::ec_p256k, keydesc("kid_ec256k", crypto_use_t::use_any));
+    keychain.add_ec2(key, ec_curve_t::ec_p384, keydesc("kid_ec384", crypto_use_t::use_any));
+    keychain.add_ec2(key, ec_curve_t::ec_p521, keydesc("kid_ec521", crypto_use_t::use_any));
+    keychain.add_ec2(key, ec_curve_t::ec_x25519, keydesc("kid_x25519", crypto_use_t::use_enc));
+    keychain.add_ec2(key, ec_curve_t::ec_ed25519, keydesc("kid_ed25519", crypto_use_t::use_sig));
     key->for_each(dump_crypto_key, nullptr);
     _test_case.assert(key->size() > 0, __FUNCTION__, "key generation");
 }

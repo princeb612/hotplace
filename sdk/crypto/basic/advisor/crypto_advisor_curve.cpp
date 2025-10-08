@@ -14,13 +14,22 @@
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_advisor::curve_for_each(std::function<void(const char*, uint32, void*)> f, void* user) {
+return_t crypto_advisor::for_each_curve(std::function<void(const char*, uint32, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
     for (auto i = 0; i < sizeof_hint_curves; i++) {
         const hint_curve_t* item = hint_curves + i;
         if (item->name) {
             f(item->name, advisor_feature_curve, user);
         }
+    }
+    return ret;
+}
+
+return_t crypto_advisor::for_each_curve_hint(std::function<void(const hint_curve_t*, void*)> f, void* user) {
+    return_t ret = errorcode_t::success;
+    for (auto i = 0; i < sizeof_hint_curves; i++) {
+        const hint_curve_t* item = hint_curves + i;
+        f(item, user);
     }
     return ret;
 }
@@ -47,7 +56,7 @@ const hint_curve_t* crypto_advisor::hintof_curve(const char* curve) {
     const hint_curve_t* item = nullptr;
 
     if (curve) {
-        t_maphint<std::string, const hint_curve_t*> hint(_nid_bycurve_map);
+        t_maphint<std::string, const hint_curve_t*> hint(_curve_name_map);
         hint.find(curve, &item);
     }
 
@@ -97,7 +106,7 @@ return_t crypto_advisor::ktyof_ec_curve(const char* curve, uint32& kty) {
             __leave2;
         }
 
-        const hint_curve_t* item = hintof_curve(curve);
+        const hint_curve_t* item = hintof_curve_name(curve);
         if (item) {
             kty = item->kty;
         }

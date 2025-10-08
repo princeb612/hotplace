@@ -107,8 +107,8 @@ class crypto_advisor {
     /**
      * @brief   for_each
      */
-    return_t cipher_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
-    return_t cipher_for_each(std::function<void(const hint_cipher_t*)> func);
+    return_t for_each_cipher(std::function<void(const char*, uint32, void*)> f, void* user);
+    return_t for_each_cipher(std::function<void(const hint_cipher_t*)> func);
 
     ///////////////////////////////////////////////////////////////////////////
     // digest
@@ -140,12 +140,13 @@ class crypto_advisor {
      */
     const char* nameof_md(hash_algorithm_t algorithm);
 
-    return_t md_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
+    return_t for_each_md(std::function<void(const char*, uint32, void*)> f, void* user);
 
     ///////////////////////////////////////////////////////////////////////////
     // curve
     ///////////////////////////////////////////////////////////////////////////
-    return_t curve_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
+    return_t for_each_curve(std::function<void(const char*, uint32, void*)> f, void* user);
+    return_t for_each_curve_hint(std::function<void(const hint_curve_t*, void*)> f, void* user);
     /**
      * @brief hint
      * @param uint32 nid [in] see ec_curve_t
@@ -156,16 +157,18 @@ class crypto_advisor {
     const hint_curve_t* hintof_curve_nid(uint32 nid);
 
     /**
-     * @brief hint
+     * @brief hint (syn. hintof_curve)
      * @param const char* name [in]
+     * @remarks cover NIST, X9.62, X9.63, SEC
      */
     const hint_curve_t* hintof_curve_name(const char* name);
     /**
-     * @brief hint
+     * @brief hint (syn. hintof_curve_name)
      * @param const char* curve [in]
      *          "P-256" series, "Ed25519", "Ed448", "X25519", "X448"
      * @return const hint_curve_t*
      * @sa hintof_curve_nid
+     * @remarks cover NIST, X9.62, X9.63, SEC
      */
     const hint_curve_t* hintof_curve(const char* curve);
     /*
@@ -285,14 +288,14 @@ class crypto_advisor {
      *          std::function <void (const hint_signature_t*, void*)> lambda2 =
      *                  [] (const hint_signature_t* item, void* user) -> void { printf ("    %s\n", item->jws_name); };
      *
-     *          advisor->jose_for_each_algorithm (lambda1, nullptr );
-     *          advisor->jose_for_each_encryption (lambda1, nullptr );
+     *          advisor->for_each_jwa (lambda1, nullptr );
+     *          advisor->for_each_jwe (lambda1, nullptr );
      *
-     *          advisor->jose_for_each_signature (lambda2, nullptr );
+     *          advisor->for_each_jws (lambda2, nullptr );
      */
-    return_t jose_for_each_algorithm(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user);
-    return_t jose_for_each_encryption(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user);
-    return_t jose_for_each_signature(std::function<void(const hint_signature_t*, void*)> f, void* user);
+    return_t for_each_jwa(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user);
+    return_t for_each_jwe(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user);
+    return_t for_each_jws(std::function<void(const hint_signature_t*, void*)> f, void* user);
 
     /**
      * @brief hint
@@ -492,7 +495,7 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     // COSE
     ///////////////////////////////////////////////////////////////////////////
-    return_t cose_for_each(std::function<void(const char*, uint32, void*)> f, void* user);
+    return_t for_each_cose(std::function<void(const char*, uint32, void*)> f, void* user);
     /**
      * @brief hint
      * @param cose_alg_t sig [in]

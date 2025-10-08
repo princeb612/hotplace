@@ -137,7 +137,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                     auto hint = advisor->hintof_tls_group(curve);
                     uint32 nid = nidof(hint);
                     if (nid) {
-                        ret = keychain.add_ec(&keyexchange, nid, pubkey, binary_t(), binary_t(), keydesc(KID_TLS_SERVER_KEY_EXCHANGE));
+                        ret = keychain.add_ec2(&keyexchange, nid, pubkey, binary_t(), binary_t(), keydesc(KID_TLS_SERVER_KEY_EXCHANGE));
                     } else {
                         ret = errorcode_t::not_supported;
                     }
@@ -220,7 +220,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
                 auto nid = hint->nid;
                 bool stop = false;
                 if (kty_ec == kty) {
-                    keychain.add_ec(&keyexchange, nid, desc);
+                    keychain.add_ec2(&keyexchange, nid, desc);
                     auto pkey = keyexchange.find(KID_TLS_SERVER_KEY_EXCHANGE);
                     if (pkey) {
                         binary_t temp;
@@ -229,7 +229,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
                         stop = true;
                     }
                 } else if (kty_okp == kty) {
-                    keychain.add_ec(&keyexchange, nid, desc);
+                    keychain.add_ec2(&keyexchange, nid, desc);
                     auto pkey = keyexchange.find(KID_TLS_SERVER_KEY_EXCHANGE);
                     if (pkey) {
                         binary_t temp;

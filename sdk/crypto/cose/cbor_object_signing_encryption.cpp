@@ -505,7 +505,7 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
                 cosekey = cose_static_key;  // -2
             }
             uint32 nid = advisor->curveof(curve);
-            keychain.add_ec(&statickey, nid, keydesc());
+            keychain.add_ec2(&statickey, nid, keydesc());
             statickey.get_public_key(statickey.any(), bin_x, bin_y);
             layer->get_unprotected().add(cosekey, curve, bin_x, bin_y);
         }

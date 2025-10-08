@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_advisor::jose_for_each_algorithm(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user) {
+return_t crypto_advisor::for_each_jwa(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
 
     auto lambda = [&](const hint_jose_encryption_t& item) { return f(&item, user); };
@@ -22,7 +22,7 @@ return_t crypto_advisor::jose_for_each_algorithm(std::function<void(const hint_j
     return ret;
 }
 
-return_t crypto_advisor::jose_for_each_encryption(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user) {
+return_t crypto_advisor::for_each_jwe(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
 
     auto lambda = [&](const hint_jose_encryption_t& item) { return f(&item, user); };
@@ -30,7 +30,7 @@ return_t crypto_advisor::jose_for_each_encryption(std::function<void(const hint_
     return ret;
 }
 
-return_t crypto_advisor::jose_for_each_signature(std::function<void(const hint_signature_t*, void*)> f, void* user) {
+return_t crypto_advisor::for_each_jws(std::function<void(const hint_signature_t*, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
 
     auto lambda = [&](const hint_signature_t& item) { return f(&item, user); };

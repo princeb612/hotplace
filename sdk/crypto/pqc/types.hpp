@@ -37,8 +37,8 @@ struct oqs_context {
     OSSL_PROVIDER* default_provider;
     OSSL_PROVIDER* oqs_provider;
     std::map<std::string, int> algs;
-    std::list<std::string> kemalgs;
-    std::list<std::string> sigalgs;
+    std::list<std::pair<std::string, int>> kemalgs;
+    std::list<std::pair<std::string, int>> sigalgs;
 
     oqs_context() : libctx(nullptr), default_provider(nullptr), oqs_provider(nullptr) {}
 };

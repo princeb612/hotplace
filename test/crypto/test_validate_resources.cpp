@@ -23,5 +23,5 @@ void test_validate_resources() {
         auto test_crosscheck = ((hint->scheme) & 0x0000ffff) == (CRYPTO_SCHEME16(hint_crosscheck->algorithm, hint_crosscheck->mode));
         _test_case.assert(test_crosscheck, __FUNCTION__, "%s test fetchname and {algorithm, mode}", hint->fetchname);
     };
-    advisor->cipher_for_each(lambda);
+    advisor->for_each_cipher(lambda);
 }

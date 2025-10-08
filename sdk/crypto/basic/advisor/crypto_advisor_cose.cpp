@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_advisor::cose_for_each(std::function<void(const char*, uint32, void*)> f, void* user) {
+return_t crypto_advisor::for_each_cose(std::function<void(const char*, uint32, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
     for (auto i = 0; i < sizeof_hint_cose_algorithms; i++) {
         const hint_cose_algorithm_t* item = hint_cose_algorithms + i;

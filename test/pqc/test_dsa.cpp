@@ -27,10 +27,10 @@ void test_dsa() {
         _test_case.test(ret, __FUNCTION__, "load oqsprovider");
         if (errorcode_t::success == ret) {
             const char* message = "We don't playing because we grow old; we grow old because we stop playing. - George Bernard Shaw";
-            oqs.for_each(context, OSSL_OP_SIGNATURE, [&](const std::string& alg) -> void {
-                _logger->writeln("algorithm : %s", alg.c_str());
+            oqs.for_each(context, OSSL_OP_SIGNATURE, [&](const std::string& alg, int flags) -> void {
+                _logger->writeln("algorithm : %s flags %i", alg.c_str(), flags);
 
-                if (OBJ_sn2nid(alg.c_str())) {
+                if (oqs_alg_oid_registered & flags) {
                     EVP_PKEY* pkey_keygen = nullptr;
                     binary_t pubkey;
                     binary_t privkey;
@@ -43,11 +43,15 @@ void test_dsa() {
 
                     // public key
                     ret = oqs.encode_key(context, pkey_keygen, pubkey, encoding_pubkey);
-                    _logger->writeln("pub key %s", base16_encode(pubkey).c_str());
+                    if (loglevel_debug == option.trace_level) {
+                        _logger->writeln("pub key %s", base16_encode(pubkey).c_str());
+                    }
                     _test_case.test(ret, __FUNCTION__, "public key %s", alg.c_str());
-
+                    // private key
                     ret = oqs.encode_key(context, pkey_keygen, privkey, encoding_privkey);
-                    _logger->writeln("priv key %s", base16_encode(privkey).c_str());
+                    if (loglevel_debug == option.trace_level) {
+                        _logger->writeln("priv key %s", base16_encode(privkey).c_str());
+                    }
                     _test_case.test(ret, __FUNCTION__, "private key %s", alg.c_str());
 
                     // key distribution
@@ -58,7 +62,9 @@ void test_dsa() {
                     if (errorcode_t::success == ret) {
                         binary_t signature;
                         ret = oqs.sign(context, pkey_keygen, (const byte_t*)message, strlen(message), signature);
-                        _logger->writeln("signature %s", base16_encode(signature).c_str());
+                        if (loglevel_debug == option.trace_level) {
+                            _logger->writeln("signature %s", base16_encode(signature).c_str());
+                        }
                         _test_case.test(ret, __FUNCTION__, "sign %s", alg.c_str());
 
                         ret = oqs.verify(context, pkey_pub, (const byte_t*)message, strlen(message), signature);

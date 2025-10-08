@@ -27,11 +27,13 @@ void test_kem() {
         _test_case.test(ret, __FUNCTION__, "load oqsprovider");
         if (errorcode_t::success == ret) {
             // p256_mlkem512, x25519_mlkem512 : OID registered only
-            oqs.for_each(context, OSSL_OP_KEM, [&](const std::string& alg) -> void {
+            oqs.for_each(context, OSSL_OP_KEM, [&](const std::string& alg, int flags) -> void {
                 _logger->writeln("algorithm : %s", alg.c_str());
 
-                if (OBJ_sn2nid(alg.c_str())) {
+                if (oqs_alg_oid_registered & flags) {
                     EVP_PKEY* pkey_keygen = nullptr;
+                    EVP_PKEY* pkey_pub = nullptr;
+
                     binary_t capsulekey;
                     binary_t sharedsecret_bob;
                     binary_t pubkey;
@@ -45,15 +47,18 @@ void test_kem() {
 
                     // public key
                     ret = oqs.encode_key(context, pkey_keygen, pubkey, encoding_pubkey);
-                    _logger->writeln("pub key %s", base16_encode(pubkey).c_str());
-                    _test_case.test(ret, __FUNCTION__, "public key %s", alg.c_str());
-
+                    if (loglevel_debug == option.trace_level) {
+                        _logger->writeln("pub key %s", base16_encode(pubkey).c_str());
+                    }
+                    _test_case.test(ret, __FUNCTION__, "public key %s flags %i", alg.c_str(), flags);
+                    // private key
                     ret = oqs.encode_key(context, pkey_keygen, privkey, encoding_privkey);
-                    _logger->writeln("priv key %s", base16_encode(privkey).c_str());
+                    if (loglevel_debug == option.trace_level) {
+                        _logger->writeln("priv key %s", base16_encode(privkey).c_str());
+                    }
                     _test_case.test(ret, __FUNCTION__, "private key %s", alg.c_str());
 
                     // key distribution
-                    EVP_PKEY* pkey_pub = nullptr;
                     ret = oqs.decode_key(context, &pkey_pub, pubkey, encoding_pubkey);
                     _test_case.test(ret, __FUNCTION__, "distribute public key %s", alg.c_str());
 
@@ -78,8 +83,7 @@ void test_kem() {
                     EVP_PKEY_free(pkey_pub);
                     EVP_PKEY_free(pkey_keygen);
                 } else {
-                    ret = errorcode_t::not_supported;
-                    _test_case.test(ret, __FUNCTION__, "No OID registered for %s", alg.c_str());
+                    _test_case.test(not_supported, __FUNCTION__, "No OID registered for %s", alg.c_str());
                 }
             });
 

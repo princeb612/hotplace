@@ -16,34 +16,40 @@
 
 void do_encode(oqs_context* context, const std::string& alg, oqs_key_encoding_t encoding, const char* passphrase = nullptr) {
     return_t ret = errorcode_t::success;
+    const OPTION& option = _cmdline->value();
     pqc_oqs pqc;
     EVP_PKEY* pkey = nullptr;
+    EVP_PKEY* pkey_decoded = nullptr;
     binary_t capsulekey;
     binary_t sharedsecret;
-    binary_t pubkey;
+    binary_t key_encoded;
 
-    _test_case.begin("encoding [%s]", pqc.nameof_encoding(encoding).c_str());
+    std::string name_encoding = pqc.nameof_encoding(encoding);
 
     pqc.keygen(context, alg.c_str(), &pkey);
     _test_case.assert(nullptr != pkey, __FUNCTION__, "keygen %s", alg.c_str());
 
-    ret = pqc.encode_key(context, pkey, pubkey, encoding, passphrase);
-    if (OQS_KEY_ENCODING_PEM & encoding) {
-        _logger->writeln("%.*s", (int)pubkey.size(), (char*)&pubkey[0]);
-    } else {
-        _logger->writeln("key %s", base16_encode(pubkey).c_str());
+    ret = pqc.encode_key(context, pkey, key_encoded, encoding, passphrase);
+    if (loglevel_debug == option.trace_level) {
+        if (OQS_KEY_ENCODING_PEM & encoding) {
+            _logger->writeln("%.*s", (int)key_encoded.size(), (char*)&key_encoded[0]);
+        } else {
+            _logger->writeln("key %s", base16_encode(key_encoded).c_str());
+        }
     }
-    _test_case.test(ret, __FUNCTION__, "encode %s", alg.c_str());
+    _test_case.test(ret, __FUNCTION__, "encode %s [%s]", alg.c_str(), name_encoding.c_str());
 
-    EVP_PKEY* pkey_decoded = nullptr;
-    ret = pqc.decode_key(context, &pkey_decoded, pubkey, encoding, passphrase);
-    _test_case.test(ret, __FUNCTION__, "decode %s", alg.c_str());
+    if (errorcode_t::success == ret) {
+        ret = pqc.decode_key(context, &pkey_decoded, key_encoded, encoding, passphrase);
+        _test_case.test(ret, __FUNCTION__, "decode %s [%s]", alg.c_str(), name_encoding.c_str());
+    }
 
     EVP_PKEY_free(pkey);
     EVP_PKEY_free(pkey_decoded);
 }
 
 void test_encode() {
+    _test_case.begin("encode");
     return_t ret = errorcode_t::success;
     const OPTION& option = _cmdline->value();
 
@@ -54,23 +60,31 @@ void test_encode() {
 
         ret = pqc.open(&context);
         if (errorcode_t::success == ret) {
-            pqc.for_each(context, OSSL_OP_KEM, [&](const std::string& alg) -> void {
-                _logger->writeln("algorithm : %s", alg.c_str());
-                do_encode(context, alg, oqs_key_encoding_priv_pem);
-                do_encode(context, alg, oqs_key_encoding_encrypted_priv_pem, passphrase);
-                do_encode(context, alg, oqs_key_encoding_pub_pem);
-                do_encode(context, alg, oqs_key_encoding_priv_der);
-                do_encode(context, alg, oqs_key_encoding_encrypted_priv_der, passphrase);
-                do_encode(context, alg, oqs_key_encoding_pub_der);
+            pqc.for_each(context, OSSL_OP_KEM, [&](const std::string& alg, int flags) -> void {
+                _logger->writeln("algorithm : %s flags %i", alg.c_str(), flags);
+                if (oqs_alg_oid_registered & flags) {
+                    do_encode(context, alg, oqs_key_encoding_priv_pem);
+                    do_encode(context, alg, oqs_key_encoding_encrypted_priv_pem, passphrase);
+                    do_encode(context, alg, oqs_key_encoding_pub_pem);
+                    do_encode(context, alg, oqs_key_encoding_priv_der);
+                    do_encode(context, alg, oqs_key_encoding_encrypted_priv_der, passphrase);
+                    do_encode(context, alg, oqs_key_encoding_pub_der);
+                } else {
+                    _test_case.test(not_supported, __FUNCTION__, "No OID registered for %s", alg.c_str());
+                }
             });
-            pqc.for_each(context, OSSL_OP_SIGNATURE, [&](const std::string& alg) -> void {
-                _logger->writeln("algorithm : %s", alg.c_str());
-                do_encode(context, alg, oqs_key_encoding_priv_pem);
-                do_encode(context, alg, oqs_key_encoding_encrypted_priv_pem, passphrase);
-                do_encode(context, alg, oqs_key_encoding_pub_pem);
-                do_encode(context, alg, oqs_key_encoding_priv_der);
-                do_encode(context, alg, oqs_key_encoding_encrypted_priv_der, passphrase);
-                do_encode(context, alg, oqs_key_encoding_pub_der);
+            pqc.for_each(context, OSSL_OP_SIGNATURE, [&](const std::string& alg, int flags) -> void {
+                _logger->writeln("algorithm : %s flags %i", alg.c_str(), flags);
+                if (oqs_alg_oid_registered & flags) {
+                    do_encode(context, alg, oqs_key_encoding_priv_pem);
+                    do_encode(context, alg, oqs_key_encoding_encrypted_priv_pem, passphrase);
+                    do_encode(context, alg, oqs_key_encoding_pub_pem);
+                    do_encode(context, alg, oqs_key_encoding_priv_der);
+                    do_encode(context, alg, oqs_key_encoding_encrypted_priv_der, passphrase);
+                    do_encode(context, alg, oqs_key_encoding_pub_der);
+                } else {
+                    _test_case.test(not_supported, __FUNCTION__, "No OID registered for %s", alg.c_str());
+                }
             });
 
             pqc.close(context);

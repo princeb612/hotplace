@@ -53,8 +53,8 @@ int test_ecdh() {
     binary_t secret_alice;
     binary_t secret_bob;
 
-    keyset.add_ec(&keys, NID_secp384r1, keydesc("alice"));
-    keyset.add_ec(&keys, NID_secp384r1, keydesc("bob"));
+    keyset.add_ec2(&keys, NID_secp384r1, keydesc("alice"));
+    keyset.add_ec2(&keys, NID_secp384r1, keydesc("bob"));
 
     const EVP_PKEY* alicePrivateKey = keys.find("alice", crypto_kty_t::kty_ec);
     const EVP_PKEY* bobPrivateKey = keys.find("bob", crypto_kty_t::kty_ec);

@@ -106,7 +106,7 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
                 if (nid) {
                     keydesc desc(KID_TLS_CLIENT_KEY_EXCHANGE);
                     if (kty_ec == kty || kty_okp == kty) {
-                        ret = keychain.add_ec(&keyexchange, nid, pubkey, binary_t(), binary_t(), desc);
+                        ret = keychain.add_ec2(&keyexchange, nid, pubkey, binary_t(), binary_t(), desc);
                     } else if (kty_dh == kty) {
                         ret = keychain.add_dh(&keyexchange, nid, pubkey, binary_t(), desc);
                     } else {
@@ -156,7 +156,7 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
                 if (kty_rsa == kty) {
                     ret = keychain.add_rsa(&keyexchange, nid, 2048, desc);
                 } else if (kty_ec == kty || kty_okp == kty) {
-                    ret = keychain.add_ec(&keyexchange, nid, desc);
+                    ret = keychain.add_ec2(&keyexchange, nid, desc);
                 } else if (kty_dh == kty) {
                     ret = keychain.add_dh(&keyexchange, nid, desc);
                 } else {
