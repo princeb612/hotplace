@@ -28,7 +28,8 @@ int main(int argc, char **argv) {
                 << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION &o, char *param) -> void { o.enable_trace(loglevel_debug); }).optional()
 #endif
                 << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION &o, char *param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional();
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION &o, char *param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-k", "dump keys", [](OPTION &o, char *param) -> void { o.dump_keys = true; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION &option = _cmdline->value();
@@ -50,9 +51,13 @@ int main(int argc, char **argv) {
         set_trace_level(option.trace_level);
     }
 
-    test_encode();
-    test_kem();
-    test_dsa();
+    test_ossl_encode();
+    test_ossl_kem();
+    test_ossl_dsa();
+
+    test_oqs_encode();
+    test_oqs_kem();
+    test_oqs_dsa();
 
     _logger->flush();
 

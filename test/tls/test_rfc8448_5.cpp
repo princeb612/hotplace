@@ -24,7 +24,6 @@ void test_rfc8448_5() {
     tls_session session;
     crypto_keychain keychain;
     auto& protection = session.get_tls_protection();
-    basic_stream bs;
 
     {
         // {client}  create an ephemeral x25519 key pair
@@ -40,9 +39,7 @@ void test_rfc8448_5() {
         ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, nullptr, d, keydesc(constexpr_client));
 
         _logger->writeln(constexpr_client);
-        dump_key(key.find(constexpr_client), &bs);
-        _logger->writeln(bs);
-        bs.clear();
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(key.find(constexpr_client), &bs); });
 
         _test_case.test(ret, __FUNCTION__, "ephemeral x25519 key pair");
     }
@@ -82,9 +79,7 @@ void test_rfc8448_5() {
         ret = keychain.add_ec_uncompressed_b16rfc(&key, ec_p256, pub, priv, keydesc(constexpr_server));
 
         _logger->writeln(constexpr_server);
-        dump_key(key.find(constexpr_server), &bs);
-        _logger->writeln(bs);
-        bs.clear();
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(key.find(constexpr_server), &bs); });
 
         _test_case.test(ret, __FUNCTION__, "P-256 key pair");
     }
@@ -154,9 +149,7 @@ void test_rfc8448_5() {
         ret = keychain.add_ec_uncompressed_b16rfc(&key, ec_p256, pub, priv, keydesc(constexpr_server));
 
         _logger->writeln(constexpr_server);
-        dump_key(key.find(constexpr_server), &bs);
-        _logger->writeln(bs);
-        bs.clear();
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(key.find(constexpr_server), &bs); });
 
         _test_case.test(ret, __FUNCTION__, "P-256 key pair");
     }

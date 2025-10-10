@@ -24,7 +24,6 @@ void test_tls12_xargs_org() {
     crypto_keychain keychain;
     openssl_digest dgst;
     openssl_kdf kdf;
-    basic_stream bs;
     size_t pos = 0;
     binary_t bin_clienthello_record;
     binary_t bin_serverhello_record;
@@ -129,9 +128,7 @@ void test_tls12_xargs_org() {
         crypto_key& keyexchange = session.get_tls_protection().get_keyexchange();
         keychain.add_ec_b16(&keyexchange, ec_x25519, x, y, d, keydesc(kid));
 
-        dump_key(keyexchange.find(kid), &bs);
-        _logger->writeln(bs);
-        bs.clear();
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(keyexchange.find(kid), &bs); });
     }
     // https://tls12.xargs.org/#server-key-exchange
     {
@@ -177,9 +174,7 @@ void test_tls12_xargs_org() {
         const char* d = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
         crypto_key& keyexchange = session.get_tls_protection().get_keyexchange();
         keychain.add_ec_b16(&keyexchange, ec_x25519, x, y, d, keydesc(kid));
-        basic_stream bs;
-        dump_key(keyexchange.find(kid), &bs);
-        _logger->writeln(bs);
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(keyexchange.find(kid), &bs); });
     }
     // https://tls12.xargs.org/#client-key-exchange
     {

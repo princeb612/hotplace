@@ -16,33 +16,39 @@ void do_test_huffman_codes_routine(const char* sample, const char* expect) {
         const OPTION& option = _cmdline->value();
 
         return_t ret = errorcode_t::success;
-        basic_stream bs;
         binary_t bin;
 
         auto huffcode = http_huffman_coding::get_instance();
 
-        huffcode->encode(&bs, (byte_t*)sample, strlen(sample));
-        if (option.verbose) {
-            test_case_notimecheck notimecheck(_test_case);
-            _logger->writeln("%s", bs.c_str());
+        // encode
+        {
+            basic_stream bs;
+            huffcode->encode(&bs, (byte_t*)sample, strlen(sample));
+            if (option.verbose) {
+                test_case_notimecheck notimecheck(_test_case);
+                _logger->writeln("%s", bs.c_str());
+            }
+
+            huffcode->encode(bin, (byte_t*)sample, strlen(sample));
+            if (option.verbose) {
+                test_case_notimecheck notimecheck(_test_case);
+                _logger->dump(bin);
+            }
+
+            _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "encode %s", sample);
         }
 
-        huffcode->encode(bin, (byte_t*)sample, strlen(sample));
-        if (option.verbose) {
-            test_case_notimecheck notimecheck(_test_case);
-            _logger->dump(bin);
+        // decode
+        {
+            basic_stream bs;
+            ret = huffcode->decode(&bs, &bin[0], bin.size());
+            if (option.verbose) {
+                test_case_notimecheck notimecheck(_test_case);
+                _logger->writeln("%s", bs.c_str());
+            }
+
+            _test_case.assert(((errorcode_t::success == ret) && (bs == basic_stream(sample))), __FUNCTION__, "decode %s", sample);
         }
-
-        _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "encode %s", sample);
-
-        bs.clear();
-        ret = huffcode->decode(&bs, &bin[0], bin.size());
-        if (option.verbose) {
-            test_case_notimecheck notimecheck(_test_case);
-            _logger->writeln("%s", bs.c_str());
-        }
-
-        _test_case.assert(((errorcode_t::success == ret) && (bs == basic_stream(sample))), __FUNCTION__, "decode %s", sample);
     }
 }
 

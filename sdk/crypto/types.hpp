@@ -336,12 +336,12 @@ enum tls_named_curve_t : uint16 {
     tls_named_curve_ffdhe4096 = 0x0102,             // 258
     tls_named_curve_ffdhe6144 = 0x0103,             // 259
     tls_named_curve_ffdhe8192 = 0x0104,             // 260
-    tls_named_curve_MLKEM512 = 0x0200,              // 512
-    tls_named_curve_MLKEM768 = 0x0201,              // 513
-    tls_named_curve_MLKEM1024 = 0x0202,             // 514
-    tls_named_curve_SecP256r1MLKEM768 = 0x11eb,     // 4587
-    tls_named_curve_X25519MLKEM768 = 0x11ec,        // 4588
-    tls_named_curve_SecP384r1MLKEM1024 = 0x11ed,    // 4589
+    tls_named_curve_MLKEM512 = 0x0200,              // 512  FIPS 203 version of ML-KEM-512
+    tls_named_curve_MLKEM768 = 0x0201,              // 513  FIPS 203 version of ML-KEM-768
+    tls_named_curve_MLKEM1024 = 0x0202,             // 514  FIPS 203 version of ML-KEM-1024
+    tls_named_curve_SecP256r1MLKEM768 = 0x11eb,     // 4587 Combining secp256r1 ECDH with ML-KEM-768
+    tls_named_curve_X25519MLKEM768 = 0x11ec,        // 4588 Combining X25519 ECDH with ML-KEM-768
+    tls_named_curve_SecP384r1MLKEM1024 = 0x11ed,    // 4589 Combining secp384r1 ECDH with ML-KEM-1024
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1388,6 +1388,32 @@ enum authenticated_encryption_flag_t : uint16 {
     tls_mac_then_encrypt = 0x0001,
     jose_encrypt_then_mac = 0x8001,
     tls_encrypt_then_mac = 0x8002,
+};
+
+///////////////////////////////////////////////////////////////////////////
+// openssl-3.0 ENCODER
+///////////////////////////////////////////////////////////////////////////
+
+#define KEY_ENCODING_PEM 0x00000001
+#define KEY_ENCODING_DER 0x00000002
+#define KEY_ENCODING_PRIV_ENCRYPTED 0xc0000000
+#define KEY_ENCODING_PRIV 0x80000000
+#define KEY_ENCODING_PUB 0x00000000
+
+enum key_encoding_t : uint32 {
+    key_encoding_priv_pem = KEY_ENCODING_PRIV | KEY_ENCODING_PEM,
+    key_encoding_encrypted_priv_pem = KEY_ENCODING_PRIV_ENCRYPTED | KEY_ENCODING_PEM,
+    key_encoding_pub_pem = KEY_ENCODING_PUB | KEY_ENCODING_PEM,
+    key_encoding_priv_der = KEY_ENCODING_PRIV | KEY_ENCODING_DER,
+    key_encoding_encrypted_priv_der = KEY_ENCODING_PRIV_ENCRYPTED | KEY_ENCODING_DER,
+    key_encoding_pub_der = KEY_ENCODING_PUB | KEY_ENCODING_DER,
+};
+
+struct key_encoding_params_t {
+    int selection;
+    const char* format;
+    const char* structure;
+    bool use_pass;
 };
 
 }  // namespace crypto

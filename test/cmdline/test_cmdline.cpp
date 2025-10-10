@@ -39,11 +39,11 @@ void do_test_cmdline(bool expect, int argc, char** argv) {
     const OPTION& cmdoption = cmdline.value();
 
     // OPTION cmdoption = cmdline.value ();
-    basic_stream bs;
-    bs << "infile " << cmdoption.infile << "\n"
-       << "outfile " << cmdoption.outfile << "\n"
-       << "keygen " << cmdoption.keygen;
-    _logger->writeln(bs);
+    _logger->writeln([&](basic_stream& bs) -> void {
+        bs << "infile " << cmdoption.infile << "\n"
+           << "outfile " << cmdoption.outfile << "\n"
+           << "keygen " << cmdoption.keygen;
+    });
 
     bool test = (errorcode_t::success == ret);
     _test_case.assert(expect ? test : !test, __FUNCTION__, "cmdline %s (%s)", args.c_str(), expect ? "positive test" : "negative test");

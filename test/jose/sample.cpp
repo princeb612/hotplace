@@ -14,20 +14,15 @@ t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 void print_text(const char* text, ...) {
-    console_color concolor;
     va_list ap;
-
-    basic_stream bs;
-
-    bs << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::green);
-
     va_start(ap, text);
-    bs.vprintf(text, ap);
+    _logger->writeln([&](basic_stream& bs) -> void {
+        console_color concolor;
+        bs << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::green);
+        bs.vprintf(text, ap);
+        bs << concolor.turnoff();
+    });
     va_end(ap);
-
-    bs << concolor.turnoff();
-
-    _logger->writeln(bs);
 }
 
 void dump(const char* text, const std::string& value) {
@@ -87,36 +82,36 @@ void dump2(const char* text, const byte_t* addr, size_t size) {
 void dump_elem(const binary_t& source) {
     const OPTION& option = _cmdline->value();
     if (option.verbose) {
-        basic_stream bs;
-        bs << "[";
+        _logger->writeln([&](basic_stream& bs) -> void {
+            bs << "[";
 #if __cplusplus >= 201103L  // c++11
-        for_each(source.begin(), source.end(), [&](byte_t c) { bs.printf("%i,", c); });
+            for_each(source.begin(), source.end(), [&](byte_t c) { bs.printf("%i,", c); });
 #else
-        for (binary_t::iterator iter = source.begin(); iter != source.end(); iter++) {
-            byte_t c = *iter;
-            bs.printf("%i,", c);
-        }
+            for (binary_t::iterator iter = source.begin(); iter != source.end(); iter++) {
+                byte_t c = *iter;
+                bs.printf("%i,", c);
+            }
 #endif
-        bs << "]";
-        _logger->writeln(bs);
+            bs << "]";
+        });
     }
 }
 
 void dump_elem(const std::string& source) {
     const OPTION& option = _cmdline->value();
     if (option.verbose) {
-        basic_stream bs;
-        bs << "[";
+        _logger->writeln([&](basic_stream& bs) -> void {
+            bs << "[";
 #if __cplusplus >= 201103L  // c++11
-        for_each(source.begin(), source.end(), [&](byte_t c) { bs.printf("%i,", c); });
+            for_each(source.begin(), source.end(), [&](byte_t c) { bs.printf("%i,", c); });
 #else
-        for (std::string::iterator iter = source.begin(); iter != source.end(); iter++) {
-            byte_t c = *iter;
-            bs.printf("%i,", c);
-        }
+            for (std::string::iterator iter = source.begin(); iter != source.end(); iter++) {
+                byte_t c = *iter;
+                bs.printf("%i,", c);
+            }
 #endif
-        bs << "]";
-        _logger->writeln(bs);
+            bs << "]";
+        });
     }
 }
 
@@ -130,9 +125,7 @@ void dump_crypto_key(crypto_key_object* key, void*) {
         _logger->writeln("\e[1;32mnid %i kid \"%s\" alg %s use %i\e[0m", nid, key->get_desc().get_kid_cstr(), key->get_desc().get_alg_cstr(),
                          key->get_desc().get_use());
 
-        basic_stream bs;
-        dump_key(key->get_pkey(), &bs);
-        _logger->writeln("%s", bs.c_str());
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(key->get_pkey(), &bs); });
     }
 }
 

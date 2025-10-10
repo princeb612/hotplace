@@ -136,6 +136,34 @@ class crypto_keychain {
      */
     virtual return_t write_file(crypto_key* cryptokey, keyflag_t mode, const char* file, int flag = 0);
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    /**
+     * @brief keygen
+     * @param EVP_PKEY** pkey [out]
+     * @param OSSL_LIB_CTX* libctx [inopt]
+     * @param const char* name [in]
+     */
+    return_t pkey_gen_byname(EVP_PKEY** pkey, OSSL_LIB_CTX* libctx, const char* name);
+    /**
+     * @brief encode
+     * @param OSSL_LIB_CTX* libctx [inopt]
+     * @param const EVP_PKEY* pkey [in]
+     * @param binary_t& keydata [out]
+     * @param key_encoding_t encoding [in]
+     * @param const char* passphrase [inopt]
+     */
+    return_t pkey_encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    /**
+     * @brief encode
+     * @param OSSL_LIB_CTX* libctx [in]
+     * @param EVP_PKEY** pkey [out]
+     * @param const binary_t& keydata [in]
+     * @param key_encoding_t encoding [in]
+     * @param const char* passphrase [inopt]
+     */
+    return_t pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+#endif
+
     /**
      * @brief   RSA
      */

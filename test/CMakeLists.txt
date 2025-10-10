@@ -37,6 +37,7 @@ add_subdirectory (sign)
 add_subdirectory (jose)
 add_subdirectory (cose)
 add_subdirectory (authenticode)
+add_subdirectory (pqc)
 
 # net
 add_subdirectory (ipaddr)
@@ -61,11 +62,6 @@ add_subdirectory (httpserver3)
 # odbc
 if (SUPPORT_ODBC)
 add_subdirectory (odbc)
-endif ()
-
-# oqs, pqc
-if (SUPPORT_PQC)
-add_subdirectory (pqc)
 endif ()
 
 # etc

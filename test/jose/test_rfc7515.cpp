@@ -56,44 +56,40 @@ void test_basic() {
     };
 
     {
-        basic_stream bs;
-        for (size_t i = 0; i < RTL_NUMBER_OF(table); i++) {
-            int key_len = EVP_CIPHER_key_length(table[i].evp);
-            int iv_len = EVP_CIPHER_iv_length(table[i].evp);
+        _logger->write([&](basic_stream& bs) -> void {
+            for (size_t i = 0; i < RTL_NUMBER_OF(table); i++) {
+                int key_len = EVP_CIPHER_key_length(table[i].evp);
+                int iv_len = EVP_CIPHER_iv_length(table[i].evp);
 
-            bs << table[i].name << " key " << key_len << " iv " << iv_len << "\n";
-        }
-        _logger->write(bs);
+                bs << table[i].name << " key " << key_len << " iv " << iv_len << "\n";
+            }
+        });
     }
 
 #if __cplusplus >= 201103L  // c++11
     {
         crypto_advisor* advisor = crypto_advisor::get_instance();
-        basic_stream bs;
-
-        std::function<void(const hint_jose_encryption_t*, void*)> lambda1 = [&](const hint_jose_encryption_t* item, void* user) -> void {
-            bs.printf("    %s\n", item->alg_name);
-        };
-        std::function<void(const hint_signature_t*, void*)> lambda2 = [&](const hint_signature_t* item, void* user) -> void {
-            bs.printf("    %s\n", item->jws_name);
-        };
-        _logger->write(bs);
 
         _logger->writeln("JWA");
-        advisor->for_each_jwa(lambda1, nullptr);
+        _logger->write([&](basic_stream& bs) -> void {
+            advisor->for_each_jwa([&](const hint_jose_encryption_t* item, void* user) -> void { bs.printf("    %s\n", item->alg_name); }, nullptr);
+        });
 
         _logger->writeln("JWE");
-        advisor->for_each_jwe(lambda1, nullptr);
+        _logger->write([&](basic_stream& bs) -> void {
+            advisor->for_each_jwe([&](const hint_jose_encryption_t* item, void* user) -> void { bs.printf("    %s\n", item->alg_name); }, nullptr);
+        });
 
         _logger->writeln("JWS");
-        advisor->for_each_jws(lambda2, nullptr);
+        _logger->write([&](basic_stream& bs) -> void {
+            advisor->for_each_jws([&](const hint_signature_t* item, void* user) -> void { bs.printf("    %s\n", item->jws_name); }, nullptr);
+        });
     }
 #endif
 
     {
         _logger->writeln("jwk test");
 
-        basic_stream bs;
         json_web_key jwk;
         json_web_signature jws;
 
@@ -101,16 +97,16 @@ void test_basic() {
         jwk.load_file(&crypto_key_es521, key_ownspec, "rfc7516_A4.jwk");
 
         const EVP_PKEY* pkey = crypto_key_es521.any();
-        if (pkey) {
-            if (option.verbose) {
-                basic_stream bs;
-                dump_key(pkey, &bs);
-                bs.printf("%s\n", bs.c_str());
+        _logger->write([&](basic_stream& bs) -> void {
+            if (pkey) {
+                if (option.verbose) {
+                    basic_stream bs;
+                    dump_key(pkey, &bs);
+                    bs.printf("%s\n", bs.c_str());
+                }
             }
-        }
-        _logger->write(bs);
+        });
 
-        _test_case.assert(true, __FUNCTION__, "baseic informations");
         _test_case.assert(nullptr != pkey, __FUNCTION__, "jwk");
     }
 }
@@ -637,20 +633,21 @@ void do_key_match(crypto_key* key, jwa_t alg, crypto_use_t use) {
     const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm(alg);
 
     print_text("try kt %d alg %s", alg_info->kty, alg_info->alg_name);
-    pkey = key->select(kid, alg, use);
-    basic_stream bs;
-    if (pkey) {
-        const OPTION& option = _cmdline->value();
-        if (option.dump_keys) {
-            bs.printf("> kid %s\n", kid.c_str());
-            key->get_key(pkey, pub1, pub2, priv);
 
-            dump_key(pkey, &bs);
-            bs.printf("\n");
+    _logger->writeln([&](basic_stream& bs) -> void {
+        pkey = key->select(kid, alg, use);
+        if (pkey) {
+            const OPTION& option = _cmdline->value();
+            if (option.dump_keys) {
+                bs.printf("> kid %s\n", kid.c_str());
+                key->get_key(pkey, pub1, pub2, priv);
+
+                dump_key(pkey, &bs);
+                bs.printf("\n");
+            }
         }
-    }
-    bs.printf(pkey ? "found" : "not found");
-    _logger->writeln(bs);
+        bs.printf(pkey ? "found" : "not found");
+    });
 }
 
 void do_key_match(crypto_key* key, jws_t sig, crypto_use_t use) {
@@ -665,20 +662,21 @@ void do_key_match(crypto_key* key, jws_t sig, crypto_use_t use) {
     const hint_signature_t* alg_info = advisor->hintof_jose_signature(sig);
 
     print_text("try kt %d alg %s", typeof_kty(alg_info), nameof_jws(alg_info));
-    pkey = key->select(kid, sig, use);
-    basic_stream bs;
-    if (pkey) {
-        const OPTION& option = _cmdline->value();
-        if (option.dump_keys) {
-            bs.printf("> kid %s\n", kid.c_str());
-            key->get_key(pkey, pub1, pub2, priv);
 
-            dump_key(pkey, &bs);
-            bs.printf("\n");
+    _logger->writeln([&](basic_stream& bs) -> void {
+        pkey = key->select(kid, sig, use);
+        if (pkey) {
+            const OPTION& option = _cmdline->value();
+            if (option.dump_keys) {
+                bs.printf("> kid %s\n", kid.c_str());
+                key->get_key(pkey, pub1, pub2, priv);
+
+                dump_key(pkey, &bs);
+                bs.printf("\n");
+            }
         }
-    }
-    bs.printf(pkey ? "found" : "not found");
-    _logger->writeln(bs);
+        bs.printf(pkey ? "found" : "not found");
+    });
 }
 
 void key_match_test() {

@@ -8,14 +8,14 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/pqc.hpp>
+#include <hotplace/sdk/oqs.hpp>
 
-#include "sample.hpp"
+#include "../sample.hpp"
 
 // install oqsprovider.dll into ossl-modules
 
-void test_dsa() {
-    _test_case.begin("DSA");
+void test_oqs_dsa() {
+    _test_case.begin("OQS DSA");
     return_t ret = errorcode_t::success;
     const OPTION& option = _cmdline->value();
 
@@ -34,29 +34,29 @@ void test_dsa() {
                     EVP_PKEY* pkey_keygen = nullptr;
                     binary_t pubkey;
                     binary_t privkey;
-                    auto encoding_pubkey = oqs_key_encoding_pub_der;
-                    auto encoding_privkey = oqs_key_encoding_priv_der;
+                    auto encoding_pubkey = key_encoding_pub_der;
+                    auto encoding_privkey = key_encoding_priv_der;
 
                     // generate keypair
-                    oqs.keygen(context, alg.c_str(), &pkey_keygen);
+                    oqs.keygen(&pkey_keygen, context, alg.c_str());
                     _test_case.assert(nullptr != pkey_keygen, __FUNCTION__, "keygen %s", alg.c_str());
 
                     // public key
-                    ret = oqs.encode_key(context, pkey_keygen, pubkey, encoding_pubkey);
-                    if (loglevel_debug == option.trace_level) {
+                    ret = oqs.encode(context, pkey_keygen, pubkey, encoding_pubkey);
+                    if (option.dump_keys) {
                         _logger->writeln("pub key %s", base16_encode(pubkey).c_str());
                     }
                     _test_case.test(ret, __FUNCTION__, "public key %s", alg.c_str());
                     // private key
-                    ret = oqs.encode_key(context, pkey_keygen, privkey, encoding_privkey);
-                    if (loglevel_debug == option.trace_level) {
+                    ret = oqs.encode(context, pkey_keygen, privkey, encoding_privkey);
+                    if (option.dump_keys) {
                         _logger->writeln("priv key %s", base16_encode(privkey).c_str());
                     }
                     _test_case.test(ret, __FUNCTION__, "private key %s", alg.c_str());
 
                     // key distribution
                     EVP_PKEY* pkey_pub = nullptr;
-                    ret = oqs.decode_key(context, &pkey_pub, pubkey, encoding_pubkey);
+                    ret = oqs.decode(context, &pkey_pub, pubkey, encoding_pubkey);
                     _test_case.test(ret, __FUNCTION__, "distribute public key %s", alg.c_str());
 
                     if (errorcode_t::success == ret) {

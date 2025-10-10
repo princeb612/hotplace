@@ -633,6 +633,13 @@ class crypto_advisor {
 
     std::string nameof_authenticated_encryption(uint16 code);
 
+    ///////////////////////////////////////////////////////////////////////////
+    // openssl-3.0 ENCODER
+    ///////////////////////////////////////////////////////////////////////////
+
+    return_t get_encoding_params(key_encoding_t encoding, key_encoding_params_t& enc);
+    std::string nameof_encoding(key_encoding_t encoding);
+
    protected:
     return_t load();
     return_t build();

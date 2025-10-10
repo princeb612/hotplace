@@ -128,7 +128,6 @@ void test_dhkem_ossl_example() {
 
         // receiver - generate key pair
         {
-            basic_stream bs;
             size_t publen = 512;
             pub.resize(publen);
 
@@ -139,8 +138,7 @@ void test_dhkem_ossl_example() {
             }
             pub.resize(publen);
 
-            dump_key(priv, &bs, 16, 3);
-            _logger->writeln(bs);
+            _logger->writeln([&](basic_stream& bs) -> void { dump_key(priv, &bs, 16, 3); });
             _logger->hdump("pub", pub, 16, 3);
         }
         // receiver - give this public key to the sender

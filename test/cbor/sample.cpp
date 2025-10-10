@@ -31,15 +31,15 @@ void whatsthis(int argc, char** argv) {
         reader.publish(handle, &diagnostic);
         reader.close(handle);
 
-        basic_stream bs;
-        bs << "what u want to know"
-           << "\n"
-           << "< " << option.content << "\n"
-           << "> " << diagnostic << "\n"
-           << "> dump"
-           << "\n";
-        dump_memory(what, &bs, 16, 2, 0, dump_notrunc);
-        _logger->consoleln(bs);
+        _logger->consoleln([&](basic_stream& bs) -> void {
+            bs << "what u want to know"
+               << "\n"
+               << "< " << option.content << "\n"
+               << "> " << diagnostic << "\n"
+               << "> dump"
+               << "\n";
+            dump_memory(what, &bs, 16, 2, 0, dump_notrunc);
+        });
     }
 }
 

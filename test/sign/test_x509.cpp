@@ -72,19 +72,13 @@ void test_x509_sign() {
     keychain.load_pem(&key, pem, strlen(pem), keydesc("priv"));
     keychain.load_cert(&key, crt, strlen(crt), keydesc("pub"));
 
-    basic_stream bs;
-    if (0) {
-    }
-
     auto pkey_priv = key.find("priv");
     auto pkey_pub = key.find("pub");
 
-    dump_key(pkey_priv, &bs);
-    _logger->write(bs);
+    _logger->write([&](basic_stream& bs) -> void { dump_key(pkey_priv, &bs); });
     _test_case.assert(pkey_priv, __FUNCTION__, "load RSA private key");
 
-    dump_key(pkey_pub, &bs);
-    _logger->write(bs);
+    _logger->write([&](basic_stream& bs) -> void { dump_key(pkey_pub, &bs); });
     _test_case.assert(pkey_pub, __FUNCTION__, "load RSA certificate");
 
     crypto_sign_builder builder;

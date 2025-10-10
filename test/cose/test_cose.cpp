@@ -14,16 +14,16 @@
 void do_dump_diagnostic(const binary_t& input) {
     const OPTION& option = _cmdline->value();
     if (option.dump_diagnostic) {
-        basic_stream diagnostic;
-        cbor_reader_context_t* handle = nullptr;
-        cbor_reader reader;
-        auto ret = reader.open(&handle);
-        if (errorcode_t::success == ret) {
-            ret = reader.parse(handle, input);
-            reader.publish(handle, &diagnostic);
-            reader.close(handle);
-        }
-        _logger->colorln(diagnostic);
+        _logger->colorln([&](basic_stream& bs) -> void {
+            cbor_reader_context_t* handle = nullptr;
+            cbor_reader reader;
+            auto ret = reader.open(&handle);
+            if (errorcode_t::success == ret) {
+                ret = reader.parse(handle, input);
+                reader.publish(handle, &bs);
+                reader.close(handle);
+            }
+        });
     }
 }
 

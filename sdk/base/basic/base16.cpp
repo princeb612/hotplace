@@ -131,7 +131,9 @@ std::string base16_encode(const binary_t& source) {
     return outpart;
 }
 
-return_t base16_encode(const binary_t& source, stream_t* stream) { return base16_encode(source.empty() ? nullptr : &source[0], source.size(), stream); }
+return_t base16_encode(const binary_t& source, stream_t* stream, uint32 flags) {
+    return base16_encode(source.empty() ? nullptr : &source[0], source.size(), stream, flags);
+}
 
 std::string base16_encode(const char* source) {
     std::string outpart;

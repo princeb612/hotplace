@@ -23,7 +23,6 @@ void test_dtls_xargs_org() {
     crypto_keychain keychain;
     openssl_digest dgst;
     openssl_kdf kdf;
-    basic_stream bs;
     size_t pos = 0;
     binary_t bin_clienthello_record;
     binary_t bin_serverhello_record;
@@ -37,9 +36,7 @@ void test_dtls_xargs_org() {
         const char* y = "";
         const char* d = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
         keychain.add_ec_b16(&key, ec_x25519, x, y, d, keydesc(constexpr_client_key));
-        basic_stream bs;
-        dump_key(key.find(constexpr_client_key), &bs);
-        _logger->writeln(bs);
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(key.find(constexpr_client_key), &bs); });
     }
     // https://dtls.xargs.org/#client-hello-datagram
     {
@@ -59,9 +56,7 @@ void test_dtls_xargs_org() {
         const char* y = "";
         const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";
         keychain.add_ec_b16(&key, ec_x25519, x, y, d, keydesc(constexpr_server_key));
-        basic_stream bs;
-        dump_key(key.find(constexpr_server_key), &bs);
-        _logger->writeln(bs);
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(key.find(constexpr_server_key), &bs); });
     }
     // https://dtls.xargs.org/#server-hello-datagram
     {

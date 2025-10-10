@@ -21,7 +21,6 @@ void tcp_client() {
     }
 
     char buffer[option.bufsize];
-    basic_stream bs;
 
     __try2 {
         cli->set_wto(option.wto);
@@ -38,6 +37,7 @@ void tcp_client() {
                 size_t cbread = 0;
                 test = cli->read(buffer, option.bufsize, &cbread);
                 if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
+                    basic_stream bs;
                     bs.write(buffer, cbread);
                     while (errorcode_t::more_data == test) {
                         test = cli->more(buffer, option.bufsize, &cbread);
@@ -46,7 +46,6 @@ void tcp_client() {
                         }
                     }
                     _logger->writeln("received response: [%d][len %zi]%s", cli->get_socket(), bs.size(), bs.c_str());
-                    bs.clear();
                 }
             }
         }
@@ -71,7 +70,6 @@ void udp_client() {
     }
 
     char buffer[option.bufsize];
-    basic_stream bs;
     sockaddr_storage_t addr;
     socklen_t addrlen = sizeof(addr);
 
@@ -90,9 +88,9 @@ void udp_client() {
                 size_t cbread = 0;
                 test = cli->recvfrom(buffer, option.bufsize, &cbread, (sockaddr*)&addr, &addrlen);
                 if (errorcode_t::success == test) {
+                    basic_stream bs;
                     bs.write(buffer, cbread);
                     _logger->writeln("received response: [%d][len %zi]%s", cli->get_socket(), bs.size(), bs.c_str());
-                    bs.clear();
                 }
             }
         }
@@ -124,7 +122,6 @@ void tls_client() {
     openssl_tls_client_socket cli(&tls);
 
     char buffer[option.bufsize];
-    basic_stream bs;
 
     __try2 {
         openssl_startup();
@@ -141,6 +138,7 @@ void tls_client() {
             size_t cbsent = 0;
             auto test = cli.send(option.message.c_str(), option.message.size(), &cbsent);
             if (errorcode_t::success == test) {
+                basic_stream bs;
                 size_t cbread = 0;
                 test = cli.read(buffer, option.bufsize, &cbread);
                 if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
@@ -154,7 +152,6 @@ void tls_client() {
                 }
                 _logger->writeln("received response: [%d][len %zi]%s", cli.get_socket(), bs.size(), bs.c_str());
                 // _logger->dump(bs);
-                bs.clear();
             }
         }
     }
@@ -175,7 +172,6 @@ void tls_client2() {
     trial_tls_client_socket cli(minver);
 
     char buffer[option.bufsize];
-    basic_stream bs;
 
     __try2 {
         openssl_startup();
@@ -192,6 +188,7 @@ void tls_client2() {
             size_t cbsent = 0;
             auto test = cli.send(option.message.c_str(), option.message.size(), &cbsent);
             if (errorcode_t::success == test) {
+                basic_stream bs;
                 size_t cbread = 0;
                 test = cli.read(buffer, option.bufsize, &cbread);
                 if ((errorcode_t::success == test) || (errorcode_t::more_data == test)) {
@@ -205,7 +202,6 @@ void tls_client2() {
                 }
                 _logger->writeln("received response: [%d][len %zi]%s", cli.get_socket(), bs.size(), bs.c_str());
                 // _logger->dump(bs);
-                bs.clear();
             }
         }
     }
@@ -229,7 +225,6 @@ void dtls_client() {
     socklen_t addrlen = sizeof(addr);
 
     char buffer[option.bufsize];
-    basic_stream bs;
 
     __try2 {
         openssl_startup();
@@ -250,9 +245,9 @@ void dtls_client() {
                 size_t cbread = 0;
                 test = cli.recvfrom(buffer, option.bufsize, &cbread, (sockaddr*)&addr, &addrlen);
                 if (errorcode_t::success == test) {
+                    basic_stream bs;
                     bs.write(buffer, cbread);
                     _logger->writeln("received response: [%d][len %zi]%s", cli.get_socket(), bs.size(), bs.c_str());
-                    bs.clear();
                 }
             }
         }
@@ -278,7 +273,6 @@ void dtls_client2() {
     cli.get_session()->get_dtls_record_publisher().set_flags(dtls_record_publisher_multi_handshakes);
 
     char buffer[option.bufsize];
-    basic_stream bs;
     sockaddr_storage_t sa;
 
     __try2 {
@@ -307,7 +301,6 @@ void dtls_client2() {
                     sockaddr_string(peer, addr);
 
                     _logger->writeln("received response: [%d][len %zi]%.*s", cli.get_socket(), cbread, cbread, buffer);
-                    bs.clear();
                 }
             }
         }

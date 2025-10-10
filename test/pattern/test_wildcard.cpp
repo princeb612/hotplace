@@ -38,9 +38,7 @@ void test_lcp() {
     int n = sizeof(ar) / sizeof(ar[0]);
     std::string result = get_lcp(ar, n);
 
-    basic_stream bs;
-    bs << "The longest common prefix is: " << result;
-    _logger->writeln(bs);
+    _logger->writeln([&](basic_stream& bs) -> void { bs << "The longest common prefix is: " << result; });
 
     _test_case.assert(result == "gee", __FUNCTION__, "LCP");
 }
@@ -162,9 +160,8 @@ void test_merge_ovl_intervals() {
     typedef std::vector<interval> result;
     result res;
     result expect;
-    basic_stream bs;
 
-    auto func = [&](result::const_iterator iter, int where) -> void {
+    auto func = [&](result::const_iterator iter, int where, basic_stream& bs) -> void {
         switch (where) {
             case seek_t::seek_begin:
                 bs << "{";
@@ -180,44 +177,41 @@ void test_merge_ovl_intervals() {
         }
     };
 
+    auto lambda_log = [&](basic_stream& bs) -> void { for_each<result, basic_stream>(res, func, bs); };
+
     expect = {interval(1, 9, 0)};
     moi.clear().add(6, 8).add(1, 9).add(2, 4).add(4, 7);
     res = moi.merge();
-    for_each<result>(res, func);
-    _logger->writeln(bs);  // {1, 9}
+    // {1, 9}
+    _logger->writeln(lambda_log);
     _test_case.assert(res == expect, __FUNCTION__, "test #1");
-    bs.clear();
 
     expect = {interval(1, 4, 0), interval(6, 8, 0), interval(9, 10, 0)};
     // expect = {{1,4,0},{6,8,0},{9,10,0}};
     moi.clear().add(9, 10).add(6, 8).add(1, 3).add(2, 4).add(6, 8);  // partially duplicated
     res = moi.merge();
-    for_each<result>(res, func);
-    _logger->writeln(bs);  // {1, 4}, {6, 8}, {9, 10}
+    // {1, 4}, {6, 8}, {9, 10}
+    _logger->writeln(lambda_log);
     _test_case.assert(res == expect, __FUNCTION__, "test #2");
-    bs.clear();
 
     expect = {interval(1, 8, 4), interval(9, 10, 3)};
     moi.clear().add(9, 10, 3).add(6, 8, 2).add(1, 3, 0).add(2, 4, 1).add(1, 8, 4);
     res = moi.merge();
-    for_each<result>(res, func);
-    _logger->writeln(bs);  // {1, 8}, {9, 10}
+    // {1, 8}, {9, 10}
+    _logger->writeln(lambda_log);
     _test_case.assert(res == expect, __FUNCTION__, "test #3");
-    bs.clear();
 
     expect = {interval(1, 8, 4), interval(9, 10, 3)};
     moi.clear().add(9, 10, 3).add(6, 8, 2).add(1, 3, 0).add(2, 4, 1).add(1, 8, 4);
     res = moi.merge();
-    for_each<result>(res, func);
-    _logger->writeln(bs);  // {1, 8}, {9, 10}
+    // {1, 8}, {9, 10}
+    _logger->writeln(lambda_log);
     _test_case.assert(res == expect, __FUNCTION__, "test #4");
-    bs.clear();
 
     expect = {interval(1, 8, 4)};
     moi.clear().add(1, 8, 4);
     res = moi.merge();
-    for_each<result>(res, func);
-    _logger->writeln(bs);  // {1, 8}
+    // {1, 8}
+    _logger->writeln(lambda_log);
     _test_case.assert(res == expect, __FUNCTION__, "test #5");
-    bs.clear();
 }

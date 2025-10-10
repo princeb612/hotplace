@@ -33,11 +33,11 @@ void test_ffdhe() {
     keychain.add_dh(&key, NID_ffdhe8192, keydesc("NID_ffdhe8192"));
 
     auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
-        basic_stream bs;
-        bs.printf(R"(> kid "%s")", item->get_desc().get_kid_cstr());
-        bs.printf("\n");
-        dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
-        _logger->write(bs);
+        _logger->write([&](basic_stream& bs) -> void {
+            bs.printf(R"(> kid "%s")", item->get_desc().get_kid_cstr());
+            bs.printf("\n");
+            dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
+        });
     };
     key.for_each(dump_crypto_key, nullptr);
 
@@ -71,10 +71,10 @@ void test_ffdhe_dh() {
     keychain.add_dh_b16(&key, NID_ffdhe2048, pub, nullptr, keydesc("pub"));
 
     auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
-        basic_stream bs;
-        bs.println("\e[1;32m> kid \"%s\"\e[0m", item->get_desc().get_kid_cstr());
-        dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
-        _logger->write(bs);
+        _logger->write([&](basic_stream& bs) -> void {
+            bs.println("\e[1;32m> kid \"%s\"\e[0m", item->get_desc().get_kid_cstr());
+            dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
+        });
     };
     key.for_each(dump_crypto_key, nullptr);
 

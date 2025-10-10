@@ -27,7 +27,6 @@ COMMENTS
     oqs            - liboqs, oqs-provider feature
     pch            - precompiled header
     prof           - gprof
-    pqc            - liboqs, oqs-provider feature
     odbc           - ODBC feature
     redist         - redistribute MSYS2(MINGW) binaries
     shared         - shared build
@@ -99,11 +98,9 @@ if [ ${#args[@]} -ne 0 ]; then
         elif [ $arg = 'opt' ]; then
             CXXFLAGS="${CXXFLAGS}  -O2"
         elif [ $arg = 'oqs' ]; then
-            export SUPPORT_PQC=1
+            export SUPPORT_OQS=1
         elif [ $arg = 'pch' ]; then
             SUPPORT_PCH=1
-        elif [ $arg = 'pqc' ]; then
-            export SUPPORT_PQC=1
         elif [ $arg = 'prof' ]; then
             CXXFLAGS="${CXXFLAGS} -pg"
         elif [ $arg = 'redist' ]; then

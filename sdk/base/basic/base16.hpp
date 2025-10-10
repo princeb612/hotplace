@@ -105,12 +105,13 @@ return_t base16_encode(const binary_t& source, std::string& outpart, uint32 flag
  * @brief   encode
  * @param   const binary_t& source [in]
  * @param   stream_t* stream [out]
+ * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc | base16_capital
  * @example
  *          binary_t source = std::move(str2bin ("hello world"));
  *          basic_stream encoded;
  *          base16_encode (source, &encoded);
  */
-return_t base16_encode(const binary_t& source, stream_t* stream);
+return_t base16_encode(const binary_t& source, stream_t* stream, uint32 flags = 0);
 /*
  * @brief   encode
  * @param   const binary_t& source [in]

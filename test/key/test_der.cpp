@@ -47,7 +47,6 @@ void test_der() {
     binary_t bin_sample = std::move(base16_decode_rfc(cert));
 
     const char* kid = "der";
-    basic_stream bs;
     crypto_key key;
     crypto_keychain keychain;
     ret = keychain.load_der(&key, &bin_sample[0], bin_sample.size(), keydesc(kid));
@@ -55,7 +54,6 @@ void test_der() {
     _test_case.test(ret, __FUNCTION__, "RFC 8448 3. server certificate");
 
     auto x509 = key.find_x509(kid, kty_rsa);
-    _logger->write(bs);
     _test_case.assert(x509, __FUNCTION__, "dump");
 
     binary_t bin_der;

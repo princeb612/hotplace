@@ -26,7 +26,6 @@ void test_rfc8448_7() {
     tls_session session;
     crypto_keychain keychain;
     auto& protection = session.get_tls_protection();
-    basic_stream bs;
     binary_t bin;
 
     {
@@ -43,9 +42,7 @@ void test_rfc8448_7() {
         ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, nullptr, d, keydesc(constexpr_client));
 
         _logger->writeln(constexpr_client);
-        dump_key(key.find(constexpr_client), &bs);
-        _logger->writeln(bs);
-        bs.clear();
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(key.find(constexpr_client), &bs); });
 
         _test_case.test(ret, __FUNCTION__, "ephemeral x25519 key pair");
     }
@@ -80,9 +77,7 @@ void test_rfc8448_7() {
         ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, nullptr, d, keydesc(constexpr_server));
 
         _logger->writeln(constexpr_server);
-        dump_key(key.find(constexpr_server), &bs);
-        _logger->writeln(bs);
-        bs.clear();
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(key.find(constexpr_server), &bs); });
 
         _test_case.test(ret, __FUNCTION__, "ephemeral x25519 key pair");
     }

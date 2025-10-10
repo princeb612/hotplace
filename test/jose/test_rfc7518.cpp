@@ -75,18 +75,17 @@ int test_ecdh() {
 
     const OPTION& option = _cmdline->value();
     if (option.verbose) {
-        basic_stream bs;
-        bs << "alice public key  x : " << base16_encode(x_alice) << "\n"
-           << "alice public key  y : " << base16_encode(y_alice) << "\n"
-           << "alice private key d : " << base16_encode(d_alice) << "\n"
-           << "bob   public key  x : " << base16_encode(x_bob) << "\n"
-           << "bob   public key  y : " << base16_encode(y_bob) << "\n"
-           << "bob   private key d : " << base16_encode(d_bob) << "\n"
+        _logger->writeln([&](basic_stream& bs) -> void {
+            bs << "alice public key  x : " << base16_encode(x_alice) << "\n"
+               << "alice public key  y : " << base16_encode(y_alice) << "\n"
+               << "alice private key d : " << base16_encode(d_alice) << "\n"
+               << "bob   public key  x : " << base16_encode(x_bob) << "\n"
+               << "bob   public key  y : " << base16_encode(y_bob) << "\n"
+               << "bob   private key d : " << base16_encode(d_bob) << "\n"
 
-           << "secret computed by alice : " << base16_encode(secret_alice) << "\n"
-           << "secret computed by bob   : " << base16_encode(secret_bob);
-
-        _logger->writeln(bs);
+               << "secret computed by alice : " << base16_encode(secret_alice) << "\n"
+               << "secret computed by bob   : " << base16_encode(secret_bob);
+        });
     }
 
     bool result = (secret_alice == secret_bob);
@@ -98,7 +97,6 @@ void test_rfc7518_C() {
     print_text("RFC 7518 Appendix C.  Example ECDH-ES Key Agreement Computation");
 
     json_web_key jwk;
-    basic_stream bs;
     crypto_key key_alice;
     crypto_key key_bob;
 
@@ -114,16 +112,17 @@ void test_rfc7518_C() {
     binary_t secret_bob;
     dh_key_agreement(pkey_bob, pkey_alice, secret_bob);
 
-    bs << "Z (ECDH-ES key agreement output) : \n" << base16_encode(secret_bob) << "\n";
+    _logger->writeln([&](basic_stream& bs) -> void {
+        bs << "Z (ECDH-ES key agreement output) : \n" << base16_encode(secret_bob) << "\n";
 #if __cplusplus >= 201103L  // c++11
-    for_each(secret_bob.begin(), secret_bob.end(), [&](byte_t c) { bs.printf("%i,", c); });
+        for_each(secret_bob.begin(), secret_bob.end(), [&](byte_t c) { bs.printf("%i,", c); });
 #else
-    for (binary_t::iterator iter = secret_bob.begin(); iter != secret_bob.end(); iter++) {
-        byte_t c = *iter;
-        bs.printf("%i,", c);
-    }
+        for (binary_t::iterator iter = secret_bob.begin(); iter != secret_bob.end(); iter++) {
+            byte_t c = *iter;
+            bs.printf("%i,", c);
+        }
 #endif
-    _logger->writeln(bs);
+    });
 
     // apu Alice
     // apv Bob

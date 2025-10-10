@@ -19,7 +19,6 @@
 
 void test_rfc8448_2() {
     _test_case.begin("RFC 8448 2.  Private Keys");
-    basic_stream bs;
     crypto_keychain keychain;
 
     {
@@ -43,7 +42,6 @@ void test_rfc8448_2() {
 
         crypto_key key;
         keychain.add_rsa_b16rfc(&key, nid_rsa, n, e, d, keydesc("server RSA certificate"));
-        dump_key(key.find("server RSA certificate"), &bs);
-        _logger->writeln(bs);
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(key.find("server RSA certificate"), &bs); });
     }
 }

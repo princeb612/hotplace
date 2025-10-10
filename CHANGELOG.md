@@ -28,11 +28,12 @@
     * CBOR
 
 * details
-  * Revision 887
+  * Revision 888
+    * [tested] PQC KEM (openssl-3.5)
   * Revision 884
-    * [tested] PQC DSA
+    * [tested] oqs-provider DSA
   * Revision 883
-    * [tested] PQC KEM
+    * [tested] oqs-provider KEM
   * Revision 839
     * [tested] DTLS records
   * Revision 836

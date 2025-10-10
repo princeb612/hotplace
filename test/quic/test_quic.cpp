@@ -109,9 +109,7 @@ void test_quic_xargs_org() {
         const char* d = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
         crypto_key& key = protection.get_keyexchange();
         keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE));
-        basic_stream bs;
-        dump_key(key.find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE), &bs);
-        _logger->write(bs);
+        _logger->write([&](basic_stream& bs) -> void { dump_key(key.find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE), &bs); });
     }
 
     /**
@@ -208,9 +206,7 @@ void test_quic_xargs_org() {
 
         keychain.add_ec_b16(&key, "X25519", x, y, d, keydesc(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE));
 
-        basic_stream bs;
-        dump_key(key.find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE), &bs);
-        _logger->write(bs);
+        _logger->write([&](basic_stream& bs) -> void { dump_key(key.find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE), &bs); });
     }
 
     /**

@@ -143,6 +143,13 @@ void test_github_example() {
 
     _test_case.reset_time();
 
+    auto dumps = [&](const char* b, const char* f) -> void {
+        _logger->colorln([&](basic_stream& bs) -> void {
+            bs.printf(">%s %s\n", b, f);
+            dump_memory(base16_decode(f), &bs, 16, 2, dump_notrunc);
+        });
+    };
+
     bool result = false;
     cbor_object_signing_encryption cose;
     for (i = 0; i < sizeof_test_vector_github_cose_wg; i++) {
@@ -161,7 +168,6 @@ void test_github_example() {
         mapped_key->for_each(dump_crypto_key, nullptr);
 
         binary_t bin_cbor;
-        basic_stream bs;
         basic_stream diagnostic;
         cbor_reader reader;
         cbor_reader_context_t* reader_handle = nullptr;
@@ -171,8 +177,10 @@ void test_github_example() {
         reader.publish(reader_handle, &bin_cbor);
         reader.close(reader_handle);
         if (option.verbose) {
-            dump_memory(bin_cbor, &bs, 16, 2);
-            _logger->writeln("cbor\n%s", bs.c_str());
+            _logger->writeln([&](basic_stream& bs) -> void {
+                bs.printf("cbor\n");
+                dump_memory(bin_cbor, &bs, 16, 2, dump_notrunc);
+            });
             _logger->writeln("diagnostic\n  %s", diagnostic.c_str());
 
             cbor_publisher publisher;
@@ -196,12 +204,6 @@ void test_github_example() {
 
         cose_context_t* handle = nullptr;
         cose.open(&handle);
-
-#define dumps(b, f)                                       \
-    if (f) {                                              \
-        dump_memory(base16_decode(f), &bs, 16, 2);        \
-        _logger->colorln(">%s %s\n%s", b, f, bs.c_str()); \
-    }
 
         if (option.verbose) {
             dumps("AAD", vector->enc.aad_hex);
@@ -277,8 +279,11 @@ void test_github_example() {
             }
             debug_stream = handle->debug_stream;
             if (output.size()) {
-                dump_memory(output, &bs, 16, 4);
-                _logger->writeln("decrypted\n%s\n%s", bs.c_str(), base16_encode(output).c_str());
+                _logger->writeln([&](basic_stream& bs) -> void {
+                    bs << "decrypted\n";
+                    dump_memory(output, &bs, 16, 4, dump_notrunc);
+                    bs << base16_encode(output);
+                });
             }
         }
 

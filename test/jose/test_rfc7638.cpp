@@ -24,7 +24,6 @@ void test_jwk_thumbprint() {
     std::string thumbprint;
     json_t* json_root = nullptr;
     binary_t hash_value;
-    basic_stream bs;
 
     jwk.load_file(&key, key_ownspec, "rfc7638_3.jwk");
     key.for_each(dump_crypto_key, nullptr);
@@ -55,16 +54,17 @@ void test_jwk_thumbprint() {
 
     const OPTION& option = _cmdline->value();
     if (option.verbose) {
-        bs << "in lexicographic order : "
-           << "\n"
-           << buffer << "\n"
-           << "hash : "
-           << "\n"
-           << base16_encode(hash_value) << "\n"
-           << "thumbprint :"
-           << "\n"
-           << thumbprint;
-        _logger->writeln(bs);
+        _logger->writeln([&](basic_stream& bs) -> void {
+            bs << "in lexicographic order : "
+               << "\n"
+               << buffer << "\n"
+               << "hash : "
+               << "\n"
+               << base16_encode(hash_value) << "\n"
+               << "thumbprint :"
+               << "\n"
+               << thumbprint;
+        });
     }
 
     // crv, kty, x, y

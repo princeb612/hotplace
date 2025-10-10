@@ -104,7 +104,6 @@ void test_frexp() {
 
 void test_basic_stream() {
     _test_case.begin("basic_stream");
-    basic_stream bs;
 
     {
         struct testvector {
@@ -121,10 +120,10 @@ void test_basic_stream() {
         };
 
         for (auto item : _table) {
+            basic_stream bs;
             bs.printf("%f", item.f);
             _logger->writeln(bs);
             _test_case.assert(item.bs == bs, __FUNCTION__, "float %s", item.bs.c_str());
-            bs.clear();
         }
     }
     {
@@ -142,10 +141,10 @@ void test_basic_stream() {
         };
 
         for (auto item : _table) {
+            basic_stream bs;
             bs.printf("%lf", item.f);
             _logger->writeln(bs);
             _test_case.assert(item.bs == bs, __FUNCTION__, "double %s", item.bs.c_str());
-            bs.clear();
         }
     }
 }

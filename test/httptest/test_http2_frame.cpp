@@ -12,7 +12,6 @@
 #include "sample.hpp"
 
 void do_test_http2_frame(http2_frame* frame1, http2_frame* frame2, const char* text, const char* expect) {
-    basic_stream bs;
     binary_t bin_f1;
     binary_t bin_f2;
     binary_t bin_expect = std::move(base16_decode_rfc(expect));
@@ -22,8 +21,7 @@ void do_test_http2_frame(http2_frame* frame1, http2_frame* frame2, const char* t
     _logger->hdump("frame", bin_f1, 16, 3);
 
     // human-readable
-    frame1->dump(&bs);
-    _logger->write(bs);
+    _logger->write([&](basic_stream& bs) -> void { frame1->dump(&bs); });
 
     // comparison
     _test_case.assert(bin_f1 == bin_expect, __FUNCTION__, "%s #compose", text);

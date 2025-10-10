@@ -18,7 +18,7 @@
 #include <hotplace/sdk/io.hpp>
 
 /* basic */
-#include <hotplace/sdk/crypto/pqc/oqs.hpp>
-#include <hotplace/sdk/crypto/pqc/types.hpp>
+#include <hotplace/sdk/crypto/oqs/oqs.hpp>
+#include <hotplace/sdk/crypto/oqs/types.hpp>
 
 #endif

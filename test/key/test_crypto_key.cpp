@@ -15,7 +15,6 @@ void test_crypto_key() {
     return_t ret = errorcode_t::success;
     crypto_key key;
     crypto_keychain keychain;
-    basic_stream bs;
 
     struct curves_t {
         uint32 nid;
@@ -90,10 +89,10 @@ void test_crypto_key() {
     auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
         auto pkey = item->get_pkey();
 
-        bs.println("\e[1;32m> kid \"%s\"\e[0m", item->get_desc().get_kid_cstr());
-        dump_key(pkey, &bs, 16, 3, dump_notrunc);
-        _logger->write(bs);
-        bs.clear();
+        _logger->write([&](basic_stream& bs) -> void {
+            bs.println("\e[1;32m> kid \"%s\"\e[0m", item->get_desc().get_kid_cstr());
+            dump_key(pkey, &bs, 16, 3, dump_notrunc);
+        });
 
         binary_t bin_pub;
         binary_t bin_priv;
@@ -120,18 +119,16 @@ void test_crypto_key() {
         }
     }
 
-    json_web_key jwk;
-    ret = jwk.write(&key, &bs, public_key | private_key);
-    _logger->writeln(bs);
-    bs.clear();
+    _logger->writeln([&](basic_stream& bs) -> void {
+        json_web_key jwk;
+        ret = jwk.write(&key, &bs, public_key | private_key);
+    });
     _test_case.test(ret, __FUNCTION__, "JWK");
 
     cbor_web_key cwk;
     binary_t cwk_cbor;
     cwk.write(&key, cwk_cbor, public_key | private_key);
     _logger->hdump("CWK", cwk_cbor, 16, 3);
-    ret = cwk.diagnose(&key, &bs, public_key | private_key);
-    _logger->writeln(bs);
-    bs.clear();
+    _logger->writeln([&](basic_stream& bs) -> void { ret = cwk.diagnose(&key, &bs, public_key | private_key); });
     _test_case.test(ret, __FUNCTION__, "CWK");
 }

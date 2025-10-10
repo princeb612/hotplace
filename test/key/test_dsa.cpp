@@ -27,7 +27,6 @@ void test_dsa() {
         "4F005E534FAD5548505D29BE35ACEE720D3F74D09C6B721C3D15E0ED477AE20A82BAC5ADA8A629BF4B09E3534B7B9F45DC42590B7AF5E91ABDE8E64B4B3602D73F66A3E99A1C837DE2E6E6"
         "3391A2E5521097D3659CACCBB7DBB9FA3BDEBD3499E678EABD929E609715D5EDA845C8D2523856ACF61400C72A98359A022C7A90A4";
 
-    basic_stream bs;
     crypto_keychain keychain;
     keychain.add_dsa(&key, nid_dsa, keydesc("genkey"));
     keychain.add_dsa_b16(&key, nid_dsa, y, x, p, q, g, keydesc("DSA private"));
@@ -37,10 +36,10 @@ void test_dsa() {
     auto pkey_dsa_priv = key.find("DSA private");
 
     auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
-        bs.println("\e[1;32m> kid \"%s\"\e[0m", item->get_desc().get_kid_cstr());
-        dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
-        _logger->write(bs);
-        bs.clear();
+        _logger->write([&](basic_stream& bs) -> void {
+            bs.println("\e[1;32m> kid \"%s\"\e[0m", item->get_desc().get_kid_cstr());
+            dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
+        });
     };
     key.for_each(dump_crypto_key, nullptr);
 

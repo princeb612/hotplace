@@ -181,9 +181,9 @@ void do_test_cbor_file(const char* expect_file, const char* text) {
 
     console_color concolor;
 
-    basic_stream bs;
-    bs << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::cyan) << expect_file << concolor.turnoff();
-    _logger->writeln(bs);
+    _logger->writeln([&](basic_stream& bs) -> void {
+        bs << concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::cyan) << expect_file << concolor.turnoff();
+    });
 
     return_t ret = errorcode_t::success;
 

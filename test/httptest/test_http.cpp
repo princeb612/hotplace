@@ -15,20 +15,19 @@ void do_split_url(const char *url, url_info_t *url_info) {
     split_url(url, url_info);
 
     if (option.verbose) {
-        basic_stream bs;
-        bs << "> url      : " << url << "\n"
-           << "> scheme   : " << url_info->scheme << "\n"
-           << "> host     : " << url_info->host << "\n"
-           << "> port     : " << url_info->port << "\n"
-           << "> uri      : " << url_info->uri << "\n"
-           << "> uripath  : " << url_info->uripath << "\n"
-           << "> query    : " << url_info->query << "\n";
+        _logger->writeln([&](basic_stream &bs) -> void {
+            bs << "> url      : " << url << "\n"
+               << "> scheme   : " << url_info->scheme << "\n"
+               << "> host     : " << url_info->host << "\n"
+               << "> port     : " << url_info->port << "\n"
+               << "> uri      : " << url_info->uri << "\n"
+               << "> uripath  : " << url_info->uripath << "\n"
+               << "> query    : " << url_info->query << "\n";
 
-        skey_value kv;
-        http_uri::to_keyvalue(url_info->query, kv);
-        kv.foreach ([&](const std::string &key, const std::string &value, void *param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
-
-        _logger->writeln(bs);
+            skey_value kv;
+            http_uri::to_keyvalue(url_info->query, kv);
+            kv.foreach ([&](const std::string &key, const std::string &value, void *param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
+        });
     }
 }
 
@@ -93,9 +92,9 @@ void test_uri() {
         skey_value &kv = request.get_http_uri().get_query_keyvalue();
         std::string code = kv.get("code");
 
-        basic_stream bs;
-        kv.foreach ([&](const std::string &key, const std::string &value, void *param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
-        _logger->write(bs);
+        _logger->write([&](basic_stream &bs) -> void {
+            kv.foreach ([&](const std::string &key, const std::string &value, void *param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
+        });
 
         _test_case.assert("5lkd8ApNal3fkg3S6fh-uw" == kv.get("code"), __FUNCTION__, "uri.get_query_keyvalue.code");
     }

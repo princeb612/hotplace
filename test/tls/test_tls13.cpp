@@ -22,7 +22,6 @@ void test_tls13_xargs_org() {
     crypto_keychain keychain;
     openssl_digest dgst;
     openssl_kdf kdf;
-    basic_stream bs;
     size_t pos = 0;
     binary_t bin_clienthello_record;
     binary_t bin_serverhello_record;
@@ -54,9 +53,7 @@ void test_tls13_xargs_org() {
         crypto_key key;
         ret = keychain.load_cert(&key, servercert, strlen(servercert));
 
-        dump_key(key.any(), &bs);
-        _logger->writeln(bs);
-        bs.clear();
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(key.any(), &bs); });
 
         _test_case.test(ret, __FUNCTION__, "certificate");
     }
@@ -72,9 +69,7 @@ void test_tls13_xargs_org() {
         const char* y = "";
         const char* d = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
         keychain.add_ec_b16(&keyexchange, ec_x25519, x, y, d, keydesc(constexpr_client));
-        basic_stream bs;
-        dump_key(keyexchange.find(constexpr_client), &bs);
-        _logger->writeln(bs);
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(keyexchange.find(constexpr_client), &bs); });
 
         // > handshake type 1 (client_hello)
         //   > extension - 0033 key_share
@@ -122,9 +117,7 @@ void test_tls13_xargs_org() {
         crypto_key& keyexchange = session.get_tls_protection().get_keyexchange();
         keychain.add_ec_b16(&keyexchange, ec_x25519, x, y, d, keydesc(constexpr_server));
 
-        dump_key(keyexchange.find(constexpr_server), &bs);
-        _logger->writeln(bs);
-        bs.clear();
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(keyexchange.find(constexpr_server), &bs); });
     }
     /**
      * S -> C

@@ -280,13 +280,11 @@ logger& logger::do_dump(const byte_t* addr, size_t size, unsigned hexpart, unsig
 }
 
 logger& logger::do_hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
-    if (addr) {
-        auto lambda = [&](logger_item* item) -> void {
-            item->bs.printf("%s\n", header.c_str());
-            dump_memory(addr, size, &item->bs, hexpart, indent, 0, dump_memory_flag_t::dump_notrunc);
-        };
-        do_write(lambda);
-    }
+    auto lambda = [&](logger_item* item) -> void {
+        item->bs.printf("%s\n", header.c_str());
+        dump_memory(addr, size, &item->bs, hexpart, indent, 0, dump_memory_flag_t::dump_notrunc);
+    };
+    do_write(lambda);
     return *this;
 }
 

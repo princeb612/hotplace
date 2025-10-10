@@ -54,6 +54,30 @@ void for_each(container_t& c, typename std::function<void(typename container_t::
     }
 }
 
+template <typename container_t, typename usertype>
+void for_each_const(const container_t& c, typename std::function<void(typename container_t::const_iterator, int, usertype&)> f, usertype& u) {
+    if (c.size()) {
+        auto iter = c.begin();
+        f(iter++, seek_t::seek_begin, u);
+        while (c.end() != iter) {
+            f(iter++, seek_t::seek_move, u);
+        }
+        f(c.end(), seek_t::seek_end, u);
+    }
+}
+
+template <typename container_t, typename usertype>
+void for_each(container_t& c, typename std::function<void(typename container_t::iterator, int, usertype&)> f, usertype& u) {
+    if (c.size()) {
+        auto iter = c.begin();
+        f(iter++, seek_t::seek_begin, u);
+        while (c.end() != iter) {
+            f(iter++, seek_t::seek_move, u);
+        }
+        f(c.end(), seek_t::seek_end, u);
+    }
+}
+
 /**
  * @brief   util
  * @sample

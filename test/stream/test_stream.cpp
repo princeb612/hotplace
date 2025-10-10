@@ -27,49 +27,46 @@ void test_consolecolor() {
         console_color_t::white,
     };
 
-    basic_stream bs;
     uint32 loop = 0;
-    for (auto bgcolor : bgcolors) {
-        concolor.set_bgcolor(bgcolor);
-        for (auto style : styles) {
-            concolor.set_style(style);
-            for (auto fgcolor : fgcolors) {
-                concolor.set_fgcolor(fgcolor);
+    _logger->consoleln([&](basic_stream& bs) -> void {
+        for (auto bgcolor : bgcolors) {
+            concolor.set_bgcolor(bgcolor);
+            for (auto style : styles) {
+                concolor.set_style(style);
+                for (auto fgcolor : fgcolors) {
+                    concolor.set_fgcolor(fgcolor);
 
-                if (fgcolor != bgcolor) {
-                    bs << concolor.turnon() << "test" << concolor.turnoff();
-                    if (15 == (loop % 16)) {
-                        bs << "\n";
+                    if (fgcolor != bgcolor) {
+                        bs << concolor.turnon() << "test" << concolor.turnoff();
+                        if (15 == (loop % 16)) {
+                            bs << "\n";
+                        }
+                        ++loop;
                     }
-                    ++loop;
                 }
             }
         }
-    }
-    bs << "\n";
-    _logger->consoleln(bs);
-    bs.clear();
+    });
     _test_case.assert(true, __FUNCTION__, "console color.1 loop %i times", loop);
 
     concolor.set_style(console_style_t::normal);
     concolor.set_fgcolor(console_color_t::yellow);
     concolor.set_bgcolor(console_color_t::black);
 
-    bs << concolor.turnon() << "color";
-    bs << concolor.turnoff() << "default";
-    _logger->writeln(bs);
-    bs.clear();
+    _logger->writeln([&](basic_stream& bs) -> void {
+        bs << concolor.turnon() << "color";
+        bs << concolor.turnoff() << "default";
+    });
     _test_case.assert(true, __FUNCTION__, "console color.2");
 
-    bs << concolor.turnon() << concolor.set_style(console_style_t::bold).set_fgcolor(console_color_t::yellow).set_bgcolor(console_color_t::black) << "color"
-       << concolor.turnoff() << "default";
-    _logger->writeln(bs);
-    bs.clear();
+    _logger->writeln([&](basic_stream& bs) -> void {
+        bs << concolor.turnon() << concolor.set_style(console_style_t::bold).set_fgcolor(console_color_t::yellow).set_bgcolor(console_color_t::black) << "color"
+           << concolor.turnoff() << "default";
+    });
     _test_case.assert(true, __FUNCTION__, "console color.3");
 }
 
-void do_test_dump_routine(const byte_t* dump_address, size_t dump_size, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0,
-                          size_t rebase = 0x0) {
+void do_test_dump_routine(const byte_t* dump_address, size_t dump_size, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0) {
     return_t ret = errorcode_t::success;
     _logger->dump(dump_address, dump_size, hex_part, indent);
     _test_case.test(ret, __FUNCTION__, "dump addr %p size %zi hex %i indent %i rebase %zi", dump_address, dump_size, hex_part, indent, rebase);
@@ -81,25 +78,22 @@ void test_dumpmemory() {
     ansi_string bs;
     const char* text = "still a man hears what he wants to hear and disregards the rest";  // the boxer - Simon & Garfunkel
 
-    do_test_dump_routine((byte_t*)text, strlen(text), &bs);
-    do_test_dump_routine((byte_t*)text, strlen(text), &bs, 32);
-    do_test_dump_routine((byte_t*)text, strlen(text), &bs, 16, 4);
-    do_test_dump_routine((byte_t*)text, strlen(text), &bs, 16, 4, 0x1000);
+    do_test_dump_routine((byte_t*)text, strlen(text));
+    do_test_dump_routine((byte_t*)text, strlen(text), 32);
+    do_test_dump_routine((byte_t*)text, strlen(text), 16, 4);
+    do_test_dump_routine((byte_t*)text, strlen(text), 16, 4, 0x1000);
 
     std::string str(text);
-    ret = dump_memory(str, &bs);
-    _logger->writeln("dump\n%s", bs.c_str());
-    _test_case.test(ret, __FUNCTION__, "dump std::string");
+    _logger->hdump("dump", str, 16, 3);
+    _test_case.assert(true, __FUNCTION__, "string");
 
     binary_t bin = std::move(str2bin(str));
-    ret = dump_memory(bin, &bs);
-    _logger->writeln("dump\n%s", bs.c_str());
-    _test_case.test(ret, __FUNCTION__, "dump std::vector<byte_t>");
+    _logger->hdump("dump", bin, 16, 3);
+    _test_case.assert(true, __FUNCTION__, "binary_t");
 
     binary_t bin2;
-    ret = dump_memory(bin2, &bs);
-    _logger->writeln("dump\n%s", bs.c_str());
-    _test_case.test(ret, __FUNCTION__, "dump blank");
+    _logger->hdump("dump", bin2, 16, 3);
+    _test_case.assert(true, __FUNCTION__, "dump blank");
 }
 
 void test_i128() {

@@ -25,11 +25,13 @@ return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* str
             }
         }
 
-        if (0 == dump_size) {
+        if (nullptr == stream || 0 == hex_part) {
+            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (nullptr == dump_address || nullptr == stream || 0 == hex_part) {
-            ret = errorcode_t::invalid_parameter;
+        if ((nullptr == dump_address) || (0 == dump_size)) {
+            stream->fill(indent, ' ');
+            stream->printf("empty\n");
             __leave2;
         }
 

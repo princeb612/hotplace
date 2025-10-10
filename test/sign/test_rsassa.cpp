@@ -105,9 +105,7 @@ void test_rsassa() {
         keychain.add_rsa(&key, nid, 2048, keydesc("key"));
         auto pkey = key.find("key");
 
-        basic_stream bs;
-        dump_key(pkey, &bs);
-        _logger->write(bs);
+        _logger->write([&](basic_stream& bs) -> void { dump_key(pkey, &bs); });
 
         auto kty = typeof_crypto_key(pkey);
         auto ktyname = advisor->nameof_kty(kty);
