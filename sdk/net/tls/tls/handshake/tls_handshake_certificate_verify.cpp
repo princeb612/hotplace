@@ -89,7 +89,7 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
         auto& protection_context = protection.get_protection_context();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        auto kty = typeof_crypto_key(pkey);
+        auto kty = ktyof_evp_pkey(pkey);
         scheme = protection_context.select_signature_algorithm(kty);
 
         crypto_sign_builder builder;

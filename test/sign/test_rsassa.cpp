@@ -107,7 +107,7 @@ void test_rsassa() {
 
         _logger->write([&](basic_stream& bs) -> void { dump_key(pkey, &bs); });
 
-        auto kty = typeof_crypto_key(pkey);
+        auto kty = ktyof_evp_pkey(pkey);
         auto ktyname = advisor->nameof_kty(kty);
         uint32 pkey_nid = 0;
         nidof_evp_pkey(pkey, pkey_nid);

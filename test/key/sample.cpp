@@ -63,6 +63,7 @@ int main(int argc, char** argv) {
         test_dsa();
         test_dh_rfc7748();
         test_hpke();
+        test_mlkem();
     }
     __finally2 { openssl_cleanup(); }
 

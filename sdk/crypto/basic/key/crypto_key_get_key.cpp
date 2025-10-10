@@ -72,6 +72,9 @@ return_t crypto_key::get_public_key(const EVP_PKEY* pkey, binary_t& pub1, binary
             case crypto_kty_t::kty_dsa: {
                 // do nothing
             } break;
+            case crypto_kty_t::kty_mlkem: {
+                // TODO
+            } break;
         }
     }
     return ret;
@@ -85,7 +88,7 @@ return_t crypto_key::ec_uncompressed_key(const EVP_PKEY* pkey, binary_t& uncompr
             __leave2;
         }
 
-        crypto_kty_t kty = typeof_crypto_key(pkey);
+        crypto_kty_t kty = ktyof_evp_pkey(pkey);
         if (kty_ec != kty) {
             ret = errorcode_t::different_type;
             __leave2;
@@ -111,7 +114,7 @@ return_t crypto_key::ec_compressed_key(const EVP_PKEY* pkey, binary_t& compresse
             __leave2;
         }
 
-        crypto_kty_t kty = typeof_crypto_key(pkey);
+        crypto_kty_t kty = ktyof_evp_pkey(pkey);
         if (kty_ec != kty) {
             ret = errorcode_t::different_type;
             __leave2;
@@ -188,6 +191,9 @@ return_t crypto_key::get_private_key(const EVP_PKEY* pkey, binary_t& priv) {
                     priv = iter->second;
                 }
             } break;
+            case crypto_kty_t::kty_mlkem: {
+                // TODO
+            } break;
         }
     }
     return ret;
@@ -231,7 +237,7 @@ return_t crypto_key::get_key(const EVP_PKEY* pkey, int flags, binary_t& pub, bin
         pub.clear();
         priv.clear();
 
-        crypto_kty_t kty = typeof_crypto_key(pkey);
+        crypto_kty_t kty = ktyof_evp_pkey(pkey);
         crypt_datamap_t datamap;
         crypt_datamap_t::iterator iter;
 
@@ -299,6 +305,9 @@ return_t crypto_key::get_key(const EVP_PKEY* pkey, int flags, binary_t& pub, bin
                 if (private_key & flags) {
                     lambda_get_item(crypt_item_t::item_dsa_priv, priv);
                 }
+            } break;
+            case kty_mlkem: {
+                // TODO
             } break;
             default: {
                 ret = errorcode_t::not_supported;
@@ -386,6 +395,9 @@ return_t crypto_key::get_key(const EVP_PKEY* pkey, int flags, crypto_kty_t& type
                     lambda_get_item(crypt_item_t::item_dsa_priv, priv);
                 }
             } break;
+            case crypto_kty_t::kty_mlkem: {
+                // TODO
+            } break;
         }
     }
     return ret;
@@ -439,6 +451,9 @@ return_t crypto_key::get_privkey(const EVP_PKEY* pkey, crypto_kty_t& type, binar
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
+            } break;
+            case crypto_kty_t::kty_mlkem: {
+                // TODO
             } break;
         }
     }

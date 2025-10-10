@@ -101,7 +101,7 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
                 crypto_keychain keychain;
                 uint32 nid = 0;
                 auto pkey_ske = keyexchange.find(KID_TLS_SERVER_KEY_EXCHANGE);
-                crypto_kty_t kty = typeof_crypto_key(pkey_ske);
+                crypto_kty_t kty = ktyof_evp_pkey(pkey_ske);
                 nidof_evp_pkey(pkey_ske, nid);
                 if (nid) {
                     keydesc desc(KID_TLS_CLIENT_KEY_EXCHANGE);
@@ -149,7 +149,7 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
             // kty, nid from server_key_exchange
             crypto_keychain keychain;
             uint32 nid = 0;
-            crypto_kty_t kty = typeof_crypto_key(pkey_ske);
+            crypto_kty_t kty = ktyof_evp_pkey(pkey_ske);
             nidof_evp_pkey(pkey_ske, nid);
             if (nid) {
                 keydesc desc(KID_TLS_CLIENT_KEY_EXCHANGE);
@@ -172,7 +172,7 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
         binary_t pubkey;
         auto pkey_cke = keyexchange.find(KID_TLS_CLIENT_KEY_EXCHANGE);
         if (pkey_cke) {
-            crypto_kty_t kty = typeof_crypto_key(pkey_cke);
+            crypto_kty_t kty = ktyof_evp_pkey(pkey_cke);
             if (kty_ec == kty) {
                 binary_t temp;
                 keyexchange.ec_uncompressed_key(pkey_cke, pubkey, temp);

@@ -244,7 +244,7 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
         }
 
         binary_t pubkey;
-        auto kty = typeof_crypto_key(pkey);
+        auto kty = ktyof_evp_pkey(pkey);
         if (kty_ec == kty) {
             binary_t privkey;
             keyexchange.ec_uncompressed_key(pkey, pubkey, privkey);
@@ -394,7 +394,7 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
         uint16 pubkeylen = 0;
         uint16 group = 0;
         {
-            auto kty = typeof_crypto_key(pkey);
+            auto kty = ktyof_evp_pkey(pkey);
             if (kty_ec == kty) {
                 binary_t privkey;
                 keyexchange.ec_uncompressed_key(pkey, pubkey, privkey);
@@ -457,7 +457,7 @@ return_t tls_extension_server_key_share::add_keyshare() {
                 __leave2;
             }
 
-            auto kty = typeof_crypto_key(cli_keyshare);
+            auto kty = ktyof_evp_pkey(cli_keyshare);
             uint32 nid = 0;
             nidof_evp_pkey(cli_keyshare, nid);
 

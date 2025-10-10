@@ -34,7 +34,7 @@ return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, co
             __leave2;
         }
 
-        auto kty = typeof_crypto_key(pkey);
+        auto kty = ktyof_evp_pkey(pkey);
         if (kty_okp != kty) {
             ret = errorcode_t::invalid_context;
             __leave2;
@@ -79,7 +79,7 @@ return_t openssl_sign::verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, 
             __leave2;
         }
 
-        auto kty = typeof_crypto_key(pkey);
+        auto kty = ktyof_evp_pkey(pkey);
         if (kty_okp != kty) {
             ret = errorcode_t::invalid_context;
             __leave2;

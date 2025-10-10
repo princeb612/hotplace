@@ -43,11 +43,19 @@
 #include <openssl/encoder.h>
 #include <openssl/params.h>
 #include <openssl/provider.h>
+#else
+// avoid compile error
+struct OSSL_LIB_CTX { /* dummy */
+};
 #endif
 
 #if OPENSSL_VERSION_NUMBER >= 0x30200000L
 #include <openssl/hpke.h>
 #include <openssl/thread.h>
+#endif
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#else
 #endif
 
 namespace hotplace {

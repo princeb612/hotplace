@@ -31,10 +31,14 @@ void test_ossl_encode() {
             EVP_PKEY* privkey = nullptr;
             EVP_PKEY* privkey_decoded = nullptr;
             binary_t keydata;
+            bool is_keypair = false;
 
             // generate keypair
-            ret = keychain.pkey_gen_byname(&privkey, nullptr, alg.c_str());
+            ret = keychain.pkey_gen_byname(nullptr, &privkey, alg.c_str());
             _test_case.test(ret, __FUNCTION__, "keygen %s", alg.c_str());
+
+            is_keypair = keychain.pkey_is_private(nullptr, privkey);
+            _test_case.assert(true == is_keypair, __FUNCTION__, "keypair");
 
             // ENCODER
             {
@@ -63,6 +67,9 @@ void test_ossl_encode() {
                 // key distribution
                 ret = keychain.pkey_decode(nullptr, &pubkey, keydata, key_encoding_pub_der);
                 _test_case.test(ret, __FUNCTION__, "decode public key %s", alg.c_str());
+
+                is_keypair = keychain.pkey_is_private(nullptr, pubkey);
+                _test_case.assert(false == is_keypair, __FUNCTION__, "public key");
             }
 
             EVP_PKEY_free(pubkey);

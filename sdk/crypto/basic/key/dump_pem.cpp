@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {
@@ -91,6 +92,16 @@ return_t dump_pem(const EVP_PKEY* pkey, BIO* out) {
                 PEM_write_bio_PrivateKey(out, (EVP_PKEY*)pkey, nullptr, nullptr, 0, nullptr, nullptr);
             }
             PEM_write_bio_Parameters(out, (EVP_PKEY*)pkey);
+        } else if (EVP_PKEY_KEYMGMT == type) {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+            crypto_keychain keychain;
+            binary_t keydata;
+            bool is_keypair = keychain.pkey_is_private(nullptr, pkey);
+            keychain.pkey_encode(nullptr, pkey, keydata, is_keypair ? key_encoding_priv_pem : key_encoding_pub_pem);
+            if (keydata.size()) {
+                BIO_write(out, &keydata[0], keydata.size());
+            }
+#endif
         }
     }
     __finally2 {}

@@ -141,7 +141,7 @@ return_t pqc_oqs::for_each(oqs_context* context, int opid, std::function<void(co
 #endif
 }
 
-return_t pqc_oqs::keygen(EVP_PKEY** pkey, oqs_context* context, const std::string& alg) {
+return_t pqc_oqs::keygen(oqs_context* context, EVP_PKEY** pkey, const std::string& alg) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     return_t ret = errorcode_t::success;
     __try2 {
@@ -157,7 +157,7 @@ return_t pqc_oqs::keygen(EVP_PKEY** pkey, oqs_context* context, const std::strin
         }
 
         crypto_keychain keychain;
-        ret = keychain.pkey_gen_byname(pkey, context->libctx, alg.c_str());
+        ret = keychain.pkey_gen_byname(context->libctx, pkey, alg.c_str());
     }
     __finally2 {}
     return ret;

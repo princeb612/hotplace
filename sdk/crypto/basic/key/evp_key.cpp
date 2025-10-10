@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/evp_key.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 
@@ -34,9 +35,17 @@ return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
                 nid = EC_GROUP_get_curve_name(group);
                 EC_KEY_free(ec);
             }
+        } else if (EVP_PKEY_KEYMGMT == nid) {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+            auto name = EVP_PKEY_get0_type_name(pkey);
+            if (name) {
+                nid = OBJ_txt2nid(name);
+            }
+#endif
         }
+
         if (0 == nid) {
-            ret = errorcode_t::invalid_parameter;
+            ret = errorcode_t::not_supported;
             __leave2;
         }
     }
@@ -60,34 +69,107 @@ crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
         int type = EVP_PKEY_id(pkey);
 
         switch (type) {
-            case EVP_PKEY_HMAC:
+            case EVP_PKEY_HMAC: {
                 kty = crypto_kty_t::kty_oct;
-                break;
+            } break;
             case EVP_PKEY_RSA:
-            case EVP_PKEY_RSA2:
+            case EVP_PKEY_RSA2: {
                 kty = crypto_kty_t::kty_rsa;
-                break;
-            case EVP_PKEY_RSA_PSS:
+            } break;
+            case EVP_PKEY_RSA_PSS: {
                 kty = crypto_kty_t::kty_rsapss;
-                break;
-            case EVP_PKEY_EC:
+            } break;
+            case EVP_PKEY_EC: {
                 kty = crypto_kty_t::kty_ec;
-                break;
+            } break;
             case EVP_PKEY_X25519:
             case EVP_PKEY_X448:
             case EVP_PKEY_ED25519:
-            case EVP_PKEY_ED448:
+            case EVP_PKEY_ED448: {
                 kty = crypto_kty_t::kty_okp;
-                break;
-            case EVP_PKEY_DH:
+            } break;
+            case EVP_PKEY_DH: {
                 kty = crypto_kty_t::kty_dh;
-                break;
-            case EVP_PKEY_DSA:
+            } break;
+            case EVP_PKEY_DSA: {
                 kty = crypto_kty_t::kty_dsa;
-                break;
+            } break;
+            case EVP_PKEY_KEYMGMT: {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+                auto name = EVP_PKEY_get0_type_name(pkey);
+                if (name) {
+                    auto nid = OBJ_txt2nid(name);
+                    switch (nid) {
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+                        case NID_ML_KEM_512:
+                        case NID_ML_KEM_768:
+                        case NID_ML_KEM_1024: {
+                            kty = crypto_kty_t::kty_mlkem;
+                        } break;
+#endif
+                        default: {
+                            // not supported
+                        } break;
+                    }
+                }
+#endif
+            } break;
             default:
                 break;
         }
+    }
+    return kty;
+}
+
+crypto_kty_t ktyof_evp_pkey(const EVP_PKEY* key) { return typeof_crypto_key(key); }
+
+crypto_kty_t ktyof_nid(uint32 nid) {
+    crypto_kty_t kty = crypto_kty_t::kty_unknown;
+    switch (nid) {
+        case EVP_PKEY_HMAC: {
+            kty = crypto_kty_t::kty_oct;
+        } break;
+        case EVP_PKEY_RSA:
+        case EVP_PKEY_RSA2: {
+            kty = crypto_kty_t::kty_rsa;
+        } break;
+        case EVP_PKEY_RSA_PSS: {
+            kty = crypto_kty_t::kty_rsapss;
+        } break;
+        case EVP_PKEY_EC: {
+            kty = crypto_kty_t::kty_ec;
+        } break;
+        case EVP_PKEY_X25519:
+        case EVP_PKEY_X448:
+        case EVP_PKEY_ED25519:
+        case EVP_PKEY_ED448: {
+            kty = crypto_kty_t::kty_okp;
+        } break;
+        case EVP_PKEY_DH:
+        case NID_ffdhe2048:
+        case NID_ffdhe3072:
+        case NID_ffdhe4096:
+        case NID_ffdhe6144:
+        case NID_ffdhe8192: {
+            kty = crypto_kty_t::kty_dh;
+        } break;
+        case EVP_PKEY_DSA: {
+            kty = crypto_kty_t::kty_dsa;
+        } break;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+        case NID_ML_KEM_512:
+        case NID_ML_KEM_768:
+        case NID_ML_KEM_1024: {
+            kty = crypto_kty_t::kty_mlkem;
+        } break;
+#endif
+        default: {
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            auto hint = advisor->hintof_curve_nid(nid);
+            if (hint) {
+                kty = hint->kty;  // kty_ec, kty_okp
+            }
+        } break;
     }
     return kty;
 }
@@ -103,31 +185,24 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
             __leave2;
         }
 
-        const EVP_PKEY* key = pkey;
-        int type = EVP_PKEY_id(key);
-
-        switch (type) {
-            case EVP_PKEY_HMAC:
+        auto kty = ktyof_evp_pkey(pkey);
+        switch (kty) {
+            case kty_oct: {
                 result = true;
-                break;
-            case EVP_PKEY_RSA:
-            case EVP_PKEY_RSA2:
-            case EVP_PKEY_RSA_PSS:
-                if (nullptr != RSA_get0_d(EVP_PKEY_get0_RSA((EVP_PKEY*)key))) {
+            } break;
+            case kty_rsa:
+            case kty_rsapss: {
+                if (nullptr != RSA_get0_d(EVP_PKEY_get0_RSA((EVP_PKEY*)pkey))) {
                     result = true;
                 }
-                break;
-            case EVP_PKEY_EC: {
-                const BIGNUM* bn = EC_KEY_get0_private_key(EVP_PKEY_get0_EC_KEY((EVP_PKEY*)key));
+            } break;
+            case kty_ec: {
+                const BIGNUM* bn = EC_KEY_get0_private_key(EVP_PKEY_get0_EC_KEY((EVP_PKEY*)pkey));
                 if (nullptr != bn) {
                     result = true;
                 }
-                break;
-            }
-            case EVP_PKEY_X25519:
-            case EVP_PKEY_X448:
-            case EVP_PKEY_ED25519:
-            case EVP_PKEY_ED448: {
+            } break;
+            case kty_okp: {
                 binary_t bin_d;
                 size_t len_d = 256;
                 bin_d.resize(len_d);
@@ -136,9 +211,8 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
                 if (1 == check) {
                     result = true;
                 }
-                break;
-            }
-            case EVP_PKEY_DH: {
+            } break;
+            case kty_dh: {
                 auto dh = EVP_PKEY_get0_DH((EVP_PKEY*)pkey);
                 const BIGNUM* bn_priv = nullptr;
                 DH_get0_key(dh, nullptr, &bn_priv);
@@ -146,7 +220,7 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
                     result = true;
                 }
             } break;
-            case EVP_PKEY_DSA: {
+            case kty_dsa: {
                 auto dsa = EVP_PKEY_get0_DSA((EVP_PKEY*)pkey);
                 const BIGNUM* bn_pub = nullptr;
                 const BIGNUM* bn_priv = nullptr;
@@ -159,9 +233,13 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
                     }
                 }
             } break;
-            default:
-                ret = errorcode_t::not_supported;
-                break;
+            case kty_mlkem: {
+                crypto_keychain keychain;
+                result = keychain.pkey_is_private(nullptr, pkey);
+            } break;
+            default: {
+                ret = not_supported;
+            } break;
         }
     }
     __finally2 {}
@@ -177,7 +255,7 @@ const char* nameof_key_type(crypto_kty_t type) {
 
 bool is_kindof(const EVP_PKEY* pkey, crypto_kty_t type) {
     bool test = false;
-    crypto_kty_t kty = typeof_crypto_key(pkey);
+    crypto_kty_t kty = ktyof_evp_pkey(pkey);
 
     test = (kty == type);
     return test;

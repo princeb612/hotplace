@@ -55,7 +55,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, crypt_sig_t sig) {
         }
 
         // uint32 type = EVP_PKEY_id (pkey);
-        crypto_kty_t kty = typeof_crypto_key(pkey);
+        crypto_kty_t kty = ktyof_evp_pkey(pkey);
         uint32 nid = 0;
         nidof_evp_pkey(pkey, nid);
 

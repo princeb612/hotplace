@@ -38,7 +38,7 @@ void test_oqs_dsa() {
                     auto encoding_privkey = key_encoding_priv_der;
 
                     // generate keypair
-                    oqs.keygen(&pkey_keygen, context, alg.c_str());
+                    oqs.keygen(context, &pkey_keygen, alg.c_str());
                     _test_case.assert(nullptr != pkey_keygen, __FUNCTION__, "keygen %s", alg.c_str());
 
                     // public key

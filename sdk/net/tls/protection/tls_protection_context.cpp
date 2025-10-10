@@ -177,7 +177,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
             auto& keys = tlsadvisor->get_keys();
             auto lambda = [&](crypto_key_object* k, void* param) -> void {
                 auto pkey = k->get_pkey();
-                auto kty = typeof_crypto_key(pkey);
+                auto kty = ktyof_evp_pkey(pkey);
                 ktypes_set.insert(kty);
             };
             keys.for_each(lambda, nullptr);

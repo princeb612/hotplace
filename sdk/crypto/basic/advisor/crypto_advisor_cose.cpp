@@ -80,7 +80,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, cose_alg_t alg) {
         if (nullptr == hint) {
             __leave2;
         }
-        crypto_kty_t kty = typeof_crypto_key(pkey);
+        crypto_kty_t kty = ktyof_evp_pkey(pkey);
         bool cmp1 = (hint->kty == kty);
         bool cmp2 = true;
         if (crypto_kty_t::kty_ec == kty) {

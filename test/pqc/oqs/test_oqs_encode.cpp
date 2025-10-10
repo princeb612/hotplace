@@ -27,7 +27,7 @@ void do_encode(oqs_context* context, const std::string& alg, key_encoding_t enco
 
     std::string name_encoding = advisor->nameof_encoding(encoding);
 
-    pqc.keygen(&pkey, context, alg.c_str());
+    pqc.keygen(context, &pkey, alg.c_str());
     _test_case.assert(nullptr != pkey, __FUNCTION__, "keygen %s", alg.c_str());
 
     ret = pqc.encode(context, pkey, key_encoded, encoding, passphrase);

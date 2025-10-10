@@ -410,6 +410,8 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
             case EVP_PKEY_DSA:
                 stream->printf("DSA");
                 break;
+            case EVP_PKEY_KEYMGMT:
+                break;
             default:
                 ret = errorcode_t::not_supported;
                 break;
@@ -581,8 +583,22 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                 pkey_param_printf(crypt_item_t::item_dsa_q, bin_q, stream, hex_part, indent);
                 pkey_param_printf(crypt_item_t::item_dsa_g, bin_g, stream, hex_part, indent);
             } break;
-            default:
-                break;
+            default: {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+                BIO* bio = BIO_new(BIO_s_mem());
+                EVP_PKEY_print_params(bio, pkey, indent, nullptr);
+                char temp[16];
+                int l = 0;
+                while (1) {
+                    l = BIO_read(bio, temp, sizeof(temp));
+                    if (0 >= l) {
+                        break;
+                    }
+                    stream->write(temp, l);
+                }
+                BIO_free(bio);
+#endif
+            } break;
         }
 
         /* PEM */

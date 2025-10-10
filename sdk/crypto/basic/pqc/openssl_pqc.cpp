@@ -15,14 +15,13 @@
 namespace hotplace {
 namespace crypto {
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-
 openssl_pqc::openssl_pqc() {}
 
 openssl_pqc::~openssl_pqc() {}
 
 return_t openssl_pqc::encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
@@ -33,11 +32,15 @@ return_t openssl_pqc::encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_
         ret = keychain.pkey_encode(libctx, pkey, keydata, encoding, passphrase);
     }
     __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
 return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
@@ -48,11 +51,15 @@ return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary
         ret = keychain.pkey_decode(libctx, pkey, keydata, encoding, passphrase);
     }
     __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
 return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     EVP_PKEY_CTX* pkey_ctx = nullptr;
     size_t keycapsule_len = 0;
     size_t sharedsecret_len = 0;
@@ -93,11 +100,15 @@ return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, binary_t& 
         }
     }
     __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
 return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     EVP_PKEY_CTX* pkey_ctx = nullptr;
     size_t sharedsecret_len = 0;
     int test = 0;
@@ -137,11 +148,15 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const bina
         }
     }
     __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
 return_t openssl_pqc::sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     EVP_MD_CTX* md_context = nullptr;
     int rc = 1;
     size_t dgstsize = 0;
@@ -180,11 +195,15 @@ return_t openssl_pqc::sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* s
         signature.resize(dgstsize);
     }
     __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
 return_t openssl_pqc::verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     EVP_MD_CTX* md_context = nullptr;
     int rc = 1;
 
@@ -229,10 +248,11 @@ return_t openssl_pqc::verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t*
             EVP_MD_CTX_destroy(md_context);
         }
     }
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
-
-#endif
 
 }  // namespace crypto
 }  // namespace hotplace

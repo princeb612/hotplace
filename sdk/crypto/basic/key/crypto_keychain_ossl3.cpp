@@ -15,10 +15,9 @@
 namespace hotplace {
 namespace crypto {
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-
-return_t crypto_keychain::pkey_gen_byname(EVP_PKEY** pkey, OSSL_LIB_CTX* libctx, const char* name) {
+return_t crypto_keychain::pkey_gen_byname(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const char* name) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     __try2 {
         if (nullptr == pkey || nullptr == name) {
             ret = errorcode_t::invalid_parameter;
@@ -41,11 +40,15 @@ return_t crypto_keychain::pkey_gen_byname(EVP_PKEY** pkey, OSSL_LIB_CTX* libctx,
         }
     }
     __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
 return_t crypto_keychain::pkey_encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     OSSL_ENCODER_CTX* encoder_context = nullptr;
     BIO* mem = nullptr;
     __try2 {
@@ -101,11 +104,15 @@ return_t crypto_keychain::pkey_encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
         BIO_free(mem);
         OSSL_ENCODER_CTX_free(encoder_context);
     }
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
 return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     BIO* buf = nullptr;
     OSSL_DECODER_CTX* decoder_context = nullptr;
     __try2 {
@@ -150,10 +157,61 @@ return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, con
         BIO_free(buf);
         OSSL_DECODER_CTX_free(decoder_context);
     }
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
+bool crypto_keychain::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey) {
+    bool ret_value = false;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    return_t ret = errorcode_t::success;
+    OSSL_ENCODER_CTX* encoder_context = nullptr;
+    BIO* mem = nullptr;
+    __try2 {
+        if (nullptr == pkey) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+
+        key_encoding_params_t params;
+        advisor->get_encoding_params(key_encoding_priv_der, params);
+
+        encoder_context = OSSL_ENCODER_CTX_new_for_pkey(pkey, params.selection, params.format, params.structure, nullptr);
+        if (encoder_context) {
+            unsigned char* pub = nullptr;
+            size_t publen = 0;
+            BUF_MEM* buf = nullptr;
+            int rc = 0;
+
+            mem = BIO_new(BIO_s_mem());
+            rc = OSSL_ENCODER_to_bio(encoder_context, mem);
+            if (rc < 1) {
+                __leave2;
+            }
+
+            BIO_get_mem_ptr(mem, &buf);
+            if (nullptr == buf || 0 == buf->length) {
+                __leave2;
+            }
+
+            ret_value = true;
+        } else {
+            ret = failed;
+        }
+    }
+    __finally2 {
+        BIO_free(mem);
+        OSSL_ENCODER_CTX_free(encoder_context);
+    }
+#else
+    ret = errorcode_t::not_supported;
 #endif
+    return ret_value;
+}
 
 }  // namespace crypto
 }  // namespace hotplace

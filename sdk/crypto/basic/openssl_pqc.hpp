@@ -16,7 +16,16 @@
 namespace hotplace {
 namespace crypto {
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+/**
+ * @brief ML-KEM
+ * @remarks
+ *          ML-KEM - openssl-3.5 required
+ *              "ML-KEM-512"    1454    EVP_PKEY_ML_KEM_512
+ *              "ML-KEM-768"    1455    EVP_PKEY_ML_KEM_768
+ *              "ML-KEM-1024"   1456    EVP_PKEY_ML_KEM_1024
+ *
+ *          oqs-provider - openssl-3.0 required
+ */
 
 class openssl_pqc {
    public:
@@ -32,8 +41,6 @@ class openssl_pqc {
     return_t sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature);
     return_t verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature);
 };
-
-#endif
 
 }  // namespace crypto
 }  // namespace hotplace

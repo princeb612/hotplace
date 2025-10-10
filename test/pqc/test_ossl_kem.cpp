@@ -37,16 +37,19 @@ void test_ossl_kem() {
             // generate keypair
             // https://docs.openssl.org/3.5/man7/EVP_PKEY-ML-KEM/
 
-            ret = keychain.pkey_gen_byname(&privkey, nullptr, alg.c_str());
-            // "ML-KEM-512"    1454    EVP_PKEY_ML_KEM_512
-            // "ML-KEM-768"    1455    EVP_PKEY_ML_KEM_768
-            // "ML-KEM-1024"   1456    EVP_PKEY_ML_KEM_1024
-            // _logger->writeln([&](basic_stream& bs) -> void {
-            //     // EVP_PKEY_id          -1
-            //     // EVP_PKEY_get_base_id  0
-            //     auto type = EVP_PKEY_id(privkey);
-            //     bs.printf("type %i", type);
-            // });
+            ret = keychain.pkey_gen_byname(nullptr, &privkey, alg.c_str());
+            _logger->writeln([&](basic_stream& bs) -> void {
+                // EVP_PKEY_id          -1
+                // EVP_PKEY_get_base_id  0
+                auto type = EVP_PKEY_id(privkey);
+                if (EVP_PKEY_KEYMGMT == type) {
+                    // provider-specific if -1 (check EVP_PKEY_get0_type_name or EVP_PKEY_is_a)
+                    auto name = EVP_PKEY_get0_type_name(privkey);
+                    bs << "type " << name << " " << OBJ_txt2nid(name);
+                } else {
+                    bs.printf("type %i", type);
+                }
+            });
             _test_case.test(ret, __FUNCTION__, "keygen %s", alg.c_str());
 
             // key distribution

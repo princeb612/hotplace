@@ -199,8 +199,10 @@ flowchart LR
 | feature | API                        | minimum version |
 | --      | --                         | --              |
 |         | EVP_PKEY_CTX_new_from_name | openssl 3.0~    |
+|         | EVP_PKEY_get0_type_name    | openssl 3.0~    |
 | HPKE    | OSSL_HPKE_seal             | openssl 3.2~    |
 | KDF     | OSSL_set_max_threads       | openssl 3.2~    |
+| MLKEM   |                            | openssl 3.5~    |
 
 ## TODO
 

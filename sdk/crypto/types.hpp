@@ -352,20 +352,25 @@ enum tls_named_curve_t : uint16 {
  * @sa crypto_key::get_key
  * @remarks
  * if there are both public_key | asn1public_key in the flag, asn1public_key has higher priority.
- * | key type   | public_key               | asn1public_key | private_key  |
- * | kty_oct    | N/A                      | N/A            | item_hmac_k  |
- * | kty_okp    | item_ec_x                | item_asn1der   | item_ec_d    |
- * | kty_ec     | item_ec_pub_uncompressed | item_asn1der   | item_ec_d    |
- * | kty_rsa    | N/A                      | item_asn1der   | item_rsa_d   |
- * | kty_rsapss | N/A                      | item_asn1der   | item_rsa_d   |
- * | kty_dh     | item_dh_pub              | item_asn1der   | item_dh_priv |
- * | kty_dsa    | N/A                      | item_asn1der   | item_dsa_x   |
+ * | key type   | public_key               | asn1public_key | private_key     |
+ * | kty_oct    | N/A                      | N/A            | item_hmac_k     |
+ * | kty_okp    | item_ec_x                | item_asn1der   | item_ec_d       |
+ * | kty_ec     | item_ec_pub_uncompressed | item_asn1der   | item_ec_d       |
+ * | kty_rsa    | N/A                      | item_asn1der   | item_rsa_d      |
+ * | kty_rsapss | N/A                      | item_asn1der   | item_rsa_d      |
+ * | kty_dh     | item_dh_pub              | item_asn1der   | item_dh_priv    |
+ * | kty_dsa    | N/A                      | item_asn1der   | item_dsa_x      |
+ * | kty_mlkem  | TODO                     | TODO           | item_mlkem_priv |
  */
 enum crypt_access_t {
     public_key = (1 << 0),      // simple and common representation
     private_key = (1 << 1),     //
     asn1public_key = (1 << 2),  // ASN.1 DER representation
 };
+
+// "ML-KEM-512"    1454    EVP_PKEY_ML_KEM_512
+// "ML-KEM-768"    1455    EVP_PKEY_ML_KEM_768
+// "ML-KEM-1024"   1456    EVP_PKEY_ML_KEM_1024
 
 enum crypto_kty_t : uint16 {
     kty_unknown = 0,
@@ -377,6 +382,7 @@ enum crypto_kty_t : uint16 {
     kty_dh = 5,          // NID_dhKeyAgreement
     kty_rsapss = 6,      // NID_rsassaPss
     kty_dsa = 7,         // NID_dsa
+    kty_mlkem = 8,       // NID_ML_KEM_512, NID_ML_KEM_768, NID_ML_KEM_1024
     kty_bad = 0xffff,
 };
 
@@ -464,6 +470,9 @@ enum crypt_item_t : uint16 {
     item_dsa_g = 83,
     item_dsa_y = 84,
     item_dsa_x = item_dsa_priv,
+
+    item_mlkem_pub = item_asn1der,
+    item_mlkem_priv = 85,
 
     /* string */
     item_header = 128,  // p - header (protected_header.decoded)
@@ -1371,17 +1380,20 @@ enum crypt_poweredby_t {
 
 /* nid (use openssl nid definition for convenience) */
 enum nid_t : uint32 {
-    nid_oct = 855,         // EVP_PKEY_HMAC, NID_hmac
-    nid_rsa = 6,           // EVP_PKEY_RSA, NID_rsaEncryption
-    nid_rsa2 = 19,         // EVP_PKEY_RSA2, NID_rsa
-    nid_rsapss = 912,      // EVP_PKEY_RSA_PSS, NID_rsassaPss
+    nid_dh = 28,           // NID_dhKeyAgreement (EVP_PKEY_DH)
+    nid_dsa = 116,         // NID_dsa
     nid_ffdhe2048 = 1126,  // NID_ffdhe2048
     nid_ffdhe3072 = 1127,  // NID_ffdhe3072
     nid_ffdhe4096 = 1128,  // NID_ffdhe4096
     nid_ffdhe6144 = 1129,  // NID_ffdhe6144
     nid_ffdhe8192 = 1130,  // NID_ffdhe8192
-    nid_dh = 28,           // NID_dhKeyAgreement (EVP_PKEY_DH)
-    nid_dsa = 116,         // NID_dsa
+    nid_mlkem512 = 1454,   // NID_ML_KEM_512
+    nid_mlkem768 = 1455,   // NID_ML_KEM_768
+    nid_mlkem1024 = 1456,  // NID_ML_KEM_1024
+    nid_oct = 855,         // EVP_PKEY_HMAC, NID_hmac
+    nid_rsa = 6,           // EVP_PKEY_RSA, NID_rsaEncryption
+    nid_rsa2 = 19,         // EVP_PKEY_RSA2, NID_rsa
+    nid_rsapss = 912,      // EVP_PKEY_RSA_PSS, NID_rsassaPss
 };
 
 enum authenticated_encryption_flag_t : uint16 {

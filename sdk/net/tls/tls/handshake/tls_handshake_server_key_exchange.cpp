@@ -245,7 +245,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     }
 
     auto pkey_cert = tlsadvisor->get_key(session, KID_TLS_SERVER_CERTIFICATE_PRIVATE);
-    auto kty_cert = typeof_crypto_key(pkey_cert);
+    auto kty_cert = ktyof_evp_pkey(pkey_cert);
 
     uint16 sigalg = 0;
     {

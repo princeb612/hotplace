@@ -52,7 +52,7 @@ class pqc_oqs {
      *          pqc.for_each(context, OSSL_OP_SIGNATURE, [&](const std::string& alg, int flags) -> void {});
      */
     return_t for_each(oqs_context* context, int opid, std::function<void(const std::string&, int)> func);
-    return_t keygen(EVP_PKEY** pkey, oqs_context* context, const std::string& alg);
+    return_t keygen(oqs_context* context, EVP_PKEY** pkey, const std::string& alg);
     /**
      * @brief   encode key
      * @param   oqs_context* context [in]

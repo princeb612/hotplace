@@ -136,14 +136,15 @@ class crypto_keychain {
      */
     virtual return_t write_file(crypto_key* cryptokey, keyflag_t mode, const char* file, int flag = 0);
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     /**
      * @brief keygen
-     * @param EVP_PKEY** pkey [out]
      * @param OSSL_LIB_CTX* libctx [inopt]
+     * @param EVP_PKEY** pkey [out]
      * @param const char* name [in]
+     * @return error code (see error.hpp)
+     *         not_supported - openssl 3.5 required
      */
-    return_t pkey_gen_byname(EVP_PKEY** pkey, OSSL_LIB_CTX* libctx, const char* name);
+    return_t pkey_gen_byname(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const char* name);
     /**
      * @brief encode
      * @param OSSL_LIB_CTX* libctx [inopt]
@@ -151,6 +152,8 @@ class crypto_keychain {
      * @param binary_t& keydata [out]
      * @param key_encoding_t encoding [in]
      * @param const char* passphrase [inopt]
+     * @return error code (see error.hpp)
+     *         not_supported - openssl 3.5 required
      */
     return_t pkey_encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
     /**
@@ -160,9 +163,18 @@ class crypto_keychain {
      * @param const binary_t& keydata [in]
      * @param key_encoding_t encoding [in]
      * @param const char* passphrase [inopt]
+     * @return error code (see error.hpp)
+     *         not_supported - openssl 3.5 required
      */
     return_t pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
-#endif
+    /**
+     * @brief encode
+     * @param OSSL_LIB_CTX* libctx [in]
+     * @param EVP_PKEY* pkey [in]
+     * @return error code (see error.hpp)
+     *         not_supported - openssl 3.5 required
+     */
+    bool pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey);
 
     /**
      * @brief   RSA
@@ -439,6 +451,25 @@ class crypto_keychain {
                          const keydesc& desc);
     return_t add_dsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const char* p, const char* q, const char* g,
                             const keydesc& desc);
+
+    /**
+     * @brief ML-KEM
+     * @param uint32 nid [in] NID_ML_KEM_512, NID_ML_KEM_768, NID_ML_KEM_1024
+     * @remarks openssl-3.5 required
+     */
+    return_t add_mlkem(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+    return_t add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, const keydesc& desc);
+    return_t add_mlkem_priv(crypto_key* cryptokey, uint32 nid, const binary_t& keypair, const keydesc& desc);
+
+    return_t add_mlkem_pub_b64(crypto_key* cryptokey, uint32 nid, const char* pub, const keydesc& desc);
+    return_t add_mlkem_pub_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, const keydesc& desc);
+    return_t add_mlkem_pub_b16(crypto_key* cryptokey, uint32 nid, const char* pub, const keydesc& desc);
+    return_t add_mlkem_pub_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, const keydesc& desc);
+
+    return_t add_mlkem_priv_b64(crypto_key* cryptokey, uint32 nid, const char* keypair, const keydesc& desc);
+    return_t add_mlkem_priv_b64u(crypto_key* cryptokey, uint32 nid, const char* keypair, const keydesc& desc);
+    return_t add_mlkem_priv_b16(crypto_key* cryptokey, uint32 nid, const char* keypair, const keydesc& desc);
+    return_t add_mlkem_priv_b16rfc(crypto_key* cryptokey, uint32 nid, const char* keypair, const keydesc& desc);
 
    protected:
 };

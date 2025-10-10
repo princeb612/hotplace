@@ -613,7 +613,7 @@ class crypto_key {
 /**
  * @param crypto_key_object key [in]
  */
-crypto_kty_t typeof_crypto_key(crypto_key_object& key);
+crypto_kty_t ktyof_evp_pkey(crypto_key_object& key);
 
 /**
  * @brief   dump

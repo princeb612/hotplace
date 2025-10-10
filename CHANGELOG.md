@@ -28,7 +28,7 @@
     * CBOR
 
 * details
-  * Revision 888
+  * Revision 889
     * [tested] PQC KEM (openssl-3.5)
   * Revision 884
     * [tested] oqs-provider DSA

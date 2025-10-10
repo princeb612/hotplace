@@ -177,7 +177,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, jwa_t alg) {
         if (nullptr == hint_enc) {
             __leave2;
         }
-        crypto_kty_t kty = typeof_crypto_key(pkey);
+        crypto_kty_t kty = ktyof_evp_pkey(pkey);
         bool cmp1 = (hint_enc->kty == kty);
         bool cmp2 = (hint_enc->alt == crypto_kty_t::kty_unknown) ? true : (hint_enc->alt == kty);
         test = (cmp1 || cmp2);
@@ -195,7 +195,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, jws_t sig) {
         }
 
         // uint32 type = EVP_PKEY_id (pkey);
-        crypto_kty_t kty = typeof_crypto_key(pkey);
+        crypto_kty_t kty = ktyof_evp_pkey(pkey);
         uint32 nid = 0;
         nidof_evp_pkey(pkey, nid);
 

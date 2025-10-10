@@ -48,6 +48,10 @@ namespace crypto {
  *    #define NID_X9_62_prime256v1       415
  *    #define NID_secp384r1              715
  *    #define NID_secp521r1              716
+ *
+ *    #define NID_ML_KEM_512            1454
+ *    #define NID_ML_KEM_768            1455
+ *    #define NID_ML_KEM_1024           1456
  */
 return_t nidof_evp_pkey(const EVP_PKEY* key, uint32& nid);
 /**
@@ -57,9 +61,13 @@ return_t nidof_evp_pkey(const EVP_PKEY* key, uint32& nid);
 bool kindof_ecc(const EVP_PKEY* pkey);
 
 /**
+ * @brfief key type
  * @param const EVP_PKEY* key [in]
+ * @return crypto_kty_t
  */
 crypto_kty_t typeof_crypto_key(const EVP_PKEY* key);
+crypto_kty_t ktyof_evp_pkey(const EVP_PKEY* key);
+crypto_kty_t ktyof_nid(uint32 nid);
 
 /**
  * @brief is private key
@@ -72,6 +80,8 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result);
 /**
  * @brief kindof
  * @param crypto_kty_t type [in]
+ * @return bool
+ * @remarks kty_ec, kty_okp
  */
 bool kindof_ecc(crypto_kty_t type);
 /**

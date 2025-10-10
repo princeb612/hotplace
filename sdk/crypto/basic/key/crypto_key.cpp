@@ -60,7 +60,7 @@ return_t crypto_key::add(crypto_key_object key, bool up_ref) {
             __leave2;
         }
 
-        crypto_kty_t type = typeof_crypto_key(key);
+        crypto_kty_t type = ktyof_evp_pkey(key);
         if (crypto_kty_t::kty_unknown == type) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -168,7 +168,7 @@ void crypto_key::erase(const std::string& kid) {
     }
 }
 
-crypto_kty_t typeof_crypto_key(crypto_key_object& key) { return typeof_crypto_key(key.get_pkey()); }
+crypto_kty_t ktyof_evp_pkey(crypto_key_object& key) { return ktyof_evp_pkey(key.get_pkey()); }
 
 }  // namespace crypto
 }  // namespace hotplace

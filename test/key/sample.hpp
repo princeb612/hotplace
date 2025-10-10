@@ -28,5 +28,6 @@ void test_der();
 void test_dsa();
 void test_dh_rfc7748();
 void test_hpke();
+void test_mlkem();
 
 #endif

@@ -28,7 +28,7 @@ return_t crypto_key::extract(const EVP_PKEY* pkey, int flags, crypto_kty_t& type
             __leave2;
         }
 
-        type = typeof_crypto_key(pkey);
+        type = ktyof_evp_pkey(pkey);
         switch (type) {
             case crypto_kty_t::kty_oct:
                 ret = extract_oct(pkey, flags, type, datamap, preserve);
@@ -66,7 +66,7 @@ return_t crypto_key::extract_oct(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             __leave2;
         }
 
-        type = typeof_crypto_key(pkey);
+        type = ktyof_evp_pkey(pkey);
 
         if (crypto_kty_t::kty_oct != type) {
             ret = errorcode_t::different_type;
@@ -98,7 +98,7 @@ return_t crypto_key::extract_rsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             __leave2;
         }
 
-        type = typeof_crypto_key(pkey);
+        type = ktyof_evp_pkey(pkey);
 
         if ((crypto_kty_t::kty_rsa != type) && (crypto_kty_t::kty_rsapss != type)) {
             ret = errorcode_t::different_type;
@@ -163,7 +163,7 @@ return_t crypto_key::extract_ec(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
             __leave2;
         }
 
-        type = typeof_crypto_key(pkey);
+        type = ktyof_evp_pkey(pkey);
 
         if (crypto_kty_t::kty_ec != type) {
             ret = errorcode_t::different_type;
@@ -266,7 +266,7 @@ return_t crypto_key::extract_okp(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             __leave2;
         }
 
-        type = typeof_crypto_key(pkey);
+        type = ktyof_evp_pkey(pkey);
 
         if (crypto_kty_t::kty_okp != type) {
             ret = errorcode_t::different_type;
@@ -344,7 +344,7 @@ return_t crypto_key::extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
             __leave2;
         }
 
-        type = typeof_crypto_key(pkey);
+        type = ktyof_evp_pkey(pkey);
 
         if (crypto_kty_t::kty_dh != type) {
             ret = errorcode_t::different_type;
@@ -407,7 +407,7 @@ return_t crypto_key::extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             __leave2;
         }
 
-        type = typeof_crypto_key(pkey);
+        type = ktyof_evp_pkey(pkey);
 
         if (crypto_kty_t::kty_dsa != type) {
             ret = errorcode_t::different_type;
