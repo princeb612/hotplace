@@ -170,29 +170,36 @@ return_t crypto_keychain::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pk
 
 return_t crypto_keychain::pkey_encode_raw(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding) {
     return_t ret = errorcode_t::success;
-    size_t len = 0;
-    switch (encoding) {
-        case key_encoding_priv_pem:
-        case key_encoding_encrypted_priv_pem:
-        case key_encoding_pub_pem:
-        case key_encoding_priv_der:
-        case key_encoding_encrypted_priv_der:
-        case key_encoding_pub_der: {
-            ret = not_supported;
-        } break;
-        case key_encoding_priv_raw: {
-            EVP_PKEY_get_raw_private_key(pkey, nullptr, &len);
-            keydata.resize(len);
-            EVP_PKEY_get_raw_private_key(pkey, len ? &keydata[0] : nullptr, &len);
-            keydata.resize(len);
-        } break;
-        case key_encoding_pub_raw: {
-            EVP_PKEY_get_raw_public_key(pkey, nullptr, &len);
-            keydata.resize(len);
-            EVP_PKEY_get_raw_public_key(pkey, len ? &keydata[0] : nullptr, &len);
-            keydata.resize(len);
-        } break;
+    __try2 {
+        if (nullptr == pkey) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        size_t len = 0;
+        switch (encoding) {
+            case key_encoding_priv_pem:
+            case key_encoding_encrypted_priv_pem:
+            case key_encoding_pub_pem:
+            case key_encoding_priv_der:
+            case key_encoding_encrypted_priv_der:
+            case key_encoding_pub_der: {
+                ret = not_supported;
+            } break;
+            case key_encoding_priv_raw: {
+                EVP_PKEY_get_raw_private_key(pkey, nullptr, &len);
+                keydata.resize(len);
+                EVP_PKEY_get_raw_private_key(pkey, len ? &keydata[0] : nullptr, &len);
+                keydata.resize(len);
+            } break;
+            case key_encoding_pub_raw: {
+                EVP_PKEY_get_raw_public_key(pkey, nullptr, &len);
+                keydata.resize(len);
+                EVP_PKEY_get_raw_public_key(pkey, len ? &keydata[0] : nullptr, &len);
+                keydata.resize(len);
+            } break;
+        }
     }
+    __finally2 {}
     return ret;
 }
 

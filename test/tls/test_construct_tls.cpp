@@ -954,6 +954,7 @@ void test_construct_tls13_mlkem() {
     }
     tlsadvisor->set_default_tls_groups();
 #else
+    _test_case.begin("TLS 1.3 keyshare MLKEM");
     _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
 #endif
 }

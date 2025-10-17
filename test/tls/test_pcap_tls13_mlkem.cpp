@@ -220,6 +220,8 @@ void test_pcap_tls13_mlkem() {
         },
     };
 
+    _test_case.begin("TLS 1.3 keyshare MLKEM encoding");
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
     return_t ret = errorcode_t::success;
     crypto_keychain keychain;
     for (size_t i = 0; i < RTL_NUMBER_OF(table); i++) {
@@ -240,4 +242,7 @@ void test_pcap_tls13_mlkem() {
 
         EVP_PKEY_free(pkey);
     }
+#else
+    _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
+#endif
 }
