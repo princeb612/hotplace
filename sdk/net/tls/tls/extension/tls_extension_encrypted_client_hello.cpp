@@ -72,23 +72,22 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.println("   > %s %i", constexpr_client_hello_type, client_hello_type);
-            dbs.println("   > %s %i %s", constexpr_kdf, kdf, tlsadvisor->kdf_id_string(kdf).c_str());
-            dbs.println("   > %s %i %s", constexpr_aead, aead, tlsadvisor->aead_alg_string(aead).c_str());
-            dbs.println("   > %s %i", constexpr_config_id, config_id);
-            dbs.println("   > %s %i", constexpr_enc_len, enc_len);
-            if (check_trace_level(loglevel_debug)) {
-                dump_memory(enc, &dbs, 16, 4, 0x0, dump_notrunc);
-            }
-            dbs.println("   > %s %i", constexpr_payload_len, enc_payload_len);
-            if (check_trace_level(loglevel_debug)) {
-                dump_memory(enc_payload, &dbs, 16, 4, 0x0, dump_notrunc);
-            }
-
-            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
+                dbs.println("   > %s %i", constexpr_client_hello_type, client_hello_type);
+                dbs.println("   > %s %i %s", constexpr_kdf, kdf, tlsadvisor->kdf_id_string(kdf).c_str());
+                dbs.println("   > %s %i %s", constexpr_aead, aead, tlsadvisor->aead_alg_string(aead).c_str());
+                dbs.println("   > %s %i", constexpr_config_id, config_id);
+                dbs.println("   > %s %i", constexpr_enc_len, enc_len);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(enc, &dbs, 16, 4, 0x0, dump_notrunc);
+                }
+                dbs.println("   > %s %i", constexpr_payload_len, enc_payload_len);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(enc_payload, &dbs, 16, 4, 0x0, dump_notrunc);
+                }
+            });
         }
 #endif
 

@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
@@ -45,7 +46,7 @@ return_t crypto_advisor::build() {
     unsigned long osslver = OpenSSL_version_num();
 #if defined DEBUG
     if (istraceable(trace_category_crypto)) {
-        trace_debug_event(trace_category_crypto, trace_event_openssl_info, "openssl version %x\n", osslver);
+        trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("openssl version %x", osslver); });
     }
 #endif
 
@@ -89,7 +90,8 @@ return_t crypto_advisor::build() {
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
                 // __trace(errorcode_t::debug, "%s", nameof_alg(item));
-                trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport, "no %s\n", nameof_alg(item));
+                trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport,
+                                  [&](basic_stream& dbs) -> void { dbs.println("no %s", nameof_alg(item)); });
             }
 #endif
         }
@@ -132,7 +134,8 @@ return_t crypto_advisor::build() {
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
                 // __trace(errorcode_t::debug, "%s", nameof_alg(item));
-                trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport, "no %s\n", nameof_alg(item));
+                trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport,
+                                  [&](basic_stream& dbs) -> void { dbs.println("no %s", nameof_alg(item)); });
             }
 #endif
         }
@@ -202,6 +205,15 @@ return_t crypto_advisor::build() {
 
         if (item->name) {
             set_feature(item->name, advisor_feature_curve);
+            if (item->aka1) {
+                set_feature(item->aka1, advisor_feature_curve);
+            }
+            if (item->aka2) {
+                set_feature(item->aka2, advisor_feature_curve);
+            }
+            if (item->aka3) {
+                set_feature(item->aka3, advisor_feature_curve);
+            }
             _curve_name_map.insert({item->name, item});
         }
         if (item->tlsgroup) {
@@ -277,12 +289,16 @@ return_t crypto_advisor::build() {
             const char* feature;
             unsigned long version;
         } _table[] = {
-            // scrypt 3.0
+            // 3.0 scrypt
             {"scrypt", 0x30000000},
-            // argon 3.2
+            // 3.2 argon
             {"argon2d", 0x30200000},
             {"argon2i", 0x30200000},
             {"argon2id", 0x30200000},
+            // 3.5 ML-KEM
+            {"ML-KEM-512", 0x30500000},
+            {"ML-KEM-768", 0x30500000},
+            {"ML-KEM-1024", 0x30500000},
         };
         for (auto item : _table) {
             _features.insert({item.feature, advisor_feature_version});

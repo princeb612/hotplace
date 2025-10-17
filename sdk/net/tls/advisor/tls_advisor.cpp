@@ -67,6 +67,9 @@ void tls_advisor::load_resource() {
 
     load_tls_version();
     load_etc();
+
+    set_default_ciphersuites();
+    set_default_tls_groups();
 }
 
 void tls_advisor::load_tls_parameters() {
@@ -124,7 +127,9 @@ void tls_advisor::load_tls_parameters() {
         auto item = tls_groups + i;
         _supported_group_codes.insert({item->code, item});
         _supported_group_names.insert({item->name, item});
-        _supported_group_nids.insert({item->nid, item});
+        if (item->nid) {
+            _supported_group_nids.insert({item->nid, item});
+        }
     }
 }
 
@@ -640,9 +645,7 @@ return_t tls_advisor::set_ciphersuites(const char* ciphersuites) {
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("# set ciphersuite(s)");
-            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void { dbs.println("# set ciphersuite(s)"); });
         }
 #endif
 
@@ -654,9 +657,8 @@ return_t tls_advisor::set_ciphersuites(const char* ciphersuites) {
                 _ciphersuites.insert(code);
 #if defined DEBUG
                 if (istraceable(trace_category_net)) {
-                    basic_stream dbs;
-                    dbs.println(" > 0x%02x %s", hint->code, hint->name_iana);
-                    trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                    trace_debug_event(trace_category_net, trace_event_tls_protection,
+                                      [&](basic_stream& dbs) -> void { dbs.println(" > 0x%02x %s", hint->code, hint->name_iana); });
                 }
 #endif
             }
@@ -685,6 +687,59 @@ bool tls_advisor::test_ciphersuite(uint16 cs) {
     } else {
         auto iter = _ciphersuites.find(cs);
         if (_ciphersuites.end() != iter) {
+            ret = true;
+        }
+    }
+    return ret;
+}
+
+return_t tls_advisor::set_tls_groups(const char* groups) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == groups) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto lambda = [&](const std::string& item) -> void {
+            auto hint = tlsadvisor->hintof_tls_group(item);
+            if (hint && (tls_flag_support & hint->flags)) {
+                auto code = hint->code;
+                _groups.insert(code);
+#if defined DEBUG
+                if (istraceable(trace_category_net)) {
+                    trace_debug_event(trace_category_net, trace_event_tls_protection,
+                                      [&](basic_stream& dbs) -> void { dbs.println(" > 0x%02x %s", hint->code, hint->name); });
+                }
+#endif
+            }
+        };
+
+        split_context_t* context = nullptr;
+        split_begin(&context, groups, ":");
+        split_foreach(context, lambda);
+        split_end(context);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t tls_advisor::set_default_tls_groups() {
+    return_t ret = errorcode_t::success;
+    _groups.clear();
+    _groups.insert(tls_named_curve_x25519);
+    _groups.insert(tls_named_curve_MLKEM768);
+    _groups.insert(tls_named_curve_secp384r1);
+    return ret;
+}
+
+bool tls_advisor::test_tls_group(uint16 group) {
+    bool ret = false;
+    if (_groups.empty()) {
+        ret = true;
+    } else {
+        auto iter = _groups.find(group);
+        if (_groups.end() != iter) {
             ret = true;
         }
     }
@@ -744,12 +799,12 @@ return_t tls_advisor::negotiate_alpn(tls_handshake* handshake, const byte_t* alp
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            basic_stream dbs;
-            dbs.println("> protocols");
-            dump_memory(alpn, size, &dbs, 16, 3, 0, dump_notrunc);
-            dbs.println("> pattern");
-            dump_memory(_prot, &dbs, 16, 3, 0, dump_notrunc);
-            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                dbs.println("> protocols");
+                dump_memory(alpn, size, &dbs, 16, 3, 0, dump_notrunc);
+                dbs.println("> pattern");
+                dump_memory(_prot, &dbs, 16, 3, 0, dump_notrunc);
+            });
         }
 #endif
     }

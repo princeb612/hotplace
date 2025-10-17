@@ -104,9 +104,8 @@ return_t multiplexer_controller::event_loop_new(multiplexer_controller_context_t
 
 #if defined DEBUG
         if (istraceable(trace_category_internal)) {
-            basic_stream dbs;
-            dbs.println("- event_loop_new tid %08x", tid);
-            trace_debug_event(trace_category_internal, trace_event_multiplexer, &dbs);
+            trace_debug_event(trace_category_internal, trace_event_multiplexer,
+                              [&](basic_stream& dbs) -> void { dbs.println("- event_loop_new tid %08x", tid); });
         }
 #endif
     }
@@ -167,9 +166,9 @@ return_t multiplexer_controller::event_loop_break_concurrent(multiplexer_control
 
 #if defined DEBUG
         if (istraceable(trace_category_internal)) {
-            basic_stream dbs;
-            dbs.println("- event_loop_break_concurrent : break %zi/%zi", concurrent, context->control.size());
-            trace_debug_event(trace_category_internal, trace_event_multiplexer, &dbs);
+            trace_debug_event(trace_category_internal, trace_event_multiplexer, [&](basic_stream& dbs) -> void {
+                dbs.println("- event_loop_break_concurrent : break %zi/%zi", concurrent, context->control.size());
+            });
         }
 #endif
 
@@ -206,9 +205,8 @@ bool multiplexer_controller::event_loop_test_broken(multiplexer_controller_conte
                 ret_value = true;
 #if defined DEBUG
                 if (istraceable(trace_category_internal)) {
-                    basic_stream dbs;
-                    dbs.println("- event_loop_test_broken : broken detected");
-                    trace_debug_event(trace_category_internal, trace_event_multiplexer, &dbs);
+                    trace_debug_event(trace_category_internal, trace_event_multiplexer,
+                                      [&](basic_stream& dbs) -> void { dbs.println("- event_loop_test_broken : broken detected"); });
                 }
 #endif
             }

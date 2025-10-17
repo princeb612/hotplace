@@ -131,6 +131,9 @@ void play_pcap(tls_session* session, const pcap_testvector* testvector, size_t s
         const pcap_testvector* item = testvector + i;
 
         binary_t bin_record = std::move(base16_decode_rfc(item->record));
+        if (bin_record.empty()) {
+            continue;
+        }
         dump_record(item->desc, session, item->dir, bin_record);
 
         session->get_alert(item->dir, lambda_test_fatal_alert);
@@ -291,6 +294,8 @@ int main(int argc, char** argv) {
             test_alert();
 
             test_pcap_tls13_http1();
+            test_pcap_tls13_mlkem();
+            test_construct_tls13_mlkem();
         }
     } else {
         dump_clienthello();

@@ -129,14 +129,14 @@ void tls_session::update_session_status(session_status_t status) {
     }
 #if defined DEBUG
     if (istraceable(trace_category_net, loglevel_debug)) {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        basic_stream dbs;
-        dbs.println("\e[1;34msession status %08x (update %08x)\e[0m", _status, status);
-        dbs.println("> update status 0x%08x", status);
-        tlsadvisor->enum_session_status_string(status, [&](const char* desc) -> void { dbs.println("  %s", desc); });
-        dbs.println("> session status 0x%08x", _status);
-        tlsadvisor->enum_session_status_string(_status, [&](const char* desc) -> void { dbs.println("  %s", desc); });
-        trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+        trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            dbs.println("\e[1;34msession status %08x (update %08x)\e[0m", _status, status);
+            dbs.println("> update status 0x%08x", status);
+            tlsadvisor->enum_session_status_string(status, [&](const char* desc) -> void { dbs.println("  %s", desc); });
+            dbs.println("> session status 0x%08x", _status);
+            tlsadvisor->enum_session_status_string(_status, [&](const char* desc) -> void { dbs.println("  %s", desc); });
+        });
     }
 #endif
 }
@@ -180,10 +180,10 @@ return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, b
 
 #if defined DEBUG
     if (istraceable(trace_category_net, loglevel_debug)) {
-        basic_stream dbs;
-        dbs.println("\e[1;34msession status %08x (wait%s %08x) %s\e[0m", _status, waitall ? "all" : "", status,
-                    status == (_status & status) ? "true" : "false");
-        trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+        trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+            dbs.println("\e[1;34msession status %08x (wait%s %08x) %s\e[0m", _status, waitall ? "all" : "", status,
+                        status == (_status & status) ? "true" : "false");
+        });
     }
 #endif
 
@@ -253,9 +253,9 @@ void tls_session::session_info::push_alert(uint8 level, uint8 desc) {
 #if defined DEBUG
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     if (istraceable(trace_category_net)) {
-        basic_stream dbs;
-        dbs.println("\e[1;31malert level:%s desc:%s\e[0m", tlsadvisor->alert_level_string(level).c_str(), tlsadvisor->alert_desc_string(desc).c_str());
-        trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+        trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+            dbs.println("\e[1;31malert level:%s desc:%s\e[0m", tlsadvisor->alert_level_string(level).c_str(), tlsadvisor->alert_desc_string(desc).c_str());
+        });
     }
 #endif
 }

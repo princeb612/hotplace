@@ -91,19 +91,20 @@ return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const b
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("   > %s 0x%I64x (%I64i)", constexpr_sequence_number, sequence_number, sequence_number);
-            dbs.println("   > %s 0x%I64x (%I64i)", constexpr_retire_prior_to, retire_prior_to, retire_prior_to);
-            dbs.println("   > %s 0x%zx (%zi) %s", constexpr_connection_id, connection_id.size(), connection_id.size(), base16_encode(connection_id).c_str());
-            if (check_trace_level(loglevel_debug)) {
-                dump_memory(connection_id, &dbs, 16, 5, 0x0, dump_notrunc);
-            }
-            dbs.println("   > %s 0x%zx (%zi) %s", constexpr_stateless_reset_token, stateless_reset_token.size(), stateless_reset_token.size(),
-                        base16_encode(stateless_reset_token).c_str());
-            if (check_trace_level(loglevel_debug)) {
-                dump_memory(stateless_reset_token, &dbs, 16, 5, 0x0, dump_notrunc);
-            }
-            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                dbs.println("   > %s 0x%I64x (%I64i)", constexpr_sequence_number, sequence_number, sequence_number);
+                dbs.println("   > %s 0x%I64x (%I64i)", constexpr_retire_prior_to, retire_prior_to, retire_prior_to);
+                dbs.println("   > %s 0x%zx (%zi) %s", constexpr_connection_id, connection_id.size(), connection_id.size(),
+                            base16_encode(connection_id).c_str());
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(connection_id, &dbs, 16, 5, 0x0, dump_notrunc);
+                }
+                dbs.println("   > %s 0x%zx (%zi) %s", constexpr_stateless_reset_token, stateless_reset_token.size(), stateless_reset_token.size(),
+                            base16_encode(stateless_reset_token).c_str());
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(stateless_reset_token, &dbs, 16, 5, 0x0, dump_notrunc);
+                }
+            });
         }
 #endif
     }
@@ -146,9 +147,9 @@ return_t quic_frame_new_connection_id::do_write_body(tls_direction_t dir, binary
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("\e[1;34m  + frame %s 0x%x(%i)\e[0m", tlsadvisor->quic_frame_type_string(type).c_str(), type, type);
-            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                dbs.println("\e[1;34m  + frame %s 0x%x(%i)\e[0m", tlsadvisor->quic_frame_type_string(type).c_str(), type, type);
+            });
         }
 #endif
     }

@@ -73,6 +73,15 @@ openssl_tls_context& openssl_tls_context::set_cipher_list(const char* list) {
     return *this;
 }
 
+openssl_tls_context& openssl_tls_context::set_group_list(const char* list) {
+    if (list) {
+        if (_ctx) {
+            SSL_CTX_set1_groups_list(_ctx, list);
+        }
+    }
+    return *this;
+}
+
 openssl_tls_context& openssl_tls_context::set_use_dh(int bits) {
     return_t ret = errorcode_t::success;
     DH* dh = nullptr;

@@ -189,13 +189,13 @@ return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, 
 
 #if defined DEBUG
         if (istraceable(trace_category_internal, loglevel_debug)) {
-            // X509_print_fp(stdout, x509);
-            basic_stream dbs;
-            auto dbio = BIO_new(BIO_s_mem());
-            X509_print(dbio, x509);  // x509 -> dbio
-            read_bio(&dbs, dbio);    // dbio -> dbs
-            BIO_free(dbio);
-            trace_debug_event(trace_category_internal, trace_event_internal, &dbs);
+            trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
+                // X509_print_fp(stdout, x509);
+                auto dbio = BIO_new(BIO_s_mem());
+                X509_print(dbio, x509);  // x509 -> dbio
+                read_bio(&dbs, dbio);    // dbio -> dbs
+                BIO_free(dbio);
+            });
         }
 #endif
 

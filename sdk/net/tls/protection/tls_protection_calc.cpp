@@ -273,7 +273,6 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             if (is_kindof_tls13()) {
                 binary_t secret_handshake_client;
                 binary_t secret_handshake_server;
-
                 if (use_pre_master_secret()) {
                     // from SSLKEYLOGFILE
                     secret_handshake_client = get_secrets().get(tls_secret_c_hs_traffic);
@@ -283,59 +282,74 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     //  psk_ke      ... pre_shared_key
                     //  psk_dhe_ke  ... key_share
                     binary_t shared_secret;
-                    {
-                        const EVP_PKEY *pkey_priv = nullptr;
-                        const EVP_PKEY *pkey_pub = nullptr;
 
-                        pkey_priv = get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
-                        if (pkey_priv) {
-                            // in server ... priv(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC)
-                            pkey_pub = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);  // client_hello
+                    const EVP_PKEY *pkey_priv = nullptr;
+                    const EVP_PKEY *pkey_pub = nullptr;
+
+                    auto group = get_protection_context().get0_supported_group();
+                    auto hint_group = tlsadvisor->hintof_tls_group(group);
+                    if (hint_group) {
+                        auto kty_group = hint_group->kty;
+                        if (kty_mlkem == kty_group) {
+                            // tls_extension_key_share
+                            shared_secret = get_secrets().get(tls_context_shared_secret);
                         } else {
-                            // in client ... priv(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC)
-                            pkey_priv = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
-                            pkey_pub = get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello
-                        }
-
-                        // warn_retry
-                        // If the server selects an (EC)DHE group and the client did not offer a compatible "key_share" extension in the initial ClientHello,
-                        // the server MUST respond with a HelloRetryRequest (Section 4.1.4) message.
-
-                        if (nullptr == pkey_priv || nullptr == pkey_pub) {
-                            if (is_kindof_tls13()) {
-                                ret = errorcode_t::warn_retry;  // HRR
+                            pkey_priv = get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
+                            if (pkey_priv) {
+                                // in server ... priv(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC)
+                                pkey_pub = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);  // client_hello
+                            } else {
+                                // in client ... priv(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC)
+                                pkey_priv = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
+                                pkey_pub = get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello
                             }
+
+                            // warn_retry
+                            // If the server selects an (EC)DHE group and the client did not offer a compatible "key_share" extension in the initial
+                            // ClientHello, the server MUST respond with a HelloRetryRequest (Section 4.1.4) message.
+
+                            if (nullptr == pkey_priv || nullptr == pkey_pub) {
+                                if (is_kindof_tls13()) {
+                                    ret = errorcode_t::warn_retry;  // HRR
+                                }
+                                __leave2;
+                            }
+
+                            uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
+                            if (group_enforced) {
+                                auto hint = tlsadvisor->hintof_tls_group(group_enforced);
+                                // enforcing
+                                auto pkey_ch = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, hint->kty);
+                                if (nullptr == pkey_ch) {
+                                    pkey_ch = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, hint->kty);
+                                }
+                                uint32 nid = 0;
+                                nidof_evp_pkey(pkey_ch, nid);
+                                if (nid != hint->nid) {
+                                    ret = errorcode_t::warn_retry;
+                                    __leave2;  // HRR
+                                }
+                            } else {
+                                uint32 nid_priv = 0;
+                                uint32 nid_pub = 0;
+                                nidof_evp_pkey(pkey_priv, nid_priv);
+                                nidof_evp_pkey(pkey_pub, nid_pub);
+
+                                if (nid_priv != nid_pub) {
+                                    ret = errorcode_t::warn_retry;
+                                    __leave2;  // HRR
+                                }
+                            }
+
+                            ret = dh_key_agreement(pkey_priv, pkey_pub, shared_secret);
+
+                            get_secrets().assign(tls_context_shared_secret, shared_secret);
+                        }
+                    } else {
+                        if (is_kindof_tls13()) {
+                            ret = errorcode_t::warn_retry;  // HRR
                             __leave2;
                         }
-
-                        uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
-                        if (group_enforced) {
-                            auto hint = tlsadvisor->hintof_tls_group(group_enforced);
-                            // enforcing
-                            auto pkey_ch = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
-                            if (nullptr == pkey_ch) {
-                                pkey_ch = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
-                            }
-                            uint32 nid = 0;
-                            nidof_evp_pkey(pkey_ch, nid);
-                            if (nid != hint->nid) {
-                                ret = errorcode_t::warn_retry;
-                                __leave2;  // HRR
-                            }
-                        } else {
-                            uint32 nid_priv = 0;
-                            uint32 nid_pub = 0;
-                            nidof_evp_pkey(pkey_priv, nid_priv);
-                            nidof_evp_pkey(pkey_pub, nid_pub);
-                            if (nid_priv != nid_pub) {
-                                ret = errorcode_t::warn_retry;
-                                __leave2;  // HRR
-                            }
-                        }
-
-                        ret = dh_key_agreement(pkey_priv, pkey_pub, shared_secret);
-
-                        get_secrets().assign(tls_context_shared_secret, shared_secret);
                     }
 
                     binary_t early_secret;
@@ -545,14 +559,14 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
 #if defined DEBUG
                 if (istraceable(trace_category_net)) {
-                    basic_stream dbs;
-                    dbs.printf("\e[1;36m");
-                    dbs.println("> hmac alg %x", hmac_alg);
-                    dbs.println("> client hello random %s", base16_encode(client_hello_random).c_str());
-                    dbs.println("> server hello random %s", base16_encode(server_hello_random).c_str());
-                    dbs.println("> pre master secret %s", base16_encode(pre_master_secret).c_str());
-                    dbs.printf("\e[0m");
-                    trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                        dbs.printf("\e[1;36m");
+                        dbs.println("> hmac alg %x", hmac_alg);
+                        dbs.println("> client hello random %s", base16_encode(client_hello_random).c_str());
+                        dbs.println("> server hello random %s", base16_encode(server_hello_random).c_str());
+                        dbs.println("> pre master secret %s", base16_encode(pre_master_secret).c_str());
+                        dbs.printf("\e[0m");
+                    });
                 }
 #endif
 
@@ -623,13 +637,13 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 // CLIENT_RANDOM
-                basic_stream dbs;
-                std::string keylog_client_random = std::move(base16_encode(get_secrets().get(tls_context_client_hello_random)));
-                std::string keylog_master_secret = std::move(base16_encode(master_secret));
-                dbs.printf("\e[1;36m");
-                dbs.println("# CLIENT_RANDOM %s %s", keylog_client_random.c_str(), keylog_master_secret.c_str());
-                dbs.printf("\e[0m");
-                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                    std::string keylog_client_random = std::move(base16_encode(get_secrets().get(tls_context_client_hello_random)));
+                    std::string keylog_master_secret = std::move(base16_encode(master_secret));
+                    dbs.printf("\e[1;36m");
+                    dbs.println("# CLIENT_RANDOM %s %s", keylog_client_random.c_str(), keylog_master_secret.c_str());
+                    dbs.printf("\e[0m");
+                });
             }
 #endif
 
@@ -750,27 +764,29 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
-                dbs.printf("\e[1;36m");
-                dbs.println("> cipher_suite %s", tlsadvisor->hintof_cipher_suite(cs)->name_iana);
-                dbs.println("> master_secret %s", base16_encode(master_secret).c_str());
-                dbs.println("> client_hello_random %s", base16_encode(client_hello_random).c_str());
-                dbs.println("> server_hello_random %s", base16_encode(server_hello_random).c_str());
-                dbs.println("> keyblock %s", base16_encode(p).c_str());
-                if (is_cbc) {
-                    dbs.println("> secret_client_mac_key[%08x] %s (%zi-octet)", tls_secret_client_mac_key, base16_encode(secret_client_mac_key).c_str(),
-                                secret_client_mac_key.size());
-                    dbs.println("> secret_server_mac_key[%08x] %s (%zi-octet)", tls_secret_server_mac_key, base16_encode(secret_server_mac_key).c_str(),
-                                secret_server_mac_key.size());
-                }
-                dbs.println("> secret_client_key[%08x] %s (%zi-octet)", tls_secret_client_key, base16_encode(secret_client_key).c_str(),
-                            secret_client_key.size());
-                dbs.println("> secret_server_key[%08x] %s (%zi-octet)", tls_secret_server_key, base16_encode(secret_server_key).c_str(),
-                            secret_server_key.size());
-                dbs.println("> secret_client_iv[%08x] %s (%zi-octet)", tls_secret_client_iv, base16_encode(secret_client_iv).c_str(), secret_client_iv.size());
-                dbs.println("> secret_server_iv[%08x] %s (%zi-octet)", tls_secret_server_iv, base16_encode(secret_server_iv).c_str(), secret_server_iv.size());
-                dbs.printf("\e[0m");
-                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                    dbs.printf("\e[1;36m");
+                    dbs.println("> cipher_suite %s", tlsadvisor->hintof_cipher_suite(cs)->name_iana);
+                    dbs.println("> master_secret %s", base16_encode(master_secret).c_str());
+                    dbs.println("> client_hello_random %s", base16_encode(client_hello_random).c_str());
+                    dbs.println("> server_hello_random %s", base16_encode(server_hello_random).c_str());
+                    dbs.println("> keyblock %s", base16_encode(p).c_str());
+                    if (is_cbc) {
+                        dbs.println("> secret_client_mac_key[%08x] %s (%zi-octet)", tls_secret_client_mac_key, base16_encode(secret_client_mac_key).c_str(),
+                                    secret_client_mac_key.size());
+                        dbs.println("> secret_server_mac_key[%08x] %s (%zi-octet)", tls_secret_server_mac_key, base16_encode(secret_server_mac_key).c_str(),
+                                    secret_server_mac_key.size());
+                    }
+                    dbs.println("> secret_client_key[%08x] %s (%zi-octet)", tls_secret_client_key, base16_encode(secret_client_key).c_str(),
+                                secret_client_key.size());
+                    dbs.println("> secret_server_key[%08x] %s (%zi-octet)", tls_secret_server_key, base16_encode(secret_server_key).c_str(),
+                                secret_server_key.size());
+                    dbs.println("> secret_client_iv[%08x] %s (%zi-octet)", tls_secret_client_iv, base16_encode(secret_client_iv).c_str(),
+                                secret_client_iv.size());
+                    dbs.println("> secret_server_iv[%08x] %s (%zi-octet)", tls_secret_server_iv, base16_encode(secret_server_iv).c_str(),
+                                secret_server_iv.size());
+                    dbs.printf("\e[0m");
+                });
             }
 #endif
 
@@ -874,12 +890,12 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
             }
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
-                dbs.println("> finished");
-                dbs.println("  key   %s", base16_encode(fin_key).c_str());
-                dbs.println("  hash  %s", base16_encode(fin_hash).c_str());
-                dbs.println("  maced %s", base16_encode(maced).c_str());
-                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                    dbs.println("> finished");
+                    dbs.println("  key   %s", base16_encode(fin_key).c_str());
+                    dbs.println("  hash  %s", base16_encode(fin_hash).c_str());
+                    dbs.println("  maced %s", base16_encode(maced).c_str());
+                });
             }
 #endif
         } else {
@@ -912,12 +928,12 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
             }
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
-                dbs.println("> finished");
-                dbs.println("  key   %s", base16_encode(fin_key).c_str());
-                dbs.println("  hash  %s", base16_encode(fin_hash).c_str());
-                dbs.println("  maced %s", base16_encode(maced).c_str());
-                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                    dbs.println("> finished");
+                    dbs.println("  key   %s", base16_encode(fin_key).c_str());
+                    dbs.println("  hash  %s", base16_encode(fin_hash).c_str());
+                    dbs.println("  maced %s", base16_encode(maced).c_str());
+                });
             }
 #endif
         }

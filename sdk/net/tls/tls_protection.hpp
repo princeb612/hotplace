@@ -70,6 +70,7 @@ class protection_context {
 
     uint16 get0_cipher_suite();
     uint16 get0_supported_version();
+    uint16 get0_supported_group();
     uint16 select_signature_algorithm(crypto_kty_t kty);
 
     void clear();

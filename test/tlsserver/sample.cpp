@@ -42,7 +42,8 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-tls12", "allow TLS 1.2", [](OPTION& o, char* param) -> void { o.flags |= option_flag_allow_tls12; }).optional()
                 << t_cmdarg_t<OPTION>("-T", "use trial adapter", [](OPTION& o, char* param) -> void { o.flags |= option_flag_trial; }).optional()
                 << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.flags |= option_flag_keylog; }).optional()
-                << t_cmdarg_t<OPTION>("-cs", "ciphersuite", [](OPTION& o, char* param) -> void { o.cs = param; }).optional().preced();
+                << t_cmdarg_t<OPTION>("-cs", "ciphersuite", [](OPTION& o, char* param) -> void { o.cs = param; }).optional().preced()
+                << t_cmdarg_t<OPTION>("-group", "group", [](OPTION& o, char* param) -> void { o.group = param; }).optional().preced();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

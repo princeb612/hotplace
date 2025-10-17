@@ -471,8 +471,8 @@ enum crypt_item_t : uint16 {
     item_dsa_y = 84,
     item_dsa_x = item_dsa_priv,
 
-    item_mlkem_pub = item_asn1der,
-    item_mlkem_priv = 85,
+    item_mlkem_pub = 85,
+    item_mlkem_priv = 86,
 
     /* string */
     item_header = 128,  // p - header (protected_header.decoded)
@@ -1408,6 +1408,8 @@ enum authenticated_encryption_flag_t : uint16 {
 
 #define KEY_ENCODING_PEM 0x00000001
 #define KEY_ENCODING_DER 0x00000002
+#define KEY_ENCODING_RAW 0x00000003
+#define KEY_ENCODING_FORMAT 0x000000ff
 #define KEY_ENCODING_PRIV_ENCRYPTED 0xc0000000
 #define KEY_ENCODING_PRIV 0x80000000
 #define KEY_ENCODING_PUB 0x00000000
@@ -1419,6 +1421,8 @@ enum key_encoding_t : uint32 {
     key_encoding_priv_der = KEY_ENCODING_PRIV | KEY_ENCODING_DER,
     key_encoding_encrypted_priv_der = KEY_ENCODING_PRIV_ENCRYPTED | KEY_ENCODING_DER,
     key_encoding_pub_der = KEY_ENCODING_PUB | KEY_ENCODING_DER,
+    key_encoding_priv_raw = KEY_ENCODING_PRIV | KEY_ENCODING_RAW,
+    key_encoding_pub_raw = KEY_ENCODING_PUB | KEY_ENCODING_RAW,
 };
 
 struct key_encoding_params_t {

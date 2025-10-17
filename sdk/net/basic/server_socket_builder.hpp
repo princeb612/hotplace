@@ -35,14 +35,21 @@ class server_socket_builder {
      */
     server_socket_builder& set(uint32 scheme);
     /**
+     * @brief   certificate
      * @param   const std::string& server_cert [in]
      * @param   const std::string& server_key [in]
      */
     server_socket_builder& set_certificate(const std::string& server_cert, const std::string& server_key);
     /**
+     * @brif    cipher suites
      * @param   const std::string& cipher_suites [in]
      */
     server_socket_builder& set_ciphersuites(const std::string& cipher_suites);
+    /**
+     * @brief   groups
+     * @param   const std::string& groups [in]
+     */
+    server_socket_builder& set_groups(const std::string& groups);
     /**
      * @param   int verify_peer [in]
      */
@@ -68,6 +75,7 @@ class server_socket_builder {
     std::string _server_cert;
     std::string _server_key;
     std::string _cipher_suites;
+    std::string _groups;
     int _verify;
 };
 

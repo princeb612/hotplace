@@ -97,14 +97,13 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            tls_advisor* advisor = tls_advisor::get_instance();
+            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                tls_advisor* advisor = tls_advisor::get_instance();
 
-            dbs.println("\e[1;35m > %s\e[0m", constexpr_alert);
-            dbs.println(" > %s %i %s", constexpr_level, level, advisor->alert_level_string(level).c_str());
-            dbs.println(" > %s %i %s", constexpr_desc, desc, advisor->alert_desc_string(desc).c_str());
-
-            trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+                dbs.println("\e[1;35m > %s\e[0m", constexpr_alert);
+                dbs.println(" > %s %i %s", constexpr_level, level, advisor->alert_level_string(level).c_str());
+                dbs.println(" > %s %i %s", constexpr_desc, desc, advisor->alert_desc_string(desc).c_str());
+            });
         }
 #endif
     }

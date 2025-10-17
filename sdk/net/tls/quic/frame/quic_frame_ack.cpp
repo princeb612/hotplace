@@ -200,9 +200,9 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("\e[1;34m  + frame %s 0x%x(%i)\e[0m", tlsadvisor->quic_frame_type_string(type).c_str(), type, type);
-            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                dbs.println("\e[1;34m  + frame %s 0x%x(%i)\e[0m", tlsadvisor->quic_frame_type_string(type).c_str(), type, type);
+            });
         }
 #endif
     }

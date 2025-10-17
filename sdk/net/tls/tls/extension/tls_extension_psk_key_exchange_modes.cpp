@@ -57,15 +57,15 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.println("   > %s", constexpr_modes);
-            int i = 0;
-            for (auto m : _modes) {
-                dbs.println("     [%i] %i %s", i++, m, tlsadvisor->psk_key_exchange_mode_name(m).c_str());
-            }
-            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
+                dbs.println("   > %s", constexpr_modes);
+                int i = 0;
+                for (auto m : _modes) {
+                    dbs.println("     [%i] %i %s", i++, m, tlsadvisor->psk_key_exchange_mode_name(m).c_str());
+                }
+            });
         }
 #endif
     }

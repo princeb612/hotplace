@@ -46,13 +46,12 @@ return_t tls_extension_alps::do_read_body(tls_direction_t dir, const byte_t* str
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("   > %s %i", constexpr_alps_len, alps_len);
-            if (check_trace_level(loglevel_debug)) {
-                dump_memory(alpn, &dbs, 16, 4, 0x0, dump_notrunc);
-            }
-
-            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                dbs.println("   > %s %i", constexpr_alps_len, alps_len);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(alpn, &dbs, 16, 4, 0x0, dump_notrunc);
+                }
+            });
         }
 #endif
 

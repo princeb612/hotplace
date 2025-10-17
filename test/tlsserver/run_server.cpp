@@ -8,6 +8,9 @@
  *          ctrl + c
  *      test.2
  *          test-tlsclient
+ *      test.3
+ *          ./test-tlsserver.exe -r -k -T --trace -tls13
+ *          openssl s_client -connect localhost:9000 -state -msg -trace -debug -keylogfile sslkeylog -tls1_3 -groups MLKEM512:MLKEM768:MLKEM1024
  *
  * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpauth, httpserver2
  *
@@ -97,11 +100,16 @@ return_t echo_server(void*) {
             } else {
                 ciphersuites += option.cs;
             }
+            std::string group;
+            if (option.group.empty()) {
+            } else {
+                group += option.group;
+            }
 
             _logger->writeln("ciphersuites %s", ciphersuites.c_str());
 
             server_socket_builder builder;
-            tls_socket = builder.set(flags).set_certificate("rsa.crt", "rsa.key").set_ciphersuites(ciphersuites).set_verify(0).build();
+            tls_socket = builder.set(flags).set_certificate("rsa.crt", "rsa.key").set_ciphersuites(ciphersuites).set_groups(group).set_verify(0).build();
         }
 
         server_conf conf;

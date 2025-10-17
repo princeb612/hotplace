@@ -14,6 +14,7 @@
 
 #include <functional>
 #include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/trace.hpp>
 #include <list>
@@ -95,6 +96,7 @@ enum trace_event_net_t {
 void set_trace_debug(std::function<void(trace_category_t category, uint32 event, stream_t* s)> f);
 void trace_debug_event(trace_category_t category, uint32 event, stream_t* s);
 void trace_debug_event(trace_category_t category, uint32 event, const char* fmt, ...);
+void trace_debug_event(trace_category_t category, uint32 event, std::function<void(basic_stream& bs)> f);
 void trace_debug_filter(trace_category_t category, bool filter);
 bool trace_debug_filtered(trace_category_t category);
 /**

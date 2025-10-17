@@ -790,9 +790,8 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
             }
 #if defined DEBUG
             if (istraceable(trace_category_crypto)) {
-                basic_stream dbs;
-                dbs.println("process_keydistribution alg %i (%s)", alg, hint->name);
-                trace_debug_event(trace_category_crypto, trace_event_cose_keydistribution, &dbs);
+                trace_debug_event(trace_category_crypto, trace_event_cose_keydistribution,
+                                  [&](basic_stream& dbs) -> void { dbs.println("process_keydistribution alg %i (%s)", alg, hint->name); });
             }
 #endif
 
@@ -922,9 +921,8 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
 
                 auto dump = [&](const char* text, binary_t& bin) -> void {
                     if (bin.size()) {
-                        basic_stream dbs;
-                        dbs.println("  %-10s %s", text ? text : "", base16_encode(bin).c_str());
-                        trace_debug_event(trace_category_crypto, trace_event_cose_keydistribution, &dbs);
+                        trace_debug_event(trace_category_crypto, trace_event_cose_keydistribution,
+                                          [&](basic_stream& dbs) -> void { dbs.println("  %-10s %s", text ? text : "", base16_encode(bin).c_str()); });
                     }
                 };
 

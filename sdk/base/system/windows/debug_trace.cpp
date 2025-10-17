@@ -32,24 +32,23 @@ return_t trace_backtrace(return_t errorcode) {
     if (errorcode_t::success != errorcode) {
         uint32 option = get_trace_option();
         if (trace_option_t::trace_bt & option) {
-            debug_trace_context_t* handle = nullptr;
-            basic_stream dbs;
+            trace_debug_event(trace_category_internal, trace_event_backtrace, [&](basic_stream& dbs) -> void {
+                debug_trace_context_t* handle = nullptr;
 
-            std::string errcode;
-            std::string errmsg;
-            error_advisor* advisor = error_advisor::get_instance();
-            advisor->error_message(errorcode, errcode, errmsg);
-            dbs.println("0x%08x:%s:%s", errorcode, errcode.c_str(), errmsg.c_str());
+                std::string errcode;
+                std::string errmsg;
+                error_advisor* advisor = error_advisor::get_instance();
+                advisor->error_message(errorcode, errcode, errmsg);
+                dbs.println("0x%08x:%s:%s", errorcode, errcode.c_str(), errmsg.c_str());
 
-            // PDB
-            CONTEXT rtlcontext;
-            debug_trace dbg;
-            dbg.open(&handle);
-            dbg.capture(&rtlcontext);
-            ret = dbg.trace(handle, &rtlcontext, &dbs);
-            dbg.close(handle);
-
-            trace_debug_event(trace_category_internal, trace_event_backtrace, &dbs);
+                // PDB
+                CONTEXT rtlcontext;
+                debug_trace dbg;
+                dbg.open(&handle);
+                dbg.capture(&rtlcontext);
+                ret = dbg.trace(handle, &rtlcontext, &dbs);
+                dbg.close(handle);
+            });
         }
     }
     return ret;

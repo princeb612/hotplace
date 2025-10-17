@@ -609,12 +609,12 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
             }
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
-                basic_stream dbs;
-                dbs.println("> ciphertext");
-                dump_memory(ciphertext, ciphersize, &dbs, 16, 3, 0, dump_notrunc);
-                dbs.println("> plaintext");
-                dump_memory(plaintext, size_update, &dbs, 16, 3, 0, dump_notrunc);
-                trace_debug_event(trace_category_crypto, trace_event_encryption, &dbs);
+                trace_debug_event(trace_category_crypto, trace_event_encryption, [&](basic_stream &dbs) -> void {
+                    dbs.println("> ciphertext");
+                    dump_memory(ciphertext, ciphersize, &dbs, 16, 3, 0, dump_notrunc);
+                    dbs.println("> plaintext");
+                    dump_memory(plaintext, size_update, &dbs, 16, 3, 0, dump_notrunc);
+                });
             }
 #endif
         }

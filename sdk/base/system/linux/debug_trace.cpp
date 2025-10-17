@@ -36,17 +36,15 @@ return_t trace_backtrace(return_t errorcode) {
     if (errorcode_t::success != errorcode) {
         uint32 option = get_trace_option();
         if (trace_option_t::trace_bt & option) {
-            basic_stream dbs;
+            trace_debug_event(trace_category_internal, trace_event_backtrace, [&](basic_stream& dbs) -> void {
+                std::string errcode;
+                std::string errmsg;
+                error_advisor* advisor = error_advisor::get_instance();
+                advisor->error_message(errorcode, errcode, errmsg);
+                dbs.println("0x%08x:%s:%s", errorcode, errcode.c_str(), errmsg.c_str());
 
-            std::string errcode;
-            std::string errmsg;
-            error_advisor* advisor = error_advisor::get_instance();
-            advisor->error_message(errorcode, errcode, errmsg);
-            dbs.println("0x%08x:%s:%s", errorcode, errcode.c_str(), errmsg.c_str());
-
-            debug_trace(&dbs);
-
-            trace_debug_event(trace_category_internal, trace_event_backtrace, &dbs);
+                debug_trace(&dbs);
+            });
         }
     }
     return ret;

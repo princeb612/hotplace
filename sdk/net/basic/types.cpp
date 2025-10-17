@@ -46,9 +46,7 @@ socket_context_t::~socket_context_t() {
 
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
-                basic_stream dbs;
-                dbs.println("- SSL_free %p", ssl);
-                trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
+                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("- SSL_free %p", ssl); });
             }
 #endif
         }

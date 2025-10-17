@@ -219,21 +219,20 @@ void quic_packet_handshake::dump() {
     if (istraceable(trace_category_net)) {
         quic_packet::dump();
 
-        auto session = get_session();
-        basic_stream dbs;
+        trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
+            auto session = get_session();
 
-        // length = packet number + payload
-        auto len = get_bodysize();
-        dbs.println(" > length %I64i", len);
-        // packet number
-        dbs.println(" > packet number 0x%08x (%i)", get_pn(), get_pn());
-        // payload
-        dbs.println(" > payload (len %zi)", _payload.size());
-        if (check_trace_level(loglevel_debug)) {
-            dump_memory(_payload, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
-        }
-
-        trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+            // length = packet number + payload
+            auto len = get_bodysize();
+            dbs.println(" > length %I64i", len);
+            // packet number
+            dbs.println(" > packet number 0x%08x (%i)", get_pn(), get_pn());
+            // payload
+            dbs.println(" > payload (len %zi)", _payload.size());
+            if (check_trace_level(loglevel_debug)) {
+                dump_memory(_payload, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+            }
+        });
     }
 #endif
 }

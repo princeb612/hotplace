@@ -180,7 +180,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                 auto kty = ktyof_evp_pkey(pkey);
                 ktypes_set.insert(kty);
             };
-            keys.for_each(lambda, nullptr);
+            keys.for_each(lambda);
         }
 
         {
@@ -223,9 +223,8 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                     }
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
-                        basic_stream dbs;
-                        dbs.println(" ? \e[1;33m# 0x%02x %s\e[0m", cs, hint->name_iana);
-                        trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                        trace_debug_event(trace_category_net, trace_event_tls_protection,
+                                          [&](basic_stream& dbs) -> void { dbs.println(" ? \e[1;33m# 0x%02x %s\e[0m", cs, hint->name_iana); });
                     }
 #endif
                     cs_map[hint->spec].push_back(cs);
@@ -244,9 +243,8 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
                         auto hint = tlsadvisor->hintof_cipher_suite(cs);
-                        basic_stream dbs;
-                        dbs.println(" ! \e[1;33m# 0x%02x %s\e[0m", cs, hint->name_iana);
-                        trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                        trace_debug_event(trace_category_net, trace_event_tls_protection,
+                                          [&](basic_stream& dbs) -> void { dbs.println(" ! \e[1;33m# 0x%02x %s\e[0m", cs, hint->name_iana); });
                     }
 #endif
                     break;
@@ -269,8 +267,6 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
             }
 
             if (false == test) {
-                session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
-                session->reset_session_status();
                 ret = errorcode_t::error_handshake;
                 __leave2;
             }
@@ -279,14 +275,25 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
         {
             // copy
             _signature_algorithms = rhs._signature_algorithms;
+        }
 
-            auto lambda_supported_groups = [&](uint16 group, bool*) -> void {
+        {
+            // _supported_groups
+
+            std::list<uint16> candidates;
+            rhs.for_each_supported_groups([&](uint16 group, bool*) -> void {
                 auto hint = tlsadvisor->hintof_tls_group(group);
                 if (hint && (tls_flag_support & hint->flags)) {
-                    _supported_groups.push_back(group);
+                    if (tls_flag_secure & hint->flags) {
+                        _supported_groups.push_back(group);
+                    } else {
+                        candidates.push_back(group);
+                    }
                 }
-            };
-            rhs.for_each_supported_groups(lambda_supported_groups);
+            });
+            if (_supported_groups.empty()) {
+                _supported_groups = std::move(candidates);
+            }
         }
     }
     __finally2 {}
@@ -307,6 +314,14 @@ uint16 protection_context::get0_supported_version() {
     uint16 ret_value = 0;
     if (false == _supported_versions.empty()) {
         ret_value = *_supported_versions.begin();
+    }
+    return ret_value;
+}
+
+uint16 protection_context::get0_supported_group() {
+    uint16 ret_value = 0;
+    if (false == _supported_groups.empty()) {
+        ret_value = *_supported_groups.begin();
     }
     return ret_value;
 }

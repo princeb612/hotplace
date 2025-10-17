@@ -36,9 +36,7 @@ return_t http3_frame_data::do_read_payload(const byte_t* stream, size_t size, si
     __try2 {
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("%.*s", (unsigned)size, (char*)stream);
-            trace_debug_event(trace_category_net, trace_event_http3, &dbs);
+            trace_debug_event(trace_category_net, trace_event_http3, [&](basic_stream& dbs) -> void { dbs.println("%.*s", (unsigned)size, (char*)stream); });
         }
 #endif
     }

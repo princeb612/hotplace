@@ -165,9 +165,8 @@ return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& nam
         }
 
         if (errorcode_t::success == ret) {
-            basic_stream bs;
-            bs << "index [" << index << "] " << name << "=" << value << "\n";
-            trace_debug_event(trace_category_net, trace_event_header_compression_select, &bs);
+            trace_debug_event(trace_category_net, trace_event_header_compression_select,
+                              [&](basic_stream& dbs) -> void { dbs << "index [" << index << "] " << name << "=" << value << "\n"; });
         }
     }
     __finally2 {}
@@ -217,9 +216,8 @@ return_t http_dynamic_table::commit() {
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                basic_stream bs;
-                bs.printf("+ insert entry[%zi] %s=%s\n", _inserted, name.c_str(), value.c_str());
-                trace_debug_event(trace_category_net, trace_event_header_compression_insert, &bs);
+                trace_debug_event(trace_category_net, trace_event_header_compression_insert,
+                                  [&](basic_stream& dbs) -> void { dbs.println("+ insert entry[%zi] %s=%s", _inserted, name.c_str(), value.c_str()); });
             }
 #endif
 
@@ -266,9 +264,8 @@ return_t http_dynamic_table::evict() {
 
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
-                        basic_stream bs;
-                        bs.printf("- evict  entry[%zi] %s=%s\n", entry, name.c_str(), val.c_str());
-                        trace_debug_event(trace_category_net, trace_event_header_compression_evict, &bs);
+                        trace_debug_event(trace_category_net, trace_event_header_compression_evict,
+                                          [&](basic_stream& dbs) -> void { dbs.println("- evict  entry[%zi] %s=%s", entry, name.c_str(), val.c_str()); });
                     }
 #endif
                     _dynamic_map.erase(iter);
@@ -303,9 +300,8 @@ void http_dynamic_table::set_capacity(uint32 capacity) {
 
 #if defined DEBUG
     if (istraceable(trace_category_net)) {
-        basic_stream bs;
-        bs.printf("> set capacity %zi\n", capacity);
-        trace_debug_event(trace_category_net, trace_event_header_compression_evict, &bs);
+        trace_debug_event(trace_category_net, trace_event_header_compression_evict,
+                          [&](basic_stream& dbs) -> void { dbs.println("> set capacity %zi", capacity); });
     }
 #endif
 

@@ -34,7 +34,7 @@ class tls_extension_key_share : public tls_extension {
 
     return_t add(uint16 group, tls_direction_t dir);
     return_t add(const std::string& group, tls_direction_t dir);
-    return_t add_pubkey(uint16 group, const binary_t& pubkey, const keydesc& desc);
+    return_t add_pubkey(uint16 group, const binary_t& pubkey, const keydesc& desc, tls_direction_t dir);
 };
 
 class tls_extension_client_key_share : public tls_extension_key_share {

@@ -144,29 +144,64 @@ class crypto_keychain {
      * @return error code (see error.hpp)
      *         not_supported - openssl 3.5 required
      */
-    return_t pkey_gen_byname(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const char* name);
+    return_t pkey_keygen_byname(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const char* name);
     /**
      * @brief encode
      * @param OSSL_LIB_CTX* libctx [inopt]
      * @param const EVP_PKEY* pkey [in]
      * @param binary_t& keydata [out]
      * @param key_encoding_t encoding [in]
+     *      pkey_encode_format
+     *          key_encoding_priv_pem
+     *          key_encoding_encrypted_priv_pem
+     *          key_encoding_pub_pem
+     *          key_encoding_priv_der
+     *          key_encoding_encrypted_priv_der
+     *          key_encoding_pub_der
+     *      pkey_encode_raw
+     *          key_encoding_priv_raw
+     *          key_encoding_pub_raw
      * @param const char* passphrase [inopt]
      * @return error code (see error.hpp)
      *         not_supported - openssl 3.5 required
      */
     return_t pkey_encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    return_t pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    return_t pkey_encode_raw(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding);
     /**
      * @brief encode
      * @param OSSL_LIB_CTX* libctx [in]
      * @param EVP_PKEY** pkey [out]
      * @param const binary_t& keydata [in]
      * @param key_encoding_t encoding [in]
+     *      pkey_decode_format
+     *          key_encoding_priv_pem
+     *          key_encoding_encrypted_priv_pem
+     *          key_encoding_pub_pem
+     *          key_encoding_priv_der
+     *          key_encoding_encrypted_priv_der
+     *          key_encoding_pub_der
      * @param const char* passphrase [inopt]
      * @return error code (see error.hpp)
      *         not_supported - openssl 3.5 required
      */
     return_t pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    return_t pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    /**
+     * @param key_encoding_t encoding [in]
+     *      pkey_decode_raw
+     *          key_encoding_priv_raw
+     *          key_encoding_pub_raw
+     * @example
+     *      // TLS 1.3 keyshare encoding
+     *      // name        pubkey.size
+     *      // ML-KEM-512          800
+     *      // ML-KEM-768         1184
+     *      // ML-KEM-1024        1568
+     *      pkey_decode_raw(nullptr, "ML-KEM-512", &pkey, pubkey, key_encoding_pub_raw);
+     */
+    return_t pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding);
+
     /**
      * @brief encode
      * @param OSSL_LIB_CTX* libctx [in]
@@ -458,18 +493,18 @@ class crypto_keychain {
      * @remarks openssl-3.5 required
      */
     return_t add_mlkem(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
-    return_t add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, const keydesc& desc);
-    return_t add_mlkem_priv(crypto_key* cryptokey, uint32 nid, const binary_t& keypair, const keydesc& desc);
+    return_t add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mlkem_priv(crypto_key* cryptokey, uint32 nid, const binary_t& keypair, key_encoding_t encoding, const keydesc& desc);
 
-    return_t add_mlkem_pub_b64(crypto_key* cryptokey, uint32 nid, const char* pub, const keydesc& desc);
-    return_t add_mlkem_pub_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, const keydesc& desc);
-    return_t add_mlkem_pub_b16(crypto_key* cryptokey, uint32 nid, const char* pub, const keydesc& desc);
-    return_t add_mlkem_pub_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, const keydesc& desc);
+    return_t add_mlkem_pub_b64(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mlkem_pub_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mlkem_pub_b16(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mlkem_pub_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
 
-    return_t add_mlkem_priv_b64(crypto_key* cryptokey, uint32 nid, const char* keypair, const keydesc& desc);
-    return_t add_mlkem_priv_b64u(crypto_key* cryptokey, uint32 nid, const char* keypair, const keydesc& desc);
-    return_t add_mlkem_priv_b16(crypto_key* cryptokey, uint32 nid, const char* keypair, const keydesc& desc);
-    return_t add_mlkem_priv_b16rfc(crypto_key* cryptokey, uint32 nid, const char* keypair, const keydesc& desc);
+    return_t add_mlkem_priv_b64(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mlkem_priv_b64u(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mlkem_priv_b16(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mlkem_priv_b16rfc(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
 
    protected:
 };

@@ -83,6 +83,18 @@ extern const pcap_testvector pcap_curl_http1_tls12[];
 extern const size_t sizeof_pcap_curl_http1_tls12;
 extern const pcap_testvector pcap_curl_http1_tls12_chacha20_poly1305[];
 extern const size_t sizeof_pcap_curl_http1_tls12_chacha20_poly1305;
+extern const pcap_testvector pcap_tls13_aes128gcm_sha256_mlkem512[];
+extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_mlkem512;
+extern const pcap_testvector pcap_tls13_aes128gcm_sha256_mlkem768[];
+extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_mlkem768;
+extern const pcap_testvector pcap_tls13_aes128gcm_sha256_mlkem1024[];
+extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_mlkem1024;
+extern const pcap_testvector pcap_tls13_aes128gcm_sha256_secp256r1mlkem768[];
+extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_secp256r1mlkem768;
+extern const pcap_testvector pcap_tls13_aes128gcm_sha256_x25519mlkem768[];
+extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_x25519mlkem768;
+extern const pcap_testvector pcap_tls13_aes128gcm_sha256_secp384r1mlkem1024[];
+extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_secp384r1mlkem1024;
 
 // RFC
 void test_rfc8448_2();
@@ -103,6 +115,7 @@ void test_pcap_tls13_http1();
 void test_dtls_record_arrange();
 
 void test_construct_tls();
+void test_construct_tls13_mlkem();
 void test_construct_dtls13();
 void test_construct_dtls12_1();
 void test_construct_dtls12_2();
@@ -115,5 +128,6 @@ void test_helloretryrequest();
 void test_alert();
 
 void test_pcap_tls13_http1();
+void test_pcap_tls13_mlkem();
 
 #endif

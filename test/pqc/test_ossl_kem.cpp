@@ -34,10 +34,10 @@ void test_ossl_kem() {
             binary_t sharedsecret_alice;
             binary_t sharedsecret_bob;
 
-            // generate keypair
+            // alice : generate keypair
             // https://docs.openssl.org/3.5/man7/EVP_PKEY-ML-KEM/
 
-            ret = keychain.pkey_gen_byname(nullptr, &privkey, alg.c_str());
+            ret = keychain.pkey_keygen_byname(nullptr, &privkey, alg.c_str());
             _logger->writeln([&](basic_stream& bs) -> void {
                 // EVP_PKEY_id          -1
                 // EVP_PKEY_get_base_id  0
@@ -52,7 +52,7 @@ void test_ossl_kem() {
             });
             _test_case.test(ret, __FUNCTION__, "keygen %s", alg.c_str());
 
-            // key distribution
+            // alice -> bob : key distribution
             {
                 ret = keychain.pkey_encode(nullptr, privkey, keydata, key_encoding_pub_der);
                 _test_case.test(ret, __FUNCTION__, "encode public key %s", alg.c_str());
@@ -60,7 +60,7 @@ void test_ossl_kem() {
                 ret = keychain.pkey_decode(nullptr, &pubkey, keydata, key_encoding_pub_der);
                 _test_case.test(ret, __FUNCTION__, "decode public key %s", alg.c_str());
             }
-            // encapsule
+            // bob : encapsule
             {
                 ret = pqc.encapsule(nullptr, pubkey, capsulekey, sharedsecret_bob);
                 _logger->write([&](basic_stream& bs) -> void {
@@ -73,7 +73,7 @@ void test_ossl_kem() {
                 });
                 _test_case.test(ret, __FUNCTION__, "encapsule %s", alg.c_str());
             }
-            // decapsule
+            // alice : decapsule
             {
                 ret = pqc.decapsule(nullptr, privkey, capsulekey, sharedsecret_alice);
                 _logger->write([&](basic_stream& bs) -> void {

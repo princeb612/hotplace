@@ -193,9 +193,9 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
                     _run = false;
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
-                        basic_stream dbs;
-                        dbs.println("* protocol complete %zi out of %zi", message_size, bufstream.size());
-                        trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
+                        trace_debug_event(trace_category_net, trace_event_net_consume, [&](basic_stream& dbs) -> void {
+                            dbs.println("* protocol complete %zi out of %zi", message_size, bufstream.size());
+                        });
                     }
 #endif
 

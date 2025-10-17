@@ -219,15 +219,14 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
             binary_append(_bin, &msg[0], msg.size() - trail);
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
-                dbs.autoindent(3);
-                dbs.println(" > %s", constexpr_application_data);  // data
-                if (check_trace_level(loglevel_debug)) {
-                    dump_memory(_bin, &dbs, 16, 3, 0x0, dump_notrunc);
-                }
-                dbs.autoindent(0);
-
-                trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                    dbs.autoindent(3);
+                    dbs.println(" > %s", constexpr_application_data);  // data
+                    if (check_trace_level(loglevel_debug)) {
+                        dump_memory(_bin, &dbs, 16, 3, 0x0, dump_notrunc);
+                    }
+                    dbs.autoindent(0);
+                });
             }
 #endif
         }

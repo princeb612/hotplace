@@ -35,7 +35,7 @@ return_t crypto_keychain::add_mlkem(crypto_key* cryptokey, uint32 nid, const key
             ret = errorcode_t::not_supported;
             __leave2;
         }
-        ret = pkey_gen_byname(nullptr, &pkey, sn);
+        ret = pkey_keygen_byname(nullptr, &pkey, sn);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -54,7 +54,7 @@ return_t crypto_keychain::add_mlkem(crypto_key* cryptokey, uint32 nid, const key
     return ret;
 }
 
-return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, const keydesc& desc) {
+return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     EVP_PKEY* pkey = nullptr;
@@ -68,7 +68,20 @@ return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const
             ret = errorcode_t::different_type;
             __leave2;
         }
-        ret = pkey_decode(nullptr, &pkey, pub, key_encoding_pub_der);
+        switch (encoding) {
+            case key_encoding_priv_pem:
+            case key_encoding_encrypted_priv_pem:
+            case key_encoding_pub_pem:
+            case key_encoding_priv_der:
+            case key_encoding_encrypted_priv_der:
+            case key_encoding_pub_der: {
+                ret = pkey_decode_format(nullptr, &pkey, pub, encoding);
+            } break;
+            case key_encoding_priv_raw:
+            case key_encoding_pub_raw: {
+                ret = pkey_decode_raw(nullptr, OBJ_nid2sn(nid), &pkey, pub, encoding);
+            }
+        }
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -99,7 +112,7 @@ return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const
     return ret;
 }
 
-return_t crypto_keychain::add_mlkem_priv(crypto_key* cryptokey, uint32 nid, const binary_t& keypair, const keydesc& desc) {
+return_t crypto_keychain::add_mlkem_priv(crypto_key* cryptokey, uint32 nid, const binary_t& keypair, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     EVP_PKEY* pkey = nullptr;
@@ -113,7 +126,7 @@ return_t crypto_keychain::add_mlkem_priv(crypto_key* cryptokey, uint32 nid, cons
             ret = errorcode_t::different_type;
             __leave2;
         }
-        ret = pkey_decode(nullptr, &pkey, keypair, key_encoding_priv_der);
+        ret = pkey_decode(nullptr, &pkey, keypair, encoding);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -144,7 +157,7 @@ return_t crypto_keychain::add_mlkem_priv(crypto_key* cryptokey, uint32 nid, cons
     return ret;
 }
 
-return_t crypto_keychain::add_mlkem_pub_b64(crypto_key* cryptokey, uint32 nid, const char* pub, const keydesc& desc) {
+return_t crypto_keychain::add_mlkem_pub_b64(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || (nullptr == pub)) {
@@ -162,13 +175,13 @@ return_t crypto_keychain::add_mlkem_pub_b64(crypto_key* cryptokey, uint32 nid, c
 
         os2b(pub, bin_pub);
 
-        ret = add_mlkem_pub(cryptokey, nid, bin_pub, desc);
+        ret = add_mlkem_pub(cryptokey, nid, bin_pub, encoding, desc);
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_mlkem_pub_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, const keydesc& desc) {
+return_t crypto_keychain::add_mlkem_pub_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || (nullptr == pub)) {
@@ -186,13 +199,13 @@ return_t crypto_keychain::add_mlkem_pub_b64u(crypto_key* cryptokey, uint32 nid, 
 
         os2b(pub, bin_pub);
 
-        ret = add_mlkem_pub(cryptokey, nid, bin_pub, desc);
+        ret = add_mlkem_pub(cryptokey, nid, bin_pub, encoding, desc);
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_mlkem_pub_b16(crypto_key* cryptokey, uint32 nid, const char* pub, const keydesc& desc) {
+return_t crypto_keychain::add_mlkem_pub_b16(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || (nullptr == pub)) {
@@ -210,13 +223,13 @@ return_t crypto_keychain::add_mlkem_pub_b16(crypto_key* cryptokey, uint32 nid, c
 
         os2b(pub, bin_pub);
 
-        ret = add_mlkem_pub(cryptokey, nid, bin_pub, desc);
+        ret = add_mlkem_pub(cryptokey, nid, bin_pub, encoding, desc);
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_mlkem_pub_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, const keydesc& desc) {
+return_t crypto_keychain::add_mlkem_pub_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || (nullptr == pub)) {
@@ -234,13 +247,13 @@ return_t crypto_keychain::add_mlkem_pub_b16rfc(crypto_key* cryptokey, uint32 nid
 
         os2b(pub, bin_pub);
 
-        ret = add_mlkem_pub(cryptokey, nid, bin_pub, desc);
+        ret = add_mlkem_pub(cryptokey, nid, bin_pub, encoding, desc);
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_mlkem_priv_b64(crypto_key* cryptokey, uint32 nid, const char* keypair, const keydesc& desc) {
+return_t crypto_keychain::add_mlkem_priv_b64(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || (nullptr == keypair)) {
@@ -258,13 +271,13 @@ return_t crypto_keychain::add_mlkem_priv_b64(crypto_key* cryptokey, uint32 nid, 
 
         os2b(keypair, bin_keypair);
 
-        ret = add_mlkem_pub(cryptokey, nid, bin_keypair, desc);
+        ret = add_mlkem_pub(cryptokey, nid, bin_keypair, encoding, desc);
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_mlkem_priv_b64u(crypto_key* cryptokey, uint32 nid, const char* keypair, const keydesc& desc) {
+return_t crypto_keychain::add_mlkem_priv_b64u(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || (nullptr == keypair)) {
@@ -282,13 +295,13 @@ return_t crypto_keychain::add_mlkem_priv_b64u(crypto_key* cryptokey, uint32 nid,
 
         os2b(keypair, bin_keypair);
 
-        ret = add_mlkem_pub(cryptokey, nid, bin_keypair, desc);
+        ret = add_mlkem_pub(cryptokey, nid, bin_keypair, encoding, desc);
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_mlkem_priv_b16(crypto_key* cryptokey, uint32 nid, const char* keypair, const keydesc& desc) {
+return_t crypto_keychain::add_mlkem_priv_b16(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || (nullptr == keypair)) {
@@ -306,13 +319,13 @@ return_t crypto_keychain::add_mlkem_priv_b16(crypto_key* cryptokey, uint32 nid, 
 
         os2b(keypair, bin_keypair);
 
-        ret = add_mlkem_pub(cryptokey, nid, bin_keypair, desc);
+        ret = add_mlkem_pub(cryptokey, nid, bin_keypair, encoding, desc);
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_mlkem_priv_b16rfc(crypto_key* cryptokey, uint32 nid, const char* keypair, const keydesc& desc) {
+return_t crypto_keychain::add_mlkem_priv_b16rfc(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || (nullptr == keypair)) {
@@ -330,7 +343,7 @@ return_t crypto_keychain::add_mlkem_priv_b16rfc(crypto_key* cryptokey, uint32 ni
 
         os2b(keypair, bin_keypair);
 
-        ret = add_mlkem_pub(cryptokey, nid, bin_keypair, desc);
+        ret = add_mlkem_pub(cryptokey, nid, bin_keypair, encoding, desc);
     }
     __finally2 {}
     return ret;

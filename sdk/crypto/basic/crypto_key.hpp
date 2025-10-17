@@ -380,14 +380,15 @@ class crypto_key {
      * @param binary_t& pub1 [out]
      * @param binary_t& pub2 [out]
      * @remarks
-     *          | key type   | public_key1 | public_key2 |
-     *          | kty_oct    | N/A         | N/A         |
-     *          | kty_okp    | item_ec_x   | N/A         |
-     *          | kty_ec     | item_ec_x   | item_ec_y   |
-     *          | kty_rsa    | item_rsa_n  | item_rsa_e  |
-     *          | kty_rsapss | item_rsa_n  | item_rsa_e  |
-     *          | kty_dh     | item_dh_pub | N/A         |
-     *          | kty_dsa    | N/A         | N/A         |
+     *          | key type   | public_key1    | public_key2 |
+     *          | kty_oct    | N/A            | N/A         |
+     *          | kty_okp    | item_ec_x      | N/A         |
+     *          | kty_ec     | item_ec_x      | item_ec_y   |
+     *          | kty_rsa    | item_rsa_n     | item_rsa_e  |
+     *          | kty_rsapss | item_rsa_n     | item_rsa_e  |
+     *          | kty_dh     | item_dh_pub    | N/A         |
+     *          | kty_dsa    | N/A            | N/A         |
+     *          | kty_mlkem  | item_mlkem_pub | N/A         |
      */
     static return_t get_public_key(const EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2);
     /**
@@ -441,14 +442,15 @@ class crypto_key {
      * @param binary_t& priv [out]
      * @param bool preserve [inopt] false
      * @remarks
-     *          | key type   | public_key               | private_key  |
-     *          | kty_oct    | N/A                      | item_hmac_k  |
-     *          | kty_okp    | item_ec_x                | item_ec_d    |
-     *          | kty_ec     | item_ec_pub_uncompressed | item_ec_d    |
-     *          | kty_rsa    | N/A                      | item_rsa_d   |
-     *          | kty_rsapss | N/A                      | item_rsa_d   |
-     *          | kty_dh     | item_dh_pub              | item_dh_priv |
-     *          | kty_dsa    | N/A                      | item_dsa_x   |
+     *          | key type   | public_key               | private_key     |
+     *          | kty_oct    | N/A                      | item_hmac_k     |
+     *          | kty_okp    | item_ec_x                | item_ec_d       |
+     *          | kty_ec     | item_ec_pub_uncompressed | item_ec_d       |
+     *          | kty_rsa    | N/A                      | item_rsa_d      |
+     *          | kty_rsapss | N/A                      | item_rsa_d      |
+     *          | kty_dh     | item_dh_pub              | item_dh_priv    |
+     *          | kty_dsa    | N/A                      | item_dsa_x      |
+     *          | kty_mlkem  | item_mlkem_pub           | item_mlkem_priv |
      */
     static return_t get_key(const EVP_PKEY* pkey, binary_t& pub, binary_t& priv, bool preserve = false);
     /**
@@ -460,14 +462,15 @@ class crypto_key {
      * @param binary_t& priv [out]
      * @param bool preserve [inopt] false
      * @remarks
-     *          | key type   | public_key               | asn1public_key | private_key  |
-     *          | kty_oct    | N/A                      | N/A            | item_hmac_k  |
-     *          | kty_okp    | item_ec_x                | item_asn1der   | item_ec_d    |
-     *          | kty_ec     | item_ec_pub_uncompressed | item_asn1der   | item_ec_d    |
-     *          | kty_rsa    | N/A                      | item_asn1der   | item_rsa_d   |
-     *          | kty_rsapss | N/A                      | item_asn1der   | item_rsa_d   |
-     *          | kty_dh     | item_dh_pub              | item_asn1der   | item_dh_priv |
-     *          | kty_dsa    | N/A                      | item_asn1der   | item_dsa_x   |
+     *          | key type   | public_key               | asn1public_key | private_key     |
+     *          | kty_oct    | N/A                      | N/A            | item_hmac_k     |
+     *          | kty_okp    | item_ec_x                | item_asn1der   | item_ec_d       |
+     *          | kty_ec     | item_ec_pub_uncompressed | item_asn1der   | item_ec_d       |
+     *          | kty_rsa    | N/A                      | item_asn1der   | item_rsa_d      |
+     *          | kty_rsapss | N/A                      | item_asn1der   | item_rsa_d      |
+     *          | kty_dh     | item_dh_pub              | item_asn1der   | item_dh_priv    |
+     *          | kty_dsa    | N/A                      | item_asn1der   | item_dsa_x      |
+     *          | kty_mlkem  | item_mlkem_pub           | item_asn1der   | item_mlkem_priv |
      */
     static return_t get_key(const EVP_PKEY* pkey, int flags, binary_t& pub, binary_t& priv, bool preserve = false);
     /**
@@ -478,14 +481,15 @@ class crypto_key {
      * @parambinary_t& priv [out]
      * @param bool preserve [inopt] preserve leading zero (default false)
      * @remarks
-     *          | key type   | public_key1 | public_key2 | private_key  |
-     *          | kty_oct    | N/A         | N/A         | item_hmac_k  |
-     *          | kty_okp    | item_ec_x   | N/A         | item_ec_d    |
-     *          | kty_ec     | item_ec_x   | item_ec_y   | item_ec_d    |
-     *          | kty_rsa    | item_rsa_n  | item_rsa_e  | item_rsa_d   |
-     *          | kty_rsapss | item_rsa_n  | item_rsa_e  | item_rsa_d   |
-     *          | kty_dh     | item_dh_pub | N/A         | item_dh_priv |
-     *          | kty_dsa    | N/A         | N/A         | item_dsa_x   |
+     *          | key type   | public_key1    | public_key2 | private_key     |
+     *          | kty_oct    | N/A            | N/A         | item_hmac_k     |
+     *          | kty_okp    | item_ec_x      | N/A         | item_ec_d       |
+     *          | kty_ec     | item_ec_x      | item_ec_y   | item_ec_d       |
+     *          | kty_rsa    | item_rsa_n     | item_rsa_e  | item_rsa_d      |
+     *          | kty_rsapss | item_rsa_n     | item_rsa_e  | item_rsa_d      |
+     *          | kty_dh     | item_dh_pub    | N/A         | item_dh_priv    |
+     *          | kty_dsa    | N/A            | N/A         | item_dsa_x      |
+     *          | kty_mlkem  | item_mlkem_pub | N/A         | item_mlkem_priv |
      */
     static return_t get_key(const EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv, bool preserve = false);
     /**
@@ -534,6 +538,8 @@ class crypto_key {
 
     /**
      * @brief dump
+     * @param std::function<void(crypto_key_object*, void*)> func [in]
+     * @param void* param [inopt]
      * @example
      *  void dump_crypto_key (crypto_key_object* key, void*)
      *  {
@@ -549,7 +555,7 @@ class crypto_key {
      *      key.for_each (dump_crypto_key, nullptr);
      *  }
      */
-    void for_each(std::function<void(crypto_key_object*, void*)>, void* param);
+    void for_each(std::function<void(crypto_key_object*, void*)> func, void* param = nullptr);
 
     void erase(const std::string& kid);
 
@@ -589,6 +595,7 @@ class crypto_key {
     static return_t extract_okp(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
     static return_t extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
     static return_t extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
+    static return_t extract_mlkem(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
 
    private:
     /**

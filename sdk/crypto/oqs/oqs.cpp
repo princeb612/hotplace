@@ -157,7 +157,7 @@ return_t pqc_oqs::keygen(oqs_context* context, EVP_PKEY** pkey, const std::strin
         }
 
         crypto_keychain keychain;
-        ret = keychain.pkey_gen_byname(context->libctx, pkey, alg.c_str());
+        ret = keychain.pkey_keygen_byname(context->libctx, pkey, alg.c_str());
     }
     __finally2 {}
     return ret;
@@ -208,7 +208,7 @@ return_t pqc_oqs::decode(oqs_context* context, EVP_PKEY** pkey, const binary_t& 
 #endif
 }
 
-return_t pqc_oqs::encapsule(oqs_context* context, EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret) {
+return_t pqc_oqs::encapsule(oqs_context* context, const EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     return_t ret = errorcode_t::success;
     __try2 {
@@ -227,7 +227,7 @@ return_t pqc_oqs::encapsule(oqs_context* context, EVP_PKEY* pkey, binary_t& caps
 #endif
 }
 
-return_t pqc_oqs::decapsule(oqs_context* context, EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret) {
+return_t pqc_oqs::decapsule(oqs_context* context, const EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     return_t ret = errorcode_t::success;
     __try2 {

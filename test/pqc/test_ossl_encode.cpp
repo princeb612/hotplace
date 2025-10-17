@@ -34,7 +34,7 @@ void test_ossl_encode() {
             bool is_keypair = false;
 
             // generate keypair
-            ret = keychain.pkey_gen_byname(nullptr, &privkey, alg.c_str());
+            ret = keychain.pkey_keygen_byname(nullptr, &privkey, alg.c_str());
             _test_case.test(ret, __FUNCTION__, "keygen %s", alg.c_str());
 
             is_keypair = keychain.pkey_is_private(nullptr, privkey);

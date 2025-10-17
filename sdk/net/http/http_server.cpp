@@ -173,29 +173,28 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
 
 #if defined DEBUG
     if (istraceable(trace_category_net, loglevel_debug)) {
-        netsocket_t* session_socket = (netsocket_t*)data_array[0];  // mux_tryconnect can be nullptr
-        basic_stream bs;
-
-        switch (type) {
-            case mux_connect: {
-                socket_t clisock = session_socket->get_event_socket();
-                bs.printf("connect %i\n", clisock);
-            } break;
-            case mux_read: {
-                socket_t clisock = session_socket->get_event_socket();
-                bs.printf("read %i\n", clisock);
-                byte_t* buf = (byte_t*)data_array[1];
-                size_t bufsize = (size_t)data_array[2];
-                dump_memory((byte_t*)buf, bufsize, &bs, 16, 2, 0, dump_memory_flag_t::dump_notrunc);
-            } break;
-            case mux_disconnect: {
-                socket_t clisock = session_socket->get_event_socket();
-                bs.printf("disconnect %i\n", clisock);
-            } break;
-            default:
-                break;
-        }
-        trace_debug_event(trace_category_net, trace_event_net_consume, &bs);
+        trace_debug_event(trace_category_net, trace_event_net_consume, [&](basic_stream& dbs) -> void {
+            netsocket_t* session_socket = (netsocket_t*)data_array[0];  // mux_tryconnect can be nullptr
+            switch (type) {
+                case mux_connect: {
+                    socket_t clisock = session_socket->get_event_socket();
+                    dbs.printf("connect %i\n", clisock);
+                } break;
+                case mux_read: {
+                    socket_t clisock = session_socket->get_event_socket();
+                    dbs.printf("read %i\n", clisock);
+                    byte_t* buf = (byte_t*)data_array[1];
+                    size_t bufsize = (size_t)data_array[2];
+                    dump_memory((byte_t*)buf, bufsize, &dbs, 16, 2, 0, dump_memory_flag_t::dump_notrunc);
+                } break;
+                case mux_disconnect: {
+                    socket_t clisock = session_socket->get_event_socket();
+                    dbs.printf("disconnect %i\n", clisock);
+                } break;
+                default:
+                    break;
+            }
+        });
     }
 #endif
 

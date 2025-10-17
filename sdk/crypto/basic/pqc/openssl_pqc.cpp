@@ -57,7 +57,7 @@ return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary
     return ret;
 }
 
-return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret) {
+return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     EVP_PKEY_CTX* pkey_ctx = nullptr;
@@ -70,7 +70,7 @@ return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, binary_t& 
             __leave2;
         }
 
-        pkey_ctx = EVP_PKEY_CTX_new_from_pkey(nullptr, pkey, nullptr);
+        pkey_ctx = EVP_PKEY_CTX_new_from_pkey(nullptr, (EVP_PKEY*)pkey, nullptr);
         if (nullptr == pkey_ctx) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -106,7 +106,7 @@ return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, binary_t& 
     return ret;
 }
 
-return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret) {
+return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     EVP_PKEY_CTX* pkey_ctx = nullptr;
@@ -122,7 +122,7 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const bina
             __leave2;
         }
 
-        pkey_ctx = EVP_PKEY_CTX_new_from_pkey(nullptr, pkey, nullptr);
+        pkey_ctx = EVP_PKEY_CTX_new_from_pkey(nullptr, (EVP_PKEY*)pkey, nullptr);
         if (nullptr == pkey_ctx) {
             ret = errorcode_t::internal_error;
             __leave2;

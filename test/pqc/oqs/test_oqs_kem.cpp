@@ -41,7 +41,7 @@ void test_oqs_kem() {
                     auto encoding_pubkey = key_encoding_pub_der;
                     auto encoding_privkey = key_encoding_priv_der;
 
-                    // generate keypair
+                    // alice : generate keypair
                     oqs.keygen(context, &pkey_keygen, alg.c_str());
                     _test_case.assert(nullptr != pkey_keygen, __FUNCTION__, "keygen %s", alg.c_str());
 
@@ -58,12 +58,12 @@ void test_oqs_kem() {
                     }
                     _test_case.test(ret, __FUNCTION__, "private key %s", alg.c_str());
 
-                    // key distribution
+                    // alice -> bob : key distribution
                     ret = oqs.decode(context, &pkey_pub, pubkey, encoding_pubkey);
                     _test_case.test(ret, __FUNCTION__, "distribute public key %s", alg.c_str());
 
                     if (errorcode_t::success == ret) {
-                        // encapsulate using public key
+                        // bob : encapsulate using public key
                         ret = oqs.encapsule(context, pkey_pub, capsulekey, sharedsecret_bob);
                         if (option.is_loglevel_debug()) {
                             _logger->hdump("encapsulated key", capsulekey, 16, 3);
@@ -71,7 +71,7 @@ void test_oqs_kem() {
                         }
                         _test_case.test(ret, __FUNCTION__, "encapsulate %s", alg.c_str());
 
-                        // decapsulate using private key
+                        // alice : decapsulate using private key
                         binary_t sharedsecret_alice;
                         ret = oqs.decapsule(context, pkey_keygen, capsulekey, sharedsecret_alice);
                         _test_case.test(ret, __FUNCTION__, "decapsulate %s", alg.c_str());

@@ -335,10 +335,8 @@ http_response& http_response::get_response(basic_stream& bs) {
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            basic_stream dbs;
-            dump_memory(bs.data(), bs.size(), &dbs, 16, 2, 0, dump_notrunc);
-
-            trace_debug_event(trace_category_net, trace_event_net_response, &dbs);
+            trace_debug_event(trace_category_net, trace_event_net_response,
+                              [&](basic_stream& dbs) -> void { dump_memory(bs.data(), bs.size(), &dbs, 16, 2, 0, dump_notrunc); });
         }
 #endif
     }
@@ -428,11 +426,10 @@ http_response& http_response::get_response_h2(binary_t& bin) {
         auto lambda_debug = [&](http2_frame* frame) -> void {
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
-                frame->dump(&dbs);
-                dbs.println("");
-
-                trace_debug_event(trace_category_net, trace_event_net_response, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_response, [&](basic_stream& dbs) -> void {
+                    frame->dump(&dbs);
+                    dbs.println("");
+                });
             }
 #endif
         };

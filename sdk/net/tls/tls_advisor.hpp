@@ -114,8 +114,10 @@ extern const size_t sizeof_tls_version_hint;
  *          tls_flag_support                    legacy or debugging purpose
  */
 enum tls_resource_flag_t : uint8 {
-    tls_flag_secure = (1 << 0),
-    tls_flag_support = (1 << 1),
+    tls_flag_secure = (1 << 0),   // secure, recommended
+    tls_flag_support = (1 << 1),  // support
+    tls_flag_pqc = (1 << 2),      // Post-Quantum Cryptography
+    tls_flag_hybrid = (1 << 3),   // hybrid
 };
 struct tls_cipher_suite_t {
     uint16 code;                // 0xc023
@@ -135,9 +137,11 @@ hash_algorithm_t algof_mac(const tls_cipher_suite_t* info);
 struct tls_group_t {
     uint16 code;
     uint8 flags;
+    const char* name;
     crypto_kty_t kty;
     uint16 nid;
-    const char* name;
+    crypto_kty_t hkty;  // hybrid
+    uint16 hnid;        // bybrid
 };
 extern const tls_group_t tls_groups[];
 extern const size_t sizeof_tls_groups;
@@ -264,6 +268,19 @@ class tls_advisor {
     return_t enable_alpn(const char* prot);
     return_t negotiate_alpn(tls_handshake* handshake, const byte_t* alpn, size_t size);
 
+    /**
+     * @brief   group
+     * @example
+     *          tls_advisor->set_tls_groups("X25519:MLKEM512");
+     *          auto group = protection.get_protection_context().get0_supported_group();
+     *          if (0 == group) {
+     *              // HRR
+     *          }
+     */
+    return_t set_tls_groups(const char* groups);
+    return_t set_default_tls_groups();
+    bool test_tls_group(uint16 group);
+
    protected:
     tls_advisor();
     void load_resource();
@@ -323,6 +340,7 @@ class tls_advisor {
     std::map<uint32, const tls_session_status_code_t*> _session_status_codes;
 
     std::set<uint16> _ciphersuites;
+    std::set<uint16> _groups;
     binary_t _prot;
 
     bool _load;

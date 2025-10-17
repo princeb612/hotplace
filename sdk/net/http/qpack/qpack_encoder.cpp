@@ -150,28 +150,28 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.printf("   ");
-            if (qpack_decode_capacity & item.flags) {
-                dbs.println("> capacity %zi", item.capacity);
-            } else if (qpack_decode_field_section_prefix & item.flags) {
-                dbs.println("> field section prefix RIC=%zi Base=%zi", item.ric, item.base);
-            } else if (qpack_decode_index & item.flags) {
-                dbs.println("> Index   [%zi] %s: %s", item.index, item.name.c_str(), item.value.c_str());
-            } else if (qpack_decode_nameref & item.flags) {
-                dbs.println("> NameRef [%zi] %s: %s", item.index, item.name.c_str(), item.value.c_str());
-            } else if (qpack_decode_namevalue & item.flags) {
-                dbs.println("> NameVal %s: %s", item.name.c_str(), item.value.c_str());
-            } else if (qpack_decode_ack & item.flags) {
-                dbs.println("> ACK STREAM %zi", item.streamid);
-            } else if (qpack_decode_cancel & item.flags) {
-                dbs.println("> CANCEL STREAM %zi", item.streamid);
-            } else if (qpack_decode_dup & item.flags) {
-                dbs.println("> DUP [%zi] %s: %s", item.index, item.name.c_str(), item.value.c_str());
-            } else if (qpack_decode_inc & item.flags) {
-                dbs.println("> INC %zi", item.inc);
-            }
-            trace_debug_event(trace_category_net, trace_event_qpack, &dbs);
+            trace_debug_event(trace_category_net, trace_event_qpack, [&](basic_stream& dbs) -> void {
+                dbs.printf("   ");
+                if (qpack_decode_capacity & item.flags) {
+                    dbs.println("> capacity %zi", item.capacity);
+                } else if (qpack_decode_field_section_prefix & item.flags) {
+                    dbs.println("> field section prefix RIC=%zi Base=%zi", item.ric, item.base);
+                } else if (qpack_decode_index & item.flags) {
+                    dbs.println("> Index   [%zi] %s: %s", item.index, item.name.c_str(), item.value.c_str());
+                } else if (qpack_decode_nameref & item.flags) {
+                    dbs.println("> NameRef [%zi] %s: %s", item.index, item.name.c_str(), item.value.c_str());
+                } else if (qpack_decode_namevalue & item.flags) {
+                    dbs.println("> NameVal %s: %s", item.name.c_str(), item.value.c_str());
+                } else if (qpack_decode_ack & item.flags) {
+                    dbs.println("> ACK STREAM %zi", item.streamid);
+                } else if (qpack_decode_cancel & item.flags) {
+                    dbs.println("> CANCEL STREAM %zi", item.streamid);
+                } else if (qpack_decode_dup & item.flags) {
+                    dbs.println("> DUP [%zi] %s: %s", item.index, item.name.c_str(), item.value.c_str());
+                } else if (qpack_decode_inc & item.flags) {
+                    dbs.println("> INC %zi", item.inc);
+                }
+            });
         }
 #endif
     }
@@ -590,9 +590,8 @@ return_t qpack_encoder::unpack(http_dynamic_table* dyntable, const byte_t* sourc
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("   > field section prefix RIC=%zi Base=%zi (IC=%zi)", item.ric, item.base, ic);
-            trace_debug_event(trace_category_net, trace_event_qpack, &dbs);
+            trace_debug_event(trace_category_net, trace_event_qpack,
+                              [&](basic_stream& dbs) -> void { dbs.println("   > field section prefix RIC=%zi Base=%zi (IC=%zi)", item.ric, item.base, ic); });
         }
 #endif
     }

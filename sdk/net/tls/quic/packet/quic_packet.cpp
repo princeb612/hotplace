@@ -195,9 +195,7 @@ return_t quic_packet::do_read_header(tls_direction_t dir, const byte_t* stream, 
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("# QUIC packet (size %zi)", size);
-            trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void { dbs.println("# QUIC packet (size %zi)", size); });
         }
 #endif
 
@@ -340,37 +338,36 @@ return_t quic_packet::do_write(tls_direction_t dir, binary_t& header, binary_t& 
 void quic_packet::dump() {
 #if defined DEBUG
     if (istraceable(trace_category_net)) {
-        basic_stream dbs;
+        trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
-        dbs.println("- quic packet %s", tlsadvisor->quic_packet_type_string(get_type()).c_str());
-        dbs.println(" > version %08x", get_version());
-        dbs.println(" > destination connection id %s", base16_encode(_dcid).c_str());
-        // dump_memory(_dcid, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
-        switch (get_type()) {
-            // long header
-            case quic_packet_type_version_negotiation:
-            case quic_packet_type_initial:
-            case quic_packet_type_0_rtt:
-            case quic_packet_type_handshake:
-            case quic_packet_type_retry:
-                dbs.println(" > source connection id %s", base16_encode(_scid).c_str());
-                // dump_memory(_scid, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
-                break;
-            // short header
-            case quic_packet_type_1_rtt:
-                break;
-        }
-        switch (get_type()) {
-            case quic_packet_type_initial:
-            case quic_packet_type_0_rtt:
-            case quic_packet_type_handshake:
-            case quic_packet_type_1_rtt:
-                dbs.println(" > packet number length %i", get_pn_length());
-                break;
-        }
-        trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+            dbs.println("- quic packet %s", tlsadvisor->quic_packet_type_string(get_type()).c_str());
+            dbs.println(" > version %08x", get_version());
+            dbs.println(" > destination connection id %s", base16_encode(_dcid).c_str());
+            // dump_memory(_dcid, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+            switch (get_type()) {
+                // long header
+                case quic_packet_type_version_negotiation:
+                case quic_packet_type_initial:
+                case quic_packet_type_0_rtt:
+                case quic_packet_type_handshake:
+                case quic_packet_type_retry:
+                    dbs.println(" > source connection id %s", base16_encode(_scid).c_str());
+                    // dump_memory(_scid, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
+                    break;
+                // short header
+                case quic_packet_type_1_rtt:
+                    break;
+            }
+            switch (get_type()) {
+                case quic_packet_type_initial:
+                case quic_packet_type_0_rtt:
+                case quic_packet_type_handshake:
+                case quic_packet_type_1_rtt:
+                    dbs.println(" > packet number length %i", get_pn_length());
+                    break;
+            }
+        });
     }
 #endif
 }
@@ -381,10 +378,10 @@ return_t quic_packet::header_protect(tls_direction_t dir, protection_space_t spa
     __try2 {
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("\e[1;34m > packet number 0x%s (%i)\e[0m", base16_encode(bin_pn).c_str(), _pn);
-            dbs.println(" > packet number length %i", pn_length);
-            trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
+                dbs.println("\e[1;34m > packet number 0x%s (%i)\e[0m", base16_encode(bin_pn).c_str(), _pn);
+                dbs.println(" > packet number length %i", pn_length);
+            });
         }
 #endif
 
@@ -463,19 +460,18 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println(" > protected   packet header byte 0x%02x", hdr_backup);
-            dbs.println(" > unprotected packet header byte 0x%02x", hdr);
-            dbs.println(" > packet number length %i", pn_length);
+            trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
+                dbs.println(" > protected   packet header byte 0x%02x", hdr_backup);
+                dbs.println(" > unprotected packet header byte 0x%02x", hdr);
+                dbs.println(" > packet number length %i", pn_length);
 
-            binary_t bin_protected_pn;
-            binary_append(bin_protected_pn, &bin_payload[0], pn_length);
-            uint32 protected_pn = t_binary_to_integer<uint32>(bin_protected_pn);
+                binary_t bin_protected_pn;
+                binary_append(bin_protected_pn, &bin_payload[0], pn_length);
+                uint32 protected_pn = t_binary_to_integer<uint32>(bin_protected_pn);
 
-            dbs.println(" > protected   packet number 0x%08x", protected_pn);
-            dbs.println("\e[1;34m > unprotected packet number 0x%08x (%08i)\e[0m", pn, pn);
-
-            trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+                dbs.println(" > protected   packet number 0x%08x", protected_pn);
+                dbs.println("\e[1;34m > unprotected packet number 0x%08x (%08i)\e[0m", pn, pn);
+            });
         }
 #endif
 

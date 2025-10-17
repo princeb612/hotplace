@@ -47,11 +47,11 @@ return_t quic_frame_stop_sending::do_read_body(tls_direction_t dir, const byte_t
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            basic_stream dbs;
-            dbs.println("   > %s %I64i", constexpr_stream_id, stream_id);
-            dbs.println("   > %s %I64i %s", constexpr_error_code, error_code, tlsadvisor->quic_error_string(error_code).c_str());
-            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                dbs.println("   > %s %I64i", constexpr_stream_id, stream_id);
+                dbs.println("   > %s %I64i %s", constexpr_error_code, error_code, tlsadvisor->quic_error_string(error_code).c_str());
+            });
         }
 #endif
     }

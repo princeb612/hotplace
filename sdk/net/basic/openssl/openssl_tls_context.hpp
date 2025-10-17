@@ -96,6 +96,10 @@ class openssl_tls_context {
      */
     openssl_tls_context& set_cipher_list(const char* list);
     /**
+     * SSL_CTX_set1_groups_list
+     */
+    openssl_tls_context& set_group_list(const char* list);
+    /**
      * DH_generate_parameters_ex, SSL_CTX_set_tmp_dh
      */
     openssl_tls_context& set_use_dh(int bits);

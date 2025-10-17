@@ -122,20 +122,19 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.autoindent(1);
-            dbs.println(" > %s 0x%08x (%i secs)", constexpr_ticket_lifetime, ticket_lifetime, ticket_lifetime);
-            dbs.println(" > %s 0x%08x", constexpr_ticket_age_add, ticket_age_add);
-            dbs.println(" > %s %s", constexpr_ticket_nonce, base16_encode(ticket_nonce).c_str());
-            dbs.println(" > %s %s", constexpr_session_ticket, base16_encode(session_ticket).c_str());
-            if (check_trace_level(loglevel_debug)) {
-                dump_memory(session_ticket, &dbs, 16, 3, 0x0, dump_notrunc);
-            }
-            dbs.println(" > %s 0x%zx (%zi)", constexpr_ticket_extensions, ticket_extensions.size(), ticket_extensions.size());
-            dump_memory(ticket_extensions, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.autoindent(0);
-
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                dbs.autoindent(1);
+                dbs.println(" > %s 0x%08x (%i secs)", constexpr_ticket_lifetime, ticket_lifetime, ticket_lifetime);
+                dbs.println(" > %s 0x%08x", constexpr_ticket_age_add, ticket_age_add);
+                dbs.println(" > %s %s", constexpr_ticket_nonce, base16_encode(ticket_nonce).c_str());
+                dbs.println(" > %s %s", constexpr_session_ticket, base16_encode(session_ticket).c_str());
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(session_ticket, &dbs, 16, 3, 0x0, dump_notrunc);
+                }
+                dbs.println(" > %s 0x%zx (%zi)", constexpr_ticket_extensions, ticket_extensions.size(), ticket_extensions.size());
+                dump_memory(ticket_extensions, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.autoindent(0);
+            });
         }
 #endif
 

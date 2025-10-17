@@ -52,9 +52,9 @@ return_t tls_composer::session_status_changed(uint32 session_status, tls_directi
     __try2 {
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("hook %s (%s)", tlsadvisor->session_status_string(session_status).c_str(), tlsadvisor->nameof_direction(dir).c_str());
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                dbs.println("hook %s (%s)", tlsadvisor->session_status_string(session_status).c_str(), tlsadvisor->nameof_direction(dir).c_str());
+            });
         }
 #endif
         if (from_client == dir) {

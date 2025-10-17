@@ -45,10 +45,24 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte
 }
 
 return_t tls_records::read(tls_session* session, tls_direction_t dir, const binary_t& bin) {
-    const byte_t* stream = &bin[0];
-    size_t size = bin.size();
-    size_t pos = 0;
-    return read(session, dir, stream, size, pos);
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if (bin.empty()) {
+            ret = errorcode_t::empty;
+            __leave2;
+        }
+
+        const byte_t* stream = &bin[0];
+        size_t size = bin.size();
+        size_t pos = 0;
+        ret = read(session, dir, stream, size, pos);
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t tls_records::write(tls_session* session, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func) {

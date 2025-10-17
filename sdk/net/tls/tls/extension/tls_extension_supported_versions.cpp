@@ -69,16 +69,15 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.println("    > %s (%i ent.)", constexpr_versions, count);
-            int i = 0;
-            for (auto ver : _versions) {
-                dbs.println("      [%i] 0x%04x %s", i++, ver, tlsadvisor->tls_version_string(ver).c_str());
-            }
-
-            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
+                dbs.println("    > %s (%i ent.)", constexpr_versions, count);
+                int i = 0;
+                for (auto ver : _versions) {
+                    dbs.println("      [%i] 0x%04x %s", i++, ver, tlsadvisor->tls_version_string(ver).c_str());
+                }
+            });
         }
 #endif
     }
@@ -148,12 +147,11 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.println("    > 0x%04x %s", version, tlsadvisor->tls_version_string(version).c_str());
-
-            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
+                dbs.println("    > 0x%04x %s", version, tlsadvisor->tls_version_string(version).c_str());
+            });
         }
 #endif
     }

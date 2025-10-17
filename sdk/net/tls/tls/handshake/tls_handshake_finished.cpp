@@ -193,20 +193,20 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
-                dbs.autoindent(1);
-                dbs.println("> %s \e[1;33m%s\e[0m", constexpr_verify_data, (errorcode_t::success == ret) ? "true" : "false");
-                if (check_trace_level(loglevel_debug)) {
-                    dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
-                }
-                const binary_t ht_secret = secrets.get(typeof_secret);
-                dbs.println("  > secret [0x%08x] %s (%s)", typeof_secret, base16_encode(ht_secret).c_str(), tlsadvisor->nameof_secret(typeof_secret).c_str());
-                dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
-                dbs.println("  > verify data %s", base16_encode(verify_data).c_str());
-                dbs.println("  > maced       %s", base16_encode(maced).c_str());
-                dbs.autoindent(0);
-
-                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    dbs.autoindent(1);
+                    dbs.println("> %s \e[1;33m%s\e[0m", constexpr_verify_data, (errorcode_t::success == ret) ? "true" : "false");
+                    if (check_trace_level(loglevel_debug)) {
+                        dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
+                    }
+                    const binary_t ht_secret = secrets.get(typeof_secret);
+                    dbs.println("  > secret [0x%08x] %s (%s)", typeof_secret, base16_encode(ht_secret).c_str(),
+                                tlsadvisor->nameof_secret(typeof_secret).c_str());
+                    dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
+                    dbs.println("  > verify data %s", base16_encode(verify_data).c_str());
+                    dbs.println("  > maced       %s", base16_encode(maced).c_str());
+                    dbs.autoindent(0);
+                });
             }
 #endif
 
@@ -259,17 +259,16 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("> %s", constexpr_verify_data);
-            if (check_trace_level(loglevel_debug)) {
-                dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
-            }
-            const binary_t ht_secret = secrets.get(typeof_secret);
-            dbs.println("  > secret [0x%08x] %s (%s)", typeof_secret, base16_encode(ht_secret).c_str(), tlsadvisor->nameof_secret(typeof_secret).c_str());
-            dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
-            dbs.println("  > verify data %s", base16_encode(verify_data).c_str());
-
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                dbs.println("> %s", constexpr_verify_data);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
+                }
+                const binary_t ht_secret = secrets.get(typeof_secret);
+                dbs.println("  > secret [0x%08x] %s (%s)", typeof_secret, base16_encode(ht_secret).c_str(), tlsadvisor->nameof_secret(typeof_secret).c_str());
+                dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
+                dbs.println("  > verify data %s", base16_encode(verify_data).c_str());
+            });
         }
 #endif
 

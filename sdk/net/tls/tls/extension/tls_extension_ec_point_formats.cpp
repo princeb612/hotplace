@@ -76,16 +76,15 @@ return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.println("   > %s (%i ent.)", constexpr_formats, len);
-            uint8 i = 0;
-            for (auto fmt : _ec_point_formats) {
-                dbs.println("     [%i] 0x%02x(%i) %s", i++, fmt, fmt, tlsadvisor->ec_point_format_name(fmt).c_str());
-            }
-
-            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
+                dbs.println("   > %s (%i ent.)", constexpr_formats, len);
+                uint8 i = 0;
+                for (auto fmt : _ec_point_formats) {
+                    dbs.println("     [%i] 0x%02x(%i) %s", i++, fmt, fmt, tlsadvisor->ec_point_format_name(fmt).c_str());
+                }
+            });
         }
 #endif
     }

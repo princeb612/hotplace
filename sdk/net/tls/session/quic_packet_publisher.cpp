@@ -240,9 +240,8 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
                     protection.calc(session, tls_hs_client_hello, dir);  // calc initial keys
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
-                        basic_stream dbs;
-                        dbs.println("QUIC DCID %s", base16_encode(id).c_str());
-                        trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+                        trace_debug_event(trace_category_net, trace_event_quic_packet,
+                                          [&](basic_stream& dbs) -> void { dbs.println("QUIC DCID %s", base16_encode(id).c_str()); });
                     }
 #endif
                 }
@@ -256,9 +255,8 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
                     session->get_quic_session().get_cid_tracker().insert({0, id});
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
-                        basic_stream dbs;
-                        dbs.println("QUIC Server CID %s", base16_encode(id).c_str());
-                        trace_debug_event(trace_category_net, trace_event_quic_packet, &dbs);
+                        trace_debug_event(trace_category_net, trace_event_quic_packet,
+                                          [&](basic_stream& dbs) -> void { dbs.println("QUIC Server CID %s", base16_encode(id).c_str()); });
                     }
 #endif
                 }

@@ -38,16 +38,16 @@ transcript_hash *tls_protection::get_transcript_hash() {
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                constexpr char constexpr_transcript_hash[] = "\e[1;33mstarting transcript_hash\e[0m";
-                constexpr char constexpr_cipher_suite[] = "cipher suite";
-                crypto_advisor *advisor = crypto_advisor::get_instance();
-                tls_advisor *tlsadvisor = tls_advisor::get_instance();
-                auto mdname = advisor->nameof_md(hashalg);
-                basic_stream dbs;
-                dbs.println("# %s", constexpr_transcript_hash);
-                dbs.println(" > %s 0x%04x %s", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
-                dbs.println(" > %s", mdname);
-                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                    constexpr char constexpr_transcript_hash[] = "\e[1;33mstarting transcript_hash\e[0m";
+                    constexpr char constexpr_cipher_suite[] = "cipher suite";
+                    crypto_advisor *advisor = crypto_advisor::get_instance();
+                    tls_advisor *tlsadvisor = tls_advisor::get_instance();
+                    auto mdname = advisor->nameof_md(hashalg);
+                    dbs.println("# %s", constexpr_transcript_hash);
+                    dbs.println(" > %s 0x%04x %s", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
+                    dbs.println(" > %s", mdname);
+                });
             }
 #endif
         }
@@ -91,18 +91,18 @@ return_t tls_protection::update_transcript_hash(tls_session *session, const byte
                 hash->update(stream + offset_body, size - offset_body);
 #if defined DEBUG
                 if (istraceable(trace_category_net, loglevel_debug)) {
-                    basic_stream dbs;
-                    binary_t digest;
-                    hash->digest(digest);
-                    dbs.printf("\e[1;34m");
-                    dbs.println("> update transcript hash @0x%p", this);
-                    dump_memory(stream, sizeof(tls_handshake_t), &dbs, 16, 3, 0, dump_notrunc);
-                    dbs.println("> update transcript hash @0x@%p", this);
-                    dump_memory(stream + offset_body, size - offset_body, &dbs, 16, 3, 0, dump_notrunc);
-                    dbs.printf("\e[1;33m");
-                    dbs.println("   %s", base16_encode(digest).c_str());
-                    dbs.printf("\e[0m");
-                    trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                        binary_t digest;
+                        hash->digest(digest);
+                        dbs.printf("\e[1;34m");
+                        dbs.println("> update transcript hash @0x%p", this);
+                        dump_memory(stream, sizeof(tls_handshake_t), &dbs, 16, 3, 0, dump_notrunc);
+                        dbs.println("> update transcript hash @0x@%p", this);
+                        dump_memory(stream + offset_body, size - offset_body, &dbs, 16, 3, 0, dump_notrunc);
+                        dbs.printf("\e[1;33m");
+                        dbs.println("   %s", base16_encode(digest).c_str());
+                        dbs.printf("\e[0m");
+                    });
                 }
 #endif
             } else {
@@ -113,24 +113,24 @@ return_t tls_protection::update_transcript_hash(tls_session *session, const byte
                 hash->update(stream, size);
 #if defined DEBUG
                 if (istraceable(trace_category_net, loglevel_debug)) {
-                    basic_stream dbs;
-                    binary_t digest;
-                    hash->digest(digest);
-                    dbs.printf("\e[1;34m");
-                    dbs.println("> update transcript hash @0x%p size 0x%zx", this, size);
-                    // dump_memory(stream, size, &dbs, 16, 3, 0, dump_notrunc);
-                    size_t hdrsize = 0;
-                    if (is_kindof_dtls()) {
-                        hdrsize = sizeof(dtls_handshake_t);
-                    } else {
-                        hdrsize = sizeof(tls_handshake_t);
-                    }
-                    dump_memory(stream, hdrsize, &dbs, 16, 3, 0, dump_notrunc);
-                    dump_memory(stream + hdrsize, size - hdrsize, &dbs, 16, 3, 0, dump_notrunc);
-                    dbs.printf("\e[1;33m");
-                    dbs.println("   %s", base16_encode(digest).c_str());
-                    dbs.printf("\e[0m");
-                    trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                        binary_t digest;
+                        hash->digest(digest);
+                        dbs.printf("\e[1;34m");
+                        dbs.println("> update transcript hash @0x%p size 0x%zx", this, size);
+                        // dump_memory(stream, size, &dbs, 16, 3, 0, dump_notrunc);
+                        size_t hdrsize = 0;
+                        if (is_kindof_dtls()) {
+                            hdrsize = sizeof(dtls_handshake_t);
+                        } else {
+                            hdrsize = sizeof(tls_handshake_t);
+                        }
+                        dump_memory(stream, hdrsize, &dbs, 16, 3, 0, dump_notrunc);
+                        dump_memory(stream + hdrsize, size - hdrsize, &dbs, 16, 3, 0, dump_notrunc);
+                        dbs.printf("\e[1;33m");
+                        dbs.println("   %s", base16_encode(digest).c_str());
+                        dbs.printf("\e[0m");
+                    });
                 }
 #endif
             }

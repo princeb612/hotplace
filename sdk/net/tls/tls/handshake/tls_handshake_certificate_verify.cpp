@@ -227,19 +227,18 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.autoindent(1);
-            dbs.println(" > %s 0x%04x %s", constexpr_signature_alg, scheme, tlsadvisor->signature_scheme_name(scheme).c_str());
-            dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
-            // dbs.println(" > tosign");
-            // dump_memory(tosign, &dbs, 16, 3, 0x00, dump_notrunc);
-            dbs.println(" > %s \e[1;33m%s\e[0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
-            if (check_trace_level(loglevel_debug)) {
-                dump_memory(signature, &dbs, 16, 3, 0x00, dump_notrunc);
-            }
-            dbs.autoindent(0);
-
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                dbs.autoindent(1);
+                dbs.println(" > %s 0x%04x %s", constexpr_signature_alg, scheme, tlsadvisor->signature_scheme_name(scheme).c_str());
+                dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
+                // dbs.println(" > tosign");
+                // dump_memory(tosign, &dbs, 16, 3, 0x00, dump_notrunc);
+                dbs.println(" > %s \e[1;33m%s\e[0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(signature, &dbs, 16, 3, 0x00, dump_notrunc);
+                }
+                dbs.autoindent(0);
+            });
         }
 #endif
     }

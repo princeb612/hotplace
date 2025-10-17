@@ -119,16 +119,15 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
-                dbs.autoindent(1);
-                dbs.println(" > %s %i", constexpr_pubkey_len, pubkey_len);
-                if (check_trace_level(loglevel_debug)) {
-                    dbs.println(" > %s", constexpr_pubkey);
-                    dump_memory(pubkey, &dbs, 16, 3, 0x0, dump_notrunc);
-                }
-                dbs.autoindent(0);
-
-                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    dbs.autoindent(1);
+                    dbs.println(" > %s %i", constexpr_pubkey_len, pubkey_len);
+                    if (check_trace_level(loglevel_debug)) {
+                        dbs.println(" > %s", constexpr_pubkey);
+                        dump_memory(pubkey, &dbs, 16, 3, 0x0, dump_notrunc);
+                    }
+                    dbs.autoindent(0);
+                });
             }
 #endif
         }
@@ -191,12 +190,12 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            basic_stream dbs;
-            dbs.println("> SKE");
-            dump_key(pkey_ske, &dbs, 16, 3, dump_notrunc);
-            dbs.println("> CKE");
-            dump_key(pkey_cke, &dbs, 16, 3, dump_notrunc);
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                dbs.println("> SKE");
+                dump_key(pkey_ske, &dbs, 16, 3, dump_notrunc);
+                dbs.println("> CKE");
+                dump_key(pkey_cke, &dbs, 16, 3, dump_notrunc);
+            });
         }
 #endif
     }

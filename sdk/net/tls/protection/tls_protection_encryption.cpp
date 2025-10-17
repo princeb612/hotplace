@@ -566,20 +566,19 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            basic_stream dbs;
-            dbs.println("> encrypt");
-            dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
-            dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());
-            dbs.println(" > record no %i (space %s)", record_no, tlsadvisor->protection_space_string(space).c_str());
-            dbs.println(" > nonce %s", base16_encode(nonce).c_str());
-            dbs.println(" > aad %s", base16_encode(aad).c_str());
-            dbs.println(" > tag %s", base16_encode(tag).c_str());
-            dbs.println(" > plaintext");
-            dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.println(" > ciphertext");
-            dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
-
-            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                dbs.println("> encrypt");
+                dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
+                dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());
+                dbs.println(" > record no %i (space %s)", record_no, tlsadvisor->protection_space_string(space).c_str());
+                dbs.println(" > nonce %s", base16_encode(nonce).c_str());
+                dbs.println(" > aad %s", base16_encode(aad).c_str());
+                dbs.println(" > tag %s", base16_encode(tag).c_str());
+                dbs.println(" > plaintext");
+                dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.println(" > ciphertext");
+                dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
+            });
         }
 #endif
     }
@@ -672,21 +671,20 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            basic_stream dbs;
-            dbs.println("> encrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
-            dbs.println(" > aad %s", base16_encode(aad).c_str());
-            dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, cbc));
-            dbs.println(" > enckey[%08x] %s (%s)", secret_key, base16_encode(enckey).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
-            dbs.println(" > iv %s", base16_encode(iv).c_str());
-            dbs.println(" > mac %s", advisor->nameof_md(hmac_alg));
-            dbs.println(" > mackey[%08x] %s (%s)", secret_mac_key, base16_encode(mackey).c_str(), tlsadvisor->nameof_secret(secret_mac_key).c_str());
-            dbs.println(" > record no %i", record_no);
-            dbs.println(" > plaintext");
-            dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.println(" > cbcmaced");
-            dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
-
-            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                dbs.println("> encrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
+                dbs.println(" > aad %s", base16_encode(aad).c_str());
+                dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, cbc));
+                dbs.println(" > enckey[%08x] %s (%s)", secret_key, base16_encode(enckey).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
+                dbs.println(" > iv %s", base16_encode(iv).c_str());
+                dbs.println(" > mac %s", advisor->nameof_md(hmac_alg));
+                dbs.println(" > mackey[%08x] %s (%s)", secret_mac_key, base16_encode(mackey).c_str(), tlsadvisor->nameof_secret(secret_mac_key).c_str());
+                dbs.println(" > record no %i", record_no);
+                dbs.println(" > plaintext");
+                dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.println(" > cbcmaced");
+                dump_memory(ciphertext, &dbs, 16, 3, 0x0, dump_notrunc);
+            });
         }
 #endif
     }
@@ -921,24 +919,23 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            basic_stream dbs;
-            dbs.println("> decrypt");
-            dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
-            dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());
-            dbs.println(" > record no %i (space %s)", record_no, tlsadvisor->protection_space_string(space).c_str());
-            dbs.println(" > nonce %s", base16_encode(nonce).c_str());
-            if (is_kindof_tls12()) {
-                dbs.println(" > aad %s", base16_encode(tls12_aad).c_str());
-            } else {
-                dbs.println(" > aad %s", base16_encode(aad).c_str());
-            }
-            dbs.println(" > tag %s", base16_encode(tag).c_str());
-            dbs.println(" > ciphertext");
-            dump_memory(stream + pos, size - pos, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.println(" > plaintext");
-            dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
-
-            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                dbs.println("> decrypt");
+                dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
+                dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());
+                dbs.println(" > record no %i (space %s)", record_no, tlsadvisor->protection_space_string(space).c_str());
+                dbs.println(" > nonce %s", base16_encode(nonce).c_str());
+                if (is_kindof_tls12()) {
+                    dbs.println(" > aad %s", base16_encode(tls12_aad).c_str());
+                } else {
+                    dbs.println(" > aad %s", base16_encode(aad).c_str());
+                }
+                dbs.println(" > tag %s", base16_encode(tag).c_str());
+                dbs.println(" > ciphertext");
+                dump_memory(stream + pos, size - pos, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.println(" > plaintext");
+                dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
+            });
         }
 #endif
     }
@@ -1050,21 +1047,20 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            basic_stream dbs;
-            dbs.println("> decrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
-            dbs.println(" > aad %s", base16_encode(aad).c_str());
-            dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, cbc));
-            dbs.println(" > enckey[%08x] %s (%s)", secret_key, base16_encode(enckey).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
-            dbs.println(" > iv %s", base16_encode(iv).c_str());
-            dbs.println(" > mac %s", advisor->nameof_md(hmac_alg));
-            dbs.println(" > mackey[%08x] %s (%s)", secret_mac_key, base16_encode(mackey).c_str(), tlsadvisor->nameof_secret(secret_mac_key).c_str());
-            dbs.println(" > record no %i", record_no);
-            dbs.println(" > ciphertext");
-            dump_memory(ciphertext, ciphersize, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.println(" > plaintext 0x%x(%i)", plainsize, plainsize);
-            dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
-
-            trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                dbs.println("> decrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
+                dbs.println(" > aad %s", base16_encode(aad).c_str());
+                dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, cbc));
+                dbs.println(" > enckey[%08x] %s (%s)", secret_key, base16_encode(enckey).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
+                dbs.println(" > iv %s", base16_encode(iv).c_str());
+                dbs.println(" > mac %s", advisor->nameof_md(hmac_alg));
+                dbs.println(" > mackey[%08x] %s (%s)", secret_mac_key, base16_encode(mackey).c_str(), tlsadvisor->nameof_secret(secret_mac_key).c_str());
+                dbs.println(" > record no %i", record_no);
+                dbs.println(" > ciphertext");
+                dump_memory(ciphertext, ciphersize, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.println(" > plaintext 0x%x(%i)", plainsize, plainsize);
+                dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
+            });
         }
 #endif
     }

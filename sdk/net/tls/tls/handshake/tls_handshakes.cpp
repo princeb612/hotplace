@@ -63,6 +63,10 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        if (bin.empty()) {
+            ret = errorcode_t::empty;
+            __leave2;
+        }
 
         const byte_t* stream = &bin[0];
         size_t size = bin.size();

@@ -35,8 +35,8 @@ class openssl_pqc {
     return_t encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
     return_t decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
 
-    return_t encapsule(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret);
-    return_t decapsule(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret);
+    return_t encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret);
+    return_t decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret);
 
     return_t sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature);
     return_t verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature);

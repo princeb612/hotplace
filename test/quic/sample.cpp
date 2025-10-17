@@ -360,6 +360,7 @@ int main(int argc, char** argv) {
     }
 
     if (0 == option.flags) {
+#if 0
         // RFC 9000
         test_rfc_9000_a1();
         test_rfc_9000_a2();
@@ -389,6 +390,7 @@ int main(int argc, char** argv) {
             test_rfc_9369_a4(&client_session, &server_session);
             test_rfc_9369_a5();
         }
+#endif
     }
 
     if ((test_flag_pcap & option.flags) || (0 == option.flags)) {

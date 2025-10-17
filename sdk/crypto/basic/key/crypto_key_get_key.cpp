@@ -11,6 +11,7 @@
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/evp_key.hpp>
 
 namespace hotplace {
@@ -73,7 +74,11 @@ return_t crypto_key::get_public_key(const EVP_PKEY* pkey, binary_t& pub1, binary
                 // do nothing
             } break;
             case crypto_kty_t::kty_mlkem: {
-                // TODO
+                // pub
+                iter = datamap.find(crypt_item_t::item_mlkem_pub);
+                if (datamap.end() != iter) {
+                    pub1 = iter->second;
+                }
             } break;
         }
     }
@@ -192,7 +197,10 @@ return_t crypto_key::get_private_key(const EVP_PKEY* pkey, binary_t& priv) {
                 }
             } break;
             case crypto_kty_t::kty_mlkem: {
-                // TODO
+                iter = datamap.find(crypt_item_t::item_mlkem_priv);
+                if (datamap.end() != iter) {
+                    priv = iter->second;
+                }
             } break;
         }
     }
@@ -207,14 +215,20 @@ return_t crypto_key::get_asn1public_key(const EVP_PKEY* pkey, binary_t& pub) {
             __leave2;
         }
 
-        int len = i2d_PUBKEY((EVP_PKEY*)pkey, nullptr);
-        if (len < 0) {
-            ret = errorcode_t::internal_error;
-            __leave2;
+        int type = EVP_PKEY_id(pkey);
+        if (EVP_PKEY_KEYMGMT != type) {
+            int len = i2d_PUBKEY((EVP_PKEY*)pkey, nullptr);
+            if (len < 0) {
+                ret = errorcode_t::internal_error;
+                __leave2;
+            }
+            pub.resize(len);
+            byte_t* p = &pub[0];
+            len = i2d_PUBKEY((EVP_PKEY*)pkey, &p);
+        } else {
+            crypto_keychain keychain;
+            ret = keychain.pkey_encode(nullptr, pkey, pub, key_encoding_pub_der);
         }
-        pub.resize(len);
-        byte_t* p = &pub[0];
-        len = i2d_PUBKEY((EVP_PKEY*)pkey, &p);
     }
     __finally2 {}
     return ret;
@@ -307,7 +321,12 @@ return_t crypto_key::get_key(const EVP_PKEY* pkey, int flags, binary_t& pub, bin
                 }
             } break;
             case kty_mlkem: {
-                // TODO
+                if ((public_key | asn1public_key) & flags) {
+                    lambda_get_item(crypt_item_t::item_mlkem_pub, pub);
+                }
+                if (private_key & flags) {
+                    lambda_get_item(crypt_item_t::item_mlkem_priv, priv);
+                }
             } break;
             default: {
                 ret = errorcode_t::not_supported;
@@ -396,7 +415,12 @@ return_t crypto_key::get_key(const EVP_PKEY* pkey, int flags, crypto_kty_t& type
                 }
             } break;
             case crypto_kty_t::kty_mlkem: {
-                // TODO
+                if (public_key & flags) {
+                    lambda_get_item(crypt_item_t::item_mlkem_pub, pub1);
+                }
+                if (private_key & flags) {
+                    lambda_get_item(crypt_item_t::item_mlkem_priv, priv);
+                }
             } break;
         }
     }
@@ -453,7 +477,10 @@ return_t crypto_key::get_privkey(const EVP_PKEY* pkey, crypto_kty_t& type, binar
                 }
             } break;
             case crypto_kty_t::kty_mlkem: {
-                // TODO
+                iter = datamap.find(crypt_item_t::item_mlkem_priv);
+                if (datamap.end() != iter) {
+                    priv = iter->second;
+                }
             } break;
         }
     }

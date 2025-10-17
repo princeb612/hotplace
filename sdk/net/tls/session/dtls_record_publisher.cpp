@@ -103,13 +103,13 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
 
 #if defined DEBUG
                         if (istraceable(trace_category_net, loglevel_debug)) {
-                            basic_stream dbs;
-                            dbs.printf("\e[1;36m");
-                            dbs.println("# publish %s %i %s", tlsadvisor->handshake_type_string(hstype).c_str(), hsseq,
-                                        tlsadvisor->nameof_direction(dir, 1).c_str());
-                            dbs.printf("\e[0m");
-                            dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
-                            trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+                            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                                dbs.printf("\e[1;36m");
+                                dbs.println("# publish %s %i %s", tlsadvisor->handshake_type_string(hstype).c_str(), hsseq,
+                                            tlsadvisor->nameof_direction(dir, 1).c_str());
+                                dbs.printf("\e[0m");
+                                dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
+                            });
                         }
 #endif
                         spl.add(std::move(bin), std::move(desc));
@@ -123,13 +123,13 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                 auto lambda_split = [&](uint32 flags, const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize, const spl_desc& desc) -> void {
 #if defined DEBUG
                     if (istraceable(trace_category_net, loglevel_debug)) {
-                        basic_stream dbs;
-                        dbs.printf("\e[1;36m");
-                        dbs.println("# split %s %i %s", tlsadvisor->handshake_type_string(desc.hstype).c_str(), desc.hsseq,
-                                    tlsadvisor->nameof_direction(dir, 1).c_str());
-                        dbs.printf("\e[0m");
-                        dump_memory(stream + fragoffset, fragsize, &dbs, 16, 3, 0, dump_notrunc);
-                        trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+                        trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                            dbs.printf("\e[1;36m");
+                            dbs.println("# split %s %i %s", tlsadvisor->handshake_type_string(desc.hstype).c_str(), desc.hsseq,
+                                        tlsadvisor->nameof_direction(dir, 1).c_str());
+                            dbs.printf("\e[0m");
+                            dump_memory(stream + fragoffset, fragsize, &dbs, 16, 3, 0, dump_notrunc);
+                        });
                     }
 #endif
                     uint32 mask = splitter_flag_t::splitter_new_segment;

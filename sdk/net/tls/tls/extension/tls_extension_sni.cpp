@@ -72,13 +72,12 @@ return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stre
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.println("   > %s %i (%s)", constexpr_name_type, type, tlsadvisor->sni_nametype_string(type).c_str());  // 00 host_name
-            dbs.println("   > %s %s", constexpr_hostname, bin2str(hostname).c_str());
-
-            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
+                dbs.println("   > %s %i (%s)", constexpr_name_type, type, tlsadvisor->sni_nametype_string(type).c_str());  // 00 host_name
+                dbs.println("   > %s %s", constexpr_hostname, bin2str(hostname).c_str());
+            });
         }
 #endif
 

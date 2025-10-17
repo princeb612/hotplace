@@ -21,7 +21,7 @@ namespace crypto {
 openssl_mac::openssl_mac() {}
 
 return_t openssl_mac::hmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output) {
-    return hmac(alg, key, &input[0], input.size(), output);
+    return hmac(alg, key, input.empty() ? nullptr : &input[0], input.size(), output);
 }
 
 return_t openssl_mac::hmac(const char* alg, const binary_t& key, const byte_t* stream, size_t size, binary_t& output) {

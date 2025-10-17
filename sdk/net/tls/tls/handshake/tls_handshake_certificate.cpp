@@ -137,13 +137,12 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.autoindent(1);
-            dbs.println(" > %s %i", constexpr_request_context_len, request_context_len);
-            dbs.println(" > %s 0x%04x(%i)", constexpr_certificates_len, certificates_len, certificates_len);
-            dbs.autoindent(0);
-
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                dbs.autoindent(1);
+                dbs.println(" > %s %i", constexpr_request_context_len, request_context_len);
+                dbs.println(" > %s 0x%04x(%i)", constexpr_certificates_len, certificates_len, certificates_len);
+                dbs.autoindent(0);
+            });
         }
 #endif
 
@@ -188,12 +187,12 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
-                dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_len, idx, certificate_len, certificate_len);
-                if (is_tls13) {
-                    dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_extensions_len, idx, extensions_len, extensions_len);
-                }
-                trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_len, idx, certificate_len, certificate_len);
+                    if (is_tls13) {
+                        dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_extensions_len, idx, extensions_len, extensions_len);
+                    }
+                });
             }
 #endif
 
@@ -218,17 +217,17 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            basic_stream dbs;
-            dbs.autoindent(1);
-            auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
-                if (item->get_desc().get_kid_str() == desc.get_kid_str()) {
-                    dbs.println(R"(> kid "%s")", item->get_desc().get_kid_cstr());
-                    dump_key(item->get_pkey(), &dbs, 16, 3, dump_notrunc);
-                }
-            };
-            servercert.for_each(dump_crypto_key, nullptr);
-            dbs.autoindent(0);
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                dbs.autoindent(1);
+                auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+                    if (item->get_desc().get_kid_str() == desc.get_kid_str()) {
+                        dbs.println(R"(> kid "%s")", item->get_desc().get_kid_cstr());
+                        dump_key(item->get_pkey(), &dbs, 16, 3, dump_notrunc);
+                    }
+                };
+                servercert.for_each(dump_crypto_key, nullptr);
+                dbs.autoindent(0);
+            });
         }
 #endif
     }
@@ -263,15 +262,14 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.autoindent(1);
-            dbs.println("> %s", constexpr_certificate);
-            if (check_trace_level(loglevel_debug)) {
-                dump_memory(certificate, &dbs, 16, 3, 0x0, dump_notrunc);
-            }
-            dbs.autoindent(0);
-
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                dbs.autoindent(1);
+                dbs.println("> %s", constexpr_certificate);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(certificate, &dbs, 16, 3, 0x0, dump_notrunc);
+                }
+                dbs.autoindent(0);
+            });
         }
 #endif
 

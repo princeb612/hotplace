@@ -12,7 +12,8 @@
 
 #include "sample.hpp"
 
-static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
+static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_session* session, tls_direction_t dir, binary_t& bin, const char* group_param,
+                                               const char* message) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -77,7 +78,10 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
                                             .add("ffdhe3072")
                                             .add("ffdhe4096")
                                             .add("ffdhe6144")
-                                            .add("ffdhe8192");
+                                            .add("ffdhe8192")
+                                            .add("MLKEM512")
+                                            .add("MLKEM768")
+                                            .add("MLKEM1024");
                                         return success;
                                     })
                                .add(tls_ext_next_protocol_negotiation, dir, handshake)
@@ -121,16 +125,31 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
                                             return success;
                                         })
                                    .add(tls_ext_key_share, dir, handshake,  //
-                                        [](tls_extension* extension) -> return_t {
+                                        [&](tls_extension* extension) -> return_t {
                                             tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
                                             keyshare->clear();
-                                            keyshare->add("x25519");
+                                            split_context_t* context = nullptr;
+                                            split_begin(&context, group_param, ":");
+                                            split_foreach(context, [&](const std::string tlsgroup) -> void { keyshare->add(tlsgroup); });
+                                            split_end(context);
+
                                             return success;
                                         });
 
-                               auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
-                               _logger->write([&](basic_stream& bs) -> void { dump_key(pkey, &bs); });
-                               _test_case.assert(pkey, __FUNCTION__, "{client} key share (client generated)");
+                               // auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
+                               // _logger->write([&](basic_stream& bs) -> void { dump_key(pkey, &bs); });
+                               bool test = false;
+                               auto& keyexchange = session->get_tls_protection().get_keyexchange();
+                               keyexchange.for_each(
+                                   [&](crypto_key_object* obj, void* user) -> void {
+                                       if (KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE == obj->get_desc().get_kid_str()) {
+                                           auto pkey = obj->get_pkey();
+                                           _logger->write([&](basic_stream& bs) -> void { dump_key(pkey, &bs); });
+                                           test = true;
+                                       }
+                                   },
+                                   nullptr);
+                               _test_case.assert(test, __FUNCTION__, "{client} key share (client generated)");
                            }
                            return success;
                        })
@@ -160,11 +179,14 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
             __leave2;
         }
 
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto csname = tlsadvisor->cipher_suite_string(server_cs);
             _test_case.assert(csname.size(), __FUNCTION__, "%s", csname.c_str());
         }
+
+        auto group = protection.get_protection_context().get0_supported_group();
+        auto hint_group = tlsadvisor->hintof_tls_group(group);
 
         tls_record_handshake record(session);
         ret = record
@@ -191,8 +213,8 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
                                         (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
                                         return success;
                                     })
-                               .add(tls_ext_supported_groups, dir, handshake, [](tls_extension* extension) -> return_t {
-                                   (*(tls_extension_supported_groups*)extension).add("x25519");
+                               .add(tls_ext_supported_groups, dir, handshake, [&](tls_extension* extension) -> return_t {
+                                   (*(tls_extension_supported_groups*)extension).add(group);
                                    return success;
                                });
 
@@ -213,14 +235,26 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
 
                                {
                                    auto svr_keyshare = protection.get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
-                                   _logger->write([&](basic_stream& bs) -> void { dump_key(svr_keyshare, &bs); });
-                                   _test_case.assert(svr_keyshare, __FUNCTION__, "{server} key share (server generated)");
+                                   if (svr_keyshare) {
+                                       _logger->write([&](basic_stream& bs) -> void { dump_key(svr_keyshare, &bs); });
+                                       _test_case.assert(svr_keyshare, __FUNCTION__, "{server} key share (server generated)");
+                                   } else {
+                                       _test_case.assert(kty_mlkem == hint_group->kty, __FUNCTION__, "{server} to be encapsulated");
+                                   }
                                }
                            }
 
                            return success;
                        })
                   .write(dir, bin);
+
+        auto& keyexchange = session->get_tls_protection().get_keyexchange();
+        keyexchange.for_each([&](crypto_key_object* obj, void* user) -> void {
+            if (KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC == obj->get_desc().get_kid_str()) {
+                auto pkey = obj->get_pkey();
+                _logger->write([&](basic_stream& bs) -> void { dump_key(pkey, &bs); });
+            }
+        });
     }
     __finally2 {
         std::string dirstr;
@@ -580,11 +614,11 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
     return ret;
 }
 
-static void test_construct_tls_routine(const TLS_OPTION& option) {
+static void test_construct_tls_routine(const TLS_OPTION& option, const char* group_param) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     auto ver = tlsadvisor->tls_version_string(option.version);
     auto hint = tlsadvisor->hintof_cipher_suite(option.cipher_suite);
-    _test_case.begin("construct %s %s", ver.c_str(), hint->name_iana);
+    _test_case.begin("construct %s %s %s", ver.c_str(), hint->name_iana, group_param);
 
     // C -> S {client}
     // construct : write + client_session
@@ -601,7 +635,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option) {
 
         // C -> S CH
         binary_t bin_client_hello;
-        ret = do_test_construct_client_hello(option, &client_session, from_client, bin_client_hello, "construct client hello");
+        ret = do_test_construct_client_hello(option, &client_session, from_client, bin_client_hello, group_param, "construct client hello");
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -902,6 +936,20 @@ void test_construct_tls() {
     };
 
     for (auto item : testvector) {
-        test_construct_tls_routine(item);
+        test_construct_tls_routine(item, "x25519");
     }
+}
+
+void test_construct_tls13_mlkem() {
+    TLS_OPTION testvector[] = {
+        {tls_13, "TLS_AES_128_CCM_8_SHA256"}, {tls_13, "TLS_AES_128_CCM_SHA256"},       {tls_13, "TLS_AES_128_GCM_SHA256"},
+        {tls_13, "TLS_AES_256_GCM_SHA384"},   {tls_13, "TLS_CHACHA20_POLY1305_SHA256"},
+    };
+
+    auto tlsadvisor = tls_advisor::get_instance();
+    tlsadvisor->set_tls_groups("MLKEM512:MLKEM768:MLKEM1024");
+    for (auto item : testvector) {
+        test_construct_tls_routine(item, "MLKEM512:MLKEM768");
+    }
+    tlsadvisor->set_default_tls_groups();
 }

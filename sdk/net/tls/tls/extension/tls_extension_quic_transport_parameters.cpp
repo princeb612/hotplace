@@ -147,27 +147,26 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            for (auto item : params) {
-                auto param_id = item.first;
-                const auto& v = item.second.content();
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                for (auto item : params) {
+                    auto param_id = item.first;
+                    const auto& v = item.second.content();
 
-                dbs.printf("    > %I64i (%s) ", param_id, tlsadvisor->quic_param_string(param_id).c_str());
-                switch (v.type) {
-                    case TYPE_NULL: {
-                    } break;
-                    case TYPE_UINT64: {
-                        dbs.printf("0x%I64x (%I64i)", v.data.ui64, v.data.ui64);
-                    } break;
-                    case TYPE_BINARY: {
-                        vtprintf(&dbs, item.second, vtprintf_style_base16);
-                    } break;
+                    dbs.printf("    > %I64i (%s) ", param_id, tlsadvisor->quic_param_string(param_id).c_str());
+                    switch (v.type) {
+                        case TYPE_NULL: {
+                        } break;
+                        case TYPE_UINT64: {
+                            dbs.printf("0x%I64x (%I64i)", v.data.ui64, v.data.ui64);
+                        } break;
+                        case TYPE_BINARY: {
+                            vtprintf(&dbs, item.second, vtprintf_style_base16);
+                        } break;
+                    }
+                    dbs.println("");
                 }
-                dbs.println("");
-            }
-
-            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
+            });
         }
 #endif
     }

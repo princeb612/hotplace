@@ -44,9 +44,9 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("\e[1;34m  > frame %s 0x%x(%i) @0x%zx\e[0m", tlsadvisor->quic_frame_type_string(type).c_str(), type, type, begin);
-            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                dbs.println("\e[1;34m  > frame %s 0x%x(%i) @0x%zx\e[0m", tlsadvisor->quic_frame_type_string(type).c_str(), type, type, begin);
+            });
         }
 #endif
 
@@ -69,9 +69,7 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
             }
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
-                dbs.println("   > len %zi", pos - tpos + 1);
-                trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
+                trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void { dbs.println("   > len %zi", pos - tpos + 1); });
             }
 #endif
         }

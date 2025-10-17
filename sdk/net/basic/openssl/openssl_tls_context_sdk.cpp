@@ -117,13 +117,13 @@ return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {
 
 #if defined DEBUG
         if (istraceable(trace_category_crypto)) {
-            basic_stream dbs;
-            dbs.println("flag %08x", flags);
+            trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void {
+                dbs.println("flag %08x", flags);
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-            dbs.println("min proto version %08x", minver);
-            dbs.println("max proto version %08x", maxver);
+                dbs.println("min proto version %08x", minver);
+                dbs.println("max proto version %08x", maxver);
 #endif
-            trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
+            });
         }
 #endif
 
@@ -200,9 +200,7 @@ return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* ce
 
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
-                basic_stream dbs;
-                dbs.println("- SSL_new %p", ssl);
-                trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
+                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("- SSL_new %p", ssl); });
             }
 #endif
 
@@ -246,9 +244,7 @@ return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* ce
             SSL_free(ssl);
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
-                basic_stream dbs;
-                dbs.println("- SSL_free %p", ssl);
-                trace_debug_event(trace_category_crypto, trace_event_openssl_info, &dbs);
+                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("- SSL_free %p", ssl); });
             }
 #endif
         }
@@ -271,69 +267,69 @@ void set_info_callback_routine(const SSL* ssl, int where, int ret) {
             __leave2;
         }
 
-        basic_stream bs;
-        valist va;
-        const char* state = "*";
+        trace_debug_event(trace_category_net, trace_event_openssl_tls_state, [&](basic_stream& dbs) -> void {
+            valist va;
+            const char* state = "*";
 
-        // # define SSL_ST_CONNECT                  0x1000
-        // # define SSL_ST_ACCEPT                   0x2000
-        //
-        // # define SSL_ST_MASK                     0x0FFF
-        //
-        // # define SSL_CB_LOOP                     0x01
-        // # define SSL_CB_EXIT                     0x02
-        // # define SSL_CB_READ                     0x04
-        // # define SSL_CB_WRITE                    0x08
-        // # define SSL_CB_ALERT                    0x4000
-        // # define SSL_CB_HANDSHAKE_START          0x10
-        // # define SSL_CB_HANDSHAKE_DONE           0x20
+            // # define SSL_ST_CONNECT                  0x1000
+            // # define SSL_ST_ACCEPT                   0x2000
+            //
+            // # define SSL_ST_MASK                     0x0FFF
+            //
+            // # define SSL_CB_LOOP                     0x01
+            // # define SSL_CB_EXIT                     0x02
+            // # define SSL_CB_READ                     0x04
+            // # define SSL_CB_WRITE                    0x08
+            // # define SSL_CB_ALERT                    0x4000
+            // # define SSL_CB_HANDSHAKE_START          0x10
+            // # define SSL_CB_HANDSHAKE_DONE           0x20
 
-        if (where & SSL_ST_CONNECT) {
-            state = "SSL_connect";
-        } else if (where & SSL_ST_ACCEPT) {
-            state = "SSL_accept";
-        } else if (where & SSL_CB_READ) {
-            state = "SSL_read";
-        } else if (where & SSL_CB_WRITE) {
-            state = "SSL_write";
-        }
+            if (where & SSL_ST_CONNECT) {
+                state = "SSL_connect";
+            } else if (where & SSL_ST_ACCEPT) {
+                state = "SSL_accept";
+            } else if (where & SSL_CB_READ) {
+                state = "SSL_read";
+            } else if (where & SSL_CB_WRITE) {
+                state = "SSL_write";
+            }
 
-        if (where & SSL_CB_LOOP) {
-            va << state << "loop" << SSL_state_string_long(ssl) << SSL_get_cipher_name(ssl);
-        } else if (where & SSL_CB_EXIT) {
-            va << state << "exit" << SSL_state_string_long(ssl);
-        } else if (where & SSL_CB_ALERT) {
-            va << state << "callback" << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
-        } else if (where & SSL_CB_HANDSHAKE_START) {
-            va << "handshake start";
-        } else if (where & SSL_CB_HANDSHAKE_DONE) {
-            va << "handshake done";
-        } else {
-            va << state << SSL_state_string_long(ssl) << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
-        }
+            if (where & SSL_CB_LOOP) {
+                va << state << "loop" << SSL_state_string_long(ssl) << SSL_get_cipher_name(ssl);
+            } else if (where & SSL_CB_EXIT) {
+                va << state << "exit" << SSL_state_string_long(ssl);
+            } else if (where & SSL_CB_ALERT) {
+                va << state << "callback" << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
+            } else if (where & SSL_CB_HANDSHAKE_START) {
+                va << "handshake start";
+            } else if (where & SSL_CB_HANDSHAKE_DONE) {
+                va << "handshake done";
+            } else {
+                va << state << SSL_state_string_long(ssl) << SSL_alert_type_string_long(ret) << SSL_alert_desc_string_long(ret);
+            }
 
-        // # define TLS1_3_VERSION  0x0304
-        // # define TLS1_VERSION    0x0301
-        // # define TLS1_1_VERSION  0x0302
-        // # define TLS1_2_VERSION  0x0303
-        // # define DTLS1_VERSION   0xFEFF
-        // # define DTLS1_2_VERSION 0xFEFD
+            // # define TLS1_3_VERSION  0x0304
+            // # define TLS1_VERSION    0x0301
+            // # define TLS1_1_VERSION  0x0302
+            // # define TLS1_2_VERSION  0x0303
+            // # define DTLS1_VERSION   0xFEFF
+            // # define DTLS1_2_VERSION 0xFEFD
 
-        bs.printf("TLS %08X %08x ", SSL_version(ssl), where);
-        switch (va.size()) {
-            case 1:
-                bs.vprintf("{1}\n", va);
-                break;
-            case 3:
-                bs.vprintf("{1}:{2}:{3}\n", va);
-                break;
-            case 4:
-                bs.vprintf("{1}:{2}:{3}:{4}\n", va);
-                break;
-            default:
-                break;
-        }
-        trace_debug_event(trace_category_net, trace_event_openssl_tls_state, &bs);
+            dbs.printf("TLS %08X %08x ", SSL_version(ssl), where);
+            switch (va.size()) {
+                case 1:
+                    dbs.vprintf("{1}\n", va);
+                    break;
+                case 3:
+                    dbs.vprintf("{1}:{2}:{3}\n", va);
+                    break;
+                case 4:
+                    dbs.vprintf("{1}:{2}:{3}:{4}\n", va);
+                    break;
+                default:
+                    break;
+            }
+        });
     }
     __finally2 {}
 }

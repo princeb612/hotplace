@@ -174,18 +174,17 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("   > %s 0x%04x(%i)", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
-            if (check_trace_level(loglevel_debug)) {
-                dump_memory(psk_identity, &dbs, 16, 4, 0x0, dump_notrunc);
-            }
-            dbs.println("   > %s 0x%08x", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
-            dbs.println("   > %s 0x%04x(%i)", constexpr_psk_binders_len, psk_binders_len, psk_binders_len);
-            dbs.println("   > %s 0x%04x(%i)", constexpr_psk_binder_len, psk_binder_len, psk_binder_len);
-            dbs.println("   > %s %s \e[1;33m%s\e[0m", constexpr_psk_binder, base16_encode(psk_binder).c_str(),
-                        (errorcode_t::success == ret) ? "true" : "false");
-
-            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                dbs.println("   > %s 0x%04x(%i)", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(psk_identity, &dbs, 16, 4, 0x0, dump_notrunc);
+                }
+                dbs.println("   > %s 0x%08x", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
+                dbs.println("   > %s 0x%04x(%i)", constexpr_psk_binders_len, psk_binders_len, psk_binders_len);
+                dbs.println("   > %s 0x%04x(%i)", constexpr_psk_binder_len, psk_binder_len, psk_binder_len);
+                dbs.println("   > %s %s \e[1;33m%s\e[0m", constexpr_psk_binder, base16_encode(psk_binder).c_str(),
+                            (errorcode_t::success == ret) ? "true" : "false");
+            });
         }
 #endif
 
@@ -221,10 +220,8 @@ return_t tls_extension_server_psk::do_read_body(tls_direction_t dir, const byte_
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("   > %s %i", constexpr_selected_identity, selected_identity);
-
-            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_extension,
+                              [&](basic_stream& dbs) -> void { dbs.println("   > %s %i", constexpr_selected_identity, selected_identity); });
         }
 #endif
 

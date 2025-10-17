@@ -114,21 +114,20 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("> %s", constexpr_unified_header);
-            dbs.println(" > 0x%02x (C:%i S:%i L:%i E:%x)", uhdr, (uhdr & 0x10) ? 1 : 0, (uhdr & 0x08) ? 1 : 0, (uhdr & 0x04) ? 1 : 0, (uhdr & 0x03));
-            if (connection_id.size()) {
-                dbs.println(" > %s %s", constexpr_connection_id, base16_encode(connection_id).c_str());
-            }
+            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                dbs.println("> %s", constexpr_unified_header);
+                dbs.println(" > 0x%02x (C:%i S:%i L:%i E:%x)", uhdr, (uhdr & 0x10) ? 1 : 0, (uhdr & 0x08) ? 1 : 0, (uhdr & 0x04) ? 1 : 0, (uhdr & 0x03));
+                if (connection_id.size()) {
+                    dbs.println(" > %s %s", constexpr_connection_id, base16_encode(connection_id).c_str());
+                }
 
-            dbs.println(" > %s %04x", constexpr_sequence, sequence);
-            dbs.println(" > %s %04x", constexpr_len, len);
-            dbs.println(" > %s", constexpr_encdata);
-            if (check_trace_level(loglevel_debug)) {
-                dump_memory(encdata, &dbs, 16, 3, 0x0, dump_notrunc);
-            }
-
-            trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+                dbs.println(" > %s %04x", constexpr_sequence, sequence);
+                dbs.println(" > %s %04x", constexpr_len, len);
+                dbs.println(" > %s", constexpr_encdata);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(encdata, &dbs, 16, 3, 0x0, dump_notrunc);
+                }
+            });
         }
 #endif
 
@@ -199,24 +198,22 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            basic_stream dbs;
+            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                dbs.println("> rec_enc %04x", rec_enc);
+                if (2 == sequence_len) {
+                    dbs.println("> %s %04x (%04x XOR %s)", constexpr_recno, recno, sequence, base16_encode(protmask).substr(0, sequence_len << 1).c_str());
+                } else if (1 == sequence_len) {
+                    dbs.println("> %s %02x (%02x XOR %s)", constexpr_recno, recno, sequence, base16_encode(protmask).substr(0, sequence_len << 1).c_str());
+                }
 
-            dbs.println("> rec_enc %04x", rec_enc);
-            if (2 == sequence_len) {
-                dbs.println("> %s %04x (%04x XOR %s)", constexpr_recno, recno, sequence, base16_encode(protmask).substr(0, sequence_len << 1).c_str());
-            } else if (1 == sequence_len) {
-                dbs.println("> %s %02x (%02x XOR %s)", constexpr_recno, recno, sequence, base16_encode(protmask).substr(0, sequence_len << 1).c_str());
-            }
-
-            dbs.println("> protmask");
-            dump_memory(protmask, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.println("> additional");
-            dump_memory(additional, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.println("> %s %04x", constexpr_recno, recno);
-            dbs.println("> plaintext");
-            dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
-
-            trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+                dbs.println("> protmask");
+                dump_memory(protmask, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.println("> additional");
+                dump_memory(additional, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.println("> %s %04x", constexpr_recno, recno);
+                dbs.println("> plaintext");
+                dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
+            });
         }
 #endif
 
@@ -227,19 +224,17 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
+                trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                    dbs.println("> content type 0x%02x(%i) %s", type, type, tlsadvisor->content_type_string(type).c_str());
 
-                dbs.println("> content type 0x%02x(%i) %s", type, type, tlsadvisor->content_type_string(type).c_str());
-
-                if (check_trace_level(loglevel_debug)) {
-                    switch (type) {
-                        case tls_content_type_application_data: {
-                            dump_memory(&plaintext[0], plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
-                        } break;
+                    if (check_trace_level(loglevel_debug)) {
+                        switch (type) {
+                            case tls_content_type_application_data: {
+                                dump_memory(&plaintext[0], plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
+                            } break;
+                        }
                     }
-                }
-
-                trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+                });
             }
 #endif
 
@@ -368,14 +363,12 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            basic_stream dbs;
-
-            dbs.println("> header");
-            dump_memory(header, &dbs, 16, 3, 0x0, dump_notrunc);
-            dbs.println("> header masked (sequence)");
-            dump_memory(&bin[0], header.size(), &dbs, 16, 3, 0x0, dump_notrunc);
-
-            trace_debug_event(trace_category_net, trace_event_tls_record, &dbs);
+            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                dbs.println("> header");
+                dump_memory(header, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.println("> header masked (sequence)");
+                dump_memory(&bin[0], header.size(), &dbs, 16, 3, 0x0, dump_notrunc);
+            });
         }
 #endif
     }

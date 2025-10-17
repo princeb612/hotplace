@@ -52,26 +52,25 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            netsocket_t* session_socket = (netsocket_t*)data_array[0];
-            basic_stream dbs;
-
-            switch (type) {
-                case mux_connect:
-                    dbs.println("[h2] connect %i", session_socket->event_handle->fd);
-                    break;
-                case mux_read: {
-                    dbs.println("[h2] read %i", session_socket->event_handle->fd);
-                    byte_t* buf = (byte_t*)data_array[1];
-                    size_t bufsize = (size_t)data_array[2];
-                    dump_memory((byte_t*)buf, bufsize, &dbs, 16, 2, 0, dump_memory_flag_t::dump_notrunc);
-                } break;
-                case mux_disconnect:
-                    dbs.println("[h2] disconnect %i", session_socket->event_handle->fd);
-                    break;
-                default:
-                    break;
-            }
-            trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
+            trace_debug_event(trace_category_net, trace_event_net_consume, [&](basic_stream& dbs) -> void {
+                netsocket_t* session_socket = (netsocket_t*)data_array[0];
+                switch (type) {
+                    case mux_connect:
+                        dbs.println("[h2] connect %i", session_socket->event_handle->fd);
+                        break;
+                    case mux_read: {
+                        dbs.println("[h2] read %i", session_socket->event_handle->fd);
+                        byte_t* buf = (byte_t*)data_array[1];
+                        size_t bufsize = (size_t)data_array[2];
+                        dump_memory((byte_t*)buf, bufsize, &dbs, 16, 2, 0, dump_memory_flag_t::dump_notrunc);
+                    } break;
+                    case mux_disconnect:
+                        dbs.println("[h2] disconnect %i", session_socket->event_handle->fd);
+                        break;
+                    default:
+                        break;
+                }
+            });
         }
 #endif
 
@@ -229,9 +228,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             lambda_postread(frame);
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
-                frame->dump(&dbs);
-                trace_debug_event(trace_category_net, trace_event_net_consume, &dbs);
+                trace_debug_event(trace_category_net, trace_event_net_consume, [&](basic_stream& dbs) -> void { frame->dump(&dbs); });
             }
 #endif
             frame->release();

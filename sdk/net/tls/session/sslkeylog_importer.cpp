@@ -116,9 +116,7 @@ void sslkeylog_importer::session_status_changed(tls_session* session, uint32 sta
 #if defined DEBUG
         if (false == secret_map.empty()) {
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
-                dbs.println("# import SSLKEYLOGFILE");
-                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void { dbs.println("# import SSLKEYLOGFILE"); });
             }
         }
 #endif
@@ -130,10 +128,10 @@ void sslkeylog_importer::session_status_changed(tls_session* session, uint32 sta
 #if defined DEBUG
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             if (istraceable(trace_category_net)) {
-                basic_stream dbs;
-                auto& name = _instance._rtable[secret];
-                dbs.println("%s %s %s", name.c_str(), client_random_b16.c_str(), base16_encode(value).c_str());
-                trace_debug_event(trace_category_net, trace_event_tls_protection, &dbs);
+                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                    auto& name = _instance._rtable[secret];
+                    dbs.println("%s %s %s", name.c_str(), client_random_b16.c_str(), base16_encode(value).c_str());
+                });
             }
 #endif
         }

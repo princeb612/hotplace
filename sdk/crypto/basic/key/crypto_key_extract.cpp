@@ -11,6 +11,7 @@
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/evp_key.hpp>
 
 namespace hotplace {
@@ -48,6 +49,9 @@ return_t crypto_key::extract(const EVP_PKEY* pkey, int flags, crypto_kty_t& type
                 break;
             case crypto_kty_t::kty_dsa:
                 ret = extract_dsa(pkey, flags, type, datamap, preserve);
+                break;
+            case crypto_kty_t::kty_mlkem:
+                ret = extract_mlkem(pkey, flags, type, datamap, false);
                 break;
         }
     }
@@ -462,6 +466,47 @@ return_t crypto_key::extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
                 binary_t bin_x;
                 bn2bin(bn_x, bin_x);
                 datamap.insert(std::make_pair(crypt_item_t::item_dsa_priv, std::move(bin_x)));
+            }
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_key::extract_mlkem(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
+    return_t ret = errorcode_t::success;
+    int ret_openssl = 1;
+    __try2 {
+        datamap.clear();
+
+        if (nullptr == pkey) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        type = ktyof_evp_pkey(pkey);
+
+        if (crypto_kty_t::kty_mlkem != type) {
+            ret = errorcode_t::different_type;
+            __leave2;
+        }
+
+        crypto_keychain keychain;
+        if (crypt_access_t::public_key & flags) {
+            key_encoding_t encoding = (crypt_access_t::asn1public_key & flags) ? key_encoding_pub_der : key_encoding_pub_raw;
+            crypt_item_t item = (crypt_access_t::asn1public_key & flags) ? item_asn1der : item_mlkem_pub;
+            binary_t bin_pub;
+            ret = keychain.pkey_encode(nullptr, pkey, bin_pub, encoding);
+            if (success == ret) {
+                datamap.insert(std::make_pair(item, std::move(bin_pub)));
+            }
+        }
+
+        if (crypt_access_t::private_key & flags) {
+            binary_t bin_keypair;
+            ret = keychain.pkey_encode(nullptr, pkey, bin_keypair, key_encoding_priv_raw);
+            if (success == ret) {
+                datamap.insert(std::make_pair(crypt_item_t::item_mlkem_priv, std::move(bin_keypair)));
             }
         }
     }

@@ -37,6 +37,10 @@ server_socket_builder& server_socket_builder::set_ciphersuites(const std::string
     _cipher_suites = cipher_suites;
     return *this;
 }
+server_socket_builder& server_socket_builder::set_groups(const std::string& groups) {
+    _groups = groups;
+    return *this;
+}
 server_socket_builder& server_socket_builder::set_verify(int verify_peer) {
     _verify = verify_peer;
     return *this;
@@ -93,6 +97,7 @@ server_socket* server_socket_builder::build() {
                         openssl_tls_context ctx(tlscontext_flag_tls | ossl_flags, _server_cert.c_str(), _server_key.c_str());
                         __try_new_catch_only(svrsocket, new openssl_tls_server_socket(new openssl_tls(&ctx)));
                         ctx.set_cipher_list(_cipher_suites.c_str());
+                        ctx.set_group_list(_groups.c_str());
                         ctx.set_verify(_verify);
                     } break;
                     case socket_scheme_trial: {
@@ -106,6 +111,7 @@ server_socket* server_socket_builder::build() {
                         openssl_tls_context ctx(tlscontext_flag_dtls | ossl_flags, _server_cert.c_str(), _server_key.c_str());
                         __try_new_catch_only(svrsocket, new openssl_dtls_server_socket(new openssl_tls(&ctx)));
                         ctx.set_cipher_list(_cipher_suites.c_str());
+                        ctx.set_group_list(_groups.c_str());
                         ctx.set_verify(_verify);
                     } break;
                     case socket_scheme_trial: {
@@ -135,6 +141,7 @@ server_socket* server_socket_builder::build() {
                         load_certificate(_server_cert.c_str(), _server_key.c_str(), nullptr);
                         auto tlsadvisor = tls_advisor::get_instance();
                         tlsadvisor->set_ciphersuites(_cipher_suites.c_str());
+                        tlsadvisor->set_tls_groups(_groups.c_str());
                         // verify_peer not supported
                     } break;
                 }

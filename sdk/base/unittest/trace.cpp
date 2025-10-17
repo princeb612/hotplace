@@ -37,6 +37,14 @@ void trace_debug_event(trace_category_t category, uint32 event, const char* fmt,
     }
 }
 
+void trace_debug_event(trace_category_t category, uint32 event, std::function<void(basic_stream& bs)> f) {
+    if (f && trace_debug_filtered(category)) {
+        basic_stream bs;
+        f(bs);
+        trace_debug_event(category, event, &bs);
+    }
+}
+
 void trace_debug_filter(trace_category_t category, bool filter) { _debug_category_filter[category] = filter; }
 
 bool trace_debug_filtered(trace_category_t category) {

@@ -49,12 +49,12 @@ return_t quic_frame_new_token::do_read_body(tls_direction_t dir, const byte_t* s
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("   > %s (%zi) %s", constexpr_token, token.size(), base16_encode(token).c_str());
-            if (check_trace_level(loglevel_debug)) {
-                dump_memory(token, &dbs, 16, 5, 0x0, dump_notrunc);
-            }
-            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                dbs.println("   > %s (%zi) %s", constexpr_token, token.size(), base16_encode(token).c_str());
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(token, &dbs, 16, 5, 0x0, dump_notrunc);
+                }
+            });
         }
 #endif
         if (token.empty()) {
@@ -82,9 +82,9 @@ return_t quic_frame_new_token::do_write_body(tls_direction_t dir, binary_t& bin)
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            dbs.println("\e[1;34m  + frame %s 0x%x(%i)\e[0m", tlsadvisor->quic_frame_type_string(type).c_str(), type, type);
-            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
+            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                dbs.println("\e[1;34m  + frame %s 0x%x(%i)\e[0m", tlsadvisor->quic_frame_type_string(type).c_str(), type, type);
+            });
         }
 #endif
     }

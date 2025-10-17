@@ -45,10 +45,10 @@ return_t trial_tls_server_socket::tls_accept(socket_context_t **handle, socket_t
                 socket_context_t *ctx = (socket_context_t *)(sess->get_hook_param());
 #if defined DEBUG
                 if (istraceable(trace_category_net, loglevel_debug)) {
-                    basic_stream dbs;
-                    dbs.println("send %p %i", ctx, ctx->fd);
-                    dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
-                    trace_debug_event(trace_category_net, trace_event_tls_handshake, &dbs);
+                    trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream &dbs) -> void {
+                        dbs.println("send %p %i", ctx, ctx->fd);
+                        dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
+                    });
                 }
 #endif
                 size_t sent = 0;

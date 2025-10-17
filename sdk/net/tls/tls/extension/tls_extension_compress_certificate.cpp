@@ -49,16 +49,15 @@ return_t tls_extension_compress_certificate::do_read_body(tls_direction_t dir, c
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            basic_stream dbs;
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.println("   > %s %i (%i ent.)", constexpr_algorithm_len, algorithms_len << 1, algorithms_len);
-            int i = 0;
-            for (auto alg : _algorithms) {
-                dbs.println("     [%i] 0x%04x %s", i++, alg, tlsadvisor->compression_alg_name(alg).c_str());
-            }
-
-            trace_debug_event(trace_category_net, trace_event_tls_extension, &dbs);
+                dbs.println("   > %s %i (%i ent.)", constexpr_algorithm_len, algorithms_len << 1, algorithms_len);
+                int i = 0;
+                for (auto alg : _algorithms) {
+                    dbs.println("     [%i] 0x%04x %s", i++, alg, tlsadvisor->compression_alg_name(alg).c_str());
+                }
+            });
         }
 #endif
     }

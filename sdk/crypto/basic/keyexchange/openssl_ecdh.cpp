@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/crypto/basic/evp_key.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
 #if defined __linux__
 #include <arpa/inet.h>
@@ -51,6 +52,13 @@ return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* pkey_pub, binary
         secret.clear();
 
         if (nullptr == pkey || nullptr == pkey_pub) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        bool is_private = false;
+        ret = is_private_key(pkey, is_private);
+        if (false == is_private) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
