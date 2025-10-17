@@ -941,6 +941,7 @@ void test_construct_tls() {
 }
 
 void test_construct_tls13_mlkem() {
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
     TLS_OPTION testvector[] = {
         {tls_13, "TLS_AES_128_CCM_8_SHA256"}, {tls_13, "TLS_AES_128_CCM_SHA256"},       {tls_13, "TLS_AES_128_GCM_SHA256"},
         {tls_13, "TLS_AES_256_GCM_SHA384"},   {tls_13, "TLS_CHACHA20_POLY1305_SHA256"},
@@ -952,4 +953,7 @@ void test_construct_tls13_mlkem() {
         test_construct_tls_routine(item, "MLKEM512:MLKEM768");
     }
     tlsadvisor->set_default_tls_groups();
+#else
+    _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
+#endif
 }

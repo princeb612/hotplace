@@ -532,33 +532,38 @@ const tls_group_t tls_groups[] = {
         kty_dh,
         NID_ffdhe8192,
     },
+    // avoid compile error
+    //   #ifndef NID_ML_KEM_512
+    //   #define NID_ML_KEM_512 nid_mlkem512
+    //   #endif
+    //   ...
     {
         tls_named_curve_MLKEM512,
         tls_flag_support | tls_flag_secure | tls_flag_pqc,
         "MLKEM512",
         kty_mlkem,
-        NID_ML_KEM_512,
+        nid_mlkem512,
     },
     {
         tls_named_curve_MLKEM768,
         tls_flag_support | tls_flag_secure | tls_flag_pqc,
         "MLKEM768",
         kty_mlkem,
-        NID_ML_KEM_768,
+        nid_mlkem768,
     },
     {
         tls_named_curve_MLKEM1024,
         tls_flag_support | tls_flag_secure | tls_flag_pqc,
         "MLKEM1024",
         kty_mlkem,
-        NID_ML_KEM_1024,
+        nid_mlkem1024,
     },
     {
         tls_named_curve_SecP256r1MLKEM768,
         tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "SecP256r1MLKEM768",
         kty_mlkem,
-        NID_ML_KEM_768,
+        nid_mlkem768,
         kty_ec,
         NID_X9_62_prime256v1,
     },
@@ -567,7 +572,7 @@ const tls_group_t tls_groups[] = {
         tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "X25519MLKEM768",
         kty_mlkem,
-        NID_ML_KEM_768,
+        nid_mlkem768,
         kty_okp,
         NID_X25519,
     },
@@ -576,7 +581,7 @@ const tls_group_t tls_groups[] = {
         tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "SecP384r1MLKEM1024",
         kty_mlkem,
-        NID_ML_KEM_1024,
+        nid_mlkem1024,
         kty_ec,
         NID_secp384r1,
     },
