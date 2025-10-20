@@ -543,28 +543,28 @@ const tls_group_t tls_groups[] = {
 #define FLAG_SUPPORT_PQC 0
 #endif
     {
-        tls_named_group_MLKEM512,
+        tls_named_group_mlkem512,
         FLAG_SUPPORT_PQC | tls_flag_secure | tls_flag_pqc,
         "MLKEM512",
         kty_mlkem,
         nid_mlkem512,
     },
     {
-        tls_named_group_MLKEM768,
+        tls_named_group_mlkem768,
         FLAG_SUPPORT_PQC | tls_flag_secure | tls_flag_pqc,
         "MLKEM768",
         kty_mlkem,
         nid_mlkem768,
     },
     {
-        tls_named_group_MLKEM1024,
+        tls_named_group_mlkem1024,
         FLAG_SUPPORT_PQC | tls_flag_secure | tls_flag_pqc,
         "MLKEM1024",
         kty_mlkem,
         nid_mlkem1024,
     },
     {
-        tls_named_group_SecP256r1MLKEM768,
+        tls_named_group_secp256r1mlkem768,
         tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "SecP256r1MLKEM768",
         kty_mlkem,
@@ -573,7 +573,7 @@ const tls_group_t tls_groups[] = {
         NID_X9_62_prime256v1,
     },
     {
-        tls_named_group_X25519MLKEM768,
+        tls_named_group_x25519mlkem768,
         tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "X25519MLKEM768",
         kty_mlkem,
@@ -582,7 +582,7 @@ const tls_group_t tls_groups[] = {
         NID_X25519,
     },
     {
-        tls_named_group_SecP384r1MLKEM1024,
+        tls_named_group_secp384r1mlkem1024,
         tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "SecP384r1MLKEM1024",
         kty_mlkem,

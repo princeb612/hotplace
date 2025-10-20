@@ -274,17 +274,17 @@ const hint_group_t hint_groups[] = {
     {
         nid_mlkem512,  // NID_ML_KEM_512
         crypto_kty_t::kty_mlkem,
-        tls_named_group_MLKEM512,
+        tls_named_group_mlkem512,
     },
     {
         nid_mlkem768,  // NID_ML_KEM_768
         crypto_kty_t::kty_mlkem,
-        tls_named_group_MLKEM768,
+        tls_named_group_mlkem768,
     },
     {
         nid_mlkem1024,  // NID_ML_KEM_1024
         crypto_kty_t::kty_mlkem,
-        tls_named_group_MLKEM1024,
+        tls_named_group_mlkem1024,
     },
 };
 

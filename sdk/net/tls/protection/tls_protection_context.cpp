@@ -294,7 +294,6 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
         {
             // copy
             _signature_algorithms = rhs._signature_algorithms;
-            _keyshare_groups = rhs._keyshare_groups;
         }
 
         {
@@ -324,6 +323,16 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
             if (_supported_groups.empty()) {
                 _supported_groups = std::move(candidates);
             }
+        }
+
+        {
+            // deselect GREASE
+            rhs.for_each_keyshare_groups([&](uint16 group, bool*) -> void {
+                auto hint = advisor->hintof_tls_group(group);
+                if (hint) {
+                    _keyshare_groups.push_back(group);
+                }
+            });
         }
     }
     __finally2 {}

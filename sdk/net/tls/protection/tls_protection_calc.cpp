@@ -311,7 +311,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
                             if (nullptr == pkey_priv || nullptr == pkey_pub) {
                                 ret = errorcode_t::warn_retry;  // HRR
-                                __leave2_trace(ret);
+                                __leave2;
                             }
 
                             uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
@@ -324,7 +324,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                                 }
                                 if (nullptr == pkey_ch) {
                                     ret = errorcode_t::warn_retry;
-                                    __leave2_trace(ret);  // HRR
+                                    __leave2;  // HRR
                                 }
                             }
 
@@ -334,7 +334,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                         }
                     } else {
                         ret = errorcode_t::warn_retry;  // HRR
-                        __leave2_trace(ret);
+                        __leave2;
                     }
 
                     binary_t early_secret;

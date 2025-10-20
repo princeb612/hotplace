@@ -568,7 +568,7 @@ return_t tls_extension_server_key_share::add_keyshare() {
             auto hint = tlsadvisor->hintof_curve_tls_group(group);
             if (nullptr == hint) {
                 ret = not_supported;
-                __leave2_trace(ret);
+                __leave2;
             }
             ret = add(group);
         }

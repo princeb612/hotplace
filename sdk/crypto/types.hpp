@@ -340,12 +340,12 @@ enum tls_named_group_t : uint16 {
     tls_named_group_ffdhe4096 = 0x0102,             // 258
     tls_named_group_ffdhe6144 = 0x0103,             // 259
     tls_named_group_ffdhe8192 = 0x0104,             // 260
-    tls_named_group_MLKEM512 = 0x0200,              // 512  FIPS 203 version of ML-KEM-512
-    tls_named_group_MLKEM768 = 0x0201,              // 513  FIPS 203 version of ML-KEM-768
-    tls_named_group_MLKEM1024 = 0x0202,             // 514  FIPS 203 version of ML-KEM-1024
-    tls_named_group_SecP256r1MLKEM768 = 0x11eb,     // 4587 Combining secp256r1 ECDH with ML-KEM-768
-    tls_named_group_X25519MLKEM768 = 0x11ec,        // 4588 Combining X25519 ECDH with ML-KEM-768
-    tls_named_group_SecP384r1MLKEM1024 = 0x11ed,    // 4589 Combining secp384r1 ECDH with ML-KEM-1024
+    tls_named_group_mlkem512 = 0x0200,              // 512  FIPS 203 version of ML-KEM-512
+    tls_named_group_mlkem768 = 0x0201,              // 513  FIPS 203 version of ML-KEM-768
+    tls_named_group_mlkem1024 = 0x0202,             // 514  FIPS 203 version of ML-KEM-1024
+    tls_named_group_secp256r1mlkem768 = 0x11eb,     // 4587 Combining secp256r1 ECDH with ML-KEM-768
+    tls_named_group_x25519mlkem768 = 0x11ec,        // 4588 Combining X25519 ECDH with ML-KEM-768
+    tls_named_group_secp384r1mlkem1024 = 0x11ed,    // 4589 Combining secp384r1 ECDH with ML-KEM-1024
 };
 
 ///////////////////////////////////////////////////////////////////////////
