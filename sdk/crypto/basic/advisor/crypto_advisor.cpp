@@ -217,7 +217,7 @@ return_t crypto_advisor::build() {
             _curve_name_map.insert({item->name, item});
         }
         if (item->tlsgroup) {
-            _tls_group_map.insert({item->tlsgroup, item});
+            _tls_group_curve_map.insert({item->tlsgroup, item});
         }
         if (item->aka1) {
             _curve_name_map.insert({item->aka1, item});
@@ -281,6 +281,16 @@ return_t crypto_advisor::build() {
         auto item = hint_kty_names + i;
         if (item->name) {
             _kty_names.insert({item->kty, item});
+        }
+    }
+
+    for (i = 0; i < sizeof_hint_groups; i++) {
+        auto item = hint_groups + i;
+        if (item->nid) {
+            _tls_group_nid_map.insert({item->nid, item});
+        }
+        if (tls_named_group_unknown != item->group) {
+            _tls_group_map.insert({item->group, item});
         }
     }
 

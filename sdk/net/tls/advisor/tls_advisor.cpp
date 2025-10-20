@@ -300,7 +300,7 @@ void tls_advisor::enum_signature_scheme(std::function<void(const tls_sig_scheme_
     }
 }
 
-const tls_group_t* tls_advisor::hintof_tls_group(uint16 code) {
+const tls_group_t* tls_advisor::hintof_curve_tls_group(uint16 code) {
     const tls_group_t* ret_value = nullptr;
     auto iter = _supported_group_codes.find(code);
     if (_supported_group_codes.end() != iter) {
@@ -309,7 +309,7 @@ const tls_group_t* tls_advisor::hintof_tls_group(uint16 code) {
     return ret_value;
 }
 
-const tls_group_t* tls_advisor::hintof_tls_group(const std::string& name) {
+const tls_group_t* tls_advisor::hintof_curve_tls_group(const std::string& name) {
     const tls_group_t* ret_value = nullptr;
     auto iter = _supported_group_names.find(name);
     if (_supported_group_names.end() != iter) {
@@ -700,9 +700,12 @@ return_t tls_advisor::set_tls_groups(const char* groups) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
+        critical_section_guard guard(_lock);
+
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto lambda = [&](const std::string& item) -> void {
-            auto hint = tlsadvisor->hintof_tls_group(item);
+            auto hint = tlsadvisor->hintof_curve_tls_group(item);
             if (hint && (tls_flag_support & hint->flags)) {
                 auto code = hint->code;
                 _groups.insert(code);
@@ -726,10 +729,13 @@ return_t tls_advisor::set_tls_groups(const char* groups) {
 
 return_t tls_advisor::set_default_tls_groups() {
     return_t ret = errorcode_t::success;
+    critical_section_guard guard(_lock);
     _groups.clear();
-    _groups.insert(tls_named_curve_x25519);
-    _groups.insert(tls_named_curve_MLKEM768);
-    _groups.insert(tls_named_curve_secp384r1);
+    _groups.insert(tls_named_group_x25519);
+    _groups.insert(tls_named_group_secp256r1);
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    _groups.insert(tls_named_group_MLKEM512);
+#endif
     return ret;
 }
 
@@ -738,12 +744,22 @@ bool tls_advisor::test_tls_group(uint16 group) {
     if (_groups.empty()) {
         ret = true;
     } else {
+        critical_section_guard guard(_lock);
         auto iter = _groups.find(group);
         if (_groups.end() != iter) {
             ret = true;
         }
     }
     return ret;
+}
+
+void tls_advisor::for_each_tls_groups(std::function<void(uint16)> func) {
+    if (func) {
+        critical_section_guard guard(_lock);
+        for (auto& group : _groups) {
+            func(group);
+        }
+    }
 }
 
 return_t tls_advisor::enable_alpn(const char* prot) {

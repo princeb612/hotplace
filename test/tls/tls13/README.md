@@ -31,3 +31,6 @@
 - tls13_TLS_AES_128_CCM_SHA256_MLKEM1024.pcapng
   - [server](README_tls13_TLS_AES_128_CCM_SHA256_MLKEM1024_server.md)
   - [client](README_tls13_TLS_AES_128_CCM_SHA256_MLKEM1024_client.md)
+
+> [!NOTE]
+> MLKEM512, MLKEM768, MLKEM1024 - openssl 3.5 required

@@ -186,7 +186,7 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
         }
 
         auto group = protection.get_protection_context().get0_supported_group();
-        auto hint_group = tlsadvisor->hintof_tls_group(group);
+        auto hint_group = tlsadvisor->hintof_curve_tls_group(group);
 
         tls_record_handshake record(session);
         ret = record

@@ -47,6 +47,7 @@
  *      ret = do_something ();
  *      __leave2_if_fail (ret);
  */
+#if defined DEBUG
 #define __trace(x, ...)               \
     {                                 \
         __footprintf(__VA_ARGS__);    \
@@ -69,6 +70,15 @@
         __footprints(x);             \
         break;                       \
     }
+#else
+#define __trace(x, ...)
+#define __leave2_trace(x) break
+#define __leave2_tracef(x, ...) break
+#define __leave2_if_fail(x)          \
+    if (errorcode_t::success != x) { \
+        break;                       \
+    }
+#endif
 
 #ifdef __cplusplus
 #define __trynew try

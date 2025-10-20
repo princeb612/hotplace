@@ -101,8 +101,8 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                      })
                 .add(tls_ext_supported_groups, dir, hs,
                      // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-                     [](tls_extension* extension) -> return_t {
-                         (*(tls_extension_supported_groups*)extension).add("x25519").add("x448").add("secp256r1").add("secp384r1").add("secp521r1");
+                     [&](tls_extension* extension) -> return_t {
+                         tlsadvisor->for_each_tls_groups([&](uint16 group) -> void { (*(tls_extension_supported_groups*)extension).add(group); });
                          return success;
                      })
                 .add(tls_ext_signature_algorithms, dir, hs, [](tls_extension* extension) -> return_t {
@@ -146,7 +146,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                              tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
                              if (tls_flow_hello_retry_request != protection.get_flow()) {
                                  keyshare->clear();
-                                 keyshare->add("x25519");
+                                 tlsadvisor->for_each_tls_groups([&](uint16 group) -> void { keyshare->add(group); });
                              }
                              return success;
                          });

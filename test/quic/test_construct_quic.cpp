@@ -521,12 +521,14 @@ void test_construct_quic() {
             // cf. http3.pcapng #1
             // #Frame C->S
             //   PKN 10 initial [CRYPTO(CH), PADDING]
+            size_t range_ch = 0;
             {
                 const char* text = "initial [CRYPTO(CH), PADDING]";
                 lambda_check_pkn(&session_client, from_client, protection_initial, 10);
                 construct_quic_cli_initial(&session_client, from_client, quic_pad_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
-                lambda_test_ready_to_ack(&session_server, protection_initial, 10, 0);
+                range_ch = bins.size() ? (bins.size() - 1) : 0;  // consider fragmentation
+                lambda_test_ready_to_ack(&session_server, protection_initial, 10 + range_ch, range_ch);
             }
 
             // cf. http3.pcapng #3
@@ -537,7 +539,8 @@ void test_construct_quic() {
                 lambda_check_pkn(&session_server, from_server, protection_initial, 10);
                 construct_quic_svr_initial(&session_server, from_server, quic_ack_packet | quic_pad_packet, bins, text);
                 send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_client, protection_initial, 10, 0);
+                auto range_sh = bins.size() ? (bins.size() - 1) : 0;
+                lambda_test_ready_to_ack(&session_client, protection_initial, 10 + range_sh, range_sh);
             }
 
             // cf. http3.pcapng #4
@@ -545,7 +548,7 @@ void test_construct_quic() {
             //   PKN 11 initial [ACK (10), PADDING]
             {
                 const char* text = "initial [ACK, PADDING]";
-                lambda_check_pkn(&session_client, from_client, protection_initial, 11);
+                lambda_check_pkn(&session_client, from_client, protection_initial, 10 + range_ch + 1);
                 construct_quic_ack(&session_client, from_client, quic_pad_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
             }

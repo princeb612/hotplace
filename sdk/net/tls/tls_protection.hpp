@@ -50,18 +50,21 @@ class protection_context {
     void add_supported_group(uint16 sg);
     void add_supported_version(uint16 sv);
     void add_ec_point_format(uint8 epf);
+    void add_keyshare_group(uint16 group);
 
     void clear_cipher_suites();
     void clear_signature_algorithms();
     void clear_supported_groups();
     void clear_supported_versions();
     void clear_ec_point_formats();
+    void clear_keyshare_groups();
 
     void for_each_cipher_suites(std::function<void(uint16, bool*)> fn) const;
     void for_each_signature_algorithms(std::function<void(uint16, bool*)> fn) const;
     void for_each_supported_groups(std::function<void(uint16, bool*)> fn) const;
     void for_each_supported_versions(std::function<void(uint16, bool*)> fn) const;
     void for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) const;
+    void for_each_keyshare_groups(std::function<void(uint16, bool*)> fn) const;
 
     return_t select_from(const protection_context& rhs, tls_session* session, uint16 minspec = tls_12, uint16 maxspec = tls_13);
 
@@ -72,6 +75,7 @@ class protection_context {
     uint16 get0_supported_version();
     uint16 get0_supported_group();
     uint16 select_signature_algorithm(crypto_kty_t kty);
+    uint16 get0_keyshare_group();
 
     void clear();
 
@@ -82,6 +86,7 @@ class protection_context {
     std::list<uint16> _supported_groups;      // tls_extension_supported_groups
     std::list<uint16> _supported_versions;    // tls_extension_client_supported_versions
     std::list<uint8> _ec_point_formats;       // tls_extension_ec_point_formats
+    std::list<uint16> _keyshare_groups;
     uint16 _cipher_suite;
 };
 

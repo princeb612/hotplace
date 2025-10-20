@@ -150,7 +150,8 @@ void test_pcap_tls13_mlkem() {
     }
 
     // TLS 1.3 key_share raw encoding
-
+    _test_case.begin("TLS 1.3 keyshare MLKEM encoding");
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
     struct testvector {
         const char *desc;
         const char *name;
@@ -220,8 +221,6 @@ void test_pcap_tls13_mlkem() {
         },
     };
 
-    _test_case.begin("TLS 1.3 keyshare MLKEM encoding");
-#if OPENSSL_VERSION_NUMBER >= 0x30500000L
     return_t ret = errorcode_t::success;
     crypto_keychain keychain;
     for (size_t i = 0; i < RTL_NUMBER_OF(table); i++) {

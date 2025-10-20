@@ -28,6 +28,7 @@ protection_context::protection_context(const protection_context& rhs) {
     _supported_groups = rhs._supported_groups;
     _supported_versions = rhs._supported_versions;
     _ec_point_formats = rhs._ec_point_formats;
+    _keyshare_groups = rhs._keyshare_groups;
     _cipher_suite = rhs._cipher_suite;
 }
 
@@ -38,6 +39,7 @@ protection_context::protection_context(protection_context&& rhs) {
     _supported_groups = std::move(rhs._supported_groups);
     _supported_versions = std::move(rhs._supported_versions);
     _ec_point_formats = std::move(rhs._ec_point_formats);
+    _keyshare_groups = std::move(rhs._keyshare_groups);
     _cipher_suite = rhs._cipher_suite;
 }
 
@@ -72,6 +74,8 @@ void protection_context::add_supported_version(uint16 sv) { _supported_versions.
 
 void protection_context::add_ec_point_format(uint8 epf) { _ec_point_formats.push_back(epf); }
 
+void protection_context::add_keyshare_group(uint16 group) { _keyshare_groups.push_back(group); }
+
 void protection_context::clear_cipher_suites() { _cipher_suites.clear(); }
 
 void protection_context::clear_signature_algorithms() { _signature_algorithms.clear(); }
@@ -82,51 +86,63 @@ void protection_context::clear_supported_versions() { _supported_versions.clear(
 
 void protection_context::clear_ec_point_formats() { _ec_point_formats.clear(); }
 
+void protection_context::clear_keyshare_groups() { _keyshare_groups.clear(); }
+
 void protection_context::for_each_cipher_suites(std::function<void(uint16, bool*)> fn) const {
-    bool test = false;
+    bool cont = false;
     for (auto item : _cipher_suites) {
-        fn(item, &test);
-        if (test) {
+        fn(item, &cont);
+        if (cont) {
             break;
         }
     }
 }
 
 void protection_context::for_each_signature_algorithms(std::function<void(uint16, bool*)> fn) const {
-    bool test = false;
+    bool cont = false;
     for (auto item : _signature_algorithms) {
-        fn(item, &test);
-        if (test) {
+        fn(item, &cont);
+        if (cont) {
             break;
         }
     }
 }
 
 void protection_context::for_each_supported_groups(std::function<void(uint16, bool*)> fn) const {
-    bool test = false;
+    bool cont = false;
     for (auto item : _supported_groups) {
-        fn(item, &test);
-        if (test) {
+        fn(item, &cont);
+        if (cont) {
             break;
         }
     }
 }
 
 void protection_context::for_each_supported_versions(std::function<void(uint16, bool*)> fn) const {
-    bool test = false;
+    bool cont = false;
     for (auto item : _supported_versions) {
-        fn(item, &test);
-        if (test) {
+        fn(item, &cont);
+        if (cont) {
             break;
         }
     }
 }
 
 void protection_context::for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) const {
-    bool test = false;
+    bool cont = false;
     for (auto item : _ec_point_formats) {
-        fn(item, &test);
-        if (test) {
+        fn(item, &cont);
+        if (cont) {
+            break;
+        }
+    }
+}
+
+void protection_context::for_each_keyshare_groups(std::function<void(uint16, bool*)> fn) const {
+    bool cont = false;
+    for (auto item : _keyshare_groups) {
+        fn(item, &cont);
+        if (cont) {
             break;
         }
     }
@@ -138,6 +154,7 @@ void protection_context::clear() {
     clear_supported_groups();
     clear_supported_versions();
     clear_ec_point_formats();
+    clear_keyshare_groups();
 }
 
 return_t protection_context::select_from(const protection_context& rhs, tls_session* session, uint16 minspec, uint16 maxspec) {
@@ -232,10 +249,12 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
             }
         }
 
+        tls_version_t spec = tls_unknown;
         {
             auto lambda_select_cs = [&](tls_version_t ver) -> bool {
                 bool ret_value = false;
                 for (auto cs : cs_map[ver]) {
+                    spec = ver;
                     add_supported_version(ver);
                     add_cipher_suite(cs);
                     set_cipher_suite(cs);
@@ -275,6 +294,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
         {
             // copy
             _signature_algorithms = rhs._signature_algorithms;
+            _keyshare_groups = rhs._keyshare_groups;
         }
 
         {
@@ -282,12 +302,22 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
 
             std::list<uint16> candidates;
             rhs.for_each_supported_groups([&](uint16 group, bool*) -> void {
-                auto hint = tlsadvisor->hintof_tls_group(group);
+                auto hint = tlsadvisor->hintof_curve_tls_group(group);
                 if (hint && (tls_flag_support & hint->flags)) {
-                    if (tls_flag_secure & hint->flags) {
-                        _supported_groups.push_back(group);
-                    } else {
-                        candidates.push_back(group);
+                    bool cond = true;
+                    if (tls_flag_pqc & hint->flags) {
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+                        cond = (tls_13 == spec);
+#else
+                        cond = false;
+#endif
+                    }
+                    if (cond) {
+                        if (tls_flag_secure & hint->flags) {
+                            _supported_groups.push_back(group);
+                        } else {
+                            candidates.push_back(group);
+                        }
                     }
                 }
             });
@@ -322,6 +352,14 @@ uint16 protection_context::get0_supported_group() {
     uint16 ret_value = 0;
     if (false == _supported_groups.empty()) {
         ret_value = *_supported_groups.begin();
+    }
+    return ret_value;
+}
+
+uint16 protection_context::get0_keyshare_group() {
+    uint16 ret_value = 0;
+    if (false == _keyshare_groups.empty()) {
+        ret_value = *_keyshare_groups.begin();
     }
     return ret_value;
 }

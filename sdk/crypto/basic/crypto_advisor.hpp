@@ -469,6 +469,13 @@ class crypto_advisor {
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
+     * @param tls_named_group_t group [in]
+     * @return true if match, false if not
+     */
+    bool is_kindof(const EVP_PKEY* pkey, tls_named_group_t group);
+    /**
+     * @brief kind of
+     * @param const EVP_PKEY* pkey [in]
      * @param jwa_t alg [in]
      * @return true if match, false if not
      */
@@ -541,7 +548,9 @@ class crypto_advisor {
      * @param uint16 group [in] TLS supported group
      * @return const hint_curve_t*
      */
-    const hint_curve_t* hintof_tls_group(uint16 group);
+    const hint_curve_t* hintof_curve_tls_group(uint16 group);
+    const hint_group_t* hintof_tls_group_nid(uint32 nid);
+    const hint_group_t* hintof_tls_group(uint16 group);
 
     ///////////////////////////////////////////////////////////////////////////
     // etc
@@ -789,7 +798,11 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     // TLS
     ///////////////////////////////////////////////////////////////////////////
-    typedef std::map<uint16, const hint_curve_t*> tls_group_map_t;
+    typedef std::map<uint16, const hint_curve_t*> tls_group_curve_map_t;
+    typedef std::map<uint32, const hint_group_t*> tls_group_nid_map_t;
+    typedef std::map<uint16, const hint_group_t*> tls_group_map_t;
+    tls_group_curve_map_t _tls_group_curve_map;
+    tls_group_nid_map_t _tls_group_nid_map;
     tls_group_map_t _tls_group_map;
     ///////////////////////////////////////////////////////////////////////////
     // etc
@@ -838,6 +851,9 @@ extern const hint_cose_group_t hint_cose_groups[];
 extern const hint_cose_algorithm_t hint_cose_algorithms[];
 extern const size_t sizeof_hint_cose_groups;
 extern const size_t sizeof_hint_cose_algorithms;
+///////////////////////////////////////////////////////////////////////////
+extern const hint_group_t hint_groups[];
+extern const size_t sizeof_hint_groups;
 ///////////////////////////////////////////////////////////////////////////
 
 }  // namespace crypto

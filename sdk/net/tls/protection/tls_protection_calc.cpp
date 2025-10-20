@@ -286,22 +286,23 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     const EVP_PKEY *pkey_priv = nullptr;
                     const EVP_PKEY *pkey_pub = nullptr;
 
-                    auto group = get_protection_context().get0_supported_group();
-                    auto hint_group = tlsadvisor->hintof_tls_group(group);
+                    auto group = get_protection_context().get0_keyshare_group();
+                    auto hint_group = tlsadvisor->hintof_curve_tls_group(group);
                     if (hint_group) {
                         auto kty_group = hint_group->kty;
+                        uint32 nid = hint_group->nid;
                         if (kty_mlkem == kty_group) {
                             // tls_extension_key_share
                             shared_secret = get_secrets().get(tls_context_shared_secret);
                         } else {
-                            pkey_priv = get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
+                            pkey_priv = get_keyexchange().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE, group);
                             if (pkey_priv) {
                                 // in server ... priv(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC)
-                                pkey_pub = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);  // client_hello
+                                pkey_pub = get_keyexchange().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);  // client_hello
                             } else {
                                 // in client ... priv(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC)
-                                pkey_priv = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
-                                pkey_pub = get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello
+                                pkey_priv = get_keyexchange().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
+                                pkey_pub = get_keyexchange().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC, group);  // server_hello
                             }
 
                             // warn_retry
@@ -309,35 +310,21 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                             // ClientHello, the server MUST respond with a HelloRetryRequest (Section 4.1.4) message.
 
                             if (nullptr == pkey_priv || nullptr == pkey_pub) {
-                                if (is_kindof_tls13()) {
-                                    ret = errorcode_t::warn_retry;  // HRR
-                                }
-                                __leave2;
+                                ret = errorcode_t::warn_retry;  // HRR
+                                __leave2_trace(ret);
                             }
 
                             uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
                             if (group_enforced) {
-                                auto hint = tlsadvisor->hintof_tls_group(group_enforced);
+                                auto hint = tlsadvisor->hintof_curve_tls_group(group_enforced);
                                 // enforcing
-                                auto pkey_ch = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, hint->kty);
+                                auto pkey_ch = get_keyexchange().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
                                 if (nullptr == pkey_ch) {
-                                    pkey_ch = get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, hint->kty);
+                                    pkey_ch = get_keyexchange().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);
                                 }
-                                uint32 nid = 0;
-                                nidof_evp_pkey(pkey_ch, nid);
-                                if (nid != hint->nid) {
+                                if (nullptr == pkey_ch) {
                                     ret = errorcode_t::warn_retry;
-                                    __leave2;  // HRR
-                                }
-                            } else {
-                                uint32 nid_priv = 0;
-                                uint32 nid_pub = 0;
-                                nidof_evp_pkey(pkey_priv, nid_priv);
-                                nidof_evp_pkey(pkey_pub, nid_pub);
-
-                                if (nid_priv != nid_pub) {
-                                    ret = errorcode_t::warn_retry;
-                                    __leave2;  // HRR
+                                    __leave2_trace(ret);  // HRR
                                 }
                             }
 
@@ -346,10 +333,8 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                             get_secrets().assign(tls_context_shared_secret, shared_secret);
                         }
                     } else {
-                        if (is_kindof_tls13()) {
-                            ret = errorcode_t::warn_retry;  // HRR
-                            __leave2;
-                        }
+                        ret = errorcode_t::warn_retry;  // HRR
+                        __leave2_trace(ret);
                     }
 
                     binary_t early_secret;
@@ -534,6 +519,9 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
                 binary_t pre_master_secret;
                 {
+                    auto group = get_protection_context().get0_supported_group();
+                    auto hint_group = tlsadvisor->hintof_curve_tls_group(group);
+
                     const EVP_PKEY *pkey_priv = nullptr;
                     const EVP_PKEY *pkey_pub = nullptr;
                     auto pkey_ske = get_keyexchange().find(KID_TLS_SERVER_KEY_EXCHANGE);

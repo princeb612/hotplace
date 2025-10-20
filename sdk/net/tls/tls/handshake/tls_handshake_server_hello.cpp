@@ -131,6 +131,7 @@ return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
         }
 
         auto session = get_session();
+
         auto session_status = session->get_session_status();
         if (0 == (session_status_client_hello & session_status)) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);

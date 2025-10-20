@@ -139,9 +139,9 @@ struct tls_group_t {
     uint8 flags;
     const char* name;
     crypto_kty_t kty;
-    uint16 nid;
+    uint32 nid;
     crypto_kty_t hkty;  // hybrid
-    uint16 hnid;        // bybrid
+    uint32 hnid;        // bybrid
 };
 extern const tls_group_t tls_groups[];
 extern const size_t sizeof_tls_groups;
@@ -176,8 +176,8 @@ class tls_advisor {
     const tls_sig_scheme_t* hintof_signature_scheme(uint16 code);
     const tls_sig_scheme_t* hintof_signature_scheme(const std::string& name);
     void enum_signature_scheme(std::function<void(const tls_sig_scheme_t*)> func);
-    const tls_group_t* hintof_tls_group(uint16 code);
-    const tls_group_t* hintof_tls_group(const std::string& name);
+    const tls_group_t* hintof_curve_tls_group(uint16 code);
+    const tls_group_t* hintof_curve_tls_group(const std::string& name);
     const tls_group_t* hintof_tls_group_nid(uint32 nid);
     void enum_tls_group(std::function<void(const tls_group_t*)> func);
     hash_algorithm_t hash_alg_of(uint16 code);
@@ -280,6 +280,7 @@ class tls_advisor {
     return_t set_tls_groups(const char* groups);
     return_t set_default_tls_groups();
     bool test_tls_group(uint16 group);
+    void for_each_tls_groups(std::function<void(uint16)> func);
 
    protected:
     tls_advisor();

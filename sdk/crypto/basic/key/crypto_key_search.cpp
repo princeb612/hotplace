@@ -21,10 +21,11 @@ enum {
     SEARCH_ALG = 0x4,
     SEARCH_ALT = 0x8,
     SEARCH_X509 = 0x10,
+    SEARCH_NID = 0x20,
 };
 
-template <typename ALGORITHM>
-bool find_discriminant(crypto_key_object item, const char* kid, ALGORITHM alg, crypto_kty_t kt, crypto_kty_t alt, crypto_use_t use, uint32 flags) {
+template <typename KEY>
+bool find_discriminant(crypto_key_object item, const char* kid, KEY key, crypto_kty_t kt, crypto_kty_t alt, crypto_use_t use, uint32 flags) {
     bool ret = false;
 
     __try2 {
@@ -50,7 +51,7 @@ bool find_discriminant(crypto_key_object item, const char* kid, ALGORITHM alg, c
         }
         if (SEARCH_ALG & flags) {
             crypto_advisor* advisor = crypto_advisor::get_instance();
-            cond_alg = advisor->is_kindof(item.get_pkey(), alg);
+            cond_alg = advisor->is_kindof(item.get_pkey(), key);
             if (false == cond_alg) {
                 __leave2;
             }
@@ -200,6 +201,56 @@ const EVP_PKEY* crypto_key::select(crypto_kty_t kty, crypto_use_t use, bool up_r
         for (auto& pair : _key_map) {
             crypto_key_object& keyobj = pair.second;
             bool test = find_discriminant(keyobj, nullptr, nullptr, kty, alt, use, SEARCH_KTY);
+            if (test) {
+                ret_value = keyobj.get_pkey();
+                break;
+            }
+        }
+        if (nullptr == ret_value) {
+            __leave2;
+        }
+        if (up_ref) {
+            EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
+        }
+    }
+    __finally2 {}
+    return ret_value;
+}
+
+const EVP_PKEY* crypto_key::select_nid(uint32 nid, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
+    critical_section_guard guard(_lock);
+    __try2 {
+        for (auto& pair : _key_map) {
+            crypto_key_object& keyobj = pair.second;
+
+            auto pkey = keyobj.get_pkey();
+            uint32 id = 0;
+            nidof_evp_pkey(pkey, id);
+            if (id == nid) {
+                ret_value = pkey;
+                break;
+            }
+        }
+        if (nullptr == ret_value) {
+            __leave2;
+        }
+        if (up_ref) {
+            EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
+        }
+    }
+    __finally2 {}
+    return ret_value;
+}
+
+const EVP_PKEY* crypto_key::select(tls_named_group_t group, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
+    critical_section_guard guard(_lock);
+    __try2 {
+        for (auto& pair : _key_map) {
+            crypto_key_object& keyobj = pair.second;
+
+            bool test = find_discriminant<tls_named_group_t>(keyobj, nullptr, group, kty_unknown, kty_unknown, use, SEARCH_ALG);
             if (test) {
                 ret_value = keyobj.get_pkey();
                 break;
@@ -575,6 +626,86 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypto_kty_t kt, crypto_use_t 
     }
     __finally2 {}
     return ret_value;
+}
+
+const EVP_PKEY* crypto_key::find_nid(const char* kid, uint32 nid, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    critical_section_guard guard(_lock);
+    __try2 {
+        std::string k;
+        if (kid) {
+            k = kid;
+
+            crypto_key_map_t::iterator iter;
+            crypto_key_map_t::iterator lower_bound;
+            crypto_key_map_t::iterator upper_bound;
+            lower_bound = _key_map.lower_bound(k);
+            upper_bound = _key_map.upper_bound(k);
+
+            for (iter = lower_bound; iter != upper_bound; iter++) {
+                crypto_key_object& item = iter->second;
+                auto pkey = item.get_pkey();
+                uint32 id = 0;
+                nidof_evp_pkey(pkey, id);
+                if (id == nid) {
+                    ret_value = pkey;
+                    break;
+                }
+            }
+            if (nullptr == ret_value) {
+                __leave2;
+            }
+            if (up_ref) {
+                EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
+            }
+        } else {
+            ret_value = select_nid(nid, use, up_ref);
+        }
+    }
+    __finally2 {}
+    return ret_value;
+}
+
+const EVP_PKEY* crypto_key::find(const char* kid, tls_named_group_t group, crypto_use_t use, bool up_ref) {
+    const EVP_PKEY* ret_value = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    critical_section_guard guard(_lock);
+    __try2 {
+        std::string k;
+        if (kid) {
+            k = kid;
+
+            crypto_key_map_t::iterator iter;
+            crypto_key_map_t::iterator lower_bound;
+            crypto_key_map_t::iterator upper_bound;
+            lower_bound = _key_map.lower_bound(k);
+            upper_bound = _key_map.upper_bound(k);
+
+            for (iter = lower_bound; iter != upper_bound; iter++) {
+                crypto_key_object& item = iter->second;
+                bool test = find_discriminant<tls_named_group_t>(item, kid, group, kty_unknown, kty_unknown, use, SEARCH_ALG);
+                if (test) {
+                    ret_value = item.get_pkey();
+                    break;
+                }
+            }
+            if (nullptr == ret_value) {
+                __leave2;
+            }
+            if (up_ref) {
+                EVP_PKEY_up_ref((EVP_PKEY*)ret_value);  // increments a reference counter
+            }
+        } else {
+            ret_value = select(group, use, up_ref);
+        }
+    }
+    __finally2 {}
+    return ret_value;
+}
+
+const EVP_PKEY* crypto_key::find_group(const char* kid, uint16 group, crypto_use_t use, bool up_ref) {
+    return find(kid, (tls_named_group_t)group, use, up_ref);
 }
 
 const EVP_PKEY* crypto_key::find(const char* kid, jwa_t alg, crypto_use_t use, bool up_ref) {

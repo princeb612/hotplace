@@ -134,7 +134,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 // 3 named_curve
                 if (3 == curve_info) {
                     crypto_keychain keychain;
-                    auto hint = advisor->hintof_tls_group(curve);
+                    auto hint = advisor->hintof_curve_tls_group(curve);
                     uint32 nid = nidof(hint);
                     if (nid) {
                         ret = keychain.add_ec2(&keyexchange, nid, pubkey, binary_t(), binary_t(), keydesc(KID_TLS_SERVER_KEY_EXCHANGE));
@@ -212,7 +212,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
 
     {
         auto lambda = [&](uint16 group, bool *ctrl) -> void {
-            auto hint = advisor->hintof_tls_group(group);
+            auto hint = advisor->hintof_curve_tls_group(group);
             if (hint && hint->tlsgroup) {
                 auto kty = hint->kty;
                 auto category = hint->category;
