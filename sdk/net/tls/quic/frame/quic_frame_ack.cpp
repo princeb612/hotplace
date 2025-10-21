@@ -61,6 +61,8 @@ quic_frame_ack::quic_frame_ack(tls_session* session, uint8 type) : quic_frame((q
     }
 }
 
+quic_frame_ack::~quic_frame_ack() {}
+
 quic_frame_ack& quic_frame_ack::set_space(protection_space_t space) {
     _space = space;
     return *this;

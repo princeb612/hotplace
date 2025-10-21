@@ -149,23 +149,19 @@ quic_packet_publisher& quic_packet_publisher::add_stream(uint64 stream_id, uint8
     __try2 {
         auto session = get_session();
 
-        quic_frame_builder builder;
-        auto frame = builder.set(quic_frame_type_stream).set(session).build();
-        if (frame) {
-            frame_entry_t entry;
-            entry.how = frame_entry_qpack;
-            entry.type = quic_frame_type_stream;
-            entry.stream_id = stream_id;
-            entry.uni_stream_type = uni_type;
-            if (func) {
-                qpack_stream qp;
-                auto& dyntable = session->get_quic_session().get_dynamic_table();
-                qp.set_dyntable(&dyntable);
-                func(qp);
-                entry.bin = std::move(qp.get_binary());
-            }
-            _frame_layout.push_back(std::move(entry));
+        frame_entry_t entry;
+        entry.how = frame_entry_qpack;
+        entry.type = quic_frame_type_stream;
+        entry.stream_id = stream_id;
+        entry.uni_stream_type = uni_type;
+        if (func) {
+            qpack_stream qp;
+            auto& dyntable = session->get_quic_session().get_dynamic_table();
+            qp.set_dyntable(&dyntable);
+            func(qp);
+            entry.bin = std::move(qp.get_binary());
         }
+        _frame_layout.push_back(std::move(entry));
     }
     __finally2 {}
     return *this;
@@ -484,7 +480,14 @@ return_t quic_packet_publisher::publish(tls_direction_t dir, std::function<void(
             func(get_session(), item);
         }
     }
-    __finally2 {}
+    __finally2 {
+        for (auto& item : _frame_layout) {
+            if (item.frame) {
+                item.frame->release();
+            }
+        }
+        _frame_layout.clear();
+    }
     return ret;
 }
 

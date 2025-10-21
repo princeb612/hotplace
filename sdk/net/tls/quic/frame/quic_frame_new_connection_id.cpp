@@ -47,6 +47,8 @@ constexpr char constexpr_stateless_reset_token[] = "stateless reset token";
 
 quic_frame_new_connection_id::quic_frame_new_connection_id(tls_session* session) : quic_frame(quic_frame_type_new_connection_id, session) {}
 
+quic_frame_new_connection_id::~quic_frame_new_connection_id() {}
+
 return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

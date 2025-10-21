@@ -25,6 +25,8 @@ constexpr char constexpr_payload[] = "payload";
 
 http3_frame::http3_frame(h3_frame_t type) : _type(type) { _shared.make_share(this); }
 
+http3_frame::~http3_frame() {}
+
 return_t http3_frame::read(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

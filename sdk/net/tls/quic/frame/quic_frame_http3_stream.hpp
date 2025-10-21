@@ -20,6 +20,7 @@ namespace net {
 class quic_frame_http3_stream : public quic_frame_stream {
    public:
     quic_frame_http3_stream(tls_session* session, uint8 type);
+    virtual ~quic_frame_http3_stream();
 
     void set(uint64 stream_id, uint8 unitype);
 

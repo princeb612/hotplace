@@ -40,6 +40,8 @@ constexpr char constexpr_unitype[] = "uni type";  // uni-directional
 
 quic_frame_http3_stream::quic_frame_http3_stream(tls_session* session, uint8 type) : quic_frame_stream(session, type), _unitype(0) {}
 
+quic_frame_http3_stream::~quic_frame_http3_stream() {}
+
 return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

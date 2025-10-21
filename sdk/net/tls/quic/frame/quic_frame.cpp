@@ -27,7 +27,7 @@ quic_frame::quic_frame(quic_frame_t type, tls_session* session) : _type(type), _
     _shared.make_share(this);
 }
 
-quic_frame::~quic_frame() { set(nullptr, nullptr); }
+quic_frame::~quic_frame() {}
 
 return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -138,13 +138,7 @@ void quic_frame::release() { _shared.delref(); }
 
 void quic_frame::set(quic_packet_publisher* publisher, quic_packet* packet) {
     _publisher = publisher;
-    if (_packet) {
-        _packet->release();
-    }
     _packet = packet;
-    if (_packet) {
-        _packet->addref();
-    }
 }
 
 quic_packet_publisher* quic_frame::get_publisher() { return _publisher; }

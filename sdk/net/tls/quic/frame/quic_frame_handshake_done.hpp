@@ -21,6 +21,7 @@ namespace net {
 class quic_frame_handshake_done : public quic_frame {
    public:
     quic_frame_handshake_done(tls_session* session);
+    virtual ~quic_frame_handshake_done();
 
    protected:
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);

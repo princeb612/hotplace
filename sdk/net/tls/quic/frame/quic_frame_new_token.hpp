@@ -21,6 +21,7 @@ namespace net {
 class quic_frame_new_token : public quic_frame {
    public:
     quic_frame_new_token(tls_session* session);
+    virtual ~quic_frame_new_token();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

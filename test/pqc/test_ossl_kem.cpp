@@ -29,6 +29,7 @@ void test_ossl_kem() {
         for (const auto& alg : algs) {
             EVP_PKEY* privkey = nullptr;
             EVP_PKEY* pubkey = nullptr;
+            EVP_PKEY* pubkey_raw = nullptr;
             binary_t keydata;
             binary_t capsulekey;
             binary_t sharedsecret_alice;
@@ -52,22 +53,32 @@ void test_ossl_kem() {
             });
             _test_case.test(ret, __FUNCTION__, "keygen %s", alg.c_str());
 
-            // alice -> bob : key distribution
+            // alice -> bob : key distribution (DER)
             {
                 ret = keychain.pkey_encode(nullptr, privkey, keydata, key_encoding_pub_der);
-                _test_case.test(ret, __FUNCTION__, "encode public key %s", alg.c_str());
+                _test_case.test(ret, __FUNCTION__, "encode public key %s size %zi", alg.c_str(), keydata.size());
 
                 ret = keychain.pkey_decode(nullptr, &pubkey, keydata, key_encoding_pub_der);
-                _test_case.test(ret, __FUNCTION__, "decode public key %s", alg.c_str());
+                _test_case.test(ret, __FUNCTION__, "decode public key %s size %zi", alg.c_str(), keydata.size());
+            }
+            // alice -> bob : key distribution (TLS 1.3)
+            {
+                ret = keychain.pkey_encode_raw(nullptr, privkey, keydata, key_encoding_pub_raw);
+                _test_case.test(ret, __FUNCTION__, "encode public key %s size %zi", alg.c_str(), keydata.size());
+
+                ret = keychain.pkey_decode_raw(nullptr, alg.c_str(), &pubkey_raw, keydata, key_encoding_pub_raw);
+                _test_case.test(ret, __FUNCTION__, "decode public key %s size %zi", alg.c_str(), keydata.size());
+
+                _test_case.assert(EVP_PKEY_eq(pubkey, pubkey_raw), __FUNCTION__, "EVP_PKEY_eq");
             }
             // bob : encapsule
             {
                 ret = pqc.encapsule(nullptr, pubkey, capsulekey, sharedsecret_bob);
                 _logger->write([&](basic_stream& bs) -> void {
-                    bs << "capsule";
+                    bs << "capsule ";
                     base16_encode(capsulekey, &bs, base16_notrunc);
                     bs << "\n";
-                    bs << "shared secret";
+                    bs << "shared secret ";
                     base16_encode(sharedsecret_bob, &bs, base16_notrunc);
                     bs << "\n";
                 });
@@ -88,6 +99,7 @@ void test_ossl_kem() {
             _test_case.assert(sharedsecret_alice == sharedsecret_bob, __FUNCTION__, "compare shared secret");
 
             EVP_PKEY_free(pubkey);
+            EVP_PKEY_free(pubkey_raw);
             EVP_PKEY_free(privkey);
         }
     }

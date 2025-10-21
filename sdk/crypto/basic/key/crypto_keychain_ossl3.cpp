@@ -231,11 +231,13 @@ return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name
 
         pctx = EVP_PKEY_CTX_new_from_name(NULL, name, NULL);
         if (!pctx) {
-            __leave2_trace_openssl(failed);
+            ret = failed;
+            __leave2_trace_openssl(ret);
         }
         rc = EVP_PKEY_fromdata_init(pctx);
         if (rc <= 0) {
-            __leave2_trace_openssl(failed);
+            ret = failed;
+            __leave2_trace_openssl(ret);
         }
 
         params[0] = OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, (void*)&keydata[0], keydata.size());

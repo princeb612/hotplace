@@ -36,6 +36,8 @@ constexpr char constexpr_type[] = "type";
 
 quic_frame_handshake_done::quic_frame_handshake_done(tls_session* session) : quic_frame(quic_frame_type_handshake_done, session) {}
 
+quic_frame_handshake_done::~quic_frame_handshake_done() {}
+
 return_t quic_frame_handshake_done::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {

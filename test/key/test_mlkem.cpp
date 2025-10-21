@@ -42,44 +42,6 @@ void test_mlkem_keygen() {
 #endif
 }
 
-#define MLKEM512_PUBKEY_LEN 800
-EVP_PKEY *create_mlkem512_public_key(const unsigned char *raw_pub_key_bytes) {
-    EVP_PKEY_CTX *pctx = NULL;
-    EVP_PKEY *pkey = NULL;
-    OSSL_PARAM params[3];
-    int ret = 0;
-    __try2 {
-        // 1. EVP_PKEY_CTX 초기화 (ML-KEM-512 알고리즘 사용)
-        // "ML-KEM-512"는 OpenSSL 3.5의 PQC Provider에서 지원하는 이름입니다.
-        pctx = EVP_PKEY_CTX_new_from_name(NULL, "ML-KEM-512", NULL);
-        if (!pctx) {
-            __leave2_trace_openssl(failed);
-        }
-
-        // 2. EVP_PKEY_fromdata_init() 호출
-        if (EVP_PKEY_fromdata_init(pctx) <= 0) {
-            __leave2_trace_openssl(failed);
-        }
-
-        // 3. OSSL_PARAM 배열 설정
-        // Raw Public Key (원시 공개키) 데이터와 길이를 지정합니다.
-        params[0] = OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY,  // 공개키 데이터를 지정하는 매개변수 이름
-                                                      (void *)raw_pub_key_bytes, MLKEM512_PUBKEY_LEN);
-        params[1] = OSSL_PARAM_construct_end();
-
-        // 4. EVP_PKEY_fromdata() 호출
-        // OSSL_PARAM으로부터 EVP_PKEY 객체를 생성합니다.
-        ret = EVP_PKEY_fromdata(pctx, &pkey, EVP_PKEY_PUBLIC_KEY, params);
-
-        if (ret <= 0) {
-            pkey = NULL;  // 에러 발생 시 NULL로 설정
-            __leave2_trace_openssl(failed);
-        }
-    }
-    __finally2 { EVP_PKEY_CTX_free(pctx); }
-    return pkey;
-}
-
 void test_mlkem() {
     _test_case.begin("ML-KEM");
 

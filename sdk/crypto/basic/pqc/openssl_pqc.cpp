@@ -99,7 +99,7 @@ return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, bina
             __leave2;
         }
     }
-    __finally2 {}
+    __finally2 { EVP_PKEY_CTX_free(pkey_ctx); }
 #else
     ret = errorcode_t::not_supported;
 #endif
@@ -147,7 +147,7 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, cons
             __leave2;
         }
     }
-    __finally2 {}
+    __finally2 { EVP_PKEY_CTX_free(pkey_ctx); }
 #else
     ret = errorcode_t::not_supported;
 #endif

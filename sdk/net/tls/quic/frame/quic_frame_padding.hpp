@@ -21,6 +21,7 @@ namespace net {
 class quic_frame_padding : public quic_frame {
    public:
     quic_frame_padding(tls_session* session);
+    virtual ~quic_frame_padding();
 
     /**
      * @param   uint16 len [in]

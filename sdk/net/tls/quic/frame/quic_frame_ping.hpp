@@ -21,6 +21,7 @@ namespace net {
 class quic_frame_ping : public quic_frame {
    public:
     quic_frame_ping(tls_session* session);
+    virtual ~quic_frame_ping();
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

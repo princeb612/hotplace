@@ -25,6 +25,8 @@ namespace net {
  */
 class http3_frame {
    public:
+    virtual ~http3_frame();
+
     return_t read(const byte_t* stream, size_t size, size_t& pos);
     return_t write(binary_t& bin);
 

@@ -37,6 +37,8 @@ constexpr char constexpr_token[] = "token";
 
 quic_frame_new_token::quic_frame_new_token(tls_session* session) : quic_frame(quic_frame_type_new_token, session) {}
 
+quic_frame_new_token::~quic_frame_new_token() {}
+
 return_t quic_frame_new_token::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {

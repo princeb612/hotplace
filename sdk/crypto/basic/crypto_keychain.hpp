@@ -241,10 +241,10 @@ class crypto_keychain {
      *
      * nid, curve list
      * kty OSSL-NID TLS-group curve
-     * EC       704    0x0000 secp112r1 wap-wsg-idm-ecid-wtls6
-     * EC       705    0x0000 secp112r2
-     * EC       706    0x0000 secp128r1
-     * EC       707    0x0000 secp128r2
+     * EC       704    N/A    secp112r1 wap-wsg-idm-ecid-wtls6
+     * EC       705    N/A    secp112r2
+     * EC       706    N/A    secp128r1
+     * EC       707    N/A    secp128r2
      * EC       708    0x000f ansip160k1 secp160k1
      * EC       709    0x0010 ansip160r1 secp160r1 wap-wsg-idm-ecid-wtls7
      * EC       710    0x0011 ansip160r2 secp160r2
@@ -256,10 +256,10 @@ class crypto_keychain {
      * EC       415    0x0017 P-256 prime256v1 secp256r1
      * EC       715    0x0018 P-384 ansip384r1 secp384r1
      * EC       716    0x0019 P-521 ansip521r1 secp521r1
-     * EC       717    0x0000 sect113r1 wap-wsg-idm-ecid-wtls4
-     * EC       718    0x0000 sect113r2
-     * EC       719    0x0000 sect131r1
-     * EC       720    0x0000 sect131r2
+     * EC       717    N/A    sect113r1 wap-wsg-idm-ecid-wtls4
+     * EC       718    N/A    sect113r2
+     * EC       719    N/A    sect131r1
+     * EC       720    N/A    sect131r2
      * EC       721    0x0001 K-163 ansit163k1 sect163k1 wap-wsg-idm-ecid-wtls3
      * EC       722    0x0002 ansit163r1 sect163r1
      * EC       723    0x0003 B-163 ansit163r2 sect163r2
@@ -276,22 +276,22 @@ class crypto_keychain {
      * EC       734    0x000e B-571 ansit571r1 sect571r1
      * OKP     1034    0x001d X25519
      * OKP     1035    0x001e X448
-     * OKP     1087    0x0000 Ed25519
-     * OKP     1088    0x0000 Ed448
-     * EC       921    0x0000 brainpoolP160r1
-     * EC       922    0x0000 brainpoolP160t1
-     * EC       923    0x0000 brainpoolP192r1
-     * EC       924    0x0000 brainpoolP192t1
-     * EC       925    0x0000 brainpoolP224r1
-     * EC       926    0x0000 brainpoolP224t1
+     * OKP     1087    N/A    Ed25519
+     * OKP     1088    N/A    Ed448
+     * EC       921    N/A    brainpoolP160r1
+     * EC       922    N/A    brainpoolP160t1
+     * EC       923    N/A    brainpoolP192r1
+     * EC       924    N/A    brainpoolP192t1
+     * EC       925    N/A    brainpoolP224r1
+     * EC       926    N/A    brainpoolP224t1
      * EC       927    0x001a brainpoolP256r1
-     * EC       928    0x0000 brainpoolP256t1
-     * EC       929    0x0000 brainpoolP320r1
-     * EC       930    0x0000 brainpoolP320t1
+     * EC       928    N/A    brainpoolP256t1
+     * EC       929    N/A    brainpoolP320r1
+     * EC       930    N/A    brainpoolP320t1
      * EC       931    0x001b brainpoolP384r1
-     * EC       932    0x0000 brainpoolP384t1
+     * EC       932    N/A    brainpoolP384t1
      * EC       933    0x001c brainpoolP512r1
-     * EC       934    0x0000 brainpoolP512t1
+     * EC       934    N/A    brainpoolP512t1
      */
 
     /**

@@ -35,6 +35,8 @@ namespace net {
 
 quic_frame_padding::quic_frame_padding(tls_session* session) : quic_frame(quic_frame_type_padding, session), _len(0), _flags(0) {}
 
+quic_frame_padding::~quic_frame_padding() {}
+
 return_t quic_frame_padding::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     // RFC 9001 19.1.  PADDING Frames

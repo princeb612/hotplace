@@ -102,6 +102,7 @@ struct ack_t {
 class quic_frame_ack : public quic_frame {
    public:
     quic_frame_ack(tls_session* session, uint8 type = quic_frame_type_ack);
+    virtual ~quic_frame_ack();
 
     quic_frame_ack& set_space(protection_space_t space);
     protection_space_t get_space();

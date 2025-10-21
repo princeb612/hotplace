@@ -45,6 +45,7 @@
   * RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
   * RFC 6347 Datagram Transport Layer Security Version 1.2
   * RFC 7627 Transport Layer Security (TLS) Session Hash and Extended Master Secret Extension
+  * RFC 7905 ChaCha20-Poly1305 Cipher Suites for Transport Layer Security (TLS)
   * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
   * RFC 8448 Example Handshake Traces for TLS 1.3
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
@@ -55,6 +56,8 @@
   * RFC 9369 QUIC Version 2
     * sdk/net/tls/quic/
     * test/quic/
+  * ML-KEM Post-Quantum Key Agreement for TLS 1.3
+    * [draft-ietf-tls-mlkem-04](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/)
 * CBOR
   * RFC 7049 Concise Binary Object Representation (CBOR)
   * RFC 8949 Concise Binary Object Representation (CBOR)

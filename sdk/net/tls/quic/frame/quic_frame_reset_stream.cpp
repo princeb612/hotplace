@@ -26,6 +26,8 @@ constexpr char constexpr_error_code[] = "error code";
 
 quic_frame_reset_stream::quic_frame_reset_stream(tls_session* session) : quic_frame(quic_frame_type_reset_stream, session) {}
 
+quic_frame_reset_stream::~quic_frame_reset_stream() {}
+
 /**
  * RFC 9000 19.4.  RESET_STREAM Frames
  * RESET_STREAM Frame {
