@@ -292,6 +292,7 @@ const hint_group_t hint_groups[] = {
     // 6.1.  SecP256r1MLKEM768
     // 6.2.  X25519MLKEM768
     // 6.3.  SecP384r1MLKEM1024
+#if 0
     {
         tls_named_group_secp256r1mlkem768,
         nid_mlkem768,  // NID_ML_KEM_768
@@ -313,6 +314,7 @@ const hint_group_t hint_groups[] = {
         NID_secp384r1,
         crypto_kty_t::kty_ec,
     },
+#endif
 };
 
 const size_t sizeof_hint_groups = RTL_NUMBER_OF(hint_groups);

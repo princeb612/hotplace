@@ -76,7 +76,11 @@ openssl_tls_context& openssl_tls_context::set_cipher_list(const char* list) {
 openssl_tls_context& openssl_tls_context::set_group_list(const char* list) {
     if (list) {
         if (_ctx) {
-            SSL_CTX_set1_groups_list(_ctx, list);
+            // IMPORTANT check len
+            auto len = strlen(list);
+            if (len) {
+                SSL_CTX_set1_groups_list(_ctx, list);
+            }
         }
     }
     return *this;
