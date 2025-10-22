@@ -19,12 +19,21 @@ namespace crypto {
 /**
  * @brief ML-KEM
  * @remarks
- *          ML-KEM - openssl-3.5 required
- *              "ML-KEM-512"    1454    EVP_PKEY_ML_KEM_512
- *              "ML-KEM-768"    1455    EVP_PKEY_ML_KEM_768
- *              "ML-KEM-1024"   1456    EVP_PKEY_ML_KEM_1024
+ *      ML-KEM - openssl-3.5 required
  *
- *          oqs-provider - openssl-3.0 required
+ *      | name          | group | NID                         |    key | encaps |
+ *      | "ML-KEM-512"  |   512 | 1454 (EVP_PKEY_ML_KEM_512)  |    800 |    768 |
+ *      | "ML-KEM-768"  |   513 | 1455 (EVP_PKEY_ML_KEM_768)  |   1184 |   1088 |
+ *      | "ML-KEM-1024" |   514 | 1456 (EVP_PKEY_ML_KEM_1024) |   1568 |   1568 |
+ *
+ *      hybrid ECDHE-MLKEM
+ *
+ *      | name               | group | keyshare  |
+ *      | SecP256r1MLKEM768  |  4587 | 1184 + 65 |
+ *      | X25519MLKEM768     |  4588 | 1184 + 32 |
+ *      | SecP384r1MLKEM1024 |  4589 | 1568 + 97 |
+ *
+ *      oqs-provider - openssl-3.0 required
  */
 
 class openssl_pqc {
@@ -46,9 +55,36 @@ class openssl_pqc {
      * @param EVP_PKEY** pkey [out]
      * @param const binary_t& keydata [in]
      * @param key_encoding_t encoding [in]
+     *          key_encoding_priv_pem
+     *          key_encoding_encrypted_priv_pem
+     *          key_encoding_pub_pem
+     *          key_encoding_priv_der
+     *          key_encoding_encrypted_priv_der
+     *          key_encoding_pub_der
      * @param const char* passphrase [inopt]
      */
     return_t decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    return_t decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding, const char* passphrase = nullptr);
+    /**
+     * @param OSSL_LIB_CTX* libctx [in]
+     * @param const char* name [in]
+     * @param EVP_PKEY** pkey [out]
+     * @param const binary_t& keydata [in]
+     * @param key_encoding_t encoding [in]
+     *          key_encoding_priv_pem
+     *          key_encoding_encrypted_priv_pem
+     *          key_encoding_pub_pem
+     *          key_encoding_priv_der
+     *          key_encoding_encrypted_priv_der
+     *          key_encoding_pub_der
+     *          key_encoding_priv_raw
+     *          key_encoding_pub_raw
+     * @param const char* passphrase [inopt]
+     */
+    return_t decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding,
+                    const char* passphrase = nullptr);
+    return_t decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
+                    const char* passphrase = nullptr);
     /**
      * @brief encaps
      * @param OSSL_LIB_CTX* libctx [in]
@@ -65,6 +101,7 @@ class openssl_pqc {
      * @param binary_t& sharedsecret [out]
      */
     return_t decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret);
+    return_t decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const byte_t* capsulekeystream, size_t capsulekeysize, binary_t& sharedsecret);
     /**
      * @brief sign
      * @param OSSL_LIB_CTX* libctx [in]

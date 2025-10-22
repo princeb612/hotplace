@@ -112,17 +112,27 @@ return_t crypto_keychain::pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKE
 
 return_t crypto_keychain::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == pkey || keydata.empty()) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = pkey_decode_format(libctx, pkey, &keydata[0], keydata.size(), encoding, passphrase);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
+                                             const char* passphrase) {
+    return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     BIO* buf = nullptr;
     OSSL_DECODER_CTX* decoder_context = nullptr;
     int rc = 0;
     __try2 {
-        if (nullptr == pkey) {
+        if (nullptr == pkey || nullptr == keystream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (keydata.empty()) {
-            ret = errorcode_t::bad_data;
             __leave2;
         }
 
@@ -136,7 +146,7 @@ return_t crypto_keychain::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pk
             __leave2;
         }
 
-        buf = BIO_new_mem_buf(&keydata[0], keydata.size());
+        buf = BIO_new_mem_buf(keystream, keysize);
         if (nullptr == buf) {
             ret = failed;
             __leave2;
@@ -203,22 +213,80 @@ return_t crypto_keychain::pkey_encode_raw(OSSL_LIB_CTX* libctx, const EVP_PKEY* 
     return ret;
 }
 
+return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding,
+                                      const char* passphrase) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == pkey || keydata.empty()) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = pkey_decode(libctx, name, pkey, &keydata[0], keydata.size(), encoding, passphrase);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
+                                      const char* passphrase) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == pkey || nullptr == keystream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        switch (encoding) {
+            case key_encoding_priv_pem:
+            case key_encoding_encrypted_priv_pem:
+            case key_encoding_pub_pem:
+            case key_encoding_priv_der:
+            case key_encoding_encrypted_priv_der:
+            case key_encoding_pub_der: {
+                ret = pkey_decode_format(libctx, pkey, keystream, keysize, encoding, passphrase);
+            } break;
+            case key_encoding_priv_raw:
+            case key_encoding_pub_raw: {
+                ret = pkey_decode_raw(libctx, name, pkey, keystream, keysize, encoding);
+            } break;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
 return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == pkey || keydata.empty()) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = pkey_decode_raw(libctx, name, pkey, &keydata[0], keydata.size(), encoding);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize,
+                                          key_encoding_t encoding) {
     return_t ret = errorcode_t::success;
     EVP_PKEY_CTX* pctx = NULL;
     OSSL_PARAM params[3];
     int rc = 0;
     __try2 {
-        if (nullptr == name || nullptr == pkey) {
+        if (nullptr == name || nullptr == pkey || nullptr == keystream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        const char* param = nullptr;
         int selection = 0;
         switch (encoding) {
             case key_encoding_priv_raw: {
+                param = OSSL_PKEY_PARAM_PRIV_KEY;
                 selection = EVP_PKEY_PRIVATE_KEY;
             } break;
             case key_encoding_pub_raw: {
+                param = OSSL_PKEY_PARAM_PUB_KEY;
                 selection = EVP_PKEY_PUBLIC_KEY;
             } break;
             default: {
@@ -240,10 +308,10 @@ return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name
             __leave2_trace_openssl(ret);
         }
 
-        params[0] = OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, (void*)&keydata[0], keydata.size());
+        params[0] = OSSL_PARAM_construct_octet_string(param, (void*)keystream, keysize);
         params[1] = OSSL_PARAM_construct_end();
 
-        rc = EVP_PKEY_fromdata(pctx, pkey, EVP_PKEY_PUBLIC_KEY, params);
+        rc = EVP_PKEY_fromdata(pctx, pkey, selection, params);
         if (rc <= 0) {
             ret = failed;
             __leave2_trace_openssl(ret);
@@ -274,6 +342,20 @@ return_t crypto_keychain::pkey_encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
 
 return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == pkey || keydata.empty()) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = pkey_decode(libctx, pkey, &keydata[0], keydata.size(), encoding, passphrase);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
+                                      const char* passphrase) {
+    return_t ret = errorcode_t::success;
     switch (encoding) {
         case key_encoding_priv_pem:
         case key_encoding_encrypted_priv_pem:
@@ -281,7 +363,7 @@ return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, con
         case key_encoding_priv_der:
         case key_encoding_encrypted_priv_der:
         case key_encoding_pub_der: {
-            ret = pkey_decode_format(libctx, pkey, keydata, encoding, passphrase);
+            ret = pkey_decode_format(libctx, pkey, keystream, keysize, encoding, passphrase);
         } break;
         case key_encoding_priv_raw:
         case key_encoding_pub_raw: {

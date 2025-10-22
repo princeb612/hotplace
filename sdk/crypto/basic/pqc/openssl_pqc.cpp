@@ -57,6 +57,63 @@ return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary
     return ret;
 }
 
+return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding, const char* passphrase) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    __try2 {
+        if (nullptr == pkey) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        crypto_keychain keychain;
+        ret = keychain.pkey_decode(libctx, pkey, keystream, keysize, encoding, passphrase);
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding,
+                             const char* passphrase) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == pkey || keydata.empty()) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = decode(libctx, name, pkey, &keydata[0], keydata.size(), encoding, passphrase);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
+                             const char* passphrase) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        crypto_keychain keychain;
+        switch (encoding) {
+            case key_encoding_priv_pem:
+            case key_encoding_encrypted_priv_pem:
+            case key_encoding_pub_pem:
+            case key_encoding_priv_der:
+            case key_encoding_encrypted_priv_der:
+            case key_encoding_pub_der: {
+                ret = keychain.pkey_decode_format(libctx, pkey, keystream, keysize, encoding, passphrase);
+            } break;
+            case key_encoding_priv_raw:
+            case key_encoding_pub_raw: {
+                ret = keychain.pkey_decode_raw(libctx, name, pkey, keystream, keysize, encoding);
+            } break;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
 return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
@@ -108,16 +165,25 @@ return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, bina
 
 return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == pkey || capsulekey.empty()) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = decapsule(libctx, pkey, &capsulekey[0], capsulekey.size(), sharedsecret);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const byte_t* capsulekeystream, size_t capsulekeysize, binary_t& sharedsecret) {
+    return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     EVP_PKEY_CTX* pkey_ctx = nullptr;
     size_t sharedsecret_len = 0;
     int test = 0;
     __try2 {
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (capsulekey.empty()) {
+        if (nullptr == pkey || nullptr == capsulekeystream) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -133,7 +199,7 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, cons
             ret = errorcode_t::internal_error;
             __leave2;
         }
-        test = EVP_PKEY_decapsulate(pkey_ctx, nullptr, &sharedsecret_len, &capsulekey[0], capsulekey.size());
+        test = EVP_PKEY_decapsulate(pkey_ctx, nullptr, &sharedsecret_len, capsulekeystream, capsulekeysize);
         if (test <= 0) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -141,7 +207,7 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, cons
 
         sharedsecret.resize(sharedsecret_len);
 
-        test = EVP_PKEY_decapsulate(pkey_ctx, &sharedsecret[0], &sharedsecret_len, &capsulekey[0], capsulekey.size());
+        test = EVP_PKEY_decapsulate(pkey_ctx, &sharedsecret[0], &sharedsecret_len, capsulekeystream, capsulekeysize);
         if (test <= 0) {
             ret = errorcode_t::internal_error;
             __leave2;

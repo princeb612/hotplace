@@ -27,6 +27,8 @@ void test_ossl_encode();
 void test_ossl_kem();
 void test_ossl_dsa();
 
+void test_ossl_hybrid_kem();
+
 void test_oqs_encode();
 void test_oqs_kem();
 void test_oqs_dsa();

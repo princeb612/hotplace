@@ -120,7 +120,7 @@ void test_pcap_tls13_http1() {
     }
 
     {
-        _test_case.begin("TLS 1.2 curl_http1_tls12.pcapng (TCP segmentation)");
+        _test_case.begin("TLS 1.2 curl_http1_tls12.pcapng");
 
         tls_session session(session_type_tls);
 

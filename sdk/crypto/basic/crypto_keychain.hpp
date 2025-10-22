@@ -186,7 +186,11 @@ class crypto_keychain {
      *         not_supported - openssl 3.5 required
      */
     return_t pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    return_t pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
+                         const char* passphrase = nullptr);
     return_t pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    return_t pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
+                                const char* passphrase = nullptr);
     /**
      * @param key_encoding_t encoding [in]
      *      pkey_decode_raw
@@ -200,7 +204,12 @@ class crypto_keychain {
      *      // ML-KEM-1024        1568
      *      pkey_decode_raw(nullptr, "ML-KEM-512", &pkey, pubkey, key_encoding_pub_raw);
      */
+    return_t pkey_decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding,
+                         const char* passphrase = nullptr);
+    return_t pkey_decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
+                         const char* passphrase = nullptr);
     return_t pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding);
+    return_t pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding);
 
     /**
      * @brief encode

@@ -28,7 +28,7 @@
     * CBOR
 
 * details
-  * Revision 895
+  * Revision 896
   * Revision 890
     * [tested] TLS 1.3 MLKEM512, MLKEM768, MLKEM1024
   * Revision 889

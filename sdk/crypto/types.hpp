@@ -1407,9 +1407,11 @@ enum authenticated_encryption_flag_t : uint16 {
 };
 
 struct hint_group_t {
+    tls_named_group_t group;
     uint32 nid;
     crypto_kty_t kty;
-    tls_named_group_t group;
+    uint32 hnid;        // hybrid
+    crypto_kty_t hkty;  // hybrid
 };
 
 ///////////////////////////////////////////////////////////////////////////

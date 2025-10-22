@@ -11,7 +11,7 @@
 #include "sample.hpp"
 
 void test_ossl_kem() {
-    _test_case.begin("openssl-3.5 KEM");
+    _test_case.begin("understanding ML-KEM Post-Quantum Key Agreement for TLS 1.3");
 
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     return_t ret = errorcode_t::success;
@@ -56,18 +56,18 @@ void test_ossl_kem() {
             // alice -> bob : key distribution (DER)
             {
                 ret = keychain.pkey_encode(nullptr, privkey, keydata, key_encoding_pub_der);
-                _test_case.test(ret, __FUNCTION__, "encode public key %s size %zi", alg.c_str(), keydata.size());
+                _test_case.test(ret, __FUNCTION__, "DER encode public key %s size %zi", alg.c_str(), keydata.size());
 
                 ret = keychain.pkey_decode(nullptr, &pubkey, keydata, key_encoding_pub_der);
-                _test_case.test(ret, __FUNCTION__, "decode public key %s size %zi", alg.c_str(), keydata.size());
+                _test_case.test(ret, __FUNCTION__, "DER decode public key %s size %zi", alg.c_str(), keydata.size());
             }
             // alice -> bob : key distribution (TLS 1.3)
             {
                 ret = keychain.pkey_encode_raw(nullptr, privkey, keydata, key_encoding_pub_raw);
-                _test_case.test(ret, __FUNCTION__, "encode public key %s size %zi", alg.c_str(), keydata.size());
+                _test_case.test(ret, __FUNCTION__, "RAW encode public key %s size %zi", alg.c_str(), keydata.size());
 
                 ret = keychain.pkey_decode_raw(nullptr, alg.c_str(), &pubkey_raw, keydata, key_encoding_pub_raw);
-                _test_case.test(ret, __FUNCTION__, "decode public key %s size %zi", alg.c_str(), keydata.size());
+                _test_case.test(ret, __FUNCTION__, "RAW decode public key %s size %zi", alg.c_str(), keydata.size());
 
                 _test_case.assert(EVP_PKEY_eq(pubkey, pubkey_raw), __FUNCTION__, "EVP_PKEY_eq");
             }
@@ -82,7 +82,7 @@ void test_ossl_kem() {
                     base16_encode(sharedsecret_bob, &bs, base16_notrunc);
                     bs << "\n";
                 });
-                _test_case.test(ret, __FUNCTION__, "encapsule %s", alg.c_str());
+                _test_case.test(ret, __FUNCTION__, "encapsule %s size %zi", alg.c_str(), capsulekey.size());
             }
             // alice : decapsule
             {

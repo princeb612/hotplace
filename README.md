@@ -58,6 +58,7 @@
     * test/quic/
   * ML-KEM Post-Quantum Key Agreement for TLS 1.3
     * [draft-ietf-tls-mlkem-04](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/)
+    * test/tls/
 * CBOR
   * RFC 7049 Concise Binary Object Representation (CBOR)
   * RFC 8949 Concise Binary Object Representation (CBOR)
@@ -205,6 +206,9 @@
 
 ## studying
 
+* TLS
+  * Post-quantum hybrid ECDHE-MLKEM Key Agreement for TLSv1.3
+    * [draft-ietf-tls-ecdhe-mlkem-01](https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/01/)
 * HTTP/1.1
   * RFC 2817 Upgrading to TLS Within HTTP/1.1
 * HTTP/3

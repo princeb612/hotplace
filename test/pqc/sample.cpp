@@ -55,6 +55,8 @@ int main(int argc, char **argv) {
     test_ossl_kem();
     test_ossl_dsa();
 
+    test_ossl_hybrid_kem();
+
     test_oqs_encode();
     test_oqs_kem();
     test_oqs_dsa();
