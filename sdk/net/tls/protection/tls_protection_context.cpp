@@ -12,7 +12,7 @@
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
 #include <hotplace/sdk/net/tls/tls_protection.hpp>
 #include <hotplace/sdk/net/tls/tls_session.hpp>
@@ -301,7 +301,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
 
             std::list<uint16> candidates;
             rhs.for_each_supported_groups([&](uint16 group, bool*) -> void {
-                auto hint = tlsadvisor->hintof_curve_tls_group(group);
+                auto hint = advisor->hintof_tls_group(group);
                 if (hint && (tls_flag_support & hint->flags)) {
                     bool cond = true;
                     if (tls_flag_pqc & hint->flags) {

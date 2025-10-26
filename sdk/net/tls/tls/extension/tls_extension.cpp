@@ -199,7 +199,7 @@ return_t tls_extension::do_read_header(tls_direction_t dir, const byte_t* stream
             trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                dbs.println("  > %s - %04x %s", constexpr_extension, extension_type, tlsadvisor->tls_extension_string(extension_type).c_str());
+                dbs.println("  > %s - %04x %s", constexpr_extension, extension_type, tlsadvisor->nameof_tls_extension(extension_type).c_str());
                 if (check_trace_level(loglevel_debug)) {
                     dump_memory(stream + offsetof_header(), get_extsize(), &dbs, 16, 4, 0x0, dump_notrunc);
                 }

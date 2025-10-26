@@ -92,7 +92,7 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
                 auto content_type = get_type();
                 dbs.printf("\e[1;36m");
                 dbs.println("# write %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type,
-                            tlsadvisor->content_type_string(content_type).c_str());
+                            tlsadvisor->nameof_tls_record(content_type).c_str());
                 dbs.printf("\e[0m");
             });
         }
@@ -284,8 +284,8 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
                     dump_memory(stream + recpos, content_header_size + len, &dbs, 16, 3, 0, dump_notrunc);
                 }
 
-                dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
-                dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->tls_version_string(record_version).c_str());
+                dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->nameof_tls_record(content_type).c_str());
+                dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->nameof_tls_version(record_version).c_str());
                 if (is_dtls()) {
                     dbs.println(" > %s 0x%04x", constexpr_dtls_epoch, key_epoch);
                     dbs.println(" > %s 0x%012I64x (%I64u)", constexpr_dtls_record_seq, dtls_record_seq, dtls_record_seq);
@@ -412,8 +412,8 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
 
                 auto content_type = get_type();
                 auto len = body.size();
-                dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->content_type_string(content_type).c_str());
-                dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->tls_version_string(record_version).c_str());
+                dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->nameof_tls_record(content_type).c_str());
+                dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->nameof_tls_version(record_version).c_str());
                 if (session_type_dtls == get_session()->get_type()) {
                     if (dont_control_dtls_sequence & get_flags()) {
                     } else {

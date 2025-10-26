@@ -27,8 +27,9 @@
 #include <hotplace/sdk/crypto/basic/crypto_hmac.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keyexchange.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/hmac_otp.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>

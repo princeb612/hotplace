@@ -12,7 +12,7 @@
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_hash.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/crypto/basic/transcript_hash.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
@@ -45,7 +45,7 @@ transcript_hash *tls_protection::get_transcript_hash() {
                     tls_advisor *tlsadvisor = tls_advisor::get_instance();
                     auto mdname = advisor->nameof_md(hashalg);
                     dbs.println("# %s", constexpr_transcript_hash);
-                    dbs.println(" > %s 0x%04x %s", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
+                    dbs.println(" > %s 0x%04x %s", constexpr_cipher_suite, cipher_suite, tlsadvisor->nameof_tls_cipher_suite(cipher_suite).c_str());
                     dbs.println(" > %s", mdname);
                 });
             }

@@ -75,7 +75,7 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
                 dbs.println("    > %s (%i ent.)", constexpr_versions, count);
                 int i = 0;
                 for (auto ver : _versions) {
-                    dbs.println("      [%i] 0x%04x %s", i++, ver, tlsadvisor->tls_version_string(ver).c_str());
+                    dbs.println("      [%i] 0x%04x %s", i++, ver, tlsadvisor->nameof_tls_version(ver).c_str());
                 }
             });
         }
@@ -150,7 +150,7 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
             trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                dbs.println("    > 0x%04x %s", version, tlsadvisor->tls_version_string(version).c_str());
+                dbs.println("    > 0x%04x %s", version, tlsadvisor->nameof_tls_version(version).c_str());
             });
         }
 #endif

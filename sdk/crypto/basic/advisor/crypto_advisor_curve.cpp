@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -18,8 +18,8 @@ return_t crypto_advisor::for_each_curve(std::function<void(const char*, uint32, 
     return_t ret = errorcode_t::success;
     for (auto i = 0; i < sizeof_hint_curves; i++) {
         const hint_curve_t* item = hint_curves + i;
-        if (item->name) {
-            f(item->name, advisor_feature_curve, user);
+        if (item->name_nist) {
+            f(item->name_nist, advisor_feature_curve, user);
         }
     }
     return ret;
@@ -153,14 +153,16 @@ return_t crypto_advisor::nameof_ec_curve(const EVP_PKEY* pkey, std::string& name
         t_maphint<uint32, const hint_curve_t*> hint(_curve_bynid_map);
         ret = hint.find(nid, &item);
         if (errorcode_t::success == ret) {
-            if (item->name) {
-                name = item->name;
-            } else if (item->aka1) {
-                name = item->aka1;
-            } else if (item->aka2) {
-                name = item->aka2;
-            } else if (item->aka3) {
-                name = item->aka3;
+            if (item->name_nist) {
+                name = item->name_nist;
+            } else if (item->name_x962) {
+                name = item->name_x962;
+            } else if (item->name_sec) {
+                name = item->name_sec;
+            } else if (item->name_bp) {
+                name = item->name_bp;
+            } else if (item->name_wtls) {
+                name = item->name_wtls;
             }
         }
     }

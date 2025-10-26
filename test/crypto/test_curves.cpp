@@ -20,17 +20,17 @@ void test_curves() {
     auto lambda = [&](const hint_curve_t* hint, void*) -> void {
         _logger->writeln([&](basic_stream& bs) -> void {
             bs.printf("%-3s     %4u    0x%04x ", advisor->nameof_kty(hint->kty), hint->nid, hint->tlsgroup);
-            if (hint->name) {
-                bs << hint->name << " ";
+            if (hint->name_nist) {
+                bs << hint->name_nist << " ";
             }
-            if (hint->aka1) {
-                bs << hint->aka1 << " ";
+            if (hint->name_x962) {
+                bs << hint->name_x962 << " ";
             }
-            if (hint->aka2) {
-                bs << hint->aka2 << " ";
+            if (hint->name_sec) {
+                bs << hint->name_sec << " ";
             }
-            if (hint->aka3) {
-                bs << hint->aka3 << " ";
+            if (hint->name_wtls) {
+                bs << hint->name_wtls << " ";
             }
         });
     };

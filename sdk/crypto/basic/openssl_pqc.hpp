@@ -21,17 +21,17 @@ namespace crypto {
  * @remarks
  *      ML-KEM - openssl-3.5 required
  *
- *      | name          | group | NID                         |    key | encaps |
+ *      | name          | group | NID                         | encode | encaps |
  *      | "ML-KEM-512"  |   512 | 1454 (EVP_PKEY_ML_KEM_512)  |    800 |    768 |
  *      | "ML-KEM-768"  |   513 | 1455 (EVP_PKEY_ML_KEM_768)  |   1184 |   1088 |
  *      | "ML-KEM-1024" |   514 | 1456 (EVP_PKEY_ML_KEM_1024) |   1568 |   1568 |
  *
  *      hybrid ECDHE-MLKEM
  *
- *      | name               | group | keyshare  |
- *      | SecP256r1MLKEM768  |  4587 | 1184 + 65 |
- *      | X25519MLKEM768     |  4588 | 1184 + 32 |
- *      | SecP384r1MLKEM1024 |  4589 | 1568 + 97 |
+ *      | name               | group | encode    | encaps    |
+ *      | SecP256r1MLKEM768  |  4587 | 1184 + 65 | 1088 + 65 |
+ *      | X25519MLKEM768     |  4588 | 1184 + 32 | 1088 + 32 |
+ *      | SecP384r1MLKEM1024 |  4589 | 1568 + 97 | 1568 + 97 |
  *
  *      oqs-provider - openssl-3.0 required
  */
@@ -89,18 +89,18 @@ class openssl_pqc {
      * @brief encaps
      * @param OSSL_LIB_CTX* libctx [in]
      * @param const EVP_PKEY* pkey [in] public key
-     * @param binary_t& capsulekey [out]
+     * @param binary_t& keycapsule [out]
      * @param binary_t& sharedsecret [out]
      */
-    return_t encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret);
+    return_t encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keycapsule, binary_t& sharedsecret);
     /**
      * @brief decaps
      * @param OSSL_LIB_CTX* libctx [in]
      * @param const EVP_PKEY* pkey [in] private key
-     * @param const binary_t& capsulekey [in] see encapsule
+     * @param const binary_t& keycapsule [in] see encapsule
      * @param binary_t& sharedsecret [out]
      */
-    return_t decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret);
+    return_t decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const binary_t& keycapsule, binary_t& sharedsecret);
     return_t decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const byte_t* capsulekeystream, size_t capsulekeysize, binary_t& sharedsecret);
     /**
      * @brief sign

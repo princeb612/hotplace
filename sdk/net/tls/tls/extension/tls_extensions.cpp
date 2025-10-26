@@ -50,7 +50,7 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
                     if (istraceable(trace_category_net)) {
                         tls_advisor* tlsadvisor = tls_advisor::get_instance();
                         trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                            dbs.println("\e[1;31m! error while reading extension %s\e[0m", tlsadvisor->tls_extension_string(extension_type).c_str());
+                            dbs.println("\e[1;31m! error while reading extension %s\e[0m", tlsadvisor->nameof_tls_extension(extension_type).c_str());
                         });
                     }
 #endif
@@ -79,7 +79,7 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
             if (istraceable(trace_category_net)) {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                    dbs.println("\e[1;31m! error while writing extension %s\e[0m", tlsadvisor->tls_extension_string(extension->get_type()).c_str());
+                    dbs.println("\e[1;31m! error while writing extension %s\e[0m", tlsadvisor->nameof_tls_extension(extension->get_type()).c_str());
                 });
             }
 #endif
@@ -104,7 +104,7 @@ tls_extensions& tls_extensions::add(uint16 type, tls_direction_t dir, tls_handsh
                     tls_advisor* tlsadvisor = tls_advisor::get_instance();
                     if (istraceable(trace_category_net)) {
                         trace_debug_event(trace_category_net, trace_event_tls_extension,
-                                          [&](basic_stream& dbs) -> void { dbs.println("check %s", tlsadvisor->tls_extension_string(type).c_str()); });
+                                          [&](basic_stream& dbs) -> void { dbs.println("check %s", tlsadvisor->nameof_tls_extension(type).c_str()); });
                     }
 #endif
                     extension->release();

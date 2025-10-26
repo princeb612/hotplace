@@ -68,7 +68,7 @@ return_t quic_frame_connection_close::do_read_body(tls_direction_t dir, const by
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                dbs.println("   > %s %I64i %s", constexpr_error_code, error_code, tlsadvisor->quic_error_string(error_code).c_str());
+                dbs.println("   > %s %I64i %s", constexpr_error_code, error_code, tlsadvisor->nameof_quic_error(error_code).c_str());
                 if (is_0x1c) {
                     dbs.println("   > %s %I64i", constexpr_frametype, frame_type);
                 }

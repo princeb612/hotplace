@@ -55,7 +55,7 @@ return_t tls_extension_compress_certificate::do_read_body(tls_direction_t dir, c
                 dbs.println("   > %s %i (%i ent.)", constexpr_algorithm_len, algorithms_len << 1, algorithms_len);
                 int i = 0;
                 for (auto alg : _algorithms) {
-                    dbs.println("     [%i] 0x%04x %s", i++, alg, tlsadvisor->compression_alg_name(alg).c_str());
+                    dbs.println("     [%i] 0x%04x %s", i++, alg, tlsadvisor->nameof_compression_alg(alg).c_str());
                 }
             });
         }

@@ -221,6 +221,11 @@ class crypto_keychain {
     bool pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey);
 
     /**
+     * @brief add
+     */
+    return_t add(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+
+    /**
      * @brief   RSA
      */
     return_t add_rsa(crypto_key* cryptokey, uint32 nid, size_t bits, const keydesc& desc);

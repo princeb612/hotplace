@@ -14,7 +14,7 @@
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/net/tls/quic/types.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -123,18 +123,10 @@ void tls_advisor::load_tls_parameters() {
         _sig_scheme_codes.insert({item->code, item});
         _sig_scheme_names.insert({item->name, item});
     }
-    for (auto i = 0; i < sizeof_tls_groups; i++) {
-        auto item = tls_groups + i;
-        _supported_group_codes.insert({item->code, item});
-        _supported_group_names.insert({item->name, item});
-        if (item->nid) {
-            _supported_group_nids.insert({item->nid, item});
-        }
-    }
 }
 
 void tls_advisor::load_tls_extensiontype_values() {
-    // compression_alg_code
+    // valueof_compression_alg
     for (auto i = 0; i < sizeof_tls_compression_alg_codes; i++) {
         auto item = tls_compression_alg_codes + i;
         _compression_alg_codes.insert({item->code, item});
@@ -300,42 +292,7 @@ void tls_advisor::enum_signature_scheme(std::function<void(const tls_sig_scheme_
     }
 }
 
-const tls_group_t* tls_advisor::hintof_curve_tls_group(uint16 code) {
-    const tls_group_t* ret_value = nullptr;
-    auto iter = _supported_group_codes.find(code);
-    if (_supported_group_codes.end() != iter) {
-        ret_value = iter->second;
-    }
-    return ret_value;
-}
-
-const tls_group_t* tls_advisor::hintof_curve_tls_group(const std::string& name) {
-    const tls_group_t* ret_value = nullptr;
-    auto iter = _supported_group_names.find(name);
-    if (_supported_group_names.end() != iter) {
-        ret_value = iter->second;
-    }
-    return ret_value;
-}
-
-const tls_group_t* tls_advisor::hintof_tls_group_nid(uint32 nid) {
-    const tls_group_t* ret_value = nullptr;
-    auto iter = _supported_group_nids.find(nid);
-    if (_supported_group_nids.end() != iter) {
-        ret_value = iter->second;
-    }
-    return ret_value;
-}
-
-void tls_advisor::enum_tls_group(std::function<void(const tls_group_t*)> func) {
-    if (func) {
-        for (auto item : _supported_group_codes) {
-            func(item.second);
-        }
-    }
-}
-
-hash_algorithm_t tls_advisor::hash_alg_of(uint16 code) {
+hash_algorithm_t tls_advisor::algof_hash(uint16 code) {
     hash_algorithm_t alg = hash_alg_unknown;
     const tls_cipher_suite_t* hint_tls_alg = hintof_cipher_suite(code);
     if (hint_tls_alg) {
@@ -355,7 +312,7 @@ const tls_version_hint_t* tls_advisor::hintof_tls_version(uint16 code) {
     return ret_value;
 }
 
-std::string tls_advisor::tls_version_string(uint16 code) {
+std::string tls_advisor::nameof_tls_version(uint16 code) {
     std::string value;
     auto iter = _tls_version.find(code);
     if (_tls_version.end() != iter) {
@@ -365,7 +322,7 @@ std::string tls_advisor::tls_version_string(uint16 code) {
     return value;
 }
 
-std::string tls_advisor::compression_method_string(uint8 code) {
+std::string tls_advisor::nameof_compression_method(uint8 code) {
     std::string value;
     if (0 == code) {
         value = "null";
@@ -392,7 +349,7 @@ std::string tls_advisor::compression_method_string(uint8 code) {
     return value;
 }
 
-std::string tls_advisor::sni_nametype_string(uint16 code) {
+std::string tls_advisor::nameof_sni_nametype(uint16 code) {
     std::string value;
     if (0 == code) {
         value = "hostname";
@@ -400,7 +357,7 @@ std::string tls_advisor::sni_nametype_string(uint16 code) {
     return value;
 }
 
-std::string tls_advisor::quic_packet_type_string(uint8 code) {
+std::string tls_advisor::nameof_quic_packet(uint8 code) {
     std::string value;
     auto iter = _quic_packet_type_codes.find(code);
     if (_quic_packet_type_codes.end() != iter) {
@@ -420,7 +377,7 @@ std::string tls_advisor::nameof_secret(tls_secret_t secret) {
     return value;
 }
 
-std::string tls_advisor::quic_streamid_type_string(uint64 streamid) {
+std::string tls_advisor::nameof_quic_streamid_type(uint64 streamid) {
     std::string value;
     uint8 mask = streamid & 0x3;
     auto iter = _quic_stream_id_codes.find(mask);
@@ -431,7 +388,7 @@ std::string tls_advisor::quic_streamid_type_string(uint64 streamid) {
     return value;
 }
 
-std::string tls_advisor::protection_space_string(protection_space_t code) {
+std::string tls_advisor::nameof_protection_space(protection_space_t code) {
     std::string value;
     auto iter = _protection_space_codes.find(code);
     if (_protection_space_codes.end() != iter) {
@@ -500,7 +457,7 @@ std::string tls_advisor::nameof_tls_flow(tls_flow_t flow) {
     return value;
 }
 
-std::string tls_advisor::session_status_string(uint32 status) {
+std::string tls_advisor::nameof_session_status(uint32 status) {
     std::string value;
     auto iter = _session_status_codes.find(status);
     if (_session_status_codes.end() != iter) {
@@ -703,16 +660,16 @@ return_t tls_advisor::set_tls_groups(const char* groups) {
 
         critical_section_guard guard(_lock);
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto advisor = crypto_advisor::get_instance();
         auto lambda = [&](const std::string& item) -> void {
-            auto hint = tlsadvisor->hintof_curve_tls_group(item);
+            auto hint = advisor->hintof_tls_group(item);
             if (hint && (tls_flag_support & hint->flags)) {
-                auto code = hint->code;
+                auto code = hint->group;
                 _groups.insert(code);
 #if defined DEBUG
                 if (istraceable(trace_category_net)) {
                     trace_debug_event(trace_category_net, trace_event_tls_protection,
-                                      [&](basic_stream& dbs) -> void { dbs.println(" > 0x%02x %s", hint->code, hint->name); });
+                                      [&](basic_stream& dbs) -> void { dbs.println(" > 0x%02x %s", hint->group, hint->name); });
                 }
 #endif
             }

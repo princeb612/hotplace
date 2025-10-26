@@ -34,7 +34,7 @@ void test_oqs_kem() {
                     EVP_PKEY* pkey_keygen = nullptr;
                     EVP_PKEY* pkey_pub = nullptr;
 
-                    binary_t capsulekey;
+                    binary_t keycapsule;
                     binary_t sharedsecret_bob;
                     binary_t pubkey;
                     binary_t privkey;
@@ -64,16 +64,16 @@ void test_oqs_kem() {
 
                     if (errorcode_t::success == ret) {
                         // bob : encapsulate using public key
-                        ret = oqs.encapsule(context, pkey_pub, capsulekey, sharedsecret_bob);
+                        ret = oqs.encapsule(context, pkey_pub, keycapsule, sharedsecret_bob);
                         if (option.is_loglevel_debug()) {
-                            _logger->hdump("encapsulated key", capsulekey, 16, 3);
+                            _logger->hdump("encapsulated key", keycapsule, 16, 3);
                             _logger->hdump("shared secret", sharedsecret_bob, 16, 3);
                         }
                         _test_case.test(ret, __FUNCTION__, "encapsulate %s", alg.c_str());
 
                         // alice : decapsulate using private key
                         binary_t sharedsecret_alice;
-                        ret = oqs.decapsule(context, pkey_keygen, capsulekey, sharedsecret_alice);
+                        ret = oqs.decapsule(context, pkey_keygen, keycapsule, sharedsecret_alice);
                         _test_case.test(ret, __FUNCTION__, "decapsulate %s", alg.c_str());
 
                         // compare

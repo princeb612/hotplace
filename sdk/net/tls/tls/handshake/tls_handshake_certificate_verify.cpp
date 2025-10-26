@@ -13,7 +13,7 @@
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/transcript_hash.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_certificate_verify.hpp>
@@ -229,7 +229,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 dbs.autoindent(1);
-                dbs.println(" > %s 0x%04x %s", constexpr_signature_alg, scheme, tlsadvisor->signature_scheme_name(scheme).c_str());
+                dbs.println(" > %s 0x%04x %s", constexpr_signature_alg, scheme, tlsadvisor->nameof_signature_scheme(scheme).c_str());
                 dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
                 // dbs.println(" > tosign");
                 // dump_memory(tosign, &dbs, 16, 3, 0x00, dump_notrunc);

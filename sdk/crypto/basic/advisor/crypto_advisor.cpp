@@ -177,14 +177,10 @@ return_t crypto_advisor::build() {
             _jose_sig_map.insert(std::make_pair(item->jws_type, item));
             _sig2jws_map.insert(std::make_pair(item->sig, item->jws_type));
         }
-
-        set_feature(item->jws_name, advisor_feature_jws);
-    }
-    for (i = 0; i < sizeof_hint_signatures; i++) {
-        const hint_signature_t* item = hint_signatures + i;
         for (uint midx = 0; midx < item->count; midx++) {
             _sig_bynid_map.insert(std::make_pair(item->nid[midx], item));
         }
+        set_feature(item->jws_name, advisor_feature_jws);
     }
     for (i = 0; i < sizeof_hint_cose_algorithms; i++) {
         const hint_cose_algorithm_t* item = hint_cose_algorithms + i;
@@ -195,39 +191,48 @@ return_t crypto_advisor::build() {
     }
     for (i = 0; i < sizeof_hint_curves; i++) {
         const hint_curve_t* item = hint_curves + i;
-        if (item->name) {
-            _nid_bycurve_map.insert(std::make_pair(item->name, item));
+        if (item->name_nist) {
+            _nid_bycurve_map.insert(std::make_pair(item->name_nist, item));
         }
         if (cose_ec_curve_t::cose_ec_unknown != item->cose_crv) {
             _cose_curve_map.insert(std::make_pair(item->cose_crv, item));
         }
         _curve_bynid_map.insert(std::make_pair(item->nid, item));
 
-        if (item->name) {
-            set_feature(item->name, advisor_feature_curve);
-            if (item->aka1) {
-                set_feature(item->aka1, advisor_feature_curve);
+        if (item->name_nist) {
+            set_feature(item->name_nist, advisor_feature_curve);
+            if (item->name_nist) {
+                _curve_name_map.insert({item->name_nist, item});
             }
-            if (item->aka2) {
-                set_feature(item->aka2, advisor_feature_curve);
+            if (item->name_x962) {
+                set_feature(item->name_x962, advisor_feature_curve);
             }
-            if (item->aka3) {
-                set_feature(item->aka3, advisor_feature_curve);
+            if (item->name_sec) {
+                set_feature(item->name_sec, advisor_feature_curve);
             }
-            _curve_name_map.insert({item->name, item});
+            if (item->name_bp) {
+                set_feature(item->name_bp, advisor_feature_curve);
+            }
+            if (item->name_wtls) {
+                set_feature(item->name_wtls, advisor_feature_curve);
+            }
         }
         if (item->tlsgroup) {
             _tls_group_curve_map.insert({item->tlsgroup, item});
         }
-        if (item->aka1) {
-            _curve_name_map.insert({item->aka1, item});
+        if (item->name_x962) {
+            _curve_name_map.insert({item->name_x962, item});
         }
-        if (item->aka2) {
-            _curve_name_map.insert({item->aka2, item});
+        if (item->name_sec) {
+            _curve_name_map.insert({item->name_sec, item});
         }
-        if (item->aka3) {
-            _curve_name_map.insert({item->aka3, item});
+        if (item->name_bp) {
+            _curve_name_map.insert({item->name_bp, item});
         }
+        if (item->name_wtls) {
+            _curve_name_map.insert({item->name_wtls, item});
+        }
+        _nid2curve_map.insert(std::make_pair(item->nid, item));
     }
 
     _kty2cose_map.insert(std::make_pair(crypto_kty_t::kty_ec, cose_kty_t::cose_kty_ec2));
@@ -270,13 +275,6 @@ return_t crypto_advisor::build() {
         _cose2sig_map.insert(std::make_pair(cose2sig[i].cose, cose2sig[i].sig));
     }
 
-    for (i = 0; i < sizeof_hint_curves; i++) {
-        _nid2curve_map.insert(std::make_pair(hint_curves[i].nid, hint_curves[i].cose_crv));
-        if (hint_curves[i].cose_crv) {
-            _curve2nid_map.insert(std::make_pair(hint_curves[i].cose_crv, hint_curves[i].nid));
-        }
-    }
-
     for (i = 0; i < sizeof_hint_kty_names; i++) {
         auto item = hint_kty_names + i;
         if (item->name) {
@@ -291,6 +289,11 @@ return_t crypto_advisor::build() {
         }
         if (tls_named_group_unknown != item->group) {
             _tls_group_map.insert({item->group, item});
+        }
+        if (item->name) {
+            std::string key = item->name;
+            std::transform(key.begin(), key.end(), key.begin(), tolower);  // ignore case
+            _tls_group_name_map.insert({std::move(key), item});
         }
     }
 

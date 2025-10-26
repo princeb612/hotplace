@@ -15,7 +15,7 @@ void enum_pkns(quic_packet_publisher& publisher) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     _logger->colorln("PKN published");
     publisher.for_each_pkn(
-        [&](protection_space_t space, uint64 pkn) -> void { _logger->colorln("+ %s %I64i", tlsadvisor->protection_space_string(space).c_str(), pkn); });
+        [&](protection_space_t space, uint64 pkn) -> void { _logger->colorln("+ %s %I64i", tlsadvisor->nameof_protection_space(space).c_str(), pkn); });
 }
 
 void construct_quic_cli_initial(tls_session* session, tls_direction_t dir, uint32 flags, std::list<binary_t>& bins, const char* message) {
@@ -512,7 +512,7 @@ void test_construct_quic() {
             ack_t ack;
             ack << pkns;
             ack_t expect(largest, range);
-            _test_case.assert(ack == expect, __FUNCTION__, "confirm ack %s %i..%i", tlsadvisor->protection_space_string(space).c_str(), largest,
+            _test_case.assert(ack == expect, __FUNCTION__, "confirm ack %s %i..%i", tlsadvisor->nameof_protection_space(space).c_str(), largest,
                               largest - range);
         };
 

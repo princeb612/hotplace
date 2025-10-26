@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-std::string tls_advisor::alert_level_string(uint8 code) {
+std::string tls_advisor::nameof_tls_alert_level(uint8 code) {
     std::string value;
     auto iter = _alert_level_codes.find(code);
     if (_alert_level_codes.end() != iter) {
@@ -24,7 +24,7 @@ std::string tls_advisor::alert_level_string(uint8 code) {
     }
     return value;
 }
-std::string tls_advisor::alert_desc_string(uint8 code) {
+std::string tls_advisor::nameof_tls_alert_desc(uint8 code) {
     /**
      * RFC 5246 7.2.  Alert Protocol
      * RFC 8446 6.  Alert Protocol
@@ -38,7 +38,7 @@ std::string tls_advisor::alert_desc_string(uint8 code) {
     return value;
 }
 
-std::string tls_advisor::cipher_suite_string(uint16 code) {
+std::string tls_advisor::nameof_tls_cipher_suite(uint16 code) {
     std::string value;
     auto iter = _cipher_suite_codes.find(code);
     if (_cipher_suite_codes.end() != iter) {
@@ -48,7 +48,7 @@ std::string tls_advisor::cipher_suite_string(uint16 code) {
     return value;
 }
 
-uint16 tls_advisor::cipher_suite_code(const std::string& ciphersuite) {
+uint16 tls_advisor::valueof_cipher_suite(const std::string& ciphersuite) {
     uint16 code = 0;
     auto iter = _cipher_suite_names.find(ciphersuite);
     if (_cipher_suite_names.end() != iter) {
@@ -58,7 +58,7 @@ uint16 tls_advisor::cipher_suite_code(const std::string& ciphersuite) {
     return code;
 }
 
-std::string tls_advisor::content_type_string(uint8 type) {
+std::string tls_advisor::nameof_tls_record(uint8 type) {
     std::string value;
     auto iter = _content_type_codes.find(type);
     if (_content_type_codes.end() != iter) {
@@ -68,7 +68,7 @@ std::string tls_advisor::content_type_string(uint8 type) {
     return value;
 }
 
-std::string tls_advisor::ec_curve_type_string(uint8 code) {
+std::string tls_advisor::nameof_ec_curve_type(uint8 code) {
     std::string value;
     auto iter = _ec_curve_type_codes.find(code);
     if (_ec_curve_type_codes.end() != iter) {
@@ -78,7 +78,7 @@ std::string tls_advisor::ec_curve_type_string(uint8 code) {
     return value;
 }
 
-std::string tls_advisor::ec_point_format_name(uint8 code) {
+std::string tls_advisor::nameof_ec_point_format(uint8 code) {
     std::string value;
     auto iter = _ec_point_format_codes.find(code);
     if (_ec_point_format_codes.end() != iter) {
@@ -88,7 +88,7 @@ std::string tls_advisor::ec_point_format_name(uint8 code) {
     return value;
 }
 
-uint16 tls_advisor::ec_point_format_code(const std::string& name) {
+uint16 tls_advisor::valueof_ec_point_format(const std::string& name) {
     uint16 value = 0;
     auto iter = _ec_point_format_names.find(name);
     if (_ec_point_format_names.end() != iter) {
@@ -98,7 +98,7 @@ uint16 tls_advisor::ec_point_format_code(const std::string& name) {
     return value;
 }
 
-std::string tls_advisor::handshake_type_string(uint8 type) {
+std::string tls_advisor::nameof_tls_handshake(uint8 type) {
     std::string value;
     auto iter = _handshake_type_codes.find(type);
     if (_handshake_type_codes.end() != iter) {
@@ -108,7 +108,7 @@ std::string tls_advisor::handshake_type_string(uint8 type) {
     return value;
 }
 
-std::string tls_advisor::kdf_id_string(uint16 type) {
+std::string tls_advisor::nameof_kdf_id(uint16 type) {
     std::string value;
     auto iter = _kdf_id_codes.find(type);
     if (_kdf_id_codes.end() != iter) {
@@ -118,7 +118,7 @@ std::string tls_advisor::kdf_id_string(uint16 type) {
     return value;
 }
 
-std::string tls_advisor::psk_key_exchange_mode_name(uint8 code) {
+std::string tls_advisor::nameof_psk_key_exchange_mode(uint8 code) {
     std::string value;
     auto iter = _psk_keyexchange_codes.find(code);
     if (_psk_keyexchange_codes.end() != iter) {
@@ -128,7 +128,7 @@ std::string tls_advisor::psk_key_exchange_mode_name(uint8 code) {
     return value;
 }
 
-uint8 tls_advisor::psk_key_exchange_mode_code(const std::string& name) {
+uint8 tls_advisor::valueof_psk_key_exchange_mode(const std::string& name) {
     uint8 value = 0;
     auto iter = _psk_keyexchange_names.find(name);
     if (_psk_keyexchange_names.end() != iter) {
@@ -138,7 +138,7 @@ uint8 tls_advisor::psk_key_exchange_mode_code(const std::string& name) {
     return value;
 }
 
-std::string tls_advisor::signature_scheme_name(uint16 code) {
+std::string tls_advisor::nameof_signature_scheme(uint16 code) {
     std::string value;
     auto iter = _sig_scheme_codes.find(code);
     if (_sig_scheme_codes.end() != iter) {
@@ -148,7 +148,7 @@ std::string tls_advisor::signature_scheme_name(uint16 code) {
     return value;
 }
 
-uint16 tls_advisor::signature_scheme_code(const std::string& name) {
+uint16 tls_advisor::valueof_signature_scheme(const std::string& name) {
     uint16 value;
     auto iter = _sig_scheme_names.find(name);
     if (_sig_scheme_names.end() != iter) {
@@ -158,22 +158,22 @@ uint16 tls_advisor::signature_scheme_code(const std::string& name) {
     return value;
 }
 
-std::string tls_advisor::supported_group_name(uint16 code) {
+std::string tls_advisor::nameof_group(uint16 code) {
     std::string value;
-    auto iter = _supported_group_codes.find(code);
-    if (_supported_group_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->name;
+    auto advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_tls_group(code);
+    if (hint && hint->name) {
+        value = hint->name;
     }
     return value;
 }
 
-uint16 tls_advisor::supported_group_code(const std::string& name) {
+uint16 tls_advisor::valueof_group(const std::string& name) {
     uint16 value = 0;
-    auto iter = _supported_group_names.find(name);
-    if (_supported_group_names.end() != iter) {
-        auto item = iter->second;
-        value = item->code;
+    auto advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_tls_group(name);
+    if (hint) {
+        value = hint->group;
     }
     return value;
 }

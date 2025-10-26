@@ -71,7 +71,7 @@ void test_ossl_hybrid_kem() {
         // bob server hello
         binary_t sharedsecret_x25519_bob;
         binary_t keyenc_x25519_bob;
-        binary_t capsulekey;
+        binary_t keycapsule;
         binary_t sharedsecret_mlkem_bob;
         binary_t sharedsecret_bob;
         {
@@ -93,18 +93,18 @@ void test_ossl_hybrid_kem() {
             key.get_public_key(keypairx_x25519_bob, keyenc_x25519_bob, temp);
 
             // encaps
-            pqc.encapsule(nullptr, pubkey_mlkem768_alice, capsulekey, sharedsecret_mlkem_bob);
+            pqc.encapsule(nullptr, pubkey_mlkem768_alice, keycapsule, sharedsecret_mlkem_bob);
 
             _logger->write([&](basic_stream& dbs) -> void {
                 dbs.println("capsule key");
-                dbs.println("%s", base16_encode(capsulekey).c_str());
+                dbs.println("%s", base16_encode(keycapsule).c_str());
                 dbs.println("ephemeral share");
                 dbs.println("%s", base16_encode(keyenc_x25519_bob).c_str());
                 dbs.println("shared secret");
                 dbs.println("%s", base16_encode(sharedsecret_mlkem_bob).c_str());
             });
 
-            binary_append(keyshare_bob, capsulekey);
+            binary_append(keyshare_bob, keycapsule);
             binary_append(keyshare_bob, keyenc_x25519_bob);
             _test_case.assert(1088 + 32 == keyshare_bob.size(), __FUNCTION__, "bob keyshare");
 

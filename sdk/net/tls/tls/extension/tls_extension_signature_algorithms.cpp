@@ -74,7 +74,7 @@ return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, c
                 dbs.println("   > %s (%i ent.)", constexpr_algorithms, count);
                 int i = 0;
                 for (auto alg : _algorithms) {
-                    dbs.println("     [%02i] 0x%04x %s", i++, alg, tlsadvisor->signature_scheme_name(alg).c_str());
+                    dbs.println("     [%02i] 0x%04x %s", i++, alg, tlsadvisor->nameof_signature_scheme(alg).c_str());
                 }
             });
         }
@@ -116,7 +116,7 @@ tls_extension_signature_algorithms& tls_extension_signature_algorithms::add(uint
 
 tls_extension_signature_algorithms& tls_extension_signature_algorithms::add(const std::string& name) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    auto code = tlsadvisor->signature_scheme_code(name);
+    auto code = tlsadvisor->valueof_signature_scheme(name);
     return add(code);
 }
 

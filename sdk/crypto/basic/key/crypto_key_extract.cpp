@@ -12,7 +12,7 @@
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -282,16 +282,9 @@ return_t crypto_key::extract_okp(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
         if (plzero) {
             uint32 nid = 0;
             nidof_evp_pkey(pkey, nid);
-            switch (nid) {
-                case NID_ED25519:
-                case NID_X25519:
-                    curve_size = 32;
-                    break;
-                case EVP_PKEY_ED448:
-                case EVP_PKEY_X448:
-                    curve_size = 57;
-                    break;
-            }
+            auto advisor = crypto_advisor::get_instance();
+            auto hint = advisor->hintof_curve_nid(nid);
+            curve_size = hint->keysize;
         }
 
         if (crypt_access_t::asn1public_key & flags) {

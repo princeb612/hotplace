@@ -482,6 +482,15 @@ class crypto_key {
      *          | kty_dh     | item_dh_pub              | item_dh_priv    |
      *          | kty_dsa    | N/A                      | item_dsa_x      |
      *          | kty_mlkem  | item_mlkem_pub           | item_mlkem_priv |
+     *
+     *          auto kty = ktyof_evp_pkey(pkey);
+     *          if (kty_ec == kty) {
+     *              keyexchange.ec_uncompressed_key(pkey, pubkey, privkey);
+     *          } else if (kty_okp == kty) {
+     *              keyexchange.get_key(pkey, pubkey, pubkey, privkey, true);
+     *          } else if (kty_mlkem == kty) {
+     *              keyexchange.get_public_key(pkey, pubkey, privkey);
+     *          }
      */
     static return_t get_key(const EVP_PKEY* pkey, binary_t& pub, binary_t& priv, bool preserve = false);
     /**

@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-std::string tls_advisor::quic_param_string(uint64 code) {
+std::string tls_advisor::nameof_quic_param(uint64 code) {
     std::string value;
     auto iter = _quic_trans_param_codes.find(code);
     if (_quic_trans_param_codes.end() == iter) {
@@ -27,7 +27,7 @@ std::string tls_advisor::quic_param_string(uint64 code) {
     return value;
 }
 
-std::string tls_advisor::quic_frame_type_string(uint64 code) {
+std::string tls_advisor::nameof_quic_frame(uint64 code) {
     std::string value;
     auto iter = _quic_frame_type_codes.find(code);
     if (_quic_frame_type_codes.end() != iter) {
@@ -37,7 +37,7 @@ std::string tls_advisor::quic_frame_type_string(uint64 code) {
     return value;
 }
 
-std::string tls_advisor::quic_error_string(uint64 code) {
+std::string tls_advisor::nameof_quic_error(uint64 code) {
     std::string value;
     auto iter = _quic_trans_error_codes.find(code);
     if (_quic_trans_error_codes.end() != iter) {

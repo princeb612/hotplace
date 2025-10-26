@@ -47,6 +47,7 @@ enum trace_event_crypto_t {
     trace_event_cose_encryption = 12,
     trace_event_cose_signing = 13,
     trace_event_cose_mac = 14,
+    trace_event_keyexchange = 15,
 };
 
 enum trace_event_net_t {

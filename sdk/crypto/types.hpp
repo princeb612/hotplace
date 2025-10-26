@@ -1255,9 +1255,9 @@ enum curve_category_t : uint8 {
  *              group       TLS supported group     0x0017
  *              oid         OID
  *              name        NIST
- *              aka1        X9.62, X9.63
- *              aka2        Standards for Efficient Cryptography (SEC)
- *              aka3
+ *              name_x962        X9.62, X9.63
+ *              name_sec        Standards for Efficient Cryptography (SEC)
+ *              name_wtls
  * @remarks
  *         references
  *             TLS supported groups
@@ -1278,21 +1278,44 @@ enum curve_category_t : uint8 {
  *          Other
  *              Complex multiplication
  */
-typedef struct _hint_curves_t {
-    uint32 nid;  // openssl NID
-    cose_ec_curve_t cose_crv;
-    crypto_kty_t kty;  // kty_ec, kty_okp
-    crypto_use_t use;  // use_any, use_enc, use_sig
-    uint16 tlsgroup;   // TLS group
-    uint16 flags;      // ECDSA_SUPPORT_xxx
-    uint8 keysize;     // key size (preserve leading zero), (keysize-2 .. keysize)
-    uint8 category;    // see curve_category_t
-    const char* oid;   // OID, https://neuromancer.sk/
-    const char* name;  // NIST (CURVE P-256, P-384, P-521, ...)
-    const char* aka1;  // X9.62, X9.63 (ansip384r1, ansip521r1, ...)
-    const char* aka2;  // Standards for Efficient Cryptography (SEC) (secp256r1, secp384r1, secp521r1, ...)
-    const char* aka3;
-} hint_curve_t;
+struct hint_curve_t {
+    uint32 nid;                // openssl NID
+    crypto_kty_t kty;          // kty_ec, kty_okp
+    crypto_use_t use;          // use_any, use_enc, use_sig
+    uint16 tlsgroup;           // TLS group
+    cose_ec_curve_t cose_crv;  // COSE
+    uint16 flags;              // ECDSA_SUPPORT_xxx
+    uint8 keysize;             // key size (preserve leading zero), (keysize-2 .. keysize)
+    uint8 category;            // see curve_category_t
+    const char* oid;           // OID, https://neuromancer.sk/
+    const char* name_nist;     // NIST (CURVE P-256, P-384, P-521, ...)
+    const char* name_x962;     // X9.62, X9.63 (ansip384r1, ansip521r1, ...)
+    const char* name_sec;      // Standards for Efficient Cryptography (SEC) (secp256r1, secp384r1, secp521r1, ...)
+    const char* name_bp;       // brainpool
+    const char* name_wtls;     // WAP-TLS
+};
+
+enum tls_resource_flag_t : uint8 {
+    tls_flag_secure = (1 << 0),   // secure, recommended
+    tls_flag_support = (1 << 1),  // support
+    tls_flag_pqc = (1 << 2),      // Post-Quantum Cryptography
+    tls_flag_hybrid = (1 << 3),   // hybrid
+};
+
+struct hint_group_t {
+    uint16 group;  // tls_named_group_t
+    uint8 flags;   // tls_resource_flag_t
+    const char* name;
+    crypto_kty_t kty;
+    uint32 nid;
+    uint16 keysize;
+    uint16 capsulesize;
+    crypto_kty_t hkty;  // hybrid
+    uint32 hnid;        // bybrid
+    uint16 hkeysize;    // hybrid (EC uncompressed, OKP x)
+};
+
+///////////////////////////////////////////////////////////////////////////
 uint32 nidof(const hint_curve_t* hint);
 cose_ec_curve_t coseof(const hint_curve_t* hint);
 crypto_kty_t ktyof(const hint_curve_t* hint);
@@ -1404,14 +1427,6 @@ enum authenticated_encryption_flag_t : uint16 {
     tls_mac_then_encrypt = 0x0001,
     jose_encrypt_then_mac = 0x8001,
     tls_encrypt_then_mac = 0x8002,
-};
-
-struct hint_group_t {
-    tls_named_group_t group;
-    uint32 nid;
-    crypto_kty_t kty;
-    uint32 hnid;        // hybrid
-    crypto_kty_t hkty;  // hybrid
 };
 
 ///////////////////////////////////////////////////////////////////////////

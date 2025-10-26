@@ -82,7 +82,7 @@ return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const
                 dbs.println("   > %s (%i ent.)", constexpr_formats, len);
                 uint8 i = 0;
                 for (auto fmt : _ec_point_formats) {
-                    dbs.println("     [%i] 0x%02x(%i) %s", i++, fmt, fmt, tlsadvisor->ec_point_format_name(fmt).c_str());
+                    dbs.println("     [%i] 0x%02x(%i) %s", i++, fmt, fmt, tlsadvisor->nameof_ec_point_format(fmt).c_str());
                 }
             });
         }
@@ -129,7 +129,7 @@ tls_extension_ec_point_formats& tls_extension_ec_point_formats::add(uint8 code) 
 
 tls_extension_ec_point_formats& tls_extension_ec_point_formats::add(const std::string& name) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    uint16 code = tlsadvisor->ec_point_format_code(name);
+    uint16 code = tlsadvisor->valueof_ec_point_format(name);
     return add(code);
 }
 

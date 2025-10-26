@@ -2,7 +2,7 @@
 /**
  * @file {file}
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
- * @desc
+ * @desc https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  *
  * Revision History
  * Date         Name                Description
@@ -15,308 +15,419 @@
 namespace hotplace {
 namespace crypto {
 
+// avoid compile error
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+#define tls_flag_support_pqc tls_flag_support
+#else
+#define tls_flag_support_pqc 0
+#endif
+
 const hint_group_t hint_groups[] = {
-    {
-        tls_named_group_unknown,
-        NID_secp112r1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_unknown,
-        NID_secp112r2,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_unknown,
-        NID_secp128r1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_unknown,
-        NID_secp128r2,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_secp160k1,
-        NID_secp160k1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_secp160r1,
-        NID_secp160r1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_secp160r2,
-        NID_secp160r2,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_secp192k1,
-        NID_secp192k1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_secp192r1,
-        NID_X9_62_prime192v1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_secp224k1,
-        NID_secp224k1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_secp224r1,
-        NID_secp224r1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_secp256k1,
-        NID_secp256k1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_secp256r1,
-        NID_X9_62_prime256v1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_secp384r1,
-        NID_secp384r1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_secp521r1,
-        NID_secp521r1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_unknown,
-        NID_sect113r1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_unknown,
-        NID_sect113r2,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_unknown,
-        NID_sect131r1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_unknown,
-        NID_sect131r2,
-        crypto_kty_t::kty_ec,
-    },
+    // RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
+    // ffdhe2048~ffdhe8192
+
+    // sa. const hint_curve_t hint_curves[]
+
     {
         tls_named_group_sect163k1,
+        tls_flag_support,
+        "sect163k1",
+        kty_ec,
         NID_sect163k1,
-        crypto_kty_t::kty_ec,
-    },
+    },  // K-163, ansit163k1
     {
         tls_named_group_sect163r1,
+        tls_flag_support,
+        "sect163r1",
+        kty_ec,
         NID_sect163r1,
-        crypto_kty_t::kty_ec,
-    },
+    },  // ansit163r1
     {
         tls_named_group_sect163r2,
+        tls_flag_support,
+        "sect163r2",
+        kty_ec,
         NID_sect163r2,
-        crypto_kty_t::kty_ec,
-    },
+    },  // B-163, ansit163r2
     {
         tls_named_group_sect193r1,
+        tls_flag_support,
+        "sect193r1",
+        kty_ec,
         NID_sect193r1,
-        crypto_kty_t::kty_ec,
-    },
+    },  // ansit193r1
     {
         tls_named_group_sect193r2,
+        tls_flag_support,
+        "sect193r2",
+        kty_ec,
         NID_sect193r2,
-        crypto_kty_t::kty_ec,
-    },
+    },  // sect193r2
     {
         tls_named_group_sect233k1,
+        tls_flag_support,
+        "sect233k1",
+        kty_ec,
         NID_sect233k1,
-        crypto_kty_t::kty_ec,
-    },
+    },  // K-233, ansit233k1
     {
         tls_named_group_sect233r1,
+        tls_flag_support,
+        "sect233r1",
+        kty_ec,
         NID_sect233r1,
-        crypto_kty_t::kty_ec,
-    },
+    },  // B-233, ansit233r1
     {
         tls_named_group_sect239k1,
+        tls_flag_support,
+        "sect239k1",
+        kty_ec,
         NID_sect239k1,
-        crypto_kty_t::kty_ec,
-    },
+    },  // ansit239k1
     {
         tls_named_group_sect283k1,
+        tls_flag_support,
+        "sect283k1",
+        kty_ec,
         NID_sect283k1,
-        crypto_kty_t::kty_ec,
-    },
+    },  // K-283, ansit283k1
     {
         tls_named_group_sect283r1,
+        tls_flag_support,
+        "sect283r1",
+        kty_ec,
         NID_sect283r1,
-        crypto_kty_t::kty_ec,
-    },
+    },  // B-283, ansit283r1
     {
         tls_named_group_sect409k1,
+        tls_flag_support,
+        "sect409k1",
+        kty_ec,
         NID_sect409k1,
-        crypto_kty_t::kty_ec,
-    },
+    },  // K-409, ansit409k1
     {
         tls_named_group_sect409r1,
+        tls_flag_support,
+        "sect409r1",
+        kty_ec,
         NID_sect409r1,
-        crypto_kty_t::kty_ec,
-    },
+    },  // B-409, ansit409r1
     {
         tls_named_group_sect571k1,
+        tls_flag_support,
+        "sect571k1",
+        kty_ec,
         NID_sect571k1,
-        crypto_kty_t::kty_ec,
-    },
+    },  // K-571, ansit571k1
     {
         tls_named_group_sect571r1,
+        tls_flag_support,
+        "sect571r1",
+        kty_ec,
         NID_sect571r1,
-        crypto_kty_t::kty_ec,
-    },
+    },  // B-571, ansit571r1
     {
-        tls_named_group_x25519,
-        NID_X25519,
-        crypto_kty_t::kty_okp,
-    },
+        tls_named_group_secp160k1,
+        tls_flag_support,
+        "secp160k1",
+        kty_ec,
+        NID_secp160k1,
+    },  // ansip160k1
     {
-        tls_named_group_x448,
-        NID_X448,
-        crypto_kty_t::kty_okp,
-    },
+        tls_named_group_secp160r1,
+        tls_flag_support,
+        "secp160r1",
+        kty_ec,
+        NID_secp160r1,
+    },  // ansip160r1
     {
-        tls_named_group_unknown,
-        NID_ED25519,
-        crypto_kty_t::kty_okp,
-    },
+        tls_named_group_secp160r2,
+        tls_flag_support,
+        "secp160r2",
+        kty_ec,
+        NID_secp160r2,
+    },  // ansip160r2
     {
-        tls_named_group_unknown,
-        NID_ED448,
-        crypto_kty_t::kty_okp,
-    },
+        tls_named_group_secp192k1,
+        tls_flag_support,
+        "secp192k1",
+        kty_ec,
+        NID_secp192k1,
+    },  // ansip192k1
     {
-        tls_named_group_unknown,
-        NID_brainpoolP160r1,
-        crypto_kty_t::kty_ec,
-    },
+        tls_named_group_secp192r1,
+        tls_flag_support,
+        "secp192r1",
+        kty_ec,
+        NID_X9_62_prime192v1,
+    },  // P-192, prime192v1
     {
-        tls_named_group_unknown,
-        NID_brainpoolP160t1,
-        crypto_kty_t::kty_ec,
-    },
+        tls_named_group_secp224k1,
+        tls_flag_support,
+        "secp224k1",
+        kty_ec,
+        NID_secp224k1,
+    },  // ansip224k1
     {
-        tls_named_group_unknown,
-        NID_brainpoolP192r1,
-        crypto_kty_t::kty_ec,
-    },
+        tls_named_group_secp224r1,
+        tls_flag_support,
+        "secp224r1",
+        kty_ec,
+        NID_secp224r1,
+    },  // ansip224r1
     {
-        tls_named_group_unknown,
-        NID_brainpoolP192t1,
-        crypto_kty_t::kty_ec,
-    },
+        tls_named_group_secp256k1,
+        tls_flag_support,
+        "secp256k1",
+        kty_ec,
+        NID_secp256k1,
+    },  // ansip256k1
     {
-        tls_named_group_unknown,
-        NID_brainpoolP224r1,
-        crypto_kty_t::kty_ec,
-    },
+        tls_named_group_secp256r1,
+        tls_flag_support,
+        "secp256r1",
+        kty_ec,
+        NID_X9_62_prime256v1,
+    },  // P-256, prime256v1, RFC 8446 9.1 MUST
     {
-        tls_named_group_unknown,
-        NID_brainpoolP224t1,
-        crypto_kty_t::kty_ec,
-    },
+        tls_named_group_secp384r1,
+        tls_flag_support,
+        "secp384r1",
+        kty_ec,
+        NID_secp384r1,
+    },  // P-384, ansip384r1
+    {
+        tls_named_group_secp521r1,
+        tls_flag_support,
+        "secp521r1",
+        kty_ec,
+        NID_secp521r1,
+    },  // P-521, ansip521r1
     {
         tls_named_group_brainpoolP256r1,
+        tls_flag_support,
+        "brainpoolP256r1",
+        kty_ec,
         NID_brainpoolP256r1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_unknown,
-        NID_brainpoolP256t1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_unknown,
-        NID_brainpoolP320r1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_unknown,
-        NID_brainpoolP320t1,
-        crypto_kty_t::kty_ec,
     },
     {
         tls_named_group_brainpoolP384r1,
+        tls_flag_support,
+        "brainpoolP384r1",
+        kty_ec,
         NID_brainpoolP384r1,
-        crypto_kty_t::kty_ec,
-    },
-    {
-        tls_named_group_unknown,
-        NID_brainpoolP384t1,
-        crypto_kty_t::kty_ec,
     },
     {
         tls_named_group_brainpoolP512r1,
+        tls_flag_support,
+        "brainpoolP512r1",
+        kty_ec,
         NID_brainpoolP512r1,
-        crypto_kty_t::kty_ec,
     },
     {
-        tls_named_group_unknown,
-        NID_brainpoolP512t1,
-        crypto_kty_t::kty_ec,
+        tls_named_group_x25519,
+        tls_flag_support,
+        "x25519",
+        kty_okp,
+        NID_X25519,
+    },  // RFC 8446 8446 9.1 MUST
+    {
+        tls_named_group_x448,
+        tls_flag_support,
+        "x448",
+        kty_okp,
+        NID_X448,
+    },
+    {
+        tls_named_group_brainpoolP256r1tls13,
+        0,
+        "brainpoolP256r1tls13",
+        kty_unknown,
+        0,
+    },
+    {
+        tls_named_group_brainpoolP384r1tls13,
+        0,
+        "brainpoolP384r1tls13",
+        kty_unknown,
+        0,
+    },
+    {
+        tls_named_group_brainpoolP512r1tls13,
+        0,
+        "brainpoolP512r1tls13",
+        kty_unknown,
+        0,
+    },
+    {
+        tls_named_group_GC256A,
+        0,
+        "GC256A",
+        kty_unknown,
+        0,
+    },
+    {
+        tls_named_group_GC256B,
+        0,
+        "GC256B",
+        kty_unknown,
+        0,
+    },
+    {
+        tls_named_group_GC256C,
+        0,
+        "GC256C",
+        kty_unknown,
+        0,
+    },
+    {
+        tls_named_group_GC256D,
+        0,
+        "GC256D",
+        kty_unknown,
+        0,
+    },
+    {
+        tls_named_group_GC512A,
+        0,
+        "GC512A",
+        kty_unknown,
+        0,
+    },
+    {
+        tls_named_group_GC512B,
+        0,
+        "GC512B",
+        kty_unknown,
+        0,
+    },
+    {
+        tls_named_group_GC512C,
+        0,
+        "GC512C",
+        kty_unknown,
+        0,
+    },
+    {
+        tls_named_group_curveSM2,
+        0,
+        "curveSM2",
+        kty_unknown,
+        0,
+    },
+    {
+        tls_named_group_ffdhe2048,
+        tls_flag_support,
+        "ffdhe2048",
+        kty_dh,
+        NID_ffdhe2048,
+    },
+    {
+        tls_named_group_ffdhe3072,
+        tls_flag_support,
+        "ffdhe3072",
+        kty_dh,
+        NID_ffdhe3072,
+    },
+    {
+        tls_named_group_ffdhe4096,
+        tls_flag_support,
+        "ffdhe4096",
+        kty_dh,
+        NID_ffdhe4096,
+    },
+    {
+        tls_named_group_ffdhe6144,
+        tls_flag_support,
+        "ffdhe6144",
+        kty_dh,
+        NID_ffdhe6144,
+    },
+    {
+        tls_named_group_ffdhe8192,
+        tls_flag_support,
+        "ffdhe8192",
+        kty_dh,
+        NID_ffdhe8192,
     },
     {
         tls_named_group_mlkem512,
-        nid_mlkem512,  // NID_ML_KEM_512
-        crypto_kty_t::kty_mlkem,
+        tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc,
+        "MLKEM512",
+        kty_mlkem,
+        nid_mlkem512,
+        800,
+        768,
     },
     {
         tls_named_group_mlkem768,
-        nid_mlkem768,  // NID_ML_KEM_768
-        crypto_kty_t::kty_mlkem,
+        tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc,
+        "MLKEM768",
+        kty_mlkem,
+        nid_mlkem768,
+        1184,
+        1088,
     },
     {
         tls_named_group_mlkem1024,
-        nid_mlkem1024,  // NID_ML_KEM_1024
-        crypto_kty_t::kty_mlkem,
+        tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc,
+        "MLKEM1024",
+        kty_mlkem,
+        nid_mlkem1024,
+        1568,
+        1568,
     },
-    // Post-quantum hybrid ECDHE-MLKEM Key Agreement for TLSv1.3
-    // draft-ietf-tls-ecdhe-mlkem-01
-    // ratified by NIST
-    // 6.1.  SecP256r1MLKEM768
-    // 6.2.  X25519MLKEM768
-    // 6.3.  SecP384r1MLKEM1024
-#if 0
     {
         tls_named_group_secp256r1mlkem768,
-        nid_mlkem768,  // NID_ML_KEM_768
-        crypto_kty_t::kty_mlkem,
+        tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        "SecP256r1MLKEM768",
+        kty_mlkem,
+        nid_mlkem768,
+        1184,
+        1088,
+        kty_ec,
         NID_X9_62_prime256v1,
-        crypto_kty_t::kty_ec,
+        65,
     },
     {
         tls_named_group_x25519mlkem768,
-        nid_mlkem768,  // NID_ML_KEM_768
-        crypto_kty_t::kty_mlkem,
+        tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        "X25519MLKEM768",
+        kty_mlkem,
+        nid_mlkem768,
+        1184,
+        1088,
+        kty_okp,
         NID_X25519,
-        crypto_kty_t::kty_okp,
+        32,
     },
     {
         tls_named_group_secp384r1mlkem1024,
-        nid_mlkem1024,  // NID_ML_KEM_1024
-        crypto_kty_t::kty_mlkem,
+        tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        "SecP384r1MLKEM1024",
+        kty_mlkem,
+        nid_mlkem1024,
+        1568,
+        1568,
+        kty_ec,
         NID_secp384r1,
-        crypto_kty_t::kty_ec,
+        97,
     },
-#endif
+    {
+        0xff01,
+        0,
+        "arbitrary_explicit_prime_curves",
+        kty_unknown,
+        0,
+    },
+    {
+        0xff02,
+        0,
+        "arbitrary_explicit_char2_curves",
+        kty_unknown,
+        0,
+    },
 };
-
 const size_t sizeof_hint_groups = RTL_NUMBER_OF(hint_groups);
 
 }  // namespace crypto

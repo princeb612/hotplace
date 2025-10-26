@@ -62,7 +62,7 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
             trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                dbs.println("   > %s %i %s", constexpr_cert_status_type, cert_status_type, tlsadvisor->cert_status_type_string(cert_status_type).c_str());
+                dbs.println("   > %s %i %s", constexpr_cert_status_type, cert_status_type, tlsadvisor->nameof_cert_status_type(cert_status_type).c_str());
                 dbs.println("   > %s %i", constexpr_responderid_info_len, responderid_info_len);
                 if (check_trace_level(loglevel_debug)) {
                     dump_memory(responderid_info, &dbs, 16, 4, 0x0, dump_notrunc);

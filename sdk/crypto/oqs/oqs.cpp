@@ -208,7 +208,7 @@ return_t pqc_oqs::decode(oqs_context* context, EVP_PKEY** pkey, const binary_t& 
 #endif
 }
 
-return_t pqc_oqs::encapsule(oqs_context* context, const EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret) {
+return_t pqc_oqs::encapsule(oqs_context* context, const EVP_PKEY* pkey, binary_t& keycapsule, binary_t& sharedsecret) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     return_t ret = errorcode_t::success;
     __try2 {
@@ -218,7 +218,7 @@ return_t pqc_oqs::encapsule(oqs_context* context, const EVP_PKEY* pkey, binary_t
         }
 
         openssl_pqc pqc;
-        ret = pqc.encapsule(context->libctx, pkey, capsulekey, sharedsecret);
+        ret = pqc.encapsule(context->libctx, pkey, keycapsule, sharedsecret);
     }
     __finally2 {}
     return ret;
@@ -227,7 +227,7 @@ return_t pqc_oqs::encapsule(oqs_context* context, const EVP_PKEY* pkey, binary_t
 #endif
 }
 
-return_t pqc_oqs::decapsule(oqs_context* context, const EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret) {
+return_t pqc_oqs::decapsule(oqs_context* context, const EVP_PKEY* pkey, const binary_t& keycapsule, binary_t& sharedsecret) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     return_t ret = errorcode_t::success;
     __try2 {
@@ -237,7 +237,7 @@ return_t pqc_oqs::decapsule(oqs_context* context, const EVP_PKEY* pkey, const bi
         }
 
         openssl_pqc pqc;
-        ret = pqc.decapsule(context->libctx, pkey, capsulekey, sharedsecret);
+        ret = pqc.decapsule(context->libctx, pkey, keycapsule, sharedsecret);
     }
     __finally2 {}
     return ret;

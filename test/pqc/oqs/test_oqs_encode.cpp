@@ -20,7 +20,7 @@ void do_encode(oqs_context* context, const std::string& alg, key_encoding_t enco
     pqc_oqs pqc;
     EVP_PKEY* pkey = nullptr;
     EVP_PKEY* pkey_decoded = nullptr;
-    binary_t capsulekey;
+    binary_t keycapsule;
     binary_t sharedsecret;
     binary_t key_encoded;
     crypto_advisor* advisor = crypto_advisor::get_instance();

@@ -140,7 +140,7 @@ quic_packet* quic_packet_builder::build() {
             auto tlsadvisor = tls_advisor::get_instance();
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
-                    dbs.println("\e[1;33m+ quic packet %s\e[0m", tlsadvisor->quic_packet_type_string(type).c_str());
+                    dbs.println("\e[1;33m+ quic packet %s\e[0m", tlsadvisor->nameof_quic_packet(type).c_str());
                 });
             }
         }

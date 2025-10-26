@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -36,6 +36,25 @@ const hint_group_t* crypto_advisor::hintof_tls_group(uint16 group) {
 
     hint.find(group, &item);
     return item;
+}
+
+const hint_group_t* crypto_advisor::hintof_tls_group(const std::string& name) {
+    const hint_group_t* item = nullptr;
+    t_maphint<std::string, const hint_group_t*> hint(_tls_group_name_map);
+
+    std::string key = name;
+    std::transform(key.begin(), key.end(), key.begin(), tolower);
+    hint.find(std::move(key), &item);  // ignore case
+    return item;
+}
+
+void crypto_advisor::enum_tls_group(std::function<void(const hint_group_t*)> func) {
+    if (func) {
+        for (auto i = 0; i < sizeof_hint_groups; i++) {
+            auto item = hint_groups + i;
+            func(item);
+        }
+    }
 }
 
 bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, tls_named_group_t group) {

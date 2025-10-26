@@ -49,6 +49,7 @@ void trace_advisor::load() {
                 e.event_map.insert({trace_event_cose_encryption, "COSE encryption"});
                 e.event_map.insert({trace_event_cose_signing, "COSE signing"});
                 e.event_map.insert({trace_event_cose_mac, "COSE mac"});
+                e.event_map.insert({trace_event_keyexchange, "keyexchange"});
                 _resource_map.insert({trace_category_crypto, e});
             }
             {

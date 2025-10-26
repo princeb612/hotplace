@@ -338,7 +338,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                     dbs.autoindent(1);
-                    dbs.println(" > %s 0x%04x (%s)", constexpr_version, version, tlsadvisor->tls_version_string(version).c_str());
+                    dbs.println(" > %s 0x%04x (%s)", constexpr_version, version, tlsadvisor->nameof_tls_version(version).c_str());
                     dbs.println(" > %s", constexpr_random);
                     if (random.size()) {
                         // dump_memory(random, s, 16, 3, 0x0, dump_notrunc);
@@ -348,9 +348,9 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                     if (session_id.size()) {
                         dbs.println("   %s", base16_encode(session_id).c_str());
                     }
-                    dbs.println(" > %s 0x%04x %s", constexpr_cipher_suite, cipher_suite, tlsadvisor->cipher_suite_string(cipher_suite).c_str());
+                    dbs.println(" > %s 0x%04x %s", constexpr_cipher_suite, cipher_suite, tlsadvisor->nameof_tls_cipher_suite(cipher_suite).c_str());
                     dbs.println(" > %s %i %s", constexpr_compression_method, compression_method,
-                                tlsadvisor->compression_method_string(compression_method).c_str());
+                                tlsadvisor->nameof_compression_method(compression_method).c_str());
                     dbs.println(" > %s 0x%02x(%i)", constexpr_extension_len, extension_len, extension_len);
                     dbs.autoindent(0);
                 });

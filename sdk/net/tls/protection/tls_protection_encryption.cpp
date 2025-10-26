@@ -570,7 +570,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
                 dbs.println("> encrypt");
                 dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
                 dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());
-                dbs.println(" > record no %i (space %s)", record_no, tlsadvisor->protection_space_string(space).c_str());
+                dbs.println(" > record no %i (space %s)", record_no, tlsadvisor->nameof_protection_space(space).c_str());
                 dbs.println(" > nonce %s", base16_encode(nonce).c_str());
                 dbs.println(" > aad %s", base16_encode(aad).c_str());
                 dbs.println(" > tag %s", base16_encode(tag).c_str());
@@ -923,7 +923,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
                 dbs.println("> decrypt");
                 dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
                 dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());
-                dbs.println(" > record no %i (space %s)", record_no, tlsadvisor->protection_space_string(space).c_str());
+                dbs.println(" > record no %i (space %s)", record_no, tlsadvisor->nameof_protection_space(space).c_str());
                 dbs.println(" > nonce %s", base16_encode(nonce).c_str());
                 if (is_kindof_tls12()) {
                     dbs.println(" > aad %s", base16_encode(tls12_aad).c_str());

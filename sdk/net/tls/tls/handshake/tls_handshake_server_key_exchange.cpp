@@ -13,7 +13,7 @@
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_server_key_exchange.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
@@ -167,15 +167,15 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream &dbs) -> void {
                     dbs.autoindent(2);
-                    dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
-                    dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
+                    dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->nameof_ec_curve_type(curve_info).c_str());
+                    dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->nameof_group(curve).c_str());
                     dbs.println("> %s", constexpr_pubkey);
                     dbs.println(" > %s %i", constexpr_pubkey_len, pubkey_len);
                     if (check_trace_level(loglevel_debug)) {
                         dump_memory(pubkey, &dbs, 16, 4, 0x0, dump_notrunc);
                     }
                     dbs.println("> %s \e[1;33m%s\e[0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
-                    dbs.println(" > 0x%04x %s", sigalg, tlsadvisor->signature_scheme_name(sigalg).c_str());
+                    dbs.println(" > 0x%04x %s", sigalg, tlsadvisor->nameof_signature_scheme(sigalg).c_str());
                     dbs.println(" > %s %i", constexpr_sig_len, sig_len);
                     if (check_trace_level(loglevel_debug)) {
                         dump_memory(sig, &dbs, 16, 3, 0x0, dump_notrunc);
@@ -298,15 +298,15 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     if (istraceable(trace_category_net)) {
         trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream &dbs) -> void {
             dbs.autoindent(2);
-            dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->ec_curve_type_string(curve_info).c_str());
-            dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->supported_group_name(curve).c_str());
+            dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->nameof_ec_curve_type(curve_info).c_str());
+            dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->nameof_group(curve).c_str());
             dbs.println("> %s", constexpr_pubkey);
             dbs.println(" > %s %zi", constexpr_pubkey_len, pubkey.size());
             if (check_trace_level(loglevel_debug)) {
                 dump_memory(pubkey, &dbs, 16, 4, 0, dump_notrunc);
             }
             dbs.println("> %s", constexpr_signature);
-            dbs.println(" > 0x%04x %s", sigalg, tlsadvisor->signature_scheme_name(sigalg).c_str());
+            dbs.println(" > 0x%04x %s", sigalg, tlsadvisor->nameof_signature_scheme(sigalg).c_str());
             dbs.println(" > %s %zi", constexpr_sig_len, sig.size());
             if (check_trace_level(loglevel_debug)) {
                 dump_memory(sig, &dbs, 16, 3, 0, dump_notrunc);

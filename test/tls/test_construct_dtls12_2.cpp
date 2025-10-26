@@ -144,7 +144,7 @@ static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_ses
 
         {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto csname = tlsadvisor->cipher_suite_string(server_cs);
+            auto csname = tlsadvisor->nameof_tls_cipher_suite(server_cs);
             _test_case.assert(csname.size(), __FUNCTION__, "%s", csname.c_str());
         }
 

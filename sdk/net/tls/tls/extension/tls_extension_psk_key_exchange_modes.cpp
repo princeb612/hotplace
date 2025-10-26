@@ -63,7 +63,7 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
                 dbs.println("   > %s", constexpr_modes);
                 int i = 0;
                 for (auto m : _modes) {
-                    dbs.println("     [%i] %i %s", i++, m, tlsadvisor->psk_key_exchange_mode_name(m).c_str());
+                    dbs.println("     [%i] %i %s", i++, m, tlsadvisor->nameof_psk_key_exchange_mode(m).c_str());
                 }
             });
         }
@@ -99,7 +99,7 @@ tls_extension_psk_key_exchange_modes& tls_extension_psk_key_exchange_modes::add(
 
 tls_extension_psk_key_exchange_modes& tls_extension_psk_key_exchange_modes::add(const std::string& name) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    auto code = tlsadvisor->psk_key_exchange_mode_code(name);
+    auto code = tlsadvisor->valueof_psk_key_exchange_mode(name);
     return add(code);
 }
 

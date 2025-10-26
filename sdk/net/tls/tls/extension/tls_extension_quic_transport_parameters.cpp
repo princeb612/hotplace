@@ -153,7 +153,7 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
                     auto param_id = item.first;
                     const auto& v = item.second.content();
 
-                    dbs.printf("    > %I64i (%s) ", param_id, tlsadvisor->quic_param_string(param_id).c_str());
+                    dbs.printf("    > %I64i (%s) ", param_id, tlsadvisor->nameof_quic_param(param_id).c_str());
                     switch (v.type) {
                         case TYPE_NULL: {
                         } break;

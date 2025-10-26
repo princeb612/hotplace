@@ -131,7 +131,7 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
 
         {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto csname = tlsadvisor->cipher_suite_string(server_cs);
+            auto csname = tlsadvisor->nameof_tls_cipher_suite(server_cs);
             _test_case.assert(csname.size(), __FUNCTION__, "%s", csname.c_str());
         }
 
@@ -387,7 +387,7 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
 
 void test_construct_dtls_routine(const TLS_OPTION& option) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    auto ver = tlsadvisor->tls_version_string(option.version);
+    auto ver = tlsadvisor->nameof_tls_version(option.version);
     auto hint = tlsadvisor->hintof_cipher_suite(option.cipher_suite);
     _test_case.begin("construct %s %s", ver.c_str(), hint->name_iana);
 

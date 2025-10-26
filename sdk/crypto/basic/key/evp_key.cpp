@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {
@@ -34,6 +34,30 @@ return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
                 const EC_GROUP* group = EC_KEY_get0_group(ec);
                 nid = EC_GROUP_get_curve_name(group);
                 EC_KEY_free(ec);
+            }
+        } else if (EVP_PKEY_DH == nid) {
+            nid = EVP_PKEY_get_base_id(pkey);
+            DH* dh = EVP_PKEY_get1_DH((EVP_PKEY*)pkey);
+            if (dh) {
+                int bits = BN_num_bits(DH_get0_p(dh));
+                switch (bits) {
+                    case 2048: {
+                        nid = nid_ffdhe2048;
+                    } break;
+                    case 3072: {
+                        nid = nid_ffdhe3072;
+                    } break;
+                    case 4096: {
+                        nid = nid_ffdhe4096;
+                    } break;
+                    case 6144: {
+                        nid = nid_ffdhe6144;
+                    } break;
+                    case 8192: {
+                        nid = nid_ffdhe8192;
+                    } break;
+                }
+                DH_free(dh);
             }
         } else if (EVP_PKEY_KEYMGMT == nid) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L

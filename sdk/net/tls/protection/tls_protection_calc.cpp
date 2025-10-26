@@ -16,7 +16,7 @@
 #include <hotplace/sdk/crypto/basic/crypto_aead.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_hash.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_hmac.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
@@ -287,7 +287,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     const EVP_PKEY *pkey_pub = nullptr;
 
                     auto group = get_protection_context().get0_keyshare_group();
-                    auto hint_group = tlsadvisor->hintof_curve_tls_group(group);
+                    auto hint_group = advisor->hintof_tls_group(group);
                     if (hint_group) {
                         auto kty_group = hint_group->kty;
                         uint32 nid = hint_group->nid;
@@ -316,7 +316,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
                             uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
                             if (group_enforced) {
-                                auto hint = tlsadvisor->hintof_curve_tls_group(group_enforced);
+                                auto hint = advisor->hintof_tls_group(group_enforced);
                                 // enforcing
                                 auto pkey_ch = get_keyexchange().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
                                 if (nullptr == pkey_ch) {
@@ -520,7 +520,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 binary_t pre_master_secret;
                 {
                     auto group = get_protection_context().get0_supported_group();
-                    auto hint_group = tlsadvisor->hintof_curve_tls_group(group);
+                    auto hint_group = advisor->hintof_tls_group(group);
 
                     const EVP_PKEY *pkey_priv = nullptr;
                     const EVP_PKEY *pkey_pub = nullptr;
@@ -862,7 +862,7 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
                 typeof_secret = tls_secret_c_hs_traffic;
             }
             const binary_t &ht_secret = get_secrets().get(typeof_secret);
-            hash_algorithm_t hashalg = tlsadvisor->hash_alg_of(get_cipher_suite());
+            hash_algorithm_t hashalg = tlsadvisor->algof_hash(get_cipher_suite());
             openssl_kdf kdf;
             binary_t context;
             if (is_kindof_dtls()) {

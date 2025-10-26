@@ -91,7 +91,7 @@ void test_quic_xargs_org() {
     auto lambda_read_packet = [&](tls_session* session, tls_direction_t dir, const binary_t& bin_packet, const char* func, const char* desc) -> void {
         uint8 type = 0;
         ret = quic_read_packet(type, session, dir, bin_packet);
-        _test_case.test(ret, func, "%s %s %s", direction_string(from_client).c_str(), tlsadvisor->quic_packet_type_string(type).c_str(), desc);
+        _test_case.test(ret, func, "%s %s %s", direction_string(from_client).c_str(), tlsadvisor->nameof_quic_packet(type).c_str(), desc);
     };
 
     crypto_keychain keychain;

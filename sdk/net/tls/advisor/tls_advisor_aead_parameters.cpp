@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-std::string tls_advisor::aead_alg_string(uint16 code) {
+std::string tls_advisor::nameof_aead_alg(uint16 code) {
     std::string value;
     auto iter = _aead_alg_codes.find(code);
     if (_aead_alg_codes.end() != iter) {

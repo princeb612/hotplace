@@ -31,7 +31,7 @@ void test_ossl_kem() {
             EVP_PKEY* pubkey = nullptr;
             EVP_PKEY* pubkey_raw = nullptr;
             binary_t keydata;
-            binary_t capsulekey;
+            binary_t keycapsule;
             binary_t sharedsecret_alice;
             binary_t sharedsecret_bob;
 
@@ -73,20 +73,20 @@ void test_ossl_kem() {
             }
             // bob : encapsule
             {
-                ret = pqc.encapsule(nullptr, pubkey, capsulekey, sharedsecret_bob);
+                ret = pqc.encapsule(nullptr, pubkey, keycapsule, sharedsecret_bob);
                 _logger->write([&](basic_stream& bs) -> void {
                     bs << "capsule ";
-                    base16_encode(capsulekey, &bs, base16_notrunc);
+                    base16_encode(keycapsule, &bs, base16_notrunc);
                     bs << "\n";
                     bs << "shared secret ";
                     base16_encode(sharedsecret_bob, &bs, base16_notrunc);
                     bs << "\n";
                 });
-                _test_case.test(ret, __FUNCTION__, "encapsule %s size %zi", alg.c_str(), capsulekey.size());
+                _test_case.test(ret, __FUNCTION__, "encapsule %s size %zi", alg.c_str(), keycapsule.size());
             }
             // alice : decapsule
             {
-                ret = pqc.decapsule(nullptr, privkey, capsulekey, sharedsecret_alice);
+                ret = pqc.decapsule(nullptr, privkey, keycapsule, sharedsecret_alice);
                 _logger->write([&](basic_stream& bs) -> void {
                     bs << "shared secret\n";
                     base16_encode(sharedsecret_alice, &bs, base16_notrunc);

@@ -101,7 +101,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 auto hstype = get_type();
                 dbs.printf("\e[1;36m");
-                dbs.println("# read handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+                dbs.println("# read handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->nameof_tls_handshake(hstype).c_str());
                 dbs.printf("\e[0m");
             });
         }
@@ -190,7 +190,7 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 auto hstype = get_type();
                 dbs.printf("\e[1;36m");
-                dbs.println("# write %p handshake type 0x%02x(%i) (%s)", session, hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+                dbs.println("# write %p handshake type 0x%02x(%i) (%s)", session, hstype, hstype, tlsadvisor->nameof_tls_handshake(hstype).c_str());
                 dbs.printf("\e[0m");
             });
         }
@@ -396,7 +396,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 dbs.autoindent(1);
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                dbs.println("> handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+                dbs.println("> handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->nameof_tls_handshake(hstype).c_str());
                 dbs.println(" > length 0x%06x(%i)", length, length);
                 if (cond_dtls) {
                     dbs.println(" > %s 0x%04x", constexpr_handshake_message_seq, dtls_seq);
@@ -453,7 +453,7 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto hstype = get_type();
             dbs.println("# handshake");
-            dbs.println("> handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->handshake_type_string(hstype).c_str());
+            dbs.println("> handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->nameof_tls_handshake(hstype).c_str());
             dbs.println(" > length 0x%06x(%i)", length, length);
             if (session_type_dtls == session->get_type()) {
                 dbs.println(" > %s 0x%04x", constexpr_handshake_message_seq, _dtls_seq);

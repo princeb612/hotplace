@@ -341,7 +341,7 @@ void quic_packet::dump() {
         trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            dbs.println("- quic packet %s", tlsadvisor->quic_packet_type_string(get_type()).c_str());
+            dbs.println("- quic packet %s", tlsadvisor->nameof_quic_packet(get_type()).c_str());
             dbs.println(" > version %08x", get_version());
             dbs.println(" > destination connection id %s", base16_encode(_dcid).c_str());
             // dump_memory(_dcid, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);

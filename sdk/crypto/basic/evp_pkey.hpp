@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_EVPKEY__
-#define __HOTPLACE_SDK_CRYPTO_BASIC_EVPKEY__
+#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_EVPPKEY__
+#define __HOTPLACE_SDK_CRYPTO_BASIC_EVPPKEY__
 
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>

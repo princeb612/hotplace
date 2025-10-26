@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-std::string tls_advisor::compression_alg_name(uint16 code) {
+std::string tls_advisor::nameof_compression_alg(uint16 code) {
     std::string value;
     auto iter = _compression_alg_codes.find(code);
     if (_compression_alg_codes.end() != iter) {
@@ -25,7 +25,7 @@ std::string tls_advisor::compression_alg_name(uint16 code) {
     return value;
 }
 
-uint16 tls_advisor::compression_alg_code(const std::string& name) {
+uint16 tls_advisor::valueof_compression_alg(const std::string& name) {
     uint16 value = 0;
     auto iter = _compression_alg_names.find(name);
     if (_compression_alg_names.end() != iter) {
@@ -35,7 +35,7 @@ uint16 tls_advisor::compression_alg_code(const std::string& name) {
     return value;
 }
 
-std::string tls_advisor::tls_extension_string(uint16 code) {
+std::string tls_advisor::nameof_tls_extension(uint16 code) {
     std::string value;
     auto iter = _extension_type_codes.find(code);
     if (_extension_type_codes.end() != iter) {
@@ -45,7 +45,7 @@ std::string tls_advisor::tls_extension_string(uint16 code) {
     return value;
 }
 
-std::string tls_advisor::cert_status_type_string(uint8 code) {
+std::string tls_advisor::nameof_cert_status_type(uint8 code) {
     std::string value;
     auto iter = _cert_status_type_codes.find(code);
     if (_cert_status_type_codes.end() != iter) {

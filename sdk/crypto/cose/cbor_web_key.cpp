@@ -15,7 +15,7 @@
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/cose/cbor_web_key.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>

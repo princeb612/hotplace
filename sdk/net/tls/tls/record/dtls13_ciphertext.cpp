@@ -225,7 +225,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
-                    dbs.println("> content type 0x%02x(%i) %s", type, type, tlsadvisor->content_type_string(type).c_str());
+                    dbs.println("> content type 0x%02x(%i) %s", type, type, tlsadvisor->nameof_tls_record(type).c_str());
 
                     if (check_trace_level(loglevel_debug)) {
                         switch (type) {

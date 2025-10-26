@@ -114,7 +114,7 @@ return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** 
     return ret;
 }
 
-return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret) {
+return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keycapsule, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     EVP_PKEY_CTX* pkey_ctx = nullptr;
@@ -147,10 +147,10 @@ return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, bina
             __leave2;
         }
 
-        capsulekey.resize(keycapsule_len);
+        keycapsule.resize(keycapsule_len);
         sharedsecret.resize(sharedsecret_len);
 
-        test = EVP_PKEY_encapsulate(pkey_ctx, &capsulekey[0], &keycapsule_len, &sharedsecret[0], &sharedsecret_len);
+        test = EVP_PKEY_encapsulate(pkey_ctx, &keycapsule[0], &keycapsule_len, &sharedsecret[0], &sharedsecret_len);
         if (test <= 0) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -163,14 +163,14 @@ return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, bina
     return ret;
 }
 
-return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret) {
+return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const binary_t& keycapsule, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == pkey || capsulekey.empty()) {
+        if (nullptr == pkey || keycapsule.empty()) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = decapsule(libctx, pkey, &capsulekey[0], capsulekey.size(), sharedsecret);
+        ret = decapsule(libctx, pkey, &keycapsule[0], keycapsule.size(), sharedsecret);
     }
     __finally2 {}
     return ret;

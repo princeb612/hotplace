@@ -12,7 +12,7 @@
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>
 #include <hotplace/sdk/io/cbor/cbor_publisher.hpp>
 
@@ -488,18 +488,18 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                 nidof_evp_pkey(pkey, nid);
                 const hint_curve_t* hint_curve = advisor->hintof_curve_nid(nid);
                 if (hint_curve) {
-                    if (hint_curve->name) {
-                        stream->printf("%s ", hint_curve->name);
+                    if (hint_curve->name_nist) {
+                        stream->printf("%s ", hint_curve->name_nist);
                     }
                     stream->printf("aka ");
-                    if (hint_curve->aka1) {
-                        stream->printf("%s ", hint_curve->aka1);
+                    if (hint_curve->name_x962) {
+                        stream->printf("%s ", hint_curve->name_x962);
                     }
-                    if (hint_curve->aka2) {
-                        stream->printf("%s ", hint_curve->aka2);
+                    if (hint_curve->name_sec) {
+                        stream->printf("%s ", hint_curve->name_sec);
                     }
-                    if (hint_curve->aka3) {
-                        stream->printf("%s ", hint_curve->aka3);
+                    if (hint_curve->name_wtls) {
+                        stream->printf("%s ", hint_curve->name_wtls);
                     }
                     stream->printf("\n");
                 }
@@ -527,7 +527,7 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                 nidof_evp_pkey(pkey, nid);
                 const hint_curve_t* hint_curve = advisor->hintof_curve_nid(nid);
                 if (hint_curve) {
-                    stream->printf("%s", hint_curve->name);
+                    stream->printf("%s", hint_curve->name_nist);
                     stream->printf("\n");
                 }
 

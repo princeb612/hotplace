@@ -59,7 +59,7 @@ void do_test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const bina
                 _logger->hdump("signature", signature);
             }
         }
-        _test_case.test(ret, __FUNCTION__, "ECDSA.openssl_sign %s %s", hint ? hint->name : "", hashalg);
+        _test_case.test(ret, __FUNCTION__, "ECDSA.openssl_sign %s %s", hint ? hint->name_nist : "", hashalg);
     }
 
     // using crypto_sign
@@ -68,7 +68,7 @@ void do_test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const bina
         crypto_sign* sign = builder.set_scheme(crypt_sig_ecdsa).set_digest(alg).build();
         if (sign) {
             ret = sign->verify(pkey, input, signature);
-            _test_case.test(ret, __FUNCTION__, "ECDSA.crypto_sign  %s %s", hint ? hint->name : "", hashalg);
+            _test_case.test(ret, __FUNCTION__, "ECDSA.crypto_sign  %s %s", hint ? hint->name_nist : "", hashalg);
             sign->release();
         }
     }

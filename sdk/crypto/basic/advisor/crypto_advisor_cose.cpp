@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -132,17 +132,25 @@ crypt_sig_t crypto_advisor::sigof(cose_alg_t sig) {
 
 cose_ec_curve_t crypto_advisor::curveof(uint32 nid) {
     cose_ec_curve_t curve = cose_ec_curve_t::cose_ec_unknown;
-    t_maphint<uint32, cose_ec_curve_t> hint(_nid2curve_map);
+    t_maphint<uint32, const hint_curve_t*> hint(_nid2curve_map);
 
-    hint.find(nid, &curve);
+    const hint_curve_t* item = nullptr;
+    hint.find(nid, &item);
+    if (item) {
+        curve = item->cose_crv;
+    }
     return curve;
 }
 
 uint32 crypto_advisor::curveof(cose_ec_curve_t curve) {
     uint32 nid = 0;
-    t_maphint<cose_ec_curve_t, uint32> hint(_curve2nid_map);
+    t_maphint<cose_ec_curve_t, const hint_curve_t*> hint(_cose_curve_map);
 
-    hint.find(curve, &nid);
+    const hint_curve_t* item = nullptr;
+    hint.find(curve, &item);
+    if (item) {
+        nid = item->nid;
+    }
     return nid;
 }
 

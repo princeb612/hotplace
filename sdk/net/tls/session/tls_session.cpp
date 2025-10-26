@@ -254,7 +254,8 @@ void tls_session::session_info::push_alert(uint8 level, uint8 desc) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     if (istraceable(trace_category_net)) {
         trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
-            dbs.println("\e[1;31malert level:%s desc:%s\e[0m", tlsadvisor->alert_level_string(level).c_str(), tlsadvisor->alert_desc_string(desc).c_str());
+            dbs.println("\e[1;31malert level:%s desc:%s\e[0m", tlsadvisor->nameof_tls_alert_level(level).c_str(),
+                        tlsadvisor->nameof_tls_alert_desc(desc).c_str());
         });
     }
 #endif

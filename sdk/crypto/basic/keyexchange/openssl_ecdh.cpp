@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/binary.hpp>
-#include <hotplace/sdk/crypto/basic/evp_key.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
 #if defined __linux__
 #include <arpa/inet.h>

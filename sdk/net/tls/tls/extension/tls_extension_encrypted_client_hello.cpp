@@ -76,8 +76,8 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
                 dbs.println("   > %s %i", constexpr_client_hello_type, client_hello_type);
-                dbs.println("   > %s %i %s", constexpr_kdf, kdf, tlsadvisor->kdf_id_string(kdf).c_str());
-                dbs.println("   > %s %i %s", constexpr_aead, aead, tlsadvisor->aead_alg_string(aead).c_str());
+                dbs.println("   > %s %i %s", constexpr_kdf, kdf, tlsadvisor->nameof_kdf_id(kdf).c_str());
+                dbs.println("   > %s %i %s", constexpr_aead, aead, tlsadvisor->nameof_aead_alg(aead).c_str());
                 dbs.println("   > %s %i", constexpr_config_id, config_id);
                 dbs.println("   > %s %i", constexpr_enc_len, enc_len);
                 if (check_trace_level(loglevel_debug)) {

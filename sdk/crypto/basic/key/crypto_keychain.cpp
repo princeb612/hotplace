@@ -14,6 +14,7 @@
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>
 
@@ -370,6 +371,38 @@ return_t crypto_keychain::write_file(crypto_key* cryptokey, keyflag_t mode, cons
         std::ofstream file(filename, std::ios::trunc);
         file.write(bs.c_str(), bs.size());
         file.close();
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add(crypto_key* cryptokey, uint32 nid, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto kty = ktyof_nid(nid);
+        switch (kty) {
+            case kty_dh: {
+                ret = add_dh(cryptokey, nid, desc);
+            } break;
+            case kty_dsa: {
+                ret = add_dsa(cryptokey, nid, desc);
+            } break;
+            case kty_ec: {
+                ret = add_ec(cryptokey, nid, desc);
+            } break;
+            case kty_okp: {
+                ret = add_okp(cryptokey, nid, desc);
+            } break;
+            case kty_rsa: {
+                ret = add_rsa(cryptokey, nid, 2048, desc);
+            } break;
+            case kty_mlkem: {
+                ret = add_mlkem(cryptokey, nid, desc);
+            } break;
+            default: {
+                ret = not_supported;
+            } break;
+        }
     }
     __finally2 {}
     return ret;

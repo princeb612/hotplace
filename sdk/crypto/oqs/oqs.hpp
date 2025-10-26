@@ -83,18 +83,18 @@ class pqc_oqs {
      * @brfief encaps
      * @param oqs_context* context [in]
      * @param const EVP_PKEY* pkey [in] public key
-     * @param binary_t& capsulekey [out]
+     * @param binary_t& keycapsule [out]
      * @param binary_t& sharedsecret [out]
      */
-    return_t encapsule(oqs_context* context, const EVP_PKEY* pkey, binary_t& capsulekey, binary_t& sharedsecret);
+    return_t encapsule(oqs_context* context, const EVP_PKEY* pkey, binary_t& keycapsule, binary_t& sharedsecret);
     /**
      * @brief decaps
      * @param oqs_context* context [in]
      * @param const EVP_PKEY* pkey [in] private key
-     * @param const binary_t& capsulekey [in]
+     * @param const binary_t& keycapsule [in]
      * @param binary_t& sharedsecret [out]
      */
-    return_t decapsule(oqs_context* context, const EVP_PKEY* pkey, const binary_t& capsulekey, binary_t& sharedsecret);
+    return_t decapsule(oqs_context* context, const EVP_PKEY* pkey, const binary_t& keycapsule, binary_t& sharedsecret);
 
     /**
      * @brief sign
