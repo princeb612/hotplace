@@ -197,7 +197,7 @@ return_t crypto_advisor::build() {
         if (cose_ec_curve_t::cose_ec_unknown != item->cose_crv) {
             _cose_curve_map.insert(std::make_pair(item->cose_crv, item));
         }
-        _curve_bynid_map.insert(std::make_pair(item->nid, item));
+        _curve_bynid_map.insert(std::make_pair(item->id, item));
 
         if (item->name_nist) {
             set_feature(item->name_nist, advisor_feature_curve);
@@ -232,7 +232,7 @@ return_t crypto_advisor::build() {
         if (item->name_wtls) {
             _curve_name_map.insert({item->name_wtls, item});
         }
-        _nid2curve_map.insert(std::make_pair(item->nid, item));
+        _nid2curve_map.insert(std::make_pair(item->id, item));
     }
 
     _kty2cose_map.insert(std::make_pair(crypto_kty_t::kty_ec, cose_kty_t::cose_kty_ec2));
@@ -287,7 +287,7 @@ return_t crypto_advisor::build() {
         if (item->nid) {
             _tls_group_nid_map.insert({item->nid, item});
         }
-        if (tls_named_group_unknown != item->group) {
+        if (tls_group_unknown != item->group) {
             _tls_group_map.insert({item->group, item});
         }
         if (item->name) {

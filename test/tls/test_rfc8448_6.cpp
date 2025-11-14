@@ -39,7 +39,7 @@ void test_rfc8448_6() {
         const char* d =
             "c0 40 b2 bb 8f 3a dd d2 0f d4 05 8c 54"
             "70 03 a3 c6 f9 c1 cd 91 5d 5e 53 5c 87 d8 d1 91 aa f0 71";
-        crypto_key& key = protection.get_keyexchange();
+        crypto_key& key = protection.get_key();
         ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, nullptr, d, keydesc(constexpr_client));
 
         _logger->writeln(constexpr_client);
@@ -71,7 +71,7 @@ void test_rfc8448_6() {
         const char* x =
             "6c 2e 50 e8 65 91 9a 6b 5a 12 df af 91 8f"
             "92 b4 42 56 7b 0f 89 bc 54 47 8c 69 21 36 66 58 f0 62";
-        crypto_key& key = protection.get_keyexchange();
+        crypto_key& key = protection.get_key();
         ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, nullptr, d, keydesc(constexpr_server));
 
         _logger->writeln(constexpr_server);

@@ -57,7 +57,7 @@ void crypto_advisor::enum_tls_group(std::function<void(const hint_group_t*)> fun
     }
 }
 
-bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, tls_named_group_t group) {
+bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, tls_group_t group) {
     bool ret = false;
     __try2 {
         if (nullptr == pkey) {
@@ -65,14 +65,18 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, tls_named_group_t group) {
         }
         uint32 nid = 0;
         nidof_evp_pkey(pkey, nid);
-        auto hint = hintof_tls_group_nid(nid);
+        // cf. multiplicity 1..*
+        // - NID_brainpoolP256r1
+        //   -  tls_group_brainpoolP256r1
+        //   -  tls_group_brainpoolP256r1tls13
+        auto hint = hintof_tls_group(group);  // multiplicity 1..1
         if (nullptr == hint) {
             __leave2;
         }
-        if (tls_named_group_unknown == hint->group) {
+        if (tls_group_unknown == hint->group) {
             __leave2;
         }
-        ret = (group == hint->group);
+        ret = (nid == hint->nid);
     }
     __finally2 {}
     return ret;

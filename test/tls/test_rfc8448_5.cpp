@@ -35,7 +35,7 @@ void test_rfc8448_5() {
         const char* d =
             "0e d0 2f 8e 81 17 ef c7 5c a7 ac 32 aa"
             "7e 34 ed a6 4c dc 0d da d1 54 a5 e8 52 89 f9 59 f6 32 04";
-        crypto_key& key = protection.get_keyexchange();
+        crypto_key& key = protection.get_key();
         ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, nullptr, d, keydesc(constexpr_client));
 
         _logger->writeln(constexpr_client);
@@ -75,7 +75,7 @@ void test_rfc8448_5() {
             "b9 98 94 d1 3b ef b2 21 b3 de f2 eb e3 83 0e ac 8f 01 51 81 26"
             "77 c4 d6 d2 23 7e 85 cf 01 d6 91 0c fb 83 95 4e 76 ba 73 52 83"
             "05 34 15 98 97 e8 06 57 80";
-        crypto_key& key = protection.get_keyexchange();
+        crypto_key& key = protection.get_key();
         ret = keychain.add_ec_uncompressed_b16rfc(&key, ec_p256, pub, priv, keydesc(constexpr_server));
 
         _logger->writeln(constexpr_server);
@@ -145,7 +145,7 @@ void test_rfc8448_5() {
             "86 fc c8 5b 5a d4 1a 13 4a 0f 03 ee 72 b8 93 05 2b d8 5b 4c 8d"
             "e6 77 6f 5b 04 ac 07 d8 35 40 ea b3 e3 d9 c5 47 bc 65 28 c4 31"
             "7d 29 46 86 09 3a 6c ad 7d";
-        crypto_key& key = protection.get_keyexchange();
+        crypto_key& key = protection.get_key();
         ret = keychain.add_ec_uncompressed_b16rfc(&key, ec_p256, pub, priv, keydesc(constexpr_server));
 
         _logger->writeln(constexpr_server);

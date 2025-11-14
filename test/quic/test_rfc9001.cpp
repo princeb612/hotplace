@@ -193,8 +193,8 @@ void test_rfc_9001_a2(tls_session* client_session, tls_session* server_session) 
     {
         // to avoid internal error related to key calcurations
         crypto_keychain keychain;
-        auto& keyexchange = client_session->get_tls_protection().get_keyexchange();
-        keychain.add_ec2(&keyexchange, NID_X25519, keydesc(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE));
+        auto& tlskey = client_session->get_tls_protection().get_key();
+        keychain.add_ec2(&tlskey, NID_X25519, keydesc(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE));
     }
 
     test_rfc_9001_construct_initial(&test, client_session);
@@ -263,8 +263,8 @@ void test_rfc_9001_a3(tls_session* client_session, tls_session* server_session) 
     {
         // to avoid internal error related to key calcurations
         crypto_keychain keychain;
-        auto& keyexchange = server_session->get_tls_protection().get_keyexchange();
-        keychain.add_ec2(&keyexchange, NID_X25519, keydesc(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE));
+        auto& tlskey = server_session->get_tls_protection().get_key();
+        keychain.add_ec2(&tlskey, NID_X25519, keydesc(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE));
     }
 
     test_rfc_9001_construct_initial(&test, server_session);

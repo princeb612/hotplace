@@ -260,5 +260,15 @@ crypt_sig_t crypto_advisor::sigof(jws_t sig) {
     return type;
 }
 
+// hint_jose_encryption_t
+
+const char* nameof_alg(const hint_jose_encryption_t* hint) {
+    const char* ret_value = nullptr;
+    if (hint) {
+        ret_value = hint->alg_name;
+    }
+    return ret_value;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

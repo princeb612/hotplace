@@ -186,53 +186,5 @@ const hint_signature_t hint_signatures[] = {
 
 const size_t sizeof_hint_signatures = RTL_NUMBER_OF(hint_signatures);
 
-crypt_sig_t typeof_sig(const hint_signature_t* hint) {
-    crypt_sig_t type = sig_unknown;
-    if (hint) {
-        type = hint->sig;
-    }
-    return type;
-}
-
-jws_t typeof_jws(const hint_signature_t* hint) {
-    jws_t type = jws_unknown;
-    if (hint) {
-        type = hint->jws_type;
-    }
-    return type;
-}
-
-jws_group_t typeof_group(const hint_signature_t* hint) {
-    jws_group_t type = jws_group_unknown;
-    if (hint) {
-        type = hint->group;
-    }
-    return type;
-}
-
-crypto_kty_t typeof_kty(const hint_signature_t* hint) {
-    crypto_kty_t type = kty_unknown;
-    if (hint) {
-        type = hint->kty;
-    }
-    return type;
-}
-
-const char* nameof_jws(const hint_signature_t* hint) {
-    const char* name = nullptr;
-    if (hint) {
-        name = hint->jws_name;
-    }
-    return name;
-}
-
-hash_algorithm_t typeof_alg(const hint_signature_t* hint) {
-    hash_algorithm_t type = hash_alg_unknown;
-    if (hint) {
-        type = hint->alg;
-    }
-    return type;
-}
-
 }  // namespace crypto
 }  // namespace hotplace

@@ -548,7 +548,7 @@ const EVP_PKEY* tls_advisor::get_key(tls_session* session, const char* kid) {
                 break;
         }
 
-        ret_value = protection.get_keyexchange().find(kid, kty);
+        ret_value = protection.get_key().find(kid, kty);
         if (nullptr == ret_value) {
             ret_value = get_keys().find(kid, kty);
         }
@@ -580,7 +580,7 @@ const X509* tls_advisor::get_cert(tls_session* session, const char* kid) {
                 break;
         }
 
-        ret_value = protection.get_keyexchange().find_x509(kid, kty);
+        ret_value = protection.get_key().find_x509(kid, kty);
         if (nullptr == ret_value) {
             ret_value = get_keys().find_x509(kid, kty);
         }
@@ -688,12 +688,12 @@ return_t tls_advisor::set_default_tls_groups() {
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
     _groups.clear();
-    _groups.insert(tls_named_group_x25519);
-    _groups.insert(tls_named_group_secp256r1);
+    _groups.insert(tls_group_x25519);
+    _groups.insert(tls_group_secp256r1);
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
-    _groups.insert(tls_named_group_mlkem512);
-    // _groups.insert(tls_named_group_mlkem768);
-    // _groups.insert(tls_named_group_mlkem1024);
+    _groups.insert(tls_group_mlkem512);
+    // _groups.insert(tls_group_mlkem768);
+    // _groups.insert(tls_group_mlkem1024);
 #endif
     return ret;
 }

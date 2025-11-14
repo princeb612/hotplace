@@ -17,11 +17,9 @@ namespace crypto {
 
 return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydesc& desc) {
     return_t ret = errorcode_t::success;
+    int rc = 0;
     EVP_PKEY* pkey = nullptr;
     EVP_PKEY_CTX* ctx = nullptr;
-    int ret_openssl = 0;
-    EVP_PKEY* params = nullptr;
-    EVP_PKEY_CTX* keyctx = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -48,35 +46,20 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydes
             ret = errorcode_t::internal_error;
             __leave2;
         }
-        ret_openssl = EVP_PKEY_paramgen_init(ctx);
-        if (ret_openssl < 0) {
+        rc = EVP_PKEY_keygen_init(ctx);
+        if (rc < 1) {
             ret = errorcode_t::internal_error;
-            __leave2;
+            __leave2_trace_openssl(ret);
         }
-        ret_openssl = EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, nid);
-        if (ret_openssl < 0) {
+        rc = EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, nid);
+        if (rc < 1) {
             ret = errorcode_t::not_supported;
             __leave2;
         }
-        ret_openssl = EVP_PKEY_paramgen(ctx, &params);
-        if (ret_openssl < 0) {
+        rc = EVP_PKEY_keygen(ctx, &pkey);
+        if (rc < 1) {
             ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        keyctx = EVP_PKEY_CTX_new(params, nullptr);
-        if (nullptr == keyctx) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        ret_openssl = EVP_PKEY_keygen_init(keyctx);
-        if (ret_openssl < 0) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        ret_openssl = EVP_PKEY_keygen(keyctx, &pkey);
-        if (ret_openssl < 0) {
-            ret = errorcode_t::internal_error;
-            __leave2;
+            __leave2_trace_openssl(ret);
         }
         if (nullptr == pkey) { /* [openssl 3.0.3] return success but pkey is nullptr */
             ret = errorcode_t::internal_error;
@@ -96,13 +79,6 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydes
                 EVP_PKEY_free(pkey);
             }
         }
-        if (keyctx) {
-            EVP_PKEY_CTX_free(keyctx);
-        }
-        if (params) {
-            EVP_PKEY_free(params);
-        }
-
         if (ctx) {
             EVP_PKEY_CTX_free(ctx);
         }
@@ -120,7 +96,7 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const binary
     EC_POINT* pub = nullptr;
     EC_POINT* point = nullptr;
     BN_CTX* cfg = nullptr;
-    int ret_openssl = 1;
+    int rc = 1;
 
     __try2 {
         if (nullptr == cryptokey) {
@@ -165,34 +141,34 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const binary
         }
 
         if (nullptr != bn_d) {
-            ret_openssl = EC_KEY_set_private_key(ec, bn_d);
-            if (ret_openssl != 1) {
+            rc = EC_KEY_set_private_key(ec, bn_d);
+            if (rc != 1) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace_openssl(ret);
             }
 
-            ret_openssl = EC_POINT_mul(group, point, bn_d, nullptr, nullptr, nullptr);
-            if (ret_openssl != 1) {
+            rc = EC_POINT_mul(group, point, bn_d, nullptr, nullptr, nullptr);
+            if (rc != 1) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace_openssl(ret);
             }
         } else {
-            ret_openssl = EC_POINT_set_affine_coordinates(group, point, bn_x, bn_y, nullptr);  // EC_POINT_set_affine_coordinates_GFp
-            if (ret_openssl != 1) {
+            rc = EC_POINT_set_affine_coordinates(group, point, bn_x, bn_y, nullptr);  // EC_POINT_set_affine_coordinates_GFp
+            if (rc != 1) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace_openssl(ret);
             }
         }
 
-        ret_openssl = EC_KEY_set_public_key(ec, point);
-        if (ret_openssl != 1) {
+        rc = EC_KEY_set_public_key(ec, point);
+        if (rc != 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
         pkey = EVP_PKEY_new();
         EVP_PKEY_set1_EC_KEY(pkey, ec);  // EC_KEY_up_ref
-        if (ret_openssl != 1) {
+        if (rc != 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }

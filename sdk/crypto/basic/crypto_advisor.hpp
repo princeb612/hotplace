@@ -470,10 +470,10 @@ class crypto_advisor {
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
-     * @param tls_named_group_t group [in]
+     * @param tls_group_t group [in]
      * @return true if match, false if not
      */
-    bool is_kindof(const EVP_PKEY* pkey, tls_named_group_t group);
+    bool is_kindof(const EVP_PKEY* pkey, tls_group_t group);
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]

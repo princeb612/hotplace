@@ -20,9 +20,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/wtls/wap-wsg-idm-ecid-wtls6
     {
         NID_secp112r1,
+        NID_secp112r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         14,
@@ -37,9 +38,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp112r2
     {
         NID_secp112r2,
+        NID_secp112r2,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         14,
@@ -52,9 +54,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp128r1
     {
         NID_secp128r1,
+        NID_secp128r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         16,
@@ -67,9 +70,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp128r2
     {
         NID_secp128r2,
+        NID_secp128r2,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         16,
@@ -83,9 +87,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp160k1
     {
         NID_secp160k1,
+        NID_secp160k1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_secp160k1,
+        tls_group_secp160k1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         20,
@@ -100,9 +105,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/wtls/wap-wsg-idm-ecid-wtls7
     {
         NID_secp160r1,
+        NID_secp160r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_secp160r1,
+        tls_group_secp160r1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         20,
@@ -118,9 +124,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp160r2
     {
         NID_secp160r2,
+        NID_secp160r2,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_secp160r2,
+        tls_group_secp160r2,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         20,
@@ -134,9 +141,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp192k1
     {
         NID_secp192k1,
+        NID_secp192k1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_secp192k1,
+        tls_group_secp192k1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         24,
@@ -151,9 +159,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp192r1
     {
         NID_X9_62_prime192v1,
+        NID_X9_62_prime192v1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_secp192r1,
+        tls_group_secp192r1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         24,
@@ -167,9 +176,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp224k1
     {
         NID_secp224k1,
+        NID_secp224k1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_secp224k1,
+        tls_group_secp224k1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         28,
@@ -185,9 +195,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/wtls/wap-wsg-idm-ecid-wtls12
     {
         NID_secp224r1,
+        NID_secp224r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_secp224r1,
+        tls_group_secp224r1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         28,
@@ -203,9 +214,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp256k1
     {
         NID_secp256k1,
+        NID_secp256k1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_secp256k1,
+        tls_group_secp256k1,
         cose_ec_curve_t::cose_ec_secp256k1,  // RFC8812 ES256K, "secp256k1"
         ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512 | CURVE_SUPPORT_COSE,
         32,
@@ -220,9 +232,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp256r1
     {
         NID_X9_62_prime256v1,
+        NID_X9_62_prime256v1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_secp256r1,
+        tls_group_secp256r1,
         cose_ec_curve_t::cose_ec_p256,
         ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512 | CURVE_SUPPORT_JOSE | CURVE_SUPPORT_COSE,
         32,
@@ -237,9 +250,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp384r1
     {
         NID_secp384r1,
+        NID_secp384r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_secp384r1,
+        tls_group_secp384r1,
         cose_ec_curve_t::cose_ec_p384,
         ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512 | CURVE_SUPPORT_JOSE | CURVE_SUPPORT_COSE,
         48,
@@ -254,9 +268,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/secp521r1
     {
         NID_secp521r1,
+        NID_secp521r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_secp521r1,
+        tls_group_secp521r1,
         cose_ec_curve_t::cose_ec_p521,
         ECDSA_SUPPORT_SHA2_512 | CURVE_SUPPORT_JOSE | CURVE_SUPPORT_COSE,
         66,
@@ -270,9 +285,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/wtls/wap-wsg-idm-ecid-wtls4
     {
         NID_sect113r1,
+        NID_sect113r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         15,
@@ -287,9 +303,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect113r2
     {
         NID_sect113r2,
+        NID_sect113r2,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         15,
@@ -302,9 +319,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect131r1
     {
         NID_sect131r1,
+        NID_sect131r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         17,
@@ -317,9 +335,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect131r2
     {
         NID_sect131r2,
+        NID_sect131r2,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         17,
@@ -335,9 +354,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/wtls/wap-wsg-idm-ecid-wtls3
     {
         NID_sect163k1,
+        NID_sect163k1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect163k1,
+        tls_group_sect163k1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         21,
@@ -353,9 +373,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect163r1
     {
         NID_sect163r1,
+        NID_sect163r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect163r1,
+        tls_group_sect163r1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         21,
@@ -370,9 +391,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect163r2
     {
         NID_sect163r2,
+        NID_sect163r2,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect163r2,
+        tls_group_sect163r2,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         21,
@@ -386,9 +408,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect193r1
     {
         NID_sect193r1,
+        NID_sect193r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect193r1,
+        tls_group_sect193r1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         25,
@@ -402,9 +425,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect193r2
     {
         NID_sect193r2,
+        NID_sect193r2,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect193r2,
+        tls_group_sect193r2,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         25,
@@ -420,9 +444,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/wtls/wap-wsg-idm-ecid-wtls10
     {
         NID_sect233k1,
+        NID_sect233k1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect233k1,
+        tls_group_sect233k1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         30,
@@ -440,9 +465,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/wtls/wap-wsg-idm-ecid-wtls11
     {
         NID_sect233r1,
+        NID_sect233r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect233r1,
+        tls_group_sect233r1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         30,
@@ -458,9 +484,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect239k1
     {
         NID_sect239k1,
+        NID_sect239k1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect239k1,
+        tls_group_sect239k1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         30,
@@ -473,9 +500,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect283k1
     {
         NID_sect283k1,
+        NID_sect283k1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect283k1,
+        tls_group_sect283k1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         36,
@@ -490,9 +518,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect283r1
     {
         NID_sect283r1,
+        NID_sect283r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect283r1,
+        tls_group_sect283r1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         36,
@@ -507,9 +536,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect409k1
     {
         NID_sect409k1,
+        NID_sect409k1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect409k1,
+        tls_group_sect409k1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_512,
         52,
@@ -524,9 +554,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect409r1
     {
         NID_sect409r1,
+        NID_sect409r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect409r1,
+        tls_group_sect409r1,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_512,
         52,
@@ -541,9 +572,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect571k1
     {
         NID_sect571k1,
+        NID_sect571k1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect571k1,
+        tls_group_sect571k1,
         cose_ec_curve_t::cose_ec_unknown,
         0,
         72,
@@ -558,9 +590,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/secg/sect571r1
     {
         NID_sect571r1,
+        NID_sect571r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_sect571r1,
+        tls_group_sect571r1,
         cose_ec_curve_t::cose_ec_unknown,
         0,
         72,
@@ -573,9 +606,10 @@ const hint_curve_t hint_curves[] = {
     //
     {
         NID_X25519,
+        NID_X25519,
         crypto_kty_t::kty_okp,
         crypto_use_t::use_enc,
-        tls_named_group_x25519,
+        tls_group_x25519,
         cose_ec_curve_t::cose_ec_x25519,
         CURVE_SUPPORT_JOSE | CURVE_SUPPORT_COSE,
         32,
@@ -586,9 +620,10 @@ const hint_curve_t hint_curves[] = {
     //
     {
         NID_X448,
+        NID_X448,
         crypto_kty_t::kty_okp,
         crypto_use_t::use_enc,
-        tls_named_group_x448,
+        tls_group_x448,
         cose_ec_curve_t::cose_ec_x448,
         CURVE_SUPPORT_JOSE | CURVE_SUPPORT_COSE,
         56,
@@ -599,9 +634,10 @@ const hint_curve_t hint_curves[] = {
     //
     {
         NID_ED25519,
+        NID_ED25519,
         crypto_kty_t::kty_okp,
         crypto_use_t::use_sig,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_ed25519,
         CURVE_SUPPORT_JOSE | CURVE_SUPPORT_COSE,
         32,
@@ -612,9 +648,10 @@ const hint_curve_t hint_curves[] = {
     //
     {
         NID_ED448,
+        NID_ED448,
         crypto_kty_t::kty_okp,
         crypto_use_t::use_sig,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_ed448,
         CURVE_SUPPORT_JOSE | CURVE_SUPPORT_COSE,
         57,
@@ -625,11 +662,12 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP160r1
     {
         NID_brainpoolP160r1,
+        NID_brainpoolP160r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
-        ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
+        ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         20,
         prime_field_weierstrass_curve,
         "1.3.36.3.3.2.8.1.1.1",
@@ -641,9 +679,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP160t1
     {
         NID_brainpoolP160t1,
+        NID_brainpoolP160t1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA1 | ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         20,
@@ -657,11 +696,12 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP192r1
     {
         NID_brainpoolP192r1,
+        NID_brainpoolP192r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
-        ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
+        ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         24,
         prime_field_weierstrass_curve,
         "1.3.36.3.3.2.8.1.1.3",
@@ -673,9 +713,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP192t1
     {
         NID_brainpoolP192t1,
+        NID_brainpoolP192t1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         24,
@@ -689,11 +730,12 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP224r1
     {
         NID_brainpoolP224r1,
+        NID_brainpoolP224r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
-        ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
+        ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         28,
         prime_field_weierstrass_curve,
         "1.3.36.3.3.2.8.1.1.5",
@@ -705,9 +747,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP224t1
     {
         NID_brainpoolP224t1,
+        NID_brainpoolP224t1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_224 | ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         28,
@@ -721,11 +764,12 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP256r1
     {
         NID_brainpoolP256r1,
+        NID_brainpoolP256r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_brainpoolP256r1,
+        tls_group_brainpoolP256r1,
         cose_ec_curve_t::cose_ec_unknown,
-        ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
+        ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         32,
         prime_field_weierstrass_curve,
         "1.3.36.3.3.2.8.1.1.7",
@@ -734,12 +778,28 @@ const hint_curve_t hint_curves[] = {
         nullptr,
         "brainpoolP256r1",
     },
-    // https://neuromancer.sk/std/brainpool/brainpoolP256t1
     {
+        nid_brainpoolp256r1tls13,  // NID_brainpoolP256r1tls13 (openssl-3.2)
+        NID_brainpoolP256r1,
+        crypto_kty_t::kty_ec,
+        crypto_use_t::use_any,
+        tls_group_brainpoolP256r1tls13,
+        cose_ec_curve_t::cose_ec_unknown,
+        ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
+        32,
+        prime_field_weierstrass_curve,
+        "1.3.36.3.3.2.8.1.1.7",
+        nullptr,
+        nullptr,
+        nullptr,
+        "brainpoolP256r1",
+    },
+    {
+        NID_brainpoolP256t1,
         NID_brainpoolP256t1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         32,
@@ -753,11 +813,12 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP320r1
     {
         NID_brainpoolP320r1,
+        NID_brainpoolP320r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
-        ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
+        ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         40,
         prime_field_weierstrass_curve,
         "1.3.36.3.3.2.8.1.1.9",
@@ -769,9 +830,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP320t1
     {
         NID_brainpoolP320t1,
+        NID_brainpoolP320t1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         40,
@@ -785,11 +847,28 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP384r1
     {
         NID_brainpoolP384r1,
+        NID_brainpoolP384r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_brainpoolP384r1,
+        tls_group_brainpoolP384r1,
         cose_ec_curve_t::cose_ec_unknown,
-        ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
+        ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
+        48,
+        prime_field_weierstrass_curve,
+        "1.3.36.3.3.2.8.1.1.11",
+        nullptr,
+        nullptr,
+        nullptr,
+        "brainpoolP384r1",
+    },
+    {
+        nid_brainpoolp384r1tls13,  // NID_brainpoolP384r1tls13 (openssl-3.2)
+        NID_brainpoolP384r1,
+        crypto_kty_t::kty_ec,
+        crypto_use_t::use_any,
+        tls_group_brainpoolP384r1tls13,
+        cose_ec_curve_t::cose_ec_unknown,
+        ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         48,
         prime_field_weierstrass_curve,
         "1.3.36.3.3.2.8.1.1.11",
@@ -801,9 +880,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP384t1
     {
         NID_brainpoolP384t1,
+        NID_brainpoolP384t1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,
         48,
@@ -817,11 +897,28 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP512r1
     {
         NID_brainpoolP512r1,
+        NID_brainpoolP512r1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_brainpoolP512r1,
+        tls_group_brainpoolP512r1,
         cose_ec_curve_t::cose_ec_unknown,
-        ECDSA_SUPPORT_SHA2_512,
+        ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
+        64,
+        prime_field_weierstrass_curve,
+        "1.3.36.3.3.2.8.1.1.13",
+        nullptr,
+        nullptr,
+        nullptr,
+        "brainpoolP512r1",
+    },
+    {
+        nid_brainpoolp512r1tls13,  // NID_brainpoolP512r1tls13 (openssl-3.2)
+        NID_brainpoolP512r1,
+        crypto_kty_t::kty_ec,
+        crypto_use_t::use_any,
+        tls_group_brainpoolP512r1tls13,
+        cose_ec_curve_t::cose_ec_unknown,
+        ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         64,
         prime_field_weierstrass_curve,
         "1.3.36.3.3.2.8.1.1.13",
@@ -833,9 +930,10 @@ const hint_curve_t hint_curves[] = {
     // https://neuromancer.sk/std/brainpool/brainpoolP512t1
     {
         NID_brainpoolP512t1,
+        NID_brainpoolP512t1,
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
-        tls_named_group_unknown,
+        tls_group_unknown,
         cose_ec_curve_t::cose_ec_unknown,
         ECDSA_SUPPORT_SHA2_512,
         64,
@@ -849,73 +947,6 @@ const hint_curve_t hint_curves[] = {
 };
 
 const size_t sizeof_hint_curves = RTL_NUMBER_OF(hint_curves);
-
-uint32 nidof(const hint_curve_t* hint) {
-    uint32 value = 0;
-    if (hint) {
-        value = hint->nid;
-    }
-    return value;
-}
-cose_ec_curve_t coseof(const hint_curve_t* hint) {
-    cose_ec_curve_t value = cose_ec_unknown;
-    if (hint) {
-        value = hint->cose_crv;
-    }
-    return value;
-}
-crypto_kty_t ktyof(const hint_curve_t* hint) {
-    crypto_kty_t value = kty_unknown;
-    if (hint) {
-        value = hint->kty;
-    }
-    return value;
-}
-uint16 tlsgroupof(const hint_curve_t* hint) {
-    uint16 value = 0;
-    if (hint) {
-        value = hint->tlsgroup;
-    }
-    return value;
-}
-uint8 keysizeof(const hint_curve_t* hint) {
-    uint8 value = 0;
-    if (hint) {
-        value = hint->keysize;
-    }
-    return value;
-}
-const char* oidof(const hint_curve_t* hint) {
-    const char* value = nullptr;
-    if (hint) {
-        value = hint->oid;
-    }
-    return value;
-}
-
-bool support(const hint_curve_t* hint, hash_algorithm_t alg) {
-    bool ret_value = false;
-    if (hint) {
-        switch (alg) {
-            case sha1:
-                ret_value = hint->flags & ECDSA_SUPPORT_SHA1;
-                break;
-            case sha2_224:
-                ret_value = hint->flags & ECDSA_SUPPORT_SHA2_224;
-                break;
-            case sha2_256:
-                ret_value = hint->flags & ECDSA_SUPPORT_SHA2_256;
-                break;
-            case sha2_384:
-                ret_value = hint->flags & ECDSA_SUPPORT_SHA2_384;
-                break;
-            case sha2_512:
-                ret_value = hint->flags & ECDSA_SUPPORT_SHA2_512;
-                break;
-        }
-    }
-    return ret_value;
-}
 
 }  // namespace crypto
 }  // namespace hotplace

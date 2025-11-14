@@ -168,5 +168,73 @@ return_t crypto_advisor::for_each_cipher(std::function<void(const hint_cipher_t*
     return ret;
 }
 
+// hint_blockcipher_t
+
+crypt_algorithm_t typeof_alg(const hint_blockcipher_t* hint) {
+    crypt_algorithm_t ret_value = crypt_alg_unknown;
+    if (hint) {
+        ret_value = hint->algorithm;
+    }
+    return ret_value;
+}
+
+uint16 sizeof_key(const hint_blockcipher_t* hint) {
+    uint16 ret_value = 0;
+    if (hint) {
+        ret_value = hint->keysize;
+    }
+    return ret_value;
+}
+
+uint16 sizeof_iv(const hint_blockcipher_t* hint) {
+    uint16 ret_value = 0;
+    if (hint) {
+        ret_value = hint->ivsize;
+    }
+    return ret_value;
+}
+
+uint16 sizeof_block(const hint_blockcipher_t* hint) {
+    uint16 ret_value = 0;
+    if (hint) {
+        ret_value = hint->blocksize;
+    }
+    return ret_value;
+}
+
+// hint_cipher_t
+
+crypto_scheme_t typeof_sheme(const hint_cipher_t* hint) {
+    crypto_scheme_t ret_value = crypto_scheme_unknown;
+    if (hint) {
+        ret_value = hint->scheme;
+    }
+    return ret_value;
+}
+
+crypt_algorithm_t typeof_alg(const hint_cipher_t* hint) {
+    crypt_algorithm_t ret_value = crypt_alg_unknown;
+    if (hint) {
+        ret_value = hint->algorithm;
+    }
+    return ret_value;
+}
+
+crypt_mode_t typeof_mode(const hint_cipher_t* hint) {
+    crypt_mode_t ret_value = mode_unknown;
+    if (hint) {
+        ret_value = hint->mode;
+    }
+    return ret_value;
+}
+
+const char* nameof_alg(const hint_cipher_t* hint) {
+    const char* ret_value = nullptr;
+    if (hint) {
+        ret_value = hint->fetchname;
+    }
+    return ret_value;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

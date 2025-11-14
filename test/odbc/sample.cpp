@@ -8,16 +8,15 @@
  * Date         Name                Description
  */
 
+#include "sample.hpp"
+
 #include <hotplace/sdk/odbc.hpp>
-#include <hotplace/sdk/sdk.hpp>
-#include <hotplace/test/test.hpp>
+
 using namespace hotplace::odbc;
 
 test_case _test_case;
 t_shared_instance<logger> _logger;
-
-struct OPTION : public CMDLINEOPTION {};
-t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
+t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 // connection strings
 // DRIVER={%s};SERVER=%s,%ld;UID=%s;PWD=%s;DATABASE=%s;PROTOCOL=TCPIP;
@@ -58,22 +57,15 @@ void test() {
 
     odbc_diagnose::get_instance()->add_handler(dbdiag_handler, nullptr);
 
-    constexpr char constexpr_connstring[] = "DRIVER={%s};SERVER=%s;PORT=%d;DATABASE=%s;USER=%s;PASSWORD=%s";
-#if __cplusplus >= 201402L  // c++14
-    constexpr auto constexpr_obf_user = CONSTEXPR_OBF("user");
-    constexpr auto constexpr_obf_pass = CONSTEXPR_OBF("password");
-    ret = dbconn.connect(&rs, format(constexpr_connstring, "MySQL ODBC 8.0 ANSI Driver", "localhost", 3306, "world", CONSTEXPR_OBF_CSTR(constexpr_obf_user),
-                                     CONSTEXPR_OBF_CSTR(constexpr_obf_pass))
-                                  .c_str());
-#else
-    constexpr char constexpr_obf_user[] = "user";
-    constexpr char constexpr_obf_pass[] = "password";
-    ret = dbconn.connect(
-        &rs, format(constexpr_connstring, "MySQL ODBC 8.0 ANSI Driver", "localhost", 3306, "world", constexpr_obf_user, constexpr_obf_pass).c_str());
-#endif
+    const OPTION& option = _cmdline->value();
+    _logger->writeln("connection string [%s]", option.connstr.c_str());
+
+    ret = dbconn.connect(&rs, option.connstr.c_str());
+    _test_case.test(ret, __FUNCTION__, "connect");
 
     if (errorcode_t::success == ret) {
-        ret = rs->query("select * from city");
+        ret = rs->query("select * from %s", option.tablename.c_str());
+        _test_case.test(ret, __FUNCTION__, "query");
         if (errorcode_t::success == ret) {
             odbc_record record;
             while (true) {
@@ -112,7 +104,9 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
 #endif
                 << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("--c", "connection string", [](OPTION& o, char* param) -> void { o.connstr = param; }).preced()
+                << t_cmdarg_t<OPTION>("--t", "tablename", [](OPTION& o, char* param) -> void { o.tablename = param; }).preced();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

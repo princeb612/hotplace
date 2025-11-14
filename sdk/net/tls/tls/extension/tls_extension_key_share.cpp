@@ -84,7 +84,7 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
         }
 
         auto& protection = session->get_tls_protection();
-        auto& keyshare = protection.get_keyexchange();
+        auto& keyshare = protection.get_key();
 
         // add key into session-level key collections
         auto lambda_add = [&](crypto_kty_t type, uint32 osslnid) -> void {
@@ -153,7 +153,7 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto& protection = session->get_tls_protection();
-        auto& keyshare = protection.get_keyexchange();
+        auto& keyshare = protection.get_key();
 
         crypto_keychain keychain;
         auto hint = advisor->hintof_tls_group(group);
@@ -214,7 +214,7 @@ return_t tls_extension_client_key_share::add(const std::string& group) { return 
 void tls_extension_client_key_share::clear() {
     auto session = get_handshake()->get_session();
     auto& protection = session->get_tls_protection();
-    auto& keyshare = protection.get_keyexchange();
+    auto& keyshare = protection.get_key();
 
     keyshare.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
     keyshare.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);
@@ -274,7 +274,7 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
                 trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                     auto session = get_handshake()->get_session();
                     auto& protection = session->get_tls_protection();
-                    auto& keyexchange = protection.get_keyexchange();
+                    auto& tlskey = protection.get_key();
                     auto hint_group = advisor->hintof_tls_group(group);
 
                     dbs.println("   > %s %i(0x%04x)", constexpr_len, len, len);
@@ -310,14 +310,14 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
         protection.get_protection_context().clear_keyshare_groups();
 
         binary_t bin_keyshare;
-        auto& keyexchange = protection.get_keyexchange();
-        keyexchange.for_each([&](crypto_key_object* obj, void* user) -> void {
+        auto& tlskey = protection.get_key();
+        tlskey.for_each([&](crypto_key_object* obj, void* user) -> void {
             if (KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE == obj->get_desc().get_kid_str()) {
                 auto pkey = obj->get_pkey();
 
                 binary_t pubkey;
                 binary_t privkey;
-                keyexchange.get_key(pkey, public_key, pubkey, privkey, true);
+                tlskey.get_key(pkey, public_key, pubkey, privkey, true);
                 uint16 group = 0;
                 uint16 pubkeylen = pubkey.size();
                 uint32 nid = 0;
@@ -361,7 +361,7 @@ return_t tls_extension_server_key_share::add(const std::string& group) { return 
 void tls_extension_server_key_share::clear() {
     auto session = get_handshake()->get_session();
     auto& protection = session->get_tls_protection();
-    auto& keyshare = protection.get_keyexchange();
+    auto& keyshare = protection.get_key();
 
     keyshare.erase(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
     keyshare.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);
@@ -403,7 +403,7 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
                     case kty_mlkem: {
                         openssl_pqc pqc;
                         binary_t shared_secret;
-                        auto pkey_priv = protection.get_keyexchange().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
+                        auto pkey_priv = protection.get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
                         pqc.decapsule(nullptr, pkey_priv, pubkey, shared_secret);
                         protection.get_secrets().assign(tls_context_shared_secret, shared_secret);
                     } break;
@@ -448,7 +448,7 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
         auto tlsadvisor = tls_advisor::get_instance();
         auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
-        auto& keyexchange = protection.get_keyexchange();
+        auto& tlskey = protection.get_key();
         uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
         auto group = group_enforced ? group_enforced : protection.get_protection_context().get0_keyshare_group();
         auto hint_group = advisor->hintof_tls_group(group);
@@ -462,8 +462,8 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
             correct_group = false;
         }
 
-        auto pkey_svr = keyexchange.find_group(get_kid().c_str(), group);
-        auto pkey_cli = protection.get_keyexchange().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);
+        auto pkey_svr = tlskey.find_group(get_kid().c_str(), group);
+        auto pkey_cli = protection.get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);
 
         if (kty_mlkem == kty_group) {
             // encapsulate
@@ -493,14 +493,14 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
             auto kty = ktyof_evp_pkey(pkey_svr);
             if (kty_ec == kty) {
                 binary_t privkey;
-                keyexchange.ec_uncompressed_key(pkey_svr, pubkey, privkey);
+                tlskey.ec_uncompressed_key(pkey_svr, pubkey, privkey);
             } else if (kty_okp == kty) {
                 binary_t temp;
                 binary_t privkey;
-                keyexchange.get_key(pkey_svr, pubkey, temp, privkey, true);
+                tlskey.get_key(pkey_svr, pubkey, temp, privkey, true);
             } else if (kty_mlkem == kty_group) {
                 binary_t temp;
-                keyexchange.get_public_key(pkey_cli, pubkey, temp);
+                tlskey.get_public_key(pkey_cli, pubkey, temp);
                 binary_t sharedsecret;
                 openssl_pqc pqc;
                 pqc.encapsule(nullptr, pkey_cli, pubkey, sharedsecret);

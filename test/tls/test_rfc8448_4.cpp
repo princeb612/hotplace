@@ -39,7 +39,7 @@ void test_rfc8448_4(tls_session* rfc8448_session) {
         const char* x =
             "e4 ff b6 8a c0 5f 8d 96 c9 9d a2 66 98 34"
             "6c 6b e1 64 82 ba dd da fe 05 1a 66 b4 f1 8d 66 8f 0b";
-        crypto_key& key = protection.get_keyexchange();
+        crypto_key& key = protection.get_key();
         ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, nullptr, d, keydesc(constexpr_client));
 
         _logger->writeln(constexpr_client);
@@ -128,7 +128,7 @@ void test_rfc8448_4(tls_session* rfc8448_session) {
         const char* x =
             "12 17 61 ee 42 c3 33 e1 b9 e7 7b 60 dd 57"
             "c2 05 3c d9 45 12 ab 47 f1 15 e8 6e ff 50 94 2c ea 31";
-        crypto_key& key = protection.get_keyexchange();
+        crypto_key& key = protection.get_key();
         ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, nullptr, d, keydesc(constexpr_server));
 
         _logger->writeln(constexpr_server);

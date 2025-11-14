@@ -136,11 +136,11 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
                                             return success;
                                         });
 
-                               // auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
+                               // auto pkey = session->get_tls_protection().get_key().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
                                // _logger->write([&](basic_stream& bs) -> void { dump_key(pkey, &bs); });
                                bool test = false;
-                               auto& keyexchange = session->get_tls_protection().get_keyexchange();
-                               keyexchange.for_each(
+                               auto& tlskey = session->get_tls_protection().get_key();
+                               tlskey.for_each(
                                    [&](crypto_key_object* obj, void* user) -> void {
                                        if (KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE == obj->get_desc().get_kid_str()) {
                                            auto pkey = obj->get_pkey();
@@ -235,7 +235,7 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
                                         });
 
                                {
-                                   auto svr_keyshare = protection.get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
+                                   auto svr_keyshare = protection.get_key().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
                                    if (svr_keyshare) {
                                        _logger->write([&](basic_stream& bs) -> void { dump_key(svr_keyshare, &bs); });
                                        _test_case.assert(svr_keyshare, __FUNCTION__, "{server} key share (server generated)");
@@ -249,8 +249,8 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
                        })
                   .write(dir, bin);
 
-        auto& keyexchange = session->get_tls_protection().get_keyexchange();
-        keyexchange.for_each([&](crypto_key_object* obj, void* user) -> void {
+        auto& tlskey = session->get_tls_protection().get_key();
+        tlskey.for_each([&](crypto_key_object* obj, void* user) -> void {
             if (KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC == obj->get_desc().get_kid_str()) {
                 auto pkey = obj->get_pkey();
                 _logger->write([&](basic_stream& bs) -> void { dump_key(pkey, &bs); });
@@ -675,15 +675,7 @@ static void test_construct_tls_routine(const TLS_OPTION& option, const char* gro
         }
 
         uint16 tlsversion = 0;
-        uint16 keyexchange = 0;
-        uint8 mode = 0;
         {
-            auto& protection = server_session.get_tls_protection();
-            auto cs = protection.get_cipher_suite();
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
-            keyexchange = hint->keyexchange;
-
             auto svr_tlsversion = server_session.get_tls_protection().get_tls_version();
             auto cli_tlsversion = client_session.get_tls_protection().get_tls_version();
 

@@ -94,7 +94,7 @@ static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_ses
                                  });
 
                              {
-                                 auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
+                                 auto pkey = session->get_tls_protection().get_key().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
                                  _logger->write([&](basic_stream& bs) -> void { dump_key(pkey, &bs); });
                                  _test_case.assert(pkey, __FUNCTION__, "{client} key share (client generated)");
                              }
@@ -163,7 +163,7 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
                   .write(dir, bin);
 
         {
-            auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
+            auto pkey = session->get_tls_protection().get_key().find(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE);
             _logger->write([&](basic_stream& bs) -> void { dump_key(pkey, &bs); });
             _test_case.assert(pkey, __FUNCTION__, "{server} key share (server generated)");
         }

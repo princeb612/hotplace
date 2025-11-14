@@ -15,26 +15,43 @@ void test_curves() {
     crypto_keychain keychain;
     crypto_key key;
     auto advisor = crypto_advisor::get_instance();
-    {
-        advisor->for_each_curve_hint(
-            [&](const hint_curve_t* hint, void*) -> void {
-                auto nid = hint->nid;
-                auto kty = hint->kty;
-                auto kid = hint->name_nist;  // can be nullptr
+    advisor->for_each_curve_hint(
+        [&](const hint_curve_t* hint, void*) -> void {
+            auto nid = hint->nid;
+            auto kty = hint->kty;
 
-                keychain.add_ec2(&key, nid, keydesc(kid));
-                auto pkey = key.find_nid(kid, nid);
+            basic_stream bs;
+            if (hint->name_nist) {
+                bs << hint->name_nist << " ";
+            }
+            if (hint->name_x962) {
+                bs << hint->name_x962 << " ";
+            }
+            if (hint->name_sec) {
+                bs << hint->name_sec << " ";
+            }
+            if (hint->name_bp) {
+                bs << hint->name_bp << " ";
+            }
+            if (hint->name_wtls) {
+                bs << hint->name_wtls << " ";
+            }
+            auto kid = bs.c_str();
 
-                binary_t bin_pub;
-                binary_t bin_priv;
-                key.get_key(pkey, public_key | private_key, bin_pub, bin_priv);
+            auto test = keychain.add_ec2(&key, nid, keydesc(kid));
+            _test_case.test(test, __FUNCTION__, "%s", kid);
 
-                _logger->write([&](basic_stream& dbs) -> void {
-                    dbs.println("kid %s nid %i", kid, nid);
-                    dbs.println(" - publ %zi %s", bin_pub.size(), base16_encode(bin_pub).c_str());
-                    dbs.println(" - priv %zi %s", bin_priv.size(), base16_encode(bin_priv).c_str());
-                });
-            },
-            nullptr);
-    }
+            auto pkey = key.find_nid(kid, nid);
+
+            binary_t bin_pub;
+            binary_t bin_priv;
+            key.get_key(pkey, public_key | private_key, bin_pub, bin_priv);
+
+            _logger->write([&](basic_stream& dbs) -> void {
+                dbs.println("kid %s nid %i", kid, nid);
+                dbs.println(" - publ %zi %s", bin_pub.size(), base16_encode(bin_pub).c_str());
+                dbs.println(" - priv %zi %s", bin_priv.size(), base16_encode(bin_priv).c_str());
+            });
+        },
+        nullptr);
 }

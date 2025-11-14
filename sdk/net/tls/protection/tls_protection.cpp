@@ -67,7 +67,9 @@ uint16 tls_protection::get_tls_version() { return _version; }
 
 void tls_protection::set_tls_version(uint16 version) { _version = version; }
 
-crypto_key &tls_protection::get_keyexchange() { return _keyexchange; }
+crypto_key &tls_protection::get_key() { return _key; }
+
+crypto_keyexchange &tls_protection::get_keyexchange() { return _keyexchange; }
 
 void tls_protection::use_pre_master_secret(bool use) { _use_pre_master_secret = use; }
 

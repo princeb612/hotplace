@@ -132,7 +132,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
             case tls_flow_1rtt: {
             } break;
             case tls_flow_0rtt: {
-                protection.get_keyexchange().clear();
+                protection.get_key().clear();
 
                 session->reset_recordno(from_client);
                 session->reset_recordno(from_server);
@@ -140,9 +140,9 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
             case tls_flow_hello_retry_request: {
                 session->clear_session_status(session_status_server_hello);
 
-                auto& keyexchange = protection.get_keyexchange();
-                keyexchange.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);  // client_hello key_share
-                keyexchange.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello key_share
+                auto& tlskey = protection.get_key();
+                tlskey.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);  // client_hello key_share
+                tlskey.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello key_share
             } break;
             case tls_flow_renegotiation: {
                 // TODO

@@ -243,14 +243,14 @@ const EVP_PKEY* crypto_key::select_nid(uint32 nid, crypto_use_t use, bool up_ref
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::select(tls_named_group_t group, crypto_use_t use, bool up_ref) {
+const EVP_PKEY* crypto_key::select(tls_group_t group, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     critical_section_guard guard(_lock);
     __try2 {
         for (auto& pair : _key_map) {
             crypto_key_object& keyobj = pair.second;
 
-            bool test = find_discriminant<tls_named_group_t>(keyobj, nullptr, group, kty_unknown, kty_unknown, use, SEARCH_ALG);
+            bool test = find_discriminant<tls_group_t>(keyobj, nullptr, group, kty_unknown, kty_unknown, use, SEARCH_ALG);
             if (test) {
                 ret_value = keyobj.get_pkey();
                 break;
@@ -667,7 +667,7 @@ const EVP_PKEY* crypto_key::find_nid(const char* kid, uint32 nid, crypto_use_t u
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::find(const char* kid, tls_named_group_t group, crypto_use_t use, bool up_ref) {
+const EVP_PKEY* crypto_key::find(const char* kid, tls_group_t group, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     critical_section_guard guard(_lock);
@@ -684,7 +684,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, tls_named_group_t group, crypt
 
             for (iter = lower_bound; iter != upper_bound; iter++) {
                 crypto_key_object& item = iter->second;
-                bool test = find_discriminant<tls_named_group_t>(item, kid, group, kty_unknown, kty_unknown, use, SEARCH_ALG);
+                bool test = find_discriminant<tls_group_t>(item, kid, group, kty_unknown, kty_unknown, use, SEARCH_ALG);
                 if (test) {
                     ret_value = item.get_pkey();
                     break;
@@ -704,9 +704,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, tls_named_group_t group, crypt
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::find_group(const char* kid, uint16 group, crypto_use_t use, bool up_ref) {
-    return find(kid, (tls_named_group_t)group, use, up_ref);
-}
+const EVP_PKEY* crypto_key::find_group(const char* kid, uint16 group, crypto_use_t use, bool up_ref) { return find(kid, (tls_group_t)group, use, up_ref); }
 
 const EVP_PKEY* crypto_key::find(const char* kid, jwa_t alg, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;

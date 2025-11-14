@@ -260,11 +260,11 @@ class crypto_key {
     const EVP_PKEY* select_nid(uint32 nid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief select
-     * @param tls_named_group_t group [in]
+     * @param tls_group_t group [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(tls_named_group_t group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(tls_group_t group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief select
      * @param jwa_t alg [in]
@@ -359,11 +359,11 @@ class crypto_key {
     /**
      * @brief find
      * @param const char* kid [in]
-     * @param tls_named_group_t group [in]
+     * @param tls_group_t group [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find(const char* kid, tls_named_group_t group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* find(const char* kid, tls_group_t group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     const EVP_PKEY* find_group(const char* kid, uint16 group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief find
@@ -485,11 +485,11 @@ class crypto_key {
      *
      *          auto kty = ktyof_evp_pkey(pkey);
      *          if (kty_ec == kty) {
-     *              keyexchange.ec_uncompressed_key(pkey, pubkey, privkey);
+     *              key.ec_uncompressed_key(pkey, pubkey, privkey);
      *          } else if (kty_okp == kty) {
-     *              keyexchange.get_key(pkey, pubkey, pubkey, privkey, true);
+     *              key.get_key(pkey, pubkey, pubkey, privkey, true);
      *          } else if (kty_mlkem == kty) {
-     *              keyexchange.get_public_key(pkey, pubkey, privkey);
+     *              key.get_public_key(pkey, pubkey, privkey);
      *          }
      */
     static return_t get_key(const EVP_PKEY* pkey, binary_t& pub, binary_t& priv, bool preserve = false);

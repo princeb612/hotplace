@@ -63,13 +63,13 @@ void test_tls13_xargs_org() {
      */
     {
         constexpr char constexpr_client[] = KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE;
-        crypto_key& keyexchange = session.get_tls_protection().get_keyexchange();
+        crypto_key& tlskey = session.get_tls_protection().get_key();
         // Client Key Exchange Generation
         const char* x = "358072d6365880d1aeea329adf9121383851ed21a28e3b75e965d0d2cd166254";
         const char* y = "";
         const char* d = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
-        keychain.add_ec_b16(&keyexchange, ec_x25519, x, y, d, keydesc(constexpr_client));
-        _logger->writeln([&](basic_stream& bs) -> void { dump_key(keyexchange.find(constexpr_client), &bs); });
+        keychain.add_ec_b16(&tlskey, ec_x25519, x, y, d, keydesc(constexpr_client));
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(tlskey.find(constexpr_client), &bs); });
 
         // > handshake type 1 (client_hello)
         //   > extension - 0033 key_share
@@ -114,10 +114,10 @@ void test_tls13_xargs_org() {
         const char* x = "9fd7ad6dcff4298dd3f96d5b1b2af910a0535b1488d7f8fabb349a982880b615";
         const char* y = "";
         const char* d = "909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf";
-        crypto_key& keyexchange = session.get_tls_protection().get_keyexchange();
-        keychain.add_ec_b16(&keyexchange, ec_x25519, x, y, d, keydesc(constexpr_server));
+        crypto_key& tlskey = session.get_tls_protection().get_key();
+        keychain.add_ec_b16(&tlskey, ec_x25519, x, y, d, keydesc(constexpr_server));
 
-        _logger->writeln([&](basic_stream& bs) -> void { dump_key(keyexchange.find(constexpr_server), &bs); });
+        _logger->writeln([&](basic_stream& bs) -> void { dump_key(tlskey.find(constexpr_server), &bs); });
     }
     /**
      * S -> C

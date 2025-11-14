@@ -23,52 +23,23 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_keyexchange::crypto_keyexchange(tls_named_group_t group) : _group(group) {}
+crypto_keyexchange::crypto_keyexchange(tls_group_t group) : _group(group) { _shared.make_share(this); }
 
 crypto_keyexchange::~crypto_keyexchange() {}
 
 return_t crypto_keyexchange::keygen(crypto_key* key, const char* kid, binary_t& share) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == key) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+        auto group = get_group();
 
-        auto advisor = crypto_advisor::get_instance();
-        auto hint = advisor->hintof_tls_group(get_group());
-        if (nullptr == hint) {
-            ret = not_supported;
-            __leave2;
-        }
-        auto nid = hint->nid;
-        auto kty = hint->kty;
-
-        // keygen
-        crypto_keychain keychain;
-        ret = keychain.add(key, nid, keydesc(kid));
+        ret = keygen(group, key, kid);
         if (success != ret) {
             __leave2;
         }
 
-        binary_t bin_privkey;
-        auto prk = key->find_nid(kid, nid);
-        ret = key->get_key(prk, public_key, share, bin_privkey, true);
-
-        if (tls_flag_hybrid & hint->flags) {
-            // keygen
-            auto hnid = hint->hnid;
-            ret = keychain.add(key, hnid, keydesc(kid));
-            auto hkey = key->find_nid(kid, hnid);
-
-            /**
-             * public key
-             *   case kty_ec: uncompressed format
-             *   default: raw format
-             */
-            binary_t hshare;
-            ret = key->get_key(hkey, public_key, hshare, bin_privkey, true);
-            binary_append(share, hshare);
+        ret = keyshare(group, key, kid, share);
+        if (success != ret) {
+            __leave2;
         }
     }
     __finally2 {}
@@ -78,41 +49,13 @@ return_t crypto_keyexchange::keygen(crypto_key* key, const char* kid, binary_t& 
 return_t crypto_keyexchange::exchange(crypto_key* key, const char* kid, const binary_t& share, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto advisor = crypto_advisor::get_instance();
-        auto hint = advisor->hintof_tls_group(get_group());
-        if (nullptr == hint) {
-            ret = not_supported;
-            __leave2;
-        }
-        auto nid = hint->nid;
-        auto kty = hint->kty;
+        auto group = get_group();
 
-        crypto_key tempkey;
-        crypto_keychain keychain;
-        binary_t bin_privkey;
-        switch (kty) {
-            case kty_dh: {
-                ret = keychain.add_dh(&tempkey, nid, share, bin_privkey, keydesc("pub"));
-            } break;
-            case kty_ec: {
-                ret = keychain.add_ec_uncompressed(&tempkey, nid, share, bin_privkey, keydesc("pub"));
-            } break;
-            case kty_okp: {
-                ret = keychain.add_okp(&tempkey, nid, share, bin_privkey, keydesc("pub"));
-            } break;
-            case kty_mlkem:
-            default: {
-                ret = bad_request;
-            } break;
-        }
+        crypto_key ephemeral;
+        ret = exchange(group, key, &ephemeral, kid, "pub", share, sharedsecret);
         if (success != ret) {
             __leave2;
         }
-
-        // ECDH
-        auto prk = key->find_nid(kid, nid);
-        auto pbk = tempkey.any();
-        ret = dh_key_agreement(prk, pbk, sharedsecret);
     }
     __finally2 {}
     return ret;
@@ -120,12 +63,251 @@ return_t crypto_keyexchange::exchange(crypto_key* key, const char* kid, const bi
 
 return_t crypto_keyexchange::encaps(const binary_t& share, binary_t& keycapsule, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        auto group = get_group();
+
+        ret = encaps(group, share, keycapsule, sharedsecret);
+        if (success != ret) {
+            __leave2;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keyexchange::decaps(crypto_key* key, const char* kid, const binary_t& share, binary_t& sharedsecret) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto group = get_group();
+
+        ret = decaps(group, key, kid, share, sharedsecret);
+        if (success != ret) {
+            __leave2;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+tls_group_t crypto_keyexchange::get_group() { return _group; }
+
+return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const char* kid) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto advisor = crypto_advisor::get_instance();
+        auto hint = advisor->hintof_tls_group(group);
+        if (nullptr == hint) {
+            ret = not_supported;
+            __leave2;
+        }
+        auto nid = hint->nid;
+        auto kty = hint->kty;
+
+        auto pkey = key->find_nid(kid, nid);
+        if (pkey) {
+            ret = already_exist;
+            __leave2;
+        }
+
+        // keygen
+        crypto_keychain keychain;
+        keydesc desc(kid);
+        ret = keychain.add(key, nid, desc);
+        if (success != ret) {
+            __leave2;
+        }
+
+        // binary_t bin_privkey;
+        // auto prk = key->find_nid(kid, nid);
+        // ret = key->get_key(prk, public_key, share, bin_privkey, true);
+
+        if (tls_flag_hybrid & hint->flags) {
+            // keygen
+            auto hnid = hint->hnid;
+            ret = keychain.add(key, hnid, desc);
+
+            /**
+             * public key
+             *   case kty_ec: uncompressed format
+             *   default: raw format
+             */
+            // binary_t hshare;
+            // auto hkey = key->find_nid(kid, hnid);
+            // ret = key->get_key(hkey, public_key, hshare, bin_privkey, true);
+            // binary_append(share, hshare);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keyexchange::keyshare(tls_group_t group, crypto_key* key, const char* kid, binary_t& share) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto advisor = crypto_advisor::get_instance();
+        auto hint = advisor->hintof_tls_group(group);
+        if (nullptr == hint) {
+            ret = not_supported;
+            __leave2;
+        }
+        auto nid = hint->nid;
+        auto kty = hint->kty;
+
+        // keygen
+        crypto_keychain keychain;
+        // ret = keychain.add(key, nid, keydesc(kid));
+        // if (success != ret) {
+        //     __leave2;
+        // }
+
+        binary_t bin_privkey;
+        auto prk = key->find_nid(kid, nid);
+        ret = key->get_key(prk, public_key, share, bin_privkey, true);
+
+        if (tls_flag_hybrid & hint->flags) {
+            // keygen
+            auto hnid = hint->hnid;
+            // ret = keychain.add(key, hnid, keydesc(kid));
+
+            /**
+             * public key
+             *   case kty_ec: uncompressed format
+             *   default: raw format
+             */
+            binary_t hshare;
+            auto hkey = key->find_nid(kid, hnid);
+            ret = key->get_key(hkey, public_key, hshare, bin_privkey, true);
+            binary_append(share, hshare);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, const char* kid, const binary_t& share) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == storage) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto advisor = crypto_advisor::get_instance();
+        auto hint = advisor->hintof_tls_group(group);
+        if (nullptr == hint) {
+            ret = not_supported;
+            __leave2;
+        }
+        auto nid = hint->nid;
+        auto kty = hint->kty;
+
+        crypto_keychain keychain;
+        binary_t bin_privkey;
+        switch (kty) {
+            case kty_dh: {
+                ret = keychain.add_dh(storage, nid, share, bin_privkey, keydesc(kid));
+            } break;
+            case kty_ec: {
+                ret = keychain.add_ec_uncompressed(storage, nid, share, bin_privkey, keydesc(kid));
+            } break;
+            case kty_okp: {
+                ret = keychain.add_okp(storage, nid, share, bin_privkey, keydesc(kid));
+            } break;
+            case kty_mlkem:
+            default: {
+                ret = bad_request;
+            } break;
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keyexchange::exchange(tls_group_t group, crypto_key* key, crypto_key* ephemeral, const char* kid, const char* epkid, const binary_t& share,
+                                      binary_t& sharedsecret) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == key || nullptr == ephemeral || nullptr == kid || nullptr == epkid) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto advisor = crypto_advisor::get_instance();
+        auto hint = advisor->hintof_tls_group(group);
+        if (nullptr == hint) {
+            ret = not_supported;
+            __leave2;
+        }
+        if (keyexchange_ecdhe != hint->exch) {
+            ret = bad_request;
+            __leave2;
+        }
+
+        ret = keystore(group, ephemeral, epkid, share);
+        if (success != ret) {
+            __leave2;
+        }
+
+        // ECDH
+        auto prk = key->find(kid, group);
+        auto pbk = ephemeral->find(epkid, group);
+        ret = dh_key_agreement(prk, pbk, sharedsecret);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keyexchange::exchange(tls_group_t group, crypto_key* key, crypto_key* ephemeral, const char* kid, const char* epkid, const char* shareid,
+                                      binary_t& sharedsecret) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == key || nullptr == ephemeral || nullptr == kid || nullptr == epkid) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto advisor = crypto_advisor::get_instance();
+        auto hint = advisor->hintof_tls_group(group);
+        if (nullptr == hint) {
+            ret = not_supported;
+            __leave2;
+        }
+        if (keyexchange_ecdhe != hint->exch) {
+            ret = bad_request;
+            __leave2;
+        }
+
+        // ECDH
+        auto prk = key->find(kid, group);
+        auto pbk = ephemeral->find(epkid, group);
+        ret = dh_key_agreement(prk, pbk, sharedsecret);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, binary_t& keycapsule, binary_t& sharedsecret) {
+    return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     __try2 {
         auto advisor = crypto_advisor::get_instance();
-        auto hint = advisor->hintof_tls_group(get_group());
+        auto hint = advisor->hintof_tls_group(group);
         if (nullptr == hint) {
             ret = not_supported;
+            __leave2;
+        }
+        if (keyexchange_mlkem != hint->exch) {
+            ret = bad_request;
             __leave2;
         }
 
@@ -139,25 +321,25 @@ return_t crypto_keyexchange::encaps(const binary_t& share, binary_t& keycapsule,
 
         const char* name = nullptr;
         const char* hname = nullptr;
-        switch (get_group()) {
-            case tls_named_group_mlkem512: {
+        switch (group) {
+            case tls_group_mlkem512: {
                 name = "ML-KEM-512";
             } break;
-            case tls_named_group_secp256r1mlkem768: {
+            case tls_group_secp256r1mlkem768: {
                 name = "ML-KEM-768";
                 hname = "secp256r1";
             } break;
-            case tls_named_group_mlkem768: {
+            case tls_group_mlkem768: {
                 name = "ML-KEM-768";
             } break;
-            case tls_named_group_x25519mlkem768: {
+            case tls_group_x25519mlkem768: {
                 name = "ML-KEM-768";
                 hname = "x25519";
             } break;
-            case tls_named_group_mlkem1024: {
+            case tls_group_mlkem1024: {
                 name = "ML-KEM-1024";
             } break;
-            case tls_named_group_secp384r1mlkem1024: {
+            case tls_group_secp384r1mlkem1024: {
                 name = "ML-KEM-1024";
                 hname = "secp384r1";
             } break;
@@ -239,13 +421,17 @@ return_t crypto_keyexchange::encaps(const binary_t& share, binary_t& keycapsule,
     return ret;
 }
 
-return_t crypto_keyexchange::decaps(crypto_key* key, const char* kid, const binary_t& share, binary_t& sharedsecret) {
+return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const char* kid, const binary_t& share, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto advisor = crypto_advisor::get_instance();
-        auto hint = advisor->hintof_tls_group(get_group());
+        auto hint = advisor->hintof_tls_group(group);
         if (nullptr == hint) {
             ret = not_supported;
+            __leave2;
+        }
+        if (keyexchange_mlkem != hint->exch) {
+            ret = bad_request;
             __leave2;
         }
 
@@ -255,19 +441,6 @@ return_t crypto_keyexchange::decaps(crypto_key* key, const char* kid, const bina
         if (expect_share != share.size()) {
             ret = unexpected;
             __leave2;
-        }
-
-        const char* hname = nullptr;
-        switch (get_group()) {
-            case tls_named_group_secp256r1mlkem768: {
-                hname = "secp256r1";
-            } break;
-            case tls_named_group_secp384r1mlkem1024: {
-                hname = "secp384r1";
-            } break;
-            case tls_named_group_x25519mlkem768: {
-                hname = "x25519";
-            } break;
         }
 
         crypto_key pubkey;
@@ -299,7 +472,6 @@ return_t crypto_keyexchange::decaps(crypto_key* key, const char* kid, const bina
                     keychain.add_ec_uncompressed(&tempkey, hnid, bin_pubkey, bin_privkey, keydesc("pub"));
                 } break;
                 case kty_okp: {
-                    // ret = pqc.decode(nullptr, hname, &hkey, &share[capsulesize], hkeysize, key_encoding_pub_raw);
                     keychain.add_okp(&tempkey, hnid, bin_pubkey, bin_privkey, keydesc("pub"));
                 } break;
             }
@@ -334,7 +506,9 @@ return_t crypto_keyexchange::decaps(crypto_key* key, const char* kid, const bina
     return ret;
 }
 
-tls_named_group_t crypto_keyexchange::get_group() { return _group; }
+void crypto_keyexchange::addref() { _shared.addref(); }
+
+void crypto_keyexchange::release() { _shared.delref(); }
 
 }  // namespace crypto
 }  // namespace hotplace

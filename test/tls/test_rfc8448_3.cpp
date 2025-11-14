@@ -40,8 +40,8 @@ void test_rfc8448_3(tls_session* rfc8448_session) {
         crypto_key key;
         ret = keychain.add_ec_b16rfc(&key, ec_x25519, x, y, d, keydesc(constexpr_client));
 
-        rfc8448_session->get_tls_protection().get_keyexchange().add((EVP_PKEY*)key.any(), constexpr_client, true);
-        rfc8448_session2.get_tls_protection().get_keyexchange().add((EVP_PKEY*)key.any(), constexpr_client, true);
+        rfc8448_session->get_tls_protection().get_key().add((EVP_PKEY*)key.any(), constexpr_client, true);
+        rfc8448_session2.get_tls_protection().get_key().add((EVP_PKEY*)key.any(), constexpr_client, true);
 
         _logger->writeln(constexpr_client);
         _logger->writeln([&](basic_stream& bs) -> void { dump_key(key.find(constexpr_client), &bs); });
@@ -85,8 +85,8 @@ void test_rfc8448_3(tls_session* rfc8448_session) {
         keychain.add_ec_b16(&key, ec_x25519, x, y, d, keydesc(constexpr_server));
 
         // from key to rfc8448_session, rfc8448_session2
-        rfc8448_session->get_tls_protection().get_keyexchange().add((EVP_PKEY*)key.any(), constexpr_server, true);
-        rfc8448_session2.get_tls_protection().get_keyexchange().add((EVP_PKEY*)key.any(), constexpr_server, true);
+        rfc8448_session->get_tls_protection().get_key().add((EVP_PKEY*)key.any(), constexpr_server, true);
+        rfc8448_session2.get_tls_protection().get_key().add((EVP_PKEY*)key.any(), constexpr_server, true);
 
         _logger->writeln([&](basic_stream& bs) -> void { dump_key(key.find(constexpr_server), &bs); });
     }

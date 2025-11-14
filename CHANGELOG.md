@@ -10,6 +10,7 @@
   * Revision 805-
     * server - DTLS
     * QUIC, HTTP/3
+    * PQC
   * Revision 777-804
     * server - TLS, HTTP/1.1, HTTP/2
   * Revision 682-776
@@ -28,6 +29,7 @@
     * CBOR
 
 * details
+  * Revision 899
   * Revision 898
     * [tested] keyexchange TLS group
   * Revision 896

@@ -85,6 +85,7 @@ class crypto_hmac;
 class crypto_hmac_builder;
 class crypto_key;
 class crypto_keychain;
+class crypto_keyexchange;
 class crypto_key_object;
 class crypto_sign;
 class crypto_sign_builder;

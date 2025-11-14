@@ -120,29 +120,5 @@ const hint_digest_t evp_md_methods[] = {
 
 const size_t sizeof_evp_md_methods = RTL_NUMBER_OF(evp_md_methods);
 
-hash_algorithm_t typeof_alg(const hint_digest_t *hint) {
-    hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
-    if (hint) {
-        ret_value = hint->algorithm;
-    }
-    return ret_value;
-}
-
-const char *nameof_alg(const hint_digest_t *hint) {
-    const char *ret_value = nullptr;
-    if (hint) {
-        ret_value = hint->fetchname;
-    }
-    return ret_value;
-}
-
-uint16 sizeof_digest(const hint_digest_t *hint) {
-    uint16 ret_value = 0;
-    if (hint) {
-        ret_value = hint->digest_size;
-    }
-    return ret_value;
-}
-
 }  // namespace crypto
 }  // namespace hotplace

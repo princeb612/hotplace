@@ -113,7 +113,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                                });
 
                            {
-                               auto pkey = session->get_tls_protection().get_keyexchange().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
+                               auto pkey = session->get_tls_protection().get_key().find(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE);
                                _logger->write([&](basic_stream& bs) -> void { dump_key(pkey, &bs); });
                                _test_case.assert(pkey, __FUNCTION__, "{client} key share (client generated)");
                            }
@@ -234,7 +234,7 @@ void test_helloretryrequest() {
     basic_stream step;
 
     // enforce server key share group 0x001d "x25519"
-    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, tls_named_group_x25519);
+    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, tls_group_x25519);
 
     {
         flow = session_server.get_tls_protection().get_flow();

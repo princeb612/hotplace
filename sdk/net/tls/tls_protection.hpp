@@ -16,6 +16,7 @@
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keyexchange.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
@@ -122,7 +123,8 @@ class tls_protection {
     void set_tls_version(uint16 version);
     protection_context& get_protection_context();
 
-    crypto_key& get_keyexchange();
+    crypto_key& get_key();
+    crypto_keyexchange& get_keyexchange();
 
     void use_pre_master_secret(bool use);
     bool use_pre_master_secret();
@@ -302,7 +304,8 @@ class tls_protection {
     uint16 _version;                    // negotiated version
     transcript_hash* _transcript_hash;  // transcript hash
     critical_section _lock;             // lock
-    crypto_key _keyexchange;            // key
+    crypto_key _key;                    // key
+    crypto_keyexchange _keyexchange;    // keyexchange
     t_binaries<tls_secret_t> _secrets;  // secrets
     bool _use_pre_master_secret;        // test
 

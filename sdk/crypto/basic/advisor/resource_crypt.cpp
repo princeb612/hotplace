@@ -17,161 +17,36 @@ namespace crypto {
 const hint_blockcipher_t hint_blockciphers[] = {
     // 16 (128), 24 (192), 32 (256)
 
-    {
-        aes128,
-        16,
-        16,
-        16,
-        16,
-    },
-    {
-        aes192,
-        24,
-        16,
-        16,
-        24,
-    },
-    {
-        aes256,
-        32,
-        16,
-        16,
-        32,
-    },
-    {
-        blowfish,
-        16,
-        8,
-        8,
-    },
+    {aes128, 16, 16, 16, 16},
+    {aes192, 24, 16, 16, 24},
+    {aes256, 32, 16, 16, 32},
+    {blowfish, 16, 8, 8},
 
-    {
-        aria128,
-        16,
-        16,
-        16,
-    },
-    {
-        aria192,
-        24,
-        16,
-        16,
-    },
-    {
-        aria256,
-        32,
-        16,
-        16,
-    },
+    {aria128, 16, 16, 16},
+    {aria192, 24, 16, 16},
+    {aria256, 32, 16, 16},
 
-    {
-        camellia128,
-        16,
-        16,
-        16,
-    },
-    {
-        camellia192,
-        24,
-        16,
-        16,
-    },
-    {
-        camellia256,
-        32,
-        16,
-        16,
-    },
+    {camellia128, 16, 16, 16},
+    {camellia192, 24, 16, 16},
+    {camellia256, 32, 16, 16},
 
-    {
-        cast,
-        16,
-        8,
-        8,
-    },
+    {cast, 16, 8, 8},
 
-    {
-        idea,
-        16,
-        8,
-        8,
-    },
+    {idea, 16, 8, 8},
 
-    {
-        rc2,
-        8,
-        8,
-        8,
-    },
+    {rc2, 8, 8, 8},
 
-    {
-        rc5,
-        16,
-        8,
-        8,
-    },
+    {rc5, 16, 8, 8},
 
-    {
-        seed,
-        16,
-        16,
-        16,
-    },
+    {seed, 16, 16, 16},
 
-    {
-        sm4,
-        16,
-        16,
-        16,
-    },
+    {sm4, 16, 16, 16},
 
-    {
-        rc4,
-        0,
-        12,
-        0,
-    },
-    {
-        chacha20,
-        32,
-        12,
-        0,
-    },
+    {rc4, 0, 12, 0},
+    {chacha20, 32, 12, 0},
 };
 
 const size_t sizeof_hint_blockciphers = RTL_NUMBER_OF(hint_blockciphers);
-
-crypt_algorithm_t typeof_alg(const hint_blockcipher_t* hint) {
-    crypt_algorithm_t ret_value = crypt_alg_unknown;
-    if (hint) {
-        ret_value = hint->algorithm;
-    }
-    return ret_value;
-}
-
-uint16 sizeof_key(const hint_blockcipher_t* hint) {
-    uint16 ret_value = 0;
-    if (hint) {
-        ret_value = hint->keysize;
-    }
-    return ret_value;
-}
-
-uint16 sizeof_iv(const hint_blockcipher_t* hint) {
-    uint16 ret_value = 0;
-    if (hint) {
-        ret_value = hint->ivsize;
-    }
-    return ret_value;
-}
-
-uint16 sizeof_block(const hint_blockcipher_t* hint) {
-    uint16 ret_value = 0;
-    if (hint) {
-        ret_value = hint->blocksize;
-    }
-    return ret_value;
-}
 
 const hint_cipher_t evp_cipher_methods[] = {
     // scheme contains algorithm and mode, repetition just for convenience
@@ -323,38 +198,6 @@ const hint_cipher_t evp_cipher_methods[] = {
 };
 
 const size_t sizeof_evp_cipher_methods = RTL_NUMBER_OF(evp_cipher_methods);
-
-crypto_scheme_t typeof_sheme(const hint_cipher_t* hint) {
-    crypto_scheme_t ret_value = crypto_scheme_unknown;
-    if (hint) {
-        ret_value = hint->scheme;
-    }
-    return ret_value;
-}
-
-crypt_algorithm_t typeof_alg(const hint_cipher_t* hint) {
-    crypt_algorithm_t ret_value = crypt_alg_unknown;
-    if (hint) {
-        ret_value = hint->algorithm;
-    }
-    return ret_value;
-}
-
-crypt_mode_t typeof_mode(const hint_cipher_t* hint) {
-    crypt_mode_t ret_value = mode_unknown;
-    if (hint) {
-        ret_value = hint->mode;
-    }
-    return ret_value;
-}
-
-const char* nameof_alg(const hint_cipher_t* hint) {
-    const char* ret_value = nullptr;
-    if (hint) {
-        ret_value = hint->fetchname;
-    }
-    return ret_value;
-}
 
 const openssl_evp_cipher_method_older_t aes_wrap_methods[] = {
     {EVP_aes_128_wrap(), {crypto_scheme_aes_128_wrap, aes128, wrap, "aes-128-wrap"}},

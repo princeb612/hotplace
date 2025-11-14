@@ -146,7 +146,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         }
 #endif
 
-        auto& servercert = protection.get_keyexchange();
+        auto& servercert = protection.get_key();
         keydesc desc(use_sig);
         if (from_server == dir) {
             desc.set_kid(KID_TLS_SERVER_CERTIFICATE_PUBLIC);

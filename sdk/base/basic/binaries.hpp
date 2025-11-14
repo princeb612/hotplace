@@ -224,6 +224,22 @@ class t_binaries {
         return write(id, offset, bin.empty() ? nullptr : &bin[0], bin.size(), flags);
     }
 
+    return_t peek(T id, binary_t& bin) {
+        return_t ret = errorcode_t::success;
+        __try2 {
+            critical_section_guard guard(_lock);
+            auto iter = _map.find(id);
+            if (_map.end() == iter) {
+                ret = errorcode_t::not_found;
+                __leave2;
+            } else {
+                bin = iter->second.bin;
+            }
+        }
+        __finally2 {}
+        return ret;
+    }
+
     /**
      * @brief   consume
      * @param   T id [in]
@@ -381,6 +397,15 @@ class t_binaries {
             tag = iter->second.tag;
         }
         return ret;
+    }
+
+    void for_each(std::function<void(const T&, const binary_t&)> func) {
+        if (func) {
+            critical_section_guard guard(_lock);
+            for (const auto& pair : _map) {
+                func(pair.first, pair.second);
+            }
+        }
     }
 
    protected:

@@ -230,7 +230,7 @@ enum crypt_sig_t : uint16 {
 ///////////////////////////////////////////////////////////////////////////
 // curve
 // ec_curve_t        - openssl numeric identifier
-// tls_named_group_t - TLS Supported Groups
+// tls_group_t - TLS Supported Groups
 ///////////////////////////////////////////////////////////////////////////
 /**
  * @brief   Elliptic Curve (use openssl nid definition for convenience)
@@ -284,68 +284,68 @@ enum ec_curve_t : uint32 {
  * tls_ext_supported_groups
  * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  */
-enum tls_named_group_t : uint16 {
-    tls_named_group_unknown = 0x0000,
+enum tls_group_t : uint16 {
+    tls_group_unknown = 0x0000,
     // RFC 8446 4.2.7.  Supported Groups
     // RFC 8422 5.1.1.  Supported Elliptic Curves Extension
     // deprecated (1..22), reserved (0xFE00..0xFEFF), deprecated(0xFF01..0xFF02)
 
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
 
-    // cf. hint_curves define tls_named_group_sect163k1..tls_named_group_x448
+    // cf. hint_curves define tls_group_sect163k1..tls_group_x448
 
-    tls_named_group_sect163k1 = 0x0001,
-    tls_named_group_sect163r1 = 0x0002,
-    tls_named_group_sect163r2 = 0x0003,
-    tls_named_group_sect193r1 = 0x0004,
-    tls_named_group_sect193r2 = 0x0005,
-    tls_named_group_sect233k1 = 0x0006,
-    tls_named_group_sect233r1 = 0x0007,
-    tls_named_group_sect239k1 = 0x0008,
-    tls_named_group_sect283k1 = 0x0009,
-    tls_named_group_sect283r1 = 0x000a,             // 10
-    tls_named_group_sect409k1 = 0x000b,             // 11
-    tls_named_group_sect409r1 = 0x000c,             // 12
-    tls_named_group_sect571k1 = 0x000d,             // 13
-    tls_named_group_sect571r1 = 0x000e,             // 14
-    tls_named_group_secp160k1 = 0x000f,             // 15
-    tls_named_group_secp160r1 = 0x0010,             // 16
-    tls_named_group_secp160r2 = 0x0011,             // 17
-    tls_named_group_secp192k1 = 0x0012,             // 18
-    tls_named_group_secp192r1 = 0x0013,             // 19
-    tls_named_group_secp224k1 = 0x0014,             // 20
-    tls_named_group_secp224r1 = 0x0015,             // 21
-    tls_named_group_secp256k1 = 0x0016,             // 22
-    tls_named_group_secp256r1 = 0x0017,             // 23
-    tls_named_group_secp384r1 = 0x0018,             // 24
-    tls_named_group_secp521r1 = 0x0019,             // 25
-    tls_named_group_brainpoolP256r1 = 0x001a,       // 26
-    tls_named_group_brainpoolP384r1 = 0x001b,       // 27
-    tls_named_group_brainpoolP512r1 = 0x001c,       // 28
-    tls_named_group_x25519 = 0x001d,                // 29
-    tls_named_group_x448 = 0x001e,                  // 30
-    tls_named_group_brainpoolP256r1tls13 = 0x001f,  // 31
-    tls_named_group_brainpoolP384r1tls13 = 0x0020,  // 32
-    tls_named_group_brainpoolP512r1tls13 = 0x0021,  // 33
-    tls_named_group_GC256A = 0x0022,                // 34
-    tls_named_group_GC256B = 0x0023,                // 35
-    tls_named_group_GC256C = 0x0024,                // 36
-    tls_named_group_GC256D = 0x0025,                // 37
-    tls_named_group_GC512A = 0x0026,                // 38
-    tls_named_group_GC512B = 0x0027,                // 39
-    tls_named_group_GC512C = 0x0028,                // 40
-    tls_named_group_curveSM2 = 0x0029,              // 41, not recommended
-    tls_named_group_ffdhe2048 = 0x0100,             // 256
-    tls_named_group_ffdhe3072 = 0x0101,             // 257
-    tls_named_group_ffdhe4096 = 0x0102,             // 258
-    tls_named_group_ffdhe6144 = 0x0103,             // 259
-    tls_named_group_ffdhe8192 = 0x0104,             // 260
-    tls_named_group_mlkem512 = 0x0200,              // 512  FIPS 203 version of ML-KEM-512
-    tls_named_group_mlkem768 = 0x0201,              // 513  FIPS 203 version of ML-KEM-768
-    tls_named_group_mlkem1024 = 0x0202,             // 514  FIPS 203 version of ML-KEM-1024
-    tls_named_group_secp256r1mlkem768 = 0x11eb,     // 4587 Combining secp256r1 ECDH with ML-KEM-768
-    tls_named_group_x25519mlkem768 = 0x11ec,        // 4588 Combining X25519 ECDH with ML-KEM-768
-    tls_named_group_secp384r1mlkem1024 = 0x11ed,    // 4589 Combining secp384r1 ECDH with ML-KEM-1024
+    tls_group_sect163k1 = 0x0001,
+    tls_group_sect163r1 = 0x0002,
+    tls_group_sect163r2 = 0x0003,
+    tls_group_sect193r1 = 0x0004,
+    tls_group_sect193r2 = 0x0005,
+    tls_group_sect233k1 = 0x0006,
+    tls_group_sect233r1 = 0x0007,
+    tls_group_sect239k1 = 0x0008,
+    tls_group_sect283k1 = 0x0009,
+    tls_group_sect283r1 = 0x000a,             // 10
+    tls_group_sect409k1 = 0x000b,             // 11
+    tls_group_sect409r1 = 0x000c,             // 12
+    tls_group_sect571k1 = 0x000d,             // 13
+    tls_group_sect571r1 = 0x000e,             // 14
+    tls_group_secp160k1 = 0x000f,             // 15
+    tls_group_secp160r1 = 0x0010,             // 16
+    tls_group_secp160r2 = 0x0011,             // 17
+    tls_group_secp192k1 = 0x0012,             // 18
+    tls_group_secp192r1 = 0x0013,             // 19
+    tls_group_secp224k1 = 0x0014,             // 20
+    tls_group_secp224r1 = 0x0015,             // 21
+    tls_group_secp256k1 = 0x0016,             // 22
+    tls_group_secp256r1 = 0x0017,             // 23
+    tls_group_secp384r1 = 0x0018,             // 24
+    tls_group_secp521r1 = 0x0019,             // 25
+    tls_group_brainpoolP256r1 = 0x001a,       // 26
+    tls_group_brainpoolP384r1 = 0x001b,       // 27
+    tls_group_brainpoolP512r1 = 0x001c,       // 28
+    tls_group_x25519 = 0x001d,                // 29
+    tls_group_x448 = 0x001e,                  // 30
+    tls_group_brainpoolP256r1tls13 = 0x001f,  // 31
+    tls_group_brainpoolP384r1tls13 = 0x0020,  // 32
+    tls_group_brainpoolP512r1tls13 = 0x0021,  // 33
+    tls_group_GC256A = 0x0022,                // 34
+    tls_group_GC256B = 0x0023,                // 35
+    tls_group_GC256C = 0x0024,                // 36
+    tls_group_GC256D = 0x0025,                // 37
+    tls_group_GC512A = 0x0026,                // 38
+    tls_group_GC512B = 0x0027,                // 39
+    tls_group_GC512C = 0x0028,                // 40
+    tls_group_curveSM2 = 0x0029,              // 41, not recommended
+    tls_group_ffdhe2048 = 0x0100,             // 256
+    tls_group_ffdhe3072 = 0x0101,             // 257
+    tls_group_ffdhe4096 = 0x0102,             // 258
+    tls_group_ffdhe6144 = 0x0103,             // 259
+    tls_group_ffdhe8192 = 0x0104,             // 260
+    tls_group_mlkem512 = 0x0200,              // 512  FIPS 203 version of ML-KEM-512
+    tls_group_mlkem768 = 0x0201,              // 513  FIPS 203 version of ML-KEM-768
+    tls_group_mlkem1024 = 0x0202,             // 514  FIPS 203 version of ML-KEM-1024
+    tls_group_secp256r1mlkem768 = 0x11eb,     // 4587 Combining secp256r1 ECDH with ML-KEM-768
+    tls_group_x25519mlkem768 = 0x11ec,        // 4588 Combining X25519 ECDH with ML-KEM-768
+    tls_group_secp384r1mlkem1024 = 0x11ed,    // 4589 Combining secp384r1 ECDH with ML-KEM-1024
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -509,6 +509,7 @@ enum keyexchange_t {
     keyexchange_dss_export = 12,   // TLS 1.0
     keyexchange_anon_export = 13,  // TLS 1.0
     keyexchange_krb5_export = 14,  // TLS 1.0
+    keyexchange_mlkem = 15,        // MLKEM
 };
 
 // TLS authentication
@@ -1279,6 +1280,7 @@ enum curve_category_t : uint8 {
  *              Complex multiplication
  */
 struct hint_curve_t {
+    uint32 id;                 // openssl NID
     uint32 nid;                // openssl NID
     crypto_kty_t kty;          // kty_ec, kty_okp
     crypto_use_t use;          // use_any, use_enc, use_sig
@@ -1303,8 +1305,9 @@ enum tls_resource_flag_t : uint8 {
 };
 
 struct hint_group_t {
-    uint16 group;  // tls_named_group_t
-    uint8 flags;   // tls_resource_flag_t
+    uint16 group;        // tls_group_t
+    keyexchange_t exch;  // keyexchange_ecdhe, keyexchange_mlkem
+    uint8 flags;         // tls_resource_flag_t
     const char* name;
     crypto_kty_t kty;
     uint32 nid;
@@ -1407,20 +1410,23 @@ enum crypt_poweredby_t {
 
 /* nid (use openssl nid definition for convenience) */
 enum nid_t : uint32 {
-    nid_dh = 28,           // NID_dhKeyAgreement (EVP_PKEY_DH)
-    nid_dsa = 116,         // NID_dsa
-    nid_ffdhe2048 = 1126,  // NID_ffdhe2048
-    nid_ffdhe3072 = 1127,  // NID_ffdhe3072
-    nid_ffdhe4096 = 1128,  // NID_ffdhe4096
-    nid_ffdhe6144 = 1129,  // NID_ffdhe6144
-    nid_ffdhe8192 = 1130,  // NID_ffdhe8192
-    nid_mlkem512 = 1454,   // NID_ML_KEM_512
-    nid_mlkem768 = 1455,   // NID_ML_KEM_768
-    nid_mlkem1024 = 1456,  // NID_ML_KEM_1024
-    nid_oct = 855,         // EVP_PKEY_HMAC, NID_hmac
-    nid_rsa = 6,           // EVP_PKEY_RSA, NID_rsaEncryption
-    nid_rsa2 = 19,         // EVP_PKEY_RSA2, NID_rsa
-    nid_rsapss = 912,      // EVP_PKEY_RSA_PSS, NID_rsassaPss
+    nid_dh = 28,                      // NID_dhKeyAgreement (EVP_PKEY_DH)
+    nid_dsa = 116,                    // NID_dsa
+    nid_ffdhe2048 = 1126,             // NID_ffdhe2048
+    nid_ffdhe3072 = 1127,             // NID_ffdhe3072
+    nid_ffdhe4096 = 1128,             // NID_ffdhe4096
+    nid_ffdhe6144 = 1129,             // NID_ffdhe6144
+    nid_ffdhe8192 = 1130,             // NID_ffdhe8192
+    nid_mlkem512 = 1454,              // NID_ML_KEM_512 (openssl-3.5)
+    nid_mlkem768 = 1455,              // NID_ML_KEM_768 (openssl-3.5)
+    nid_mlkem1024 = 1456,             // NID_ML_KEM_1024 (openssl-3.5)
+    nid_oct = 855,                    // EVP_PKEY_HMAC, NID_hmac
+    nid_rsa = 6,                      // EVP_PKEY_RSA, NID_rsaEncryption
+    nid_rsa2 = 19,                    // EVP_PKEY_RSA2, NID_rsa
+    nid_rsapss = 912,                 // EVP_PKEY_RSA_PSS, NID_rsassaPss
+    nid_brainpoolp256r1tls13 = 1285,  // NID_brainpoolP256r1tls13 (openssl-3.2)
+    nid_brainpoolp384r1tls13 = 1286,  // NID_brainpoolP384r1tls13 (openssl-3.2)
+    nid_brainpoolp512r1tls13 = 1287,  // NID_brainpoolP512r1tls13 (openssl-3.2)
 };
 
 enum authenticated_encryption_flag_t : uint16 {

@@ -270,13 +270,5 @@ const hint_jose_encryption_t hint_jose_encryptions[] = {
 const size_t sizeof_hint_jose_algorithms = RTL_NUMBER_OF(hint_jose_algorithms);
 const size_t sizeof_hint_jose_encryptions = RTL_NUMBER_OF(hint_jose_encryptions);
 
-const char* nameof_alg(const hint_jose_encryption_t* hint) {
-    const char* ret_value = nullptr;
-    if (hint) {
-        ret_value = hint->alg_name;
-    }
-    return ret_value;
-}
-
 }  // namespace crypto
 }  // namespace hotplace

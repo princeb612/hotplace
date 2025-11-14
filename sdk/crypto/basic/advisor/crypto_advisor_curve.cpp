@@ -169,5 +169,74 @@ return_t crypto_advisor::nameof_ec_curve(const EVP_PKEY* pkey, std::string& name
     return ret;
 }
 
+// hint_curve_t
+
+uint32 nidof(const hint_curve_t* hint) {
+    uint32 value = 0;
+    if (hint) {
+        value = hint->nid;
+    }
+    return value;
+}
+cose_ec_curve_t coseof(const hint_curve_t* hint) {
+    cose_ec_curve_t value = cose_ec_unknown;
+    if (hint) {
+        value = hint->cose_crv;
+    }
+    return value;
+}
+crypto_kty_t ktyof(const hint_curve_t* hint) {
+    crypto_kty_t value = kty_unknown;
+    if (hint) {
+        value = hint->kty;
+    }
+    return value;
+}
+uint16 tlsgroupof(const hint_curve_t* hint) {
+    uint16 value = 0;
+    if (hint) {
+        value = hint->tlsgroup;
+    }
+    return value;
+}
+uint8 keysizeof(const hint_curve_t* hint) {
+    uint8 value = 0;
+    if (hint) {
+        value = hint->keysize;
+    }
+    return value;
+}
+const char* oidof(const hint_curve_t* hint) {
+    const char* value = nullptr;
+    if (hint) {
+        value = hint->oid;
+    }
+    return value;
+}
+
+bool support(const hint_curve_t* hint, hash_algorithm_t alg) {
+    bool ret_value = false;
+    if (hint) {
+        switch (alg) {
+            case sha1:
+                ret_value = hint->flags & ECDSA_SUPPORT_SHA1;
+                break;
+            case sha2_224:
+                ret_value = hint->flags & ECDSA_SUPPORT_SHA2_224;
+                break;
+            case sha2_256:
+                ret_value = hint->flags & ECDSA_SUPPORT_SHA2_256;
+                break;
+            case sha2_384:
+                ret_value = hint->flags & ECDSA_SUPPORT_SHA2_384;
+                break;
+            case sha2_512:
+                ret_value = hint->flags & ECDSA_SUPPORT_SHA2_512;
+                break;
+        }
+    }
+    return ret_value;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

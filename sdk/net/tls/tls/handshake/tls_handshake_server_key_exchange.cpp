@@ -85,7 +85,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             auto session = get_session();
             auto &protection = session->get_tls_protection();
             auto &secrets = protection.get_secrets();
-            auto &keyexchange = protection.get_keyexchange();
+            auto &tlskey = protection.get_key();
             crypto_advisor *advisor = crypto_advisor::get_instance();
             tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
@@ -137,7 +137,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                     auto hint = advisor->hintof_curve_tls_group(curve);
                     uint32 nid = nidof(hint);
                     if (nid) {
-                        ret = keychain.add_ec2(&keyexchange, nid, pubkey, binary_t(), binary_t(), keydesc(KID_TLS_SERVER_KEY_EXCHANGE));
+                        ret = keychain.add_ec2(&tlskey, nid, pubkey, binary_t(), binary_t(), keydesc(KID_TLS_SERVER_KEY_EXCHANGE));
                     } else {
                         ret = errorcode_t::not_supported;
                     }
@@ -199,7 +199,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     auto session = get_session();
     auto &protection = session->get_tls_protection();
     auto &secrets = protection.get_secrets();
-    auto &keyexchange = protection.get_keyexchange();
+    auto &tlskey = protection.get_key();
     auto &protection_context = protection.get_protection_context();
     auto advisor = crypto_advisor::get_instance();
     auto tlsadvisor = tls_advisor::get_instance();
@@ -219,20 +219,20 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
                 auto nid = hint->nid;
                 bool stop = false;
                 if (kty_ec == kty) {
-                    keychain.add_ec2(&keyexchange, nid, desc);
-                    auto pkey = keyexchange.find(KID_TLS_SERVER_KEY_EXCHANGE);
+                    keychain.add_ec2(&tlskey, nid, desc);
+                    auto pkey = tlskey.find(KID_TLS_SERVER_KEY_EXCHANGE);
                     if (pkey) {
                         binary_t temp;
-                        keyexchange.ec_uncompressed_key(pkey, pubkey, temp);
+                        tlskey.ec_uncompressed_key(pkey, pubkey, temp);
                         curve = group;
                         stop = true;
                     }
                 } else if (kty_okp == kty) {
-                    keychain.add_ec2(&keyexchange, nid, desc);
-                    auto pkey = keyexchange.find(KID_TLS_SERVER_KEY_EXCHANGE);
+                    keychain.add_ec2(&tlskey, nid, desc);
+                    auto pkey = tlskey.find(KID_TLS_SERVER_KEY_EXCHANGE);
                     if (pkey) {
                         binary_t temp;
-                        keyexchange.get_public_key(pkey, pubkey, temp);
+                        tlskey.get_public_key(pkey, pubkey, temp);
                         curve = group;
                         stop = true;
                     }

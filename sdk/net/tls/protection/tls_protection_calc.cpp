@@ -295,14 +295,14 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                             // tls_extension_key_share
                             shared_secret = get_secrets().get(tls_context_shared_secret);
                         } else {
-                            pkey_priv = get_keyexchange().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE, group);
+                            pkey_priv = get_key().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE, group);
                             if (pkey_priv) {
                                 // in server ... priv(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC)
-                                pkey_pub = get_keyexchange().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);  // client_hello
+                                pkey_pub = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);  // client_hello
                             } else {
                                 // in client ... priv(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE) + pub(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC)
-                                pkey_priv = get_keyexchange().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
-                                pkey_pub = get_keyexchange().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC, group);  // server_hello
+                                pkey_priv = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
+                                pkey_pub = get_key().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC, group);  // server_hello
                             }
 
                             // warn_retry
@@ -318,9 +318,9 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                             if (group_enforced) {
                                 auto hint = advisor->hintof_tls_group(group_enforced);
                                 // enforcing
-                                auto pkey_ch = get_keyexchange().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
+                                auto pkey_ch = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
                                 if (nullptr == pkey_ch) {
-                                    pkey_ch = get_keyexchange().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);
+                                    pkey_ch = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);
                                 }
                                 if (nullptr == pkey_ch) {
                                     ret = errorcode_t::warn_retry;
@@ -524,8 +524,8 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
                     const EVP_PKEY *pkey_priv = nullptr;
                     const EVP_PKEY *pkey_pub = nullptr;
-                    auto pkey_ske = get_keyexchange().find(KID_TLS_SERVER_KEY_EXCHANGE);
-                    auto pkey_cke = get_keyexchange().find(KID_TLS_CLIENT_KEY_EXCHANGE);
+                    auto pkey_ske = get_key().find(KID_TLS_SERVER_KEY_EXCHANGE);
+                    auto pkey_cke = get_key().find(KID_TLS_CLIENT_KEY_EXCHANGE);
                     bool test = false;
                     is_private_key(pkey_ske, test);
                     if (test) {
