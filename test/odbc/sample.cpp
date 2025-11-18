@@ -55,39 +55,47 @@ void test() {
     odbc_connector dbconn;
     odbc_query* rs = nullptr;
 
-    odbc_diagnose::get_instance()->add_handler(dbdiag_handler, nullptr);
-
     const OPTION& option = _cmdline->value();
-    _logger->writeln("connection string [%s]", option.connstr.c_str());
 
-    ret = dbconn.connect(&rs, option.connstr.c_str());
-    _test_case.test(ret, __FUNCTION__, "connect");
+    __try2 {
+        if (option.connstr.empty()) {
+            __leave2;
+        }
 
-    if (errorcode_t::success == ret) {
-        ret = rs->query("select * from %s", option.tablename.c_str());
-        _test_case.test(ret, __FUNCTION__, "query");
+        _logger->writeln("connection string [%s]", option.connstr.c_str());
+
+        odbc_diagnose::get_instance()->add_handler(dbdiag_handler, nullptr);
+
+        ret = dbconn.connect(&rs, option.connstr.c_str());
+        _test_case.test(ret, __FUNCTION__, "connect");
+
         if (errorcode_t::success == ret) {
-            odbc_record record;
-            while (true) {
-                while (errorcode_t::success == rs->fetch(&record)) {
-                    _logger->writeln("---");
-                    int n = record.count();
-                    for (int i = 0; i < n; i++) {
-                        odbc_field* field = record.get_field(i);
-                        ansi_string f, d;
-                        field->get_field_name(f);
-                        field->as_string(d);
-                        _logger->writeln("%s : %s", f.c_str(), d.c_str());
+            ret = rs->query("select * from %s", option.tablename.c_str());
+            _test_case.test(ret, __FUNCTION__, "query");
+            if (errorcode_t::success == ret) {
+                odbc_record record;
+                while (true) {
+                    while (errorcode_t::success == rs->fetch(&record)) {
+                        _logger->writeln("---");
+                        int n = record.count();
+                        for (int i = 0; i < n; i++) {
+                            odbc_field* field = record.get_field(i);
+                            ansi_string f, d;
+                            field->get_field_name(f);
+                            field->as_string(d);
+                            _logger->writeln("%s : %s", f.c_str(), d.c_str());
+                        }
+                    }
+                    bool more = rs->more();
+                    if (false == more) {
+                        break;
                     }
                 }
-                bool more = rs->more();
-                if (false == more) {
-                    break;
-                }
             }
+            rs->release();
         }
-        rs->release();
     }
+    __finally2 {}
 }
 
 int main(int argc, char** argv) {

@@ -164,6 +164,8 @@ std::string tls_advisor::nameof_group(uint16 code) {
     auto hint = advisor->hintof_tls_group(code);
     if (hint && hint->name) {
         value = hint->name;
+    } else {
+        value = "GREASE";
     }
     return value;
 }

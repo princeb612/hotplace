@@ -88,6 +88,7 @@ class protection_context {
     std::list<uint16> _supported_versions;    // tls_extension_client_supported_versions
     std::list<uint8> _ec_point_formats;       // tls_extension_ec_point_formats
     std::list<uint16> _keyshare_groups;
+    std::set<uint16> _keyshare_groups2;
     uint16 _cipher_suite;
 };
 

@@ -29,6 +29,7 @@ protection_context::protection_context(const protection_context& rhs) {
     _supported_versions = rhs._supported_versions;
     _ec_point_formats = rhs._ec_point_formats;
     _keyshare_groups = rhs._keyshare_groups;
+    _keyshare_groups2 = rhs._keyshare_groups2;
     _cipher_suite = rhs._cipher_suite;
 }
 
@@ -40,6 +41,7 @@ protection_context::protection_context(protection_context&& rhs) {
     _supported_versions = std::move(rhs._supported_versions);
     _ec_point_formats = std::move(rhs._ec_point_formats);
     _keyshare_groups = std::move(rhs._keyshare_groups);
+    _keyshare_groups2 = std::move(rhs._keyshare_groups2);
     _cipher_suite = rhs._cipher_suite;
 }
 
@@ -74,7 +76,10 @@ void protection_context::add_supported_version(uint16 sv) { _supported_versions.
 
 void protection_context::add_ec_point_format(uint8 epf) { _ec_point_formats.push_back(epf); }
 
-void protection_context::add_keyshare_group(uint16 group) { _keyshare_groups.push_back(group); }
+void protection_context::add_keyshare_group(uint16 group) {
+    _keyshare_groups.push_back(group);
+    _keyshare_groups2.insert(group);
+}
 
 void protection_context::clear_cipher_suites() { _cipher_suites.clear(); }
 
@@ -86,7 +91,10 @@ void protection_context::clear_supported_versions() { _supported_versions.clear(
 
 void protection_context::clear_ec_point_formats() { _ec_point_formats.clear(); }
 
-void protection_context::clear_keyshare_groups() { _keyshare_groups.clear(); }
+void protection_context::clear_keyshare_groups() {
+    _keyshare_groups.clear();
+    _keyshare_groups2.clear();
+}
 
 void protection_context::for_each_cipher_suites(std::function<void(uint16, bool*)> fn) const {
     bool cont = false;
@@ -140,7 +148,7 @@ void protection_context::for_each_ec_point_formats(std::function<void(uint8, boo
 
 void protection_context::for_each_keyshare_groups(std::function<void(uint16, bool*)> fn) const {
     bool cont = false;
-    for (auto item : _keyshare_groups) {
+    for (auto item : _keyshare_groups2) {
         fn(item, &cont);
         if (cont) {
             break;
@@ -299,7 +307,6 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
         {
             // _supported_groups
 
-            std::list<uint16> candidates;
             rhs.for_each_supported_groups([&](uint16 group, bool*) -> void {
                 auto hint = advisor->hintof_tls_group(group);
                 if (hint && (tls_flag_support & hint->flags)) {
@@ -313,24 +320,33 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
                     }
                     if (cond) {
                         if (tls_flag_secure & hint->flags) {
-                            _supported_groups.push_back(group);
+                            _supported_groups.insert(_supported_groups.begin(), group);
                         } else {
-                            candidates.push_back(group);
+                            _supported_groups.push_back(group);
                         }
                     }
                 }
             });
-            if (_supported_groups.empty()) {
-                _supported_groups = std::move(candidates);
-            }
         }
 
         {
             // deselect GREASE
             rhs.for_each_keyshare_groups([&](uint16 group, bool*) -> void {
                 auto hint = advisor->hintof_tls_group(group);
-                if (hint) {
-                    _keyshare_groups.push_back(group);
+                if (hint && (tls_flag_support & hint->flags)) {
+                    if (tls_flag_secure & hint->flags) {
+                        _keyshare_groups.insert(_keyshare_groups.begin(), group);
+                    } else {
+                        _keyshare_groups.push_back(group);
+                    }
+                    _keyshare_groups2.insert(group);
+#if defined DEBUG
+                    if (istraceable(trace_category_net)) {
+                        trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                            dbs.println(" - \e[1;33m# 0x%04x %s\e[0m", group, tlsadvisor->nameof_group(group).c_str());
+                        });
+                    }
+#endif
                 }
             });
         }

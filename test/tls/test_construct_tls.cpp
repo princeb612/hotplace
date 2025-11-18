@@ -943,7 +943,14 @@ void test_construct_tls13_mlkem() {
     auto tlsadvisor = tls_advisor::get_instance();
     tlsadvisor->set_tls_groups("MLKEM512:MLKEM768:MLKEM1024");
     for (auto item : testvector) {
-        test_construct_tls_routine(item, "MLKEM512:MLKEM768");
+        // test_construct_tls_routine(item, "MLKEM512:MLKEM768");
+        test_construct_tls_routine(item, "MLKEM512");
+        test_construct_tls_routine(item, "MLKEM768");
+        test_construct_tls_routine(item, "MLKEM1024");
+
+        test_construct_tls_routine(item, "SecP256r1MLKEM768");
+        test_construct_tls_routine(item, "X25519MLKEM768");
+        test_construct_tls_routine(item, "SecP384r1MLKEM1024");
     }
     tlsadvisor->set_default_tls_groups();
 #else

@@ -29,7 +29,7 @@
     * CBOR
 
 * details
-  * Revision 899
+  * Revision 900
   * Revision 898
     * [tested] keyexchange TLS group
   * Revision 896

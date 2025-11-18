@@ -105,6 +105,12 @@ return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const ch
             ret = not_supported;
             __leave2;
         }
+        auto flags = hint->flags;
+        if (0 == (tls_flag_support & flags)) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
         auto nid = hint->nid;
         auto kty = hint->kty;
 
@@ -122,24 +128,10 @@ return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const ch
             __leave2;
         }
 
-        // binary_t bin_privkey;
-        // auto prk = key->find_nid(kid, nid);
-        // ret = key->get_key(prk, public_key, share, bin_privkey, true);
-
         if (tls_flag_hybrid & hint->flags) {
             // keygen
             auto hnid = hint->hnid;
             ret = keychain.add(key, hnid, desc);
-
-            /**
-             * public key
-             *   case kty_ec: uncompressed format
-             *   default: raw format
-             */
-            // binary_t hshare;
-            // auto hkey = key->find_nid(kid, hnid);
-            // ret = key->get_key(hkey, public_key, hshare, bin_privkey, true);
-            // binary_append(share, hshare);
         }
     }
     __finally2 {}
@@ -149,6 +141,8 @@ return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const ch
 return_t crypto_keyexchange::keyshare(tls_group_t group, crypto_key* key, const char* kid, binary_t& share) {
     return_t ret = errorcode_t::success;
     __try2 {
+        share.clear();
+
         if (nullptr == key) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -160,19 +154,24 @@ return_t crypto_keyexchange::keyshare(tls_group_t group, crypto_key* key, const 
             ret = not_supported;
             __leave2;
         }
+        auto flags = hint->flags;
+        if (0 == (tls_flag_support & flags)) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
         auto nid = hint->nid;
         auto kty = hint->kty;
 
         // keygen
         crypto_keychain keychain;
-        // ret = keychain.add(key, nid, keydesc(kid));
-        // if (success != ret) {
-        //     __leave2;
-        // }
 
         binary_t bin_privkey;
         auto prk = key->find_nid(kid, nid);
         ret = key->get_key(prk, public_key, share, bin_privkey, true);
+        if (success != ret) {
+            __leave2;
+        }
 
         if (tls_flag_hybrid & hint->flags) {
             // keygen
@@ -187,6 +186,9 @@ return_t crypto_keyexchange::keyshare(tls_group_t group, crypto_key* key, const 
             binary_t hshare;
             auto hkey = key->find_nid(kid, hnid);
             ret = key->get_key(hkey, public_key, hshare, bin_privkey, true);
+            if (success != ret) {
+                __leave2;
+            }
             binary_append(share, hshare);
         }
     }
@@ -208,6 +210,12 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
             ret = not_supported;
             __leave2;
         }
+        // auto flags = hint->flags;
+        // if (0 == (tls_flag_support & flags)) {
+        //     ret = errorcode_t::not_supported;
+        //     __leave2;
+        // }
+
         auto nid = hint->nid;
         auto kty = hint->kty;
 
@@ -223,7 +231,9 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
             case kty_okp: {
                 ret = keychain.add_okp(storage, nid, share, bin_privkey, keydesc(kid));
             } break;
-            case kty_mlkem:
+            case kty_mlkem: {
+                ret = keychain.add_mlkem_pub(storage, nid, share, key_encoding_pub_raw, keydesc(kid));
+            } break;
             default: {
                 ret = bad_request;
             } break;
@@ -246,6 +256,11 @@ return_t crypto_keyexchange::exchange(tls_group_t group, crypto_key* key, crypto
         auto hint = advisor->hintof_tls_group(group);
         if (nullptr == hint) {
             ret = not_supported;
+            __leave2;
+        }
+        auto flags = hint->flags;
+        if (0 == (tls_flag_support & flags)) {
+            ret = errorcode_t::not_supported;
             __leave2;
         }
         if (keyexchange_ecdhe != hint->exch) {
@@ -282,6 +297,11 @@ return_t crypto_keyexchange::exchange(tls_group_t group, crypto_key* key, crypto
             ret = not_supported;
             __leave2;
         }
+        auto flags = hint->flags;
+        if (0 == (tls_flag_support & flags)) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
         if (keyexchange_ecdhe != hint->exch) {
             ret = bad_request;
             __leave2;
@@ -304,6 +324,11 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
         auto hint = advisor->hintof_tls_group(group);
         if (nullptr == hint) {
             ret = not_supported;
+            __leave2;
+        }
+        auto flags = hint->flags;
+        if (0 == (tls_flag_support & flags)) {
+            ret = errorcode_t::not_supported;
             __leave2;
         }
         if (keyexchange_mlkem != hint->exch) {
@@ -428,6 +453,11 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
         auto hint = advisor->hintof_tls_group(group);
         if (nullptr == hint) {
             ret = not_supported;
+            __leave2;
+        }
+        auto flags = hint->flags;
+        if (0 == (tls_flag_support & flags)) {
+            ret = errorcode_t::not_supported;
             __leave2;
         }
         if (keyexchange_mlkem != hint->exch) {

@@ -281,7 +281,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes
                     //  psk_ke      ... pre_shared_key
                     //  psk_dhe_ke  ... key_share
-                    binary_t shared_secret;
+                    binary_t shared_secret = get_secrets().get(tls_context_shared_secret);
 
                     const EVP_PKEY *pkey_priv = nullptr;
                     const EVP_PKEY *pkey_pub = nullptr;
@@ -293,7 +293,6 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                         uint32 nid = hint_group->nid;
                         if (kty_mlkem == kty_group) {
                             // tls_extension_key_share
-                            shared_secret = get_secrets().get(tls_context_shared_secret);
                         } else {
                             pkey_priv = get_key().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE, group);
                             if (pkey_priv) {
