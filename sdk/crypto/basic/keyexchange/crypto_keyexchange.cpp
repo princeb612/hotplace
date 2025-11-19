@@ -210,29 +210,49 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
             ret = not_supported;
             __leave2;
         }
-        // auto flags = hint->flags;
-        // if (0 == (tls_flag_support & flags)) {
-        //     ret = errorcode_t::not_supported;
-        //     __leave2;
-        // }
+        auto flags = hint->flags;
+        if (0 == (tls_flag_support & flags)) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        if (hint->keysize + hint->hkeysize != share.size()) {
+            ret = bad_data;
+            __leave2;
+        }
 
         auto nid = hint->nid;
         auto kty = hint->kty;
 
         crypto_keychain keychain;
-        binary_t bin_privkey;
+        binary_t bin_privkey;  // dummy
+        keydesc desc(kid);
         switch (kty) {
             case kty_dh: {
-                ret = keychain.add_dh(storage, nid, share, bin_privkey, keydesc(kid));
+                ret = keychain.add_dh(storage, nid, share, bin_privkey, desc);
             } break;
             case kty_ec: {
-                ret = keychain.add_ec_uncompressed(storage, nid, share, bin_privkey, keydesc(kid));
+                ret = keychain.add_ec_uncompressed(storage, nid, share, bin_privkey, desc);
             } break;
             case kty_okp: {
-                ret = keychain.add_okp(storage, nid, share, bin_privkey, keydesc(kid));
+                ret = keychain.add_okp(storage, nid, share, bin_privkey, desc);
             } break;
             case kty_mlkem: {
-                ret = keychain.add_mlkem_pub(storage, nid, share, key_encoding_pub_raw, keydesc(kid));
+                auto keysize = hint->keysize;
+                ret = keychain.add_mlkem_pub(storage, nid, &share[0], keysize, key_encoding_pub_raw, desc);
+                if (tls_flag_hybrid & hint->flags) {
+                    auto hkty = hint->hkty;
+                    auto hnid = hint->hnid;
+                    auto hkeysize = hint->hkeysize;
+                    switch (hkty) {
+                        case kty_ec: {
+                            ret = keychain.add_ec_uncompressed(storage, hnid, &share[keysize], hkeysize, nullptr, 0, desc);
+                        } break;
+                        case kty_okp: {
+                            ret = keychain.add_okp(storage, hnid, &share[keysize], hkeysize, nullptr, 0, desc);
+                        } break;
+                    }
+                }
             } break;
             default: {
                 ret = bad_request;
@@ -394,16 +414,17 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
             auto hkty = hint->hkty;
             auto hnid = hint->hnid;
 
+            keydesc desc("pub");
             binary_t bin_pubkey;
             binary_t bin_privkey;
             binary_append(bin_pubkey, &share[keysize], hkeysize);
 
             switch (hkty) {
                 case kty_ec: {
-                    keychain.add_ec_uncompressed(&tempkey, hnid, bin_pubkey, bin_privkey, keydesc("pub"));
+                    keychain.add_ec_uncompressed(&tempkey, hnid, bin_pubkey, bin_privkey, desc);
                 } break;
                 case kty_okp: {
-                    keychain.add_okp(&tempkey, hnid, bin_pubkey, bin_privkey, keydesc("pub"));
+                    keychain.add_okp(&tempkey, hnid, bin_pubkey, bin_privkey, desc);
                 } break;
             }
 
@@ -493,16 +514,17 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
             crypto_key tempkey;
             crypto_keychain keychain;
 
+            keydesc desc("pub");
             binary_t bin_pubkey;
             binary_t bin_privkey;
             binary_append(bin_pubkey, &share[capsulesize], hkeysize);
 
             switch (hkty) {
                 case kty_ec: {
-                    keychain.add_ec_uncompressed(&tempkey, hnid, bin_pubkey, bin_privkey, keydesc("pub"));
+                    keychain.add_ec_uncompressed(&tempkey, hnid, bin_pubkey, bin_privkey, desc);
                 } break;
                 case kty_okp: {
-                    keychain.add_okp(&tempkey, hnid, bin_pubkey, bin_privkey, keydesc("pub"));
+                    keychain.add_okp(&tempkey, hnid, bin_pubkey, bin_privkey, desc);
                 } break;
             }
 

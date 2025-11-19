@@ -358,6 +358,7 @@ class crypto_keychain {
      */
     return_t add_okp(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
     return_t add_okp(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& d, const keydesc& desc);
+    return_t add_okp(crypto_key* cryptokey, uint32 nid, const byte_t* x, size_t pubsize, const byte_t* d, size_t privsize, const keydesc& desc);
 
     /**
      * @brief   EC
@@ -424,6 +425,8 @@ class crypto_keychain {
      *          04 || x (32 bytes) || y (32 bytes)
      */
     return_t add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const binary_t& pubkey, const binary_t& privkey, const keydesc& desc);
+    return_t add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const byte_t* pubkey, size_t pubsize, const byte_t* privkey, size_t privsize,
+                                 const keydesc& desc);
     return_t add_ec_uncompressed_b64(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc);
     return_t add_ec_uncompressed_b64u(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc);
     return_t add_ec_uncompressed_b16(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc);
@@ -508,6 +511,7 @@ class crypto_keychain {
      */
     return_t add_mlkem(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
     return_t add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const byte_t* pub, size_t pubsize, key_encoding_t encoding, const keydesc& desc);
     return_t add_mlkem_priv(crypto_key* cryptokey, uint32 nid, const binary_t& keypair, key_encoding_t encoding, const keydesc& desc);
 
     return_t add_mlkem_pub_b64(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);

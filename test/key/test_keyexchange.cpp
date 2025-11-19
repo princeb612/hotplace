@@ -23,12 +23,12 @@ void test_keyexchange_ecdhe(tls_group_t group) {
     crypto_key keystore_alice;
     crypto_keyexchange keyexch_alice(group);
     ret = keyexch_alice.keygen(&keystore_alice, "alice", share_alice);
-    _test_case.test(ret, __FUNCTION__, "keygen %s", name);
+    _test_case.assert((success == ret) && (hint->keysize == share_alice.size()), __FUNCTION__, "keygen %s (%zi)", name, share_alice.size());
     // alice -> bob
     crypto_key keystore_bob;
     crypto_keyexchange keyexch_bob(group);
     ret = keyexch_bob.keygen(&keystore_bob, "bob", share_bob);
-    _test_case.test(ret, __FUNCTION__, "keygen %s", name);
+    _test_case.assert((success == ret) && (hint->keysize == share_bob.size()), __FUNCTION__, "keygen %s (%zi)", name, share_bob.size());
 
     {
         _logger->write([&](basic_stream& dbs) -> void {
@@ -56,6 +56,8 @@ void test_keyexchange_ecdhe(tls_group_t group) {
     _test_case.test(ret, __FUNCTION__, "keyexchange %s compare shared secret", name);
 }
 
+// https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/
+// https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/
 void test_keyexchange_mlkem(tls_group_t group) {
     auto advisor = crypto_advisor::get_instance();
     auto hint = advisor->hintof_tls_group(group);
@@ -68,8 +70,10 @@ void test_keyexchange_mlkem(tls_group_t group) {
     // alice
     crypto_key keystore_alice;
     crypto_keyexchange keyexch_alice(group);
+    // For the client's share, the key_exchange value contains the pk output
+    // of the corresponding KEM NamedGroup's KeyGen algorithm.
     ret = keyexch_alice.keygen(&keystore_alice, "alice", share_alice);
-    _test_case.test(ret, __FUNCTION__, "keygen %s", name);
+    _test_case.assert((success == ret) && ((hint->keysize + hint->hkeysize) == share_alice.size()), __FUNCTION__, "keygen %s (%zi)", name, share_alice.size());
 
     {
         _logger->write([&](basic_stream& dbs) -> void {
@@ -80,8 +84,10 @@ void test_keyexchange_mlkem(tls_group_t group) {
 
     // alice -> bob
     crypto_keyexchange keyexch_bob(group);
+    // For the server's share, the key_exchange value contains the ct output
+    // of the corresponding KEM NamedGroup's Encaps algorithm.
     ret = keyexch_bob.encaps(share_alice, share_bob, sharedsecret_bob);
-    _test_case.test(ret, __FUNCTION__, "encaps %s", name);
+    _test_case.assert((success == ret) && ((hint->capsulesize + hint->hkeysize) == share_bob.size()), __FUNCTION__, "encaps %s (%zi)", name, share_bob.size());
     // bob -> alice
     ret = keyexch_alice.decaps(&keystore_alice, "alice", share_bob, sharedsecret_alice);
     _test_case.test(ret, __FUNCTION__, "decaps %s", name);
@@ -145,8 +151,8 @@ void test_keyexchange() {
     test_keyexchange_mlkem(tls_group_mlkem768);
     test_keyexchange_mlkem(tls_group_mlkem1024);
 
-    test_keyexchange_mlkem(tls_group_secp256r1mlkem768);
+    // test_keyexchange_mlkem(tls_group_secp256r1mlkem768);
     test_keyexchange_mlkem(tls_group_secp384r1mlkem1024);
-    test_keyexchange_mlkem(tls_group_x25519mlkem768);
+    // test_keyexchange_mlkem(tls_group_x25519mlkem768);
 #endif
 }

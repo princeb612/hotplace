@@ -55,11 +55,15 @@ return_t crypto_keychain::add_mlkem(crypto_key* cryptokey, uint32 nid, const key
 }
 
 return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, key_encoding_t encoding, const keydesc& desc) {
+    return add_mlkem_pub(cryptokey, nid, &pub[0], pub.size(), encoding, desc);
+}
+
+return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const byte_t* pub, size_t pubsize, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     EVP_PKEY* pkey = nullptr;
     __try2 {
-        if (nullptr == cryptokey) {
+        if (nullptr == cryptokey || nullptr == pub) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -75,11 +79,11 @@ return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const
             case key_encoding_priv_der:
             case key_encoding_encrypted_priv_der:
             case key_encoding_pub_der: {
-                ret = pkey_decode_format(nullptr, &pkey, pub, encoding);
+                ret = pkey_decode_format(nullptr, &pkey, pub, pubsize, encoding);
             } break;
             case key_encoding_priv_raw:
             case key_encoding_pub_raw: {
-                ret = pkey_decode_raw(nullptr, OBJ_nid2sn(nid), &pkey, pub, encoding);
+                ret = pkey_decode_raw(nullptr, OBJ_nid2sn(nid), &pkey, pub, pubsize, encoding);
             }
         }
         if (errorcode_t::success != ret) {

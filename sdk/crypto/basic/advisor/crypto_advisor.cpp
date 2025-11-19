@@ -312,6 +312,9 @@ return_t crypto_advisor::build() {
             {"ML-KEM-512", 0x30500000},
             {"ML-KEM-768", 0x30500000},
             {"ML-KEM-1024", 0x30500000},
+            {"SecP256r1MLKEM768", 0x30500000},
+            {"X25519MLKEM768", 0x30500000},
+            {"SecP384r1MLKEM1024", 0x30500000},
         };
         for (auto item : _table) {
             _features.insert({item.feature, advisor_feature_version});

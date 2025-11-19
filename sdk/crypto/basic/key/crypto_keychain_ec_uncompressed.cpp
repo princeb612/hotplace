@@ -16,6 +16,12 @@ namespace hotplace {
 namespace crypto {
 
 return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const binary_t& pubkey, const binary_t& privkey, const keydesc& desc) {
+    return add_ec_uncompressed(cryptokey, nid, pubkey.empty() ? nullptr : &pubkey[0], pubkey.size(), privkey.empty() ? nullptr : &privkey[0], privkey.size(),
+                               desc);
+}
+
+return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const byte_t* pubkey, size_t pubsize, const byte_t* privkey, size_t privsize,
+                                              const keydesc& desc) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
     EC_KEY* eckey = nullptr;
@@ -39,13 +45,12 @@ return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid,
             __leave2;
         }
 
-        if (pubkey.size()) {
-            auto p = &pubkey[0];
-            o2i_ECPublicKey(&eckey, &p, pubkey.size());
+        // call both o2i_ECPublicKey and EC_KEY_set_private_key
+        if (pubkey && pubsize) {
+            o2i_ECPublicKey(&eckey, &pubkey, pubsize);
         }
-
-        if (privkey.size()) {
-            bn_priv = BN_bin2bn(&privkey[0], privkey.size(), nullptr);
+        if (privkey && privsize) {
+            bn_priv = BN_bin2bn(privkey, privsize, nullptr);
 
             rc = EC_KEY_set_private_key(eckey, bn_priv);
             if (rc != 1) {

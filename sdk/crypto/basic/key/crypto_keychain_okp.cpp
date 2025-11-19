@@ -86,6 +86,10 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const keyde
 }
 
 return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& d, const keydesc& desc) {
+    return add_okp(cryptokey, nid, x.empty() ? nullptr : &x[0], x.size(), d.empty() ? nullptr : &d[0], d.size(), desc);
+}
+
+return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const byte_t* x, size_t pubsize, const byte_t* d, size_t privsize, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     EVP_PKEY* pkey = nullptr;
 
@@ -107,10 +111,13 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const binar
             __leave2;
         }
 
-        if (d.size()) {
-            pkey = EVP_PKEY_new_raw_private_key(nid, nullptr, &d[0], d.size());
-        } else if (x.size()) {
-            pkey = EVP_PKEY_new_raw_public_key(nid, nullptr, &x[0], x.size());
+        if (d && privsize) {
+            pkey = EVP_PKEY_new_raw_private_key(nid, nullptr, d, privsize);
+        } else if (x && pubsize) {
+            pkey = EVP_PKEY_new_raw_public_key(nid, nullptr, x, pubsize);
+        } else {
+            ret = invalid_parameter;
+            __leave2;
         }
         if (nullptr == pkey) {
             ret = errorcode_t::bad_request;

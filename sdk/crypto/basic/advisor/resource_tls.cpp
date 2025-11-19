@@ -35,6 +35,7 @@ const hint_group_t hint_groups[] = {
         "sect163k1",
         kty_ec,
         NID_sect163k1,
+        43,
     },  // K-163, ansit163k1
     {
         tls_group_sect163r1,
@@ -43,6 +44,7 @@ const hint_group_t hint_groups[] = {
         "sect163r1",
         kty_ec,
         NID_sect163r1,
+        43,
     },  // ansit163r1
     {
         tls_group_sect163r2,
@@ -51,6 +53,7 @@ const hint_group_t hint_groups[] = {
         "sect163r2",
         kty_ec,
         NID_sect163r2,
+        43,
     },  // B-163, ansit163r2
     {
         tls_group_sect193r1,
@@ -59,6 +62,7 @@ const hint_group_t hint_groups[] = {
         "sect193r1",
         kty_ec,
         NID_sect193r1,
+        51,
     },  // ansit193r1
     {
         tls_group_sect193r2,
@@ -67,6 +71,7 @@ const hint_group_t hint_groups[] = {
         "sect193r2",
         kty_ec,
         NID_sect193r2,
+        51,
     },  // sect193r2
     {
         tls_group_sect233k1,
@@ -75,6 +80,7 @@ const hint_group_t hint_groups[] = {
         "sect233k1",
         kty_ec,
         NID_sect233k1,
+        61,
     },  // K-233, ansit233k1
     {
         tls_group_sect233r1,
@@ -83,6 +89,7 @@ const hint_group_t hint_groups[] = {
         "sect233r1",
         kty_ec,
         NID_sect233r1,
+        61,
     },  // B-233, ansit233r1
     {
         tls_group_sect239k1,
@@ -91,6 +98,7 @@ const hint_group_t hint_groups[] = {
         "sect239k1",
         kty_ec,
         NID_sect239k1,
+        61,
     },  // ansit239k1
     {
         tls_group_sect283k1,
@@ -99,6 +107,7 @@ const hint_group_t hint_groups[] = {
         "sect283k1",
         kty_ec,
         NID_sect283k1,
+        73,
     },  // K-283, ansit283k1
     {
         tls_group_sect283r1,
@@ -107,6 +116,7 @@ const hint_group_t hint_groups[] = {
         "sect283r1",
         kty_ec,
         NID_sect283r1,
+        73,
     },  // B-283, ansit283r1
     {
         tls_group_sect409k1,
@@ -115,6 +125,7 @@ const hint_group_t hint_groups[] = {
         "sect409k1",
         kty_ec,
         NID_sect409k1,
+        105,
     },  // K-409, ansit409k1
     {
         tls_group_sect409r1,
@@ -123,6 +134,7 @@ const hint_group_t hint_groups[] = {
         "sect409r1",
         kty_ec,
         NID_sect409r1,
+        105,
     },  // B-409, ansit409r1
     {
         tls_group_sect571k1,
@@ -131,6 +143,7 @@ const hint_group_t hint_groups[] = {
         "sect571k1",
         kty_ec,
         NID_sect571k1,
+        145,
     },  // K-571, ansit571k1
     {
         tls_group_sect571r1,
@@ -139,6 +152,7 @@ const hint_group_t hint_groups[] = {
         "sect571r1",
         kty_ec,
         NID_sect571r1,
+        145,
     },  // B-571, ansit571r1
     {
         tls_group_secp160k1,
@@ -147,6 +161,7 @@ const hint_group_t hint_groups[] = {
         "secp160k1",
         kty_ec,
         NID_secp160k1,
+        41,
     },  // ansip160k1
     {
         tls_group_secp160r1,
@@ -155,6 +170,7 @@ const hint_group_t hint_groups[] = {
         "secp160r1",
         kty_ec,
         NID_secp160r1,
+        41,
     },  // ansip160r1
     {
         tls_group_secp160r2,
@@ -163,6 +179,7 @@ const hint_group_t hint_groups[] = {
         "secp160r2",
         kty_ec,
         NID_secp160r2,
+        41,
     },  // ansip160r2
     {
         tls_group_secp192k1,
@@ -171,6 +188,7 @@ const hint_group_t hint_groups[] = {
         "secp192k1",
         kty_ec,
         NID_secp192k1,
+        49,
     },  // ansip192k1
     {
         tls_group_secp192r1,
@@ -179,6 +197,7 @@ const hint_group_t hint_groups[] = {
         "secp192r1",
         kty_ec,
         NID_X9_62_prime192v1,
+        49,
     },  // P-192, prime192v1
     {
         tls_group_secp224k1,
@@ -187,6 +206,7 @@ const hint_group_t hint_groups[] = {
         "secp224k1",
         kty_ec,
         NID_secp224k1,
+        57,
     },  // ansip224k1
     {
         tls_group_secp224r1,
@@ -195,6 +215,7 @@ const hint_group_t hint_groups[] = {
         "secp224r1",
         kty_ec,
         NID_secp224r1,
+        57,
     },  // ansip224r1
     {
         tls_group_secp256k1,
@@ -203,6 +224,7 @@ const hint_group_t hint_groups[] = {
         "secp256k1",
         kty_ec,
         NID_secp256k1,
+        65,
     },  // ansip256k1
     {
         tls_group_secp256r1,
@@ -211,6 +233,7 @@ const hint_group_t hint_groups[] = {
         "secp256r1",
         kty_ec,
         NID_X9_62_prime256v1,
+        65,
     },  // P-256, prime256v1, RFC 8446 9.1 MUST
     {
         tls_group_secp384r1,
@@ -219,6 +242,7 @@ const hint_group_t hint_groups[] = {
         "secp384r1",
         kty_ec,
         NID_secp384r1,
+        97,
     },  // P-384, ansip384r1
     {
         tls_group_secp521r1,
@@ -227,31 +251,8 @@ const hint_group_t hint_groups[] = {
         "secp521r1",
         kty_ec,
         NID_secp521r1,
+        133,
     },  // P-521, ansip521r1
-    {
-        tls_group_brainpoolP256r1,  //  RFC 7027
-        keyexchange_ecdhe,
-        tls_flag_support,
-        "brainpoolP256r1",
-        kty_ec,
-        NID_brainpoolP256r1,
-    },
-    {
-        tls_group_brainpoolP384r1,  //  RFC 7027
-        keyexchange_ecdhe,
-        tls_flag_support,
-        "brainpoolP384r1",
-        kty_ec,
-        NID_brainpoolP384r1,
-    },
-    {
-        tls_group_brainpoolP512r1,  //  RFC 7027
-        keyexchange_ecdhe,
-        tls_flag_support,
-        "brainpoolP512r1",
-        kty_ec,
-        NID_brainpoolP512r1,
-    },
     {
         tls_group_x25519,
         keyexchange_ecdhe,
@@ -259,6 +260,7 @@ const hint_group_t hint_groups[] = {
         "x25519",
         kty_okp,
         NID_X25519,
+        32,
     },  // RFC 8446 8446 9.1 MUST
     {
         tls_group_x448,
@@ -267,6 +269,34 @@ const hint_group_t hint_groups[] = {
         "x448",
         kty_okp,
         NID_X448,
+        56,
+    },
+    {
+        tls_group_brainpoolP256r1,  //  RFC 7027
+        keyexchange_ecdhe,
+        tls_flag_support,
+        "brainpoolP256r1",
+        kty_ec,
+        NID_brainpoolP256r1,
+        65,
+    },
+    {
+        tls_group_brainpoolP384r1,  //  RFC 7027
+        keyexchange_ecdhe,
+        tls_flag_support,
+        "brainpoolP384r1",
+        kty_ec,
+        NID_brainpoolP384r1,
+        97,
+    },
+    {
+        tls_group_brainpoolP512r1,  //  RFC 7027
+        keyexchange_ecdhe,
+        tls_flag_support,
+        "brainpoolP512r1",
+        kty_ec,
+        NID_brainpoolP512r1,
+        129,
     },
     {
         tls_group_brainpoolP256r1tls13,  //  RFC 8734
@@ -275,6 +305,7 @@ const hint_group_t hint_groups[] = {
         "brainpoolP256r1tls13",
         kty_ec,
         NID_brainpoolP256r1,
+        65,
     },
     {
         tls_group_brainpoolP384r1tls13,  //  RFC 8734
@@ -283,6 +314,7 @@ const hint_group_t hint_groups[] = {
         "brainpoolP384r1tls13",
         kty_ec,
         NID_brainpoolP384r1,
+        97,
     },
     {
         tls_group_brainpoolP512r1tls13,  //  RFC 8734
@@ -291,6 +323,7 @@ const hint_group_t hint_groups[] = {
         "brainpoolP512r1tls13",
         kty_ec,
         NID_brainpoolP512r1,
+        129,
     },
     {
         tls_group_GC256A,
@@ -363,6 +396,7 @@ const hint_group_t hint_groups[] = {
         "ffdhe2048",
         kty_dh,
         NID_ffdhe2048,
+        256,
     },
     {
         tls_group_ffdhe3072,
@@ -371,6 +405,7 @@ const hint_group_t hint_groups[] = {
         "ffdhe3072",
         kty_dh,
         NID_ffdhe3072,
+        384,
     },
     {
         tls_group_ffdhe4096,
@@ -379,6 +414,7 @@ const hint_group_t hint_groups[] = {
         "ffdhe4096",
         kty_dh,
         NID_ffdhe4096,
+        512,
     },
     {
         tls_group_ffdhe6144,
@@ -387,6 +423,7 @@ const hint_group_t hint_groups[] = {
         "ffdhe6144",
         kty_dh,
         NID_ffdhe6144,
+        768,
     },
     {
         tls_group_ffdhe8192,
@@ -395,7 +432,9 @@ const hint_group_t hint_groups[] = {
         "ffdhe8192",
         kty_dh,
         NID_ffdhe8192,
+        1024,
     },
+    // https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/
     {
         tls_group_mlkem512,
         keyexchange_mlkem,
@@ -426,10 +465,11 @@ const hint_group_t hint_groups[] = {
         1568,
         1568,
     },
+    // https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/
     {
         tls_group_secp256r1mlkem768,
         keyexchange_mlkem,
-        tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "SecP256r1MLKEM768",
         kty_mlkem,
         nid_mlkem768,
@@ -442,7 +482,7 @@ const hint_group_t hint_groups[] = {
     {
         tls_group_x25519mlkem768,
         keyexchange_mlkem,
-        tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "X25519MLKEM768",
         kty_mlkem,
         nid_mlkem768,
@@ -455,7 +495,7 @@ const hint_group_t hint_groups[] = {
     {
         tls_group_secp384r1mlkem1024,
         keyexchange_mlkem,
-        tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "SecP384r1MLKEM1024",
         kty_mlkem,
         nid_mlkem1024,

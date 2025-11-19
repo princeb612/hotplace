@@ -381,12 +381,12 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
             correct_group = false;
         }
 
-        auto pkey_svr = tlskey.find_group(get_kid().c_str(), group);
-        auto pkey_cli = protection.get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);
-
         if (kty_mlkem == kty_group) {
             // encapsulate
         } else {
+            auto pkey_svr = tlskey.find_group(get_kid().c_str(), group);
+            auto pkey_cli = protection.get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);
+
             if (nullptr == pkey_svr) {
                 correct_group = false;
             } else {
@@ -416,22 +416,12 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
             if (kty_mlkem == kty_group) {
                 keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, share);
 
-#if defined DEBUG
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_extension,
-                                      [&](basic_stream& dbs) -> void { dbs.println("%zi %s", share.size(), base16_encode(share).c_str()); });
-                }
-#endif
-
                 binary_t sharedsecret;
                 keyexchange.encaps((tls_group_t)group, share, keycapsule, sharedsecret);
                 protection.get_secrets().assign(tls_context_shared_secret, sharedsecret);
 #if defined DEBUG
                 if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                        dbs.println("   > encaps");
-                        dbs.println("%zi %s", keycapsule.size(), base16_encode(keycapsule).c_str());
-                    });
+                    trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void { dbs.println("   > encaps"); });
                 }
 #endif
                 pubkey = std::move(keycapsule);

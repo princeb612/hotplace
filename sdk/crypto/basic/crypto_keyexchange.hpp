@@ -113,6 +113,12 @@ class crypto_keyexchange {
 
     /**
      * @brief group
+     * @remarks
+     *          alice           bob             TLS
+     *          - keygen
+     *          - keyshare  ----> public key    CH
+     *                          - encaps        SH
+     *          - decaps    <---- keycapsle     SH
      */
     return_t keygen(tls_group_t group, crypto_key* key, const char* kid);
     return_t keyshare(tls_group_t group, crypto_key* key, const char* kid, binary_t& share);
