@@ -57,14 +57,9 @@ void test_mlkem_keyuse(tls_group_t group, const binary_t &share) {
         _test_case.test(ret, __FUNCTION__, "store %s", name);
         auto dump_crypto_key = [&](crypto_key_object *item, void *) -> void {
             auto kid = item->get_desc().get_kid_cstr();
-            auto pkey = key.find(kid);
-            _test_case.assert(nullptr != pkey, __FUNCTION__, "find %s", kid);
-
-            auto kty = ktyof_evp_pkey(pkey);
-            _test_case.assert(kty_mlkem == kty, __FUNCTION__, "kty %s", nameof_key_type(kty));
 
             _logger->write([&](basic_stream &bs) -> void {
-                bs.println("\e[1;32m> kid \"%s\"\e[0m", item->get_desc().get_kid_cstr());
+                bs.println("\e[1;32m> kid \"%s\"\e[0m", kid);
                 dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
             });
         };
@@ -87,15 +82,7 @@ void test_mlkem_keyuse() {
     struct testvector {
         tls_group_t group;
         const char *client_share;
-        int flags;
     };
-    // - test vector
-    //   - generated using curl 8.15.0
-    // - fail case
-    //   - tls_group_secp256r1mlkem768
-    //   - tls_group_secp384r1mlkem1024
-    // - error
-    //   - EVP_PKEY_fromdata
     testvector tv[] = {
         {
             tls_group_secp256r1mlkem768,
@@ -117,7 +104,6 @@ void test_mlkem_keyuse() {
             "099889b190a49b2710d7254bc73f4d151dc26b87221c6081300e62f72bb15549be817875181dd2f51090578ca1466c431b9d5080b8f3907b1907847a582d613c8086fc9960f05f14b1"
             "a987fb9091b7092575181d5534c6663599a516965658fec9b557f2a3a1c460beb29328fc81b6fa35b867ac91811c6fb3914b3eea73d3b8b6686b80a1106858573cadd3c5ec748e4515"
             "da14afaaf20607b7",
-            0,
         },
         {
             tls_group_x25519mlkem768,
@@ -164,15 +150,12 @@ void test_mlkem_keyuse() {
             "803adfc43e20e4586b06997f0b857079608cd2ca01e2768e24b5343a56b2f7a9194702f59ba8e8b04c96f6ba6536b515d7555de9a1eceb02b7133576b8027961852e6b00a8659d4810"
             "7af5b7c447a628e59a5c5c67576e034b91f2c11df8235d08ccba0ab38d4533d72570dd8875fe81a22649660446aac3d9661b4abba87204e20b66e9699f4818a387d8ad0df721ca26c6"
             "786cc7c5a8a595e0166b16ad7faa72da90bd63978739865ca6c1078eb11d21d9c9cbbfa8a40c6ac917d54a4f04efa59f152b5d287189e0915d8aa6",
-            0,
         },
     };
     for (auto i = 0; i < RTL_NUMBER_OF(tv); i++) {
         auto item = tv + i;
-        if (item->flags) {
-            auto share = base16_decode(item->client_share);
-            test_mlkem_keyuse(item->group, share);
-        }
+        auto share = base16_decode(item->client_share);
+        test_mlkem_keyuse(item->group, share);
     }
 }
 

@@ -29,12 +29,11 @@
     * CBOR
 
 * details
+  * Revision 902
   * Revision 901
     * [tested] TLS 1.3 X25519MLKEM768
   * Revision 898
     * [tested] keyexchange TLS group
-  * Revision 896
-    * [tested] X25519MLKEM768
   * Revision 890
     * [tested] TLS 1.3 MLKEM512, MLKEM768, MLKEM1024
   * Revision 889

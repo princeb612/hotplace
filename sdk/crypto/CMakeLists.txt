@@ -20,7 +20,6 @@ file (GLOB FILEGROUP_SDK_SOURCE_CRYPTO
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/digest/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/kdf/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/key/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/keyexchange/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/mac/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/pqc/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/prng/*.cpp

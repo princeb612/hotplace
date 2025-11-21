@@ -119,6 +119,11 @@ class crypto_keyexchange {
      *          - keyshare  ----> public key    CH
      *                          - encaps        SH
      *          - decaps    <---- keycapsle     SH
+     *
+     *          inconsistent concatenation
+     *          - tls_group_secp256r1mlkem768  secp256r1 || mlkem768
+     *          - tls_group_x25519mlkem768     mlkem768 || x25519 (due to historical reasons)
+     *          - tls_group_secp384r1mlkem1024 secp384r1 || mlkem1024
      */
     return_t keygen(tls_group_t group, crypto_key* key, const char* kid);
     return_t keyshare(tls_group_t group, crypto_key* key, const char* kid, binary_t& share);

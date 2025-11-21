@@ -284,9 +284,6 @@ return_t crypto_advisor::build() {
 
     for (i = 0; i < sizeof_hint_groups; i++) {
         auto item = hint_groups + i;
-        if (item->nid) {
-            _tls_group_nid_map.insert({item->nid, item});
-        }
         if (tls_group_unknown != item->group) {
             _tls_group_map.insert({item->group, item});
         }

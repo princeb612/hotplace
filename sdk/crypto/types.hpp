@@ -1304,18 +1304,20 @@ enum tls_resource_flag_t : uint8 {
     tls_flag_hybrid = (1 << 3),   // hybrid
 };
 
+struct hint_group_item_t {
+    crypto_kty_t kty;
+    uint32 nid;
+    uint16 keysize;
+    uint16 capsulesize;
+};
+
 struct hint_group_t {
     uint16 group;        // tls_group_t
     keyexchange_t exch;  // keyexchange_ecdhe, keyexchange_mlkem
     uint8 flags;         // tls_resource_flag_t
     const char* name;
-    crypto_kty_t kty;
-    uint32 nid;
-    uint16 keysize;
-    uint16 capsulesize;
-    crypto_kty_t hkty;  // hybrid
-    uint32 hnid;        // bybrid
-    uint16 hkeysize;    // hybrid (EC uncompressed, OKP x)
+    hint_group_item_t first;
+    hint_group_item_t second;  // hybrid
 };
 
 ///////////////////////////////////////////////////////////////////////////

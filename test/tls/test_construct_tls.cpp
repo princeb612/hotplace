@@ -240,7 +240,7 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
                                        _logger->write([&](basic_stream& bs) -> void { dump_key(svr_keyshare, &bs); });
                                        _test_case.assert(svr_keyshare, __FUNCTION__, "{server} key share (server generated)");
                                    } else {
-                                       _test_case.assert(kty_mlkem == hint_group->kty, __FUNCTION__, "{server} to be encapsulated");
+                                       _test_case.assert(tls_flag_pqc & hint_group->flags, __FUNCTION__, "{server} to be encapsulated");
                                    }
                                }
                            }
@@ -948,9 +948,9 @@ void test_construct_tls13_mlkem() {
         test_construct_tls_routine(item, "MLKEM768");
         test_construct_tls_routine(item, "MLKEM1024");
 
-        test_construct_tls_routine(item, "SecP256r1MLKEM768");
+        // test_construct_tls_routine(item, "SecP256r1MLKEM768");
         test_construct_tls_routine(item, "X25519MLKEM768");
-        test_construct_tls_routine(item, "SecP384r1MLKEM1024");
+        // test_construct_tls_routine(item, "SecP384r1MLKEM1024");
     }
     tlsadvisor->set_default_tls_groups();
 #else

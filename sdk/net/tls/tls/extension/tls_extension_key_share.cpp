@@ -316,22 +316,18 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
             pl.get_binary(constexpr_pubkey, pubkey);
 
             auto hint = advisor->hintof_tls_group(group);
-            auto kty = hint ? hint->kty : kty_unknown;
 
             if (pubkeylen) {
                 crypto_keyexchange keyexchange;
                 auto& tlskey = protection.get_key();
                 binary_t shared_secret;
-                switch (kty) {
-                    case kty_mlkem: {
-                        keyexchange.decaps((tls_group_t)group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, pubkey, shared_secret);
-                        protection.get_secrets().assign(tls_context_shared_secret, shared_secret);
-                    } break;
-                    default: {
-                        // RFC 8446 the server's share MUST be in the same group as one of the client's shares.
-                        add_pubkey(group, pubkey, keydesc(get_kid()), dir);
-                        // and then ECDHE, HRR (see calc)
-                    }
+                if (tls_flag_pqc & hint->flags) {
+                    keyexchange.decaps((tls_group_t)group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, pubkey, shared_secret);
+                    protection.get_secrets().assign(tls_context_shared_secret, shared_secret);
+                } else {
+                    // RFC 8446 the server's share MUST be in the same group as one of the client's shares.
+                    add_pubkey(group, pubkey, keydesc(get_kid()), dir);
+                    // and then ECDHE, HRR (see calc)
                 }
             }
 
@@ -372,16 +368,14 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
         auto group = group_enforced ? group_enforced : protection.get_protection_context().get0_keyshare_group();
         auto hint_group = advisor->hintof_tls_group(group);
         bool correct_group = true;
-        auto kty_group = kty_unknown;
-        uint32 nid = 0;
+        bool iskindof_mlkem = false;
         if (hint_group) {
-            kty_group = hint_group->kty;
-            nid = hint_group->nid;
+            iskindof_mlkem = (tls_flag_pqc & hint_group->flags);
         } else {
             correct_group = false;
         }
 
-        if (kty_mlkem == kty_group) {
+        if (iskindof_mlkem) {
             // encapsulate
         } else {
             auto pkey_svr = tlskey.find_group(get_kid().c_str(), group);
@@ -413,7 +407,7 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
             binary_t share;
             binary_t keycapsule;
 
-            if (kty_mlkem == kty_group) {
+            if (iskindof_mlkem) {
                 keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, share);
 
                 binary_t sharedsecret;

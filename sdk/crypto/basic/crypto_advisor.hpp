@@ -550,7 +550,6 @@ class crypto_advisor {
      * @return const hint_curve_t*
      */
     const hint_curve_t* hintof_curve_tls_group(uint16 group);
-    const hint_group_t* hintof_tls_group_nid(uint32 nid);
     const hint_group_t* hintof_tls_group(uint16 group);
     const hint_group_t* hintof_tls_group(const std::string& name);
     void enum_tls_group(std::function<void(const hint_group_t*)> func);
@@ -799,11 +798,9 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     // TLS
     ///////////////////////////////////////////////////////////////////////////
-    typedef std::map<uint32, const hint_group_t*> tls_group_nid_map_t;
     typedef std::map<uint16, const hint_group_t*> tls_group_map_t;
     typedef std::map<std::string, const hint_group_t*> tls_group_name_map_t;
     typedef std::map<uint16, const hint_curve_t*> tls_group_curve_map_t;
-    tls_group_nid_map_t _tls_group_nid_map;
     tls_group_map_t _tls_group_map;
     tls_group_name_map_t _tls_group_name_map;
     tls_group_curve_map_t _tls_group_curve_map;

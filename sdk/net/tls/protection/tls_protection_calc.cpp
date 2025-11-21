@@ -289,9 +289,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     auto group = get_protection_context().get0_keyshare_group();
                     auto hint_group = advisor->hintof_tls_group(group);
                     if (hint_group) {
-                        auto kty_group = hint_group->kty;
-                        uint32 nid = hint_group->nid;
-                        if (kty_mlkem == kty_group) {
+                        if (tls_flag_pqc & hint_group->flags) {
                             // tls_extension_key_share
                         } else {
                             pkey_priv = get_key().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE, group);

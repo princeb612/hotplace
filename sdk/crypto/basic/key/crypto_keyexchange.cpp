@@ -111,8 +111,8 @@ return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const ch
             __leave2;
         }
 
-        auto nid = hint->nid;
-        auto kty = hint->kty;
+        auto nid = hint->first.nid;
+        auto kty = hint->first.kty;
 
         auto pkey = key->find_nid(kid, nid);
         if (pkey) {
@@ -130,8 +130,8 @@ return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const ch
 
         if (tls_flag_hybrid & hint->flags) {
             // keygen
-            auto hnid = hint->hnid;
-            ret = keychain.add(key, hnid, desc);
+            const auto& hybrid = hint->second;
+            ret = keychain.add(key, hybrid.nid, desc);
         }
     }
     __finally2 {}
@@ -160,13 +160,13 @@ return_t crypto_keyexchange::keyshare(tls_group_t group, crypto_key* key, const 
             __leave2;
         }
 
-        auto nid = hint->nid;
-        auto kty = hint->kty;
+        auto nid = hint->first.nid;
+        auto kty = hint->first.kty;
 
         // keygen
         crypto_keychain keychain;
+        binary_t bin_privkey;  // dummy
 
-        binary_t bin_privkey;
         auto prk = key->find_nid(kid, nid);
         ret = key->get_key(prk, public_key, share, bin_privkey, true);
         if (success != ret) {
@@ -175,8 +175,7 @@ return_t crypto_keyexchange::keyshare(tls_group_t group, crypto_key* key, const 
 
         if (tls_flag_hybrid & hint->flags) {
             // keygen
-            auto hnid = hint->hnid;
-            // ret = keychain.add(key, hnid, keydesc(kid));
+            const auto& hybrid = hint->second;
 
             /**
              * public key
@@ -184,7 +183,7 @@ return_t crypto_keyexchange::keyshare(tls_group_t group, crypto_key* key, const 
              *   default: raw format
              */
             binary_t hshare;
-            auto hkey = key->find_nid(kid, hnid);
+            auto hkey = key->find_nid(kid, hybrid.nid);
             ret = key->get_key(hkey, public_key, hshare, bin_privkey, true);
             if (success != ret) {
                 __leave2;
@@ -216,13 +215,14 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
             __leave2;
         }
 
-        if (hint->keysize + hint->hkeysize != share.size()) {
+        if (hint->first.keysize + hint->second.keysize != share.size()) {
             ret = bad_data;
             __leave2;
         }
 
-        auto nid = hint->nid;
-        auto kty = hint->kty;
+        auto nid = hint->first.nid;
+        auto kty = hint->first.kty;
+        size_t keysize = hint->first.keysize;
 
         crypto_keychain keychain;
         binary_t bin_privkey;  // dummy
@@ -232,31 +232,35 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
                 ret = keychain.add_dh(storage, nid, share, bin_privkey, desc);
             } break;
             case kty_ec: {
-                ret = keychain.add_ec_uncompressed(storage, nid, share, bin_privkey, desc);
+                ret = keychain.add_ec_uncompressed(storage, nid, &share[0], keysize, nullptr, 0, desc);
             } break;
             case kty_okp: {
-                ret = keychain.add_okp(storage, nid, share, bin_privkey, desc);
+                ret = keychain.add_okp(storage, nid, &share[0], keysize, nullptr, 0, desc);
             } break;
             case kty_mlkem: {
-                auto keysize = hint->keysize;
                 ret = keychain.add_mlkem_pub(storage, nid, &share[0], keysize, key_encoding_pub_raw, desc);
-                if (tls_flag_hybrid & hint->flags) {
-                    auto hkty = hint->hkty;
-                    auto hnid = hint->hnid;
-                    auto hkeysize = hint->hkeysize;
-                    switch (hkty) {
-                        case kty_ec: {
-                            ret = keychain.add_ec_uncompressed(storage, hnid, &share[keysize], hkeysize, nullptr, 0, desc);
-                        } break;
-                        case kty_okp: {
-                            ret = keychain.add_okp(storage, hnid, &share[keysize], hkeysize, nullptr, 0, desc);
-                        } break;
-                    }
-                }
             } break;
             default: {
                 ret = bad_request;
             } break;
+        }
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        if (tls_flag_hybrid & hint->flags) {
+            const auto& hybrid = hint->second;
+            switch (hybrid.kty) {
+                case kty_okp: {
+                    ret = keychain.add_okp(storage, hybrid.nid, &share[keysize], hybrid.keysize, nullptr, 0, desc);
+                } break;
+                case kty_mlkem: {
+                    ret = keychain.add_mlkem_pub(storage, hybrid.nid, &share[keysize], hybrid.keysize, key_encoding_pub_raw, desc);
+                } break;
+                default: {
+                    ret = bad_request;
+                } break;
+            }
         }
     }
     __finally2 {}
@@ -338,7 +342,6 @@ return_t crypto_keyexchange::exchange(tls_group_t group, crypto_key* key, crypto
 
 return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, binary_t& keycapsule, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY* pkey = nullptr;
     __try2 {
         auto advisor = crypto_advisor::get_instance();
         auto hint = advisor->hintof_tls_group(group);
@@ -356,114 +359,101 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
             __leave2;
         }
 
-        auto keysize = hint->keysize;
-        auto hkeysize = hint->hkeysize;
-        auto expect_share = keysize + hkeysize;
-        if (expect_share != share.size()) {
-            ret = unexpected;
-            __leave2;
-        }
-
-        const char* name = nullptr;
-        const char* hname = nullptr;
-        switch (group) {
-            case tls_group_mlkem512: {
-                name = "ML-KEM-512";
-            } break;
-            case tls_group_secp256r1mlkem768: {
-                name = "ML-KEM-768";
-                hname = "secp256r1";
-            } break;
-            case tls_group_mlkem768: {
-                name = "ML-KEM-768";
-            } break;
-            case tls_group_x25519mlkem768: {
-                name = "ML-KEM-768";
-                hname = "x25519";
-            } break;
-            case tls_group_mlkem1024: {
-                name = "ML-KEM-1024";
-            } break;
-            case tls_group_secp384r1mlkem1024: {
-                name = "ML-KEM-1024";
-                hname = "secp384r1";
-            } break;
-            default: {
-                ret = not_supported;
-            }
-        }
-        if (success != ret) {
-            __leave2;
-        }
-
+        crypto_key key;
+        crypto_keychain keychain;
         openssl_pqc pqc;
+
+        const char* kid = "clientshare";
+        const char* epkid = "epk";
+
+        ret = keystore(group, &key, kid, share);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        const auto& first = hint->first;
+        const auto& second = hint->second;
+
         binary_t kc;
         binary_t ss;
-        ret = pqc.decode(nullptr, name, &pkey, &share[0], keysize, key_encoding_pub_raw);
-        if (success != ret) {
-            __leave2;
+
+        switch (first.kty) {
+            case kty_mlkem: {
+                auto pkey = key.find_nid(kid, first.nid);
+                ret = pqc.encapsule(nullptr, pkey, kc, ss);
+            } break;
+            case kty_ec: {
+                ret = keychain.add(&key, first.nid, keydesc(epkid));  // hybrid
+            } break;
         }
-        ret = pqc.encapsule(nullptr, pkey, kc, ss);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
         if (tls_flag_hybrid & hint->flags) {
-            crypto_key tempkey;
-            crypto_keychain keychain;
-            auto hkty = hint->hkty;
-            auto hnid = hint->hnid;
+            /**
+             * kty_ec || kty_mlkem
+             *   tls_group_secp256r1mlkem768
+             *   tls_group_secp384r1mlkem1024
+             * kty_mlkem || kty_okp
+             *   tls_group_x25519mlkem768
+             */
 
-            keydesc desc("pub");
-            binary_t bin_pubkey;
-            binary_t bin_privkey;
-            binary_append(bin_pubkey, &share[keysize], hkeysize);
-
-            switch (hkty) {
-                case kty_ec: {
-                    keychain.add_ec_uncompressed(&tempkey, hnid, bin_pubkey, bin_privkey, desc);
+            auto hkey = key.find_nid(kid, second.nid);
+            switch (second.kty) {
+                case kty_mlkem: {
+                    ret = pqc.encapsule(nullptr, hkey, kc, ss);
                 } break;
                 case kty_okp: {
-                    keychain.add_okp(&tempkey, hnid, bin_pubkey, bin_privkey, desc);
+                    keychain.add(&key, second.nid, keydesc(epkid));
+                } break;
+                default: {
+                    ret = not_supported;
                 } break;
             }
 
-            keychain.add(&tempkey, hnid, keydesc("epk"));
+            binary_t hybrid_kc;
+            binary_t hybrid_ss;
+            auto prk = key.find(epkid);
+            auto pbk = key.find_nid(kid, (kty_mlkem == first.kty) ? second.nid : first.nid);
 
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
                 trace_debug_event(trace_category_crypto, trace_event_keyexchange, [&](basic_stream& dbs) -> void {
-                    dbs.println("\e[1;33mtemporary keys\e[0m");
-                    tempkey.for_each([&](crypto_key_object* obj, void*) -> void {
-                        dbs.println("\e[1;32m> kid \"%s\"\e[0m", obj->get_desc().get_kid_cstr());
-                        dump_key(obj->get_pkey(), &dbs, 15, 4, dump_notrunc);
-                    });
+                    dbs.println("\e[1;33mepk\e[0m");
+                    dump_key(prk, &dbs, 15, 4, dump_notrunc);
                 });
             }
 #endif
 
-            binary_t hybrid_kc;
-            binary_t hybrid_ss;
-            auto prk = tempkey.find("epk");
-            auto pbk = tempkey.find("pub");
             ret = dh_key_agreement(prk, pbk, hybrid_ss);
             if (success != ret) {
                 __leave2;
             }
 
-            tempkey.get_key(prk, public_key, hybrid_kc, bin_privkey, true);
-            binary_append(kc, hybrid_kc);
-            binary_append(ss, hybrid_ss);
+            binary_t bin_privkey;  // dummy
+            key.get_key(prk, public_key, hybrid_kc, bin_privkey, true);
+
+            switch (group) {
+                case tls_group_secp256r1mlkem768:
+                case tls_group_secp384r1mlkem1024: {
+                    kc.insert(kc.begin(), hybrid_kc.begin(), hybrid_kc.end());
+                    ss.insert(ss.begin(), hybrid_ss.begin(), hybrid_ss.end());
+                } break;
+                case tls_group_x25519mlkem768: {
+                    binary_append(kc, hybrid_kc);
+                    binary_append(ss, hybrid_ss);
+                } break;
+                default: {
+                    ret = not_supported;
+                } break;
+            }
         }
 
         keycapsule = std::move(kc);
         sharedsecret = std::move(ss);
     }
-    __finally2 {
-        if (pkey) {
-            EVP_PKEY_free(pkey);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -486,62 +476,71 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
             __leave2;
         }
 
-        auto capsulesize = hint->capsulesize;
-        auto hkeysize = hint->hkeysize;
-        auto expect_share = capsulesize + hkeysize;
-        if (expect_share != share.size()) {
-            ret = unexpected;
+        const auto& first = hint->first;
+        const auto& second = hint->second;
+        size_t expect_size = (kty_mlkem == first.kty) ? first.capsulesize + second.keysize : first.keysize + second.capsulesize;
+        if (expect_size != share.size()) {
+            ret = bad_data;
             __leave2;
         }
 
-        crypto_key pubkey;
+        const char* sskid = "servershare";
+
+        crypto_key tempkey;
+        crypto_keychain keychain;
         openssl_pqc pqc;
         binary_t ss;
-        auto nid = hint->nid;
-        auto kty = hint->kty;
+        auto capsulesize = first.capsulesize;
+        auto keysize = first.keysize;
+        keydesc desc(sskid);
 
-        auto pkey = key->find_nid(kid, nid);
-        ret = pqc.decapsule(nullptr, pkey, &share[0], capsulesize, ss);
-        if (success != ret) {
+        switch (first.kty) {
+            case kty_mlkem: {
+                auto pkey = key->find_nid(kid, first.nid);
+                ret = pqc.decapsule(nullptr, pkey, &share[0], capsulesize, ss);
+            } break;
+            case kty_ec: {
+                ret = keychain.add_ec_uncompressed(&tempkey, first.nid, &share[0], keysize, nullptr, 0, desc);
+            } break;
+            default: {
+                ret = not_supported;
+            } break;
+        }
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
         if (tls_flag_hybrid & hint->flags) {
-            auto hkty = hint->hkty;
-            auto hnid = hint->hnid;
-            auto hkeysize = hint->hkeysize;
-
-            crypto_key tempkey;
-            crypto_keychain keychain;
-
-            keydesc desc("pub");
-            binary_t bin_pubkey;
-            binary_t bin_privkey;
-            binary_append(bin_pubkey, &share[capsulesize], hkeysize);
-
-            switch (hkty) {
-                case kty_ec: {
-                    keychain.add_ec_uncompressed(&tempkey, hnid, bin_pubkey, bin_privkey, desc);
+            switch (second.kty) {
+                case kty_mlkem: {
+                    auto pkey = key->find_nid(kid, second.nid);
+                    ret = pqc.decapsule(nullptr, pkey, &share[keysize], second.capsulesize, ss);
                 } break;
                 case kty_okp: {
-                    keychain.add_okp(&tempkey, hnid, bin_pubkey, bin_privkey, desc);
+                    ret = keychain.add_okp(&tempkey, second.nid, &share[capsulesize], second.keysize, nullptr, 0, desc);
+                } break;
+                default: {
+                    ret = not_supported;
                 } break;
             }
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+
+            auto ecnid = (kty_mlkem == first.kty) ? second.nid : first.nid;
+            auto prk = key->find_nid(kid, ecnid);
+            auto pbk = tempkey.find_nid(sskid, ecnid);
 
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
                 trace_debug_event(trace_category_crypto, trace_event_keyexchange, [&](basic_stream& dbs) -> void {
-                    dbs.println("\e[1;33mtemporary keys\e[0m");
-                    tempkey.for_each([&](crypto_key_object* obj, void*) -> void {
-                        dbs.println("\e[1;32m> kid \"%s\"\e[0m", obj->get_desc().get_kid_cstr());
-                        dump_key(obj->get_pkey(), &dbs, 15, 4, dump_notrunc);
-                    });
+                    dbs.println("\e[1;33m%s\e[0m", kid);
+                    dump_key(prk, &dbs, 15, 4, dump_notrunc);
+                    dbs.println("\e[1;33m%s\e[0m", sskid);
+                    dump_key(pbk, &dbs, 15, 4, dump_notrunc);
                 });
             }
 #endif
-
-            auto prk = key->find_nid(kid, hnid);
-            auto pbk = tempkey.find_nid("pub", hnid);
 
             binary_t hybrid_ss;
             ret = dh_key_agreement(prk, pbk, hybrid_ss);
@@ -549,7 +548,15 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
                 __leave2;
             }
 
-            binary_append(ss, hybrid_ss);
+            switch (group) {
+                case tls_group_secp256r1mlkem768:
+                case tls_group_secp384r1mlkem1024: {
+                    ss.insert(ss.begin(), hybrid_ss.begin(), hybrid_ss.end());
+                } break;
+                case tls_group_x25519mlkem768: {
+                    binary_append(ss, hybrid_ss);
+                } break;
+            }
         }
 
         sharedsecret = std::move(ss);

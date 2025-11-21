@@ -22,14 +22,6 @@ const hint_curve_t* crypto_advisor::hintof_curve_tls_group(uint16 group) {
     return item;
 }
 
-const hint_group_t* crypto_advisor::hintof_tls_group_nid(uint32 nid) {
-    const hint_group_t* item = nullptr;
-    t_maphint<uint32, const hint_group_t*> hint(_tls_group_nid_map);
-
-    hint.find(nid, &item);
-    return item;
-}
-
 const hint_group_t* crypto_advisor::hintof_tls_group(uint16 group) {
     const hint_group_t* item = nullptr;
     t_maphint<uint16, const hint_group_t*> hint(_tls_group_map);
@@ -76,7 +68,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, tls_group_t group) {
         if (tls_group_unknown == hint->group) {
             __leave2;
         }
-        ret = (nid == hint->nid);
+        ret = (nid == hint->first.nid || nid == hint->second.nid);
     }
     __finally2 {}
     return ret;
