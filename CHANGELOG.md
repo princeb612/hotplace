@@ -29,7 +29,9 @@
     * CBOR
 
 * details
+  * Revision 903
   * Revision 902
+    * [fixed] SecP256r1MLKEM768, SecP384r1MLKEM1024
   * Revision 901
     * [tested] TLS 1.3 X25519MLKEM768
   * Revision 898

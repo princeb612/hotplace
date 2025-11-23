@@ -163,9 +163,8 @@ void test_keyexchange() {
     test_keyexchange_mlkem(tls_group_mlkem768);
     test_keyexchange_mlkem(tls_group_mlkem1024);
 
-    // test failed - httpserver
-    // test_keyexchange_mlkem(tls_group_secp256r1mlkem768);
-    // test_keyexchange_mlkem(tls_group_secp384r1mlkem1024);
+    test_keyexchange_mlkem(tls_group_secp256r1mlkem768);
+    test_keyexchange_mlkem(tls_group_secp384r1mlkem1024);
     test_keyexchange_mlkem(tls_group_x25519mlkem768);
 #endif
 }
