@@ -929,7 +929,19 @@ void test_construct_tls() {
     };
 
     for (auto item : testvector) {
+        test_construct_tls_routine(item, "secp256r1");
+        test_construct_tls_routine(item, "secp384r1");
+        test_construct_tls_routine(item, "secp521r1");
         test_construct_tls_routine(item, "x25519");
+        test_construct_tls_routine(item, "x448");
+        test_construct_tls_routine(item, "ffdhe2048");
+        test_construct_tls_routine(item, "ffdhe3072");
+        test_construct_tls_routine(item, "ffdhe4096");
+        test_construct_tls_routine(item, "ffdhe6144");
+        test_construct_tls_routine(item, "ffdhe8192");
+        test_construct_tls_routine(item, (tls_13 == item.version) ? "brainpoolP256r1tls13" : "brainpoolP512r1");
+        test_construct_tls_routine(item, (tls_13 == item.version) ? "brainpoolP384r1tls13" : "brainpoolP384r1");
+        test_construct_tls_routine(item, (tls_13 == item.version) ? "brainpoolP512r1tls13" : "brainpoolP256r1");
     }
 }
 

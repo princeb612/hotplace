@@ -1,34 +1,44 @@
 ## test
 
-- MINGW64 test in progress, linux not yet
-- [ ] tasks
+- [x] tasks
   - [x] baby steps
     - [x] https://tls13.xargs.org
     - [x] https://tls12.xargs.org
     - [x] https://dtls.xargs.org
   - [x] TLS client (Revision 776)
-  - [ ] TLS server
+  - [x] TLS server
     - [x] verification
       - [x] server_key_exchange (TLS 1.2)
         - [x] DER format (Revision 779)
       - [x] certificate_verify (TLS 1.3)
       - [x] finished
       - [x] PSK
-    - [ ] extension
+    - [x] extension
       - [x] key_share (Revision 789)
     - [ ] renegotiation
-      - [x] client_hello renegotiation_info
-      - [x] server_hello renegotiation_info
-      - [ ] key calcurations
-    - [ ] TLS
+    - [x] TLS
       - [x] TLS 1.3
+        - [x] ciphersuite
+          - [x] GCM
+          - [x] CCM
+          - [ ] CCM8 (no test vector)
+          - [x] chacha20-poly1305
+        - [x] group
+          - [x] brainpoolP256r1tls13 brainpoolP384r1tls13 brainpoolP512r1tls13
+          - [x] MLKEM512, MLKEM768, MLKEM1024 (Revision 890)
+          - [x] X25519MLKEM768 (Revision 901)
+          - [x] SecP256r1MLKEM768, SecP384r1MLKEM1024 (Revision 902)
       - [x] TLS 1.2
         - [x] entrypt_then_mac (Revision 752)
-        - [x] CBC
-        - [x] GCM (Revision 788)
-        - [ ] CCM (no test vector)
-        - [x] chacha20-poly1305 (Revision 825)
         - [x] extended_master_secret (Revision 779)
+        - [x] ciphersuite
+          - [x] CBC
+          - [x] GCM (Revision 788)
+          - [x] chacha20-poly1305 (Revision 825)
+        - [x] group
+          - [x] secp256r1, secp384r1, secp521r1
+          - [x] x25519, x448
+          - [x] ffdhe2048, ffdhe3072, ffdhe4096, ffdhe6144, ffdhe8192
   - [x] DTLS
     - [x] DTLS 1.2 fragmentation (Revision 781)
   - [x] sslkeylog

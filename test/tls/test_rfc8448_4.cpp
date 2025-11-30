@@ -17,9 +17,6 @@
 
 #include "sample.hpp"
 
-// understanding ...
-// replay mitigation not implemented
-
 // RFC 8448 4.  Resumed 0-RTT Handshake
 // This handshake resumes from the handshake in Section 3.
 void test_rfc8448_4(tls_session* rfc8448_session) {

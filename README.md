@@ -57,7 +57,8 @@
     * sdk/net/tls/quic/
     * test/quic/
   * ML-KEM Post-Quantum Key Agreement for TLS 1.3
-    * [draft-ietf-tls-mlkem-04](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/)
+    * [draft-ietf-tls-mlkem-05](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/)
+    * [draft-ietf-tls-ecdhe-mlkem-03](https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/)
     * test/tls/
 * CBOR
   * RFC 7049 Concise Binary Object Representation (CBOR)

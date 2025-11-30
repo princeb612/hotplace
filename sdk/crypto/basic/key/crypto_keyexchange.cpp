@@ -434,13 +434,12 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
             binary_t bin_privkey;  // dummy
             key.get_key(prk, public_key, hybrid_kc, bin_privkey, true);
 
-            switch (group) {
-                case tls_group_secp256r1mlkem768:
-                case tls_group_secp384r1mlkem1024: {
+            switch (first.kty) {
+                case kty_ec: {
                     kc.insert(kc.begin(), hybrid_kc.begin(), hybrid_kc.end());
                     ss.insert(ss.begin(), hybrid_ss.begin(), hybrid_ss.end());
                 } break;
-                case tls_group_x25519mlkem768: {
+                case kty_mlkem: {
                     binary_append(kc, hybrid_kc);
                     binary_append(ss, hybrid_ss);
                 } break;

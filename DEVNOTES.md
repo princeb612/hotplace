@@ -12,11 +12,10 @@ TLS
 - RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
 - RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
 - RFC 8448 Example Handshake Traces for TLS 1.3
-  - TLS over TCP not yet
+- ML-KEM Post-Quantum Key Agreement for TLS 1.3
 
 DTLS
 - RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
-  - DTLS over UDP not yet
 
 QUIC
 - RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
