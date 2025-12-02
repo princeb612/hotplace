@@ -24,7 +24,7 @@
           - [ ] CCM8 (no test vector)
           - [x] chacha20-poly1305
         - [x] group
-          - [x] brainpoolP256r1tls13 brainpoolP384r1tls13 brainpoolP512r1tls13
+          - [x] brainpoolP256r1tls13, brainpoolP384r1tls13, brainpoolP512r1tls13
           - [x] MLKEM512, MLKEM768, MLKEM1024 (Revision 890)
           - [x] X25519MLKEM768 (Revision 901)
           - [x] SecP256r1MLKEM768, SecP384r1MLKEM1024 (Revision 902)

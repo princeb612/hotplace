@@ -16,6 +16,8 @@
 namespace hotplace {
 namespace net {
 
+return_t dtls_cookie_dgram_peer_sockaddr(binary_t& cookie, SSL* ssl);
+
 /**
  * @brief   BIO_ADDR*
  */
@@ -25,13 +27,6 @@ return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, soc
  * @remarks BIO_dgram_get_peer(ssl)
  */
 return_t SSL_dgram_peer_sockaddr(SSL* ssl, struct sockaddr* sockaddr, socklen_t addrlen);
-
-/**
- * @brief   dtls cookie
- * @remarks hmac("sha256", app_instance_nonce, (sockaddr*)&address, sizeof(address));
- */
-return_t generate_cookie_sockaddr(binary_t& cookie, const sockaddr* addr, socklen_t addrlen);
-return_t dtls_cookie_dgram_peer_sockaddr(binary_t& cookie, SSL* ssl);
 
 }  // namespace net
 }  // namespace hotplace

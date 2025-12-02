@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/net/basic/trial/secure_prosumer.hpp>
+#include <hotplace/sdk/net/tls/dtls_record_arrange.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_application_data.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_builder.hpp>
@@ -64,9 +65,54 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, 
 
         tls_record_builder builder;
 
-        const byte_t* stream = _mbs.data();
-        size_t size = _mbs.size();
+        auto session_type = session->get_type();
         size_t pos = 0;
+
+        if (session_type_dtls == session_type) {
+            // DTLS (built-in reorder feature)
+            if (nullptr == addr || nullptr == addrlen) {
+                ret = errorcode_t::invalid_parameter;
+                __leave2;
+            }
+            socklen_t socklen = *addrlen;
+
+            auto& arrange = session->get_dtls_record_arrange();
+            arrange.produce(addr, socklen, _mbs.data(), _mbs.size());
+            _mbs.clear();
+
+            while (1) {
+                binary_t packet;
+                auto test = arrange.consume(addr, socklen, packet);
+                if (success == test) {
+                    pos = 0;
+                    ret = do_produce(session, dir, &packet[0], packet.size(), pos, addr, addrlen);
+                } else {
+                    break;  // empty, not_ready
+                }
+            }
+        } else {
+            // TLS, QUIC
+            const byte_t* stream = _mbs.data();
+            size_t size = _mbs.size();
+            ret = do_produce(session, dir, stream, size, pos, addr, addrlen);
+            _mbs.cut(0, pos);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, struct sockaddr* addr,
+                                     socklen_t* addrlen) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == session || nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tls_record_builder builder;
+
         while ((errorcode_t::success == ret) && (pos < size)) {
             uint8 content_type = stream[pos];
             auto record = builder.set(session).set(content_type).build();
@@ -94,7 +140,6 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, 
                 record->release();
             }
         }
-        _mbs.cut(0, pos);
     }
     __finally2 {}
     return ret;

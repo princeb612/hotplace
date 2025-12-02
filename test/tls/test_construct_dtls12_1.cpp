@@ -279,8 +279,14 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         // sketch - arrange, reassemble
 
         // UDP traffic
+        struct sockaddr_in addr;
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(80);
+        inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
+
         _traffic.shuffle();
-        auto lambda = [&](const binary_t& bin) { arrange.produce(&bin[0], bin.size()); };
+        auto lambda = [&](const binary_t& bin) { arrange.produce((sockaddr*)&addr, sizeof(addr), &bin[0], bin.size()); };
         _traffic.consume(lambda);
 
         bool has_fatal = false;
@@ -301,7 +307,7 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         uint64 seq = 0;
         uint32 retry = 10;  // max elements
         while (retry--) {
-            auto test = arrange.consume(epoch, seq, bin);
+            auto test = arrange.consume((sockaddr*)&addr, sizeof(addr), epoch, seq, bin);
             if (empty == test) {
                 break;
             } else if (not_ready == test) {
@@ -552,7 +558,6 @@ void test_construct_dtls12_1() {
     do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384");
     do_test_construct_dtls12_1("TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256");
 
-    // indirectly tested
     // TLS 1.2, httpserver1, curl
 
     do_test_construct_dtls12_1("TLS_ECDHE_ECDSA_WITH_AES_128_CCM");

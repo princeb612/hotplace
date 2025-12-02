@@ -11,6 +11,7 @@
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
+#include <hotplace/sdk/net/basic/util/sdk.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_arrange.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
 #include <hotplace/sdk/net/tls/tls_protection.hpp>
@@ -20,15 +21,21 @@
 namespace hotplace {
 namespace net {
 
-dtls_record_arrange::dtls_record_arrange() : _epoch(0), _seq(0) {}
+dtls_record_arrange::dtls_record_arrange() {}
 
 dtls_record_arrange::~dtls_record_arrange() {}
 
-return_t dtls_record_arrange::produce(const byte_t* stream, size_t size) {
+return_t dtls_record_arrange::produce(const sockaddr* addr, socklen_t addrlen, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == stream || size < sizeof(dtls_header)) {
+        if (nullptr == addr || nullptr == stream || size < sizeof(dtls_header)) {
             ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        binary_t cookie;
+        ret = generate_cookie_sockaddr(cookie, addr, addrlen);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -54,7 +61,9 @@ return_t dtls_record_arrange::produce(const byte_t* stream, size_t size) {
 
             {
                 critical_section_guard guard(_lock);
-                _packets.insert({key, packet});
+                auto& pool = _pool[cookie];
+                memcpy(&pool.addr, addr, addrlen);
+                pool.packets.insert({key, std::move(packet)});
             }
 
             pos += sizeof(dtls_header) + len;
@@ -64,48 +73,63 @@ return_t dtls_record_arrange::produce(const byte_t* stream, size_t size) {
     return ret;
 }
 
-return_t dtls_record_arrange::consume(binary_t& bin) {
+return_t dtls_record_arrange::consume(const sockaddr* addr, socklen_t addrlen, binary_t& bin) {
     uint16 epoch = 0;
     uint64 seq = 0;
-    return consume(epoch, seq, bin);
+    return consume(addr, addrlen, epoch, seq, bin);
 }
 
-return_t dtls_record_arrange::consume(uint16& epoch, uint64& seq, binary_t& bin) {
+return_t dtls_record_arrange::consume(const sockaddr* addr, socklen_t addrlen, uint16& epoch, uint64& seq, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
+        if (nullptr == addr) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         epoch = 0;
         seq = 0;
         bin.clear();
 
+        binary_t cookie;
+        ret = generate_cookie_sockaddr(cookie, addr, addrlen);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        critical_section_guard guard(_lock);
         {
-            critical_section_guard guard(_lock);
-            if (_packets.empty()) {
+            auto& pool = _pool[cookie];
+
+            auto& packets = pool.packets;
+            if (packets.empty()) {
                 ret = errorcode_t::empty;
                 __leave2;
             }
 
-            auto iter = _packets.begin();
-            get_epoch_seq(iter->first, epoch, seq);
+            auto iter = packets.begin();
+            {
+                auto& key = iter->first;
+                get_epoch_seq(key, epoch, seq);
 
-            if ((_epoch != epoch) || (_seq != seq)) {
-                ret = errorcode_t::not_ready;
+                if ((pool.epoch != epoch) || (pool.seq != seq)) {
+                    ret = errorcode_t::not_ready;
+                    __leave2;
+                }
+
+                const binary_t& packet = iter->second;
+                if (tls_content_type_change_cipher_spec == packet[0]) {
+                    pool.epoch++;
+                    pool.seq = 0;
+                } else {
+                    pool.epoch = epoch;
+                    pool.seq = seq + 1;
+                }
+
+                bin = std::move(iter->second);
+
+                packets.erase(iter);
             }
-            if (errorcode_t::success != ret) {
-                __leave2;
-            }
-
-            const binary_t& packet = iter->second;
-            if (tls_content_type_change_cipher_spec == packet[0]) {
-                _epoch++;
-                _seq = 0;
-            } else {
-                _epoch = epoch;
-                _seq = seq + 1;
-            }
-
-            bin = std::move(iter->second);
-
-            _packets.erase(iter);
         }
     }
     __finally2 {}

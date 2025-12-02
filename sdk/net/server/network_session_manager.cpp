@@ -13,6 +13,7 @@
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/net/basic/openssl/sdk.hpp>
 #include <hotplace/sdk/net/basic/server_socket.hpp>
+#include <hotplace/sdk/net/basic/util/sdk.hpp>
 #include <hotplace/sdk/net/server/network_server.hpp>
 #include <hotplace/sdk/net/server/network_session.hpp>
 

@@ -7,10 +7,8 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
-  * Revision 805-
-    * server - DTLS
-    * QUIC, HTTP/3
-    * PQC
+  * Revision 876-904
+    * ML-KEM Post-Quantum Key Agreement for TLS 1.3
   * Revision 777-804
     * server - TLS, HTTP/1.1, HTTP/2
   * Revision 682-776
@@ -29,7 +27,8 @@
     * CBOR
 
 * details
-  * Revision 904
+  * Revision 905
+    * [added] DTLS (built-in reorder feature)
   * Revision 902
     * [fixed] TLS 1.3 SecP256r1MLKEM768, SecP384r1MLKEM1024
   * Revision 901

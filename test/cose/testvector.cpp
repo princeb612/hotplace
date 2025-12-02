@@ -1259,7 +1259,14 @@ const test_vector_github_cose_wg_t test_vector_github_cose_wg[] = {
         "D8608443A1010AA1054DBFE89563EE070CE187BDF1C472581C1C13CAB7971BFDE757EF20AE086FEE3FD06E173D101132D85A02A996818343A1012BA2344653656E646572044A6F75722D73"
         "656372657440",
         {
-            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
             "5075626c6963204f74686572",  // "Public Other"
         },
     },
@@ -1268,7 +1275,15 @@ const test_vector_github_cose_wg_t test_vector_github_cose_wg[] = {
         "hkdf-aes-examples/hmac-aes-128-14.json",
         "D8608443A1010AA1054DBFE89563EE070CE187BDF1C472581C97539E7960276A8CF77A84BB28008082C84D09DB42CCED9FB956D7DB818343A1012BA1044A6F75722D73656372657440",
         {
-            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
             "50726976617465204f746865722044617461",  // "Private Other Data"
         },
     },
@@ -1350,7 +1365,14 @@ const test_vector_github_cose_wg_t test_vector_github_cose_wg[] = {
         "D8608443A1010AA1054DBFE89563EE070CE187BDF1C472581C9C9E6315059087E9C9960EA12F28621746D4AA28589A62EC330D8B0C818343A1012CA2344653656E646572044A6F75722D73"
         "656372657440",
         {
-            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
             "5075626c6963204f74686572",  // "Public Other"
         },
     },
@@ -1359,7 +1381,15 @@ const test_vector_github_cose_wg_t test_vector_github_cose_wg[] = {
         "hkdf-aes-examples/hmac-aes-256-14.json",
         "D8608443A1010AA1054DBFE89563EE070CE187BDF1C472581C65215970E1BE57DE0C7E38F43249D88C2769088B85266475F5096D1D818343A1012CA1044A6F75722D73656372657440",
         {
-            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
             "50726976617465204f746865722044617461",  // "Private Other Data"
         },
     },
@@ -1442,7 +1472,14 @@ const test_vector_github_cose_wg_t test_vector_github_cose_wg[] = {
         "D8608443A1010AA1054DBFE89563EE070CE187BDF1C472581C21331CC990421BAE71871E7B1A9C760E62C8B09C66DB6F3298D94B21818343A10129A2344653656E646572044A6F7572"
         "2D73656372657440",
         {
-            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
             "5075626c6963204f74686572",  // "Public Other"
         },
     },
@@ -1452,7 +1489,15 @@ const test_vector_github_cose_wg_t test_vector_github_cose_wg[] = {
         "D8608443A1010AA1054DBFE89563EE070CE187BDF1C472581CF5CB7489E7F933D1444438D671633D2A4DB756BB5930385B53508700818343A10129A1044A6F75722D7365637265744"
         "0",
         {
-            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
             "50726976617465204f746865722044617461",  // "Private Other Data"
         },
     },
@@ -1534,7 +1579,14 @@ const test_vector_github_cose_wg_t test_vector_github_cose_wg[] = {
         "D8608443A1010AA1054DBFE89563EE070CE187BDF1C472581C90F652D7E399AE8E8734541E081203EDB8D24ED161787AE85C14D443818343A1012AA2344653656E646572044A6F7572"
         "2D73656372657440",
         {
-            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
             "5075626c6963204f74686572",  // "Public Other"
         },
     },
@@ -1544,7 +1596,15 @@ const test_vector_github_cose_wg_t test_vector_github_cose_wg[] = {
         "D8608443A1010AA1054DBFE89563EE070CE187BDF1C472581CA6A8C745350E75285AC4AF50B5742D56D930E1ADC5406233BD11FE27818343A1012AA1044A6F75722D7365637265744"
         "0",
         {
-            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
             "50726976617465204f746865722044617461",  // "Private Other Data"
         },
     },
@@ -1716,11 +1776,14 @@ const test_vector_github_cose_wg_t test_vector_github_cose_wg[] = {
         "D8608443A1010AA1054D89F52F65A1C580933B5261A76C581C753548A19B1307084CA7B2056924ED95F2E3B17006DFE931B687B847818343A10129A233506161626263636464656566"
         "6667676868044A6F75722D73656372657440",
         {
-            nullptr, nullptr,
+            nullptr,
+            nullptr,
             "6c69676874696e672d636c69656e74",  // "lighting-client",
-            nullptr, nullptr,
+            nullptr,
+            nullptr,
             "6c69676874696e672d736572766572",  // "lighting-server",
-            nullptr, nullptr,
+            nullptr,
+            nullptr,
             "456e6372797074696f6e204578616d706c65203032",  // "Encryption Example 02",
         },
     },
@@ -1878,7 +1941,8 @@ const test_vector_github_cose_wg_t test_vector_github_cose_wg[] = {
         1,
     },
     {
-        "key", "sign-tests/sign-pass-02.json",
+        "key",
+        "sign-tests/sign-pass-02.json",
         "D8628440A054546869732069732074686520636F6E74656E742E818343A10126A1044231315840CBB8DAD9BEAFB890E1A414124D8BFBC26BEDF2A94FCB5A882432BFF6D63E15F574EE"
         "B2AB51D83FA2CBF62672EBF4C7D993B0F4C2447647D831BA57CCA86B930A",
         "11aa22bb33cc44dd55006699",  // external

@@ -12,9 +12,29 @@
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/io/system/socket.hpp>
 #include <hotplace/sdk/net/basic/openssl/sdk.hpp>
+#include <hotplace/sdk/net/basic/util/sdk.hpp>
 
 namespace hotplace {
 namespace net {
+
+return_t dtls_cookie_dgram_peer_sockaddr(binary_t& cookie, SSL* ssl) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == ssl) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        sockaddr_storage_t addr;
+        ret = SSL_dgram_peer_sockaddr(ssl, (sockaddr*)&addr, (socklen_t)sizeof(addr));
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = generate_cookie_sockaddr(cookie, (sockaddr*)&addr, (socklen_t)sizeof(addr));
+    }
+    __finally2 {}
+    return ret;
+}
 
 return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
@@ -81,50 +101,6 @@ return_t SSL_dgram_peer_sockaddr(SSL* ssl, struct sockaddr* sockaddr, socklen_t 
             BIO_ADDR_free(bio_addr);
         }
     }
-    return ret;
-}
-
-return_t generate_cookie_sockaddr(binary_t& cookie, const sockaddr* addr, socklen_t addrlen) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == addr) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        unsigned cookie_size = 16;
-        binary_t key;
-        advisor->get_cookie_secret(0, cookie_size, key);
-
-        openssl_hash hash;
-        hash_context_t* handle = nullptr;
-        hash.open(&handle, "sha256", &key[0], key.size());
-        hash.init(handle);
-        hash.update(handle, (byte_t*)addr, addrlen);
-        hash.finalize(handle, cookie);
-        hash.close(handle);
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t dtls_cookie_dgram_peer_sockaddr(binary_t& cookie, SSL* ssl) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == ssl) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        sockaddr_storage_t addr;
-        ret = SSL_dgram_peer_sockaddr(ssl, (sockaddr*)&addr, (socklen_t)sizeof(addr));
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        ret = generate_cookie_sockaddr(cookie, (sockaddr*)&addr, (socklen_t)sizeof(addr));
-    }
-    __finally2 {}
     return ret;
 }
 

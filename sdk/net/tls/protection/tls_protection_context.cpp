@@ -192,11 +192,6 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
             }
         }
 
-        // for (auto ver : rhs._supported_versions) {
-        //     bool is_tls13 = tlsadvisor->is_kindof_tls13(ver);
-        //     tlsversion_map.insert({is_tls13 ? tls_13 : tls_12, ver});
-        // }
-
         {
             // check certificate type(s), see load_certificate
             auto& keys = tlsadvisor->get_keys();

@@ -202,11 +202,6 @@
   * half/single/double precision floating point
     * test/ieee754/
 
-* TLS
-  * Post-quantum hybrid ECDHE-MLKEM Key Agreement for TLSv1.3
-    * [draft-ietf-tls-ecdhe-mlkem-01](https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/01/)
-    * test/pqc/
-
 ## not applied
 
 

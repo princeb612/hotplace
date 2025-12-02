@@ -34,6 +34,8 @@ class secure_prosumer {
 
    protected:
     return_t do_produce(tls_session* session, tls_direction_t dir, struct sockaddr* addr = nullptr, socklen_t* addrlen = nullptr);
+    return_t do_produce(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, struct sockaddr* addr = nullptr,
+                        socklen_t* addrlen = nullptr);
 
     critical_section _mlock;
     std::queue<socket_buffer_t> _mq;
