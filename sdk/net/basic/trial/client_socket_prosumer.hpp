@@ -66,7 +66,7 @@ class client_socket_prosumer : public client_socket {
    protected:
     client_socket_prosumer();
 
-    virtual return_t do_consume(basic_stream& stream);
+    virtual return_t do_consume(basic_stream& stream, sockaddr_storage_t& addr);
     virtual return_t do_handshake();
     virtual return_t do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);
     virtual return_t do_secure();

@@ -62,8 +62,20 @@ return_t dtls_record_arrange::produce(const sockaddr* addr, socklen_t addrlen, c
             {
                 critical_section_guard guard(_lock);
                 auto& pool = _pool[cookie];
-                memcpy(&pool.addr, addr, addrlen);
-                pool.packets.insert({key, std::move(packet)});
+                if (((epoch == pool.epoch) && (seq < pool.seq)) || ((epoch < pool.epoch))) {
+                    // drop re-transmission
+                } else {
+                    if (0 == pool.addr.ss_family) {
+                        memcpy(&pool.addr, addr, addrlen);
+                    }
+#if defined DEBUG
+                    if (istraceable(trace_category_net)) {
+                        trace_debug_event(trace_category_net, trace_event_tls_record,
+                                          [&](basic_stream& dbs) -> void { dbs.println("\e[1;35mDTLS reorder + epoch %u seq %I64u\e[0m", epoch, seq); });
+                    }
+#endif
+                    pool.packets.insert({key, std::move(packet)});
+                }
             }
 
             pos += sizeof(dtls_header) + len;
@@ -116,6 +128,13 @@ return_t dtls_record_arrange::consume(const sockaddr* addr, socklen_t addrlen, u
                     ret = errorcode_t::not_ready;
                     __leave2;
                 }
+
+#if defined DEBUG
+                if (istraceable(trace_category_net)) {
+                    trace_debug_event(trace_category_net, trace_event_tls_record,
+                                      [&](basic_stream& dbs) -> void { dbs.println("\e[1;35mDTLS reorder ! epoch %u seq %I64u\e[0m", epoch, seq); });
+                }
+#endif
 
                 const binary_t& packet = iter->second;
                 if (tls_content_type_change_cipher_spec == packet[0]) {

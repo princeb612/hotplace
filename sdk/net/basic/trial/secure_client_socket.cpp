@@ -51,7 +51,7 @@ return_t secure_client_socket::do_secure() {
     return_t ret = errorcode_t::success;
 
     auto session = get_session();
-    ret = get_secure_prosumer()->produce(session, from_server, [&](basic_stream& s) -> void { do_consume(s); });
+    ret = get_secure_prosumer()->produce(session, from_server, [&](basic_stream& s, sockaddr_storage_t& addr) -> void { do_consume(s, addr); });
 
     // RFC 2246 7.2.2. Error alerts
     // RFC 8448 6.2.  Error Alerts

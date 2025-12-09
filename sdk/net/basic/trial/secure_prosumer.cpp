@@ -8,6 +8,9 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/net/basic/trial/secure_prosumer.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_arrange.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record.hpp>
@@ -22,7 +25,7 @@ namespace net {
 
 secure_prosumer::secure_prosumer() {}
 
-return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, std::function<void(basic_stream&)> func) {
+return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, std::function<void(basic_stream&, sockaddr_storage_t&)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == func) {
@@ -30,9 +33,11 @@ return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, std
             __leave2;
         }
 
-        func(_mbs);
+        sockaddr_storage_t addr;
+        func(_mbs, addr);
 
-        ret = do_produce(session, dir);
+        socklen_t addrlen = sizeof(addr);
+        ret = do_produce(session, dir, (sockaddr*)&addr, &addrlen);
     }
     __finally2 {}
     return ret;
@@ -122,12 +127,11 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, 
                     if (tls_content_type_application_data == content_type) {
                         tls_record_application_data* appdata = (tls_record_application_data*)record;
                         const auto& bin = appdata->get_binary();
-
                         if (false == bin.empty()) {
                             socket_buffer_t item;
                             item.buffer << bin;
-                            if (addr) {
-                                memcpy(&item.addr, addr, sizeof(sockaddr_storage_t));
+                            if (addr && addrlen) {
+                                memcpy(&item.addr, addr, *addrlen);
                             }
 
                             critical_section_guard guard(_mlock);
@@ -165,7 +169,9 @@ return_t secure_prosumer::consume(int sock_type, uint32 wto, char* ptr_data, siz
             auto& item = _mq.front();
 
             if (SOCK_DGRAM == sock_type) {
-                memcpy(addr, &item.addr, sizeof(sockaddr_storage_t));
+                if (addr && addrlen) {
+                    memcpy(addr, &item.addr, *addrlen);
+                }
             }
 
             auto datasize = item.buffer.size();
@@ -181,6 +187,16 @@ return_t secure_prosumer::consume(int sock_type, uint32 wto, char* ptr_data, siz
 
                 _mq.pop();
             }
+#if defined DEBUG
+            if (*cbread) {
+                if (istraceable(trace_category_net)) {
+                    trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                        dbs.println("+ read");
+                        dump_memory((byte_t*)ptr_data, *cbread, &dbs, 16, 3, 0x0, dump_notrunc);
+                    });
+                }
+            }
+#endif
             if (false == _mq.empty()) {
                 ret = errorcode_t::more_data;
             }

@@ -113,6 +113,7 @@ return_t trial_dtls_server_socket::recvfrom(socket_context_t* handle, int mode, 
             __leave2;
         }
 #endif
+        socklen_t len = *addrlen;
 
         if (read_socket_recv & mode) {
             ret = naive_udp_server_socket::recvfrom(handle, mode, ptr_data, size_data, cbread, addr, addrlen);
@@ -135,8 +136,7 @@ return_t trial_dtls_server_socket::recvfrom(socket_context_t* handle, int mode, 
         }
         if (read_ssl_read & mode) {
             // iocp & epoll, application_data
-            size_t len = sizeof(sockaddr_storage_t);
-            ret = session->get_secure_prosumer()->consume(socket_type(), 0, ptr_data, size_data, cbread, addr, addrlen);
+            ret = session->get_secure_prosumer()->consume(socket_type(), 0, ptr_data, size_data, cbread, addr, &len);
         }
     }
     __finally2 {}

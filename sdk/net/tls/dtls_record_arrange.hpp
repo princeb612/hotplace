@@ -34,8 +34,8 @@ namespace net {
  * @example
  *          tls_session session(session_type_dtls);
  *          auto& arrange = session.get_dtls_record_arrange();
- *          arrange.produce(dgram, dgramsize, addr, addrlen);
- *          arrange.consume(epoch, seq, packet, addr, &addrlen);  // reorder
+ *          arrange.produce(addr, addrlen, dgram, dgramsize);
+ *          arrange.consume(addr, addrlen, epoch, seq, packet);  // reorder
  */
 class dtls_record_arrange {
     friend class tls_session;
@@ -54,7 +54,7 @@ class dtls_record_arrange {
     return_t produce(const sockaddr* addr, socklen_t addrlen, const byte_t* stream, size_t size);
     /**
      * @brief consume
-     * @param const sockaddr* addr [out]
+     * @param const sockaddr* addr [in]
      * @param socklen_t addrlen [in]
      * @param binary_t& bin [out]
      */

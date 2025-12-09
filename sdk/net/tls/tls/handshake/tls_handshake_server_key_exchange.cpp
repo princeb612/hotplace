@@ -128,19 +128,13 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             }
 
             {
-                // RFC 8422, EC Curve Type, 3, "named_curve", see ec_curve_type_desc (tls_ec_curve_type_desc_t)
+                // RFC 8422, EC Curve Type, 3, "named_curve"
                 // 1 explicit_prime
                 // 2 explicit_char2
                 // 3 named_curve
                 if (3 == curve_info) {
-                    crypto_keychain keychain;
-                    auto hint = advisor->hintof_curve_tls_group(curve);
-                    uint32 nid = nidof(hint);
-                    if (nid) {
-                        ret = keychain.add_ec2(&tlskey, nid, pubkey, binary_t(), binary_t(), keydesc(KID_TLS_SERVER_KEY_EXCHANGE));
-                    } else {
-                        ret = errorcode_t::not_supported;
-                    }
+                    crypto_keyexchange keyexchange;
+                    ret = keyexchange.keystore((tls_group_t)curve, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE, pubkey);
                 }
             }
 
@@ -207,37 +201,17 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     uint16 curve = 0;
     binary_t pubkey;
     binary_t sig;
-    keydesc desc(KID_TLS_SERVER_KEY_EXCHANGE);
     crypto_keychain keychain;
+    crypto_keyexchange keyexchange;
 
     {
         auto lambda = [&](uint16 group, bool *ctrl) -> void {
             auto hint = advisor->hintof_curve_tls_group(group);
             if (hint && hint->tlsgroup) {
-                auto kty = hint->kty;
-                auto category = hint->category;
-                auto nid = hint->nid;
-                bool stop = false;
-                if (kty_ec == kty) {
-                    keychain.add_ec2(&tlskey, nid, desc);
-                    auto pkey = tlskey.find(KID_TLS_SERVER_KEY_EXCHANGE);
-                    if (pkey) {
-                        binary_t temp;
-                        tlskey.ec_uncompressed_key(pkey, pubkey, temp);
-                        curve = group;
-                        stop = true;
-                    }
-                } else if (kty_okp == kty) {
-                    keychain.add_ec2(&tlskey, nid, desc);
-                    auto pkey = tlskey.find(KID_TLS_SERVER_KEY_EXCHANGE);
-                    if (pkey) {
-                        binary_t temp;
-                        tlskey.get_public_key(pkey, pubkey, temp);
-                        curve = group;
-                        stop = true;
-                    }
-                }
-                *ctrl = stop;
+                keyexchange.keygen((tls_group_t)group, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE);
+                keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE, pubkey);
+                curve = group;
+                *ctrl = true;  // stop
             }
         };
         protection_context.for_each_supported_groups(lambda);

@@ -49,6 +49,14 @@ void crypto_advisor::enum_tls_group(std::function<void(const hint_group_t*)> fun
     }
 }
 
+const hint_group_t* crypto_advisor::hintof_tls_group_nid(uint32 nid) {
+    const hint_group_t* item = nullptr;
+    t_maphint<uint32, const hint_group_t*> hint(_tls_group_nid_map);
+
+    hint.find(nid, &item);
+    return item;
+}
+
 bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, tls_group_t group) {
     bool ret = false;
     __try2 {

@@ -295,9 +295,7 @@ return_t client_socket_prosumer::do_consumer_routine(uint32 type, uint32 data_co
             uint32 bytes_transfered = (uint32)(arch_t)data_array[1];
             mplexer_key_t* mpkey = (mplexer_key_t*)data_array[2];
             auto& netbuf = mpkey->buffer;
-            if (SOCK_DGRAM == socket_type()) {
-                memcpy(&item.addr, &mpkey->addr, sizeof(sockaddr_storage_t));
-            }
+            memcpy(&item.addr, &mpkey->addr, sizeof(sockaddr_storage_t));
             enqueue(item, netbuf.wsabuf.buf, bytes_transfered);
             async_read();
 #endif
@@ -349,7 +347,7 @@ void client_socket_prosumer::async_read() {
 #endif
 }
 
-return_t client_socket_prosumer::do_consume(basic_stream& stream) {
+return_t client_socket_prosumer::do_consume(basic_stream& stream, sockaddr_storage_t& addr) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (support_tls()) {
@@ -358,6 +356,7 @@ return_t client_socket_prosumer::do_consume(basic_stream& stream) {
             while (false == _rq.empty()) {
                 const auto& item = _rq.front();
                 stream << item.buffer;
+                memcpy(&addr, &item.addr, sizeof(sockaddr_storage_t));
                 _rq.pop();
             }
         }

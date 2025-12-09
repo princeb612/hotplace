@@ -286,6 +286,9 @@ return_t crypto_advisor::build() {
         auto item = hint_groups + i;
         if (tls_group_unknown != item->group) {
             _tls_group_map.insert({item->group, item});
+            if (0 == (tls_flag_hybrid & item->flags)) {
+                _tls_group_nid_map.insert({item->first.nid, item});
+            }
         }
         if (item->name) {
             std::string key = item->name;

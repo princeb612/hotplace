@@ -11,6 +11,7 @@
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -99,19 +100,14 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
                 auto& protection = session->get_tls_protection();
                 auto& tlskey = protection.get_key();
                 crypto_keychain keychain;
+                crypto_keyexchange keyexchange;
                 uint32 nid = 0;
                 auto pkey_ske = tlskey.find(KID_TLS_SERVER_KEY_EXCHANGE);
-                crypto_kty_t kty = ktyof_evp_pkey(pkey_ske);
                 nidof_evp_pkey(pkey_ske, nid);
                 if (nid) {
-                    keydesc desc(KID_TLS_CLIENT_KEY_EXCHANGE);
-                    if (kty_ec == kty || kty_okp == kty) {
-                        ret = keychain.add_ec2(&tlskey, nid, pubkey, binary_t(), binary_t(), desc);
-                    } else if (kty_dh == kty) {
-                        ret = keychain.add_dh(&tlskey, nid, pubkey, binary_t(), desc);
-                    } else {
-                        ret = errorcode_t::not_supported;
-                    }
+                    crypto_advisor* advisor = crypto_advisor::get_instance();
+                    auto hint = advisor->hintof_tls_group_nid(nid);
+                    keyexchange.keystore((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE, pubkey);
                 } else {
                     ret = errorcode_t::not_supported;
                 }
@@ -144,40 +140,23 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
         auto& protection = session->get_tls_protection();
         auto& tlskey = protection.get_key();
         auto pkey_ske = tlskey.find(KID_TLS_SERVER_KEY_EXCHANGE);
+        binary_t pubkey;
+        uint32 nid = 0;
         {
             // kty, nid from server_key_exchange
             crypto_keychain keychain;
-            uint32 nid = 0;
-            crypto_kty_t kty = ktyof_evp_pkey(pkey_ske);
+            crypto_keyexchange keyexchange;
+            // crypto_kty_t kty = ktyof_evp_pkey(pkey_ske);
             nidof_evp_pkey(pkey_ske, nid);
             if (nid) {
-                keydesc desc(KID_TLS_CLIENT_KEY_EXCHANGE);
-                if (kty_rsa == kty) {
-                    ret = keychain.add_rsa(&tlskey, nid, 2048, desc);
-                } else if (kty_ec == kty || kty_okp == kty) {
-                    ret = keychain.add_ec2(&tlskey, nid, desc);
-                } else if (kty_dh == kty) {
-                    ret = keychain.add_dh(&tlskey, nid, desc);
-                } else {
-                    ret = errorcode_t::not_supported;
-                    __leave2;
-                }
+                crypto_advisor* advisor = crypto_advisor::get_instance();
+                auto hint = advisor->hintof_tls_group_nid(nid);
+
+                keyexchange.keygen((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE);
+                keyexchange.keyshare((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE, pubkey);
             } else {
                 ret = errorcode_t::not_supported;
                 __leave2;
-            }
-        }
-
-        binary_t pubkey;
-        auto pkey_cke = tlskey.find(KID_TLS_CLIENT_KEY_EXCHANGE);
-        if (pkey_cke) {
-            crypto_kty_t kty = ktyof_evp_pkey(pkey_cke);
-            if (kty_ec == kty) {
-                binary_t temp;
-                tlskey.ec_uncompressed_key(pkey_cke, pubkey, temp);
-            } else if (kty_okp == kty) {
-                binary_t temp;
-                tlskey.get_public_key(pkey_cke, pubkey, temp);
             }
         }
 
@@ -194,6 +173,7 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
                 dbs.println("> SKE");
                 dump_key(pkey_ske, &dbs, 16, 3, dump_notrunc);
                 dbs.println("> CKE");
+                auto pkey_cke = tlskey.find_nid(KID_TLS_CLIENT_KEY_EXCHANGE, nid);
                 dump_key(pkey_cke, &dbs, 16, 3, dump_notrunc);
             });
         }

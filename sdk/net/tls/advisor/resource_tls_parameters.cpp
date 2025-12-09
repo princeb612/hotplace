@@ -140,34 +140,7 @@ define_tls_variable(handshake_type_code) = {
 define_tls_sizeof_variable(handshake_type_code);
 
 define_tls_variable(hash_alg_code) = {
-    {
-        1,
-        "md5",
-    },
-    {
-        2,
-        "sha1",
-    },
-    {
-        3,
-        "sha224",
-    },
-    {
-        4,
-        "sha256",
-    },
-    {
-        5,
-        "sha384",
-    },
-    {
-        6,
-        "sha512",
-    },
-    {
-        8,
-        "intrinsic",
-    },
+    {1, "md5"}, {2, "sha1"}, {3, "sha224"}, {4, "sha256"}, {5, "sha384"}, {6, "sha512"}, {8, "intrinsic"},
 };
 define_tls_sizeof_variable(hash_alg_code);
 
@@ -178,34 +151,7 @@ define_tls_variable(psk_keyexchange_code) = {
 define_tls_sizeof_variable(psk_keyexchange_code);
 
 define_tls_variable(sig_alg_code) = {
-    {
-        1,
-        "rsa",
-    },
-    {
-        2,
-        "dsa",
-    },
-    {
-        3,
-        "ecdsa",
-    },
-    {
-        7,
-        "ed25519",
-    },
-    {
-        8,
-        "ed448",
-    },
-    {
-        64,
-        "gostr34102012_256",
-    },
-    {
-        65,
-        "gostr34102012_512",
-    },
+    {1, "rsa"}, {2, "dsa"}, {3, "ecdsa"}, {7, "ed25519"}, {8, "ed448"}, {64, "gostr34102012_256"}, {65, "gostr34102012_512"},
 };
 define_tls_sizeof_variable(sig_alg_code);
 
