@@ -55,8 +55,8 @@ class server_socket : public basic_socket {
     virtual return_t dtls_open(socket_context_t** handle, socket_t listen_sock);
     /**
      * @brief   DTLS handshake
-     * @param   socket_context_t* handle
-     * @param   sockaddr* addr
+     * @param   socket_context_t* handle [in]
+     * @param   sockaddr* addr [out]
      * @param   socklen_t addrlen [in]
      */
     virtual return_t dtls_handshake(socket_context_t* handle, sockaddr* addr, socklen_t addrlen);

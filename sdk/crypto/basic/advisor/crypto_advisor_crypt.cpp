@@ -65,11 +65,12 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher(const EVP_CIPHER* ciph
 }
 
 const EVP_CIPHER* crypto_advisor::find_evp_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
-    EVP_CIPHER* ret_value = nullptr;
+    const EVP_CIPHER* ret_value = nullptr;
     uint32 key = CRYPTO_SCHEME16(algorithm, mode);
-    t_maphint<uint32, EVP_CIPHER*> hint(_cipher_map);
-
-    hint.find(key, &ret_value);
+    auto iter = _cipher_fetch_map.find(key);
+    if (_cipher_fetch_map.end() != iter) {
+        ret_value = iter->second.cipher;
+    }
     return ret_value;
 }
 
@@ -81,7 +82,7 @@ const EVP_CIPHER* crypto_advisor::find_evp_cipher(const char* name) {
         const hint_cipher_t* item = nullptr;
         hint.find(name, &item);
         if (item) {
-            ret_value = _cipher_map[CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item))];
+            ret_value = _cipher_fetch_map[CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item))].cipher;
         }
     }
     return ret_value;
@@ -103,14 +104,16 @@ const hint_cipher_t* crypto_advisor::hintof_cipher(const char* name) {
 
 const hint_cipher_t* crypto_advisor::hintof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
     const hint_cipher_t* ret_value = nullptr;
-    t_maphint<uint32, const hint_cipher_t*> hint(_cipher_fetch_map);
-    hint.find(CRYPTO_SCHEME16(algorithm, mode), &ret_value);
+    uint32 key = CRYPTO_SCHEME16(algorithm, mode);
+    auto iter = _cipher_fetch_map.find(key);
+    if (_cipher_fetch_map.end() != iter) {
+        ret_value = iter->second.hint;
+    }
     return ret_value;
 }
 
 const hint_cipher_t* crypto_advisor::hintof_cipher(const EVP_CIPHER* cipher) {
     const hint_cipher_t* ret_value = nullptr;
-
     __try2 {
         if (nullptr == cipher) {
             __leave2;
@@ -133,16 +136,12 @@ const hint_cipher_t* crypto_advisor::hintof_cipher(crypto_scheme_t scheme) {
 const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
     return_t ret = errorcode_t::success;
     const char* ret_value = nullptr;
-
-    __try2 {
-        uint32 key = CRYPTO_SCHEME16(algorithm, mode);
-        const hint_cipher_t* item = nullptr;
-        t_maphint<uint32, const hint_cipher_t*> hint(_cipher_fetch_map);
-
-        ret = hint.find(key, &item);
-        ret_value = nameof_alg(item);
+    uint32 key = CRYPTO_SCHEME16(algorithm, mode);
+    auto iter = _cipher_fetch_map.find(key);
+    if (_cipher_fetch_map.end() != iter) {
+        auto hint = iter->second.hint;
+        ret_value = nameof_alg(hint);
     }
-    __finally2 {}
     return ret_value;
 }
 
@@ -154,7 +153,7 @@ return_t crypto_advisor::for_each_cipher(std::function<void(const char*, uint32,
     }
     for (auto i = 0; i < sizeof_aes_wrap_methods; i++) {
         const openssl_evp_cipher_method_older_t* item = aes_wrap_methods + i;
-        f(item->method.fetchname, advisor_feature_wrap, user);
+        f(item->hint.fetchname, advisor_feature_wrap, user);
     }
     return ret;
 }

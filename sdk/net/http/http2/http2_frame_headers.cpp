@@ -35,9 +35,9 @@ return_t http2_frame_headers::do_read_body(const byte_t* stream, size_t size, si
         }
 
         payload pl;
-        pl << new payload_member((uint8)0, constexpr_frame_pad_length, constexpr_frame_padding)                 //
-           << new payload_member((uint32)0, true, constexpr_frame_stream_dependency, constexpr_frame_priority)  //
-           << new payload_member((uint8)0, constexpr_frame_weight, constexpr_frame_priority)                    //
+        pl << new payload_member(uint8(0), constexpr_frame_pad_length, constexpr_frame_padding)                 //
+           << new payload_member(uint32(0), true, constexpr_frame_stream_dependency, constexpr_frame_priority)  //
+           << new payload_member(uint8(0), constexpr_frame_weight, constexpr_frame_priority)                    //
            << new payload_member(binary_t(), constexpr_frame_fragment)                                          //
            << new payload_member(binary_t(), constexpr_frame_padding, constexpr_frame_padding);
 

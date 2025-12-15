@@ -76,27 +76,28 @@ return_t crypto_advisor::build() {
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
         EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch(nullptr, nameof_alg(item), nullptr);
         if (evp_cipher) {
-            _cipher_map.insert(std::make_pair(CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item)), evp_cipher));
+            _cipher_fetch_map.insert(std::make_pair(item->scheme, cipher_fetch_block_t(evp_cipher, item)));
             _evp_cipher_map.insert(std::make_pair(evp_cipher, item));
         }
 #else
         const EVP_CIPHER* evp_cipher = EVP_get_cipherbyname(nameof_alg(item));
         if (evp_cipher) {
-            _cipher_map.insert(std::make_pair(CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item)), (EVP_CIPHER*)evp_cipher));
+            _cipher_fetch_map.insert(std::make_pair(CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item)), cipher_fetch_block_t(evp_cipher, item)));
             _evp_cipher_map.insert(std::make_pair(evp_cipher, item));
         }
 #endif
-        if (nullptr == evp_cipher) {
 #if defined DEBUG
-            if (istraceable(trace_category_crypto, loglevel_debug)) {
-                // __trace(errorcode_t::debug, "%s", nameof_alg(item));
+        if (istraceable(trace_category_crypto, loglevel_debug)) {
+            // __trace(errorcode_t::debug, "%s", nameof_alg(item));
+            if (nullptr == evp_cipher) {
                 trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport,
                                   [&](basic_stream& dbs) -> void { dbs.println("no %s", nameof_alg(item)); });
+            } else {
+                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("%s", nameof_alg(item)); });
             }
-#endif
         }
+#endif
 
-        _cipher_fetch_map.insert(std::make_pair(CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item)), item));
         _cipher_byname_map.insert(std::make_pair(nameof_alg(item), item));
 
         if (evp_cipher) {
@@ -106,28 +107,32 @@ return_t crypto_advisor::build() {
         _cipher_scheme_map.insert({item->scheme, item});
     }
 
+#if (OPENSSL_VERSION_NUMBER < 0x30000000L)
+    // workaround for openssl-1.1.1 - EVP_CIPHER_fetch("aes-128-wrap") return nullptr
     for (i = 0; i < sizeof_aes_wrap_methods; i++) {
         const openssl_evp_cipher_method_older_t* item = aes_wrap_methods + i;
-        if (osslver < 0x30000000L) {
-            _cipher_map.insert(std::make_pair(CRYPTO_SCHEME16(item->method.algorithm, item->method.mode), (EVP_CIPHER*)item->_cipher));
-            _evp_cipher_map.insert(std::make_pair(item->_cipher, &item->method));
-        }
 
-        set_feature(item->method.fetchname, advisor_feature_cipher);  // workaround for openssl-1.1.1 - EVP_CIPHER_fetch("aes-128-wrap") return nullptr
-        set_feature(item->method.fetchname, advisor_feature_wrap);
+        cipher_fetch_block_t block((EVP_CIPHER*)item->_cipher, &item->hint);
+        // distinguish between crypto_scheme_aes_128_gcm and crypto_scheme_tls_aes_128_gcm
+        _cipher_fetch_map.insert({CRYPTO_SCHEME16(item->hint.algorithm, item->hint.mode), std::move(block)});
+        _evp_cipher_map.insert({item->_cipher, &item->hint});
+
+        set_feature(item->hint.fetchname, advisor_feature_cipher);
+        set_feature(item->hint.fetchname, advisor_feature_wrap);
     }
+#endif
 
     for (i = 0; i < sizeof_evp_md_methods; i++) {
         const hint_digest_t* item = evp_md_methods + i;
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
         EVP_MD* evp_md = EVP_MD_fetch(nullptr, nameof_alg(item), nullptr);
         if (evp_md) {
-            _md_map.insert(std::make_pair(typeof_alg(item), evp_md));
+            _md_fetch_map.insert(std::make_pair(item->algorithm, md_fetch_block_t(evp_md, item)));
         }
 #else
         const EVP_MD* evp_md = EVP_get_digestbyname(nameof_alg(item));
         if (evp_md) {
-            _md_map.insert(std::make_pair(typeof_alg(item), (EVP_MD*)evp_md));
+            _md_fetch_map.insert(std::make_pair(typeof_alg(item), md_fetch_block_t(evp_md, item)));
         }
 #endif
         if (nullptr == evp_md) {
@@ -139,7 +144,6 @@ return_t crypto_advisor::build() {
             }
 #endif
         }
-        _md_fetch_map.insert(std::make_pair(typeof_alg(item), item));
         _md_byname_map.insert(std::make_pair(nameof_alg(item), item));
 
         if (evp_md) {
@@ -334,12 +338,17 @@ return_t crypto_advisor::cleanup() {
     return_t ret = errorcode_t::success;
 
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
-    for (auto& pair : _cipher_map) {
-        EVP_CIPHER_free(pair.second);
+    critical_section_guard guard(_lock);
+    for (auto& pair : _cipher_fetch_map) {
+        auto& cipher = pair.second.cipher;
+        EVP_CIPHER_free(cipher);
     }
-    for (auto& pair : _md_map) {
-        EVP_MD_free(pair.second);
+    _cipher_fetch_map.clear();
+    for (auto& pair : _md_fetch_map) {
+        auto& md = pair.second.md;
+        EVP_MD_free(md);
     }
+    _md_fetch_map.clear();
 #endif
 
     return ret;

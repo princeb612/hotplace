@@ -13,12 +13,14 @@ void test_http2() {
     _test_case.begin("HTTP/2");
 
     return_t ret = errorcode_t::success;
-    network_session session(new naive_tcp_server_socket);
+    auto svr_socket = new naive_tcp_server_socket;
+    network_session session(svr_socket);
     t_mlfq<network_session> event_queue;
     network_protocol_group protocol_group;
     http2_session h2sess;
+    auto http2_prot = new http2_protocol;
 
-    protocol_group << new http2_protocol;
+    protocol_group << http2_prot;
 
     for (auto i = 0; i < sizeof_testvector_h2; i++) {
         auto item = testvector_h2frame + i;
@@ -47,4 +49,7 @@ void test_http2() {
             temp->release();
         }
     }
+
+    http2_prot->release();
+    svr_socket->release();
 }

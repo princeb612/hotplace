@@ -167,7 +167,7 @@ return_t quic_packet_retry::retry_integrity_tag(const quic_packet_retry& retry_p
         const binary_t& bin_dcid = secrets.get(tls_context_quic_dcid);
 
         // ODCID Length (8)
-        binary_append(bin_retry_pseudo_packet, (uint8)bin_dcid.size());
+        binary_append(bin_retry_pseudo_packet, uint8(bin_dcid.size()));
         // Original Destination Connection ID (0..160)
         binary_append(bin_retry_pseudo_packet, bin_dcid);
 

@@ -125,6 +125,10 @@ std::string base16_encode(const binary_t& source);
  * @param   const char* source [in]
  */
 std::string base16_encode(const char* source);
+/**
+ * @param   const byte_t* source [in]
+ * @param   size_t size [in]
+ */
 std::string base16_encode(const byte_t* source, size_t size);
 /**
  * @brief   encode
@@ -217,8 +221,15 @@ std::string base16_encode_rfc(const std::string& source);
  * @brief   decode
  * @param   const std::string& source [in]
  * @return  binary_t
+ * @sample  base16_encode_rfc
  */
 binary_t base16_decode_rfc(const std::string& source);
+/**
+ * @param   const char* source [in]
+ * @example
+ *          binary_t key = std::move(base16_decode_rfc("000102030405060708090a0b0c0d0e0f 101112131415161718191a1b1c1d1e1f"));
+ * @sample  base16_encode_rfc
+ */
 binary_t base16_decode_rfc(const char* source);
 
 }  // namespace hotplace

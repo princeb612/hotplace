@@ -23,7 +23,7 @@ enum binary_flag_t {
     bin_trunc = 0x1,        // truncate
     bin_wait_fin = 0x2,     // wait until the fin
     bin_set_fin = 0x4,      // set fin
-    bin_keep_entry = 0x80,  //
+    bin_keep_entry = 0x80,  // keep entry
 };
 
 /**
@@ -66,6 +66,11 @@ class t_binaries {
             }
         }
     }
+    /**
+     * @param   T id [in]
+     * @param   const binary_t& bin [in]
+     * @param   uint32 flags [inopt]
+     */
     void assign(T id, const binary_t& bin, uint32 flags = 0) { assign(id, bin.empty() ? nullptr : &bin[0], bin.size(), flags); }
 
     /**
@@ -88,6 +93,10 @@ class t_binaries {
             }
         }
     }
+    /**
+     * @param   T id [in]
+     * @param   const binary_t& bin [in]
+     */
     void append(T id, const binary_t& bin) { append(id, bin.empty() ? nullptr : &bin[0], bin.size()); }
 
     /**
@@ -118,6 +127,12 @@ class t_binaries {
         }
         return ret;
     }
+    /**
+     * @param   T id [in]
+     * @param   size_t offset [in]
+     * @param   const binary_t& bin [in]
+     * @param   uint32 flags [inopt]
+     */
     return_t write(T id, size_t offset, const binary_t& bin, uint32 flags = 0) { return write(id, offset, bin.empty() ? nullptr : &bin[0], bin.size(), flags); }
 
     /**
@@ -223,7 +238,11 @@ class t_binaries {
     return_t produce(T id, size_t offset, const binary_t& bin, uint32 flags = 0) {
         return write(id, offset, bin.empty() ? nullptr : &bin[0], bin.size(), flags);
     }
-
+    /**
+     * @brief   peek
+     * @param   T id [in]
+     * @param   binary_t& bin [out]
+     */
     return_t peek(T id, binary_t& bin) {
         return_t ret = errorcode_t::success;
         __try2 {
@@ -398,7 +417,9 @@ class t_binaries {
         }
         return ret;
     }
-
+    /**
+     * @param   std::function<void(const T&, const binary_t&)> func [in]
+     */
     void for_each(std::function<void(const T&, const binary_t&)> func) {
         if (func) {
             critical_section_guard guard(_lock);

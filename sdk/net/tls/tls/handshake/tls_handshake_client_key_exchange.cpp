@@ -96,7 +96,6 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
             }
 
             {
-                // kty, nid from server_key_exchange
                 auto& protection = session->get_tls_protection();
                 auto& tlskey = protection.get_key();
                 crypto_keychain keychain;
@@ -143,10 +142,8 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
         binary_t pubkey;
         uint32 nid = 0;
         {
-            // kty, nid from server_key_exchange
             crypto_keychain keychain;
             crypto_keyexchange keyexchange;
-            // crypto_kty_t kty = ktyof_evp_pkey(pkey_ske);
             nidof_evp_pkey(pkey_ske, nid);
             if (nid) {
                 crypto_advisor* advisor = crypto_advisor::get_instance();

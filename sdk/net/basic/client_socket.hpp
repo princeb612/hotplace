@@ -30,10 +30,16 @@ class client_socket : public basic_socket {
 
     /**
      * @brief   connect
+     * @param   const char* address [in]
+     * @param   uint16 port [in]
+     * @param   uint32 timeout [in]
      */
     virtual return_t connect(const char* address, uint16 port, uint32 timeout);
     /**
      * @brief   open
+     * @param   sockaddr_storage_t* sa [out]
+     * @param   const char* address [in]
+     * @param   uint16 port [in]
      */
     virtual return_t open(sockaddr_storage_t* sa, const char* address, uint16 port);
     /**
@@ -43,23 +49,42 @@ class client_socket : public basic_socket {
 
     /**
      * @brief   read
+     * @param   char* ptr_data [out]
+     * @param   size_t size_data [in]
+     * @param   size_t* cbread [out]
      */
     virtual return_t read(char* ptr_data, size_t size_data, size_t* cbread);
     /**
      * @brief   more
+     * @param   char* ptr_data [out]
+     * @param   size_t size_data [in]
+     * @param   size_t* cbread [out]
      */
     virtual return_t more(char* ptr_data, size_t size_data, size_t* cbread);
     /**
      * @brief   send
+     * @param   const char* ptr_data [in]
+     * @param   size_t size_data [in]
+     * @param   size_t* cbsent [out]
      */
     virtual return_t send(const char* ptr_data, size_t size_data, size_t* cbsent);
 
     /**
      * @brief   recvfrom
+     * @param   char* ptr_data [out]
+     * @param   size_t size_data [in]
+     * @param   size_t* cbread [out]
+     * @param   struct sockaddr* addr [out]
+     * @param   socklen_t* addrlen [inout]
      */
     virtual return_t recvfrom(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);
     /**
      * @brief   sendto
+     * @param   const char* ptr_data [in]
+     * @param   size_t size_data [in]
+     * @param   size_t* cbsent [out]
+     * @param   const struct sockaddr* addr [in]
+     * @param   socklen_t addrlen [in]
      */
     virtual return_t sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen);
 

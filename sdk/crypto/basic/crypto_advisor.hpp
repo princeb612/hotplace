@@ -102,6 +102,7 @@ class crypto_advisor {
      *          // return "aes-128-cbc"
      *          EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch ("aes-128-cbc", nullptr);
      *          // return EVP_aes_128_cbc ()
+     *          EVP_CIPHER_free(evp_cipher);
      */
     const char* nameof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
     /**
@@ -720,13 +721,18 @@ class crypto_advisor {
     // crypt
     ///////////////////////////////////////////////////////////////////////////
     typedef std::map<uint32, const hint_blockcipher_t*> blockcipher_map_t; /* pair (alg, hint_blockcipher_t*) */
-    typedef std::map<uint32, EVP_CIPHER*> cipher_map_t;                    /* pair (alg+mode, EVP_CIPHER*) */
-    typedef std::map<uint32, const hint_cipher_t*> cipher_fetch_map_t;     /* pair (alg+mode, hint_cipher_t*) */
+    struct cipher_fetch_block_t {
+        EVP_CIPHER* cipher;
+        const hint_cipher_t* hint;
+
+        cipher_fetch_block_t() : cipher(nullptr), hint(nullptr) {}
+        cipher_fetch_block_t(EVP_CIPHER* c, const hint_cipher_t* h) : cipher(c), hint(h) {}
+    };
+    typedef std::map<uint32, cipher_fetch_block_t> cipher_fetch_map_t; /* pair (alg+mode, cipher_fetch_block_t) */
     typedef std::map<const EVP_CIPHER*, const hint_cipher_t*> evp_cipher_map_t;
     typedef std::map<std::string, const hint_cipher_t*> cipher_byname_map_t; /* "aes-256-cbc" to hint_cipher_t* */
     typedef std::map<crypto_scheme_t, const hint_cipher_t*> cipher_scheme_map_t;
     blockcipher_map_t _blockcipher_map;
-    cipher_map_t _cipher_map;
     cipher_fetch_map_t _cipher_fetch_map;
     evp_cipher_map_t _evp_cipher_map;
     cipher_byname_map_t _cipher_byname_map;
@@ -734,10 +740,15 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     // digest
     ///////////////////////////////////////////////////////////////////////////
-    typedef std::map<uint32, EVP_MD*> md_map_t; /* pair (alg+mode, EVP_MD*) */
-    typedef std::map<uint32, const hint_digest_t*> md_fetch_map_t;
+    struct md_fetch_block_t {
+        EVP_MD* md;
+        const hint_digest_t* hint;
+
+        md_fetch_block_t() : md(nullptr), hint(nullptr) {}
+        md_fetch_block_t(EVP_MD* m, const hint_digest_t* h) : md(m), hint(h) {}
+    };
+    typedef std::map<uint32, md_fetch_block_t> md_fetch_map_t;           /* pair (alg+mode, md_fetch_block_t) */
     typedef std::map<std::string, const hint_digest_t*> md_byname_map_t; /* "sha256" to hint_digest_t* */
-    md_map_t _md_map;
     md_fetch_map_t _md_fetch_map;
     md_byname_map_t _md_byname_map;
     ///////////////////////////////////////////////////////////////////////////
@@ -822,7 +833,7 @@ class crypto_advisor {
 
 typedef struct _openssl_evp_cipher_method_older_t {
     const EVP_CIPHER* _cipher;
-    hint_cipher_t method;
+    hint_cipher_t hint;
 } openssl_evp_cipher_method_older_t;
 
 ///////////////////////////////////////////////////////////////////////////

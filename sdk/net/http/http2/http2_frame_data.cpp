@@ -35,7 +35,7 @@ return_t http2_frame_data::do_read_body(const byte_t* stream, size_t size, size_
         // Pad Length?
         // conditional (as signified by a "?" in the diagram) and is only present if the PADDED flag is set
         payload pl;
-        pl << new payload_member((uint8)0, constexpr_frame_pad_length, constexpr_frame_padding)  //
+        pl << new payload_member(uint8(0), constexpr_frame_pad_length, constexpr_frame_padding)  //
            << new payload_member(binary_t(), constexpr_frame_data)                               //
            << new payload_member(binary_t(), constexpr_frame_padding, constexpr_frame_padding);
 
@@ -57,7 +57,7 @@ return_t http2_frame_data::do_write_body(binary_t& body) {
     payload pl;
     pl << new payload_member(_padlen, constexpr_frame_pad_length, constexpr_frame_padding)  //
        << new payload_member(_data, constexpr_frame_data)                                   //
-       << new payload_member((uint8)0, _padlen, constexpr_frame_padding, constexpr_frame_padding);
+       << new payload_member(uint8(0), _padlen, constexpr_frame_padding, constexpr_frame_padding);
     pl.set_group(constexpr_frame_padding, _padlen ? true : false);
     pl.write(body);
 

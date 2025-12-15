@@ -60,7 +60,6 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypto_scheme_aes_128_ecb, aes128, ecb, "aes-128-ecb"},
     {crypto_scheme_aes_128_gcm, aes128, gcm, "aes-128-gcm"},
     {crypto_scheme_aes_128_ofb, aes128, ofb, "aes-128-ofb"},
-    {crypto_scheme_aes_128_wrap, aes128, wrap, "aes-128-wrap"},
 
     {crypto_scheme_aes_192_cbc, aes192, cbc, "aes-192-cbc"},
     {crypto_scheme_aes_192_ccm, aes192, ccm, "aes-192-ccm"},
@@ -71,7 +70,6 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypto_scheme_aes_192_ecb, aes192, ecb, "aes-192-ecb"},
     {crypto_scheme_aes_192_gcm, aes192, gcm, "aes-192-gcm"},
     {crypto_scheme_aes_192_ofb, aes192, ofb, "aes-192-ofb"},
-    {crypto_scheme_aes_192_wrap, aes192, wrap, "aes-192-wrap"},
 
     {crypto_scheme_aes_256_cbc, aes256, cbc, "aes-256-cbc"},
     {crypto_scheme_aes_256_ccm, aes256, ccm, "aes-256-ccm"},
@@ -82,7 +80,6 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypto_scheme_aes_256_ecb, aes256, ecb, "aes-256-ecb"},
     {crypto_scheme_aes_256_gcm, aes256, gcm, "aes-256-gcm"},
     {crypto_scheme_aes_256_ofb, aes256, ofb, "aes-256-ofb"},
-    {crypto_scheme_aes_256_wrap, aes256, wrap, "aes-256-wrap"},
 
     {crypto_scheme_aria_128_cbc, aria128, cbc, "aria-128-cbc"},
     {crypto_scheme_aria_128_ccm, aria128, ccm, "aria-128-ccm"},
@@ -195,14 +192,22 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypto_scheme_tls_aria_256_ccm, aria256, ccm, "aria-256-ccm", 15 - 3, 16},
     {crypto_scheme_tls_camellia_128_gcm, camellia128, gcm, "camellia-128-gcm", 15 - 3, 16},
     {crypto_scheme_tls_camellia_256_gcm, camellia256, gcm, "camellia-256-gcm", 15 - 3, 16},
+
+#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
+    {crypto_scheme_aes_128_wrap, aes128, wrap, "aes-128-wrap"},
+    {crypto_scheme_aes_192_wrap, aes192, wrap, "aes-192-wrap"},
+    {crypto_scheme_aes_256_wrap, aes256, wrap, "aes-256-wrap"},
+#endif
 };
 
 const size_t sizeof_evp_cipher_methods = RTL_NUMBER_OF(evp_cipher_methods);
 
 const openssl_evp_cipher_method_older_t aes_wrap_methods[] = {
+#if (OPENSSL_VERSION_NUMBER < 0x30000000L)
     {EVP_aes_128_wrap(), {crypto_scheme_aes_128_wrap, aes128, wrap, "aes-128-wrap"}},
     {EVP_aes_192_wrap(), {crypto_scheme_aes_192_wrap, aes192, wrap, "aes-192-wrap"}},
     {EVP_aes_256_wrap(), {crypto_scheme_aes_256_wrap, aes256, wrap, "aes-256-wrap"}},
+#endif
 };
 
 const size_t sizeof_aes_wrap_methods = RTL_NUMBER_OF(aes_wrap_methods);

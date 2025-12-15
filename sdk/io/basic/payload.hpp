@@ -236,9 +236,9 @@ class payload {
      *          payload pl;
      *          binary_t data;
      *          binary_t pad;
-     *          pl << new payload_member((uint8)0, "padlen", "pad")
+     *          pl << new payload_member(uint8(0), "padlen", "pad")
      *             << new payload_member(data, "data")
-     *             << new payload_member((uint32)0, true, "value")
+     *             << new payload_member(uint32(0), true, "value")
      *             << new payload_member(pad, "pad", "pad");
      *          binary_t decoded = std::move(base16_decode("036461746100001000706164"));
      *          pl.set_reference_value("pad", "padlen"); // padlen=03, so length of pad 3 bytes

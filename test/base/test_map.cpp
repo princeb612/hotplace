@@ -52,6 +52,16 @@ void test_mapinsert() {
 
         moveitem_t() : i(0) { _logger->writeln("ctor"); }
         moveitem_t(int v) : i(v) { _logger->writeln("ctor1"); }
+        /**
+         * @remarks
+         *          #if __cplusplus >= 201703L  // c++17
+         *          dict.insert({0, moveitem_t(0)});
+         *          #elif __cplusplus >= 201103L  // c++11
+         *          dict.insert(std::make_pair(0, moveitem_t(0)));
+         *          #else
+         *          dict.insert({0, copyitem_t(0)});
+         *          #endif
+         */
         moveitem_t(const moveitem_t&) = delete;
         moveitem_t& operator=(const moveitem_t&) = delete;
         moveitem_t(moveitem_t&& rhs) {
@@ -84,7 +94,7 @@ void test_mapinsert() {
     {
         std::map<int, moveitem_t> dict;
 
-        dict.insert({0, moveitem_t(0)});
+        dict.insert(std::make_pair(0, moveitem_t(0)));
     }
 
     // ctor1 copy copy dtor dtor dtor
@@ -103,7 +113,7 @@ void test_mapinsert() {
     {
         std::map<int, moveitem_t> dict;
 
-        auto pib = dict.insert({0, moveitem_t(0)});
+        auto pib = dict.insert(std::make_pair(0, moveitem_t(0)));
         if (true == pib.second) {
             auto& entry = pib.first->second;
             //

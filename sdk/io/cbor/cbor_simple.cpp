@@ -97,7 +97,7 @@ void cbor_simple::represent(binary_t* b) {
     if (b) {
         cbor_encode enc;
 
-        enc.encode(*b, cbor_major_t::cbor_major_simple, (uint8)_value);
+        enc.encode(*b, cbor_major_t::cbor_major_simple, _value);
     }
 }
 

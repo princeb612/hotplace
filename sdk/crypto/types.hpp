@@ -109,6 +109,7 @@ enum crypt_algorithm_t : uint8 {
  *      auto cipher = EVP_CIPHER_fetch(nullptr, "aes-128-ccm", nullptr);
  *      EVP_CIPHER_CTX_init(context);
  *      EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_TAG, 8, nullptr);
+ *      EVP_CIPHER_free(cipher);
  */
 enum crypt_mode_t : uint8 {
     mode_unknown = 0,

@@ -27,7 +27,8 @@
     * CBOR
 
 * details
-  * Revision 906
+  * Revision 907
+    * [tested] valgrind
   * Revision 905
     * [added] DTLS (built-in reorder feature)
   * Revision 902

@@ -51,6 +51,24 @@ class basic_socket {
     virtual int addref();
     virtual int release();
 
+    /**
+     * @sa      socket_scheme_t
+     * @remarks
+     *          naive_tcp_client_socket    - socket_scheme_tcp | socket_scheme_client
+     *          naive_tcp_server_socket    - socket_scheme_tcp | socket_scheme_server
+     *          naive_udp_client_socket    - socket_scheme_udp | socket_scheme_client
+     *          naive_udp_server_socket    - socket_scheme_udp | socket_scheme_server
+     *          openssl_tls_client_socket  - socket_scheme_tls | socket_scheme_openssl | socket_scheme_client
+     *          openssl_tls_server_socket  - socket_scheme_tls | socket_scheme_openssl | socket_scheme_server
+     *          openssl_dtls_client_socket - socket_scheme_dtls | socket_scheme_openssl | socket_scheme_client
+     *          openssl_dtls_server_socket - socket_scheme_dtls | socket_scheme_openssl | socket_scheme_server
+     *          trial_tcp_client_socket    - socket_scheme_tcp | socket_scheme_trial | socket_scheme_client
+     *          trial_udp_client_socket    - socket_scheme_udp | socket_scheme_trial | socket_scheme_client
+     *          trial_tls_client_socket    - socket_scheme_tls | socket_scheme_trial | socket_scheme_client
+     *          trial_tls_server_socket    - socket_scheme_tls | socket_scheme_trial | socket_scheme_server
+     *          trial_dtls_client_socket   - socket_scheme_dtls | socket_scheme_trial | socket_scheme_client
+     *          trial_dtls_server_socket   - socket_scheme_dtls | socket_scheme_trial | socket_scheme_server
+     */
     virtual uint32 get_scheme();
 
    protected:

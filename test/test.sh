@@ -13,7 +13,7 @@ if [ $# -eq 0 ]; then
     array=(base bufferio cmdline datetime encode ieee754 graph nostd pattern thread unittest) # base
     array+=(cbor mlfq payload stream string asn1 parser) # io
     array+=(authenticode crypto cose hash jose kdf key random sign) # crypto
-    array+=(ipaddr httptest quic tls13) # net
+    array+=(ipaddr httptest tls quic) # net
     if [[ $OSTYPE = "cygwin" || $OSTYPE = "msys" ]]; then
         array+=(windows)
     else
@@ -30,14 +30,14 @@ fi
 # valgrind -v --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=report-memcheck ...
 # valgrind -v --tool=helgrind --log-file=report-helgrind ...
 # valgrind -v --tool=drd --read-var-info=yes --log-file=report-drd ...
-tool=(memcheck helgrind drd)
+tools=(memcheck helgrind drd)
 #tool+=(cachegrind)
 for item in ${array[@]}; do
     cd $cwd/$item
     binary=./test-$item
     time $binary
     if [ -z $test_valgrind ]; then
-        for tool in ${tool[@]}; do
+        for tool in ${tools[@]}; do
             option=
             if [ $tool = 'memcheck' ]; then
                 option='--leak-check=full --show-leak-kinds=all --track-origins=yes'
@@ -45,7 +45,7 @@ for item in ${array[@]}; do
                 option='--read-var-info=yes'
             fi
             valgrind -v --tool=$tool $option --log-file=report-$tool $binary
-            cat report-$tool
+            # cat report-$tool
         done
     fi
 done
@@ -53,6 +53,6 @@ done
 #echo --------------------------------------------------------------------------------
 #cd $cwd
 #grep fail `find . -name report`
-for item in ${array[@]}; do
-    grep fail `find $cwd/$item -name report`
-done
+# for item in ${array[@]}; do
+#     grep fail `find $cwd/$item -name report`
+# done

@@ -15,9 +15,10 @@ namespace crypto {
 
 const EVP_MD* crypto_advisor::find_evp_md(hash_algorithm_t algorithm) {
     EVP_MD* ret_value = nullptr;
-    t_maphint<uint32, EVP_MD*> hint(_md_map);
-
-    hint.find(algorithm, &ret_value);
+    auto iter = _md_fetch_map.find(algorithm);
+    if (_md_fetch_map.end() != iter) {
+        ret_value = iter->second.md;
+    }
     return ret_value;
 }
 
@@ -47,13 +48,12 @@ const EVP_MD* crypto_advisor::find_evp_md(jws_t sig) {
 
 const EVP_MD* crypto_advisor::find_evp_md(const char* name) {
     const EVP_MD* ret_value = nullptr;
-
     if (name) {
         t_maphint<std::string, const hint_digest_t*> hint(_md_byname_map);
         const hint_digest_t* item = nullptr;
         hint.find(name, &item);
         if (item) {
-            ret_value = _md_map[typeof_alg(item)];
+            ret_value = _md_fetch_map[typeof_alg(item)].md;
         }
     }
     return ret_value;
@@ -61,15 +61,15 @@ const EVP_MD* crypto_advisor::find_evp_md(const char* name) {
 
 const hint_digest_t* crypto_advisor::hintof_digest(hash_algorithm_t algorithm) {
     const hint_digest_t* ret_value = nullptr;
-    t_maphint<uint32, const hint_digest_t*> hint(_md_fetch_map);
-
-    hint.find(algorithm, &ret_value);
+    auto iter = _md_fetch_map.find(algorithm);
+    if (_md_fetch_map.end() != iter) {
+        ret_value = iter->second.hint;
+    }
     return ret_value;
 }
 
 const hint_digest_t* crypto_advisor::hintof_digest(const char* name) {
     const hint_digest_t* ret_value = nullptr;
-
     __try2 {
         if (nullptr == name) {
             __leave2;
@@ -84,11 +84,11 @@ const hint_digest_t* crypto_advisor::hintof_digest(const char* name) {
 
 const char* crypto_advisor::nameof_md(hash_algorithm_t algorithm) {
     const char* ret_value = nullptr;
-    const hint_digest_t* item = nullptr;
-    t_maphint<uint32, const hint_digest_t*> hint(_md_fetch_map);
+    md_fetch_block_t block;
+    t_maphint<uint32, md_fetch_block_t> hint(_md_fetch_map);
 
-    hint.find(algorithm, &item);
-    ret_value = nameof_alg(item);
+    hint.find(algorithm, &block);
+    ret_value = nameof_alg(block.hint);
     return ret_value;
 }
 

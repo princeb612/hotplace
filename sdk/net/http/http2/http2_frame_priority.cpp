@@ -33,8 +33,8 @@ return_t http2_frame_priority::do_read_body(const byte_t* stream, size_t size, s
         }
 
         payload pl;
-        pl << new payload_member((uint32)0, true, constexpr_frame_stream_dependency)  //
-           << new payload_member((uint8)0, constexpr_frame_weight);
+        pl << new payload_member(uint32(0), true, constexpr_frame_stream_dependency)  //
+           << new payload_member(uint8(0), constexpr_frame_weight);
 
         pl.set_reference_value(constexpr_frame_padding, constexpr_frame_pad_length);
         pl.read(stream, size, pos);

@@ -69,6 +69,7 @@ return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg
     int ret_openssl = 1;
     BIGNUM* bn_r = nullptr;
     BIGNUM* bn_s = nullptr;
+    DSA_SIG* sig = nullptr;
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
@@ -88,7 +89,7 @@ return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg
 
         bin2bn(r, &bn_r);
         bin2bn(s, &bn_s);
-        DSA_SIG* sig = DSA_SIG_new();
+        sig = DSA_SIG_new();
         DSA_SIG_set0(sig, bn_r, bn_s);
         ret_openssl = DSA_do_verify(&digest[0], digest.size(), sig, (DSA*)dsa);
         if (ret_openssl < 1) {
@@ -96,11 +97,15 @@ return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg
         }
     }
     __finally2 {
-        if (bn_r) {
-            BN_free(bn_r);
-        }
-        if (bn_s) {
-            BN_free(bn_s);
+        if (sig) {
+            DSA_SIG_free(sig);  // bn_r, bn_s
+        } else {
+            if (bn_r) {
+                BN_free(bn_r);
+            }
+            if (bn_s) {
+                BN_free(bn_s);
+            }
         }
     }
     return ret;
