@@ -14,150 +14,43 @@
 namespace hotplace {
 namespace net {
 
-network_protocol_group::network_protocol_group() { _shared.addref(); }
+network_protocol::network_protocol() {
+    _shared.make_share(this);
+    _constraints.resize(protocol_constraints_t::protocol_constraints_the_end);
+}
 
-network_protocol_group::~network_protocol_group() { clear(); }
+network_protocol::~network_protocol() {}
 
-return_t network_protocol_group::add(network_protocol* protocol) {
+return_t network_protocol::is_kind_of(void* stream, size_t stream_size) { return errorcode_t::success; }
+
+return_t network_protocol::read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state, int* priority) {
+    *state = protocol_state_t::protocol_state_complete;
+    return errorcode_t::success;
+}
+
+return_t network_protocol::set_constraints(protocol_constraints_t id, size_t value) {
     return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == protocol) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        critical_section_guard guard(_lock);
-        protocol_map_pib_t pib = _protocols.insert(std::make_pair(protocol->protocol_id(), protocol));
-        if (true == pib.second) {
-            protocol->addref();
-        }
+    if (id < protocol_constraints_t::protocol_constraints_the_end) {
+        _constraints[id] = value;
+    } else {
+        ret = errorcode_t::invalid_request;
     }
-    __finally2 {}
-
     return ret;
 }
 
-network_protocol_group& network_protocol_group::operator<<(network_protocol* protocol) {
-    add(protocol);
-    return *this;
-}
-
-return_t network_protocol_group::find(const std::string& protocol_id, network_protocol** ptr_protocol) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == ptr_protocol) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        critical_section_guard guard(_lock);
-        protocol_map_t::iterator iter = _protocols.find(protocol_id);
-        if (_protocols.end() == iter) {
-            ret = errorcode_t::not_found;
-        } else {
-            network_protocol* protocol = iter->second;
-            protocol->addref();
-            *ptr_protocol = protocol;
-        }
+size_t network_protocol::get_constraints(protocol_constraints_t id) {
+    size_t ret_value = 0;
+    if (id < protocol_constraints_t::protocol_constraints_the_end) {
+        ret_value = _constraints[id];
     }
-    __finally2 {}
-
-    return ret;
+    return ret_value;
 }
 
-network_protocol* network_protocol_group::operator[](const std::string& protocol_id) {
-    network_protocol* protocol = nullptr;
+bool network_protocol::use_alpn() { return false; }
 
-    find(protocol_id, &protocol);
-    return protocol;
-}
+int network_protocol::addref() { return _shared.addref(); }
 
-return_t network_protocol_group::remove(network_protocol* protocol) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == protocol) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        critical_section_guard guard(_lock);
-        protocol_map_t::iterator iter = _protocols.find(protocol->protocol_id());
-        if (_protocols.end() != iter) {
-            network_protocol* protocol_ref = iter->second;
-            protocol_ref->release();
-        }
-    }
-    __finally2 {}
-
-    return ret;
-}
-
-return_t network_protocol_group::clear() {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        critical_section_guard guard(_lock);
-        for (auto& pair : _protocols) {
-            network_protocol* protocol = pair.second;
-            protocol->release();
-        }
-        _protocols.clear();
-    }
-    __finally2 {}
-
-    return ret;
-}
-
-bool network_protocol_group::empty() {
-    bool ret = _protocols.empty();
-
-    return ret;
-}
-
-return_t network_protocol_group::is_kind_of(void* stream, size_t stream_size, network_protocol** ptr_protocol) {
-    return_t ret = errorcode_t::success;
-    network_protocol* protocol_match = nullptr;
-
-    __try2 {
-        if (nullptr == ptr_protocol) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        critical_section_guard guard(_lock);
-
-        for (auto& pair : _protocols) {
-            network_protocol* protocol = pair.second;
-            return_t dwResult = protocol->is_kind_of(stream, stream_size);
-
-            if (errorcode_t::success == dwResult) {
-                protocol_match = protocol;
-                protocol_match->addref();
-                break;
-            } else if (errorcode_t::more_data == dwResult) {
-                ret = dwResult;
-                protocol_match = protocol;
-            }
-        }
-
-        if (nullptr == protocol_match) {
-            ret = errorcode_t::not_supported;
-        }
-        if (errorcode_t::success == ret) {
-            *ptr_protocol = protocol_match;
-        }
-    }
-    __finally2 {}
-
-    return ret;
-}
-
-int network_protocol_group::addref() { return _shared.addref(); }
-
-int network_protocol_group::release() { return _shared.delref(); }
+int network_protocol::release() { return _shared.delref(); }
 
 }  // namespace net
 }  // namespace hotplace

@@ -40,11 +40,8 @@ enum protocol_constraints_t {
  */
 class network_protocol {
    public:
-    network_protocol() {
-        _shared.make_share(this);
-        _constraints.resize(protocol_constraints_t::protocol_constraints_the_end);
-    }
-    virtual ~network_protocol() {}
+    network_protocol();
+    virtual ~network_protocol();
 
     /**
      * @brief check protocol
@@ -53,7 +50,7 @@ class network_protocol {
      * @return  errorcode_t::success
      *          errorcode_t::not_supported (if error, do not return errorcode_t::success)
      */
-    virtual return_t is_kind_of(void* stream, size_t stream_size) { return errorcode_t::success; }
+    virtual return_t is_kind_of(void* stream, size_t stream_size);
     /**
      * @brief read stream
      * @param   IBufferStream*      stream          [IN]
@@ -61,29 +58,12 @@ class network_protocol {
      * @param   protocol_state_t*   state           [OUT]
      * @param   int*                priority        [OUTOPT]
      */
-    virtual return_t read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state, int* priority = nullptr) {
-        *state = protocol_state_t::protocol_state_complete;
-        return errorcode_t::success;
-    }
+    virtual return_t read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state, int* priority = nullptr);
     /**
      * @brief   constraints
      */
-    virtual return_t set_constraints(protocol_constraints_t id, size_t value) {
-        return_t ret = errorcode_t::success;
-        if (id < protocol_constraints_t::protocol_constraints_the_end) {
-            _constraints[id] = value;
-        } else {
-            ret = errorcode_t::invalid_request;
-        }
-        return ret;
-    }
-    virtual size_t get_constraints(protocol_constraints_t id) {
-        size_t ret_value = 0;
-        if (id < protocol_constraints_t::protocol_constraints_the_end) {
-            ret_value = _constraints[id];
-        }
-        return ret_value;
-    }
+    virtual return_t set_constraints(protocol_constraints_t id, size_t value);
+    virtual size_t get_constraints(protocol_constraints_t id);
 
     /**
      * @brief   id
@@ -95,10 +75,10 @@ class network_protocol {
      *      is_h3 = protocol->is_kind_of(stream, size);  // compare [0x2, 'h', '3']
      *  }
      */
-    virtual bool use_alpn() { return false; }
+    virtual bool use_alpn();
 
-    int addref() { return _shared.addref(); }
-    int release() { return _shared.delref(); }
+    int addref();
+    int release();
 
    protected:
    private:

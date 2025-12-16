@@ -834,14 +834,14 @@ class crypto_advisor {
 typedef struct _openssl_evp_cipher_method_older_t {
     const EVP_CIPHER* _cipher;
     hint_cipher_t hint;
-} openssl_evp_cipher_method_older_t;
+} evp_cipher_ossl1_methods;
 
 ///////////////////////////////////////////////////////////////////////////
 extern const hint_cipher_t evp_cipher_methods[];
-extern const openssl_evp_cipher_method_older_t aes_wrap_methods[];
+extern const evp_cipher_ossl1_methods ossl1_aes_wrap_methods[];
 extern const hint_blockcipher_t hint_blockciphers[];
 extern const size_t sizeof_evp_cipher_methods;
-extern const size_t sizeof_aes_wrap_methods;
+extern const size_t sizeof_ossl1_aes_wrap_methods;
 extern const size_t sizeof_hint_blockciphers;
 ///////////////////////////////////////////////////////////////////////////
 extern const hint_digest_t evp_md_methods[];

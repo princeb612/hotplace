@@ -25,9 +25,7 @@ namespace hotplace {
 namespace net {
 
 tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(tls_12), _maxspec(tls_13) {
-    if (session) {
-        session->addref();
-    } else {
+    if (nullptr == session) {
         throw exception(errorcode_t::no_session);
     }
 
@@ -39,12 +37,7 @@ tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(t
     }
 }
 
-tls_composer::~tls_composer() {
-    auto session = get_session();
-    if (session) {
-        session->release();
-    }
-}
+tls_composer::~tls_composer() {}
 
 return_t tls_composer::session_status_changed(uint32 session_status, tls_direction_t dir, uint32 wto, std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;

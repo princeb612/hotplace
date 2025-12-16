@@ -151,8 +151,8 @@ return_t crypto_advisor::for_each_cipher(std::function<void(const char*, uint32,
         const hint_cipher_t* item = evp_cipher_methods + i;
         f(nameof_alg(item), advisor_feature_cipher, user);
     }
-    for (auto i = 0; i < sizeof_aes_wrap_methods; i++) {
-        const openssl_evp_cipher_method_older_t* item = aes_wrap_methods + i;
+    for (auto i = 0; i < sizeof_ossl1_aes_wrap_methods; i++) {
+        const evp_cipher_ossl1_methods* item = ossl1_aes_wrap_methods + i;
         f(item->hint.fetchname, advisor_feature_wrap, user);
     }
     return ret;

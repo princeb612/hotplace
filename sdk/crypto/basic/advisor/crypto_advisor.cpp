@@ -109,8 +109,8 @@ return_t crypto_advisor::build() {
 
 #if (OPENSSL_VERSION_NUMBER < 0x30000000L)
     // workaround for openssl-1.1.1 - EVP_CIPHER_fetch("aes-128-wrap") return nullptr
-    for (i = 0; i < sizeof_aes_wrap_methods; i++) {
-        const openssl_evp_cipher_method_older_t* item = aes_wrap_methods + i;
+    for (i = 0; i < sizeof_ossl1_aes_wrap_methods; i++) {
+        const evp_cipher_ossl1_methods* item = ossl1_aes_wrap_methods + i;
 
         cipher_fetch_block_t block((EVP_CIPHER*)item->_cipher, &item->hint);
         // distinguish between crypto_scheme_aes_128_gcm and crypto_scheme_tls_aes_128_gcm

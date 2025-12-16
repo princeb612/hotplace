@@ -202,7 +202,7 @@ const hint_cipher_t evp_cipher_methods[] = {
 
 const size_t sizeof_evp_cipher_methods = RTL_NUMBER_OF(evp_cipher_methods);
 
-const openssl_evp_cipher_method_older_t aes_wrap_methods[] = {
+const evp_cipher_ossl1_methods ossl1_aes_wrap_methods[] = {
 #if (OPENSSL_VERSION_NUMBER < 0x30000000L)
     {EVP_aes_128_wrap(), {crypto_scheme_aes_128_wrap, aes128, wrap, "aes-128-wrap"}},
     {EVP_aes_192_wrap(), {crypto_scheme_aes_192_wrap, aes192, wrap, "aes-192-wrap"}},
@@ -210,7 +210,7 @@ const openssl_evp_cipher_method_older_t aes_wrap_methods[] = {
 #endif
 };
 
-const size_t sizeof_aes_wrap_methods = RTL_NUMBER_OF(aes_wrap_methods);
+const size_t sizeof_ossl1_aes_wrap_methods = RTL_NUMBER_OF(ossl1_aes_wrap_methods);
 
 }  // namespace crypto
 }  // namespace hotplace
