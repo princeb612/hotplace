@@ -52,4 +52,6 @@ void test_base16_rfc();
 
 void test_base64();
 
+void test_huffman_codes();
+
 #endif

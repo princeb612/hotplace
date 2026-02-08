@@ -51,11 +51,11 @@ class crypto_hmac {
     crypto_hmac& update(const binary_t& message);
     crypto_hmac& update(const byte_t* stream, size_t size);
     template <typename T>
-    crypto_hmac& update(T value, std::function<T(T)> fn = nullptr);
-    crypto_hmac& update(uint8 value, std::function<uint8(uint8)> fn = nullptr);
-    crypto_hmac& update(uint16 value, std::function<uint16(uint16)> fn = nullptr);
-    crypto_hmac& update(uint32 value, std::function<uint32(uint32)> fn = nullptr);
-    crypto_hmac& update(uint64 value, std::function<uint64(uint64)> fn = nullptr);
+    crypto_hmac& update(T value, std::function<T(const T&)> fn = nullptr);
+    crypto_hmac& update(uint8 value, std::function<uint8(const uint8&)> fn = nullptr);
+    crypto_hmac& update(uint16 value, std::function<uint16(const uint16&)> fn = nullptr);
+    crypto_hmac& update(uint32 value, std::function<uint32(const uint32&)> fn = nullptr);
+    crypto_hmac& update(uint64 value, std::function<uint64(const uint64&)> fn = nullptr);
     crypto_hmac& digest(binary_t& md);
     crypto_hmac& finalize(binary_t& md);
 

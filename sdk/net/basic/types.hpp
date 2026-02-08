@@ -163,7 +163,9 @@ class trial_tls_server_socket;
 class trial_dtls_server_socket;
 class trial_quic_server_socket;
 
+class trial_composer;
 class tls_composer;
+class quic_composer;
 
 class server_socket_adapter;
 class openssl_server_socket_adapter;

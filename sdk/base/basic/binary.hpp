@@ -62,18 +62,18 @@ class binary {
      *          b.append(data);          // 64000000 little endian
      *          b.append(data, hton32);  // 00000064 big endian
      */
-    binary& append(int16 value, std::function<int16(int16)> func = nullptr);
-    binary& append(uint16 value, std::function<uint16(uint16)> func = nullptr);
-    binary& append(int32 value, std::function<int32(int32)> func = nullptr);
-    binary& append(uint32 value, std::function<uint32(uint32)> func = nullptr);
-    binary& append(int64 value, std::function<int64(int64)> func = nullptr);
-    binary& append(uint64 value, std::function<uint64(uint64)> func = nullptr);
+    binary& append(int16 value, std::function<int16(const int16&)> func = nullptr);
+    binary& append(uint16 value, std::function<uint16(const uint16&)> func = nullptr);
+    binary& append(int32 value, std::function<int32(const int32&)> func = nullptr);
+    binary& append(uint32 value, std::function<uint32(const uint32&)> func = nullptr);
+    binary& append(int64 value, std::function<int64(const int64&)> func = nullptr);
+    binary& append(uint64 value, std::function<uint64(const uint64&)> func = nullptr);
 #if defined __SIZEOF_INT128__
-    binary& append(int128 value, std::function<int128(int128)> func = nullptr);
-    binary& append(uint128 value, std::function<uint128(uint128)> func = nullptr);
+    binary& append(int128 value, std::function<int128(const int128&)> func = nullptr);
+    binary& append(uint128 value, std::function<uint128(const uint128&)> func = nullptr);
 #endif
-    binary& append(float value, std::function<uint32(uint32)> func = nullptr);
-    binary& append(double value, std::function<uint64(uint64)> func = nullptr);
+    binary& append(float value, std::function<uint32(const uint32&)> func = nullptr);
+    binary& append(double value, std::function<uint64(const uint64&)> func = nullptr);
     /**
      * @sample
      *          b.append("token");
@@ -179,30 +179,30 @@ class binary {
 return_t binary_push(binary_t& target, byte_t rhs);
 
 template <typename T>
-return_t t_binary_append(binary_t& target, T value, std::function<T(T)> func = nullptr) {
-    return_t ret = errorcode_t::success;
-    if (func) {
-        T temp = value;
-        value = func(temp);
+return_t t_binary_append(binary_t& target, T value, std::function<T(const T&)> func = nullptr) {
+    if (nullptr != func) {
+        value = func(value);
     }
-    target.insert(target.end(), (byte_t*)&value, (byte_t*)&value + sizeof(T));
-    return ret;
+    const size_t pos = target.size();
+    target.resize(pos + sizeof(T));
+    memcpy(target.data() + pos, &value, sizeof(T));
+    return errorcode_t::success;
 }
 
 return_t binary_append(binary_t& target, int8 value);
 return_t binary_append(binary_t& target, uint8 value);
-return_t binary_append(binary_t& target, int16 value, std::function<int16(int16)> func = nullptr);
-return_t binary_append(binary_t& target, uint16 value, std::function<uint16(uint16)> func = nullptr);
-return_t binary_append(binary_t& target, int32 value, std::function<int32(int32)> func = nullptr);
-return_t binary_append(binary_t& target, uint32 value, std::function<uint32(uint32)> func = nullptr);
-return_t binary_append(binary_t& target, int64 value, std::function<int64(int64)> func = nullptr);
-return_t binary_append(binary_t& target, uint64 value, std::function<uint64(uint64)> func = nullptr);
+return_t binary_append(binary_t& target, int16 value, std::function<int16(const int16&)> func = nullptr);
+return_t binary_append(binary_t& target, uint16 value, std::function<uint16(const uint16&)> func = nullptr);
+return_t binary_append(binary_t& target, int32 value, std::function<int32(const int32&)> func = nullptr);
+return_t binary_append(binary_t& target, uint32 value, std::function<uint32(const uint32&)> func = nullptr);
+return_t binary_append(binary_t& target, int64 value, std::function<int64(const int64&)> func = nullptr);
+return_t binary_append(binary_t& target, uint64 value, std::function<uint64(const uint64&)> func = nullptr);
 #if defined __SIZEOF_INT128__
-return_t binary_append(binary_t& target, int128 value, std::function<int128(int128)> func = nullptr);
-return_t binary_append(binary_t& target, uint128 value, std::function<uint128(uint128)> func = nullptr);
+return_t binary_append(binary_t& target, int128 value, std::function<int128(const int128&)> func = nullptr);
+return_t binary_append(binary_t& target, uint128 value, std::function<uint128(const uint128&)> func = nullptr);
 #endif
-return_t binary_append(binary_t& target, float value, std::function<uint32(uint32)> func = nullptr);
-return_t binary_append(binary_t& target, double value, std::function<uint64(uint64)> func = nullptr);
+return_t binary_append(binary_t& target, float value, std::function<uint32(const uint32&)> func = nullptr);
+return_t binary_append(binary_t& target, double value, std::function<uint64(const uint64&)> func = nullptr);
 return_t binary_append(binary_t& target, const std::string& rhs);
 return_t binary_append(binary_t& target, const binary_t& rhs);
 return_t binary_append(binary_t& target, const binary& rhs);
@@ -217,29 +217,37 @@ return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t 
  * @param   uint32 len [in] limited up to sizeof(T)
  *          in case of (len == sizeof(T)) it works like binary_append
  * @param   T value [in]
- * @param   std::function<T(T)> func [inopt] hton16, ..., hton128
+ * @param   std::function<T(const T&)> func [inopt] hton16, ..., hton128
+ * @sample
+ *          uint32 ui32 = 0x12345678;
+ *
+ *          // narrow
+ *          // 00000000 : 56 78 -- -- -- -- -- -- -- -- -- -- -- -- -- -- | Vx
+ *          binary_t bin;
+ *          t_binary_append2<uint32>(bin, sizeof(uint16), ui32, hton32);
+ *
+ *          // wide
+ *          // 00000000 : 00 00 00 00 12 34 56 78 -- -- -- -- -- -- -- -- | .....4Vx
+ *          t_binary_append2<uint32>(bin, sizeof(uint64), ui32, hton32);
  */
 template <typename T>
-return_t t_binary_append2(binary_t& target, uint32 bnlen, T value, std::function<T(T)> func = nullptr) {
-    return_t ret = errorcode_t::success;
-    size_t pos = target.size();
+return_t t_binary_append2(binary_t& target, uint32 bnlen, T value, std::function<T(const T&)> func = nullptr) {
+    if (nullptr != func) {
+        value = func(value);
+    }
+    const size_t pos = target.size();
     uint32 tsize = sizeof(T);
     size_t toffset = 0;
-    if (func) {
-        T temp = value;
-        value = func(temp);
-    }
-    if (bnlen >= tsize) {
-        size_t offset = bnlen - tsize;
-        while (offset--) {
-            binary_push(target, 0);
-        }
-    } else {
+    if (bnlen < tsize) {
         toffset = tsize - bnlen;
         tsize = bnlen;
     }
-    target.insert(target.end(), (byte_t*)&value + toffset, (byte_t*)&value + toffset + tsize);
-    return ret;
+    target.resize(pos + bnlen);
+    if (bnlen > tsize) {
+        memset(target.data() + pos, 0, bnlen - tsize);
+    }
+    memcpy(target.data() + pos + (bnlen - tsize), reinterpret_cast<const byte_t*>(&value) + toffset, tsize);
+    return errorcode_t::success;
 }
 
 /**
@@ -249,53 +257,48 @@ return_t t_binary_append2(binary_t& target, uint32 bnlen, T value, std::function
  *          binary_append2(bin, 8, ui128, hton128); // append
  *          // 00000000 : 01 23 45 67 89 AB CD EF -- -- -- -- -- -- -- -- | .#Eg....
  */
-return_t binary_append2(binary_t& target, uint32 len, int16 value, std::function<int16(int16)> func = nullptr);
-return_t binary_append2(binary_t& target, uint32 len, uint16 value, std::function<uint16(uint16)> func = nullptr);
-return_t binary_append2(binary_t& target, uint32 len, int32 value, std::function<int32(int32)> func = nullptr);
-return_t binary_append2(binary_t& target, uint32 len, uint32 value, std::function<uint32(uint32)> func = nullptr);
-return_t binary_append2(binary_t& target, uint32 len, int64 value, std::function<int64(int64)> func = nullptr);
-return_t binary_append2(binary_t& target, uint32 len, uint64 value, std::function<uint64(uint64)> func = nullptr);
+return_t binary_append2(binary_t& target, uint32 len, int16 value, std::function<int16(const int16&)> func = nullptr);
+return_t binary_append2(binary_t& target, uint32 len, uint16 value, std::function<uint16(const uint16&)> func = nullptr);
+return_t binary_append2(binary_t& target, uint32 len, int32 value, std::function<int32(const int32&)> func = nullptr);
+return_t binary_append2(binary_t& target, uint32 len, uint32 value, std::function<uint32(const uint32&)> func = nullptr);
+return_t binary_append2(binary_t& target, uint32 len, int64 value, std::function<int64(const int64&)> func = nullptr);
+return_t binary_append2(binary_t& target, uint32 len, uint64 value, std::function<uint64(const uint64&)> func = nullptr);
 #if defined __SIZEOF_INT128__
-return_t binary_append2(binary_t& target, uint32 len, int128 value, std::function<int128(int128)> func = nullptr);
-return_t binary_append2(binary_t& target, uint32 len, uint128 value, std::function<uint128(uint128)> func = nullptr);
+return_t binary_append2(binary_t& target, uint32 len, int128 value, std::function<int128(const int128&)> func = nullptr);
+return_t binary_append2(binary_t& target, uint32 len, uint128 value, std::function<uint128(const uint128&)> func = nullptr);
 #endif
 
 /**
  * @brief   overwrite (resize and fill)
  */
 template <typename T>
-return_t t_binary_load(binary_t& target, uint32 bnlen, T value, std::function<T(T)> func = nullptr) {
-    return_t ret = errorcode_t::success;
+return_t t_binary_load(binary_t& target, uint32 bnlen, T value, std::function<T(const T&)> func = nullptr) {
     target.clear();
     target.resize(bnlen);
-    if (bnlen) {
+    if (0 != bnlen) {
         uint32 tsize = sizeof(T);
         size_t toffset = 0;
-        if (func) {
-            T temp = value;
-            value = func(temp);
-        }
-        if (bnlen >= tsize) {
-            //
-        } else {
+        if (bnlen < tsize) {
             toffset = tsize - bnlen;
             tsize = bnlen;
         }
-
-        memcpy(&target[0] + (bnlen - tsize), (byte_t*)&value + toffset, tsize);
+        if (nullptr != func) {
+            value = func(value);
+        }
+        memcpy(target.data() + (bnlen - tsize), reinterpret_cast<const byte_t*>(&value) + toffset, tsize);
     }
-    return ret;
+    return errorcode_t::success;
 }
 
-return_t binary_load(binary_t& target, uint32 limit, int16 value, std::function<int16(int16)> func = nullptr);
-return_t binary_load(binary_t& target, uint32 limit, uint16 value, std::function<uint16(uint16)> func = nullptr);
-return_t binary_load(binary_t& target, uint32 limit, int32 value, std::function<int32(int32)> func = nullptr);
-return_t binary_load(binary_t& target, uint32 limit, uint32 value, std::function<uint32(uint32)> func = nullptr);
-return_t binary_load(binary_t& target, uint32 limit, int64 value, std::function<int64(int64)> func = nullptr);
-return_t binary_load(binary_t& target, uint32 limit, uint64 value, std::function<uint64(uint64)> func = nullptr);
+return_t binary_load(binary_t& target, uint32 limit, int16 value, std::function<int16(const int16&)> func = nullptr);
+return_t binary_load(binary_t& target, uint32 limit, uint16 value, std::function<uint16(const uint16&)> func = nullptr);
+return_t binary_load(binary_t& target, uint32 limit, int32 value, std::function<int32(const int32&)> func = nullptr);
+return_t binary_load(binary_t& target, uint32 limit, uint32 value, std::function<uint32(const uint32&)> func = nullptr);
+return_t binary_load(binary_t& target, uint32 limit, int64 value, std::function<int64(const int64&)> func = nullptr);
+return_t binary_load(binary_t& target, uint32 limit, uint64 value, std::function<uint64(const uint64&)> func = nullptr);
 #if defined __SIZEOF_INT128__
-return_t binary_load(binary_t& target, uint32 limit, int128 value, std::function<int128(int128)> func = nullptr);
-return_t binary_load(binary_t& target, uint32 limit, uint128 value, std::function<uint128(uint128)> func = nullptr);
+return_t binary_load(binary_t& target, uint32 limit, int128 value, std::function<int128(const int128&)> func = nullptr);
+return_t binary_load(binary_t& target, uint32 limit, uint128 value, std::function<uint128(const uint128&)> func = nullptr);
 #endif
 return_t binary_load(binary_t& target, uint32 limit, const byte_t* data, uint32 len);
 return_t binary_fill(binary_t& target, size_t count, const byte_t& value);
@@ -306,8 +309,12 @@ return_t binary_fill(binary_t& target, size_t count, const byte_t& value);
  * @param char* rhs [in]
  */
 static inline binary_t& operator<<(binary_t& lhs, char* rhs) {
-    if (rhs) {
-        lhs.insert(lhs.end(), rhs, rhs + strlen(rhs));
+    if (nullptr != rhs) {
+        const size_t len = strlen(rhs);
+        if (0 != len) {
+            lhs.reserve(lhs.size() + len);
+            lhs.insert(lhs.end(), rhs, rhs + len);
+        }
     }
     return lhs;
 }
@@ -318,7 +325,10 @@ static inline binary_t& operator<<(binary_t& lhs, char* rhs) {
  * @param std::string rhs [in]
  */
 static inline binary_t& operator<<(binary_t& lhs, const std::string& rhs) {
-    lhs.insert(lhs.end(), rhs.begin(), rhs.end());
+    if (false == rhs.empty()) {
+        lhs.reserve(lhs.size() + rhs.size());
+        lhs.insert(lhs.end(), rhs.begin(), rhs.end());
+    }
     return lhs;
 }
 
@@ -328,7 +338,10 @@ static inline binary_t& operator<<(binary_t& lhs, const std::string& rhs) {
  * @param binary_t rhs [in]
  */
 static inline binary_t& operator<<(binary_t& lhs, const binary_t& rhs) {
-    lhs.insert(lhs.end(), rhs.begin(), rhs.end());
+    if (false == rhs.empty()) {
+        lhs.reserve(lhs.size() + rhs.size());
+        lhs.insert(lhs.end(), rhs.begin(), rhs.end());
+    }
     return lhs;
 }
 
@@ -336,22 +349,17 @@ static inline binary_t& operator<<(binary_t& lhs, const binary_t& rhs) {
  * @brief   util
  */
 static inline std::string bin2str(const binary_t& bin) {
-    std::string result;
-    if (bin.size()) {
-        result.assign((char*)&bin[0], bin.size());
+    if (true == bin.empty()) {
+        return std::string();
+    } else {
+        return std::string(reinterpret_cast<const char*>(bin.data()), bin.size());
     }
-    return result;
 }
 
 /**
  * @brief   util
  */
-static inline binary_t str2bin(const std::string& source) {
-    binary_t result;
-
-    result.insert(result.end(), source.begin(), source.end());
-    return result;
-}
+static inline binary_t str2bin(const std::string& source) { return binary_t(source.begin(), source.end()); }
 
 /**
  * @brief   binary to integer
@@ -374,17 +382,17 @@ static inline binary_t str2bin(const std::string& source) {
 template <typename T>
 T t_binary_to_integer(const byte_t* bstr, size_t size, return_t& errorcode) {
     T value = 0;
-    if (bstr) {
+    if (nullptr != bstr) {
         size_t tsize = sizeof(T);
         if (tsize <= size) {
-            value = *(T*)bstr;
+            value = *reinterpret_cast<const T*>(bstr);
             if (tsize > 1) {
                 value = convert_endian(value);  // host endian
             }
         } else {
             binary_t bin;
             binary_load(bin, tsize, bstr, size);
-            value = *(T*)&bin[0];
+            value = *reinterpret_cast<const T*>(bin.data());
             if (tsize > 1) {
                 value = convert_endian(value);  // host endian
             }
@@ -403,7 +411,7 @@ T t_binary_to_integer(const byte_t* bstr, size_t size) {
 
 template <typename T>
 T t_binary_to_integer(const binary_t& bin, return_t& errorcode) {
-    return t_binary_to_integer<T>(bin.empty() ? nullptr : &bin[0], bin.size(), errorcode);
+    return t_binary_to_integer<T>((true == bin.empty()) ? nullptr : bin.data(), bin.size(), errorcode);
 }
 
 template <typename T>

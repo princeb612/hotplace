@@ -392,7 +392,7 @@ class crypto_keychain {
      *          02 || x (ysign 0, y0)
      *          03 || x (ysign 1, y1)
      *
-     *          ex. P-256 33 byts
+     *          ex. P-256 33 bytes
      *          02 || x (32 bytes)
      *          03 || x (32 bytes)
      */
@@ -421,7 +421,7 @@ class crypto_keychain {
      * @remarks
      *          04 || x || y
      *
-     *          ex. P-256 65 byts
+     *          ex. P-256 65 bytes
      *          04 || x (32 bytes) || y (32 bytes)
      */
     return_t add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const binary_t& pubkey, const binary_t& privkey, const keydesc& desc);

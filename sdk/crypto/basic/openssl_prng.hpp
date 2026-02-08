@@ -17,7 +17,7 @@ namespace hotplace {
 namespace crypto {
 
 /**
- * @brief random number generator
+ * @brief pseudo random number generator
  */
 class openssl_prng {
    public:

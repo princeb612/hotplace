@@ -885,6 +885,8 @@ static void test_construct_tls_routine(const TLS_OPTION& option, const char* gro
 }
 
 void test_construct_tls() {
+    const OPTION& option = _cmdline->value();
+
     TLS_OPTION testvector[] = {
         // tested
 
@@ -934,11 +936,13 @@ void test_construct_tls() {
         test_construct_tls_routine(item, "secp521r1");
         test_construct_tls_routine(item, "x25519");
         test_construct_tls_routine(item, "x448");
-        test_construct_tls_routine(item, "ffdhe2048");
-        test_construct_tls_routine(item, "ffdhe3072");
-        test_construct_tls_routine(item, "ffdhe4096");
-        test_construct_tls_routine(item, "ffdhe6144");
-        test_construct_tls_routine(item, "ffdhe8192");
+        if (option.test_ffdhe) {
+            test_construct_tls_routine(item, "ffdhe2048");
+            test_construct_tls_routine(item, "ffdhe3072");
+            test_construct_tls_routine(item, "ffdhe4096");
+            test_construct_tls_routine(item, "ffdhe6144");
+            test_construct_tls_routine(item, "ffdhe8192");
+        }
         test_construct_tls_routine(item, (tls_13 == item.version) ? "brainpoolP256r1tls13" : "brainpoolP512r1");
         test_construct_tls_routine(item, (tls_13 == item.version) ? "brainpoolP384r1tls13" : "brainpoolP384r1");
         test_construct_tls_routine(item, (tls_13 == item.version) ? "brainpoolP512r1tls13" : "brainpoolP256r1");

@@ -279,6 +279,17 @@ void test_stream() {
     _logger->writeln(bs.c_str());
 
     _test_case.assert(true, __FUNCTION__, "stream");
+
+    bs.resize(50);
+    _logger->dump(bs);
+    _test_case.assert(50 == bs.size(), __FUNCTION__, "expand");
+
+    bs.resize(11);
+    _logger->dump(bs);
+    _test_case.assert(11 == bs.size(), __FUNCTION__, "shrink");
+
+    bs.resize(0);
+    _test_case.assert(bs.empty(), __FUNCTION__, "resize 0");
 }
 
 void test_stream_getline() {

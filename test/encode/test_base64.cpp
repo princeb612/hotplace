@@ -24,12 +24,9 @@ void do_test_base64_routine(const char* source, size_t source_size, int encoding
     {
         test_case_notimecheck notimecheck(_test_case);
 
-        dump_memory((byte_t*)source, source_size, &bs);
-        _logger->writeln("input\n%s", bs.c_str());
-        dump_memory((byte_t*)&encoded_b64[0], encoded_b64.size(), &bs);
-        _logger->writeln("encoded\n%.*s", (int)bs.size(), bs.c_str());
-        dump_memory(&decoded_b64[0], decoded_b64.size(), &bs);
-        _logger->writeln("decoded\n%.*s", (int)bs.size(), bs.c_str());
+        _logger->hdump("input", source, source_size, 16, 3);
+        _logger->hdump("encoded", encoded_b64, 16, 3);
+        _logger->hdump("decoded", decoded_b64, 16, 3);
     }
 }
 

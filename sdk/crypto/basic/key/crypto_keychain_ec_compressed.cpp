@@ -68,11 +68,6 @@ return_t crypto_keychain::add_ec_compressed(crypto_key* cryptokey, uint32 nid, c
                 __leave2_trace_openssl(ret);
             }
         } else {
-            /*
-             * RFC8152 13.1.1.  Double Coordinate Curves
-             * Compute the sign bit as laid out in the Elliptic-Curve-Point-to-Octet-String Conversion function of [SEC1]
-             * If the sign bit is zero, then encode y as a CBOR false value; otherwise, encode y as a CBOR true value.
-             */
             ret_openssl = EC_POINT_set_compressed_coordinates(group, point, bn_x, ysign, nullptr);  // EC_POINT_set_compressed_coordinates_GFp
             if (ret_openssl != 1) {
                 ret = errorcode_t::internal_error;

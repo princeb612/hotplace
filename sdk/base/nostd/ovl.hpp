@@ -106,7 +106,7 @@ class t_merge_ovl_intervals {
         t_merge_ovl_intervals<T, TAGTYPE> temp;
         temp._arr = std::move(_arr);
         temp.merge();
-        for (auto item : temp._arr) {
+        for (const auto& item : temp._arr) {
             if (item.e < start) {
                 add(std::move(item));
             } else if (end < item.s) {
@@ -123,7 +123,7 @@ class t_merge_ovl_intervals {
         return *this;
     }
     t_merge_ovl_intervals& subtract(t_merge_ovl_intervals& rhs) {
-        critical_section_guard guard(_lock);
+        // do not hold _lock while calling rhs.merge() to avoid deadlock if rhs == *this or cross-lock.
         auto temp = rhs.merge();
         for (const auto& item : temp) {
             subtract(item.s, item.e);
@@ -157,12 +157,10 @@ class t_merge_ovl_intervals {
         }
         return _arr;
     }
-    size_t size() { return _arr.size(); }
+    size_t size() const { return _arr.size(); }
 
     bool operator==(t_merge_ovl_intervals& rhs) {
-        critical_section_guard guard(_lock);
-        critical_section_guard guard_rhs(rhs._lock);
-
+        // avoid holding both locks; merge() acquires its own lock per object.
         auto l = merge();
         auto r = rhs.merge();
         return l == r;
@@ -267,7 +265,7 @@ class t_ovl_points {
         t_ovl_points<T> temp;
         temp._arr = std::move(_arr);
         temp.merge();
-        for (auto item : temp._arr) {
+        for (const auto& item : temp._arr) {
             if (item.e < start) {
                 add(std::move(item));
             } else if (end < item.s) {
@@ -284,7 +282,6 @@ class t_ovl_points {
         return *this;
     }
     t_ovl_points& subtract(t_ovl_points& rhs) {
-        critical_section_guard guard(_lock);
         auto temp = rhs.merge();
         for (const auto& item : temp) {
             subtract(item.s, item.e);
@@ -317,12 +314,9 @@ class t_ovl_points {
         }
         return _arr;
     }
-    size_t size() { return _arr.size(); }
+    size_t size() const { return _arr.size(); }
 
     bool operator==(t_ovl_points<T>& rhs) {
-        critical_section_guard guard(_lock);
-        critical_section_guard guard_rhs(rhs._lock);
-
         auto l = merge();
         auto r = rhs.merge();
         return l == r;

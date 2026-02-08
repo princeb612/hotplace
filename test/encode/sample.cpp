@@ -185,6 +185,9 @@ int main(int argc, char** argv) {
     _test_case.begin("b64 encoding");
     test_base64();
 
+    _test_case.begin("huffman codes");
+    test_huffman_codes();
+
     _logger->flush();
 
     _test_case.report(5);

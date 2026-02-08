@@ -24,6 +24,10 @@
 
 namespace hotplace {
 
+enum huffman_coding_flags {
+    manual_decode = 0x01,
+};
+
 /*
  * @brief   huffman codes
  * @refer   Data Structures and Algorithm Analysis in C++ - 10.1.2 Huffman Codes
@@ -156,12 +160,13 @@ class huffman_coding {
     /**
      * @brief   decode
      * @remarks constraints : min(code len in bits) >= 5
+     *          to ignore set manual_decode
      *
      *          huff.imports(_h2hcodes);  // RFC 7541 Appendix B. Huffman Code
      *          huff.encode(...);
      *          huff.decode(...);
      */
-    return_t decode(stream_t *stream, const byte_t *source, size_t size) const;
+    return_t decode(stream_t *stream, const byte_t *source, size_t size, uint32 flags = 0) const;
 
     /**
      * @brief   check min(code len in bits) >= 5

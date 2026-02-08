@@ -172,8 +172,12 @@ basic_stream& operator<<(basic_stream& lhs, const obfuscate_string& rhs) {
 }
 
 binary_t& operator<<(binary_t& lhs, const obfuscate_string& rhs) {
-    for (const auto& item : rhs._contents) {
-        lhs.insert(lhs.end(), item - rhs._factor);
+    const size_t n = rhs._contents.size();
+    if (n) {
+        lhs.reserve(lhs.size() + n);
+        for (const auto& item : rhs._contents) {
+            lhs.insert(lhs.end(), item - rhs._factor);
+        }
     }
     return lhs;
 }
@@ -185,6 +189,10 @@ void obfuscate_string::startup() {
     }
 }
 
-void obfuscate_string::cleanup() { memset(&_contents[0], 0, _contents.size()); }
+void obfuscate_string::cleanup() {
+    if (false == _contents.empty()) {
+        memset(&_contents[0], 0, _contents.size());
+    }
+}
 
 }  // namespace hotplace

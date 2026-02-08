@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_CONSOLECOLOR__
-#define __HOTPLACE_SDK_BASE_BASIC_CONSOLECOLOR__
+#ifndef __HOTPLACE_SDK_BASE_UNITTEST_CONSOLECOLOR__
+#define __HOTPLACE_SDK_BASE_UNITTEST_CONSOLECOLOR__
 
 #include <stdarg.h>
 

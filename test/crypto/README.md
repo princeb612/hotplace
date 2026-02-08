@@ -29,7 +29,7 @@
       * ciphertext        := 227bc9ba81ef30f2a8a78ff1df50844d5804b7eeb2e214c32b6892aca3db7b78077fdd90067c516bacb3ba90dedf720f
     * comments
       * ciphersuite       := TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
-      * sequence          := uint64(0)
+      * sequence          := uint64(sequence)
       * AAD               := uint64(sequence) || uint8(type) || uint16(version) = 0000000000000000160303
       * enckey            := f656d037b173ef3e11169f27231a84b6
       * IV                := 404142434445464748494a4b4c4d4e4f
@@ -57,7 +57,7 @@
       * enckey          := f656d037b173ef3e11169f27231a84b6
       * IV              := 404142434445464748494a4b4c4d4e4f
       * mackey          := 1b7d117c7d5f690bc263cae8ef60af0f1878acc2
-      * sequence        := uint64(0)
+      * sequence        := uint64(sequence)
       * AAD             := uint64(sequence) || uint8(type) || uint16(version) = 0000000000000000160303
       * mac_calc        := HMAC(mackey, uint64(sequence) || uint8(type) || uint16(version) || ciphertext.length || ciphertext)
       * authenticate    := true (mac_calc == mac)

@@ -309,18 +309,37 @@ return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size
             __leave2;
         }
 
-        size_t code_msize = 0;
+        size_t code_minsize = 0;
+        size_t code_maxsize = 0;
 #if SWITCH_HUFFMANCODING_TRIE == 0
         if (_reverse_codetable.empty()) {
             ret = errorcode_t::not_ready;
             __leave2;
         }
 
-        code_msize = _reverse_codetable.begin()->first.size();
+        code_minsize = _reverse_codetable.begin()->first.size();
+        code_maxsize = _reverse_codetable.rbegin()->first.size();
 #else
-        code_msize = _range.getmin();
+        code_minsize = _range.getmin();
+        code_maxsize = _range.getmax();
 #endif
-        usepad &= (code_msize >= 5);  // overwrite usepad
+        usepad &= (code_minsize >= 5);  // overwrite usepad
+
+        // octet stream byte
+        auto lambda_os_byte = [](const std::string &s, size_t count) -> uint8 {
+            uint8 rc = 0;
+            if (count <= s.size()) {
+                for (int n = 0; n < count; n++) {
+                    if ('1' == s[n]) {
+                        rc |= (1 << (7 - n));
+                    }
+                }
+            }
+            return rc;
+        };
+
+        // reserve roughly to reduce reallocations
+        bin.reserve(bin.size() + ((size * code_maxsize) + 7) / 8);
 
         // align to MSB
         for (p = source, i = 0; i < size; i++) {
@@ -342,11 +361,7 @@ return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size
 
             while (buf.size() >= 8) {
                 uint8 b = 0;
-                for (int n = 0; n < 8; n++) {
-                    if ('1' == buf[n]) {
-                        b |= (1 << (7 - n));
-                    }
-                }
+                b = lambda_os_byte(buf, 8);
                 bin.insert(bin.end(), b);
                 buf.erase(0, 8);
             }
@@ -355,12 +370,7 @@ return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size
             size_t remains = buf.size();
             if (remains) {
                 uint8 b = 0;
-
-                for (int i = 0; i < remains; i++) {
-                    if ('1' == buf[i]) {
-                        b |= (1 << (7 - i));
-                    }
-                }
+                b = lambda_os_byte(buf, remains);
                 bin.insert(bin.end(), b);
                 buf.erase(0, remains);
             }
@@ -393,7 +403,7 @@ return_t huffman_coding::encode(stream_t *stream, const byte_t *source, size_t s
     return ret;
 }
 
-return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t size) const {
+return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t size, uint32 flags) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == stream) || (nullptr == source)) {
@@ -401,21 +411,24 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
             __leave2;
         }
 
-        size_t code_msize = 0;
+        size_t code_minsize = 0;
 #if SWITCH_HUFFMANCODING_TRIE == 0
         if (_reverse_codetable.empty()) {
             ret = errorcode_t::not_ready;
             __leave2;
         }
 
-        code_msize = _reverse_codetable.begin()->first.size();
+        code_minsize = _reverse_codetable.begin()->first.size();
 #else
-        code_msize = _range.getmin();
+        code_minsize = _range.getmin();
 #endif
-        if (code_msize <= 4) {
-            // see encode
-            ret = errorcode_t::insufficient;
-            __leave2;
+
+        if (0 == (huffman_coding_flags::manual_decode & flags)) {
+            if (code_minsize <= 4) {
+                // see encode
+                ret = errorcode_t::ambiguous;
+                __leave2;
+            }
         }
 
         std::string que;
@@ -427,11 +440,15 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
                 que += ((b & (1 << n)) ? '1' : '0');
             }
 
-            while (que.size() >= code_msize) {
+            if (0x80 == b) {
+                uint breakpoint = 1;
+            }
+
+            while (que.size() >= code_minsize) {
 #if SWITCH_HUFFMANCODING_TRIE == 0
                 // naive
                 int count = 0;
-                for (size_t l = code_msize; l <= que.size(); l++) {
+                for (size_t l = code_minsize; l <= que.size(); l++) {
                     token = que.substr(0, l);
                     std::map<std::string, uint8>::const_iterator iter = _reverse_codetable.find(token);
                     if (_reverse_codetable.end() != iter) {
@@ -442,7 +459,7 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
                         count++;
                     }
                 }
-                if ((que.size() - code_msize + 1) == count) {
+                if ((que.size() - code_minsize + 1) == count) {
                     break;
                 }
 #else
@@ -462,7 +479,9 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
 
         for (auto e : que) {
             if ('1' != e) {
-                ret = errorcode_t::bad_data;
+                if (0 == (huffman_coding_flags::manual_decode & flags)) {
+                    ret = errorcode_t::bad_data;
+                }
                 break;
             }
         }
@@ -474,17 +493,17 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
 bool huffman_coding::decodable() {
     bool ret = false;
     __try2 {
-        size_t code_msize = 0;
+        size_t code_minsize = 0;
 #if SWITCH_HUFFMANCODING_TRIE == 0
         if (_reverse_codetable.empty()) {
             __leave2;
         }
 
-        code_msize = _reverse_codetable.begin()->first.size();
+        code_minsize = _reverse_codetable.begin()->first.size();
 #else
-        code_msize = _range.getmin();
+        code_minsize = _range.getmin();
 #endif
-        if (code_msize > 4) {
+        if (code_minsize > 4) {
             ret = true;
         }
     }

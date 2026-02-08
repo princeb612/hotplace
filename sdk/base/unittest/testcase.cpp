@@ -9,6 +9,7 @@
  * 2023.08.15   Soo Han, Kim        elapsed time
  */
 
+#include <algorithm>
 #include <fstream>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
@@ -17,6 +18,7 @@
 #include <hotplace/sdk/base/system/thread.hpp>
 #include <hotplace/sdk/base/unittest/testcase.hpp>
 #include <iostream>
+#include <vector>
 
 namespace hotplace {
 
@@ -81,7 +83,6 @@ test_case::test_case() : _logger(nullptr) { reset_time(); }
 
 void test_case::begin(const char* case_name, ...) {
     arch_t tid = get_thread_id();
-    testcase_per_thread_pib_t pib;
     basic_stream topic;
     basic_stream stream;
     t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
@@ -93,16 +94,9 @@ void test_case::begin(const char* case_name, ...) {
         va_start(ap, case_name);
         topic.vprintf(case_name, ap);
         va_end(ap);
-
-        pib = _testcase_per_threads.insert(std::make_pair(tid, topic.c_str()));
-        if (false == pib.second) {
-            pib.first->second = topic.c_str();
-        }
+        _testcase_per_threads[tid] = topic.c_str();
     } else {
-        pib = _testcase_per_threads.insert(std::make_pair(tid, topic.c_str()));
-        if (false == pib.second) {
-            pib.first->second.clear();
-        }
+        _testcase_per_threads[tid].clear();
     }
 
     constexpr char constexpr_testcase[] = "[test case] ";
@@ -129,29 +123,14 @@ void test_case::reset_time() {
 
     arch_t tid = get_thread_id();
 
-    // turn on flag
-    time_flag_per_thread_pib_t flag_pib;
-    flag_pib = _time_flag_per_threads.insert(std::make_pair(tid, true));
-    if (false == flag_pib.second) {
-        bool& flag = flag_pib.first->second;
-        flag = true;
-    }
+    // turn on per-thread stopwatch flag.
+    _time_flag_per_threads[tid] = true;
 
-    // update timestamp
-    timestamp_per_thread_pib_t timestamp_pib;
-    timestamp_pib = _timestamp_per_threads.insert(std::make_pair(tid, now));
-    if (false == timestamp_pib.second) {
-        struct timespec* stamp = &(timestamp_pib.first->second);
-        memcpy(stamp, &now, sizeof(struct timespec));
-    }
+    // update per-thread timestamp.
+    _timestamp_per_threads[tid] = now;
 
-    // clear time slices
-    time_slice_per_thread_pib_t slice_pib;
-    time_slice_t clean_time_slice;
-    slice_pib = _time_slice_per_threads.insert(std::make_pair(tid, clean_time_slice));
-    if (false == slice_pib.second) {
-        slice_pib.first->second.clear();
-    }
+    // clear per-thread accumulated time slices.
+    _time_slice_per_threads[tid].clear();
 }
 
 void test_case::pause_time() {
@@ -159,35 +138,19 @@ void test_case::pause_time() {
 
     arch_t tid = get_thread_id();
 
-    time_flag_per_thread_pib_t flag_pib;
-    flag_pib = _time_flag_per_threads.insert(std::make_pair(tid, false));
-    if (false == flag_pib.second) {
-        bool& flag = flag_pib.first->second;
-        if (true == flag) {
-            // push_back time difference slice necessary
-            struct timespec now = {0};
-            time_monotonic(now);
+    bool& flag = _time_flag_per_threads[tid];
+    if (true == flag) {
+        // push a time slice for the elapsed interval since last timestamp.
+        struct timespec now = {0};
+        time_monotonic(now);
 
-            timestamp_per_thread_pib_t timestamp_pib;
-            timestamp_pib = _timestamp_per_threads.insert(std::make_pair(tid, now));
-            if (false == timestamp_pib.second) {
-                // read a last timestamp and calcurate a time difference
-                struct timespec& stamp = timestamp_pib.first->second;
+        struct timespec& stamp = _timestamp_per_threads[tid];
 
-                struct timespec diff = {0};
-                time_diff(diff, stamp, now);
-
-                time_slice_per_thread_pib_t slice_pib;
-                time_slice_t clean_time_slice;
-
-                // push back into a list
-                slice_pib = _time_slice_per_threads.insert(std::make_pair(tid, clean_time_slice));
-                time_slice_t& slices = slice_pib.first->second;
-                slices.push_back(diff);
-            }
-        }
-        flag = false;  // turn off thread flag
+        struct timespec diff = {0};
+        time_diff(diff, stamp, now);
+        _time_slice_per_threads[tid].push_back(diff);
     }
+    flag = false;  // turn off per-thread stopwatch flag.
 }
 
 void test_case::resume_time() {
@@ -195,65 +158,37 @@ void test_case::resume_time() {
 
     arch_t tid = get_thread_id();
 
-    time_flag_per_thread_pib_t flag_pib;
-    flag_pib = _time_flag_per_threads.insert(std::make_pair(tid, false));
-    if (false == flag_pib.second) {
-        bool& flag = flag_pib.first->second;
-        if (false == flag) {
-            // update timestamp
-            struct timespec now = {0};
-            time_monotonic(now);
-
-            timestamp_per_thread_pib_t timestamp_pib;
-            timestamp_pib = _timestamp_per_threads.insert(std::make_pair(tid, now));
-            if (false == timestamp_pib.second) {
-                struct timespec* stamp = &(timestamp_pib.first->second);
-                memcpy(stamp, &now, sizeof(struct timespec));
-            }
-        }
-        flag = true;  // turn on thread flag
+    bool& flag = _time_flag_per_threads[tid];
+    if (false == flag) {
+        // update timestamp on resume.
+        struct timespec now = {0};
+        time_monotonic(now);
+        _timestamp_per_threads[tid] = now;
     }
+    flag = true;  // turn on per-thread stopwatch flag.
 }
 
 void test_case::check_time(struct timespec& ts) {
     memset(&ts, 0, sizeof(ts));
 
-    time_slice_t clean_time_slice;
-
     critical_section_guard guard(_lock);
 
     arch_t tid = get_thread_id();
 
-    time_flag_per_thread_pib_t flag_pib;
-    flag_pib = _time_flag_per_threads.insert(std::make_pair(tid, false));
-    if (false == flag_pib.second) {
-        bool& flag = flag_pib.first->second;
-        if (true == flag) {
-            // push_back time difference slice necessary
-            struct timespec now = {0};
-            time_monotonic(now);
+    bool& flag = _time_flag_per_threads[tid];
+    if (true == flag) {
+        // Push a time slice for the elapsed interval since last timestamp.
+        struct timespec now = {0};
+        time_monotonic(now);
 
-            timestamp_per_thread_pib_t timestamp_pib;
-            timestamp_pib = _timestamp_per_threads.insert(std::make_pair(tid, now));
-            if (false == timestamp_pib.second) {
-                // read a last timestamp and calcurate a time difference
-                struct timespec& stamp = timestamp_pib.first->second;
+        struct timespec& stamp = _timestamp_per_threads[tid];
 
-                struct timespec diff = {0};
-                time_diff(diff, stamp, now);
-
-                // push back into a list
-                time_slice_per_thread_pib_t slice_pib;
-                slice_pib = _time_slice_per_threads.insert(std::make_pair(tid, clean_time_slice));
-                time_slice_t& slices = slice_pib.first->second;
-                slices.push_back(diff);
-            }
-        }
+        struct timespec diff = {0};
+        time_diff(diff, stamp, now);
+        _time_slice_per_threads[tid].push_back(diff);
     }
 
-    time_slice_per_thread_pib_t slice_pib;
-    slice_pib = _time_slice_per_threads.insert(std::make_pair(tid, clean_time_slice));
-    time_slice_t& slices = slice_pib.first->second;
+    time_slice_t& slices = _time_slice_per_threads[tid];
 
     time_sum(ts, slices);
 }
@@ -306,7 +241,6 @@ void test_case::test(return_t result, const char* test_function, const char* mes
 void test_case::test(return_t result, const char* test_function, const char* message, va_list ap) {
     struct timespec elapsed;
     arch_t tid = get_thread_id();
-    testcase_per_thread_pib_t pib;
     std::string topic;
     error_advisor* advisor = error_advisor::get_instance();
 
@@ -331,10 +265,7 @@ void test_case::test(return_t result, const char* test_function, const char* mes
         }
         item._message = tltle.c_str();
 
-        pib = _testcase_per_threads.insert(std::make_pair(tid, topic));
-        if (false == pib.second) {
-            topic = pib.first->second;
-        }
+        topic = _testcase_per_threads[tid];
 
         test_status_t clean_status;
         unittest_map_pib_t pib = _test_map.insert(std::make_pair(topic, clean_status));
@@ -430,7 +361,7 @@ constexpr char constexpr_message[] = "message";
     stream << concolor.set_fgcolor(color1) << msg;    \
     stream << concolor.set_fgcolor(color2);
 
-void test_case::dump_list_into_stream(unittest_list_t& array, basic_stream& stream, uint32 flags) {
+void test_case::dump_list_into_stream(const unittest_list_t& array, basic_stream& stream, uint32 flags) {
     error_advisor* advisor = error_advisor::get_instance();
 
     console_color_t fgcolor = console_color_t::white;
@@ -602,7 +533,7 @@ void test_case::report_unittest(basic_stream& stream) {
 
     for (const auto& testcase : _test_list) {
         unittest_map_t::iterator map_iter = _test_map.find(testcase);
-        test_status_t status = map_iter->second;
+        const test_status_t& status = map_iter->second;
 
         stream << "@ " << constexpr_testcase << " \"" << testcase.c_str() << "\" " << constexpr_success << " " << status._test_stat._count_success;
         if (status._test_stat._count_fail) {
@@ -681,7 +612,7 @@ void test_case::report_cases(basic_stream& stream) {
 
     for (const auto& testcase : _test_list) {
         unittest_map_t::iterator map_iter = _test_map.find(testcase);
-        test_status_t status = map_iter->second;
+        const test_status_t& status = map_iter->second;
 
         console_colored_stream << _concolor.turnon();
         if (status._test_stat._count_fail) {
@@ -752,41 +683,43 @@ void test_case::report_testtime(basic_stream& stream, uint32 top_count) {
 
     critical_section_guard guard(_lock);
 
-    unittest_list_t array;
-    typedef std::map<uint128, const unittest_item_t*> temp_map_t;
-    temp_map_t temp_map;
-    unittest_map_t::iterator it;
-
-    unsigned int field_nsec = (RTL_FIELD_SIZE(struct timespec, tv_nsec) << 3);
+    // collect pointers to avoid copying unittest_item_t (can be large due to strings).
+    std::vector<const unittest_item_t*> items;
     console_colored_stream << _concolor.turnon().set_style(console_style_t::bold);
 
     for (const auto& pair : _test_map) {
-        for (auto& testitem : pair.second._test_list) {
-            const struct timespec* t = &(testitem._time);
-            uint128 timekey = ((uint128)t->tv_sec << field_nsec) | (t->tv_nsec);
-            temp_map.insert(std::make_pair(timekey, &testitem));  // build pair(timekey, pointer)
+        for (const auto& testitem : pair.second._test_list) {
+            items.push_back(&testitem);
         }
     }
 
-    // build list
-    temp_map_t::reverse_iterator rit;
-    for (rit = temp_map.rbegin(); rit != temp_map.rend(); rit++) {
-        array.push_back(*rit->second);  // copy unittest_item_t here
-    }
+    auto by_time_desc = [](const unittest_item_t* a, const unittest_item_t* b) {
+        if (a->_time.tv_sec != b->_time.tv_sec) {
+            return a->_time.tv_sec > b->_time.tv_sec;
+        }
+        return a->_time.tv_nsec > b->_time.tv_nsec;
+    };
 
     // top N
-    if (array.size() > top_count) {
-        array.resize(top_count);
+    // Note: default is (uint32)-1 meaning "all".
+    if ((static_cast<uint32>(-1) != top_count) && (items.size() > top_count)) {
+        std::nth_element(items.begin(), items.begin() + top_count, items.end(), by_time_desc);
+        items.resize(top_count);
     }
+    std::sort(items.begin(), items.end(), by_time_desc);
 
     // dump and cout
-    if (array.size()) {
+    if (items.size()) {
         constexpr char constexpr_timesort[] = "sort by time (top %zi)\n";
-        stream.printf(constexpr_timesort, array.size());
+        stream.printf(constexpr_timesort, items.size());
 
         stream.fill(80, '-');
         stream << "\n";
 
+        unittest_list_t array;
+        for (const auto* p : items) {
+            array.push_back(*p);  // dump_list_into_stream expects a list of values
+        }
         dump_list_into_stream(array, stream);
 
         stream.fill(80, '-');

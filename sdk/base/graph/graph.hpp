@@ -154,17 +154,7 @@ class t_graph {
 
     friend bool operator<(const vertex& lhs, const vertex& rhs) { return lhs._data < rhs._data; }
     friend bool operator==(const vertex& lhs, const vertex& rhs) { return lhs._data == rhs._data; }
-    friend bool operator<(const edge& lhs, const edge& rhs) {
-        bool ret = true;
-        if (lhs._from < rhs._from) {
-            // do nothing
-        } else if (lhs._from == rhs._from) {
-            ret = (lhs._to < rhs._to);
-        } else {
-            ret = false;
-        }
-        return ret;
-    }
+    friend bool operator<(const edge& lhs, const edge& rhs) { return (lhs._from < rhs._from) || (lhs._from == rhs._from && lhs._to < rhs._to); }
 
     typedef std::set<vertex> unordered_vertices_t;
     typedef std::set<edge> unordered_edges_t;
@@ -184,16 +174,16 @@ class t_graph {
         return *this;
     }
     t_graph& add_vertex(const vertex& v) {
-        std::pair<typename unordered_vertices_t::iterator, bool> pib = _unordered_vertices.insert(v);
-        if (true == pib.second) {
-            _ordered_vertices.push_back(v);
+        auto pib = _unordered_vertices.insert(v);
+        if (pib.second) {
+            _ordered_vertices.push_back(*pib.first);
         }
         return *this;
     }
     t_graph& add_vertex(vertex&& v) {
-        std::pair<typename unordered_vertices_t::iterator, bool> pib = _unordered_vertices.insert(std::move(v));
-        if (true == pib.second) {
-            _ordered_vertices.push_back(v);
+        auto pib = _unordered_vertices.insert(std::move(v));
+        if (pib.second) {
+            _ordered_vertices.push_back(*pib.first);
         }
         return *this;
     }
@@ -225,7 +215,7 @@ class t_graph {
                     __leave2;
                 }
             }
-            std::pair<typename unordered_edges_t::iterator, bool> pib = _unordered_edges.insert(e);
+            auto pib = _unordered_edges.insert(e);
             if (pib.second) {
                 add_vertex(e._from).add_vertex(e._to);
 
@@ -240,8 +230,24 @@ class t_graph {
         return *this;
     }
     t_graph& add_edge(edge&& e) {
-        edge temp(std::move(e));
-        return add_edge(temp);
+        __try2 {
+            if (graph_undirected == e._direction) {
+                edge r(e._to, e._from, e._weight, e._direction);
+                if (_unordered_edges.find(r) != _unordered_edges.end()) {
+                    __leave2;
+                }
+            }
+            auto pib = _unordered_edges.insert(std::move(e));
+            if (pib.second) {
+                add_vertex(pib.first->_from).add_vertex(pib.first->_to);
+                _ordered_edges.push_back(*pib.first);
+                if (graph_undirected == pib.first->_direction) {
+                    _unordered_edges.insert(edge(pib.first->_to, pib.first->_from, pib.first->_weight, pib.first->_direction));
+                }
+            }
+        }
+        __finally2 {}
+        return *this;
     }
 
     const unordered_vertices_t& get_unordered_vertices() const { return _unordered_vertices; }
@@ -269,7 +275,7 @@ class t_graph {
         virtual graph_search& learn() {
             do_setup();
             do_preview();
-            for (auto n : _neighbours) {
+            for (const auto& n : _neighbours) {
                 unvisit();
                 do_learn(n.first);
             }
@@ -277,7 +283,7 @@ class t_graph {
         }
 
         virtual graph_search& infer() {
-            for (auto n : _neighbours) {
+            for (const auto& n : _neighbours) {
                 unvisit();
                 do_infer(n.first);
             }
@@ -285,7 +291,7 @@ class t_graph {
         }
 
         virtual void traverse(visitor_t f) {
-            for (auto n : _neighbours) {
+            for (const auto& n : _neighbours) {
                 do_traverse(n.first, f);
             }
         }
@@ -295,14 +301,12 @@ class t_graph {
        protected:
         virtual void do_setup() {}
         virtual void do_preview() {
-            for (auto item : _g._unordered_vertices) {
-                _visit.insert({item, false});
-                neighbour_t n;
-                _neighbours.insert({item, std::move(n)});
+            for (const auto& item : _g._unordered_vertices) {
+                _visit.emplace(item, false);
+                _neighbours.emplace(item, neighbour_t());
             }
-            for (auto item : _g._unordered_edges) {
+            for (const auto& item : _g._unordered_edges) {
                 _neighbours[item._from].insert(item._to);
-
                 if (graph_undirected == item._direction) {
                     _neighbours[item._to].insert(item._from);
                 }
@@ -331,16 +335,22 @@ class t_graph {
          */
         bool visit(const T& v, std::set<edge>& connected) {
             bool ret = false;
-            auto& neighbour = _neighbours.find(v)->second;
-            for (auto item : neighbour) {
-                auto iter = _unordered_edges.find(edge(v, item));
-                if (_unordered_edges.end() != iter) {
-                    connected.insert(*iter);  // directed
-                } else {
-                    iter = _unordered_edges.find(edge(item, v));
+            auto it = _neighbours.find(v);
+            if (_neighbours.end() == it) {
+                // do nothing
+            } else {
+                ret = true;
+                const auto& neighbour = it->second;
+                for (const auto& item : neighbour) {
+                    auto iter = _unordered_edges.find(edge(v, item));
                     if (_unordered_edges.end() != iter) {
-                        if (graph_undirected == iter->_direction) {
-                            connected.insert(*iter);  // undirected
+                        connected.insert(*iter);  // directed
+                    } else {
+                        iter = _unordered_edges.find(edge(item, v));
+                        if (_unordered_edges.end() != iter) {
+                            if (graph_undirected == iter->_direction) {
+                                connected.insert(*iter);  // undirected
+                            }
                         }
                     }
                 }
@@ -351,17 +361,16 @@ class t_graph {
          * @brief   weight = directed(from -> to).weight, or weight = undirected(from <-> to).weight
          */
         int get_weight(const T& from, const T& to) {
-            int weight = -1;
-            if (from == to) {
-                weight = 0;
-            } else {
-                auto& edges = _g._unordered_edges;
-                auto item = edges.find(edge(from, to));
-                if (edges.end() != item) {
-                    weight = item->_weight;
+            int rc = 0;
+            __try2 {
+                if (from == to) {
+                    __leave2;
                 }
+                auto it = _g._unordered_edges.find(edge(from, to));
+                rc = (_g._unordered_edges.end() != it) ? it->_weight : -1;
             }
-            return weight;
+            __finally2 {}
+            return rc;
         }
 
         const t_graph<T>& _g;
@@ -382,12 +391,17 @@ class t_graph {
         virtual void do_setup() { _results.clear(); }
 
         virtual void do_learn(const T& u) {
-            auto& result = this->_results[u];
-            auto& neighbours = this->_neighbours;
-
-            for (const auto& neighbour : neighbours.find(u)->second) {
-                result.push_back(neighbour);
+            __try2 {
+                auto& result = this->_results[u];
+                auto nit = this->_neighbours.find(u);
+                if (this->_neighbours.end() == nit) {
+                    __leave2;
+                }
+                for (const auto& neighbour : nit->second) {
+                    result.push_back(neighbour);
+                }
             }
+            __finally2 {}
         }
 
         virtual void do_traverse(const T& u, visitor_t f) { f(u, u, 0, _results[u]); }
@@ -429,16 +443,21 @@ class t_graph {
             learn_recursive(u, u, result);
         }
         void learn_recursive(const T& v, const T& u, result_t& result) {
-            auto& neighbours = this->_neighbours;
+            __try2 {
+                this->visit(u);
 
-            this->visit(u);
-
-            for (const auto& neighbour : neighbours.find(u)->second) {
-                if (this->visit(neighbour)) {
-                    result.push_back(neighbour);
-                    learn_recursive(v, neighbour, result);
+                auto nit = this->_neighbours.find(u);
+                if (this->_neighbours.end() == nit) {
+                    __leave2;
+                }
+                for (const auto& neighbour : nit->second) {
+                    if (this->visit(neighbour)) {
+                        result.push_back(neighbour);
+                        learn_recursive(v, neighbour, result);
+                    }
                 }
             }
+            __finally2 {}
         }
 
         virtual void do_traverse(const T& u, visitor_t f) { f(u, u, 0, _results[u]); }
@@ -474,18 +493,21 @@ class t_graph {
             this->visit(u);
             result.push_back(u);
 
-            std::list<T> q;
-            q.push_front(u);
+            std::queue<T> q;
+            q.push(u);
 
             while (false == q.empty()) {
-                T v = q.front();
-                q.pop_front();  // remove the head
+                const T v = q.front();
+                q.pop();
 
-                // mark and enqueue all (unvisited) neighbours
-                for (const auto& neighbour : neighbours.find(v)->second) {
+                auto nit = neighbours.find(v);
+                if (neighbours.end() == nit) {
+                    continue;
+                }
+                for (const auto& neighbour : nit->second) {
                     if (this->visit(neighbour)) {
                         result.push_back(neighbour);
-                        q.push_back(neighbour);
+                        q.push(neighbour);
                     }
                 }
             }
@@ -552,15 +574,19 @@ class t_graph {
             dist[u] = 0;
 
             while (false == pq.empty()) {
-                T v = pq.top().second;
-                int d = pq.top().first;
+                const T v = pq.top().second;
+                const int d = pq.top().first;
                 pq.pop();
 
                 if (d > dist[v]) {
                     continue;
                 }
 
-                for (const auto& neighbour : neighbours.find(v)->second) {
+                auto nit = neighbours.find(v);
+                if (neighbours.end() == nit) {
+                    continue;
+                }
+                for (const auto& neighbour : nit->second) {
                     int weight = this->get_weight(v, neighbour);
                     int distance = dist[v] + weight;
                     if (dist[neighbour] > distance) {
@@ -602,7 +628,7 @@ class t_graph {
                     auto iter = section.begin();
                     head = iter->second;  // update head -- while (u != head)
 
-                    for (iter++; iter != section.end(); iter++) {          // alternative section
+                    for (iter++; section.end() != iter; iter++) {          // alternative section
                         std::list<T> list_branch = lst;                    // branch list
                         const T& head_branch = iter->second;               // select alternative neighbour
                         list_branch.push_front(head_branch);               // into branch list
@@ -636,7 +662,7 @@ class t_graph {
             edge e(from, to);
             auto lbound = route.lower_bound(e);
             auto ubound = route.upper_bound(e);
-            for (auto iter = lbound; iter != ubound; iter++) {
+            for (auto iter = lbound; ubound != iter; iter++) {
                 f(from, to, iter->first._weight, iter->second);
             }
         }

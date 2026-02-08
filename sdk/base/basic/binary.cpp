@@ -17,9 +17,9 @@ namespace hotplace {
 
 binary::binary() : _be(false) {}
 
-binary::binary(const binary& rhs) : _be(false), _bin(rhs._bin) {}
+binary::binary(const binary& rhs) : _be(rhs._be), _bin(rhs._bin) {}
 
-binary::binary(binary&& rhs) : _be(false), _bin(std::move(rhs._bin)) {}
+binary::binary(binary&& rhs) : _be(rhs._be), _bin(std::move(rhs._bin)) {}
 
 binary::binary(char rhs) : _be(false) { push_back(rhs); }
 
@@ -73,58 +73,58 @@ binary& binary::set(binary_t&& rhs) {
 }
 
 binary& binary::push_back(byte_t rhs) {
-    binary_push(_bin, rhs);
+    _bin.push_back(rhs);
     return *this;
 }
 
-binary& binary::append(int16 value, std::function<int16(int16)> func) {
+binary& binary::append(int16 value, std::function<int16(const int16&)> func) {
     t_binary_append<int16>(_bin, value, func);
     return *this;
 }
 
-binary& binary::append(uint16 value, std::function<uint16(uint16)> func) {
+binary& binary::append(uint16 value, std::function<uint16(const uint16&)> func) {
     t_binary_append<uint16>(_bin, value, func);
     return *this;
 }
 
-binary& binary::append(int32 value, std::function<int32(int32)> func) {
+binary& binary::append(int32 value, std::function<int32(const int32&)> func) {
     t_binary_append<int32>(_bin, value, func);
     return *this;
 }
 
-binary& binary::append(uint32 value, std::function<uint32(uint32)> func) {
+binary& binary::append(uint32 value, std::function<uint32(const uint32&)> func) {
     t_binary_append<uint32>(_bin, value, func);
     return *this;
 }
 
-binary& binary::append(int64 value, std::function<int64(int64)> func) {
+binary& binary::append(int64 value, std::function<int64(const int64&)> func) {
     t_binary_append<int64>(_bin, value, func);
     return *this;
 }
 
-binary& binary::append(uint64 value, std::function<uint64(uint64)> func) {
+binary& binary::append(uint64 value, std::function<uint64(const uint64&)> func) {
     t_binary_append<uint64>(_bin, value, func);
     return *this;
 }
 
 #if defined __SIZEOF_INT128__
-binary& binary::append(int128 value, std::function<int128(int128)> func) {
+binary& binary::append(int128 value, std::function<int128(const int128&)> func) {
     t_binary_append<int128>(_bin, value, func);
     return *this;
 }
 
-binary& binary::append(uint128 value, std::function<uint128(uint128)> func) {
+binary& binary::append(uint128 value, std::function<uint128(const uint128&)> func) {
     t_binary_append<uint128>(_bin, value, func);
     return *this;
 }
 #endif
 
-binary& binary::append(float value, std::function<uint32(uint32)> func) {
+binary& binary::append(float value, std::function<uint32(const uint32&)> func) {
     binary_append(_bin, value, func);
     return *this;
 }
 
-binary& binary::append(double value, std::function<uint64(uint64)> func) {
+binary& binary::append(double value, std::function<uint64(const uint64&)> func) {
     binary_append(_bin, value, func);
     return *this;
 }
@@ -234,13 +234,25 @@ binary& binary::operator=(float value) { return clear().append(value, _be ? hton
 
 binary& binary::operator=(double value) { return clear().append(value, _be ? hton64 : nullptr); }
 
-binary& binary::operator=(const std::string& value) { return clear().append(value); }
+binary& binary::operator=(const std::string& value) {
+    _bin.assign(value.begin(), value.end());
+    return *this;
+}
 
-binary& binary::operator=(const binary_t& value) { return clear().append(value); }
+binary& binary::operator=(const binary_t& value) {
+    _bin = value;
+    return *this;
+}
 
-binary& binary::operator=(binary_t&& value) { return set(value); }
+binary& binary::operator=(binary_t&& value) {
+    _bin = std::move(value);
+    return *this;
+}
 
-binary& binary::operator=(const binary& value) { return clear().append(value); }
+binary& binary::operator=(const binary& value) {
+    _bin = value.get();
+    return *this;
+}
 
 binary& binary::operator=(const char* value) { return clear().append(value); }
 

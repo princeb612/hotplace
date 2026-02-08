@@ -498,6 +498,9 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                     if (hint_curve->name_sec) {
                         stream->printf("%s ", hint_curve->name_sec);
                     }
+                    if (hint_curve->name_bp) {
+                        stream->printf("%s ", hint_curve->name_bp);
+                    }
                     if (hint_curve->name_wtls) {
                         stream->printf("%s ", hint_curve->name_wtls);
                     }

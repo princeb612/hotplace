@@ -29,7 +29,6 @@
 #include <hotplace/sdk/base/basic/binaries.hpp>
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/cmdline.hpp>
-#include <hotplace/sdk/base/basic/console_color.hpp>
 #include <hotplace/sdk/base/basic/constexpr_obfuscate.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/basic/huffman_coding.hpp>
@@ -92,12 +91,14 @@
 #include <hotplace/sdk/base/system/signalwait_threads.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
+#include <hotplace/sdk/base/system/uint.hpp>
 #if defined _WIN32 || defined _WIN64
 #include <hotplace/sdk/base/system/windows/sdk.hpp>
 #include <hotplace/sdk/base/system/windows/windows_version.hpp>
 #endif
 
 /* unittest */
+#include <hotplace/sdk/base/unittest/console_color.hpp>
 #include <hotplace/sdk/base/unittest/logger.hpp>
 #include <hotplace/sdk/base/unittest/testcase.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>

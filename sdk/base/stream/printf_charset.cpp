@@ -237,7 +237,7 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
                  * stdround using it; adjust fract so we don't re-stdround
                  * later.
                  */
-                if (!prec && ++p < endp) {
+                if ((0 == prec) && ++p < endp) {
                     fract = 0;
                     startp = round((double)0, &expcnt, startp, t - 1, *p, signp);
                 }
@@ -281,7 +281,7 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
             }
 
             /* unless alternate flag, trim any g/G format trailing 0's */
-            if (gformat && !(flags & ALT)) {
+            if (gformat && (0 == (flags & ALT))) {
                 while (t > startp && *--t == _T('0')) {
                     ;
                 }
@@ -296,7 +296,7 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
         case _T('g'):
         case _T('G'):
             /* a precision of 0 is treated as a precision of 1. */
-            if (!prec) {
+            if (0 == prec) {
                 ++prec;
             }
             /*
@@ -305,7 +305,7 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
              * conversion is less than -4 or greater than the precision.''
              *  -- ANSI X3J11
              */
-            if (expcnt > prec || (!expcnt && fract && fract < .0001)) {
+            if (expcnt > prec || ((0 == expcnt) && fract && fract < .0001)) {
                 /*
                  * g/G format counts "significant digits, not digits of
                  * precision; for the e/E format, this just causes an
@@ -346,7 +346,7 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
                     do {
                         fract = modf(fract * 10, &tmp);
                         *t++ = tochar((int)tmp);
-                    } while (!tmp && !expcnt);
+                    } while ((0 == tmp) && (0 == expcnt));
 
                     while (--prec && fract) {
                         fract = modf(fract * 10, &tmp);
@@ -366,7 +366,7 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
                 while (t > startp && *--t == _T('0')) {
                     ;
                 }
-                if (*t != _T('.')) {
+                if (_T('.') != *t) {
                     ++t;
                 }
             }
@@ -438,7 +438,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
 
     ieee754_typeof_t ieee754_type = ieee754_typeof_t::ieee754_finite;
 
-    if (!runtime_printf) {
+    if (nullptr == runtime_printf) {
         goto error;
     }
 
@@ -474,7 +474,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
             /* void */;
         }
 
-        if ((n = (int)(fmt - fmark)) != 0) {
+        if (n = (int)(fmt - fmark)) {
             PRINT(fmark, n);
             ret += n;
         }
@@ -514,7 +514,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                  * flag will be ignored.''
                  *  -- ANSI X3J11
                  */
-                if (!sign) {
+                if (0 == sign) {
                     sign = _T(' ');
                 }
                 goto rflag;
@@ -565,7 +565,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                  * beginning of a field width.''
                  *  -- ANSI X3J11
                  */
-                if (!(flags & LADJUST)) {
+                if (0 == (flags & LADJUST)) {
                     flags |= ZEROPAD; /* '-' disables '0' */
                 }
                 goto rflag;
@@ -795,7 +795,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                     TCHAR *p = (TCHAR *)wmemchr(cp, 0, prec);
 #endif
 
-                    if (p != nullptr) {
+                    if (nullptr != p) {
                         size = (int)(p - cp);
                         if ((int)size > prec) {
                             size = prec;
@@ -822,7 +822,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                 _ulong = UARG();
                 base = HEX;
                 /* leading 0x/X only if non-zero */
-                if (flags & ALT && _ulong != 0) {
+                if (flags & ALT && _ulong) {
                     flags |= HEXPREFIX;
                 }
 
@@ -845,7 +845,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                  *  -- ANSI X3J11
                  */
                 cp = buf + BUF;
-                if ((_ulong != 0) || (prec != 0)) {
+                if (_ulong || prec) {
                     TCHAR *xdigs = nullptr; /* digits for [xX] conversion */
                     /*
                      * unsigned mod is hard, and unsigned mod
@@ -859,7 +859,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                                 _ulong >>= 3;
                             } while (_ulong);
                             /* handle octal leading 0 */
-                            if (flags & ALT && *cp != _T('0')) {
+                            if (flags & ALT && (_T('0') != *cp)) {
                                 *--cp = _T('0');
                             }
                             break;

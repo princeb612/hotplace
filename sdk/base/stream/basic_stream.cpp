@@ -9,6 +9,7 @@
  */
 
 #include <ctype.h>
+#include <string.h>
 
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
@@ -88,9 +89,24 @@ return_t basic_stream::insert(size_t begin, const void* data, size_t data_size) 
 return_t basic_stream::fill(size_t l, char c) {
     return_t ret = errorcode_t::success;
 
-    while (l--) {
-        _bio.printf(_handle, "%c", c);
+    if (0 == l) {
+        // do nothing
+    } else if (l <= 16) {
+        while (l--) {
+            _bio.printf(_handle, "%c", c);
+        }
+    } else {
+        const size_t chunk_size = 256;
+        char buf[chunk_size];
+        memset(buf, c, chunk_size);
+
+        while (l && errorcode_t::success == ret) {
+            size_t n = (l < chunk_size) ? l : chunk_size;
+            ret = _bio.write(_handle, buf, n);
+            l -= n;
+        }
     }
+
     return ret;
 }
 
@@ -317,6 +333,19 @@ void basic_stream::autoindent(uint8 indent) {
         fill(indent, ' ');
     } else {
         *this << '\r';
+    }
+}
+
+void basic_stream::resize(size_t s) {
+    auto z = size();
+    if (0 == s) {
+        clear();
+    } else if (z > s) {
+        // cut
+        cut(s, z - s);
+    } else {
+        // extend
+        fill(s - z, 0);
     }
 }
 

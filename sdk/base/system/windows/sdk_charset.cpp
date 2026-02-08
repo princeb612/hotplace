@@ -44,9 +44,9 @@ return_t adjust_privileges(HANDLE hToken, LPCWSTR privilege, DWORD attrib, DWORD
         GETPROCADDRESS(LOOKUPPRIVILEGEVALUE, lpfnLookupPrivilegeValue, advapi32_handle, NAMEOF_API_LOOKUPPRIVILEGEVALUE, ret, __leave2);
         GETPROCADDRESS(ADJUSTTOKENPRIVILEGES, lpfnAdjustTokenPrivileges, advapi32_handle, NAMEOF_API_ADJUSTTOKENPRIVILEGES, ret, __leave2);
 
-        if (!lpfnLookupPrivilegeValue(nullptr,             // lookup privilege on local system
-                                      (LPCTSTR)privilege,  // privilege to lookup
-                                      &luid)) {            // receives LUID of privilege
+        if (FALSE == lpfnLookupPrivilegeValue(nullptr,             // lookup privilege on local system
+                                              (LPCTSTR)privilege,  // privilege to lookup
+                                              &luid)) {            // receives LUID of privilege
             ret = ::GetLastError();
             __leave2;
         }

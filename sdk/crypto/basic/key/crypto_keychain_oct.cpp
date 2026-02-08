@@ -48,7 +48,9 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, const keyd
     return ret;
 }
 
-return_t crypto_keychain::add_oct(crypto_key* cryptokey, const binary_t& k, const keydesc& desc) { return add_oct(cryptokey, &k[0], k.size(), desc); }
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const binary_t& k, const keydesc& desc) {
+    return add_oct(cryptokey, k.empty() ? nullptr : &k[0], k.size(), desc);
+}
 
 return_t crypto_keychain::add_oct(crypto_key* cryptokey, const byte_t* k, size_t size, const keydesc& desc) {
     return_t ret = errorcode_t::success;

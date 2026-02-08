@@ -139,7 +139,7 @@ class bufferio {
      * @return bool
      * @remarks
      *      negative sentense
-     *          if (!bio.empty(handle)) { do something }
+     *          if (false == bio.empty(handle)) { do something }
      *      positive sentense
      *          if (bio.occupied(handle)) { do something }
      */

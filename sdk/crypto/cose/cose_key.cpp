@@ -102,6 +102,11 @@ cbor_map* cose_data::cose_key::cbor() {
 
             if (cose_kty_t::cose_kty_ec2 == kty) {
                 if (_compressed) {
+                    /*
+                     * RFC 8152 13.1.1.  Double Coordinate Curves
+                     * Compute the sign bit as laid out in the Elliptic-Curve-Point-to-Octet-String Conversion function of [SEC1]
+                     * If the sign bit is zero, then encode y as a CBOR false value; otherwise, encode y as a CBOR true value.
+                     */
                     *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_ysign));  // y(-3)
                 } else {
                     *object << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(_y));  // y(-3)

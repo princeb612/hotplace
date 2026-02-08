@@ -13,7 +13,6 @@
 #define __HOTPLACE_SDK_BASE_UNITTEST_LOGGER__
 
 #include <hotplace/sdk/base/basic/binary.hpp>
-#include <hotplace/sdk/base/basic/console_color.hpp>
 #include <hotplace/sdk/base/basic/keyvalue.hpp>
 #include <hotplace/sdk/base/charset.hpp>
 #include <hotplace/sdk/base/error.hpp>
@@ -23,6 +22,7 @@
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
 #include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/unittest/console_color.hpp>
 
 namespace hotplace {
 

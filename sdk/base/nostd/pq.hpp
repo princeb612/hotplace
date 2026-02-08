@@ -48,10 +48,10 @@ class t_binary_heap {
         }
 
         size_t hole = ++_size;
-
-        T copy = x;
-        _array[0] = std::move(copy);
-        for (; x < _array[hole / 2]; hole /= 2) {
+        T tmp = x;
+        _array[0] = std::move(tmp);
+        // percolate up using the temporary value instead of repeatedly reading x.
+        for (; hole > 1 && _array[0] < _array[hole / 2]; hole /= 2) {
             _array[hole] = std::move(_array[hole / 2]);
         }
         _array[hole] = std::move(_array[0]);
@@ -64,7 +64,8 @@ class t_binary_heap {
         size_t hole = ++_size;
 
         _array[0] = std::move(x);
-        for (; x < _array[hole / 2]; hole /= 2) {
+        // after std::move, x is in a valid but unspecified state; always compare using the stored sentinel.
+        for (; hole > 1 && _array[0] < _array[hole / 2]; hole /= 2) {
             _array[hole] = std::move(_array[hole / 2]);
         }
         _array[hole] = std::move(_array[0]);
@@ -85,7 +86,7 @@ class t_binary_heap {
         percolate_down(1);
     }
     void clear() { _size = 0; }
-    size_t size() { return _size; }
+    size_t size() const { return _size; }
 
    private:
     t_vector<T> _array;

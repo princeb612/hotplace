@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
     //      xxd -ps outputfile
 
     // part 0 .. try to decode
-    if (!option.skip_cbor_basic) {
+    if (false == option.skip_cbor_basic) {
         test_rfc8152_read_cbor();
     }
 
@@ -169,12 +169,12 @@ int main(int argc, char** argv) {
     // clearly marked as such in the JSON file.  If errors in the examples
     // in this document are found, the examples on GitHub will be updated,
     // and a note to that effect will be placed in the JSON file.
-    if (!option.skip_validate) {
+    if (false == option.skip_validate) {
         test_github_example();
     }
 
     // part 4 encrypt/sign/mac
-    if (!option.skip_gen) {
+    if (false == option.skip_gen) {
         crypto_key key;
         test_keygen(&key);
         test_selfgen(&key);

@@ -14,12 +14,12 @@
 
 #include <time.h>
 
-#include <hotplace/sdk/base/basic/console_color.hpp>
 #include <hotplace/sdk/base/charset.hpp>
 #include <hotplace/sdk/base/error.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
 #include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/unittest/console_color.hpp>
 #include <hotplace/sdk/base/unittest/logger.hpp>
 #include <list>
 #include <map>
@@ -187,7 +187,7 @@ class test_case {
     enum testcase_dump_t {
         testcase_dump_error = (1 << 0),
     };
-    void dump_list_into_stream(unittest_list_t& array, basic_stream& stream, uint32 flags = 0);
+    void dump_list_into_stream(const unittest_list_t& array, basic_stream& stream, uint32 flags = 0);
 
     void check_time(struct timespec& time);
 

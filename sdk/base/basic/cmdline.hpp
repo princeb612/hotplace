@@ -16,9 +16,9 @@
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <iostream>
-#include <list>
 #include <map>
 #include <set>
+#include <vector>
 
 namespace hotplace {
 
@@ -178,7 +178,7 @@ class t_cmdline_t {
    protected:
    private:
     T _source;
-    typedef std::list<std::string> cmdline_args_list_t;
+    typedef std::vector<std::string> cmdline_args_list_t;
     typedef std::map<std::string, t_cmdarg_t<T> > cmdline_args_map_t;
     typedef std::set<std::string> cmdline_args_set_t;
     typedef std::pair<typename cmdline_args_map_t::iterator, bool> cmdline_args_map_pib_t;
@@ -195,13 +195,11 @@ t_cmdline_t<T>::~t_cmdline_t() {}
 
 template <typename T>
 t_cmdline_t<T>& t_cmdline_t<T>::operator<<(const t_cmdarg_t<T>& cmd) {
-    int idx = _args.size();
-
     const char* token = cmd.token();
-    cmdline_args_map_pib_t pib = _args.insert(std::make_pair(token, cmd));
+    cmdline_args_map_pib_t pib = _args.emplace(token, cmd);
 
     if (pib.second) {
-        _list.push_back(token);
+        _list.emplace_back(token);
     }
 
     return *this;
@@ -209,13 +207,11 @@ t_cmdline_t<T>& t_cmdline_t<T>::operator<<(const t_cmdarg_t<T>& cmd) {
 
 template <typename T>
 t_cmdline_t<T>& t_cmdline_t<T>::operator<<(t_cmdarg_t<T>&& cmd) {
-    int idx = _args.size();
-
-    const char* token = cmd.token();
-    cmdline_args_map_pib_t pib = _args.insert(std::make_pair(token, cmd));
+    const std::string token = cmd._token;
+    cmdline_args_map_pib_t pib = _args.emplace(token, std::move(cmd));
 
     if (pib.second) {
-        _list.push_back(token);
+        _list.emplace_back(token);
     }
 
     return *this;

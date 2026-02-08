@@ -267,6 +267,7 @@ enum errorcode_t {
     /* 0xef010045 4009820229 */ illegal_parameter,
     /* 0xef010046 4009820230 */ block_segmented,
     /* 0xef010047 4009820231 */ violation,
+    /* 0xef010048 4009820232 */ ambiguous,
 
     /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,

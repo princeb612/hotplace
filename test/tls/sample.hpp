@@ -15,9 +15,10 @@
 
 struct OPTION : public CMDLINEOPTION {
     int keylog;
+    int test_ffdhe;
     binary_t clienthello;
 
-    OPTION() : CMDLINEOPTION(), keylog(0) {}
+    OPTION() : CMDLINEOPTION(), keylog(0), test_ffdhe(0) {}
 };
 
 struct TLS_OPTION {

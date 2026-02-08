@@ -25,19 +25,47 @@ namespace hotplace {
 namespace net {
 
 tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(tls_12), _maxspec(tls_13) {
-    if (nullptr == session) {
-        throw exception(errorcode_t::no_session);
-    }
-
-    if (session_type_dtls == session->get_type()) {
-        auto& publisher = session->get_dtls_record_publisher();
-        publisher.set_fragment_size(1024);
-        publisher.set_segment_size(1024);
-        publisher.set_flags(dtls_record_publisher_multi_handshakes);
+    auto session_type = session->get_type();
+    switch (session_type) {
+        case session_type_dtls: {
+            auto& publisher = session->get_dtls_record_publisher();
+            publisher.set_fragment_size(1024);
+            publisher.set_segment_size(1024);
+            publisher.set_flags(dtls_record_publisher_multi_handshakes);
+        } break;
+        case session_type_quic:
+        case session_type_quic2: {
+            _minspec = tls_13;
+        } break;
     }
 }
 
 tls_composer::~tls_composer() {}
+
+return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::function<void(tls_session*, binary_t&)> func) {
+    return_t ret = errorcode_t::success;
+    auto session = get_session();
+    auto session_type = session->get_type();
+    switch (session_type) {
+        case session_type_tls:
+        case session_type_dtls: {
+            if (from_client == dir) {
+                ret = do_tls_client_handshake(wto, func);
+            } else if (from_server == dir) {
+                ret = errorcode_t::not_supported;  // session_status_changed
+            }
+        } break;
+        case session_type_quic:
+        case session_type_quic2: {
+            if (from_client == dir) {
+                ret = do_quic_client_handshake(wto, func);
+            } else if (from_server == dir) {
+                ret = errorcode_t::not_supported;  // session_status_changed
+            }
+        }
+    }
+    return ret;
+}
 
 return_t tls_composer::session_status_changed(uint32 session_status, tls_direction_t dir, uint32 wto, std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
@@ -93,31 +121,6 @@ return_t tls_composer::session_status_changed(uint32 session_status, tls_directi
         }
     }
     __finally2 {}
-    return ret;
-}
-
-return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::function<void(tls_session*, binary_t&)> func) {
-    return_t ret = errorcode_t::success;
-    auto session = get_session();
-    auto session_type = session->get_type();
-    switch (session_type) {
-        case session_type_tls:
-        case session_type_dtls: {
-            if (from_client == dir) {
-                ret = do_tls_client_handshake(wto, func);
-            } else if (from_server == dir) {
-                ret = errorcode_t::not_supported;  // session_status_changed
-            }
-        } break;
-        case session_type_quic:
-        case session_type_quic2: {
-            if (from_client == dir) {
-                ret = do_quic_client_handshake(wto, func);
-            } else if (from_server == dir) {
-                ret = errorcode_t::not_supported;  // session_status_changed
-            }
-        }
-    }
     return ret;
 }
 

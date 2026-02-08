@@ -298,7 +298,7 @@ return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name
         }
 
         pctx = EVP_PKEY_CTX_new_from_name(NULL, name, NULL);
-        if (!pctx) {
+        if (nullptr == pctx) {
             ret = failed;
             __leave2_trace_openssl(ret);
         }

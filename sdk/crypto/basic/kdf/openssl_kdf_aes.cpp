@@ -73,7 +73,7 @@ return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, si
             content.insert(content.end(), i);  // i = 1..255 (01..ff)
 
             // T(i) = AES-CMAC(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
-            if (!t_block_size) {
+            if (0 == t_block_size) {
                 t_block_size = blocksize;
                 t_block.resize(blocksize);
             }

@@ -10,6 +10,7 @@
  * 2009.07.22   Soo Han, Kim        codename.merlin
  */
 
+#include <cctype>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/basic/types.hpp>
 
@@ -30,59 +31,65 @@ return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* str
             __leave2;
         }
         if ((nullptr == dump_address) || (0 == dump_size)) {
-            stream->fill(indent, ' ');
-            stream->printf("empty\n");
+            if (dump_memory_flag_t::dump_empty & flags) {
+                stream->fill(indent, ' ');
+                stream->printf("empty\n");
+            }
             __leave2;
         }
 
-        unsigned position = 0;
-        unsigned end_position = ((dump_size + hex_part - 1) / hex_part) * hex_part;
-        const byte_t* hex_pointer = dump_address;
-        const byte_t* ascii_pointer = nullptr;
-        unsigned dumped_hex_part = 0;
+        // end position is aligned to hex_part to print the "-- " padding.
+        const size_t hex_part_size = static_cast<size_t>(hex_part);
+        const size_t end_position = ((dump_size + hex_part_size - 1) / hex_part_size) * hex_part_size;
 
+        // keep the legacy output format (8-hex-digit address) but compute address safely.
+        // note: if address exceeds 32-bit, it's truncated by design to match "%08x".
         constexpr char constexpr_dumpaddr[] = "%08X : ";
         constexpr char constexpr_dumpbyte[] = "%02X ";
 
         if (dump_memory_flag_t::dump_header & flags) {
             stream->fill(11, ' ');
-            for (size_t i = 0; i < hex_part; i++) {
-                stream->printf(constexpr_dumpbyte, i);
+            for (size_t i = 0; i < hex_part_size; ++i) {
+                stream->printf(constexpr_dumpbyte, static_cast<unsigned>(i));
             }
             stream->printf("\n");
         }
-        while (position < end_position) {
-            if (0 == position % hex_part) {                  /* part of address and hex-decimal */
-                if (0 != position && position < dump_size) { /* new line */
-                    stream->printf("\n");
-                }
-                if (0 != indent) { /* preceding indent */
-                    stream->fill(indent, ' ');
-                }
-                ascii_pointer = hex_pointer;
-                stream->printf(constexpr_dumpaddr, (byte_t*)((size_t)rebase + (size_t)hex_pointer - (size_t)dump_address)); /* address */
+
+        for (size_t position = 0; position < end_position; position += hex_part_size) {
+            if (0 != position && position < dump_size) {
+                stream->printf("\n");
             }
-            if (position < dump_size) {
-                stream->printf(constexpr_dumpbyte, *(hex_pointer++)); /* hexdecimal */
-            } else {
-                stream->printf("-- "); /* do not dump here */
-                ++dumped_hex_part;
+
+            if (indent != 0) {
+                stream->fill(indent, ' ');
             }
-            if (0 == (++position % hex_part)) { /* readable part of ASCII */
-                stream->printf("| ");           /* delimeter ie. address : hex | ascii */
-                for (unsigned count = 0; count < hex_part - dumped_hex_part; count++) {
-                    byte_t c = (byte_t) * (ascii_pointer++);
-                    if ('%' == c) {
-                        stream->printf("%%");
-                    } else if (isprint(c)) {
-                        stream->printf("%c", c); /* printable */
-                    } else {
-                        stream->printf("%c", '.'); /*special characters */
-                    }
+
+            const size_t line_bytes = (position < dump_size) ? ((dump_size - position < hex_part_size) ? (dump_size - position) : hex_part_size) : 0;
+            const size_t addr_value = rebase + position;
+            stream->printf(constexpr_dumpaddr, static_cast<unsigned>(addr_value & 0xFFFFFFFFu));
+
+            const byte_t* line_ptr = dump_address + position;
+            for (size_t i = 0; i < hex_part_size; ++i) {
+                if (i < line_bytes) {
+                    stream->printf(constexpr_dumpbyte, static_cast<unsigned>(line_ptr[i]));
+                } else {
+                    stream->printf("-- ");
                 }
-                dumped_hex_part = 0;
+            }
+
+            stream->printf("| ");
+            for (size_t i = 0; i < line_bytes; ++i) {
+                const byte_t c = line_ptr[i];
+                if ('%' == c) {
+                    stream->printf("%%");
+                } else if (std::isprint(static_cast<unsigned char>(c))) {
+                    stream->printf("%c", c);
+                } else {
+                    stream->printf("%c", '.');
+                }
             }
         }
+
         stream->printf("\n");
     }
     __finally2 {}
@@ -94,15 +101,15 @@ return_t dump_memory(const char* data, stream_t* stream_object, unsigned hex_par
     if (data) {
         size = strlen(data);
     }
-    return dump_memory((byte_t*)data, size, stream_object, hex_part, indent, rebase, flags);
+    return dump_memory(reinterpret_cast<const byte_t*>(data), size, stream_object, hex_part, indent, rebase, flags);
 }
 
 return_t dump_memory(const std::string& data, stream_t* stream_object, unsigned hex_part, unsigned indent, size_t rebase, int flags) {
-    return dump_memory((byte_t*)data.c_str(), data.size(), stream_object, hex_part, indent, rebase, flags);
+    return dump_memory(reinterpret_cast<const byte_t*>(data.data()), data.size(), stream_object, hex_part, indent, rebase, flags);
 }
 
 return_t dump_memory(const binary_t& data, stream_t* stream_object, unsigned hex_part, unsigned indent, size_t rebase, int flags) {
-    return dump_memory(data.empty() ? nullptr : &data[0], data.size(), stream_object, hex_part, indent, rebase, flags);
+    return dump_memory(data.empty() ? nullptr : data.data(), data.size(), stream_object, hex_part, indent, rebase, flags);
 }
 
 return_t dump_memory(const basic_stream& data, stream_t* stream_object, unsigned hex_part, unsigned indent, size_t rebase, int flags) {
@@ -137,7 +144,7 @@ return_t dump_memory(const variant_t& vt, stream_t* stream_object, unsigned hex_
     basic_stream bs;
 
     vtprintf(&bs, vt);
-    return dump_memory((byte_t*)bs.c_str(), bs.size(), stream_object, hex_part, indent, rebase, flags);
+    return dump_memory(reinterpret_cast<const byte_t*>(bs.c_str()), bs.size(), stream_object, hex_part, indent, rebase, flags);
 }
 
 }  // namespace hotplace

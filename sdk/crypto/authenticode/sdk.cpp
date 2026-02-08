@@ -149,7 +149,7 @@ return_t pkcs7_digest_info(PKCS7 *pkcs7, std::string &md, binary_t &digest) {
         ASN1_OBJECT *indir_objid = OBJ_txt2obj(SPC_INDIRECT_DATA_OBJID, 1);
         int mdtype = -1;
 
-        if (!OBJ_cmp(pkcs7->d.sign->contents->type, indir_objid) && pkcs7->d.sign->contents->d.other->type == V_ASN1_SEQUENCE) {
+        if (0 == OBJ_cmp(pkcs7->d.sign->contents->type, indir_objid) && pkcs7->d.sign->contents->d.other->type == V_ASN1_SEQUENCE) {
             ASN1_STRING *astr = pkcs7->d.sign->contents->d.other->value.sequence;
             const unsigned char *p = astr->data;
             SpcIndirectDataContent *idc = d2i_SpcIndirectDataContent(nullptr, &p, astr->length);

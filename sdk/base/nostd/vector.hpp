@@ -54,26 +54,35 @@ class t_vector {
     }
     void resize(size_t size) {
         if (size > _capacity) {
-            reserve(size << 1);
+            size_t new_cap = (size > (_capacity << 1)) ? size : (_capacity << 1);
+            reserve(new_cap);
+            for (size_t i = _size; i < size; ++i) {
+                _items[i] = T();
+            }
+        } else if (size < _size) {
+            for (size_t i = size; i < _size; ++i) {
+                _items[i].~T();
+            }
         }
         _size = size;
     }
     void reserve(size_t capacity) {
-        if (capacity >= _size) {
-            T* items = new T[capacity];
-            for (size_t i = 0; i < _size; ++i) {
-                items[i] = std::move(_items[i]);
-            }
-            _capacity = capacity;
-            std::swap(items, _items);
-            delete[] items;
+        if (capacity <= _capacity) {
+            return;
         }
+        T* items = new T[capacity];
+        for (size_t i = 0; i < _size; ++i) {
+            items[i] = std::move(_items[i]);
+        }
+        delete[] _items;
+        _items = items;
+        _capacity = capacity;
     }
     T& operator[](size_t index) { return _items[index]; }
     const T& operator[](size_t index) const { return _items[index]; }
     bool empty() const { return 0 == size(); }
     size_t size() const { return _size; }
-    int capacity() const { return _capacity; }
+    size_t capacity() const { return _capacity; }
 
     void push_back(const T& x) {
         if (_size == _capacity) {
@@ -92,6 +101,9 @@ class t_vector {
 
     void clear() {
         if (_items) {
+            for (size_t i = 0; i < _size; ++i) {
+                _items[i].~T();
+            }
             delete[] _items;
             _items = nullptr;
         }
@@ -102,10 +114,10 @@ class t_vector {
     typedef T* iterator;
     typedef const T* const_iterator;
 
-    T* begin() { return &_items[0]; }
-    T* end() { return &_items[size()]; }
-    const T* begin() const { return &_items[0]; }
-    const T* end() const { return &_items[size()]; }
+    T* begin() { return _items; }
+    T* end() { return _items + _size; }
+    const T* begin() const { return _items; }
+    const T* end() const { return _items + _size; }
 
    private:
     size_t _size;

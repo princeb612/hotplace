@@ -32,6 +32,7 @@ namespace hotplace {
 enum dump_memory_flag_t : uint8 {
     dump_header = (1 << 0),
     dump_notrunc = (1 << 1),
+    dump_empty = (1 << 2),
 };
 
 /**

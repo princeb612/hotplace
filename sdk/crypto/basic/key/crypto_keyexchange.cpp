@@ -359,14 +359,14 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
             __leave2;
         }
 
-        crypto_key key;
+        crypto_key ephemeral;
         crypto_keychain keychain;
         openssl_pqc pqc;
 
         const char* kid = "clientshare";
         const char* epkid = "epk";
 
-        ret = keystore(group, &key, kid, share);
+        ret = keystore(group, &ephemeral, kid, share);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -379,11 +379,11 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
 
         switch (first.kty) {
             case kty_mlkem: {
-                auto pkey = key.find_nid(kid, first.nid);
+                auto pkey = ephemeral.find_nid(kid, first.nid);
                 ret = pqc.encapsule(nullptr, pkey, kc, ss);
             } break;
             case kty_ec: {
-                ret = keychain.add(&key, first.nid, keydesc(epkid));  // hybrid
+                ret = keychain.add(&ephemeral, first.nid, keydesc(epkid));  // hybrid
             } break;
         }
         if (errorcode_t::success != ret) {
@@ -399,13 +399,13 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
              *   tls_group_x25519mlkem768
              */
 
-            auto hkey = key.find_nid(kid, second.nid);
+            auto hkey = ephemeral.find_nid(kid, second.nid);
             switch (second.kty) {
                 case kty_mlkem: {
                     ret = pqc.encapsule(nullptr, hkey, kc, ss);
                 } break;
                 case kty_okp: {
-                    keychain.add(&key, second.nid, keydesc(epkid));
+                    keychain.add(&ephemeral, second.nid, keydesc(epkid));
                 } break;
                 default: {
                     ret = not_supported;
@@ -414,8 +414,8 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
 
             binary_t hybrid_kc;
             binary_t hybrid_ss;
-            auto prk = key.find(epkid);
-            auto pbk = key.find_nid(kid, (kty_mlkem == first.kty) ? second.nid : first.nid);
+            auto prk = ephemeral.find(epkid);
+            auto pbk = ephemeral.find_nid(kid, (kty_mlkem == first.kty) ? second.nid : first.nid);
 
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
@@ -432,7 +432,7 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
             }
 
             binary_t bin_privkey;  // dummy
-            key.get_key(prk, public_key, hybrid_kc, bin_privkey, true);
+            ephemeral.get_key(prk, public_key, hybrid_kc, bin_privkey, true);
 
             switch (first.kty) {
                 case kty_ec: {
@@ -485,7 +485,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
 
         const char* sskid = "servershare";
 
-        crypto_key tempkey;
+        crypto_key ephemeral;
         crypto_keychain keychain;
         openssl_pqc pqc;
         binary_t ss;
@@ -499,7 +499,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
                 ret = pqc.decapsule(nullptr, pkey, &share[0], capsulesize, ss);
             } break;
             case kty_ec: {
-                ret = keychain.add_ec_uncompressed(&tempkey, first.nid, &share[0], keysize, nullptr, 0, desc);
+                ret = keychain.add_ec_uncompressed(&ephemeral, first.nid, &share[0], keysize, nullptr, 0, desc);
             } break;
             default: {
                 ret = not_supported;
@@ -516,7 +516,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
                     ret = pqc.decapsule(nullptr, pkey, &share[keysize], second.capsulesize, ss);
                 } break;
                 case kty_okp: {
-                    ret = keychain.add_okp(&tempkey, second.nid, &share[capsulesize], second.keysize, nullptr, 0, desc);
+                    ret = keychain.add_okp(&ephemeral, second.nid, &share[capsulesize], second.keysize, nullptr, 0, desc);
                 } break;
                 default: {
                     ret = not_supported;
@@ -528,7 +528,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
 
             auto ecnid = (kty_mlkem == first.kty) ? second.nid : first.nid;
             auto prk = key->find_nid(kid, ecnid);
-            auto pbk = tempkey.find_nid(sskid, ecnid);
+            auto pbk = ephemeral.find_nid(sskid, ecnid);
 
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {

@@ -615,7 +615,7 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
         }
     }
 
-    if (!ok) {
+    if (0 == ok) {
         //__trace (0, format ("#verify error:num=%d:%s", err, X509_verify_cert_error_string (err)).c_str ());
     }
     switch (err) {
@@ -653,7 +653,7 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
             // printf("#error %d\n", err);
             break;
     }
-    if (!ok) {
+    if (0 == ok) {
         // constexpr char constexpr_errmsg[] = "#verify error:num=";
         //__trace(errorcode_t::internal_error, format("%s%d:%s", constexpr_errmsg, err, X509_verify_cert_error_string(err)).c_str());
     }

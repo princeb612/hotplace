@@ -329,7 +329,7 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
 }
 
 void do_test_construct_dtls12_1(const char* ciphersuite) {
-    _test_case.begin("construct DTLS 1.2 %s", ciphersuite);
+    _test_case.begin("construct DTLS 1.2 %s (wo segmentation)", ciphersuite);
 
     tls_session session_client(session_type_dtls);
     tls_session session_server(session_type_dtls);

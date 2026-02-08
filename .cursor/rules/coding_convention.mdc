@@ -1,0 +1,11 @@
+---
+description: 
+alwaysApply: true
+---
+
+- Comments should be written in English.
+- Procedurally written using __try2 for while(0) and __leave2 for break. Overall, use the __try2 { } / __finally2 {} / return template.
+- __leave2 is not used for for, while, or switch loops.
+- Do not return based on branching within a function. Returns are handled at the end of the function based on an error code or return type.
+- For == or !=, write the constant or rvalue on the left and the lvalue on the right.
+- The ! operator is not used and is written in the form (nullptr == condition) or (false == condition) or (0 == condition).

@@ -55,11 +55,9 @@ return_t bufferio::open(bufferio_context_t** handle, uint32 block_size, byte_t p
 }
 
 void copy_from_bufferio_queue_nolock(byte_t* dest, size_t& index, bufferin_queue_t& source_queue) {
-    bufferio_t* bufferio_item = nullptr;
-
-    for (const bufferio_t* bufferio_item : source_queue) {
-        memcpy(dest + index, bufferio_item->base_address, bufferio_item->offset);
-        index += bufferio_item->offset;
+    for (const auto* item : source_queue) {
+        memcpy(dest + index, item->base_address, item->offset);
+        index += item->offset;
     }
 }
 
@@ -396,8 +394,8 @@ bool bufferio::compare(bufferio_context_t* handle, const void* data_to_compare, 
                 break;
             }
 
-            target_index += pIo->offset;
-            compare_size_remains -= pIo->offset;
+            target_index += compare_size;
+            compare_size_remains -= compare_size;
         }
 
         ret_bool = ((0 == cmp) && (0 == compare_size_remains));

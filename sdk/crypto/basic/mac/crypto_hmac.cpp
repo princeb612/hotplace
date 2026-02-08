@@ -69,7 +69,7 @@ crypto_hmac& crypto_hmac::update(const byte_t* stream, size_t size) {
 }
 
 template <typename T>
-crypto_hmac& crypto_hmac::update(T value, std::function<T(T)> fn) {
+crypto_hmac& crypto_hmac::update(T value, std::function<T(const T&)> fn) {
     openssl_hash hash;
     if (fn) {
         T temp = fn(value);
@@ -80,13 +80,13 @@ crypto_hmac& crypto_hmac::update(T value, std::function<T(T)> fn) {
     return *this;
 }
 
-crypto_hmac& crypto_hmac::update(uint8 value, std::function<uint8(uint8)> fn) { return update<uint8>(value, fn); }
+crypto_hmac& crypto_hmac::update(uint8 value, std::function<uint8(const uint8&)> fn) { return update<uint8>(value, fn); }
 
-crypto_hmac& crypto_hmac::update(uint16 value, std::function<uint16(uint16)> fn) { return update<uint16>(value, fn); }
+crypto_hmac& crypto_hmac::update(uint16 value, std::function<uint16(const uint16&)> fn) { return update<uint16>(value, fn); }
 
-crypto_hmac& crypto_hmac::update(uint32 value, std::function<uint32(uint32)> fn) { return update<uint32>(value, fn); }
+crypto_hmac& crypto_hmac::update(uint32 value, std::function<uint32(const uint32&)> fn) { return update<uint32>(value, fn); }
 
-crypto_hmac& crypto_hmac::update(uint64 value, std::function<uint64(uint64)> fn) { return update<uint64>(value, fn); }
+crypto_hmac& crypto_hmac::update(uint64 value, std::function<uint64(const uint64&)> fn) { return update<uint64>(value, fn); }
 
 crypto_hmac& crypto_hmac::digest(binary_t& md) {
     openssl_hash hash;

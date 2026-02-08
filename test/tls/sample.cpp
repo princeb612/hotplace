@@ -197,6 +197,7 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.keylog = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-ffdhe", "test FFDHE", [](OPTION& o, char* param) -> void { o.test_ffdhe = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-c", "dump clienthello (base16 stream)",
                                       [](OPTION& o, char* param) -> void {
                                           o.enable_debug();
@@ -279,6 +280,7 @@ int main(int argc, char** argv) {
             test_pcap_tls13();
             test_pcap_tls12();
             test_construct_tls();
+            test_construct_tls13_mlkem();
         }
 
         {
@@ -295,7 +297,6 @@ int main(int argc, char** argv) {
 
             test_pcap_tls13_http1();
             test_pcap_tls13_mlkem();
-            test_construct_tls13_mlkem();
         }
     } else {
         dump_clienthello();
