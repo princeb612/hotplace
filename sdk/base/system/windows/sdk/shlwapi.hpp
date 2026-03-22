@@ -76,19 +76,19 @@ typedef struct _tagpropertykey {
 typedef DWORD SHCOLSTATEF;
 
 /**
- * 1. Windows/6.0A ±¸¼º
- * ; Visual Studio 2008 (9.0) SDK °æ·Î Microsoft SDKs/Windows/v6.0A/Include ·Î ºÎÅÍ ´ÙÀ½ ÆÄÀÏ ±¸¼º
+ * 1. Windows/6.0A êµ¬ì„±
+ * ; Visual Studio 2008 (9.0) SDK ê²½ë¡œ Microsoft SDKs/Windows/v6.0A/Include ë¡œ ë¶€í„° ë‹¤ìŒ íŒŒì¼ êµ¬ì„±
  *
- * 1) Microsoft SDKs/Windows/v6.0A/Include/PortableDevice.h º¹»ç
- * 2) Microsoft SDKs/Windows/v6.0A/Include/PortableDeviceApi.h ¹× Microsoft SDKs/Windows/v6.0A/Include/PortableDeviceTypes.h º¹»ç ¹× ¼öÁ¤
- *    #define __REQUIRED_RPCNDR_H_VERSION__ 500 À» 475 ¼öÁ¤
- * 3) propsys.h º¹»ç ¹× ¼öÁ¤
- *    #include <propkeydef.h> ºÎºĞÀ» "propkeydef.h" º¯°æ
- * 4) Microsoft SDKs/Windows/v6.0A/Include/propkeydef.h, Microsoft SDKs/Windows/v6.0A/Include/structuredquery.h º¹»ç
+ * 1) Microsoft SDKs/Windows/v6.0A/Include/PortableDevice.h ë³µì‚¬
+ * 2) Microsoft SDKs/Windows/v6.0A/Include/PortableDeviceApi.h ë° Microsoft SDKs/Windows/v6.0A/Include/PortableDeviceTypes.h ë³µì‚¬ ë° ìˆ˜ì •
+ *    #define __REQUIRED_RPCNDR_H_VERSION__ 500 ì„ 475 ìˆ˜ì •
+ * 3) propsys.h ë³µì‚¬ ë° ìˆ˜ì •
+ *    #include <propkeydef.h> ë¶€ë¶„ì„ "propkeydef.h" ë³€ê²½
+ * 4) Microsoft SDKs/Windows/v6.0A/Include/propkeydef.h, Microsoft SDKs/Windows/v6.0A/Include/structuredquery.h ë³µì‚¬
  *
  * 2. PortableDeviceGuids.lib
  * #pragma comment (lib, "PortableDeviceGUIDs")
- * ; ºôµå½Ã ¿ÜºÎ ¶óÀÌºê·¯¸® °æ·Î¿¡ Æ÷ÇÔÇÒ °Í (ÇöÀç Helper/Trunk/Srs/Test/PortableDevice ¿¡ Æ÷ÇÔ)
+ * ; ë¹Œë“œì‹œ ì™¸ë¶€ ë¼ì´ë¸ŒëŸ¬ë¦¬ ê²½ë¡œì— í¬í•¨í•  ê²ƒ (í˜„ì¬ Helper/Trunk/Srs/Test/PortableDevice ì— í¬í•¨)
  */
 #ifdef _MSC_VER
 #include <hotplace/sdk/base/system/windows/sdk/v6.0A/PortableDevice.h>
@@ -115,11 +115,11 @@ typedef DWORD SHCOLSTATEF;
 #define _In_
 
 /**
- * VC6 shlwapi.h È¥¿ë¿¡ ÀÇÇÑ ÄÄÆÄÀÏ ¿À·ù È¸ÇÇ
+ * VC6 shlwapi.h í˜¼ìš©ì— ì˜í•œ ì»´íŒŒì¼ ì˜¤ë¥˜ íšŒí”¼
  * - from Microsoft SDKs/Windows/v6.0A/Include/shlwapi.h
  * 1) STATIC_CAST
  * 2) OFFSETOFCLASS, QITAB, QITABENT
- * 3) QISearch GetProcAddress ¹æ½ÄÀ¸·Î »ç¿ë
+ * 3) QISearch GetProcAddress ë°©ì‹ìœ¼ë¡œ ì‚¬ìš©
  */
 #define STATIC_CAST(typ) static_cast<typ>
 

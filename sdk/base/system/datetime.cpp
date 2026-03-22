@@ -580,6 +580,7 @@ return_t time_sum(struct timespec& ts, std::list<struct timespec>& slices) {
 }
 
 void system_gettime(int clockid, struct timespec& ts) {
+#if defined __GNUC__
 #if defined __linux__
 // to support a minimal platform
 #define DLSYMAPI(handle, nameof_api, func_ptr) *(void**)(&func_ptr) = dlsym(handle, nameof_api)
@@ -598,6 +599,16 @@ void system_gettime(int clockid, struct timespec& ts) {
     }
 #else
     clock_gettime(clockid, &ts);
+#endif
+#elif defined _MSC_VER
+    // TODO
+    // CLOCK_REALTIME   GetSystemTimePreciseAsFileTime
+    // CLOCK_MONOTONIC  QueryPerformanceFrequency, QueryPerformanceCounter
+    // CLOCK_BOOTTIME   QueryInterruptTimePrecise / GetTickCount64
+    if (CLOCK_REALTIME == clockid) {
+    } else if (CLOCK_MONOTONIC == clockid) {
+    } else if (CLOCK_BOOTTIME == clockid) {
+    }
 #endif
 }
 

@@ -214,12 +214,14 @@ asn1_encode& asn1_encode::encode(binary_t& bin, asn1_type_t type, const variant&
         case TYPE_UINT64:
             primitive(bin, value.content().data.ui64);
             break;
+#if defined __SIZEOF_INT128__
         case TYPE_INT128:
             primitive(bin, value.content().data.i128);
             break;
         case TYPE_UINT128:
             primitive(bin, value.content().data.ui128);
             break;
+#endif
         case TYPE_FLOAT:
             primitive(bin, value.content().data.f);
             break;

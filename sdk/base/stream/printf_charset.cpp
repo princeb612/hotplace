@@ -408,19 +408,19 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
     int prec = 0;                          /* precision from format (%.3d), or -1 */
     TCHAR sign = 0;                        /* sign prefix (' ', '+', '-', or \0) */
     int softsign = 0;                      /* temporary negative sign for floats */
-    double _double = 0;                    /* double precision arguments %[eEfgG] */
+    double doubleprec = 0;                 /* double precision arguments %[eEfgG] */
     int fpprec = 0;                        /* `extra' floating precision in [eEfgG] */
 
 #if defined __SIZEOF_INT128__
     // 128bits (supports %I128x)
-    uint128 _ulong = 0;
+    uint128 archint = 0;
 #else
     // 64 bits
-    uint64 _ulong = 0; /* integer arguments %[diouxX] (including __int64) */
+    uint64 archint = 0; /* integer arguments %[diouxX] (including __int64) */
 #endif
 
     // 32 bits
-    // unsigned long _ulong;     /* integer arguments %[diouxX] */
+    // unsigned long archint;     /* integer arguments %[diouxX] */
     enum { OCT, DEC, HEX } base; /* base for [diouxX] conversion */
     int dprec;                   /* a copy of prec if [diouxX], 0 otherwise */
     int dpad;                    /* extra 0 padding needed for integers */
@@ -610,9 +610,9 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
             /*FALLTHROUGH*/
             case _T('d'):
             case _T('i'):
-                _ulong = SARG();
-                if ((long)_ulong < 0) {
-                    _ulong = -(long)_ulong;
+                archint = SARG();
+                if ((long)archint < 0) {
+                    archint = -(long)archint;
                     sign = _T('-');
                 }
                 base = DEC;
@@ -624,8 +624,8 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
             case _T('F'):
             case _T('g'):
             case _T('G'):
-                _double = va_arg(ap, double);
-                ieee754_type = ieee754_typeof(_double);
+                doubleprec = va_arg(ap, double);
+                ieee754_type = ieee754_typeof(doubleprec);
                 if (ieee754_typeof_t::ieee754_pinf == ieee754_type) {
                     PRINT(_T("inf"), (sizeof(TCHAR) * 3));
                 } else if (ieee754_typeof_t::ieee754_ninf == ieee754_type) {
@@ -649,11 +649,11 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                        "start" of its buffer, i.e.
                        ``intf("%.2f", (double)9.999);'';
                        if the first character is still NUL, it did.
-                       softsign avoids negative 0 if _double < 0 but
+                       softsign avoids negative 0 if doubleprec < 0 but
                        no significant digits will be shown. */
                     cp = buf;
                     *cp = _T('\0');
-                    size = __cvt_double(_double, prec, flags, &softsign, ch, cp, buf + sizeof(buf));
+                    size = __cvt_double(doubleprec, prec, flags, &softsign, ch, cp, buf + sizeof(buf));
                     if (softsign) {
                         sign = _T('-');
                     }
@@ -677,7 +677,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                 flags |= LONGINT;
             /*FALLTHROUGH*/
             case _T('o'):
-                _ulong = UARG();
+                archint = UARG();
                 base = OCT;
                 goto nosign;
 
@@ -690,7 +690,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                  *  -- ANSI X3J11
                  */
                 /* NOSTRICT */
-                _ulong = (uint64)va_arg(ap, void *);
+                archint = (uint64)va_arg(ap, void *);
                 base = HEX;
                 flags |= HEXPREFIX;
                 ch = _T('x');
@@ -709,12 +709,12 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                 if (_T('6') == *fmt && _T('4') == *(fmt + 1)) {
                     fmt += 2;
 
-                    _ulong = (uint64)va_arg(ap, uint64);
+                    archint = (uint64)va_arg(ap, uint64);
 
                     if (_T('i') == *fmt) {
                         fmt++;
-                        if ((int64)_ulong < 0) {
-                            _ulong = -(int64)_ulong;
+                        if ((int64)archint < 0) {
+                            archint = -(int64)archint;
                             sign = _T('-');
                         }
                         base = DEC;
@@ -734,12 +734,12 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                 else if (_T('1') == *fmt && _T('2') == *(fmt + 1) && _T('8') == *(fmt + 2)) {
                     fmt += 3;
 
-                    _ulong = (uint128)va_arg(ap, uint128);
+                    archint = (uint128)va_arg(ap, uint128);
 
                     if (_T('i') == *fmt) {
                         fmt++;
-                        if ((int128)_ulong < 0) {
-                            _ulong = -(int128)_ulong;
+                        if ((int128)archint < 0) {
+                            archint = -(int128)archint;
                             sign = _T('-');
                         }
                         base = DEC;
@@ -757,14 +757,14 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                 }
 #endif
                 else {
-                    _ulong = SARG();
+                    archint = SARG();
 
                     goto number;
                 }
 
             case _T('z'):
                 base = DEC;
-                _ulong = (size_t)va_arg(ap, size_t);
+                archint = (size_t)va_arg(ap, size_t);
                 if (_T('i') == *fmt) {
                     fmt++;
                     goto number;
@@ -813,16 +813,16 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                 flags |= LONGINT;
             /*FALLTHROUGH*/
             case _T('u'):
-                _ulong = UARG();
+                archint = UARG();
                 base = DEC;
                 goto nosign;
 
             case _T('X'):
             case _T('x'):
-                _ulong = UARG();
+                archint = UARG();
                 base = HEX;
                 /* leading 0x/X only if non-zero */
-                if (flags & ALT && _ulong) {
+                if (flags & ALT && archint) {
                     flags |= HEXPREFIX;
                 }
 
@@ -845,7 +845,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                  *  -- ANSI X3J11
                  */
                 cp = buf + BUF;
-                if (_ulong || prec) {
+                if (archint || prec) {
                     TCHAR *xdigs = nullptr; /* digits for [xX] conversion */
                     /*
                      * unsigned mod is hard, and unsigned mod
@@ -855,9 +855,9 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                     switch (base) {
                         case OCT:
                             do {
-                                *--cp = tochar((int)(_ulong & 7));
-                                _ulong >>= 3;
-                            } while (_ulong);
+                                *--cp = tochar((int)(archint & 7));
+                                archint >>= 3;
+                            } while (archint);
                             /* handle octal leading 0 */
                             if (flags & ALT && (_T('0') != *cp)) {
                                 *--cp = _T('0');
@@ -866,11 +866,11 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
 
                         case DEC:
                             /* many numbers are 1 digit */
-                            while (_ulong >= 10) {
-                                *--cp = tochar((int)(_ulong % 10));
-                                _ulong /= 10;
+                            while (archint >= 10) {
+                                *--cp = tochar((int)(archint % 10));
+                                archint /= 10;
                             }
-                            *--cp = tochar((int)(_ulong));
+                            *--cp = tochar((int)(archint));
                             break;
 
                         case HEX:
@@ -881,9 +881,9 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                                 xdigs = (TCHAR *)_T ("0123456789abcdef");
                             }
                             do {
-                                *--cp = xdigs[_ulong & 15];
-                                _ulong >>= 4;
-                            } while (_ulong);
+                                *--cp = xdigs[archint & 15];
+                                archint >>= 4;
+                            } while (archint);
                             break;
 
                         default:

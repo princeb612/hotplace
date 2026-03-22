@@ -52,7 +52,7 @@ class huffman_coding {
         hc_t(uint8 b) : symbol(b), weight(0), flags(0) {}
         hc_t(uint8 b, size_t f) : symbol(b), weight(f), flags(0) {}
         hc_t(const hc_t &rhs) : symbol(rhs.symbol), weight(rhs.weight), flags(rhs.flags) {}
-        bool operator<(const hc_t &rhs) const { return symbol < rhs.symbol; }
+        friend bool operator<(const hc_t &lhs, const hc_t &rhs) { return lhs.symbol < rhs.symbol; }
     };
     struct hc_comparator : t_comparator_base<hc_t> {
         bool operator()(const hc_t &lhs, const hc_t &rhs) const {

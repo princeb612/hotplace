@@ -144,7 +144,7 @@ class t_trie {
      * @return  trienode*
      * @sa      add
      */
-    const trienode* insert(const std::vector<T>& pattern, int index = -1, TP* tag = nullptr) { return insert(&pattern[0], pattern.size(), tag); }
+    const trienode* insert(const std::vector<T>& pattern, int index = -1, TP* tag = nullptr) { return insert(&pattern[0], pattern.size(), index, tag); }
     const trienode* insert(const T* pattern, size_t size, int index = -1, TP* tag = nullptr) {
         trienode* current = _root;
         if (pattern) {
@@ -162,7 +162,7 @@ class t_trie {
             }
 
             if (-1 == current->index) {
-                size_t idx = 0;
+                int idx = 0;
                 if (-1 == index) {
                     if (false == _rlookup.empty()) {
                         auto iter = _rlookup.rbegin();

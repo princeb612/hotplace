@@ -30,13 +30,52 @@ namespace hotplace {
  * @remarks gcc builtin clz - count leading zeros (ex. 0000000011111111 return 8)
  */
 static inline int bit_length(uint16 v) {
-    uint32 temp = v;
-    return __builtin_clz(temp) - 16;
+    unsigned int ret_value = 0;
+#if defined __GNUC__
+    ret_value = __builtin_clz(v) - 16;
+#elif defined _MSC_VER
+    if (0 == v) {
+        ret_value = 16;
+    } else {
+        unsigned long idx = 0;
+        _BitScanReverse(&idx, v);
+        ret_value = 15 - idx;
+    }
+#endif
+    return ret_value;
 }
 
-static inline int bit_length(uint32 v) { return __builtin_clz(v); }
+static inline int bit_length(uint32 v) {
+    unsigned int ret_value = 0;
+#if defined __GNUC__
+    ret_value = __builtin_clz(v);
+#elif defined _MSC_VER
+    if (0 == v) {
+        ret_value = 32;
+    } else {
+        unsigned long idx = 0;
+        _BitScanReverse(&idx, v);
+        ret_value = 31 - idx;
+    }
+#endif
+    return ret_value;
+}
 
-static inline int bit_length(uint64 v) { return __builtin_clzll(v); }
+static inline int bit_length(uint64 v) {
+    unsigned int ret_value = 0;
+#if defined __GNUC__
+    ret_value = __builtin_clzll(v);
+#elif defined _MSC_VER
+    if (0 == v) {
+        ret_value = 64;
+    } else {
+        unsigned long idx = 0;
+        _BitScanReverse64(&idx, v);
+        ret_value = 63 - idx;
+    }
+#endif
+    return ret_value;
+}
 
 #if defined __SIZEOF_INT128__
 static inline int bit_length(uint128 v) {
@@ -44,9 +83,9 @@ static inline int bit_length(uint128 v) {
     uint64 hi = (v >> 64);
     uint64 lo = 0;
     if (hi) {
-        b = __builtin_clzll(hi);
+        b = bit_length(hi);
     } else if (lo = (v & ~0ULL)) {
-        b = __builtin_clzll(lo) + 64;
+        b = bit_length(lo) + 64;
     }
     return b;
 }

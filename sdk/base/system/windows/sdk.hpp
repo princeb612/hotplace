@@ -16,8 +16,6 @@
 #include <hotplace/sdk/base/inline.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
 
-#if defined __MINGW32__
-
 /*
  * @brief   do not define __in/__out (MINGW)
  * @desc
@@ -28,6 +26,8 @@
  */
 #define ___in
 #define ___out
+
+#if defined __MINGW32__
 
 #define __bcount(size)
 #define __ecount(size)
@@ -72,6 +72,7 @@
 
 #define __deref_out
 #define __deref_out_ecount(size)
+
 #endif
 
 /* TEXT("advapi32.dll") */

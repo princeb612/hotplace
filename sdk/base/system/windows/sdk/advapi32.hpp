@@ -134,8 +134,8 @@ typedef BOOL(WINAPI *CREATEPROCESSWITHLOGONW)(___in LPCWSTR lpUsername, __in_opt
 /* @brief
     The OpenProcessToken function opens the access token associated with a process.
    @comment
-    Platform SDK ¿¡´Â TOKEN_ALL_ACCESS ¿¡´Â TOKEN_ADJUST_SESSIONID ÇÃ·¡±×¸¦ Æ÷ÇÔ
-    ÀÌ·Î ÀÎÇØ Windows NT 4.0 Àº ERROR_ACCESS_DENIED °¡ ¹ß»ıÇÒ ¼ö ÀÖ´Ù.
+    Platform SDK ì—ëŠ” TOKEN_ALL_ACCESS ì—ëŠ” TOKEN_ADJUST_SESSIONID í”Œë˜ê·¸ë¥¼ í¬í•¨
+    ì´ë¡œ ì¸í•´ Windows NT 4.0 ì€ ERROR_ACCESS_DENIED ê°€ ë°œìƒí•  ìˆ˜ ìˆë‹¤.
  */
 typedef BOOL(__stdcall *OPENPROCESSTOKEN)(HANDLE ProcessHandle, DWORD DesiredAccess, PHANDLE TokenHandle);
 

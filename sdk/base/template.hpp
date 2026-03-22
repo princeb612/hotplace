@@ -27,7 +27,8 @@ RETURN_T type_cast(TYPE param) {
 
 template <typename T>
 struct t_comparator_base {
-    friend bool operator<(const T& lhs, const T& rhs) { return lhs < rhs; }
+    // friend bool operator<(const T& lhs, const T& rhs) { return lhs < rhs; }
+    bool operator()(const T& lhs, const T& rhs) const { return lhs < rhs; }
 };
 
 template <typename T>
@@ -72,7 +73,7 @@ TYPE t_atoi_n(const char* value, size_t size) {
 
         for (; i < size; ++i) {
             const char c = value[i];
-            if (not std::isdigit(c)) {
+            if (0 == std::isdigit(c)) {
                 ret = errorcode_t::bad_data;
                 break;
             }

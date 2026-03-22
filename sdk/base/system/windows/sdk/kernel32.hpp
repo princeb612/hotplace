@@ -422,7 +422,7 @@ typedef BOOL(NTAPI *VERIFYVERSIONINFO)(POSVERSIONINFOEX, DWORD, DWORDLONG);
    system. To retrieve product type information on versions of Windows prior to the minimum supported operating systems specified in the Requirements section,
    use the GetVersionEx function. You can also use the OperatingSystemSKU property of the Win32_OperatingSystem WMI class.
    @comment
-    Vista Edition À» ÆÄ¾ÇÇÏ±â À§ÇØ¼­ GetProductInfo API ¸¦ ÀÌ¿ëÇÑ´Ù.
+    Vista Edition ì„ íŒŒì•…í•˜ê¸° ìœ„í•´ì„œ GetProductInfo API ë¥¼ ì´ìš©í•œë‹¤.
     see alse, http://msdn2.microsoft.com/en-gb/library/ms724358.aspx
  */
 typedef BOOL(__stdcall *GETPRODUCTINFO)(DWORD, DWORD, DWORD, DWORD, LPDWORD);

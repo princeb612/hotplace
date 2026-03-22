@@ -389,7 +389,7 @@ binary_t base16_decode_rfc(const std::string& source) {
             std::string data;
             split_begin(&handle, inpart.c_str(), ",");
             split_count(handle, count);
-            for (size_t i = 0; i < count; i++) {
+            for (unsigned int i = 0; i < count; i++) {
                 split_get(handle, i, data);
                 int value = atoi(data.c_str());
                 if (value < 256) {

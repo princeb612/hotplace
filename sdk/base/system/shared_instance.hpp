@@ -96,7 +96,11 @@ class t_shared_reference {
     int getref() { return _counter; }
 
    private:
+#if defined __GNUC__
     int _counter;
+#elif defined _MSC_VER
+    LONG _counter;
+#endif
     OBJECT_T* _object;
 };
 

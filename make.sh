@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 :<<COMMENTS
 @author Soo Han, Kim (princeb612.kr@gmail.com)
@@ -17,23 +17,24 @@
 COMMENTS
 
 :<< HELP
-    cf             - clang-format
-    cmake          - makefile only
-    ctest          - build and run ctest
-    debug          - debug build
-    format         - clang-format (syn. cf)
-    leaks          - gdb 
-    opt            - optimize
-    oqs            - liboqs, oqs-provider feature
-    pch            - precompiled header
-    prof           - gprof
-    odbc           - ODBC feature
-    redist         - redistribute MSYS2(MINGW) binaries
-    shared         - shared build
-    disable_static - disable static build
-    verbose        - CMAKE_VERBOSE_MAKEFILE ON
-    test           - run examples
+  cf             - clang-format
+  cmake          - makefile only
+  ctest          - build and run ctest
+  debug          - gcc debug build
+  format         - clang-format (syn. cf)
+  leaks          - gdb
+  opt            - optimize
+  oqs            - liboqs, oqs-provider feature
+  pch            - precompiled header
+  prof           - gprof
+  odbc           - ODBC feature
+  redist         - redistribute MSYS2(MINGW) binaries
+  shared         - shared build
+  disable_static - disable static build
+  verbose        - CMAKE_VERBOSE_MAKEFILE ON
+  test           - run examples
 
+  gcc
     static build example
       mingw64
         source env.ubuntu && install_packages
@@ -48,6 +49,7 @@ COMMENTS
       ubuntu
         source env.mingw64 && install_packages && export_path
         ./make.sh debug pch disable_static shared
+
 HELP
 
 :<< SWITCHES
@@ -73,9 +75,11 @@ do_redist=0
 do_test=0
 
 CXXFLAGS=''
+SUPPORT_DEBUG=0
 SUPPORT_PCH=0
 builddir=build
 args=("$@")
+generator='Unix Makefiles'
 
 export HOTPLACE_HOME=$(pwd)
 
@@ -88,7 +92,7 @@ if [ ${#args[@]} -ne 0 ]; then
         elif [ $arg = 'ctest' ]; then
             do_ctest=1
         elif [ $arg = 'debug' ]; then
-            CXXFLAGS="${CXXFLAGS} -DDEBUG -g"
+            SUPPORT_DEBUG=1
         elif [ $arg = 'format' ]; then
             do_clangformat=1
         elif [ $arg = 'leaks' ]; then
@@ -120,11 +124,16 @@ if [ ${#args[@]} -ne 0 ]; then
             export CMAKE_CXX_COMPILER=${toolchain_dir}/bin/c++
         elif [ $arg = 'verbose' ]; then
             export CMAKE_VERBOSE_MAKEFILE=ON
+        elif [ $arg = 'msvc' ]; then
+            # Visual Studio Community
+            builddir=build_msvc
+            generator='Visual Studio 18 2026'
         fi
     done
 fi
 
 export CXXFLAGS
+export SUPPORT_DEBUG
 export SUPPORT_PCH
 
 # clang-format
@@ -149,7 +158,7 @@ fi
 mkdir -p ${builddir}
 cd ${builddir}
 export MAKEFLAGS='-j 4'
-cmake -G 'Unix Makefiles' -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ..
+cmake -G "${generator}" -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ..
 if [ $do_makefile = 1 ]; then
     exit
 fi

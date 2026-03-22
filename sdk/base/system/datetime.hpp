@@ -207,10 +207,17 @@ class datetime {
     struct timespec _timespec; /* time_t tv_sec(UTC seconds) + long tv_nsec(nanoseconds) */
 };
 
+#if defined _MSC_VER
+#define CLOCK_REALTIME 1
+#define CLOCK_MONOTONIC 4
+#define CLOCK_BOOTTIME 7
+#endif
 /**
- * @brief clock_gettime (kernel 2.6) replacement
+ * @brief clock_gettime
  * @param int clockid [in] CLOCK_REALTIME, CLOCK_MONOTONIC
  * @param struct timespec& ts [out]
+ * @remarks
+ *        clock_gettime (kernel 2.6) replacement
  */
 void system_gettime(int clockid, struct timespec& ts);
 

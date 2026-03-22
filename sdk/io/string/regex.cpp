@@ -9,9 +9,20 @@
  */
 
 #include <hotplace/sdk/io/string/string.hpp>
-#include <regex>
+
+#if defined __GNUC__
 #if (((__GNUC__ == 4) && (__GNUC_MINOR__ >= 9)) || (__GNUC__ > 4))
+#define USE_STDREGEX 1
 #else
+#define USE_PCRE 1
+#endif
+#elif defined _MSC_VER
+#define USE_STDREGEX 1
+#endif
+
+#if defined USE_STDREGEX
+#include <regex>
+#elif defined USE_PCRE
 #include <pcre.h>
 #endif
 
@@ -21,7 +32,7 @@ namespace io {
 void regex_token(const std::string& input, const std::string& expr, size_t& pos, std::list<std::string>& tokens) {
     tokens.clear();
 
-#if (((__GNUC__ == 4) && (__GNUC_MINOR__ >= 9)) || (__GNUC__ > 4))
+#if defined USE_STDREGEX
     // Regular expressions library (since C++11) https://en.cppreference.com/w/cpp/regex
     // The GNU C++ standard library supports <regex>, but not until GCC version 4.9.0.
     // undefined reference to re_expr/sregex_iterator/smatch in GCC 4.8.5 (fixed in GCC 4.9.0)
@@ -40,7 +51,7 @@ void regex_token(const std::string& input, const std::string& expr, size_t& pos,
             pos += (match.position() + match.str().size());
         }
     }
-#else
+#elif defined USE_PCRE
     pcre* re = nullptr;
     int rc = 0;
     int eoffset = 0;

@@ -4,22 +4,28 @@
 # Date         Name                Description
 #
 
+# cmake -B build -G 'Unix Makefile'
+
 # minimum platform
 # - toolchain dependencies : cmake (2.8.10.2)
+
 cmake_minimum_required (VERSION 2.6)
 
 project (hotplace)
 
-#set (CMAKE_BUILD_TYPE Debug)
+# set (CMAKE_BUILD_TYPE Release)
 set (CMAKE_VERBOSE_MAKEFILE OFF)
 set (CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
 set (SET_STDCPP c++11)
+set (SUPPORT_DEBUG 0)
 set (SUPPORT_ODBC 0)   # 
 set (SUPPORT_PCH 0)    # cmake 2.x
 set (SUPPORT_OQS 0)    # 
 set (SUPPORT_SHARED 0) # set 1 in mingw, ubuntu, custom build
 set (SUPPORT_STATIC 1) # 1 if not set disable_static
+set (PROJECT_SDK_USE_STD_REGEX 1) # regex
 
 if (NOT "$ENV{CMAKE_VERBOSE_MAKEFILE}" STREQUAL "")
     set (CMAKE_VERBOSE_MAKEFILE "$ENV{CMAKE_VERBOSE_MAKEFILE}")
@@ -34,6 +40,9 @@ endif ()
 if (NOT "$ENV{CMAKE_CXX_FLAGS}" STREQUAL "")
     set (CMAKE_CXX_FLAGS "$ENV{CMAKE_CXX_FLAGS}")
 endif ()
+if (NOT "$ENV{SUPPORT_DEBUG}" STREQUAL "")
+    set (SUPPORT_DEBUG $ENV{SUPPORT_DEBUG})
+endif ()
 if (NOT "$ENV{SUPPORT_STATIC}" STREQUAL "")
     set (SUPPORT_STATIC $ENV{SUPPORT_STATIC})
 endif ()
@@ -43,7 +52,7 @@ endif ()
 if (NOT "$ENV{SUPPORT_ODBC}" STREQUAL "")
     set (SUPPORT_ODBC $ENV{SUPPORT_ODBC})
 endif ()
-if(CMAKE_VERSION VERSION_GREATER 3.8)
+if (CMAKE_VERSION VERSION_GREATER 3.8)
     if (NOT "$ENV{SUPPORT_PCH}" STREQUAL "")
         set (SUPPORT_PCH $ENV{SUPPORT_PCH})
     else (1)
@@ -53,32 +62,49 @@ endif ()
 if (NOT "$ENV{SUPPORT_OQS}" STREQUAL "")
     set (SUPPORT_OQS $ENV{SUPPORT_OQS})
 endif ()
-
-# -std=c++11
-# -Wl,-z,noexecstack
-if (UNIX)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-z,noexecstack")
-elseif (WIN32)
-set (SET_STDCPP c++14)
-endif ()
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${SET_STDCPP} -Wl,--as-needed -Wl,--version-script=${PROJECT_SOURCE_DIR}/sdk/version.script")
-
 if (NOT "$ENV{SET_STDCPP}" STREQUAL "")
     set (SET_STDCPP $ENV{SET_STDCPP})
 endif ()
 
-set (PROJECT_SDK_USE_STD_REGEX 1)
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    message(STATUS "GCC version " ${CMAKE_CXX_COMPILER_VERSION})
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if (SUPPORT_DEBUG)
+        # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g")
+    endif ()
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
-        set (PROJECT_SDK_USE_STD_REGEX 0)
+        set (PROJECT_SDK_USE_STD_REGEX 0) # thirdparty
     endif()
-endif()
+
+    if (UNIX)
+    # -std=c++11
+    # -Wl,-z,noexecstack
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-z,noexecstack")
+    elseif (WIN32)
+    set (SET_STDCPP c++14)
+    endif ()
+
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${SET_STDCPP} -Wl,--as-needed -Wl,--version-script=${PROJECT_SOURCE_DIR}/sdk/version.script")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    set (SET_STDCPP c++14)
+    # debug iterator
+    # compiler | default  | desc
+    # gcc      | disabled | turn on  : -D_GLIBCXX_DEBUG
+    # msvc     | enabled  | turn on  : -D_ITERATOR_DEBUG_LEVEL=2
+    #          |          | turn off : -D_ITERATOR_DEBUG_LEVEL=0
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_ITERATOR_DEBUG_LEVEL=0")
+    # set(CMAKE_GENERATOR_PLATFORM x64 CACHE STRING "Target Architecture" FORCE)
+    add_compile_definitions(_$ENV{PROCESSOR_ARCHITECTURE}_ __x86_64__ NOMINMAX)
+    add_compile_options(/utf-8)
+endif ()
 
 # verbose
 message (STATUS "CMAKE_VERBOSE_MAKEFILE $ENV{CMAKE_VERBOSE_MAKEFILE}")
 message (STATUS "CXXFLAGS $ENV{CXXFLAGS}")
+message (STATUS "CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}")
+message (STATUS "CMAKE_CXX_COMPILER_ID ${CMAKE_CXX_COMPILER_ID}")
+message (STATUS "CMAKE_CXX_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION}")
 message (STATUS "CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}")
+message (STATUS "PROJECT_SDK_USE_STD_REGEX ${PROJECT_SDK_USE_STD_REGEX}")
+message (STATUS "SUPPORT_DEBUG ${SUPPORT_DEBUG}")
 message (STATUS "SUPPORT_STATIC ${SUPPORT_STATIC}")
 message (STATUS "SUPPORT_SHARED ${SUPPORT_SHARED}")
 message (STATUS "SUPPORT_ODBC ${SUPPORT_ODBC}")
@@ -92,9 +118,9 @@ set (PROJECT_SDK_MODULE_CRYPTO ${CMAKE_PROJECT_NAME}-sdk-crypto)
 set (PROJECT_SDK_MODULE_NET ${CMAKE_PROJECT_NAME}-sdk-net)
 set (PROJECT_SDK_MODULE_ODBC ${CMAKE_PROJECT_NAME}-sdk-odbc)
 if (SUPPORT_STATIC)
-set (MODULE_SO_TYPE "static")
+    set (MODULE_SO_TYPE "static")
 elseif (SUPPORT_SHARED)
-set (MODULE_SO_TYPE "shared")
+    set (MODULE_SO_TYPE "shared")
 endif ()
 
 set (PROJECT_SDK_MODULE_DEPENDENCIES ${PROJECT_SDK_MODULE_BASE}-${MODULE_SO_TYPE} ${PROJECT_SDK_MODULE_IO}-${MODULE_SO_TYPE} ${PROJECT_SDK_MODULE_CRYPTO}-${MODULE_SO_TYPE} ${PROJECT_SDK_MODULE_NET}-${MODULE_SO_TYPE})
@@ -104,12 +130,12 @@ endif ()
 
 # dependencies
 if (UNIX)
-set (PROJECT_SDK_PLATFORM_DEPENDENCIES dl pthread crypto ssl jansson z)
+    set (PROJECT_SDK_PLATFORM_DEPENDENCIES dl pthread crypto ssl jansson z)
 elseif (WIN32)
-set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson z)
+    set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson z)
 endif ()
 if (PROJECT_SDK_USE_STD_REGEX EQUAL 0)
-set (PROJECT_SDK_PLATFORM_DEPENDENCIES ${PROJECT_SDK_PLATFORM_DEPENDENCIES} pcre)
+    set (PROJECT_SDK_PLATFORM_DEPENDENCIES ${PROJECT_SDK_PLATFORM_DEPENDENCIES} pcre)
 endif ()
 
 if (SUPPORT_ODBC)

@@ -114,7 +114,7 @@
     [GetPwrDiskSpindownRange is available for use in the operating systems specified in the Requirements section. It may be altered or unavailable in subsequent
    versions.] Retrieves the disk spindown range.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *GETPWRDISKSPINDOWNRANGE)(PUINT, PUINT);
 /* @brief
@@ -122,14 +122,14 @@ typedef BOOLEAN(WINAPI *GETPWRDISKSPINDOWNRANGE)(PUINT, PUINT);
    versions. Applications written for Windows Vista and later should use PowerEnumerate instead.] Enumerates all power schemes. For each power scheme
    enumerated, the function calls a callback function with information about the power scheme.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *ENUMPWRSCHEMES)(PWRSCHEMESENUMPROC, LPARAM);
 /* @brief
     [ReadGlobalPwrPolicy is available for use in the operating systems specified in the Requirements section. It may be altered or unavailable in subsequent
    versions.] Retrieves the current global power policy settings.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *READGLOBALPWRPOLICY)(PGLOBAL_POWER_POLICY);
 /* @brief
@@ -137,7 +137,7 @@ typedef BOOLEAN(WINAPI *READGLOBALPWRPOLICY)(PGLOBAL_POWER_POLICY);
     It may be altered or unavailable in subsequent versions.]
     Retrieves the power policy settings that are unique to the specified power scheme.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *READPWRSCHEME)(UINT, PPOWER_POLICY);
 /* @brief
@@ -145,7 +145,7 @@ typedef BOOLEAN(WINAPI *READPWRSCHEME)(UINT, PPOWER_POLICY);
     Instead, use the PowerEnumerate function to enumerate power settings for a specified scheme, and the power write functions to write individual settings.]
     Writes policy settings that are unique to the specified power scheme.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *WRITEPWRSCHEME)(PUINT, LPTSTR, LPTSTR, PPOWER_POLICY);
 /* @brief
@@ -153,7 +153,7 @@ typedef BOOLEAN(WINAPI *WRITEPWRSCHEME)(PUINT, LPTSTR, LPTSTR, PPOWER_POLICY);
     It may be altered or unavailable in subsequent versions.]
     Writes global power policy settings.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *WRITEGLOBALPWRPOLICY)(PGLOBAL_POWER_POLICY);
 /* @brief
@@ -161,7 +161,7 @@ typedef BOOLEAN(WINAPI *WRITEGLOBALPWRPOLICY)(PGLOBAL_POWER_POLICY);
     It may be altered or unavailable in subsequent versions. Applications written for Windows Vista and later should use PowerDeleteScheme instead.]
     Deletes the specified power scheme.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *DELETEPWRSCHEME)(UINT);
 /* @brief
@@ -183,7 +183,7 @@ typedef BOOLEAN(WINAPI *SETACTIVEPWRSCHEME)(UINT, PGLOBAL_POWER_POLICY, PPOWER_P
 /* @brief
     Retrieves information about the system power capabilities.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *GETPWRCAPABILITIES)(PSYSTEM_POWER_CAPABILITIES);
 /* @brief
@@ -191,7 +191,7 @@ typedef BOOLEAN(WINAPI *GETPWRCAPABILITIES)(PSYSTEM_POWER_CAPABILITIES);
     It may be altered or unavailable in subsequent versions. Applications written for Windows Vista and later should use GetPwrCapabilities instead.]
     Determines whether the computer supports the sleep states.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *ISPWRSUSPENDALLOWED)(VOID);
 /* @brief
@@ -199,7 +199,7 @@ typedef BOOLEAN(WINAPI *ISPWRSUSPENDALLOWED)(VOID);
     It may be altered or unavailable in subsequent versions. Applications written for Windows Vista and later should use GetPwrCapabilities instead.]
     Determines whether the computer supports hibernation.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *ISPWRHIBERNATEALLOWED)(VOID);
 /* @brief
@@ -207,7 +207,7 @@ typedef BOOLEAN(WINAPI *ISPWRHIBERNATEALLOWED)(VOID);
     It may be altered or unavailable in subsequent versions.]
     Determines whether the computer supports the soft off power state.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *ISPWRSHUTDOWNALLOWED)(VOID);
 /* @brief
@@ -216,7 +216,7 @@ typedef BOOLEAN(WINAPI *ISPWRSHUTDOWNALLOWED)(VOID);
 /* @brief
     Suspends the system by shutting power down. Depending on the Hibernate parameter, the system either enters a suspend (sleep) state or hibernation (S4).
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *SETSUSPENDSTATE)(BOOLEAN, BOOLEAN, BOOLEAN);
 /* @brief
@@ -230,7 +230,7 @@ typedef BOOLEAN(WINAPI *GETCURRENTPOWERPOLICIES)(PGLOBAL_POWER_POLICY, PPOWER_PO
     It may be altered or unavailable in subsequent versions. Applications written for Windows Vista and later should use PowerSettingAccessCheck instead.]
     Determines whether the current user has sufficient privilege to write a power scheme.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *CANUSERWRITEPWRSCHEME)(VOID);
 /* @brief
@@ -238,7 +238,7 @@ typedef BOOLEAN(WINAPI *CANUSERWRITEPWRSCHEME)(VOID);
     It may be altered or unavailable in subsequent versions.]
     Retrieves the processor power policy settings for the specified power scheme.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *READPROCESSORPWRSCHEME)(UINT, PMACHINE_PROCESSOR_POWER_POLICY);
 /* @brief
@@ -246,7 +246,7 @@ typedef BOOLEAN(WINAPI *READPROCESSORPWRSCHEME)(UINT, PMACHINE_PROCESSOR_POWER_P
     It may be altered or unavailable in subsequent versions.]
     Writes processor power policy settings for the specified power scheme.
    @comment
-    »ç¿ëÇÏÁö ¾ÊÀ½
+    ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
  */
 typedef BOOLEAN(WINAPI *WRITEPROCESSORPWRSCHEME)(UINT, PMACHINE_PROCESSOR_POWER_POLICY);
 

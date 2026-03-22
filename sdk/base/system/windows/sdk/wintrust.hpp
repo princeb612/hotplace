@@ -40,7 +40,7 @@ typedef BOOL(__stdcall *WINVERIFYTRUST)(HWND hwnd, GUID *pguidAction, LPVOID pvD
     This function has no associated import library.
     You must use the LoadLibrary and GetProcAddress functions to dynamically link to Wintrust.dll.
    @comment
-    XP, 2003 ÀÌÈÄ¿¡´Â CryptQueryObject ¸¦ »ç¿ëÇÏµµ·Ï Ã³¸®ÇÏ°í ÀÖ´Ù. (Helper Authenticode Âü°í)
+    XP, 2003 ì´í›„ì—ëŠ” CryptQueryObject ë¥¼ ì‚¬ìš©í•˜ë„ë¡ ì²˜ë¦¬í•˜ê³  ìˆë‹¤. (Helper Authenticode ì°¸ê³ )
  */
 typedef BOOL(__stdcall *WINTRUSTLOADFUNCTIONPOINTERS)(GUID *pgActionID, CRYPT_PROVIDER_FUNCTIONS *pPfns);
 

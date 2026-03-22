@@ -90,7 +90,7 @@ typedef struct _OBJECT_ATTRIBUTES {
 
 #endif  // Visual Studio 6.0
 
-#ifndef __MINGW32__
+#if !defined __MINGW32__ && !defined _MSC_VER
 #define InitializeObjectAttributes(p, n, a, r, s) \
     {                                             \
         (p)->Length = sizeof(OBJECT_ATTRIBUTES);  \
