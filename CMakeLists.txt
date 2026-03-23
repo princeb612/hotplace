@@ -83,8 +83,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif ()
 
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${SET_STDCPP} -Wl,--as-needed -Wl,--version-script=${PROJECT_SOURCE_DIR}/sdk/version.script")
+    set (SET_THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty/gcc)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    set (SET_STDCPP c++14)
+    set (SET_STDCPP c++17) # C7525
     # debug iterator
     # compiler | default  | desc
     # gcc      | disabled | turn on  : -D_GLIBCXX_DEBUG
@@ -92,8 +93,9 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     #          |          | turn off : -D_ITERATOR_DEBUG_LEVEL=0
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_ITERATOR_DEBUG_LEVEL=0")
     # set(CMAKE_GENERATOR_PLATFORM x64 CACHE STRING "Target Architecture" FORCE)
-    add_compile_definitions(_$ENV{PROCESSOR_ARCHITECTURE}_ __x86_64__ NOMINMAX)
+    add_compile_definitions(_$ENV{PROCESSOR_ARCHITECTURE}_ __x86_64__ _CRT_SECURE_NO_DEPRECATE  _CRT_SECURE_NO_WARNINGS NOMINMAX)
     add_compile_options(/utf-8)
+    set (SET_THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty/msvc)
 endif ()
 
 # verbose
@@ -132,7 +134,15 @@ endif ()
 if (UNIX)
     set (PROJECT_SDK_PLATFORM_DEPENDENCIES dl pthread crypto ssl jansson z)
 elseif (WIN32)
-    set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson z)
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 crypto ssl jansson z)
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+        if (SUPPORT_DEBUG)
+            set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 libcrypto libssl jansson_d zd)
+        else (1)
+            set (PROJECT_SDK_PLATFORM_DEPENDENCIES ws2_32 libcrypto libssl jansson z)
+        endif ()
+    endif ()
 endif ()
 if (PROJECT_SDK_USE_STD_REGEX EQUAL 0)
     set (PROJECT_SDK_PLATFORM_DEPENDENCIES ${PROJECT_SDK_PLATFORM_DEPENDENCIES} pcre)
@@ -209,11 +219,11 @@ endfunction ()
 
 # -Ixxx
 include_directories (..)
-include_directories (${PROJECT_SOURCE_DIR}/thirdparty/include)
+include_directories (${SET_THIRDPARTY_DIR}/include)
 # -Lxxx
 link_directories (${CMAKE_INSTALL_RPATH})
-link_directories (${PROJECT_SOURCE_DIR}/thirdparty/lib64)
-link_directories (${PROJECT_SOURCE_DIR}/thirdparty/lib)
+link_directories (${SET_THIRDPARTY_DIR}/lib64)
+link_directories (${SET_THIRDPARTY_DIR}/lib)
 
 # mkdir xxx
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)

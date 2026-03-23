@@ -14,6 +14,7 @@
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
+#include <hotplace/sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <hotplace/sdk/net/tls/quic/types.hpp>
 #include <hotplace/sdk/net/tls/tls_container.hpp>
 #include <hotplace/sdk/net/tls/types.hpp>

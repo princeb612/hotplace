@@ -521,7 +521,8 @@ return_t set_sock_nbio(socket_t sock, uint32 nbio_mode) {
         }
     }
 #elif defined _WIN32 || defined _WIN64
-    ret_fcntl = ioctlsocket(sock, FIONBIO, &nbio_mode);
+    unsigned long mode = nbio_mode;
+    ret_fcntl = ioctlsocket(sock, FIONBIO, &mode);
 #endif
     if (-1 == ret_fcntl) {
         ret = get_lasterror(ret_fcntl, wsaerror);

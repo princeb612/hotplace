@@ -111,14 +111,15 @@ return_t crypto_advisor::build() {
     // workaround for openssl-1.1.1 - EVP_CIPHER_fetch("aes-128-wrap") return nullptr
     for (i = 0; i < sizeof_ossl1_aes_wrap_methods; i++) {
         const evp_cipher_ossl1_methods* item = ossl1_aes_wrap_methods + i;
+        if (item->_cipher) {
+            cipher_fetch_block_t block((EVP_CIPHER*)item->_cipher, &item->hint);
+            // distinguish between crypto_scheme_aes_128_gcm and crypto_scheme_tls_aes_128_gcm
+            _cipher_fetch_map.insert({CRYPTO_SCHEME16(item->hint.algorithm, item->hint.mode), std::move(block)});
+            _evp_cipher_map.insert({item->_cipher, &item->hint});
 
-        cipher_fetch_block_t block((EVP_CIPHER*)item->_cipher, &item->hint);
-        // distinguish between crypto_scheme_aes_128_gcm and crypto_scheme_tls_aes_128_gcm
-        _cipher_fetch_map.insert({CRYPTO_SCHEME16(item->hint.algorithm, item->hint.mode), std::move(block)});
-        _evp_cipher_map.insert({item->_cipher, &item->hint});
-
-        set_feature(item->hint.fetchname, advisor_feature_cipher);
-        set_feature(item->hint.fetchname, advisor_feature_wrap);
+            set_feature(item->hint.fetchname, advisor_feature_cipher);
+            set_feature(item->hint.fetchname, advisor_feature_wrap);
+        }
     }
 #endif
 

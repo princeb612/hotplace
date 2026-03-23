@@ -105,7 +105,7 @@ return_t network_session::ready_to_read() {
 
         WSARecv(sock, &wsabuf, 1, &dwRecvBytes, &dwFlags, &ov, nullptr);
     } else if (SOCK_DGRAM == type) {
-        uint32 flags = 0;
+        DWORD flags = 0;
         if (get_server_socket()->support_tls()) {
             /**
              * MSG_PEEK to get the peer address

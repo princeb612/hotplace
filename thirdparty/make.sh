@@ -10,6 +10,10 @@
     * make
       $ ./make.sh
 
+    * MSVC
+      # pacman -S mingw64/mingw-w64-x86_64-python-sphinx mingw64/mingw-w64-x86_64-nasm
+      # ./make.sh msvc
+
 COMMENTS
 
 set -e
@@ -21,6 +25,25 @@ if [ -z ${HOTPLACE_HOME} ]; then
     HOTPLACE_HOME=`cd ..; pwd`
     export HOTPLACE_HOME
 fi
+
+args=("$@")
+target=Debug
+base=gcc
+generator='Unix Makefiles'
+builddir=build
+param=
+
+if [ ${#args[@]} -ne 0 ]; then
+    for arg in ${args[@]}; do
+        if [ $arg = 'msvc' ]; then
+            base=msvc
+            builddir=build_msvc
+            generator='Visual Studio 18 2026'
+        fi
+    done
+fi
+
+install_dir=${HOTPLACE_HOME}/thirdparty/$base
 
 for item in ${dependency[@]}; do
     member=item[name]
@@ -46,7 +69,7 @@ for item in ${dependency[@]}; do
         inflate `basename ${!member_url}`
     fi
     # build
-    if [ ! -f $member_basedir/.complete ]; then
+    if [ ! -f $member_basedir/${builddir}/.complete ]; then
         cd ${HOTPLACE_HOME}/thirdparty/$member_basedir
         if [ ! -z ${!member_buildscript} ]; then
             $(${!member_buildscript})

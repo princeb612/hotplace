@@ -207,6 +207,10 @@ const evp_cipher_ossl1_methods ossl1_aes_wrap_methods[] = {
     {EVP_aes_128_wrap(), {crypto_scheme_aes_128_wrap, aes128, wrap, "aes-128-wrap"}},
     {EVP_aes_192_wrap(), {crypto_scheme_aes_192_wrap, aes192, wrap, "aes-192-wrap"}},
     {EVP_aes_256_wrap(), {crypto_scheme_aes_256_wrap, aes256, wrap, "aes-256-wrap"}},
+#else
+#ifdef _MSC_VER
+    {},  // C2466
+#endif
 #endif
 };
 

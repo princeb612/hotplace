@@ -235,38 +235,38 @@ bool bufferio::empty(bufferio_context_t* handle) {
     bool ret = false;
     __try2 {
         if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
+            // errorcode_t::invalid_parameter;
             __leave2;
         }
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
-            ret = errorcode_t::invalid_context;
+            // errorcode_t::invalid_context;
             __leave2;
         }
 
-        return (0 == handle->bufferio_size);
+        ret = (0 == handle->bufferio_size);
     }
     __finally2 {}
-    return false;
+    return ret;
 }
 
 bool bufferio::occupied(bufferio_context_t* handle) {
     bool ret = false;
     __try2 {
         if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
+            // errorcode_t::invalid_parameter;
             __leave2;
         }
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
-            ret = errorcode_t::invalid_context;
+            // errorcode_t::invalid_context;
             __leave2;
         }
 
-        return (0 != handle->bufferio_size);
+        ret = (0 != handle->bufferio_size);
     }
     __finally2 {}
-    return false;
+    return ret;
 }
 
 return_t bufferio::size(bufferio_context_t* handle, size_t* contents_size) {

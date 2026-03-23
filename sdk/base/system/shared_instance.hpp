@@ -128,9 +128,14 @@ class t_shared_reference {
 
 template <typename OBJECT_T>
 class t_shared_instance {
+#ifdef _MSC_VER
+    typedef LONG counter_type;
+#else
+    typedef int counter_type;
+#endif
    public:
-    t_shared_instance() : _object(nullptr) { _counter = new int(1); }
-    t_shared_instance(OBJECT_T* object) : _object(object) { _counter = new int(1); }
+    t_shared_instance() : _object(nullptr) { _counter = new counter_type(1); }
+    t_shared_instance(OBJECT_T* object) : _object(object) { _counter = new counter_type(1); }
     t_shared_instance(const t_shared_instance& inst) : _counter(inst._counter), _object(inst._object) { atomic_increment(_counter); }
     ~t_shared_instance() { delref(); }
 
@@ -193,7 +198,7 @@ class t_shared_instance {
     }
 
    private:
-    int* _counter;
+    counter_type* _counter;
     OBJECT_T* _object;
 };
 

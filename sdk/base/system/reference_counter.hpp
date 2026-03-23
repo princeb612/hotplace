@@ -67,7 +67,11 @@ class reference_counter {
     int getref() { return _count; }
 
    private:
+#ifdef _MSC_VER
+    LONG _count;
+#else
     int _count;
+#endif
 };
 
 }  // namespace hotplace

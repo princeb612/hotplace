@@ -11,12 +11,7 @@
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
-#include <regex>
 #include <set>
-#if (((__GNUC__ == 4) && (__GNUC_MINOR__ >= 9)) || (__GNUC__ > 4))
-#else
-#include <pcre.h>
-#endif
 
 namespace hotplace {
 namespace io {

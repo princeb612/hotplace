@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SDK_POWERPROF__
 #define __HOTPLACE_SDK_BASE_SYSTEM_WINDOWS_SDK_POWERPROF__
 
+#if 0
 #include <powrprof.h>
 
 /* "GetPwrDiskSpindownRange" */
@@ -419,5 +420,7 @@ typedef DWORD(WINAPI *POWERSETTINGREGISTERNOTIFICATION)(LPCGUID SettingGuid, DWO
 /* @brief   PowerSettingUnregisterNotification
  */
 typedef DWORD(WINAPI *POWERSETTINGUNREGISTERNOTIFICATION)(HPOWERNOTIFY Handle);
+
+#endif
 
 #endif

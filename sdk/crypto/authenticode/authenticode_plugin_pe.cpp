@@ -17,6 +17,12 @@
 namespace hotplace {
 namespace crypto {
 
+#ifdef _MSC_VER
+#define UINT32_TYPE DWORD
+#else
+#define UINT32_TYPE uint32
+#endif
+
 authenticode_plugin_pe::authenticode_plugin_pe() : authenticode_plugin() {}
 
 authenticode_plugin_pe::~authenticode_plugin_pe() {}
@@ -340,8 +346,8 @@ return_t authenticode_plugin_pe::digest(file_stream* filestream, const char* alg
             }
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
-                uint32* checksum_pointer = nullptr; /* *checksum_pointer is CheckSum */
-                uint32* securitydir_pointer = nullptr;
+                UINT32_TYPE* checksum_pointer = nullptr; /* *checksum_pointer is CheckSum */
+                UINT32_TYPE* securitydir_pointer = nullptr;
                 IMAGE_OPTIONAL_HEADER* optional_header = &nt_headers->OptionalHeader;
                 if (IMAGE_NT_OPTIONAL_HDR64_MAGIC == optional_header->Magic) {
                     if (stream_size < dos_header->e_lfanew + sizeof(IMAGE_NT_HEADERS) + sizeof(IMAGE_OPTIONAL_HEADER64)) {
@@ -464,7 +470,7 @@ return_t authenticode_plugin_pe::read_checksum(file_stream* filestream, uint32* 
             }
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
-                uint32* checksum_pointer = nullptr; /* *checksum_pointer is CheckSum */
+                UINT32_TYPE* checksum_pointer = nullptr; /* *checksum_pointer is CheckSum */
                 IMAGE_OPTIONAL_HEADER* optional_header = &nt_headers->OptionalHeader;
                 if (IMAGE_NT_OPTIONAL_HDR64_MAGIC == optional_header->Magic) {
                     IMAGE_OPTIONAL_HEADER64* optional_header64 = reinterpret_cast<IMAGE_OPTIONAL_HEADER64*>(optional_header);
@@ -522,7 +528,7 @@ return_t authenticode_plugin_pe::calc_checksum(file_stream* filestream, uint32* 
         if (IMAGE_DOS_SIGNATURE == dos_header->e_magic) {
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
-                uint32* checksum_pointer = nullptr; /* *checksum_pointer is CheckSum */
+                UINT32_TYPE* checksum_pointer = nullptr; /* *checksum_pointer is CheckSum */
                 IMAGE_OPTIONAL_HEADER* optional_header = &nt_headers->OptionalHeader;
                 if (IMAGE_NT_OPTIONAL_HDR64_MAGIC == optional_header->Magic) {
                     IMAGE_OPTIONAL_HEADER64* optional_header64 = reinterpret_cast<IMAGE_OPTIONAL_HEADER64*>(optional_header);
@@ -592,7 +598,7 @@ return_t authenticode_plugin_pe::update_checksum(file_stream* filestream, uint32
         if (IMAGE_DOS_SIGNATURE == dos_header->e_magic) {
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
-                uint32* checksum_pointer = nullptr; /* *checksum_pointer is CheckSum */
+                UINT32_TYPE* checksum_pointer = nullptr; /* *checksum_pointer is CheckSum */
                 IMAGE_OPTIONAL_HEADER* optional_header = &nt_headers->OptionalHeader;
                 if (IMAGE_NT_OPTIONAL_HDR64_MAGIC == optional_header->Magic) {
                     IMAGE_OPTIONAL_HEADER64* optional_header64 = reinterpret_cast<IMAGE_OPTIONAL_HEADER64*>(optional_header);

@@ -51,68 +51,80 @@ function inflate ()
 # build_openssl directory
 function build_openssl ()
 {
-    local install_dir=${HOTPLACE_HOME}/thirdparty
+    if [ ${base} = "msvc" ]; then
+        echo install perl (strawberry)
+        echo run cmd
+        echo - "c:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat"
+        echo - perl Configure VC-WIN64A --prefix="${install_dir}" --with-rand-seed=os no-egd -d shared
+        echo - nmake
+        echo - nmake install
+        return 0
+    fi
 
     if [[ $OSTYPE = "cygwin" || $OSTYPE = "msys" ]]; then
-        # undefined reference to `strerror_r'
         ./Configure mingw64 --prefix=${install_dir} --with-rand-seed=os no-egd -d shared
     else
         ./Configure linux-x86_64 --prefix=${install_dir} --with-rand-seed=devrandom -D__USE_UNIX98=1 -D_GNU_SOURCE=1 no-egd -d shared
     fi
+
     make -j 2
     touch crypto/rand/drbg_ctr.c
     make -j 2
     make -j 2 install_sw install_ssldirs
 
-    touch .complete
+    touch ${base}/.complete
 }
 
 # build_jansson directory
 function build_jansson ()
 {
-    local install_dir=${HOTPLACE_HOME}/thirdparty
-
-    aclocal; autoheader; autoconf;
-    libtoolize --automake --copy --force
-    automake --foreign --copy --add-missing
-    ./configure --prefix=${install_dir} --enable-static --enable-shared CPPFLAGS="-fPIC"
-    make -j 2
-    make -j 2 install
-
+    # if [[ ${base} = "gcc" ]]; then
+    #     aclocal; autoheader; autoconf;
+    #     libtoolize --automake --copy --force
+    #     automake --foreign --copy --add-missing
+    #     ./configure --prefix=${install_dir} --enable-static --enable-shared CPPFLAGS="-fPIC"
+    #     make -j 2
+    #     make -j 2 install
+    #     cd $builddir
+    # elif [[ ${base} = "msvc" ]]; then
+        cmake -G "${generator}" --install-prefix ${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target} -DJANSSON_BUILD_DOCS=OFF
+        cd $builddir
+        cmake --build . --config ${target}
+        cmake --install . --config ${target}
+    # fi
     touch .complete
 }
 
 function build_zlib ()
 {
-    local install_dir=${HOTPLACE_HOME}/thirdparty
+    # ./configure --prefix=${install_dir}
+    # make
+    # make install
 
-    ./configure --prefix=${install_dir} 
-    make
-    make install
+    cmake -G "${generator}" --install-prefix ${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target}
+    cd $builddir
+    cmake --build . --config ${target}
+    cmake --install . --config ${target}
 
     touch .complete
 }
 
 function build_liboqs()
 {
-    local install_dir=${HOTPLACE_HOME}/thirdparty
+    cmake -G "${generator}" --install-prefix ${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target}
+    cd $builddir
+    cmake --build . --config ${target}
+    cmake --install . --config ${target}
 
-    cmake -G 'Unix Makefiles' --install-prefix ${install_dir} -B build -DCMAKE_BUILD_TYPE=Debug
-    cd build
-    make
-    make install
-    cd -
     touch .complete
 }
 
 function build_oqsprovider()
 {
-    local install_dir=${HOTPLACE_HOME}/thirdparty
+    cmake -G "${generator}" --install-prefix ${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target} -DOQS_KEM_ENCODERS=ON
+    cd $builddir
+    cmake --build . --config ${target}
+    cmake --install . --config ${target}
 
-    cmake -G 'Unix Makefiles' --install-prefix ${install_dir} -B build -DCMAKE_BUILD_TYPE=Debug -DOQS_KEM_ENCODERS=ON
-    cd build
-    make
-    make install
-    cd -
     touch .complete
 }
