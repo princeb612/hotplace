@@ -164,9 +164,9 @@ static void do_validate_resource_cipher_suite() {
                     if (except_map.end() != iter) {
                         auto eitem = iter->second;
                         test = (eitem->expected == name);
-                        comments = "\e[1;31m";
+                        comments = ANSI_ESCAPE "1;31m";
                         comments += eitem->comments;
-                        comments += "\e[0m";
+                        comments += ANSI_ESCAPE "0m";
                     }
                 }
                 if (false == test) {

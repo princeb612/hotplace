@@ -76,7 +76,7 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                dbs.println("\e[1;32m+ add keypair %s (group %s)\e[0m", privkid, tlsadvisor->nameof_group(group).c_str());
+                dbs.println(ANSI_ESCAPE "1;32m+ add keypair %s (group %s)" ANSI_ESCAPE "0m", privkid, tlsadvisor->nameof_group(group).c_str());
             });
         }
 #endif
@@ -115,7 +115,7 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                dbs.println("\e[1;32m+ add pub key %s (group %s)\e[0m", desc.get_kid_cstr(), tlsadvisor->nameof_group(group).c_str());
+                dbs.println(ANSI_ESCAPE "1;32m+ add pub key %s (group %s)" ANSI_ESCAPE "0m", desc.get_kid_cstr(), tlsadvisor->nameof_group(group).c_str());
             });
         }
 #endif
@@ -346,7 +346,7 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
                     }
                     dbs.println("     %s", base16_encode(pubkey).c_str());
                 } else {
-                    dbs.println("     \e[1;33mHelloRetryRequest\e[0m");
+                    dbs.println("     " ANSI_ESCAPE "1;33mHelloRetryRequest" ANSI_ESCAPE "0m");
                 }
             });
         }

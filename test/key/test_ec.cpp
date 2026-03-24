@@ -20,7 +20,7 @@ void test_eckey_compressed() {
 
     auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
         _logger->write([&](basic_stream& bs) -> void {
-            bs.println("\e[1;32m> kid \"%s\"\e[0m", item->get_desc().get_kid_cstr());
+            bs.println(ANSI_ESCAPE "1;32m> kid \"%s\"" ANSI_ESCAPE "0m", item->get_desc().get_kid_cstr());
             dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
         });
     };

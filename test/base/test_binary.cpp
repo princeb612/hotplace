@@ -13,7 +13,9 @@
 void test_binary() {
     _test_case.begin("binary");
     binary_t bin;
+#ifdef __SIZEOF_INT128__
     uint128 ui128 = 0;
+#endif
     uint64 ui64 = 0;
     uint32 ui32 = 0;
 
@@ -29,8 +31,10 @@ void test_binary() {
     _test_case.assert(1 == ui32, __FUNCTION__, "binary_to_integer #uint32");
     ui64 = t_binary_to_integer<uint64>(bin, ret);
     _test_case.assert(1 == ui64, __FUNCTION__, "binary_to_integer #uint64");
+#ifdef __SIZEOF_INT128__
     ui128 = t_binary_to_integer<uint128>(bin, ret);
     _test_case.assert(1 == ui128, __FUNCTION__, "binary_to_integer #uint128");
+#endif
 
     // narrow, truncate
     // 00000000 : 56 78 -- -- -- -- -- -- -- -- -- -- -- -- -- -- | Vx
@@ -63,6 +67,7 @@ void test_binary() {
 
     bin2.clear();
 
+#ifdef __SIZEOF_INT128__
     // wide
     // 00000000 : 00 00 00 00 00 00 00 00 00 00 00 00 12 34 56 78 | .............4Vx
     t_binary_load<uint32>(bin1, sizeof(uint128), ui32, hton32);
@@ -73,8 +78,9 @@ void test_binary() {
     _test_case.assert(bin1 == base16_decode("0x00000000000000000000000012345678"), __FUNCTION__, "binary_load (wide)");
     _test_case.assert(bin2 == base16_decode("0x00000000000000000000000012345678"), __FUNCTION__, "binary_append2 (wide)");
     _test_case.assert(0x12345678 == ui128, __FUNCTION__, "binary_to_integer #0x%I128x", ui128);
-
     bin.clear();
+#endif
+
     binary_append(bin, uint32(1), hton32);
     ui32 = t_binary_to_integer<uint32>(bin);
     _test_case.assert(1 == ui32, __FUNCTION__, "bin32 to uint32 %u", ui32);

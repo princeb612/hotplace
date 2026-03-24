@@ -104,3 +104,55 @@ cd module
 - [x] udpserver2
 - [x] unittest
 - [x] windows
+
+- MSVC
+  - [ ] constraints
+    - [ ] int128, uint128
+  - [ ] test
+    - [ ] asn1
+    - [ ] authenticode
+    - [x] base
+    - [x] bufferio
+    - [x] cbor
+    - [x] cmdline
+    - [ ] cose
+    - [x] crypto
+    - [x] datetime
+    - [ ] dtlsserver
+    - [x] encode
+    - [x] graph
+    - [ ] hash
+    - [x] hpack
+    - [ ] httpaltsvc
+    - [ ] httpauth
+    - [ ] httpserver1
+    - [ ] httpserver2
+    - [ ] httpserver3
+    - [ ] httptest
+    - [x] ieee754
+    - [ ] ipaddr
+    - [ ] jose
+    - [x] kdf
+    - [x] key
+    - [x] mlfq
+    - [ ] netclient
+    - [ ] nostd
+    - [x] parser
+    - [x] pattern
+    - [x] payload
+    - [x] pqc
+    - [x] qpack
+    - [ ] quic
+    - [x] random
+    - [x] sign
+    - [x] stream
+    - [x] string
+    - [ ] tcpserver1
+    - [ ] tcpserver2
+    - [x] thread
+    - [x] tls
+    - [ ] tlsserver
+    - [ ] udpserver1
+    - [ ] udpserver2
+    - [ ] unittest
+    - [ ] windows

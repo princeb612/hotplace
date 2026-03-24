@@ -100,7 +100,7 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
             trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
                 tls_advisor* advisor = tls_advisor::get_instance();
 
-                dbs.println("\e[1;35m > %s\e[0m", constexpr_alert);
+                dbs.println(ANSI_ESCAPE "1;35m > %s" ANSI_ESCAPE "0m", constexpr_alert);
                 dbs.println(" > %s %i %s", constexpr_level, level, advisor->nameof_tls_alert_level(level).c_str());
                 dbs.println(" > %s %i %s", constexpr_desc, desc, advisor->nameof_tls_alert_desc(desc).c_str());
             });

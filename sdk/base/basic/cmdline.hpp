@@ -284,7 +284,8 @@ void t_cmdline_t<T>::help() {
         }
     }
     maxlen += 5;  // " arg" for preced case
-    std::string fmt = format("\e[%%im%%-%zis\e[0m %%c %%s\n", maxlen);
+    std::string fmt;
+    fmt = format(ANSI_ESCAPE "%%im%%-%zis" ANSI_ESCAPE "0m %%c %%s\n", maxlen);
     for (const auto& key : _list) {
         map_iter = _args.find(key);
         if (_args.end() == map_iter) {

@@ -124,6 +124,7 @@ void do_test_cbor_int(int64 value, const char* expect) {
     cbor->release();
 }
 
+#ifdef __SIZEOF_INT128__
 void do_test_cbor_int(int128 value, const char* expect) {
     binary_t bin;
     variant vt;
@@ -135,6 +136,7 @@ void do_test_cbor_int(int128 value, const char* expect) {
     do_cbor_test(cbor, expect);
     cbor->release();
 }
+#endif
 
 void do_test_cbor_fp16(uint16 value, const char* expect) {
     binary_t bin;
@@ -253,6 +255,7 @@ void do_test_cbor_int_tag(int64 value, cbor_tag_t tag, const char* expect) {
     cbor->release();
 }
 
+#ifdef __SIZEOF_INT128__
 void do_test_cbor_int_tag(int128 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
@@ -260,6 +263,7 @@ void do_test_cbor_int_tag(int128 value, cbor_tag_t tag, const char* expect) {
     do_cbor_test(cbor, expect);
     cbor->release();
 }
+#endif
 
 void do_test_cbor_float_tag(float value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);

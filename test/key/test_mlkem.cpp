@@ -29,7 +29,7 @@ void test_mlkem_keygen() {
         _test_case.assert(kty_mlkem == kty, __FUNCTION__, "kty %s", nameof_key_type(kty));
 
         _logger->write([&](basic_stream &bs) -> void {
-            bs.println("\e[1;32m> kid \"%s\"\e[0m", item->get_desc().get_kid_cstr());
+            bs.println(ANSI_ESCAPE "1;32m> kid \"%s\"" ANSI_ESCAPE "0m", item->get_desc().get_kid_cstr());
             dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
         });
     };
@@ -59,7 +59,7 @@ void test_mlkem_keyuse(tls_group_t group, const binary_t &share) {
             auto kid = item->get_desc().get_kid_cstr();
 
             _logger->write([&](basic_stream &bs) -> void {
-                bs.println("\e[1;32m> kid \"%s\"\e[0m", kid);
+                bs.println(ANSI_ESCAPE "1;32m> kid \"%s\"" ANSI_ESCAPE "0m", kid);
                 dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
             });
         };

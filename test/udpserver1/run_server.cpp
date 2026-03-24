@@ -34,12 +34,12 @@ netsocket_event_t netsock_event;
 return_t async_handler(accept_context_t* accept_context, netsocket_event_t* netsock_event) {
     return_t ret = errorcode_t::success;
 #if defined _WIN32 || defined _WIN64
-    uint32 flags = 0;
+    DWORD flags = 0;
     netbuffer_t& wsabuf_read = netsock_event->netio_read;
     wsabuf_read.init();
     int addrlen = sizeof(sockaddr_storage_t);
     WSARecvFrom(accept_context->udp_server_sock, &wsabuf_read.wsabuf, 1, nullptr, &flags, (sockaddr*)&netsock_event->client_addr, &addrlen,
-                &wsabuf_read.overlapped, nullptr);
+                &wsabuf_read.overlapped, (LPWSAOVERLAPPED_COMPLETION_ROUTINE) nullptr);
 #endif
     return ret;
 }

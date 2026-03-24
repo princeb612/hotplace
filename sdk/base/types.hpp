@@ -117,6 +117,12 @@ enum encoding_t {
 #define CONSTEXPR const
 #endif
 
+#ifdef __GNUC__
+#define ANSI_ESCAPE "\e["
+#elif defined _MSC_VER
+#define ANSI_ESCAPE "\x1b["
+#endif
+
 }  // namespace hotplace
 
 #endif

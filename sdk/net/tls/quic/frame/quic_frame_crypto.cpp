@@ -152,9 +152,9 @@ return_t quic_frame_crypto::do_write_body(tls_direction_t dir, const byte_t* str
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
-                dbs.println("\e[1;33m + CRYPTO");
+                dbs.println(ANSI_ESCAPE "1;33m + CRYPTO");
                 dbs.println("   > %s 0x%zx (%zi)", constexpr_offset, pos, pos);
-                dbs.println("   > %s 0x%zx (%zi)\e[0m", constexpr_length, len, len);
+                dbs.println("   > %s 0x%zx (%zi)" ANSI_ESCAPE "0m", constexpr_length, len, len);
             });
         }
 #endif

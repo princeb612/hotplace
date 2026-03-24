@@ -123,9 +123,9 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
 
         /* base64url encoding */
         stream->fill(indent, ' ');
-        stream->printf("\e[35m");
+        stream->printf(ANSI_ESCAPE "35m");
         stream->printf("%s", b64url_encoded.c_str());
-        stream->printf("\e[0m");
+        stream->printf(ANSI_ESCAPE "0m");
         stream->printf("\n");
 
         /* COSE-style */
@@ -136,9 +136,9 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
             publisher.publish(root, &diagnostic);
 
             stream->fill(indent, ' ');
-            stream->printf("\e[33m");
+            stream->printf(ANSI_ESCAPE "33m");
             stream->printf("%s", diagnostic.c_str());
-            stream->printf("\e[0m");
+            stream->printf(ANSI_ESCAPE "0m");
             stream->printf("\n");
 
             root->release();

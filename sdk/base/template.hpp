@@ -126,57 +126,34 @@ T t_htoi(const char* hex) {
 /**
  * @brief   byte capacity for signed integer
  * @sa      byte_capacity for unsigned integer
+ * @remarks
+ *          min -(1 << (8 * n - 1))
+ *          max (1 << (8 * n - 1)) - 1
+ *
+ *          e.g. if n = 1, -2^7 ~ 2^7 - 1
+ *
+ *          1 bytes : -128 ~ 127
+ *          2 bytes : -32768 ~ 32767 (exclude -128 ~ 127)
+ *          3 bytes : -8388608 ~ 8388607 (exclude -32768 ~ 32767)
+ *          4 bytes : -2147483648 ~ 2147483647 (exclude -8388608 ~ 8388607)
+ *          5 bytes : -549755813888 ~ 549755813887 (exclude -2147483648 ~ 2147483647)
+ *          6 bytes : -140737488355328 ~ 140737488355327 (exclude -549755813888 ~ 549755813887)
+ *          7 bytes : -36028797018963968 ~ 36028797018963967 (exclude -140737488355328 ~ 140737488355327)
+ *          8 bytes : -9223372036854775808 ~ 9223372036854775807 (exclude -36028797018963968 ~ 36028797018963967)
+ *          ...
  * @example
  *          int byte_size = byte_capacity_signed<int128>(t_atoi<int128>("170141183460469231731687303715884105727"));
- *
- *                                               127 0000000000000000000000000000007f (1 bytes)
- *                                              -128 ffffffffffffffffffffffffffffff80 (1 bytes)
- *                                               128 00000000000000000000000000000080 (2 bytes)
- *                                              -129 ffffffffffffffffffffffffffffff7f (2 bytes)
- *                                             32767 00000000000000000000000000007fff (2 bytes)
- *                                            -32768 ffffffffffffffffffffffffffff8000 (2 bytes)
- *                                             32768 00000000000000000000000000008000 (3 bytes)
- *                                            -32769 ffffffffffffffffffffffffffff7fff (3 bytes)
- *                                           8388607 000000000000000000000000007fffff (3 bytes)
- *                                          -8388608 ffffffffffffffffffffffffff800000 (3 bytes)
- *                                        2147483647 0000000000000000000000007fffffff (4 bytes)
- *                                       -2147483648 ffffffffffffffffffffffff80000000 (4 bytes)
- *                                      549755813887 00000000000000000000007fffffffff (5 bytes)
- *                                     -549755813888 ffffffffffffffffffffff8000000000 (5 bytes)
- *                                   140737488355327 000000000000000000007fffffffffff (6 bytes)
- *                                  -140737488355328 ffffffffffffffffffff800000000000 (6 bytes)
- *                                 36028797018963967 0000000000000000007fffffffffffff (7 bytes)
- *                                -36028797018963968 ffffffffffffffffff80000000000000 (7 bytes)
- *                               9223372036854775807 00000000000000007fffffffffffffff (8 bytes)
- *                              -9223372036854775808 ffffffffffffffff8000000000000000 (8 bytes)
- *                            2361183241434822606847 000000000000007fffffffffffffffff (9 bytes)
- *                           -2361183241434822606848 ffffffffffffff800000000000000000 (9 bytes)
- *                          604462909807314587353087 0000000000007fffffffffffffffffff (10 bytes)
- *                         -604462909807314587353088 ffffffffffff80000000000000000000 (10 bytes)
- *                       154742504910672534362390527 00000000007fffffffffffffffffffff (11 bytes)
- *                      -154742504910672534362390528 ffffffffff8000000000000000000000 (11 bytes)
- *                     39614081257132168796771975167 000000007fffffffffffffffffffffff (12 bytes)
- *                    -39614081257132168796771975168 ffffffff800000000000000000000000 (12 bytes)
- *                  10141204801825835211973625643007 0000007fffffffffffffffffffffffff (13 bytes)
- *                 -10141204801825835211973625643008 ffffff80000000000000000000000000 (13 bytes)
- *                2596148429267413814265248164610047 00007fffffffffffffffffffffffffff (14 bytes)
- *               -2596148429267413814265248164610048 ffff8000000000000000000000000000 (14 bytes)
- *              664613997892457936451903530140172287 007fffffffffffffffffffffffffffff (15 bytes)
- *             -664613997892457936451903530140172288 ff800000000000000000000000000000 (15 bytes)
- *           170141183460469231731687303715884105727 7fffffffffffffffffffffffffffffff (16 bytes)
- *          -170141183460469231731687303715884105728 80000000000000000000000000000000 (16 bytes)
  */
 template <typename signed_type>
 int byte_capacity_signed(signed_type v) {
     int len = 1;
-    if (v > 0) {
+    if (v < 0) {
         v = ~v;  // 2's complement
     }
-    while (v < -0x80) {
-        v >>= 8;
+    while (v >>= 1) {
         len++;
     }
-    return len;
+    return (len + 8) / 8;
 }
 
 /**

@@ -47,6 +47,7 @@ void test_convert_endian() {
         _test_case.assert(hton64(item.h) == item.n, __FUNCTION__, "hton64 %x %x", item.h, item.n);
     }
 
+#ifdef __SIZEOF_INT128__
     struct testvector_128 {
         uint128 h;
         uint128 n;
@@ -66,6 +67,7 @@ void test_convert_endian() {
         _logger->dump((byte_t *)&item.n, sizeof(uint128));
         _test_case.assert(hton128(item.h) == item.n, __FUNCTION__, "hton128 %x %x", item.h, item.n);
     }
+#endif
 }
 
 void test_endian() {

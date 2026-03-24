@@ -601,13 +601,37 @@ void system_gettime(int clockid, struct timespec& ts) {
     clock_gettime(clockid, &ts);
 #endif
 #elif defined _MSC_VER
-    // TODO
     // CLOCK_REALTIME   GetSystemTimePreciseAsFileTime
     // CLOCK_MONOTONIC  QueryPerformanceFrequency, QueryPerformanceCounter
     // CLOCK_BOOTTIME   QueryInterruptTimePrecise / GetTickCount64
     if (CLOCK_REALTIME == clockid) {
+        FILETIME ft;
+        GetSystemTimePreciseAsFileTime(&ft);
+        uint64 res = ft.dwHighDateTime;
+        res <<= 32;
+        res |= ft.dwLowDateTime;
+        res /= 10;
+        res -= 11644473600000000ULL;
+        ts.tv_sec = res / 1000000UL;
+        ts.tv_nsec = res % 1000000UL;
     } else if (CLOCK_MONOTONIC == clockid) {
+        LARGE_INTEGER freq;
+        LARGE_INTEGER counter;
+        QueryPerformanceFrequency(&freq);
+        QueryPerformanceCounter(&counter);
+        ts.tv_sec = counter.QuadPart / freq.QuadPart;
+        ts.tv_nsec = (counter.QuadPart % freq.QuadPart) * 1000000000LL / freq.QuadPart;
     } else if (CLOCK_BOOTTIME == clockid) {
+        // realtimeapiset.h, kernel32.dll, 	Mincore.lib
+        typedef VOID (*QUERYINTERRUPTTIMEPRECISE)(ULONGLONG* lpInterruptTimePrecise);
+        QUERYINTERRUPTTIMEPRECISE lpfnQueryInterruptTimePrecise = nullptr;
+        DLSYM(GetModuleHandle("kernel32.dll"), "QueryInterruptTimePrecise", lpfnQueryInterruptTimePrecise);
+        if (lpfnQueryInterruptTimePrecise) {
+            ULONGLONG t;
+            lpfnQueryInterruptTimePrecise(&t);
+            ts.tv_sec = t / 10000000ULL;
+            ts.tv_nsec = (t % 10000000ULL) * 100;
+        }
     }
 #endif
 }

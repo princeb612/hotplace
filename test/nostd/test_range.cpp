@@ -17,13 +17,17 @@ void test_integer_range() {
     t_integer_range<int32> i32;
     t_integer_range<uint64> ui64;
     t_integer_range<int64> i64;
+#ifdef __SIZEOF_INT128__
     t_integer_range<uint128> ui128;
     t_integer_range<int128> i128;
+#endif
 
     _test_case.assert(uint16(-1) == ui16.getmax(), __FUNCTION__, "uint16 max");
     _test_case.assert(uint32(-1) == ui32.getmax(), __FUNCTION__, "uint32 max");
     _test_case.assert(uint64(-1) == ui64.getmax(), __FUNCTION__, "uint64 max");
+#ifdef __SIZEOF_INT128__
     _test_case.assert(uint128(-1) == ui128.getmax(), __FUNCTION__, "uint128 max");
+#endif
 
     _test_case.assert(int16(0x8000) == i16.getmin(), __FUNCTION__, "int16 min");
     _test_case.assert(int16(0x7fff) == i16.getmax(), __FUNCTION__, "int16 max");
@@ -31,8 +35,10 @@ void test_integer_range() {
     _test_case.assert(int32(0x7fffffff) == i32.getmax(), __FUNCTION__, "int32 max");
     _test_case.assert(int64(0x8000000000000000) == i64.getmin(), __FUNCTION__, "int64 min");
     _test_case.assert(int64(0x7fffffffffffffff) == i64.getmax(), __FUNCTION__, "int64 max");
+#ifdef __SIZEOF_INT128__
     _test_case.assert(t_atoi<int128>("-170141183460469231731687303715884105728") == i128.getmin(), __FUNCTION__, "int128 min");
     _test_case.assert(t_atoi<int128>("170141183460469231731687303715884105727") == i128.getmax(), __FUNCTION__, "int128 max");
+#endif
 }
 
 void test_sampling() {

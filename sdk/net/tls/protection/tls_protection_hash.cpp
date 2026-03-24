@@ -39,7 +39,7 @@ transcript_hash *tls_protection::get_transcript_hash() {
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
-                    constexpr char constexpr_transcript_hash[] = "\e[1;33mstarting transcript_hash\e[0m";
+                    constexpr char constexpr_transcript_hash[] = ANSI_ESCAPE "1;33mstarting transcript_hash" ANSI_ESCAPE "0m";
                     constexpr char constexpr_cipher_suite[] = "cipher suite";
                     crypto_advisor *advisor = crypto_advisor::get_instance();
                     tls_advisor *tlsadvisor = tls_advisor::get_instance();
@@ -94,14 +94,14 @@ return_t tls_protection::update_transcript_hash(tls_session *session, const byte
                     trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
                         binary_t digest;
                         hash->digest(digest);
-                        dbs.printf("\e[1;34m");
+                        dbs.printf(ANSI_ESCAPE "1;34m");
                         dbs.println("> update transcript hash @0x%p", this);
                         dump_memory(stream, sizeof(tls_handshake_t), &dbs, 16, 3, 0, dump_notrunc);
                         dbs.println("> update transcript hash @0x@%p", this);
                         dump_memory(stream + offset_body, size - offset_body, &dbs, 16, 3, 0, dump_notrunc);
-                        dbs.printf("\e[1;33m");
+                        dbs.printf(ANSI_ESCAPE "1;33m");
                         dbs.println("   %s", base16_encode(digest).c_str());
-                        dbs.printf("\e[0m");
+                        dbs.printf(ANSI_ESCAPE "0m");
                     });
                 }
 #endif
@@ -116,7 +116,7 @@ return_t tls_protection::update_transcript_hash(tls_session *session, const byte
                     trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
                         binary_t digest;
                         hash->digest(digest);
-                        dbs.printf("\e[1;34m");
+                        dbs.printf(ANSI_ESCAPE "1;34m");
                         dbs.println("> update transcript hash @0x%p size 0x%zx", this, size);
                         // dump_memory(stream, size, &dbs, 16, 3, 0, dump_notrunc);
                         size_t hdrsize = 0;
@@ -127,9 +127,9 @@ return_t tls_protection::update_transcript_hash(tls_session *session, const byte
                         }
                         dump_memory(stream, hdrsize, &dbs, 16, 3, 0, dump_notrunc);
                         dump_memory(stream + hdrsize, size - hdrsize, &dbs, 16, 3, 0, dump_notrunc);
-                        dbs.printf("\e[1;33m");
+                        dbs.printf(ANSI_ESCAPE "1;33m");
                         dbs.println("   %s", base16_encode(digest).c_str());
-                        dbs.printf("\e[0m");
+                        dbs.printf(ANSI_ESCAPE "0m");
                     });
                 }
 #endif

@@ -67,9 +67,9 @@ if (NOT "$ENV{SET_STDCPP}" STREQUAL "")
 endif ()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if (SUPPORT_DEBUG)
-        # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g")
-    endif ()
+    # if (SUPPORT_DEBUG)
+    #     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g")
+    # endif ()
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
         set (PROJECT_SDK_USE_STD_REGEX 0) # thirdparty
     endif()
@@ -91,9 +91,11 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     # gcc      | disabled | turn on  : -D_GLIBCXX_DEBUG
     # msvc     | enabled  | turn on  : -D_ITERATOR_DEBUG_LEVEL=2
     #          |          | turn off : -D_ITERATOR_DEBUG_LEVEL=0
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_ITERATOR_DEBUG_LEVEL=0")
+    if (SUPPORT_DEBUG)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
+    endif ()
     # set(CMAKE_GENERATOR_PLATFORM x64 CACHE STRING "Target Architecture" FORCE)
-    add_compile_definitions(_$ENV{PROCESSOR_ARCHITECTURE}_ __x86_64__ _CRT_SECURE_NO_DEPRECATE  _CRT_SECURE_NO_WARNINGS NOMINMAX)
+    add_compile_definitions(_$ENV{PROCESSOR_ARCHITECTURE}_ __x86_64__ _CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_WARNINGS _ITERATOR_DEBUG_LEVEL=0 NOMINMAX)
     add_compile_options(/utf-8)
     set (SET_THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty/msvc)
 endif ()

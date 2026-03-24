@@ -66,7 +66,17 @@ enum console_color_t {
 class console_color {
    public:
     console_color(console_style_t style = console_style_t::normal, console_color_t fg = console_color_t::white, console_color_t bg = console_color_t::black)
-        : _use(true), _style(style), _fg(fg), _bg(bg) {}
+        : _use(true), _style(style), _fg(fg), _bg(bg) {
+#if defined WIN32 || defined WIN64
+        HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD mode = 0;
+        GetConsoleMode(console, &mode);
+        if (0 == (ENABLE_VIRTUAL_TERMINAL_PROCESSING & mode)) {
+            SetConsoleMode(console, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+        }
+#endif
+    }
+
     console_color& set_style(console_style_t style) {
         _style = style;
         return *this;
@@ -99,17 +109,17 @@ class console_color {
     }
     friend std::ostream& operator<<(std::ostream& os, console_color& color) {
         if (color.get_usage()) {
-            os << "\e[" << color.get_style() << ";" << color.get_fgcolor() << ";" << color.get_bgcolor() << "m";
+            os << ANSI_ESCAPE << color.get_style() << ";" << color.get_fgcolor() << ";" << color.get_bgcolor() << "m";
         } else {
-            os << "\e[0m";
+            os << ANSI_ESCAPE << "0m";
         }
         return os;
     }
     friend basic_stream& operator<<(basic_stream& os, console_color& color) {
         if (color.get_usage()) {
-            os << "\e[" << color.get_style() << ";" << color.get_fgcolor() << ";" << color.get_bgcolor() << "m";
+            os << ANSI_ESCAPE << color.get_style() << ";" << color.get_fgcolor() << ";" << color.get_bgcolor() << "m";
         } else {
-            os << "\e[0m";
+            os << ANSI_ESCAPE << "0m";
         }
         return os;
     }
@@ -127,9 +137,9 @@ class console_color {
                 __leave2;
             }
             if (get_usage()) {
-                stream->printf("\e[%d;%d;%dm", get_style(), get_fgcolor(), get_bgcolor());
+                stream->printf(ANSI_ESCAPE "%d;%d;%dm", get_style(), get_fgcolor(), get_bgcolor());
             } else {
-                stream->printf("\e[0m");
+                stream->printf(ANSI_ESCAPE "0m");
             }
         }
         __finally2 {}

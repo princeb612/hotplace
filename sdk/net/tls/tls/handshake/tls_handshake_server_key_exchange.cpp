@@ -168,7 +168,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                     if (check_trace_level(loglevel_debug)) {
                         dump_memory(pubkey, &dbs, 16, 4, 0x0, dump_notrunc);
                     }
-                    dbs.println("> %s \e[1;33m%s\e[0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
+                    dbs.println("> %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
                     dbs.println(" > 0x%04x %s", sigalg, tlsadvisor->nameof_signature_scheme(sigalg).c_str());
                     dbs.println(" > %s %i", constexpr_sig_len, sig_len);
                     if (check_trace_level(loglevel_debug)) {

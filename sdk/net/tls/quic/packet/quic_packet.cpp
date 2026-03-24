@@ -379,7 +379,7 @@ return_t quic_packet::header_protect(tls_direction_t dir, protection_space_t spa
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
-                dbs.println("\e[1;34m > packet number 0x%s (%i)\e[0m", base16_encode(bin_pn).c_str(), _pn);
+                dbs.println(ANSI_ESCAPE "1;34m > packet number 0x%s (%i)" ANSI_ESCAPE "0m", base16_encode(bin_pn).c_str(), _pn);
                 dbs.println(" > packet number length %i", pn_length);
             });
         }
@@ -470,7 +470,7 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
                 uint32 protected_pn = t_binary_to_integer<uint32>(bin_protected_pn);
 
                 dbs.println(" > protected   packet number 0x%08x", protected_pn);
-                dbs.println("\e[1;34m > unprotected packet number 0x%08x (%08i)\e[0m", pn, pn);
+                dbs.println(ANSI_ESCAPE "1;34m > unprotected packet number 0x%08x (%08i)" ANSI_ESCAPE "0m", pn, pn);
             });
         }
 #endif

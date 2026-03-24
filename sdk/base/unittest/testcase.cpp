@@ -312,12 +312,7 @@ void test_case::test(return_t result, const char* test_function, const char* mes
         }
 
         basic_stream stream;
-        t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
-
-        console_colored_stream << _concolor.turnon() << _concolor.set_style(console_style_t::bold) << _concolor.set_fgcolor(color)
-                               << format("[%08x]", result).c_str() << _concolor.set_fgcolor(console_color_t::yellow)
-                               << format("[%s] ", test_function ? test_function : "").c_str() << tltle.c_str();
-        console_colored_stream << _concolor.turnoff();
+        stream.printf(ANSI_ESCAPE "1;%im[%08x]" ANSI_ESCAPE "33m[%s] %s" ANSI_ESCAPE "0m", color, result, test_function ? test_function : "", tltle.c_str());
 
         if (_logger) {
             _logger->writeln(stream);

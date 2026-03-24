@@ -21,15 +21,15 @@
 #define __leave2 break
 
 #if defined DEBUG
-#define __footprints(x)                                                  \
-    if (hotplace::get_trace_option()) {                                  \
-        ::printf("[\e[31m%08x\e[0m][%s @ %d]\n", x, __FILE__, __LINE__); \
+#define __footprints(x)                                                                          \
+    if (hotplace::get_trace_option()) {                                                          \
+        ::printf("[" ANSI_ESCAPE "31m%08x" ANSI_ESCAPE "0m][%s @ %d]\n", x, __FILE__, __LINE__); \
     }
-#define __footprintf(...)                                                \
-    if (hotplace::get_trace_option()) {                                  \
-        ::printf("[\e[35m debug  \e[0m][%s @ %d] ", __FILE__, __LINE__); \
-        ::printf(__VA_ARGS__);                                           \
-        printf("\n");                                                    \
+#define __footprintf(...)                                                                        \
+    if (hotplace::get_trace_option()) {                                                          \
+        ::printf("[" ANSI_ESCAPE "35m debug  " ANSI_ESCAPE "0m][%s @ %d] ", __FILE__, __LINE__); \
+        ::printf(__VA_ARGS__);                                                                   \
+        printf("\n");                                                                            \
     }
 #else
 #define __footprints(x)

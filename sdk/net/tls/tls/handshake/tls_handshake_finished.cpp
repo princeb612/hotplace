@@ -195,7 +195,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                     dbs.autoindent(1);
-                    dbs.println("> %s \e[1;33m%s\e[0m", constexpr_verify_data, (errorcode_t::success == ret) ? "true" : "false");
+                    dbs.println("> %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_verify_data, (errorcode_t::success == ret) ? "true" : "false");
                     if (check_trace_level(loglevel_debug)) {
                         dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
                     }

@@ -283,7 +283,7 @@ void parser::dump(const parser::context& context, basic_stream& bs) {
         auto iter = color.find(desc->type);
         if (color.end() != iter) {
             code = iter->second;
-            bs.printf("\e[%sm%.*s\e[0m ", code.c_str(), (unsigned)desc->size, desc->p);
+            bs.printf(ANSI_ESCAPE "%sm%.*s" ANSI_ESCAPE "0m ", code.c_str(), (unsigned)desc->size, desc->p);
         } else {
             bs.printf("%.*s ", (unsigned)desc->size, desc->p);
         }

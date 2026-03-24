@@ -90,10 +90,10 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
             trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 auto content_type = get_type();
-                dbs.printf("\e[1;36m");
+                dbs.printf(ANSI_ESCAPE "1;36m");
                 dbs.println("# write %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type,
                             tlsadvisor->nameof_tls_record(content_type).c_str());
-                dbs.printf("\e[0m");
+                dbs.printf(ANSI_ESCAPE "0m");
             });
         }
 #endif
@@ -128,12 +128,12 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
         if (istraceable(trace_category_net, loglevel_debug)) {
             trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
                 if (get_flags()) {
-                    dbs.printf("\e[0;36m");
+                    dbs.printf(ANSI_ESCAPE "0;36m");
                 } else {
-                    dbs.printf("\e[1;36m");
+                    dbs.printf(ANSI_ESCAPE "1;36m");
                 }
                 dbs.println("# record constructed");
-                dbs.printf("\e[0m");
+                dbs.printf(ANSI_ESCAPE "0m");
                 dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
             });
         }

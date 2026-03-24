@@ -78,20 +78,11 @@ function build_openssl ()
 # build_jansson directory
 function build_jansson ()
 {
-    # if [[ ${base} = "gcc" ]]; then
-    #     aclocal; autoheader; autoconf;
-    #     libtoolize --automake --copy --force
-    #     automake --foreign --copy --add-missing
-    #     ./configure --prefix=${install_dir} --enable-static --enable-shared CPPFLAGS="-fPIC"
-    #     make -j 2
-    #     make -j 2 install
-    #     cd $builddir
-    # elif [[ ${base} = "msvc" ]]; then
-        cmake -G "${generator}" --install-prefix ${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target} -DJANSSON_BUILD_DOCS=OFF
-        cd $builddir
-        cmake --build . --config ${target}
-        cmake --install . --config ${target}
-    # fi
+    cmake -G "${generator}" --install-prefix ${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target} -DJANSSON_BUILD_DOCS=OFF
+    cd $builddir
+    cmake --build . --config ${target}
+    cmake --install . --config ${target}
+
     touch .complete
 }
 

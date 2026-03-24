@@ -420,7 +420,7 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
                 trace_debug_event(trace_category_crypto, trace_event_keyexchange, [&](basic_stream& dbs) -> void {
-                    dbs.println("\e[1;33mepk\e[0m");
+                    dbs.println(ANSI_ESCAPE "1;33mepk" ANSI_ESCAPE "0m");
                     dump_key(prk, &dbs, 15, 4, dump_notrunc);
                 });
             }
@@ -533,9 +533,9 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
                 trace_debug_event(trace_category_crypto, trace_event_keyexchange, [&](basic_stream& dbs) -> void {
-                    dbs.println("\e[1;33m%s\e[0m", kid);
+                    dbs.println(ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", kid);
                     dump_key(prk, &dbs, 15, 4, dump_notrunc);
-                    dbs.println("\e[1;33m%s\e[0m", sskid);
+                    dbs.println(ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", sskid);
                     dump_key(pbk, &dbs, 15, 4, dump_notrunc);
                 });
             }

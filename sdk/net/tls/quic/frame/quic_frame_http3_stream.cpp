@@ -288,9 +288,9 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
-                dbs.println("\e[1;34m  + frame %s 0x%x(%i)\e[0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type);
+                dbs.println(ANSI_ESCAPE "1;34m  + frame %s 0x%x(%i)" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type);
                 dbs.println("   > %s 0x%zx (%zi)", constexpr_offset, pos, pos);
-                dbs.println("   > %s 0x%zx (%zi)\e[0m", constexpr_length, len, len);
+                dbs.println("   > %s 0x%zx (%zi)" ANSI_ESCAPE "0m", constexpr_length, len, len);
                 dbs.println("   > %s 0x%I64x (%I64i) %s", constexpr_stream_id, _stream_id, _stream_id,
                             tlsadvisor->nameof_quic_streamid_type(_stream_id).c_str());
                 auto resource = http_resource::get_instance();

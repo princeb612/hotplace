@@ -233,7 +233,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
                 dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
                 // dbs.println(" > tosign");
                 // dump_memory(tosign, &dbs, 16, 3, 0x00, dump_notrunc);
-                dbs.println(" > %s \e[1;33m%s\e[0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
+                dbs.println(" > %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
                 if (check_trace_level(loglevel_debug)) {
                     dump_memory(signature, &dbs, 16, 3, 0x00, dump_notrunc);
                 }

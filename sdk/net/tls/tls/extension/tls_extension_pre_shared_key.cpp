@@ -182,7 +182,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
                 dbs.println("   > %s 0x%08x", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
                 dbs.println("   > %s 0x%04x(%i)", constexpr_psk_binders_len, psk_binders_len, psk_binders_len);
                 dbs.println("   > %s 0x%04x(%i)", constexpr_psk_binder_len, psk_binder_len, psk_binder_len);
-                dbs.println("   > %s %s \e[1;33m%s\e[0m", constexpr_psk_binder, base16_encode(psk_binder).c_str(),
+                dbs.println("   > %s %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_psk_binder, base16_encode(psk_binder).c_str(),
                             (errorcode_t::success == ret) ? "true" : "false");
             });
         }

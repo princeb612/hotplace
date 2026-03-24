@@ -546,12 +546,12 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 #if defined DEBUG
                 if (istraceable(trace_category_net)) {
                     trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
-                        dbs.printf("\e[1;36m");
+                        dbs.printf(ANSI_ESCAPE "1;36m");
                         dbs.println("> hmac alg %x", hmac_alg);
                         dbs.println("> client hello random %s", base16_encode(client_hello_random).c_str());
                         dbs.println("> server hello random %s", base16_encode(server_hello_random).c_str());
                         dbs.println("> pre master secret %s", base16_encode(pre_master_secret).c_str());
-                        dbs.printf("\e[0m");
+                        dbs.printf(ANSI_ESCAPE "0m");
                     });
                 }
 #endif
@@ -626,9 +626,9 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
                     std::string keylog_client_random = std::move(base16_encode(get_secrets().get(tls_context_client_hello_random)));
                     std::string keylog_master_secret = std::move(base16_encode(master_secret));
-                    dbs.printf("\e[1;36m");
+                    dbs.printf(ANSI_ESCAPE "1;36m");
                     dbs.println("# CLIENT_RANDOM %s %s", keylog_client_random.c_str(), keylog_master_secret.c_str());
-                    dbs.printf("\e[0m");
+                    dbs.printf(ANSI_ESCAPE "0m");
                 });
             }
 #endif
@@ -751,7 +751,7 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
-                    dbs.printf("\e[1;36m");
+                    dbs.printf(ANSI_ESCAPE "1;36m");
                     dbs.println("> cipher_suite %s", tlsadvisor->hintof_cipher_suite(cs)->name_iana);
                     dbs.println("> master_secret %s", base16_encode(master_secret).c_str());
                     dbs.println("> client_hello_random %s", base16_encode(client_hello_random).c_str());
@@ -771,7 +771,7 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
                                 secret_client_iv.size());
                     dbs.println("> secret_server_iv[%08x] %s (%zi-octet)", tls_secret_server_iv, base16_encode(secret_server_iv).c_str(),
                                 secret_server_iv.size());
-                    dbs.printf("\e[0m");
+                    dbs.printf(ANSI_ESCAPE "0m");
                 });
             }
 #endif

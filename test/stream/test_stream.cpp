@@ -97,6 +97,7 @@ void test_dumpmemory() {
 }
 
 void test_i128() {
+#ifdef __SIZEOF_INT128__
     _test_case.begin("int128");
     ansi_string stream;
 
@@ -178,6 +179,7 @@ void test_i128() {
         _logger->writeln(stream.c_str());
         stream.clear();
     }
+#endif
 }
 
 void do_test_sprintf_routine(valist& va, const char* fmt, const char* expect) {

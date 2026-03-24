@@ -100,9 +100,9 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 auto hstype = get_type();
-                dbs.printf("\e[1;36m");
+                dbs.printf(ANSI_ESCAPE "1;36m");
                 dbs.println("# read handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->nameof_tls_handshake(hstype).c_str());
-                dbs.printf("\e[0m");
+                dbs.printf(ANSI_ESCAPE "0m");
             });
         }
 #endif
@@ -134,10 +134,10 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
 #if defined DEBUG
             if (istraceable(trace_category_net, loglevel_debug)) {
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                    dbs.printf("\e[1;33m");
+                    dbs.printf(ANSI_ESCAPE "1;33m");
                     dbs.println("> reassemble handshake message seq %i", _dtls_seq);
                     dump_memory(assemble, &dbs, 16, 3, 0, dump_notrunc);
-                    dbs.printf("\e[0m");
+                    dbs.printf(ANSI_ESCAPE "0m");
                 });
             }
 #endif
@@ -189,9 +189,9 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
             trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 auto hstype = get_type();
-                dbs.printf("\e[1;36m");
+                dbs.printf(ANSI_ESCAPE "1;36m");
                 dbs.println("# write %p handshake type 0x%02x(%i) (%s)", session, hstype, hstype, tlsadvisor->nameof_tls_handshake(hstype).c_str());
-                dbs.printf("\e[0m");
+                dbs.printf(ANSI_ESCAPE "0m");
             });
         }
 #endif
@@ -352,10 +352,10 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
 #if defined DEBUG
                     if (istraceable(trace_category_net, loglevel_debug)) {
                         trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                            dbs.printf("\e[1;33m");
+                            dbs.printf(ANSI_ESCAPE "1;33m");
                             dbs.println(" > fragment");
                             dump_memory(stream + pos, fragment_len, &dbs, 16, 3, 0, dump_notrunc);
-                            dbs.printf("\e[0m");
+                            dbs.printf(ANSI_ESCAPE "0m");
                         });
                     }
 #endif
@@ -381,10 +381,10 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
 #if defined DEBUG
                 if (istraceable(trace_category_net, loglevel_debug)) {
                     trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                        dbs.printf("\e[1;33m");
+                        dbs.printf(ANSI_ESCAPE "1;33m");
                         dbs.println(" > fragment");
                         dump_memory(stream + hspos, size - hspos, &dbs, 16, 3, 0, dump_notrunc);
-                        dbs.printf("\e[0m");
+                        dbs.printf(ANSI_ESCAPE "0m");
                     });
                 }
 #endif
