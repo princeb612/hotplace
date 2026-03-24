@@ -15,11 +15,6 @@
 
 namespace hotplace {
 
-#define LITTLE_ENDIANESS 0x41424344UL
-#define BIG_ENDIANESS 0x44434241UL
-#define PDP_ENDIANESS 0x42414443UL
-#define ENDIAN_ORDER ('ABCD')
-
 #if defined __GNUC__
 
 #if defined __MINGW32__
@@ -44,16 +39,24 @@ namespace hotplace {
 
 #else  // _MSC_VER
 
+#define LITTLE_ENDIANESS 0x41424344UL
+#define BIG_ENDIANESS 0x44434241UL
+#define PDP_ENDIANESS 0x42414443UL
+#define ENDIAN_ORDER ('ABCD')
+
+#define __ORDER_LITTLE_ENDIAN__ LITTLE_ENDIANESS
+#define __ORDER_BIG_ENDIAN__ BIG_ENDIANESS
+
 #if ENDIAN_ORDER == LITTLE_ENDIANESS
 #define __LITTLE_ENDIAN__
 #define __LITTLE_ENDIAN
 #define LITTLE_ENDIAN
-#define BYTE_ORDER_ENDIANESS LITTLE_ENDIANESS
+#define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__
 #elif ENDIAN_ORDER == BIG_ENDIANESS
 #define __BIG_ENDIAN__
 #define __BIG_ENDIAN
 #define BIG_ENDIAN
-#define BYTE_ORDER_ENDIANESS BIG_ENDIANESS
+#define __BYTE_ORDER__ __ORDER_BIG_ENDIAN__
 #elif ENDIAN_ORDER == PDP_ENDIANESS
 #define __PDP_ENDIAN__
 #define __PDP_ENDIAN
@@ -106,7 +109,7 @@ uint128 ntoh128(uint128 value);
 
 #endif
 
-#if (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || (BYTE_ORDER_ENDIANESS == BIG_ENDIANESS)
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 
 template <typename T>
 T t_convert_endian(T value);
@@ -127,7 +130,7 @@ T t_convert_endian(T value) {
     return value;
 }
 
-#elif (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || (BYTE_ORDER_ENDIANESS == LITTLE_ENDIANESS)
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 
 template <typename T1, typename T2>
 T1 t_convert_endian(T1 value);

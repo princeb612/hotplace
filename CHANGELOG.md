@@ -7,6 +7,8 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
+  * Revision 910-
+    * MSVC environment (alpha status)
   * Revision 876-904
     * ML-KEM Post-Quantum Key Agreement for TLS 1.3
   * Revision 777-804
@@ -27,7 +29,7 @@
     * CBOR
 
 * details
-  * Revision 913
+  * Revision 914
   * Revision 907
     * [tested] valgrind
   * Revision 905

@@ -13,6 +13,9 @@
       valgrind (linux)
     * make
       $ ./make.sh
+      e.g.
+        ./make.sh cmake debug pch
+        ./make.sh cmake debug pch msvc
 
 COMMENTS
 

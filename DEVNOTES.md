@@ -205,14 +205,6 @@ flowchart LR
 
 ## TODO
 
-- [ ] MSVC
-  - [ ] thirdparty
-  - [ ] [int128/__SIZEOF_INT128__ using abseil](https://github.com/abseil/abseil-cpp)
-  - [ ] system_gettime
-    - [ ] CLOCK_REALTIME
-    - [ ] CLOCK_MONOTONIC
-    - [ ] CLOCK_BOOTTIME
-  - [x] NOMINMAX (std::min, std::max)
 - [ ] HTTP/3
   - [x] http3.pcapng
     - [x] pcap
