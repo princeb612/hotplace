@@ -28,12 +28,10 @@ namespace hotplace {
 #define __BIG_ENDIAN__
 #define __BIG_ENDIAN
 #define BIG_ENDIAN
-#define BYTE_ORDER_ENDIANESS BIG_ENDIANESS
 #elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define __LITTLE_ENDIAN__
 #define __LITTLE_ENDIAN
 #define LITTLE_ENDIAN
-#define BYTE_ORDER_ENDIANESS LITTLE_ENDIANESS
 #else
 //
 #endif
@@ -108,7 +106,7 @@ uint128 ntoh128(uint128 value);
 
 #endif
 
-#if BYTE_ORDER_ENDIANESS == BIG_ENDIANESS
+#if (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || (BYTE_ORDER_ENDIANESS == BIG_ENDIANESS)
 
 template <typename T>
 T t_convert_endian(T value);
@@ -129,7 +127,7 @@ T t_convert_endian(T value) {
     return value;
 }
 
-#elif BYTE_ORDER_ENDIANESS == LITTLE_ENDIANESS
+#elif (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || (BYTE_ORDER_ENDIANESS == LITTLE_ENDIANESS)
 
 template <typename T1, typename T2>
 T1 t_convert_endian(T1 value);
