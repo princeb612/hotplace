@@ -118,7 +118,7 @@ void huffman_coding::infer(hc_temp &hc, typename btree_t::node_t *t) {
 #else
             size_t size = code.size();
             _trie.insert(code.c_str(), size, sym);
-            _range.test(size);
+            _range.sampling(size);
 #endif
         }
 
@@ -188,7 +188,7 @@ huffman_coding &huffman_coding::imports(const hc_code_t *table) {
         const auto &code = item->code;
         size_t size = strlen(code);
         _trie.insert(code, size, sym);
-        _range.test(size);
+        _range.sampling(size);
 #endif
     }
 

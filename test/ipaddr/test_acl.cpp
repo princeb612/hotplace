@@ -31,7 +31,9 @@ void test1() {
     acl.add_rule("10.20.15.25", true);
     acl.add_rule("10.20.13.25", 24, false);
     acl.add_rule("::1", 128, true);
+#ifdef SUPPORT_IPV6
     acl.add_rule("3ffe:ffff:0:f101::1", 64, true);
+#endif
 
     // single true, but range false -> determin return false
     acl.add_rule("10.20.1.125", true);

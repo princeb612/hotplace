@@ -54,13 +54,13 @@ void test_sampling() {
         return ret;
     };
 
-    sample.test(1);
+    sample.sampling(1);
     expect(1, 1);
-    sample.test(-1);
+    sample.sampling(-1);
     expect(-1, 1);
-    sample.test(2);
+    sample.sampling(2);
     expect(-1, 2);
-    sample.test(-2);
+    sample.sampling(-2);
     expect(-2, 2);
 }
 

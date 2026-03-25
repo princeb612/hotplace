@@ -10,10 +10,12 @@
   * ![c++](https://img.shields.io/badge/c++-c++11-green)
   * ![gcc](https://img.shields.io/badge/gcc->=4.7-green)
   * ![cmake](https://img.shields.io/badge/cmake->=2.6-green)
+  * ![MSVC](https://img.shields.io/badge/MSVC-Community-magenta)
 * platform
   * ![MSYS2](https://img.shields.io/badge/MSYS2-MINGW64-green)
-  * ![UBUNTU](https://img.shields.io/badge/UBUNTU-green)
-  * ![RHEL](https://img.shields.io/badge/RHEL-green)
+  * ![UBUNTU](https://img.shields.io/badge/UBUNTU->=20-green)
+  * ![RHEL](https://img.shields.io/badge/RHEL->=7-green)
+  * ![Windows](https://img.shields.io/badge/Windows-10-magenta)
 * status
   * JOSE ![implemented](https://img.shields.io/badge/implemented+SDK-green)
   * CBOR,COSE ![implemented](https://img.shields.io/badge/implemented+SDK-green)

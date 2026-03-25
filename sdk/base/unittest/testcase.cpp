@@ -312,7 +312,8 @@ void test_case::test(return_t result, const char* test_function, const char* mes
         }
 
         basic_stream stream;
-        stream.printf(ANSI_ESCAPE "1;%im[%08x]" ANSI_ESCAPE "33m[%s] %s" ANSI_ESCAPE "0m", color, result, test_function ? test_function : "", tltle.c_str());
+        stream.printf(ANSI_ESCAPE "1;%im[%08x]" ANSI_ESCAPE "33m[%s] %s" ANSI_ESCAPE "0m", CONSOLE_COLOR_FG + color, result, test_function ? test_function : "",
+                      tltle.c_str());
 
         if (_logger) {
             _logger->writeln(stream);

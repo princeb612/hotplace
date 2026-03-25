@@ -75,12 +75,27 @@ void test_byte_capacity_unsigned() {
 
 void test_byte_capacity_signed() {
     _test_case.begin("byte capacity");
-    struct testvector {
+
 #ifdef __SIZEOF_INT128__
-        int128 x;
+    typedef int128 signed_t;
+    int bits = 16;
 #else
-        int64 x;
+    typedef int64 signed_t;
+    int bits = 8;
 #endif
+
+    for (int n = 1; n <= bits; n++) {
+        signed_t min_val = -((signed_t)1 << (8 * n - 1));
+        signed_t max_val = ((signed_t)1 << (8 * n - 1)) - 1;
+#ifdef __SIZEOF_INT128__
+        _logger->writeln("byte capacity %i min %I128i ~ max %I128i", n, min_val, max_val);
+#else
+        _logger->writeln("byte capacity %i min %I64i ~ max %I64i", n, min_val, max_val);
+#endif
+    }
+
+    struct testvector {
+        signed_t x;
         int expect;
     } _table[] = {
         TESTVECTOR_ENTRY(127, 1),

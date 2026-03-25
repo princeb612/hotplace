@@ -517,9 +517,9 @@ void test_digest_access_authentication(const char *alg, unsigned long *ossl_minv
         };
 
         ret = test_resolver("user", "password1");
-        _test_case.assert((errorcode_t::success != ret), __FUNCTION__, "Digest Access Authentication Scheme (negative case) algorithm=%s", alg ? alg : "");
+        _test_case.assert((errorcode_t::success != ret), __FUNCTION__, "Digest Access Authentication Scheme (negative case) algorithm=%s", alg);
         ret = test_resolver("user", "password");
-        _test_case.assert((errorcode_t::success == ret), __FUNCTION__, "Digest Access Authentication Scheme (positive case) algorithm=%s", alg ? alg : "");
+        _test_case.assert((errorcode_t::success == ret), __FUNCTION__, "Digest Access Authentication Scheme (positive case) algorithm=%s", alg);
     } else {
         _test_case.test(errorcode_t::not_supported, __FUNCTION__, "require OpenSSL_version_num %08x", *ossl_minver);
     }

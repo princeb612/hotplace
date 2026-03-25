@@ -77,7 +77,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 
     if (UNIX)
     # -std=c++11
-    # -Wl,-z,noexecstack
+    # https://man7.org/linux/man-pages/man8/execstack.8.html
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-z,noexecstack")
     elseif (WIN32)
     set (SET_STDCPP c++14)
@@ -97,8 +97,10 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
     endif ()
     # set(CMAKE_GENERATOR_PLATFORM x64 CACHE STRING "Target Architecture" FORCE)
+    # https://learn.microsoft.com/ko-kr/cpp/standard-library/iterator-debug-level?view=msvc-170
     add_compile_definitions(_$ENV{PROCESSOR_ARCHITECTURE}_ __x86_64__ _CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_WARNINGS _ITERATOR_DEBUG_LEVEL=0 NOMINMAX)
     # https://learn.microsoft.com/ko-kr/cpp/build/reference/zc-cplusplus?view=msvc-170
+    # https://learn.microsoft.com/ko-kr/cpp/build/reference/utf-8-set-source-and-executable-character-sets-to-utf-8?view=msvc-170
     add_compile_options(/Zc:__cplusplus /std:${SET_STDCPP} /utf-8)
     set (SET_THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty/msvc)
 endif ()

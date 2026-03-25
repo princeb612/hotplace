@@ -19,12 +19,13 @@
 
 namespace hotplace {
 
-struct range_t {
-    size_t begin;
-    size_t end;
-    range_t() : begin(0), end(0) {}
-    range_t(size_t b, size_t e) : begin(b), end(e) {}
-    bool operator<(const range_t& rhs) const {
+template <typename T = size_t>
+struct t_range_t {
+    T begin;
+    T end;
+    t_range_t() : begin(0), end(0) {}
+    t_range_t(size_t b, size_t e) : begin(std::min(b, e)), end(std::max(b, e)) {}
+    bool operator<(const t_range_t& rhs) const {
         bool ret = false;
         if (begin < rhs.begin) {
             ret = true;
@@ -33,7 +34,7 @@ struct range_t {
         }
         return ret;
     }
-    bool operator==(const range_t& rhs) const { return (begin == rhs.begin) && (end == rhs.end); }
+    bool operator==(const t_range_t& rhs) const { return (begin == rhs.begin) && (end == rhs.end); }
     size_t width() {
         size_t ret_value = 0;
         if (begin <= end) {
@@ -44,6 +45,8 @@ struct range_t {
         return ret_value;
     }
 };
+
+typedef t_range_t<size_t> range_t;
 
 /**
  * @brief   integer range
@@ -94,10 +97,10 @@ class t_integer_range {
 /**
  * @sample
  *          t_sampling_range<int> sample;
- *          sample.test(1);   // getmin  1, getmax 1
- *          sample.test(-1);  // getmin -1, getmax 1
- *          sample.test(2);   // getmin -1, getmax 2
- *          sample.test(-2);  // getmin -2, getmax 1
+ *          sample.sampling(1);   // getmin  1, getmax 1
+ *          sample.sampling(-1);  // getmin -1, getmax 1
+ *          sample.sampling(2);   // getmin -1, getmax 2
+ *          sample.sampling(-2);  // getmin -2, getmax 1
  */
 template <typename T>
 class t_sampling_range {
@@ -105,7 +108,7 @@ class t_sampling_range {
     t_sampling_range() { reset(); }
     t_sampling_range(const t_sampling_range<T>& rhs) : _min(rhs._min), _max(rhs._max), _flag(rhs._flag) {}
 
-    void test(const T& value) {
+    void sampling(const T& value) {
         if (0 == _flag) {
             _min = value;
             _max = value;

@@ -42,12 +42,12 @@ return_t trace_backtrace(return_t errorcode) {
                 dbs.println("0x%08x:%s:%s", errorcode, errcode.c_str(), errmsg.c_str());
 
                 // PDB
-                // CONTEXT rtlcontext;
-                // debug_trace dbg;
-                // dbg.open(&handle);
-                // dbg.capture(&rtlcontext);
-                // ret = dbg.trace(handle, &rtlcontext, &dbs);
-                // dbg.close(handle);
+                CONTEXT rtlcontext;
+                debug_trace dbg;
+                dbg.open(&handle);
+                dbg.capture(&rtlcontext);
+                ret = dbg.trace(handle, &rtlcontext, &dbs);
+                dbg.close(handle);
             });
         }
     }
@@ -356,12 +356,14 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
         DWORD image_type = 0;
 #if defined __x86_64__
         image_type = IMAGE_FILE_MACHINE_AMD64;
+        DWORD64 dwOffsetFromSymbol = 0;
 #else
         image_type = IMAGE_FILE_MACHINE_I386;
+        DWORD dwOffsetFromSymbol = 0;
 #endif
         int nFrameNum = 0;
-        DWORD dwOffsetFromSymbol = 0;
-        symbol = static_cast<IMAGEHLP_SYMBOL*>(malloc((sizeof(IMAGEHLP_SYMBOL)) + (1 << 10)));
+        size_t symsize = sizeof(IMAGEHLP_SYMBOL) + (1 << 12);
+        symbol = static_cast<IMAGEHLP_SYMBOL*>(malloc(symsize));
         if (nullptr == symbol) {
             ret = ERROR_OUTOFMEMORY;
             __leave2;
@@ -376,7 +378,7 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
 
         // stream->printf("%s\n", constexpr_debug);
 
-        memset(symbol, 0, (sizeof(IMAGEHLP_SYMBOL)) + (1 << 10));
+        memset(symbol, 0, symsize);
         symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
         symbol->MaxNameLength = (1 << 10);
 
@@ -401,7 +403,7 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
                     stream->printf(constexpr_moduleinfo, base_name(Module.ImageName).c_str(), Module.BaseOfImage, frame.AddrPC.Offset - Module.BaseOfImage);
                 }
 
-                bRet = context->mssdk.lpfnSymGetSymFromAddr(process_handle, frame.AddrPC.Offset, (arch_t*)&dwOffsetFromSymbol, symbol);
+                bRet = context->mssdk.lpfnSymGetSymFromAddr(process_handle, frame.AddrPC.Offset, &dwOffsetFromSymbol, symbol);
                 if (TRUE == bRet) {
                     context->mssdk.lpfnUnDecorateSymbolName((PCTSTR)symbol->Name, (PTSTR)buffer_undecorated_name, (1 << 10), UNDNAME_NAME_ONLY);
                     context->mssdk.lpfnUnDecorateSymbolName((PCTSTR)symbol->Name, (PTSTR)buffer_undecorated_fullname, (1 << 10), UNDNAME_COMPLETE);

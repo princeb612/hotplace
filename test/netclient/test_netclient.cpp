@@ -20,7 +20,11 @@ void tcp_client() {
         cli = new trial_tcp_client_socket;
     }
 
-    char buffer[option.bufsize];
+#if defined __GNUC__
+    char buffer[option.bufsize];  // VLA (Variable Length Array)
+#elif defined _MSC_VER
+    char* buffer = (char*)_alloca(option.bufsize);
+#endif
 
     __try2 {
         cli->set_wto(option.wto);
@@ -69,7 +73,11 @@ void udp_client() {
         cli = new trial_udp_client_socket;
     }
 
-    char buffer[option.bufsize];
+#if defined __GNUC__
+    char buffer[option.bufsize];  // VLA (Variable Length Array)
+#elif defined _MSC_VER
+    char* buffer = (char*)_alloca(option.bufsize);
+#endif
     sockaddr_storage_t addr;
     socklen_t addrlen = sizeof(addr);
 
@@ -121,7 +129,11 @@ void tls_client() {
     openssl_tls tls(sslctx);
     openssl_tls_client_socket cli(&tls);
 
-    char buffer[option.bufsize];
+#if defined __GNUC__
+    char buffer[option.bufsize];  // VLA (Variable Length Array)
+#elif defined _MSC_VER
+    char* buffer = (char*)_alloca(option.bufsize);
+#endif
 
     __try2 {
         openssl_startup();
@@ -171,7 +183,11 @@ void tls_client2() {
     auto minver = (option.flags & option_flag_allow_tls12) ? tls_12 : tls_13;
     trial_tls_client_socket cli(minver);
 
-    char buffer[option.bufsize];
+#if defined __GNUC__
+    char buffer[option.bufsize];  // VLA (Variable Length Array)
+#elif defined _MSC_VER
+    char* buffer = (char*)_alloca(option.bufsize);
+#endif
 
     __try2 {
         openssl_startup();
@@ -224,7 +240,11 @@ void dtls_client() {
     sockaddr_storage_t addr;
     socklen_t addrlen = sizeof(addr);
 
-    char buffer[option.bufsize];
+#if defined __GNUC__
+    char buffer[option.bufsize];  // VLA (Variable Length Array)
+#elif defined _MSC_VER
+    char* buffer = (char*)_alloca(option.bufsize);
+#endif
 
     __try2 {
         openssl_startup();
@@ -272,7 +292,11 @@ void dtls_client2() {
     cli.get_session()->get_dtls_record_publisher().set_fragment_size(512);
     cli.get_session()->get_dtls_record_publisher().set_flags(dtls_record_publisher_multi_handshakes);
 
-    char buffer[option.bufsize];
+#if defined __GNUC__
+    char buffer[option.bufsize];  // VLA (Variable Length Array)
+#elif defined _MSC_VER
+    char* buffer = (char*)_alloca(option.bufsize);
+#endif
     sockaddr_storage_t sa;
 
     __try2 {

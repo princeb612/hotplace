@@ -105,53 +105,56 @@ cd module
 - [x] unittest
 - [x] windows
 
-- MSVC
-  - [ ] constraints
-    - [ ] int128, uint128
-  - [ ] test
-    - [ ] asn1
-    - [x] authenticode
-    - [x] base
-    - [x] bufferio
-    - [x] cbor
-    - [x] cmdline
-    - [x] cose
-    - [x] crypto
-    - [x] datetime
-    - [x] dtlsserver
-    - [x] encode
-    - [x] graph
-    - [x] hash
-    - [x] hpack
-    - [ ] httpaltsvc
-    - [x] httpauth
-    - [x] httpserver1
-    - [x] httpserver2
-    - [ ] httptest
-    - [x] ieee754
-    - [ ] ipaddr
-    - [x] jose
-    - [x] kdf
-    - [x] key
-    - [x] mlfq
-    - [ ] netclient
-    - [x] nostd
-    - [x] parser
-    - [x] pattern
-    - [x] payload
-    - [x] pqc
-    - [x] qpack
-    - [ ] quic
-    - [x] random
-    - [x] sign
-    - [x] stream
-    - [x] string
-    - [x] tcpserver1
-    - [x] tcpserver2
-    - [x] thread
-    - [x] tls
-    - [x] tlsserver
-    - [ ] udpserver1
-    - [x] udpserver2
-    - [x] unittest
-    - [ ] windows
+### MSVC
+- [ ] constraints
+  - [ ] int128, uint128
+- [ ] test
+  - [ ] asn1
+  - [x] authenticode
+  - [x] base
+  - [x] bufferio
+  - [x] cbor
+  - [x] cmdline
+  - [x] cose
+  - [x] crypto
+  - [x] datetime
+  - [x] dtlsserver
+  - [x] encode
+  - [x] graph
+  - [x] hash
+  - [x] hpack
+  - [ ] httpaltsvc
+  - [x] httpauth
+  - [x] httpserver1
+  - [x] httpserver2
+  - [x] httptest
+  - [x] ieee754
+  - [x] ipaddr
+  - [x] jose
+  - [x] kdf
+  - [x] key
+  - [x] mlfq
+  - [x] netclient
+  - [x] nostd
+  - [x] parser
+  - [x] pattern
+  - [x] payload
+  - [x] pqc
+  - [x] qpack
+  - [x] quic
+  - [x] random
+  - [x] sign
+  - [x] stream
+  - [x] string
+  - [x] tcpserver1
+  - [x] tcpserver2
+  - [x] thread
+  - [x] tls
+  - [x] tlsserver
+  - [ ] udpserver1
+  - [x] udpserver2
+  - [x] unittest
+  - [x] windows
+ - [ ] check
+   - [x] backtrace
+   - [ ] case _test_case.assert((errorcode_t::success != ret), __FUNCTION__, "Digest Access Authentication Scheme (negative case) algorithm=%s", alg ? alg : "");
