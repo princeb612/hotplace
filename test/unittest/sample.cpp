@@ -41,6 +41,9 @@ void test_unittest() {
     _test_case.assert(true, "function8", "case 2 desc 2");                      // pass
     _test_case.assert(false, "function9", "case 2 desc 3 - intentional fail");  // fail
 
+    const char* msg1 = "MSVC variable arguments ambiguity problem";
+    _test_case.assert(true, "function10", "case 3 %s", msg1 ? msg1 : "");
+
     return_t ret = _test_case.result();
     _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "result");
 }

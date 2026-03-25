@@ -197,11 +197,11 @@ void test_case::assert(bool expect, const char* test_function, const char* messa
     return_t ret = errorcode_t::success;
     va_list ap;
     va_start(ap, message);
-    assert(expect, test_function, message, ap);
+    vassert(expect, test_function, message, ap);
     va_end(ap);
 }
 
-void test_case::assert(bool expect, const char* test_function, const char* message, va_list ap) {
+void test_case::vassert(bool expect, const char* test_function, const char* message, va_list ap) {
     return_t ret = errorcode_t::success;
 
     if (false == expect) {
@@ -218,11 +218,11 @@ void test_case::assert(bool expect, const char* test_function, const char* messa
 void test_case::nassert(bool expect, const char* test_function, const char* message, ...) {
     va_list ap;
     va_start(ap, message);
-    nassert(expect, test_function, message, ap);
+    vnassert(expect, test_function, message, ap);
     va_end(ap);
 }
 
-void test_case::nassert(bool expect, const char* test_function, const char* message, va_list ap) {
+void test_case::vnassert(bool expect, const char* test_function, const char* message, va_list ap) {
     return_t ret = (false == expect) ? expect_failure : unexpected;
     basic_stream tltle;
     if (message) {
@@ -234,11 +234,11 @@ void test_case::nassert(bool expect, const char* test_function, const char* mess
 void test_case::test(return_t result, const char* test_function, const char* message, ...) {
     va_list ap;
     va_start(ap, message);
-    test(result, test_function, message, ap);
+    vtest(result, test_function, message, ap);
     va_end(ap);
 }
 
-void test_case::test(return_t result, const char* test_function, const char* message, va_list ap) {
+void test_case::vtest(return_t result, const char* test_function, const char* message, va_list ap) {
     struct timespec elapsed;
     arch_t tid = get_thread_id();
     std::string topic;
@@ -327,13 +327,13 @@ void test_case::test(return_t result, const char* test_function, const char* mes
 void test_case::ntest(return_t result, const char* test_function, const char* message, ...) {
     va_list ap;
     va_start(ap, message);
-    ntest(result, test_function, message, ap);
+    vntest(result, test_function, message, ap);
     va_end(ap);
 }
 
-void test_case::ntest(return_t result, const char* test_function, const char* message, va_list ap) {
+void test_case::vntest(return_t result, const char* test_function, const char* message, va_list ap) {
     return_t ret = (errorcode_t::success != result) ? expect_failure : unexpected;
-    test(ret, test_function, message, ap);
+    vtest(ret, test_function, message, ap);
 }
 
 constexpr char constexpr_success[] = "success";

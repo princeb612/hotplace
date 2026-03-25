@@ -106,8 +106,23 @@ cd module
 - [x] windows
 
 ### MSVC
-- [ ] constraints
-  - [ ] int128, uint128
+- [ ] issues
+  - [ ] compatibility
+    - [ ] int128/uint128
+    - [x] __builtin_clzll
+    - [x] clock_gettime
+  - [x] fix
+    - [x] backtrace
+    - [x] byte_capacity_signed
+  - MSVC-specific
+    - [x] source file encoding (utf-8 character set)
+    - [x] variable arguments ambiguity ('v' prefix)
+    - [x] __cplusplus preprocessor macro
+    - [x] debug iterator (turn off)
+    - [x] VLA (Variable Length Array workaround)
+  - [x] build
+    - [x] space (separated according to gcc/msvc)
+    - [x] thirdparty (openssl manual build required)
 - [ ] test
   - [ ] asn1
   - [x] authenticode
@@ -155,6 +170,3 @@ cd module
   - [x] udpserver2
   - [x] unittest
   - [x] windows
- - [ ] check
-   - [x] backtrace
-   - [ ] case _test_case.assert((errorcode_t::success != ret), __FUNCTION__, "Digest Access Authentication Scheme (negative case) algorithm=%s", alg ? alg : "");

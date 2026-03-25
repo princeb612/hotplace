@@ -65,6 +65,9 @@ namespace hotplace {
  *      test_case _test_case;   // reset
  *      _test_case.begin (...); // reset, same in start method
  *      _test_case.assert (..); // check time, same in assert method
+ * @remarks
+ *      MSVC variable arguments ambiguity ... / va_list
+ *      so, prefix 'v' to functions that use the va_list parameter
  */
 class test_case {
    public:
@@ -98,12 +101,12 @@ class test_case {
      * @desc    check result and time
      */
     void assert(bool expect, const char* test_function, const char* message, ...);
-    void assert(bool expect, const char* test_function, const char* message, va_list ap);
+    void vassert(bool expect, const char* test_function, const char* message, va_list ap);
     /**
      * @brief   expect failure
      */
     void nassert(bool expect, const char* test_function, const char* message, ...);
-    void nassert(bool expect, const char* test_function, const char* message, va_list ap);
+    void vnassert(bool expect, const char* test_function, const char* message, va_list ap);
     /**
      * @brief   test
      * @param   return_t result [in]
@@ -112,12 +115,12 @@ class test_case {
      * @desc    check result and time
      */
     void test(return_t result, const char* test_function, const char* message, ...);
-    void test(return_t result, const char* test_function, const char* message, va_list ap);
+    void vtest(return_t result, const char* test_function, const char* message, va_list ap);
     /**
      * @brief   expect failure
      */
     void ntest(return_t result, const char* test_function, const char* message, ...);
-    void ntest(return_t result, const char* test_function, const char* message, va_list ap);
+    void vntest(return_t result, const char* test_function, const char* message, va_list ap);
     /**
      * @brief   report
      * @param   uint32 top_count [inopt] oder by test-time, and list top
